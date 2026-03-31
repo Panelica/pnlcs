@@ -29,6 +29,9 @@ class ModuleRegistry
         return $class ? app($class) : null;
     }
 
+    public function resolveServer(string $name): ?\App\Contracts\ServerModuleInterface { return $this->getServerModule($name); }
+    public function resolveGateway(string $name): ?\App\Contracts\GatewayModuleInterface { return $this->getGatewayModule($name); }
+
     public function getServerModules(): array { return array_keys($this->serverModules); }
     public function getGatewayModules(): array { return array_keys($this->gatewayModules); }
     public function getRegistrarModules(): array { return array_keys($this->registrarModules); }

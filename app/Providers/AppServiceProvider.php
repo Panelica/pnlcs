@@ -25,5 +25,8 @@ class AppServiceProvider extends ServiceProvider
         $registry->registerServer('panelica', \Modules\Servers\Panelica\PanelicaModule::class);
         $registry->registerServer('cpanel',   \Modules\Servers\CPanel\CPanelModule::class);
         $registry->registerGateway('banktransfer', \Modules\Gateways\BankTransfer\BankTransferModule::class);
+        $registry->registerGateway('paypal',      \Modules\Gateways\PayPal\PayPalModule::class);
+        $registry->registerGateway('stripe',      \Modules\Gateways\Stripe\StripeModule::class);
+        $registry->registerGateway('authorize',   \Modules\Gateways\AuthorizeNet\AuthorizeNetModule::class);
     }
 }

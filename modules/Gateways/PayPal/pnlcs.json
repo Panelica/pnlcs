@@ -1,0 +1,1 @@
+{"name":"paypal","type":"gateway","version":"1.0.0","display_name":"PayPal","description":"PayPal Checkout integration using PayPal REST API v2","author":{"name":"PNLCS"}}

@@ -1,0 +1,1 @@
+{"name":"stripe","type":"gateway","version":"1.0.0","display_name":"Stripe","description":"Stripe Payment Intents API with tokenised card processing","author":{"name":"PNLCS"}}
