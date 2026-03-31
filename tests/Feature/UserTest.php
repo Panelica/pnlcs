@@ -1,9 +1,7 @@
 <?php
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\User;
 
-uses(RefreshDatabase::class);
 
 test("user migration creates table with correct columns", function () {
     $columns = Schema::getColumnListing("users");

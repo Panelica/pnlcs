@@ -5,7 +5,6 @@ use App\Models\AdminRole;
 use App\Models\Server;
 use App\Models\ServerGroup;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 function makeServerAdmin(): Admin
 {

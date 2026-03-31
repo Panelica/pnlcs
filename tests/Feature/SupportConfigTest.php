@@ -6,7 +6,6 @@ use App\Models\EmailTemplate;
 use App\Models\TicketDepartment;
 use App\Models\TicketStatus;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 function makeSupportAdmin(): Admin
 {

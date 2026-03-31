@@ -6,7 +6,6 @@ use App\Models\Announcement;
 use App\Models\KbCategory;
 use App\Models\KbArticle;
 
-uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 // ============================================================
 // Helpers

@@ -5,7 +5,6 @@ use App\Models\AdminRole;
 use App\Models\BannedIp;
 use App\Models\TodoItem;
 
-uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 // ============================================================
 // Helpers

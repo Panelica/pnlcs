@@ -1,5 +1,4 @@
 <?php
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\Admin;
 use App\Models\AdminRole;
@@ -9,7 +8,6 @@ use App\Models\Contact;
 use App\Models\User;
 
 // --- Contact Tests ---
-uses(RefreshDatabase::class);
 
 test("contact belongs to client", function () {
     $client = Client::factory()->create();

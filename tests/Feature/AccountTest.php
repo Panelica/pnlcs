@@ -3,11 +3,10 @@
 use App\Models\Client;
 use App\Models\User;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 function makeClientUser(): array
 {
-    $user   = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Doe', 'email' => 'jane@example.com']);
+    $user   = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Doe', 'email' => 'jane_' . uniqid() . '@example.com']);
     $client = Client::factory()->create(['email' => $user->email, 'first_name' => 'Jane', 'last_name' => 'Doe']);
     $user->clients()->attach($client->id, ['owner' => true, 'permissions' => null]);
     return [$user, $client];
@@ -31,7 +30,7 @@ test('user can update profile', function () {
     $response = $this->actingAs($user)->put(route('client.account.update'), [
         'first_name'   => 'Updated',
         'last_name'    => 'Name',
-        'email'        => 'jane@example.com',
+        'email'        => $user->email,
         'company_name' => 'Acme Inc',
         'address1'     => '123 Main St',
         'address2'     => '',
@@ -124,7 +123,7 @@ test('user can add a contact', function () {
     $response = $this->actingAs($user)->post(route('client.account.contacts.store'), [
         'first_name'   => 'Alice',
         'last_name'    => 'Smith',
-        'email'        => 'alice@example.com',
+        'email'        => 'alice_' . uniqid() . '@example.com',
         'company_name' => 'Tech Co',
         'phone_number' => '+1 555 9999',
     ]);
@@ -136,7 +135,6 @@ test('user can add a contact', function () {
         'client_id'  => $client->id,
         'first_name' => 'Alice',
         'last_name'  => 'Smith',
-        'email'      => 'alice@example.com',
     ]);
 });
 

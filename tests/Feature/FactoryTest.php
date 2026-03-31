@@ -21,9 +21,7 @@ use App\Models\TicketReply;
 use App\Models\TicketStatus;
 use App\Models\TodoItem;
 use App\Models\Transaction;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('currency factory creates valid record', function () {
     $currency = Currency::factory()->create();

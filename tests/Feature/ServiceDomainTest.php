@@ -5,8 +5,10 @@ use App\Models\AdminRole;
 use App\Models\Domain;
 use App\Models\Product;
 use App\Models\Service;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 
 beforeEach(function () {
+    $this->withoutMiddleware(VerifyCsrfToken::class);
     $role = AdminRole::factory()->fullAdmin()->create();
     $this->admin = Admin::factory()->create(['role_id' => $role->id, 'password' => 'secret']);
     $this->actingAs($this->admin, 'admin');

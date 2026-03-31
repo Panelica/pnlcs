@@ -3,9 +3,7 @@
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Constants\Permissions;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('full admin can access all pages', function () {
     $role = AdminRole::factory()->fullAdmin()->create();

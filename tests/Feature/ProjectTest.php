@@ -5,9 +5,7 @@ use App\Models\Client;
 use App\Models\Project;
 use App\Models\ProjectTask;
 use App\Models\ProjectMessage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('project can be created with factory', function () {
     $project = Project::factory()->create();

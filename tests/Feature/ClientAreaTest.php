@@ -1,10 +1,8 @@
 <?php
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\User;
 use App\Models\Client;
 
-uses(RefreshDatabase::class);
 
 test("client login page loads", function () {
     $response = $this->get(route("client.login"));

@@ -4,7 +4,6 @@ use App\Models\Client;
 use App\Models\Domain;
 use App\Models\User;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 function makeDomainClient(): array
 {
@@ -13,7 +12,7 @@ function makeDomainClient(): array
     $user->clients()->attach($client->id, ['owner' => true, 'permissions' => null]);
     $domain = Domain::factory()->create([
         'client_id'   => $client->id,
-        'domain'      => 'mysite.com',
+        'domain'      => 'mysite_' . uniqid() . '.com',
         'status'      => 'Active',
         'nameservers' => json_encode(['ns1' => 'ns1.example.com', 'ns2' => 'ns2.example.com']),
     ]);
@@ -30,7 +29,7 @@ test('authenticated user can view their domain detail', function () {
 
     $response = $this->actingAs($user)->get(route('client.domains.show', $domain));
     $response->assertStatus(200);
-    $response->assertSee('mysite.com');
+    $response->assertSee($domain->domain);
     $response->assertSee('Nameservers');
     $response->assertSee('EPP');
 });
@@ -134,10 +133,10 @@ test('domains list only shows client owned domains', function () {
     [$user, $client, $domain] = makeDomainClient();
 
     $otherClient = Client::factory()->create();
-    Domain::factory()->create(['client_id' => $otherClient->id, 'domain' => 'other.com']);
+    $otherDomain = Domain::factory()->create(['client_id' => $otherClient->id, 'domain' => 'other_' . uniqid() . '.com']);
 
     $response = $this->actingAs($user)->get(route('client.domains.index'));
     $response->assertStatus(200);
-    $response->assertSee('mysite.com');
-    $response->assertDontSee('other.com');
+    $response->assertSee($domain->domain);
+    $response->assertDontSee($otherDomain->domain);
 });

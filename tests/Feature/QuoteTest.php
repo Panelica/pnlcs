@@ -6,9 +6,7 @@ use App\Models\Invoice;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Services\QuoteService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('quote can be created with factory', function () {
     $quote = Quote::factory()->create();

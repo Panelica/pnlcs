@@ -10,18 +10,17 @@ use App\Models\Promotion;
 use App\Models\User;
 use App\Services\CartService;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 function ensureDefaultCurrency(): Currency
 {
     return Currency::firstOrCreate(
         ['is_default' => true],
         [
-            'code'      => 'USD',
-            'prefix'    => '$',
-            'suffix'    => '',
-            'format'    => 1,
-            'rate'      => '1.00000',
+            'code'       => 'USD',
+            'prefix'     => '$',
+            'suffix'     => '',
+            'format'     => 1,
+            'rate'       => '1.00000',
             'is_default' => true,
         ]
     );
@@ -29,8 +28,8 @@ function ensureDefaultCurrency(): Currency
 
 function makeAuthenticatedClient(): array
 {
-    $user     = User::factory()->create();
-    $client   = Client::factory()->create(['email' => $user->email]);
+    $user   = User::factory()->create();
+    $client = Client::factory()->create(['email' => $user->email]);
     $user->clients()->attach($client->id, ['owner' => true, 'permissions' => null]);
     ensureDefaultCurrency();
     return [$user, $client];
@@ -144,7 +143,7 @@ test('can apply valid promo code', function () {
     $product         = makeProductWithPricing();
 
     Promotion::factory()->percentage(10)->create([
-        'code'            => 'SAVE10',
+        'code'            => 'SAVE10TEST',
         'start_date'      => now()->subDay(),
         'expiration_date' => now()->addMonth(),
         'max_uses'        => 0,
@@ -155,19 +154,19 @@ test('can apply valid promo code', function () {
     $cart        = $cartService->getOrCreateCart($client->id);
     $cartService->addProduct($cart, $product, 'monthly');
 
-    $response = $this->actingAs($user)->post(route('client.cart.promo'), ['code' => 'SAVE10']);
+    $response = $this->actingAs($user)->post(route('client.cart.promo'), ['code' => 'SAVE10TEST']);
     $response->assertRedirect(route('client.cart.index'));
     $response->assertSessionHas('success');
 
     $cart->refresh();
     $data = json_decode($cart->data, true);
-    expect($data['promo_code'])->toBe('SAVE10');
+    expect($data['promo_code'])->toBe('SAVE10TEST');
 });
 
 test('invalid promo code shows error', function () {
     [$user] = makeAuthenticatedClient();
 
-    $response = $this->actingAs($user)->post(route('client.cart.promo'), ['code' => 'INVALID']);
+    $response = $this->actingAs($user)->post(route('client.cart.promo'), ['code' => 'INVALID999']);
     $response->assertRedirect(route('client.cart.index'));
     $response->assertSessionHas('error');
 });

@@ -10,9 +10,7 @@ use App\Models\TicketDepartment;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Order;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('client show page loads summary tab', function () {
     $admin = Admin::factory()->create();

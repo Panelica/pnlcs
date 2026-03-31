@@ -7,7 +7,6 @@ use App\Models\TaxRule;
 use App\Models\Transaction;
 use App\Services\InvoiceService;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 // ---------------------------------------------------------------------------
 // Create invoice with items

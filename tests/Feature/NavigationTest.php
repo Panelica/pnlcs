@@ -1,9 +1,7 @@
 <?php
 
 use App\Models\Admin;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('dashboard is accessible', function () {
     $admin = Admin::factory()->create();

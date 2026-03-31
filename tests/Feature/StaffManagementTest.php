@@ -3,9 +3,7 @@
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\ApiCredential;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 // ===== HELPERS =====
 

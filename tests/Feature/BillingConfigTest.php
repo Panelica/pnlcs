@@ -5,9 +5,7 @@ use App\Models\AdminRole;
 use App\Models\Currency;
 use App\Models\TaxRule;
 use App\Models\Promotion;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 // ===== HELPERS =====
 

@@ -11,7 +11,6 @@ use App\Services\InvoiceService;
 use App\Services\InvoiceGenerationService;
 use App\Services\OrderService;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 // Helper to build the service
 function makeOrderService(): OrderService

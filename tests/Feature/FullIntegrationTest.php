@@ -29,9 +29,7 @@ use App\Models\KbCategory;
 use App\Models\KbArticle;
 use App\Models\BannedIp;
 use App\Models\NetworkIssue;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('full admin workflow: login, create client, view details', function () {
     $admin = Admin::factory()->create();

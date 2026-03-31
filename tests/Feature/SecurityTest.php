@@ -3,9 +3,7 @@
 use App\Models\Admin;
 use App\Models\Client;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('admin pages redirect unauthenticated users', function () {
     $this->get(route('admin.dashboard'))->assertRedirect(route('admin.login'));

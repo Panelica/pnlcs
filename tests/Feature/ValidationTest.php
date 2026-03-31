@@ -3,9 +3,7 @@
 use App\Models\Admin;
 use App\Models\Client;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 test('store client requires first_name', function () {
     $admin = Admin::factory()->create();

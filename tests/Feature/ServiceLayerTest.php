@@ -11,9 +11,7 @@ use App\Services\TicketService;
 use App\Services\DomainService;
 use App\Services\TransactionService;
 use App\Services\AffiliateService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
 
 // ClientService tests
 test('client service creates client', function () {

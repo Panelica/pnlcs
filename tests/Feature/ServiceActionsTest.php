@@ -1,5 +1,4 @@
 <?php
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\Client;
 use App\Models\Service;
@@ -14,7 +13,6 @@ function makeAuthUserWithClient(): array
     return [$user, $client];
 }
 
-uses(RefreshDatabase::class);
 
 test('authenticated user can view service detail', function () {
     [$user, $client] = makeAuthUserWithClient();
