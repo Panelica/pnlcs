@@ -38,7 +38,7 @@
             @php
                 $pricingRecord = $product->pricing->first();
                 $startingPrice = null;
-                $startingCycle = ;
+                $startingCycle = '';
                 if ($pricingRecord) {
                     foreach (['monthly','quarterly','semiannually','annually','biennially','triennially'] as $cycle) {
                         if (isset($pricingRecord->{$cycle}) && (float)$pricingRecord->{$cycle} > 0) {
@@ -49,7 +49,7 @@
                     }
                 }
                 $currPrefix = $currency?->prefix ?? '$';
-                $currSuffix = $currency?->suffix ?? ;
+                $currSuffix = $currency?->suffix ?? '';
             @endphp
             <div class="product-card {{ $product->is_featured ? 'featured' : '' }}">
                 @if($product->is_featured)
@@ -66,7 +66,7 @@
                 @else
                     <div class="product-desc"></div>
                 @endif
-                <a href="{{ route('client.cart.configure', $product) }}" class="btn btn-primary btn-sm" style="text-align:center;">Order Now &rarr;</a>
+                <a href="{{ route('client.store.configure', $product) }}" class="btn btn-primary btn-sm" style="text-align:center;">Order Now &rarr;</a>
             </div>
             @endforeach
         </div>

@@ -45,15 +45,15 @@
     <div class="card-body" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;">
         <div style="text-align:center;padding:16px;border-right:1px solid #e5e7eb;">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:6px;">This Month</div>
-            <div style="font-size:24px;font-weight:700;color:#46a546;">${{ number_format($totalRevenue, 2) }}</div>
+            <div style="font-size:24px;font-weight:700;color:#46a546;">${{ number_format($monthIncome, 2) }}</div>
         </div>
         <div style="text-align:center;padding:16px;border-right:1px solid #e5e7eb;">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:6px;">This Week</div>
-            <div style="font-size:24px;font-weight:700;color:#337ab7;">$0.00</div>
+            <div style="font-size:24px;font-weight:700;color:#337ab7;">${{ number_format($weekIncome, 2) }}</div>
         </div>
         <div style="text-align:center;padding:16px;">
             <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#999;margin-bottom:6px;">Today</div>
-            <div style="font-size:24px;font-weight:700;color:#1a4d80;">$0.00</div>
+            <div style="font-size:24px;font-weight:700;color:#1a4d80;">${{ number_format($todayIncome, 2) }}</div>
         </div>
     </div>
 </div>

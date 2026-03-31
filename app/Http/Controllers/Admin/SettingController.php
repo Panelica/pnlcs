@@ -95,4 +95,33 @@ class SettingController extends Controller
             ]);
         }
     }
+
+    public function myAccount()
+    {
+        $admin = auth("admin")->user();
+        return view("admin.settings.my-account", compact("admin"));
+    }
+
+    public function updateMyAccount(\Illuminate\Http\Request $request)
+    {
+        $admin = auth("admin")->user();
+
+        $request->validate([
+            "first_name"   => "required|string|max:100",
+            "last_name"    => "required|string|max:100",
+            "email"        => "required|email|unique:admins,email," . $admin->id,
+            "signature"    => "nullable|string|max:1000",
+            "new_password" => "nullable|min:8|confirmed",
+        ]);
+
+        $data = $request->only(["first_name", "last_name", "email", "signature"]);
+
+        if ($request->filled("new_password")) {
+            $data["password"] = bcrypt($request->new_password);
+        }
+
+        $admin->update($data);
+
+        return back()->with("success", "Account updated successfully.");
+    }
 }

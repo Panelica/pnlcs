@@ -37,7 +37,7 @@
                     $pr = $product->pricing->first();
                     $cycles = ['monthly','quarterly','semiannually','annually'];
                     $price = null;
-                    $cycle = ;
+                    $cycle = '';
                     if ($pr) {
                         foreach ($cycles as $c) {
                             if (isset($pr->{$c}) && (float)$pr->{$c} > 0) { $price = $pr->{$c}; $cycle = $c; break; }

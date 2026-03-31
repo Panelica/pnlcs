@@ -4,7 +4,7 @@
 
 <div class="page-header">
     <h1>Shopping Cart</h1>
-    <a href="{{ route('client.cart.store') }}" class="btn btn-default btn-sm">+ Add More</a>
+    <a href="{{ route('client.store') }}" class="btn btn-default btn-sm">+ Add More</a>
 </div>
 
 @if(empty($cartItems))
@@ -12,7 +12,7 @@
     <div class="card-body" style="text-align:center; padding:48px; color:#999;">
         <div style="font-size:36px; margin-bottom:12px;">&#128722;</div>
         <p style="margin:0 0 16px;">Your cart is empty.</p>
-        <a href="{{ route('client.cart.store') }}" class="btn btn-primary">Browse Products</a>
+        <a href="{{ route('client.store') }}" class="btn btn-primary">Browse Products</a>
     </div>
 </div>
 @else

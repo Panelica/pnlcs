@@ -20,7 +20,7 @@
 
 <div class="page-header">
     <h1>Configure: {{ $product->name }}</h1>
-    <a href="{{ route('client.cart.store') }}" class="btn btn-default btn-sm">&larr; Back</a>
+    <a href="{{ route('client.store') }}" class="btn btn-default btn-sm">&larr; Back</a>
 </div>
 
 <form method="POST" action="{{ route('client.cart.add') }}" id="configForm">

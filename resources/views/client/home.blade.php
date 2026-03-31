@@ -26,7 +26,7 @@
     <h1 style="font-size:20px; font-weight:600; margin:0;">Welcome, {{ auth()->user()->first_name }}</h1>
     <div style="display:flex; gap:8px;">
         <a href="{{ route('client.tickets.create') }}" class="btn btn-primary btn-sm">Open Ticket</a>
-        <a href="{{ route('client.cart.store') }}" class="btn btn-default btn-sm">Order Service</a>
+        <a href="{{ route('client.store') }}" class="btn btn-default btn-sm">Order Service</a>
     </div>
 </div>
 
@@ -182,7 +182,7 @@
 <div class="quick-actions">
     <a href="{{ route('client.tickets.create') }}" class="btn btn-default">&#128101; Open Support Ticket</a>
     <a href="#" class="btn btn-default">&#127760; Register Domain</a>
-    <a href="{{ route('client.cart.store') }}" class="btn btn-default">&#128722; Order New Service</a>
+    <a href="{{ route('client.store') }}" class="btn btn-default">&#128722; Order New Service</a>
     <a href="{{ route('client.funds.index') }}" class="btn btn-default">&#128176; Add Funds</a>
 </div>
 

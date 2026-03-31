@@ -4,7 +4,7 @@
 
 <div class="page-header">
     <h1>My Services</h1>
-    <a href="{{ route('client.cart.store') }}" class="btn btn-primary btn-sm">Order New Service</a>
+    <a href="{{ route('client.store') }}" class="btn btn-primary btn-sm">Order New Service</a>
 </div>
 
 <div class="card">
@@ -35,7 +35,7 @@
                 @empty
                 <tr>
                     <td colspan="6" style="text-align:center; padding:32px; color:#999;">
-                        No services found. <a href="{{ route('client.cart.store') }}" style="color:#337ab7;">Order one now</a>
+                        No services found. <a href="{{ route('client.store') }}" style="color:#337ab7;">Order one now</a>
                     </td>
                 </tr>
                 @endforelse

@@ -66,7 +66,7 @@
                 </a>
                 <div class="dropdown-menu">
                     <a href="{{ route('client.services.index') }}">My Services</a>
-                    <a href="{{ route('client.cart.store') }}">Order New Service</a>
+                    <a href="{{ route('client.store') }}">Order New Service</a>
                 </div>
             </div>
 
@@ -137,7 +137,7 @@
         <a href="{{ route('client.home') }}">Dashboard</a>
         <div class="mobile-section">Services</div>
         <a href="{{ route('client.services.index') }}">My Services</a>
-        <a href="{{ route('client.cart.store') }}">Order New Service</a>
+        <a href="{{ route('client.store') }}">Order New Service</a>
         <div class="mobile-section">Domains</div>
         <a href="{{ route('client.domains.index') }}">My Domains</a>
         <div class="mobile-section">Billing</div>

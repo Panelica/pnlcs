@@ -7,6 +7,13 @@
     <title>@yield("title", "Admin") - PNLCS</title>
     @vite(["resources/css/app.css"])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    <style>
+        .sidebar.collapsed { width: 0 !important; min-height: 0; overflow: hidden; padding: 0; border: 0; }
+        .sidebar.collapsed + .contentarea { margin-left: 0 !important; border-left: none; }
+        .sidebar-toggle-btn { position: fixed; bottom: 16px; left: 16px; z-index: 2000; width: 28px; height: 28px; background: #1a4d80; color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 28px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: left 0.2s; }
+        .sidebar.collapsed ~ .sidebar-toggle-btn { left: 8px; }
+        @media (max-width: 768px) { .sidebar-toggle-btn { display: none; } }
+    </style>
 </head>
 <body>
 
@@ -196,7 +203,7 @@
                     <i class="fas fa-user"></i> {{ auth('admin')->user()->full_name ?? 'Admin' }}
                 </a>
                 <ul class="dropdown-menu" style="right:0; left:auto;">
-                    <li><a href="{{ route('admin.config.admins') }}">My Account</a></li>
+                    <li><a href="{{ route('admin.my-account') }}">My Account</a></li>
                     <li><a href="/" target="_blank">Client Area</a></li>
                     <li class="divider"></li>
                     <li>
@@ -478,6 +485,20 @@
 </div>
 
 @vite(["resources/js/app.js"])
+<button class="sidebar-toggle-btn" id="sidebarToggle" title="Toggle sidebar" onclick="toggleSidebar()">&#9776;</button>
+<script>
+(function(){
+    var collapsed = localStorage.getItem("pnlcs_sidebar_collapsed") === "1";
+    var sidebar = document.getElementById("sidebar");
+    if (sidebar && collapsed) sidebar.classList.add("collapsed");
+})();
+function toggleSidebar() {
+    var sidebar = document.getElementById("sidebar");
+    if (!sidebar) return;
+    sidebar.classList.toggle("collapsed");
+    localStorage.setItem("pnlcs_sidebar_collapsed", sidebar.classList.contains("collapsed") ? "1" : "0");
+}
+</script>
 @stack('scripts')
 </body>
 </html>

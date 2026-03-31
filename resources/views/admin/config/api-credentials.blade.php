@@ -12,21 +12,21 @@
 @endif
 
 <div class="card">
-    @if(($apiKeys ?? collect())->isEmpty())
+    @if(($credentials ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No API keys configured.</div>
     @else
     <table class="data-table">
         <thead><tr><th>Name</th><th>API Key</th><th>Permissions</th><th>Created</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
         <tbody>
-        @foreach($apiKeys as $key)
+        @foreach($credentials as $credential)
         <tr>
-            <td style="font-weight:600;">{{ $key->name }}</td>
-            <td><span style="font-family:monospace;font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">{{ substr($key->api_key, 0, 8) }}...{{ substr($key->api_key, -4) }}</span></td>
-            <td style="font-size:12px;">{{ $key->permissions ?? 'All' }}</td>
-            <td style="font-size:12px;color:#777;">{{ $key->created_at->format('d M Y') }}</td>
-            <td><span class="badge-{{ $key->disabled ? 'suspended' : 'active' }}">{{ $key->disabled ? 'Disabled' : 'Active' }}</span></td>
+            <td style="font-weight:600;">{{ $credential->name }}</td>
+            <td><span style="font-family:monospace;font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">{{ substr($credential->api_key, 0, 8) }}...{{ substr($credential->api_key, -4) }}</span></td>
+            <td style="font-size:12px;">{{ $credential->permissions ?? 'All' }}</td>
+            <td style="font-size:12px;color:#777;">{{ $credential->created_at->format('d M Y') }}</td>
+            <td><span class="badge-{{ $credential->disabled ? 'suspended' : 'active' }}">{{ $credential->disabled ? 'Disabled' : 'Active' }}</span></td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $key) }}" style="display:inline;" onsubmit="return confirm('Revoke this API key?')">
+                <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $credential) }}" style="display:inline;" onsubmit="return confirm('Revoke this API key?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">Revoke</button>
                 </form>
