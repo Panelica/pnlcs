@@ -43,8 +43,8 @@
         .pn-nav-link.active{color:var(--primary);background:var(--primary-light)}
         .pn-chevron{width:12px;height:12px;transition:transform 0.2s}
         .pn-nav-item:hover .pn-chevron{transform:rotate(180deg)}
-        .pn-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:200px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);z-index:999;padding:6px;overflow:hidden}
-        .pn-nav-item:hover .pn-dropdown,.pn-nav-item.open .pn-dropdown{display:block}
+        .pn-dropdown{display:none;position:absolute;top:100%;left:0;min-width:200px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);z-index:999;padding:6px;overflow:hidden}
+        .pn-nav-item:hover .pn-dropdown,.pn-nav-item.open .pn-dropdown{display:block}.pn-dropdown::before{content:"";position:absolute;top:-10px;left:0;right:0;height:10px}
         .pn-dropdown a{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;font-weight:500;color:var(--text);text-decoration:none;border-radius:8px;transition:all 0.12s}
         .pn-dropdown a:hover{background:var(--primary-light);color:var(--primary)}
         .pn-dropdown .sep{height:1px;background:var(--border);margin:4px 0}
