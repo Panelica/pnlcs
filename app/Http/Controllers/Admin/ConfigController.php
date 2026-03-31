@@ -571,7 +571,7 @@ class ConfigController extends Controller
     }
     public function testServerConnection(Server $server) {
         $host = $server->hostname ?? $server->ip_address;
-        $port = $server->port ?? 22;
+        $port = $server->port ?? match($server->type) { "panelica" => 8443, "cpanel" => 2087, "plesk" => 8443, "directadmin" => 2222, default => 22 };
         if (empty($host)) {
             return back()->with("error", "No hostname or IP address configured for this server.");
         }
