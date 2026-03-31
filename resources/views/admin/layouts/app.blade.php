@@ -183,6 +183,7 @@
                     <li><a href="{{ route('admin.config.email-templates') }}">Email Templates</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.settings.general') }}">General Settings</a></li>
+                    <li><a href="{{ route('admin.settings.general') }}#mail">Mail Settings</a></li>
                     <li><a href="{{ route('admin.config.banned-ips') }}">Banned IPs</a></li>
                     <li><a href="{{ route('admin.config.banned-emails') }}">Banned Emails</a></li>
                     <li><a href="{{ route('admin.config.client-groups') }}">Client Groups</a></li>
@@ -383,6 +384,7 @@
         <div class="sidebar-header"><i class="fas fa-wrench"></i> Other</div>
         <ul class="menu">
             <li><a href="{{ route('admin.settings.general') }}" @if($routeName === 'admin.settings.general') class="active" @endif>General Settings</a></li>
+            <li><a href="{{ route('admin.settings.general') }}#mail" @if($routeName === 'admin.settings.general') class="active" @endif>Mail Settings</a></li>
             <li><a href="{{ route('admin.config.client-groups') }}" @if($routeName === 'admin.config.client-groups') class="active" @endif>Client Groups</a></li>
             <li><a href="{{ route('admin.config.banned-ips') }}" @if($routeName === 'admin.config.banned-ips') class="active" @endif>Banned IPs</a></li>
             <li><a href="{{ route('admin.config.banned-emails') }}" @if($routeName === 'admin.config.banned-emails') class="active" @endif>Banned Emails</a></li>
