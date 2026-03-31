@@ -274,10 +274,10 @@
                 <a href="{{ route("client.home") }}" class="pn-nav-link {{ request()->routeIs("client.home") ? "active" : "" }}">Dashboard</a>
             </div>
             <div class="pn-nav-item">
-                <span class="pn-nav-link {{ request()->routeIs("client.services.*") || request()->routeIs("client.store*") ? "active" : "" }}">
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.services.*") || request()->routeIs("client.store*") ? "active" : "" }}">
                     Services
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                </span>
+                </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.services.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -290,10 +290,10 @@
                 </div>
             </div>
             <div class="pn-nav-item">
-                <span class="pn-nav-link {{ request()->routeIs("client.domains.*") ? "active" : "" }}">
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.domains.*") ? "active" : "" }}">
                     Domains
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                </span>
+                </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.domains.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
@@ -304,10 +304,10 @@
                 </div>
             </div>
             <div class="pn-nav-item">
-                <span class="pn-nav-link {{ request()->routeIs("client.invoices.*") || request()->routeIs("client.funds.*") ? "active" : "" }}">
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.invoices.*") || request()->routeIs("client.funds.*") ? "active" : "" }}">
                     Billing
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                </span>
+                </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.invoices.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -320,10 +320,10 @@
                 </div>
             </div>
             <div class="pn-nav-item">
-                <span class="pn-nav-link {{ request()->routeIs("client.tickets.*") || request()->routeIs("client.kb.*") || request()->routeIs("client.announcements.*") || request()->routeIs("client.contact") || request()->routeIs("client.downloads.*") ? "active" : "" }}">
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.tickets.*") || request()->routeIs("client.kb.*") || request()->routeIs("client.announcements.*") || request()->routeIs("client.contact") || request()->routeIs("client.downloads.*") ? "active" : "" }}">
                     Support
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                </span>
+                </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.tickets.create") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -345,10 +345,10 @@
                 </div>
             </div>
             <div class="pn-nav-item">
-                <span class="pn-nav-link {{ request()->routeIs("client.account.*") ? "active" : "" }}">
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.account.*") ? "active" : "" }}">
                     Account
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-                </span>
+                </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.account.profile") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -478,7 +478,7 @@
 @yield("scripts")
 <script>
 // Dropdown click toggle for mobile/touch
-document.querySelectorAll(".pn-nav-item > .pn-nav-link").forEach(function(link) {
+document.querySelectorAll(".pn-nav-item > .pn-nav-link, .pn-nav-item > button.pn-nav-link").forEach(function(link) {
     link.addEventListener("click", function(e) {
         var item = this.closest(".pn-nav-item");
         if (item.querySelector(".pn-dropdown")) {
