@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<div class="pn-card" style="max-width:720px">
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">New Support Request</span></div>
     <div class="pn-card-body">
         @if($errors->any())
@@ -72,4 +72,24 @@
     </div>
 </div>
 
+</div>
+<div>
+<div class="pn-card">
+<div class="pn-card-header"><span class="pn-card-title">Before You Submit</span></div>
+<div class="pn-card-body" style="font-size:13px;color:var(--muted)">
+<p style="margin-bottom:12px">Please check these resources first:</p>
+<a href="/client/knowledgebase" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:600;margin-bottom:8px">Knowledge Base</a>
+<a href="/client/announcements" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:600;margin-bottom:8px">Announcements</a>
+</div>
+</div>
+<div class="pn-card" style="margin-top:16px">
+<div class="pn-card-header"><span class="pn-card-title">Response Times</span></div>
+<div class="pn-card-body" style="font-size:13px">
+<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">Low Priority</span><strong>24 hours</strong></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">Medium Priority</span><strong>12 hours</strong></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0"><span style="color:var(--muted)">High Priority</span><strong style="color:#ef4444">4 hours</strong></div>
+</div>
+</div>
+</div>
+</div>
 @endsection

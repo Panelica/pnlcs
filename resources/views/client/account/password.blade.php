@@ -16,7 +16,7 @@
     </div>
 </div>
 
-<div class="pn-card" style="max-width:480px">
+<div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">Update Password</span></div>
     <div class="pn-card-body">
         @if($errors->any())
@@ -48,6 +48,28 @@
     </div>
 </div>
 
+</div>
+<div>
+<div class="pn-card">
+<div class="pn-card-header"><span class="pn-card-title">Password Tips</span></div>
+<div class="pn-card-body">
+<ul style="list-style:none;padding:0;margin:0;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:10px;">
+<li style="display:flex;gap:8px;align-items:start"><span style="color:var(--accent);font-weight:700">1</span> Use at least 12 characters</li>
+<li style="display:flex;gap:8px;align-items:start"><span style="color:var(--accent);font-weight:700">2</span> Mix uppercase, lowercase, numbers &amp; symbols</li>
+<li style="display:flex;gap:8px;align-items:start"><span style="color:var(--accent);font-weight:700">3</span> Avoid dictionary words or personal info</li>
+<li style="display:flex;gap:8px;align-items:start"><span style="color:var(--accent);font-weight:700">4</span> Use a unique password for each site</li>
+<li style="display:flex;gap:8px;align-items:start"><span style="color:var(--accent);font-weight:700">5</span> Consider using a password manager</li>
+</ul>
+</div>
+</div>
+<div class="pn-card" style="margin-top:16px">
+<div class="pn-card-body" style="text-align:center;padding:20px">
+<div style="font-size:32px;margin-bottom:8px">&#128274;</div>
+<div style="font-size:13px;color:var(--muted)">Your password was last changed<br><strong style="color:var(--text)">Never</strong></div>
+</div>
+</div>
+</div>
+</div>
 @section("scripts")
 <script>
 function checkStrength(v) {

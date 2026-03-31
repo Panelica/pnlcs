@@ -12,7 +12,7 @@
     @if($service->domain) &mdash; {{ $service->domain }}@endif
 </div>
 
-<div class="card" style="max-width:600px;">
+<div class="pn-card">
     <div class="card-header">Cancellation Request</div>
     <div class="card-body">
         @if($errors->any())

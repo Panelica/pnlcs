@@ -6,7 +6,7 @@
     <h1>Security Settings</h1>
 </div>
 
-<div class="card" style="max-width:640px; margin-bottom:20px;">
+<div class="pn-card" style="margin-bottom:20px;">
     <div class="card-header">Two-Factor Authentication</div>
     <div class="card-body">
         <p style="font-size:13px; color:#555; margin-bottom:16px;">
@@ -30,7 +30,7 @@
     </div>
 </div>
 
-<div class="card" style="max-width:640px;">
+<div class="pn-card">
     <div class="card-header">Active Sessions</div>
     <div class="card-body" style="padding:0;">
         <table class="data-table">

@@ -1,7 +1,7 @@
 @extends("client.layouts.app")
 @section("title", "Domain Pricing")
 @section("content")
-<div style="max-width:1000px;margin:0 auto;padding:24px 16px;">
+<div style="max-width:100%;padding:0;">
 
     <div style="text-align:center;margin-bottom:40px;">
         <h1 style="font-size:32px;font-weight:800;color:#1a4d80;margin-bottom:8px;">Domain Pricing</h1>

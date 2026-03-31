@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<div class="pn-card" style="max-width:680px">
+<div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">Personal Information</span></div>
     <div class="pn-card-body">
         @if($errors->any())

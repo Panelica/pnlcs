@@ -7,7 +7,7 @@
     All Announcements
 </a>
 
-<div class="pn-card" style="max-width:820px">
+<div class="pn-card">
     <div class="pn-card-header">
         <div>
             <div style="font-size:18px;font-weight:800;color:var(--primary);letter-spacing:-0.3px">{{ $announcement->title }}</div>

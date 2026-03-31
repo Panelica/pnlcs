@@ -10,7 +10,7 @@
 </div>
 
 @php $credit = auth()->user()->credit ?? 0; @endphp
-<div class="pn-card mb-24" style="max-width:520px;background:linear-gradient(135deg,var(--primary),#1e5fa0);border:none">
+<div class="pn-card mb-24" style="max-width:100%;background:linear-gradient(135deg,var(--primary),#1e5fa0);border:none">
     <div class="pn-card-body" style="text-align:center;padding:28px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(255,255,255,0.65);margin-bottom:8px">Current Account Credit</div>
         <div style="font-size:42px;font-weight:900;color:#fff;letter-spacing:-1px">${{ number_format($credit, 2) }}</div>
@@ -18,7 +18,7 @@
     </div>
 </div>
 
-<div class="pn-card" style="max-width:520px">
+<div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">Select Amount</span></div>
     <div class="pn-card-body">
         @if($errors->any())
