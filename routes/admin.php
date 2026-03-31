@@ -55,7 +55,9 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     // Settings
     Route::get("settings", [SettingController::class, "general"])->name("settings.general");
     Route::post("settings", [SettingController::class, "updateGeneral"])->name("settings.general.update");
+
+    // Reports
+    Route::get("reports", [\App\Http\Controllers\Admin\ReportController::class, "index"])->name("reports.index");
+    Route::get("reports/{slug}", [\App\Http\Controllers\Admin\ReportController::class, "show"])->name("reports.show");
 });
 
-// The following routes need to be inside the admin middleware group
-// Appending here - they will be placed properly
