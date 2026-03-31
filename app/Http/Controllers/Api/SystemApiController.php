@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Service;
 use App\Models\Setting;
+use Illuminate\Http\Request;
 use App\Models\Ticket;
 
 class SystemApiController extends BaseApiController
