@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\QuoteController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Admin\WhoisController;
 use Illuminate\Support\Facades\Route;
 
 Route::get("/admin/login", [AuthController::class, "showLogin"])->name("admin.login");
@@ -239,5 +240,9 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
 
     // API Documentation
     Route::get("api-docs", [ConfigController::class, "apiDocs"])->name("api-docs");
+
+    // WHOIS Lookup
+    Route::get("whois", [WhoisController::class, "index"])->name("whois.index");
+    Route::post("whois", [WhoisController::class, "lookup"])->name("whois.lookup");
 
 });

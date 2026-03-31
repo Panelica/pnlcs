@@ -14,6 +14,7 @@ use App\Http\Controllers\Client\InvoiceController;
 use App\Http\Controllers\Client\KbController;
 use App\Http\Controllers\Client\ServiceController;
 use App\Http\Controllers\Client\TicketController;
+use App\Http\Controllers\DomainSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('client')->name('client.')->group(function () {
@@ -33,6 +34,11 @@ Route::prefix('client')->name('client.')->group(function () {
     // Contact (public)
     Route::get('contact', [ContactController::class, 'show'])->name('contact');
     Route::post('contact', [ContactController::class, 'submit'])->name('contact.submit');
+
+    // Domain Search (public — no auth required)
+    Route::get(domain-search, [DomainSearchController::class, index])->name(domain.search);
+    Route::post(domain-search, [DomainSearchController::class, check])->name(domain.check);
+    Route::get(domain-pricing, [DomainSearchController::class, pricing])->name(domain.pricing);
 
     // Store — public browsing
     Route::get('store', [CartController::class, 'store'])->name('store');
