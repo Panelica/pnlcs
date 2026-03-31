@@ -8,7 +8,7 @@ Route::get('/', function () {
 });
 
 // ===== Gateway Webhooks (no CSRF — verified by signature) =====
-Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->group(function () {
+Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->group(function () {
     Route::post('gateway/paypal/webhook',    [GatewayWebhookController::class, 'paypal'])->name('gateway.paypal.webhook');
     Route::post('gateway/stripe/webhook',    [GatewayWebhookController::class, 'stripe'])->name('gateway.stripe.webhook');
     Route::post('gateway/authorize/webhook', [GatewayWebhookController::class, 'authorize'])->name('gateway.authorize.webhook');
