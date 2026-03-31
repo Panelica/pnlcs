@@ -15,6 +15,16 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->callSeeders();
+    
+        $this->call(EmailTemplateSeeder::class);
+    }
+}
+
+    private function callSeeders(): void
+{
+    public function run(): void
+    {
         // Admin role + user
         $role = AdminRole::firstOrCreate(
             ["name" => "Full Administrator"],
@@ -44,7 +54,10 @@ class DatabaseSeeder extends Seeder
         ];
         foreach ($settings as $s) {
             Setting::firstOrCreate(["setting" => $s["setting"]], $s);
-        }
+        
+        $this->call(EmailTemplateSeeder::class);
+    }
+}
 
         // Default ticket departments
         TicketDepartment::firstOrCreate(["name" => "General"], ["description" => "General inquiries", "email" => "support@pnlcs.com"]);
@@ -69,5 +82,11 @@ class DatabaseSeeder extends Seeder
             ["name" => "Billing Manager"],
             ["description" => "Billing and orders", "permissions" => ["list_clients", "view_clients", "add_clients", "list_invoices", "create_invoice", "edit_invoice", "list_transactions", "view_orders", "accept_order"]]
         );
+    
+        $this->call(EmailTemplateSeeder::class);
+    }
+}
+
+        $this->call(EmailTemplateSeeder::class);
     }
 }
