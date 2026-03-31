@@ -11,7 +11,7 @@
     <div class="card-body">
         <form method="POST" action="{{ route('admin.whois.lookup') }}">
             @csrf
-            @if($errors->any())
+            @if(isset($errors) && $errors->any())
             <div class="alert alert-danger" style="margin-bottom:16px;">{{ $errors->first() }}</div>
             @endif
             <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
