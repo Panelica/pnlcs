@@ -172,6 +172,7 @@
                     <li><a href="{{ route('admin.config.admins') }}">Admin Accounts</a></li>
                     <li><a href="{{ route('admin.config.admin-roles') }}">Admin Roles</a></li>
                     <li><a href="{{ route('admin.config.api-credentials') }}">API Credentials</a></li>
+                    <li><a href="{{ route('admin.api-docs') }}">API Documentation</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.products.index') }}">Products/Services</a></li>
                     <li><a href="{{ route('admin.config.servers') }}">Servers</a></li>
@@ -355,6 +356,7 @@
             <li><a href="{{ route('admin.config.admins') }}" @if($routeName === 'admin.config.admins') class="active" @endif>Administrator Accounts</a></li>
             <li><a href="{{ route('admin.config.admin-roles') }}" @if($routeName === 'admin.config.admin-roles') class="active" @endif>Administrator Roles</a></li>
             <li><a href="{{ route('admin.config.api-credentials') }}" @if($routeName === 'admin.config.api-credentials') class="active" @endif>API Credentials</a></li>
+            <li><a href="{{ route('admin.api-docs') }}" @if($routeName === 'admin.api-docs') class="active" @endif>API Documentation</a></li>
         </ul>
 
         <div class="sidebar-header"><i class="fas fa-credit-card"></i> Payments</div>

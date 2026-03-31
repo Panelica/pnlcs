@@ -237,4 +237,7 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::get("logs/module", [LogController::class, "module"])->name("logs.module");
     Route::get("logs/email", [LogController::class, "email"])->name("logs.email");
 
+    // API Documentation
+    Route::get("api-docs", [ConfigController::class, "apiDocs"])->name("api-docs");
+
 });

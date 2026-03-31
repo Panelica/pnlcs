@@ -744,4 +744,11 @@ class ConfigController extends Controller
         $group->delete();
         return back()->with("success", "Client group deleted.");
     }
+
+    // ===== API DOCS =====
+
+    public function apiDocs()
+    {
+        return view('admin.api-docs');
+    }
 }
