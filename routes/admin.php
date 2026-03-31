@@ -59,5 +59,6 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     // Reports
     Route::get("reports", [\App\Http\Controllers\Admin\ReportController::class, "index"])->name("reports.index");
     Route::get("reports/{slug}", [\App\Http\Controllers\Admin\ReportController::class, "show"])->name("reports.show");
+
 });
 
