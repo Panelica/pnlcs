@@ -2,135 +2,121 @@
 
 use App\Models\Admin;
 use App\Models\AdminRole;
-use Livewire\Livewire;
-use App\Livewire\Admin\Auth\Login;
 
-test("admin login page loads", function () {
-    $response = $this->get(route("admin.login"));
-    $response->assertStatus(200);
+test('admin login page loads', function () {
+    $response = $this->get(route('admin.login'));
+    $response->assertStatus(200)->assertSee('PNLCS');
 });
 
-test("admin can login with valid credentials via livewire", function () {
+test('admin can login with valid credentials', function () {
     $role = AdminRole::factory()->fullAdmin()->create();
     $admin = Admin::factory()->create([
-        "role_id" => $role->id,
-        "username" => "testadmin",
-        "password" => "secret123",
+        'role_id' => $role->id,
+        'username' => 'testadmin',
+        'password' => 'secret123',
     ]);
 
-    Livewire::test(Login::class)
-        ->set("username", "testadmin")
-        ->set("password", "secret123")
-        ->call("login")
-        ->assertHasNoErrors()
-        ->assertRedirect(route("admin.dashboard"));
+    $response = $this->post(route('admin.login.submit'), [
+        'username' => 'testadmin',
+        'password' => 'secret123',
+    ]);
 
-    $this->assertAuthenticatedAs($admin, "admin");
+    $response->assertRedirect(route('admin.dashboard'));
+    $this->assertAuthenticatedAs($admin, 'admin');
 });
 
-test("admin cannot login with invalid credentials", function () {
+test('admin cannot login with invalid credentials', function () {
     $role = AdminRole::factory()->fullAdmin()->create();
     Admin::factory()->create([
-        "role_id" => $role->id,
-        "username" => "testadmin",
-        "password" => "secret123",
+        'role_id' => $role->id,
+        'username' => 'testadmin',
+        'password' => 'secret123',
     ]);
 
-    Livewire::test(Login::class)
-        ->set("username", "testadmin")
-        ->set("password", "wrongpassword")
-        ->call("login")
-        ->assertHasErrors("username");
+    $response = $this->post(route('admin.login.submit'), [
+        'username' => 'testadmin',
+        'password' => 'wrongpassword',
+    ]);
 
-    $this->assertGuest("admin");
+    $response->assertSessionHasErrors('username');
+    $this->assertGuest('admin');
 });
 
-test("disabled admin cannot login", function () {
+test('disabled admin cannot login', function () {
     $role = AdminRole::factory()->fullAdmin()->create();
     Admin::factory()->create([
-        "role_id" => $role->id,
-        "username" => "disabled",
-        "password" => "secret123",
-        "is_disabled" => true,
+        'role_id' => $role->id,
+        'username' => 'disabled',
+        'password' => 'secret123',
+        'is_disabled' => true,
     ]);
 
-    Livewire::test(Login::class)
-        ->set("username", "disabled")
-        ->set("password", "secret123")
-        ->call("login")
-        ->assertHasErrors("username");
+    $response = $this->post(route('admin.login.submit'), [
+        'username' => 'disabled',
+        'password' => 'secret123',
+    ]);
 
-    $this->assertGuest("admin");
+    $response->assertSessionHasErrors('username');
+    $this->assertGuest('admin');
 });
 
-test("unauthenticated admin is redirected to login", function () {
-    $response = $this->get(route("admin.dashboard"));
-    $response->assertRedirect(route("admin.login"));
+test('unauthenticated admin is redirected to login', function () {
+    $response = $this->get(route('admin.dashboard'));
+    $response->assertRedirect(route('admin.login'));
 });
 
-test("authenticated admin can access dashboard", function () {
+test('authenticated admin can access dashboard', function () {
     $role = AdminRole::factory()->fullAdmin()->create();
-    $admin = Admin::factory()->create(["role_id" => $role->id]);
+    $admin = Admin::factory()->create(['role_id' => $role->id]);
 
-    $response = $this->actingAs($admin, "admin")
-        ->get(route("admin.dashboard"));
-
-    $response->assertStatus(200)
-        ->assertSee("Welcome to PNLCS");
+    $response = $this->actingAs($admin, 'admin')->get(route('admin.dashboard'));
+    $response->assertStatus(200)->assertSee('Welcome to PNLCS');
 });
 
-test("admin can logout", function () {
+test('admin can logout', function () {
     $role = AdminRole::factory()->fullAdmin()->create();
-    $admin = Admin::factory()->create(["role_id" => $role->id]);
+    $admin = Admin::factory()->create(['role_id' => $role->id]);
 
-    $this->actingAs($admin, "admin")
-        ->post(route("admin.logout"));
-
-    $this->assertGuest("admin");
+    $this->actingAs($admin, 'admin')->post(route('admin.logout'));
+    $this->assertGuest('admin');
 });
 
-test("admin last login is updated on login", function () {
+test('admin last login is updated', function () {
     $role = AdminRole::factory()->fullAdmin()->create();
     $admin = Admin::factory()->create([
-        "role_id" => $role->id,
-        "username" => "logintrack",
-        "password" => "secret123",
-        "last_login" => null,
+        'role_id' => $role->id,
+        'username' => 'logintrack',
+        'password' => 'secret123',
+        'last_login' => null,
     ]);
 
-    Livewire::test(Login::class)
-        ->set("username", "logintrack")
-        ->set("password", "secret123")
-        ->call("login");
+    $this->post(route('admin.login.submit'), [
+        'username' => 'logintrack',
+        'password' => 'secret123',
+    ]);
 
     $admin->refresh();
     expect($admin->last_login)->not->toBeNull();
 });
 
-test("admin permission middleware blocks unauthorized access", function () {
-    $role = AdminRole::factory()->create([
-        "permissions" => ["list_clients"],
-    ]);
-    $admin = Admin::factory()->create(["role_id" => $role->id]);
+test('permission middleware blocks unauthorized', function () {
+    $role = AdminRole::factory()->create(['permissions' => ['list_clients']]);
+    $admin = Admin::factory()->create(['role_id' => $role->id]);
 
-    Route::middleware(["web", "admin.auth", "admin.permission:delete_clients"])
-        ->get("/admin/test-permission", fn () => "OK");
+    Route::middleware(['web', 'admin.auth', 'admin.permission:delete_clients'])
+        ->get('/admin/test-perm', fn () => 'OK');
 
-    $response = $this->actingAs($admin, "admin")
-        ->get("/admin/test-permission");
-
+    $response = $this->actingAs($admin, 'admin')->get('/admin/test-perm');
     $response->assertStatus(403);
 });
 
-test("full admin bypasses all permission checks", function () {
+test('full admin bypasses permissions', function () {
     $role = AdminRole::factory()->fullAdmin()->create();
-    $admin = Admin::factory()->create(["role_id" => $role->id]);
+    $admin = Admin::factory()->create(['role_id' => $role->id]);
 
-    Route::middleware(["web", "admin.auth", "admin.permission:nonexistent"])
-        ->get("/admin/test-bypass", fn () => "OK");
+    Route::middleware(['web', 'admin.auth', 'admin.permission:anything'])
+        ->get('/admin/test-bypass', fn () => 'OK');
 
-    $response = $this->actingAs($admin, "admin")
-        ->get("/admin/test-bypass");
-
+    $response = $this->actingAs($admin, 'admin')->get('/admin/test-bypass');
     $response->assertStatus(200);
 });

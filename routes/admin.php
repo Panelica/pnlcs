@@ -1,19 +1,15 @@
 <?php
 
-use App\Livewire\Admin\Auth\Login;
-use App\Livewire\Admin\Dashboard;
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/admin/login', Login::class)->name('admin.login');
+// Admin auth
+Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
+Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login.submit');
 
+// Admin authenticated
 Route::middleware(['admin.auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/', Dashboard::class)->name('dashboard');
-
-    Route::post('/logout', function () {
-        auth('admin')->logout();
-        session()->invalidate();
-        session()->regenerateToken();
-
-        return redirect()->route('admin.login');
-    })->name('logout');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
