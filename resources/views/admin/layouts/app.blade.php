@@ -135,13 +135,13 @@
     </div>
     <div class="sb-section">
         <div class="sb-hdr">Orders</div>
-        <a href="{{ route("admin.orders.index") }}" class="sb-link {{ request()->routeIs("admin.orders.*") ? "active" : "" }}"><span class="ico">&#128722;</span> All Orders @php $pendingCnt = \App\Models\Order::where("status","pending")->count(); @endphp @if($pendingCnt > 0)<span class="sb-badge">{{ $pendingCnt }}</span>@endif</a>
+        <a href="{{ route("admin.orders.index") }}" class="sb-link {{ request()->routeIs("admin.orders.*") ? "active" : "" }}"><span class="ico">&#128722;</span> All Orders @if($sidebarCounts->pending_orders > 0)<span class="sb-badge">{{ $sidebarCounts->pending_orders }}</span>@endif</a>
         <a href="{{ route("admin.orders.index") }}?status=pending" class="sb-link" style="padding-left:28px;font-size:12px;color:rgba(255,255,255,0.5);">&#8627; Pending</a>
         <a href="{{ route("admin.orders.index") }}?status=fraud" class="sb-link" style="padding-left:28px;font-size:12px;color:rgba(255,255,255,0.5);">&#8627; Fraud</a>
     </div>
     <div class="sb-section">
         <div class="sb-hdr">Billing</div>
-        <a href="{{ route("admin.invoices.index") }}" class="sb-link {{ request()->routeIs("admin.invoices.*") ? "active" : "" }}"><span class="ico">&#128196;</span> Invoices @php $unpaidCnt = \App\Models\Invoice::where("status","unpaid")->count() + \App\Models\Invoice::where("status","overdue")->count(); @endphp @if($unpaidCnt > 0)<span class="sb-badge">{{ $unpaidCnt }}</span>@endif</a>
+        <a href="{{ route("admin.invoices.index") }}" class="sb-link {{ request()->routeIs("admin.invoices.*") ? "active" : "" }}"><span class="ico">&#128196;</span> Invoices @if(($sidebarCounts->unpaid_invoices + $sidebarCounts->overdue_invoices) > 0)<span class="sb-badge">{{ $sidebarCounts->unpaid_invoices + $sidebarCounts->overdue_invoices }}</span>@endif</a>
         <a href="{{ route("admin.invoices.index") }}?status=unpaid" class="sb-link" style="padding-left:28px;font-size:12px;color:rgba(255,255,255,0.5);">&#8627; Unpaid</a>
         <a href="{{ route("admin.invoices.index") }}?status=overdue" class="sb-link" style="padding-left:28px;font-size:12px;color:rgba(255,255,255,0.5);">&#8627; Overdue</a>
         <a href="{{ route("admin.config.transactions") }}" class="sb-link {{ request()->routeIs("admin.config.transactions") ? "active" : "" }}"><span class="ico">&#128178;</span> Transactions</a>
@@ -151,7 +151,7 @@
     </div>
     <div class="sb-section">
         <div class="sb-hdr">Support</div>
-        <a href="{{ route("admin.tickets.index") }}" class="sb-link {{ request()->routeIs("admin.tickets.*") ? "active" : "" }}"><span class="ico">&#127915;</span> Tickets @php $openTix = \App\Models\Ticket::whereIn("status",["Open","Customer-Reply"])->count(); @endphp @if($openTix > 0)<span class="sb-badge">{{ $openTix }}</span>@endif</a>
+        <a href="{{ route("admin.tickets.index") }}" class="sb-link {{ request()->routeIs("admin.tickets.*") ? "active" : "" }}"><span class="ico">&#127915;</span> Tickets @if($sidebarCounts->open_tickets > 0)<span class="sb-badge">{{ $sidebarCounts->open_tickets }}</span>@endif</a>
         <a href="{{ route("admin.tickets.index") }}?status=Open" class="sb-link" style="padding-left:28px;font-size:12px;color:rgba(255,255,255,0.5);">&#8627; Open</a>
         <a href="{{ route("admin.tickets.index") }}?status=Customer-Reply" class="sb-link" style="padding-left:28px;font-size:12px;color:rgba(255,255,255,0.5);">&#8627; Awaiting Reply</a>
         <a href="{{ route("admin.tickets.index") }}?priority=High" class="sb-link" style="padding-left:28px;font-size:12px;color:rgba(255,255,255,0.5);">&#8627; High Priority</a>
@@ -198,12 +198,12 @@
             <a href="{{ route("admin.clients.create") }}" class="cs-link"><span class="ico">&#43;</span> Add Client</a>
             <a href="{{ route("admin.invoices.create") }}" class="cs-link"><span class="ico">&#128196;</span> New Invoice</a>
             <a href="{{ route("admin.quotes.create") }}" class="cs-link"><span class="ico">&#128203;</span> New Quote</a>
-            <a href="{{ route("admin.tickets.index") }}" class="cs-link"><span class="ico">&#127915;</span> Support Tickets @php $openTix2 = \App\Models\Ticket::whereIn("status",["Open","Customer-Reply"])->count(); @endphp @if($openTix2)<span class="cs-badge cs-badge-danger">{{ $openTix2 }}</span>@endif</a>
-            <a href="{{ route("admin.orders.index") }}?status=pending" class="cs-link"><span class="ico">&#9203;</span> Pending Orders @php $pndOrd = \App\Models\Order::where("status","pending")->count(); @endphp @if($pndOrd)<span class="cs-badge cs-badge-warning">{{ $pndOrd }}</span>@endif</a>
+            <a href="{{ route("admin.tickets.index") }}" class="cs-link"><span class="ico">&#127915;</span> Support Tickets @if($sidebarCounts->open_tickets)<span class="cs-badge cs-badge-danger">{{ $sidebarCounts->open_tickets }}</span>@endif</a>
+            <a href="{{ route("admin.orders.index") }}?status=pending" class="cs-link"><span class="ico">&#9203;</span> Pending Orders @if($sidebarCounts->pending_orders)<span class="cs-badge cs-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a>
         </div>
         <div class="cs-section"><div class="cs-hdr">Billing</div>
-            <a href="{{ route("admin.invoices.index") }}?status=unpaid" class="cs-link">Unpaid Invoices @php $unpd = \App\Models\Invoice::where("status","unpaid")->count(); @endphp @if($unpd)<span class="cs-badge cs-badge-warning">{{ $unpd }}</span>@endif</a>
-            <a href="{{ route("admin.invoices.index") }}?status=overdue" class="cs-link">Overdue Invoices @php $ovd = \App\Models\Invoice::where("status","overdue")->count(); @endphp @if($ovd)<span class="cs-badge cs-badge-danger">{{ $ovd }}</span>@endif</a>
+            <a href="{{ route("admin.invoices.index") }}?status=unpaid" class="cs-link">Unpaid Invoices @if($sidebarCounts->unpaid_invoices)<span class="cs-badge cs-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a>
+            <a href="{{ route("admin.invoices.index") }}?status=overdue" class="cs-link">Overdue Invoices @if($sidebarCounts->overdue_invoices)<span class="cs-badge cs-badge-danger">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a>
             <a href="{{ route("admin.config.transactions") }}" class="cs-link">Transactions</a>
         </div>
         <div class="cs-section"><div class="cs-hdr">System</div>
@@ -240,8 +240,8 @@
     @elseif(request()->routeIs("admin.invoices.*") || request()->routeIs("admin.config.transactions") || request()->routeIs("admin.quotes.*") || request()->routeIs("admin.config.quotes") || request()->routeIs("admin.config.billable-items"))
         <div class="cs-section"><div class="cs-hdr">Invoices</div>
             <a href="{{ route("admin.invoices.index") }}" class="cs-link {{ request()->routeIs("admin.invoices.index") ? "active" : "" }}">All Invoices</a>
-            <a href="{{ route("admin.invoices.index") }}?status=unpaid" class="cs-link">Unpaid @php $upd = \App\Models\Invoice::where("status","unpaid")->count(); @endphp @if($upd)<span class="cs-badge cs-badge-warning">{{ $upd }}</span>@endif</a>
-            <a href="{{ route("admin.invoices.index") }}?status=overdue" class="cs-link">Overdue @php $ovd2 = \App\Models\Invoice::where("status","overdue")->count(); @endphp @if($ovd2)<span class="cs-badge cs-badge-danger">{{ $ovd2 }}</span>@endif</a>
+            <a href="{{ route("admin.invoices.index") }}?status=unpaid" class="cs-link">Unpaid @if($sidebarCounts->unpaid_invoices)<span class="cs-badge cs-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a>
+            <a href="{{ route("admin.invoices.index") }}?status=overdue" class="cs-link">Overdue @if($sidebarCounts->overdue_invoices)<span class="cs-badge cs-badge-danger">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a>
             <a href="{{ route("admin.invoices.index") }}?status=paid" class="cs-link">Paid <span class="cs-badge cs-badge-success" style="font-size:9px;">&#10003;</span></a>
             <a href="{{ route("admin.invoices.index") }}?status=cancelled" class="cs-link">Cancelled</a>
             <a href="{{ route("admin.invoices.create") }}" class="cs-link">&#43; New Invoice</a>
@@ -254,16 +254,16 @@
         </div>
     @elseif(request()->routeIs("admin.tickets.*"))
         <div class="cs-section"><div class="cs-hdr">Tickets</div>
-            <a href="{{ route("admin.tickets.index") }}" class="cs-link {{ !request("status") && !request("dept") && !request("priority") ? "active" : "" }}">All Tickets @php $allTix = \App\Models\Ticket::whereNotIn("status",["Closed"])->count(); @endphp @if($allTix)<span class="cs-badge cs-badge-secondary">{{ $allTix }}</span>@endif</a>
-            <a href="{{ route("admin.tickets.index") }}?status=Open" class="cs-link {{ request("status")==="Open" ? "active" : "" }}">Open @php $opn = \App\Models\Ticket::where("status","Open")->count(); @endphp @if($opn)<span class="cs-badge cs-badge-success">{{ $opn }}</span>@endif</a>
-            <a href="{{ route("admin.tickets.index") }}?status=Customer-Reply" class="cs-link {{ request("status")==="Customer-Reply" ? "active" : "" }}">Awaiting Reply @php $aw = \App\Models\Ticket::where("status","Customer-Reply")->count(); @endphp @if($aw)<span class="cs-badge cs-badge-warning">{{ $aw }}</span>@endif</a>
+            <a href="{{ route("admin.tickets.index") }}" class="cs-link {{ !request("status") && !request("dept") && !request("priority") ? "active" : "" }}">All Tickets @if($sidebarCounts->active_tickets)<span class="cs-badge cs-badge-secondary">{{ $sidebarCounts->active_tickets }}</span>@endif</a>
+            <a href="{{ route("admin.tickets.index") }}?status=Open" class="cs-link {{ request("status")==="Open" ? "active" : "" }}">Open @if($sidebarCounts->open_tickets_only)<span class="cs-badge cs-badge-success">{{ $sidebarCounts->open_tickets_only }}</span>@endif</a>
+            <a href="{{ route("admin.tickets.index") }}?status=Customer-Reply" class="cs-link {{ request("status")==="Customer-Reply" ? "active" : "" }}">Awaiting Reply @if($sidebarCounts->awaiting_tickets)<span class="cs-badge cs-badge-warning">{{ $sidebarCounts->awaiting_tickets }}</span>@endif</a>
             <a href="{{ route("admin.tickets.index") }}?status=Answered" class="cs-link {{ request("status")==="Answered" ? "active" : "" }}">Answered</a>
             <a href="{{ route("admin.tickets.index") }}?status=On+Hold" class="cs-link {{ request("status")==="On Hold" ? "active" : "" }}">On Hold</a>
             <a href="{{ route("admin.tickets.index") }}?status=In+Progress" class="cs-link {{ request("status")==="In Progress" ? "active" : "" }}">In Progress</a>
             <a href="{{ route("admin.tickets.index") }}?status=Closed" class="cs-link {{ request("status")==="Closed" ? "active" : "" }}">Closed</a>
         </div>
         <div class="cs-section"><div class="cs-hdr">Filter by Priority</div>
-            <a href="{{ route("admin.tickets.index") }}?priority=High" class="cs-link {{ request("priority")==="High" ? "active" : "" }}"><span style="color:#ef4444;">&#9679;</span> High Priority @php $highPri = \App\Models\Ticket::where("priority","High")->whereNotIn("status",["Closed"])->count(); @endphp @if($highPri)<span class="cs-badge cs-badge-danger">{{ $highPri }}</span>@endif</a>
+            <a href="{{ route("admin.tickets.index") }}?priority=High" class="cs-link {{ request("priority")==="High" ? "active" : "" }}"><span style="color:#ef4444;">&#9679;</span> High Priority @if($sidebarCounts->high_priority_tickets)<span class="cs-badge cs-badge-danger">{{ $sidebarCounts->high_priority_tickets }}</span>@endif</a>
             <a href="{{ route("admin.tickets.index") }}?priority=Medium" class="cs-link {{ request("priority")==="Medium" ? "active" : "" }}"><span style="color:#f59e0b;">&#9679;</span> Medium</a>
             <a href="{{ route("admin.tickets.index") }}?priority=Low" class="cs-link {{ request("priority")==="Low" ? "active" : "" }}"><span style="color:#22c55e;">&#9679;</span> Low</a>
         </div>
