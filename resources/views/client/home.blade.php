@@ -1,129 +1,189 @@
 @extends('client.layouts.app')
-@section('title', 'My Account')
+@section('title', 'Dashboard')
+@section('styles')
+<style>
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+    .stat-card { display: block; text-decoration: none; color: inherit; }
+    .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .stat-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+    .stat-icon svg { width: 20px; height: 20px; }
+    .stat-icon.green { background: #dff0d8; color: #3c763d; }
+    .stat-icon.blue { background: #d9edf7; color: #31708f; }
+    .stat-icon.orange { background: #fcf8e3; color: #8a6d3b; }
+    .stat-icon.red { background: #f2dede; color: #a94442; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+    .card-header-actions { display: flex; align-items: center; justify-content: space-between; }
+    .card-header-actions a { font-size: 12px; color: #337ab7; text-decoration: none; }
+    .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+</style>
+@endsection
 @section('content')
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Welcome, {{ auth()->user()->first_name }}</h1>
-    <div class="flex gap-2">
-        <a href="{{ route('client.tickets.create') }}" class="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors">Open Ticket</a>
-        <a href="{{ route('client.domains.index') }}" class="px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-50 transition-colors">Register Domain</a>
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+    <h1 style="font-size:20px; font-weight:600; margin:0;">Welcome, {{ auth()->user()->first_name }}</h1>
+    <div style="display:flex; gap:8px;">
+        <a href="{{ route('client.tickets.create') }}" class="btn btn-primary btn-sm">Open Ticket</a>
+        <a href="{{ route('client.cart.store') }}" class="btn btn-default btn-sm">Order Service</a>
     </div>
 </div>
 
-{{-- Stats Cards --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <a href="{{ route('client.services.index') }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 text-center hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
-        <div class="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+{{-- Stat Cards --}}
+<div class="stats-grid">
+    <a href="{{ route('client.services.index') }}" class="stat-card">
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="stat-value" style="color:#3c763d;">{{ $serviceCount }}</div>
+            <div class="stat-label">Active Services</div>
         </div>
-        <p class="text-2xl font-bold">{{ $serviceCount }}</p>
-        <p class="text-xs text-slate-500 mt-1">Active Services</p>
     </a>
-    <a href="{{ route('client.domains.index') }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 text-center hover:border-emerald-300 dark:hover:border-emerald-600 transition-colors">
-        <div class="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+    <a href="{{ route('client.domains.index') }}" class="stat-card">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
+            </div>
+            <div class="stat-value" style="color:#31708f;">{{ $domainCount }}</div>
+            <div class="stat-label">Active Domains</div>
         </div>
-        <p class="text-2xl font-bold">{{ $domainCount }}</p>
-        <p class="text-xs text-slate-500 mt-1">Active Domains</p>
     </a>
-    <a href="{{ route('client.invoices.index') }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 text-center hover:border-amber-300 dark:hover:border-amber-600 transition-colors">
-        <div class="w-10 h-10 {{ $unpaidInvoices > 0 ? 'bg-amber-100 dark:bg-amber-900/30' : 'bg-slate-100 dark:bg-slate-700' }} rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg class="w-5 h-5 {{ $unpaidInvoices > 0 ? 'text-amber-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    <a href="{{ route('client.invoices.index') }}" class="stat-card">
+        <div class="stat-card">
+            <div class="stat-icon orange">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="stat-value" style="{{ $unpaidInvoices > 0 ? 'color:#8a6d3b;' : '' }}">{{ $unpaidInvoices }}</div>
+            <div class="stat-label">Unpaid Invoices</div>
         </div>
-        <p class="text-2xl font-bold {{ $unpaidInvoices > 0 ? 'text-amber-600' : '' }}">{{ $unpaidInvoices }}</p>
-        <p class="text-xs text-slate-500 mt-1">Unpaid Invoices</p>
     </a>
-    <a href="{{ route('client.tickets.index') }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 text-center hover:border-rose-300 dark:hover:border-rose-600 transition-colors">
-        <div class="w-10 h-10 {{ $openTickets > 0 ? 'bg-rose-100 dark:bg-rose-900/30' : 'bg-slate-100 dark:bg-slate-700' }} rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg class="w-5 h-5 {{ $openTickets > 0 ? 'text-rose-600' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+    <a href="{{ route('client.tickets.index') }}" class="stat-card">
+        <div class="stat-card">
+            <div class="stat-icon red">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+            </div>
+            <div class="stat-value" style="{{ $openTickets > 0 ? 'color:#a94442;' : '' }}">{{ $openTickets }}</div>
+            <div class="stat-label">Open Tickets</div>
         </div>
-        <p class="text-2xl font-bold {{ $openTickets > 0 ? 'text-rose-600' : '' }}">{{ $openTickets }}</p>
-        <p class="text-xs text-slate-500 mt-1">Open Tickets</p>
     </a>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="two-col">
     {{-- Recent Invoices --}}
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h3 class="font-semibold">Recent Invoices</h3>
-            <a href="{{ route('client.invoices.index') }}" class="text-xs text-indigo-600 hover:text-indigo-500">View all</a>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-actions">
+                <span>Recent Invoices</span>
+                <a href="{{ route('client.invoices.index') }}">View all &rarr;</a>
+            </div>
         </div>
-        @if($recentInvoices->isEmpty())
-            <div class="p-8 text-center text-sm text-slate-400">No invoices yet.</div>
-        @else
-            <table class="w-full text-sm">
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    @foreach($recentInvoices as $invoice)
-                    <tr>
-                        <td class="px-4 py-3"><a href="{{ route('client.invoices.show', $invoice) }}" class="text-indigo-600 font-medium">#{{ $invoice->invoice_num ?? $invoice->id }}</a></td>
-                        <td class="px-4 py-3 text-slate-500">{{ $invoice->due_date?->format('d M Y') }}</td>
-                        <td class="px-4 py-3 font-medium">${{ number_format($invoice->total, 2) }}</td>
-                        <td class="px-4 py-3">
-                            <span class="px-2 py-0.5 text-xs rounded-full
-                                {{ $invoice->status === 'Paid' ? 'bg-emerald-100 text-emerald-700' :
-                                   ($invoice->status === 'Unpaid' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700') }}">
-                                {{ $invoice->status }}
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
+        <div class="card-body" style="padding:0;">
+            @if($recentInvoices->isEmpty())
+                <div style="padding:24px; text-align:center; color:#999; font-size:13px;">No invoices yet.</div>
+            @else
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Due Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentInvoices as $invoice)
+                        <tr>
+                            <td><a href="{{ route('client.invoices.show', $invoice) }}" style="color:#337ab7;">#{{ $invoice->invoice_num ?? $invoice->id }}</a></td>
+                            <td style="color:#777;">{{ $invoice->due_date?->format('d M Y') ?? '-' }}</td>
+                            <td style="font-weight:500;">${{ number_format($invoice->total, 2) }}</td>
+                            <td><span class="badge badge-{{ strtolower($invoice->status) }}">{{ ucfirst($invoice->status) }}</span></td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        </div>
     </div>
 
     {{-- Recent Tickets --}}
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h3 class="font-semibold">Recent Tickets</h3>
-            <a href="{{ route('client.tickets.index') }}" class="text-xs text-indigo-600 hover:text-indigo-500">View all</a>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-actions">
+                <span>Recent Tickets</span>
+                <a href="{{ route('client.tickets.index') }}">View all &rarr;</a>
+            </div>
         </div>
-        @if($recentTickets->isEmpty())
-            <div class="p-8 text-center text-sm text-slate-400">No tickets yet.</div>
-        @else
-            <table class="w-full text-sm">
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                    @foreach($recentTickets as $ticket)
-                    <tr>
-                        <td class="px-4 py-3"><a href="{{ route('client.tickets.show', $ticket) }}" class="text-indigo-600 font-medium">{{ Str::limit($ticket->title, 30) }}</a></td>
-                        <td class="px-4 py-3 text-slate-500 text-xs">{{ $ticket->last_reply?->diffForHumans() ?? $ticket->created_at?->diffForHumans() }}</td>
-                        <td class="px-4 py-3">
-                            <span class="px-2 py-0.5 text-xs rounded-full
-                                {{ $ticket->status === 'Open' ? 'bg-emerald-100 text-emerald-700' :
-                                   ($ticket->status === 'Answered' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600') }}">
-                                {{ $ticket->status }}
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
+        <div class="card-body" style="padding:0;">
+            @if($recentTickets->isEmpty())
+                <div style="padding:24px; text-align:center; color:#999; font-size:13px;">No tickets yet.</div>
+            @else
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Last Reply</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentTickets as $ticket)
+                        <tr>
+                            <td><a href="{{ route('client.tickets.show', $ticket) }}" style="color:#337ab7;">{{ Str::limit($ticket->title, 35) }}</a></td>
+                            <td><span class="badge badge-{{ strtolower(str_replace(' ', '-', $ticket->status)) }}">{{ ucfirst($ticket->status) }}</span></td>
+                            <td style="color:#777; font-size:12px;">{{ $ticket->last_reply?->diffForHumans() ?? $ticket->created_at?->diffForHumans() }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        </div>
     </div>
 </div>
 
 {{-- Active Services --}}
 @if($activeServices->isNotEmpty())
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-        <h3 class="font-semibold">Active Services</h3>
-        <a href="{{ route('client.services.index') }}" class="text-xs text-indigo-600 hover:text-indigo-500">View all</a>
+<div class="card">
+    <div class="card-header">
+        <div class="card-header-actions">
+            <span>Active Services</span>
+            <a href="{{ route('client.services.index') }}">View all &rarr;</a>
+        </div>
     </div>
-    <table class="w-full text-sm">
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-            @foreach($activeServices as $service)
-            <tr>
-                <td class="px-4 py-3">
-                    <a href="{{ route('client.services.show', $service) }}" class="text-indigo-600 font-medium">{{ $service->product->name ?? 'Service #' . $service->id }}</a>
-                    @if($service->domain) <span class="text-slate-500 ml-2 text-xs">{{ $service->domain }}</span> @endif
-                </td>
-                <td class="px-4 py-3 text-slate-500">${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}</td>
-                <td class="px-4 py-3 text-slate-500">Due {{ $service->next_due_date?->format('d M Y') ?? 'N/A' }}</td>
-                <td class="px-4 py-3"><span class="px-2 py-0.5 text-xs rounded-full bg-emerald-100 text-emerald-700">Active</span></td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    <div class="card-body" style="padding:0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Domain</th>
+                    <th>Amount</th>
+                    <th>Next Due</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($activeServices as $service)
+                <tr>
+                    <td><a href="{{ route('client.services.show', $service) }}" style="color:#337ab7; font-weight:500;">{{ $service->product->name ?? 'Service #'.$service->id }}</a></td>
+                    <td style="color:#777;">{{ $service->domain ?? '-' }}</td>
+                    <td>${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}</td>
+                    <td style="color:#777;">{{ $service->next_due_date?->format('d M Y') ?? 'N/A' }}</td>
+                    <td><span class="badge badge-active">Active</span></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
 @endif
+
+{{-- Quick Actions --}}
+<div class="quick-actions">
+    <a href="{{ route('client.tickets.create') }}" class="btn btn-default">&#128101; Open Support Ticket</a>
+    <a href="#" class="btn btn-default">&#127760; Register Domain</a>
+    <a href="{{ route('client.cart.store') }}" class="btn btn-default">&#128722; Order New Service</a>
+    <a href="{{ route('client.funds.index') }}" class="btn btn-default">&#128176; Add Funds</a>
+</div>
+
 @endsection

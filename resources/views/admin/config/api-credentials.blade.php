@@ -1,100 +1,61 @@
-@extends("admin.layouts.app")
-@section("title", "API Credentials")
-@section("content")
+@extends('admin.layouts.app')
+@section('title', 'API Credentials')
+@section('content')
 
-<x-flash-message/>
-
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">API Credentials</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage API keys for external integrations</p>
-    </div>
-    <button type="button" x-data @click="$dispatch('open-modal-add-credential')"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
-        <x-heroicon-s-plus class="w-4 h-4"/>
-        Generate Credential
-    </button>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <h1>API Credentials</h1>
+    <button type="button" onclick="document.getElementById('modal-add-api').style.display='flex'" class="btn btn-primary btn-sm">+ Generate API Key</button>
 </div>
 
-@if($credentials->isEmpty())
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <x-empty-state title="No API credentials" description="Generate API credentials to enable external access." icon="shield"/>
-    </div>
-@else
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
-            <tr>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Identifier</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Description</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Owner</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Created</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Status</th>
-                <th class="text-right px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-            @foreach($credentials as $cred)
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                <td class="px-4 py-3">
-                    <code class="font-mono text-xs bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-1 rounded">
-                        {{ substr($cred->identifier, 0, 8) }}...{{ substr($cred->identifier, -4) }}
-                    </code>
-                </td>
-                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ $cred->description ?? '—' }}</td>
-                <td class="px-4 py-3 text-slate-500 dark:text-slate-400">{{ $cred->admin?->full_name ?? '—' }}</td>
-                <td class="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{{ $cred->created_at->format('M d, Y') }}</td>
-                <td class="px-4 py-3">
-                    @if($cred->active)
-                        <x-status-badge status="active" label="Active"/>
-                    @else
-                        <x-status-badge status="disabled" label="Inactive"/>
-                    @endif
-                </td>
-                <td class="px-4 py-3">
-                    <div class="flex items-center justify-end">
-                        <x-confirm-delete :action="route('admin.config.api-credentials.destroy', $cred)"
-                            message="Revoke this credential?"
-                            buttonClass="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition">
-                            <span class="flex items-center gap-1 text-xs">
-                                <x-heroicon-o-x-circle class="w-4 h-4"/>
-                                Revoke
-                            </span>
-                        </x-confirm-delete>
-                    </div>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+@if(session('success'))
+<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
 @endif
 
-<x-modal name="add-credential" title="Generate API Credential" maxWidth="md">
-    <form method="POST" action="{{ route('admin.config.api-credentials.store') }}">
-        @csrf
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Description <span class="text-slate-400">(optional)</span></label>
-                <input type="text" name="description" placeholder="e.g. WHMCS Integration, Mobile App"
-                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-            </div>
-            <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                <div class="flex items-start gap-2">
-                    <x-heroicon-s-exclamation-triangle class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0"/>
-                    <p class="text-xs text-amber-700 dark:text-amber-400">
-                        The secret key will be displayed only once after generation. Store it securely.
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="flex justify-end gap-3 mt-5">
-            <button type="button" @click="$dispatch('close-modal-add-credential')"
-                class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-            <button type="submit"
-                class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition">Generate</button>
-        </div>
-    </form>
-</x-modal>
+<div class="card">
+    @if(($apiKeys ?? collect())->isEmpty())
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No API keys configured.</div>
+    @else
+    <table class="data-table">
+        <thead><tr><th>Name</th><th>API Key</th><th>Permissions</th><th>Created</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+        @foreach($apiKeys as $key)
+        <tr>
+            <td style="font-weight:600;">{{ $key->name }}</td>
+            <td><span style="font-family:monospace;font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">{{ substr($key->api_key, 0, 8) }}...{{ substr($key->api_key, -4) }}</span></td>
+            <td style="font-size:12px;">{{ $key->permissions ?? 'All' }}</td>
+            <td style="font-size:12px;color:#777;">{{ $key->created_at->format('d M Y') }}</td>
+            <td><span class="badge-{{ $key->disabled ? 'suspended' : 'active' }}">{{ $key->disabled ? 'Disabled' : 'Active' }}</span></td>
+            <td style="text-align:right;">
+                <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $key) }}" style="display:inline;" onsubmit="return confirm('Revoke this API key?')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-xs">Revoke</button>
+                </form>
+            </td>
+        </tr>
+        @endforeach
+        </tbody>
+    </table>
+    @endif
+</div>
 
+<div id="modal-add-api" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-api').style.display='none'"></div>
+    <div style="position:relative;background:#fff;border-radius:4px;width:450px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:16px;">Generate API Key</h4>
+            <button type="button" onclick="document.getElementById('modal-add-api').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('admin.config.api-credentials.store') }}">
+            @csrf
+            <div style="padding:20px;">
+                <div class="form-group"><label class="form-label">Key Name / Description</label><input type="text" name="name" required class="form-control" placeholder="e.g. Mobile App Integration"></div>
+                <div class="form-group"><label class="form-label">IP Whitelist <small style="color:#999;">(optional, comma-separated)</small></label><input type="text" name="ip_whitelist" class="form-control" placeholder="192.168.1.1, 10.0.0.0/8"></div>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-add-api').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Generate Key</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

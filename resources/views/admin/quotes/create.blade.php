@@ -1,129 +1,87 @@
-@extends("admin.layouts.app")
-@section("title", "Create Quote")
-@section("content")
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Create Quote</h1>
-    <a href="{{ route('admin.quotes.index') }}" class="text-slate-500 hover:text-slate-700 text-sm">← Back to Quotes</a>
+@extends('admin.layouts.app')
+@section('title', 'Create Quote')
+@section('content')
+<div class="page-header">
+    <h1>Create Quote</h1>
+    <a href="{{ route('admin.quotes.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
 </div>
 @if($errors->any())
-<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm">
-    <ul class="list-disc list-inside">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">
+    <ul style="margin:0;padding-left:18px;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
 </div>
 @endif
 <form method="POST" action="{{ route('admin.quotes.store') }}" x-data="quoteForm()">
     @csrf
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h2 class="font-semibold mb-4">Quote Details</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client *</label>
-                        <select name="client_id" required class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:15px;">
+        <div>
+            <div class="card" style="margin-bottom:15px;">
+                <div class="card-header"><strong>Quote Details</strong></div>
+                <div class="card-body">
+                    <div class="form-group"><label class="form-label">Client <span style="color:#d9534f;">*</span></label>
+                        <select name="client_id" required class="form-control">
                             <option value="">Select a client...</option>
                             @foreach($clients as $client)
-                            <option value="{{ $client->id }}" {{ old('client_id')==$client->id ? 'selected' : '' }}>{{ $client->full_name }} ({{ $client->email }})</option>
+                            <option value="{{ $client->id }}" {{ old('client_id')==$client->id?'selected':'' }}>{{ $client->full_name }} ({{ $client->email }})</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Subject *</label>
-                        <input type="text" name="subject" value="{{ old('subject') }}" required class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date *</label>
-                        <input type="date" name="date" value="{{ old('date', now()->toDateString()) }}" required class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valid Until *</label>
-                        <input type="date" name="valid_until" value="{{ old('valid_until', now()->addDays(30)->toDateString()) }}" required class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <div class="form-group"><label class="form-label">Subject <span style="color:#d9534f;">*</span></label><input type="text" name="subject" value="{{ old('subject') }}" required class="form-control"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
+                        <div class="form-group"><label class="form-label">Date <span style="color:#d9534f;">*</span></label><input type="date" name="date" value="{{ old('date', now()->toDateString()) }}" required class="form-control"></div>
+                        <div class="form-group"><label class="form-label">Valid Until <span style="color:#d9534f;">*</span></label><input type="date" name="valid_until" value="{{ old('valid_until', now()->addDays(30)->toDateString()) }}" required class="form-control"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="font-semibold">Line Items</h2>
-                    <button type="button" @click="addItem()" class="px-3 py-1.5 text-xs font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 rounded-lg transition-colors">+ Add Item</button>
+            <div class="card" style="margin-bottom:15px;">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                    <strong>Line Items</strong>
+                    <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ Add Item</button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="border-b border-slate-200 dark:border-slate-700">
-                            <tr>
-                                <th class="pb-2 text-left font-medium text-slate-600 w-1/2">Description</th>
-                                <th class="pb-2 text-left font-medium text-slate-600 w-20">Qty</th>
-                                <th class="pb-2 text-left font-medium text-slate-600 w-24">Unit Price</th>
-                                <th class="pb-2 text-left font-medium text-slate-600 w-20">Discount</th>
-                                <th class="pb-2 text-center font-medium text-slate-600 w-16">Taxable</th>
-                                <th class="pb-2 text-right font-medium text-slate-600 w-24">Amount</th>
-                                <th class="pb-2 w-10"></th>
-                            </tr>
-                        </thead>
+                <div class="card-body" style="padding:0;">
+                    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                        <thead><tr style="border-bottom:1px solid #ddd;background:#f9f9f9;">
+                            <th style="padding:6px 10px;text-align:left;font-weight:600;color:#555;">Description</th>
+                            <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">Qty</th>
+                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:90px;">Unit Price</th>
+                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">Discount</th>
+                            <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">Taxable</th>
+                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">Amount</th>
+                            <th style="width:30px;"></th>
+                        </tr></thead>
                         <tbody>
                             <template x-for="(item, index) in items" :key="index">
-                                <tr class="border-b border-slate-100 dark:border-slate-700/50">
-                                    <td class="py-2 pr-2">
-                                        <input type="text" :name="`items[${index}][description]`" x-model="item.description" required placeholder="Item description..." class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                                    </td>
-                                    <td class="py-2 pr-2">
-                                        <input type="number" :name="`items[${index}][quantity]`" x-model.number="item.quantity" @input="calcItem(item)" min="0.01" step="0.01" class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                                    </td>
-                                    <td class="py-2 pr-2">
-                                        <input type="number" :name="`items[${index}][unit_price]`" x-model.number="item.unit_price" @input="calcItem(item)" min="0" step="0.01" class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                                    </td>
-                                    <td class="py-2 pr-2">
-                                        <input type="number" :name="`items[${index}][discount]`" x-model.number="item.discount" @input="calcItem(item)" min="0" step="0.01" class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
-                                    </td>
-                                    <td class="py-2 pr-2 text-center">
-                                        <input type="hidden" :name="`items[${index}][taxable]`" value="0">
-                                        <input type="checkbox" :name="`items[${index}][taxable]`" x-model="item.taxable" value="1" class="rounded border-slate-300 text-indigo-600">
-                                    </td>
-                                    <td class="py-2 pr-2 text-right font-medium" x-text="'$' + item.amount.toFixed(2)"></td>
-                                    <td class="py-2 text-center">
-                                        <button type="button" @click="removeItem(index)" class="text-red-400 hover:text-red-600 text-xs">✕</button>
-                                    </td>
+                                <tr style="border-bottom:1px solid #f5f5f5;">
+                                    <td style="padding:6px 10px;"><input type="text" :name="`items[${index}][description]`" x-model="item.description" required placeholder="Item description..." class="form-control" style="font-size:13px;"></td>
+                                    <td style="padding:6px 8px;"><input type="number" :name="`items[${index}][quantity]`" x-model.number="item.quantity" @input="calcItem(item)" min="0.01" step="0.01" class="form-control" style="font-size:13px;text-align:center;"></td>
+                                    <td style="padding:6px 8px;"><input type="number" :name="`items[${index}][unit_price]`" x-model.number="item.unit_price" @input="calcItem(item)" min="0" step="0.01" class="form-control" style="font-size:13px;text-align:right;"></td>
+                                    <td style="padding:6px 8px;"><input type="number" :name="`items[${index}][discount]`" x-model.number="item.discount" @input="calcItem(item)" min="0" step="0.01" class="form-control" style="font-size:13px;text-align:right;"></td>
+                                    <td style="padding:6px 8px;text-align:center;"><input type="hidden" :name="`items[${index}][taxable]`" value="0"><input type="checkbox" :name="`items[${index}][taxable]`" x-model="item.taxable" value="1"></td>
+                                    <td style="padding:6px 8px;text-align:right;font-weight:600;font-family:monospace;" x-text="'$' + item.amount.toFixed(2)"></td>
+                                    <td style="padding:6px 4px;text-align:center;"><button type="button" @click="removeItem(index)" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:16px;">&times;</button></td>
                                 </tr>
                             </template>
-                            <tr x-show="items.length===0">
-                                <td colspan="7" class="py-4 text-center text-slate-400 text-sm">No items yet. Click "+ Add Item" to add line items.</td>
-                            </tr>
+                            <tr x-show="items.length===0"><td colspan="7" style="text-align:center;color:#999;padding:20px;font-size:13px;">No items. Click "+ Add Item".</td></tr>
                         </tbody>
-                        <tfoot class="border-t-2 border-slate-300 dark:border-slate-600">
-                            <tr>
-                                <td colspan="5" class="pt-3 text-right font-semibold text-sm">Subtotal</td>
-                                <td class="pt-3 text-right font-semibold" x-text="'$' + subtotal().toFixed(2)"></td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="pt-1 text-right font-bold text-base">Total</td>
-                                <td class="pt-1 text-right font-bold text-base" x-text="'$' + subtotal().toFixed(2)"></td>
-                                <td></td>
-                            </tr>
+                        <tfoot style="border-top:2px solid #aaa;">
+                            <tr><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:600;">Subtotal</td><td style="padding:8px;text-align:right;font-weight:600;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
+                            <tr style="background:#f5f5f5;"><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:700;font-size:14px;">Total</td><td style="padding:8px;text-align:right;font-weight:700;font-size:14px;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div class="space-y-6">
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h2 class="font-semibold mb-4">Notes</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Admin Notes</label>
-                        <textarea name="notes" rows="3" class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ old('notes') }}</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Customer Notes</label>
-                        <textarea name="customer_notes" rows="3" class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ old('customer_notes') }}</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Proposal</label>
-                        <textarea name="proposal" rows="4" placeholder="Proposal text..." class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ old('proposal') }}</textarea>
-                    </div>
+        <div>
+            <div class="card" style="margin-bottom:15px;">
+                <div class="card-header"><strong>Notes</strong></div>
+                <div class="card-body">
+                    <div class="form-group"><label class="form-label">Admin Notes</label><textarea name="notes" rows="3" class="form-control">{{ old('notes') }}</textarea></div>
+                    <div class="form-group"><label class="form-label">Customer Notes</label><textarea name="customer_notes" rows="3" class="form-control">{{ old('customer_notes') }}</textarea></div>
+                    <div class="form-group"><label class="form-label">Proposal</label><textarea name="proposal" rows="4" placeholder="Proposal text..." class="form-control">{{ old('proposal') }}</textarea></div>
                 </div>
             </div>
-            <button type="submit" class="w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">Create Quote</button>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">Create Quote</button>
         </div>
     </div>
 </form>
@@ -132,13 +90,9 @@
 function quoteForm() {
     return {
         items: [],
-        addItem() {
-            this.items.push({ description: '', quantity: 1, unit_price: 0, discount: 0, taxable: true, amount: 0 });
-        },
+        addItem() { this.items.push({ description: '', quantity: 1, unit_price: 0, discount: 0, taxable: true, amount: 0 }); },
         removeItem(index) { this.items.splice(index, 1); },
-        calcItem(item) {
-            item.amount = Math.max(0, (item.quantity * item.unit_price) - item.discount);
-        },
+        calcItem(item) { item.amount = Math.max(0, (item.quantity * item.unit_price) - item.discount); },
         subtotal() { return this.items.reduce((s, i) => s + i.amount, 0); }
     };
 }

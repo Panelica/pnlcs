@@ -1,56 +1,45 @@
-@extends("admin.layouts.app")
-@section("title", "Create Project")
-@section("content")
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Create Project</h1>
-    <a href="{{ route('admin.projects.index') }}" class="text-slate-500 hover:text-slate-700 text-sm">← Back to Projects</a>
+@extends('admin.layouts.app')
+@section('title', 'Create Project')
+@section('content')
+<div class="page-header">
+    <h1>Create Project</h1>
+    <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
 </div>
 @if($errors->any())
-<div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-sm">
-    <ul class="list-disc list-inside">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">
+    <ul style="margin:0;padding-left:18px;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
 </div>
 @endif
-<form method="POST" action="{{ route('admin.projects.store') }}">
-    @csrf
-    <div class="max-w-2xl bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 space-y-4">
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Client *</label>
-            <select name="client_id" required class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                <option value="">Select a client...</option>
-                @foreach($clients as $client)
-                <option value="{{ $client->id }}" {{ old('client_id')==$client->id ? 'selected' : '' }}>{{ $client->full_name }} ({{ $client->email }})</option>
-                @endforeach
-            </select>
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Title *</label>
-            <input type="text" name="title" value="{{ old('title') }}" required class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
-            <textarea name="description" rows="4" class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">{{ old('description') }}</textarea>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status *</label>
-                <select name="status" required class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                    @foreach(['pending'=>'Pending','in_progress'=>'In Progress','completed'=>'Completed','cancelled'=>'Cancelled'] as $v=>$l)
-                    <option value="{{ $v }}" {{ old('status','pending')==$v?'selected':'' }}>{{ $l }}</option>
+<div class="card" style="max-width:700px;">
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.projects.store') }}">
+            @csrf
+            <div class="form-group"><label class="form-label">Client <span style="color:#d9534f;">*</span></label>
+                <select name="client_id" required class="form-control">
+                    <option value="">Select a client...</option>
+                    @foreach($clients as $client)
+                    <option value="{{ $client->id }}" {{ old('client_id')==$client->id?'selected':'' }}>{{ $client->full_name }} ({{ $client->email }})</option>
                     @endforeach
                 </select>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Start Date</label>
-                <input type="date" name="start_date" value="{{ old('start_date') }}" class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <div class="form-group"><label class="form-label">Title <span style="color:#d9534f;">*</span></label><input type="text" name="title" value="{{ old('title') }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="4" class="form-control">{{ old('description') }}</textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 15px;">
+                <div class="form-group"><label class="form-label">Status <span style="color:#d9534f;">*</span></label>
+                    <select name="status" required class="form-control">
+                        @foreach(['pending'=>'Pending','in_progress'=>'In Progress','completed'=>'Completed','cancelled'=>'Cancelled'] as $v=>$l)
+                        <option value="{{ $v }}" {{ old('status','pending')==$v?'selected':'' }}>{{ $l }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">Start Date</label><input type="date" name="start_date" value="{{ old('start_date') }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Due Date</label><input type="date" name="due_date" value="{{ old('due_date') }}" class="form-control"></div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Due Date</label>
-                <input type="date" name="due_date" value="{{ old('due_date') }}" class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <div style="display:flex;gap:8px;margin-top:5px;">
+                <button type="submit" class="btn btn-primary">Create Project</button>
+                <a href="{{ route('admin.projects.index') }}" class="btn btn-default">Cancel</a>
             </div>
-        </div>
-        <div class="pt-2">
-            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">Create Project</button>
-        </div>
+        </form>
     </div>
-</form>
+</div>
 @endsection

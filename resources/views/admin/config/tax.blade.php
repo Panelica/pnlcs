@@ -1,159 +1,110 @@
-@extends("admin.layouts.app")
-@section("title", "Tax Rules")
-@section("content")
+@extends('admin.layouts.app')
+@section('title', 'Tax Configuration')
+@section('content')
 
-<x-flash-message/>
-
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Tax Rules</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure tax rates by country and region</p>
-    </div>
-    <button type="button" x-data @click="$dispatch('open-modal-add-tax')"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
-        <x-heroicon-s-plus class="w-4 h-4"/>
-        Add Tax Rule
-    </button>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <h1>Tax Configuration</h1>
+    <button type="button" onclick="document.getElementById('modal-add-tax').style.display='flex'" class="btn btn-primary btn-sm">+ Add Tax Rule</button>
 </div>
 
-@if($rules->isEmpty())
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <x-empty-state title="No tax rules configured" description="Add tax rules to automatically apply taxes to invoices." icon="document"/>
-    </div>
-@else
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
-            <tr>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Name</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Country</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">State/Region</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Rate %</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Level</th>
-                <th class="text-right px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-            @foreach($rules as $rule)
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ $rule->name }}</td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{{ $rule->country ?: 'Any' }}</td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400">{{ $rule->state ?: 'Any' }}</td>
-                <td class="px-4 py-3">
-                    <span class="font-semibold text-slate-900 dark:text-white">{{ number_format($rule->tax_rate, 2) }}%</span>
-                </td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400">
-                    {{ $rule->level == 2 ? 'Level 2' : 'Level 1' }}
-                </td>
-                <td class="px-4 py-3">
-                    <div class="flex items-center justify-end gap-3">
-                        <button type="button"
-                            x-data @click="$dispatch('open-modal-edit-tax-{{ $rule->id }}')"
-                            class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-                            <x-heroicon-o-pencil-square class="w-4 h-4"/>
-                        </button>
-                        <x-confirm-delete :action="route('admin.config.tax.destroy', $rule)"
-                            message="Delete this tax rule?"/>
-                    </div>
-                </td>
-            </tr>
-
-            <x-modal :name="'edit-tax-' . $rule->id" title="Edit Tax Rule" maxWidth="md">
-                <form method="POST" action="{{ route('admin.config.tax.update', $rule) }}">
-                    @csrf
-                    @method('PUT')
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Rule Name</label>
-                            <input type="text" name="name" value="{{ $rule->name }}" required
-                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Country Code <span class="text-slate-400">(2-letter, blank = all)</span></label>
-                                <input type="text" name="country" value="{{ $rule->country }}" maxlength="2" placeholder="US"
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase"/>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">State <span class="text-slate-400">(blank = all)</span></label>
-                                <input type="text" name="state" value="{{ $rule->state }}" placeholder="CA"
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Tax Rate (%)</label>
-                                <input type="number" name="tax_rate" value="{{ $rule->tax_rate }}" step="0.01" min="0" max="100" required
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Tax Level</label>
-                                <select name="level"
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                                    <option value="1" @selected($rule->level == 1)>Level 1</option>
-                                    <option value="2" @selected($rule->level == 2)>Level 2</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-3 mt-5">
-                        <button type="button" @click="$dispatch('close-modal-edit-tax-{{ $rule->id }}')"
-                            class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-                        <button type="submit"
-                            class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition">Save Changes</button>
-                    </div>
-                </form>
-            </x-modal>
-            @endforeach
-        </tbody>
-    </table>
-</div>
+@if(session('success'))
+<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
 @endif
 
-<x-modal name="add-tax" title="Add Tax Rule" maxWidth="md">
-    <form method="POST" action="{{ route('admin.config.tax.store') }}">
-        @csrf
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Rule Name</label>
-                <input type="text" name="name" required placeholder="e.g. US Sales Tax"
-                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Country Code <span class="text-slate-400">(blank = all)</span></label>
-                    <input type="text" name="country" maxlength="2" placeholder="US"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">State <span class="text-slate-400">(blank = all)</span></label>
-                    <input type="text" name="state" placeholder="CA"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Tax Rate (%)</label>
-                    <input type="number" name="tax_rate" step="0.01" min="0" max="100" required placeholder="10.00"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Tax Level</label>
-                    <select name="level"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                        <option value="1">Level 1</option>
-                        <option value="2">Level 2</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="flex justify-end gap-3 mt-5">
-            <button type="button" @click="$dispatch('close-modal-add-tax')"
-                class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-            <button type="submit"
-                class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition">Add Tax Rule</button>
-        </div>
-    </form>
-</x-modal>
+<div class="card">
+    @if(($taxes ?? collect())->isEmpty())
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No tax rules configured.</div>
+    @else
+    <table class="data-table">
+        <thead><tr><th>Tax Name</th><th>Rate (%)</th><th>Country</th><th>State</th><th>Level</th><th>Compound</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+        @foreach($taxes as $tax)
+        <tr>
+            <td style="font-weight:600;">{{ $tax->name }}</td>
+            <td>{{ $tax->rate }}%</td>
+            <td>{{ $tax->country ?: 'All' }}</td>
+            <td>{{ $tax->state ?: 'All' }}</td>
+            <td>{{ $tax->level == 1 ? 'Tax 1' : 'Tax 2' }}</td>
+            <td>{{ $tax->compound ? 'Yes' : 'No' }}</td>
+            <td style="text-align:right;">
+                <button type="button" class="btn btn-default btn-xs"
+                    onclick="openEditTax({{ json_encode(['id'=>$tax->id,'name'=>$tax->name,'rate'=>$tax->rate,'country'=>$tax->country,'state'=>$tax->state,'level'=>$tax->level,'compound'=>$tax->compound]) }})">Edit</button>
+                <form method="POST" action="{{ route('admin.config.tax.destroy', $tax) }}" style="display:inline;" onsubmit="return confirm('Delete tax rule?')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                </form>
+            </td>
+        </tr>
+        @endforeach
+        </tbody>
+    </table>
+    @endif
+</div>
 
+<div id="modal-add-tax" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-tax').style.display='none'"></div>
+    <div style="position:relative;background:#fff;border-radius:4px;width:480px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:16px;">Add Tax Rule</h4>
+            <button type="button" onclick="document.getElementById('modal-add-tax').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('admin.config.tax.store') }}">
+            @csrf
+            <div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">Tax Name</label><input type="text" name="name" required class="form-control" placeholder="VAT"></div>
+                    <div class="form-group"><label class="form-label">Rate (%)</label><input type="number" name="rate" step="0.01" required class="form-control" placeholder="20"></div>
+                    <div class="form-group"><label class="form-label">Level</label><select name="level" class="form-control"><option value="1">Tax 1 (Primary)</option><option value="2">Tax 2 (Secondary)</option></select></div>
+                    <div class="form-group"><label class="form-label">Country <small style="color:#999;">(blank = all)</small></label><input type="text" name="country" class="form-control" placeholder="GB"></div>
+                    <div class="form-group"><label class="form-label">State <small style="color:#999;">(blank = all)</small></label><input type="text" name="state" class="form-control"></div>
+                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="compound" value="1"> Compound Tax (calculated on top of Tax 1)</label></div>
+                </div>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-add-tax').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Add Tax Rule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modal-edit-tax" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-edit-tax').style.display='none'"></div>
+    <div style="position:relative;background:#fff;border-radius:4px;width:480px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:16px;">Edit Tax Rule</h4>
+            <button type="button" onclick="document.getElementById('modal-edit-tax').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+        </div>
+        <form method="POST" id="edit-tax-form" action="">
+            @csrf @method('PUT')
+            <div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">Tax Name</label><input type="text" name="name" id="et-name" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Rate (%)</label><input type="number" name="rate" id="et-rate" step="0.01" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Level</label><select name="level" id="et-level" class="form-control"><option value="1">Tax 1</option><option value="2">Tax 2</option></select></div>
+                    <div class="form-group"><label class="form-label">Country</label><input type="text" name="country" id="et-country" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">State</label><input type="text" name="state" id="et-state" class="form-control"></div>
+                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="compound" value="1" id="et-compound"> Compound Tax</label></div>
+                </div>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-edit-tax').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditTax(d) {
+    document.getElementById('edit-tax-form').action = '/admin/config/tax/' + d.id;
+    document.getElementById('et-name').value = d.name;
+    document.getElementById('et-rate').value = d.rate;
+    document.getElementById('et-level').value = d.level;
+    document.getElementById('et-country').value = d.country || '';
+    document.getElementById('et-state').value = d.state || '';
+    document.getElementById('et-compound').checked = !!d.compound;
+    document.getElementById('modal-edit-tax').style.display = 'flex';
+}
+</script>
 @endsection

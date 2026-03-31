@@ -1,157 +1,191 @@
 <!DOCTYPE html>
-<html lang="en" x-data="{ mobileOpen: false }">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'My Account') - PNLCS</title>
     @vite(['resources/css/app.css'])
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; background: #f6f6f6; color: #333; margin: 0; }
+        /* Top navbar */
+        .client-navbar { background: #fff; border-bottom: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); position: sticky; top: 0; z-index: 1000; }
+        .client-navbar .navbar-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; height: 48px; }
+        .client-navbar .navbar-brand { color: #1a4d80; font-size: 18px; font-weight: 700; text-decoration: none; margin-right: 24px; flex-shrink: 0; letter-spacing: -0.5px; }
+        .client-navbar .navbar-nav { display: flex; align-items: center; gap: 2px; flex: 1; }
+        .client-navbar .nav-link { display: flex; align-items: center; gap: 4px; padding: 6px 10px; font-size: 13px; color: #555; text-decoration: none; border-radius: 3px; white-space: nowrap; }
+        .client-navbar .nav-link:hover, .client-navbar .nav-link.active { color: #1a4d80; background: #eff6ff; }
+        .client-navbar .nav-dropdown { position: relative; }
+        .client-navbar .nav-dropdown .nav-link { cursor: pointer; }
+        .client-navbar .nav-dropdown .nav-link svg { width: 10px; height: 10px; margin-left: 2px; }
+        .client-navbar .dropdown-menu { display: none; position: absolute; top: calc(100% + 2px); left: 0; min-width: 180px; background: #fff; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 999; padding: 4px 0; }
+        .client-navbar .nav-dropdown:hover .dropdown-menu { display: block; }
+        .client-navbar .dropdown-menu a { display: block; padding: 7px 14px; font-size: 13px; color: #444; text-decoration: none; }
+        .client-navbar .dropdown-menu a:hover { background: #f5f5f5; color: #1a4d80; }
+        .client-navbar .dropdown-menu .divider { height: 1px; background: #eee; margin: 3px 0; }
+        .client-navbar .navbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+        .client-navbar .navbar-right .nav-link { font-size: 13px; }
+        .client-navbar .navbar-right .btn { font-size: 12px; padding: 4px 12px; }
+        /* Mobile */
+        .navbar-toggle { display: none; background: none; border: 1px solid #ddd; border-radius: 3px; padding: 5px 8px; cursor: pointer; }
+        .navbar-toggle span { display: block; width: 18px; height: 2px; background: #555; margin: 3px 0; }
+        .mobile-menu { display: none; background: #fff; border-top: 1px solid #eee; padding: 8px 0; }
+        .mobile-menu a { display: block; padding: 8px 20px; font-size: 13px; color: #444; text-decoration: none; }
+        .mobile-menu a:hover { background: #f5f5f5; color: #1a4d80; }
+        .mobile-menu .mobile-section { padding: 4px 20px 2px; font-size: 11px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+        @media (max-width: 900px) {
+            .client-navbar .navbar-nav { display: none; }
+            .navbar-toggle { display: block; }
+            .mobile-menu.open { display: block; }
+        }
+        /* Main wrapper */
+        .client-main { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+        /* Footer */
+        .client-footer { background: #fff; border-top: 1px solid #e0e0e0; padding: 16px 20px; text-align: center; font-size: 12px; color: #999; margin-top: 40px; }
+        /* Alert boxes */
+        .alert { padding: 10px 14px; border-radius: 4px; border: 1px solid transparent; font-size: 13px; margin-bottom: 14px; }
+        .alert-success { background: #dff0d8; border-color: #d6e9c6; color: #3c763d; }
+        .alert-error, .alert-danger { background: #f2dede; border-color: #ebccd1; color: #a94442; }
+        .alert-info { background: #d9edf7; border-color: #bce8f1; color: #31708f; }
+        .alert-warning { background: #fcf8e3; border-color: #faebcc; color: #8a6d3b; }
+    </style>
+    @yield('styles')
 </head>
-<body class="antialiased bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen">
+<body>
 
-<nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm relative z-50">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="flex items-center justify-between h-16">
-            {{-- Logo --}}
-            <a href="{{ route('client.home') }}" class="text-xl font-bold text-indigo-600 flex-shrink-0">PNLCS</a>
+<nav class="client-navbar">
+    <div class="navbar-inner">
+        <a href="{{ route('client.home') }}" class="navbar-brand">PNLCS</a>
 
-            {{-- Desktop Nav --}}
-            <div class="hidden lg:flex items-center gap-1 text-sm">
-                {{-- Home --}}
-                <a href="{{ route('client.home') }}" class="px-3 py-2 rounded-lg {{ request()->routeIs('client.home') ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/20' : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700' }}">Home</a>
+        <div class="navbar-nav">
+            <a href="{{ route('client.home') }}" class="nav-link {{ request()->routeIs('client.home') ? 'active' : '' }}">Dashboard</a>
 
-                {{-- Services --}}
-                <div class="relative group">
-                    <button class="flex items-center gap-1 px-3 py-2 rounded-lg {{ request()->routeIs('client.services.*') ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/20' : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700' }}">
-                        Services
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="absolute left-0 top-full pt-1 hidden group-hover:block w-48">
-                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1">
-                            <a href="{{ route('client.services.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">My Services</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Order New Service</a>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Domains --}}
-                <div class="relative group">
-                    <button class="flex items-center gap-1 px-3 py-2 rounded-lg {{ request()->routeIs('client.domains.*') ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/20' : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700' }}">
-                        Domains
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="absolute left-0 top-full pt-1 hidden group-hover:block w-48">
-                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1">
-                            <a href="{{ route('client.domains.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">My Domains</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Register Domain</a>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Billing --}}
-                <div class="relative group">
-                    <button class="flex items-center gap-1 px-3 py-2 rounded-lg {{ request()->routeIs('client.invoices.*') || request()->routeIs('client.funds.*') ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/20' : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700' }}">
-                        Billing
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="absolute left-0 top-full pt-1 hidden group-hover:block w-48">
-                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1">
-                            <a href="{{ route('client.invoices.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Invoices</a>
-                            <a href="{{ route('client.funds.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Add Funds</a>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Support --}}
-                <div class="relative group">
-                    <button class="flex items-center gap-1 px-3 py-2 rounded-lg {{ request()->routeIs('client.tickets.*') || request()->routeIs('client.kb.*') || request()->routeIs('client.announcements.*') || request()->routeIs('client.contact') || request()->routeIs('client.downloads.*') ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/20' : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700' }}">
-                        Support
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="absolute left-0 top-full pt-1 hidden group-hover:block w-52">
-                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1">
-                            <a href="{{ route('client.tickets.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">My Tickets</a>
-                            <a href="{{ route('client.tickets.create') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Open Ticket</a>
-                            <a href="{{ route('client.kb.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Knowledge Base</a>
-                            <a href="{{ route('client.announcements.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Announcements</a>
-                            <a href="{{ route('client.contact') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Contact Us</a>
-                            <a href="{{ route('client.downloads.index') }}" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Downloads</a>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Affiliates --}}
-                <a href="{{ route('client.affiliates.index') }}" class="px-3 py-2 rounded-lg {{ request()->routeIs('client.affiliates.*') ? 'text-indigo-600 font-medium bg-indigo-50 dark:bg-indigo-900/20' : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700' }}">Affiliates</a>
-
-                {{-- Account --}}
-                <div class="relative group">
-                    <button class="flex items-center gap-1 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-700">
-                        {{ auth()->user()?->first_name ?? 'Account' }}
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                    <div class="absolute right-0 top-full pt-1 hidden group-hover:block w-48">
-                        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 py-1">
-                            <a href="#" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Profile</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Security</a>
-                            <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
-                            <form method="POST" action="{{ route('client.logout') }}">
-                                @csrf
-                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Logout</button>
-                            </form>
-                        </div>
-                    </div>
+            <div class="nav-dropdown">
+                <a class="nav-link {{ request()->routeIs('client.services.*') ? 'active' : '' }}">
+                    Services <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="{{ route('client.services.index') }}">My Services</a>
+                    <a href="{{ route('client.cart.store') }}">Order New Service</a>
                 </div>
             </div>
 
-            {{-- Mobile hamburger --}}
-            <button class="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
-                x-on:click="mobileOpen = !mobileOpen">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path x-show="!mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    <path x-show="mobileOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-            </button>
+            <div class="nav-dropdown">
+                <a class="nav-link {{ request()->routeIs('client.domains.*') ? 'active' : '' }}">
+                    Domains <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="{{ route('client.domains.index') }}">My Domains</a>
+                    <a href="#">Register Domain</a>
+                </div>
+            </div>
+
+            <div class="nav-dropdown">
+                <a class="nav-link {{ request()->routeIs('client.invoices.*') || request()->routeIs('client.funds.*') ? 'active' : '' }}">
+                    Billing <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="{{ route('client.invoices.index') }}">Invoices</a>
+                    <a href="{{ route('client.funds.index') }}">Add Funds</a>
+                </div>
+            </div>
+
+            <div class="nav-dropdown">
+                <a class="nav-link {{ request()->routeIs('client.tickets.*') || request()->routeIs('client.kb.*') || request()->routeIs('client.announcements.*') || request()->routeIs('client.contact') || request()->routeIs('client.downloads.*') ? 'active' : '' }}">
+                    Support <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="{{ route('client.tickets.create') }}">Open Ticket</a>
+                    <a href="{{ route('client.tickets.index') }}">My Tickets</a>
+                    <a href="{{ route('client.kb.index') }}">Knowledge Base</a>
+                    <a href="{{ route('client.announcements.index') }}">Announcements</a>
+                </div>
+            </div>
+
+            <div class="nav-dropdown">
+                <a class="nav-link {{ request()->routeIs('client.account.*') ? 'active' : '' }}">
+                    Account <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </a>
+                <div class="dropdown-menu">
+                    <a href="{{ route('client.account.profile') }}">Profile</a>
+                    <a href="{{ route('client.account.password') }}">Password</a>
+                    <a href="{{ route('client.account.contacts') }}">Contacts</a>
+                    <a href="{{ route('client.account.security') }}">Security</a>
+                </div>
+            </div>
         </div>
 
-        {{-- Mobile Menu --}}
-        <div x-show="mobileOpen" x-transition class="lg:hidden pb-4 space-y-1 text-sm">
-            <a href="{{ route('client.home') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Home</a>
-            <div class="pt-1 pb-1"><p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Services</p></div>
-            <a href="{{ route('client.services.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">My Services</a>
-            <div class="pt-1 pb-1"><p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Domains</p></div>
-            <a href="{{ route('client.domains.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">My Domains</a>
-            <div class="pt-1 pb-1"><p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Billing</p></div>
-            <a href="{{ route('client.invoices.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Invoices</a>
-            <a href="{{ route('client.funds.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Add Funds</a>
-            <div class="pt-1 pb-1"><p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Support</p></div>
-            <a href="{{ route('client.tickets.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">My Tickets</a>
-            <a href="{{ route('client.tickets.create') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Open Ticket</a>
-            <a href="{{ route('client.kb.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Knowledge Base</a>
-            <a href="{{ route('client.announcements.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Announcements</a>
-            <a href="{{ route('client.contact') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Contact Us</a>
-            <a href="{{ route('client.downloads.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Downloads</a>
-            <div class="pt-1 pb-1"><p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Account</p></div>
-            <a href="{{ route('client.affiliates.index') }}" class="block px-3 py-2 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">Affiliates</a>
-            <form method="POST" action="{{ route('client.logout') }}">
-                @csrf
-                <button type="submit" class="w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">Logout</button>
-            </form>
+        <div class="navbar-right">
+            @auth
+                <span style="font-size:13px; color:#555;">{{ auth()->user()->first_name }}</span>
+                <form method="POST" action="{{ route('client.logout') }}" style="margin:0;">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-sm">Logout</button>
+                </form>
+            @else
+                <a href="{{ route('client.login') }}" class="nav-link">Login</a>
+                <a href="{{ route('client.register') }}" class="btn btn-primary btn-sm">Register</a>
+            @endauth
         </div>
+
+        <button class="navbar-toggle" onclick="document.getElementById('mobileMenu').classList.toggle('open')">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+
+    <div id="mobileMenu" class="mobile-menu">
+        <a href="{{ route('client.home') }}">Dashboard</a>
+        <div class="mobile-section">Services</div>
+        <a href="{{ route('client.services.index') }}">My Services</a>
+        <a href="{{ route('client.cart.store') }}">Order New Service</a>
+        <div class="mobile-section">Domains</div>
+        <a href="{{ route('client.domains.index') }}">My Domains</a>
+        <div class="mobile-section">Billing</div>
+        <a href="{{ route('client.invoices.index') }}">Invoices</a>
+        <a href="{{ route('client.funds.index') }}">Add Funds</a>
+        <div class="mobile-section">Support</div>
+        <a href="{{ route('client.tickets.create') }}">Open Ticket</a>
+        <a href="{{ route('client.tickets.index') }}">My Tickets</a>
+        <a href="{{ route('client.kb.index') }}">Knowledge Base</a>
+        <a href="{{ route('client.announcements.index') }}">Announcements</a>
+        <div class="mobile-section">Account</div>
+        <a href="{{ route('client.account.profile') }}">Profile</a>
+        <a href="{{ route('client.account.password') }}">Password</a>
+        <a href="{{ route('client.account.contacts') }}">Contacts</a>
+        <a href="{{ route('client.account.security') }}">Security</a>
+        @auth
+            <form method="POST" action="{{ route('client.logout') }}" style="margin:0; padding: 0 20px 8px;">
+                @csrf
+                <button type="submit" class="btn btn-danger btn-sm" style="margin-top:8px; width:100%;">Logout</button>
+            </form>
+        @endauth
     </div>
 </nav>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
+<div class="client-main">
     @if(session('success'))
-        <div class="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-400">{{ session('success') }}</div>
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
     @if(session('error'))
-        <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400">{{ session('error') }}</div>
+        <div class="alert alert-error">{{ session('error') }}</div>
     @endif
     @if(session('info'))
-        <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-400">{{ session('info') }}</div>
+        <div class="alert alert-info">{{ session('info') }}</div>
     @endif
-    @yield('content')
-</main>
+    @if(session('warning'))
+        <div class="alert alert-warning">{{ session('warning') }}</div>
+    @endif
 
-<footer class="border-t border-slate-200 dark:border-slate-700 py-6 text-center text-sm text-slate-400">&copy; {{ date('Y') }} PNLCS. All rights reserved.</footer>
+    @yield('content')
+</div>
+
+<footer class="client-footer">
+    &copy; {{ date('Y') }} PNLCS. All rights reserved.
+    &nbsp;&middot;&nbsp; <a href="{{ route('client.contact') }}" style="color:#337ab7;">Contact</a>
+    &nbsp;&middot;&nbsp; <a href="{{ route('client.announcements.index') }}" style="color:#337ab7;">Announcements</a>
+    &nbsp;&middot;&nbsp; <a href="{{ route('client.kb.index') }}" style="color:#337ab7;">Knowledge Base</a>
+</footer>
+
+@yield('scripts')
 </body>
 </html>

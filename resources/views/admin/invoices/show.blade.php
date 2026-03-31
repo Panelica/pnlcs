@@ -1,286 +1,178 @@
-@extends("admin.layouts.app")
-@section("title", "Invoice #" . $invoice->invoice_num)
-@section("content")
-<div class="max-w-4xl">
+@extends('admin.layouts.app')
+@section('title', 'Invoice #' . $invoice->invoice_num)
+@section('content')
 
-    {{-- Header --}}
-    <div class="flex items-start justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold">Invoice #{{ $invoice->invoice_num }}</h1>
-            <p class="text-slate-500 text-sm mt-1">
-                <a href="{{ route('admin.clients.show', $invoice->client) }}" class="text-indigo-600 hover:underline">
-                    {{ $invoice->client->display_name ?? 'N/A' }}
-                </a>
-                &nbsp;·&nbsp; {{ $invoice->date?->format('d M Y') }}
-                &nbsp;·&nbsp; Due {{ $invoice->due_date?->format('d M Y') }}
-            </p>
-        </div>
-        <div class="flex items-center gap-3">
-            <span class="px-3 py-1 text-sm font-medium rounded-full
-                {{ $invoice->status === 'Paid'      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                  ($invoice->status === 'Unpaid'    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                  ($invoice->status === 'Overdue'   ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                   'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300')) }}">
-                {{ ucfirst($invoice->status) }}
-            </span>
-            <a href="{{ route('admin.invoices.index') }}" class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                ← Back
-            </a>
-        </div>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <h1>Invoice #{{ $invoice->invoice_num }} <span class="badge-{{ strtolower($invoice->status) }}" style="font-size:14px;vertical-align:middle;">{{ ucfirst($invoice->status) }}</span></h1>
+    <div style="display:flex;gap:6px;align-items:center;">
+        @if(in_array($invoice->status, ['Unpaid', 'Overdue']))
+        <button type="button" class="btn btn-success btn-sm" onclick="document.getElementById('mark-paid-form').style.display=document.getElementById('mark-paid-form').style.display==='none'?'block':'none'">Mark Paid</button>
+        @endif
+        @if($invoice->status !== 'Paid' && $invoice->status !== 'Cancelled')
+        <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}" style="display:inline;" onsubmit="return confirm('Cancel this invoice?')">
+            @csrf
+            <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+        </form>
+        @endif
+        <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
     </div>
+</div>
 
-    {{-- Flash messages --}}
-    @if(session('success'))
-    <div class="mb-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm text-emerald-700 dark:text-emerald-400">
-        {{ session('success') }}
-    </div>
-    @endif
-    @if(session('error'))
-    <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-400">
-        {{ session('error') }}
-    </div>
-    @endif
+@if(session('success'))
+<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
+@endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {{-- Left: items + transactions --}}
-        <div class="lg:col-span-2 space-y-6">
-
-            {{-- Line Items --}}
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h3 class="font-semibold mb-4">Line Items</h3>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-200 dark:border-slate-700">
-                            <th class="py-2 text-left text-slate-500 font-medium">Description</th>
-                            <th class="py-2 text-center text-slate-500 font-medium w-16">Taxed</th>
-                            <th class="py-2 text-right text-slate-500 font-medium w-28">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($invoice->items as $item)
-                        <tr class="border-b border-slate-100 dark:border-slate-700/50">
-                            <td class="py-3">
-                                <span class="text-xs text-slate-400 mr-1 uppercase">{{ $item->type }}</span>
-                                {{ $item->description }}
-                            </td>
-                            <td class="py-3 text-center">
-                                @if($item->taxed)
-                                    <span class="text-emerald-500">✓</span>
-                                @else
-                                    <span class="text-slate-300">—</span>
-                                @endif
-                            </td>
-                            <td class="py-3 text-right font-mono">${{ number_format($item->amount, 2) }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="3" class="py-6 text-center text-slate-400 text-sm">No line items</td></tr>
-                        @endforelse
-                    </tbody>
-                    <tfoot>
-                        <tr class="border-t border-slate-200 dark:border-slate-700">
-                            <td class="py-3 text-slate-500 font-medium" colspan="2">Subtotal</td>
-                            <td class="py-3 text-right font-mono font-semibold">${{ number_format($invoice->subtotal, 2) }}</td>
-                        </tr>
-                        @if($invoice->tax > 0)
-                        <tr>
-                            <td class="py-1.5 text-slate-500 text-sm" colspan="2">
-                                Tax @if($invoice->tax_rate > 0)({{ $invoice->tax_rate }}%)@endif
-                            </td>
-                            <td class="py-1.5 text-right font-mono text-sm">${{ number_format($invoice->tax, 2) }}</td>
-                        </tr>
-                        @endif
-                        @if($invoice->tax2 > 0)
-                        <tr>
-                            <td class="py-1.5 text-slate-500 text-sm" colspan="2">
-                                Tax 2 @if($invoice->tax_rate2 > 0)({{ $invoice->tax_rate2 }}%)@endif
-                            </td>
-                            <td class="py-1.5 text-right font-mono text-sm">${{ number_format($invoice->tax2, 2) }}</td>
-                        </tr>
-                        @endif
-                        @if($invoice->credit > 0)
-                        <tr>
-                            <td class="py-1.5 text-emerald-600 text-sm" colspan="2">Credit Applied</td>
-                            <td class="py-1.5 text-right font-mono text-sm text-emerald-600">-${{ number_format($invoice->credit, 2) }}</td>
-                        </tr>
-                        @endif
-                        <tr class="border-t-2 border-slate-300 dark:border-slate-600">
-                            <td class="py-3 font-bold text-base" colspan="2">Total</td>
-                            <td class="py-3 text-right font-bold text-base font-mono">${{ number_format($invoice->total, 2) }}</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            {{-- Transactions / Payment History --}}
-            @if($invoice->transactions->count() > 0)
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h3 class="font-semibold mb-4">Payment History</h3>
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-slate-200 dark:border-slate-700">
-                            <th class="py-2 text-left text-slate-500 font-medium">Date</th>
-                            <th class="py-2 text-left text-slate-500 font-medium">Gateway</th>
-                            <th class="py-2 text-left text-slate-500 font-medium">Transaction ID</th>
-                            <th class="py-2 text-right text-slate-500 font-medium">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($invoice->transactions as $tx)
-                        <tr class="border-b border-slate-100 dark:border-slate-700/50">
-                            <td class="py-2.5">{{ $tx->date?->format('d M Y') }}</td>
-                            <td class="py-2.5 capitalize">{{ $tx->gateway }}</td>
-                            <td class="py-2.5 font-mono text-xs text-slate-500">{{ $tx->transaction_id ?? '—' }}</td>
-                            <td class="py-2.5 text-right font-mono text-emerald-600">+${{ number_format($tx->amount_in, 2) }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            @endif
-
-            {{-- Notes --}}
-            @if($invoice->notes)
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h3 class="font-semibold mb-2">Notes</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{{ $invoice->notes }}</p>
-            </div>
-            @endif
-
-        </div>
-
-        {{-- Right: actions + client info --}}
-        <div class="space-y-6">
-
-            {{-- Actions --}}
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h3 class="font-semibold mb-4">Actions</h3>
-                <div class="space-y-3">
-
-                    {{-- Mark Paid --}}
-                    @if(in_array($invoice->status, ['Unpaid', 'Overdue']))
-                    <div x-data="{ open: false }">
-                        <button type="button" @click="open = !open"
-                                class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
-                            Mark as Paid
-                        </button>
-                        <div x-show="open" x-transition class="mt-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg" style="display:none;">
-                            <form method="POST" action="{{ route('admin.invoices.mark-paid', $invoice) }}">
-                                @csrf
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs font-medium mb-1">Transaction ID (optional)</label>
-                                        <input type="text" name="transaction_id" placeholder="e.g. ch_abc123"
-                                               class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs font-medium mb-1">Gateway</label>
-                                        <select name="gateway"
-                                                class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                            <option value="manual">Manual</option>
-                                            <option value="banktransfer">Bank Transfer</option>
-                                            <option value="paypal">PayPal</option>
-                                            <option value="stripe">Stripe</option>
-                                            <option value="credit">Credit</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit"
-                                            class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
-                                        Confirm Payment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+@if(in_array($invoice->status, ['Unpaid', 'Overdue']))
+<div id="mark-paid-form" style="display:none;margin-bottom:15px;">
+    <div class="card">
+        <div class="card-header"><strong>Mark Invoice as Paid</strong></div>
+        <div class="card-body">
+            <form method="POST" action="{{ route('admin.invoices.mark-paid', $invoice) }}">
+                @csrf
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+                        <label class="form-label">Gateway</label>
+                        <select name="gateway" class="form-control">
+                            <option value="manual">Manual</option>
+                            <option value="banktransfer">Bank Transfer</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="stripe">Stripe</option>
+                            <option value="credit">Credit</option>
+                        </select>
                     </div>
-                    @endif
-
-                    {{-- Cancel --}}
-                    @if($invoice->status !== 'Paid' && $invoice->status !== 'Cancelled')
-                    <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}"
-                          onsubmit="return confirm('Cancel this invoice? This cannot be undone.')">
-                        @csrf
-                        <button type="submit"
-                                class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors">
-                            Cancel Invoice
-                        </button>
-                    </form>
-                    @endif
-
-                    @if($invoice->status === 'Paid')
-                    <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg text-center">
-                        <p class="text-sm text-emerald-700 dark:text-emerald-400 font-medium">✓ Paid on {{ $invoice->date_paid?->format('d M Y H:i') }}</p>
+                    <div class="form-group" style="margin:0;flex:1;min-width:160px;">
+                        <label class="form-label">Transaction ID (optional)</label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. ch_abc123">
                     </div>
-                    @endif
-
-                    @if($invoice->status === 'Cancelled')
-                    <div class="p-3 bg-slate-100 dark:bg-slate-700/50 rounded-lg text-center">
-                        <p class="text-sm text-slate-500 font-medium">Invoice Cancelled</p>
+                    <div class="form-group" style="margin:0;flex:1;min-width:120px;">
+                        <label class="form-label">Amount</label>
+                        <input type="number" name="amount" step="0.01" value="{{ $invoice->total }}" class="form-control">
                     </div>
-                    @endif
+                    <button type="submit" class="btn btn-success btn-sm" style="margin-bottom:0;">Confirm Payment</button>
                 </div>
-            </div>
-
-            {{-- Client info --}}
-            @if($invoice->client)
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h3 class="font-semibold mb-4">Client</h3>
-                <dl class="space-y-2 text-sm">
-                    <div>
-                        <dt class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Name</dt>
-                        <dd><a href="{{ route('admin.clients.show', $invoice->client) }}" class="text-indigo-600 hover:underline font-medium">{{ $invoice->client->display_name }}</a></dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Email</dt>
-                        <dd class="text-slate-700 dark:text-slate-300">{{ $invoice->client->email }}</dd>
-                    </div>
-                    @if($invoice->client->address1)
-                    <div>
-                        <dt class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Address</dt>
-                        <dd class="text-slate-700 dark:text-slate-300">
-                            {{ $invoice->client->address1 }}<br>
-                            {{ $invoice->client->city }}, {{ $invoice->client->state }} {{ $invoice->client->postcode }}<br>
-                            {{ $invoice->client->country }}
-                        </dd>
-                    </div>
-                    @endif
-                    @if($invoice->client->tax_id)
-                    <div>
-                        <dt class="text-xs text-slate-500 uppercase tracking-wider mb-0.5">Tax ID</dt>
-                        <dd class="font-mono text-xs">{{ $invoice->client->tax_id }}</dd>
-                    </div>
-                    @endif
-                </dl>
-            </div>
-            @endif
-
-            {{-- Invoice meta --}}
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h3 class="font-semibold mb-4">Invoice Details</h3>
-                <dl class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <dt class="text-slate-500">Invoice #</dt>
-                        <dd class="font-mono font-medium">{{ $invoice->invoice_num }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-slate-500">Date</dt>
-                        <dd>{{ $invoice->date?->format('d M Y') }}</dd>
-                    </div>
-                    <div class="flex justify-between">
-                        <dt class="text-slate-500">Due Date</dt>
-                        <dd class="{{ $invoice->due_date?->isPast() && $invoice->status !== 'Paid' ? 'text-red-600 font-medium' : '' }}">
-                            {{ $invoice->due_date?->format('d M Y') }}
-                        </dd>
-                    </div>
-                    @if($invoice->payment_method)
-                    <div class="flex justify-between">
-                        <dt class="text-slate-500">Payment Method</dt>
-                        <dd class="capitalize">{{ $invoice->payment_method }}</dd>
-                    </div>
-                    @endif
-                </dl>
-            </div>
-
+            </form>
         </div>
     </div>
 </div>
+@endif
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
+
+    {{-- Left (2/3): Line Items + Payment History --}}
+    <div style="grid-column:span 2;">
+
+        <div class="card" style="margin-bottom:15px;">
+            <div class="card-header"><strong>Line Items</strong></div>
+            <table class="data-table">
+                <thead><tr>
+                    <th>Description</th><th style="width:60px;text-align:center;">Taxed</th><th style="text-align:right;width:100px;">Amount</th>
+                </tr></thead>
+                <tbody>
+                @forelse($invoice->items as $item)
+                <tr>
+                    <td><span style="font-size:11px;color:#999;text-transform:uppercase;margin-right:4px;">{{ $item->type }}</span>{{ $item->description }}</td>
+                    <td style="text-align:center;">{{ $item->taxed ? '&#10003;' : '&mdash;' }}</td>
+                    <td style="text-align:right;font-family:monospace;">${{ number_format($item->amount, 2) }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="3" style="text-align:center;color:#999;padding:20px;">No line items</td></tr>
+                @endforelse
+                </tbody>
+                <tfoot>
+                    <tr><td colspan="2" style="text-align:right;padding:8px 12px;color:#555;">Subtotal</td><td style="text-align:right;padding:8px 12px;font-weight:600;font-family:monospace;">${{ number_format($invoice->subtotal, 2) }}</td></tr>
+                    @if($invoice->tax > 0)
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">Tax@if($invoice->tax_rate > 0) ({{ $invoice->tax_rate }}%)@endif</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax, 2) }}</td></tr>
+                    @endif
+                    @if($invoice->tax2 > 0)
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">Tax 2@if($invoice->tax_rate2 > 0) ({{ $invoice->tax_rate2 }}%)@endif</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax2, 2) }}</td></tr>
+                    @endif
+                    @if($invoice->credit > 0)
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#5cb85c;">Credit Applied</td><td style="text-align:right;padding:4px 12px;font-family:monospace;color:#5cb85c;">-${{ number_format($invoice->credit, 2) }}</td></tr>
+                    @endif
+                    <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td colspan="2" style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;">Total</td><td style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;font-family:monospace;">${{ number_format($invoice->total, 2) }}</td></tr>
+                </tfoot>
+            </table>
+        </div>
+
+        @if($invoice->transactions->count() > 0)
+        <div class="card" style="margin-bottom:15px;">
+            <div class="card-header"><strong>Payment History</strong></div>
+            <table class="data-table">
+                <thead><tr><th>Date</th><th>Gateway</th><th>Transaction ID</th><th style="text-align:right;">Amount</th></tr></thead>
+                <tbody>
+                @foreach($invoice->transactions as $tx)
+                <tr>
+                    <td>{{ $tx->date?->format('d M Y') }}</td>
+                    <td style="text-transform:capitalize;">{{ $tx->gateway }}</td>
+                    <td style="font-family:monospace;font-size:12px;">{{ $tx->transaction_id ?? '&mdash;' }}</td>
+                    <td style="text-align:right;color:#5cb85c;font-weight:600;">+${{ number_format($tx->amount_in, 2) }}</td>
+                </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+
+        @if($invoice->notes)
+        <div class="card">
+            <div class="card-header"><strong>Notes</strong></div>
+            <div class="card-body" style="font-size:13px;white-space:pre-wrap;color:#555;">{{ $invoice->notes }}</div>
+        </div>
+        @endif
+    </div>
+
+    {{-- Right (1/3) --}}
+    <div>
+        @if($invoice->client)
+        <div class="panel" style="margin-bottom:15px;">
+            <div class="panel-heading panel-primary">Client Info</div>
+            <div class="panel-body">
+                <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                    <tr><td style="padding:4px 0;color:#777;width:40%;">Name</td><td style="padding:4px 0;"><a href="{{ route('admin.clients.show', $invoice->client) }}" style="color:#337ab7;font-weight:600;">{{ $invoice->client->display_name }}</a></td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">Email</td><td style="padding:4px 0;">{{ $invoice->client->email }}</td></tr>
+                    @if($invoice->client->address1)
+                    <tr><td style="padding:4px 0;color:#777;">Address</td><td style="padding:4px 0;">{{ $invoice->client->address1 }}<br>{{ $invoice->client->city }}, {{ $invoice->client->state }} {{ $invoice->client->postcode }}<br>{{ $invoice->client->country }}</td></tr>
+                    @endif
+                    @if($invoice->client->tax_id)
+                    <tr><td style="padding:4px 0;color:#777;">Tax ID</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->client->tax_id }}</td></tr>
+                    @endif
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <div class="panel" style="margin-bottom:15px;">
+            <div class="panel-heading panel-primary">Invoice Details</div>
+            <div class="panel-body">
+                <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                    <tr><td style="padding:4px 0;color:#777;width:45%;">Invoice #</td><td style="padding:4px 0;font-family:monospace;font-weight:600;">{{ $invoice->invoice_num }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">Date</td><td style="padding:4px 0;">{{ $invoice->date?->format('d M Y') }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">Due Date</td><td style="padding:4px 0;{{ ($invoice->due_date?->isPast() && $invoice->status !== 'Paid') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $invoice->due_date?->format('d M Y') }}</td></tr>
+                    @if($invoice->payment_method)
+                    <tr><td style="padding:4px 0;color:#777;">Payment</td><td style="padding:4px 0;text-transform:capitalize;">{{ $invoice->payment_method }}</td></tr>
+                    @endif
+                    @if($invoice->status === 'Paid' && $invoice->date_paid)
+                    <tr><td style="padding:4px 0;color:#777;">Paid On</td><td style="padding:4px 0;color:#5cb85c;font-weight:600;">{{ $invoice->date_paid->format('d M Y H:i') }}</td></tr>
+                    @endif
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading panel-primary">Actions</div>
+            <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
+                @if($invoice->status === 'Paid')
+                <div style="padding:8px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:3px;text-align:center;color:#3c763d;font-size:13px;">&#10003; Paid on {{ $invoice->date_paid?->format('d M Y H:i') }}</div>
+                @endif
+                @if($invoice->status === 'Cancelled')
+                <div style="padding:8px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;text-align:center;color:#777;font-size:13px;">Invoice Cancelled</div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection

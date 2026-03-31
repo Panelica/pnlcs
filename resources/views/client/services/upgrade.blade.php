@@ -1,66 +1,73 @@
 @extends('client.layouts.app')
 @section('title', 'Upgrade / Downgrade Service')
 @section('content')
-<div class="max-w-3xl mx-auto">
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold">Upgrade / Downgrade</h1>
-        <p class="text-slate-500 text-sm mt-1">Currently on: <strong>{{ $service->product->name ?? 'N/A' }}</strong> &mdash; ${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}</p>
-    </div>
 
-    @if($availableProducts->isEmpty())
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-            <p class="text-slate-400">No upgrade or downgrade options are currently available for this service.</p>
-            <a href="{{ route('client.services.show', $service) }}" class="inline-block mt-4 text-sm text-indigo-600 hover:text-indigo-500">&larr; Back to Service</a>
-        </div>
-    @else
-        <form method="POST" action="{{ route('client.services.upgrade.process', $service) }}">
+<div class="page-header">
+    <h1>Upgrade / Downgrade</h1>
+    <a href="{{ route('client.services.show', $service) }}" class="btn btn-default btn-sm">&larr; Back to Service</a>
+</div>
+
+@if(!isset($upgrades) || $upgrades->isEmpty())
+<div class="card">
+    <div class="card-body" style="text-align:center; padding:40px; color:#999;">
+        <p style="margin:0 0 16px;">No upgrade options are available for this service at this time.</p>
+        <a href="{{ route('client.services.show', $service) }}" class="btn btn-default btn-sm">&larr; Back to Service</a>
+    </div>
+</div>
+@else
+<div style="background:#d9edf7; border:1px solid #bce8f1; color:#31708f; padding:12px 16px; border-radius:4px; font-size:13px; margin-bottom:20px;">
+    Currently on: <strong>{{ $service->product->name ?? 'Service' }}</strong> &mdash; ${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}
+</div>
+
+<div class="card">
+    <div class="card-header">Select a New Plan</div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('client.services.upgrade.submit', $service) }}">
             @csrf
-            <div class="space-y-4 mb-6">
-                @foreach($availableProducts as $product)
+            @if($errors->any())
+            <div style="background:#f2dede;border:1px solid #ebccd1;color:#a94442;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:16px;">
+                <ul style="margin:0; padding-left:18px;">
+                    @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+                </ul>
+            </div>
+            @endif
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                @foreach($upgrades as $product)
                 @php
-                    $pricing = $product->pricing->first();
-                    $price = $pricing ? $pricing->monthly ?? 0 : 0;
-                    $diff = $price - $service->amount;
+                    $pr = $product->pricing->first();
+                    $cycles = ['monthly','quarterly','semiannually','annually'];
+                    $price = null;
+                    $cycle = ;
+                    if ($pr) {
+                        foreach ($cycles as $c) {
+                            if (isset($pr->{$c}) && (float)$pr->{$c} > 0) { $price = $pr->{$c}; $cycle = $c; break; }
+                        }
+                    }
                 @endphp
-                <label class="flex items-start gap-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors has-[:checked]:border-indigo-500 has-[:checked]:ring-2 has-[:checked]:ring-indigo-200">
-                    <input type="radio" name="new_product_id" value="{{ $product->id }}" class="mt-1 text-indigo-600" required>
-                    <div class="flex-1">
-                        <div class="flex items-center justify-between">
-                            <span class="font-semibold">{{ $product->name }}</span>
-                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                ${{ number_format($price, 2) }}/mo
-                                @if($diff > 0)
-                                    <span class="text-amber-600 text-xs ml-1">(+${{ number_format(abs($diff), 2) }})</span>
-                                @elseif($diff < 0)
-                                    <span class="text-emerald-600 text-xs ml-1">(-${{ number_format(abs($diff), 2) }})</span>
-                                @endif
-                            </span>
-                        </div>
+                <label style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
+                    <input type="radio" name="new_product_id" value="{{ $product->id }}" required style="margin:0;">
+                    <div style="flex:1;">
+                        <div style="font-weight:500; font-size:13px; color:#1a4d80;">{{ $product->name }}</div>
                         @if($product->description)
-                            <p class="text-sm text-slate-500 mt-1">{{ Str::limit($product->description, 120) }}</p>
+                        <div style="font-size:12px; color:#777; margin-top:3px;">{{ Str::limit(strip_tags($product->description), 100) }}</div>
                         @endif
                     </div>
+                    @if($price)
+                    <div style="text-align:right; white-space:nowrap;">
+                        <div style="font-weight:600; font-size:14px;">${{ number_format($price, 2) }}</div>
+                        <div style="font-size:11px; color:#999;">per {{ $cycle }}</div>
+                    </div>
+                    @endif
                 </label>
                 @endforeach
             </div>
-
-            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">
-                <p class="text-sm text-blue-700 dark:text-blue-300">
-                    <strong>Note:</strong> Your upgrade request will be reviewed by our team. Any pro-rated cost difference will be applied to your next invoice.
-                </p>
-            </div>
-
-            @error('new_product_id') <p class="text-red-500 text-sm mb-4">{{ $message }}</p> @enderror
-
-            <div class="flex items-center gap-3">
-                <button type="submit" class="px-5 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                    Submit Upgrade Request
-                </button>
-                <a href="{{ route('client.services.show', $service) }}" class="px-5 py-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-50 transition-colors">
-                    Cancel
-                </a>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn btn-primary">Request Change</button>
+                <a href="{{ route('client.services.show', $service) }}" class="btn btn-default">Cancel</a>
             </div>
         </form>
-    @endif
+    </div>
 </div>
+@endif
+
 @endsection

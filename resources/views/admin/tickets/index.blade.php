@@ -1,51 +1,74 @@
 @extends("admin.layouts.app")
 @section("title", "Support Tickets")
 @section("content")
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Support Tickets</h1>
+
+<div class="page-header">
+    <h1>Support Tickets</h1>
 </div>
 
-<div class="flex gap-2 mb-6 flex-wrap">
-    @foreach(["" => "All", "open" => "Open", "answered" => "Answered", "customer-reply" => "Customer Reply", "on hold" => "On Hold", "in progress" => "In Progress", "closed" => "Closed"] as $val => $label)
-    <a href="{{ route("admin.tickets.index", ["status" => $val]) }}" class="px-3 py-1.5 rounded-lg text-sm font-medium {{ request("status") == $val ? "bg-indigo-600 text-white" : "bg-slate-100 dark:bg-slate-700 hover:bg-slate-200" }} transition-colors">{{ $label }}</a>
+<!-- Status Filter Tabs -->
+<div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
+    @foreach(["" => "All", "open" => "Open", "answered" => "Answered", "customer-reply" => "Customer Reply", "closed" => "Closed", "on hold" => "On Hold"] as $val => $label)
+    @php $isActive = (request("status","") == $val); @endphp
+    <a href="{{ route("admin.tickets.index", ["status" => $val]) }}"
+       style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
+        {{ $label }}
+    </a>
     @endforeach
 </div>
 
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700/50">
+<!-- Table -->
+<div class="card">
+    <table class="data-table">
+        <thead>
             <tr>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Ticket</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Department</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Subject</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Client</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Priority</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Status</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Last Reply</th>
+                <th>Ticket #</th>
+                <th>Department</th>
+                <th>Subject</th>
+                <th>Client</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Last Reply</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+        <tbody>
             @forelse($tickets as $ticket)
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                <td class="px-4 py-3 font-mono text-xs"><a href="{{ route("admin.tickets.show", $ticket) }}" class="text-indigo-600">#{{ $ticket->tid }}</a></td>
-                <td class="px-4 py-3">{{ $ticket->department->name ?? "N/A" }}</td>
-                <td class="px-4 py-3 font-medium"><a href="{{ route("admin.tickets.show", $ticket) }}" class="text-indigo-600 hover:text-indigo-500">{{ Str::limit($ticket->title, 50) }}</a></td>
-                <td class="px-4 py-3">{{ $ticket->client->full_name ?? $ticket->name ?? $ticket->email }}</td>
-                <td class="px-4 py-3">
-                    @php $pc = ["low" => "slate", "medium" => "blue", "high" => "amber", "critical" => "red"]; @endphp
-                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-{{ $pc[$ticket->priority] ?? "slate" }}-100 text-{{ $pc[$ticket->priority] ?? "slate" }}-700">{{ ucfirst($ticket->priority) }}</span>
-                </td>
-                <td class="px-4 py-3">
-                    @php $sc = ["open" => "emerald", "answered" => "blue", "customer-reply" => "amber", "on hold" => "violet", "in progress" => "cyan", "closed" => "slate"]; @endphp
-                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-{{ $sc[$ticket->status] ?? "slate" }}-100 text-{{ $sc[$ticket->status] ?? "slate" }}-700">{{ ucfirst($ticket->status) }}</span>
-                </td>
-                <td class="px-4 py-3 text-slate-500 text-xs">{{ $ticket->last_reply?->diffForHumans() ?? "-" }}</td>
+            @php
+            $statusBadge = match(strtolower($ticket->status ?? "")) {
+                "open"            => "badge-open",
+                "answered"        => "badge-answered",
+                "customer-reply"  => "badge-customer-reply",
+                "closed"          => "badge-terminated",
+                "on hold"         => "badge-suspended",
+                "in progress"     => "badge-pending",
+                default           => "badge-cancelled",
+            };
+            $priorityBadge = match(strtolower($ticket->priority ?? "")) {
+                "high", "critical" => "badge-terminated",
+                "medium"           => "badge-pending",
+                "low"              => "badge-active",
+                default            => "badge-cancelled",
+            };
+            @endphp
+            <tr>
+                <td><a href="{{ route("admin.tickets.show", $ticket) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $ticket->tid }}</a></td>
+                <td style="color:#666;">{{ $ticket->department->name ?? "N/A" }}</td>
+                <td><a href="{{ route("admin.tickets.show", $ticket) }}" style="color:#337ab7;text-decoration:none;font-weight:500;">{{ Str::limit($ticket->title, 55) }}</a></td>
+                <td>{{ $ticket->client->full_name ?? $ticket->name ?? $ticket->email }}</td>
+                <td><span class="badge {{ $priorityBadge }}">{{ ucfirst($ticket->priority ?? "") }}</span></td>
+                <td><span class="badge {{ $statusBadge }}">{{ ucfirst($ticket->status ?? "") }}</span></td>
+                <td style="color:#666;font-size:12px;">{{ $ticket->last_reply?->diffForHumans() ?? "-" }}</td>
             </tr>
             @empty
-            <tr><td colspan="7" class="px-4 py-12 text-center text-slate-500">No tickets found.</td></tr>
+            <tr>
+                <td colspan="7" style="text-align:center;padding:32px;color:#999;">No tickets found.</td>
+            </tr>
             @endforelse
         </tbody>
     </table>
-    <div class="px-4 py-3 border-t">{{ $tickets->withQueryString()->links() }}</div>
+    <div style="padding:10px 16px;border-top:1px solid #e5e7eb;">
+        {{ $tickets->withQueryString()->links() }}
+    </div>
 </div>
+
 @endsection

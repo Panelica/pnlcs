@@ -2,111 +2,58 @@
 @section('title', 'Email Logs')
 @section('content')
 
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">System Logs</h1>
+<div class="page-header"><h1>System Logs</h1></div>
+
+<div style="border-bottom:2px solid #ddd;margin-bottom:15px;display:flex;">
+    @foreach(['admin.logs.index'=>'Activity','admin.logs.gateway'=>'Gateway','admin.logs.module'=>'Module','admin.logs.email'=>'Email'] as $route=>$label)
+    <a href="{{ route($route) }}" style="padding:8px 16px;font-size:13px;text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px;{{ request()->routeIs($route) ? 'border-bottom-color:#337ab7;color:#337ab7;font-weight:600;' : 'color:#555;' }}">{{ $label }}</a>
+    @endforeach
 </div>
 
-<x-flash-message/>
-
-{{-- Tab Navigation --}}
-<div class="flex gap-1 mb-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-1">
-    <a href="{{ route('admin.logs.index') }}"
-       class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-        Activity
-    </a>
-    <a href="{{ route('admin.logs.gateway') }}"
-       class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-        Gateway
-    </a>
-    <a href="{{ route('admin.logs.module') }}"
-       class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
-        Module
-    </a>
-    <a href="{{ route('admin.logs.email') }}"
-       class="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-indigo-600 text-white">
-        Email
-    </a>
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-body">
+        <form method="GET" action="{{ route('admin.logs.email') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div><label class="form-label">Status</label>
+                <select name="status" onchange="this.form.submit()" class="form-control" style="width:140px;">
+                    <option value="">All</option>
+                    <option value="sent" {{ request('status')==='sent'?'selected':'' }}>Sent</option>
+                    <option value="pending" {{ request('status')==='pending'?'selected':'' }}>Pending</option>
+                    <option value="failed" {{ request('status')==='failed'?'selected':'' }}>Failed</option>
+                </select>
+            </div>
+            <div style="flex:1;min-width:200px;"><label class="form-label">Search (subject/recipient)</label><input type="text" name="search" value="{{ request('search') }}" placeholder="Search..." class="form-control"></div>
+            <div style="display:flex;gap:6px;">
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                <a href="{{ route('admin.logs.email') }}" class="btn btn-default btn-sm">Clear</a>
+            </div>
+        </form>
+    </div>
 </div>
 
-{{-- Email Log Filters --}}
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mb-4">
-    <form method="GET" action="{{ route('admin.logs.email') }}" class="flex flex-wrap items-end gap-4">
-        <div>
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Status</label>
-            <select name="status" onchange="this.form.submit()"
-                    class="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500">
-                <option value="">All</option>
-                <option value="sent" {{ request('status') === 'sent' ? 'selected' : '' }}>Sent</option>
-                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="failed" {{ request('status') === 'failed' ? 'selected' : '' }}>Failed</option>
-            </select>
-        </div>
-        <div class="flex-1 min-w-[200px]">
-            <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Search (subject/recipient)</label>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search..."
-                   class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <div class="flex gap-2">
-            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors">Filter</button>
-            <a href="{{ route('admin.logs.email') }}" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-lg transition-colors">Clear</a>
-        </div>
-    </form>
-</div>
-
-{{-- Email Log Table --}}
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700/50">
-            <tr>
-                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300 w-40">Date</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300 w-36">Client</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300 w-44">Recipient</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300">Subject</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600 dark:text-slate-300 w-20">Status</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+<div class="card">
+    <table class="data-table">
+        <thead><tr><th>Date</th><th>Client</th><th>Recipient</th><th>Subject</th><th>Status</th></tr></thead>
+        <tbody>
             @forelse($logs as $log)
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                    {{ $log->date?->format('Y-m-d H:i:s') ?? $log->created_at?->format('Y-m-d H:i:s') ?? '-' }}
+            <tr>
+                <td style="font-size:12px;white-space:nowrap;color:#777;">{{ $log->date?->format('Y-m-d H:i:s') ?? $log->created_at?->format('Y-m-d H:i:s') ?? '-' }}</td>
+                <td>
+                    @if($log->client)<a href="{{ route('admin.clients.show', $log->client) }}" style="color:#337ab7;">{{ $log->client->full_name }}</a>
+                    @else<span style="color:#999;">-</span>@endif
                 </td>
-                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">
-                    @if($log->client)
-                        <a href="{{ route('admin.clients.show', $log->client) }}" class="text-indigo-600 hover:text-indigo-500">
-                            {{ $log->client->full_name }}
-                        </a>
-                    @else
-                        <span class="text-slate-400">-</span>
-                    @endif
-                </td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400 text-xs">
-                    {{ $log->to ?? '-' }}
-                </td>
-                <td class="px-4 py-3 text-slate-700 dark:text-slate-300">
-                    {{ $log->subject ?? '-' }}
-                </td>
-                <td class="px-4 py-3">
-                    @if($log->failed)
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">Failed</span>
-                    @elseif($log->pending)
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400">Pending</span>
-                    @else
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Sent</span>
-                    @endif
+                <td style="font-size:12px;color:#777;">{{ $log->to ?? '-' }}</td>
+                <td>{{ $log->subject ?? '-' }}</td>
+                <td>
+                    @if($log->failed)<span class="badge-cancelled">Failed</span>
+                    @elseif($log->pending)<span class="badge-pending">Pending</span>
+                    @else<span class="badge-active">Sent</span>@endif
                 </td>
             </tr>
             @empty
-            <tr>
-                <td colspan="5" class="px-4 py-8 text-center text-slate-500 dark:text-slate-400">No email log entries found.</td>
-            </tr>
+            <tr><td colspan="5" style="text-align:center;color:#999;padding:30px;">No email log entries found.</td></tr>
             @endforelse
         </tbody>
     </table>
-    @if($logs->hasPages())
-    <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">
-        {{ $logs->withQueryString()->links() }}
-    </div>
-    @endif
+    @if($logs->hasPages())<div style="padding:10px 15px;">{{ $logs->withQueryString()->links() }}</div>@endif
 </div>
 @endsection

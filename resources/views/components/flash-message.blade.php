@@ -1,39 +1,36 @@
 @if(session('success'))
-<div x-data="{ show: true }" x-show="show" x-transition x-init="setTimeout(() => show = false, 5000)"
-     class="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg flex items-center justify-between">
-    <div class="flex items-center gap-2">
-        <x-heroicon-s-check-circle class="w-5 h-5 text-emerald-500"/>
-        <span class="text-sm text-emerald-700 dark:text-emerald-400">{{ session('success') }}</span>
-    </div>
-    <button x-on:click="show = false" class="text-emerald-400 hover:text-emerald-600">
-        <x-heroicon-o-x-mark class="w-4 h-4"/>
-    </button>
+<div style="background:#dff0d8; border:1px solid #d6e9c6; color:#3c763d; padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+    <span>{{ session('success') }}</span>
+    <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:#3c763d; font-size:16px; cursor:pointer; padding:0; line-height:1; opacity:0.7;">&times;</button>
 </div>
 @endif
 
 @if(session('error'))
-<div x-data="{ show: true }" x-show="show" x-transition
-     class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center justify-between">
-    <div class="flex items-center gap-2">
-        <x-heroicon-s-x-circle class="w-5 h-5 text-red-500"/>
-        <span class="text-sm text-red-700 dark:text-red-400">{{ session('error') }}</span>
-    </div>
-    <button x-on:click="show = false" class="text-red-400 hover:text-red-600">
-        <x-heroicon-o-x-mark class="w-4 h-4"/>
-    </button>
+<div style="background:#f2dede; border:1px solid #ebccd1; color:#a94442; padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+    <span>{{ session('error') }}</span>
+    <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:#a94442; font-size:16px; cursor:pointer; padding:0; line-height:1; opacity:0.7;">&times;</button>
+</div>
+@endif
+
+@if(session('warning'))
+<div style="background:#fcf8e3; border:1px solid #faebcc; color:#8a6d3b; padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+    <span>{{ session('warning') }}</span>
+    <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:#8a6d3b; font-size:16px; cursor:pointer; padding:0; line-height:1; opacity:0.7;">&times;</button>
+</div>
+@endif
+
+@if(session('info'))
+<div style="background:#d9edf7; border:1px solid #bce8f1; color:#31708f; padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+    <span>{{ session('info') }}</span>
+    <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:#31708f; font-size:16px; cursor:pointer; padding:0; line-height:1; opacity:0.7;">&times;</button>
 </div>
 @endif
 
 @if($errors->any())
-<div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-    <div class="flex items-center gap-2 mb-2">
-        <x-heroicon-s-exclamation-triangle class="w-5 h-5 text-red-500"/>
-        <span class="text-sm font-medium text-red-700 dark:text-red-400">Please fix the following errors:</span>
-    </div>
-    <ul class="list-disc list-inside text-sm text-red-600 dark:text-red-400 space-y-1">
-        @foreach($errors->all() as $error)
-        <li>{{ $error }}</li>
-        @endforeach
+<div style="background:#f2dede; border:1px solid #ebccd1; color:#a94442; padding:10px 14px; border-radius:4px; font-size:13px; margin-bottom:14px;">
+    <strong>Please fix the following errors:</strong>
+    <ul style="margin:6px 0 0; padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
     </ul>
 </div>
 @endif

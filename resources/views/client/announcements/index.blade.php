@@ -1,26 +1,38 @@
 @extends('client.layouts.app')
 @section('title', 'Announcements')
 @section('content')
-<h1 class="text-2xl font-bold mb-6">Announcements</h1>
+
+<div class="page-header">
+    <h1>Announcements</h1>
+</div>
 
 @if($announcements->isEmpty())
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-        <p class="text-slate-400">No announcements at this time.</p>
+<div class="card">
+    <div class="card-body" style="text-align:center; padding:48px; color:#999;">
+        No announcements at this time.
     </div>
+</div>
 @else
-    <div class="space-y-4">
-        @foreach($announcements as $announcement)
-        <a href="{{ route('client.announcements.show', $announcement) }}" class="block bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
-            <div class="flex items-start justify-between gap-4">
-                <div class="flex-1">
-                    <h2 class="font-semibold text-slate-800 dark:text-slate-100 mb-2">{{ $announcement->title }}</h2>
-                    <p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{{ strip_tags($announcement->announcement) }}</p>
+<div style="display:flex; flex-direction:column; gap:10px;">
+    @foreach($announcements as $announcement)
+    <a href="{{ route('client.announcements.show', $announcement) }}" style="text-decoration:none; color:inherit;">
+        <div class="card" style="transition:box-shadow 0.15s;">
+            <div class="card-body">
+                <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+                    <div style="flex:1;">
+                        <div style="font-size:14px; font-weight:600; color:#1a4d80; margin-bottom:6px;">{{ $announcement->title }}</div>
+                        <div style="font-size:13px; color:#666; line-height:1.5; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">
+                            {{ strip_tags($announcement->announcement) }}
+                        </div>
+                    </div>
+                    <time style="font-size:12px; color:#999; white-space:nowrap; flex-shrink:0; margin-top:2px;">{{ $announcement->created_at->format('d M Y') }}</time>
                 </div>
-                <time class="text-xs text-slate-400 whitespace-nowrap flex-shrink-0">{{ $announcement->created_at->format('d M Y') }}</time>
             </div>
-        </a>
-        @endforeach
-    </div>
-    <div class="mt-6">{{ $announcements->links() }}</div>
+        </div>
+    </a>
+    @endforeach
+</div>
+<div style="margin-top:16px;">{{ $announcements->links() }}</div>
 @endif
+
 @endsection

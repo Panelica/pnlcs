@@ -1,43 +1,74 @@
-@extends("client.layouts.app")
-@section("title", "Security Settings")
-@section("content")
+@extends('client.layouts.app')
+@section('title', 'Security Settings')
+@section('content')
 
-<div class="mb-6">
-    <h1 class="text-2xl font-bold">Security Settings</h1>
+<div class="page-header">
+    <h1>Security Settings</h1>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-    <div class="lg:col-span-1">
-        <nav class="space-y-1">
-            <a href="{{ route("client.account.profile") }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">Profile Details</a>
-            <a href="{{ route("client.account.password") }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">Change Password</a>
-            <a href="{{ route("client.account.contacts") }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700">Contacts</a>
-            <a href="{{ route("client.account.security") }}" class="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-indigo-50 text-indigo-700 font-medium dark:bg-indigo-900/30 dark:text-indigo-400">Security</a>
-        </nav>
-    </div>
-    <div class="lg:col-span-3 space-y-6">
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <h2 class="font-semibold mb-4">Two-Factor Authentication</h2>
-            @if($user->second_factor_type)
-            <div class="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-lg mb-4">
-                <span class="text-emerald-600 text-sm font-medium">Two-factor authentication is enabled ({{ $user->second_factor_type }}).</span>
-            </div>
-            @else
-            <div class="flex items-center gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                <span class="text-yellow-700 text-sm">Two-factor authentication is not enabled on your account.</span>
-            </div>
-            @endif
-            <p class="text-sm text-slate-500 mb-4">Two-factor authentication adds an extra layer of security. Once configured, you will need to provide a code from your authenticator app at login.</p>
-            <button disabled class="bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 font-medium px-5 py-2 rounded-lg text-sm cursor-not-allowed">
-                Configure 2FA (Coming Soon)
-            </button>
+<div class="card" style="max-width:640px; margin-bottom:20px;">
+    <div class="card-header">Two-Factor Authentication</div>
+    <div class="card-body">
+        <p style="font-size:13px; color:#555; margin-bottom:16px;">
+            Two-factor authentication adds an extra layer of security to your account by requiring both your password and a verification code from your phone.
+        </p>
+        @if($twoFactorEnabled ?? false)
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#dff0d8; border:1px solid #d6e9c6; border-radius:4px; margin-bottom:14px;">
+            <span style="font-size:13px; color:#3c763d; font-weight:500;">&#10003; Two-Factor Authentication is enabled</span>
+            <form method="POST" action="{{ route('client.account.security.disable2fa') }}" style="margin:0;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-sm">Disable</button>
+            </form>
         </div>
-
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <h2 class="font-semibold mb-4">Active Sessions</h2>
-            <p class="text-sm text-slate-500">Session management allows you to view and revoke active login sessions from other devices.</p>
-            <p class="text-xs text-slate-400 mt-2">This feature is coming soon.</p>
+        @else
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; margin-bottom:14px;">
+            <span style="font-size:13px; color:#777;">Two-Factor Authentication is not enabled</span>
+            <a href="{{ route('client.account.security.enable2fa') }}" class="btn btn-success btn-sm">Enable 2FA</a>
         </div>
+        @endif
     </div>
 </div>
+
+<div class="card" style="max-width:640px;">
+    <div class="card-header">Active Sessions</div>
+    <div class="card-body" style="padding:0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Device / IP</th>
+                    <th>Last Activity</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($sessions ?? [] as $session)
+                <tr>
+                    <td>
+                        <div style="font-weight:500; font-size:13px;">{{ $session->ip_address }}</div>
+                        <div style="font-size:12px; color:#777;">{{ $session->user_agent ? Str::limit($session->user_agent, 60) : '-' }}</div>
+                    </td>
+                    <td style="color:#777; font-size:12px;">{{ $session->last_activity ? \Carbon\Carbon::createFromTimestamp($session->last_activity)->diffForHumans() : '-' }}</td>
+                    <td>
+                        @if($session->id !== session()->getId())
+                        <form method="POST" action="{{ route('client.account.security.logout_session', $session->id) }}" style="margin:0;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger btn-xs">Revoke</button>
+                        </form>
+                        @else
+                        <span style="font-size:12px; color:#46a546; font-weight:500;">Current</span>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="3" style="text-align:center; padding:24px; color:#999;">No active sessions.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
 @endsection

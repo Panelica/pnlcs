@@ -1,16 +1,17 @@
-@extends("admin.layouts.app")
-@section("title", "Reports")
-@section("content")
-<h1 class="text-2xl font-bold mb-6">Reports</h1>
-@php $categories = collect($reports)->groupBy("category"); @endphp
+@extends('admin.layouts.app')
+@section('title', 'Reports')
+@section('content')
+<div class="page-header"><h1>Reports</h1></div>
+
+@php $categories = collect($reports)->groupBy('category'); @endphp
 @foreach($categories as $cat => $items)
-<div class="mb-6">
-    <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">{{ $cat }}</h3>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div style="margin-bottom:20px;">
+    <h3 style="font-size:12px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;border-bottom:1px solid #eee;padding-bottom:6px;">{{ $cat }}</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
         @foreach($items as $report)
-        <a href="{{ route("admin.reports.show", $report["slug"]) }}" class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 hover:border-indigo-300 dark:hover:border-indigo-600 transition-colors">
-            <h4 class="font-medium">{{ $report["name"] }}</h4>
-            <p class="text-sm text-slate-500 mt-1">{{ $report["description"] }}</p>
+        <a href="{{ route('admin.reports.show', $report['slug']) }}" class="card" style="display:block;text-decoration:none;padding:12px 15px;transition:border-color 0.15s;">
+            <div style="font-weight:600;font-size:13px;color:#333;margin-bottom:4px;">{{ $report['name'] }}</div>
+            <div style="font-size:12px;color:#777;">{{ $report['description'] }}</div>
         </a>
         @endforeach
     </div>

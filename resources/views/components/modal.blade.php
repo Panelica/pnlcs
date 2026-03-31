@@ -1,45 +1,38 @@
 @props([
     'name' => 'modal',
-    'title' => '',
-    'maxWidth' => 'lg',
+    'title' => '''',
+    'maxWidth' => 'md',
 ])
 
 @php
-$maxWidthClass = match($maxWidth) {
-    'sm' => 'max-w-sm',
-    'md' => 'max-w-md',
-    'lg' => 'max-w-lg',
-    'xl' => 'max-w-xl',
-    '2xl' => 'max-w-2xl',
-    default => 'max-w-lg',
-};
+$widthMap = ['sm' => '400px', 'md' => '520px', 'lg' => '640px', 'xl' => '800px', '2xl' => '960px'];
+$maxW = $widthMap[$maxWidth] ?? '520px';
 @endphp
 
-<div x-data="{ open: false }"
-     x-on:open-modal-{{ $name }}.window="open = true"
-     x-on:close-modal-{{ $name }}.window="open = false"
-     x-on:keydown.escape.window="open = false"
-     x-show="open"
-     x-cloak
-     class="fixed inset-0 z-50 overflow-y-auto"
-     style="display: none;">
-    <div class="flex items-center justify-center min-h-screen px-4">
-        <div x-show="open" x-transition:enter="ease-out duration-200" x-transition:leave="ease-in duration-150"
-             class="fixed inset-0 bg-black/50" x-on:click="open = false"></div>
-
-        <div x-show="open" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
-             x-transition:enter-end="opacity-100 scale-100" x-transition:leave="ease-in duration-150"
-             x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-             class="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl {{ $maxWidthClass }} w-full p-6 z-10">
+<div id="modal-{{ $name }}"
+    style="display:none; position:fixed; inset:0; z-index:1050; overflow-y:auto;"
+    onclick="if(event.target===this) closeModal('{{ $name }}')">
+    <div style="display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; background:rgba(0,0,0,0.5);">
+        <div class="modal-content" style="max-width:{{ $maxW }}; width:100%;" onclick="event.stopPropagation()">
             @if($title)
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white">{{ $title }}</h3>
-                <button x-on:click="open = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                    <x-heroicon-o-x-mark class="w-5 h-5"/>
-                </button>
+            <div class="modal-header">
+                <h3>{{ $title }}</h3>
+                <button type="button" onclick="closeModal('{{ $name }}')" style="background:none; border:none; font-size:18px; color:#999; cursor:pointer; padding:0; line-height:1;">&times;</button>
             </div>
             @endif
-            {{ $slot }}
+            <div class="modal-body">
+                {{ $slot }}
+            </div>
         </div>
     </div>
 </div>
+
+@once
+@push('scripts')
+<script>
+function openModal(name) { document.getElementById('modal-'+name).style.display='block'; document.body.style.overflow='hidden'; }
+function closeModal(name) { document.getElementById('modal-'+name).style.display='none'; document.body.style.overflow=''''; }
+document.addEventListener('keydown', function(e) { if(e.key==='Escape') { document.querySelectorAll('[id^=modal-]').forEach(m=>m.style.display='none'); document.body.style.overflow=''''; }});
+</script>
+@endpush
+@endonce

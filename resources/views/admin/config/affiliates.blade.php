@@ -2,81 +2,43 @@
 @section('title', 'Affiliates')
 @section('content')
 
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Affiliates</h1>
-    <div class="text-sm text-slate-500 dark:text-slate-400">Read-only summary</div>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <h1>Affiliate Program</h1>
 </div>
 
-<x-flash-message/>
-
-{{-- Stats --}}
-@if($affiliates->isNotEmpty())
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Affiliates</p>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ $affiliates->count() }}</p>
-    </div>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Visits</p>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">{{ number_format($affiliates->sum('visitors')) }}</p>
-    </div>
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5">
-        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Balance Pending</p>
-        <p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">${{ number_format($affiliates->sum('balance'), 2) }}</p>
-    </div>
-</div>
+@if(session('success'))
+<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
 @endif
 
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    @if($affiliates->isEmpty())
-        <x-empty-state title="No affiliates yet" description="Clients who sign up through referral links will appear here." icon="users"/>
+<div class="card">
+    @if(($affiliates ?? collect())->isEmpty())
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No affiliates registered.</div>
     @else
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
-                    <tr>
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Client</th>
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Visits</th>
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Referrals</th>
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Balance</th>
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Withdrawn</th>
-                        <th class="text-left px-6 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pay Type</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-                    @foreach($affiliates as $affiliate)
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                        <td class="px-6 py-4">
-                            @if($affiliate->client)
-                                <div>
-                                    <p class="font-medium text-slate-900 dark:text-white">
-                                        {{ $affiliate->client->first_name }} {{ $affiliate->client->last_name }}
-                                    </p>
-                                    <p class="text-xs text-slate-400">{{ $affiliate->client->email }}</p>
-                                </div>
-                            @else
-                                <span class="text-slate-400">Client #{{ $affiliate->client_id }}</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400">{{ number_format($affiliate->visitors) }}</td>
-                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400">—</td>
-                        <td class="px-6 py-4">
-                            <span class="font-medium {{ $affiliate->balance > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400' }}">
-                                ${{ number_format($affiliate->balance, 2) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 text-slate-500 dark:text-slate-400">${{ number_format($affiliate->withdrawn, 2) }}</td>
-                        <td class="px-6 py-4">
-                            <span class="capitalize text-slate-500 dark:text-slate-400">{{ $affiliate->pay_type ?: 'percentage' }}</span>
-                            @if($affiliate->pay_amount)
-                                <span class="ml-1 text-xs text-slate-400">{{ $affiliate->pay_amount }}</span>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+    <table class="data-table">
+        <thead><tr><th>Client</th><th>Affiliate Code</th><th>Visits</th><th>Signups</th><th>Earnings</th><th>Balance</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+        @foreach($affiliates as $aff)
+        <tr>
+            <td><a href="{{ route('admin.clients.show', $aff->client) }}" style="color:#337ab7;font-weight:600;">{{ $aff->client->full_name ?? 'N/A' }}</a></td>
+            <td style="font-family:monospace;">{{ $aff->code }}</td>
+            <td>{{ $aff->visits ?? 0 }}</td>
+            <td>{{ $aff->signups ?? 0 }}</td>
+            <td>${{ number_format($aff->earnings ?? 0, 2) }}</td>
+            <td style="font-weight:600;color:#5cb85c;">${{ number_format($aff->balance ?? 0, 2) }}</td>
+            <td><span class="badge-{{ $aff->active ? 'active' : 'suspended' }}">{{ $aff->active ? 'Active' : 'Inactive' }}</span></td>
+            <td style="text-align:right;">
+                <form method="POST" action="{{ route('admin.config.affiliates.withdraw', $aff) }}" style="display:inline;" onsubmit="return confirm('Process withdrawal?')">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-xs">Withdraw</button>
+                </form>
+            </td>
+        </tr>
+        @endforeach
+        </tbody>
+    </table>
+    @if(method_exists($affiliates, 'links'))
+    <div style="padding:10px 15px;">{{ $affiliates->links() }}</div>
+    @endif
     @endif
 </div>
 @endsection

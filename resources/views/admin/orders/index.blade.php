@@ -1,31 +1,72 @@
 @extends("admin.layouts.app")
 @section("title", "Orders")
 @section("content")
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Orders</h1>
+
+<div class="page-header">
+    <h1>Orders</h1>
 </div>
-<div class="flex gap-2 mb-6">
+
+<!-- Status Filter Tabs -->
+<div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
     @foreach(["" => "All", "pending" => "Pending", "active" => "Active", "fraud" => "Fraud", "cancelled" => "Cancelled"] as $val => $label)
-    <a href="{{ route("admin.orders.index", ["status" => $val]) }}" class="px-3 py-1.5 rounded-lg text-sm font-medium {{ request("status") == $val ? "bg-indigo-600 text-white" : "bg-slate-100 dark:bg-slate-700 hover:bg-slate-200" }}">{{ $label }}</a>
+    @php $isActive = (request("status","") == $val); @endphp
+    <a href="{{ route("admin.orders.index", ["status" => $val]) }}"
+       style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
+        {{ $label }}
+    </a>
     @endforeach
 </div>
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700/50"><tr><th class="px-4 py-3 text-left font-medium">Order #</th><th class="px-4 py-3 text-left font-medium">Client</th><th class="px-4 py-3 text-left font-medium">Date</th><th class="px-4 py-3 text-right font-medium">Amount</th><th class="px-4 py-3 text-left font-medium">Status</th></tr></thead>
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+
+<!-- Table -->
+<div class="card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Client</th>
+                <th>Date</th>
+                <th style="text-align:right;">Amount</th>
+                <th>Payment Method</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
             @forelse($orders as $order)
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                <td class="px-4 py-3 font-mono text-xs"><a href="{{ route("admin.orders.show", $order) }}" class="text-indigo-600">#{{ $order->order_num }}</a></td>
-                <td class="px-4 py-3">{{ $order->client->full_name ?? "N/A" }}</td>
-                <td class="px-4 py-3 text-slate-500">{{ $order->date?->format("d M Y") }}</td>
-                <td class="px-4 py-3 text-right">${{ number_format($order->amount, 2) }}</td>
-                <td class="px-4 py-3"><span class="px-2 py-0.5 text-xs font-medium rounded-full {{ $order->status == "active" ? "bg-emerald-100 text-emerald-700" : ($order->status == "pending" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-700") }}">{{ ucfirst($order->status) }}</span></td>
+            @php
+            $badgeClass = match(strtolower($order->status ?? "")) {
+                "active"    => "badge-active",
+                "pending"   => "badge-pending",
+                "fraud"     => "badge-fraud",
+                "cancelled" => "badge-cancelled",
+                default     => "badge-cancelled",
+            };
+            @endphp
+            <tr>
+                <td><a href="{{ route("admin.orders.show", $order) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $order->order_num }}</a></td>
+                <td>
+                    @if($order->client)
+                    <a href="{{ route("admin.clients.show", $order->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $order->client->full_name }}</a>
+                    @else N/A @endif
+                </td>
+                <td style="color:#666;">{{ $order->date?->format("d M Y") ?? "-" }}</td>
+                <td style="text-align:right;font-weight:500;">${{ number_format($order->amount, 2) }}</td>
+                <td style="color:#666;">{{ $order->payment_method ?? "-" }}</td>
+                <td><span class="badge {{ $badgeClass }}">{{ ucfirst($order->status ?? "") }}</span></td>
+                <td>
+                    <a href="{{ route("admin.orders.show", $order) }}" class="btn btn-default btn-xs">View</a>
+                </td>
             </tr>
             @empty
-            <tr><td colspan="5" class="px-4 py-12 text-center text-slate-500">No orders found.</td></tr>
+            <tr>
+                <td colspan="7" style="text-align:center;padding:32px;color:#999;">No orders found.</td>
+            </tr>
             @endforelse
         </tbody>
     </table>
-    <div class="px-4 py-3 border-t">{{ $orders->withQueryString()->links() }}</div>
+    <div style="padding:10px 16px;border-top:1px solid #e5e7eb;">
+        {{ $orders->withQueryString()->links() }}
+    </div>
 </div>
+
 @endsection

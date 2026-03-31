@@ -1,79 +1,82 @@
-@extends("client.layouts.app")
-@section("title", "Order — Browse Products")
-@section("content")
+@extends('client.layouts.app')
+@section('title', 'Order a New Product')
+@section('styles')
+<style>
+    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 900px) { .products-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .products-grid { grid-template-columns: 1fr; } }
+    .product-card { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 20px; display: flex; flex-direction: column; transition: box-shadow 0.2s; }
+    .product-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); border-color: #b0cce8; }
+    .product-card.featured { border-color: #337ab7; }
+    .product-name { font-size: 15px; font-weight: 600; color: #1a4d80; margin-bottom: 8px; }
+    .product-price { font-size: 22px; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .product-price span { font-size: 13px; font-weight: 400; color: #999; }
+    .product-desc { font-size: 13px; color: #666; line-height: 1.6; margin-bottom: 14px; flex: 1; }
+    .featured-badge { display: inline-block; background: #337ab7; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 3px; margin-bottom: 8px; }
+    .group-title { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #e0e0e0; }
+    .group-section { margin-bottom: 30px; }
+</style>
+@endsection
+@section('content')
 
-<div class="mb-6">
-    <h1 class="text-2xl font-bold">Order a New Product</h1>
-    <p class="text-slate-500 mt-1">Choose a product to get started.</p>
+<div class="page-header">
+    <h1>Order a New Product</h1>
 </div>
 
-@if(session("error"))
-<div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{{ session("error") }}</div>
+@if(session('error'))
+<div style="background:#f2dede;border:1px solid #ebccd1;color:#a94442;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:16px;">{{ session('error') }}</div>
 @endif
 
 @forelse($groups as $group)
-<div class="mb-10">
-    <h2 class="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 pb-2">
-        {{ $group->name }}
-    </h2>
-
+<div class="group-section">
+    <div class="group-title">{{ $group->name }}</div>
     @if($group->products->isEmpty())
-        <p class="text-slate-400 text-sm">No products available in this category.</p>
+        <p style="color:#999; font-size:13px;">No products available in this category.</p>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="products-grid">
             @foreach($group->products as $product)
             @php
-                $featuredClass = $product->is_featured ? "ring-2 ring-indigo-400" : "";
                 $pricingRecord = $product->pricing->first();
                 $startingPrice = null;
+                $startingCycle = ;
                 if ($pricingRecord) {
-                    foreach (["monthly","quarterly","semiannually","annually","biennially","triennially"] as $cycle) {
+                    foreach (['monthly','quarterly','semiannually','annually','biennially','triennially'] as $cycle) {
                         if (isset($pricingRecord->{$cycle}) && (float)$pricingRecord->{$cycle} > 0) {
                             $startingPrice = $pricingRecord->{$cycle};
+                            $startingCycle = $cycle;
                             break;
                         }
                     }
                 }
-                $currPrefix = $currency ? $currency->prefix : "$";
-                $currSuffix = $currency ? $currency->suffix : "";
+                $currPrefix = $currency?->prefix ?? '$';
+                $currSuffix = $currency?->suffix ?? ;
             @endphp
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6 flex flex-col {{ $featuredClass }}">
+            <div class="product-card {{ $product->is_featured ? 'featured' : '' }}">
                 @if($product->is_featured)
-                <div class="mb-3">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">Most Popular</span>
-                </div>
+                    <div><span class="featured-badge">Popular</span></div>
                 @endif
-
-                <h3 class="text-base font-semibold mb-2">{{ $product->name }}</h3>
-
-                @if($product->description)
-                <p class="text-sm text-slate-500 mb-4 flex-1">{{ Str::limit($product->description, 120) }}</p>
-                @endif
-
+                <div class="product-name">{{ $product->name }}</div>
                 @if($startingPrice !== null)
-                <div class="mb-4">
-                    <span class="text-slate-400 text-xs">Starting from</span>
-                    <div class="text-2xl font-bold text-indigo-600">
-                        {{ $currPrefix }}{{ number_format($startingPrice, 2) }}{{ $currSuffix }}
-                        <span class="text-sm font-normal text-slate-400">/mo</span>
-                    </div>
-                </div>
+                    <div class="product-price">{{ $currPrefix }}{{ number_format($startingPrice, 2) }}{{ $currSuffix }} <span>/{{ $startingCycle }}</span></div>
                 @else
-                <div class="mb-4 text-sm text-slate-400">Contact us for pricing</div>
+                    <div class="product-price">Contact Us</div>
                 @endif
-
-                <a href="{{ route("client.store.configure", $product->slug) }}"
-                   class="mt-auto block text-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-                    Order Now
-                </a>
+                @if($product->description)
+                    <div class="product-desc">{{ Str::limit(strip_tags($product->description), 120) }}</div>
+                @else
+                    <div class="product-desc"></div>
+                @endif
+                <a href="{{ route('client.cart.configure', $product) }}" class="btn btn-primary btn-sm" style="text-align:center;">Order Now &rarr;</a>
             </div>
             @endforeach
         </div>
     @endif
 </div>
 @empty
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-12 text-center">
-    <p class="text-slate-400">No products are currently available. Please check back soon.</p>
+<div class="card">
+    <div class="card-body" style="text-align:center; padding:40px; color:#999;">
+        No products available at this time.
+    </div>
 </div>
 @endforelse
 

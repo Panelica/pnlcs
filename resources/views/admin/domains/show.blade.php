@@ -1,127 +1,92 @@
 @extends('admin.layouts.app')
 @section('title', $domain->domain)
 @section('content')
-<div class="max-w-4xl space-y-6">
 
-    @if(session('success'))
-    <div class="p-4 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 rounded-xl text-emerald-700 dark:text-emerald-300 text-sm">
-        {{ session('success') }}
-    </div>
-    @endif
-    @if(session('error'))
-    <div class="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-xl text-red-700 dark:text-red-300 text-sm">
-        {{ session('error') }}
-    </div>
-    @endif
+@if(session('success'))
+<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
+@endif
 
-    {{-- Header --}}
-    <div class="flex items-start justify-between">
-        <div>
-            <div class="mb-1">
-                <a href="{{ route('admin.domains.index') }}" class="text-slate-400 hover:text-slate-600 text-sm">&larr; Domains</a>
-            </div>
-            <h1 class="text-2xl font-bold font-mono">{{ $domain->domain }}</h1>
-            <p class="text-slate-500 mt-1">
-                {{ ucfirst($domain->type) }} &mdash; Registrar: {{ ucfirst($domain->registrar ?? 'N/A') }}
-                @if($domain->client)
-                    &mdash; <a href="{{ route('admin.clients.show', $domain->client_id) }}" class="text-indigo-600 hover:underline">{{ $domain->client->full_name }}</a>
-                @endif
-            </p>
-        </div>
-        <div>
-            @php
-                $sc = match(strtolower($domain->status)) {
-                    'active' => 'bg-emerald-100 text-emerald-700',
-                    'pending' => 'bg-amber-100 text-amber-700',
-                    'expired' => 'bg-red-100 text-red-700',
-                    default => 'bg-slate-100 text-slate-700',
-                };
-            @endphp
-            <span class="px-3 py-1 text-sm font-semibold rounded-full {{ $sc }}">{{ ucfirst($domain->status) }}</span>
+<div class="page-header">
+    <div>
+        <h1 style="font-family:monospace;font-size:22px;">{{ $domain->domain }}</h1>
+        <div style="font-size:13px;color:#777;margin-top:3px;">
+            {{ ucfirst($domain->type) }} &mdash; Registrar: {{ ucfirst($domain->registrar ?? 'N/A') }}
+            @if($domain->client) &mdash; <a href="{{ route('admin.clients.show', $domain->client_id) }}" style="color:#337ab7;">{{ $domain->client->full_name }}</a>@endif
         </div>
     </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+        @php $badgeClass = match(strtolower($domain->status)) { 'active'=>'badge-active', 'pending'=>'badge-pending', 'expired'=>'badge-overdue', default=>'badge-cancelled' }; @endphp
+        <span class="{{ $badgeClass }}">{{ ucfirst($domain->status) }}</span>
+        <a href="{{ route('admin.domains.index') }}" class="btn btn-default btn-sm">&larr; Domains</a>
+    </div>
+</div>
 
-    {{-- Info cards --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {{-- Registration Info --}}
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <h3 class="font-semibold text-sm uppercase tracking-wide text-slate-400 mb-4">Registration</h3>
-            <dl class="space-y-2.5 text-sm">
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Registration Date</dt><dd>{{ $domain->registration_date?->format('d M Y') ?? '-' }}</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Expiry Date</dt>
-                    <dd class="{{ $domain->expiry_date?->isPast() ? 'text-red-600 font-semibold' : '' }}">{{ $domain->expiry_date?->format('d M Y') ?? '-' }}</dd>
-                </div>
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Next Due Date</dt><dd>{{ $domain->next_due_date?->format('d M Y') ?? '-' }}</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Period</dt><dd>{{ $domain->registration_period }} year(s)</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Type</dt><dd>{{ $domain->type }}</dd></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
+    <div class="panel">
+        <div class="panel-heading panel-primary">Registration</div>
+        <div class="panel-body">
+            <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <tr><td style="padding:5px 0;color:#777;width:45%;">Registration Date</td><td style="padding:5px 0;">{{ $domain->registration_date?->format('d M Y') ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Expiry Date</td><td style="padding:5px 0;{{ $domain->expiry_date?->isPast() ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $domain->expiry_date?->format('d M Y') ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Next Due Date</td><td style="padding:5px 0;">{{ $domain->next_due_date?->format('d M Y') ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Period</td><td style="padding:5px 0;">{{ $domain->registration_period }} year(s)</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Type</td><td style="padding:5px 0;">{{ $domain->type }}</td></tr>
                 @if($domain->order_id)
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Order</dt><dd><a href="{{ route('admin.orders.show', $domain->order_id) }}" class="text-indigo-600 hover:underline">#{{ $domain->order_id }}</a></dd></div>
+                <tr><td style="padding:5px 0;color:#777;">Order</td><td style="padding:5px 0;"><a href="{{ route('admin.orders.show', $domain->order_id) }}" style="color:#337ab7;">#{{ $domain->order_id }}</a></td></tr>
                 @endif
-            </dl>
-        </div>
-
-        {{-- Billing --}}
-        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-            <h3 class="font-semibold text-sm uppercase tracking-wide text-slate-400 mb-4">Billing</h3>
-            <dl class="space-y-2.5 text-sm">
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">First Payment</dt><dd class="font-bold">${{ number_format($domain->first_payment_amount, 2) }}</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Recurring Amount</dt><dd class="font-bold">${{ number_format($domain->recurring_amount, 2) }}/year</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Payment Method</dt><dd>{{ $domain->payment_method ?? '-' }}</dd></div>
-                <div class="flex justify-between gap-2"><dt class="text-slate-500">Premium</dt><dd>{{ $domain->is_premium ? 'Yes' : 'No' }}</dd></div>
-            </dl>
+            </table>
         </div>
     </div>
+    <div class="panel">
+        <div class="panel-heading panel-primary">Billing</div>
+        <div class="panel-body">
+            <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <tr><td style="padding:5px 0;color:#777;width:45%;">First Payment</td><td style="padding:5px 0;font-weight:700;">${{ number_format($domain->first_payment_amount, 2) }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Recurring Amount</td><td style="padding:5px 0;font-weight:700;">${{ number_format($domain->recurring_amount, 2) }}/year</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Payment Method</td><td style="padding:5px 0;">{{ $domain->payment_method ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Premium</td><td style="padding:5px 0;">{{ $domain->is_premium ? 'Yes' : 'No' }}</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
 
-    {{-- Nameservers --}}
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="font-semibold text-sm uppercase tracking-wide text-slate-400 mb-4">Nameservers</h3>
+<div class="panel" style="margin-bottom:15px;">
+    <div class="panel-heading panel-primary">Nameservers</div>
+    <div class="panel-body">
         @php $ns = is_array($domain->nameservers) ? $domain->nameservers : (json_decode($domain->nameservers ?? '[]', true) ?? []); @endphp
         @if(count($ns) > 0)
-        <div class="space-y-2">
-            @foreach($ns as $i => $nameserver)
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-400 w-10">NS{{ $i + 1 }}</span>
-                <span class="font-mono text-sm bg-slate-100 dark:bg-slate-700 px-3 py-1.5 rounded-lg">{{ $nameserver }}</span>
-            </div>
-            @endforeach
+        @foreach($ns as $i => $nameserver)
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+            <span style="font-size:12px;color:#777;width:30px;">NS{{ $i+1 }}</span>
+            <span style="font-family:monospace;font-size:13px;background:#f5f5f5;border:1px solid #e0e0e0;padding:3px 8px;border-radius:3px;">{{ $nameserver }}</span>
         </div>
+        @endforeach
         @else
-        <p class="text-sm text-slate-400">No nameservers configured.</p>
+        <p style="font-size:13px;color:#999;">No nameservers configured.</p>
         @endif
     </div>
-
-    {{-- Features & Options --}}
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="font-semibold text-sm uppercase tracking-wide text-slate-400 mb-4">Features</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <span class="text-sm font-medium">DNS Management</span>
-                <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $domain->dns_management ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500' }}">
-                    {{ $domain->dns_management ? 'Enabled' : 'Disabled' }}
-                </span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <span class="text-sm font-medium">Email Forwarding</span>
-                <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $domain->email_forwarding ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500' }}">
-                    {{ $domain->email_forwarding ? 'Enabled' : 'Disabled' }}
-                </span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                <span class="text-sm font-medium">ID Protection</span>
-                <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $domain->id_protection ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500' }}">
-                    {{ $domain->id_protection ? 'Enabled' : 'Disabled' }}
-                </span>
-            </div>
-        </div>
-    </div>
-
-    {{-- Notes --}}
-    @if($domain->notes)
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-        <h3 class="font-semibold text-sm uppercase tracking-wide text-slate-400 mb-3">Notes</h3>
-        <p class="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">{{ $domain->notes }}</p>
-    </div>
-    @endif
-
 </div>
+
+<div class="panel" style="margin-bottom:15px;">
+    <div class="panel-heading panel-primary">Features</div>
+    <div class="panel-body" style="display:flex;gap:15px;flex-wrap:wrap;">
+        @foreach(['dns_management'=>'DNS Management','email_forwarding'=>'Email Forwarding','id_protection'=>'ID Protection'] as $field=>$label)
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f9f9f9;border:1px solid #e0e0e0;border-radius:4px;min-width:180px;">
+            <span style="font-size:13px;font-weight:600;">{{ $label }}</span>
+            <span class="{{ $domain->$field ? 'badge-active' : 'badge-cancelled' }}" style="margin-left:10px;">{{ $domain->$field ? 'Enabled' : 'Disabled' }}</span>
+        </div>
+        @endforeach
+    </div>
+</div>
+
+@if($domain->notes)
+<div class="panel">
+    <div class="panel-heading panel-primary">Notes</div>
+    <div class="panel-body" style="font-size:13px;white-space:pre-wrap;color:#555;">{{ $domain->notes }}</div>
+</div>
+@endif
+
 @endsection

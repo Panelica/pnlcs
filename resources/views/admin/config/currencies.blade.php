@@ -1,156 +1,104 @@
-@extends("admin.layouts.app")
-@section("title", "Currencies")
-@section("content")
+@extends('admin.layouts.app')
+@section('title', 'Currencies')
+@section('content')
 
-<x-flash-message/>
-
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Currencies</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Configure supported currencies and exchange rates</p>
-    </div>
-    <button type="button" x-data @click="$dispatch('open-modal-add-currency')"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition">
-        <x-heroicon-s-plus class="w-4 h-4"/>
-        Add Currency
-    </button>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <h1>Currencies</h1>
+    <button type="button" onclick="document.getElementById('modal-add-currency').style.display='flex'" class="btn btn-primary btn-sm">+ Add Currency</button>
 </div>
 
-@if($currencies->isEmpty())
-    <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <x-empty-state title="No currencies configured" description="Add at least one currency to accept payments." icon="currency"/>
-    </div>
-@else
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
-            <tr>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Code</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Prefix</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Suffix</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Rate (vs base)</th>
-                <th class="text-left px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Default?</th>
-                <th class="text-right px-4 py-3 font-medium text-slate-600 dark:text-slate-300">Actions</th>
-            </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
-            @foreach($currencies as $currency)
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                <td class="px-4 py-3">
-                    <span class="font-semibold text-slate-900 dark:text-white">{{ $currency->code }}</span>
-                </td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400">
-                    <code class="font-mono text-xs bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">{{ $currency->prefix ?: '—' }}</code>
-                </td>
-                <td class="px-4 py-3 text-slate-600 dark:text-slate-400">
-                    <code class="font-mono text-xs bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">{{ $currency->suffix ?: '—' }}</code>
-                </td>
-                <td class="px-4 py-3 text-slate-700 dark:text-slate-300 font-mono">{{ number_format($currency->rate, 5) }}</td>
-                <td class="px-4 py-3">
-                    @if($currency->is_default)
-                        <x-status-badge status="active" label="Default"/>
-                    @else
-                        <form method="POST" action="{{ route('admin.config.currencies.default', $currency) }}" class="inline">
-                            @csrf
-                            <button type="submit" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Set Default</button>
-                        </form>
-                    @endif
-                </td>
-                <td class="px-4 py-3">
-                    <div class="flex items-center justify-end gap-3">
-                        <button type="button"
-                            x-data @click="$dispatch('open-modal-edit-currency-{{ $currency->id }}')"
-                            class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
-                            <x-heroicon-o-pencil-square class="w-4 h-4"/>
-                        </button>
-                        @if(!$currency->is_default)
-                        <x-confirm-delete :action="route('admin.config.currencies.destroy', $currency)"
-                            message="Delete this currency?"/>
-                        @else
-                        <span class="text-slate-300 dark:text-slate-600 cursor-not-allowed" title="Cannot delete the default currency">
-                            <x-heroicon-o-trash class="w-4 h-4"/>
-                        </span>
-                        @endif
-                    </div>
-                </td>
-            </tr>
+@if(session('success'))
+<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
+@endif
 
-            <x-modal :name="'edit-currency-' . $currency->id" title="Edit Currency" maxWidth="sm">
-                <form method="POST" action="{{ route('admin.config.currencies.update', $currency) }}">
-                    @csrf
-                    @method('PUT')
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Currency Code</label>
-                            <input type="text" name="code" value="{{ $currency->code }}" maxlength="3" required
-                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase"/>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Prefix</label>
-                                <input type="text" name="prefix" value="{{ $currency->prefix }}" maxlength="10"
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Suffix</label>
-                                <input type="text" name="suffix" value="{{ $currency->suffix }}" maxlength="10"
-                                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Exchange Rate</label>
-                            <input type="number" name="rate" value="{{ $currency->rate }}" step="0.00001" min="0.00001" required
-                                class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-3 mt-5">
-                        <button type="button" @click="$dispatch('close-modal-edit-currency-{{ $currency->id }}')"
-                            class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-                        <button type="submit"
-                            class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition">Save Changes</button>
-                    </div>
+<div class="card">
+    <table class="data-table">
+        <thead><tr><th>Code</th><th>Name</th><th>Prefix</th><th>Suffix</th><th>Rate</th><th>Default</th><th style="text-align:right;">Actions</th></tr></thead>
+        <tbody>
+        @foreach($currencies as $currency)
+        <tr>
+            <td style="font-family:monospace;font-weight:600;">{{ $currency->code }}</td>
+            <td>{{ $currency->prefix }}</td>
+            <td style="font-family:monospace;">{{ $currency->prefix }}</td>
+            <td style="font-family:monospace;">{{ $currency->suffix ?? '' }}</td>
+            <td>{{ $currency->rate }}</td>
+            <td>{{ $currency->default ? '<span class="badge-active">Default</span>' : '' }}</td>
+            <td style="text-align:right;">
+                <button type="button" class="btn btn-default btn-xs"
+                    onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->default]) }})">Edit</button>
+                @if(!$currency->default)
+                <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return confirm('Delete currency {{ $currency->code }}?')">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
                 </form>
-            </x-modal>
-            @endforeach
+                @endif
+            </td>
+        </tr>
+        @endforeach
         </tbody>
     </table>
 </div>
-@endif
 
-<x-modal name="add-currency" title="Add Currency" maxWidth="sm">
-    <form method="POST" action="{{ route('admin.config.currencies.store') }}">
-        @csrf
-        <div class="space-y-4">
-            <div>
-                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Currency Code <span class="text-slate-400">(e.g. USD, EUR, GBP)</span></label>
-                <input type="text" name="code" maxlength="3" required placeholder="USD"
-                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent uppercase"/>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Prefix <span class="text-slate-400">(e.g. $)</span></label>
-                    <input type="text" name="prefix" maxlength="10" placeholder="$"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Suffix <span class="text-slate-400">(e.g. USD)</span></label>
-                    <input type="text" name="suffix" maxlength="10"
-                        class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
+<div id="modal-add-currency" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-currency').style.display='none'"></div>
+    <div style="position:relative;background:#fff;border-radius:4px;width:450px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:16px;">Add Currency</h4>
+            <button type="button" onclick="document.getElementById('modal-add-currency').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('admin.config.currencies.store') }}">
+            @csrf
+            <div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group"><label class="form-label">Currency Code</label><input type="text" name="code" required maxlength="3" class="form-control" placeholder="USD"></div>
+                    <div class="form-group"><label class="form-label">Exchange Rate</label><input type="number" name="rate" step="0.000001" required value="1" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Prefix (symbol)</label><input type="text" name="prefix" class="form-control" placeholder="$"></div>
+                    <div class="form-group"><label class="form-label">Suffix</label><input type="text" name="suffix" class="form-control"></div>
                 </div>
             </div>
-            <div>
-                <label class="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Exchange Rate <span class="text-slate-400">(vs base currency)</span></label>
-                <input type="number" name="rate" step="0.00001" min="0.00001" required placeholder="1.00000"
-                    class="w-full px-3 py-2 text-sm border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"/>
+            <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-add-currency').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Add Currency</button>
             </div>
-        </div>
-        <div class="flex justify-end gap-3 mt-5">
-            <button type="button" @click="$dispatch('close-modal-add-currency')"
-                class="px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">Cancel</button>
-            <button type="submit"
-                class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition">Add Currency</button>
-        </div>
-    </form>
-</x-modal>
+        </form>
+    </div>
+</div>
 
+<div id="modal-edit-currency" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-edit-currency').style.display='none'"></div>
+    <div style="position:relative;background:#fff;border-radius:4px;width:450px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:16px;">Edit Currency</h4>
+            <button type="button" onclick="document.getElementById('modal-edit-currency').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+        </div>
+        <form method="POST" id="edit-currency-form" action="">
+            @csrf @method('PUT')
+            <div style="padding:20px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div class="form-group"><label class="form-label">Currency Code</label><input type="text" name="code" id="ec-code" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Exchange Rate</label><input type="number" name="rate" id="ec-rate" step="0.000001" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Prefix</label><input type="text" name="prefix" id="ec-prefix" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Suffix</label><input type="text" name="suffix" id="ec-suffix" class="form-control"></div>
+                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="default" value="1" id="ec-default"> Set as Default Currency</label></div>
+                </div>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-edit-currency').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditCurrency(d) {
+    document.getElementById('edit-currency-form').action = '/admin/config/currencies/' + d.id;
+    document.getElementById('ec-code').value = d.code;
+    document.getElementById('ec-rate').value = d.rate;
+    document.getElementById('ec-prefix').value = d.prefix || '';
+    document.getElementById('ec-suffix').value = d.suffix || '';
+    document.getElementById('ec-default').checked = !!d.default;
+    document.getElementById('modal-edit-currency').style.display = 'flex';
+}
+</script>
 @endsection

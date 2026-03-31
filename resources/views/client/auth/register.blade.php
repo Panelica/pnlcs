@@ -4,32 +4,90 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - PNLCS</title>
-    @vite(["resources/css/app.css"])
+    @vite(['resources/css/app.css'])
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; font-size: 13px; background: #f6f6f6; color: #333; margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        .register-box { width: 100%; max-width: 480px; }
+        .login-logo { text-align: center; margin-bottom: 24px; }
+        .login-logo h1 { font-size: 26px; font-weight: 700; color: #1a4d80; margin: 0 0 6px; }
+        .login-logo p { font-size: 13px; color: #777; margin: 0; }
+        .card { background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .card-body { padding: 28px; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 13px; font-weight: 500; color: #555; margin-bottom: 4px; }
+        .form-control { display: block; width: 100%; padding: 7px 12px; font-size: 13px; color: #555; background: #fff; border: 1px solid #ccc; border-radius: 4px; transition: border-color 0.15s; }
+        .form-control:focus { border-color: #66afe9; outline: 0; box-shadow: 0 0 6px rgba(102,175,233,.5); }
+        select.form-control { height: 34px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 7px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; text-decoration: none; width: 100%; }
+        .btn-primary { background: #337ab7; color: #fff; border-color: #2e6da4; }
+        .btn-primary:hover { background: #286090; }
+        .alert { padding: 9px 12px; border-radius: 4px; font-size: 13px; margin-bottom: 14px; background: #f2dede; border: 1px solid #ebccd1; color: #a94442; }
+        .alert li { margin: 2px 0; }
+        .login-link { text-align: center; margin-top: 16px; font-size: 13px; color: #777; }
+        .login-link a { color: #337ab7; font-weight: 500; text-decoration: none; }
+        .field-note { font-size: 12px; color: #999; margin-top: 3px; }
+    </style>
 </head>
-<body class="antialiased bg-slate-50 dark:bg-slate-900">
-<div class="min-h-screen flex items-center justify-center py-12 px-4">
-    <div class="w-full max-w-lg">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800 dark:text-white">PNLCS</h1>
-            <p class="text-slate-500 mt-2">Create your account</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-8">
-            <form method="POST" action="{{ route("client.register.submit") }}" class="space-y-4">
-                @csrf
-                @if($errors->any())<div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-600">@foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach</div>@endif
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-sm font-medium mb-1">First Name *</label><input type="text" name="first_name" value="{{ old("first_name") }}" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500"></div>
-                    <div><label class="block text-sm font-medium mb-1">Last Name *</label><input type="text" name="last_name" value="{{ old("last_name") }}" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500"></div>
+<body>
+<div class="register-box">
+    <div class="login-logo">
+        <h1>PNLCS</h1>
+        <p>Create Your Account</p>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            @if($errors->any())
+                <div class="alert">
+                    <ul style="margin:0; padding-left:18px;">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
-                <div><label class="block text-sm font-medium mb-1">Email *</label><input type="email" name="email" value="{{ old("email") }}" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500"></div>
-                <div><label class="block text-sm font-medium mb-1">Password *</label><input type="password" name="password" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500"></div>
-                <div><label class="block text-sm font-medium mb-1">Confirm Password *</label><input type="password" name="password_confirmation" required class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500"></div>
-                <div><label class="block text-sm font-medium mb-1">Company</label><input type="text" name="company_name" value="{{ old("company_name") }}" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500"></div>
-                <div><label class="block text-sm font-medium mb-1">Phone</label><input type="text" name="phone_number" value="{{ old("phone_number") }}" class="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 focus:ring-2 focus:ring-indigo-500"></div>
-                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg transition-colors">Register</button>
+            @endif
+
+            <form method="POST" action="{{ route('client.register.submit') }}">
+                @csrf
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="first_name">First Name <span style="color:#c43c35;">*</span></label>
+                        <input type="text" id="first_name" name="first_name" value="{{ old('first_name') }}" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="last_name">Last Name <span style="color:#c43c35;">*</span></label>
+                        <input type="text" id="last_name" name="last_name" value="{{ old('last_name') }}" required class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address <span style="color:#c43c35;">*</span></label>
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password <span style="color:#c43c35;">*</span></label>
+                    <input type="password" id="password" name="password" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password_confirmation">Confirm Password <span style="color:#c43c35;">*</span></label>
+                    <input type="password" id="password_confirmation" name="password_confirmation" required class="form-control">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="phone_number">Phone <span style="color:#999; font-weight:400;">(optional)</span></label>
+                        <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="company_name">Company <span style="color:#999; font-weight:400;">(optional)</span></label>
+                        <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" class="form-control">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top:4px;">Create Account</button>
             </form>
         </div>
-        <p class="text-center text-sm text-slate-500 mt-6">Already have an account? <a href="{{ route("client.login") }}" class="text-indigo-600 hover:text-indigo-500 font-medium">Sign In</a></p>
+    </div>
+    <div class="login-link">
+        Already have an account? <a href="{{ route('client.login') }}">Sign In</a>
     </div>
 </div>
 </body>

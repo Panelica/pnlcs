@@ -1,100 +1,98 @@
-@extends("client.layouts.app")
-@section("title", "Checkout")
-@section("content")
+@extends('client.layouts.app')
+@section('title', 'Checkout')
+@section('styles')
+<style>
+    .checkout-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+    @media (max-width: 900px) { .checkout-layout { grid-template-columns: 1fr; } }
+    .payment-option { border: 1px solid #ddd; border-radius: 4px; padding: 12px 14px; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
+    .payment-option:hover { border-color: #337ab7; background: #f0f6ff; }
+    .payment-option input[type=radio] { margin: 0; }
+    .payment-option-name { font-size: 13px; font-weight: 500; }
+    .order-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+    .order-row:last-child { border-bottom: none; font-weight: 600; }
+</style>
+@endsection
+@section('content')
 
-<div class="mb-6">
-    <h1 class="text-2xl font-bold">Review & Complete Order</h1>
-    <p class="text-slate-500 mt-1">Please review your order before completing payment.</p>
+<div class="page-header">
+    <h1>Checkout</h1>
+    <a href="{{ route('client.cart.index') }}" class="btn btn-default btn-sm">&larr; Back to Cart</a>
 </div>
 
-@if($errors->any())
-<div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-    <ul class="list-disc list-inside">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-</div>
-@endif
-
-<form method="POST" action="{{ route("client.cart.process") }}">
+<form method="POST" action="{{ route('client.cart.order') }}">
     @csrf
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 space-y-6">
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h2 class="font-semibold mb-4">Order Items</h2>
-                <div class="space-y-3">
-                    @foreach($totals["items"] as $item)
-                    <div class="flex justify-between items-start py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
-                        <div>
-                            <p class="font-medium text-sm">{{ $item["product_name"] }}</p>
-                            <p class="text-xs text-slate-500 mt-0.5">
-                                {{ ucfirst($item["billing_cycle"]) }}
-                                @if(!empty($item["domain"])) &mdash; {{ $item["domain"] }} @endif
-                            </p>
+    <div class="checkout-layout">
+        <div>
+            {{-- Contact Details --}}
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-header">Contact Details</div>
+                <div class="card-body">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <div class="form-group">
+                            <label class="form-label">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ auth()->user()?->first_name ?? old('first_name') }}" required>
                         </div>
-                        <span class="font-semibold text-sm">
-                            {{ $currency ? $currency->prefix : "$" }}{{ number_format($item["price"], 2) }}{{ $currency ? $currency->suffix : "" }}
-                        </span>
+                        <div class="form-group">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ auth()->user()?->last_name ?? old('last_name') }}" required>
+                        </div>
                     </div>
-                    @endforeach
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ auth()->user()?->email ?? old('email') }}" required>
+                    </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <h2 class="font-semibold mb-4">Payment Method</h2>
-                <div class="space-y-3">
-                    @foreach($paymentMethods as $key => $label)
-                    <label class="flex items-center gap-3 p-4 border border-slate-200 dark:border-slate-600 rounded-lg cursor-pointer hover:border-indigo-400 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 dark:has-[:checked]:bg-indigo-900/20 transition-colors">
-                        <input type="radio" name="payment_method" value="{{ $key }}" class="text-indigo-600" {{ $loop->first ? "checked" : "" }}>
-                        <span class="font-medium text-sm">{{ $label }}</span>
-                    </label>
-                    @endforeach
+            {{-- Payment Method --}}
+            <div class="card">
+                <div class="card-header">Payment Method</div>
+                <div class="card-body">
+                    @if(isset($gateways) && $gateways->isNotEmpty())
+                        @foreach($gateways as $gateway)
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="{{ $gateway->module ?? $gateway }}" {{ $loop->first ? 'checked' : '' }}>
+                            <div class="payment-option-name">{{ $gateway->display_name ?? ucwords(str_replace('_', ' ', $gateway)) }}</div>
+                        </label>
+                        @endforeach
+                    @else
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="banktransfer" checked>
+                            <div class="payment-option-name">Bank Transfer</div>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="paypal">
+                            <div class="payment-option-name">PayPal</div>
+                        </label>
+                    @endif
                 </div>
-                @error("payment_method") <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
-            </div>
-
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
-                <label class="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox" name="terms" value="1" class="mt-0.5 text-indigo-600" {{ old("terms") ? "checked" : "" }}>
-                    <span class="text-sm text-slate-600 dark:text-slate-400">
-                        I agree to the <a href="#" class="text-indigo-600 hover:underline">Terms of Service</a> and
-                        <a href="#" class="text-indigo-600 hover:underline">Privacy Policy</a>.
-                    </span>
-                </label>
-                @error("terms") <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
         </div>
 
+        {{-- Order Summary --}}
         <div>
-            <div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-5 sticky top-6">
-                <h3 class="font-semibold mb-4">Order Summary</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Subtotal</span>
-                        <span>{{ $currency ? $currency->prefix : "$" }}{{ number_format($totals["subtotal"], 2) }}{{ $currency ? $currency->suffix : "" }}</span>
-                    </div>
-                    @if($totals["discount"] > 0)
-                    <div class="flex justify-between text-emerald-600">
-                        <span>Discount</span>
-                        <span>&minus;{{ $currency ? $currency->prefix : "$" }}{{ number_format($totals["discount"], 2) }}{{ $currency ? $currency->suffix : "" }}</span>
-                    </div>
+            <div class="card" style="position:sticky; top:70px;">
+                <div class="card-header">Order Summary</div>
+                <div class="card-body">
+                    @if(isset($cartItems))
+                        @foreach($cartItems as $item)
+                        <div class="order-row">
+                            <span>{{ $item['name'] }}</span>
+                            <span>${{ number_format($item['price'] ?? 0, 2) }}</span>
+                        </div>
+                        @endforeach
                     @endif
-                    @if($totals["tax"] > 0)
-                    <div class="flex justify-between text-slate-500">
-                        <span>Tax ({{ $totals["tax_rate"] }}%)</span>
-                        <span>{{ $currency ? $currency->prefix : "$" }}{{ number_format($totals["tax"], 2) }}{{ $currency ? $currency->suffix : "" }}</span>
+                    @php $total = isset($cartItems) ? collect($cartItems)->sum('price') : 0; @endphp
+                    <div class="order-row" style="margin-top:4px;">
+                        <span>Total</span>
+                        <span style="color:#1a4d80; font-size:16px;">${{ number_format($total, 2) }}</span>
                     </div>
-                    @endif
-                    <div class="border-t border-slate-200 dark:border-slate-600 pt-3 mt-3 flex justify-between font-bold text-base">
-                        <span>Total Due</span>
-                        <span class="text-indigo-600">{{ $currency ? $currency->prefix : "$" }}{{ number_format($totals["total"], 2) }}{{ $currency ? $currency->suffix : "" }}</span>
-                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:16px;">Place Order</button>
+                    <p style="font-size:11px; color:#999; text-align:center; margin-top:8px;">By placing your order, you agree to our Terms of Service.</p>
                 </div>
-                <button type="submit" class="mt-5 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-lg transition-colors">
-                    Complete Order
-                </button>
-                <a href="{{ route("client.cart.index") }}" class="mt-3 block text-center text-sm text-slate-400 hover:text-slate-600">
-                    &larr; Back to Cart
-                </a>
             </div>
         </div>
     </div>
 </form>
+
 @endsection

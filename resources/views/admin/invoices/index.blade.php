@@ -1,46 +1,82 @@
 @extends("admin.layouts.app")
 @section("title", "Invoices")
 @section("content")
-<div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold">Invoices</h1>
+
+<div class="page-header">
+    <h1>Invoices</h1>
+    <a href="{{ route("admin.invoices.create") }}" class="btn btn-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create Invoice
+    </a>
 </div>
 
-<div class="flex gap-2 mb-6 flex-wrap">
-    @foreach(["" => "All", "unpaid" => "Unpaid", "paid" => "Paid", "overdue" => "Overdue", "cancelled" => "Cancelled", "refunded" => "Refunded", "draft" => "Draft"] as $val => $label)
-    <a href="{{ route("admin.invoices.index", ["status" => $val]) }}" class="px-3 py-1.5 rounded-lg text-sm font-medium {{ request("status") == $val ? "bg-indigo-600 text-white" : "bg-slate-100 dark:bg-slate-700 hover:bg-slate-200" }} transition-colors">{{ $label }}</a>
+<!-- Status Filter Tabs -->
+<div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
+    @foreach(["" => "All", "unpaid" => "Unpaid", "paid" => "Paid", "overdue" => "Overdue", "cancelled" => "Cancelled", "draft" => "Draft"] as $val => $label)
+    @php $isActive = (request("status","") == $val); @endphp
+    <a href="{{ route("admin.invoices.index", ["status" => $val]) }}"
+       style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
+        {{ $label }}
+    </a>
     @endforeach
 </div>
 
-<div class="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-    <table class="w-full text-sm">
-        <thead class="bg-slate-50 dark:bg-slate-700/50">
+<!-- Table -->
+<div class="card">
+    <table class="data-table">
+        <thead>
             <tr>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Invoice #</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Client</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Date</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Due Date</th>
-                <th class="px-4 py-3 text-right font-medium text-slate-600">Total</th>
-                <th class="px-4 py-3 text-left font-medium text-slate-600">Status</th>
+                <th>Invoice #</th>
+                <th>Client</th>
+                <th>Date</th>
+                <th>Due Date</th>
+                <th style="text-align:right;">Total</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
-        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+        <tbody>
             @forelse($invoices as $invoice)
-            <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                <td class="px-4 py-3"><a href="{{ route("admin.invoices.show", $invoice) }}" class="text-indigo-600 hover:text-indigo-500 font-mono">#{{ $invoice->id }}</a></td>
-                <td class="px-4 py-3">{{ $invoice->client->full_name ?? "N/A" }}</td>
-                <td class="px-4 py-3 text-slate-500">{{ $invoice->date?->format("d M Y") }}</td>
-                <td class="px-4 py-3 text-slate-500">{{ $invoice->due_date?->format("d M Y") }}</td>
-                <td class="px-4 py-3 text-right font-medium">${{ number_format($invoice->total, 2) }}</td>
-                <td class="px-4 py-3">
-                    @php $colors = ["paid" => "emerald", "unpaid" => "amber", "overdue" => "red", "cancelled" => "slate", "draft" => "slate", "refunded" => "violet"]; $c = $colors[$invoice->status] ?? "slate"; @endphp
-                    <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-{{ $c }}-100 text-{{ $c }}-700">{{ ucfirst($invoice->status) }}</span>
+            @php
+            $badgeClass = match(strtolower($invoice->status ?? "")) {
+                "active", "paid"     => "badge-paid",
+                "pending"            => "badge-pending",
+                "unpaid"             => "badge-unpaid",
+                "overdue"            => "badge-overdue",
+                "suspended"          => "badge-suspended",
+                "terminated"         => "badge-terminated",
+                "cancelled"          => "badge-cancelled",
+                "fraud"              => "badge-fraud",
+                "draft"              => "badge-draft",
+                "refunded"           => "badge-refunded",
+                default              => "badge-cancelled",
+            };
+            @endphp
+            <tr>
+                <td><a href="{{ route("admin.invoices.show", $invoice) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $invoice->id }}</a></td>
+                <td>
+                    @if($invoice->client)
+                    <a href="{{ route("admin.clients.show", $invoice->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $invoice->client->full_name }}</a>
+                    @else N/A @endif
+                </td>
+                <td style="color:#666;">{{ $invoice->date?->format("d M Y") ?? "-" }}</td>
+                <td style="color:#666;">{{ $invoice->due_date?->format("d M Y") ?? "-" }}</td>
+                <td style="text-align:right;font-weight:500;">${{ number_format($invoice->total, 2) }}</td>
+                <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
+                <td>
+                    <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">View</a>
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" class="px-4 py-12 text-center text-slate-500">No invoices found.</td></tr>
+            <tr>
+                <td colspan="7" style="text-align:center;padding:32px;color:#999;">No invoices found.</td>
+            </tr>
             @endforelse
         </tbody>
     </table>
-    <div class="px-4 py-3 border-t border-slate-200 dark:border-slate-700">{{ $invoices->withQueryString()->links() }}</div>
+    <div style="padding:10px 16px;border-top:1px solid #e5e7eb;">
+        {{ $invoices->withQueryString()->links() }}
+    </div>
 </div>
+
 @endsection
