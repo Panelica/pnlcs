@@ -46,7 +46,7 @@
             <form method="POST" action="{{ route("client.cart.promo") }}" class="flex gap-3">
                 @csrf
                 <input type="text" name="code" placeholder="Enter promo code"
-                    value="{{ $totals[promo_code] ??  }}"
+                    value="{{ $totals['promo_code'] ?? '' }}"
                     class="flex-1 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <button type="submit" class="bg-slate-800 hover:bg-slate-700 dark:bg-slate-600 text-white text-sm px-4 py-2 rounded-lg transition-colors">
                     Apply

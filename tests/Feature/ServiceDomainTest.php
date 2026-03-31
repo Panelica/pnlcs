@@ -5,10 +5,9 @@ use App\Models\AdminRole;
 use App\Models\Domain;
 use App\Models\Product;
 use App\Models\Service;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 beforeEach(function () {
-    $this->withoutMiddleware(VerifyCsrfToken::class);
     $role = AdminRole::factory()->fullAdmin()->create();
     $this->admin = Admin::factory()->create(['role_id' => $role->id, 'password' => 'secret']);
     $this->actingAs($this->admin, 'admin');
@@ -64,7 +63,8 @@ test('module action create dispatches to ProvisioningService', function () {
     $product = Product::factory()->create(['server_type' => 'custom']);
     $service = Service::factory()->pending()->create(['product_id' => $product->id]);
 
-    $response = $this->post(route('admin.services.module-action', [$service, 'create']));
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)
+        ->post(route('admin.services.module-action', [$service, 'create']));
 
     $response->assertRedirect();
     $response->assertSessionHas('success');
@@ -75,9 +75,10 @@ test('module action suspend updates service status', function () {
     $product = Product::factory()->create(['server_type' => 'custom']);
     $service = Service::factory()->active()->create(['product_id' => $product->id]);
 
-    $response = $this->post(route('admin.services.module-action', [$service, 'suspend']), [
-        'reason' => 'Test suspension',
-    ]);
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)
+        ->post(route('admin.services.module-action', [$service, 'suspend']), [
+            'reason' => 'Test suspension',
+        ]);
 
     $response->assertRedirect();
     expect($service->fresh()->status)->toBe('Suspended');
@@ -88,7 +89,8 @@ test('module action unsuspend restores service', function () {
     $product = Product::factory()->create(['server_type' => 'custom']);
     $service = Service::factory()->suspended()->create(['product_id' => $product->id]);
 
-    $response = $this->post(route('admin.services.module-action', [$service, 'unsuspend']));
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)
+        ->post(route('admin.services.module-action', [$service, 'unsuspend']));
 
     $response->assertRedirect();
     expect($service->fresh()->status)->toBe('Active');
@@ -98,7 +100,8 @@ test('module action terminate sets termination_date', function () {
     $product = Product::factory()->create(['server_type' => 'custom']);
     $service = Service::factory()->active()->create(['product_id' => $product->id]);
 
-    $response = $this->post(route('admin.services.module-action', [$service, 'terminate']));
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)
+        ->post(route('admin.services.module-action', [$service, 'terminate']));
 
     $response->assertRedirect();
     expect($service->fresh()->status)->toBe('Terminated');
@@ -109,7 +112,8 @@ test('unknown module action returns error', function () {
     $product = Product::factory()->create(['server_type' => 'custom']);
     $service = Service::factory()->active()->create(['product_id' => $product->id]);
 
-    $response = $this->post(route('admin.services.module-action', [$service, 'invalidaction']));
+    $response = $this->withoutMiddleware(PreventRequestForgery::class)
+        ->post(route('admin.services.module-action', [$service, 'invalidaction']));
 
     $response->assertRedirect();
     $response->assertSessionHas('error');

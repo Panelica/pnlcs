@@ -12,5 +12,8 @@ abstract class TestCase extends BaseTestCase
 
         // Disable Vite in tests (no build manifest needed)
         $this->withoutVite();
+
+        // Disable CSRF verification in tests
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
     }
 }
