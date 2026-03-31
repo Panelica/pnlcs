@@ -33,7 +33,7 @@
 
         /* ─── NAVBAR ─── */
         .pn-navbar{background:#fff;border-bottom:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.06);position:sticky;top:0;z-index:1000}
-        .pn-navbar-inner{max-width:1260px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:60px;gap:8px}
+        .pn-navbar-inner{max-width:1440px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:60px;gap:8px}
         .pn-brand{color:var(--primary);font-size:20px;font-weight:800;text-decoration:none;letter-spacing:-0.5px;flex-shrink:0;display:flex;align-items:center;gap:8px}
         .pn-brand-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block}
         .pn-nav{display:flex;align-items:center;gap:2px;flex:1;padding:0 16px}
@@ -61,7 +61,7 @@
         @media(max-width:960px){.pn-nav{display:none}.pn-hamburger{display:flex}.pn-mobile-menu.open{display:block}}
 
         /* ─── LAYOUT ─── */
-        .pn-main{max-width:1260px;margin:0 auto;padding:28px 24px}
+        .pn-main{max-width:1440px;margin:0 auto;padding:28px 32px}
         .pn-footer{background:#fff;border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-size:12.5px;color:var(--muted);margin-top:48px}
         .pn-footer a{color:var(--primary);text-decoration:none}
         .pn-footer a:hover{text-decoration:underline}
