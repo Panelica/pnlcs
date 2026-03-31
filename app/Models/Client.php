@@ -91,10 +91,10 @@ class Client extends Model
     public function scopeSearch($query, string $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where("first_name", "ilike", "%{$term}%")
-                ->orWhere("last_name", "ilike", "%{$term}%")
-                ->orWhere("email", "ilike", "%{$term}%")
-                ->orWhere("company_name", "ilike", "%{$term}%");
+            $q->where("first_name", "like", "%{$term}%")
+                ->orWhere("last_name", "like", "%{$term}%")
+                ->orWhere("email", "like", "%{$term}%")
+                ->orWhere("company_name", "like", "%{$term}%");
         });
     }
 }
