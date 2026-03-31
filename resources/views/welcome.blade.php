@@ -361,6 +361,7 @@
             <a href="#pricing">Pricing</a>
             <a href="{{ route('client.store') }}">Products</a>
             <a href="{{ route('client.contact') }}">Contact</a>
+            <a href="/client/domain-pricing">Domains</a>
         </div>
         <div class="nav-right">
             <a href="{{ route('client.login') }}" class="nav-login">Login</a>
@@ -391,7 +392,7 @@
         <p class="hero-price-note">Starting at just $4.99/mo</p>
 
         <div class="domain-search-wrap">
-            <form action="{{ route('client.store') }}" method="GET" class="domain-search-box">
+            <form action="/client/domain-search" method="GET" class="domain-search-box">
                 <input type="text" name="domain" placeholder="Find your perfect domain name..." required>
                 <select name="tld" class="domain-tld-select">
                     <option value=".com">.com</option>
@@ -400,6 +401,10 @@
                     <option value=".io">.io</option>
                     <option value=".co">.co</option>
                     <option value=".dev">.dev</option>
+                    <option value=".ai">.ai</option>
+                    <option value=".app">.app</option>
+                    <option value=".xyz">.xyz</option>
+                    <option value=".store">.store</option>
                 </select>
                 <button type="submit" class="btn-domain-search">Search</button>
             </form>

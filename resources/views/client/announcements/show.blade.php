@@ -1,22 +1,21 @@
-@extends('client.layouts.app')
-@section('title', $announcement->title)
-@section('content')
+@extends("client.layouts.app")
+@section("title", $announcement->title)
+@section("content")
 
-<div style="margin-bottom:14px;">
-    <a href="{{ route('client.announcements.index') }}" style="color:#337ab7; font-size:13px;">&larr; All Announcements</a>
-</div>
+<a href="{{ route("client.announcements.index") }}" class="pn-back">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    All Announcements
+</a>
 
-<div class="card" style="max-width:800px;">
-    <div class="card-header">
+<div class="pn-card" style="max-width:820px">
+    <div class="pn-card-header">
         <div>
-            <div style="font-size:16px; font-weight:600; color:#1a4d80;">{{ $announcement->title }}</div>
-            <div style="font-size:12px; color:#999; margin-top:3px; font-weight:400;">
-                Published {{ $announcement->created_at->format('d F Y, H:i') }}
-            </div>
+            <div style="font-size:18px;font-weight:800;color:var(--primary);letter-spacing:-0.3px">{{ $announcement->title }}</div>
+            <div class="text-muted text-sm" style="margin-top:4px">Published {{ $announcement->created_at->format("d F Y") }} at {{ $announcement->created_at->format("H:i") }}</div>
         </div>
     </div>
-    <div class="card-body">
-        <div style="font-size:13px; line-height:1.8; color:#444;">
+    <div class="pn-card-body">
+        <div style="font-size:14px;line-height:1.85;color:#334155">
             {!! nl2br(e($announcement->announcement)) !!}
         </div>
     </div>

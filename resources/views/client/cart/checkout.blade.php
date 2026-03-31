@@ -1,108 +1,110 @@
-@extends('client.layouts.app')
-@section('title', 'Checkout')
-@section('styles')
-<style>
-    .checkout-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
-    @media (max-width: 900px) { .checkout-layout { grid-template-columns: 1fr; } }
-    .payment-option { border: 1px solid #ddd; border-radius: 4px; padding: 12px 14px; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
-    .payment-option:hover { border-color: #337ab7; background: #f0f6ff; }
-    .payment-option input[type=radio] { margin: 0; }
-    .payment-option-name { font-size: 13px; font-weight: 500; }
-    .order-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
-    .order-row:last-child { border-bottom: none; font-weight: 600; }
-</style>
-@endsection
-@section('content')
+@extends("client.layouts.app")
+@section("title", "Checkout")
+@section("content")
 
-<div class="page-header">
-    <h1>Checkout</h1>
-    <a href="{{ route('client.cart.index') }}" class="btn btn-default btn-sm">&larr; Back to Cart</a>
+<a href="{{ route("client.cart.index") }}" class="pn-back">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Cart
+</a>
+
+<div class="pn-page-header">
+    <div>
+        <h1 class="pn-page-title">Checkout</h1>
+        <p class="pn-page-subtitle">Review your order and choose a payment method.</p>
+    </div>
 </div>
 
-@if(session('error'))
-<div style="background:#f2dede;border:1px solid #ebccd1;color:#a94442;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:16px;">{{ session('error') }}</div>
-@endif
+@if(session("error"))<div class="pn-alert pn-alert-error mb-16">{{ session("error") }}</div>@endif
 
-<form method="POST" action="{{ route('client.cart.process') }}">
+<form method="POST" action="{{ route("client.cart.process") }}">
     @csrf
-    <div class="checkout-layout">
+    <div class="pn-checkout-grid">
         <div>
-            {{-- Contact Details --}}
-            <div class="card" style="margin-bottom:16px;">
-                <div class="card-header">Contact Details</div>
-                <div class="card-body">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="pn-card mb-16">
+                <div class="pn-card-header"><span class="pn-card-title">Contact Details</span></div>
+                <div class="pn-card-body">
+                    <div class="form-grid-2">
                         <div class="form-group">
-                            <label class="form-label">First Name</label>
-                            <input type="text" name="first_name" class="form-control" value="{{ auth()->user()?->first_name ?? old('first_name') }}" required>
+                            <label class="form-label">First Name <span class="req">*</span></label>
+                            <input type="text" name="first_name" class="form-control" value="{{ auth()->user()?->first_name ?? old("first_name") }}" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" name="last_name" class="form-control" value="{{ auth()->user()?->last_name ?? old('last_name') }}" required>
+                            <label class="form-label">Last Name <span class="req">*</span></label>
+                            <input type="text" name="last_name" class="form-control" value="{{ auth()->user()?->last_name ?? old("last_name") }}" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" value="{{ auth()->user()?->email ?? old('email') }}" required>
+                        <label class="form-label">Email Address <span class="req">*</span></label>
+                        <input type="email" name="email" class="form-control" value="{{ auth()->user()?->email ?? old("email") }}" required>
                     </div>
                 </div>
             </div>
 
-            {{-- Payment Method --}}
-            <div class="card">
-                <div class="card-header">Payment Method</div>
-                <div class="card-body">
+            <div class="pn-card mb-16">
+                <div class="pn-card-header"><span class="pn-card-title">Payment Method</span></div>
+                <div class="pn-card-body">
                     @foreach($paymentMethods as $value => $label)
-                    <label class="payment-option">
-                        <input type="radio" name="payment_method" value="{{ $value }}" {{ $loop->first ? 'checked' : '' }}>
-                        <div class="payment-option-name">{{ $label }}</div>
+                    <label class="pn-pay-option {{ $loop->first ? "selected" : "" }}" onclick="selectPay(this)">
+                        <input type="radio" name="payment_method" value="{{ $value }}" {{ $loop->first ? "checked" : "" }} style="margin:0;accent-color:var(--primary)">
+                        <div>
+                            <div style="font-size:13.5px;font-weight:600">{{ $label }}</div>
+                        </div>
                     </label>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Terms --}}
-            <div style="margin-top:14px; display:flex; align-items:flex-start; gap:8px;">
-                <input type="checkbox" name="terms" id="terms" value="1" required style="margin-top:3px; flex-shrink:0;">
-                <label for="terms" style="font-size:13px; color:#666; cursor:pointer;">
-                    I agree to the <a href="#" style="color:#337ab7;">Terms of Service</a> and <a href="#" style="color:#337ab7;">Privacy Policy</a>.
-                </label>
-            </div>
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px;background:#f8fafc;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
+                <input type="checkbox" name="terms" id="terms" value="1" required style="margin-top:2px;flex-shrink:0;accent-color:var(--primary)">
+                <span style="font-size:13px;color:var(--muted)">
+                    I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>.
+                </span>
+            </label>
         </div>
 
-        {{-- Order Summary --}}
         <div>
-            <div class="card" style="position:sticky; top:70px;">
-                <div class="card-header">Order Summary</div>
-                <div class="card-body">
-                    @foreach($totals['items'] as $item)
-                    <div class="order-row">
-                        <span>{{ $item['product_name'] ?? 'Product' }}</span>
-                        <span>${{ number_format($item['price'] ?? 0, 2) }}</span>
+            <div class="pn-card" style="position:sticky;top:80px">
+                <div class="pn-card-header"><span class="pn-card-title">Order Summary</span></div>
+                <div class="pn-card-body">
+                    @foreach($totals["items"] as $item)
+                    <div class="pn-order-row">
+                        <span class="key" style="font-size:13px">{{ $item["product_name"] ?? "Product" }}</span>
+                        <span style="font-weight:600">${{ number_format($item["price"] ?? 0, 2) }}</span>
                     </div>
                     @endforeach
-                    @if(($totals['discount'] ?? 0) > 0)
-                    <div class="order-row" style="color:#5cb85c;">
-                        <span>Discount</span>
-                        <span>-${{ number_format($totals['discount'], 2) }}</span>
+                    @if(($totals["discount"] ?? 0) > 0)
+                    <div class="pn-order-row" style="color:var(--success)">
+                        <span>Discount</span><span>-${{ number_format($totals["discount"], 2) }}</span>
                     </div>
                     @endif
-                    @if(($totals['tax'] ?? 0) > 0)
-                    <div class="order-row">
-                        <span style="color:#777;">Tax</span>
-                        <span>${{ number_format($totals['tax'], 2) }}</span>
+                    @if(($totals["tax"] ?? 0) > 0)
+                    <div class="pn-order-row">
+                        <span class="key">Tax</span><span>${{ number_format($totals["tax"], 2) }}</span>
                     </div>
                     @endif
-                    <div class="order-row" style="margin-top:4px;">
+                    <div class="pn-order-row">
                         <span>Total</span>
-                        <span style="color:#1a4d80; font-size:16px;">${{ number_format($totals['total'], 2) }}</span>
+                        <span style="color:var(--primary);font-size:18px">${{ number_format($totals["total"], 2) }}</span>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; text-align:center; display:block; margin-top:16px;">Place Order</button>
-                    <p style="font-size:11px; color:#999; text-align:center; margin-top:8px;">Order total: ${{ number_format($totals['total'], 2) }}</p>
+                    <button type="submit" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:20px;font-size:15px;padding:12px">
+                        Place Order &rarr;
+                    </button>
+                    <p class="text-muted text-sm" style="text-align:center;margin-top:10px">
+                        Secure checkout &mdash; ${{ number_format($totals["total"], 2) }}
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </form>
+
+@section("scripts")
+<script>
+function selectPay(el) {
+    document.querySelectorAll(".pn-pay-option").forEach(o => o.classList.remove("selected"));
+    el.classList.add("selected");
+}
+</script>
+@endsection
 
 @endsection

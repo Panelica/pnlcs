@@ -1,65 +1,63 @@
-@extends('client.layouts.app')
-@section('title', 'Knowledge Base')
-@section('styles')
-<style>
-    .kb-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    @media (max-width: 768px) { .kb-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 480px) { .kb-grid { grid-template-columns: 1fr; } }
-    .kb-card { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 20px; transition: box-shadow 0.15s; }
-    .kb-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
-    .kb-icon { width: 36px; height: 36px; background: #e8f0fe; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
-    .kb-icon svg { width: 18px; height: 18px; color: #1a4d80; }
-    .kb-title { font-size: 14px; font-weight: 600; color: #1a4d80; margin-bottom: 6px; }
-    .kb-desc { font-size: 12px; color: #777; line-height: 1.5; margin-bottom: 10px; }
-    .kb-count { font-size: 11px; color: #999; }
-</style>
-@endsection
-@section('content')
+@extends("client.layouts.app")
+@section("title", "Knowledge Base")
+@section("content")
 
-<div class="page-header">
-    <h1>Knowledge Base</h1>
+<div class="pn-page-header">
+    <div>
+        <h1 class="pn-page-title">Knowledge Base</h1>
+        <p class="pn-page-subtitle">Find answers to frequently asked questions.</p>
+    </div>
 </div>
 
-@if(isset($searchQuery) && $searchQuery)
-<div style="margin-bottom:16px; font-size:13px; color:#555;">
-    Search results for: <strong>{{ $searchQuery }}</strong>
-</div>
-@endif
-
-<div style="margin-bottom:20px;">
-    <form method="GET" action="{{ route('client.kb.index') }}" style="display:flex; gap:8px; max-width:400px;">
-        <input type="text" name="q" value="{{ $searchQuery ?? '' }}" class="form-control" placeholder="Search knowledge base...">
-        <button type="submit" class="btn btn-default">Search</button>
+<div class="pn-card mb-24" style="padding:20px 24px">
+    <form method="GET" action="{{ route("client.kb.index") }}" style="display:flex;gap:10px;max-width:520px">
+        <div style="position:relative;flex:1">
+            <svg width="16" height="16" fill="none" stroke="var(--muted)" viewBox="0 0 24 24" style="position:absolute;left:12px;top:50%;transform:translateY(-50%)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" name="q" value="{{ $searchQuery ?? "" }}" class="form-control" style="padding-left:38px" placeholder="Search knowledge base...">
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
     </form>
+    @if(isset($searchQuery) && $searchQuery)
+    <div class="text-muted text-sm" style="margin-top:10px">
+        Showing results for: <strong style="color:var(--text)">{{ $searchQuery }}</strong>
+    </div>
+    @endif
 </div>
 
 @forelse($categories as $cat)
-<div style="margin-bottom:24px;">
+<div class="mb-24">
     @if(isset($cat->name))
-    <h2 style="font-size:14px; font-weight:600; color:#333; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #e0e0e0;">{{ $cat->name }}</h2>
+    <h2 style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <svg width="16" height="16" fill="none" stroke="var(--primary)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        {{ $cat->name }}
+    </h2>
     @endif
     @if(isset($cat->articles) && $cat->articles->isNotEmpty())
-    <div style="display:flex; flex-direction:column; gap:6px;">
+    <div style="display:flex;flex-direction:column;gap:6px">
         @foreach($cat->articles as $article)
-        <a href="{{ route('client.kb.show', $article) }}" style="text-decoration:none;">
-            <div class="card" style="padding:12px 16px; display:flex; align-items:center; justify-content:space-between;">
-                <div>
-                    <div style="font-size:13px; font-weight:500; color:#1a4d80;">{{ $article->title }}</div>
-                    @if($article->description)<div style="font-size:12px; color:#777; margin-top:2px;">{{ Str::limit($article->description, 100) }}</div>@endif
+        <a href="{{ route("client.kb.show", $article) }}" style="text-decoration:none;color:inherit">
+            <div class="pn-card" style="padding:13px 18px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:all 0.15s">
+                <div style="display:flex;align-items:center;gap:12px;min-width:0">
+                    <svg width="14" height="14" fill="none" stroke="var(--muted)" viewBox="0 0 24 24" style="flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <div>
+                        <div style="font-size:13.5px;font-weight:600;color:var(--primary)">{{ $article->title }}</div>
+                        @if($article->description)<div class="text-muted text-sm" style="margin-top:2px">{{ Str::limit($article->description, 90) }}</div>@endif
+                    </div>
                 </div>
-                <span style="font-size:12px; color:#999; white-space:nowrap; margin-left:16px;">{{ $article->views ?? 0 }} views</span>
+                <span class="text-muted text-sm" style="white-space:nowrap;flex-shrink:0">{{ $article->views ?? 0 }} views</span>
             </div>
         </a>
         @endforeach
     </div>
     @else
-    <p style="font-size:13px; color:#999;">No articles in this category.</p>
+    <p class="text-muted text-sm">No articles in this category.</p>
     @endif
 </div>
 @empty
-<div class="card">
-    <div class="card-body" style="text-align:center; padding:48px; color:#999;">
-        No knowledge base articles available yet.
+<div class="pn-card">
+    <div class="pn-empty">
+        <div class="pn-empty-icon">&#128218;</div>
+        <p>No knowledge base articles available yet.</p>
     </div>
 </div>
 @endforelse

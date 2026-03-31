@@ -36,9 +36,9 @@ Route::prefix('client')->name('client.')->group(function () {
     Route::post('contact', [ContactController::class, 'submit'])->name('contact.submit');
 
     // Domain Search (public — no auth required)
-    Route::get(domain-search, [DomainSearchController::class, index])->name(domain.search);
-    Route::post(domain-search, [DomainSearchController::class, check])->name(domain.check);
-    Route::get(domain-pricing, [DomainSearchController::class, pricing])->name(domain.pricing);
+    Route::get('domain-search', [DomainSearchController::class, 'index'])->name('domain.search');
+    Route::post('domain-search', [DomainSearchController::class, 'check'])->name('domain.check');
+    Route::get('domain-pricing', [DomainSearchController::class, 'pricing'])->name('domain.pricing');
 
     // Store — public browsing
     Route::get('store', [CartController::class, 'store'])->name('store');
@@ -91,6 +91,7 @@ Route::prefix('client')->name('client.')->group(function () {
         // Cart & Checkout
         Route::get('cart', [CartController::class, 'index'])->name('cart.index');
         Route::post('cart/add', [CartController::class, 'addToCart'])->name('cart.add');
+        Route::post('cart/add-domain', [CartController::class, 'addDomainToCart'])->name('cart.add-domain');
         Route::delete('cart/remove/{index}', [CartController::class, 'removeItem'])->name('cart.remove');
         Route::post('cart/promo', [CartController::class, 'applyPromo'])->name('cart.promo');
         Route::get('cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');

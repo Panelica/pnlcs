@@ -120,6 +120,7 @@
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.system-database') }}">System Database</a></li>
                     <li><a href="{{ route('admin.config.system-phpinfo') }}">PHP Info</a></li>
+                    <li><a href="{{ route('admin.whois.index') }}">WHOIS Lookup</a></li>
                 </ul>
             </li>
         </ul>
@@ -249,6 +250,7 @@
             <li><a href="{{ route('admin.config.activity-log') }}">Activity Log</a></li>
             <li><a href="{{ route('admin.logs.index') }}">System Logs</a></li>
             <li><a href="{{ route('admin.config.system-phpinfo') }}">PHP Info</a></li>
+            <li><a href="{{ route('admin.whois.index') }}" @if($routeName === 'admin.whois.index' || $routeName === 'admin.whois.lookup') class="active" @endif>WHOIS Lookup</a></li>
         </ul>
 
     {{-- ── Clients Sidebar ── --}}

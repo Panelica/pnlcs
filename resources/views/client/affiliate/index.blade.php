@@ -1,60 +1,52 @@
-@extends('client.layouts.app')
-@section('title', 'Affiliate Program')
-@section('styles')
-<style>
-    .affiliate-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
-    @media (max-width: 768px) { .affiliate-stats { grid-template-columns: repeat(2, 1fr); } }
-    .aff-stat { background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 16px; text-align: center; }
-    .aff-stat-value { font-size: 24px; font-weight: 700; color: #1a4d80; }
-    .aff-stat-label { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
-    .referral-link-box { display: flex; gap: 8px; }
-    .referral-link-box input { flex: 1; }
-</style>
-@endsection
-@section('content')
+@extends("client.layouts.app")
+@section("title", "Affiliate Program")
+@section("content")
 
-<div class="page-header">
-    <h1>Affiliate Program</h1>
-</div>
-
-<div class="affiliate-stats">
-    <div class="aff-stat">
-        <div class="aff-stat-value">{{ $stats['referrals'] ?? 0 }}</div>
-        <div class="aff-stat-label">Total Referrals</div>
-    </div>
-    <div class="aff-stat">
-        <div class="aff-stat-value">{{ $stats['signups'] ?? 0 }}</div>
-        <div class="aff-stat-label">Signups</div>
-    </div>
-    <div class="aff-stat">
-        <div class="aff-stat-value" style="color:#3c763d;">${{ number_format($stats['earnings'] ?? 0, 2) }}</div>
-        <div class="aff-stat-label">Total Earnings</div>
-    </div>
-    <div class="aff-stat">
-        <div class="aff-stat-value" style="color:#8a6d3b;">${{ number_format($stats['pending'] ?? 0, 2) }}</div>
-        <div class="aff-stat-label">Pending</div>
+<div class="pn-page-header">
+    <div>
+        <h1 class="pn-page-title">Affiliate Program</h1>
+        <p class="pn-page-subtitle">Earn commissions by referring new clients.</p>
     </div>
 </div>
 
-<div class="card" style="margin-bottom:20px;">
-    <div class="card-header">Your Referral Link</div>
-    <div class="card-body">
-        <p style="font-size:13px; color:#666; margin-bottom:12px;">Share this link to earn commissions on referred signups.</p>
-        <div class="referral-link-box">
-            <input type="text" id="refLink" class="form-control" value="{{ $referralLink ?? url('/') . '?ref=' . (auth()->user()->id ?? '') }}" readonly>
-            <button type="button" class="btn btn-default" onclick="document.getElementById('refLink').select(); document.execCommand('copy'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 2000)">Copy</button>
+<div class="pn-aff-grid mb-24">
+    <div class="pn-card pn-aff-stat">
+        <div class="pn-aff-val">{{ $stats["referrals"] ?? 0 }}</div>
+        <div class="pn-aff-lbl">Total Referrals</div>
+    </div>
+    <div class="pn-card pn-aff-stat">
+        <div class="pn-aff-val">{{ $stats["signups"] ?? 0 }}</div>
+        <div class="pn-aff-lbl">Signups</div>
+    </div>
+    <div class="pn-card pn-aff-stat">
+        <div class="pn-aff-val" style="color:var(--success)">${{ number_format($stats["earnings"] ?? 0, 2) }}</div>
+        <div class="pn-aff-lbl">Total Earnings</div>
+    </div>
+    <div class="pn-card pn-aff-stat">
+        <div class="pn-aff-val" style="color:var(--warning)">${{ number_format($stats["pending"] ?? 0, 2) }}</div>
+        <div class="pn-aff-lbl">Pending</div>
+    </div>
+</div>
+
+<div class="pn-card mb-24">
+    <div class="pn-card-header"><span class="pn-card-title">Your Referral Link</span></div>
+    <div class="pn-card-body">
+        <p class="text-muted text-sm mb-16">Share your unique referral link to earn commissions when referred visitors sign up and make a purchase.</p>
+        <div style="display:flex;gap:8px;max-width:520px">
+            <input type="text" id="refLink" class="form-control" value="{{ $referralLink ?? url("/") . "?ref=" . (auth()->user()->id ?? "") }}" readonly style="background:#f8fafc;font-size:13px">
+            <button type="button" class="btn btn-primary" id="copyBtn" onclick="copyLink()" style="flex-shrink:0">Copy Link</button>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">Commission History</div>
-    <div class="card-body" style="padding:0;">
-        <table class="data-table">
+<div class="pn-card">
+    <div class="pn-card-header"><span class="pn-card-title">Commission History</span></div>
+    <div class="pn-card-body-flush">
+        <table class="pn-table">
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Client</th>
+                    <th>Referred Client</th>
                     <th>Type</th>
                     <th>Amount</th>
                     <th>Status</th>
@@ -63,20 +55,38 @@
             <tbody>
                 @forelse($commissions ?? [] as $comm)
                 <tr>
-                    <td style="color:#777;">{{ $comm->created_at?->format('d M Y') }}</td>
-                    <td>{{ $comm->referredClient->email ?? '-' }}</td>
-                    <td style="text-transform:capitalize;">{{ $comm->type ?? 'signup' }}</td>
-                    <td style="font-weight:500; color:#3c763d;">${{ number_format($comm->amount, 2) }}</td>
-                    <td><span class="badge badge-{{ strtolower($comm->status ?? 'pending') }}">{{ ucfirst($comm->status ?? 'pending') }}</span></td>
+                    <td class="text-muted text-sm">{{ $comm->created_at?->format("d M Y") }}</td>
+                    <td>{{ $comm->referredClient->email ?? "-" }}</td>
+                    <td style="text-transform:capitalize">{{ $comm->type ?? "signup" }}</td>
+                    <td style="font-weight:700;color:var(--success)">${{ number_format($comm->amount, 2) }}</td>
+                    <td><span class="badge badge-{{ strtolower($comm->status ?? "pending") }}">{{ ucfirst($comm->status ?? "pending") }}</span></td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" style="text-align:center; padding:32px; color:#999;">No commissions yet. Start referring clients!</td>
+                    <td colspan="5">
+                        <div class="pn-empty">
+                            <div class="pn-empty-icon">&#128200;</div>
+                            <p>No commissions yet. Start sharing your referral link!</p>
+                        </div>
+                    </td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 </div>
+
+@section("scripts")
+<script>
+function copyLink() {
+    const el = document.getElementById("refLink");
+    const btn = document.getElementById("copyBtn");
+    el.select(); el.setSelectionRange(0, 99999);
+    navigator.clipboard?.writeText(el.value).catch(() => document.execCommand("copy"));
+    btn.textContent = "Copied!"; btn.style.background = "var(--success)";
+    setTimeout(() => { btn.textContent = "Copy Link"; btn.style.background = ""; }, 2500);
+}
+</script>
+@endsection
 
 @endsection

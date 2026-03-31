@@ -1,14 +1,17 @@
-@extends('client.layouts.app')
-@section('title', 'My Invoices')
-@section('content')
+@extends("client.layouts.app")
+@section("title", "My Invoices")
+@section("content")
 
-<div class="page-header">
-    <h1>My Invoices</h1>
+<div class="pn-page-header">
+    <div>
+        <h1 class="pn-page-title">My Invoices</h1>
+        <p class="pn-page-subtitle">View and pay your invoices.</p>
+    </div>
 </div>
 
-<div class="card">
-    <div class="card-body" style="padding:0;">
-        <table class="data-table">
+<div class="pn-card">
+    <div class="pn-card-body-flush">
+        <table class="pn-table">
             <thead>
                 <tr>
                     <th>Invoice #</th>
@@ -21,23 +24,28 @@
             </thead>
             <tbody>
                 @forelse($invoices as $inv)
-                <tr>
-                    <td><a href="{{ route('client.invoices.show', $inv) }}" style="color:#337ab7; font-weight:500;">#{{ $inv->invoice_num ?? $inv->id }}</a></td>
-                    <td style="color:#777;">{{ $inv->date?->format('d M Y') ?? '-' }}</td>
-                    <td style="color:#777;">{{ $inv->due_date?->format('d M Y') ?? '-' }}</td>
-                    <td style="font-weight:500;">${{ number_format($inv->total, 2) }}</td>
+                <tr style="{{ in_array(strtolower($inv->status), ["unpaid","overdue"]) ? "background:#fffbeb" : "" }}">
+                    <td><a href="{{ route("client.invoices.show", $inv) }}" style="font-weight:600">#{{ $inv->invoice_num ?? $inv->id }}</a></td>
+                    <td class="text-muted text-sm">{{ $inv->date?->format("d M Y") ?? "-" }}</td>
+                    <td class="text-muted text-sm" style="{{ strtolower($inv->status) === "overdue" ? "color:var(--danger);font-weight:600" : "" }}">{{ $inv->due_date?->format("d M Y") ?? "-" }}</td>
+                    <td style="font-weight:700">${{ number_format($inv->total, 2) }}</td>
                     <td><span class="badge badge-{{ strtolower($inv->status) }}">{{ ucfirst($inv->status) }}</span></td>
                     <td>
-                        @if(in_array(strtolower($inv->status), ['unpaid', 'overdue']))
-                            <a href="{{ route('client.invoices.show', $inv) }}" class="btn btn-primary btn-xs">Pay Now</a>
+                        @if(in_array(strtolower($inv->status), ["unpaid", "overdue"]))
+                            <a href="{{ route("client.invoices.show", $inv) }}" class="btn btn-accent btn-xs">Pay Now</a>
                         @else
-                            <a href="{{ route('client.invoices.show', $inv) }}" class="btn btn-default btn-xs">View</a>
+                            <a href="{{ route("client.invoices.show", $inv) }}" class="btn btn-outline btn-xs">View</a>
                         @endif
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:32px; color:#999;">No invoices found.</td>
+                    <td colspan="6">
+                        <div class="pn-empty">
+                            <div class="pn-empty-icon">&#128196;</div>
+                            <p>No invoices found.</p>
+                        </div>
+                    </td>
                 </tr>
                 @endforelse
             </tbody>
@@ -46,7 +54,7 @@
 </div>
 
 @if($invoices instanceof \Illuminate\Pagination\LengthAwarePaginator && $invoices->hasPages())
-    <div style="margin-top:16px;">{{ $invoices->links() }}</div>
+    <div class="mt-16">{{ $invoices->links() }}</div>
 @endif
 
 @endsection
