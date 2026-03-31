@@ -20,7 +20,7 @@
 
 <div class="page-header">
     <h1>Configure: {{ $product->name }}</h1>
-    <a href="{{ route('client.store') }}" class="btn btn-default btn-sm">&larr; Back</a>
+    <a href="{{ route('client.store') }}" class="btn btn-outline btn-sm">&larr; Back</a>
 </div>
 
 <form method="POST" action="{{ route('client.cart.add') }}" id="configForm">
@@ -30,9 +30,9 @@
     <div class="config-layout">
         <div>
             {{-- Billing Cycle --}}
-            <div class="card" style="margin-bottom:16px;">
-                <div class="card-header">Billing Cycle</div>
-                <div class="card-body">
+            <div class="pn-card" style="margin-bottom:16px;">
+                <div class="pn-card-header">Billing Cycle</div>
+                <div class="pn-card-body">
                     @php $pricing = $product->pricing->first(); $cycles = ['monthly','quarterly','semiannually','annually','biennially','triennially']; @endphp
                     <div class="cycle-options">
                         @if($pricing)
@@ -55,9 +55,9 @@
 
             {{-- Domain --}}
             @if($product->require_domain ?? false)
-            <div class="card" style="margin-bottom:16px;">
-                <div class="card-header">Domain</div>
-                <div class="card-body">
+            <div class="pn-card" style="margin-bottom:16px;">
+                <div class="pn-card-header">Domain</div>
+                <div class="pn-card-body">
                     <div style="display:flex; gap:8px; margin-bottom:12px;">
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
                             <input type="radio" name="domain_option" value="register" checked> Register new domain
@@ -77,9 +77,9 @@
             @endif
 
             {{-- Additional Notes --}}
-            <div class="card">
-                <div class="card-header">Additional Notes <span style="font-weight:400; color:#999;">(optional)</span></div>
-                <div class="card-body">
+            <div class="pn-card">
+                <div class="pn-card-header">Additional Notes <span style="font-weight:400; color:#999;">(optional)</span></div>
+                <div class="pn-card-body">
                     <textarea name="notes" rows="3" class="form-control" placeholder="Any special requirements...">{{ old('notes') }}</textarea>
                 </div>
             </div>
@@ -87,9 +87,9 @@
 
         {{-- Order Summary --}}
         <div class="order-summary">
-            <div class="card">
-                <div class="card-header">Order Summary</div>
-                <div class="card-body">
+            <div class="pn-card">
+                <div class="pn-card-header">Order Summary</div>
+                <div class="pn-card-body">
                     <div class="summary-row">
                         <span style="color:#777;">Product</span>
                         <span style="font-weight:500;">{{ $product->name }}</span>

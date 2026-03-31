@@ -4,7 +4,7 @@
 
 <div class="page-header">
     <h1>Request Cancellation</h1>
-    <a href="{{ route('client.services.show', $service) }}" class="btn btn-default btn-sm">&larr; Back to Service</a>
+    <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline btn-sm">&larr; Back to Service</a>
 </div>
 
 <div style="background:#fcf8e3; border:1px solid #faebcc; color:#8a6d3b; padding:12px 16px; border-radius:4px; font-size:13px; margin-bottom:20px;">
@@ -13,8 +13,8 @@
 </div>
 
 <div class="pn-card">
-    <div class="card-header">Cancellation Request</div>
-    <div class="card-body">
+    <div class="pn-card-header">Cancellation Request</div>
+    <div class="pn-card-body">
         @if($errors->any())
         <div style="background:#f2dede;border:1px solid #ebccd1;color:#a94442;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:16px;">
             <ul style="margin:0; padding-left:18px;">
@@ -50,7 +50,7 @@
             </div>
             <div style="display:flex; gap:8px;">
                 <button type="submit" class="btn btn-danger">Submit Cancellation Request</button>
-                <a href="{{ route('client.services.show', $service) }}" class="btn btn-default">Cancel</a>
+                <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline">Cancel</a>
             </div>
         </form>
     </div>

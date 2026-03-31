@@ -4,14 +4,14 @@
 
 <div class="page-header">
     <h1>Upgrade / Downgrade</h1>
-    <a href="{{ route('client.services.show', $service) }}" class="btn btn-default btn-sm">&larr; Back to Service</a>
+    <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline btn-sm">&larr; Back to Service</a>
 </div>
 
 @if(!isset($upgrades) || $upgrades->isEmpty())
-<div class="card">
-    <div class="card-body" style="text-align:center; padding:40px; color:#999;">
+<div class="pn-card">
+    <div class="pn-card-body" style="text-align:center; padding:40px; color:#999;">
         <p style="margin:0 0 16px;">No upgrade options are available for this service at this time.</p>
-        <a href="{{ route('client.services.show', $service) }}" class="btn btn-default btn-sm">&larr; Back to Service</a>
+        <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline btn-sm">&larr; Back to Service</a>
     </div>
 </div>
 @else
@@ -19,9 +19,9 @@
     Currently on: <strong>{{ $service->product->name ?? 'Service' }}</strong> &mdash; ${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}
 </div>
 
-<div class="card">
-    <div class="card-header">Select a New Plan</div>
-    <div class="card-body">
+<div class="pn-card">
+    <div class="pn-card-header">Select a New Plan</div>
+    <div class="pn-card-body">
         <form method="POST" action="{{ route('client.services.upgrade.submit', $service) }}">
             @csrf
             @if($errors->any())
@@ -63,7 +63,7 @@
             </div>
             <div style="display:flex; gap:8px;">
                 <button type="submit" class="btn btn-primary">Request Change</button>
-                <a href="{{ route('client.services.show', $service) }}" class="btn btn-default">Cancel</a>
+                <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline">Cancel</a>
             </div>
         </form>
     </div>

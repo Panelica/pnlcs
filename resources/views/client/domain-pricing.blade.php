@@ -1,6 +1,7 @@
 @extends("client.layouts.app")
 @section("title", "Domain Pricing")
 @section("content")
+<div class="pn-page-header"><div><h1 class="pn-page-title">Domain Pricing</h1><p class="pn-page-subtitle">Browse our domain extensions and find the best price.</p></div></div>
 <div style="max-width:100%;padding:0;">
 
     <div style="text-align:center;margin-bottom:40px;">

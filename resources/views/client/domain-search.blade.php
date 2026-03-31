@@ -1,6 +1,7 @@
 @extends("client.layouts.app")
 @section("title", "Domain Search")
 @section("content")
+<div class="pn-page-header"><div><h1 class="pn-page-title">Domain Search</h1><p class="pn-page-subtitle">Check domain availability and register your perfect domain name.</p></div></div>
 <div style="max-width:100%;padding:0;">
 
     <div style="text-align:center;margin-bottom:32px;">

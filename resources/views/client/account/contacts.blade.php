@@ -8,9 +8,9 @@
 </div>
 
 <div id="addContactForm" style="display:none; margin-bottom:16px;">
-    <div class="card">
-        <div class="card-header">Add New Contact</div>
-        <div class="card-body">
+    <div class="pn-card">
+        <div class="pn-card-header">Add New Contact</div>
+        <div class="pn-card-body">
             <form method="POST" action="{{ route('client.account.contacts.store') }}">
                 @csrf
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -32,15 +32,15 @@
                     <input type="text" name="phone" class="form-control">
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm">Save Contact</button>
-                <button type="button" class="btn btn-default btn-sm" onclick="document.getElementById('addContactForm').style.display='none'">Cancel</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('addContactForm').style.display='none'">Cancel</button>
             </form>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-body" style="padding:0;">
-        <table class="data-table">
+<div class="pn-card">
+    <div class="pn-card-body" style="padding:0;">
+        <table class="pn-table">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -58,7 +58,7 @@
                     <td style="color:#777;">{{ $contact->phone ?? '-' }}</td>
                     <td style="font-size:12px; color:#777;">{{ $contact->permissions ?? 'General' }}</td>
                     <td>
-                        <a href="#" class="btn btn-default btn-xs">Edit</a>
+                        <a href="#" class="btn btn-outline btn-xs">Edit</a>
                         <form method="POST" action="{{ route('client.account.contacts.destroy', $contact) }}" style="display:inline;" onsubmit="return confirm('Remove this contact?')">
                             @csrf
                             @method('DELETE')

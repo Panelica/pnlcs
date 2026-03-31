@@ -7,8 +7,8 @@
 </div>
 
 <div class="pn-card" style="margin-bottom:20px;">
-    <div class="card-header">Two-Factor Authentication</div>
-    <div class="card-body">
+    <div class="pn-card-header">Two-Factor Authentication</div>
+    <div class="pn-card-body">
         <p style="font-size:13px; color:#555; margin-bottom:16px;">
             Two-factor authentication adds an extra layer of security to your account by requiring both your password and a verification code from your phone.
         </p>
@@ -31,9 +31,9 @@
 </div>
 
 <div class="pn-card">
-    <div class="card-header">Active Sessions</div>
-    <div class="card-body" style="padding:0;">
-        <table class="data-table">
+    <div class="pn-card-header">Active Sessions</div>
+    <div class="pn-card-body" style="padding:0;">
+        <table class="pn-table">
             <thead>
                 <tr>
                     <th>Device / IP</th>

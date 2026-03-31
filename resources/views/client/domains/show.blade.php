@@ -18,14 +18,14 @@
     </div>
     <div style="display:flex; align-items:center; gap:8px;">
         <span class="badge badge-{{ strtolower($domain->status ?? 'active') }}">{{ ucfirst($domain->status ?? 'Active') }}</span>
-        <a href="{{ route('client.domains.index') }}" class="btn btn-default btn-sm">&larr; My Domains</a>
+        <a href="{{ route('client.domains.index') }}" class="btn btn-outline btn-sm">&larr; My Domains</a>
     </div>
 </div>
 
 <div class="detail-grid">
-    <div class="card">
-        <div class="card-header">Domain Information</div>
-        <div class="card-body">
+    <div class="pn-card">
+        <div class="pn-card-header">Domain Information</div>
+        <div class="pn-card-body">
             <dl>
                 <div class="detail-row"><dt>Domain Name</dt><dd>{{ $domain->domain }}</dd></div>
                 <div class="detail-row"><dt>Registration Date</dt><dd>{{ $domain->registration_date?->format('d M Y') ?? 'N/A' }}</dd></div>
@@ -36,9 +36,9 @@
             </dl>
         </div>
     </div>
-    <div class="card">
-        <div class="card-header">Nameservers</div>
-        <div class="card-body">
+    <div class="pn-card">
+        <div class="pn-card-header">Nameservers</div>
+        <div class="pn-card-body">
             @if(isset($domain->ns1))
             <dl>
                 @foreach(['ns1', 'ns2', 'ns3', 'ns4', 'ns5'] as $ns)
@@ -55,9 +55,9 @@
 </div>
 
 @if($domain->dns_management ?? false)
-<div class="card" style="margin-bottom:20px;">
-    <div class="card-header">DNS Management</div>
-    <div class="card-body">
+<div class="pn-card" style="margin-bottom:20px;">
+    <div class="pn-card-header">DNS Management</div>
+    <div class="pn-card-body">
         <p style="font-size:13px; color:#555; margin-bottom:12px;">DNS management is enabled for this domain.</p>
         <a href="#" class="btn btn-primary btn-sm">Manage DNS Records &rarr;</a>
     </div>
@@ -65,13 +65,13 @@
 @endif
 
 {{-- EPP Code --}}
-<div class="card" style="margin-bottom:20px;">
-    <div class="card-header">Transfer Domain</div>
-    <div class="card-body">
+<div class="pn-card" style="margin-bottom:20px;">
+    <div class="pn-card-header">Transfer Domain</div>
+    <div class="pn-card-body">
         <p style="font-size:13px; color:#555; margin-bottom:12px;">Request your EPP/Auth code to transfer this domain to another registrar.</p>
         <form method="POST" action="{{ route('client.domains.epp', $domain) }}" style="display:inline;">
             @csrf
-            <button type="submit" class="btn btn-default btn-sm">Get EPP / Auth Code</button>
+            <button type="submit" class="btn btn-outline btn-sm">Get EPP / Auth Code</button>
         </form>
         @if(session('epp_code'))
         <div style="margin-top:12px; padding:10px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; font-size:13px; font-family:monospace;">
