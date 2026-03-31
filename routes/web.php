@@ -3,9 +3,7 @@
 use App\Http\Controllers\GatewayWebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('home');
 
 // ===== Gateway Webhooks (no CSRF — verified by signature) =====
 Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->group(function () {

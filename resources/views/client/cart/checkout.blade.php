@@ -19,7 +19,11 @@
     <a href="{{ route('client.cart.index') }}" class="btn btn-default btn-sm">&larr; Back to Cart</a>
 </div>
 
-<form method="POST" action="{{ route('client.cart.order') }}">
+@if(session('error'))
+<div style="background:#f2dede;border:1px solid #ebccd1;color:#a94442;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:16px;">{{ session('error') }}</div>
+@endif
+
+<form method="POST" action="{{ route('client.cart.process') }}">
     @csrf
     <div class="checkout-layout">
         <div>
@@ -48,24 +52,21 @@
             <div class="card">
                 <div class="card-header">Payment Method</div>
                 <div class="card-body">
-                    @if(isset($gateways) && $gateways->isNotEmpty())
-                        @foreach($gateways as $gateway)
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="{{ $gateway->module ?? $gateway }}" {{ $loop->first ? 'checked' : '' }}>
-                            <div class="payment-option-name">{{ $gateway->display_name ?? ucwords(str_replace('_', ' ', $gateway)) }}</div>
-                        </label>
-                        @endforeach
-                    @else
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="banktransfer" checked>
-                            <div class="payment-option-name">Bank Transfer</div>
-                        </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="paypal">
-                            <div class="payment-option-name">PayPal</div>
-                        </label>
-                    @endif
+                    @foreach($paymentMethods as $value => $label)
+                    <label class="payment-option">
+                        <input type="radio" name="payment_method" value="{{ $value }}" {{ $loop->first ? 'checked' : '' }}>
+                        <div class="payment-option-name">{{ $label }}</div>
+                    </label>
+                    @endforeach
                 </div>
+            </div>
+
+            {{-- Terms --}}
+            <div style="margin-top:14px; display:flex; align-items:flex-start; gap:8px;">
+                <input type="checkbox" name="terms" id="terms" value="1" required style="margin-top:3px; flex-shrink:0;">
+                <label for="terms" style="font-size:13px; color:#666; cursor:pointer;">
+                    I agree to the <a href="#" style="color:#337ab7;">Terms of Service</a> and <a href="#" style="color:#337ab7;">Privacy Policy</a>.
+                </label>
             </div>
         </div>
 
@@ -74,21 +75,30 @@
             <div class="card" style="position:sticky; top:70px;">
                 <div class="card-header">Order Summary</div>
                 <div class="card-body">
-                    @if(isset($cartItems))
-                        @foreach($cartItems as $item)
-                        <div class="order-row">
-                            <span>{{ $item['name'] }}</span>
-                            <span>${{ number_format($item['price'] ?? 0, 2) }}</span>
-                        </div>
-                        @endforeach
+                    @foreach($totals['items'] as $item)
+                    <div class="order-row">
+                        <span>{{ $item['product_name'] ?? 'Product' }}</span>
+                        <span>${{ number_format($item['price'] ?? 0, 2) }}</span>
+                    </div>
+                    @endforeach
+                    @if(($totals['discount'] ?? 0) > 0)
+                    <div class="order-row" style="color:#5cb85c;">
+                        <span>Discount</span>
+                        <span>-${{ number_format($totals['discount'], 2) }}</span>
+                    </div>
                     @endif
-                    @php $total = isset($cartItems) ? collect($cartItems)->sum('price') : 0; @endphp
+                    @if(($totals['tax'] ?? 0) > 0)
+                    <div class="order-row">
+                        <span style="color:#777;">Tax</span>
+                        <span>${{ number_format($totals['tax'], 2) }}</span>
+                    </div>
+                    @endif
                     <div class="order-row" style="margin-top:4px;">
                         <span>Total</span>
-                        <span style="color:#1a4d80; font-size:16px;">${{ number_format($total, 2) }}</span>
+                        <span style="color:#1a4d80; font-size:16px;">${{ number_format($totals['total'], 2) }}</span>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:16px;">Place Order</button>
-                    <p style="font-size:11px; color:#999; text-align:center; margin-top:8px;">By placing your order, you agree to our Terms of Service.</p>
+                    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center; text-align:center; display:block; margin-top:16px;">Place Order</button>
+                    <p style="font-size:11px; color:#999; text-align:center; margin-top:8px;">Order total: ${{ number_format($totals['total'], 2) }}</p>
                 </div>
             </div>
         </div>

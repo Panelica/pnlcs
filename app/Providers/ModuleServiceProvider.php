@@ -12,9 +12,14 @@ class ModuleServiceProvider extends ServiceProvider
         $this->app->singleton(ModuleRegistry::class, function () {
             $registry = new ModuleRegistry();
 
-            // Built-in modules
+            // Built-in server modules
             $registry->registerServer('custom', \Modules\Servers\Custom\CustomModule::class);
+
+            // Built-in gateway modules
             $registry->registerGateway('banktransfer', \Modules\Gateways\BankTransfer\BankTransferModule::class);
+            $registry->registerGateway('stripe', \Modules\Gateways\Stripe\StripeModule::class);
+            $registry->registerGateway('paypal', \Modules\Gateways\PayPal\PayPalModule::class);
+            $registry->registerGateway('authorize', \Modules\Gateways\AuthorizeNet\AuthorizeNetModule::class);
 
             // Panelica hosting panel module
             if (class_exists(\Modules\Servers\Panelica\PanelicaModule::class)) {
