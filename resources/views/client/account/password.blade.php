@@ -16,7 +16,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start"><div class="pn-card">
+<div style="display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">Update Password</span></div>
     <div class="pn-card-body">
         @if($errors->any())

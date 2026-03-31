@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 340px;gap:24px;max-width:100%">
+<div style="display:grid;grid-template-columns:1fr 380px;gap:32px;max-width:100%">
     <div class="pn-card">
         <div class="pn-card-header"><span class="pn-card-title">Send a Message</span></div>
         <div class="pn-card-body">

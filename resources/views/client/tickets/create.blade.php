@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start"><div class="pn-card">
+<div style="display:grid;grid-template-columns:1fr 360px;gap:32px;align-items:start"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">New Support Request</span></div>
     <div class="pn-card-body">
         @if($errors->any())

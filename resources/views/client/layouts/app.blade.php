@@ -61,16 +61,16 @@
         @media(max-width:960px){.pn-nav{display:none}.pn-hamburger{display:flex}.pn-mobile-menu.open{display:block}}
 
         /* ─── LAYOUT ─── */
-        .pn-main{max-width:1440px;margin:0 auto;padding:28px 32px}
+        .pn-main{max-width:1440px;margin:0 auto;padding:36px 40px}
         .pn-footer{background:#fff;border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-size:12.5px;color:var(--muted);margin-top:48px}
         .pn-footer a{color:var(--primary);text-decoration:none}
         .pn-footer a:hover{text-decoration:underline}
 
         /* ─── CARDS ─── */
-        .pn-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+        .pn-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:24px}
         .pn-card-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
         .pn-card-title{font-size:14px;font-weight:700;color:var(--text)}
-        .pn-card-body{padding:24px}
+        .pn-card-body{padding:28px 32px}
         .pn-card-body-flush{padding:0}
 
         /* ─── PAGE HEADER ─── */
@@ -115,7 +115,7 @@
         .pn-table a:hover{text-decoration:underline}
 
         /* ─── FORMS ─── */
-        .form-group{margin-bottom:16px}
+        .form-group{margin-bottom:20px}
         .form-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
         .form-label .req{color:var(--danger)}
         .form-control{width:100%;padding:9px 13px;font-size:13.5px;color:var(--text);background:#fff;border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:border-color 0.15s,box-shadow 0.15s;outline:none;font-family:inherit}
@@ -136,7 +136,7 @@
         .pn-alert ul li{margin-bottom:2px}
 
         /* ─── STAT CARDS ─── */
-        .pn-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+        .pn-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:24px}
         @media(max-width:800px){.pn-stat-grid{grid-template-columns:repeat(2,1fr)}}
         @media(max-width:480px){.pn-stat-grid{grid-template-columns:1fr 1fr}}
         .pn-stat{display:flex;flex-direction:column;padding:20px 24px;cursor:pointer;text-decoration:none;color:inherit;transition:box-shadow 0.15s}
