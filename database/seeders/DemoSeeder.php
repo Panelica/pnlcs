@@ -72,7 +72,7 @@ class DemoSeeder extends Seeder
         Admin::firstOrCreate(['username' => 'admin'], [
             'role_id' => $fullRole->id,
             'email' => 'admin@pnlcs.com',
-            'password' => Hash::make('admin123'),
+            'password' => 'admin123',
             'first_name' => 'System',
             'last_name' => 'Administrator',
         ]);
