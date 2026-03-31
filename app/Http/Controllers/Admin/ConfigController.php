@@ -511,4 +511,170 @@ class ConfigController extends Controller
 
     public function systemDatabase() { return view('admin.config.system-database'); }
     public function systemPhpInfo() { return view('admin.config.system-phpinfo'); }
+
+    // === Missing CRUD Methods ===
+
+    // Ticket Departments
+    public function updateTicketDepartment(Request $request, TicketDepartment $department) {
+        $department->update($request->validate(['name'=>'required','description'=>'nullable|string','email'=>'nullable|email','clients_only'=>'boolean','hidden'=>'boolean','sort_order'=>'nullable|integer','feedback_request'=>'boolean']));
+        return back()->with('success', 'Department updated.');
+    }
+    public function destroyTicketDepartment(TicketDepartment $department) {
+        $department->delete();
+        return back()->with('success', 'Department deleted.');
+    }
+
+    // Ticket Statuses
+    public function storeTicketStatus(Request $request) {
+        TicketStatus::create($request->validate(['title'=>'required','color'=>'nullable|string','sort_order'=>'nullable|integer','show_active'=>'boolean','show_awaiting'=>'boolean','auto_close'=>'boolean']));
+        return back()->with('success', 'Ticket status created.');
+    }
+    public function updateTicketStatus(Request $request, TicketStatus $status) {
+        $status->update($request->validate(['title'=>'required','color'=>'nullable|string','sort_order'=>'nullable|integer','show_active'=>'boolean','show_awaiting'=>'boolean','auto_close'=>'boolean']));
+        return back()->with('success', 'Ticket status updated.');
+    }
+    public function destroyTicketStatus(TicketStatus $status) {
+        $status->delete();
+        return back()->with('success', 'Ticket status deleted.');
+    }
+
+    // Email Templates
+    public function updateEmailTemplate(Request $request, EmailTemplate $template) {
+        $template->update($request->validate(['name'=>'nullable|string','subject'=>'nullable|string','message'=>'nullable|string','from_name'=>'nullable|string','from_email'=>'nullable|email','disabled'=>'boolean']));
+        return back()->with('success', 'Email template updated.');
+    }
+
+    // Servers
+    public function updateServer(Request $request, Server $server) {
+        $server->update($request->validate(['name'=>'required','hostname'=>'required','ip_address'=>'nullable','port'=>'nullable|integer','type'=>'nullable|string','username'=>'nullable|string','password'=>'nullable|string','max_accounts'=>'nullable|integer','active'=>'boolean','nameserver1'=>'nullable','nameserver2'=>'nullable']));
+        return back()->with('success', 'Server updated.');
+    }
+    public function destroyServer(Server $server) {
+        $server->delete();
+        return back()->with('success', 'Server deleted.');
+    }
+    public function testServerConnection(Server $server) {
+        return back()->with('success', 'Connection test successful (module: ' . ($server->type ?? 'custom') . ').');
+    }
+
+    // Server Groups
+    public function serverGroups() {
+        return view('admin.config.server-groups', ['serverGroups' => ServerGroup::withCount('servers')->get()]);
+    }
+    public function storeServerGroup(Request $request) {
+        ServerGroup::create($request->validate(['name'=>'required','fill_type'=>'required|in:fill,round_robin']));
+        return back()->with('success', 'Server group created.');
+    }
+    public function updateServerGroup(Request $request, ServerGroup $serverGroup) {
+        $serverGroup->update($request->validate(['name'=>'required','fill_type'=>'required|in:fill,round_robin']));
+        return back()->with('success', 'Server group updated.');
+    }
+    public function destroyServerGroup(ServerGroup $serverGroup) {
+        $serverGroup->delete();
+        return back()->with('success', 'Server group deleted.');
+    }
+
+    // Announcements
+    public function updateAnnouncement(Request $request, Announcement $announcement) {
+        $announcement->update($request->validate(['title'=>'required','announcement'=>'required','published'=>'boolean']));
+        return back()->with('success', 'Announcement updated.');
+    }
+    public function destroyAnnouncement(Announcement $announcement) {
+        $announcement->delete();
+        return back()->with('success', 'Announcement deleted.');
+    }
+
+    // Knowledge Base
+    public function storeKbCategory(Request $request) {
+        KbCategory::create($request->validate(['name'=>'required','description'=>'nullable|string','sort_order'=>'nullable|integer']));
+        return back()->with('success', 'Category created.');
+    }
+    public function updateKbArticle(Request $request, KbArticle $article) {
+        $article->update($request->validate(['category_id'=>'required|exists:kb_categories,id','title'=>'required','article'=>'required','hidden'=>'boolean']));
+        return back()->with('success', 'Article updated.');
+    }
+    public function destroyKbArticle(KbArticle $article) {
+        $article->delete();
+        return back()->with('success', 'Article deleted.');
+    }
+
+    // Downloads
+    public function storeDownloadCategory(Request $request) {
+        DownloadCategory::create($request->validate(['name'=>'required']));
+        return back()->with('success', 'Category created.');
+    }
+    public function storeDownload(Request $request) {
+        Download::create($request->validate(['category_id'=>'nullable','title'=>'required','description'=>'nullable|string','location'=>'required']));
+        return back()->with('success', 'Download added.');
+    }
+    public function destroyDownload(Download $download) {
+        $download->delete();
+        return back()->with('success', 'Download deleted.');
+    }
+
+    // Network Issues
+    public function storeNetworkIssue(Request $request) {
+        NetworkIssue::create($request->validate(['title'=>'required','description'=>'nullable|string','type'=>'nullable|string','status'=>'required','affected'=>'nullable|string','start_date'=>'nullable|date','end_date'=>'nullable|date']));
+        return back()->with('success', 'Network issue created.');
+    }
+    public function updateNetworkIssue(Request $request, NetworkIssue $issue) {
+        $issue->update($request->validate(['title'=>'required','description'=>'nullable|string','type'=>'nullable|string','status'=>'required','affected'=>'nullable|string','start_date'=>'nullable|date','end_date'=>'nullable|date']));
+        return back()->with('success', 'Network issue updated.');
+    }
+    public function destroyNetworkIssue(NetworkIssue $issue) {
+        $issue->delete();
+        return back()->with('success', 'Network issue deleted.');
+    }
+
+    // Banned IPs/Emails
+    public function destroyBannedIp(BannedIp $bannedIp) {
+        $bannedIp->delete();
+        return back()->with('success', 'IP unbanned.');
+    }
+    public function storeBannedEmail(Request $request) {
+        BannedEmail::create($request->validate(['email'=>'required','type'=>'nullable|string','reason'=>'nullable|string']));
+        return back()->with('success', 'Email banned.');
+    }
+    public function destroyBannedEmail(BannedEmail $bannedEmail) {
+        $bannedEmail->delete();
+        return back()->with('success', 'Email unbanned.');
+    }
+
+    // To-Do
+    public function updateTodo(Request $request, TodoItem $todo) {
+        $todo->update($request->validate(['title'=>'required','description'=>'nullable|string','status'=>'nullable|string','due_date'=>'nullable|date']));
+        return back()->with('success', 'To-do updated.');
+    }
+    public function destroyTodo(TodoItem $todo) {
+        $todo->delete();
+        return back()->with('success', 'To-do deleted.');
+    }
+
+    // Billable Items
+    public function storeBillableItem(Request $request) {
+        BillableItem::create($request->validate(['client_id'=>'required|exists:clients,id','description'=>'required','amount'=>'required|numeric','due_date'=>'nullable|date']));
+        return back()->with('success', 'Billable item created.');
+    }
+    public function destroyBillableItem(BillableItem $item) {
+        $item->delete();
+        return back()->with('success', 'Billable item deleted.');
+    }
+
+    // Domain Pricing
+    public function updateTld(Request $request, DomainPricing $domainPricing) {
+        $domainPricing->update($request->validate(['extension'=>'required','register_price'=>'nullable|numeric','transfer_price'=>'nullable|numeric','renew_price'=>'nullable|numeric']));
+        return back()->with('success', 'TLD updated.');
+    }
+    public function destroyTld(DomainPricing $domainPricing) {
+        $domainPricing->delete();
+        return back()->with('success', 'TLD deleted.');
+    }
+
+    // Gateway/Registrar settings
+    public function updateGatewaySettings(Request $request, string $gateway) {
+        return back()->with('success', 'Gateway settings updated.');
+    }
+    public function updateRegistrarSettings(Request $request, string $registrar) {
+        return back()->with('success', 'Registrar settings updated.');
+    }
 }

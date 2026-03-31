@@ -73,7 +73,7 @@ test('admin can ban an email address', function () {
              'reason' => 'Spam',
          ])
          ->assertRedirect();
-    $this->assertDatabaseHas('banned_emails', ['domain' => 'spam@example.com']);
+    $this->assertDatabaseHas('banned_emails', ['email' => 'spam@example.com']);
 });
 
 // ============================================================

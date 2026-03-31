@@ -120,7 +120,7 @@ try {
                 table_name AS name,
                 table_rows AS row_count,
                 ROUND((data_length + index_length) / 1024, 1) AS size_kb,
-                engine,
+                engine AS engine,
                 table_collation AS collation,
                 create_time
             FROM information_schema.tables
@@ -148,7 +148,7 @@ try {
                     @foreach($tables as $table)
                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
                         <td class="px-6 py-2.5"><code class="font-mono text-xs text-slate-700 dark:text-slate-300">{{ $table->name }}</code></td>
-                        <td class="px-6 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{{ $table->engine }}</td>
+                        <td class="px-6 py-2.5 text-slate-500 dark:text-slate-400 text-xs">{{ $table->engine ?? "-" }}</td>
                         <td class="px-6 py-2.5 text-right text-slate-500 dark:text-slate-400">{{ number_format($table->row_count) }}</td>
                         <td class="px-6 py-2.5 text-right text-slate-500 dark:text-slate-400">{{ number_format($table->size_kb, 1) }}</td>
                     </tr>
