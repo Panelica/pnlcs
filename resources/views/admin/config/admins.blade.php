@@ -14,7 +14,7 @@
         <h1>Staff Management</h1>
         <div style="font-size:13px;color:#777;">Manage administrator accounts and access</div>
     </div>
-    <button type="button" x-data @click="$dispatch('open-modal-add-admin')" class="btn btn-primary btn-sm">+ Add Admin</button>
+    <button type="button" onclick="openModal('add-admin')" class="btn btn-primary btn-sm">+ Add Admin</button>
 </div>
 
 @if($admins->isEmpty())
@@ -49,7 +49,7 @@
                 </td>
                 <td style="text-align:right;">
                     <div style="display:flex;gap:6px;justify-content:flex-end;">
-                        <button type="button" @click="$dispatch('open-modal-edit-admin-{{ $admin->id }}')" class="btn btn-default btn-xs">Edit</button>
+                        <button type="button" onclick="openModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-xs">Edit</button>
                         @if($admin->id !== auth('admin')->id())
                         <form method="POST" action="{{ route('admin.config.admins.destroy', $admin) }}" onsubmit="return confirm('Delete admin {{ $admin->full_name }}?')" style="display:inline;">
                             @csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">Delete</button>
@@ -58,32 +58,35 @@
                     </div>
                 </td>
             </tr>
-            <x-modal :name="'edit-admin-' . $admin->id" title="Edit Admin" maxWidth="lg">
-                <form method="POST" action="{{ route('admin.config.admins.update', $admin) }}">
-                    @csrf @method('PUT')
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
-                        <div class="form-group"><label class="form-label">First Name</label><input type="text" name="first_name" value="{{ $admin->first_name }}" required class="form-control"></div>
-                        <div class="form-group"><label class="form-label">Last Name</label><input type="text" name="last_name" value="{{ $admin->last_name }}" required class="form-control"></div>
-                        <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" value="{{ $admin->username }}" required class="form-control"></div>
-                        <div class="form-group"><label class="form-label">Email</label><input type="email" name="email" value="{{ $admin->email }}" required class="form-control"></div>
-                        <div class="form-group"><label class="form-label">Role</label>
-                            <select name="role_id" required class="form-control">
-                                @foreach($roles as $role)<option value="{{ $role->id }}" @selected($admin->role_id===$role->id)>{{ $role->name }}</option>@endforeach
-                            </select>
-                        </div>
-                        <div class="form-group"><label class="form-label">New Password <span style="color:#999;font-weight:400;">(leave blank to keep)</span></label><input type="password" name="password" minlength="6" class="form-control"></div>
-                    </div>
-                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-                        <button type="button" @click="$dispatch('close-modal-edit-admin-{{ $admin->id }}')" class="btn btn-default btn-sm">Cancel</button>
-                        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
-                    </div>
-                </form>
-            </x-modal>
             @endforeach
         </tbody>
     </table>
 </div>
 @endif
+
+@foreach($admins as $admin)
+<x-modal :name="'edit-admin-' . $admin->id" title="Edit Admin" maxWidth="lg">
+    <form method="POST" action="{{ route('admin.config.admins.update', $admin) }}">
+        @csrf @method('PUT')
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
+            <div class="form-group"><label class="form-label">First Name</label><input type="text" name="first_name" value="{{ $admin->first_name }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">Last Name</label><input type="text" name="last_name" value="{{ $admin->last_name }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" value="{{ $admin->username }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">Email</label><input type="email" name="email" value="{{ $admin->email }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">Role</label>
+                <select name="role_id" required class="form-control">
+                    @foreach($roles as $role)<option value="{{ $role->id }}" @selected($admin->role_id===$role->id)>{{ $role->name }}</option>@endforeach
+                </select>
+            </div>
+            <div class="form-group"><label class="form-label">New Password <span style="color:#999;font-weight:400;">(leave blank to keep)</span></label><input type="password" name="password" minlength="6" class="form-control"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+            <button type="button" onclick="closeModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+        </div>
+    </form>
+</x-modal>
+@endforeach
 
 <x-modal name="add-admin" title="Add New Admin" maxWidth="lg">
     <form method="POST" action="{{ route('admin.config.admins.store') }}">
@@ -102,7 +105,7 @@
             </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" @click="$dispatch('close-modal-add-admin')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="button" onclick="closeModal('add-admin')" class="btn btn-default btn-sm">Cancel</button>
             <button type="submit" class="btn btn-primary btn-sm">Create Admin</button>
         </div>
     </form>

@@ -17,21 +17,6 @@
     </div>
 </div>
 
-<div class="card" style="margin-bottom:15px;">
-    <div class="card-header"><strong>Database Actions</strong></div>
-    <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap;">
-        <form method="POST" action="{{ route('admin.config.system-database.optimize') }}" onsubmit="return confirm('Optimize all tables? This may take a moment.')">
-            @csrf
-            <button type="submit" class="btn btn-primary btn-sm">Optimize Tables</button>
-        </form>
-        <form method="POST" action="{{ route('admin.config.system-database.repair') }}" onsubmit="return confirm('Run repair on all tables?')">
-            @csrf
-            <button type="submit" class="btn btn-warning btn-sm">Repair Tables</button>
-        </form>
-        <a href="{{ route('admin.config.system-database.backup') }}" class="btn btn-default btn-sm">Download Backup</a>
-    </div>
-</div>
-
 @if(isset($tables) && count($tables) > 0)
 <div class="card">
     <div class="card-header"><strong>Table Status</strong></div>

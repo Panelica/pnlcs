@@ -57,7 +57,7 @@ class InvoiceController extends Controller
     public function create(Request $request): View
     {
         $clients        = Client::orderBy('first_name')->get();
-        $paymentMethods = PaymentMethod::orderBy('name')->get();
+        $paymentMethods = PaymentMethod::orderBy('description')->get();
 
         $selectedClient = $request->filled('client_id')
             ? Client::find($request->client_id)

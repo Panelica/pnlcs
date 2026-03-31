@@ -1,6 +1,6 @@
 @props([
     'name' => 'modal',
-    'title' => '''',
+    'title' => '',
     'maxWidth' => 'md',
 ])
 
@@ -31,8 +31,8 @@ $maxW = $widthMap[$maxWidth] ?? '520px';
 @push('scripts')
 <script>
 function openModal(name) { document.getElementById('modal-'+name).style.display='block'; document.body.style.overflow='hidden'; }
-function closeModal(name) { document.getElementById('modal-'+name).style.display='none'; document.body.style.overflow=''''; }
-document.addEventListener('keydown', function(e) { if(e.key==='Escape') { document.querySelectorAll('[id^=modal-]').forEach(m=>m.style.display='none'); document.body.style.overflow=''''; }});
+function closeModal(name) { document.getElementById('modal-'+name).style.display='none'; document.body.style.overflow=''; }
+document.addEventListener('keydown', function(e) { if(e.key==='Escape') { document.querySelectorAll('[id^=modal-]').forEach(function(m){m.style.display='none';}); document.body.style.overflow=''; }});
 </script>
 @endpush
 @endonce
