@@ -123,7 +123,7 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
             <div class="panel-heading panel-primary">Quick Actions</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
                 <a href="{{ route('admin.clients.show', ['client' => $client, 'tab' => 'notes']) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">+ Add Note</a>
-                <a href="{{ route('admin.tickets.create', ['client_id' => $client->id]) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">+ New Ticket</a>
+                <a href="{{ route('admin.tickets.index') }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">+ New Ticket</a>
                 <a href="{{ route('admin.invoices.create', ['client_id' => $client->id]) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">+ New Invoice</a>
             </div>
         </div>
