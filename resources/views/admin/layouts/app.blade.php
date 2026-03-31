@@ -190,7 +190,6 @@
                     <li><a href="{{ route('admin.config.email-templates') }}">Email Templates</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.settings.general') }}">General Settings</a></li>
-                    <li><a href="{{ route('admin.settings.general') }}#mail">Mail Settings</a></li>
                     <li><a href="{{ route('admin.config.banned-ips') }}">Banned IPs</a></li>
                     <li><a href="{{ route('admin.config.banned-emails') }}">Banned Emails</a></li>
                     <li><a href="{{ route('admin.config.client-groups') }}">Client Groups</a></li>

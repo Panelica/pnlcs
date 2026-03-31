@@ -142,14 +142,15 @@ class ConfigController extends Controller
 
     public function storeApiCredential(Request $request)
     {
+        $secret = Str::random(64);
         ApiCredential::create([
             'admin_id'    => auth('admin')->id(),
             'identifier'  => Str::random(32),
-            'secret'      => Str::random(64),
+            'secret'      => $secret,
             'description' => $request->description,
             'active'      => true,
         ]);
-        return back()->with('success', 'API credential generated.');
+        return back()->with('success', 'API credential generated.')->with('new_secret', $secret);
     }
 
     public function destroyApiCredential(ApiCredential $credential)
