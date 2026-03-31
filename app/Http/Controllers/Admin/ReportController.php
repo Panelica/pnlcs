@@ -42,14 +42,14 @@ class ReportController extends Controller
 
     private function incomeSummary()
     {
-        $data = Transaction::selectRaw("DATE_FORMAT(date, %Y-%m) as month, SUM(amount_in) as income, SUM(amount_out) as refunds")
+        $data = Transaction::selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount_in) as income, SUM(amount_out) as refunds")
             ->groupBy("month")->orderBy("month", "desc")->take(12)->get();
         return view("admin.reports.show", ["title" => "Income Summary", "data" => $data, "columns" => ["Month", "Income", "Refunds"]]);
     }
 
     private function newCustomers()
     {
-        $data = Client::selectRaw("DATE_FORMAT(created_at, %Y-%m) as month, COUNT(*) as count")
+        $data = Client::selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count")
             ->groupBy("month")->orderBy("month", "desc")->take(12)->get();
         return view("admin.reports.show", ["title" => "New Customers", "data" => $data, "columns" => ["Month", "New Clients"]]);
     }
