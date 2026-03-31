@@ -76,7 +76,7 @@ test("authenticated admin can access dashboard", function () {
         ->get(route("admin.dashboard"));
 
     $response->assertStatus(200)
-        ->assertSee("PNLCS Admin Dashboard");
+        ->assertSee("Welcome to PNLCS");
 });
 
 test("admin can logout", function () {
