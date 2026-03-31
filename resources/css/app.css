@@ -278,3 +278,79 @@ textarea.form-control { height: auto; min-height: 80px; }
     .sidebar { float: none; width: 100%; }
     .contentarea { margin-left: 0; border-left: none; }
 }
+
+/* ================================================================
+   BACKWARDS COMPAT — alias old class names to new WHMCS Blend names
+   Views still use .data-table, .card, .page-header etc.
+   These aliases make them work with the new Blend CSS.
+   ================================================================ */
+
+/* .data-table = .table-themed */
+.data-table { border-collapse: separate !important; border-spacing: 1px !important; width: 100% !important; }
+.data-table thead th { background: #1a4d80 !important; color: #fff !important; padding: 5px 10px !important; border: 0 !important; font-size: 12px !important; font-weight: 600 !important; text-align: left !important; }
+.data-table tbody td { border-top: 0 !important; border-bottom: 1px solid #ebebeb !important; padding: 6px 10px !important; font-size: 13px !important; background: #fff !important; }
+.data-table tbody tr:hover td { background-color: #eff2f9 !important; }
+.data-table tbody tr:nth-child(even) td { background-color: #f9f9f9 !important; }
+.data-table tbody tr:nth-child(even):hover td { background-color: #eff2f9 !important; }
+
+/* .card = panel style */
+.card { background: #fff !important; border: 1px solid #ddd !important; border-radius: 4px !important; margin-bottom: 15px !important; overflow: hidden !important; }
+.card-header { padding: 10px 15px !important; background: #f5f5f5 !important; border-bottom: 1px solid #ddd !important; font-weight: 600 !important; font-size: 13px !important; display: flex !important; align-items: center !important; justify-content: space-between !important; }
+.card-body { padding: 15px !important; }
+
+/* .page-header */
+.page-header { display: flex !important; align-items: center !important; justify-content: space-between !important; margin: 0 0 15px !important; padding-bottom: 10px !important; border-bottom: 1px solid #eee !important; }
+.page-header h1 { font-size: 22px !important; font-weight: 300 !important; color: #333 !important; margin: 0 !important; }
+
+/* .stat-card */
+.stat-card { background: #fff !important; border: 1px solid #ddd !important; border-radius: 4px !important; padding: 15px !important; text-align: center !important; }
+.stat-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important; }
+.stat-card .stat-value { font-size: 28px !important; font-weight: 700 !important; line-height: 1.2 !important; }
+.stat-card .stat-label { font-size: 11px !important; color: #999 !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; margin-top: 4px !important; }
+
+/* .btn aliases */
+.btn { display: inline-block !important; padding: 6px 14px !important; border-radius: 3px !important; font-size: 13px !important; font-weight: 400 !important; cursor: pointer !important; border: 1px solid transparent !important; text-decoration: none !important; line-height: 1.5 !important; }
+.btn-primary { background: #337ab7 !important; color: #fff !important; border-color: #2e6da4 !important; }
+.btn-primary:hover { background: #286090 !important; }
+.btn-success { background: #5cb85c !important; color: #fff !important; }
+.btn-danger { background: #d9534f !important; color: #fff !important; }
+.btn-warning { background: #f0ad4e !important; color: #fff !important; }
+.btn-default { background: #fff !important; color: #333 !important; border-color: #ccc !important; }
+.btn-default:hover { background: #e6e6e6 !important; }
+.btn-sm { padding: 4px 10px !important; font-size: 12px !important; }
+.btn-xs { padding: 2px 8px !important; font-size: 11px !important; }
+
+/* .badge aliases */
+.badge { display: inline-block !important; padding: 2px 8px !important; border-radius: 3px !important; font-size: 11px !important; font-weight: 600 !important; line-height: 1.5 !important; white-space: nowrap !important; }
+.badge-active, .badge-paid { background: #dff0d8 !important; color: #3c763d !important; }
+.badge-pending { background: #fcf8e3 !important; color: #8a6d3b !important; }
+.badge-suspended, .badge-overdue, .badge-open, .badge-draft, .badge-refunded { background: #d9edf7 !important; color: #31708f !important; }
+.badge-terminated, .badge-unpaid, .badge-closed { background: #f2dede !important; color: #a94442 !important; }
+.badge-cancelled, .badge-inactive { background: #f0f0f0 !important; color: #777 !important; }
+.badge-fraud { background: #333 !important; color: #fff !important; }
+.badge-completed, .badge-answered { background: #dff0d8 !important; color: #3c763d !important; }
+.badge-customer-reply { background: #fcf8e3 !important; color: #8a6d3b !important; }
+
+/* .form-control */
+.form-control { display: block !important; width: 100% !important; padding: 6px 12px !important; font-size: 13px !important; line-height: 1.5 !important; color: #555 !important; background-color: #fff !important; border: 1px solid #ccc !important; border-radius: 3px !important; }
+.form-control:focus { border-color: #66afe9 !important; outline: 0 !important; box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6) !important; }
+select.form-control { height: 34px !important; }
+.form-label { display: block !important; font-size: 13px !important; font-weight: 600 !important; color: #555 !important; margin-bottom: 4px !important; }
+.form-group { margin-bottom: 12px !important; }
+
+/* .modal aliases */
+.modal-overlay { background: rgba(0,0,0,0.5) !important; }
+.modal-content { background: #fff !important; border-radius: 4px !important; box-shadow: 0 5px 15px rgba(0,0,0,0.5) !important; }
+.modal-header { padding: 15px !important; border-bottom: 1px solid #e5e5e5 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; }
+.modal-header h3 { font-size: 16px !important; font-weight: 500 !important; margin: 0 !important; }
+.modal-body { padding: 15px !important; }
+.modal-footer { padding: 15px !important; border-top: 1px solid #e5e5e5 !important; text-align: right !important; }
+
+/* WHMCS status label compat */
+.label { display: inline !important; padding: .2em .6em .3em !important; font-size: 75% !important; font-weight: 700 !important; line-height: 1 !important; color: #fff !important; text-align: center !important; white-space: nowrap !important; vertical-align: baseline !important; border-radius: .25em !important; }
+.label-active, .label-success { background-color: #46A546 !important; }
+.label-pending, .label-warning { background-color: #F89406 !important; }
+.label-suspended, .label-info { background-color: #0768B8 !important; }
+.label-terminated, .label-danger { background-color: #C43C35 !important; }
+.label-cancelled, .label-default { background-color: #BFBFBF !important; }
+
