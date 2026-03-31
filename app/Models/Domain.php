@@ -1,0 +1,11 @@
+<?php
+namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+
+class Domain extends Model {
+    protected $fillable = ["client_id", "order_id", "type", "domain", "registrar", "registration_period", "registration_date", "expiry_date", "next_due_date", "status", "dns_management", "email_forwarding", "id_protection", "is_premium", "payment_method", "first_payment_amount", "recurring_amount", "nameservers", "notes"];
+    protected function casts(): array { return ["registration_date" => "date", "expiry_date" => "date", "next_due_date" => "date", "dns_management" => "boolean", "email_forwarding" => "boolean", "id_protection" => "boolean", "is_premium" => "boolean", "first_payment_amount" => "decimal:2", "recurring_amount" => "decimal:2"]; }
+
+    public function client() { return $this->belongsTo(Client::class); }
+    public function order() { return $this->belongsTo(Order::class); }
+}
