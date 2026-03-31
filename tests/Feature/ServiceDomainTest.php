@@ -5,9 +5,6 @@ use App\Models\AdminRole;
 use App\Models\Domain;
 use App\Models\Product;
 use App\Models\Service;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
-
-uses(DatabaseMigrations::class);
 
 beforeEach(function () {
     $role = AdminRole::factory()->fullAdmin()->create();
@@ -15,9 +12,7 @@ beforeEach(function () {
     $this->actingAs($this->admin, 'admin');
 });
 
-// ──────────────────────────────────────────────
 // Service detail view
-// ──────────────────────────────────────────────
 
 test('admin can view service detail page', function () {
     $service = Service::factory()->active()->create();
@@ -61,9 +56,7 @@ test('service detail hides module actions when no server_type', function () {
     $response->assertDontSee('Create Account');
 });
 
-// ──────────────────────────────────────────────
 // Module action dispatch
-// ──────────────────────────────────────────────
 
 test('module action create dispatches to ProvisioningService', function () {
     $product = Product::factory()->create(['server_type' => 'custom']);
@@ -120,9 +113,7 @@ test('unknown module action returns error', function () {
     $response->assertSessionHas('error');
 });
 
-// ──────────────────────────────────────────────
 // Domain views
-// ──────────────────────────────────────────────
 
 test('admin can view domain list', function () {
     Domain::factory()->count(3)->create();

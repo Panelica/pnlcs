@@ -5,9 +5,6 @@ use App\Models\AdminRole;
 use App\Models\Product;
 use App\Models\Service;
 use App\Services\ProvisioningService;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
-
-uses(DatabaseMigrations::class);
 
 beforeEach(function () {
     $role = AdminRole::factory()->fullAdmin()->create();
