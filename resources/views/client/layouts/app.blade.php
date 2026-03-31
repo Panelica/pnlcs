@@ -44,7 +44,7 @@
         .pn-chevron{width:12px;height:12px;transition:transform 0.2s}
         .pn-nav-item:hover .pn-chevron{transform:rotate(180deg)}
         .pn-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:200px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);z-index:999;padding:6px;overflow:hidden}
-        .pn-nav-item:hover .pn-dropdown{display:block}
+        .pn-nav-item:hover .pn-dropdown,.pn-nav-item.open .pn-dropdown{display:block}
         .pn-dropdown a{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;font-weight:500;color:var(--text);text-decoration:none;border-radius:8px;transition:all 0.12s}
         .pn-dropdown a:hover{background:var(--primary-light);color:var(--primary)}
         .pn-dropdown .sep{height:1px;background:var(--border);margin:4px 0}
@@ -403,7 +403,7 @@
             @endauth
         </div>
 
-        <button class="pn-hamburger" onclick="document.getElementById("pnMobileMenu").classList.toggle("open")">
+        <button class="pn-hamburger" onclick="document.getElementById('pnMobileMenu').classList.toggle('open')">
             <span></span><span></span><span></span>
         </button>
     </div>
@@ -476,5 +476,27 @@
 </footer>
 
 @yield("scripts")
+<script>
+// Dropdown click toggle for mobile/touch
+document.querySelectorAll(".pn-nav-item > .pn-nav-link").forEach(function(link) {
+    link.addEventListener("click", function(e) {
+        var item = this.closest(".pn-nav-item");
+        if (item.querySelector(".pn-dropdown")) {
+            e.preventDefault();
+            // Close others
+            document.querySelectorAll(".pn-nav-item.open").forEach(function(el) {
+                if (el !== item) el.classList.remove("open");
+            });
+            item.classList.toggle("open");
+        }
+    });
+});
+// Close dropdowns when clicking outside
+document.addEventListener("click", function(e) {
+    if (!e.target.closest(".pn-nav-item")) {
+        document.querySelectorAll(".pn-nav-item.open").forEach(function(el) { el.classList.remove("open"); });
+    }
+});
+</script>
 </body>
 </html>
