@@ -6,14 +6,6 @@
     <h1>Order #{{ $order->order_num }} <span class="badge-{{ strtolower($order->status) }}" style="font-size:14px;vertical-align:middle;">{{ ucfirst($order->status) }}</span></h1>
     <a href="{{ route('admin.orders.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
-@endif
-
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:15px;">
 
     {{-- Left column --}}

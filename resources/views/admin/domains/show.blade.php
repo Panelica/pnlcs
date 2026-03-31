@@ -1,14 +1,6 @@
 @extends('admin.layouts.app')
 @section('title', $domain->domain)
 @section('content')
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
-@endif
-
 <div class="page-header">
     <div>
         <h1 style="font-family:monospace;font-size:22px;">{{ $domain->domain }}</h1>

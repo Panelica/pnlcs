@@ -5,11 +5,6 @@
     <h1>Quotes</h1>
     <a href="{{ route('admin.quotes.create') }}" class="btn btn-primary btn-sm">+ New Quote</a>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-
 <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
     @foreach([''=>'All','Draft'=>'Draft','Sent'=>'Sent','Accepted'=>'Accepted','Declined'=>'Declined'] as $val=>$label)
     <a href="{{ route('admin.quotes.index', ['status'=>$val,'search'=>request('search')]) }}"

@@ -1,14 +1,6 @@
 @extends('admin.layouts.app')
 @section('title', '#' . $client->id . ' - ' . $client->full_name)
 @section('content')
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
-@endif
-
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>#{{ $client->id }} - {{ $client->full_name }}</h1>
     <div style="display:flex;gap:6px;align-items:center;">

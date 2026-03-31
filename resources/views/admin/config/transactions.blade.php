@@ -5,11 +5,6 @@
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>Transactions</h1>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-
 <div class="card">
     @if(($transactions ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No transactions found.</div>

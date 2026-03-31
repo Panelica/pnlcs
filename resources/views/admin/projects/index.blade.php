@@ -5,11 +5,6 @@
     <h1>Projects</h1>
     <a href="{{ route('admin.projects.create') }}" class="btn btn-primary btn-sm">+ New Project</a>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-
 <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
     @foreach([''=>'All','pending'=>'Pending','in_progress'=>'In Progress','completed'=>'Completed','cancelled'=>'Cancelled'] as $val=>$label)
     <a href="{{ route('admin.projects.index', ['status'=>$val,'search'=>request('search')]) }}"

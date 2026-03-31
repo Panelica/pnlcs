@@ -17,14 +17,6 @@
         <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
     </div>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
-@endif
-
 @if(in_array($invoice->status, ['Unpaid', 'Overdue']))
 <div id="mark-paid-form" style="display:none;margin-bottom:15px;">
     <div class="card">

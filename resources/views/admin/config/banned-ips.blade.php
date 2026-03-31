@@ -6,11 +6,6 @@
     <h1>Banned IPs</h1>
     <button type="button" onclick="document.getElementById('modal-add-ip').style.display='flex'" class="btn btn-primary btn-sm">+ Ban IP</button>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-
 <div class="card">
     @if(($bannedIps ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No banned IPs.</div>

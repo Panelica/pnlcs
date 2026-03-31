@@ -9,14 +9,6 @@
         <button type="button" onclick="openModal('add-kb-article')" class="btn btn-primary btn-sm">+ New Article</button>
     </div>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
-@endif
-
 <div class="card">
     @if(($articles ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No knowledge base articles yet.</div>

@@ -6,11 +6,6 @@
     <h1>Currencies</h1>
     <button type="button" onclick="document.getElementById('modal-add-currency').style.display='flex'" class="btn btn-primary btn-sm">+ Add Currency</button>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-
 <div class="card">
     <table class="data-table">
         <thead><tr><th>Code</th><th>Name</th><th>Prefix</th><th>Suffix</th><th>Rate</th><th>Default</th><th style="text-align:right;">Actions</th></tr></thead>

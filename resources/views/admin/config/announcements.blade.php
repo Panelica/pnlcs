@@ -6,14 +6,6 @@
     <h1>Announcements</h1>
     <button type="button" onclick="openModal('add-announcement')" class="btn btn-primary btn-sm">+ New Announcement</button>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
-@endif
-
 <div class="card">
     @if(($announcements ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No announcements posted.</div>

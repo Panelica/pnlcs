@@ -9,11 +9,6 @@
         <button type="button" onclick="document.getElementById('modal-add-dl').style.display='flex'" class="btn btn-primary btn-sm">+ Add Download</button>
     </div>
 </div>
-
-@if(session('success'))
-<div style="padding:10px 15px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:4px;color:#3c763d;margin-bottom:15px;font-size:13px;">{{ session('success') }}</div>
-@endif
-
 @if(($categories ?? collect())->isEmpty())
 <div class="card"><div class="card-body" style="text-align:center;padding:40px;color:#999;">No download categories yet. Add a category to organize downloads.</div></div>
 @else
