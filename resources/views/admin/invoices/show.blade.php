@@ -84,10 +84,10 @@
                 <tfoot>
                     <tr><td colspan="2" style="text-align:right;padding:8px 12px;color:#555;">Subtotal</td><td style="text-align:right;padding:8px 12px;font-weight:600;font-family:monospace;">${{ number_format($invoice->subtotal, 2) }}</td></tr>
                     @if($invoice->tax > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">Tax@if($invoice->tax_rate > 0) ({{ $invoice->tax_rate }}%)@endif</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax, 2) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">Tax{{ $invoice->tax_rate > 0 ? " (" . $invoice->tax_rate . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax, 2) }}</td></tr>
                     @endif
                     @if($invoice->tax2 > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">Tax 2@if($invoice->tax_rate2 > 0) ({{ $invoice->tax_rate2 }}%)@endif</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax2, 2) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">Tax 2{{ $invoice->tax_rate2 > 0 ? " (" . $invoice->tax_rate2 . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax2, 2) }}</td></tr>
                     @endif
                     @if($invoice->credit > 0)
                     <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#5cb85c;">Credit Applied</td><td style="text-align:right;padding:4px 12px;font-family:monospace;color:#5cb85c;">-${{ number_format($invoice->credit, 2) }}</td></tr>

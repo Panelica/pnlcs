@@ -94,7 +94,7 @@ h1, h2, h3, h4, h5, h6 { font-family: "Open Sans", "Helvetica Neue", Helvetica, 
 .sidebar .staff-dot { width: 8px; height: 8px; background: #27ae60; border-radius: 50%; flex-shrink: 0; }
 
 /* ── CONTENT AREA ── */
-.contentarea { margin: 0 0 0 195px; padding: 15px; min-height: 600px; background-color: #fff; border: 0; border-left: 1px solid #ccc; }
+.contentarea { margin: 0 0 0 195px; padding: 15px; min-height: calc(100vh - 95px); background-color: #fff; border: 0; border-left: 1px solid #ccc; }
 .contentarea h1 { font-size: 22px; font-weight: 300; color: #333; margin: 0 0 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
 
 /* ── FOOTER ── */
