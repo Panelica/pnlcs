@@ -17,7 +17,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('client.account.profile.update') }}">
+        <form method="POST" action="{{ route('client.account.update') }}">
             @csrf
             @method('PUT')
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">

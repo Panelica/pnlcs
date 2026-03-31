@@ -24,7 +24,7 @@
         @else
         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; margin-bottom:14px;">
             <span style="font-size:13px; color:#777;">Two-Factor Authentication is not enabled</span>
-            <a href="{{ route('client.account.security.enable2fa') }}" class="btn btn-success btn-sm">Enable 2FA</a>
+            <a href="{{ "#" }}" class="btn btn-success btn-sm">Enable 2FA</a>
         </div>
         @endif
     </div>

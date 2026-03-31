@@ -41,7 +41,7 @@
     <div class="card-body">
         <p style="font-size:13px; color:#666; margin-bottom:12px;">Share this link to earn commissions on referred signups.</p>
         <div class="referral-link-box">
-            <input type="text" id="refLink" class="form-control" value="{{ $referralLink ?? url(/) . ?ref= . (auth()->user()->id ?? ) }}" readonly>
+            <input type="text" id="refLink" class="form-control" value="{{ $referralLink ?? url('/') . '?ref=' . (auth()->user()->id ?? '') }}" readonly>
             <button type="button" class="btn btn-default" onclick="document.getElementById('refLink').select(); document.execCommand('copy'); this.textContent='Copied!'; setTimeout(()=>this.textContent='Copy', 2000)">Copy</button>
         </div>
     </div>

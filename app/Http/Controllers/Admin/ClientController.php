@@ -177,7 +177,7 @@ class ClientController extends Controller
             $c->last_name,
             $c->email,
             $c->company_name ?? '',
-            $c->status,
+            $c->status->value ?? $c->status,
             $c->country ?? '',
             $c->phone_number ?? '',
             $c->credit ?? '0.00',
