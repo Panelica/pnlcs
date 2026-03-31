@@ -442,7 +442,7 @@
      CONTENT AREA
      ═══════════════════════════════════════════════ --}}
 <div class="contentarea" id="contentarea">
-    <h1>@yield('title', 'Dashboard')</h1>
+    
 
     {{-- Flash Messages --}}
     @if(session('success'))
