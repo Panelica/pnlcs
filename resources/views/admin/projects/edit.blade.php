@@ -10,7 +10,7 @@
     <ul style="margin:0;padding-left:18px;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
 </div>
 @endif
-<div class="card" style="max-width:700px;">
+<div class="card">
     <div class="card-body">
         <form method="POST" action="{{ route('admin.projects.update', $project) }}">
             @csrf @method('PUT')

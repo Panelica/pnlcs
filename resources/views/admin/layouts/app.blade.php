@@ -6,7 +6,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", "Admin") - PNLCS</title>
     @vite(["resources/css/app.css"])
-    <style>[x-cloak]{display:none!important;}</style>
+    <style>[x-cloak]{display:none!important;}
+.intelli-search{display:flex;align-items:center;margin-right:10px;}
+.intelli-search input{width:0;padding:0;border:none;background:transparent;color:#fff;font-size:13px;transition:width .3s ease,padding .3s ease,background .3s ease;outline:none;border-radius:3px;height:28px;}
+.intelli-search input:focus,.intelli-search input.expanded{width:250px;padding:4px 10px;background:rgba(255,255,255,.95);color:#333;border:1px solid rgba(255,255,255,.3);}
+.intelli-search input::placeholder{color:#999;}
+.intelli-btn{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:14px;padding:2px 6px;}
+.intelli-btn:hover{color:#fff;}</style>
 </head>
 <body class="mode-navbar">
 
@@ -68,9 +74,18 @@
                 <a href="{{ route("admin.logs.index") }}">System Logs</a>
             </div>
         </div>
+        <div class="nav-dd"><a href="#" class="{{ request()->routeIs("admin.config.addons") ? "active" : "" }}">Addons <span class="arr">&#9660;</span></a>
+            <div class="dd-menu">
+                <div style="padding:15px 20px;text-align:center;color:#999;font-size:12px;">No addons installed.<br><span style="color:#aaa;font-size:11px;">Addon marketplace coming soon.</span></div>
+            </div>
+        </div>
     </div>
 
     <div class="nav-right">
+        <form method="GET" action="/admin/clients" class="intelli-search" id="intellisearch-form">
+            <input type="text" name="search" id="intellisearch-input" placeholder="Search clients, invoices, tickets..." autocomplete="off">
+            <button type="submit" class="intelli-btn">&#128269;</button>
+        </form>
         <button class="mode-btn" onclick="toggleLayoutMode()" title="Switch between Navbar and Sidebar layout">
             <span id="mode-icon">&#9776;</span> <span id="mode-label">Sidebar</span>
         </button>
@@ -98,6 +113,8 @@
                 <div class="sep"></div>
                 <div class="hdr">System</div>
                 <a href="{{ route("admin.settings.general") }}">General Settings</a>
+                <a href="{{ route("admin.config.automation") }}">Automation Status</a>
+                <a href="{{ route("admin.config.client-groups") }}">Client Groups</a>
                 <a href="{{ route("admin.config.system-database") }}">System Info</a>
             </div>
         </div>
@@ -187,6 +204,8 @@
         <a href="{{ route("admin.config.email-templates") }}" class="sb-link {{ request()->routeIs("admin.config.email-templates") ? "active" : "" }}"><span class="ico">&#9993;</span> Email Templates</a>
         <a href="{{ route("admin.config.api-credentials") }}" class="sb-link {{ request()->routeIs("admin.config.api-credentials") ? "active" : "" }}"><span class="ico">&#128273;</span> API Keys</a>
         <a href="{{ route("admin.config.banned-ips") }}" class="sb-link {{ request()->routeIs("admin.config.banned-ips") ? "active" : "" }}"><span class="ico">&#128683;</span> Banned IPs</a>
+        <a href="{{ route("admin.config.automation") }}" class="sb-link {{ request()->routeIs("admin.config.automation") ? "active" : "" }}"><span class="ico">&#9881;</span> Automation</a>
+        <a href="{{ route("admin.config.client-groups") }}" class="sb-link {{ request()->routeIs("admin.config.client-groups") ? "active" : "" }}"><span class="ico">&#128101;</span> Client Groups</a>
         <a href="{{ route("admin.config.system-database") }}" class="sb-link {{ request()->routeIs("admin.config.system-database") ? "active" : "" }}"><span class="ico">&#128295;</span> System Info</a>
     </div>
 </aside>
@@ -307,6 +326,8 @@
         <div class="cs-section"><div class="cs-hdr">System</div>
             <a href="{{ route("admin.config.activity-log") }}" class="cs-link {{ request()->routeIs("admin.config.activity-log") ? "active" : "" }}">Activity Log</a>
             <a href="{{ route("admin.config.todo") }}" class="cs-link {{ request()->routeIs("admin.config.todo") ? "active" : "" }}">To-Do</a>
+            <a href="{{ route("admin.config.automation") }}" class="cs-link {{ request()->routeIs("admin.config.automation") ? "active" : "" }}">Automation</a>
+            <a href="{{ route("admin.config.client-groups") }}" class="cs-link {{ request()->routeIs("admin.config.client-groups") ? "active" : "" }}">Client Groups</a>
             <a href="{{ route("admin.config.system-database") }}" class="cs-link {{ request()->routeIs("admin.config.system-database") ? "active" : "" }}">System Info</a>
             <a href="{{ route("admin.logs.index") }}" class="cs-link {{ request()->routeIs("admin.logs.*") ? "active" : "" }}">Logs</a>
         </div>
@@ -389,6 +410,9 @@ function updateAdvSearch() {
     if (sel && form) { form.action = sel.value; }
 }
 document.addEventListener("DOMContentLoaded", function() { updateAdvSearch(); });
+var isInput=document.getElementById("intellisearch-input");
+if(isInput){isInput.addEventListener("focus",function(){this.classList.add("expanded");});isInput.addEventListener("blur",function(){if(!this.value)this.classList.remove("expanded");});
+document.querySelector(".intelli-btn").addEventListener("click",function(e){if(!isInput.classList.contains("expanded")){e.preventDefault();isInput.classList.add("expanded");isInput.focus();}});}
 </script>
 @stack("scripts")
 </body>

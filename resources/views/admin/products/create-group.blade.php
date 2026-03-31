@@ -10,7 +10,7 @@
     @foreach($errors->all() as $e)<div>&bull; {{ $e }}</div>@endforeach
 </div>
 @endif
-<div class="card" style="max-width:600px;">
+<div class="card">
     <div class="card-body">
         <form method="POST" action="{{ route('admin.products.groups.store') }}">
             @csrf

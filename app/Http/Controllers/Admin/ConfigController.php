@@ -26,6 +26,8 @@ use App\Models\TicketStatus;
 use App\Models\TodoItem;
 use App\Models\Transaction;
 use App\Models\ActivityLog;
+use App\Models\ClientGroup;
+use App\Models\GatewaySettings;
 use App\Models\Download;
 use App\Models\DownloadCategory;
 use Illuminate\Http\Request;
@@ -336,7 +338,21 @@ class ConfigController extends Controller
 
     // ===== PAYMENT GATEWAYS / REGISTRARS =====
 
-    public function gateways() { return view('admin.config.gateways'); }
+    public function gateways() {
+        $rows = GatewaySettings::orderBy("sort_order")->get();
+        $gateways = $rows->groupBy("gateway")->map(function ($items, $key) {
+            $settings = $items->pluck("value", "setting");
+            return (object) [
+                "gateway_name" => $key,
+                "description" => $settings->get("name", ucfirst($key)),
+                "type" => $settings->get("type", "online"),
+                "disabled" => $settings->get("visible", "1") === "0",
+                "order_num" => $items->first()->sort_order ?? 0,
+                "settings" => $settings->except(["name", "visible", "type"])->toArray(),
+            ];
+        })->sortBy("order_num")->values();
+        return view("admin.config.gateways", ["gateways" => $gateways]);
+    }
     public function registrars() { return view('admin.config.registrars'); }
 
     // ===== EMAIL TEMPLATES =====
@@ -554,7 +570,19 @@ class ConfigController extends Controller
         return back()->with('success', 'Server deleted.');
     }
     public function testServerConnection(Server $server) {
-        return back()->with('success', 'Connection test successful (module: ' . ($server->type ?? 'custom') . ').');
+        $host = $server->hostname ?? $server->ip_address;
+        $port = $server->port ?? 22;
+        if (empty($host)) {
+            return back()->with("error", "No hostname or IP address configured for this server.");
+        }
+        $start = microtime(true);
+        $conn = @fsockopen($host, $port, $errno, $errstr, 5);
+        $elapsed = round((microtime(true) - $start) * 1000);
+        if ($conn) {
+            fclose($conn);
+            return back()->with("success", "Connection to {$host}:{$port} successful ({$elapsed}ms). Module: " . ($server->type ?? "custom"));
+        }
+        return back()->with("error", "Connection to {$host}:{$port} failed: {$errstr} (errno: {$errno}, {$elapsed}ms)");
     }
 
     // Server Groups
@@ -672,9 +700,47 @@ class ConfigController extends Controller
 
     // Gateway/Registrar settings
     public function updateGatewaySettings(Request $request, string $gateway) {
-        return back()->with('success', 'Gateway settings updated.');
+        $settings = $request->input("settings", []);
+        $json = $request->input("settings_json");
+        if ($json && empty($settings)) {
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) $settings = $decoded;
+        }
+        foreach ($settings as $key => $value) {
+            GatewaySettings::updateOrCreate(
+                ["gateway" => $gateway, "setting" => $key],
+                ["value" => $value ?? ""]
+            );
+        }
+        return back()->with("success", "Gateway settings updated.");
     }
     public function updateRegistrarSettings(Request $request, string $registrar) {
         return back()->with('success', 'Registrar settings updated.');
+    }
+
+
+    // ===== AUTOMATION =====
+    public function automation() {
+        return view("admin.config.automation");
+    }
+
+    // ===== CLIENT GROUPS =====
+    public function clientGroups() {
+        return view("admin.config.client-groups", ["groups" => ClientGroup::withCount("clients")->get()]);
+    }
+
+    public function storeClientGroup(Request $request) {
+        ClientGroup::create($request->validate(["name" => "required", "color" => "nullable|string|max:7", "discount_percent" => "nullable|numeric|min:0|max:100"]));
+        return back()->with("success", "Client group created.");
+    }
+
+    public function updateClientGroup(Request $request, ClientGroup $group) {
+        $group->update($request->validate(["name" => "required", "color" => "nullable|string|max:7", "discount_percent" => "nullable|numeric|min:0|max:100"]));
+        return back()->with("success", "Client group updated.");
+    }
+
+    public function destroyClientGroup(ClientGroup $group) {
+        $group->delete();
+        return back()->with("success", "Client group deleted.");
     }
 }

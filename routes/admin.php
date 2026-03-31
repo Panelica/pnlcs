@@ -200,6 +200,14 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
 
         Route::get("transactions", [ConfigController::class, "transactions"])->name("transactions");
 
+
+        // Automation & Client Groups
+        Route::get("automation", [ConfigController::class, "automation"])->name("automation");
+        Route::get("client-groups", [ConfigController::class, "clientGroups"])->name("client-groups");
+        Route::post("client-groups", [ConfigController::class, "storeClientGroup"])->name("client-groups.store");
+        Route::put("client-groups/{group}", [ConfigController::class, "updateClientGroup"])->name("client-groups.update");
+        Route::delete("client-groups/{group}", [ConfigController::class, "destroyClientGroup"])->name("client-groups.destroy");
+
         // System
         Route::get("system-database", [ConfigController::class, "systemDatabase"])->name("system-database");
         Route::get("system-phpinfo", [ConfigController::class, "systemPhpInfo"])->name("system-phpinfo");

@@ -14,13 +14,13 @@
 @endif
 
 <div class="card">
-    @if(($emailTemplates ?? collect())->isEmpty())
+    @if(($templates ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No email templates found.</div>
     @else
     <table class="data-table">
         <thead><tr><th>Template Name</th><th>Subject</th><th>Type</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
         <tbody>
-        @foreach($emailTemplates as $tpl)
+        @foreach($templates as $tpl)
         <tr>
             <td style="font-weight:600;">{{ $tpl->name }}</td>
             <td style="font-size:12px;color:#555;">{{ $tpl->subject }}</td>
@@ -36,7 +36,7 @@
     @endif
 </div>
 
-@foreach($emailTemplates ?? [] as $tpl)
+@foreach($templates ?? [] as $tpl)
 <x-modal :name="'edit-tpl-' . $loop->index" title="Edit Email Template" maxWidth="xl">
     <form method="POST" action="{{ route('admin.config.email-templates.update', $tpl) }}">
         @csrf @method('PUT')
@@ -53,7 +53,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">Body (HTML)</label>
-            <textarea name="body" rows="10" class="form-control" style="font-family:monospace;font-size:12px;">{{ $tpl->body }}</textarea>
+            <textarea name="message" rows="10" class="form-control" style="font-family:monospace;font-size:12px;">{{ $tpl->message }}</textarea>
         </div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">

@@ -13,7 +13,7 @@
 <div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">{{ session('error') }}</div>
 @endif
 
-<form method="POST" action="{{ route('admin.settings.general.update') }}" style="max-width:700px;">
+<form method="POST" action="{{ route('admin.settings.general.update') }}">
     @csrf
 
     <div class="card" style="margin-bottom:15px;">
