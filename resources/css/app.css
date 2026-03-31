@@ -151,16 +151,16 @@ textarea.form-control { height: auto !important; min-height: 80px !important; }
 .cs-link:hover { color: #1a4d80; background: #eaeef2; border-left-color: #1a4d80; }
 .cs-link.active { color: #1a4d80; background: #dce8f5; border-left-color: #1a4d80; font-weight: 600; }
 
-#content-area { margin-left: 200px; padding: 20px; min-height: calc(100vh - 45px); }
+#content-area { margin-left: 200px; padding: 20px; min-height: calc(100vh - 45px); width: calc(100% - 200px); min-width: 0; overflow-x: auto; }
 
 body.mode-sidebar #full-sidebar { display: block !important; }
 body.mode-sidebar #ctx-sidebar { display: none !important; }
 body.mode-sidebar .top-nav-menus { display: none !important; }
-body.mode-sidebar #content-area { margin-left: 220px !important; }
+body.mode-sidebar #content-area { margin-left: 220px !important; width: calc(100% - 220px) !important; }
 body.mode-navbar #full-sidebar { display: none !important; }
 body.mode-navbar #ctx-sidebar { display: block !important; }
 body.mode-navbar .top-nav-menus { display: flex !important; }
-body.mode-navbar #content-area { margin-left: 200px !important; }
+body.mode-navbar #content-area { margin-left: 200px !important; width: calc(100% - 200px) !important; }
 
 .flash { padding: 10px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; border: 1px solid transparent; }
 .flash-ok { background: #dff0d8; color: #3c763d; border-color: #d6e9c6; }
