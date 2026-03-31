@@ -43,7 +43,7 @@
 
             {{-- Clients --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();">Clients</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-user"></i> Clients</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.clients.index') }}">View/Search Clients</a></li>
                     <li><a href="{{ route('admin.clients.create') }}">Add New Client</a></li>
@@ -55,7 +55,7 @@
 
             {{-- Orders --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();">Orders</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-shopping-cart"></i> Orders</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.orders.index') }}">List All Orders</a></li>
                     <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">Pending</a></li>
@@ -67,7 +67,7 @@
 
             {{-- Billing --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();">Billing</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-credit-card"></i> Billing</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.invoices.index') }}">Invoices</a></li>
                     <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}">Paid Invoices</a></li>
@@ -84,7 +84,7 @@
 
             {{-- Support --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();">Support</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-life-ring"></i> Support</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.tickets.index') }}">Support Tickets</a></li>
                     <li><a href="{{ route('admin.tickets.index') }}">Open Ticket</a></li>
@@ -98,12 +98,12 @@
 
             {{-- Reports --}}
             <li style="float:left; width:auto;">
-                <a href="{{ route('admin.reports.index') }}">Reports</a>
+                <a href="{{ route('admin.reports.index') }}"><i class="fas fa-chart-bar"></i> Reports</a>
             </li>
 
             {{-- Utilities --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();">Utilities</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-wrench"></i> Utilities</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.config.automation') }}">Automation Status</a></li>
                     <li><a href="{{ route('admin.config.todo') }}">To-Do List</a></li>
@@ -160,7 +160,7 @@
 
             {{-- Setup / Config --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-wrench"></i> Setup</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-cogs"></i> Setup</a>
                 <ul class="dropdown-menu" style="right:0; left:auto;">
                     <li><a href="{{ route('admin.config.admins') }}">Admin Accounts</a></li>
                     <li><a href="{{ route('admin.config.admin-roles') }}">Admin Roles</a></li>
@@ -407,7 +407,7 @@
             <li><a href="{{ route('admin.orders.index') }}">Orders</a></li>
             <li><a href="{{ route('admin.invoices.index') }}">Invoices</a></li>
             <li><a href="{{ route('admin.tickets.index') }}">Tickets</a></li>
-            <li><a href="{{ route('admin.reports.index') }}">Reports</a></li>
+            <li><a href="{{ route('admin.reports.index') }}"><i class="fas fa-chart-bar"></i> Reports</a></li>
         </ul>
     @endif
 
