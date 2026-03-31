@@ -62,6 +62,13 @@ class ClientController extends Controller
 
         $data = ['client' => $client, 'tab' => $tab];
 
+        // Stats always needed (shown in all tabs)
+        $data['serviceCount'] = $client->services()->count();
+        $data['domainCount'] = $client->domains()->count();
+        $data['invoiceCount'] = $client->invoices()->count();
+        $data['ticketCount'] = $client->tickets()->count();
+        $data['unpaidInvoices'] = $client->invoices()->where('status', 'Unpaid')->sum('total');
+
         switch ($tab) {
             case 'services':
                 $data['services'] = $client->services()->with('product')->orderBy('id', 'desc')->paginate(15);

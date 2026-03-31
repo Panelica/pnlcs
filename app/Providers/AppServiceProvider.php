@@ -21,7 +21,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $registry = $this->app->make(ModuleRegistry::class);
-        $registry->registerServer('custom', \Modules\Servers\Custom\CustomModule::class);
+        $registry->registerServer('custom',   \Modules\Servers\Custom\CustomModule::class);
+        $registry->registerServer('panelica', \Modules\Servers\Panelica\PanelicaModule::class);
+        $registry->registerServer('cpanel',   \Modules\Servers\CPanel\CPanelModule::class);
         $registry->registerGateway('banktransfer', \Modules\Gateways\BankTransfer\BankTransferModule::class);
     }
 }
