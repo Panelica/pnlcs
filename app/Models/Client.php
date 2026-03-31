@@ -73,6 +73,26 @@ class Client extends Model
             ->withTimestamps();
     }
 
+    public function invoices(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function services(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
+
+    public function domains(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Domain::class);
+    }
+
+    public function tickets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Ticket::class);
+    }
+
     public function contacts(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Contact::class);
