@@ -1,8 +1,11 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Service extends Model {
+    use HasFactory;
+
     protected $fillable = ["client_id", "order_id", "product_id", "server_id", "domain", "payment_method", "qty", "first_payment_amount", "amount", "billing_cycle", "next_due_date", "registration_date", "status", "username", "password", "disk_usage", "disk_limit", "bw_usage", "bw_limit", "suspension_date", "suspension_reason", "termination_date", "notes"];
     protected $hidden = ["password"];
     protected function casts(): array { return ["next_due_date" => "date", "registration_date" => "date", "suspension_date" => "date", "termination_date" => "date", "amount" => "decimal:2", "first_payment_amount" => "decimal:2", "password" => "encrypted"]; }

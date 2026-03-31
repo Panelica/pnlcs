@@ -1,9 +1,12 @@
 <?php
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Product;
 use App\Models\ProductGroup;
+
+uses(RefreshDatabase::class);
 
 test("products index page loads", function () {
     $role = AdminRole::factory()->fullAdmin()->create();

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +12,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(ModuleRegistry::class);
     }
 
     /**
@@ -19,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        $registry = $this->app->make(ModuleRegistry::class);
+        $registry->registerServer('custom', \Modules\Servers\Custom\CustomModule::class);
+        $registry->registerGateway('banktransfer', \Modules\Gateways\BankTransfer\BankTransferModule::class);
     }
 }

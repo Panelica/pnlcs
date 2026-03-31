@@ -1,6 +1,9 @@
 <?php
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Services\Module\ModuleRegistry;
+
+uses(RefreshDatabase::class);
 
 test("module registry is singleton", function () {
     $r1 = app(ModuleRegistry::class);

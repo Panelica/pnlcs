@@ -1,8 +1,11 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Order extends Model {
+    use HasFactory;
+
     protected $fillable = ["order_num", "client_id", "contact_id", "date", "promo_code", "amount", "payment_method", "invoice_id", "status", "ip_address", "fraud_module", "fraud_output", "notes"];
     protected function casts(): array { return ["date" => "date", "amount" => "decimal:2"]; }
 

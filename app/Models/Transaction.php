@@ -1,8 +1,11 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Transaction extends Model {
+    use HasFactory;
+
     protected $fillable = ["client_id", "currency_id", "gateway", "date", "description", "amount_in", "fees", "amount_out", "rate", "transaction_id", "invoice_id", "refund_id"];
     protected function casts(): array { return ["date" => "date", "amount_in" => "decimal:2", "fees" => "decimal:2", "amount_out" => "decimal:2"]; }
 

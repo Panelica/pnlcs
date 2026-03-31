@@ -1,8 +1,11 @@
 <?php
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\Client;
 use App\Models\Admin;
 use App\Models\AdminRole;
+
+uses(RefreshDatabase::class);
 
 test("api health returns ok", function () {
     $response = $this->getJson("/api/health");

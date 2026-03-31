@@ -1,0 +1,49 @@
+<?php
+
+namespace App\Http\Controllers\Client;
+
+use App\Http\Controllers\Controller;
+use App\Models\Ticket;
+use App\Models\TicketDepartment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+class ContactController extends Controller
+{
+    public function show()
+    {
+        $departments = TicketDepartment::where('hidden', false)
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('client.contact', compact('departments'));
+    }
+
+    public function submit(Request $request)
+    {
+        $validated = $request->validate([
+            'name'          => 'required|string|max:100',
+            'email'         => 'required|email|max:200',
+            'department_id' => 'required|exists:ticket_departments,id',
+            'subject'       => 'required|string|max:200',
+            'message'       => 'required|string|max:5000',
+        ]);
+
+        $clientId = auth()->check() ? auth()->user()->clients()->first()?->id : null;
+
+        Ticket::create([
+            'tid'           => strtoupper(Str::random(6)),
+            'department_id' => $validated['department_id'],
+            'client_id'     => $clientId,
+            'name'          => $validated['name'],
+            'email'         => $validated['email'],
+            'title'         => $validated['subject'],
+            'message'       => $validated['message'],
+            'status'        => 'Open',
+            'priority'      => 'Medium',
+            'last_reply'    => now(),
+        ]);
+
+        return back()->with('success', 'Your message has been sent. We will get back to you shortly.');
+    }
+}

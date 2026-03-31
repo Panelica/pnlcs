@@ -1,8 +1,11 @@
 <?php
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Enums\ClientStatus;
 use App\Models\Client;
 use App\Models\User;
+
+uses(RefreshDatabase::class);
 
 test("client migration creates table with correct columns", function () {
     $columns = Schema::getColumnListing("clients");

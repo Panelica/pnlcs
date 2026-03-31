@@ -1,8 +1,11 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Ticket extends Model {
+    use HasFactory;
+
     protected $fillable = ["tid", "department_id", "client_id", "contact_id", "name", "email", "cc", "title", "message", "status", "priority", "admin", "attachment", "last_reply", "flag", "service", "merged_ticket_id", "editor"];
     protected function casts(): array { return ["last_reply" => "datetime"]; }
 

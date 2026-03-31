@@ -1,7 +1,10 @@
 <?php
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\Admin;
 use App\Models\AdminRole;
+
+uses(RefreshDatabase::class);
 
 test('admin login page loads', function () {
     $response = $this->get(route('admin.login'));

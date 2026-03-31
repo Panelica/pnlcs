@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Service;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Ticket;
 
 class SystemApiController extends BaseApiController
@@ -35,12 +36,38 @@ class SystemApiController extends BaseApiController
 
     public function getHealthStatus()
     {
+        // Test database connectivity
+        $dbStatus = "ok";
+        try {
+            DB::connection()->getPdo();
+        } catch (\Exception $e) {
+            $dbStatus = "error: " . $e->getMessage();
+        }
+
+        // Disk space for the application directory
+        $diskTotal = disk_total_space(base_path());
+        $diskFree  = disk_free_space(base_path());
+        $diskUsed  = $diskTotal - $diskFree;
+
         return $this->success([
             "health" => [
-                "status" => "ok",
-                "version" => "1.0.0",
-                "laravel" => app()->version(),
-                "php" => phpversion(),
+                "status"       => $dbStatus === "ok" ? "ok" : "degraded",
+                "version"      => "1.0.0",
+                "laravel"      => app()->version(),
+                "php"          => phpversion(),
+                "database"     => $dbStatus,
+                "disk" => [
+                    "total_bytes" => $diskTotal,
+                    "free_bytes"  => $diskFree,
+                    "used_bytes"  => $diskUsed,
+                    "used_percent" => $diskTotal > 0 ? round(($diskUsed / $diskTotal) * 100, 2) : 0,
+                ],
+                "memory" => [
+                    "limit"   => ini_get("memory_limit"),
+                    "current" => round(memory_get_usage(true) / 1024 / 1024, 2) . "MB",
+                    "peak"    => round(memory_get_peak_usage(true) / 1024 / 1024, 2) . "MB",
+                ],
+                "timestamp" => now()->toIso8601String(),
             ],
         ]);
     }
@@ -59,6 +86,7 @@ class SystemApiController extends BaseApiController
     {
         $query = \App\Models\ActivityLog::query();
         if ($request->filled("date")) $query->whereDate("date", $request->date);
+        if ($request->filled("user")) $query->where("user", $request->user);
         return $this->paginated($query->orderBy("id", "desc")->paginate($request->get("limitnum", 25)));
     }
 
@@ -134,6 +162,17 @@ class SystemApiController extends BaseApiController
         return $this->success(["templates" => \App\Models\EmailTemplate::all()->toArray()]);
     }
 
+    public function updateEmailTemplate(Request $request)
+    {
+        $template = \App\Models\EmailTemplate::find($request->templateid);
+        if (!$template) return $this->error("Template Not Found", 404);
+        foreach (["subject", "message", "disabled"] as $f) {
+            if ($request->has($f)) $template->$f = $request->$f;
+        }
+        $template->save();
+        return $this->success(["templateid" => $template->id]);
+    }
+
     public function getEmails(Request $request)
     {
         $query = \App\Models\Email::query();
@@ -143,18 +182,19 @@ class SystemApiController extends BaseApiController
 
     public function getServers()
     {
-        return $this->success(["servers" => \App\Models\Server::all()->makeVisible([])->toArray()]);
+        $servers = \App\Models\Server::with("groups")->get();
+        return $this->success(["servers" => $servers->toArray()]);
     }
 
     public function getRegistrars()
     {
-        $registrars = \Illuminate\Support\Facades\DB::table("registrar_settings")->select("registrar")->distinct()->pluck("registrar");
+        $registrars = DB::table("registrar_settings")->select("registrar")->distinct()->pluck("registrar");
         return $this->success(["registrars" => $registrars->toArray()]);
     }
 
     public function getProducts()
     {
-        return $this->success(["products" => \App\Models\Product::with("group")->get()->toArray()]);
+        return $this->success(["products" => \App\Models\Product::with("group", "pricing")->get()->toArray()]);
     }
 
     public function getPromotions()
@@ -162,11 +202,49 @@ class SystemApiController extends BaseApiController
         return $this->success(["promotions" => \App\Models\Promotion::all()->toArray()]);
     }
 
+    public function addPromotion(Request $request)
+    {
+        $validated = $request->validate([
+            "code"  => "required|string|max:100|unique:promotions,code",
+            "type"  => "required|in:percentage,fixed_amount",
+            "value" => "required|numeric|min:0",
+        ]);
+        $promo = \App\Models\Promotion::create(array_merge($validated, [
+            "start_date"      => $request->startdate ?? now()->format("Y-m-d"),
+            "expiration_date" => $request->expirationdate ?? null,
+            "max_uses"        => $request->maxuses ?? 0,
+            "uses"            => 0,
+            "recurring"       => $request->boolean("recurring"),
+            "notes"           => $request->notes ?? null,
+        ]));
+        return $this->success(["promotionid" => $promo->id]);
+    }
+
+    public function deletePromotion(Request $request)
+    {
+        $promo = \App\Models\Promotion::find($request->promotionid);
+        if (!$promo) return $this->error("Promotion Not Found", 404);
+        $promo->delete();
+        return $this->success();
+    }
+
     public function getTodoItems(Request $request)
     {
         $query = \App\Models\TodoItem::query();
         if ($request->filled("status")) $query->where("status", $request->status);
         return $this->success(["items" => $query->orderBy("id", "desc")->get()->toArray()]);
+    }
+
+    public function addTodoItem(Request $request)
+    {
+        $validated = $request->validate(["title" => "required|string|max:255"]);
+        $item = \App\Models\TodoItem::create(array_merge($validated, [
+            "description" => $request->description ?? null,
+            "due_date"    => $request->duedate ?? null,
+            "admin"       => $request->adminusername ?? null,
+            "status"      => $request->status ?? "pending",
+        ]));
+        return $this->success(["itemid" => $item->id]);
     }
 
     public function updateTodoItem(Request $request)
@@ -180,7 +258,7 @@ class SystemApiController extends BaseApiController
 
     public function getPaymentMethods()
     {
-        $gateways = \Illuminate\Support\Facades\DB::table("gateway_settings")->select("gateway")->distinct()->pluck("gateway");
+        $gateways = DB::table("gateway_settings")->select("gateway")->distinct()->pluck("gateway");
         return $this->success(["paymentmethods" => $gateways->toArray()]);
     }
 
