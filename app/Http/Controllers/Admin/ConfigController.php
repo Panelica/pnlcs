@@ -660,7 +660,7 @@ class ConfigController extends Controller
         return back()->with('success', 'IP unbanned.');
     }
     public function storeBannedEmail(Request $request) {
-        BannedEmail::create($request->validate(['email'=>'required','type'=>'nullable|string','reason'=>'nullable|string']));
+        BannedEmail::create($request->validate(['domain'=>'required','type'=>'nullable|string','reason'=>'nullable|string']));
         return back()->with('success', 'Email banned.');
     }
     public function destroyBannedEmail(BannedEmail $bannedEmail) {

@@ -141,7 +141,7 @@ document.getElementById('test-email-btn').addEventListener('click', function() {
     result.textContent = '';
     result.style.color = '';
 
-    fetch('{{ route(admin.settings.test-email) }}', {
+    fetch('{{ route('admin.settings.test-email') }}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
