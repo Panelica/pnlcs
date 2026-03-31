@@ -10,10 +10,13 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        // Disable Vite in tests (no build manifest needed)
+        // Force test database — NEVER touch production
+        config(['database.connections.mysql.database' => 'pnlcs_test']);
+        
+        // Disable Vite in tests
         $this->withoutVite();
 
-        // Disable CSRF verification in tests
+        // Disable CSRF
         $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
     }
 }
