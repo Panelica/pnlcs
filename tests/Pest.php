@@ -1,12 +1,12 @@
 <?php
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 pest()->extend(TestCase::class)
-    ->use(RefreshDatabase::class)
-    ->in("Feature");
+    ->use(DatabaseTransactions::class)
+    ->in('Feature');
 
-expect()->extend("toBeOne", function () {
+expect()->extend('toBeOne', function () {
     return $this->toBe(1);
 });

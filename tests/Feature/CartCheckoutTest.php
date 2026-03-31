@@ -47,11 +47,12 @@ function makeAuthenticatedClient(): array
 function makeProductWithPricing(Currency $currency): Product
 {
     // product_groups table has NO currency_id column
+    // products table uses 'group_id' (not 'product_group_id')
     $group   = ProductGroup::factory()->create();
     $product = Product::factory()->create([
-        'product_group_id' => $group->id,
-        'hidden'           => false,
-        'retired'          => false,
+        'group_id' => $group->id,
+        'hidden'   => false,
+        'retired'  => false,
     ]);
 
     Pricing::factory()->create([
@@ -91,7 +92,7 @@ test('configure page shows billing cycles', function () {
 test('configure page returns 404 for hidden product', function () {
     $currency = ensureDefaultCurrency();
     $group    = ProductGroup::factory()->create();
-    $product  = Product::factory()->create(['product_group_id' => $group->id, 'hidden' => true]);
+    $product  = Product::factory()->create(['group_id' => $group->id, 'hidden' => true]);
 
     $response = $this->get(route('client.store.configure', $product));
     $response->assertStatus(404);
@@ -147,7 +148,7 @@ test('can remove item from cart', function () {
 
 test('can apply valid promo code', function () {
     [$user, $client, $currency] = makeAuthenticatedClient();
-    $product  = makeProductWithPricing($currency);
+    $product   = makeProductWithPricing($currency);
     $promoCode = 'SAVE10_' . uniqid();
 
     Promotion::factory()->create([
