@@ -146,7 +146,7 @@ class PanelicaModule extends AbstractServerModule
         $webServer  = $config['web_server']  ?? 'nginx_only';
 
         $domainPayload = [
-            'domain_name' => $domain,
+            'name' => $domain,
             'user_id'     => $userId,
             'php_version' => $phpVersion,
             'web_server'  => $webServer,
