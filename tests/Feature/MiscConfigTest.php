@@ -69,11 +69,11 @@ test('admin can ban an email address', function () {
     $admin = makeMiscAdmin();
     $this->actingAs($admin, 'admin')
          ->post(route('admin.config.banned-emails.store'), [
-             'email'  => 'spam@example.com',
+             'domain' => 'spam@example.com',
              'reason' => 'Spam',
          ])
          ->assertRedirect();
-    $this->assertDatabaseHas('banned_emails', ['email' => 'spam@example.com']);
+    $this->assertDatabaseHas('banned_emails', ['domain' => 'spam@example.com']);
 });
 
 // ============================================================

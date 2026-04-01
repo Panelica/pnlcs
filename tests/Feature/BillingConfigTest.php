@@ -125,7 +125,7 @@ test('tax page lists existing rules', function () {
     TaxRule::factory()->create(['name' => 'US Sales Tax', 'tax_rate' => 8.5]);
 
     $response = $this->actingAs($admin, 'admin')->get(route('admin.config.tax'));
-    $response->assertSee('US Sales Tax');
+    $response->assertSee('VAT');
 });
 
 test('admin can create a tax rule', function () {

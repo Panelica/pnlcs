@@ -62,5 +62,5 @@ test('client XSS is escaped in views', function () {
 
 test('API requires authentication', function () {
     $this->postJson('/api/v1/GetClients', ['action' => 'GetClients'])
-        ->assertStatus(404)->assertStatus(fn ($s) => in_array($s->getStatusCode(), [401, 404]));
+        ->assertStatus(404);
 });

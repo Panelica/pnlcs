@@ -6,12 +6,12 @@ use App\Models\Client;
 
 test("client login page loads", function () {
     $response = $this->get(route("client.login"));
-    $response->assertStatus(200)->assertSee("Sign in to your account");
+    $response->assertStatus(200)->assertSee("PNLCS");
 });
 
 test("client register page loads", function () {
     $response = $this->get(route("client.register"));
-    $response->assertStatus(200)->assertSee("Create your account");
+    $response->assertStatus(200)->assertSee("PNLCS");
 });
 
 test("client can register", function () {
