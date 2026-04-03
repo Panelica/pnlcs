@@ -1,0 +1,38 @@
+{
+    "name": "Slate",
+    "slug": "slate",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Professional grey theme — understated elegance, clean corporate look, and timeless neutrality.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#334155",
+        "accent": "#64748b",
+        "nav_bg": "#1e293b",
+        "hero_bg_start": "#0f172a",
+        "hero_bg_mid": "#1e293b",
+        "hero_bg_end": "#151d2e",
+        "welcome_accent": "#64748b",
+        "footer_bg": "#1e293b"
+    },
+    "dark_colors": {
+        "body_bg": "#0f172a",
+        "card_bg": "#1e293b",
+        "text_color": "#e2e8f0",
+        "heading_color": "#f1f5f9",
+        "muted_color": "#cbd5e1",
+        "border_color": "#334155",
+        "sidebar_bg": "#1e293b",
+        "sidebar_text": "#cbd5e1",
+        "input_bg": "#1e293b",
+        "input_border": "#475569",
+        "table_header_bg": "#1e293b",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "IBM Plex Sans",
+        "heading": "IBM Plex Sans"
+    }
+}

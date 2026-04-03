@@ -412,14 +412,17 @@ class SystemApiController extends BaseApiController
     public function addProjectTask(Request $request) {
         $project = \App\Models\Project::find($request->project_id ?? $request->projectid);
         if (!$project) return $this->error("Project Not Found", 404);
-        $task = $project->tasks()->create(["title"=>$request->title ?? "Task", "description"=>$request->description, "status"=>"pending"]);
+        $task = $project->tasks()->create(["task"=>$request->title ?? $request->task ?? "Task", "notes"=>$request->description ?? $request->notes, "completed"=>0]);
         return $this->success(["taskid"=>$task->id]);
     }
 
     public function updateProjectTask(Request $request) {
         $task = \App\Models\ProjectTask::find($request->taskid);
         if (!$task) return $this->error("Task Not Found", 404);
-        foreach (["title","description","status","due_date"] as $f) { if ($request->has($f)) $task->$f = $request->$f; }
+        if ($request->has('title') || $request->has('task')) $task->task = $request->title ?? $request->task;
+        if ($request->has('description') || $request->has('notes')) $task->notes = $request->description ?? $request->notes;
+        if ($request->has('completed')) $task->completed = $request->completed;
+        if ($request->has('due_date')) $task->due_date = $request->due_date;
         $task->save();
         return $this->success(["taskid"=>$task->id]);
     }

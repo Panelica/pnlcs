@@ -1,0 +1,38 @@
+{
+    "name": "Coral",
+    "slug": "coral",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Coral pink theme — soft, warm hues with a modern feminine touch and playful energy.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#e11d48",
+        "accent": "#fb7185",
+        "nav_bg": "#881337",
+        "hero_bg_start": "#1a0410",
+        "hero_bg_mid": "#2d0720",
+        "hero_bg_end": "#1f0515",
+        "welcome_accent": "#fb7185",
+        "footer_bg": "#881337"
+    },
+    "dark_colors": {
+        "body_bg": "#1a0410",
+        "card_bg": "#2d0720",
+        "text_color": "#ffe4e6",
+        "heading_color": "#fff1f2",
+        "muted_color": "#fda4af",
+        "border_color": "#881337",
+        "sidebar_bg": "#2d0720",
+        "sidebar_text": "#fda4af",
+        "input_bg": "#2d0720",
+        "input_border": "#9f1239",
+        "table_header_bg": "#2d0720",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Lexend",
+        "heading": "Lexend"
+    }
+}

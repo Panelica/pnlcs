@@ -1,0 +1,239 @@
+/* ===== AURORA THEME CSS ===== */
+/* Northern lights inspired — purple/green/cyan, Space Grotesk font, neon glow effects */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* Font override */
+body {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.section-title, .hero__title, .hero__title-sub, h1, h2, h3, h4 {
+    font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Navigation: deep purple with subtle glow */
+.main-nav {
+    background: rgba(15, 10, 30, 0.92) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.15) !important;
+}
+.main-nav.scrolled {
+    background: rgba(15, 10, 30, 0.98) !important;
+    box-shadow: 0 4px 40px rgba(139, 92, 246, 0.15) !important;
+}
+
+/* Top bar */
+.top-bar {
+    background: rgba(15, 10, 30, 0.95) !important;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Buttons: purple-cyan gradient */
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #06b6d4) !important;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.35) !important;
+}
+.btn-primary:hover {
+    box-shadow: 0 8px 35px rgba(139, 92, 246, 0.5) !important;
+}
+.btn-accent {
+    background: linear-gradient(135deg, #34d399, #06b6d4) !important;
+    box-shadow: 0 4px 20px rgba(52, 211, 153, 0.3) !important;
+}
+.btn-accent:hover {
+    box-shadow: 0 8px 30px rgba(52, 211, 153, 0.45) !important;
+}
+
+/* Cards: glassmorphism with purple tint */
+.plan-card, .infra-card, .testimonial-card, .vps-card, .faq__item {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(233, 213, 255, 0.6) !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+.plan-card:hover, .infra-card:hover, .testimonial-card:hover, .vps-card:hover {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.1), 0 0 0 1px rgba(139, 92, 246, 0.1) !important;
+    transform: translateY(-8px) !important;
+}
+
+/* Hero badge */
+.hero__badge {
+    background: rgba(52, 211, 153, 0.12) !important;
+    border-color: rgba(52, 211, 153, 0.3) !important;
+    color: #34d399 !important;
+}
+
+/* Hero title accent */
+.hero__title span {
+    background: linear-gradient(135deg, #8b5cf6, #34d399) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+/* Hero stats with neon border */
+.hero__stat {
+    border: 1px solid rgba(139, 92, 246, 0.2) !important;
+    background: rgba(139, 92, 246, 0.08) !important;
+}
+.hero__stat i {
+    color: #34d399 !important;
+}
+
+/* Callout cards */
+.hero__callout {
+    box-shadow: 0 10px 40px rgba(139, 92, 246, 0.12) !important;
+}
+.hero__callout--1 i { color: #34d399 !important; }
+.hero__callout--2 i { color: #06b6d4 !important; }
+
+/* Plan card badge */
+.plan-card__badge {
+    background: linear-gradient(135deg, #8b5cf6, #06b6d4) !important;
+}
+.plan-card__btn--primary {
+    background: linear-gradient(135deg, #8b5cf6, #06b6d4) !important;
+}
+.plan-card__discount {
+    background: rgba(52, 211, 153, 0.1) !important;
+    color: #059669 !important;
+}
+
+/* Hosting promo gradient */
+.hosting-plans__promo {
+    background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+}
+.vps__visual {
+    background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+}
+.cta-banner {
+    background: linear-gradient(135deg, #0f0a1e, #1e1046, #0d1a2d) !important;
+}
+.stats {
+    background: linear-gradient(135deg, #0f0a1e, #1e1046, #0d1a2d) !important;
+}
+
+/* Mega menu promo */
+.main-nav__mega-promo {
+    background: linear-gradient(135deg, #7c3aed, #06b6d4) !important;
+}
+
+/* Nav login hover */
+.main-nav__login:hover {
+    border-color: #34d399 !important;
+    background: #34d399 !important;
+}
+
+/* Brand dot — green glow */
+.main-nav__brand-dot, .footer__brand-dot {
+    background: #34d399 !important;
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.6);
+}
+
+/* Dropdown link hover */
+.main-nav__dropdown-link:hover { color: #7c3aed !important; }
+.main-nav__dropdown-link i { color: #7c3aed !important; }
+
+/* Footer contact icon */
+.footer__contact-item i { color: #34d399 !important; }
+
+/* Promo cards — aurora gradients */
+.promo-card--1 { background: linear-gradient(135deg, #7c3aed, #8b5cf6) !important; }
+.promo-card--2 { background: linear-gradient(135deg, #059669, #34d399) !important; }
+.promo-card--3 { background: linear-gradient(135deg, #0891b2, #06b6d4) !important; }
+.promo-card--4 { background: linear-gradient(135deg, #0f0a1e, #1e1046) !important; }
+
+/* Stats accent */
+.stats__number span { color: #34d399 !important; }
+
+/* Infra card icons — aurora palette */
+.infra-card__icon--1 { background: rgba(139, 92, 246, 0.1) !important; color: #7c3aed !important; }
+.infra-card__icon--2 { background: rgba(52, 211, 153, 0.1) !important; color: #34d399 !important; }
+.infra-card__icon--3 { background: rgba(6, 182, 212, 0.1) !important; color: #06b6d4 !important; }
+.infra-card__icon--4 { background: rgba(139, 92, 246, 0.1) !important; color: #8b5cf6 !important; }
+.infra-card__icon--5 { background: rgba(244, 63, 94, 0.1) !important; color: #f43f5e !important; }
+.infra-card__icon--6 { background: rgba(52, 211, 153, 0.1) !important; color: #059669 !important; }
+
+/* VPS card badge */
+.vps-card__badge--popular { background: #7c3aed !important; }
+.vps-card__badge--value { background: #34d399 !important; }
+
+/* Domain search */
+.domain-search__bar:focus-within {
+    border-color: #7c3aed !important;
+    box-shadow: 0 8px 40px rgba(139, 92, 246, 0.15) !important;
+}
+.domain-search__btn {
+    background: linear-gradient(135deg, #8b5cf6, #06b6d4) !important;
+}
+.domain-search__ext:hover {
+    border-color: #7c3aed !important;
+    box-shadow: 0 8px 30px rgba(139, 92, 246, 0.12) !important;
+}
+
+/* Testimonial avatar colors */
+.testimonial-card__avatar--1 { background: #7c3aed !important; }
+.testimonial-card__avatar--2 { background: #06b6d4 !important; }
+.testimonial-card__avatar--3 { background: #34d399 !important; }
+
+/* Section backgrounds */
+.hosting-plans, .faq, .vps {
+    background: #faf5ff !important;
+}
+
+/* Aurora particle container */
+.aurora-glow {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1;
+}
+.aurora-band {
+    position: absolute;
+    width: 120%;
+    height: 60px;
+    left: -10%;
+    filter: blur(40px);
+    opacity: 0.15;
+    animation: auroraDrift 12s ease-in-out infinite alternate;
+}
+.aurora-band--1 {
+    top: 20%;
+    background: linear-gradient(90deg, transparent, #8b5cf6, #34d399, transparent);
+    animation-delay: 0s;
+}
+.aurora-band--2 {
+    top: 40%;
+    background: linear-gradient(90deg, transparent, #06b6d4, #8b5cf6, transparent);
+    animation-delay: 3s;
+    opacity: 0.1;
+}
+.aurora-band--3 {
+    top: 55%;
+    background: linear-gradient(90deg, transparent, #34d399, #06b6d4, transparent);
+    animation-delay: 6s;
+    opacity: 0.08;
+}
+@keyframes auroraDrift {
+    0% { transform: translateX(-5%) scaleY(1); opacity: 0.15; }
+    50% { transform: translateX(5%) scaleY(1.3); opacity: 0.2; }
+    100% { transform: translateX(-3%) scaleY(0.8); opacity: 0.12; }
+}
+
+/* Star particles */
+.aurora-star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+    animation: starTwinkle 4s ease-in-out infinite;
+}
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.8; }
+}

@@ -1,0 +1,38 @@
+{
+    "name": "Sunset",
+    "slug": "sunset",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Warm sunset theme — pink-orange gradients, soft curves, and a romantic golden-hour vibe.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#be185d",
+        "accent": "#f59e0b",
+        "nav_bg": "#831843",
+        "hero_bg_start": "#1a0511",
+        "hero_bg_mid": "#2d0920",
+        "hero_bg_end": "#1f0615",
+        "welcome_accent": "#f59e0b",
+        "footer_bg": "#831843"
+    },
+    "dark_colors": {
+        "body_bg": "#1a0511",
+        "card_bg": "#2d0920",
+        "text_color": "#fce7f3",
+        "heading_color": "#fdf2f8",
+        "muted_color": "#f9a8d4",
+        "border_color": "#831843",
+        "sidebar_bg": "#2d0920",
+        "sidebar_text": "#f9a8d4",
+        "input_bg": "#2d0920",
+        "input_border": "#9d174d",
+        "table_header_bg": "#2d0920",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Quicksand",
+        "heading": "Quicksand"
+    }
+}

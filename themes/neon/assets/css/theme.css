@@ -1,0 +1,130 @@
+/* ===== NEON THEME CSS ===== */
+/* Overrides default styles when Neon theme is active */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&display=swap');
+
+/* Font override */
+body {
+    font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.section-title, .hero__title, .hero__title-sub, h1, h2, h3, h4 {
+    font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Navigation */
+.main-nav {
+    background: rgba(4, 47, 30, 0.92) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.main-nav.scrolled {
+    background: rgba(4, 47, 30, 0.98) !important;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.4) !important;
+}
+
+/* Buttons: gradient */
+.btn-primary {
+    background: linear-gradient(135deg, #c084fc, #4ade80) !important;
+    box-shadow: 0 4px 20px rgba(74, 222, 128, 0.35) !important;
+}
+.btn-primary:hover {
+    box-shadow: 0 8px 30px rgba(74, 222, 128, 0.5) !important;
+}
+.btn-accent {
+    background: linear-gradient(135deg, #c084fc, #4ade80) !important;
+    box-shadow: 0 4px 20px rgba(192, 132, 252, 0.3) !important;
+}
+.btn-accent:hover {
+    box-shadow: 0 8px 30px rgba(192, 132, 252, 0.45) !important;
+}
+
+/* Cards: glassmorphism */
+.plan-card, .infra-card, .testimonial-card, .vps-card, .faq__item {
+    background: rgba(255,255,255,0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,0,0,0.06) !important;
+    transition: all 0.3s ease !important;
+}
+.plan-card:hover, .infra-card:hover, .testimonial-card:hover, .vps-card:hover {
+    background: rgba(255,255,255,0.95) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* Hero badge */
+.hero__badge {
+    background: rgba(192, 132, 252, 0.15) !important;
+    border-color: rgba(192, 132, 252, 0.3) !important;
+    color: #c084fc !important;
+}
+
+/* Hero title accent */
+.hero__title span {
+    color: #c084fc !important;
+}
+
+/* Hero stats */
+.hero__stat i {
+    color: #c084fc !important;
+}
+
+/* Callout cards */
+.hero__callout--1 i { color: #4ade80 !important; }
+.hero__callout--2 i { color: #c084fc !important; }
+
+/* Plan card badge */
+.plan-card__badge { background: linear-gradient(135deg, #c084fc, #4ade80) !important; }
+.plan-card__btn--primary {
+    background: linear-gradient(135deg, #c084fc, #4ade80) !important;
+}
+.plan-card__discount {
+    background: rgba(192, 132, 252, 0.1) !important;
+    color: #4ade80 !important;
+}
+
+/* Hosting promo gradient */
+.hosting-plans__promo {
+    background: linear-gradient(135deg, #4ade80, #c084fc) !important;
+}
+.vps__visual {
+    background: linear-gradient(135deg, #4ade80, #c084fc) !important;
+}
+.cta-banner {
+    background: linear-gradient(135deg, #042f1e, #042f1e) !important;
+}
+
+/* Mega menu promo */
+.main-nav__mega-promo {
+    background: linear-gradient(135deg, #4ade80, #c084fc) !important;
+}
+
+/* Nav login hover */
+.main-nav__login:hover {
+    border-color: #c084fc !important;
+    background: #c084fc !important;
+}
+
+/* Brand dot */
+.main-nav__brand-dot, .footer__brand-dot {
+    background: #c084fc !important;
+}
+
+/* Dropdown link hover */
+.main-nav__dropdown-link:hover { color: #4ade80 !important; }
+.main-nav__dropdown-link i { color: #4ade80 !important; }
+
+/* Footer contact icon */
+.footer__contact-item i { color: #c084fc !important; }
+
+/* Promo cards */
+.promo-card--1 { background: linear-gradient(135deg, #4ade80, #c084fc) !important; }
+.promo-card--2 { background: linear-gradient(135deg, #042f1e, #042f1e) !important; }
+
+/* Stats accent */
+.stats__number span { color: #c084fc !important; }
+
+/* VPS card badge */
+.vps-card__badge--popular { background: #4ade80 !important; }
+.vps-card__badge--value { background: #c084fc !important; }

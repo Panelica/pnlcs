@@ -1,0 +1,38 @@
+{
+    "name": "Mint",
+    "slug": "mint",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Fresh mint green theme — airy, clean, and uplifting design with a light, modern feel.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#059669",
+        "accent": "#6ee7b7",
+        "nav_bg": "#065f46",
+        "hero_bg_start": "#021a12",
+        "hero_bg_mid": "#052e1e",
+        "hero_bg_end": "#031f14",
+        "welcome_accent": "#6ee7b7",
+        "footer_bg": "#065f46"
+    },
+    "dark_colors": {
+        "body_bg": "#021a12",
+        "card_bg": "#0a3324",
+        "text_color": "#a7f3d0",
+        "heading_color": "#ecfdf5",
+        "muted_color": "#6ee7b7",
+        "border_color": "#065f46",
+        "sidebar_bg": "#0a3324",
+        "sidebar_text": "#6ee7b7",
+        "input_bg": "#0a3324",
+        "input_border": "#047857",
+        "table_header_bg": "#0a3324",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Rubik",
+        "heading": "Rubik"
+    }
+}

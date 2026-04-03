@@ -4,7 +4,6 @@ use App\Http\Controllers\Api\ClientApiController;
 use App\Http\Controllers\Api\DomainApiController;
 use App\Http\Controllers\Api\InvoiceApiController;
 use App\Http\Controllers\Api\OrderApiController;
-use App\Http\Controllers\Api\ProductApiController;
 use App\Http\Controllers\Api\ServiceApiController;
 use App\Http\Controllers\Api\SystemApiController;
 use App\Http\Controllers\Api\TicketApiController;

@@ -1,0 +1,38 @@
+{
+    "name": "Ember",
+    "slug": "ember",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Bold fire-red theme — energetic gradients, strong typography, and a fierce visual identity.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#dc2626",
+        "accent": "#f97316",
+        "nav_bg": "#7f1d1d",
+        "hero_bg_start": "#1a0505",
+        "hero_bg_mid": "#2d0a0a",
+        "hero_bg_end": "#1f0707",
+        "welcome_accent": "#f97316",
+        "footer_bg": "#7f1d1d"
+    },
+    "dark_colors": {
+        "body_bg": "#1a0505",
+        "card_bg": "#2d0a0a",
+        "text_color": "#fecaca",
+        "heading_color": "#fef2f2",
+        "muted_color": "#fca5a5",
+        "border_color": "#450a0a",
+        "sidebar_bg": "#2d0a0a",
+        "sidebar_text": "#fca5a5",
+        "input_bg": "#2d0a0a",
+        "input_border": "#7f1d1d",
+        "table_header_bg": "#2d0a0a",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Outfit",
+        "heading": "Outfit"
+    }
+}

@@ -82,6 +82,26 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::post("settings/appearance/logo", [SettingController::class, "uploadLogo"])->name("settings.appearance.logo");
     Route::post("settings/appearance/favicon", [SettingController::class, "uploadFavicon"])->name("settings.appearance.favicon");
     Route::delete("settings/appearance/logo", [SettingController::class, "removeLogo"])->name("settings.appearance.logo.remove");
+    Route::delete("settings/appearance/favicon", [SettingController::class, "removeFavicon"])->name("settings.appearance.favicon.remove");
+
+    // Homepage Builder
+    Route::get("settings/appearance/sections", [SettingController::class, "sectionsList"])->name("settings.appearance.sections");
+    Route::post("settings/appearance/sections/reorder", [SettingController::class, "sectionsReorder"])->name("settings.appearance.sections.reorder");
+    Route::put("settings/appearance/sections/{section}", [SettingController::class, "sectionUpdate"])->name("settings.appearance.sections.update");
+    Route::get("settings/appearance/sections/{slug}/content", [SettingController::class, "sectionContent"])->name("settings.appearance.sections.content");
+    Route::post("settings/appearance/sections/{slug}/content", [SettingController::class, "sectionContentSave"])->name("settings.appearance.sections.content.save");
+
+    // White-Label
+    Route::post("settings/appearance/whitelabel", [SettingController::class, "whitelabelSave"])->name("settings.appearance.whitelabel");
+
+    // Dark Mode
+    Route::post("settings/appearance/darkmode", [SettingController::class, "darkModeSave"])->name("settings.appearance.darkmode");
+
+    // Theme CRUD (WordPress-style)
+    Route::post("settings/appearance/theme/activate", [SettingController::class, "activateTheme"])->name("settings.appearance.theme.activate");
+    Route::post("settings/appearance/theme/install", [SettingController::class, "installTheme"])->name("settings.appearance.theme.install");
+    Route::delete("settings/appearance/theme/{slug}", [SettingController::class, "deleteTheme"])->name("settings.appearance.theme.delete");
+    Route::get("settings/appearance/theme/{slug}/download", [SettingController::class, "downloadTheme"])->name("settings.appearance.theme.download");
     Route::post("my-account", [SettingController::class, "updateMyAccount"])->name("my-account.update");
 
     // Reports

@@ -1,0 +1,42 @@
+{
+    "name": "Starter",
+    "slug": "starter",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Professional blue theme \u2014 the default PNLCS experience. Clean, modern, and trusted.",
+    "screenshot": "screenshot.svg",
+    "supports": [
+        "dark-mode",
+        "white-label",
+        "section-builder"
+    ],
+    "colors": {
+        "primary": "#1a4d80",
+        "accent": "#337ab7",
+        "nav_bg": "#1a4d80",
+        "hero_bg_start": "#0c1222",
+        "hero_bg_mid": "#162447",
+        "hero_bg_end": "#1a1a3e",
+        "welcome_accent": "#10b981",
+        "footer_bg": "#1a4d80"
+    },
+    "dark_colors": {
+        "body_bg": "#0f172a",
+        "card_bg": "#1e293b",
+        "text_color": "#e2e8f0",
+        "heading_color": "#f1f5f9",
+        "muted_color": "#94a3b8",
+        "border_color": "#334155",
+        "sidebar_bg": "#1e293b",
+        "sidebar_text": "#cbd5e1",
+        "input_bg": "#1e293b",
+        "input_border": "#475569",
+        "table_header_bg": "#1e293b",
+        "card_shadow": "rgba(0,0,0,0.3)",
+        "overlay_bg": "rgba(0,0,0,0.7)"
+    },
+    "fonts": {
+        "primary": "Inter",
+        "heading": "Inter"
+    }
+}

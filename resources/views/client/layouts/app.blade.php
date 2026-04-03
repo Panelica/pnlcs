@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ request()->cookie('pnlcs_theme') === 'dark' ? 'dark' : 'light' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -267,6 +267,35 @@
         .gap-16{gap:16px}
         .w-full{width:100%}
         code{font-family:monospace}
+    
+        /* ===== DARK MODE ===== */
+        :root[data-theme="dark"] {
+            --bg:#0f172a; --card:#1e293b; --border:#334155;
+            --text:#e2e8f0; --muted:#94a3b8;
+        }
+        :root[data-theme="dark"] body { background:var(--bg) !important; color:var(--text) !important; }
+        :root[data-theme="dark"] .pn-navbar { background:#1e293b !important; border-color:#334155 !important; }
+        :root[data-theme="dark"] .pn-card { background:#1e293b !important; border-color:#334155 !important; }
+        :root[data-theme="dark"] .pn-table th { background:#1e293b !important; }
+        :root[data-theme="dark"] .pn-table td { border-color:#334155 !important; }
+        :root[data-theme="dark"] .pn-table tbody tr:hover td { background:#334155 !important; }
+        :root[data-theme="dark"] .form-control { background:#1e293b !important; border-color:#475569 !important; color:#e2e8f0 !important; }
+        :root[data-theme="dark"] .pn-footer { background:#1e293b !important; border-color:#334155 !important; color:#94a3b8 !important; }
+        :root[data-theme="dark"] .pn-dropdown { background:#1e293b !important; border-color:#334155 !important; }
+        :root[data-theme="dark"] .pn-dropdown a { color:#e2e8f0 !important; }
+        :root[data-theme="dark"] .pn-dropdown a:hover { background:#334155 !important; }
+        :root[data-theme="dark"] .pn-card-title { color:#e2e8f0 !important; }
+        :root[data-theme="dark"] .pn-page-title { color:#e2e8f0 !important; }
+        :root[data-theme="dark"] .pn-stat-val { color:#e2e8f0 !important; }
+        :root[data-theme="dark"] .pn-detail-list .val { color:#e2e8f0 !important; }
+        :root[data-theme="dark"] .pn-detail-list li { border-color:#334155 !important; }
+        :root[data-theme="dark"] .pn-msg { background:#1e293b !important; border-color:#334155 !important; }
+        :root[data-theme="dark"] .pn-msg-head { background:#0f172a !important; }
+        :root[data-theme="dark"] .pn-msg-body { color:#cbd5e1 !important; }
+        :root[data-theme="dark"] .pn-alert-info { background:#1e3a5f !important; border-color:#2563eb !important; }
+        :root[data-theme="dark"] .pn-alert-success { background:#14532d !important; border-color:#16a34a !important; }
+        :root[data-theme="dark"] .pn-alert-warning { background:#451a03 !important; border-color:#d97706 !important; }
+        :root[data-theme="dark"] .pn-alert-error { background:#450a0a !important; border-color:#dc2626 !important; }
     </style>
     @yield("styles")
 </head>
@@ -383,6 +412,12 @@
         </div>
 
         <div class="pn-nav-right">
+                @if($darkModeEnabled ?? false)
+                <button onclick="toggleDarkMode()" class="dark-toggle" title="Toggle dark mode" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--muted);font-size:16px;transition:all 0.15s;">
+                    <i class="ri-sun-line" id="lightIcon" style="display:none;"></i>
+                    <i class="ri-moon-line" id="darkIcon"></i>
+                </button>
+                @endif
             @auth
             <div class="pn-nav-item">
                 <a class="pn-user-btn pn-nav-link">
@@ -505,6 +540,12 @@ document.addEventListener("click", function(e) {
     }
 });
 </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    <script>
+    function toggleDarkMode(){var d=document.documentElement.getAttribute('data-theme')==='dark';var n=d?'light':'dark';document.documentElement.setAttribute('data-theme',n);document.cookie='pnlcs_theme='+n+';path=/;max-age=31536000;SameSite=Lax';var li=document.getElementById('lightIcon'),di=document.getElementById('darkIcon');if(li&&di){li.style.display=d?'':'none';di.style.display=d?'none':'';}}
+    (function(){var m=document.cookie.match(/pnlcs_theme=(\w+)/);if(m&&m[1]==='dark'){document.documentElement.setAttribute('data-theme','dark');var li=document.getElementById('lightIcon'),di=document.getElementById('darkIcon');if(li)li.style.display='';if(di)di.style.display='none';}})();
+    </script>
 </body>
 </html>
 <script>

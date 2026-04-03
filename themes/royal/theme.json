@@ -1,0 +1,38 @@
+{
+    "name": "Royal",
+    "slug": "royal",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Premium gold and navy theme — regal aesthetics, luxurious gradients, and commanding presence.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#1e3a5f",
+        "accent": "#eab308",
+        "nav_bg": "#172554",
+        "hero_bg_start": "#050d1f",
+        "hero_bg_mid": "#0c1a38",
+        "hero_bg_end": "#091228",
+        "welcome_accent": "#eab308",
+        "footer_bg": "#172554"
+    },
+    "dark_colors": {
+        "body_bg": "#050d1f",
+        "card_bg": "#0c1a38",
+        "text_color": "#dbeafe",
+        "heading_color": "#eff6ff",
+        "muted_color": "#93c5fd",
+        "border_color": "#1e3a5f",
+        "sidebar_bg": "#0c1a38",
+        "sidebar_text": "#93c5fd",
+        "input_bg": "#0c1a38",
+        "input_border": "#1e40af",
+        "table_header_bg": "#0c1a38",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Cormorant Garamond",
+        "heading": "Cormorant Garamond"
+    }
+}

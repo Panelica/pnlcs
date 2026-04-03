@@ -1,0 +1,38 @@
+{
+    "name": "Midnight",
+    "slug": "midnight",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Deep night blue theme — minimal dark design, subtle indigo accents, and sophisticated elegance.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#1e1b4b",
+        "accent": "#6366f1",
+        "nav_bg": "#0f0d2e",
+        "hero_bg_start": "#050414",
+        "hero_bg_mid": "#0c0a2a",
+        "hero_bg_end": "#080624",
+        "welcome_accent": "#6366f1",
+        "footer_bg": "#0f0d2e"
+    },
+    "dark_colors": {
+        "body_bg": "#050414",
+        "card_bg": "#110e36",
+        "text_color": "#c7d2fe",
+        "heading_color": "#eef2ff",
+        "muted_color": "#a5b4fc",
+        "border_color": "#1e1b4b",
+        "sidebar_bg": "#110e36",
+        "sidebar_text": "#a5b4fc",
+        "input_bg": "#110e36",
+        "input_border": "#312e81",
+        "table_header_bg": "#110e36",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Poppins",
+        "heading": "Poppins"
+    }
+}
