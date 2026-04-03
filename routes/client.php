@@ -19,9 +19,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('client')->name('client.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('login', [AuthController::class, 'login'])->name('login.submit');
+    Route::post("login", [AuthController::class, "login"])->middleware("throttle:30,5")->name("login.submit");
     Route::get('register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('register', [AuthController::class, 'register'])->name('register.submit');
+
+    // Password Reset
+    Route::get("forgot-password", [AuthController::class, "showForgotPassword"])->name("password.request");
+    Route::post("forgot-password", [AuthController::class, "sendResetLink"])->name("password.email");
+    Route::get("reset-password/{token}", [AuthController::class, "showResetForm"])->name("password.reset");
+    Route::post("reset-password", [AuthController::class, "resetPassword"])->name("password.update.reset");
 
     // Knowledge Base (public)
     Route::get('knowledgebase', [KbController::class, 'index'])->name('kb.index');
@@ -33,7 +39,7 @@ Route::prefix('client')->name('client.')->group(function () {
 
     // Contact (public)
     Route::get('contact', [ContactController::class, 'show'])->name('contact');
-    Route::post('contact', [ContactController::class, 'submit'])->name('contact.submit');
+    Route::post('contact', [ContactController::class, 'submit'])->middleware('throttle:5,1')->name('contact.submit');
 
     // Domain Search (public — no auth required)
     Route::get('domain-search', [DomainSearchController::class, 'index'])->name('domain.search');
@@ -104,6 +110,9 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::put('account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
         Route::get('account/contacts', [AccountController::class, 'contacts'])->name('account.contacts');
         Route::post('account/contacts', [AccountController::class, 'storeContact'])->name('account.contacts.store');
+        Route::delete('account/contacts/{contact}', [AccountController::class, 'destroyContact'])->name('account.contacts.destroy');
+        Route::get("account/payment-methods", [AccountController::class, "paymentMethods"])->name("account.payment_methods");
         Route::get('account/security', [AccountController::class, 'security'])->name('account.security');
     });
 });
+

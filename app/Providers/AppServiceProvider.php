@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Services\Module\ModuleRegistry;
+use App\View\Composers\ThemeComposer;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,5 +32,14 @@ class AppServiceProvider extends ServiceProvider
         // Registrar modules
         $registry->registerRegistrar("manual", \Modules\Registrars\Manual\ManualRegistrar::class);
         $registry->registerRegistrar("enom",   \Modules\Registrars\Enom\EnomRegistrar::class);
+
+        // Theme Composer — injects CSS variables + branding into layouts
+        View::composer([
+            'admin.layouts.app',
+            'client.layouts.app',
+            'welcome',
+            'client.auth.login',
+            'client.auth.register',
+        ], ThemeComposer::class);
     }
 }

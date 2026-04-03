@@ -159,7 +159,7 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
         <tbody>
         @foreach($services as $service)
         <tr>
-            <td><a href="{{ route('admin.services.show', $service) }}" style="color:#337ab7;">{{ $service->product->name ?? 'N/A' }}</a></td>
+            <td><a href="{{ route('admin.services.show', $service) }}" style="color:#337ab7;">{{ $service->product?->name ?? 'N/A' }}</a></td>
             <td>{{ $service->domain ?? '-' }}</td>
             <td>{{ $service->billing_cycle }}</td>
             <td>${{ number_format($service->amount, 2) }}</td>

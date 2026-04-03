@@ -55,7 +55,7 @@
                     <option value="">-- None --</option>
                     @if(isset($services))
                         @foreach($services as $svc)
-                        <option value="{{ $svc->id }}">{{ $svc->product->name ?? "Service" }}{{ $svc->domain ? " (".$svc->domain.")" : "" }}</option>
+                        <option value="{{ $svc->id }}">{{ $svc->product?->name ?? "Service" }}{{ $svc->domain ? " (".$svc->domain.")" : "" }}</option>
                         @endforeach
                     @endif
                 </select>

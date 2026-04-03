@@ -225,6 +225,7 @@ class ConfigController extends Controller
 
     public function storeTax(Request $request)
     {
+        $request->merge(["tax_rate" => $request->tax_rate ?? $request->rate]);
         $v = $request->validate([
             'name'     => 'required',
             'tax_rate' => 'required|numeric|min:0|max:100',
@@ -238,6 +239,7 @@ class ConfigController extends Controller
 
     public function updateTax(Request $request, TaxRule $taxRule)
     {
+        $request->merge(["tax_rate" => $request->tax_rate ?? $request->rate]);
         $v = $request->validate([
             'name'     => 'required',
             'tax_rate' => 'required|numeric|min:0|max:100',
@@ -425,7 +427,7 @@ class ConfigController extends Controller
 
     public function storeAnnouncement(Request $request)
     {
-        $v = $request->validate(['title' => 'required', 'announcement' => 'required']);
+        $v = $request->validate(['title' => 'required']); $v['announcement'] = $request->body ?? $request->announcement ?? ''; if (empty($v['announcement'])) return back()->withErrors(['body' => 'Content is required']);
         Announcement::create($v);
         return back()->with('success', 'Announcement published.');
     }
@@ -605,7 +607,7 @@ class ConfigController extends Controller
 
     // Announcements
     public function updateAnnouncement(Request $request, Announcement $announcement) {
-        $announcement->update($request->validate(['title'=>'required','announcement'=>'required','published'=>'boolean']));
+        $v = $request->validate(['title'=>'required','published'=>'boolean']); $v['announcement'] = $request->body ?? $request->announcement ?? $announcement->announcement; $announcement->update($v);
         return back()->with('success', 'Announcement updated.');
     }
     public function destroyAnnouncement(Announcement $announcement) {

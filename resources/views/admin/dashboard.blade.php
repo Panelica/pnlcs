@@ -110,7 +110,7 @@
             @forelse($recentOrders as $order)
             <a href="{{ route("admin.orders.show", $order) }}" style="display:block;padding:10px 16px;border-bottom:1px solid #f0f0f0;text-decoration:none;color:inherit;">
                 <div style="font-size:13px;font-weight:500;color:#333;">#{{ $order->order_num }}</div>
-                <div style="font-size:11px;color:#999;margin-top:2px;">{{ $order->client->full_name ?? "N/A" }} &middot; ${{ number_format($order->amount, 2) }} &middot; {{ ucfirst($order->status) }}</div>
+                <div style="font-size:11px;color:#999;margin-top:2px;">{{ $order->client?->full_name ?? "N/A" ?? "N/A" }} &middot; ${{ number_format($order->amount, 2) }} &middot; {{ ucfirst($order->status) }}</div>
             </a>
             @empty
             <p style="padding:16px;font-size:13px;color:#999;margin:0;">No orders yet.</p>

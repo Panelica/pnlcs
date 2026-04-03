@@ -8,22 +8,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @if(!empty($customFavicon))
+    <link rel="icon" href="{{ $customFavicon }}" type="image/png">
+    @endif
+    @if(!empty($themeCssVars))
+    <style id="theme-vars">{!! $themeCssVars !!}</style>
+    @endif
     <style>
         *{box-sizing:border-box;margin:0;padding:0}
         :root{
-            --primary:#1a4d80;
-            --primary-light:#e8f0fb;
-            --primary-dark:#143d66;
-            --accent:#06d6a0;
+            --primary:var(--theme-primary, #1a4d80);
+            --primary-light:var(--theme-primary-light, #e8f0fb);
+            --primary-dark:var(--theme-primary-dark, #143d66);
+            --accent:var(--theme-success, #06d6a0);
             --accent-dark:#05b589;
             --danger:#ef4444;
             --warning:#f59e0b;
-            --success:#10b981;
+            --success:var(--theme-success, #10b981);
             --bg:#f8fafc;
             --card:#ffffff;
-            --border:#e2e8f0;
-            --text:#1e293b;
-            --muted:#64748b;
+            --border:var(--theme-border-color, #e2e8f0);
+            --text:var(--theme-text-color, #1e293b);
+            --muted:var(--theme-muted-color, #64748b);
             --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
             --shadow-md:0 4px 12px rgba(0,0,0,0.10),0 2px 4px rgba(0,0,0,0.06);
             --radius:12px;
@@ -74,12 +80,12 @@
         .pn-card-body-flush{padding:0}
 
         /* ─── PAGE HEADER ─── */
-        .pn-page-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+        .pn-page-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
         .pn-page-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
         .pn-page-subtitle{font-size:13px;color:var(--muted);margin-top:3px}
 
         /* ─── BUTTONS ─── */
-        .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;font-size:13.5px;font-weight:600;border-radius:var(--radius-sm);border:none;cursor:pointer;text-decoration:none;transition:all 0.15s;line-height:1.3;white-space:nowrap}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;font-size:13.5px;font-weight:600;border-radius:var(--radius-sm);border:none;cursor:pointer;text-decoration:none;transition:all 0.15s;line-height:1.3;white-space:nowrap}
         .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark);color:#fff}
         .btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-dark);color:#fff}
         .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--primary);background:var(--primary-light)}
@@ -87,6 +93,7 @@
         .btn-success{background:var(--success);color:#fff}.btn-success:hover{background:#059669;color:#fff}
         .btn-sm{padding:6px 12px;font-size:12.5px}
         .btn-xs{padding:4px 10px;font-size:12px}
+        .btn svg,.btn i{flex-shrink:0;line-height:1}
 
         /* ─── BADGES ─── */
         .badge{display:inline-flex;align-items:center;padding:3px 10px;font-size:11.5px;font-weight:600;border-radius:999px;line-height:1.4}
@@ -267,7 +274,7 @@
 
 <nav class="pn-navbar">
     <div class="pn-navbar-inner">
-        <a href="{{ route("client.home") }}" class="pn-brand">PNLCS <span class="pn-brand-dot"></span></a>
+        <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="Logo" style="max-height:32px;">@else PNLCS <span class="pn-brand-dot"></span>@endif</a>
 
         <div class="pn-nav">
             <div class="pn-nav-item">
@@ -500,3 +507,14 @@ document.addEventListener("click", function(e) {
 </script>
 </body>
 </html>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('form').forEach(function(f){
+        f.addEventListener('submit',function(){
+            var btn=f.querySelector('button[type=submit],input[type=submit]');
+            if(btn&&!btn.disabled){btn.disabled=true;btn.classList.add('submitting');
+            setTimeout(function(){btn.disabled=false;btn.classList.remove('submitting');},5000);}
+        });
+    });
+});
+</script>

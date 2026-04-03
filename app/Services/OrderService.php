@@ -17,7 +17,8 @@ class OrderService
 {
     public function __construct(
         protected InvoiceService $invoiceService,
-        protected InvoiceGenerationService $invoiceGenerationService
+        protected InvoiceGenerationService $invoiceGenerationService,
+        protected ProvisioningService $provisioning
     ) {}
 
     /**
@@ -89,6 +90,19 @@ class OrderService
 
             // Link invoice to order
             $order->update(['invoice_id' => $invoice->id]);
+
+            // Auto-provision: trigger module create for each service
+            $services = Service::where("order_id", $order->id)->where("status", "Active")->with("product")->get();
+            foreach ($services as $svc) {
+                if ($svc->product && $svc->product->server_type) {
+                    try {
+                        $this->provisioning->createAccount($svc);
+                        Log::info("Auto-provisioned service #" . $svc->id);
+                    } catch (\Throwable $e) {
+                        Log::error("Auto-provision failed for service #" . $svc->id . ": " . $e->getMessage());
+                    }
+                }
+            }
 
             return $order->fresh();
         });

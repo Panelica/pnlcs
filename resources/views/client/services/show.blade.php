@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", $service->product->name ?? "Service")
+@section("title", $service->product?->name ?? "Service")
 @section("content")
 
 <a href="{{ route("client.services.index") }}" class="pn-back">
@@ -9,7 +9,7 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">{{ $service->product->name ?? "Service" }}</h1>
+        <h1 class="pn-page-title">{{ $service->product?->name ?? "Service" }}</h1>
         @if($service->domain)<p class="pn-page-subtitle">{{ $service->domain }}</p>@endif
     </div>
     <span class="badge badge-{{ strtolower($service->status) }}" style="font-size:13px;padding:5px 14px">{{ ucfirst($service->status) }}</span>
@@ -20,7 +20,7 @@
         <div class="pn-card-header"><span class="pn-card-title">Service Details</span></div>
         <div class="pn-card-body">
             <ul class="pn-detail-list">
-                <li><span class="key">Product</span><span class="val">{{ $service->product->name ?? "N/A" }}</span></li>
+                <li><span class="key">Product</span><span class="val">{{ $service->product?->name ?? "N/A" }}</span></li>
                 <li><span class="key">Billing Cycle</span><span class="val" style="text-transform:capitalize">{{ $service->billing_cycle ?? "N/A" }}</span></li>
                 <li><span class="key">Amount</span><span class="val">${{ number_format($service->amount, 2) }} / {{ $service->billing_cycle }}</span></li>
                 <li><span class="key">Next Due Date</span><span class="val">{{ $service->next_due_date?->format("d M Y") ?? "N/A" }}</span></li>

@@ -16,7 +16,7 @@
         <div><strong style="color:#777;">Department:</strong> {{ $ticket->department->name ?? 'N/A' }}</div>
         <div><strong style="color:#777;">Client:</strong>
             @if($ticket->client)
-            <a href="{{ route('admin.clients.show', $ticket->client) }}" style="color:#337ab7;">{{ $ticket->client->full_name ?? $ticket->name ?? $ticket->email }}</a>
+            <a href="{{ $ticket->client ? route("admin.clients.show", $ticket->client) : "#" }}" style="color:#337ab7;">{{ $ticket->client?->full_name ?? $ticket->name ?? $ticket->email }}</a>
             @else
             {{ $ticket->name ?? $ticket->email }}
             @endif
@@ -29,7 +29,7 @@
 {{-- Original Message --}}
 <div class="card" style="margin-bottom:10px;">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-        <strong>{{ $ticket->name ?? $ticket->client->full_name ?? $ticket->email }}</strong>
+        <strong>{{ $ticket->name ?? $ticket->client?->full_name ?? $ticket->email }}</strong>
         <span style="font-size:12px;color:#777;">{{ $ticket->created_at->format('d M Y H:i') }}</span>
     </div>
     <div class="card-body" style="font-size:13px;line-height:1.6;color:#333;">{!! nl2br(e($ticket->message)) !!}</div>
@@ -39,7 +39,7 @@
 @foreach($ticket->replies as $reply)
 <div style="margin-bottom:10px;border-radius:4px;overflow:hidden;border:1px solid {{ $reply->admin ? '#bce8f1' : '#ddd' }};border-left:4px solid {{ $reply->admin ? '#31708f' : '#ccc' }};">
     <div style="padding:8px 15px;background:{{ $reply->admin ? '#d9edf7' : '#f9f9f9' }};display:flex;justify-content:space-between;align-items:center;">
-        <strong style="font-size:13px;">{{ $reply->admin ? 'Staff: '.$reply->admin : ($ticket->client->full_name ?? $ticket->name ?? $ticket->email) }}</strong>
+        <strong style="font-size:13px;">{{ $reply->admin ? 'Staff: '.$reply->admin : ($ticket->client?->full_name ?? $ticket->name ?? $ticket->email) }}</strong>
         <span style="font-size:12px;color:#777;">{{ $reply->created_at->format('d M Y H:i') }}</span>
     </div>
     <div style="padding:12px 15px;font-size:13px;line-height:1.6;color:#333;background:#fff;">{!! nl2br(e($reply->message)) !!}</div>

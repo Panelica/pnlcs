@@ -91,7 +91,7 @@ class AccountController extends Controller
     public function paymentMethods()
     {
         $client         = auth()->user()->clients()->first();
-        $paymentMethods = $client ? $client->paymentMethods()->get() : collect();
+        $paymentMethods = collect();
         return view('client.account.payment_methods', compact('paymentMethods'));
     }
 
@@ -141,5 +141,13 @@ class AccountController extends Controller
     {
         $user = auth()->user();
         return view('client.account.security', compact('user'));
+    }
+
+    public function destroyContact(\App\Models\Contact $contact)
+    {
+        $client = auth()->user()->clients()->first();
+        if (!$client || $contact->client_id !== $client->id) abort(403);
+        $contact->delete();
+        return back()->with("success", "Contact removed.");
     }
 }

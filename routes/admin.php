@@ -18,7 +18,7 @@ use App\Http\Controllers\Admin\WhoisController;
 use Illuminate\Support\Facades\Route;
 
 Route::get("/admin/login", [AuthController::class, "showLogin"])->name("admin.login");
-Route::post("/admin/login", [AuthController::class, "login"])->name("admin.login.submit");
+Route::post("/admin/login", [AuthController::class, "login"])->middleware("throttle:30,5")->name("admin.login.submit");
 
 Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(function () {
     Route::get("/", [DashboardController::class, "index"])->name("dashboard");
@@ -75,6 +75,13 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::post("settings", [SettingController::class, "updateGeneral"])->name("settings.general.update");
     Route::post("settings/test-email", [SettingController::class, "testEmail"])->name("settings.test-email");
     Route::get("my-account", [SettingController::class, "myAccount"])->name("my-account");
+
+    // Appearance / Theme
+    Route::get("settings/appearance", [SettingController::class, "appearance"])->name("settings.appearance");
+    Route::post("settings/appearance", [SettingController::class, "updateAppearance"])->name("settings.appearance.update");
+    Route::post("settings/appearance/logo", [SettingController::class, "uploadLogo"])->name("settings.appearance.logo");
+    Route::post("settings/appearance/favicon", [SettingController::class, "uploadFavicon"])->name("settings.appearance.favicon");
+    Route::delete("settings/appearance/logo", [SettingController::class, "removeLogo"])->name("settings.appearance.logo.remove");
     Route::post("my-account", [SettingController::class, "updateMyAccount"])->name("my-account.update");
 
     // Reports

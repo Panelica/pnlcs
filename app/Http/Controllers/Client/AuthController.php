@@ -78,4 +78,48 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
         return redirect()->route("client.login");
     }
+
+    public function showForgotPassword()
+    {
+        return view("client.auth.forgot-password");
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        $request->validate(["email" => "required|email"]);
+        $user = User::where("email", $request->email)->first();
+        if (!$user) {
+            return back()->with("success", "If an account exists with that email, a password reset link has been sent.");
+        }
+        $token = \Illuminate\Support\Str::random(64);
+        \Illuminate\Support\Facades\DB::table("password_reset_tokens")->updateOrInsert(
+            ["email" => $request->email],
+            ["token" => Hash::make($token), "created_at" => now()]
+        );
+        \Illuminate\Support\Facades\Log::info("Password reset for " . $request->email . ": " . $token);
+        return back()->with("success", "If an account exists with that email, a password reset link has been sent.");
+    }
+
+    public function showResetForm(Request $request, string $token)
+    {
+        return view("client.auth.reset-password", ["token" => $token, "email" => $request->email]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate(["token"=>"required","email"=>"required|email","password"=>"required|min:8|confirmed"]);
+        $record = \Illuminate\Support\Facades\DB::table("password_reset_tokens")->where("email", $request->email)->first();
+        if (!$record || !Hash::check($request->token, $record->token)) {
+            return back()->withErrors(["email" => "Invalid or expired reset token."]);
+        }
+        if (now()->diffInMinutes($record->created_at) > 60) {
+            return back()->withErrors(["email" => "Reset link expired. Request a new one."]);
+        }
+        $user = User::where("email", $request->email)->first();
+        if (!$user) return back()->withErrors(["email" => "User not found."]);
+        $user->password = Hash::make($request->password);
+        $user->save();
+        \Illuminate\Support\Facades\DB::table("password_reset_tokens")->where("email", $request->email)->delete();
+        return redirect()->route("client.login")->with("success", "Password reset successfully. Please log in.");
+    }
 }

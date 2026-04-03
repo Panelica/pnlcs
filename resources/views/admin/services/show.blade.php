@@ -1,9 +1,9 @@
 @extends('admin.layouts.app')
-@section('title', ($service->product->name ?? 'Service') . ($service->domain ? ' - ' . $service->domain : ''))
+@section('title', ($service->product?->name ?? 'Service') . ($service->domain ? ' - ' . $service->domain : ''))
 @section('content')
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>
-        {{ $service->product->name ?? 'Service #'.$service->id }}
+        {{ $service->product?->name ?? 'Service #'.$service->id }}
         @if($service->domain) &mdash; <span style="font-family:monospace;font-size:18px;">{{ $service->domain }}</span>@endif
         <span class="badge-{{ strtolower($service->status) }}" style="font-size:13px;vertical-align:middle;margin-left:8px;">{{ ucfirst($service->status) }}</span>
     </h1>
@@ -16,7 +16,7 @@
         <div class="panel-heading panel-primary">Service Info</div>
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                <tr><td style="padding:5px 0;color:#777;width:40%;">Product</td><td style="padding:5px 0;font-weight:600;">{{ $service->product->name ?? 'N/A' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;width:40%;">Product</td><td style="padding:5px 0;font-weight:600;">{{ $service->product?->name ?? 'N/A' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">Domain</td><td style="padding:5px 0;font-family:monospace;font-size:12px;">{{ $service->domain ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">Username</td><td style="padding:5px 0;font-family:monospace;">{{ $service->username ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">Client</td><td style="padding:5px 0;"><a href="{{ route('admin.clients.show', $service->client_id) }}" style="color:#337ab7;">{{ $service->client->full_name ?? 'N/A' }}</a></td></tr>
@@ -32,7 +32,7 @@
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
                 <tr><td style="padding:5px 0;color:#777;width:40%;">Server</td><td style="padding:5px 0;font-weight:600;">{{ $service->server->name ?? 'None assigned' }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">Module</td><td style="padding:5px 0;">{{ $service->product->server_type ?? 'None' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">Module</td><td style="padding:5px 0;">{{ $service->product?->server_type ?? 'None' }}</td></tr>
                 @if($service->suspension_date)
                 <tr><td style="padding:5px 0;color:#777;">Suspended</td><td style="padding:5px 0;color:#d9534f;">{{ $service->suspension_date->format('d M Y') }}</td></tr>
                 @endif
@@ -117,7 +117,7 @@
                 <button type="submit" class="btn btn-default btn-sm">Change Password</button>
             </form>
         </div>
-        <p style="font-size:11px;color:#999;">Module: <span style="font-family:monospace;">{{ $service->product->server_type }}</span></p>
+        <p style="font-size:11px;color:#999;">Module: <span style="font-family:monospace;">{{ $service->product?->server_type }}</span></p>
         @endif
     </div>
 </div>

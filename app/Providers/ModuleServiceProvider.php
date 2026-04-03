@@ -37,6 +37,11 @@ class ModuleServiceProvider extends ServiceProvider
             // DirectAdmin module
             $registry->registerServer('directadmin', \Modules\Servers\DirectAdmin\DirectAdminModule::class);
 
+            // Proxmox VE module (KVM + LXC)
+            if (class_exists(\Modules\Servers\Proxmox\ProxmoxModule::class)) {
+                $registry->registerServer("proxmox", \Modules\Servers\Proxmox\ProxmoxModule::class);
+            }
+
             return $registry;
         });
     }

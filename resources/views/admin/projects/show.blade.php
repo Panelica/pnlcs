@@ -4,7 +4,7 @@
 <div class="page-header">
     <div>
         <h1>{{ $project->title }}</h1>
-        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $project->client->full_name ?? 'N/A' }} &bull; Created {{ $project->created_at->format('d M Y') }}</div>
+        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $project->client?->full_name ?? 'N/A' }} &bull; Created {{ $project->created_at->format('d M Y') }}</div>
     </div>
     <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; Projects</a>
 </div>
@@ -105,7 +105,7 @@
             <div class="panel-heading panel-primary">Project Info</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:4px 0;color:#777;">Client</td><td style="padding:4px 0;font-weight:600;">{{ $project->client->full_name ?? 'N/A' }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">Client</td><td style="padding:4px 0;font-weight:600;">{{ $project->client?->full_name ?? 'N/A' }}</td></tr>
                     @if($project->start_date)<tr><td style="padding:4px 0;color:#777;">Start</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->start_date)->format('d M Y') }}</td></tr>@endif
                     @if($project->due_date)<tr><td style="padding:4px 0;color:#777;">Due</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->due_date)->format('d M Y') }}</td></tr>@endif
                     <tr><td style="padding:4px 0;color:#777;">Messages</td><td style="padding:4px 0;">{{ $project->messages->count() }}</td></tr>

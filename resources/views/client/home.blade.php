@@ -139,7 +139,7 @@
             <tbody>
                 @foreach($activeServices as $service)
                 <tr>
-                    <td><a href="{{ route("client.services.show", $service) }}">{{ $service->product->name ?? "Service #".$service->id }}</a></td>
+                    <td><a href="{{ route("client.services.show", $service) }}">{{ $service->product?->name ?? "Service #".$service->id }}</a></td>
                     <td class="text-muted">{{ $service->domain ?? "-" }}</td>
                     <td style="font-weight:600">${{ number_format($service->amount, 2) }}<span class="text-muted text-sm">/{{ $service->billing_cycle }}</span></td>
                     <td class="text-muted text-sm">{{ $service->next_due_date?->format("d M Y") ?? "N/A" }}</td>

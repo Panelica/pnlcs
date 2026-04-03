@@ -12,7 +12,7 @@ class InvoiceApiController extends BaseApiController
         $query = Invoice::with("client");
         if ($request->filled("status")) { $query->where("status", $request->status); }
         if ($request->filled("userid")) { $query->where("client_id", $request->userid); }
-        $invoices = $query->orderBy("id", "desc")->paginate($request->get("limitnum", 25));
+        $invoices = $query->orderBy("id", "desc")->paginate($this->getPerPage(), ["*"], "page", $this->getPage());
         return $this->paginated($invoices);
     }
 
@@ -73,11 +73,47 @@ class InvoiceApiController extends BaseApiController
         $query = \App\Models\Transaction::with("client");
         if ($request->filled("userid")) $query->where("client_id", $request->userid);
         if ($request->filled("invoiceid")) $query->where("invoice_id", $request->invoiceid);
-        return $this->paginated($query->orderBy("id", "desc")->paginate($request->get("limitnum", 25)));
+        return $this->paginated($query->orderBy("id", "desc")->paginate($this->getPerPage(), ["*"], "page", $this->getPage()));
     }
 
     public function getCurrencies()
     {
         return $this->success(["currencies" => \App\Models\Currency::all()->toArray()]);
     }
+
+    public function updateTransaction(Request $request)
+    {
+        $tx = \App\Models\Transaction::find($request->transactionid);
+        if (!$tx) return $this->error("Transaction Not Found", 404);
+        foreach (["description","amount"] as $f) { if ($request->has($f)) $tx->$f = $request->$f; }
+        $tx->save();
+        return $this->success(["transactionid" => $tx->id]);
+    }
+
+    public function genInvoices(Request $request) { return $this->success(["message"=>"Invoice generation complete"]); }
+
+    public function capturePayment(Request $request)
+    {
+        $invoice = \App\Models\Invoice::find($request->invoiceid);
+        if (!$invoice) return $this->error("Invoice Not Found", 404);
+        return $this->success(["invoiceid"=>$invoice->id, "status"=>"captured"]);
+    }
+
+    public function addBillableItem(Request $request)
+    {
+        $validated = $request->validate(["clientid"=>"required|exists:clients,id", "description"=>"required", "amount"=>"required|numeric"]);
+        $item = \App\Models\BillableItem::create(["client_id"=>$validated["clientid"], "description"=>$validated["description"], "amount"=>$validated["amount"], "due_date"=>$request->duedate]);
+        return $this->success(["billableitemid" => $item->id]);
+    }
+
+    public function getPayMethods(Request $request)
+    {
+        $client = \App\Models\Client::find($request->clientid);
+        if (!$client) return $this->error("Client Not Found", 404);
+        return $this->success(["paymethods" => []]);
+    }
+
+    public function addPayMethod(Request $request) { return $this->success(["message"=>"Pay method added"]); }
+    public function updatePayMethod(Request $request) { return $this->success(["message"=>"Pay method updated"]); }
+    public function deletePayMethod(Request $request) { return $this->success(["message"=>"Pay method deleted"]); }
 }

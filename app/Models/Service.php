@@ -17,4 +17,5 @@ class Service extends Model {
     public function addons() { return $this->hasMany(ServiceAddon::class); }
 
     public function scopeActive($q) { return $q->where("status", "active"); }
+
 }

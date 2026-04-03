@@ -15,7 +15,7 @@
         @foreach($transactions as $tx)
         <tr>
             <td style="font-size:12px;white-space:nowrap;">{{ $tx->date?->format('d M Y') ?? $tx->created_at->format('d M Y') }}</td>
-            <td><a href="{{ route('admin.clients.show', $tx->client) }}" style="color:#337ab7;">{{ $tx->client->full_name ?? 'N/A' }}</a></td>
+            <td><a href="{{ $tx->client ? route("admin.clients.show", $tx->client) : "#" }}" style="color:#337ab7;">{{ $tx->client?->full_name ?? "Deleted Client" ?? 'N/A' }}</a></td>
             <td>@if($tx->invoice_id)<a href="{{ route('admin.invoices.show', $tx->invoice_id) }}" style="color:#337ab7;">#{{ $tx->invoice_id }}</a>@else &mdash; @endif</td>
             <td style="text-transform:capitalize;">{{ $tx->gateway }}</td>
             <td style="font-family:monospace;font-size:11px;">{{ Str::limit($tx->transaction_id ?? '', 20) }}</td>

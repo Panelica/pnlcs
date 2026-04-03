@@ -54,6 +54,20 @@ class Client extends Model
                 $client->uuid = (string) Str::uuid();
             }
         });
+
+        // Cascade delete: clean up all child records
+        static::deleting(function (Client $client) {
+            $client->services()->delete();
+            $client->invoices()->each(function($inv) { $inv->items()->delete(); $inv->delete(); });
+            $client->tickets()->each(function($t) { $t->replies()->delete(); $t->notes()->delete(); $t->delete(); });
+            $client->domains()->delete();
+            $client->contacts()->delete();
+            $client->orders()->delete();
+            \App\Models\Affiliate::where("client_id", $client->id)->delete();
+            \App\Models\Credit::where("client_id", $client->id)->delete();
+            \App\Models\ClientNote::where("client_id", $client->id)->delete();
+            $client->users()->detach(); // Remove pivot entries
+        });
     }
 
     public function getFullNameAttribute(): string
@@ -115,6 +129,20 @@ class Client extends Model
                 ->orWhere("last_name", "like", "%{$term}%")
                 ->orWhere("email", "like", "%{$term}%")
                 ->orWhere("company_name", "like", "%{$term}%");
+        });
+
+        // Cascade delete: clean up all child records
+        static::deleting(function (Client $client) {
+            $client->services()->delete();
+            $client->invoices()->each(function($inv) { $inv->items()->delete(); $inv->delete(); });
+            $client->tickets()->each(function($t) { $t->replies()->delete(); $t->notes()->delete(); $t->delete(); });
+            $client->domains()->delete();
+            $client->contacts()->delete();
+            $client->orders()->delete();
+            \App\Models\Affiliate::where("client_id", $client->id)->delete();
+            \App\Models\Credit::where("client_id", $client->id)->delete();
+            \App\Models\ClientNote::where("client_id", $client->id)->delete();
+            $client->users()->detach(); // Remove pivot entries
         });
     }
 }

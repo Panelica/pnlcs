@@ -35,7 +35,7 @@
                     <a href="{{ route('admin.projects.show', $project) }}" style="color:#337ab7;font-weight:600;">{{ $project->title }}</a>
                     @if($project->description)<div style="font-size:12px;color:#999;margin-top:2px;">{{ Str::limit($project->description,60) }}</div>@endif
                 </td>
-                <td>{{ $project->client->full_name ?? 'N/A' }}</td>
+                <td>{{ $project->client?->full_name ?? 'N/A' }}</td>
                 <td><span class="{{ $badgeClass }}">{{ ucfirst(str_replace('_',' ',$project->status)) }}</span></td>
                 <td style="min-width:120px;">
                     <div style="background:#e9e9e9;border-radius:3px;height:10px;margin-bottom:3px;">

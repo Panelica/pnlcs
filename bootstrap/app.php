@@ -20,12 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->appendToGroup("api", \App\Http\Middleware\ApiKeyAuth::class);
         $middleware->alias([
             "admin.auth" => AdminAuthenticate::class,
             "admin.permission" => CheckAdminPermission::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn ($request) => route("admin.login"));
+        $middleware->redirectGuestsTo(function ($request) { return str_starts_with($request->path(), "client") ? route("client.login") : route("admin.login"); });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

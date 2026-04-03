@@ -47,7 +47,7 @@
             @endphp
             <tr>
                 <td style="color:#666;font-family:monospace;font-size:12px;">{{ $service->id }}</td>
-                <td style="font-weight:500;">{{ $service->product->name ?? "N/A" }}</td>
+                <td style="font-weight:500;">{{ $service->product?->name ?? "N/A" }}</td>
                 <td>
                     @if($service->client)
                     <a href="{{ route("admin.clients.show", $service->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $service->client->full_name }}</a>

@@ -4,7 +4,7 @@
 <div class="page-header">
     <div>
         <h1>Quote #{{ $quote->id }}</h1>
-        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $quote->client->full_name ?? 'N/A' }} &bull; {{ \Carbon\Carbon::parse($quote->date)->format('d M Y') }}</div>
+        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $quote->client?->full_name ?? 'N/A' }} &bull; {{ \Carbon\Carbon::parse($quote->date)->format('d M Y') }}</div>
     </div>
     <a href="{{ route('admin.quotes.index') }}" class="btn btn-default btn-sm">&larr; Quotes</a>
 </div>
@@ -75,7 +75,7 @@
             <div class="panel-heading panel-primary">Quote Info</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:4px 0;color:#777;">Client</td><td style="padding:4px 0;font-weight:600;">{{ $quote->client->full_name ?? 'N/A' }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">Client</td><td style="padding:4px 0;font-weight:600;">{{ $quote->client?->full_name ?? 'N/A' }}</td></tr>
                     <tr><td style="padding:4px 0;color:#777;">Date</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($quote->date)->format('d M Y') }}</td></tr>
                     <tr><td style="padding:4px 0;color:#777;">Valid Until</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($quote->valid_until)->format('d M Y') }}</td></tr>
                     <tr><td style="padding:4px 0;color:#777;">Items</td><td style="padding:4px 0;">{{ $quote->items->count() }}</td></tr>

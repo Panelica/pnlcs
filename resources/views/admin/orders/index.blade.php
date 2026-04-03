@@ -46,7 +46,7 @@
                 <td><a href="{{ route("admin.orders.show", $order) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $order->order_num }}</a></td>
                 <td>
                     @if($order->client)
-                    <a href="{{ route("admin.clients.show", $order->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $order->client->full_name }}</a>
+                    <a href="{{ route("admin.clients.show", $order->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $order->client?->full_name ?? "Deleted Client" }}</a>
                     @else N/A @endif
                 </td>
                 <td style="color:#666;">{{ $order->date?->format("d M Y") ?? "-" }}</td>

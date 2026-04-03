@@ -31,7 +31,7 @@
                 @forelse($services as $s)
                 <tr>
                     <td>
-                        <a href="{{ route("client.services.show", $s) }}" style="font-weight:600">{{ $s->product->name ?? "N/A" }}</a>
+                        <a href="{{ route("client.services.show", $s) }}" style="font-weight:600">{{ $s->product?->name ?? "N/A" }}</a>
                     </td>
                     <td class="text-muted">{{ $s->domain ?? "-" }}</td>
                     <td class="text-muted" style="text-transform:capitalize">{{ $s->billing_cycle ?? "-" }}</td>

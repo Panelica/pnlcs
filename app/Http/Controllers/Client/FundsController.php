@@ -7,12 +7,12 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class FundsController extends Controller
 {
     public function index()
     {
-        // Get distinct payment gateways configured in the system
         $gateways = DB::table('gateway_settings')
             ->select('gateway')
             ->distinct()
@@ -29,10 +29,23 @@ class FundsController extends Controller
             'payment_method' => 'required|string|max:50',
         ]);
 
-        $clientId = auth()->user()->clients()->first()?->id ?? 0;
+        $client = auth()->user()->clients()->first();
+
+        if (!$client) {
+            return back()->with('error', 'No client account found. Please contact support.');
+        }
+
+        // Check if gateway is configured
+        $gateway = $validated['payment_method'];
+        $configured = DB::table('gateway_settings')->where('gateway', $gateway)->exists();
+
+        if (!$configured && !in_array($gateway, ['banktransfer'])) {
+            return back()->with('error', ucfirst($gateway) . ' is not configured yet. Please use Bank Transfer or contact support to set up ' . ucfirst($gateway) . '.');
+        }
 
         $invoice = Invoice::create([
-            'client_id'      => $clientId,
+            'client_id'      => $client->id,
+            'invoice_num'    => 'INV-' . strtoupper(Str::random(8)),
             'date'           => today(),
             'due_date'       => today(),
             'subtotal'       => $validated['amount'],
@@ -43,11 +56,12 @@ class FundsController extends Controller
             'tax_rate'       => 0,
             'tax_rate2'      => 0,
             'status'         => 'Unpaid',
-            'payment_method' => $validated['payment_method'],
+            'payment_method' => $gateway,
         ]);
 
         InvoiceItem::create([
             'invoice_id'  => $invoice->id,
+            'client_id'   => $client->id,
             'type'        => 'AddFunds',
             'description' => 'Add Funds to Account',
             'amount'      => $validated['amount'],
@@ -55,6 +69,6 @@ class FundsController extends Controller
         ]);
 
         return redirect()->route('client.invoices.show', $invoice)
-            ->with('success', 'Invoice created. Please complete payment to add funds to your account.');
+            ->with('success', 'Invoice created. Please complete payment to add funds.');
     }
 }

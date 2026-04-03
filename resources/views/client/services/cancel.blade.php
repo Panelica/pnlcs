@@ -8,7 +8,7 @@
 </div>
 
 <div style="background:#fcf8e3; border:1px solid #faebcc; color:#8a6d3b; padding:12px 16px; border-radius:4px; font-size:13px; margin-bottom:20px;">
-    <strong>Warning:</strong> Requesting a cancellation will terminate your service: <strong>{{ $service->product->name ?? 'Service' }}</strong>
+    <strong>Warning:</strong> Requesting a cancellation will terminate your service: <strong>{{ $service->product?->name ?? 'Service' }}</strong>
     @if($service->domain) &mdash; {{ $service->domain }}@endif
 </div>
 

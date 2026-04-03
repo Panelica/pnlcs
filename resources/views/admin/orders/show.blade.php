@@ -34,7 +34,7 @@
                 <tbody>
                 @foreach($order->services as $svc)
                 <tr>
-                    <td><a href="{{ route('admin.services.show', $svc) }}" style="color:#337ab7;">{{ $svc->product->name ?? 'N/A' }}</a></td>
+                    <td><a href="{{ route('admin.services.show', $svc) }}" style="color:#337ab7;">{{ $svc->product?->name ?? 'N/A' }}</a></td>
                     <td style="font-family:monospace;font-size:12px;">{{ $svc->domain ?? '&mdash;' }}</td>
                     <td>{{ $svc->billing_cycle }}</td>
                     <td style="text-align:right;font-family:monospace;">${{ number_format($svc->amount, 2) }}</td>
@@ -87,10 +87,10 @@
             <div class="panel-heading panel-primary">Client Info</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:4px 0;color:#777;width:35%;">Name</td><td style="padding:4px 0;"><a href="{{ route('admin.clients.show', $order->client) }}" style="color:#337ab7;font-weight:600;">{{ $order->client->display_name }}</a></td></tr>
-                    <tr><td style="padding:4px 0;color:#777;">Email</td><td style="padding:4px 0;">{{ $order->client->email }}</td></tr>
-                    @if($order->client->company_name)
-                    <tr><td style="padding:4px 0;color:#777;">Company</td><td style="padding:4px 0;">{{ $order->client->company_name }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;width:35%;">Name</td><td style="padding:4px 0;"><a href="{{ $order->client ? route("admin.clients.show", $order->client) : "#" }}" style="color:#337ab7;font-weight:600;">{{ $order->client?->display_name ?? "Deleted Client" }}</a></td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">Email</td><td style="padding:4px 0;">{{ $order->client?->email ?? "-" }}</td></tr>
+                    @if($order->client?->company_name)
+                    <tr><td style="padding:4px 0;color:#777;">Company</td><td style="padding:4px 0;">{{ $order->client?->company_name }}</td></tr>
                     @endif
                 </table>
             </div>

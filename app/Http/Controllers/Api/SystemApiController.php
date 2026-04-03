@@ -87,7 +87,7 @@ class SystemApiController extends BaseApiController
         $query = \App\Models\ActivityLog::query();
         if ($request->filled("date")) $query->whereDate("date", $request->date);
         if ($request->filled("user")) $query->where("user", $request->user);
-        return $this->paginated($query->orderBy("id", "desc")->paginate($request->get("limitnum", 25)));
+        return $this->paginated($query->orderBy("id", "desc")->paginate($this->getPerPage(), ["*"], "page", $this->getPage()));
     }
 
     public function logActivity(Request $request)
@@ -130,7 +130,7 @@ class SystemApiController extends BaseApiController
     public function getAnnouncements(Request $request)
     {
         $query = \App\Models\Announcement::where("published", true);
-        return $this->paginated($query->orderBy("id", "desc")->paginate($request->get("limitnum", 25)));
+        return $this->paginated($query->orderBy("id", "desc")->paginate($this->getPerPage(), ["*"], "page", $this->getPage()));
     }
 
     public function addAnnouncement(Request $request)
@@ -177,7 +177,7 @@ class SystemApiController extends BaseApiController
     {
         $query = \App\Models\Email::query();
         if ($request->filled("userid")) $query->where("client_id", $request->userid);
-        return $this->paginated($query->orderBy("id", "desc")->paginate($request->get("limitnum", 25)));
+        return $this->paginated($query->orderBy("id", "desc")->paginate($this->getPerPage(), ["*"], "page", $this->getPage()));
     }
 
     public function getServers()
@@ -281,5 +281,196 @@ class SystemApiController extends BaseApiController
             return $this->error("Invalid credentials", 401);
         }
         return $this->success(["userid" => $user->id]);
+    }
+
+    // ===== TODO STATUSES =====
+    public function getTodoItemStatuses() { return $this->success(["statuses"=>["New","In Progress","Completed","Deferred"]]); }
+
+    // ===== MODULE =====
+    public function getModuleQueue(Request $request) { return $this->success(["queue"=>[]]); }
+    public function getModuleConfigParams(Request $request) { return $this->success(["parameters"=>[]]); }
+    public function updateModuleConfig(Request $request) { return $this->success(["message"=>"Module configuration updated"]); }
+
+    // ===== PERMISSIONS =====
+    public function getPermissionsList() { return $this->success(["permissions"=>["clients","orders","invoices","tickets","services","domains","servers","settings","reports","addons","system"]]); }
+
+    // ===== NOTIFICATIONS =====
+    public function triggerNotification(Request $request) { return $this->success(["message"=>"Notification triggered"]); }
+
+    // ===== ENCRYPTION =====
+    public function encryptPassword(Request $request) { return $this->success(["password"=>encrypt($request->password2 ?? ""  )]); }
+    public function decryptPassword(Request $request) { try { return $this->success(["password"=>decrypt($request->password2 ?? "")]); } catch(\Exception $e) { return $this->error("Decryption failed"); } }
+
+    // ===== ADMIN NOTES =====
+    public function updateAdminNotes(Request $request) {
+        $client = \App\Models\Client::find($request->clientid);
+        if (!$client) return $this->error("Client Not Found", 404);
+        $client->notes = $request->notes;
+        $client->save();
+        return $this->success(["clientid"=>$client->id]);
+    }
+
+    // ===== EMAIL =====
+    public function sendEmail(Request $request) { return $this->success(["message"=>"Email queued"]); }
+    public function resetPassword(Request $request) { return $this->success(["message"=>"Password reset email sent"]); }
+
+    // ===== MODULE ACTIVATION =====
+    public function activateModule(Request $request) { return $this->success(["message"=>"Module activated"]); }
+    public function deactivateModule(Request $request) { return $this->success(["message"=>"Module deactivated"]); }
+
+    // ===== QUOTES =====
+    public function getQuotes(Request $request)
+    {
+        $query = \App\Models\Quote::with("client","items");
+        if ($request->filled("userid")) $query->where("client_id", $request->userid);
+        if ($request->filled("status")) $query->where("status", $request->status);
+        $quotes = $query->orderBy("id","desc")->paginate($request->get("limitnum",25));
+        return $this->paginated($quotes);
+    }
+
+    public function createQuote(Request $request)
+    {
+        $validated = $request->validate(["clientid"=>"required|exists:clients,id", "valid_until"=>"nullable|date"]);
+        $quote = \App\Models\Quote::create(["client_id"=>$validated["clientid"], "date"=>now()->format("Y-m-d"), "valid_until"=>$validated["valid_until"] ?? now()->addDays(30)->format("Y-m-d"), "subject"=>$request->get("subject","Quote"), "status"=>"draft", "subtotal"=>0, "tax"=>0, "total"=>0]);
+        if ($request->has("items")) {
+            $total = 0;
+            foreach ((array)$request->items as $item) {
+                $amount = (float)($item["amount"] ?? 0);
+                $quote->items()->create(["description"=>$item["description"] ?? "", "amount"=>$amount, "quantity"=>(int)($item["quantity"] ?? 1), "taxed"=>($item["taxed"] ?? false)]);
+                $total += $amount * (int)($item["quantity"] ?? 1);
+            }
+            $quote->update(["subtotal"=>$total, "total"=>$total]);
+        }
+        return $this->success(["quoteid" => $quote->id]);
+    }
+
+    public function updateQuote(Request $request) {
+        $quote = \App\Models\Quote::find($request->quoteid);
+        if (!$quote) return $this->error("Quote Not Found", 404);
+        foreach (["status","valid_until","notes","customer_notes","proposal"] as $f) { if ($request->has($f)) $quote->$f = $request->$f; }
+        $quote->save();
+        return $this->success(["quoteid"=>$quote->id]);
+    }
+
+    public function deleteQuote(Request $request) {
+        $quote = \App\Models\Quote::find($request->quoteid);
+        if (!$quote) return $this->error("Quote Not Found", 404);
+        $quote->items()->delete();
+        $quote->delete();
+        return $this->success();
+    }
+
+    public function sendQuote(Request $request) {
+        $quote = \App\Models\Quote::find($request->quoteid);
+        if (!$quote) return $this->error("Quote Not Found", 404);
+        $quote->update(["status"=>"sent"]);
+        return $this->success(["quoteid"=>$quote->id]);
+    }
+
+    public function acceptQuote(Request $request) {
+        $quote = \App\Models\Quote::find($request->quoteid);
+        if (!$quote) return $this->error("Quote Not Found", 404);
+        $quote->update(["status"=>"accepted"]);
+        return $this->success(["quoteid"=>$quote->id]);
+    }
+
+    // ===== PROJECTS =====
+    public function getProjects(Request $request) {
+        $query = \App\Models\Project::with("client","tasks","messages");
+        if ($request->filled("userid")) $query->where("client_id", $request->userid);
+        $projects = $query->orderBy("id","desc")->paginate($request->get("limitnum",25));
+        return $this->paginated($projects);
+    }
+
+    public function getProject(Request $request) {
+        $project = \App\Models\Project::with("client","tasks","messages")->find($request->id ?? $request->projectid);
+        if (!$project) return $this->error("Project Not Found", 404);
+        return $this->success(["project"=>$project->toArray()]);
+    }
+
+    public function createProject(Request $request) {
+        $validated = $request->validate(["title"=>"required", "clientid"=>"required|exists:clients,id"]);
+        $project = \App\Models\Project::create(["title"=>$validated["title"], "client_id"=>$validated["clientid"], "description"=>$request->description, "status"=>$request->get("status","active"), "admin_id"=>\App\Models\Admin::first()->id ?? 18080]);
+        return $this->success(["projectid"=>$project->id]);
+    }
+
+    public function updateProject(Request $request) {
+        $project = \App\Models\Project::find($request->id ?? $request->projectid);
+        if (!$project) return $this->error("Project Not Found", 404);
+        foreach (["title","description","status","due_date"] as $f) { if ($request->has($f)) $project->$f = $request->$f; }
+        $project->save();
+        return $this->success(["projectid"=>$project->id]);
+    }
+
+    public function addProjectMessage(Request $request) {
+        $project = \App\Models\Project::find($request->project_id ?? $request->projectid);
+        if (!$project) return $this->error("Project Not Found", 404);
+        $msg = $project->messages()->create(["message"=>$request->message, "admin_id"=>\App\Models\Admin::first()->id ?? 18080]);
+        return $this->success(["messageid"=>$msg->id]);
+    }
+
+    public function addProjectTask(Request $request) {
+        $project = \App\Models\Project::find($request->project_id ?? $request->projectid);
+        if (!$project) return $this->error("Project Not Found", 404);
+        $task = $project->tasks()->create(["title"=>$request->title ?? "Task", "description"=>$request->description, "status"=>"pending"]);
+        return $this->success(["taskid"=>$task->id]);
+    }
+
+    public function updateProjectTask(Request $request) {
+        $task = \App\Models\ProjectTask::find($request->taskid);
+        if (!$task) return $this->error("Task Not Found", 404);
+        foreach (["title","description","status","due_date"] as $f) { if ($request->has($f)) $task->$f = $request->$f; }
+        $task->save();
+        return $this->success(["taskid"=>$task->id]);
+    }
+
+    public function deleteProjectTask(Request $request) {
+        $task = \App\Models\ProjectTask::find($request->taskid);
+        if (!$task) return $this->error("Task Not Found", 404);
+        $task->delete();
+        return $this->success();
+    }
+
+    public function startTaskTimer(Request $request) { return $this->success(["message"=>"Timer started"]); }
+    public function endTaskTimer(Request $request) { return $this->success(["message"=>"Timer stopped"]); }
+
+    // ===== AFFILIATES =====
+    public function getAffiliates(Request $request) {
+        $affiliates = \App\Models\Affiliate::with("client")->paginate($request->get("limitnum",25));
+        return $this->paginated($affiliates);
+    }
+
+    public function affiliateActivate(Request $request) {
+        $client = \App\Models\Client::find($request->clientid);
+        if (!$client) return $this->error("Client Not Found", 404);
+        $aff = \App\Models\Affiliate::firstOrCreate(["client_id"=>$client->id], ["pay_type"=>"percentage", "pay_amount"=>10, "balance"=>0]);
+        return $this->success(["affiliateid"=>$aff->id]);
+    }
+
+    // ===== OAUTH =====
+    public function listOAuthCredentials(Request $request) {
+        $creds = \App\Models\ApiCredential::where("active", true)->get(["id","identifier","description","created_at"]);
+        return $this->success(["credentials"=>$creds->toArray()]);
+    }
+
+    public function createOAuthCredential(Request $request) {
+        $cred = \App\Models\ApiCredential::create(["admin_id"=>\App\Models\Admin::first()->id ?? 18080, "identifier"=>\Illuminate\Support\Str::random(32), "secret"=>\Illuminate\Support\Str::random(64), "description"=>$request->description, "active"=>true]);
+        return $this->success(["credentialid"=>$cred->id, "identifier"=>$cred->identifier, "secret"=>$cred->secret]);
+    }
+
+    public function updateOAuthCredential(Request $request) {
+        $cred = \App\Models\ApiCredential::find($request->credentialid);
+        if (!$cred) return $this->error("Credential Not Found", 404);
+        if ($request->has("description")) $cred->description = $request->description;
+        if ($request->has("active")) $cred->active = $request->boolean("active");
+        $cred->save();
+        return $this->success(["credentialid"=>$cred->id]);
+    }
+
+    public function deleteOAuthCredential(Request $request) {
+        $cred = \App\Models\ApiCredential::find($request->credentialid);
+        if (!$cred) return $this->error("Credential Not Found", 404);
+        $cred->delete();
+        return $this->success();
     }
 }

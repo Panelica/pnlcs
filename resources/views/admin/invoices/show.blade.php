@@ -123,13 +123,13 @@
             <div class="panel-heading panel-primary">Client Info</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:4px 0;color:#777;width:40%;">Name</td><td style="padding:4px 0;"><a href="{{ route('admin.clients.show', $invoice->client) }}" style="color:#337ab7;font-weight:600;">{{ $invoice->client->display_name }}</a></td></tr>
-                    <tr><td style="padding:4px 0;color:#777;">Email</td><td style="padding:4px 0;">{{ $invoice->client->email }}</td></tr>
-                    @if($invoice->client->address1)
-                    <tr><td style="padding:4px 0;color:#777;">Address</td><td style="padding:4px 0;">{{ $invoice->client->address1 }}<br>{{ $invoice->client->city }}, {{ $invoice->client->state }} {{ $invoice->client->postcode }}<br>{{ $invoice->client->country }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;width:40%;">Name</td><td style="padding:4px 0;"><a href="{{ $invoice->client ? route("admin.clients.show", $invoice->client) : "#" }}" style="color:#337ab7;font-weight:600;">{{ $invoice->client?->display_name ?? "Deleted Client" }}</a></td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">Email</td><td style="padding:4px 0;">{{ $invoice->client?->email ?? "-" }}</td></tr>
+                    @if($invoice->client?->address1 ?? "")
+                    <tr><td style="padding:4px 0;color:#777;">Address</td><td style="padding:4px 0;">{{ $invoice->client?->address1 ?? "" }}<br>{{ $invoice->client?->city ?? "" }}, {{ $invoice->client?->state ?? "" }} {{ $invoice->client?->postcode ?? "" }}<br>{{ $invoice->client?->country ?? "" }}</td></tr>
                     @endif
-                    @if($invoice->client->tax_id)
-                    <tr><td style="padding:4px 0;color:#777;">Tax ID</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->client->tax_id }}</td></tr>
+                    @if($invoice->client?->tax_id ?? "")
+                    <tr><td style="padding:4px 0;color:#777;">Tax ID</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->client?->tax_id ?? "" }}</td></tr>
                     @endif
                 </table>
             </div>

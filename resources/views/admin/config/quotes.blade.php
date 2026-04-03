@@ -16,7 +16,7 @@
         @foreach($quotes as $quote)
         <tr>
             <td style="font-family:monospace;font-weight:600;">{{ $quote->id }}</td>
-            <td>{{ $quote->client->full_name ?? ($quote->firstname . ' ' . $quote->lastname) }}</td>
+            <td>{{ $quote->client?->full_name ?? "Deleted Client" ?? ($quote->firstname . ' ' . $quote->lastname) }}</td>
             <td>{{ $quote->subject }}</td>
             <td style="font-weight:600;">${{ number_format($quote->total ?? 0, 2) }}</td>
             <td style="font-size:12px;">{{ $quote->validuntil?->format('d M Y') ?? '&mdash;' }}</td>

@@ -24,7 +24,7 @@
                 <td style="font-size:12px;color:#777;">{{ $row->date ? $row->date->format("d M Y") : "-" }}</td>
                 <td>
                     @if($row->client)
-                        <a href="{{ route("admin.clients.show", $row->client) }}" style="color:#337ab7;text-decoration:none;">{{ $row->client->full_name }}</a>
+                        <a href="{{ $row->client ? route("admin.clients.show", $row->client) : "#" }}" style="color:#337ab7;text-decoration:none;">{{ $row->client?->full_name ?? "Deleted Client" }}</a>
                     @else
                         <span style="color:#999;">-</span>
                     @endif

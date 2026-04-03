@@ -7,12 +7,19 @@
     <title>@yield("title", "Admin") - PNLCS</title>
     @vite(["resources/css/app.css"])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    @if(!empty($customFavicon))
+    <link rel="icon" href="{{ $customFavicon }}" type="image/png">
+    @endif
+    @if(!empty($themeCssVars))
+    <style id="theme-vars">{!! $themeCssVars !!}</style>
+    @endif
     <style>
         .sidebar.collapsed { width: 0 !important; min-height: 0; overflow: hidden; padding: 0; border: 0; }
         .sidebar.collapsed + .contentarea { margin-left: 0 !important; border-left: none; }
-        .sidebar-toggle-btn { position: fixed; bottom: 16px; left: 16px; z-index: 2000; width: 28px; height: 28px; background: #1a4d80; color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 28px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: left 0.2s; }
+        .sidebar-toggle-btn { position: fixed; bottom: 16px; left: 16px; z-index: 2000; width: 28px; height: 28px; background: var(--theme-primary, #1a4d80); color: #fff; border: none; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 28px; text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); transition: left 0.2s; }
         .sidebar.collapsed ~ .sidebar-toggle-btn { left: 8px; }
         @media (max-width: 768px) { .sidebar-toggle-btn { display: none; } }
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;font-size:13px;font-weight:600;border-radius:4px;border:none;cursor:pointer;text-decoration:none;transition:all 0.15s;line-height:1.3;white-space:nowrap;vertical-align:middle}        .btn svg,.btn i{flex-shrink:0;line-height:1}        .btn-primary{background:var(--theme-primary, #1a4d80);color:#fff}.btn-primary:hover{background:var(--theme-primary-dark, #143d66);color:#fff}        .btn-default{background:#f5f5f5;color:#333;border:1px solid #ddd}.btn-default:hover{background:#e8e8e8}        .btn-success{background:#5cb85c;color:#fff}.btn-success:hover{background:#449d44}        .btn-danger{background:#d9534f;color:#fff}.btn-danger:hover{background:#c9302c}        .btn-sm{padding:5px 10px;font-size:12px}        .btn-xs{padding:3px 8px;font-size:11px}
     </style>
 </head>
 <body>
@@ -20,9 +27,15 @@
 {{-- ═══════════════════════════════════════════════
      NAVIGATION BAR (WHMCS Blend exact structure)
      ═══════════════════════════════════════════════ --}}
-<div class="navigation clearfix">
+<div class="navigation clearfix" style="background-color:var(--theme-nav-bg, #1a4d80);">
     {{-- Logo --}}
-    <a href="{{ route('admin.dashboard') }}" class="logo">PNLCS</a>
+    <a href="{{ route('admin.dashboard') }}" class="logo">
+        @if(!empty($customLogo))
+            <img src="{{ $customLogo }}" alt="Logo" style="max-height:30px; vertical-align:middle;">
+        @else
+            PNLCS
+        @endif
+    </a>
 
     {{-- Mobile toggle --}}
     <ul class="left-nav" style="float:left;">
@@ -192,6 +205,7 @@
                     <li><a href="{{ route('admin.config.email-templates') }}">Email Templates</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.settings.general') }}">General Settings</a></li>
+                    <li><a href="{{ route('admin.settings.appearance') }}">Appearance</a></li>
                     <li><a href="{{ route('admin.config.banned-ips') }}">Banned IPs</a></li>
                     <li><a href="{{ route('admin.config.banned-emails') }}">Banned Emails</a></li>
                     <li><a href="{{ route('admin.config.client-groups') }}">Client Groups</a></li>
@@ -394,6 +408,7 @@
         <div class="sidebar-header"><i class="fas fa-wrench"></i> Other</div>
         <ul class="menu">
             <li><a href="{{ route('admin.settings.general') }}" @if($routeName === 'admin.settings.general') class="active" @endif>General Settings</a></li>
+            <li><a href="{{ route('admin.settings.appearance') }}" @if($routeName === 'admin.settings.appearance') class="active" @endif><i class="fas fa-palette"></i> Appearance</a></li>
             <li><a href="{{ route('admin.config.client-groups') }}" @if($routeName === 'admin.config.client-groups') class="active" @endif>Client Groups</a></li>
             <li><a href="{{ route('admin.config.banned-ips') }}" @if($routeName === 'admin.config.banned-ips') class="active" @endif>Banned IPs</a></li>
             <li><a href="{{ route('admin.config.banned-emails') }}" @if($routeName === 'admin.config.banned-emails') class="active" @endif>Banned Emails</a></li>
@@ -475,7 +490,7 @@
 {{-- ═══════════════════════════════════════════════
      FOOTER
      ═══════════════════════════════════════════════ --}}
-<div class="footerbar clearfix">
+<div class="footerbar clearfix" style="background-color:var(--theme-footer-bg, #1a4d80);">
     <div style="float:left;">
         &copy; {{ date('Y') }} PNLCS - Billing &amp; Support System
     </div>
