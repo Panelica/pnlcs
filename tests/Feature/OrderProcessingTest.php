@@ -7,17 +7,12 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Service;
-use App\Services\InvoiceService;
-use App\Services\InvoiceGenerationService;
 use App\Services\OrderService;
 
-
-// Helper to build the service
+// Helper to build the service via DI container (resolves all dependencies)
 function makeOrderService(): OrderService
 {
-    $invoiceService = app(InvoiceService::class);
-    $generationService = app(InvoiceGenerationService::class);
-    return new OrderService($invoiceService, $generationService);
+    return app(OrderService::class);
 }
 
 // ---------------------------------------------------------------------------

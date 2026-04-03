@@ -427,7 +427,7 @@ class ConfigController extends Controller
 
     public function storeAnnouncement(Request $request)
     {
-        $v = $request->validate(['title' => 'required']); $v['announcement'] = $request->body ?? $request->announcement ?? ''; if (empty($v['announcement'])) return back()->withErrors(['body' => 'Content is required']);
+        $v = $request->validate(["title" => "required", "announcement" => "required"]); $v["announcement"] = $v["announcement"] ?: ($request->body ?? "");
         Announcement::create($v);
         return back()->with('success', 'Announcement published.');
     }

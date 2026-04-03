@@ -3,16 +3,21 @@
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Invoice;
+use App\Models\ApiCredential;
 
 /**
  * FullApiCoverageTest — tests for Step 26 API implementations.
- * Matches the pattern of existing ApiTest.php (no RefreshDatabase, read-only assertions).
  */
+
+beforeEach(function () {
+    $this->apiCred = ApiCredential::factory()->create();
+    $this->apiHeaders = ['X-API-Key' => $this->apiCred->identifier, 'X-API-Secret' => $this->apiCred->secret];
+});
 
 // ===== STATS =====
 
 test('getStats returns valid counts structure', function () {
-    $response = $this->getJson('/api/v1/getstats');
+    $response = $this->getJson('/api/v1/getstats', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure([
@@ -42,7 +47,7 @@ test('getStats returns valid counts structure', function () {
 // ===== ANNOUNCEMENTS =====
 
 test('getAnnouncements returns paginated result structure', function () {
-    $response = $this->getJson('/api/v1/getannouncements');
+    $response = $this->getJson('/api/v1/getannouncements', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'totalresults', 'data']);
@@ -51,7 +56,7 @@ test('getAnnouncements returns paginated result structure', function () {
 test('addAnnouncement requires announcement body', function () {
     $response = $this->postJson('/api/v1/addannouncement', [
         'title' => 'Missing body only',
-    ]);
+    ], $this->apiHeaders);
     $response->assertStatus(422);
 });
 
@@ -59,7 +64,7 @@ test('addAnnouncement creates and returns id', function () {
     $response = $this->postJson('/api/v1/addannouncement', [
         'title' => 'Test Suite Announcement ' . time(),
         'announcement' => 'Created by automated test suite.',
-    ]);
+    ], $this->apiHeaders);
 
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
@@ -69,13 +74,13 @@ test('addAnnouncement creates and returns id', function () {
     expect($id)->toBeInt()->toBeGreaterThan(0);
 
     // Cleanup
-    $this->postJson('/api/v1/deleteannouncement', ['announcementid' => $id]);
+    $this->postJson('/api/v1/deleteannouncement', ['announcementid' => $id], $this->apiHeaders);
 });
 
 test('deleteAnnouncement returns error for missing id', function () {
     $response = $this->postJson('/api/v1/deleteannouncement', [
         'announcementid' => 99999999,
-    ]);
+    ], $this->apiHeaders);
     $response->assertStatus(404)->assertJson(['result' => 'error']);
 });
 
@@ -83,14 +88,14 @@ test('updateAnnouncement returns error for missing id', function () {
     $response = $this->postJson('/api/v1/updateannouncement', [
         'announcementid' => 99999999,
         'title' => 'Should fail',
-    ]);
+    ], $this->apiHeaders);
     $response->assertStatus(404)->assertJson(['result' => 'error']);
 });
 
 // ===== PRODUCTS =====
 
 test('getProducts returns products with group relation', function () {
-    $response = $this->getJson('/api/v1/getproducts');
+    $response = $this->getJson('/api/v1/getproducts', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'products']);
@@ -131,14 +136,14 @@ test('health endpoint at /api/health also works', function () {
 // ===== DOMAINS =====
 
 test('getDomains returns paginated domain list', function () {
-    $response = $this->getJson('/api/v1/getclientsdomains');
+    $response = $this->getJson('/api/v1/getclientsdomains', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'totalresults', 'data']);
 });
 
 test('getDomainDetails returns 404 for unknown domain', function () {
-    $response = $this->getJson('/api/v1/getclientsdomains?userid=99999999');
+    $response = $this->getJson('/api/v1/getclientsdomains?userid=99999999', $this->apiHeaders);
     $response->assertStatus(200);
     expect($response->json('totalresults'))->toBe(0);
 });
@@ -148,15 +153,12 @@ test('getDomainDetails returns 404 for unknown domain', function () {
 test('createInvoice requires userid', function () {
     $response = $this->postJson('/api/v1/createinvoice', [
         'date' => now()->format('Y-m-d'),
-    ]);
+    ], $this->apiHeaders);
     $response->assertStatus(422);
 });
 
 test('createInvoice creates invoice for existing client', function () {
-    $client = Client::first();
-    if (!$client) {
-        $this->markTestSkipped('No clients in test DB');
-    }
+    $client = Client::factory()->create();
 
     $response = $this->postJson('/api/v1/createinvoice', [
         'userid' => $client->id,
@@ -164,7 +166,7 @@ test('createInvoice creates invoice for existing client', function () {
         'duedate' => now()->addDays(14)->format('Y-m-d'),
         'paymentmethod' => 'stripe',
         'status' => 'unpaid',
-    ]);
+    ], $this->apiHeaders);
 
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
@@ -174,7 +176,7 @@ test('createInvoice creates invoice for existing client', function () {
 // ===== PROMOTIONS =====
 
 test('getPromotions returns list structure', function () {
-    $response = $this->getJson('/api/v1/getpromotions');
+    $response = $this->getJson('/api/v1/getpromotions', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'promotions']);
@@ -183,7 +185,7 @@ test('getPromotions returns list structure', function () {
 // ===== EMAIL TEMPLATES =====
 
 test('getEmailTemplates returns templates array', function () {
-    $response = $this->getJson('/api/v1/getemailtemplates');
+    $response = $this->getJson('/api/v1/getemailtemplates', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'templates']);
@@ -192,7 +194,7 @@ test('getEmailTemplates returns templates array', function () {
 // ===== SERVERS =====
 
 test('getServers returns servers with groups', function () {
-    $response = $this->getJson('/api/v1/getservers');
+    $response = $this->getJson('/api/v1/getservers', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'servers']);
@@ -201,21 +203,21 @@ test('getServers returns servers with groups', function () {
 // ===== TODO ITEMS =====
 
 test('getTodoItems returns items list', function () {
-    $response = $this->getJson('/api/v1/gettodoitems');
+    $response = $this->getJson('/api/v1/gettodoitems', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'items']);
 });
 
 test('getTodoItems can filter by status', function () {
-    $response = $this->getJson('/api/v1/gettodoitems?status=pending');
+    $response = $this->getJson('/api/v1/gettodoitems?status=pending', $this->apiHeaders);
     $response->assertStatus(200)->assertJson(['result' => 'success']);
 });
 
 // ===== ACTIVITY LOG =====
 
 test('getActivityLog returns paginated structure', function () {
-    $response = $this->getJson('/api/v1/getactivitylog');
+    $response = $this->getJson('/api/v1/getactivitylog', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure(['result', 'totalresults', 'data']);
