@@ -79,7 +79,8 @@ class AffiliateController extends Controller
             'invoice_id' => null,
             'gateway' => 'affiliate_payout',
             'transaction_id' => 'AFF-' . strtoupper(uniqid()),
-            'amount' => -$amount,
+            'amount_in' => 0,
+            'amount_out' => $amount,
             'description' => "Affiliate payout - \${$amount}",
             'date' => now(),
         ]);

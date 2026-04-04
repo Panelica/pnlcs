@@ -14,6 +14,7 @@
             <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
         </form>
         @endif
+        <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="btn btn-info btn-sm">Download PDF</a>
         <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
     </div>
 </div>

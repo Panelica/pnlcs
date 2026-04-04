@@ -14,16 +14,25 @@ class AffiliateController extends Controller
         $client = auth()->user()->clients()->first();
         $affiliate = $client ? Affiliate::where('client_id', $client->id)->first() : null;
 
-        $referralHistory = collect();
+        $stats = [
+            'referrals' => $affiliate?->visitors ?? 0,
+            'signups' => 0,
+            'earnings' => ($affiliate?->balance ?? 0) + ($affiliate?->withdrawn ?? 0),
+            'pending' => $affiliate?->balance ?? 0,
+        ];
+
+        $referralLink = url('/') . '?ref=' . ($affiliate?->id ?? '');
+
+        $commissions = collect();
         if ($affiliate) {
-            $referralHistory = Transaction::where('client_id', $client->id)
+            $commissions = Transaction::where('client_id', $client->id)
                 ->where('description', 'like', '%affiliate%')
                 ->orderBy('date', 'desc')
                 ->limit(50)
                 ->get();
         }
 
-        return view('client.affiliate.index', compact('affiliate', 'client', 'referralHistory'));
+        return view('client.affiliate.index', compact('affiliate', 'client', 'stats', 'referralLink', 'commissions'));
     }
 
     public function activate()

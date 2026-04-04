@@ -20,7 +20,7 @@ class CreditCardExpiryCommand extends Command
         // Find payment methods expiring in the next 30 days
         $methods = PaymentMethod::with('client')
             ->where('payment_type', 'cc')
-            ->whereNotNull('card_last_four')
+            ->whereNotNull('last_four')
             ->whereNotNull('expiry_date')
             ->where('expiry_date', '>=', $now->startOfMonth()->toDateString())
             ->where('expiry_date', '<=', $now->copy()->addDays(30)->endOfMonth()->toDateString())

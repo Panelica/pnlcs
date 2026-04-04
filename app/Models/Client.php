@@ -34,6 +34,7 @@ class Client extends Model
         "tax_exempt",
         "language",
         "notes",
+        "affiliate_id",
         "ip_address",
     ];
 

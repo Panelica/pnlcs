@@ -140,7 +140,8 @@ class AccountController extends Controller
     public function security()
     {
         $user = auth()->user();
-        return view('client.account.security', compact('user'));
+        $twoFactorEnabled = !empty($user->second_factor_type) && !empty($user->second_factor_secret);
+        return view('client.account.security', compact('user', 'twoFactorEnabled'));
     }
 
     public function destroyContact(\App\Models\Contact $contact)

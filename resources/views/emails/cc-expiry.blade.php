@@ -5,7 +5,7 @@
 
 <p>Dear {{ \$client->first_name ?? 'Customer' }},</p>
 
-<p>Your credit card ending in <strong>{{ \$paymentMethod->card_last_four }}</strong> is expiring on <strong>{{ \$paymentMethod->expiry_date }}</strong>.</p>
+<p>Your credit card ending in <strong>{{ \$paymentMethod->last_four }}</strong> is expiring on <strong>{{ \$paymentMethod->expiry_date }}</strong>.</p>
 
 <p>To avoid any service interruptions, please update your payment method in your account area.</p>
 

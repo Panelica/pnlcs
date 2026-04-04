@@ -43,7 +43,8 @@ class AffiliateService
             'client_id' => $affiliate->client_id,
             'gateway' => 'affiliate_payout',
             'transaction_id' => 'AFF-' . strtoupper(uniqid()),
-            'amount' => -$amount,
+            'amount_in' => 0,
+            'amount_out' => $amount,
             'description' => "Affiliate withdrawal - \${$amount}",
             'date' => now(),
         ]);
@@ -97,7 +98,8 @@ class AffiliateService
             'invoice_id' => $invoice->id,
             'gateway' => 'affiliate_commission',
             'transaction_id' => 'AFFCOM-' . strtoupper(uniqid()),
-            'amount' => $commission,
+            'amount_in' => $commission,
+            'amount_out' => 0,
             'description' => "Affiliate referral commission - client#{$client->id} invoice#{$invoice->id}",
             'date' => now(),
         ]);

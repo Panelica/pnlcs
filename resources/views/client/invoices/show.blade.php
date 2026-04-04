@@ -12,6 +12,7 @@
         <h1 class="pn-page-title">Invoice #{{ $invoice->invoice_num ?? $invoice->id }}</h1>
         <p class="pn-page-subtitle">Issued {{ $invoice->date?->format("d M Y") ?? "N/A" }}</p>
     </div>
+    <a href="{{ route('client.invoices.pdf', $invoice) }}" class="pn-btn" style="background:var(--primary);color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:13px;margin-right:8px;">Download PDF</a>
     <span class="badge badge-{{ strtolower($invoice->status) }}" style="font-size:13px;padding:5px 14px">{{ ucfirst($invoice->status) }}</span>
 </div>
 

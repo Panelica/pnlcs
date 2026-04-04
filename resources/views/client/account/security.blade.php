@@ -15,16 +15,16 @@
         @if($twoFactorEnabled ?? false)
         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#dff0d8; border:1px solid #d6e9c6; border-radius:4px; margin-bottom:14px;">
             <span style="font-size:13px; color:#3c763d; font-weight:500;">&#10003; Two-Factor Authentication is enabled</span>
-            <form method="POST" action="{{ route('client.account.security.disable2fa') }}" style="margin:0;">
+            <form method="POST" action="{{ route('client.2fa.disable') }}" style="margin:0;">
                 @csrf
-                @method('DELETE')
+                <input type="password" name="password" placeholder="Your password" class="form-control form-control-sm" style="width:160px;display:inline-block;margin-right:6px;" required>
                 <button type="submit" class="btn btn-danger btn-sm">Disable</button>
             </form>
         </div>
         @else
         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; margin-bottom:14px;">
             <span style="font-size:13px; color:#777;">Two-Factor Authentication is not enabled</span>
-            <a href="{{ "#" }}" class="btn btn-success btn-sm">Enable 2FA</a>
+            <a href="{{ route('client.2fa.enable') }}" class="btn btn-success btn-sm">Enable 2FA</a>
         </div>
         @endif
     </div>
@@ -53,7 +53,6 @@
                         @if($session->id !== session()->getId())
                         <form method="POST" action="{{ route('client.account.security.logout_session', $session->id) }}" style="margin:0;">
                             @csrf
-                            @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">Revoke</button>
                         </form>
                         @else
