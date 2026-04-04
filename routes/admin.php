@@ -14,11 +14,14 @@ use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\QuoteController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\WhoisController;
 use Illuminate\Support\Facades\Route;
 
 Route::get("/admin/login", [AuthController::class, "showLogin"])->name("admin.login");
 Route::post("/admin/login", [AuthController::class, "login"])->middleware("throttle:30,5")->name("admin.login.submit");
+Route::get("/admin/2fa", [AuthController::class, "show2faVerify"])->name("admin.2fa.verify");
+Route::post("/admin/2fa", [AuthController::class, "verify2fa"])->name("admin.2fa.verify.submit");
 
 Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(function () {
     Route::get("/", [DashboardController::class, "index"])->name("dashboard");
@@ -53,6 +56,7 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::get("invoices/{invoice}", [InvoiceController::class, "show"])->name("invoices.show");
     Route::post("invoices/{invoice}/mark-paid", [InvoiceController::class, "markPaid"])->name("invoices.mark-paid");
     Route::post("invoices/{invoice}/cancel", [InvoiceController::class, "cancel"])->name("invoices.cancel");
+    Route::get("invoices/{invoice}/pdf", [InvoiceController::class, "downloadPdf"])->name("invoices.pdf");
     Route::get("clients/export/csv", [ClientController::class, "exportCsv"])->name("clients.export");
     Route::get("invoices/export/csv", [InvoiceController::class, "exportCsv"])->name("invoices.export");
 
@@ -103,6 +107,8 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::delete("settings/appearance/theme/{slug}", [SettingController::class, "deleteTheme"])->name("settings.appearance.theme.delete");
     Route::get("settings/appearance/theme/{slug}/download", [SettingController::class, "downloadTheme"])->name("settings.appearance.theme.download");
     Route::post("my-account", [SettingController::class, "updateMyAccount"])->name("my-account.update");
+    Route::match(["get", "post"], "2fa/enable", [AuthController::class, "enable2fa"])->name("2fa.enable");
+    Route::post("2fa/disable", [AuthController::class, "disable2fa"])->name("2fa.disable");
 
     // Reports
     Route::get("reports", [\App\Http\Controllers\Admin\ReportController::class, "index"])->name("reports.index");
@@ -267,6 +273,12 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
 
     // API Documentation
     Route::get("api-docs", [ConfigController::class, "apiDocs"])->name("api-docs");
+
+    // Affiliates
+    Route::get("affiliates", [AffiliateController::class, "index"])->name("affiliates.index");
+    Route::get("affiliates/{affiliate}", [AffiliateController::class, "show"])->name("affiliates.show");
+    Route::put("affiliates/{affiliate}", [AffiliateController::class, "update"])->name("affiliates.update");
+    Route::post("affiliates/{affiliate}/payout", [AffiliateController::class, "payout"])->name("affiliates.payout");
 
     // WHOIS Lookup
     Route::get("whois", [WhoisController::class, "index"])->name("whois.index");

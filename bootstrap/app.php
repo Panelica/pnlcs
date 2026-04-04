@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Middleware\AdminAuthenticate;
+use App\Http\Middleware\AdminTwoFactorVerify;
+use App\Http\Middleware\TwoFactorVerify;
+use App\Http\Middleware\AffiliateTracking;
 use App\Http\Middleware\CheckAdminPermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,9 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->appendToGroup("web", AffiliateTracking::class);
         $middleware->appendToGroup("api", \App\Http\Middleware\ApiKeyAuth::class);
         $middleware->alias([
             "admin.auth" => AdminAuthenticate::class,
+            "admin.2fa" => AdminTwoFactorVerify::class,
+            "2fa" => TwoFactorVerify::class,
             "admin.permission" => CheckAdminPermission::class,
         ]);
 

@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use App\Services\InvoicePdfService;
 
 class InvoiceController extends Controller
 {
@@ -174,5 +175,14 @@ class InvoiceController extends Controller
             ['ID', 'Invoice #', 'Client', 'Email', 'Status', 'Subtotal', 'Tax', 'Total', 'Payment Method', 'Date', 'Due Date', 'Date Paid'],
             $rows
         );
+    }
+
+
+    /**
+     * Download invoice as PDF.
+     */
+    public function downloadPdf(Invoice $invoice, InvoicePdfService $pdfService)
+    {
+        return $pdfService->download($invoice);
     }
 }

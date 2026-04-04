@@ -10,6 +10,8 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestF
     Route::post('gateway/paypal/webhook',    [GatewayWebhookController::class, 'paypal'])->name('gateway.paypal.webhook');
     Route::post('gateway/stripe/webhook',    [GatewayWebhookController::class, 'stripe'])->name('gateway.stripe.webhook');
     Route::post('gateway/authorize/webhook', [GatewayWebhookController::class, 'authorize'])->name('gateway.authorize.webhook');
+    Route::post('gateway/mollie/webhook', [GatewayWebhookController::class, 'mollie'])->name('gateway.mollie.webhook');
+    Route::post('gateway/razorpay/webhook', [GatewayWebhookController::class, 'razorpay'])->name('gateway.razorpay.webhook');
 });
 
 // ===== Gateway JS-SDK Capture Endpoints (authenticated, CSRF-protected) =====
@@ -18,4 +20,6 @@ Route::middleware(['web'])->group(function () {
     Route::post('gateway/stripe/intent/{invoice}',     [GatewayWebhookController::class, 'stripeIntent'])->name('gateway.stripe.intent');
     Route::post('gateway/stripe/confirm/{invoice}',    [GatewayWebhookController::class, 'stripeConfirm'])->name('gateway.stripe.confirm');
     Route::post('gateway/authorize/capture/{invoice}', [GatewayWebhookController::class, 'authorizeCapture'])->name('gateway.authorize.capture');
+    Route::post('gateway/mollie/capture/{invoice}', [GatewayWebhookController::class, 'mollieCapture'])->name('gateway.mollie.capture');
+    Route::post('gateway/razorpay/capture/{invoice}', [GatewayWebhookController::class, 'razorpayCapture'])->name('gateway.razorpay.capture');
 });

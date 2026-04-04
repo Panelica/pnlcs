@@ -10,11 +10,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "bacon/bacon-qr-code": "^3.0",
         "barryvdh/laravel-debugbar": "^4.2",
+        "barryvdh/laravel-dompdf": "^3.1",
         "blade-ui-kit/blade-heroicons": "^2.7",
         "laravel/framework": "^13.0",
         "laravel/pint": "^1.29",
-        "laravel/tinker": "^3.0"
+        "laravel/tinker": "^3.0",
+        "pragmarx/google2fa-laravel": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

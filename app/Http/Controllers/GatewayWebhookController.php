@@ -197,4 +197,72 @@ class GatewayWebhookController extends Controller
 
         Log::info("Invoice #{$invoice->id} marked as paid via {$gateway}", ["transaction_id" => $transactionId]);
     }
+
+    // ========== Mollie ==========
+
+    public function mollie(Request $request)
+    {
+        $data = $request->all();
+        $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("mollie");
+        if (!$module) return response("Mollie not configured", 500);
+        $result = $module->processWebhook($data);
+        if (($result["success"] ?? false) && !empty($result["invoice_id"])) {
+            $invoice = \App\Models\Invoice::find($result["invoice_id"]);
+            if ($invoice) {
+                $this->recordTransaction($invoice, "mollie", $result["transaction_id"] ?? "", (float)($result["amount"] ?? 0));
+            }
+        }
+        return response("OK", 200);
+    }
+
+    public function mollieCapture(Request $request, \App\Models\Invoice $invoice)
+    {
+        $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("mollie");
+        if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
+        $result = $module->capture($invoice, (float)$invoice->total, [
+            "redirect_url" => url("/client/invoices/{$invoice->id}?payment=success"),
+            "webhook_url" => route("gateway.mollie.webhook"),
+        ]);
+        if (($result["redirect"] ?? false) && !empty($result["checkout_url"])) {
+            return redirect($result["checkout_url"]);
+        }
+        return response()->json($result);
+    }
+
+    // ========== Razorpay ==========
+
+    public function razorpay(Request $request)
+    {
+        $data = $request->all();
+        $data["_raw_payload"] = $request->getContent();
+        $data["_signature_header"] = $request->header("X-Razorpay-Signature", "");
+        $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("razorpay");
+        if (!$module) return response("Not configured", 500);
+        $result = $module->processWebhook($data);
+        if (($result["success"] ?? false) && !empty($result["invoice_id"])) {
+            $invoice = \App\Models\Invoice::find($result["invoice_id"]);
+            if ($invoice) {
+                $this->recordTransaction($invoice, "razorpay", $result["transaction_id"] ?? "", (float)($result["amount"] ?? 0));
+            }
+        }
+        return response("OK", 200);
+    }
+
+    public function razorpayCapture(Request $request, \App\Models\Invoice $invoice)
+    {
+        $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("razorpay");
+        if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
+        if ($request->input("confirm")) {
+            // Confirm payment
+            $paymentId = $request->input("razorpay_payment_id");
+            if ($paymentId) {
+                $this->recordTransaction($invoice, "razorpay", $paymentId, (float)$invoice->total);
+                return response()->json(["success" => true, "redirect_url" => url("/client/invoices/{$invoice->id}?payment=success")]);
+            }
+            return response()->json(["success" => false, "message" => "Missing payment ID"]);
+        }
+        // Create order
+        $result = $module->capture($invoice, (float)$invoice->total);
+        return response()->json($result);
+    }
 }

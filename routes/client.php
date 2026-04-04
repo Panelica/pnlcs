@@ -50,6 +50,12 @@ Route::prefix('client')->name('client.')->group(function () {
     Route::get('store', [CartController::class, 'store'])->name('store');
     Route::get('store/configure/{product:slug}', [CartController::class, 'configure'])->name('store.configure');
 
+    // 2FA verification (requires login but not 2FA yet)
+    Route::middleware('auth')->withoutMiddleware([\App\Http\Middleware\TwoFactorVerify::class])->group(function () {
+        Route::get('2fa', [AuthController::class, 'show2faVerify'])->name('2fa.verify');
+        Route::post('2fa', [AuthController::class, 'verify2fa'])->name('2fa.verify.submit');
+    });
+
     Route::middleware('auth')->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
         Route::post('logout', [AuthController::class, 'logout'])->name('logout');
@@ -72,6 +78,7 @@ Route::prefix('client')->name('client.')->group(function () {
 
         // Invoices
         Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
 
         // Tickets
@@ -113,6 +120,8 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::delete('account/contacts/{contact}', [AccountController::class, 'destroyContact'])->name('account.contacts.destroy');
         Route::get("account/payment-methods", [AccountController::class, "paymentMethods"])->name("account.payment_methods");
         Route::get('account/security', [AccountController::class, 'security'])->name('account.security');
+        Route::match(['get', 'post'], '2fa/enable', [AuthController::class, 'enable2fa'])->name('2fa.enable');
+        Route::post('2fa/disable', [AuthController::class, 'disable2fa'])->name('2fa.disable');
     });
 });
 
