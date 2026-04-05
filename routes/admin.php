@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\LogController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\WhoisController;
+use App\Http\Controllers\Admin\BulkActionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get("/admin/login", [AuthController::class, "showLogin"])->name("admin.login");
@@ -30,6 +31,8 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     // Clients CRUD
     Route::resource("clients", ClientController::class);
     Route::post("clients/{client}/notes", [ClientController::class, "storeNote"])->name("clients.notes.store");
+    Route::post("clients/{client}/impersonate", [ClientController::class, "impersonate"])->name("clients.impersonate");
+    Route::get("impersonation/stop", [ClientController::class, "stopImpersonation"])->name("clients.stop-impersonation");
 
     // Products
     Route::get("products", [ProductController::class, "index"])->name("products.index");
@@ -246,8 +249,51 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
         Route::delete("client-groups/{group}", [ConfigController::class, "destroyClientGroup"])->name("client-groups.destroy");
 
         // System
+
+        // Notification Channels (Phase 7)
+        Route::get("notifications", [ConfigController::class, "notifications"])->name("notifications");
+        Route::post("notification-providers", [ConfigController::class, "storeNotificationProvider"])->name("notification-providers.store");
+        Route::put("notification-providers/{id}", [ConfigController::class, "updateNotificationProvider"])->name("notification-providers.update");
+        Route::delete("notification-providers/{id}", [ConfigController::class, "destroyNotificationProvider"])->name("notification-providers.destroy");
+        Route::post("notification-rules", [ConfigController::class, "storeNotificationRule"])->name("notification-rules.store");
+        Route::delete("notification-rules/{id}", [ConfigController::class, "destroyNotificationRule"])->name("notification-rules.destroy");
+
+        // Ticket Spam Filter (Phase 12)
+        Route::get("ticket-spam", [ConfigController::class, "ticketSpam"])->name("ticket-spam");
+        Route::put("ticket-spam", [ConfigController::class, "updateTicketSpam"])->name("ticket-spam.update");
+        Route::post("ticket-spam/filters", [ConfigController::class, "storeTicketSpamFilter"])->name("ticket-spam.filter.store");
+        Route::delete("ticket-spam/filters/{id}", [ConfigController::class, "destroyTicketSpamFilter"])->name("ticket-spam.filter.destroy");
+
+        // Product Addons (Phase 14)
+        Route::get("addons", [ConfigController::class, "addons"])->name("addons");
+        Route::post("addons", [ConfigController::class, "storeAddon"])->name("addons.store");
+        Route::put("addons/{id}", [ConfigController::class, "updateAddon"])->name("addons.update");
+        Route::delete("addons/{id}", [ConfigController::class, "destroyAddon"])->name("addons.destroy");
+
+        // Product Bundles (Phase 15)
+        Route::get("bundles", [ConfigController::class, "bundles"])->name("bundles");
+        Route::post("bundles", [ConfigController::class, "storeBundle"])->name("bundles.store");
+        Route::delete("bundles/{id}", [ConfigController::class, "destroyBundle"])->name("bundles.destroy");
+
         Route::get("system-database", [ConfigController::class, "systemDatabase"])->name("system-database");
         Route::get("system-phpinfo", [ConfigController::class, "systemPhpInfo"])->name("system-phpinfo");
+
+        // Config Options
+        Route::get("config-options", [ConfigController::class, "configOptions"])->name("config-options");
+        Route::post("config-option-groups", [ConfigController::class, "storeConfigOptionGroup"])->name("config-option-groups.store");
+        Route::put("config-option-groups/{id}", [ConfigController::class, "updateConfigOptionGroup"])->name("config-option-groups.update");
+        Route::delete("config-option-groups/{id}", [ConfigController::class, "deleteConfigOptionGroup"])->name("config-option-groups.destroy");
+        Route::post("config-options-store", [ConfigController::class, "storeConfigOption"])->name("config-options.store");
+        Route::delete("config-options/{id}", [ConfigController::class, "deleteConfigOption"])->name("config-options.destroy");
+        Route::post("config-option-subs", [ConfigController::class, "storeConfigOptionSub"])->name("config-option-subs.store");
+        Route::delete("config-option-subs/{id}", [ConfigController::class, "deleteConfigOptionSub"])->name("config-option-subs.destroy");
+
+        // Ticket Escalation
+        Route::get("ticket-escalation", [ConfigController::class, "ticketEscalation"])->name("ticket-escalation");
+        Route::post("ticket-escalation", [ConfigController::class, "storeTicketEscalation"])->name("ticket-escalation.store");
+        Route::put("ticket-escalation/{id}", [ConfigController::class, "updateTicketEscalation"])->name("ticket-escalation.update");
+        Route::delete("ticket-escalation/{id}", [ConfigController::class, "deleteTicketEscalation"])->name("ticket-escalation.destroy");
+
     });
 
 
@@ -285,6 +331,35 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::post("whois", [WhoisController::class, "lookup"])->name("whois.lookup");
 
 
+    // Bulk Actions
+    Route::get("bulk/mass-email", [BulkActionController::class, "massEmailForm"])->name("bulk.mass-email");
+    Route::post("bulk/mass-email", [BulkActionController::class, "massEmail"])->name("bulk.mass-email.send");
+    Route::post("bulk/invoice", [BulkActionController::class, "bulkInvoice"])->name("bulk.invoice");
+    Route::post("bulk/service-update", [BulkActionController::class, "bulkServiceUpdate"])->name("bulk.service-update");
+
+
+    // Calendar (Phase 13)
+    Route::get("calendar", [\App\Http\Controllers\Admin\CalendarController::class, "index"])->name("calendar");
+    Route::post("calendar", [\App\Http\Controllers\Admin\CalendarController::class, "store"])->name("calendar.store");
+    Route::put("calendar/{event}", [\App\Http\Controllers\Admin\CalendarController::class, "update"])->name("calendar.update");
+    Route::delete("calendar/{event}", [\App\Http\Controllers\Admin\CalendarController::class, "destroy"])->name("calendar.destroy");
+    Route::get("calendar/events", [\App\Http\Controllers\Admin\CalendarController::class, "apiEvents"])->name("calendar.events");
+
+
+    // ── Languages & Translations ──────────────────────────────────────
+    Route::prefix("config/languages")->name("config.languages.")->group(function () {
+        Route::get("/", [\App\Http\Controllers\Admin\TranslationController::class, "index"])->name("index");
+        Route::post("/toggle/{language}", [\App\Http\Controllers\Admin\TranslationController::class, "toggle"])->name("toggle");
+        Route::post("/set-default", [\App\Http\Controllers\Admin\TranslationController::class, "setDefault"])->name("set-default");
+        Route::get("/translations/{locale}", [\App\Http\Controllers\Admin\TranslationController::class, "translations"])->name("translations");
+        Route::post("/translations/{locale}/save", [\App\Http\Controllers\Admin\TranslationController::class, "saveTranslation"])->name("save");
+        Route::post("/translations/{locale}/bulk-save", [\App\Http\Controllers\Admin\TranslationController::class, "bulkSave"])->name("bulk-save");
+        Route::post("/ai-translate/{locale}", [\App\Http\Controllers\Admin\TranslationController::class, "aiTranslate"])->name("ai-translate");
+        Route::get("/export/{locale}", [\App\Http\Controllers\Admin\TranslationController::class, "export"])->name("export");
+        Route::post("/import/{locale}", [\App\Http\Controllers\Admin\TranslationController::class, "import"])->name("import");
+        Route::post("/cache-clear", [\App\Http\Controllers\Admin\TranslationController::class, "clearCache"])->name("cache-clear");
+    });
+
     // ── SSL Orders ──────────────────────────────────────────────────
     Route::prefix("ssl-orders")->name("ssl.")->group(function () {
         Route::get("/", [\App\Http\Controllers\Admin\SslOrderController::class, "index"])->name("index");
@@ -298,5 +373,6 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
         Route::get("/ssl-modules", [\App\Http\Controllers\Admin\ConfigController::class, "sslModules"])->name("sslModules");
         Route::post("/ssl-modules/{module}", [\App\Http\Controllers\Admin\ConfigController::class, "updateSslModuleSettings"])->name("updateSslModuleSettings");
         Route::post("/ssl-modules/{module}/test", [\App\Http\Controllers\Admin\ConfigController::class, "testSslConnection"])->name("testSslConnection");
+
     });
 });

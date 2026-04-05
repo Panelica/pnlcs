@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Transactions Report")
+@section("title", __("admin.transactions_report"))
 @section("content")
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>Transactions</h1>
@@ -9,9 +9,9 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Client</th>
-                <th>Description</th>
+                <th>{{ __('common.table.date') }}</th>
+                <th>{{ __('common.table.client') }}</th>
+                <th>{{ __('common.table.description') }}</th>
                 <th>Gateway</th>
                 <th>Amount In</th>
                 <th>Amount Out</th>

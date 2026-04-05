@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Appearance")
+@section("title", __("admin.settings.appearance"))
 
 @section("content")
 <div class="page-header">
@@ -147,8 +147,7 @@
                                 @csrf
                                 <input type="hidden" name="slug" value="{{ $slug }}">
                                 <button type="submit" class="btn btn-sm btn-primary" style="width:100%;">
-                                    <i class="fas fa-check"></i> Activate
-                                </button>
+                                    <i class="fas fa-check"></i>{{ __('common.actions.activate') }}</button>
                             </form>
                             <a href="{{ route('admin.settings.appearance.theme.download', $slug) }}" class="btn btn-sm btn-default" title="Download ZIP"><i class="fas fa-download"></i></a>
                             @if(!$themeInfo->isBuiltin)
@@ -339,8 +338,7 @@
                         {{ $section->is_enabled ? 'ON' : 'OFF' }}
                     </label>
                     <button class="btn btn-sm btn-primary" onclick="editSection('{{ $section->slug }}', '{{ $section->title }}')">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
+                        <i class="fas fa-edit"></i>{{ __('common.actions.edit') }}</button>
                 </div>
                 @endforeach
             </div>
@@ -358,8 +356,8 @@
                 <p style="color:#999;">Loading...</p>
             </div>
             <div style="margin-top:20px; display:flex; gap:8px; justify-content:flex-end;">
-                <button class="btn btn-default" onclick="closeSectionModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveSectionContent()"><i class="fas fa-save"></i> Save</button>
+                <button class="btn btn-default" onclick="closeSectionModal()">{{ __('common.actions.cancel') }}</button>
+                <button class="btn btn-primary" onclick="saveSectionContent()"><i class="fas fa-save"></i>{{ __('common.actions.save') }}</button>
             </div>
         </div>
     </div>
@@ -377,7 +375,7 @@
                 @csrf
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
                     <div>
-                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">Company Name</label>
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('common.form.company_name') }}</label>
                         <input type="text" name="company_name" value="{{ $whitelabel['company_name'] }}" class="form-control" placeholder="e.g. MyHosting">
                         <span style="font-size:11px; color:#999;">Replaces "PNLCS" in navigation, footer, emails</span>
                     </div>

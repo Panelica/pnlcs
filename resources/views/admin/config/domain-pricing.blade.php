@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No domain pricing configured.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Extension</th><th>Register</th><th>Transfer</th><th>Renew</th><th>Grace</th><th>Min/Max Yrs</th><th>Registrar</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Extension</th><th>{{ __('common.actions.register') }}</th><th>Transfer</th><th>Renew</th><th>Grace</th><th>Min/Max Yrs</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($tlds as $tld)
         <tr>
@@ -24,10 +24,10 @@
             <td>{{ $tld->auto_registrar ?: 'Manual' }}</td>
             <td><span class="badge-{{ $tld->enabled ? 'active' : 'suspended' }}">{{ $tld->enabled ? 'Enabled' : 'Disabled' }}</span></td>
             <td style="text-align:right;">
-                <button type="button" class="btn btn-default btn-xs" onclick="openEditTLD({{ json_encode($tld) }})">Edit</button>
+                <button type="button" class="btn btn-default btn-xs" onclick="openEditTLD({{ json_encode($tld) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.domain-pricing.destroy', $tld) }}" style="display:inline;" onsubmit="return confirm('Delete .{{ $tld->extension }}?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -62,8 +62,8 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-tld').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                <button type="button" onclick="document.getElementById('modal-tld').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save') }}</button>
             </div>
         </form>
     </div>

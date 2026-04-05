@@ -43,7 +43,7 @@ class SslController extends Controller
 
         if ($sslOrder->status !== 'Awaiting Configuration') {
             return redirect()->route('client.ssl.show', $sslOrder)
-                ->with('error', 'This certificate has already been configured.');
+                ->with('error', __('messages.error.this_certificate_has_already_been_configured'));
         }
 
         $module = $this->sslService->getModuleForOrder($sslOrder);
@@ -92,7 +92,7 @@ class SslController extends Controller
 
         if ($result['success']) {
             return redirect()->route('client.ssl.show', $sslOrder)
-                ->with('success', 'SSL certificate configuration submitted successfully. Your certificate is being processed.');
+                ->with('success', __('messages.success.ssl_certificate_configuration_submitted_successful'));
         }
 
         return back()->withInput()->with('error', $result['message']);
@@ -152,7 +152,7 @@ class SslController extends Controller
         $result = $this->sslService->resendValidation($sslOrder);
 
         if ($result['success']) {
-            return back()->with('success', 'Validation email has been resent.');
+            return back()->with('success', __('messages.success.validation_email_has_been_resent'));
         }
 
         return back()->with('error', $result['message']);

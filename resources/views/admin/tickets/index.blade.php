@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Support Tickets")
+@section("title", __("admin.tickets.title"))
 @section("content")
 
 <div class="page-header">
@@ -23,12 +23,12 @@
         <thead>
             <tr>
                 <th>Ticket #</th>
-                <th>Department</th>
-                <th>Subject</th>
-                <th>Client</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Last Reply</th>
+                <th>{{ __('common.table.department') }}</th>
+                <th>{{ __('common.table.subject') }}</th>
+                <th>{{ __('common.table.client') }}</th>
+                <th>{{ __('common.table.priority') }}</th>
+                <th>{{ __('common.table.status') }}</th>
+                <th>{{ __('common.table.last_reply') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -61,7 +61,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="text-align:center;padding:32px;color:#999;">No tickets found.</td>
+                <td colspan="7" style="text-align:center;padding:32px;color:#999;">{{ __('admin.tickets.no_tickets') }}</td>
             </tr>
             @endforelse
         </tbody>

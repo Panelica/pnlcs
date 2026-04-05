@@ -21,10 +21,10 @@
                     <option value="failed" {{ request('status')==='failed'?'selected':'' }}>Failed</option>
                 </select>
             </div>
-            <div style="flex:1;min-width:200px;"><label class="form-label">Search (subject/recipient)</label><input type="text" name="search" value="{{ request('search') }}" placeholder="Search..." class="form-control"></div>
+            <div style="flex:1;min-width:200px;"><label class="form-label">Search (subject/recipient)</label><input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('common.placeholder.search') }}" class="form-control"></div>
             <div style="display:flex;gap:6px;">
-                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                <a href="{{ route('admin.logs.email') }}" class="btn btn-default btn-sm">Clear</a>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.filter') }}</button>
+                <a href="{{ route('admin.logs.email') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>
             </div>
         </form>
     </div>
@@ -32,7 +32,7 @@
 
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>Date</th><th>Client</th><th>Recipient</th><th>Subject</th><th>Status</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.client') }}</th><th>Recipient</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
         <tbody>
             @forelse($logs as $log)
             <tr>

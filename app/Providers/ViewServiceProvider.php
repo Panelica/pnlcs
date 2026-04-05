@@ -32,5 +32,15 @@ class ViewServiceProvider extends ServiceProvider
                 'active_tickets' => 0, 'high_priority_tickets' => 0,
             ]);
         });
+
+        View::composer([
+            'admin.layouts.app',
+            'client.layouts.app',
+            'welcome',
+            'client.auth.login',
+            'client.auth.register',
+            'client.auth.forgot-password',
+            'client.auth.reset-password',
+        ], \App\View\Composers\LanguageComposer::class);
     }
 }

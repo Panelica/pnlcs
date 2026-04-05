@@ -98,10 +98,10 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6 mb-2"><label class="text-muted small">Name</label><p class="mb-0">{{ $order->admin_first_name }} {{ $order->admin_last_name }}</p></div>
-                    <div class="col-md-6 mb-2"><label class="text-muted small">Email</label><p class="mb-0">{{ $order->admin_email }}</p></div>
+                    <div class="col-md-6 mb-2"><label class="text-muted small">{{ __('common.form.email') }}</label><p class="mb-0">{{ $order->admin_email }}</p></div>
                     <div class="col-md-6 mb-2"><label class="text-muted small">Phone</label><p class="mb-0">{{ $order->admin_phone ?: '—' }}</p></div>
                     <div class="col-md-6 mb-2"><label class="text-muted small">Organization</label><p class="mb-0">{{ $order->admin_org ?: '—' }}</p></div>
-                    <div class="col-12 mb-2"><label class="text-muted small">Address</label><p class="mb-0">{{ collect([$order->admin_address, $order->admin_city, $order->admin_state, $order->admin_zip, $order->admin_country])->filter()->implode(', ') ?: '—' }}</p></div>
+                    <div class="col-12 mb-2"><label class="text-muted small">{{ __('common.form.address') }}</label><p class="mb-0">{{ collect([$order->admin_address, $order->admin_city, $order->admin_state, $order->admin_zip, $order->admin_country])->filter()->implode(', ') ?: '—' }}</p></div>
                 </div>
             </div>
         </div>

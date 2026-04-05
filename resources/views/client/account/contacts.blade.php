@@ -15,16 +15,16 @@
                 @csrf
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                     <div class="form-group">
-                        <label class="form-label">First Name <span style="color:#c43c35;">*</span></label>
+                        <label class="form-label">{{ __('common.form.first_name') }}<span style="color:#c43c35;">*</span></label>
                         <input type="text" name="first_name" required class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Last Name <span style="color:#c43c35;">*</span></label>
+                        <label class="form-label">{{ __('common.form.last_name') }}<span style="color:#c43c35;">*</span></label>
                         <input type="text" name="last_name" required class="form-control">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Email <span style="color:#c43c35;">*</span></label>
+                    <label class="form-label">{{ __('common.form.email') }}<span style="color:#c43c35;">*</span></label>
                     <input type="email" name="email" required class="form-control">
                 </div>
                 <div class="form-group">
@@ -32,7 +32,7 @@
                     <input type="text" name="phone" class="form-control">
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm">Save Contact</button>
-                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('addContactForm').style.display='none'">Cancel</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('addContactForm').style.display='none'">{{ __('common.actions.cancel') }}</button>
             </form>
         </div>
     </div>
@@ -43,11 +43,11 @@
         <table class="pn-table">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
+                    <th>{{ __('common.table.name') }}</th>
+                    <th>{{ __('common.table.email') }}</th>
                     <th>Phone</th>
                     <th>Permissions</th>
-                    <th>Actions</th>
+                    <th>{{ __('common.table.actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,11 +58,11 @@
                     <td style="color:#777;">{{ $contact->phone ?? '-' }}</td>
                     <td style="font-size:12px; color:#777;">{{ $contact->permissions ?? 'General' }}</td>
                     <td>
-                        <a href="#" class="btn btn-outline btn-xs">Edit</a>
+                        <a href="#" class="btn btn-outline btn-xs">{{ __('common.actions.edit') }}</a>
                         <form method="POST" action="{{ route('client.account.contacts.destroy', $contact) }}" style="display:inline;" onsubmit="return confirm('Remove this contact?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-xs">Remove</button>
+                            <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.remove') }}</button>
                         </form>
                     </td>
                 </tr>

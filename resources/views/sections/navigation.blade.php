@@ -58,7 +58,7 @@
                 </button>
                 @endif
                 <a href="/client/cart" class="main-nav__cart"><i class="ri-shopping-cart-2-line"></i></a>
-                <a href="{{ route('client.login') }}" class="main-nav__login">Login</a>
+                <a href="{{ route('client.login') }}" class="main-nav__login">{{ __('common.actions.login') }}</a>
                 <button class="main-nav__hamburger" @click="mobileMenu = !mobileMenu"><i class="ri-menu-line"></i></button>
             </div>
         </div>
@@ -70,7 +70,7 @@
         <a href="/client/store">VPS Server</a>
         <a href="/client/knowledgebase">Knowledge Base</a>
         <a href="/client/contact">Contact</a>
-        <a href="{{ route('client.login') }}">Login</a>
+        <a href="{{ route('client.login') }}">{{ __('common.actions.login') }}</a>
         <a href="{{ route('client.register') }}">Sign Up</a>
     </div>
 </nav>

@@ -61,7 +61,7 @@
     <div class="card-header"><strong>Referral History</strong></div>
     <div class="card-body-flush">
         <table class="table table-striped mb-0">
-            <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Gateway</th></tr></thead>
+            <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.description') }}</th><th>{{ __('common.table.amount') }}</th><th>Gateway</th></tr></thead>
             <tbody>
             @forelse(\$transactions as \$tx)
             <tr>

@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Order a New Product")
+@section("title", __("client.order_a_new_product"))
 @section("content")
 
 <div class="pn-page-header">

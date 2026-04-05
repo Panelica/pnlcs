@@ -148,7 +148,7 @@ class AuthController extends Controller
 
         session()->forget('admin_2fa_verified');
 
-        return back()->with('success', '2FA has been disabled.');
+        return back()->with('success', __('messages.success.2fa_has_been_disabled'));
     }
 
     public function logout(Request $request)

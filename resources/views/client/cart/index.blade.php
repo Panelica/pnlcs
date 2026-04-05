@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Shopping Cart")
+@section("title", __("client.cart.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -32,9 +32,9 @@
                 <table class="pn-table">
                     <thead>
                         <tr>
-                            <th>Product</th>
-                            <th>Billing Cycle</th>
-                            <th style="text-align:right">Price</th>
+                            <th>{{ __('common.table.product') }}</th>
+                            <th>{{ __('common.table.billing_cycle') }}</th>
+                            <th style="text-align:right">{{ __('common.table.price') }}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -51,7 +51,7 @@
                                 <form method="POST" action="{{ route("client.cart.remove", $key) }}" style="display:inline">
                                     @csrf
                                     @method("DELETE")
-                                    <button type="submit" class="btn btn-danger btn-xs">Remove</button>
+                                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.remove') }}</button>
                                 </form>
                             </td>
                         </tr>
@@ -67,7 +67,7 @@
                 <form method="POST" action="{{ route("client.cart.promo") }}" style="display:flex;gap:8px;max-width:360px">
                     @csrf
                     <input type="text" name="code" class="form-control" placeholder="Enter promo code" value="{{ $totals["promo_code"] ?? "" }}">
-                    <button type="submit" class="btn btn-outline" style="flex-shrink:0">Apply</button>
+                    <button type="submit" class="btn btn-outline" style="flex-shrink:0">{{ __('common.actions.apply') }}</button>
                 </form>
                 @if($totals["promo_code"] ?? false)
                 <div class="pn-alert pn-alert-success mt-16">Promo code "{{ $totals["promo_code"] }}" applied successfully!</div>

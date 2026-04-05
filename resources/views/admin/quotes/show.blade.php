@@ -19,7 +19,7 @@
             </div>
             <table class="data-table">
                 <thead><tr>
-                    <th>Description</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit Price</th><th style="text-align:right;">Discount</th><th style="text-align:right;">Amount</th>
+                    <th>{{ __('common.table.description') }}</th><th style="text-align:right;">Qty</th><th style="text-align:right;">Unit Price</th><th style="text-align:right;">{{ __('common.table.discount') }}</th><th style="text-align:right;">{{ __('common.table.amount') }}</th>
                 </tr></thead>
                 <tbody>
                     @forelse($quote->items as $item)

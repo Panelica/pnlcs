@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No banned emails or domains.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Email / Domain</th><th>Reason</th><th>Banned On</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Email / Domain</th><th>Reason</th><th>Banned On</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($bannedEmails as $ban)
         <tr>
@@ -21,7 +21,7 @@
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.banned-emails.destroy', $ban) }}" style="display:inline;" onsubmit="return confirm('Remove ban?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-default btn-xs">Remove</button>
+                    <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.remove') }}</button>
                 </form>
             </td>
         </tr>
@@ -45,7 +45,7 @@
                 <div class="form-group"><label class="form-label">Reason</label><input type="text" name="reason" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-be').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-be').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-danger btn-sm">Ban Email</button>
             </div>
         </form>

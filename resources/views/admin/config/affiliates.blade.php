@@ -10,7 +10,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No affiliates registered.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Client</th><th>Visits</th><th>Earnings</th><th>Balance</th><th>Status</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.client') }}</th><th>Visits</th><th>Earnings</th><th>Balance</th><th>{{ __('common.table.status') }}</th></tr></thead>
         <tbody>
         @foreach($affiliates as $aff)
         <tr>

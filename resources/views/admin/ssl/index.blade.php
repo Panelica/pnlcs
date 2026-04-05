@@ -1,6 +1,6 @@
 @extends("admin.layouts.app")
 
-@section("title", "SSL Orders")
+@section("title", __("admin.ssl_orders"))
 
 @section("content")
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -16,14 +16,14 @@
             </div>
             <div class="col-md-3">
                 <select name="status" class="form-select">
-                    <option value="">All Statuses</option>
+                    <option value="">{{ __('common.misc.all_statuses') }}</option>
                     @foreach(['Awaiting Configuration', 'Configuration Submitted', 'Awaiting Issuance', 'Completed', 'Cancelled', 'Revoked', 'Expired'] as $s)
                         <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>{{ $s }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Filter</button>
+                <button type="submit" class="btn btn-primary w-100">{{ __('common.actions.filter') }}</button>
             </div>
         </form>
     </div>
@@ -34,14 +34,14 @@
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Domain</th>
-                    <th>Type</th>
-                    <th>Client</th>
-                    <th>Status</th>
+                    <th>{{ __('common.table.id') }}</th>
+                    <th>{{ __('common.table.domain') }}</th>
+                    <th>{{ __('common.table.type') }}</th>
+                    <th>{{ __('common.table.client') }}</th>
+                    <th>{{ __('common.table.status') }}</th>
                     <th>Order Date</th>
                     <th>Expires</th>
-                    <th>Actions</th>
+                    <th>{{ __('common.table.actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -79,12 +79,12 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('admin.ssl.show', $order) }}" class="btn btn-sm btn-info">View</a>
+                        <a href="{{ route('admin.ssl.show', $order) }}" class="btn btn-sm btn-info">{{ __('common.actions.view') }}</a>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">No SSL orders found.</td>
+                    <td colspan="8" class="text-center text-muted py-4">{{ __('admin.ssl.no_orders') }}</td>
                 </tr>
                 @endforelse
             </tbody>

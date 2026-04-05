@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Events\ClientCreated;
 
 class AuthController extends Controller
 {
@@ -123,7 +124,7 @@ class AuthController extends Controller
         session()->forget('2fa_setup_secret');
         session(['2fa_verified' => true]);
 
-        return redirect()->route('client.account.security')->with('success', '2FA enabled successfully.')->with('backup_codes', $backupCodes);
+        return redirect()->route('client.account.security')->with('success', __('messages.success.2fa_enabled_successfully'))->with('backup_codes', $backupCodes);
     }
 
     public function disable2fa(Request $request)
@@ -144,7 +145,7 @@ class AuthController extends Controller
 
         session()->forget('2fa_verified');
 
-        return back()->with('success', '2FA has been disabled.');
+        return back()->with('success', __('messages.success.2fa_has_been_disabled'));
     }
 
     public function showRegister()
@@ -164,6 +165,7 @@ class AuthController extends Controller
             'city' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:2',
             'phone_number' => 'nullable|string|max:30',
+            'tos' => 'required|accepted',
         ]);
 
         $user = User::create([
@@ -184,6 +186,8 @@ class AuthController extends Controller
             'phone_number' => $validated['phone_number'] ?? null,
         ]);
         $client->users()->attach($user->id, ['owner' => true]);
+
+        event(new ClientCreated($client));
 
         Auth::login($user);
         return redirect()->route('client.home');
@@ -207,7 +211,7 @@ class AuthController extends Controller
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->first();
         if (!$user) {
-            return back()->with('success', 'If an account exists with that email, a password reset link has been sent.');
+            return back()->with('success', __('messages.success.if_an_account_exists_with_that_email_a_password_re'));
         }
         $token = Str::random(64);
         DB::table('password_reset_tokens')->updateOrInsert(
@@ -215,7 +219,7 @@ class AuthController extends Controller
             ['token' => Hash::make($token), 'created_at' => now()]
         );
         Log::info("Password reset for {$request->email}: {$token}");
-        return back()->with('success', 'If an account exists with that email, a password reset link has been sent.');
+        return back()->with('success', __('messages.success.if_an_account_exists_with_that_email_a_password_re'));
     }
 
     public function showResetForm(Request $request, string $token)
@@ -244,6 +248,6 @@ class AuthController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-        return redirect()->route('client.login')->with('success', 'Password reset successfully. Please log in.');
+        return redirect()->route('client.login')->with('success', __('messages.success.password_reset_successfully_please_log_in'));
     }
 }

@@ -6,6 +6,8 @@ use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ServiceTerminationMail;
 
 class ProcessCancellationsCommand extends Command
 {
@@ -14,7 +16,7 @@ class ProcessCancellationsCommand extends Command
 
     public function handle(): int
     {
-        $services = Service::with('server', 'product')
+        $services = Service::with('server', 'product', 'client')
             ->where('status', 'Active')
             ->whereNotNull('cancellation_type')
             ->where('next_due_date', '<=', now())
@@ -43,6 +45,14 @@ class ProcessCancellationsCommand extends Command
                 'status' => 'Cancelled',
                 'termination_date' => now(),
             ]);
+
+            if ($service->client?->email) {
+                try {
+                    Mail::to($service->client->email)->queue(new ServiceTerminationMail($service));
+                } catch (\Throwable $e) {
+                    Log::warning("Cancellation mail failed for service #{$service->id}: {$e->getMessage()}");
+                }
+            }
 
             $processed++;
         }

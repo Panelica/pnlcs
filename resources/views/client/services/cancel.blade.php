@@ -50,7 +50,7 @@
             </div>
             <div style="display:flex; gap:8px;">
                 <button type="submit" class="btn btn-danger">Submit Cancellation Request</button>
-                <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline">Cancel</a>
+                <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline">{{ __('common.actions.cancel') }}</a>
             </div>
         </form>
     </div>

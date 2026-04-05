@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No network issues reported.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Title</th><th>Type</th><th>Reported</th><th>Resolved</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Title</th><th>{{ __('common.table.type') }}</th><th>Reported</th><th>Resolved</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($networkIssues as $issue)
         <tr>
@@ -23,7 +23,7 @@
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.network-issues.destroy', $issue) }}" style="display:inline;" onsubmit="return confirm('Delete this issue?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -45,10 +45,10 @@
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">Title</label><input type="text" name="title" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">Type</label><select name="type" class="form-control"><option value="general">General</option><option value="network">Network</option><option value="server">Server</option><option value="datacenter">Datacenter</option></select></div>
-                <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="4" required class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" required class="form-control"></textarea></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-ni').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-ni').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Report Issue</button>
             </div>
         </form>

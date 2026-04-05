@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No departments configured.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Department Name</th><th>Email</th><th>Public</th><th>Tickets</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Department Name</th><th>{{ __('common.table.email') }}</th><th>Public</th><th>Tickets</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($departments as $dept)
         <tr>
@@ -21,10 +21,10 @@
             <td>{{ $dept->tickets_count ?? 0 }}</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
-                    onclick="openEditDept({{ json_encode(['id'=>$dept->id,'name'=>$dept->name,'email'=>$dept->email,'description'=>$dept->description,'hidden'=>$dept->hidden]) }})">Edit</button>
+                    onclick="openEditDept({{ json_encode(['id'=>$dept->id,'name'=>$dept->name,'email'=>$dept->email,'description'=>$dept->description,'hidden'=>$dept->hidden]) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.ticket-departments.destroy', $dept) }}" style="display:inline;" onsubmit="return confirm('Delete department {{ $dept->name }}?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -45,12 +45,12 @@
             @csrf
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">Department Name</label><input type="text" name="name" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Email Address <small style="color:#999;">(for ticket notifications)</small></label><input type="email" name="email" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="2" class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.email_address') }}<small style="color:#999;">(for ticket notifications)</small></label><input type="email" name="email" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
                 <div class="form-group"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="hidden" value="1"> Hidden from client ticket form</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-dept').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-dept').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Department</button>
             </div>
         </form>
@@ -68,13 +68,13 @@
             @csrf @method('PUT')
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">Department Name</label><input type="text" name="name" id="ed-name" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Email Address</label><input type="email" name="email" id="ed-email" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Description</label><textarea name="description" id="ed-desc" rows="2" class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.email_address') }}</label><input type="email" name="email" id="ed-email" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" id="ed-desc" rows="2" class="form-control"></textarea></div>
                 <div class="form-group"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="hidden" value="1" id="ed-hidden"> Hidden from clients</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-edit-dept').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                <button type="button" onclick="document.getElementById('modal-edit-dept').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
             </div>
         </form>
     </div>

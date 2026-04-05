@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Contact Us")
+@section("title", __("client.contact.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -28,7 +28,7 @@
                         <input type="text" id="name" name="name" value="{{ old("name", auth()->user()?->full_name) }}" required maxlength="100" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="email">Email Address <span class="req">*</span></label>
+                        <label class="form-label" for="email">{{ __('common.form.email_address') }}<span class="req">*</span></label>
                         <input type="email" id="email" name="email" value="{{ old("email", auth()->user()?->email) }}" required maxlength="200" class="form-control">
                     </div>
                 </div>
@@ -42,11 +42,11 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="subject">Subject <span class="req">*</span></label>
+                    <label class="form-label" for="subject">{{ __('common.form.subject') }}<span class="req">*</span></label>
                     <input type="text" id="subject" name="subject" value="{{ old("subject") }}" required maxlength="200" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="message">Message <span class="req">*</span></label>
+                    <label class="form-label" for="message">{{ __('common.form.message') }}<span class="req">*</span></label>
                     <textarea id="message" name="message" rows="7" required maxlength="5000" class="form-control" placeholder="How can we help you?">{{ old("message") }}</textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Send Message</button>

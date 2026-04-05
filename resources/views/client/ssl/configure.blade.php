@@ -1,6 +1,6 @@
 @extends("client.layouts.app")
 
-@section("title", "Configure SSL Certificate")
+@section("title", __("client.configure_ssl_certificate"))
 
 @section("content")
 <div class="mb-4">
@@ -96,15 +96,15 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">First Name <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ __('common.form.first_name') }}<span class="text-danger">*</span></label>
                     <input type="text" name="admin_first_name" class="form-control" value="{{ old('admin_first_name', auth()->user()->first_name ?? '') }}" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ __('common.form.last_name') }}<span class="text-danger">*</span></label>
                     <input type="text" name="admin_last_name" class="form-control" value="{{ old('admin_last_name', auth()->user()->last_name ?? '') }}" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ __('common.form.email') }}<span class="text-danger">*</span></label>
                     <input type="email" name="admin_email" class="form-control" value="{{ old('admin_email', auth()->user()->email ?? '') }}" required>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -116,11 +116,11 @@
                     <input type="text" name="admin_org" class="form-control" value="{{ old('admin_org', auth()->user()->company_name ?? '') }}">
                 </div>
                 <div class="col-md-12 mb-3">
-                    <label class="form-label">Address</label>
+                    <label class="form-label">{{ __('common.form.address') }}</label>
                     <input type="text" name="admin_address" class="form-control" value="{{ old('admin_address', auth()->user()->address1 ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">City</label>
+                    <label class="form-label">{{ __('common.form.city') }}</label>
                     <input type="text" name="admin_city" class="form-control" value="{{ old('admin_city', auth()->user()->city ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">

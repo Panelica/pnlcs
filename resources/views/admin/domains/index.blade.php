@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Domains")
+@section("title", __("admin.domains.title"))
 @section("content")
 
 <div class="page-header">
@@ -12,14 +12,14 @@
     <div class="card-body" style="padding:12px 16px;">
         <form method="GET" action="{{ route("admin.domains.index") }}" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
             <div class="form-group" style="margin:0;flex:1;min-width:180px;">
-                <label class="form-label">Search</label>
+                <label class="form-label">{{ __('common.actions.search') }}</label>
                 <input type="text" name="search" value="{{ request("search") }}"
                     placeholder="Search domain..." class="form-control">
             </div>
             <div class="form-group" style="margin:0;">
                 <label class="form-label">Status</label>
                 <select name="status" class="form-control" style="width:auto;">
-                    <option value="">All Statuses</option>
+                    <option value="">{{ __('common.misc.all_statuses') }}</option>
                     @foreach($statuses as $s)
                     <option value="{{ $s }}" {{ request("status") == $s ? "selected" : "" }}>{{ $s }}</option>
                     @endforeach
@@ -46,9 +46,9 @@
                 </select>
             </div>
             <div class="form-group" style="margin:0;">
-                <button type="submit" class="btn btn-default">Filter</button>
+                <button type="submit" class="btn btn-default">{{ __('common.actions.filter') }}</button>
                 @if(request()->hasAny(["search","status","registrar","sort"]))
-                <a href="{{ route("admin.domains.index") }}" class="btn btn-default" style="margin-left:4px;">Reset</a>
+                <a href="{{ route("admin.domains.index") }}" class="btn btn-default" style="margin-left:4px;">{{ __('common.actions.reset') }}</a>
                 @endif
             </div>
         </form>
@@ -60,13 +60,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Domain</th>
-                <th>Client</th>
-                <th>Registrar</th>
+                <th>{{ __('common.table.domain') }}</th>
+                <th>{{ __('common.table.client') }}</th>
+                <th>{{ __('common.table.registrar') }}</th>
                 <th>Registered</th>
                 <th>Expires</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>{{ __('common.table.status') }}</th>
+                <th>{{ __('common.table.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -97,12 +97,12 @@
                 </td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($domain->status ?? "") }}</span></td>
                 <td>
-                    <a href="{{ route("admin.domains.show", $domain) }}" class="btn btn-default btn-xs">View</a>
+                    <a href="{{ route("admin.domains.show", $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="text-align:center;padding:32px;color:#999;">No domains found.</td>
+                <td colspan="7" style="text-align:center;padding:32px;color:#999;">{{ __('admin.domains.no_domains') }}</td>
             </tr>
             @endforelse
         </tbody>

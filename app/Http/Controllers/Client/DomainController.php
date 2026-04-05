@@ -43,7 +43,7 @@ class DomainController extends Controller
         $domain->update(['nameservers' => json_encode($nameservers)]);
 
         return redirect()->route('client.domains.show', $domain)
-            ->with('success', 'Nameservers updated successfully.');
+            ->with('success', __('messages.success.nameservers_updated'));
     }
 
     public function toggleLock(Domain $domain)

@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Checkout")
+@section("title", __("client.checkout.title"))
 @section("content")
 
 <a href="{{ route("client.cart.index") }}" class="pn-back">
@@ -9,7 +9,7 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">Checkout</h1>
+        <h1 class="pn-page-title">{{ __('common.actions.checkout') }}</h1>
         <p class="pn-page-subtitle">Review your order and choose a payment method.</p>
     </div>
 </div>
@@ -25,16 +25,16 @@
                 <div class="pn-card-body">
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label class="form-label">First Name <span class="req">*</span></label>
+                            <label class="form-label">{{ __('common.form.first_name') }}<span class="req">*</span></label>
                             <input type="text" name="first_name" class="form-control" value="{{ auth()->user()?->first_name ?? old("first_name") }}" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Last Name <span class="req">*</span></label>
+                            <label class="form-label">{{ __('common.form.last_name') }}<span class="req">*</span></label>
                             <input type="text" name="last_name" class="form-control" value="{{ auth()->user()?->last_name ?? old("last_name") }}" required>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Email Address <span class="req">*</span></label>
+                        <label class="form-label">{{ __('common.form.email_address') }}<span class="req">*</span></label>
                         <input type="email" name="email" class="form-control" value="{{ auth()->user()?->email ?? old("email") }}" required>
                     </div>
                 </div>

@@ -60,7 +60,7 @@ class AccountController extends Controller
         }
 
         return redirect()->route('client.account.profile')
-            ->with('success', 'Profile updated successfully.');
+            ->with('success', __('messages.success.profile_updated'));
     }
 
     public function changePassword()
@@ -85,7 +85,7 @@ class AccountController extends Controller
         $user->update(['password' => Hash::make($request->password)]);
 
         return redirect()->route('client.account.password')
-            ->with('success', 'Password changed successfully.');
+            ->with('success', __('messages.success.password_changed'));
     }
 
     public function paymentMethods()
@@ -108,7 +108,7 @@ class AccountController extends Controller
 
         if (!$client) {
             return redirect()->route('client.account.contacts')
-                ->with('error', 'Client profile not found.');
+                ->with('error', __('messages.error.client_profile_not_found'));
         }
 
         $request->validate([
@@ -134,7 +134,7 @@ class AccountController extends Controller
         ]);
 
         return redirect()->route('client.account.contacts')
-            ->with('success', 'Contact added successfully.');
+            ->with('success', __('messages.success.contact_created'));
     }
 
     public function security()

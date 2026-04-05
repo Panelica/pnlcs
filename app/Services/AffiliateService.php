@@ -8,15 +8,23 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AffiliateWelcomeMail;
 
 class AffiliateService
 {
     public function activateAffiliate(Client $client): Affiliate
     {
-        return Affiliate::firstOrCreate(
+        $affiliate = Affiliate::firstOrCreate(
             ['client_id' => $client->id],
             ['visitors' => 0, 'pay_type' => 'percentage', 'pay_amount' => 10.00, 'onetime' => false, 'balance' => 0, 'withdrawn' => 0]
         );
+
+        if ($affiliate->wasRecentlyCreated && $client->email) {
+            Mail::to($client->email)->queue(new AffiliateWelcomeMail($client, $affiliate));
+        }
+
+        return $affiliate;
     }
 
     public function recordVisit(Affiliate $affiliate): void

@@ -36,7 +36,7 @@ class SettingController extends Controller
             Setting::set($key, $value, 'general');
         }
 
-        return back()->with('success', 'Settings updated.');
+        return back()->with('success', __('messages.success.settings_updated'));
     }
 
     public function testEmail(Request $request)
@@ -212,7 +212,7 @@ class SettingController extends Controller
 
         ThemeService::clearCache();
 
-        return back()->with('success', 'Appearance updated successfully.');
+        return back()->with('success', __('messages.success.appearance_updated_successfully'));
     }
 
     // ═══════════════════════════════════════════════════════
@@ -228,7 +228,7 @@ class SettingController extends Controller
             return back()->with('success', "Theme \"{$slug}\" activated successfully.");
         }
 
-        return back()->with('error', 'Theme not found or invalid.');
+        return back()->with('error', __('messages.error.theme_not_found_or_invalid'));
     }
 
     public function installTheme(Request $request, ThemeManager $themeManager)
@@ -251,7 +251,7 @@ class SettingController extends Controller
         $result = $themeManager->delete($slug);
 
         if ($result['success']) {
-            return back()->with('success', 'Theme deleted.');
+            return back()->with('success', __('messages.success.theme_deleted'));
         }
 
         return back()->with('error', $result['message']);
@@ -262,7 +262,7 @@ class SettingController extends Controller
     {
         $themes = $themeManager->getInstalled();
         if (!isset($themes[$slug])) {
-            return back()->with('error', 'Theme not found.');
+            return back()->with('error', __('messages.error.theme_not_found'));
         }
 
         $themePath = base_path('themes/' . $slug);
@@ -275,7 +275,7 @@ class SettingController extends Controller
 
         $zip = new \ZipArchive();
         if ($zip->open($tmpZip, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
-            return back()->with('error', 'Could not create ZIP archive.');
+            return back()->with('error', __('messages.error.could_not_create_zip_archive'));
         }
 
         $files = new \RecursiveIteratorIterator(
@@ -312,7 +312,7 @@ class SettingController extends Controller
         Setting::set('custom_logo_path', '/branding/' . $filename, 'appearance');
         ThemeService::clearCache();
 
-        return back()->with('success', 'Logo uploaded successfully.');
+        return back()->with('success', __('messages.success.logo_uploaded'));
     }
 
     public function uploadFavicon(Request $request)
@@ -328,7 +328,7 @@ class SettingController extends Controller
         Setting::set('custom_favicon_path', '/branding/' . $filename, 'appearance');
         ThemeService::clearCache();
 
-        return back()->with('success', 'Favicon uploaded successfully.');
+        return back()->with('success', __('messages.success.favicon_uploaded'));
     }
 
     public function removeLogo()
@@ -340,7 +340,7 @@ class SettingController extends Controller
         Setting::set('custom_logo_path', '', 'appearance');
         ThemeService::clearCache();
 
-        return back()->with('success', 'Logo removed.');
+        return back()->with('success', __('messages.success.logo_removed'));
     }
 
     // ═══════════════════════════════════════════════════════
@@ -458,7 +458,7 @@ class SettingController extends Controller
 
         ThemeService::clearCache();
 
-        return back()->with('success', 'White-label settings saved.');
+        return back()->with('success', __('messages.success.whitelabel_saved'));
     }
 
     // ═══════════════════════════════════════════════════════
@@ -474,6 +474,6 @@ class SettingController extends Controller
         Setting::set('dark_mode_enabled', $request->input('dark_mode_enabled', '0'), 'appearance');
         ThemeService::clearCache();
 
-        return back()->with('success', 'Dark mode settings saved.');
+        return back()->with('success', __('messages.success.darkmode_saved'));
     }
 }

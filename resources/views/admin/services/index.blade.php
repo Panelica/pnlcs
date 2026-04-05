@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Products/Services")
+@section("title", __("admin.products.title"))
 @section("content")
 
 <div class="page-header">
@@ -22,15 +22,15 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Product</th>
-                <th>Client</th>
-                <th>Domain</th>
-                <th>Billing Cycle</th>
-                <th style="text-align:right;">Amount</th>
+                <th>{{ __('common.table.id') }}</th>
+                <th>{{ __('common.table.product') }}</th>
+                <th>{{ __('common.table.client') }}</th>
+                <th>{{ __('common.table.domain') }}</th>
+                <th>{{ __('common.table.billing_cycle') }}</th>
+                <th style="text-align:right;">{{ __('common.table.amount') }}</th>
                 <th>Next Due</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>{{ __('common.table.status') }}</th>
+                <th>{{ __('common.table.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -59,12 +59,12 @@
                 <td style="color:#666;">{{ $service->next_due_date?->format("d M Y") ?? "-" }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($service->status ?? "") }}</span></td>
                 <td>
-                    <a href="{{ route("admin.services.show", $service) }}" class="btn btn-default btn-xs">View</a>
+                    <a href="{{ route("admin.services.show", $service) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="9" style="text-align:center;padding:32px;color:#999;">No services found.</td>
+                <td colspan="9" style="text-align:center;padding:32px;color:#999;">{{ __('admin.services.no_services') }}</td>
             </tr>
             @endforelse
         </tbody>

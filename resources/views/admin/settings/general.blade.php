@@ -11,11 +11,11 @@
     <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>Company Information</strong></div>
         <div class="card-body">
-            <div class="form-group"><label class="form-label">Company Name</label><input type="text" name="CompanyName" value="{{ $settings['CompanyName'] ?? '' }}" class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.company_name') }}</label><input type="text" name="CompanyName" value="{{ $settings['CompanyName'] ?? '' }}" class="form-control"></div>
             <div class="form-group"><label class="form-label">Domain</label><input type="text" name="Domain" value="{{ $settings['Domain'] ?? '' }}" class="form-control" placeholder="yourdomain.com"></div>
             <div class="form-group"><label class="form-label">Company Address</label><textarea name="Address" rows="3" class="form-control">{{ $settings['Address'] ?? '' }}</textarea></div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-                <div class="form-group"><label class="form-label">Phone Number</label><input type="text" name="PhoneNumber" value="{{ $settings['PhoneNumber'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.phone_number') }}</label><input type="text" name="PhoneNumber" value="{{ $settings['PhoneNumber'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">Company Email</label><input type="email" name="Email" value="{{ $settings['Email'] ?? '' }}" class="form-control"></div>
             </div>
         </div>

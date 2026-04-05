@@ -29,6 +29,14 @@
         <span class="pn-msg-date">{{ $ticket->created_at->format("d M Y H:i") }}</span>
     </div>
     <div class="pn-msg-body">{{ $ticket->message }}</div>
+    @if($ticket->attachment)
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border, #eee)">
+        <a href="{{ route("client.tickets.attachment", $ticket) }}" style="color:#405189;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            Download Attachment
+        </a>
+    </div>
+    @endif
 </div>
 
 {{-- Replies --}}
@@ -46,6 +54,14 @@
         <span class="pn-msg-date">{{ $reply->created_at->format("d M Y H:i") }}</span>
     </div>
     <div class="pn-msg-body">{{ $reply->message }}</div>
+    @if($reply->attachment)
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border, #eee)">
+        <a href="{{ route("client.tickets.reply.attachment", [$ticket, $reply->id]) }}" style="color:#405189;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+            Download Attachment
+        </a>
+    </div>
+    @endif
 </div>
 @endforeach
 
@@ -54,7 +70,7 @@
 <div class="pn-card mt-24">
     <div class="pn-card-header"><span class="pn-card-title">Post a Reply</span></div>
     <div class="pn-card-body">
-        <form method="POST" action="{{ route("client.tickets.reply", $ticket) }}">
+        <form method="POST" action="{{ route("client.tickets.reply", $ticket) }}" enctype="multipart/form-data">
             @csrf
             @if($errors->any())
             <div class="pn-alert pn-alert-error">
@@ -65,6 +81,10 @@
             <div class="form-group">
                 <label class="form-label" for="message">Your Reply <span class="req">*</span></label>
                 <textarea id="message" name="message" rows="6" required class="form-control" placeholder="Type your reply here..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Attachment <span style="font-weight:400;color:var(--muted)">(optional, max 10MB)</span></label>
+                <input type="file" name="attachment" accept=".jpg,.png,.gif,.pdf,.doc,.docx,.txt,.zip" class="form-control" style="padding:6px 10px;">
             </div>
             <div class="flex gap-8">
                 <button type="submit" class="btn btn-primary">Post Reply</button>

@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Open Support Ticket")
+@section("title", __("client.open_support_ticket"))
 @section("content")
 
 <a href="{{ route("client.tickets.index") }}" class="pn-back">
@@ -24,7 +24,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route("client.tickets.store") }}">
+        <form method="POST" action="{{ route("client.tickets.store") }}" enctype="multipart/form-data">
             @csrf
             <div class="form-grid-2">
                 <div class="form-group">
@@ -46,7 +46,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label" for="subject">Subject <span class="req">*</span></label>
+                <label class="form-label" for="subject">{{ __('common.form.subject') }}<span class="req">*</span></label>
                 <input type="text" id="subject" name="subject" value="{{ old("subject") }}" required class="form-control" placeholder="Brief summary of your issue">
             </div>
             <div class="form-group">
@@ -61,12 +61,16 @@
                 </select>
             </div>
             <div class="form-group">
-                <label class="form-label" for="message">Message <span class="req">*</span></label>
+                <label class="form-label" for="message">{{ __('common.form.message') }}<span class="req">*</span></label>
                 <textarea id="message" name="message" rows="9" required class="form-control" placeholder="Please describe your issue in detail...">{{ old("message") }}</textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Attachment <span style="font-weight:400;color:var(--muted)">(optional, max 10MB)</span></label>
+                <input type="file" name="attachment" accept=".jpg,.png,.gif,.pdf,.doc,.docx,.txt,.zip" class="form-control" style="padding:6px 10px;">
             </div>
             <div class="flex gap-8">
                 <button type="submit" class="btn btn-primary">Submit Ticket</button>
-                <a href="{{ route("client.tickets.index") }}" class="btn btn-outline">Cancel</a>
+                <a href="{{ route("client.tickets.index") }}" class="btn btn-outline">{{ __('common.actions.cancel') }}</a>
             </div>
         </form>
     </div>

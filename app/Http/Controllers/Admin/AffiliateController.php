@@ -60,7 +60,7 @@ class AffiliateController extends Controller
             'onetime' => $request->boolean('onetime'),
         ]);
 
-        return back()->with('success', 'Affiliate updated.');
+        return back()->with('success', __('messages.success.affiliate_updated'));
     }
 
     public function payout(Request $request, Affiliate $affiliate)

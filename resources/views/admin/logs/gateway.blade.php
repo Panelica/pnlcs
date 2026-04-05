@@ -21,8 +21,8 @@
             </div>
             <div><label class="form-label">Date</label><input type="date" name="date" value="{{ request('date') }}" class="form-control"></div>
             <div style="display:flex;gap:6px;">
-                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                <a href="{{ route('admin.logs.gateway') }}" class="btn btn-default btn-sm">Clear</a>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.filter') }}</button>
+                <a href="{{ route('admin.logs.gateway') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>
             </div>
         </form>
     </div>
@@ -30,7 +30,7 @@
 
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>Date</th><th>Gateway</th><th>Data / Request</th><th>Result</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>Gateway</th><th>Data / Request</th><th>Result</th></tr></thead>
         <tbody>
             @forelse($logs as $log)
             <tr>

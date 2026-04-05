@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Client Groups")
+@section("title", __("admin.client_groups"))
 @section("content")
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
@@ -14,7 +14,7 @@
     </div>
     @else
     <table class="data-table">
-        <thead><tr><th>Group Name</th><th>Color</th><th>Clients</th><th>Discount %</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Group Name</th><th>Color</th><th>Clients</th><th>Discount %</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($groups as $group)
         <tr>
@@ -23,8 +23,8 @@
             <td>{{ $group->clients_count ?? 0 }}</td>
             <td>{{ $group->discount_percent ?? 0 }}%</td>
             <td style="text-align:right;">
-                <button type="button" onclick="openModal('edit-group-{{ $group->id }}')" class="btn btn-default btn-xs">Edit</button>
-                <form method="POST" action="{{ route("admin.config.client-groups.destroy", $group) }}" style="display:inline;" onsubmit="return confirm('Delete this group?')">@csrf @method("DELETE")<button type="submit" class="btn btn-danger btn-xs">Delete</button></form>
+                <button type="button" onclick="openModal('edit-group-{{ $group->id }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
+                <form method="POST" action="{{ route("admin.config.client-groups.destroy", $group) }}" style="display:inline;" onsubmit="return confirm('Delete this group?')">@csrf @method("DELETE")<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
             </td>
         </tr>
         @endforeach
@@ -41,7 +41,7 @@
         <div class="form-group"><label class="form-label">Discount Percentage</label><input type="number" name="discount_percent" value="0" min="0" max="100" step="0.01" class="form-control"></div>
         <div class="form-group"><label class="form-label">Notes</label><textarea name="notes" rows="2" class="form-control"></textarea></div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('add-group')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="button" onclick="closeModal('add-group')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">Create Group</button>
         </div>
     </form>

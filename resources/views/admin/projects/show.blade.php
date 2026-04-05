@@ -64,7 +64,7 @@
                     <label class="form-label">Add Task</label>
                     <div style="display:flex;gap:8px;">
                         <input type="text" name="task" placeholder="Task description..." required class="form-control">
-                        <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                        <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.add') }}</button>
                     </div>
                 </form>
             </div>

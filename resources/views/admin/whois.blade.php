@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "WHOIS Lookup")
+@section("title", __("admin.whois.title"))
 @section("content")
 
 <div class="page-header">

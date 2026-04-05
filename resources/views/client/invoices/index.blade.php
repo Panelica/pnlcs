@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "My Invoices")
+@section("title", __("client.invoices.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -14,11 +14,11 @@
         <table class="pn-table">
             <thead>
                 <tr>
-                    <th>Invoice #</th>
-                    <th>Date</th>
-                    <th>Due Date</th>
-                    <th>Total</th>
-                    <th>Status</th>
+                    <th>{{ __('common.table.invoice_num') }}</th>
+                    <th>{{ __('common.table.date') }}</th>
+                    <th>{{ __('common.table.due_date') }}</th>
+                    <th>{{ __('common.table.total') }}</th>
+                    <th>{{ __('common.table.status') }}</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -32,9 +32,9 @@
                     <td><span class="badge badge-{{ strtolower($inv->status) }}">{{ ucfirst($inv->status) }}</span></td>
                     <td>
                         @if(in_array(strtolower($inv->status), ["unpaid", "overdue"]))
-                            <a href="{{ route("client.invoices.show", $inv) }}" class="btn btn-accent btn-xs">Pay Now</a>
+                            <a href="{{ route("client.invoices.show", $inv) }}" class="btn btn-accent btn-xs">{{ __('common.actions.pay_now') }}</a>
                         @else
-                            <a href="{{ route("client.invoices.show", $inv) }}" class="btn btn-outline btn-xs">View</a>
+                            <a href="{{ route("client.invoices.show", $inv) }}" class="btn btn-outline btn-xs">{{ __('common.actions.view') }}</a>
                         @endif
                     </td>
                 </tr>
@@ -43,7 +43,7 @@
                     <td colspan="6">
                         <div class="pn-empty">
                             <div class="pn-empty-icon">&#128196;</div>
-                            <p>No invoices found.</p>
+                            <p>{{ __('admin.invoices.no_invoices') }}</p>
                         </div>
                     </td>
                 </tr>

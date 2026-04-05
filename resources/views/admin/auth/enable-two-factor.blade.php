@@ -27,7 +27,7 @@
                 <input type="text" name="code" class="form-control" autofocus autocomplete="one-time-code" inputmode="numeric" maxlength="6" placeholder="000000" style="max-width:200px;text-align:center;font-size:18px;letter-spacing:4px;">
             </div>
             <button type="submit" class="btn btn-primary">Enable 2FA</button>
-            <a href="{{ route('admin.my-account') }}" class="btn btn-default" style="margin-left:8px;">Cancel</a>
+            <a href="{{ route('admin.my-account') }}" class="btn btn-default" style="margin-left:8px;">{{ __('common.actions.cancel') }}</a>
         </form>
     </div>
 </div>

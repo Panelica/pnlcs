@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Client;
+use App\Models\Setting;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class AccountSignupMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public Client $client
+    ) {}
+
+    public function envelope(): Envelope
+    {
+        $companyName = Setting::get('CompanyName', 'PNLCS');
+
+        return new Envelope(subject: "Welcome to {$companyName}!");
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.account-signup',
+            with: [
+                'client' => $this->client,
+                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+            ],
+        );
+    }
+}

@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Support Tickets")
+@section("title", __("admin.tickets.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -19,11 +19,11 @@
             <thead>
                 <tr>
                     <th>Ticket #</th>
-                    <th>Department</th>
-                    <th>Subject</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Last Reply</th>
+                    <th>{{ __('common.table.department') }}</th>
+                    <th>{{ __('common.table.subject') }}</th>
+                    <th>{{ __('common.table.priority') }}</th>
+                    <th>{{ __('common.table.status') }}</th>
+                    <th>{{ __('common.table.last_reply') }}</th>
                 </tr>
             </thead>
             <tbody>

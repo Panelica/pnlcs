@@ -10,7 +10,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No transactions found.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Date</th><th>Client</th><th>Invoice</th><th>Gateway</th><th>Transaction ID</th><th>Amount In</th><th>Amount Out</th><th>Fee</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.client') }}</th><th>Invoice</th><th>Gateway</th><th>Transaction ID</th><th>Amount In</th><th>Amount Out</th><th>Fee</th></tr></thead>
         <tbody>
         @foreach($transactions as $tx)
         <tr>

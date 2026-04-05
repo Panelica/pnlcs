@@ -34,7 +34,7 @@
                 @endforeach
             </tr>
             @empty
-            <tr><td colspan="{{ count($columns) }}" style="text-align:center;color:#999;padding:30px;">No data available.</td></tr>
+            <tr><td colspan="{{ count($columns) }}" style="text-align:center;color:#999;padding:30px;">{{ __('common.empty.no_data') }}</td></tr>
             @endforelse
         </tbody>
     </table>

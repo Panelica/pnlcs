@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Change Password")
+@section("title", __("client.account.change_password"))
 @section("styles")
 <style>
 .pw-strength{height:5px;border-radius:999px;background:var(--border);margin-top:8px;overflow:hidden}
@@ -30,11 +30,11 @@
             @csrf
             @method("PUT")
             <div class="form-group">
-                <label class="form-label" for="current_password">Current Password <span class="req">*</span></label>
+                <label class="form-label" for="current_password">{{ __('common.form.current_password') }}<span class="req">*</span></label>
                 <input type="password" id="current_password" name="current_password" required class="form-control">
             </div>
             <div class="form-group">
-                <label class="form-label" for="password">New Password <span class="req">*</span></label>
+                <label class="form-label" for="password">{{ __('common.form.new_password') }}<span class="req">*</span></label>
                 <input type="password" id="password" name="password" required class="form-control" oninput="checkStrength(this.value)" placeholder="Minimum 8 characters">
                 <div class="pw-strength"><div class="pw-strength-bar" id="pwBar"></div></div>
                 <div class="pw-hint text-muted" id="pwHint">Enter a new password</div>

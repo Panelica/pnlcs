@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "My Services")
+@section("title", __("client.services.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -18,12 +18,12 @@
         <table class="pn-table">
             <thead>
                 <tr>
-                    <th>Product</th>
-                    <th>Domain</th>
-                    <th>Billing Cycle</th>
-                    <th>Amount</th>
-                    <th>Next Due Date</th>
-                    <th>Status</th>
+                    <th>{{ __('common.table.product') }}</th>
+                    <th>{{ __('common.table.domain') }}</th>
+                    <th>{{ __('common.table.billing_cycle') }}</th>
+                    <th>{{ __('common.table.amount') }}</th>
+                    <th>{{ __('common.table.next_due') }}</th>
+                    <th>{{ __('common.table.status') }}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -38,7 +38,7 @@
                     <td style="font-weight:600">${{ number_format($s->amount, 2) }}</td>
                     <td class="text-muted text-sm">{{ $s->next_due_date?->format("d M Y") ?? "-" }}</td>
                     <td><span class="badge badge-{{ strtolower($s->status) }}">{{ ucfirst($s->status) }}</span></td>
-                    <td><a href="{{ route("client.services.show", $s) }}" class="btn btn-outline btn-xs">View</a></td>
+                    <td><a href="{{ route("client.services.show", $s) }}" class="btn btn-outline btn-xs">{{ __('common.actions.view') }}</a></td>
                 </tr>
                 @empty
                 <tr>

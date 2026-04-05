@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No tax rules configured.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Tax Name</th><th>Rate (%)</th><th>Country</th><th>State</th><th>Level</th><th>Compound</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Tax Name</th><th>Rate (%)</th><th>{{ __('common.table.country') }}</th><th>{{ __('common.table.state') }}</th><th>Level</th><th>Compound</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($taxes as $tax)
         <tr>
@@ -23,10 +23,10 @@
             <td>{{ $tax->compound ? 'Yes' : 'No' }}</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
-                    onclick="openEditTax({{ json_encode(['id'=>$tax->id,'name'=>$tax->name,'rate'=>$tax->rate,'country'=>$tax->country,'state'=>$tax->state,'level'=>$tax->level,'compound'=>$tax->compound]) }})">Edit</button>
+                    onclick="openEditTax({{ json_encode(['id'=>$tax->id,'name'=>$tax->name,'rate'=>$tax->rate,'country'=>$tax->country,'state'=>$tax->state,'level'=>$tax->level,'compound'=>$tax->compound]) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.tax.destroy', $tax) }}" style="display:inline;" onsubmit="return confirm('Delete tax rule?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -56,7 +56,7 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-tax').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-tax').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Tax Rule</button>
             </div>
         </form>
@@ -83,8 +83,8 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-edit-tax').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                <button type="button" onclick="document.getElementById('modal-edit-tax').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
             </div>
         </form>
     </div>

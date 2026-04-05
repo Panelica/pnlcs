@@ -21,7 +21,7 @@
 <div class="card">
     <div class="card-header"><strong>Table Status</strong></div>
     <table class="data-table">
-        <thead><tr><th>Table Name</th><th>Engine</th><th>Rows</th><th>Data Size</th><th>Index Size</th><th>Status</th></tr></thead>
+        <thead><tr><th>Table Name</th><th>Engine</th><th>Rows</th><th>Data Size</th><th>Index Size</th><th>{{ __('common.table.status') }}</th></tr></thead>
         <tbody>
         @foreach($tables as $table)
         <tr>

@@ -27,7 +27,7 @@
     <div class="card-body" style="color:#999;font-size:13px;">No downloads in this category.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Filename</th><th>Description</th><th>Size</th><th>Downloads</th><th>Published</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Filename</th><th>{{ __('common.table.description') }}</th><th>Size</th><th>Downloads</th><th>Published</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($category->downloads as $dl)
         <tr>
@@ -39,7 +39,7 @@
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.downloads.destroy', $dl) }}" style="display:inline;" onsubmit="return confirm('Delete this download?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -62,10 +62,10 @@
             @csrf
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">Category Name</label><input type="text" name="name" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="2" class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-dlcat').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-dlcat').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Category</button>
             </div>
         </form>
@@ -90,12 +90,12 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="2" class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
                 <div class="form-group"><label class="form-label">File URL or Upload</label><input type="text" name="url" class="form-control" placeholder="https://..."></div>
                 <div class="form-group"><label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="published" value="1" checked> Published</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-dl').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-dl').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Download</button>
             </div>
         </form>

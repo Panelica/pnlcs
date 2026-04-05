@@ -40,7 +40,7 @@ class AffiliateController extends Controller
         $client = auth()->user()->clients()->first();
 
         if (! $client) {
-            return back()->with('error', 'No client account found.');
+            return back()->with('error', __('messages.error.no_client_account_found'));
         }
 
         $existing = Affiliate::where('client_id', $client->id)->first();
@@ -58,7 +58,7 @@ class AffiliateController extends Controller
             'withdrawn' => 0,
         ]);
 
-        return back()->with('success', 'Your affiliate account has been activated!');
+        return back()->with('success', __('messages.success.your_affiliate_account_has_been_activated'));
     }
 
     public function withdraw(Request $request)
@@ -67,11 +67,11 @@ class AffiliateController extends Controller
         $affiliate = $client ? Affiliate::where('client_id', $client->id)->first() : null;
 
         if (! $affiliate) {
-            return back()->with('error', 'No affiliate account found.');
+            return back()->with('error', __('messages.error.no_affiliate_account_found'));
         }
 
         if ($affiliate->balance <= 0) {
-            return back()->with('error', 'You have no balance to withdraw.');
+            return back()->with('error', __('messages.error.you_have_no_balance_to_withdraw'));
         }
 
         $request->validate([

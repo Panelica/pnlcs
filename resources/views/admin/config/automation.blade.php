@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Automation Status")
+@section("title", __("admin.automation_status"))
 @section("content")
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
@@ -11,7 +11,7 @@
     <div class="card-body">
         <table class="data-table">
             <thead>
-                <tr><th>Task</th><th>Frequency</th><th>Last Run</th><th>Status</th></tr>
+                <tr><th>Task</th><th>Frequency</th><th>Last Run</th><th>{{ __('common.table.status') }}</th></tr>
             </thead>
             <tbody>
                 <tr>

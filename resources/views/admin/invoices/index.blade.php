@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Invoices")
+@section("title", __("admin.invoices.title"))
 @section("content")
 
 <div class="page-header">
@@ -26,13 +26,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Invoice #</th>
-                <th>Client</th>
-                <th>Date</th>
-                <th>Due Date</th>
-                <th style="text-align:right;">Total</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>{{ __('common.table.invoice_num') }}</th>
+                <th>{{ __('common.table.client') }}</th>
+                <th>{{ __('common.table.date') }}</th>
+                <th>{{ __('common.table.due_date') }}</th>
+                <th style="text-align:right;">{{ __('common.table.total') }}</th>
+                <th>{{ __('common.table.status') }}</th>
+                <th>{{ __('common.table.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -64,12 +64,12 @@
                 <td style="text-align:right;font-weight:500;">${{ number_format($invoice->total, 2) }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
                 <td>
-                    <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">View</a>
+                    <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="text-align:center;padding:32px;color:#999;">No invoices found.</td>
+                <td colspan="7" style="text-align:center;padding:32px;color:#999;">{{ __('admin.invoices.no_invoices') }}</td>
             </tr>
             @endforelse
         </tbody>

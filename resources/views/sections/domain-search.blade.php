@@ -12,7 +12,7 @@
         <form action="/client/domain-search" method="GET" class="domain-search__bar">
             <div class="domain-search__icon"><i class="ri-global-line"></i></div>
             <input type="text" name="domain" class="domain-search__input" placeholder="{{ $dsPlaceholder }}" required>
-            <button type="submit" class="domain-search__btn"><i class="ri-search-line"></i> Search</button>
+            <button type="submit" class="domain-search__btn"><i class="ri-search-line"></i>{{ __('common.actions.search') }}</button>
         </form>
         <div class="domain-search__extensions">
             @if(isset($domainPricing) && $domainPricing->count())
@@ -20,7 +20,7 @@
                 <a href="/client/domain-search" class="domain-search__ext">
                     <div class="domain-search__ext-name">.{{ ltrim($tld->extension, '.') }}</div>
                     <div class="domain-search__ext-price">${{ number_format($tld->register_price, 2) }}/yr</div>
-                    <span class="domain-search__ext-link">Register</span>
+                    <span class="domain-search__ext-link">{{ __('common.actions.register') }}</span>
                 </a>
                 @endforeach
             @else
@@ -29,7 +29,7 @@
                 <div class="domain-search__ext">
                     <div class="domain-search__ext-name">.{{ $tld[0] }}</div>
                     <div class="domain-search__ext-price">${{ $tld[1] }}/yr</div>
-                    <span class="domain-search__ext-link">Register</span>
+                    <span class="domain-search__ext-link">{{ __('common.actions.register') }}</span>
                 </div>
                 @endforeach
             @endif

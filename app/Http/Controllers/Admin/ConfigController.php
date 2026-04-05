@@ -30,9 +30,15 @@ use App\Models\ClientGroup;
 use App\Models\GatewaySettings;
 use App\Models\Download;
 use App\Models\DownloadCategory;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Models\ConfigOptionGroup;
+use App\Models\ConfigOption;
+use App\Models\ConfigOptionSub;
+use App\Models\TicketEscalation;
+
 
 class ConfigController extends Controller
 {
@@ -58,7 +64,7 @@ class ConfigController extends Controller
         ]);
         $v['password'] = Hash::make($v['password']);
         Admin::create($v);
-        return back()->with('success', 'Admin created successfully.');
+        return back()->with('success', __('messages.success.admin_created_successfully'));
     }
 
     public function updateAdmin(Request $request, Admin $admin)
@@ -77,16 +83,16 @@ class ConfigController extends Controller
             $v['password'] = Hash::make($v['password']);
         }
         $admin->update($v);
-        return back()->with('success', 'Admin updated successfully.');
+        return back()->with('success', __('messages.success.admin_updated_successfully'));
     }
 
     public function destroyAdmin(Admin $admin)
     {
         if ($admin->id === auth('admin')->id()) {
-            return back()->with('error', 'You cannot delete your own account.');
+            return back()->with('error', __('messages.error.you_cannot_delete_your_own_account'));
         }
         $admin->delete();
-        return back()->with('success', 'Admin deleted successfully.');
+        return back()->with('success', __('messages.success.admin_deleted_successfully'));
     }
 
     // ===== ADMIN ROLES =====
@@ -107,7 +113,7 @@ class ConfigController extends Controller
         ]);
         $v['is_full_admin'] = $request->boolean('is_full_admin');
         AdminRole::create($v);
-        return back()->with('success', 'Role created successfully.');
+        return back()->with('success', __('messages.success.role_created_successfully'));
     }
 
     public function updateRole(Request $request, AdminRole $role)
@@ -119,16 +125,16 @@ class ConfigController extends Controller
         ]);
         $v['is_full_admin'] = $request->boolean('is_full_admin');
         $role->update($v);
-        return back()->with('success', 'Role updated successfully.');
+        return back()->with('success', __('messages.success.role_updated_successfully'));
     }
 
     public function destroyRole(AdminRole $role)
     {
         if ($role->admins()->count() > 0) {
-            return back()->with('error', 'Cannot delete role: it still has admins assigned.');
+            return back()->with('error', __('messages.error.cannot_delete_role_it_still_has_admins_assigned'));
         }
         $role->delete();
-        return back()->with('success', 'Role deleted successfully.');
+        return back()->with('success', __('messages.success.role_deleted_successfully'));
     }
 
     // ===== API CREDENTIALS =====
@@ -150,13 +156,13 @@ class ConfigController extends Controller
             'description' => $request->description,
             'active'      => true,
         ]);
-        return back()->with('success', 'API credential generated.')->with('new_secret', $secret);
+        return back()->with('success', __('messages.success.api_credential_generated'))->with('new_secret', $secret);
     }
 
     public function destroyApiCredential(ApiCredential $credential)
     {
         $credential->delete();
-        return back()->with('success', 'API credential revoked.');
+        return back()->with('success', __('messages.success.api_credential_revoked'));
     }
 
     // ===== CURRENCIES =====
@@ -180,7 +186,7 @@ class ConfigController extends Controller
         $v['prefix'] = $v['prefix'] ?? '';
         $v['suffix'] = $v['suffix'] ?? '';
         Currency::create($v);
-        return back()->with('success', 'Currency added.');
+        return back()->with('success', __('messages.success.currency_created'));
     }
 
     public function updateCurrency(Request $request, Currency $currency)
@@ -195,23 +201,23 @@ class ConfigController extends Controller
         $v['prefix'] = $v['prefix'] ?? '';
         $v['suffix'] = $v['suffix'] ?? '';
         $currency->update($v);
-        return back()->with('success', 'Currency updated.');
+        return back()->with('success', __('messages.success.currency_updated'));
     }
 
     public function destroyCurrency(Currency $currency)
     {
         if ($currency->is_default) {
-            return back()->with('error', 'Cannot delete the default currency.');
+            return back()->with('error', __('messages.error.cannot_delete_the_default_currency'));
         }
         $currency->delete();
-        return back()->with('success', 'Currency deleted.');
+        return back()->with('success', __('messages.success.currency_deleted'));
     }
 
     public function setDefaultCurrency(Currency $currency)
     {
         Currency::query()->update(['is_default' => false]);
         $currency->update(['is_default' => true]);
-        return back()->with('success', 'Default currency updated.');
+        return back()->with('success', __('messages.success.currency_set_default'));
     }
 
     // ===== TAX RULES =====
@@ -234,7 +240,7 @@ class ConfigController extends Controller
             'level'    => 'nullable|integer|min:1|max:2',
         ]);
         TaxRule::create($v);
-        return back()->with('success', 'Tax rule added.');
+        return back()->with('success', __('messages.success.tax_rule_added'));
     }
 
     public function updateTax(Request $request, TaxRule $taxRule)
@@ -248,13 +254,13 @@ class ConfigController extends Controller
             'level'    => 'nullable|integer|min:1|max:2',
         ]);
         $taxRule->update($v);
-        return back()->with('success', 'Tax rule updated.');
+        return back()->with('success', __('messages.success.tax_updated'));
     }
 
     public function destroyTax(TaxRule $taxRule)
     {
         $taxRule->delete();
-        return back()->with('success', 'Tax rule deleted.');
+        return back()->with('success', __('messages.success.tax_deleted'));
     }
 
     // ===== PROMOTIONS =====
@@ -280,7 +286,7 @@ class ConfigController extends Controller
         ]);
         $v['recurring'] = $request->boolean('recurring');
         Promotion::create($v);
-        return back()->with('success', 'Promotion created.');
+        return back()->with('success', __('messages.success.promotion_created'));
     }
 
     public function updatePromotion(Request $request, Promotion $promotion)
@@ -297,13 +303,13 @@ class ConfigController extends Controller
         ]);
         $v['recurring'] = $request->boolean('recurring');
         $promotion->update($v);
-        return back()->with('success', 'Promotion updated.');
+        return back()->with('success', __('messages.success.promotion_updated'));
     }
 
     public function destroyPromotion(Promotion $promotion)
     {
         $promotion->delete();
-        return back()->with('success', 'Promotion deleted.');
+        return back()->with('success', __('messages.success.promotion_deleted'));
     }
 
     // ===== SERVERS =====
@@ -320,7 +326,7 @@ class ConfigController extends Controller
     {
         $v = $request->validate(['name' => 'required', 'hostname' => 'required', 'type' => 'nullable|string']);
         Server::create($v);
-        return back()->with('success', 'Server added.');
+        return back()->with('success', __('messages.success.server_created'));
     }
 
     // ===== DOMAIN PRICING =====
@@ -336,7 +342,7 @@ class ConfigController extends Controller
     {
         $v = $request->validate(['extension' => 'required|string|unique:domain_pricing']);
         DomainPricing::create($v);
-        return back()->with('success', 'TLD added.');
+        return back()->with('success', __('messages.success.tld_created'));
     }
 
     // ===== PAYMENT GATEWAYS / REGISTRARS =====
@@ -380,7 +386,7 @@ class ConfigController extends Controller
     {
         $v = $request->validate(['name' => 'required', 'email' => 'nullable|email']);
         TicketDepartment::create($v);
-        return back()->with('success', 'Department created.');
+        return back()->with('success', __('messages.success.department_created'));
     }
 
     // ===== TICKET STATUSES =====
@@ -404,7 +410,7 @@ class ConfigController extends Controller
     public function storeBannedIp(Request $request)
     {
         BannedIp::create($request->validate(['ip' => 'required', 'reason' => 'nullable|string']));
-        return back()->with('success', 'IP banned.');
+        return back()->with('success', __('messages.success.banned_ip_created'));
     }
 
     // ===== BANNED EMAILS =====
@@ -429,7 +435,7 @@ class ConfigController extends Controller
     {
         $v = $request->validate(["title" => "required", "announcement" => "required"]); $v["announcement"] = $v["announcement"] ?: ($request->body ?? "");
         Announcement::create($v);
-        return back()->with('success', 'Announcement published.');
+        return back()->with('success', __('messages.success.announcement_published'));
     }
 
     // ===== DOWNLOADS =====
@@ -454,7 +460,7 @@ class ConfigController extends Controller
     {
         $v = $request->validate(['category_id' => 'required|exists:kb_categories,id', 'title' => 'required', 'article' => 'required']);
         KbArticle::create($v);
-        return back()->with('success', 'Article created.');
+        return back()->with('success', __('messages.success.article_created'));
     }
 
     // ===== NETWORK ISSUES =====
@@ -514,7 +520,7 @@ class ConfigController extends Controller
     public function storeTodo(Request $request)
     {
         TodoItem::create($request->validate(['title' => 'required', 'due_date' => 'nullable|date']));
-        return back()->with('success', 'To-do added.');
+        return back()->with('success', __('messages.success.todo_added'));
     }
 
     // ===== ACTIVITY LOG =====
@@ -536,41 +542,41 @@ class ConfigController extends Controller
     // Ticket Departments
     public function updateTicketDepartment(Request $request, TicketDepartment $department) {
         $department->update($request->validate(['name'=>'required','description'=>'nullable|string','email'=>'nullable|email','clients_only'=>'boolean','hidden'=>'boolean','sort_order'=>'nullable|integer','feedback_request'=>'boolean']));
-        return back()->with('success', 'Department updated.');
+        return back()->with('success', __('messages.success.department_updated'));
     }
     public function destroyTicketDepartment(TicketDepartment $department) {
         $department->delete();
-        return back()->with('success', 'Department deleted.');
+        return back()->with('success', __('messages.success.department_deleted'));
     }
 
     // Ticket Statuses
     public function storeTicketStatus(Request $request) {
         TicketStatus::create($request->validate(['title'=>'required','color'=>'nullable|string','sort_order'=>'nullable|integer','show_active'=>'boolean','show_awaiting'=>'boolean','auto_close'=>'boolean']));
-        return back()->with('success', 'Ticket status created.');
+        return back()->with('success', __('messages.success.ticket_status_created'));
     }
     public function updateTicketStatus(Request $request, TicketStatus $status) {
         $status->update($request->validate(['title'=>'required','color'=>'nullable|string','sort_order'=>'nullable|integer','show_active'=>'boolean','show_awaiting'=>'boolean','auto_close'=>'boolean']));
-        return back()->with('success', 'Ticket status updated.');
+        return back()->with('success', __('messages.success.ticket_status_updated'));
     }
     public function destroyTicketStatus(TicketStatus $status) {
         $status->delete();
-        return back()->with('success', 'Ticket status deleted.');
+        return back()->with('success', __('messages.success.ticket_status_deleted'));
     }
 
     // Email Templates
     public function updateEmailTemplate(Request $request, EmailTemplate $template) {
         $template->update($request->validate(['name'=>'nullable|string','subject'=>'nullable|string','message'=>'nullable|string','from_name'=>'nullable|string','from_email'=>'nullable|email','disabled'=>'boolean']));
-        return back()->with('success', 'Email template updated.');
+        return back()->with('success', __('messages.success.template_updated'));
     }
 
     // Servers
     public function updateServer(Request $request, Server $server) {
         $server->update($request->validate(['name'=>'required','hostname'=>'required','ip_address'=>'nullable','port'=>'nullable|integer','type'=>'nullable|string','username'=>'nullable|string','password'=>'nullable|string','max_accounts'=>'nullable|integer','active'=>'boolean','nameserver1'=>'nullable','nameserver2'=>'nullable']));
-        return back()->with('success', 'Server updated.');
+        return back()->with('success', __('messages.success.server_updated'));
     }
     public function destroyServer(Server $server) {
         $server->delete();
-        return back()->with('success', 'Server deleted.');
+        return back()->with('success', __('messages.success.server_deleted'));
     }
     public function testServerConnection(Server $server) {
         $host = $server->hostname ?? $server->ip_address;
@@ -594,111 +600,111 @@ class ConfigController extends Controller
     }
     public function storeServerGroup(Request $request) {
         ServerGroup::create($request->validate(['name'=>'required','fill_type'=>'required|in:fill,round_robin']));
-        return back()->with('success', 'Server group created.');
+        return back()->with('success', __('messages.success.server_group_created'));
     }
     public function updateServerGroup(Request $request, ServerGroup $serverGroup) {
         $serverGroup->update($request->validate(['name'=>'required','fill_type'=>'required|in:fill,round_robin']));
-        return back()->with('success', 'Server group updated.');
+        return back()->with('success', __('messages.success.server_group_updated'));
     }
     public function destroyServerGroup(ServerGroup $serverGroup) {
         $serverGroup->delete();
-        return back()->with('success', 'Server group deleted.');
+        return back()->with('success', __('messages.success.server_group_deleted'));
     }
 
     // Announcements
     public function updateAnnouncement(Request $request, Announcement $announcement) {
         $v = $request->validate(['title'=>'required','published'=>'boolean']); $v['announcement'] = $request->body ?? $request->announcement ?? $announcement->announcement; $announcement->update($v);
-        return back()->with('success', 'Announcement updated.');
+        return back()->with('success', __('messages.success.announcement_updated'));
     }
     public function destroyAnnouncement(Announcement $announcement) {
         $announcement->delete();
-        return back()->with('success', 'Announcement deleted.');
+        return back()->with('success', __('messages.success.announcement_deleted'));
     }
 
     // Knowledge Base
     public function storeKbCategory(Request $request) {
         KbCategory::create($request->validate(['name'=>'required','description'=>'nullable|string','sort_order'=>'nullable|integer']));
-        return back()->with('success', 'Category created.');
+        return back()->with('success', __('messages.success.category_created'));
     }
     public function updateKbArticle(Request $request, KbArticle $article) {
         $article->update($request->validate(['category_id'=>'required|exists:kb_categories,id','title'=>'required','article'=>'required','hidden'=>'boolean']));
-        return back()->with('success', 'Article updated.');
+        return back()->with('success', __('messages.success.article_updated'));
     }
     public function destroyKbArticle(KbArticle $article) {
         $article->delete();
-        return back()->with('success', 'Article deleted.');
+        return back()->with('success', __('messages.success.article_deleted'));
     }
 
     // Downloads
     public function storeDownloadCategory(Request $request) {
         DownloadCategory::create($request->validate(['name'=>'required']));
-        return back()->with('success', 'Category created.');
+        return back()->with('success', __('messages.success.category_created'));
     }
     public function storeDownload(Request $request) {
         Download::create($request->validate(['category_id'=>'nullable','title'=>'required','description'=>'nullable|string','location'=>'required']));
-        return back()->with('success', 'Download added.');
+        return back()->with('success', __('messages.success.download_created'));
     }
     public function destroyDownload(Download $download) {
         $download->delete();
-        return back()->with('success', 'Download deleted.');
+        return back()->with('success', __('messages.success.download_deleted'));
     }
 
     // Network Issues
     public function storeNetworkIssue(Request $request) {
         NetworkIssue::create($request->validate(['title'=>'required','description'=>'nullable|string','type'=>'nullable|string','status'=>'required','affected'=>'nullable|string','start_date'=>'nullable|date','end_date'=>'nullable|date']));
-        return back()->with('success', 'Network issue created.');
+        return back()->with('success', __('messages.success.network_issue_created'));
     }
     public function updateNetworkIssue(Request $request, NetworkIssue $issue) {
         $issue->update($request->validate(['title'=>'required','description'=>'nullable|string','type'=>'nullable|string','status'=>'required','affected'=>'nullable|string','start_date'=>'nullable|date','end_date'=>'nullable|date']));
-        return back()->with('success', 'Network issue updated.');
+        return back()->with('success', __('messages.success.network_issue_updated'));
     }
     public function destroyNetworkIssue(NetworkIssue $issue) {
         $issue->delete();
-        return back()->with('success', 'Network issue deleted.');
+        return back()->with('success', __('messages.success.network_issue_deleted'));
     }
 
     // Banned IPs/Emails
     public function destroyBannedIp(BannedIp $bannedIp) {
         $bannedIp->delete();
-        return back()->with('success', 'IP unbanned.');
+        return back()->with('success', __('messages.success.ip_unbanned'));
     }
     public function storeBannedEmail(Request $request) {
         BannedEmail::create($request->validate(['domain'=>'required','type'=>'nullable|string','reason'=>'nullable|string']));
-        return back()->with('success', 'Email banned.');
+        return back()->with('success', __('messages.success.email_banned'));
     }
     public function destroyBannedEmail(BannedEmail $bannedEmail) {
         $bannedEmail->delete();
-        return back()->with('success', 'Email unbanned.');
+        return back()->with('success', __('messages.success.email_unbanned'));
     }
 
     // To-Do
     public function updateTodo(Request $request, TodoItem $todo) {
         $todo->update($request->validate(['title'=>'required','description'=>'nullable|string','status'=>'nullable|string','due_date'=>'nullable|date']));
-        return back()->with('success', 'To-do updated.');
+        return back()->with('success', __('messages.success.todo_updated'));
     }
     public function destroyTodo(TodoItem $todo) {
         $todo->delete();
-        return back()->with('success', 'To-do deleted.');
+        return back()->with('success', __('messages.success.todo_deleted'));
     }
 
     // Billable Items
     public function storeBillableItem(Request $request) {
         BillableItem::create($request->validate(['client_id'=>'required|exists:clients,id','description'=>'required','amount'=>'required|numeric','due_date'=>'nullable|date']));
-        return back()->with('success', 'Billable item created.');
+        return back()->with('success', __('messages.success.billable_item_created'));
     }
     public function destroyBillableItem(BillableItem $item) {
         $item->delete();
-        return back()->with('success', 'Billable item deleted.');
+        return back()->with('success', __('messages.success.billable_item_deleted'));
     }
 
     // Domain Pricing
     public function updateTld(Request $request, DomainPricing $domainPricing) {
         $domainPricing->update($request->validate(['extension'=>'required','register_price'=>'nullable|numeric','transfer_price'=>'nullable|numeric','renew_price'=>'nullable|numeric']));
-        return back()->with('success', 'TLD updated.');
+        return back()->with('success', __('messages.success.tld_updated'));
     }
     public function destroyTld(DomainPricing $domainPricing) {
         $domainPricing->delete();
-        return back()->with('success', 'TLD deleted.');
+        return back()->with('success', __('messages.success.tld_deleted'));
     }
 
     // Gateway/Registrar settings
@@ -718,7 +724,7 @@ class ConfigController extends Controller
         return back()->with("success", "Gateway settings updated.");
     }
     public function updateRegistrarSettings(Request $request, string $registrar) {
-        return back()->with('success', 'Registrar settings updated.');
+        return back()->with('success', __('messages.success.registrar_updated'));
     }
 
 
@@ -780,7 +786,7 @@ class ConfigController extends Controller
             \App\Models\SslModuleSettings::setSetting($module, $key, $value);
         }
 
-        return back()->with('success', 'SSL module settings updated.');
+        return back()->with('success', __('messages.success.ssl_module_updated'));
     }
 
     public function testSslConnection(string $module)
@@ -789,7 +795,7 @@ class ConfigController extends Controller
         $sslModule = $registry->getSslModule($module);
 
         if (!$sslModule) {
-            return back()->with('error', 'SSL module not found.');
+            return back()->with('error', __('messages.error.ssl_module_not_found'));
         }
 
         $success = $sslModule->testConnection();
@@ -798,6 +804,358 @@ class ConfigController extends Controller
             $success ? 'success' : 'error',
             $success ? 'Connection successful!' : 'Connection failed. Please check your credentials.'
         );
+    }
+
+
+    // ===== CONFIG OPTIONS =====
+
+    public function configOptions()
+    {
+        $groups = ConfigOptionGroup::with("options.subs")->get();
+        return view("admin.config.config-options", compact("groups"));
+    }
+
+    public function storeConfigOptionGroup(Request $request)
+    {
+        $validated = $request->validate([
+            "name" => "required|string|max:255",
+            "description" => "nullable|string",
+        ]);
+        ConfigOptionGroup::create($validated);
+        return back()->with("success", "Config option group created.");
+    }
+
+    public function updateConfigOptionGroup(Request $request, $id)
+    {
+        $group = ConfigOptionGroup::findOrFail($id);
+        $validated = $request->validate([
+            "name" => "required|string|max:255",
+            "description" => "nullable|string",
+        ]);
+        $group->update($validated);
+        return back()->with("success", "Config option group updated.");
+    }
+
+    public function deleteConfigOptionGroup($id)
+    {
+        ConfigOptionGroup::findOrFail($id)->delete();
+        return back()->with("success", "Config option group deleted.");
+    }
+
+    public function storeConfigOption(Request $request)
+    {
+        $validated = $request->validate([
+            "group_id" => "required|exists:config_option_groups,id",
+            "option_name" => "required|string|max:255",
+            "option_type" => "required|in:dropdown,radio,checkbox,quantity,text",
+            "sort_order" => "nullable|integer",
+        ]);
+        ConfigOption::create($validated);
+        return back()->with("success", "Config option created.");
+    }
+
+    public function deleteConfigOption($id)
+    {
+        ConfigOption::findOrFail($id)->delete();
+        return back()->with("success", "Config option deleted.");
+    }
+
+    public function storeConfigOptionSub(Request $request)
+    {
+        $validated = $request->validate([
+            "config_id" => "required|exists:config_options,id",
+            "option_name" => "required|string|max:255",
+            "sort_order" => "nullable|integer",
+        ]);
+        ConfigOptionSub::create($validated);
+        return back()->with("success", "Sub-option created.");
+    }
+
+    public function deleteConfigOptionSub($id)
+    {
+        ConfigOptionSub::findOrFail($id)->delete();
+        return back()->with("success", "Sub-option deleted.");
+    }
+
+    // ===== TICKET ESCALATION =====
+
+    public function ticketEscalation()
+    {
+        $rules = TicketEscalation::all();
+        $departments = TicketDepartment::all();
+        $admins = Admin::where("is_disabled", false)->get();
+        return view("admin.config.ticket-escalation", compact("rules", "departments", "admins"));
+    }
+
+    public function storeTicketEscalation(Request $request)
+    {
+        $validated = $request->validate([
+            "name" => "required|string|max:255",
+            "departments" => "nullable|json",
+            "statuses" => "nullable|json",
+            "priorities" => "nullable|json",
+            "time_elapsed" => "required|integer|min:1",
+            "new_department_id" => "nullable|exists:ticket_departments,id",
+            "new_priority" => "nullable|string",
+            "flag_to" => "nullable|exists:admins,id",
+            "notify" => "boolean",
+            "add_reply" => "nullable|string",
+        ]);
+        $validated["notify"] = $request->boolean("notify");
+        TicketEscalation::create($validated);
+        return back()->with("success", "Escalation rule created.");
+    }
+
+    public function updateTicketEscalation(Request $request, $id)
+    {
+        $rule = TicketEscalation::findOrFail($id);
+        $validated = $request->validate([
+            "name" => "required|string|max:255",
+            "departments" => "nullable|json",
+            "statuses" => "nullable|json",
+            "priorities" => "nullable|json",
+            "time_elapsed" => "required|integer|min:1",
+            "new_department_id" => "nullable|exists:ticket_departments,id",
+            "new_priority" => "nullable|string",
+            "flag_to" => "nullable|exists:admins,id",
+            "notify" => "boolean",
+            "add_reply" => "nullable|string",
+        ]);
+        $validated["notify"] = $request->boolean("notify");
+        $rule->update($validated);
+        return back()->with("success", "Escalation rule updated.");
+    }
+
+    public function deleteTicketEscalation($id)
+    {
+        TicketEscalation::findOrFail($id)->delete();
+        return back()->with("success", "Escalation rule deleted.");
+    }
+
+
+    // ===== NOTIFICATION CHANNELS (Phase 7) =====
+
+    public function notifications()
+    {
+        $providers = \App\Models\NotificationProvider::with("rules")->get();
+        $eventTypes = [
+            "client.created", "order.placed", "invoice.created", "invoice.paid",
+            "ticket.opened", "ticket.replied", "service.activated", "service.suspended", "service.terminated",
+        ];
+        return view("admin.config.notifications", compact("providers", "eventTypes"));
+    }
+
+    public function storeNotificationProvider(Request $request)
+    {
+        $v = $request->validate([
+            "name" => "required|string|max:255",
+            "type" => "required|in:email,slack,webhook",
+            "settings" => "nullable|array",
+            "active" => "boolean",
+        ]);
+        $v["active"] = $request->boolean("active");
+        $v["settings"] = $request->input("settings", []);
+        \App\Models\NotificationProvider::create($v);
+        return back()->with("success", "Notification provider created.");
+    }
+
+    public function updateNotificationProvider(Request $request, $id)
+    {
+        $provider = \App\Models\NotificationProvider::findOrFail($id);
+        $v = $request->validate([
+            "name" => "required|string|max:255",
+            "type" => "required|in:email,slack,webhook",
+            "settings" => "nullable|array",
+            "active" => "boolean",
+        ]);
+        $v["active"] = $request->boolean("active");
+        $v["settings"] = $request->input("settings", []);
+        $provider->update($v);
+        return back()->with("success", "Notification provider updated.");
+    }
+
+    public function destroyNotificationProvider($id)
+    {
+        $provider = \App\Models\NotificationProvider::findOrFail($id);
+        $provider->rules()->delete();
+        $provider->delete();
+        return back()->with("success", "Notification provider and its rules deleted.");
+    }
+
+    public function storeNotificationRule(Request $request)
+    {
+        $v = $request->validate([
+            "event" => "required|string|max:255",
+            "provider_id" => "required|exists:notification_providers,id",
+            "conditions" => "nullable|array",
+            "active" => "boolean",
+        ]);
+        $v["active"] = $request->boolean("active");
+        $v["conditions"] = $request->input("conditions", []);
+        \App\Models\NotificationRule::create($v);
+        return back()->with("success", "Notification rule created.");
+    }
+
+    public function destroyNotificationRule($id)
+    {
+        \App\Models\NotificationRule::findOrFail($id)->delete();
+        return back()->with("success", "Notification rule deleted.");
+    }
+
+    // ===== TICKET SPAM FILTER (Phase 12) =====
+
+    public function ticketSpam()
+    {
+        $emailFilters = \App\Models\TicketSpamFilter::where("type", "email")->pluck("content")->implode("\n");
+        $keywordFilters = \App\Models\TicketSpamFilter::where("type", "keyword")->pluck("content")->implode("\n");
+        return view("admin.config.ticket-spam", [
+            "bannedEmails" => $emailFilters,
+            "bannedKeywords" => $keywordFilters,
+            "maxPerHour" => Setting::get("TicketSpamMaxPerHour", 5),
+            "filters" => \App\Models\TicketSpamFilter::orderBy("id", "desc")->get(),
+        ]);
+    }
+
+    public function updateTicketSpam(Request $request)
+    {
+        // Sync email patterns
+        $emails = array_filter(array_map("trim", explode("\n", $request->input("banned_emails", ""))));
+        \App\Models\TicketSpamFilter::where("type", "email")->delete();
+        foreach ($emails as $pattern) {
+            if ($pattern) {
+                \App\Models\TicketSpamFilter::create(["type" => "email", "content" => $pattern]);
+            }
+        }
+
+        // Sync keyword patterns
+        $keywords = array_filter(array_map("trim", explode("\n", $request->input("banned_keywords", ""))));
+        \App\Models\TicketSpamFilter::where("type", "keyword")->delete();
+        foreach ($keywords as $keyword) {
+            if ($keyword) {
+                \App\Models\TicketSpamFilter::create(["type" => "keyword", "content" => $keyword]);
+            }
+        }
+
+        Setting::set("TicketSpamMaxPerHour", $request->input("max_per_hour", 5), "tickets");
+        return back()->with("success", "Spam filter settings updated.");
+    }
+
+    public function storeTicketSpamFilter(Request $request)
+    {
+        $v = $request->validate([
+            "type" => "required|in:email,keyword",
+            "content" => "required|string|max:255",
+        ]);
+        \App\Models\TicketSpamFilter::create($v);
+        return back()->with("success", "Spam filter added.");
+    }
+
+    public function destroyTicketSpamFilter($id)
+    {
+        \App\Models\TicketSpamFilter::findOrFail($id)->delete();
+        return back()->with("success", "Spam filter removed.");
+    }
+
+    // ===== PRODUCT ADDONS (Phase 14) =====
+
+    public function addons()
+    {
+        $addons = \App\Models\ProductAddon::orderBy("sort_order")->get();
+        $products = \App\Models\Product::orderBy("name")->get();
+        return view("admin.config.addons", compact("addons", "products"));
+    }
+
+    public function storeAddon(Request $request)
+    {
+        $v = $request->validate([
+            "name" => "required|string|max:255",
+            "description" => "nullable|string",
+            "sort_order" => "nullable|integer",
+            "hidden" => "boolean",
+            "tax" => "boolean",
+        ]);
+        $v["hidden"] = $request->boolean("hidden");
+        $v["tax"] = $request->boolean("tax");
+        $v["sort_order"] = $v["sort_order"] ?? 0;
+
+        // Store applicable products as comma-separated IDs
+        $packages = $request->input("packages", []);
+        $v["packages"] = !empty($packages) ? implode(",", $packages) : null;
+
+        \App\Models\ProductAddon::create($v);
+        return back()->with("success", "Product addon created.");
+    }
+
+    public function updateAddon(Request $request, $id)
+    {
+        $addon = \App\Models\ProductAddon::findOrFail($id);
+        $v = $request->validate([
+            "name" => "required|string|max:255",
+            "description" => "nullable|string",
+            "sort_order" => "nullable|integer",
+            "hidden" => "boolean",
+            "retired" => "boolean",
+            "tax" => "boolean",
+        ]);
+        $v["hidden"] = $request->boolean("hidden");
+        $v["retired"] = $request->boolean("retired");
+        $v["tax"] = $request->boolean("tax");
+        $addon->update($v);
+        return back()->with("success", "Product addon updated.");
+    }
+
+    public function destroyAddon($id)
+    {
+        \App\Models\ProductAddon::findOrFail($id)->delete();
+        return back()->with("success", "Product addon deleted.");
+    }
+
+    // ===== PRODUCT BUNDLES (Phase 15) =====
+
+    public function bundles()
+    {
+        $bundles = \App\Models\ProductBundle::with(["items.product"])->orderBy("name")->get();
+        $products = \App\Models\Product::with("group")->orderBy("name")->get();
+        return view("admin.config.bundles", compact("bundles", "products"));
+    }
+
+    public function storeBundle(Request $request)
+    {
+        $v = $request->validate([
+            "name" => "required|string|max:255",
+            "description" => "nullable|string",
+            "discount_type" => "required|in:percentage,fixed",
+            "discount_value" => "required|numeric|min:0",
+            "is_active" => "boolean",
+            "product_ids" => "required|array|min:2",
+            "product_ids.*" => "exists:products,id",
+        ]);
+
+        $bundle = \App\Models\ProductBundle::create([
+            "name" => $v["name"],
+            "description" => $v["description"] ?? null,
+            "discount_type" => $v["discount_type"],
+            "discount_value" => $v["discount_value"],
+            "is_active" => $request->boolean("is_active"),
+        ]);
+
+        foreach ($v["product_ids"] as $productId) {
+            $bundle->items()->create([
+                "item_type" => "product",
+                "item_id" => $productId,
+                "qty" => 1,
+            ]);
+        }
+
+        return back()->with("success", "Product bundle created.");
+    }
+
+    public function destroyBundle($id)
+    {
+        $bundle = \App\Models\ProductBundle::findOrFail($id);
+        $bundle->items()->delete();
+        $bundle->delete();
+        return back()->with("success", "Product bundle deleted.");
     }
 
 }

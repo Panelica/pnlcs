@@ -15,12 +15,12 @@
         <form method="POST" action="{{ route('admin.clients.update', $client) }}">
             @csrf @method('PUT')
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
-                <div class="form-group"><label class="form-label">First Name <span style="color:#d9534f;">*</span></label><input type="text" name="first_name" value="{{ old('first_name', $client->first_name) }}" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Last Name <span style="color:#d9534f;">*</span></label><input type="text" name="last_name" value="{{ old('last_name', $client->last_name) }}" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Email <span style="color:#d9534f;">*</span></label><input type="email" name="email" value="{{ old('email', $client->email) }}" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.first_name') }}<span style="color:#d9534f;">*</span></label><input type="text" name="first_name" value="{{ old('first_name', $client->first_name) }}" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.last_name') }}<span style="color:#d9534f;">*</span></label><input type="text" name="last_name" value="{{ old('last_name', $client->last_name) }}" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.email') }}<span style="color:#d9534f;">*</span></label><input type="email" name="email" value="{{ old('email', $client->email) }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">Company</label><input type="text" name="company_name" value="{{ old('company_name', $client->company_name) }}" class="form-control"></div>
-                <div class="form-group" style="grid-column:span 2;"><label class="form-label">Address</label><input type="text" name="address1" value="{{ old('address1', $client->address1) }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">City</label><input type="text" name="city" value="{{ old('city', $client->city) }}" class="form-control"></div>
+                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.address') }}</label><input type="text" name="address1" value="{{ old('address1', $client->address1) }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="city" value="{{ old('city', $client->city) }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">State</label><input type="text" name="state" value="{{ old('state', $client->state) }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">Postcode</label><input type="text" name="postcode" value="{{ old('postcode', $client->postcode) }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">Country</label><input type="text" name="country" value="{{ old('country', $client->country) }}" maxlength="2" class="form-control"></div>
@@ -35,7 +35,7 @@
             </div>
             <div style="margin-top:10px;display:flex;gap:8px;">
                 <button type="submit" class="btn btn-primary">Update Client</button>
-                <a href="{{ route('admin.clients.show', $client) }}" class="btn btn-default">Cancel</a>
+                <a href="{{ route('admin.clients.show', $client) }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
             </div>
         </form>
     </div>

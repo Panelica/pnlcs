@@ -17,3 +17,9 @@ Schedule::command('pnlcs:ssl-status-poll')->everyFiveMinutes();
 
 // SSL Expiry Check - daily at 09:00
 Schedule::command('pnlcs:ssl-expiry-check')->dailyAt('09:00');
+
+// Ticket Escalation - every 15 minutes
+Schedule::command('pnlcs:ticket-escalation')->everyFifteenMinutes();
+
+// Usage Polling - hourly
+Schedule::command('pnlcs:usage-polling')->hourly();

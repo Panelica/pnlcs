@@ -65,7 +65,7 @@ class QuoteController extends Controller
         $quote  = $this->quoteService->createQuote($client, $validated);
 
         return redirect()->route('admin.quotes.show', $quote)
-            ->with('success', 'Quote created successfully.');
+            ->with('success', __('messages.success.quote_created'));
     }
 
     public function show(Quote $quote)
@@ -101,41 +101,41 @@ class QuoteController extends Controller
         $this->quoteService->updateQuote($quote, $validated);
 
         return redirect()->route('admin.quotes.show', $quote)
-            ->with('success', 'Quote updated successfully.');
+            ->with('success', __('messages.success.quote_updated_successfully'));
     }
 
     public function destroy(Quote $quote)
     {
         $this->quoteService->deleteQuote($quote);
         return redirect()->route('admin.quotes.index')
-            ->with('success', 'Quote deleted.');
+            ->with('success', __('messages.success.quote_deleted'));
     }
 
     public function send(Quote $quote)
     {
         $this->quoteService->sendQuote($quote);
         return redirect()->route('admin.quotes.show', $quote)
-            ->with('success', 'Quote marked as Sent.');
+            ->with('success', __('messages.success.quote_marked_as_sent'));
     }
 
     public function convertToInvoice(Quote $quote)
     {
         $invoice = $this->quoteService->convertToInvoice($quote);
         return redirect()->route('admin.invoices.show', $invoice)
-            ->with('success', 'Quote converted to invoice successfully.');
+            ->with('success', __('messages.success.quote_converted_to_invoice_successfully'));
     }
 
     public function accept(Quote $quote)
     {
         $this->quoteService->acceptQuote($quote);
         return redirect()->route('admin.quotes.show', $quote)
-            ->with('success', 'Quote accepted.');
+            ->with('success', __('messages.success.quote_accepted'));
     }
 
     public function decline(Quote $quote)
     {
         $this->quoteService->declineQuote($quote);
         return redirect()->route('admin.quotes.show', $quote)
-            ->with('success', 'Quote declined.');
+            ->with('success', __('messages.success.quote_declined'));
     }
 }

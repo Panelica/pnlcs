@@ -5,6 +5,7 @@ use App\Http\Middleware\AdminTwoFactorVerify;
 use App\Http\Middleware\TwoFactorVerify;
 use App\Http\Middleware\AffiliateTracking;
 use App\Http\Middleware\CheckAdminPermission;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup("web", AffiliateTracking::class);
+        $middleware->appendToGroup("web", SetLocale::class);
         $middleware->appendToGroup("api", \App\Http\Middleware\ApiKeyAuth::class);
         $middleware->alias([
             "admin.auth" => AdminAuthenticate::class,
@@ -34,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->redirectGuestsTo(function ($request) { return str_starts_with($request->path(), "client") ? route("client.login") : route("admin.login"); });
     })
+    ->withEvents(false)
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

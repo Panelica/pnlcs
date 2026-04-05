@@ -8,7 +8,7 @@
 </div>
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>Code</th><th>Name</th><th>Prefix</th><th>Suffix</th><th>Rate</th><th>Default</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.code') }}</th><th>{{ __('common.table.name') }}</th><th>Prefix</th><th>Suffix</th><th>{{ __('common.table.rate') }}</th><th>Default</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($currencies as $currency)
         <tr>
@@ -20,11 +20,11 @@
             <td>{{ $currency->default ? '<span class="badge-active">Default</span>' : '' }}</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
-                    onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->default]) }})">Edit</button>
+                    onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->default]) }})">{{ __('common.actions.edit') }}</button>
                 @if(!$currency->default)
                 <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return confirm('Delete currency {{ $currency->code }}?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
                 @endif
             </td>
@@ -52,7 +52,7 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-currency').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-currency').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Currency</button>
             </div>
         </form>
@@ -78,8 +78,8 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-edit-currency').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                <button type="button" onclick="document.getElementById('modal-edit-currency').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
             </div>
         </form>
     </div>

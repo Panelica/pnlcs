@@ -11,7 +11,7 @@
         @if($invoice->status !== 'Paid' && $invoice->status !== 'Cancelled')
         <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}" style="display:inline;" onsubmit="return confirm('Cancel this invoice?')">
             @csrf
-            <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+            <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.cancel') }}</button>
         </form>
         @endif
         <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="btn btn-info btn-sm">Download PDF</a>
@@ -61,7 +61,7 @@
             <div class="card-header"><strong>Line Items</strong></div>
             <table class="data-table">
                 <thead><tr>
-                    <th>Description</th><th style="width:60px;text-align:center;">Taxed</th><th style="text-align:right;width:100px;">Amount</th>
+                    <th>{{ __('common.table.description') }}</th><th style="width:60px;text-align:center;">Taxed</th><th style="text-align:right;width:100px;">{{ __('common.table.amount') }}</th>
                 </tr></thead>
                 <tbody>
                 @forelse($invoice->items as $item)
@@ -94,7 +94,7 @@
         <div class="card" style="margin-bottom:15px;">
             <div class="card-header"><strong>Payment History</strong></div>
             <table class="data-table">
-                <thead><tr><th>Date</th><th>Gateway</th><th>Transaction ID</th><th style="text-align:right;">Amount</th></tr></thead>
+                <thead><tr><th>{{ __('common.table.date') }}</th><th>Gateway</th><th>Transaction ID</th><th style="text-align:right;">{{ __('common.table.amount') }}</th></tr></thead>
                 <tbody>
                 @foreach($invoice->transactions as $tx)
                 <tr>

@@ -7,6 +7,6 @@
 <?php if(session('success')): ?><div class="as"><?=session('success')?></div><?php endif; ?>
 <?php if($errors->any()): ?><div class="ae"><?php foreach($errors->all() as $e): ?><?=$e?><?php endforeach; ?></div><?php endif; ?>
 <form method="POST" action="<?=route('client.password.email')?>"><?php echo csrf_field(); ?>
-<div class="fg"><label class="fl">Email Address</label><input type="email" name="email" class="fc" placeholder="you@example.com" required></div>
+<div class="fg"><label class="fl">{{ __('common.form.email_address') }}</label><input type="email" name="email" class="fc" placeholder="you@example.com" required></div>
 <button type="submit" class="btn">Send Reset Link</button></form>
 <div style="text-align:center;margin-top:20px"><a href="<?=route('client.login')?>">Back to Login</a></div></div></body></html>

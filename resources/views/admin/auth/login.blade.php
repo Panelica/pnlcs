@@ -37,7 +37,7 @@
             @csrf
 
             <div class="form-group">
-                <label for="username" class="form-label">Username</label>
+                <label for="username" class="form-label">{{ __('common.form.username') }}</label>
                 <input type="text" name="username" id="username" value="{{ old("username") }}"
                     autocomplete="username" required
                     class="form-control"
@@ -45,7 +45,7 @@
             </div>
 
             <div class="form-group">
-                <label for="password" class="form-label">Password</label>
+                <label for="password" class="form-label">{{ __('common.form.password') }}</label>
                 <input type="password" name="password" id="password"
                     autocomplete="current-password" required
                     class="form-control"

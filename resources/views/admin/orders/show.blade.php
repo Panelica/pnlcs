@@ -30,7 +30,7 @@
         <div class="card" style="margin-bottom:15px;">
             <div class="card-header"><strong>Services ({{ $order->services->count() }})</strong></div>
             <table class="data-table">
-                <thead><tr><th>Product</th><th>Domain</th><th>Billing</th><th style="text-align:right;">Amount</th><th>Status</th></tr></thead>
+                <thead><tr><th>{{ __('common.table.product') }}</th><th>{{ __('common.table.domain') }}</th><th>Billing</th><th style="text-align:right;">{{ __('common.table.amount') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
                 <tbody>
                 @foreach($order->services as $svc)
                 <tr>
@@ -50,7 +50,7 @@
         <div class="card" style="margin-bottom:15px;">
             <div class="card-header"><strong>Domains ({{ $order->domains->count() }})</strong></div>
             <table class="data-table">
-                <thead><tr><th>Domain</th><th>Type</th><th>Expiry</th><th>Status</th></tr></thead>
+                <thead><tr><th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.type') }}</th><th>Expiry</th><th>{{ __('common.table.status') }}</th></tr></thead>
                 <tbody>
                 @foreach($order->domains as $dom)
                 <tr>
@@ -117,7 +117,7 @@
                 @if($order->status !== 'Fraud')
                 <form method="POST" action="{{ route('admin.orders.fraud', $order) }}" onsubmit="return confirm('Mark this order as fraud? Services will be suspended.')">
                     @csrf
-                    <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">Mark as Fraud</button>
+                    <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">{{ __('common.actions.mark_fraud') }}</button>
                 </form>
                 @endif
 

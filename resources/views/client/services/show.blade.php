@@ -26,6 +26,18 @@
                 <li><span class="key">Next Due Date</span><span class="val">{{ $service->next_due_date?->format("d M Y") ?? "N/A" }}</span></li>
                 <li><span class="key">Registration Date</span><span class="val">{{ $service->registration_date?->format("d M Y") ?? "N/A" }}</span></li>
                 <li><span class="key">Payment Method</span><span class="val" style="text-transform:capitalize">{{ $service->payment_method ?? "N/A" }}</span></li>
+                <li>
+                    <span class="key">Auto-Renew</span>
+                    <span class="val">
+                        <form method="POST" action="{{ route("client.services.autorenew", $service) }}" style="display:inline;">
+                            @csrf
+                            <button type="submit" style="display:inline-flex;align-items:center;gap:6px;padding:4px 14px;font-size:12px;font-weight:600;border-radius:6px;border:1px solid {{ $service->auto_renew ? '#22c55e' : '#d1d5db' }};background:{{ $service->auto_renew ? '#f0fdf4' : '#f9fafb' }};color:{{ $service->auto_renew ? '#16a34a' : '#6b7280' }};cursor:pointer;transition:all .15s;">
+                                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:{{ $service->auto_renew ? '#22c55e' : '#d1d5db' }}"></span>
+                                {{ $service->auto_renew ? "Enabled" : "Disabled" }}
+                            </button>
+                        </form>
+                    </span>
+                </li>
             </ul>
         </div>
     </div>
@@ -87,7 +99,7 @@
     <div class="pn-card-header"><span class="pn-card-title">Add-ons</span></div>
     <div class="pn-card-body-flush">
         <table class="pn-table">
-            <thead><tr><th>Name</th><th>Amount</th><th>Billing Cycle</th><th>Next Due</th><th>Status</th></tr></thead>
+            <thead><tr><th>{{ __('common.table.name') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>Next Due</th><th>{{ __('common.table.status') }}</th></tr></thead>
             <tbody>
                 @foreach($service->addons as $addon)
                 <tr>

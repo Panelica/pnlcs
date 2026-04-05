@@ -17,7 +17,7 @@
     </div>
     @if($group->products->count() > 0)
     <table class="data-table">
-        <thead><tr><th>Product Name</th><th>Type</th><th>Payment</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Product Name</th><th>{{ __('common.table.type') }}</th><th>Payment</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($group->products as $product)
         <tr>
@@ -33,7 +33,7 @@
                 @else<span class="badge-active">Active</span>@endif
             </td>
             <td style="text-align:right;">
-                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-default btn-xs">Edit</a>
+                <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
             </td>
         </tr>
         @endforeach

@@ -21,6 +21,7 @@ test("client can register", function () {
         "email" => "newclient@example.com",
         "password" => "password123",
         "password_confirmation" => "password123",
+        "tos" => "1",
     ]);
     $response->assertRedirect(route("client.home"));
     $this->assertAuthenticated();

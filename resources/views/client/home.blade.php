@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Dashboard")
+@section("title", __("client.dashboard.title"))
 @section("content")
 
 {{-- Welcome Banner --}}
@@ -84,7 +84,7 @@
                 <div class="pn-empty"><div class="pn-empty-icon">&#128196;</div><p>No invoices yet.</p></div>
             @else
             <table class="pn-table">
-                <thead><tr><th>Invoice</th><th>Due</th><th>Total</th><th>Status</th></tr></thead>
+                <thead><tr><th>Invoice</th><th>Due</th><th>{{ __('common.table.total') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
                 <tbody>
                     @foreach($recentInvoices as $invoice)
                     <tr>
@@ -110,7 +110,7 @@
                 <div class="pn-empty"><div class="pn-empty-icon">&#128101;</div><p>No tickets yet.</p></div>
             @else
             <table class="pn-table">
-                <thead><tr><th>Subject</th><th>Status</th><th>Last Reply</th></tr></thead>
+                <thead><tr><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.status') }}</th><th>{{ __('common.table.last_reply') }}</th></tr></thead>
                 <tbody>
                     @foreach($recentTickets as $ticket)
                     <tr>
@@ -135,7 +135,7 @@
     </div>
     <div class="pn-card-body-flush">
         <table class="pn-table">
-            <thead><tr><th>Product</th><th>Domain</th><th>Amount</th><th>Next Due</th><th>Status</th></tr></thead>
+            <thead><tr><th>{{ __('common.table.product') }}</th><th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.amount') }}</th><th>Next Due</th><th>{{ __('common.table.status') }}</th></tr></thead>
             <tbody>
                 @foreach($activeServices as $service)
                 <tr>

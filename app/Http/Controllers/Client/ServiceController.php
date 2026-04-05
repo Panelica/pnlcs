@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\Upgrade;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CancellationConfirmMail;
 
 class ServiceController extends Controller
 {
@@ -51,6 +53,11 @@ class ServiceController extends Controller
             "reason"     => $validated["reason"],
         ]);
 
+        $service->load("client");
+        if ($service->client?->email) {
+            Mail::to($service->client->email)->queue(new CancellationConfirmMail($service, $validated["type"]));
+        }
+
         return redirect()->route("client.services.show", $service)
             ->with("success", "Your cancellation request has been submitted.");
     }
@@ -90,6 +97,18 @@ class ServiceController extends Controller
 
         return redirect()->route("client.services.show", $service)
             ->with("success", "Your upgrade request has been submitted and is pending review.");
+    }
+
+    public function toggleAutoRenew(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $service->update([
+            "auto_renew" => !$service->auto_renew,
+        ]);
+
+        $status = $service->auto_renew ? "enabled" : "disabled";
+        return back()->with("success", "Auto-renewal {$status} for {$service->domain}.");
     }
 
     private function getClientId(): int

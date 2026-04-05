@@ -18,7 +18,7 @@
             <form method="POST" action="{{ route('client.2fa.disable') }}" style="margin:0;">
                 @csrf
                 <input type="password" name="password" placeholder="Your password" class="form-control form-control-sm" style="width:160px;display:inline-block;margin-right:6px;" required>
-                <button type="submit" class="btn btn-danger btn-sm">Disable</button>
+                <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.disable') }}</button>
             </form>
         </div>
         @else

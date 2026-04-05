@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No server groups configured.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Name</th><th>Fill Type</th><th>Servers</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.name') }}</th><th>Fill Type</th><th>Servers</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($serverGroups as $group)
         <tr>
@@ -20,10 +20,10 @@
             <td>{{ $group->servers_count ?? 0 }}</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
-                    onclick="openEditSG({{ json_encode(['id'=>$group->id,'name'=>$group->name,'fill_type'=>$group->fill_type]) }})">Edit</button>
+                    onclick="openEditSG({{ json_encode(['id'=>$group->id,'name'=>$group->name,'fill_type'=>$group->fill_type]) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.server-groups.destroy', $group) }}" style="display:inline;" onsubmit="return confirm('Delete group {{ $group->name }}?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -47,7 +47,7 @@
                 <div class="form-group"><label class="form-label">Fill Type</label><select name="fill_type" class="form-control"><option value="sequential">Sequential (fill one at a time)</option><option value="roundrobin">Round Robin (distribute evenly)</option></select></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-sg').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-sg').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Group</button>
             </div>
         </form>
@@ -68,8 +68,8 @@
                 <div class="form-group"><label class="form-label">Fill Type</label><select name="fill_type" id="esg-fill" class="form-control"><option value="sequential">Sequential</option><option value="roundrobin">Round Robin</option></select></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-edit-sg').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                <button type="button" onclick="document.getElementById('modal-edit-sg').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
             </div>
         </form>
     </div>

@@ -12,7 +12,7 @@
     <strong style="color:#8a6d3b;">Save this API Secret now — it will NOT be shown again:</strong>
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
         <code id="api-secret-display" style="flex:1;padding:10px;background:#fff;border:1px solid #ddd;border-radius:3px;font-size:14px;word-break:break-all;">{{ session('new_secret') }}</code>
-        <button type="button" class="btn btn-default btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('api-secret-display').textContent);this.textContent='Copied!';">Copy</button>
+        <button type="button" class="btn btn-default btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('api-secret-display').textContent);this.textContent='Copied!';">{{ __('common.actions.copy') }}</button>
     </div>
 </div>
 @endif
@@ -24,7 +24,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No API keys configured. Generate one to enable API access.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Description</th><th>API Identifier</th><th>Admin</th><th>Created</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.description') }}</th><th>API Identifier</th><th>Admin</th><th>{{ __('common.table.created') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($credentials as $cred)
         <tr>
@@ -70,7 +70,7 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Generate</button>
             </div>
         </form>

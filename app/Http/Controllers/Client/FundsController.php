@@ -32,7 +32,7 @@ class FundsController extends Controller
         $client = auth()->user()->clients()->first();
 
         if (!$client) {
-            return back()->with('error', 'No client account found. Please contact support.');
+            return back()->with('error', __('messages.error.no_client_account_found_please_contact_support'));
         }
 
         // Check if gateway is configured
@@ -69,6 +69,6 @@ class FundsController extends Controller
         ]);
 
         return redirect()->route('client.invoices.show', $invoice)
-            ->with('success', 'Invoice created. Please complete payment to add funds.');
+            ->with('success', __('messages.success.invoice_created_please_complete_payment_to_add_fun'));
     }
 }

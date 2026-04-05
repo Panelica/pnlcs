@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "My Account")
+@section("title", __("admin.settings.my_account"))
 @section("content")
 
 <div class="page-header">
@@ -22,16 +22,16 @@
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                 <div class="form-group">
-                    <label class="form-label">First Name <span style="color:#c43c35;">*</span></label>
+                    <label class="form-label">{{ __('common.form.first_name') }}<span style="color:#c43c35;">*</span></label>
                     <input type="text" name="first_name" class="form-control" value="{{ old("first_name", $admin->first_name) }}" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Last Name <span style="color:#c43c35;">*</span></label>
+                    <label class="form-label">{{ __('common.form.last_name') }}<span style="color:#c43c35;">*</span></label>
                     <input type="text" name="last_name" class="form-control" value="{{ old("last_name", $admin->last_name) }}" required>
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Email Address <span style="color:#c43c35;">*</span></label>
+                <label class="form-label">{{ __('common.form.email_address') }}<span style="color:#c43c35;">*</span></label>
                 <input type="email" name="email" class="form-control" value="{{ old("email", $admin->email) }}" required>
             </div>
             <div class="form-group">
@@ -45,7 +45,7 @@
         <div class="card-header">Change Password <small style="font-weight:400;color:#999;">(leave blank to keep current password)</small></div>
         <div class="card-body">
             <div class="form-group">
-                <label class="form-label">New Password</label>
+                <label class="form-label">{{ __('common.form.new_password') }}</label>
                 <input type="password" name="new_password" class="form-control" autocomplete="new-password">
             </div>
             <div class="form-group">
@@ -56,8 +56,8 @@
     </div>
 
     <div style="margin-top:16px;">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a href="{{ route("admin.dashboard") }}" class="btn btn-default" style="margin-left:8px;">Cancel</a>
+        <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
+        <a href="{{ route("admin.dashboard") }}" class="btn btn-default" style="margin-left:8px;">{{ __('common.actions.cancel') }}</a>
     </div>
 </form>
 

@@ -40,7 +40,7 @@
     <div class="card-body" style="padding:16px;">
         <p style="margin:0 0 12px;font-size:13px;color:#555;">All API requests require an <strong>identifier</strong> (API key) and <strong>secret</strong>. Send them as POST parameters with every request:</p>
         <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
-            <thead><tr><th style="text-align:left;padding:6px 10px;background:#fafafa;border-bottom:2px solid #e5e5e5;">Parameter</th><th style="text-align:left;padding:6px 10px;background:#fafafa;border-bottom:2px solid #e5e5e5;">Description</th></tr></thead>
+            <thead><tr><th style="text-align:left;padding:6px 10px;background:#fafafa;border-bottom:2px solid #e5e5e5;">Parameter</th><th style="text-align:left;padding:6px 10px;background:#fafafa;border-bottom:2px solid #e5e5e5;">{{ __('common.table.description') }}</th></tr></thead>
             <tbody>
                 <tr><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;"><code>identifier</code></td><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;">Your 32-character API key identifier</td></tr>
                 <tr><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;"><code>secret</code></td><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;">Your 64-character API secret (shown only once at creation)</td></tr>
@@ -81,7 +81,7 @@
 <div class="card api-section" id="section-system">
     <h3>System</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getstats</td><td class="ep-desc">Get system statistics (clients, invoices, orders, revenue)</td><td></td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">gethealthstatus</td><td class="ep-desc">Check system health and service status</td><td></td></tr>
@@ -97,7 +97,7 @@
 <div class="card api-section" id="section-clients">
     <h3>Clients</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getclients</td><td class="ep-desc">List clients with optional search/filtering</td><td>search, limitnum, limitstart, sorting, orderby</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getclientsdetails</td><td class="ep-desc">Get full details for a single client</td><td>clientid <em>or</em> email (required)</td></tr>
@@ -123,7 +123,7 @@
 <div class="card api-section" id="section-invoices">
     <h3>Invoices</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getinvoices</td><td class="ep-desc">List invoices with optional filtering</td><td>userid, status, limitnum, limitstart</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getinvoice</td><td class="ep-desc">Get a single invoice with line items</td><td>invoiceid (required)</td></tr>
@@ -142,7 +142,7 @@
 <div class="card api-section" id="section-orders">
     <h3>Orders</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getorders</td><td class="ep-desc">List all orders with optional filtering</td><td>userid, status, limitnum, limitstart</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getorderstatuses</td><td class="ep-desc">Get available order status options</td><td></td></tr>
@@ -160,7 +160,7 @@
 <div class="card api-section" id="section-tickets">
     <h3>Support Tickets</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">gettickets</td><td class="ep-desc">List support tickets with optional filtering</td><td>clientid, deptid, status, limitnum, limitstart</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getticket</td><td class="ep-desc">Get a single ticket with replies</td><td>ticketid (required)</td></tr>
@@ -179,7 +179,7 @@
 <div class="card api-section" id="section-domains">
     <h3>Domains</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getclientsdomains</td><td class="ep-desc">List domains for a specific client</td><td>clientid (required), limitnum, limitstart</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getdomains</td><td class="ep-desc">List all domains in the system</td><td>limitnum, limitstart, domain</td></tr>
@@ -201,7 +201,7 @@
 <div class="card api-section" id="section-services">
     <h3>Services / Hosting</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getclientsproducts</td><td class="ep-desc">List services/products for a client</td><td>clientid (required), limitnum, limitstart, pid, serviceid</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getproducts</td><td class="ep-desc">List all products/packages in the system</td><td>pid, gid, module</td></tr>
@@ -222,7 +222,7 @@
 <div class="card api-section" id="section-quotes">
     <h3>Quotes</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getquotes</td><td class="ep-desc">List all quotes with optional filtering</td><td>userid, status, limitnum, limitstart</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">createquote</td><td class="ep-desc">Create a new quote for a client</td><td>userid, subject, validuntil, lineitems (required)</td></tr>
@@ -238,7 +238,7 @@
 <div class="card api-section" id="section-projects">
     <h3>Projects</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getprojects</td><td class="ep-desc">List all projects</td><td>limitnum, limitstart</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getproject</td><td class="ep-desc">Get a single project with tasks and messages</td><td>projectid (required)</td></tr>
@@ -257,7 +257,7 @@
 <div class="card api-section" id="section-billing">
     <h3>Billing / Transactions</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">gettransactions</td><td class="ep-desc">List payment transactions with optional filtering</td><td>clientid, invoiceid, limitnum, limitstart</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">addtransaction</td><td class="ep-desc">Add a manual transaction record</td><td>clientid, invoiceid, description, amountin, amountout, gateway, date (required)</td></tr>
@@ -274,7 +274,7 @@
 <div class="card api-section" id="section-products">
     <h3>Products</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">addproduct</td><td class="ep-desc">Create a new product/package</td><td>name, gid, type, paytype (required)</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">updateproduct</td><td class="ep-desc">Update an existing product</td><td>pid (required), any product field</td></tr>
@@ -288,7 +288,7 @@
 <div class="card api-section" id="section-emails">
     <h3>Emails</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">sendemail</td><td class="ep-desc">Send a template-based email to a client</td><td>messagename, id (clientid/serviceid/invoiceid depending on template)</td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">sendclientsmail</td><td class="ep-desc">Send an arbitrary email to a specific client</td><td>clientid, subject, message (required)</td></tr>
@@ -301,7 +301,7 @@
 <div class="card api-section" id="section-admins">
     <h3>Admins</h3>
     <table class="api-table">
-        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>Description</th><th style="width:220px;">Key Parameters</th></tr></thead>
+        <thead><tr><th style="width:70px;">Method</th><th style="width:220px;">Action</th><th>{{ __('common.table.description') }}</th><th style="width:220px;">Key Parameters</th></tr></thead>
         <tbody>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getadmins</td><td class="ep-desc">List all administrator accounts</td><td></td></tr>
             <tr><td><span class="badge-post">POST</span></td><td class="ep-url">getadmindetails</td><td class="ep-desc">Get details for the authenticated admin</td><td></td></tr>

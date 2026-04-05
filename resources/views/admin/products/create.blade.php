@@ -23,7 +23,7 @@
                 <div class="form-group"><label class="form-label">Product Group <span style="color:#d9534f;">*</span></label><select name="group_id" required class="form-control">@foreach($groups as $g)<option value="{{ $g->id }}">{{ $g->name }}</option>@endforeach</select></div>
                 <div class="form-group"><label class="form-label">Product Type <span style="color:#d9534f;">*</span></label><select name="type" class="form-control"><option value="hosting">Shared Hosting</option><option value="reseller">Reseller Hosting</option><option value="vps">VPS/Dedicated</option><option value="ssl">SSL Certificate</option><option value="other">Other</option></select></div>
                 <div class="form-group"><label class="form-label">Payment Type <span style="color:#d9534f;">*</span></label><select name="pay_type" class="form-control"><option value="recurring">Recurring</option><option value="onetime">One Time</option><option value="free">Free</option></select></div>
-                <div class="form-group" style="grid-column:span 2;"><label class="form-label">Description</label><textarea name="description" rows="3" class="form-control">{{ old('description') }}</textarea></div>
+                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ old('description') }}</textarea></div>
             </div>
         </div>
     </div>
@@ -50,7 +50,7 @@
 
     <div style="display:flex;gap:8px;">
         <button type="submit" class="btn btn-primary">Create Product</button>
-        <a href="{{ route('admin.products.index') }}" class="btn btn-default">Cancel</a>
+        <a href="{{ route('admin.products.index') }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
     </div>
 </form>
 @endsection

@@ -20,7 +20,7 @@
 <div class="card">
     <table class="data-table">
         <thead><tr>
-            <th>Title</th><th>Client</th><th>Status</th><th>Progress</th><th>Due Date</th><th>Actions</th>
+            <th>Title</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.status') }}</th><th>Progress</th><th>{{ __('common.table.due_date') }}</th><th>{{ __('common.table.actions') }}</th>
         </tr></thead>
         <tbody>
             @forelse($projects as $project)
@@ -46,8 +46,8 @@
                 <td style="font-size:12px;color:#777;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format('d M Y') : '-' }}</td>
                 <td>
                     <div style="display:flex;gap:6px;">
-                        <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-default btn-xs">View</a>
-                        <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-xs">Edit</a>
+                        <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
+                        <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
                         <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('Delete this project?')" style="display:inline;">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">Del</button>
@@ -56,7 +56,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" style="text-align:center;color:#999;padding:30px;">No projects found.</td></tr>
+            <tr><td colspan="6" style="text-align:center;color:#999;padding:30px;">{{ __('admin.projects.no_projects') }}</td></tr>
             @endforelse
         </tbody>
     </table>

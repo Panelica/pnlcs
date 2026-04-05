@@ -134,7 +134,7 @@ class InvoiceController extends Controller
     public function cancel(Invoice $invoice): RedirectResponse
     {
         if ($invoice->status === 'Paid') {
-            return back()->with('error', 'Paid invoices cannot be cancelled.');
+            return back()->with('error', __('messages.error.paid_invoices_cannot_be_cancelled'));
         }
 
         $this->invoiceService->cancelInvoice($invoice);

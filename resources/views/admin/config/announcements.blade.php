@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No announcements posted.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Title</th><th>Date</th><th>Published</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Title</th><th>{{ __('common.table.date') }}</th><th>Published</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($announcements as $ann)
         <tr>
@@ -19,10 +19,10 @@
             <td style="font-size:12px;">{{ $ann->date?->format('d M Y') ?? $ann->created_at->format('d M Y') }}</td>
             <td><span class="badge-{{ $ann->published ? 'active' : 'draft' }}">{{ $ann->published ? 'Published' : 'Draft' }}</span></td>
             <td style="text-align:right;">
-                <button type="button" onclick="openModal('edit-ann-{{ $loop->index }}')" class="btn btn-default btn-xs">Edit</button>
+                <button type="button" onclick="openModal('edit-ann-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.announcements.destroy', $ann) }}" style="display:inline;" onsubmit="return confirm('Delete this announcement?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -48,8 +48,8 @@
             </label>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('add-announcement')" class="btn btn-default btn-sm">Cancel</button>
-            <button type="submit" class="btn btn-primary btn-sm">Create</button>
+            <button type="button" onclick="closeModal('add-announcement')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.create') }}</button>
         </div>
     </form>
 </x-modal>
@@ -69,8 +69,8 @@
             </label>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('edit-ann-{{ $loop->index }}')" class="btn btn-default btn-sm">Cancel</button>
-            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+            <button type="button" onclick="closeModal('edit-ann-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
         </div>
     </form>
 </x-modal>

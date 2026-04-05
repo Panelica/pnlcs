@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Servers")
+@section("title", __("admin.servers"))
 @section("content")
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
@@ -14,7 +14,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No servers configured. Click "Add Server" to add one.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Name</th><th>Hostname</th><th>IP Address</th><th>Type</th><th>Port</th><th>Max Accts</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.name') }}</th><th>Hostname</th><th>{{ __('common.table.ip_address') }}</th><th>{{ __('common.table.type') }}</th><th>Port</th><th>Max Accts</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($servers as $server)
         <tr>
@@ -30,10 +30,10 @@
                     @csrf
                     <button type="submit" class="btn btn-default btn-xs">Test</button>
                 </form>
-                <button type="button" class="btn btn-default btn-xs" onclick="editServer({{ $server->id }},{{ json_encode($server->name) }},{{ json_encode($server->hostname) }},{{ json_encode($server->ip_address) }},{{ json_encode($server->type) }},{{ (int)($server->port ?? 8443) }},{{ json_encode($server->username) }},{{ (int)($server->max_accounts ?? 500) }},{{ json_encode($server->nameserver1 ?? '') }},{{ json_encode($server->nameserver2 ?? '') }},{{ $server->active ? 'true' : 'false' }})">Edit</button>
+                <button type="button" class="btn btn-default btn-xs" onclick="editServer({{ $server->id }},{{ json_encode($server->name) }},{{ json_encode($server->hostname) }},{{ json_encode($server->ip_address) }},{{ json_encode($server->type) }},{{ (int)($server->port ?? 8443) }},{{ json_encode($server->username) }},{{ (int)($server->max_accounts ?? 500) }},{{ json_encode($server->nameserver1 ?? '') }},{{ json_encode($server->nameserver2 ?? '') }},{{ $server->active ? 'true' : 'false' }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.servers.destroy', $server) }}" style="display:inline;" onsubmit="return confirm('Delete this server?')">
                     @csrf @method("DELETE")
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -69,7 +69,7 @@
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label">Port</label><input type="number" name="port" value="8443" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" class="form-control" placeholder="e.g. root"></div>
+                    <div class="form-group"><label class="form-label">{{ __('common.form.username') }}</label><input type="text" name="username" class="form-control" placeholder="e.g. root"></div>
                     <div class="form-group"><label class="form-label">Password / API Token</label><input type="password" name="password" class="form-control"></div>
                     <div class="form-group"><label class="form-label">Access Hash / API Key</label><textarea name="access_hash" rows="2" class="form-control" placeholder="Optional"></textarea></div>
                     <div class="form-group"><label class="form-label">Max Accounts</label><input type="number" name="max_accounts" value="500" min="0" class="form-control"></div>
@@ -88,7 +88,7 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Server</button>
             </div>
         </form>
@@ -121,8 +121,8 @@
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label">Port</label><input type="number" id="edit-port" name="port" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Username</label><input type="text" id="edit-username" name="username" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">New Password <small style="color:#999;">(leave blank to keep)</small></label><input type="password" name="password" class="form-control" placeholder="Leave blank to keep unchanged"></div>
+                    <div class="form-group"><label class="form-label">{{ __('common.form.username') }}</label><input type="text" id="edit-username" name="username" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('common.form.new_password') }}<small style="color:#999;">(leave blank to keep)</small></label><input type="password" name="password" class="form-control" placeholder="Leave blank to keep unchanged"></div>
                     <div class="form-group"><label class="form-label">Access Hash / API Key</label><textarea name="access_hash" rows="2" class="form-control" placeholder="Leave blank to keep unchanged"></textarea></div>
                     <div class="form-group"><label class="form-label">Max Accounts</label><input type="number" id="edit-max-accounts" name="max_accounts" min="0" class="form-control"></div>
                 </div>
@@ -140,8 +140,8 @@
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
             </div>
         </form>
     </div>

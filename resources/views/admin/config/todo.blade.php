@@ -13,11 +13,11 @@
     <table class="data-table">
         <thead><tr>
             <th>Title</th>
-            <th>Description</th>
-            <th>Status</th>
-            <th>Due Date</th>
+            <th>{{ __('common.table.description') }}</th>
+            <th>{{ __('common.table.status') }}</th>
+            <th>{{ __('common.table.due_date') }}</th>
             <th>Admin</th>
-            <th style="text-align:right;">Actions</th>
+            <th style="text-align:right;">{{ __('common.table.actions') }}</th>
         </tr></thead>
         <tbody>
         @foreach($items as $todo)
@@ -45,7 +45,7 @@
                 @endif
                 <form method="POST" action="{{ route('admin.config.todo.destroy', $todo) }}" style="display:inline;" onsubmit="return confirm('Delete this task?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -67,11 +67,11 @@
             @csrf
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">Task Title *</label><input type="text" name="title" required class="form-control" placeholder="Enter task title"></div>
-                <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="2" class="form-control" placeholder="Optional description"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control" placeholder="Optional description"></textarea></div>
                 <div class="form-group"><label class="form-label">Due Date</label><input type="date" name="due_date" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
-                <button type="button" onclick="document.getElementById('modal-add-todo').style.display='none'" class="btn btn-default btn-sm">Cancel</button>
+                <button type="button" onclick="document.getElementById('modal-add-todo').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
                 <button type="submit" class="btn btn-primary btn-sm">Add Task</button>
             </div>
         </form>

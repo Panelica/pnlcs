@@ -17,7 +17,7 @@
 <tr><td style=\"padding:8px;border-bottom:1px solid #eee;\"><strong>Due Date</strong></td><td style=\"padding:8px;border-bottom:1px solid #eee;\">{{ \$invoice->due_date?->format('M d, Y') ?? 'N/A' }}</td></tr>
 </table>
 
-<p>Please log in to your account to make a payment.</p>
+<p>{{ __('email.common.login_link') }} to make a payment.</p>
 
 <p style=\"color:#888;font-size:12px;margin-top:30px;\">{{ \$companyName }}</p>
 </body></html>

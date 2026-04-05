@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Domain Pricing")
+@section("title", __("client.domain_search.pricing_title"))
 @section("content")
 <div class="pn-page-header"><div><h1 class="pn-page-title">Domain Pricing</h1><p class="pn-page-subtitle">Browse our domain extensions and find the best price.</p></div></div>
 <div style="max-width:100%;padding:0;">
@@ -28,7 +28,7 @@
             <thead>
                 <tr style="background:#1a4d80;">
                     <th style="padding:12px 20px;text-align:left;color:#fff;font-size:13px;font-weight:600;">Extension</th>
-                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Register</th>
+                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('common.actions.register') }}</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Transfer</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Renew</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Min Yrs</th>
@@ -59,7 +59,7 @@
                     <td style="padding:12px 20px;text-align:center;color:#64748b;">${{ number_format($tld->renew_price, 2) }}</td>
                     <td style="padding:12px 20px;text-align:center;color:#94a3b8;font-size:13px;">{{ $tld->min_years }}</td>
                     <td style="padding:12px 20px;text-align:center;">
-                        <a href="{{ route('client.domain.search') }}?tld={{ $tld->extension }}" style="padding:6px 14px;background:#06d6a0;color:#0f172a;font-size:12px;font-weight:700;border-radius:6px;text-decoration:none;display:inline-block;">Register</a>
+                        <a href="{{ route('client.domain.search') }}?tld={{ $tld->extension }}" style="padding:6px 14px;background:#06d6a0;color:#0f172a;font-size:12px;font-weight:700;border-radius:6px;text-decoration:none;display:inline-block;">{{ __('common.actions.register') }}</a>
                     </td>
                 </tr>
                 @endforeach

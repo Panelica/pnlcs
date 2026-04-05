@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Domain Search")
+@section("title", __("client.domain_search.title"))
 @section("content")
 <div class="pn-page-header"><div><h1 class="pn-page-title">Domain Search</h1><p class="pn-page-subtitle">Check domain availability and register your perfect domain name.</p></div></div>
 <div style="max-width:100%;padding:0;">
@@ -27,7 +27,7 @@
                     </optgroup>
                 </select>
             </div>
-            <button type="submit" style="padding:0 32px;background:#1a4d80;color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;">Search</button>
+            <button type="submit" style="padding:0 32px;background:#1a4d80;color:#fff;font-size:16px;font-weight:700;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;">{{ __('common.actions.search') }}</button>
         </div>
     </form>
 
@@ -64,7 +64,7 @@
                 <input type="hidden" name="domain" value="{{ $primary['domain'] }}">
                 <input type="hidden" name="type" value="register">
                 <input type="hidden" name="years" value="1">
-                <button type="submit" style="padding:12px 24px;background:#06d6a0;color:#0f172a;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">Add to Cart</button>
+                <button type="submit" style="padding:12px 24px;background:#06d6a0;color:#0f172a;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">{{ __('common.actions.add_to_cart') }}</button>
             </form>
             @else
             <form method="POST" action="{{ route('client.cart.add-domain') }}">
@@ -107,7 +107,7 @@
                         <input type="hidden" name="domain" value="{{ $alt['domain'] }}">
                         <input type="hidden" name="type" value="register">
                         <input type="hidden" name="years" value="1">
-                        <button type="submit" style="padding:6px 14px;background:#1a4d80;color:#fff;font-size:12px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Add</button>
+                        <button type="submit" style="padding:6px 14px;background:#1a4d80;color:#fff;font-size:12px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">{{ __('common.actions.add') }}</button>
                     </form>
                     @else
                     <span style="font-size:13px;color:#94a3b8;">Taken</span>
@@ -130,7 +130,7 @@
             <thead>
                 <tr style="background:#f8fafc;">
                     <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Extension</th>
-                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Register</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">{{ __('common.actions.register') }}</th>
                     <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Transfer</th>
                     <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Renew</th>
                     <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Action</th>
@@ -144,7 +144,7 @@
                     <td style="padding:10px 16px;text-align:center;color:#64748b;">${{ number_format($tld->transfer_price, 2) }}</td>
                     <td style="padding:10px 16px;text-align:center;color:#64748b;">${{ number_format($tld->renew_price, 2) }}</td>
                     <td style="padding:10px 16px;text-align:center;">
-                        <a href="{{ route('client.domain.search') }}?tld={{ $tld->extension }}" style="padding:5px 12px;background:#eff6ff;color:#1a4d80;font-size:12px;font-weight:600;border:1px solid #bfdbfe;border-radius:5px;text-decoration:none;">Search</a>
+                        <a href="{{ route('client.domain.search') }}?tld={{ $tld->extension }}" style="padding:5px 12px;background:#eff6ff;color:#1a4d80;font-size:12px;font-weight:600;border:1px solid #bfdbfe;border-radius:5px;text-decoration:none;">{{ __('common.actions.search') }}</a>
                     </td>
                 </tr>
                 @endforeach

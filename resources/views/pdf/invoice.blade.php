@@ -94,9 +94,9 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 60%;">Description</th>
+                <th style="width: 60%;">{{ __('common.table.description') }}</th>
                 <th class="text-right" style="width: 20%;">Taxed</th>
-                <th class="text-right" style="width: 20%;">Amount</th>
+                <th class="text-right" style="width: 20%;">{{ __('common.table.amount') }}</th>
             </tr>
         </thead>
         <tbody>

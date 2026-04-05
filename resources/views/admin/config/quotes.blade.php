@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No quotes created.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Quote #</th><th>Client</th><th>Subject</th><th>Total</th><th>Valid Until</th><th>Stage</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Quote #</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.total') }}</th><th>Valid Until</th><th>Stage</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($quotes as $quote)
         <tr>
@@ -22,10 +22,10 @@
             <td style="font-size:12px;">{{ $quote->validuntil?->format('d M Y') ?? '&mdash;' }}</td>
             <td><span class="badge-{{ strtolower($quote->stage ?? 'draft') }}">{{ $quote->stage ?? 'Draft' }}</span></td>
             <td style="text-align:right;">
-                <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">Edit</a>
+                <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
                 <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" style="display:inline;" onsubmit="return confirm('Delete this quote?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>

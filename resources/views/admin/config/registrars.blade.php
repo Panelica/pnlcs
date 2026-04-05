@@ -10,7 +10,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No domain registrars configured.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Registrar</th><th>Display Name</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.registrar') }}</th><th>Display Name</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($registrars as $reg)
         <tr>
@@ -18,7 +18,7 @@
             <td style="font-weight:600;">{{ $reg->description ?? $reg->registrar_name }}</td>
             <td><span class="badge-{{ $reg->disabled ? 'suspended' : 'active' }}">{{ $reg->disabled ? 'Disabled' : 'Active' }}</span></td>
             <td style="text-align:right;">
-                <button type="button" onclick="openModal('reg-settings-{{ $loop->index }}')" class="btn btn-default btn-xs">Configure</button>
+                <button type="button" onclick="openModal('reg-settings-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.configure') }}</button>
             </td>
         </tr>
         @endforeach
@@ -44,7 +44,7 @@
             <div class="form-group"><label class="form-label">Configuration (JSON)</label><textarea name="settings_json" rows="4" class="form-control" placeholder='{"key":"value"}'></textarea></div>
         @endif
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('reg-settings-{{ $loop->index }}')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="button" onclick="closeModal('reg-settings-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">Save Settings</button>
         </div>
     </form>

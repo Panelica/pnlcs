@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
 use Illuminate\Http\Request;
+use App\Events\TicketReplied;
 
 class TicketController extends Controller
 {
@@ -33,6 +34,7 @@ class TicketController extends Controller
             "admin" => auth("admin")->user()->username,
         ]);
         $ticket->update(["status" => "answered", "last_reply" => now()]);
+        event(new TicketReplied($ticket, $validated["message"], true));
         return back()->with("success", "Reply added.");
     }
 }

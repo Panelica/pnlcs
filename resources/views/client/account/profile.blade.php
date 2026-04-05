@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Edit Profile")
+@section("title", __("client.edit_profile"))
 @section("content")
 
 <div class="pn-page-header">
@@ -24,25 +24,25 @@
             @method("PUT")
             <div class="form-grid-2">
                 <div class="form-group">
-                    <label class="form-label" for="first_name">First Name <span class="req">*</span></label>
+                    <label class="form-label" for="first_name">{{ __('common.form.first_name') }}<span class="req">*</span></label>
                     <input type="text" id="first_name" name="first_name" value="{{ old("first_name", $user->first_name) }}" required class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="last_name">Last Name <span class="req">*</span></label>
+                    <label class="form-label" for="last_name">{{ __('common.form.last_name') }}<span class="req">*</span></label>
                     <input type="text" id="last_name" name="last_name" value="{{ old("last_name", $user->last_name) }}" required class="form-control">
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label" for="email">Email Address <span class="req">*</span></label>
+                <label class="form-label" for="email">{{ __('common.form.email_address') }}<span class="req">*</span></label>
                 <input type="email" id="email" name="email" value="{{ old("email", $user->email) }}" required class="form-control">
             </div>
             <div class="form-group">
-                <label class="form-label" for="company_name">Company Name</label>
+                <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>
                 <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $user->company_name) }}" class="form-control">
             </div>
             <div class="form-grid-2">
                 <div class="form-group">
-                    <label class="form-label" for="phone_number">Phone Number</label>
+                    <label class="form-label" for="phone_number">{{ __('common.form.phone_number') }}</label>
                     <input type="text" id="phone_number" name="phone_number" value="{{ old("phone_number", $user->phone_number) }}" class="form-control">
                 </div>
                 <div class="form-group">
@@ -63,7 +63,7 @@
             </div>
             <div class="form-grid-2">
                 <div class="form-group">
-                    <label class="form-label" for="city">City</label>
+                    <label class="form-label" for="city">{{ __('common.form.city') }}</label>
                     <input type="text" id="city" name="city" value="{{ old("city", $user->city) }}" class="form-control">
                 </div>
                 <div class="form-group">
@@ -71,7 +71,7 @@
                     <input type="text" id="postcode" name="postcode" value="{{ old("postcode", $user->postcode) }}" class="form-control">
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
         </form>
     </div>
 </div>

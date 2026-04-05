@@ -14,7 +14,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No knowledge base articles yet.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Title</th><th>Category</th><th>Views</th><th>Published</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Title</th><th>Category</th><th>Views</th><th>Published</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($articles as $art)
         <tr>
@@ -23,10 +23,10 @@
             <td>{{ $art->views ?? 0 }}</td>
             <td><span class="badge-{{ $art->published ? 'active' : 'draft' }}">{{ $art->published ? 'Published' : 'Draft' }}</span></td>
             <td style="text-align:right;">
-                <button type="button" onclick="openModal('edit-art-{{ $loop->index }}')" class="btn btn-default btn-xs">Edit</button>
+                <button type="button" onclick="openModal('edit-art-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.knowledge-base.articles.destroy', $art) }}" style="display:inline;" onsubmit="return confirm('Delete this article?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                    <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
             </td>
         </tr>
@@ -43,9 +43,9 @@
     <form method="POST" action="{{ route('admin.config.knowledge-base.categories.store') }}">
         @csrf
         <div class="form-group"><label class="form-label">Category Name</label><input type="text" name="name" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="2" class="form-control"></textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('add-kb-cat')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="button" onclick="closeModal('add-kb-cat')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">Add Category</button>
         </div>
     </form>
@@ -71,7 +71,7 @@
             </label>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('add-kb-article')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="button" onclick="closeModal('add-kb-article')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">Create Article</button>
         </div>
     </form>
@@ -99,8 +99,8 @@
             </label>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('edit-art-{{ $loop->index }}')" class="btn btn-default btn-sm">Cancel</button>
-            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+            <button type="button" onclick="closeModal('edit-art-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
         </div>
     </form>
 </x-modal>

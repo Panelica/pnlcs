@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No activity log entries.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Date/Time</th><th>Admin</th><th>IP Address</th><th>Description</th></tr></thead>
+        <thead><tr><th>Date/Time</th><th>Admin</th><th>{{ __('common.table.ip_address') }}</th><th>{{ __('common.table.description') }}</th></tr></thead>
         <tbody>
         @foreach($logs as $log)
         <tr>

@@ -23,7 +23,7 @@
                 </select>
             </div>
             <div class="form-group"><label class="form-label">Title <span style="color:#d9534f;">*</span></label><input type="text" name="title" value="{{ old('title') }}" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="4" class="form-control">{{ old('description') }}</textarea></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" class="form-control">{{ old('description') }}</textarea></div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 15px;">
                 <div class="form-group"><label class="form-label">Status <span style="color:#d9534f;">*</span></label>
                     <select name="status" required class="form-control">
@@ -37,7 +37,7 @@
             </div>
             <div style="display:flex;gap:8px;margin-top:5px;">
                 <button type="submit" class="btn btn-primary">Create Project</button>
-                <a href="{{ route('admin.projects.index') }}" class="btn btn-default">Cancel</a>
+                <a href="{{ route('admin.projects.index') }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
             </div>
         </form>
     </div>

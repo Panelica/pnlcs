@@ -7,7 +7,7 @@
 <?php if($errors->any()): ?><div class="ae"><?php foreach($errors->all() as $e): ?><?=$e?> <?php endforeach; ?></div><?php endif; ?>
 <form method="POST" action="<?=route('client.password.update.reset')?>"><?php echo csrf_field(); ?>
 <input type="hidden" name="token" value="<?=$token?>">
-<div class="fg"><label class="fl">Email</label><input type="email" name="email" class="fc" value="<?=$email ?? old('email')?>" required></div>
-<div class="fg"><label class="fl">New Password</label><input type="password" name="password" class="fc" minlength="8" required></div>
-<div class="fg"><label class="fl">Confirm Password</label><input type="password" name="password_confirmation" class="fc" required></div>
+<div class="fg"><label class="fl">{{ __('common.form.email') }}</label><input type="email" name="email" class="fc" value="<?=$email ?? old('email')?>" required></div>
+<div class="fg"><label class="fl">{{ __('common.form.new_password') }}</label><input type="password" name="password" class="fc" minlength="8" required></div>
+<div class="fg"><label class="fl">{{ __('common.form.confirm_password') }}</label><input type="password" name="password_confirmation" class="fc" required></div>
 <button type="submit" class="btn">Reset Password</button></form></div></body></html>

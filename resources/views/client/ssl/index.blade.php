@@ -1,6 +1,6 @@
 @extends("client.layouts.app")
 
-@section("title", "SSL Certificates")
+@section("title", __("client.ssl.title"))
 
 @section("content")
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -48,7 +48,7 @@
                 @endif
 
                 @if($order->isCompleted())
-                    <a href="{{ route('client.ssl.download', $order) }}" class="btn btn-success btn-sm">Download</a>
+                    <a href="{{ route('client.ssl.download', $order) }}" class="btn btn-success btn-sm">{{ __('common.actions.download') }}</a>
                 @endif
             </div>
         </div>

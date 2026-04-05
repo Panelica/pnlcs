@@ -10,7 +10,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No email templates found.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Template Name</th><th>Subject</th><th>Type</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>Template Name</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.type') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($templates as $tpl)
         <tr>
@@ -19,7 +19,7 @@
             <td style="text-transform:capitalize;">{{ $tpl->type ?? 'general' }}</td>
             <td><span class="badge-{{ $tpl->disabled ? 'suspended' : 'active' }}">{{ $tpl->disabled ? 'Disabled' : 'Active' }}</span></td>
             <td style="text-align:right;">
-                <button type="button" onclick="openModal('edit-tpl-{{ $loop->index }}')" class="btn btn-default btn-xs">Edit</button>
+                <button type="button" onclick="openModal('edit-tpl-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
             </td>
         </tr>
         @endforeach
@@ -33,7 +33,7 @@
     <form method="POST" action="{{ route('admin.config.email-templates.update', $tpl) }}">
         @csrf @method('PUT')
         <div class="form-group"><label class="form-label">Template Name</label><input type="text" name="name" value="{{ $tpl->name }}" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">Subject</label><input type="text" name="subject" value="{{ $tpl->subject }}" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.subject') }}</label><input type="text" name="subject" value="{{ $tpl->subject }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">Type</label>
             <select name="type" class="form-control">
                 <option value="general" @selected(($tpl->type ?? 'general') === 'general')>General</option>
@@ -55,7 +55,7 @@
             </label>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('edit-tpl-{{ $loop->index }}')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="button" onclick="closeModal('edit-tpl-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">Save Template</button>
         </div>
     </form>

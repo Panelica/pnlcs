@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Orders")
+@section("title", __("admin.orders.title"))
 @section("content")
 
 <div class="page-header">
@@ -22,13 +22,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Order #</th>
-                <th>Client</th>
-                <th>Date</th>
-                <th style="text-align:right;">Amount</th>
-                <th>Payment Method</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>{{ __('common.table.order_num') }}</th>
+                <th>{{ __('common.table.client') }}</th>
+                <th>{{ __('common.table.date') }}</th>
+                <th style="text-align:right;">{{ __('common.table.amount') }}</th>
+                <th>{{ __('common.table.payment_method') }}</th>
+                <th>{{ __('common.table.status') }}</th>
+                <th>{{ __('common.table.actions') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -54,12 +54,12 @@
                 <td style="color:#666;">{{ $order->payment_method ?? "-" }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($order->status ?? "") }}</span></td>
                 <td>
-                    <a href="{{ route("admin.orders.show", $order) }}" class="btn btn-default btn-xs">View</a>
+                    <a href="{{ route("admin.orders.show", $order) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="text-align:center;padding:32px;color:#999;">No orders found.</td>
+                <td colspan="7" style="text-align:center;padding:32px;color:#999;">{{ __('admin.orders.no_orders') }}</td>
             </tr>
             @endforelse
         </tbody>

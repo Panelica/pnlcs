@@ -56,7 +56,7 @@ class ProjectController extends Controller
         $project = Project::create($validated);
 
         return redirect()->route('admin.projects.show', $project)
-            ->with('success', 'Project created successfully.');
+            ->with('success', __('messages.success.project_created'));
     }
 
     public function show(Project $project)
@@ -84,7 +84,7 @@ class ProjectController extends Controller
         $project->update($validated);
 
         return redirect()->route('admin.projects.show', $project)
-            ->with('success', 'Project updated successfully.');
+            ->with('success', __('messages.success.project_updated_successfully'));
     }
 
     public function destroy(Project $project)
@@ -94,7 +94,7 @@ class ProjectController extends Controller
         $project->delete();
 
         return redirect()->route('admin.projects.index')
-            ->with('success', 'Project deleted.');
+            ->with('success', __('messages.success.project_deleted'));
     }
 
     public function addTask(Request $request, Project $project)
@@ -111,7 +111,7 @@ class ProjectController extends Controller
         ]));
 
         return redirect()->route('admin.projects.show', $project)
-            ->with('success', 'Task added.');
+            ->with('success', __('messages.success.task_added'));
     }
 
     public function updateTask(Request $request, Project $project, ProjectTask $task)
@@ -130,7 +130,7 @@ class ProjectController extends Controller
         }
 
         return redirect()->route('admin.projects.show', $project)
-            ->with('success', 'Task updated.');
+            ->with('success', __('messages.success.task_updated'));
     }
 
     public function deleteTask(Project $project, ProjectTask $task)
@@ -138,7 +138,7 @@ class ProjectController extends Controller
         $task->delete();
 
         return redirect()->route('admin.projects.show', $project)
-            ->with('success', 'Task deleted.');
+            ->with('success', __('messages.success.task_deleted'));
     }
 
     public function addMessage(Request $request, Project $project)
@@ -153,6 +153,6 @@ class ProjectController extends Controller
         ]);
 
         return redirect()->route('admin.projects.show', $project)
-            ->with('success', 'Message posted.');
+            ->with('success', __('messages.success.message_posted'));
     }
 }

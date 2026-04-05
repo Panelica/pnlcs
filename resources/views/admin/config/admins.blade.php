@@ -14,7 +14,7 @@
 @else
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>Name</th><th>Username / Email</th><th>Role</th><th>Last Login</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.name') }}</th><th>Username / Email</th><th>{{ __('common.table.role') }}</th><th>{{ __('common.table.last_login') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
             @foreach($admins as $admin)
             <tr>
@@ -41,10 +41,10 @@
                 </td>
                 <td style="text-align:right;">
                     <div style="display:flex;gap:6px;justify-content:flex-end;">
-                        <button type="button" onclick="openModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-xs">Edit</button>
+                        <button type="button" onclick="openModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
                         @if($admin->id !== auth('admin')->id())
                         <form method="POST" action="{{ route('admin.config.admins.destroy', $admin) }}" onsubmit="return confirm('Delete admin {{ $admin->full_name }}?')" style="display:inline;">
-                            @csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">Delete</button>
+                            @csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                         </form>
                         @endif
                     </div>
@@ -61,20 +61,20 @@
     <form method="POST" action="{{ route('admin.config.admins.update', $admin) }}">
         @csrf @method('PUT')
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
-            <div class="form-group"><label class="form-label">First Name</label><input type="text" name="first_name" value="{{ $admin->first_name }}" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Last Name</label><input type="text" name="last_name" value="{{ $admin->last_name }}" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" value="{{ $admin->username }}" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Email</label><input type="email" name="email" value="{{ $admin->email }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.first_name') }}</label><input type="text" name="first_name" value="{{ $admin->first_name }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.last_name') }}</label><input type="text" name="last_name" value="{{ $admin->last_name }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.username') }}</label><input type="text" name="username" value="{{ $admin->username }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.email') }}</label><input type="email" name="email" value="{{ $admin->email }}" required class="form-control"></div>
             <div class="form-group"><label class="form-label">Role</label>
                 <select name="role_id" required class="form-control">
                     @foreach($roles as $role)<option value="{{ $role->id }}" @selected($admin->role_id===$role->id)>{{ $role->name }}</option>@endforeach
                 </select>
             </div>
-            <div class="form-group"><label class="form-label">New Password <span style="color:#999;font-weight:400;">(leave blank to keep)</span></label><input type="password" name="password" minlength="6" class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.new_password') }}<span style="color:#999;font-weight:400;">(leave blank to keep)</span></label><input type="password" name="password" minlength="6" class="form-control"></div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-sm">Cancel</button>
-            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+            <button type="button" onclick="closeModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
         </div>
     </form>
 </x-modal>
@@ -84,11 +84,11 @@
     <form method="POST" action="{{ route('admin.config.admins.store') }}">
         @csrf
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
-            <div class="form-group"><label class="form-label">First Name</label><input type="text" name="first_name" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Last Name</label><input type="text" name="last_name" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Email</label><input type="email" name="email" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Password</label><input type="password" name="password" minlength="6" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.first_name') }}</label><input type="text" name="first_name" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.last_name') }}</label><input type="text" name="last_name" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.username') }}</label><input type="text" name="username" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.email') }}</label><input type="email" name="email" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.password') }}</label><input type="password" name="password" minlength="6" required class="form-control"></div>
             <div class="form-group"><label class="form-label">Role</label>
                 <select name="role_id" required class="form-control">
                     <option value="">-- Select Role --</option>
@@ -97,7 +97,7 @@
             </div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
-            <button type="button" onclick="closeModal('add-admin')" class="btn btn-default btn-sm">Cancel</button>
+            <button type="button" onclick="closeModal('add-admin')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">Create Admin</button>
         </div>
     </form>

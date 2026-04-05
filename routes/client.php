@@ -67,6 +67,7 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('services/{service}/cancel', [ServiceController::class, 'submitCancellation'])->name('services.cancel.submit');
         Route::get('services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');
         Route::post('services/{service}/upgrade', [ServiceController::class, 'processUpgrade'])->name('services.upgrade.process');
+        Route::post("services/{service}/autorenew", [ServiceController::class, "toggleAutoRenew"])->name("services.autorenew");
 
         // Domains
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
@@ -87,6 +88,8 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
         Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
+        Route::get("tickets/{ticket}/attachment", [TicketController::class, "downloadAttachment"])->name("tickets.attachment");
+        Route::get("tickets/{ticket}/reply/{replyId}/attachment", [TicketController::class, "downloadAttachment"])->name("tickets.reply.attachment");
 
         // Downloads (auth required)
         Route::get('downloads', [DownloadController::class, 'index'])->name('downloads.index');

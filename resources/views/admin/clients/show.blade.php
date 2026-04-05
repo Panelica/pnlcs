@@ -4,11 +4,17 @@
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>#{{ $client->id }} - {{ $client->full_name }}</h1>
     <div style="display:flex;gap:6px;align-items:center;">
+                <form method="POST" action="{{ route('admin.clients.impersonate', $client) }}" style="display:inline;">
+            @csrf
+            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Login as this client?')">
+                Login as Client
+            </button>
+        </form>
         <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-primary btn-sm">Edit Client</a>
-        <a href="{{ route('admin.clients.index') }}" class="btn btn-default btn-sm">Close</a>
+        <a href="{{ route('admin.clients.index') }}" class="btn btn-default btn-sm">{{ __('common.actions.close') }}</a>
         <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" style="display:inline;" onsubmit="return confirm('Delete client {{ $client->full_name }}? This cannot be undone.')">
             @csrf @method('DELETE')
-            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.delete') }}</button>
         </form>
     </div>
 </div>
@@ -150,11 +156,11 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
 @elseif($tab === 'services')
 <div class="card">
     @if($services->isEmpty())
-    <div class="card-body" style="text-align:center;color:#999;padding:40px;">No services found.</div>
+    <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.services.no_services') }}</div>
     @else
     <table class="data-table">
         <thead><tr>
-            <th>Product</th><th>Domain</th><th>Billing Cycle</th><th>Amount</th><th>Next Due</th><th>Status</th>
+            <th>{{ __('common.table.product') }}</th><th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>{{ __('common.table.amount') }}</th><th>Next Due</th><th>{{ __('common.table.status') }}</th>
         </tr></thead>
         <tbody>
         @foreach($services as $service)
@@ -176,11 +182,11 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
 @elseif($tab === 'domains')
 <div class="card">
     @if($domains->isEmpty())
-    <div class="card-body" style="text-align:center;color:#999;padding:40px;">No domains found.</div>
+    <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.domains.no_domains') }}</div>
     @else
     <table class="data-table">
         <thead><tr>
-            <th>Domain</th><th>Registrar</th><th>Registered</th><th>Expires</th><th>Status</th>
+            <th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.registrar') }}</th><th>Registered</th><th>Expires</th><th>{{ __('common.table.status') }}</th>
         </tr></thead>
         <tbody>
         @foreach($domains as $domain)
@@ -201,11 +207,11 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
 @elseif($tab === 'invoices')
 <div class="card">
     @if($invoices->isEmpty())
-    <div class="card-body" style="text-align:center;color:#999;padding:40px;">No invoices found.</div>
+    <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.invoices.no_invoices') }}</div>
     @else
     <table class="data-table">
         <thead><tr>
-            <th>Invoice #</th><th>Date</th><th>Due Date</th><th>Total</th><th>Status</th>
+            <th>{{ __('common.table.invoice_num') }}</th><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.due_date') }}</th><th>{{ __('common.table.total') }}</th><th>{{ __('common.table.status') }}</th>
         </tr></thead>
         <tbody>
         @foreach($invoices as $inv)
@@ -226,11 +232,11 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
 @elseif($tab === 'tickets')
 <div class="card">
     @if($tickets->isEmpty())
-    <div class="card-body" style="text-align:center;color:#999;padding:40px;">No tickets found.</div>
+    <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.tickets.no_tickets') }}</div>
     @else
     <table class="data-table">
         <thead><tr>
-            <th>ID</th><th>Department</th><th>Subject</th><th>Priority</th><th>Last Reply</th><th>Status</th>
+            <th>{{ __('common.table.id') }}</th><th>{{ __('common.table.department') }}</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.priority') }}</th><th>{{ __('common.table.last_reply') }}</th><th>{{ __('common.table.status') }}</th>
         </tr></thead>
         <tbody>
         @foreach($tickets as $ticket)
@@ -285,7 +291,7 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
     @else
     <table class="data-table">
         <thead><tr>
-            <th>Date</th><th>Admin</th><th>Action</th><th>Description</th>
+            <th>{{ __('common.table.date') }}</th><th>Admin</th><th>Action</th><th>{{ __('common.table.description') }}</th>
         </tr></thead>
         <tbody>
         @foreach($logs as $log)

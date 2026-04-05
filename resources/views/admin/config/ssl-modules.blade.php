@@ -1,6 +1,6 @@
 @extends("admin.layouts.app")
 
-@section("title", "SSL Module Configuration")
+@section("title", __("admin.ssl_module_configuration"))
 
 @section("content")
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -21,7 +21,7 @@
         <h5 class="mb-0">{{ ucfirst($name) }}</h5>
         <form method="POST" action="{{ route('admin.config.testSslConnection', $name) }}" class="d-inline">
             @csrf
-            <button type="submit" class="btn btn-sm btn-outline-primary">Test Connection</button>
+            <button type="submit" class="btn btn-sm btn-outline-primary">{{ __('common.actions.test_connection') }}</button>
         </form>
     </div>
     <div class="card-body">

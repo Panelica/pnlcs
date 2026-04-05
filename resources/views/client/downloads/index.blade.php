@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Downloads")
+@section("title", __("client.downloads.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -32,7 +32,7 @@
                 <thead>
                     <tr>
                         <th>File Name</th>
-                        <th>Description</th>
+                        <th>{{ __('common.table.description') }}</th>
                         <th>Downloads</th>
                         <th>Action</th>
                     </tr>
@@ -46,9 +46,7 @@
                         <td>
                             @if($download->location)
                             <a href="{{ route("client.downloads.download", $download) }}" class="btn btn-primary btn-xs">
-                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                Download
-                            </a>
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>{{ __('common.actions.download') }}</a>
                             @else
                             <span class="text-muted text-sm">N/A</span>
                             @endif

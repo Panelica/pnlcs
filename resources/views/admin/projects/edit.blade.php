@@ -15,7 +15,7 @@
         <form method="POST" action="{{ route('admin.projects.update', $project) }}">
             @csrf @method('PUT')
             <div class="form-group"><label class="form-label">Title <span style="color:#d9534f;">*</span></label><input type="text" name="title" value="{{ old('title',$project->title) }}" required class="form-control"></div>
-            <div class="form-group"><label class="form-label">Description</label><textarea name="description" rows="4" class="form-control">{{ old('description',$project->description) }}</textarea></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" class="form-control">{{ old('description',$project->description) }}</textarea></div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 15px;">
                 <div class="form-group"><label class="form-label">Status <span style="color:#d9534f;">*</span></label>
                     <select name="status" required class="form-control">
@@ -29,7 +29,7 @@
             </div>
             <div style="display:flex;gap:8px;margin-top:5px;">
                 <button type="submit" class="btn btn-primary">Update Project</button>
-                <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-default">Cancel</a>
+                <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
             </div>
         </form>
     </div>

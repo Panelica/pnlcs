@@ -7,6 +7,9 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\Log;
+use App\Events\ServiceActivated;
+use App\Events\ServiceSuspended;
+use App\Events\ServiceTerminated;
 
 class ProvisioningService
 {
@@ -27,6 +30,7 @@ class ProvisioningService
                 $service->status = 'Active';
                 $service->registration_date = $service->registration_date ?? now();
                 $service->save();
+                event(new ServiceActivated($service));
             }
 
             return $result;
@@ -55,6 +59,7 @@ class ProvisioningService
                 $service->suspension_date = now();
                 $service->suspension_reason = $reason;
                 $service->save();
+                event(new ServiceSuspended($service, $reason));
             }
 
             return $result;
@@ -110,6 +115,7 @@ class ProvisioningService
                 $service->status = 'Terminated';
                 $service->termination_date = now();
                 $service->save();
+                event(new ServiceTerminated($service));
             }
 
             return $result;

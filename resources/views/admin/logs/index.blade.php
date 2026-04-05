@@ -16,10 +16,10 @@
         <form method="GET" action="{{ route('admin.logs.index') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
             <div><label class="form-label">Admin/User</label><input type="text" name="user" value="{{ request('user') }}" placeholder="Filter by user..." class="form-control" style="width:180px;"></div>
             <div><label class="form-label">Date</label><input type="date" name="date" value="{{ request('date') }}" class="form-control"></div>
-            <div style="flex:1;min-width:200px;"><label class="form-label">Search</label><input type="text" name="search" value="{{ request('search') }}" placeholder="Search description..." class="form-control"></div>
+            <div style="flex:1;min-width:200px;"><label class="form-label">{{ __('common.actions.search') }}</label><input type="text" name="search" value="{{ request('search') }}" placeholder="Search description..." class="form-control"></div>
             <div style="display:flex;gap:6px;">
-                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                <a href="{{ route('admin.logs.index') }}" class="btn btn-default btn-sm">Clear</a>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.filter') }}</button>
+                <a href="{{ route('admin.logs.index') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>
             </div>
         </form>
     </div>
@@ -27,7 +27,7 @@
 
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>Date</th><th>User</th><th>Description</th><th>IP Address</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>User</th><th>{{ __('common.table.description') }}</th><th>{{ __('common.table.ip_address') }}</th></tr></thead>
         <tbody>
             @forelse($logs as $log)
             <tr>

@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Affiliate Program")
+@section("title", __("client.affiliates.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -45,11 +45,11 @@
         <table class="pn-table">
             <thead>
                 <tr>
-                    <th>Date</th>
+                    <th>{{ __('common.table.date') }}</th>
                     <th>Referred Client</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Status</th>
+                    <th>{{ __('common.table.type') }}</th>
+                    <th>{{ __('common.table.amount') }}</th>
+                    <th>{{ __('common.table.status') }}</th>
                 </tr>
             </thead>
             <tbody>

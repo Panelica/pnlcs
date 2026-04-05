@@ -47,9 +47,9 @@
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
                         <thead>
                             <tr style="border-bottom:1px solid #ddd;">
-                                <th style="padding:6px 8px;text-align:left;font-weight:600;color:#555;">Description</th>
-                                <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">Tax</th>
-                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:110px;">Amount</th>
+                                <th style="padding:6px 8px;text-align:left;font-weight:600;color:#555;">{{ __('common.table.description') }}</th>
+                                <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">{{ __('common.table.tax') }}</th>
+                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:110px;">{{ __('common.table.amount') }}</th>
                                 <th style="width:30px;"></th>
                             </tr>
                         </thead>

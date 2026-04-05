@@ -25,7 +25,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="form-group"><label class="form-label">Subject <span style="color:#d9534f;">*</span></label><input type="text" name="subject" value="{{ old('subject') }}" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('common.form.subject') }}<span style="color:#d9534f;">*</span></label><input type="text" name="subject" value="{{ old('subject') }}" required class="form-control"></div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
                         <div class="form-group"><label class="form-label">Date <span style="color:#d9534f;">*</span></label><input type="date" name="date" value="{{ old('date', now()->toDateString()) }}" required class="form-control"></div>
                         <div class="form-group"><label class="form-label">Valid Until <span style="color:#d9534f;">*</span></label><input type="date" name="valid_until" value="{{ old('valid_until', now()->addDays(30)->toDateString()) }}" required class="form-control"></div>
@@ -41,12 +41,12 @@
                 <div class="card-body" style="padding:0;">
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
                         <thead><tr style="border-bottom:1px solid #ddd;background:#f9f9f9;">
-                            <th style="padding:6px 10px;text-align:left;font-weight:600;color:#555;">Description</th>
+                            <th style="padding:6px 10px;text-align:left;font-weight:600;color:#555;">{{ __('common.table.description') }}</th>
                             <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">Qty</th>
                             <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:90px;">Unit Price</th>
-                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">Discount</th>
+                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">{{ __('common.table.discount') }}</th>
                             <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">Taxable</th>
-                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">Amount</th>
+                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">{{ __('common.table.amount') }}</th>
                             <th style="width:30px;"></th>
                         </tr></thead>
                         <tbody>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ request()->cookie('pnlcs_theme') === 'dark' ? 'dark' : 'light' }}">
+<html lang="{{ $currentLocale ?? 'en' }}" data-theme="{{ request()->cookie('pnlcs_theme') === 'dark' ? 'dark' : 'light' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -300,6 +300,14 @@
     @yield("styles")
 </head>
 <body>
+@if(session('impersonating_admin_id'))
+<div style="background:#f59e0b;color:#000;padding:8px 16px;text-align:center;font-weight:600;font-size:13px;position:sticky;top:0;z-index:9999;">
+    You are viewing as {{ auth()->user()->full_name ?? auth()->user()->email }}.
+    <a href="{{ route('admin.clients.stop-impersonation') }}" style="color:#000;text-decoration:underline;margin-left:10px;">
+        &larr; Return to Admin
+    </a>
+</div>
+@endif
 
 <nav class="pn-navbar">
     <div class="pn-navbar-inner">
@@ -418,6 +426,7 @@
         </div>
 
         <div class="pn-nav-right">
+        @include("client.layouts.partials.language-selector")
                 @if($darkModeEnabled ?? false)
                 <button onclick="toggleDarkMode()" class="dark-toggle" title="Toggle dark mode" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--muted);font-size:16px;transition:all 0.15s;">
                     <i class="ri-sun-line" id="lightIcon" style="display:none;"></i>
@@ -446,7 +455,7 @@
                 </div>
             </div>
             @else
-                <a href="{{ route("client.login") }}" class="btn btn-outline btn-sm">Login</a>
+                <a href="{{ route("client.login") }}" class="btn btn-outline btn-sm">{{ __('common.actions.login') }}</a>
                 <a href="{{ route("client.register") }}" class="btn btn-primary btn-sm">Get Started</a>
             @endauth
         </div>

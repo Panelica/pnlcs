@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "My Domains")
+@section("title", __("client.domains.title"))
 @section("content")
 
 <div class="pn-page-header">
@@ -19,9 +19,9 @@
             <thead>
                 <tr>
                     <th>Domain Name</th>
-                    <th>Status</th>
+                    <th>{{ __('common.table.status') }}</th>
                     <th>Registration Date</th>
-                    <th>Expiry Date</th>
+                    <th>{{ __('common.table.expiry_date') }}</th>
                     <th>Auto-Renew</th>
                 </tr>
             </thead>
@@ -52,7 +52,7 @@
                     <td colspan="5">
                         <div class="pn-empty">
                             <div class="pn-empty-icon">&#127760;</div>
-                            <p>No domains found.</p>
+                            <p>{{ __('admin.domains.no_domains') }}</p>
                             <a href="#" class="btn btn-primary">Register a Domain</a>
                         </div>
                     </td>

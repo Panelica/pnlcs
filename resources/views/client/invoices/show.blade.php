@@ -28,8 +28,8 @@
         <table class="pn-table">
             <thead>
                 <tr>
-                    <th>Description</th>
-                    <th style="text-align:right;width:140px">Amount</th>
+                    <th>{{ __('common.table.description') }}</th>
+                    <th style="text-align:right;width:140px">{{ __('common.table.amount') }}</th>
                 </tr>
             </thead>
             <tbody>

@@ -21,8 +21,8 @@
             </div>
             <div><label class="form-label">Action</label><input type="text" name="action" value="{{ request('action') }}" placeholder="e.g. create, terminate..." class="form-control" style="width:160px;"></div>
             <div style="display:flex;gap:6px;">
-                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                <a href="{{ route('admin.logs.module') }}" class="btn btn-default btn-sm">Clear</a>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.filter') }}</button>
+                <a href="{{ route('admin.logs.module') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>
             </div>
         </form>
     </div>
@@ -30,7 +30,7 @@
 
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>Date</th><th>Module</th><th>Action</th><th>Request</th><th>Response</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>Module</th><th>Action</th><th>Request</th><th>Response</th></tr></thead>
         <tbody>
             @forelse($logs as $log)
             <tr>

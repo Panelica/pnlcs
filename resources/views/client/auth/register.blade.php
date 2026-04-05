@@ -52,24 +52,24 @@
                 @csrf
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="first_name">First Name <span style="color:#c43c35;">*</span></label>
+                        <label class="form-label" for="first_name">{{ __('common.form.first_name') }}<span style="color:#c43c35;">*</span></label>
                         <input type="text" id="first_name" name="first_name" value="{{ old('first_name') }}" required class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="last_name">Last Name <span style="color:#c43c35;">*</span></label>
+                        <label class="form-label" for="last_name">{{ __('common.form.last_name') }}<span style="color:#c43c35;">*</span></label>
                         <input type="text" id="last_name" name="last_name" value="{{ old('last_name') }}" required class="form-control">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="email">Email Address <span style="color:#c43c35;">*</span></label>
+                    <label class="form-label" for="email">{{ __('common.form.email_address') }}<span style="color:#c43c35;">*</span></label>
                     <input type="email" id="email" name="email" value="{{ old('email') }}" required class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="password">Password <span style="color:#c43c35;">*</span></label>
+                    <label class="form-label" for="password">{{ __('common.form.password') }}<span style="color:#c43c35;">*</span></label>
                     <input type="password" id="password" name="password" required class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="password_confirmation">Confirm Password <span style="color:#c43c35;">*</span></label>
+                    <label class="form-label" for="password_confirmation">{{ __('common.form.confirm_password') }}<span style="color:#c43c35;">*</span></label>
                     <input type="password" id="password_confirmation" name="password_confirmation" required class="form-control">
                 </div>
                 <div class="form-row">
@@ -81,6 +81,13 @@
                         <label class="form-label" for="company_name">Company <span style="color:#999; font-weight:400;">(optional)</span></label>
                         <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" class="form-control">
                     </div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;">
+                        <input type="checkbox" name="tos" value="1" {{ old('tos') ? 'checked' : '' }} style="margin-top:3px;" required>
+                        <span>I agree to the <a href="{{ \App\Models\Setting::get('TOSUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">Terms of Service</a> and <a href="{{ \App\Models\Setting::get('PrivacyUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">Privacy Policy</a>.</span>
+                    </label>
+                    @error('tos') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                 </div>
                 <button type="submit" class="btn btn-primary" style="margin-top:4px;">Create Account</button>
             </form>

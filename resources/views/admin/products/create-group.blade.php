@@ -19,7 +19,7 @@
             <div class="form-group"><label class="form-label">Tagline</label><input type="text" name="tagline" class="form-control"></div>
             <div style="display:flex;gap:8px;margin-top:10px;">
                 <button type="submit" class="btn btn-primary">Create Group</button>
-                <a href="{{ route('admin.products.index') }}" class="btn btn-default">Cancel</a>
+                <a href="{{ route('admin.products.index') }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
             </div>
         </form>
     </div>

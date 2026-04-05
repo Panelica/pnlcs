@@ -51,7 +51,7 @@ class ClientController extends Controller
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
         $client = Client::create($validated);
-        return redirect()->route('admin.clients.show', $client)->with('success', 'Client created successfully.');
+        return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_created'));
     }
 
     public function show(Request $request, Client $client)
@@ -119,7 +119,7 @@ class ClientController extends Controller
             'sticky' => $validated['sticky'] ?? false,
         ]);
 
-        return back()->with('success', 'Note added.');
+        return back()->with('success', __('messages.success.note_added'));
     }
 
     public function edit(Client $client)
@@ -147,13 +147,13 @@ class ClientController extends Controller
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
         $client->update($validated);
-        return redirect()->route('admin.clients.show', $client)->with('success', 'Client updated.');
+        return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_updated'));
     }
 
     public function destroy(Client $client)
     {
         $client->delete();
-        return redirect()->route('admin.clients.index')->with('success', 'Client deleted.');
+        return redirect()->route('admin.clients.index')->with('success', __('messages.success.client_deleted'));
     }
 
     /**
@@ -189,5 +189,51 @@ class ClientController extends Controller
             ['ID', 'First Name', 'Last Name', 'Email', 'Company', 'Status', 'Country', 'Phone', 'Credit', 'Created At'],
             $rows
         );
+    }
+
+    /**
+     * Login as a client (impersonation).
+     */
+    public function impersonate(Client $client)
+    {
+        // Store admin session info
+        session(['impersonating_admin_id' => auth('admin')->id()]);
+        session(['impersonating_admin_name' => auth('admin')->user()->username]);
+
+        // Find the user associated with this client
+        $user = $client->users()->first();
+        if (!$user) {
+            return back()->with('error', __('messages.error.no_user_linked'));
+        }
+
+        // Login as the client's user
+        auth()->login($user);
+
+        return redirect()->route('client.home')->with('success', 'Now viewing as ' . $client->first_name . ' ' . $client->last_name);
+    }
+
+    /**
+     * Stop impersonation and return to admin.
+     */
+    public function stopImpersonation()
+    {
+        $adminId = session('impersonating_admin_id');
+        if (!$adminId) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Logout client
+        auth()->logout();
+
+        // Login back as admin
+        $admin = \App\Models\Admin::find($adminId);
+        if ($admin) {
+            auth('admin')->login($admin);
+        }
+
+        // Clear impersonation session
+        session()->forget(['impersonating_admin_id', 'impersonating_admin_name']);
+
+        return redirect()->route('admin.clients.index')->with('success', __('messages.success.impersonation_stopped'));
     }
 }

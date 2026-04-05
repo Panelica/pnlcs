@@ -26,7 +26,7 @@
                 <div class="form-group"><label class="form-label">Auto Setup</label><select name="auto_setup" class="form-control"><option value="order" {{ $product->auto_setup=='order'?'selected':'' }}>On Order</option><option value="payment" {{ $product->auto_setup=='payment'?'selected':'' }}>On Payment</option><option value="on" {{ $product->auto_setup=='on'?'selected':'' }}>Always</option><option value="off" {{ $product->auto_setup=='off'?'selected':'' }}>Never</option></select></div>
                 <div class="form-group"><label class="form-label">Server Module</label><input type="text" name="server_type" value="{{ $product->server_type }}" placeholder="e.g. panelica, cpanel" class="form-control"></div>
                 <div class="form-group" x-data="{ show: '{{ $product->type }}' === 'ssl' }" x-show="show" x-cloak><label class="form-label">SSL Module</label><select name="ssl_module" class="form-control"><option value="">None</option><option value="gogetssl" {{ $product->ssl_module=='gogetssl'?'selected':'' }}>GoGetSSL</option></select></div>
-                <div class="form-group" style="grid-column:span 2;"><label class="form-label">Description</label><textarea name="description" rows="3" class="form-control">{{ $product->description }}</textarea></div>
+                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ $product->description }}</textarea></div>
                 <div class="form-group" style="grid-column:span 2;display:flex;gap:20px;">
                     <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="hidden" value="1" {{ $product->hidden?'checked':'' }}> Hidden</label>
                     <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="retired" value="1" {{ $product->retired?'checked':'' }}> Retired</label>
@@ -65,8 +65,8 @@
     </div>
 
     <div style="display:flex;gap:8px;">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <a href="{{ route('admin.products.index') }}" class="btn btn-default">Cancel</a>
+        <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
+        <a href="{{ route('admin.products.index') }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
     </div>
 </form>
 @endsection

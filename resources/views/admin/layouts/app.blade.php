@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace("_", "-", app()->getLocale()) }}">
+<html lang="{{ str_replace("_", "-", app()->getLocale()) }}" dir="{{ $textDirection ?? 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,7 +51,7 @@
         <ul>
             {{-- + Add New --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-plus"></i> Add New</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-plus"></i>{{ __('common.actions.add_new') }}</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.clients.create') }}"><i class="fas fa-user"></i> New Client</a></li>
                     <li><a href="{{ route('admin.orders.index') }}"><i class="fas fa-cube"></i> New Order</a></li>
@@ -128,6 +128,7 @@
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.config.automation') }}">Automation Status</a></li>
                     <li><a href="{{ route('admin.config.todo') }}">To-Do List</a></li>
+                    <li><a href="{{ route('admin.calendar') }}">Calendar</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.activity-log') }}">Activity Log</a></li>
                     <li><a href="{{ route('admin.logs.index') }}">System Logs</a></li>
@@ -146,7 +147,7 @@
         <div class="intellisearch" id="intellisearch">
             <form action="{{ route('admin.clients.index') }}" method="GET">
                 <i class="fas fa-search" style="color:#fff;"></i>
-                <input type="text" name="search" class="form-control" placeholder="Search..."
+                <input type="text" name="search" class="form-control" placeholder="{{ __('common.placeholder.search') }}"
                        onfocus="document.getElementById('intellisearch').classList.add('active')"
                        onblur="setTimeout(function(){ document.getElementById('intellisearch').classList.remove('active'); }, 200)">
             </form>
@@ -198,6 +199,8 @@
                     <li><a href="{{ route('admin.config.registrars') }}">Domain Registrars</a></li>
                     <li><a href="{{ route('admin.config.sslModules') }}">SSL Modules</a></li>
                     <li class="divider"></li>
+                    <li><a href="{{ route('admin.config.languages.index') }}"><i class="fas fa-language"></i> Languages</a></li>
+                    <li class="divider"></li>
                     <li><a href="{{ route('admin.config.currencies') }}">Currencies</a></li>
                     <li><a href="{{ route('admin.config.tax') }}">Tax Rules</a></li>
                     <li><a href="{{ route('admin.config.promotions') }}">Promotions</a></li>
@@ -211,6 +214,11 @@
                     <li><a href="{{ route('admin.config.banned-ips') }}">Banned IPs</a></li>
                     <li><a href="{{ route('admin.config.banned-emails') }}">Banned Emails</a></li>
                     <li><a href="{{ route('admin.config.client-groups') }}">Client Groups</a></li>
+                    <li class="divider"></li>
+                    <li><a href="{{ route('admin.config.notifications') }}">Notification Channels</a></li>
+                    <li><a href="{{ route('admin.config.ticket-spam') }}">Ticket Spam Filter</a></li>
+                    <li><a href="{{ route('admin.config.addons') }}">Product Addons</a></li>
+                    <li><a href="{{ route('admin.config.bundles') }}">Product Bundles</a></li>
                 </ul>
             </li>
 
@@ -224,9 +232,7 @@
                     <li><a href="/" target="_blank">Client Area</a></li>
                     <li class="divider"></li>
                     <li>
-                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            Logout
-                        </a>
+                        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">{{ __('common.actions.logout') }}</a>
                     </li>
                 </ul>
             </li>
@@ -348,7 +354,7 @@
                     <option value="Medium">Medium</option>
                     <option value="Low">Low</option>
                 </select>
-                <button type="submit" class="btn-go">Filter</button>
+                <button type="submit" class="btn-go">{{ __('common.actions.filter') }}</button>
             </form>
         </div>
 
@@ -414,6 +420,10 @@
             <li><a href="{{ route('admin.config.client-groups') }}" @if($routeName === 'admin.config.client-groups') class="active" @endif>Client Groups</a></li>
             <li><a href="{{ route('admin.config.banned-ips') }}" @if($routeName === 'admin.config.banned-ips') class="active" @endif>Banned IPs</a></li>
             <li><a href="{{ route('admin.config.banned-emails') }}" @if($routeName === 'admin.config.banned-emails') class="active" @endif>Banned Emails</a></li>
+            <li><a href="{{ route('admin.config.notifications') }}" @if($routeName === 'admin.config.notifications') class="active" @endif>Notification Channels</a></li>
+            <li><a href="{{ route('admin.config.ticket-spam') }}" @if($routeName === 'admin.config.ticket-spam') class="active" @endif>Ticket Spam Filter</a></li>
+            <li><a href="{{ route('admin.config.addons') }}" @if($routeName === 'admin.config.addons') class="active" @endif>Product Addons</a></li>
+            <li><a href="{{ route('admin.config.bundles') }}" @if($routeName === 'admin.config.bundles') class="active" @endif>Product Bundles</a></li>
         </ul>
 
     {{-- ── Logs Sidebar ── --}}
@@ -424,6 +434,19 @@
             <li><a href="{{ route('admin.logs.gateway') }}" @if($routeName === 'admin.logs.gateway') class="active" @endif>Gateway Logs</a></li>
             <li><a href="{{ route('admin.logs.module') }}" @if($routeName === 'admin.logs.module') class="active" @endif>Module Logs</a></li>
             <li><a href="{{ route('admin.logs.email') }}" @if($routeName === 'admin.logs.email') class="active" @endif>Email Logs</a></li>
+        </ul>
+
+    {{-- ── Calendar Sidebar ── --}}
+    @elseif($segment === 'calendar')
+        <div class="sidebar-header"><i class="fas fa-calendar-alt"></i> Calendar</div>
+        <ul class="menu">
+            <li><a href="{{ route('admin.calendar') }}" class="active">Calendar</a></li>
+            <li><a href="{{ route('admin.config.todo') }}">To-Do List</a></li>
+        </ul>
+        <div class="sidebar-header"><i class="fas fa-wrench"></i> Utilities</div>
+        <ul class="menu">
+            <li><a href="{{ route('admin.config.automation') }}">Automation Status</a></li>
+            <li><a href="{{ route('admin.config.activity-log') }}">Activity Log</a></li>
         </ul>
 
     {{-- ── Default Sidebar (fallback) ── --}}
@@ -451,7 +474,7 @@
                 <option value="domains">Domains</option>
                 <option value="tickets">Tickets</option>
             </select>
-            <button type="submit" class="btn-go">Search</button>
+            <button type="submit" class="btn-go">{{ __('common.actions.search') }}</button>
         </form>
     </div>
 

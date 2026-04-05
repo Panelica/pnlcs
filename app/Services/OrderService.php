@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Events\OrderPlaced;
 
 class OrderService
 {
@@ -35,7 +36,7 @@ class OrderService
      */
     public function processOrder(Client $client, array $items, string $paymentMethod, ?string $promoCode = null): Order
     {
-        return DB::transaction(function () use ($client, $items, $paymentMethod, $promoCode) {
+        $order = DB::transaction(function () use ($client, $items, $paymentMethod, $promoCode) {
             $orderNum  = $this->generateOrderNumber();
             $totalAmount = array_sum(array_column($items, 'amount'));
 
@@ -108,6 +109,10 @@ class OrderService
 
             return $order->fresh();
         });
+
+        event(new OrderPlaced($order));
+
+        return $order;
     }
 
     /**

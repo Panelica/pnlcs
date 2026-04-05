@@ -9,6 +9,8 @@ use App\Models\TaxRule;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Events\InvoiceCreated;
+use App\Events\InvoicePaid;
 
 class InvoiceService
 {
@@ -18,7 +20,7 @@ class InvoiceService
      */
     public function createInvoice(Client $client, array $items, array $options = []): Invoice
     {
-        return DB::transaction(function () use ($client, $items, $options) {
+        $invoice = DB::transaction(function () use ($client, $items, $options) {
             $invoice = Invoice::create([
                 'client_id'      => $client->id,
                 'invoice_num'    => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
@@ -42,6 +44,10 @@ class InvoiceService
 
             return $this->recalculateTotals($invoice->fresh());
         });
+
+        event(new InvoiceCreated($invoice));
+
+        return $invoice;
     }
 
     /**
@@ -115,7 +121,7 @@ class InvoiceService
             return $invoice;
         }
 
-        return DB::transaction(function () use ($invoice, $transactionId, $gateway) {
+        $paidInvoice = DB::transaction(function () use ($invoice, $transactionId, $gateway) {
             $invoice->update([
                 'status'    => 'Paid',
                 'date_paid' => now(),
@@ -144,6 +150,10 @@ class InvoiceService
             }
             return $invoice->fresh();
         });
+
+        event(new InvoicePaid($paidInvoice, $transactionId));
+
+        return $paidInvoice;
     }
 
     /**

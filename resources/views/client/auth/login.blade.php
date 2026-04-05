@@ -54,11 +54,11 @@
             <form method="POST" action="{{ route('client.login.submit') }}">
                 @csrf
                 <div class="form-group">
-                    <label class="form-label" for="email">Email Address</label>
+                    <label class="form-label" for="email">{{ __('common.form.email_address') }}</label>
                     <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus class="form-control" placeholder="you@example.com">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
+                    <label class="form-label" for="password">{{ __('common.form.password') }}</label>
                     <input type="password" id="password" name="password" required class="form-control" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
                 </div>
                 <div class="remember-row">
@@ -72,7 +72,7 @@
         </div>
     </div>
     <div class="register-link">
-        Don&rsquo;t have an account? <a href="{{ route('client.register') }}">Register</a>
+        Don&rsquo;t have an account? <a href="{{ route('client.register') }}">{{ __('common.actions.register') }}</a>
     </div>
 </div>
 </body>

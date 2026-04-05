@@ -19,7 +19,7 @@
 <div class="card">
     <table class="data-table">
         <thead><tr>
-            <th>#</th><th>Subject</th><th>Client</th><th>Date</th><th>Valid Until</th><th style="text-align:right;">Total</th><th>Status</th><th>Actions</th>
+            <th>#</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.date') }}</th><th>Valid Until</th><th style="text-align:right;">{{ __('common.table.total') }}</th><th>{{ __('common.table.status') }}</th><th>{{ __('common.table.actions') }}</th>
         </tr></thead>
         <tbody>
             @forelse($quotes as $quote)
@@ -36,8 +36,8 @@
                 <td><span class="{{ $badgeClass }}">{{ $quote->status }}</span></td>
                 <td>
                     <div style="display:flex;gap:4px;">
-                        <a href="{{ route('admin.quotes.show', $quote) }}" class="btn btn-default btn-xs">View</a>
-                        <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">Edit</a>
+                        <a href="{{ route('admin.quotes.show', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
+                        <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
                         <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return confirm('Delete this quote?')" style="display:inline;">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">Del</button>
@@ -46,7 +46,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">No quotes found.</td></tr>
+            <tr><td colspan="8" style="text-align:center;color:#999;padding:30px;">{{ __('admin.quotes.no_quotes') }}</td></tr>
             @endforelse
         </tbody>
     </table>

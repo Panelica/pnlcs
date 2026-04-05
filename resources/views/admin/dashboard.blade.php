@@ -1,5 +1,5 @@
 @extends("admin.layouts.app")
-@section("title", "Dashboard")
+@section("title", __("admin.dashboard.title"))
 @section("content")
 
 <!-- Stat Cards Row -->
@@ -7,12 +7,12 @@
 
     <div class="stat-card" style="border-left:4px solid #337ab7;">
         <div class="stat-value" style="color:#337ab7;">{{ $totalClients }}</div>
-        <div class="stat-label">Total Clients</div>
+        <div class="stat-label">{{ __('admin.dashboard.total_clients') }}</div>
     </div>
 
     <div class="stat-card" style="border-left:4px solid #46a546;">
         <div class="stat-value" style="color:#46a546;">{{ $activeServices }}</div>
-        <div class="stat-label">Active Services</div>
+        <div class="stat-label">{{ __('admin.dashboard.active_services') }}</div>
     </div>
 
     <div class="stat-card" style="border-left:4px solid #008b8b;">
@@ -22,12 +22,12 @@
 
     <div class="stat-card" style="border-left:4px solid #f89406;">
         <div class="stat-value" style="color:#f89406;">{{ $pendingOrders }}</div>
-        <div class="stat-label">Pending Orders</div>
+        <div class="stat-label">{{ __('admin.dashboard.pending_orders') }}</div>
     </div>
 
     <div class="stat-card" style="border-left:4px solid #c43c35;">
         <div class="stat-value" style="color:#c43c35;">{{ $openTickets }}</div>
-        <div class="stat-label">Open Tickets</div>
+        <div class="stat-label">{{ __('admin.dashboard.open_tickets') }}</div>
     </div>
 
     <div class="stat-card" style="border-left:4px solid #d68100;">
@@ -82,10 +82,10 @@
         </div>
     </div>
 
-    <!-- Recent Tickets -->
+    <!-- {{ __('admin.dashboard.recent_tickets') }} -->
     <div class="card">
         <div class="card-header">
-            Recent Tickets
+            {{ __('admin.dashboard.recent_tickets') }}
             <a href="{{ route("admin.tickets.index") }}" style="font-size:12px;font-weight:400;color:#337ab7;text-decoration:none;">View All</a>
         </div>
         <div>
@@ -100,10 +100,10 @@
         </div>
     </div>
 
-    <!-- Recent Orders -->
+    <!-- {{ __('admin.dashboard.recent_orders') }} -->
     <div class="card">
         <div class="card-header">
-            Recent Orders
+            {{ __('admin.dashboard.recent_orders') }}
             <a href="{{ route("admin.orders.index") }}" style="font-size:12px;font-weight:400;color:#337ab7;text-decoration:none;">View All</a>
         </div>
         <div>

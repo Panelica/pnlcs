@@ -16,13 +16,13 @@
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
         <strong>All Affiliates</strong>
         <form method="GET" style="display:flex;gap:8px;">
-            <input type="text" name="search" class="form-control form-control-sm" placeholder="Search..." value="{{ request('search') }}" style="width:200px;">
-            <button class="btn btn-sm btn-default" type="submit">Search</button>
+            <input type="text" name="search" class="form-control form-control-sm" placeholder="{{ __('common.placeholder.search') }}" value="{{ request('search') }}" style="width:200px;">
+            <button class="btn btn-sm btn-default" type="submit">{{ __('common.actions.search') }}</button>
         </form>
     </div>
     <div class="card-body-flush">
         <table class="table table-striped mb-0">
-            <thead><tr><th>Client</th><th>Visitors</th><th>Type</th><th>Rate</th><th>Balance</th><th>Withdrawn</th><th>Actions</th></tr></thead>
+            <thead><tr><th>{{ __('common.table.client') }}</th><th>Visitors</th><th>{{ __('common.table.type') }}</th><th>{{ __('common.table.rate') }}</th><th>Balance</th><th>Withdrawn</th><th>{{ __('common.table.actions') }}</th></tr></thead>
             <tbody>
             @forelse($affiliates as $aff)
             <tr>
@@ -32,7 +32,7 @@
                 <td>{{ $aff->pay_type === 'percentage' ? $aff->pay_amount . '%' : '$' . number_format($aff->pay_amount, 2) }}</td>
                 <td><strong>${{ number_format($aff->balance, 2) }}</strong></td>
                 <td>${{ number_format($aff->withdrawn, 2) }}</td>
-                <td><a href="{{ route('admin.affiliates.show', $aff) }}" class="btn btn-sm btn-default">View</a></td>
+                <td><a href="{{ route('admin.affiliates.show', $aff) }}" class="btn btn-sm btn-default">{{ __('common.actions.view') }}</a></td>
             </tr>
             @empty
             <tr><td colspan="7" style="text-align:center;color:#999;">No affiliates found.</td></tr>
