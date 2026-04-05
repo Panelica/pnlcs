@@ -21,6 +21,10 @@
         @media (max-width: 768px) { .sidebar-toggle-btn { display: none; } }
         .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;font-size:13px;font-weight:600;border-radius:4px;border:none;cursor:pointer;text-decoration:none;transition:all 0.15s;line-height:1.3;white-space:nowrap;vertical-align:middle}        .btn svg,.btn i{flex-shrink:0;line-height:1}        .btn-primary{background:var(--theme-primary, #1a4d80);color:#fff}.btn-primary:hover{background:var(--theme-primary-dark, #143d66);color:#fff}        .btn-default{background:#f5f5f5;color:#333;border:1px solid #ddd}.btn-default:hover{background:#e8e8e8}        .btn-success{background:#5cb85c;color:#fff}.btn-success:hover{background:#449d44}        .btn-danger{background:#d9534f;color:#fff}.btn-danger:hover{background:#c9302c}        .btn-sm{padding:5px 10px;font-size:12px}        .btn-xs{padding:3px 8px;font-size:11px}
     </style>
+
+    @if(($textDirection ?? 'ltr') === 'rtl')
+    <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
+    @endif
 </head>
 <body>
 

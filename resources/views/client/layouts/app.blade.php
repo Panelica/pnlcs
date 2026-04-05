@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ $currentLocale ?? 'en' }}" data-theme="{{ request()->cookie('pnlcs_theme') === 'dark' ? 'dark' : 'light' }}">
+<html lang="{{ $currentLocale ?? 'en' }}" dir="{{ $textDirection ?? 'ltr' }}" data-theme="{{ request()->cookie('pnlcs_theme') === 'dark' ? 'dark' : 'light' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -298,6 +298,10 @@
         :root[data-theme="dark"] .pn-alert-error { background:#450a0a !important; border-color:#dc2626 !important; }
     </style>
     @yield("styles")
+
+    @if(($textDirection ?? 'ltr') === 'rtl')
+    <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
+    @endif
 </head>
 <body>
 @if(session('impersonating_admin_id'))
