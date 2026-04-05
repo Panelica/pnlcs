@@ -126,8 +126,8 @@ Route::prefix('client')->name('client.')->group(function () {
 });
 
 
-// ── SSL Certificates ──────────────────────────────────────────
-Route::prefix('ssl')->name('ssl.')->group(function () {
+// ── SSL Certificates (inside client prefix) ──────────────────────────────────────────
+Route::prefix('ssl')->name('client.ssl.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Client\SslController::class, 'index'])->name('index');
     Route::get('/{sslOrder}', [\App\Http\Controllers\Client\SslController::class, 'show'])->name('show');
     Route::get('/{sslOrder}/configure', [\App\Http\Controllers\Client\SslController::class, 'configure'])->name('configure');
