@@ -10,48 +10,50 @@
     $badgeTypes = ['', 'vps-card__badge--popular', 'vps-card__badge--value', ''];
     $badgeTexts = ['', 'Popular', 'Best Value', ''];
 @endphp
-<section class=vps>
-    <div class=container>
-        <h2 class=section-title>{{ $vpsTitle }}</h2>
-        <p class=section-subtitle>{{ $vpsSubtitle }}</p>
-        <div class=vps__layout>
+<section class="vps">
+    <div class="container">
+        <h2 class="section-title">{{ $vpsTitle }}</h2>
+        <p class="section-subtitle">{{ $vpsSubtitle }}</p>
+        <div class="vps__layout">
             {{-- Server rack visual --}}
-            <div class=vps__visual>
-                <div class=vps__server-rack>
-                    <div class=vps__rack-unit><span class=vps__rack-led vps__rack-led--on></span><span class=vps__rack-slots></span></div>
-                    <div class=vps__rack-unit><span class=vps__rack-led vps__rack-led--on></span><span class=vps__rack-slots></span></div>
-                    <div class=vps__rack-unit><span class=vps__rack-led vps__rack-led--blink></span><span class=vps__rack-slots></span></div>
-                    <div class=vps__rack-unit><span class=vps__rack-led vps__rack-led--on></span><span class=vps__rack-slots></span></div>
+            <div class="vps__visual">
+                <div class="vps__server-rack">
+                    <div class="vps__rack-unit"><span class="vps__rack-led vps__rack-led--on"></span><span class="vps__rack-slots"></span></div>
+                    <div class="vps__rack-unit"><span class="vps__rack-led vps__rack-led--on"></span><span class="vps__rack-slots"></span></div>
+                    <div class="vps__rack-unit"><span class="vps__rack-led vps__rack-led--blink"></span><span class="vps__rack-slots"></span></div>
+                    <div class="vps__rack-unit"><span class="vps__rack-led vps__rack-led--on"></span><span class="vps__rack-slots"></span></div>
                 </div>
                 <h3>{{ $visualTitle }}</h3>
                 <p>{{ $visualDesc }}</p>
             </div>
             {{-- VPS cards --}}
-            <div class=vps__grid>
-                @foreach($vpsProducts->take(4) as $idx => $product)
+            <div class="vps__grid">
+                @forelse($vpsProducts->take(4) as $idx => $product)
                 @php
                     $pricing = $product->pricing->first();
                     $monthlyPrice = $pricing ? $pricing->monthly : '0.00';
                     $configOptions = is_string($product->config_options) ? json_decode($product->config_options, true) : ($product->config_options ?? []);
                     $specs = [];
                     for ($i = 1; $i <= 5; $i++) {
-                        if (!empty($configOptions[f{$i}])) $specs[] = $configOptions[f{$i}];
+                        if (!empty($configOptions["f{$i}"])) $specs[] = $configOptions["f{$i}"];
                     }
                 @endphp
-                <div class=vps-card>
+                <div class="vps-card">
                     @if(!empty($badgeTexts[$idx]))
-                    <div class=vps-card__badge {{ $badgeTypes[$idx] ??  }}>{{ $badgeTexts[$idx] }}</div>
+                    <div class="vps-card__badge {{ $badgeTypes[$idx] ?? '' }}">{{ $badgeTexts[$idx] }}</div>
                     @endif
-                    <div class=vps-card__name>{{ $product->name }}</div>
-                    <div class=vps-card__specs>
+                    <div class="vps-card__name">{{ $product->name }}</div>
+                    <div class="vps-card__specs">
                         @foreach($specs as $spec)
-                        <div class=vps-card__spec><i class=ri-check-line></i> {{ $spec }}</div>
+                        <div class="vps-card__spec"><i class="ri-check-line"></i> {{ $spec }}</div>
                         @endforeach
                     </div>
-                    <div class=vps-card__price>${{ $monthlyPrice }}<small>/mo</small></div>
-                    <a href=/client/store/configure/{{ $product- }} class=vps-card__btn>Configure <i class=ri-arrow-right-line></i></a>
+                    <div class="vps-card__price">${{ $monthlyPrice }}<small>/mo</small></div>
+                    <a href="/client/store/configure/{{ $product->slug }}" class="vps-card__btn">Configure <i class="ri-arrow-right-line"></i></a>
                 </div>
-                @endforeach
+                @empty
+                {{-- No VPS products --}}
+                @endforelse
             </div>
         </div>
     </div>
