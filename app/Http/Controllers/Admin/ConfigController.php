@@ -753,4 +753,51 @@ class ConfigController extends Controller
     {
         return view('admin.api-docs');
     }
+
+    // ===== SSL MODULES =====
+    public function sslModules()
+    {
+        $registry = app(\App\Services\Module\ModuleRegistry::class);
+        $modules = [];
+        $settings = [];
+
+        foreach ($registry->getSslModules() as $name) {
+            $module = $registry->getSslModule($name);
+            if ($module) {
+                $modules[$name] = $module;
+                $settings[$name] = \App\Models\SslModuleSettings::getForModule($name);
+            }
+        }
+
+        return view('admin.config.ssl-modules', compact('modules', 'settings'));
+    }
+
+    public function updateSslModuleSettings(Request $request, string $module)
+    {
+        $settings = $request->input('settings', []);
+
+        foreach ($settings as $key => $value) {
+            \App\Models\SslModuleSettings::setSetting($module, $key, $value);
+        }
+
+        return back()->with('success', 'SSL module settings updated.');
+    }
+
+    public function testSslConnection(string $module)
+    {
+        $registry = app(\App\Services\Module\ModuleRegistry::class);
+        $sslModule = $registry->getSslModule($module);
+
+        if (!$sslModule) {
+            return back()->with('error', 'SSL module not found.');
+        }
+
+        $success = $sslModule->testConnection();
+
+        return back()->with(
+            $success ? 'success' : 'error',
+            $success ? 'Connection successful!' : 'Connection failed. Please check your credentials.'
+        );
+    }
+
 }

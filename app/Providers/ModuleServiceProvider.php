@@ -61,6 +61,9 @@ class ModuleServiceProvider extends ServiceProvider
             // Razorpay (India/Asia)
             $registry->registerGateway("razorpay", \Modules\Gateways\Razorpay\RazorpayModule::class);
 
+            // SSL Modules
+            $registry->registerSsl('gogetssl', \Modules\Ssl\GoGetSSL\GoGetSslModule::class);
+
             return $registry;
         });
     }

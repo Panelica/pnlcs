@@ -197,3 +197,15 @@ Route::prefix('v1')->group(function () {
     Route::post('updateoauthcredential', [SystemApiController::class, 'updateOAuthCredential']);
     Route::post('deleteoauthcredential', [SystemApiController::class, 'deleteOAuthCredential']);
 });
+
+// ── SSL API ──────────────────────────────────────────────────
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    Route::get('/getsslorders', [\App\Http\Controllers\Api\SslApiController::class, 'getSslOrders']);
+    Route::get('/getsslorder', [\App\Http\Controllers\Api\SslApiController::class, 'getSslOrder']);
+    Route::post('/addsslorder', [\App\Http\Controllers\Api\SslApiController::class, 'addSslOrder']);
+    Route::post('/configsslorder', [\App\Http\Controllers\Api\SslApiController::class, 'configSslOrder']);
+    Route::post('/cancelsslorder', [\App\Http\Controllers\Api\SslApiController::class, 'cancelSslOrder']);
+    Route::post('/reissuesslorder', [\App\Http\Controllers\Api\SslApiController::class, 'reissueSslOrder']);
+    Route::post('/resendsslvalidation', [\App\Http\Controllers\Api\SslApiController::class, 'resendSslValidation']);
+    Route::get('/getsslapproveremails', [\App\Http\Controllers\Api\SslApiController::class, 'getSslApproverEmails']);
+});

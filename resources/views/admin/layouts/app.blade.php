@@ -70,6 +70,7 @@
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.services.index') }}">Products/Services</a></li>
                     <li><a href="{{ route('admin.domains.index') }}">Domains</a></li>
+                    <li><a href="{{ route('admin.ssl.index') }}"><i class="fas fa-lock"></i> SSL Certificates</a></li>
                 </ul>
             </li>
 
@@ -195,6 +196,7 @@
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.gateways') }}">Payment Gateways</a></li>
                     <li><a href="{{ route('admin.config.registrars') }}">Domain Registrars</a></li>
+                    <li><a href="{{ route('admin.config.sslModules') }}">SSL Modules</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.currencies') }}">Currencies</a></li>
                     <li><a href="{{ route('admin.config.tax') }}">Tax Rules</a></li>

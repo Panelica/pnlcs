@@ -42,7 +42,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             "name" => "required|string|max:255",
             "group_id" => "required|exists:product_groups,id",
-            "type" => "required|in:hosting,reseller,vps,other",
+            "type" => "required|in:hosting,reseller,vps,ssl,other",
             "description" => "nullable|string",
             "pay_type" => "required|in:free,onetime,recurring",
         ]);
@@ -80,7 +80,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             "name" => "required|string|max:255",
             "group_id" => "required|exists:product_groups,id",
-            "type" => "required|in:hosting,reseller,vps,other",
+            "type" => "required|in:hosting,reseller,vps,ssl,other",
             "description" => "nullable|string",
             "pay_type" => "required|in:free,onetime,recurring",
             "hidden" => "nullable|boolean",
@@ -89,6 +89,7 @@ class ProductController extends Controller
             "auto_setup" => "nullable|in:order,payment,on,off",
             "server_type" => "nullable|string",
             "welcome_email_template" => "nullable|string",
+        "ssl_module" => "nullable|string|max:100",
         ]);
         $validated["hidden"] = $request->boolean("hidden");
         $validated["retired"] = $request->boolean("retired");

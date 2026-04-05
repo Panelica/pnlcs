@@ -125,3 +125,14 @@ Route::prefix('client')->name('client.')->group(function () {
     });
 });
 
+
+// ── SSL Certificates ──────────────────────────────────────────
+Route::prefix('ssl')->name('ssl.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Client\SslController::class, 'index'])->name('index');
+    Route::get('/{sslOrder}', [\App\Http\Controllers\Client\SslController::class, 'show'])->name('show');
+    Route::get('/{sslOrder}/configure', [\App\Http\Controllers\Client\SslController::class, 'configure'])->name('configure');
+    Route::post('/{sslOrder}/configure', [\App\Http\Controllers\Client\SslController::class, 'submitConfiguration'])->name('submitConfiguration');
+    Route::get('/{sslOrder}/approver-emails', [\App\Http\Controllers\Client\SslController::class, 'getApproverEmails'])->name('approverEmails');
+    Route::get('/{sslOrder}/download', [\App\Http\Controllers\Client\SslController::class, 'downloadCert'])->name('download');
+    Route::post('/{sslOrder}/resend-validation', [\App\Http\Controllers\Client\SslController::class, 'resendValidation'])->name('resendValidation');
+});
