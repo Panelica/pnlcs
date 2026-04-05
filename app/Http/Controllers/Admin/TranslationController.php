@@ -74,7 +74,7 @@ class TranslationController extends Controller
 
         // Get target translations
         $targetTranslations = DynamicTranslation::where('language', $locale)
-            ->pluck('value', \DB::raw("CONCAT(`group`, '.', `key`)"))
+            ->get(['group', 'key', 'value'])->mapWithKeys(fn($row) => [$row->group . '.' . $row->key => $row->value])
             ->toArray();
 
         $groups = DynamicTranslation::where('language', 'en')
@@ -146,7 +146,7 @@ class TranslationController extends Controller
         $existingKeys = DynamicTranslation::where('language', $locale)
             ->whereNotNull('value')
             ->where('value', '!=', '')
-            ->pluck('key', \DB::raw("CONCAT(`group`, '.', `key`)"))
+            ->get(['group', 'key'])->mapWithKeys(fn($row) => [$row->group . '.' . $row->key => $row->key])
             ->toArray();
 
         $toTranslate = $englishKeys->filter(function ($item) use ($existingKeys) {
