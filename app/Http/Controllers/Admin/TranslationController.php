@@ -125,14 +125,14 @@ class TranslationController extends Controller
         }
 
         TranslationCacheManager::flushLocale($locale);
-        return back()->with('success', "Saved {$count} translations.");
+        return back()->with('success', __('admin.messages.translations_saved', ['count' => $count]));
     }
 
     public function aiTranslate(Request $request, string $locale)
     {
         $apiKey = Setting::get('OpenAIApiKey');
         if (!$apiKey) {
-            return back()->with('error', 'OpenAI API key not configured. Go to Settings > Languages.');
+            return back()->with('error', __('admin.messages.openai_not_configured'));
         }
 
         $language = Language::where('code', $locale)->firstOrFail();
@@ -154,7 +154,7 @@ class TranslationController extends Controller
         });
 
         if ($toTranslate->isEmpty()) {
-            return back()->with('success', 'All keys already translated!');
+            return back()->with('success', __('admin.messages.all_keys_translated'));
         }
 
         // Process in batches of 30
@@ -188,7 +188,7 @@ class TranslationController extends Controller
 
         TranslationCacheManager::flushLocale($locale);
 
-        return back()->with('success', "AI translated {$translated} keys. Failed: {$failed}.");
+        return back()->with('success', __('admin.messages.ai_translated', ['translated' => $translated, 'failed' => $failed]));
     }
 
     private function callOpenAI(string $apiKey, string $model, string $targetLang, array $items): array
@@ -257,7 +257,7 @@ class TranslationController extends Controller
         $data = json_decode($content, true);
 
         if (!is_array($data)) {
-            return back()->with('error', 'Invalid JSON file.');
+            return back()->with('error', __('admin.messages.invalid_json'));
         }
 
         $count = 0;
@@ -273,12 +273,12 @@ class TranslationController extends Controller
         }
 
         TranslationCacheManager::flushLocale($locale);
-        return back()->with('success', "Imported {$count} translations.");
+        return back()->with('success', __('admin.messages.imported_translations', ['count' => $count]));
     }
 
     public function clearCache()
     {
         TranslationCacheManager::flush();
-        return back()->with('success', 'Translation cache cleared.');
+        return back()->with('success', __('admin.messages.cache_cleared'));
     }
 }

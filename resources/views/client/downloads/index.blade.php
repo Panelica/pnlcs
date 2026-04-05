@@ -4,8 +4,8 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">Downloads</h1>
-        <p class="pn-page-subtitle">Software, tools, and resources available to you.</p>
+        <h1 class="pn-page-title">{{ __('client.downloads.page_title') }}</h1>
+        <p class="pn-page-subtitle">{{ __('client.downloads.page_subtitle') }}</p>
     </div>
 </div>
 
@@ -13,7 +13,7 @@
 <div class="pn-card">
     <div class="pn-empty">
         <div class="pn-empty-icon">&#128229;</div>
-        <p>No downloads available at this time.</p>
+        <p>{{ __('client.downloads.no_available') }}</p>
     </div>
 </div>
 @else
@@ -31,10 +31,10 @@
             <table class="pn-table">
                 <thead>
                     <tr>
-                        <th>File Name</th>
+                        <th>{{ __('client.downloads.file_name') }}</th>
                         <th>{{ __('common.table.description') }}</th>
-                        <th>Downloads</th>
-                        <th>Action</th>
+                        <th>{{ __('client.downloads.download_count') }}</th>
+                        <th>{{ __('client.downloads.action') }}</th>
                     </tr>
                 </thead>
                 <tbody>

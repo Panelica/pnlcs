@@ -16,7 +16,7 @@
                     <span class="promo-card__old">{{ $card['old_price'] ?? '' }}</span>
                     <span class="promo-card__new">{{ $card['new_price'] ?? '' }}<small>{{ $card['period'] ?? '' }}</small></span>
                 </div>
-                <span class="promo-card__cta">{{ $card['cta_text'] ?? 'Get Started' }} <i class="ri-arrow-right-line"></i></span>
+                <span class="promo-card__cta">{{ $card['cta_text'] ?? __('sections.promo.get_started') }} <i class="ri-arrow-right-line"></i></span>
             </a>
             @endforeach
         </div>

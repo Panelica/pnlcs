@@ -1,11 +1,11 @@
 @extends('admin.layouts.app')
-@section('title', 'Email Logs')
+@section('title', __('admin.logs.email_logs'))
 @section('content')
 
-<div class="page-header"><h1>System Logs</h1></div>
+<div class="page-header"><h1>{{ __('admin.logs.system_logs') }}</h1></div>
 
 <div style="border-bottom:2px solid #ddd;margin-bottom:15px;display:flex;">
-    @foreach(['admin.logs.index'=>'Activity','admin.logs.gateway'=>'Gateway','admin.logs.module'=>'Module','admin.logs.email'=>'Email'] as $route=>$label)
+    @foreach(['admin.logs.index'=>__('admin.logs.activity'),'admin.logs.gateway'=>__('admin.logs.gateway'),'admin.logs.module'=>__('admin.logs.module'),'admin.logs.email'=>__('admin.logs.email')] as $route=>$label)
     <a href="{{ route($route) }}" style="padding:8px 16px;font-size:13px;text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px;{{ request()->routeIs($route) ? 'border-bottom-color:#337ab7;color:#337ab7;font-weight:600;' : 'color:#555;' }}">{{ $label }}</a>
     @endforeach
 </div>
@@ -13,15 +13,15 @@
 <div class="card" style="margin-bottom:15px;">
     <div class="card-body">
         <form method="GET" action="{{ route('admin.logs.email') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-            <div><label class="form-label">Status</label>
+            <div><label class="form-label">{{ __('common.form.status') }}</label>
                 <select name="status" onchange="this.form.submit()" class="form-control" style="width:140px;">
                     <option value="">All</option>
-                    <option value="sent" {{ request('status')==='sent'?'selected':'' }}>Sent</option>
-                    <option value="pending" {{ request('status')==='pending'?'selected':'' }}>Pending</option>
-                    <option value="failed" {{ request('status')==='failed'?'selected':'' }}>Failed</option>
+                    <option value="sent" {{ request('status')==='sent'?'selected':'' }}>{{ __('common.status.sent') }}</option>
+                    <option value="pending" {{ request('status')==='pending'?'selected':'' }}>{{ __('common.status.pending') }}</option>
+                    <option value="failed" {{ request('status')==='failed'?'selected':'' }}>{{ __('common.status.failed') }}</option>
                 </select>
             </div>
-            <div style="flex:1;min-width:200px;"><label class="form-label">Search (subject/recipient)</label><input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('common.placeholder.search') }}" class="form-control"></div>
+            <div style="flex:1;min-width:200px;"><label class="form-label">{{ __('admin.logs.search_subject_recipient') }}</label><input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('common.placeholder.search') }}" class="form-control"></div>
             <div style="display:flex;gap:6px;">
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.filter') }}</button>
                 <a href="{{ route('admin.logs.email') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>
@@ -32,7 +32,7 @@
 
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.client') }}</th><th>Recipient</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.client') }}</th><th>{{ __('admin.logs.recipient') }}</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
         <tbody>
             @forelse($logs as $log)
             <tr>
@@ -50,7 +50,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="5" style="text-align:center;color:#999;padding:30px;">No email log entries found.</td></tr>
+            <tr><td colspan="5" style="text-align:center;color:#999;padding:30px;">{{ __('admin.logs.no_email_logs') }}</td></tr>
             @endforelse
         </tbody>
     </table>

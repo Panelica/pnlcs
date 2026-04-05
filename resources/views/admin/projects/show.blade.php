@@ -6,7 +6,7 @@
         <h1>{{ $project->title }}</h1>
         <div style="font-size:13px;color:#777;margin-top:3px;">{{ $project->client?->full_name ?? 'N/A' }} &bull; Created {{ $project->created_at->format('d M Y') }}</div>
     </div>
-    <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; Projects</a>
+    <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.projects.back') }}</a>
 </div>
 
 @php
@@ -17,8 +17,8 @@
 @endphp
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:15px;">
-    <div class="stat-card"><div class="stat-value"><span class="{{ $badgeClass }}">{{ ucfirst(str_replace('_',' ',$project->status)) }}</span></div><div class="stat-label">Status</div></div>
-    <div class="stat-card"><div class="stat-value">{{ $done }}<span style="font-size:14px;font-weight:400;color:#999;">/{{ $total }}</span></div><div class="stat-label">Tasks Done</div></div>
+    <div class="stat-card"><div class="stat-value"><span class="{{ $badgeClass }}">{{ ucfirst(str_replace('_',' ',$project->status)) }}</span></div><div class="stat-label">{{ __('admin.projects.status') }}</div></div>
+    <div class="stat-card"><div class="stat-value">{{ $done }}<span style="font-size:14px;font-weight:400;color:#999;">/{{ $total }}</span></div><div class="stat-label">{{ __('admin.projects.tasks_done') }}</div></div>
     <div class="stat-card">
         <div style="margin-bottom:5px;">
             <div style="background:#e9e9e9;border-radius:3px;height:14px;">
@@ -33,7 +33,7 @@
 <div style="display:grid;grid-template-columns:1fr 300px;gap:15px;">
     <div>
         <div class="card" style="margin-bottom:15px;">
-            <div class="card-header"><strong>Tasks</strong></div>
+            <div class="card-header"><strong>{{ __('admin.projects.tasks') }}</strong></div>
             <div class="card-body" style="padding:0;">
                 @forelse($project->tasks->sortBy('sort_order') as $task)
                 <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 15px;border-bottom:1px solid #f5f5f5;">
@@ -55,15 +55,15 @@
                     </form>
                 </div>
                 @empty
-                <div style="padding:20px;text-align:center;color:#999;font-size:13px;">No tasks yet.</div>
+                <div style="padding:20px;text-align:center;color:#999;font-size:13px;">{{ __('admin.projects.no_tasks') }}</div>
                 @endforelse
             </div>
             <div class="card-body" style="border-top:1px solid #e5e7eb;">
                 <form method="POST" action="{{ route('admin.projects.tasks.store', $project) }}">
                     @csrf
-                    <label class="form-label">Add Task</label>
+                    <label class="form-label">{{ __('admin.projects.add_task_label') }}</label>
                     <div style="display:flex;gap:8px;">
-                        <input type="text" name="task" placeholder="Task description..." required class="form-control">
+                        <input type="text" name="task" placeholder="{{ __('admin.projects.task_placeholder') }}" required class="form-control">
                         <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.add') }}</button>
                     </div>
                 </form>
@@ -71,7 +71,7 @@
         </div>
 
         <div class="card">
-            <div class="card-header"><strong>Timeline / Messages</strong></div>
+            <div class="card-header"><strong>{{ __('admin.projects.timeline_messages') }}</strong></div>
             <div class="card-body" style="max-height:300px;overflow-y:auto;">
                 @forelse($project->messages->sortByDesc('created_at') as $msg)
                 <div style="display:flex;gap:10px;margin-bottom:12px;">
@@ -87,14 +87,14 @@
                     </div>
                 </div>
                 @empty
-                <p style="font-size:13px;color:#999;">No messages yet.</p>
+                <p style="font-size:13px;color:#999;">{{ __('admin.projects.no_messages') }}</p>
                 @endforelse
             </div>
             <div class="card-body" style="border-top:1px solid #e5e7eb;">
                 <form method="POST" action="{{ route('admin.projects.messages.store', $project) }}">
                     @csrf
-                    <div class="form-group"><textarea name="message" rows="2" placeholder="Post a message or update..." required class="form-control"></textarea></div>
-                    <button type="submit" class="btn btn-primary btn-sm">Post Message</button>
+                    <div class="form-group"><textarea name="message" rows="2" placeholder="{{ __('admin.projects.post_placeholder') }}" required class="form-control"></textarea></div>
+                    <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.projects.post_message') }}</button>
                 </form>
             </div>
         </div>
@@ -102,17 +102,17 @@
 
     <div>
         <div class="panel" style="margin-bottom:15px;">
-            <div class="panel-heading panel-primary">Project Info</div>
+            <div class="panel-heading panel-primary">{{ __('admin.projects.project_info') }}</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:4px 0;color:#777;">Client</td><td style="padding:4px 0;font-weight:600;">{{ $project->client?->full_name ?? 'N/A' }}</td></tr>
-                    @if($project->start_date)<tr><td style="padding:4px 0;color:#777;">Start</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->start_date)->format('d M Y') }}</td></tr>@endif
-                    @if($project->due_date)<tr><td style="padding:4px 0;color:#777;">Due</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->due_date)->format('d M Y') }}</td></tr>@endif
-                    <tr><td style="padding:4px 0;color:#777;">Messages</td><td style="padding:4px 0;">{{ $project->messages->count() }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.client') }}</td><td style="padding:4px 0;font-weight:600;">{{ $project->client?->full_name ?? 'N/A' }}</td></tr>
+                    @if($project->start_date)<tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.start') }}</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->start_date)->format('d M Y') }}</td></tr>@endif
+                    @if($project->due_date)<tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.due') }}</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->due_date)->format('d M Y') }}</td></tr>@endif
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.messages') }}</td><td style="padding:4px 0;">{{ $project->messages->count() }}</td></tr>
                 </table>
                 @if($project->description)
                 <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;">
-                    <p style="font-size:11px;font-weight:600;color:#777;text-transform:uppercase;margin-bottom:4px;">Description</p>
+                    <p style="font-size:11px;font-weight:600;color:#777;text-transform:uppercase;margin-bottom:4px;">{{ __('admin.projects.description') }}</p>
                     <p style="font-size:13px;color:#555;white-space:pre-wrap;">{{ $project->description }}</p>
                 </div>
                 @endif
@@ -121,10 +121,10 @@
         <div class="panel">
             <div class="panel-heading panel-primary">Actions</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
-                <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-sm" style="width:100%;text-align:center;">Edit Project</a>
+                <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-sm" style="width:100%;text-align:center;">{{ __('admin.projects.edit_project') }}</a>
                 <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('Delete this project and all its tasks?')">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">Delete Project</button>
+                    <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">{{ __('admin.projects.delete_project') }}</button>
                 </form>
             </div>
         </div>

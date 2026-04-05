@@ -28,7 +28,7 @@ class CalendarController extends Controller
         $validated["admin"] = auth("admin")->user()->full_name ?? "Admin";
 
         CalendarEvent::create($validated);
-        return back()->with("success", "Event created.");
+        return back()->with("success", __("admin.messages.event_created"));
     }
 
     public function update(Request $request, CalendarEvent $event)
@@ -43,13 +43,13 @@ class CalendarController extends Controller
 
         $validated["recurring"] = $request->boolean("recurring");
         $event->update($validated);
-        return back()->with("success", "Event updated.");
+        return back()->with("success", __("admin.messages.event_updated"));
     }
 
     public function destroy(CalendarEvent $event)
     {
         $event->delete();
-        return back()->with("success", "Event deleted.");
+        return back()->with("success", __("admin.messages.event_deleted"));
     }
 
     public function apiEvents(Request $request)

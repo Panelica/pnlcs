@@ -43,7 +43,7 @@ class BulkActionController extends Controller
             }
         }
 
-        return back()->with("success", "Sent {$sent} email(s) successfully.");
+        return back()->with("success", __("admin.messages.emails_sent", ["count" => $sent]));
     }
 
     public function bulkInvoice(Request $request, InvoiceService $invoiceService)
@@ -71,7 +71,7 @@ class BulkActionController extends Controller
             }
         }
 
-        return back()->with("success", "Created {$created} invoice(s).");
+        return back()->with("success", __("admin.messages.invoices_created", ["count" => $created]));
     }
 
     public function bulkServiceUpdate(Request $request)
@@ -84,6 +84,6 @@ class BulkActionController extends Controller
 
         $updated = Service::whereIn("id", $validated["service_ids"])->update(["status" => $validated["status"]]);
 
-        return back()->with("success", "Updated {$updated} service(s) to {$validated[status]}.");
+        return back()->with("success", __("admin.messages.services_updated", ["count" => $updated, "status" => $validated["status"]]));
     }
 }

@@ -1,17 +1,17 @@
 @extends('admin.layouts.app')
-@section('title', 'Network Issues')
+@section('title', __('admin.network_issues.title'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Network Issues</h1>
-    <button type="button" onclick="document.getElementById('modal-add-ni').style.display='flex'" class="btn btn-primary btn-sm">+ Report Issue</button>
+    <h1>{{ __('admin.network_issues.title') }}</h1>
+    <button type="button" onclick="document.getElementById('modal-add-ni').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.network_issues.report_issue') }}</button>
 </div>
 <div class="card">
     @if(($networkIssues ?? collect())->isEmpty())
-    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No network issues reported.</div>
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.network_issues.no_issues') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Title</th><th>{{ __('common.table.type') }}</th><th>Reported</th><th>Resolved</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>Title</th><th>{{ __('common.table.type') }}</th><th>{{ __('admin.network_issues.reported') }}</th><th>Resolved</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($networkIssues as $issue)
         <tr>
@@ -37,19 +37,19 @@
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-ni').style.display='none'"></div>
     <div style="position:relative;background:#fff;border-radius:4px;width:500px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;">Report Network Issue</h4>
+            <h4 style="margin:0;font-size:16px;">{{ __('admin.network_issues.report_issue') }}</h4>
             <button type="button" onclick="document.getElementById('modal-add-ni').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form method="POST" action="{{ route('admin.config.network-issues.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Title</label><input type="text" name="title" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">Type</label><select name="type" class="form-control"><option value="general">General</option><option value="network">Network</option><option value="server">Server</option><option value="datacenter">Datacenter</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" required class="form-control"></textarea></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-ni').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
-                <button type="submit" class="btn btn-primary btn-sm">Report Issue</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.network_issues.report_issue') }}</button>
             </div>
         </form>
     </div>

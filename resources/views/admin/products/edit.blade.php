@@ -1,13 +1,13 @@
 @extends('admin.layouts.app')
-@section('title', 'Edit ' . $product->name)
+@section('title', __('admin.products.edit_product') . ': ' . $product->name)
 @section('content')
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Edit: {{ $product->name }}</h1>
+    <h1>{{ __('admin.products.edit_product') }}: {{ $product->name }}</h1>
     <div style="display:flex;gap:6px;">
         <a href="{{ route('admin.products.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
         <form method="POST" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('Delete product {{ $product->name }}?')">
             @csrf @method('DELETE')
-            <button type="submit" class="btn btn-danger btn-sm">Delete Product</button>
+            <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.products.delete_product') }}</button>
         </form>
     </div>
 </div>
@@ -19,18 +19,18 @@
         <div class="card-header"><strong>Product Details</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-                <div class="form-group"><label class="form-label">Product Name <span style="color:#d9534f;">*</span></label><input type="text" name="name" value="{{ $product->name }}" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Product Group</label><select name="group_id" class="form-control">@foreach($groups as $g)<option value="{{ $g->id }}" {{ $product->group_id == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>@endforeach</select></div>
-                <div class="form-group"><label class="form-label">Type</label><select name="type" class="form-control"><option value="hosting" {{ $product->type=='hosting'?'selected':'' }}>Shared Hosting</option><option value="reseller" {{ $product->type=='reseller'?'selected':'' }}>Reseller</option><option value="vps" {{ $product->type=='vps'?'selected':'' }}>VPS/Dedicated</option><option value="ssl" {{ $product->type=='ssl'?'selected':'' }}>SSL Certificate</option><option value="other" {{ $product->type=='other'?'selected':'' }}>Other</option></select></div>
-                <div class="form-group"><label class="form-label">Payment</label><select name="pay_type" class="form-control"><option value="recurring" {{ $product->pay_type=='recurring'?'selected':'' }}>Recurring</option><option value="onetime" {{ $product->pay_type=='onetime'?'selected':'' }}>One Time</option><option value="free" {{ $product->pay_type=='free'?'selected':'' }}>Free</option></select></div>
-                <div class="form-group"><label class="form-label">Auto Setup</label><select name="auto_setup" class="form-control"><option value="order" {{ $product->auto_setup=='order'?'selected':'' }}>On Order</option><option value="payment" {{ $product->auto_setup=='payment'?'selected':'' }}>On Payment</option><option value="on" {{ $product->auto_setup=='on'?'selected':'' }}>Always</option><option value="off" {{ $product->auto_setup=='off'?'selected':'' }}>Never</option></select></div>
-                <div class="form-group"><label class="form-label">Server Module</label><input type="text" name="server_type" value="{{ $product->server_type }}" placeholder="e.g. panelica, cpanel" class="form-control"></div>
-                <div class="form-group" x-data="{ show: '{{ $product->type }}' === 'ssl' }" x-show="show" x-cloak><label class="form-label">SSL Module</label><select name="ssl_module" class="form-control"><option value="">None</option><option value="gogetssl" {{ $product->ssl_module=='gogetssl'?'selected':'' }}>GoGetSSL</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.product_name') }} <span style="color:#d9534f;">*</span></label><input type="text" name="name" value="{{ $product->name }}" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.product_group') }}</label><select name="group_id" class="form-control">@foreach($groups as $g)<option value="{{ $g->id }}" {{ $product->group_id == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>@endforeach</select></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.type') }}</label><select name="type" class="form-control"><option value="hosting" {{ $product->type=='hosting'?'selected':'' }}>Shared Hosting</option><option value="reseller" {{ $product->type=='reseller'?'selected':'' }}>Reseller</option><option value="vps" {{ $product->type=='vps'?'selected':'' }}>VPS/Dedicated</option><option value="ssl" {{ $product->type=='ssl'?'selected':'' }}>SSL Certificate</option><option value="other" {{ $product->type=='other'?'selected':'' }}>Other</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.payment') }}</label><select name="pay_type" class="form-control"><option value="recurring" {{ $product->pay_type=='recurring'?'selected':'' }}>Recurring</option><option value="onetime" {{ $product->pay_type=='onetime'?'selected':'' }}>One Time</option><option value="free" {{ $product->pay_type=='free'?'selected':'' }}>Free</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.auto_setup') }}</label><select name="auto_setup" class="form-control"><option value="order" {{ $product->auto_setup=='order'?'selected':'' }}>On Order</option><option value="payment" {{ $product->auto_setup=='payment'?'selected':'' }}>On Payment</option><option value="on" {{ $product->auto_setup=='on'?'selected':'' }}>Always</option><option value="off" {{ $product->auto_setup=='off'?'selected':'' }}>Never</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.server_module') }}</label><input type="text" name="server_type" value="{{ $product->server_type }}" placeholder="e.g. panelica, cpanel" class="form-control"></div>
+                <div class="form-group" x-data="{ show: '{{ $product->type }}' === 'ssl' }" x-show="show" x-cloak><label class="form-label">{{ __('admin.products.ssl_module') }}</label><select name="ssl_module" class="form-control"><option value="">None</option><option value="gogetssl" {{ $product->ssl_module=='gogetssl'?'selected':'' }}>GoGetSSL</option></select></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ $product->description }}</textarea></div>
                 <div class="form-group" style="grid-column:span 2;display:flex;gap:20px;">
-                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="hidden" value="1" {{ $product->hidden?'checked':'' }}> Hidden</label>
-                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="retired" value="1" {{ $product->retired?'checked':'' }}> Retired</label>
-                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="is_featured" value="1" {{ $product->is_featured?'checked':'' }}> Featured</label>
+                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="hidden" value="1" {{ $product->hidden?'checked':'' }}> {{ __('admin.products.hidden') }}</label>
+                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="retired" value="1" {{ $product->retired?'checked':'' }}> {{ __('admin.products.retired') }}</label>
+                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="is_featured" value="1" {{ $product->is_featured?'checked':'' }}> {{ __('admin.products.featured') }}</label>
                 </div>
             </div>
         </div>

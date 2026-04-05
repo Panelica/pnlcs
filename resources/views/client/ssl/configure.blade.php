@@ -4,10 +4,10 @@
 
 @section("content")
 <div class="mb-4">
-    <a href="{{ route('client.ssl.show', $order) }}" class="btn btn-sm btn-secondary">&larr; Back</a>
+    <a href="{{ route('client.ssl.show', $order) }}" class="btn btn-sm btn-secondary">&larr; {{ __('client.actions.back') }}</a>
 </div>
 
-<h1 class="h3 mb-4">Configure SSL Certificate</h1>
+<h1 class="h3 mb-4">{{ __('client.ssl.configure_ssl') }}</h1>
 
 @if(session('error'))
     <div class="alert alert-danger">{{ session('error') }}</div>
@@ -27,72 +27,72 @@
     @csrf
 
     <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0">Certificate Signing Request (CSR)</h5></div>
+        <div class="card-header"><h5 class="mb-0">{{ __('client.ssl.csr_title') }}</h5></div>
         <div class="card-body">
             <div class="mb-3">
-                <label class="form-label">CSR <span class="text-danger">*</span></label>
+                <label class="form-label">{{ __('client.ssl.csr') }} <span class="text-danger">*</span></label>
                 <textarea name="csr" class="form-control font-monospace" rows="8" required
                     placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;Paste your CSR here...&#10;-----END CERTIFICATE REQUEST-----"
                     x-model="csr" @blur="decodeCsr()">{{ old('csr') }}</textarea>
-                <small class="text-muted">Paste your Certificate Signing Request (CSR) or generate one using your web server.</small>
+                <small class="text-muted">{{ __('client.ssl.csr_hint') }}</small>
             </div>
 
             <div x-show="csrDecoded" x-cloak class="alert alert-info">
-                <strong>CSR Decoded:</strong>
+                <strong>{{ __('client.ssl.csr_decoded') }}:</strong>
                 <div class="row mt-2">
-                    <div class="col-md-6"><small>Common Name:</small> <strong x-text="csrInfo.cn"></strong></div>
-                    <div class="col-md-6"><small>Organization:</small> <span x-text="csrInfo.org"></span></div>
-                    <div class="col-md-6"><small>Country:</small> <span x-text="csrInfo.country"></span></div>
-                    <div class="col-md-6"><small>Key Size:</small> <span x-text="csrInfo.key_size"></span></div>
+                    <div class="col-md-6"><small>{{ __('client.ssl.common_name') }}:</small> <strong x-text="csrInfo.cn"></strong></div>
+                    <div class="col-md-6"><small>{{ __('client.ssl.organization') }}:</small> <span x-text="csrInfo.org"></span></div>
+                    <div class="col-md-6"><small>{{ __('client.ssl.country') }}:</small> <span x-text="csrInfo.country"></span></div>
+                    <div class="col-md-6"><small>{{ __('client.ssl.key_size') }}:</small> <span x-text="csrInfo.key_size"></span></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0">Server & Validation</h5></div>
+        <div class="card-header"><h5 class="mb-0">{{ __('client.ssl.server_validation') }}</h5></div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Web Server Type <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ __('client.ssl.web_server_type') }} <span class="text-danger">*</span></label>
                     <select name="webserver_type" class="form-select" required>
-                        <option value="">Select server type...</option>
+                        <option value="">{{ __('client.ssl.select_server_type') }}</option>
                         @foreach($webServerTypes as $id => $name)
                             <option value="{{ $id }}" {{ old('webserver_type') == $id ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Domain Validation Method <span class="text-danger">*</span></label>
+                    <label class="form-label">{{ __('client.ssl.domain_validation_method') }} <span class="text-danger">*</span></label>
                     <select name="validation_method" class="form-select" required x-model="validationMethod" @change="onValidationChange()">
-                        <option value="EMAIL">Email Validation</option>
-                        <option value="HTTP">HTTP File Validation</option>
-                        <option value="DNS">DNS CNAME Validation</option>
+                        <option value="EMAIL">{{ __('client.ssl.email_validation') }}</option>
+                        <option value="HTTP">{{ __('client.ssl.http_validation') }}</option>
+                        <option value="DNS">{{ __('client.ssl.dns_validation') }}</option>
                     </select>
                 </div>
             </div>
 
             <div x-show="validationMethod === 'EMAIL'" class="mb-3">
-                <label class="form-label">Approver Email <span class="text-danger">*</span></label>
+                <label class="form-label">{{ __('client.ssl.approver_email') }} <span class="text-danger">*</span></label>
                 <select name="approver_email" class="form-select" x-model="approverEmail">
-                    <option value="">Loading emails...</option>
+                    <option value="">{{ __('client.ssl.loading_emails') }}</option>
                     <template x-for="email in approverEmails" :key="email">
                         <option :value="email" x-text="email"></option>
                     </template>
                 </select>
-                <small class="text-muted">Select the email address that will receive the domain validation email.</small>
+                <small class="text-muted">{{ __('client.ssl.approver_email_hint') }}</small>
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Additional SAN Domains</label>
-                <textarea name="domains" class="form-control" rows="3" placeholder="One domain per line (optional)">{{ old('domains') }}</textarea>
-                <small class="text-muted">Additional domains to include in the certificate (Subject Alternative Names).</small>
+                <label class="form-label">{{ __('client.ssl.additional_san') }}</label>
+                <textarea name="domains" class="form-control" rows="3" placeholder="{{ __('client.ssl.san_placeholder') }}">{{ old('domains') }}</textarea>
+                <small class="text-muted">{{ __('client.ssl.san_hint') }}</small>
             </div>
         </div>
     </div>
 
     <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0">Admin Contact Information</h5></div>
+        <div class="card-header"><h5 class="mb-0">{{ __('client.ssl.admin_contact') }}</h5></div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -108,11 +108,11 @@
                     <input type="email" name="admin_email" class="form-control" value="{{ old('admin_email', auth()->user()->email ?? '') }}" required>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Phone</label>
+                    <label class="form-label">{{ __('client.form.phone') }}</label>
                     <input type="text" name="admin_phone" class="form-control" value="{{ old('admin_phone', auth()->user()->phone_number ?? '') }}">
                 </div>
                 <div class="col-md-12 mb-3">
-                    <label class="form-label">Organization</label>
+                    <label class="form-label">{{ __('client.ssl.organization') }}</label>
                     <input type="text" name="admin_org" class="form-control" value="{{ old('admin_org', auth()->user()->company_name ?? '') }}">
                 </div>
                 <div class="col-md-12 mb-3">
@@ -124,15 +124,15 @@
                     <input type="text" name="admin_city" class="form-control" value="{{ old('admin_city', auth()->user()->city ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">State/Province</label>
+                    <label class="form-label">{{ __('client.ssl.state_province') }}</label>
                     <input type="text" name="admin_state" class="form-control" value="{{ old('admin_state', auth()->user()->state ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">ZIP/Postal Code</label>
+                    <label class="form-label">{{ __('client.ssl.zip_code') }}</label>
                     <input type="text" name="admin_zip" class="form-control" value="{{ old('admin_zip', auth()->user()->postcode ?? '') }}">
                 </div>
                 <div class="col-md-4 mb-3">
-                    <label class="form-label">Country</label>
+                    <label class="form-label">{{ __('client.ssl.country') }}</label>
                     <input type="text" name="admin_country" class="form-control" maxlength="2" placeholder="US" value="{{ old('admin_country', auth()->user()->country ?? '') }}">
                 </div>
             </div>
@@ -140,7 +140,7 @@
     </div>
 
     <div class="text-end">
-        <button type="submit" class="btn btn-primary btn-lg">Submit Configuration</button>
+        <button type="submit" class="btn btn-primary btn-lg">{{ __('client.ssl.submit_configuration') }}</button>
     </div>
 </form>
 

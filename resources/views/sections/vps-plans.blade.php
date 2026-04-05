@@ -1,14 +1,14 @@
 {{-- ===== VPS PLANS ===== --}}
 @php
     $c = $content ?? collect();
-    $vpsTitle = $c->has('title') ? $c->get('title')->content_value : 'VPS Server Plans';
-    $vpsSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : 'Full root access, dedicated resources, and instant deployment';
-    $visualTitle = $c->has('visual_title') ? $c->get('visual_title')->content_value : 'Cloud VPS';
+    $vpsTitle = $c->has('title') ? $c->get('title')->content_value : __('sections.vps.title');
+    $vpsSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : __('sections.vps.subtitle');
+    $visualTitle = $c->has('visual_title') ? $c->get('visual_title')->content_value : __('sections.vps.visual_title');
     $visualDesc = $c->has('visual_desc') ? $c->get('visual_desc')->content_value : '';
 
     $vpsProducts = isset($products) ? $products->filter(fn($p) => $p->type === 'vps' || ($p->group && str_contains(strtolower($p->group->name), 'vps'))) : collect();
     $badgeTypes = ['', 'vps-card__badge--popular', 'vps-card__badge--value', ''];
-    $badgeTexts = ['', 'Popular', 'Best Value', ''];
+    $badgeTexts = ['', __('sections.vps.popular'), __('sections.vps.best_value'), ''];
 @endphp
 <section class="vps">
     <div class="container">
@@ -49,7 +49,7 @@
                         @endforeach
                     </div>
                     <div class="vps-card__price">${{ $monthlyPrice }}<small>/mo</small></div>
-                    <a href="/client/store/configure/{{ $product->slug }}" class="vps-card__btn">Configure <i class="ri-arrow-right-line"></i></a>
+                    <a href="/client/store/configure/{{ $product->slug }}" class="vps-card__btn">{{ __('sections.vps.configure') }} <i class="ri-arrow-right-line"></i></a>
                 </div>
                 @empty
                 {{-- No VPS products --}}

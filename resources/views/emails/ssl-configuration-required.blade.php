@@ -1,22 +1,22 @@
 <x-mail::message>
-# SSL Certificate Configuration Required
+# {{ __('email.ssl_config_required.title') }}
 
-Hello {{ $order->client->first_name ?? 'Customer' }},
+{{ __('email.ssl_config_required.hello', ['name' => $order->client->first_name ?? __('email.common.customer')]) }}
 
-Your SSL certificate order has been received and is awaiting configuration.
+{{ __('email.ssl_config_required.body') }}
 
-**Order Details:**
-- **Order #:** {{ $order->id }}
-- **Product:** {{ $order->service?->product?->name ?? 'SSL Certificate' }}
+**{{ __('email.ssl_config_required.order_details') }}**
+- **{{ __('email.ssl_config_required.order_number') }}** {{ $order->id }}
+- **{{ __('email.common.product_label') }}:** {{ $order->service?->product?->name ?? __('email.ssl_config_required.ssl_certificate') }}
 
-To activate your SSL certificate, you need to complete the configuration process by providing your CSR (Certificate Signing Request) and selecting a domain validation method.
+{{ __('email.ssl_config_required.activate_text') }}
 
 <x-mail::button :url="$configureUrl">
-Configure SSL Certificate
+{{ __('email.ssl_config_required.configure_button') }}
 </x-mail::button>
 
-If you need help generating a CSR, please contact our support team.
+{{ __('email.ssl_config_required.csr_help') }}
 
-Thanks,<br>
+{{ __('email.ssl_config_required.thanks') }}<br>
 {{ $companyName }}
 </x-mail::message>

@@ -1,9 +1,9 @@
 {{-- ===== DOMAIN SEARCH ===== --}}
 @php
     $c = $content ?? collect();
-    $dsTitle = $c->get('title')->content_value ?? 'Find Your Perfect Domain';
-    $dsSubtitle = $c->get('subtitle')->content_value ?? 'Search for your ideal domain name and secure it today';
-    $dsPlaceholder = $c->get('placeholder')->content_value ?? 'Enter your domain name... (e.g. mysite.com)';
+    $dsTitle = $c->get('title')->content_value ?? __('sections.domain.title');
+    $dsSubtitle = $c->get('subtitle')->content_value ?? __('sections.domain.subtitle');
+    $dsPlaceholder = $c->get('placeholder')->content_value ?? __('sections.domain.placeholder');
 @endphp
 <section class="domain-search">
     <div class="container">

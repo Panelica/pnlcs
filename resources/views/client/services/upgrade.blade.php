@@ -1,26 +1,26 @@
 @extends('client.layouts.app')
-@section('title', 'Upgrade / Downgrade Service')
+@section('title', __('client.services.upgrade_downgrade_title'))
 @section('content')
 
 <div class="page-header">
-    <h1>Upgrade / Downgrade</h1>
-    <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline btn-sm">&larr; Back to Service</a>
+    <h1>{{ __('client.services.upgrade_downgrade') }}</h1>
+    <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline btn-sm">&larr; {{ __('client.services.back_to_service') }}</a>
 </div>
 
 @if(!isset($upgrades) || $upgrades->isEmpty())
 <div class="pn-card">
     <div class="pn-card-body" style="text-align:center; padding:40px; color:#999;">
-        <p style="margin:0 0 16px;">No upgrade options are available for this service at this time.</p>
-        <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline btn-sm">&larr; Back to Service</a>
+        <p style="margin:0 0 16px;">{{ __('client.services.no_upgrades') }}</p>
+        <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline btn-sm">&larr; {{ __('client.services.back_to_service') }}</a>
     </div>
 </div>
 @else
 <div style="background:#d9edf7; border:1px solid #bce8f1; color:#31708f; padding:12px 16px; border-radius:4px; font-size:13px; margin-bottom:20px;">
-    Currently on: <strong>{{ $service->product?->name ?? 'Service' }}</strong> &mdash; ${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}
+    {{ __('client.services.currently_on') }}: <strong>{{ $service->product?->name ?? 'Service' }}</strong> &mdash; ${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}
 </div>
 
 <div class="pn-card">
-    <div class="pn-card-header">Select a New Plan</div>
+    <div class="pn-card-header">{{ __('client.services.select_new_plan') }}</div>
     <div class="pn-card-body">
         <form method="POST" action="{{ route('client.services.upgrade.submit', $service) }}">
             @csrf
@@ -62,7 +62,7 @@
                 @endforeach
             </div>
             <div style="display:flex; gap:8px;">
-                <button type="submit" class="btn btn-primary">Request Change</button>
+                <button type="submit" class="btn btn-primary">{{ __('client.services.request_change') }}</button>
                 <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline">{{ __('common.actions.cancel') }}</a>
             </div>
         </form>

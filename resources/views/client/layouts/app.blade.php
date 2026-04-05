@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield("title", "My Account") - PNLCS</title>
+    <title>@yield("title", __("client.my_account")) - PNLCS</title>
     @vite(["resources/css/app.css"])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -306,9 +306,9 @@
 <body>
 @if(session('impersonating_admin_id'))
 <div style="background:#f59e0b;color:#000;padding:8px 16px;text-align:center;font-weight:600;font-size:13px;position:sticky;top:0;z-index:9999;">
-    You are viewing as {{ auth()->user()->full_name ?? auth()->user()->email }}.
+    {{ __("client.impersonation.viewing_as") }} {{ auth()->user()->full_name ?? auth()->user()->email }}.
     <a href="{{ route('admin.clients.stop-impersonation') }}" style="color:#000;text-decoration:underline;margin-left:10px;">
-        &larr; Return to Admin
+        &larr; {{ __("client.impersonation.return_to_admin") }}
     </a>
 </div>
 @endif
@@ -319,111 +319,105 @@
 
         <div class="pn-nav">
             <div class="pn-nav-item">
-                <a href="{{ route("client.home") }}" class="pn-nav-link {{ request()->routeIs("client.home") ? "active" : "" }}">Dashboard</a>
+                <a href="{{ route("client.home") }}" class="pn-nav-link {{ request()->routeIs("client.home") ? "active" : "" }}">{{ __('client.nav.dashboard') }}</a>
             </div>
             <div class="pn-nav-item">
-                <button type="button" class="pn-nav-link {{ request()->routeIs("client.services.*") || request()->routeIs("client.store*") ? "active" : "" }}">
-                    Services
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.services.*") || request()->routeIs("client.store*") ? "active" : "" }}">{{ __('client.nav.services') }}
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.services.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
-                        My Services
+                        {{ __('client.nav.my_services') }}
                     </a>
                     <a href="{{ route("client.store") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Order New Service
+                        {{ __('client.nav.order_new_service') }}
                     </a>
                 </div>
             </div>
             <div class="pn-nav-item">
-                <button type="button" class="pn-nav-link {{ request()->routeIs("client.domains.*") ? "active" : "" }}">
-                    Domains
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.domains.*") ? "active" : "" }}">{{ __('client.nav.domains') }}
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.domains.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/></svg>
-                        My Domains
+                        {{ __('client.nav.my_domains') }}
                     </a>
-                    <a href="/client/domain-search"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35"/></svg> Register Domain</a>
-                    <a href="/client/domain-pricing"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg> Domain Pricing</a>
+                    <a href="/client/domain-search"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35"/></svg> {{ __('client.nav.register_domain') }}</a>
+                    <a href="/client/domain-pricing"><svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg> {{ __('client.nav.domain_pricing') }}</a>
                 </div>
             </div>
             <div class="pn-nav-item">
                 <a href="{{ route("client.ssl.index") }}" class="pn-nav-link {{ request()->routeIs("client.ssl.*") ? "active" : "" }}">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                    SSL
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>{{ __('client.nav.ssl') }}
                 </a>
             </div>
             <div class="pn-nav-item">
-                <button type="button" class="pn-nav-link {{ request()->routeIs("client.invoices.*") || request()->routeIs("client.funds.*") ? "active" : "" }}">
-                    Billing
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.invoices.*") || request()->routeIs("client.funds.*") ? "active" : "" }}">{{ __('client.nav.billing') }}
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.invoices.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                        Invoices
+                        {{ __('client.nav.invoices') }}
                     </a>
                     <a href="{{ route("client.funds.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Add Funds
+                        {{ __('client.nav.add_funds') }}
                     </a>
                 </div>
             </div>
             <div class="pn-nav-item">
-                <button type="button" class="pn-nav-link {{ request()->routeIs("client.tickets.*") || request()->routeIs("client.kb.*") || request()->routeIs("client.announcements.*") || request()->routeIs("client.contact") || request()->routeIs("client.downloads.*") ? "active" : "" }}">
-                    Support
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.tickets.*") || request()->routeIs("client.kb.*") || request()->routeIs("client.announcements.*") || request()->routeIs("client.contact") || request()->routeIs("client.downloads.*") ? "active" : "" }}">{{ __('client.nav.support') }}
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.tickets.create") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Open Ticket
+                        {{ __('client.nav.open_ticket') }}
                     </a>
                     <a href="{{ route("client.tickets.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
-                        My Tickets
+                        {{ __('client.nav.my_tickets') }}
                     </a>
                     <div class="sep"></div>
                     <a href="{{ route("client.kb.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                        Knowledge Base
+                        {{ __('client.nav.knowledge_base') }}
                     </a>
                     <a href="{{ route("client.announcements.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                        Announcements
+                        {{ __('client.nav.announcements') }}
                     </a>
                 </div>
             </div>
             <div class="pn-nav-item">
-                <button type="button" class="pn-nav-link {{ request()->routeIs("client.account.*") ? "active" : "" }}">
-                    Account
+                <button type="button" class="pn-nav-link {{ request()->routeIs("client.account.*") ? "active" : "" }}">{{ __('client.nav.account') }}
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </button>
                 <div class="pn-dropdown">
                     <a href="{{ route("client.account.profile") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        Edit Profile
+                        {{ __('client.nav.edit_profile') }}
                     </a>
                     <a href="{{ route("client.account.password") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        Change Password
+                        {{ __('client.nav.change_password') }}
                     </a>
                     <a href="{{ route("client.account.contacts") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        Contacts
+                        {{ __('client.nav.contacts') }}
                     </a>
                     <a href="{{ route("client.account.security") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                        Security
+                        {{ __('client.nav.security') }}
                     </a>
                     <div class="sep"></div>
                     <a href="{{ route("client.affiliates.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-                        Affiliates
+                        {{ __('client.nav.affiliates') }}
                     </a>
                 </div>
             </div>
@@ -432,7 +426,7 @@
         <div class="pn-nav-right">
         @include("client.layouts.partials.language-selector")
                 @if($darkModeEnabled ?? false)
-                <button onclick="toggleDarkMode()" class="dark-toggle" title="Toggle dark mode" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--muted);font-size:16px;transition:all 0.15s;">
+                <button onclick="toggleDarkMode()" class="dark-toggle" title="{{ __('client.toggle_dark_mode') }}" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--muted);font-size:16px;transition:all 0.15s;">
                     <i class="ri-sun-line" id="lightIcon" style="display:none;"></i>
                     <i class="ri-moon-line" id="darkIcon"></i>
                 </button>
@@ -445,22 +439,22 @@
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </a>
                 <div class="pn-dropdown" style="right:0;left:auto;min-width:180px;">
-                    <a href="{{ route("client.account.profile") }}">My Profile</a>
+                    <a href="{{ route("client.account.profile") }}">{{ __('client.nav.my_profile') }}</a>
                     <div class="sep"></div>
-                    <a href="{{ route("client.funds.index") }}">Add Funds</a>
+                    <a href="{{ route("client.funds.index") }}">{{ __('client.nav.add_funds') }}</a>
                     <div class="sep"></div>
                     <form method="POST" action="{{ route("client.logout") }}" style="padding:0;">
                         @csrf
                         <button type="submit" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;font-size:13px;font-weight:500;color:#ef4444;background:none;border:none;cursor:pointer;border-radius:8px;text-align:left;font-family:inherit;">
                             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                            Sign Out
+                            {{ __('client.nav.sign_out') }}
                         </button>
                     </form>
                 </div>
             </div>
             @else
                 <a href="{{ route("client.login") }}" class="btn btn-outline btn-sm">{{ __('common.actions.login') }}</a>
-                <a href="{{ route("client.register") }}" class="btn btn-primary btn-sm">Get Started</a>
+                <a href="{{ route("client.register") }}" class="btn btn-primary btn-sm">{{ __('client.nav.get_started') }}</a>
             @endauth
         </div>
 
@@ -470,27 +464,27 @@
     </div>
 
     <div id="pnMobileMenu" class="pn-mobile-menu">
-        <a href="{{ route("client.home") }}">Dashboard</a>
-        <div class="pn-mobile-sec">Services</div>
-        <a href="{{ route("client.services.index") }}" style="padding-left:36px">My Services</a>
-        <a href="{{ route("client.store") }}" style="padding-left:36px">Order New</a>
-        <div class="pn-mobile-sec">Billing</div>
-        <a href="{{ route("client.invoices.index") }}" style="padding-left:36px">Invoices</a>
-        <a href="{{ route("client.funds.index") }}" style="padding-left:36px">Add Funds</a>
-        <div class="pn-mobile-sec">Support</div>
-        <a href="{{ route("client.tickets.create") }}" style="padding-left:36px">Open Ticket</a>
-        <a href="{{ route("client.tickets.index") }}" style="padding-left:36px">My Tickets</a>
-        <a href="{{ route("client.kb.index") }}" style="padding-left:36px">Knowledge Base</a>
-        <a href="{{ route("client.announcements.index") }}" style="padding-left:36px">Announcements</a>
-        <div class="pn-mobile-sec">Account</div>
-        <a href="{{ route("client.account.profile") }}" style="padding-left:36px">Profile</a>
-        <a href="{{ route("client.account.password") }}" style="padding-left:36px">Password</a>
-        <a href="{{ route("client.account.contacts") }}" style="padding-left:36px">Contacts</a>
+        <a href="{{ route("client.home") }}">{{ __('client.nav.dashboard') }}</a>
+        <div class="pn-mobile-sec">{{ __('client.nav.services') }}</div>
+        <a href="{{ route("client.services.index") }}" style="padding-left:36px">{{ __('client.nav.my_services') }}</a>
+        <a href="{{ route("client.store") }}" style="padding-left:36px">{{ __('client.nav.order_new') }}</a>
+        <div class="pn-mobile-sec">{{ __('client.nav.billing') }}</div>
+        <a href="{{ route("client.invoices.index") }}" style="padding-left:36px">{{ __('client.nav.invoices') }}</a>
+        <a href="{{ route("client.funds.index") }}" style="padding-left:36px">{{ __('client.nav.add_funds') }}</a>
+        <div class="pn-mobile-sec">{{ __('client.nav.support') }}</div>
+        <a href="{{ route("client.tickets.create") }}" style="padding-left:36px">{{ __('client.nav.open_ticket') }}</a>
+        <a href="{{ route("client.tickets.index") }}" style="padding-left:36px">{{ __('client.nav.my_tickets') }}</a>
+        <a href="{{ route("client.kb.index") }}" style="padding-left:36px">{{ __('client.nav.knowledge_base') }}</a>
+        <a href="{{ route("client.announcements.index") }}" style="padding-left:36px">{{ __('client.nav.announcements') }}</a>
+        <div class="pn-mobile-sec">{{ __('client.nav.account') }}</div>
+        <a href="{{ route("client.account.profile") }}" style="padding-left:36px">{{ __('client.nav.profile') }}</a>
+        <a href="{{ route("client.account.password") }}" style="padding-left:36px">{{ __('client.nav.password') }}</a>
+        <a href="{{ route("client.account.contacts") }}" style="padding-left:36px">{{ __('client.nav.contacts') }}</a>
         @auth
         <div style="padding:12px 24px 8px;">
             <form method="POST" action="{{ route("client.logout") }}" style="margin:0;">
                 @csrf
-                <button type="submit" class="btn btn-danger btn-sm" style="width:100%;justify-content:center;">Sign Out</button>
+                <button type="submit" class="btn btn-danger btn-sm" style="width:100%;justify-content:center;">{{ __('client.nav.sign_out') }}</button>
             </form>
         </div>
         @endauth
@@ -527,13 +521,13 @@
 </div>
 
 <footer class="pn-footer">
-    <span>&copy; {{ date("Y") }} PNLCS. All rights reserved.</span>
+    <span>&copy; {{ date("Y") }} PNLCS. {{ __('client.footer.all_rights_reserved') }}</span>
     &nbsp;&middot;&nbsp;
-    <a href="{{ route("client.contact") }}">Contact</a>
+    <a href="{{ route("client.contact") }}">{{ __('client.nav.contact') }}</a>
     &nbsp;&middot;&nbsp;
-    <a href="{{ route("client.announcements.index") }}">Announcements</a>
+    <a href="{{ route("client.announcements.index") }}">{{ __('client.nav.announcements') }}</a>
     &nbsp;&middot;&nbsp;
-    <a href="{{ route("client.kb.index") }}">Knowledge Base</a>
+    <a href="{{ route("client.kb.index") }}">{{ __('client.nav.knowledge_base') }}</a>
 </footer>
 
 @yield("scripts")

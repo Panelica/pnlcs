@@ -85,6 +85,6 @@ class AffiliateController extends Controller
             'date' => now(),
         ]);
 
-        return back()->with('success', "Payout of \${$amount} processed.");
+        return back()->with("success", __("admin.messages.payout_processed", ["amount" => $amount]));
     }
 }

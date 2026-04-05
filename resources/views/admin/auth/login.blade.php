@@ -15,7 +15,7 @@
             <span style="color:#fff;font-size:22px;font-weight:700;">P</span>
         </div>
         <h1 style="margin:0;font-size:22px;font-weight:700;color:#1a4d80;">PNLCS</h1>
-        <p style="margin:4px 0 0;font-size:13px;color:#666;">Administration Area</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#666;">{{ __('admin.auth.administration_area') }}</p>
     </div>
 
     <!-- Card -->
@@ -41,7 +41,7 @@
                 <input type="text" name="username" id="username" value="{{ old("username") }}"
                     autocomplete="username" required
                     class="form-control"
-                    placeholder="Enter your username">
+                    placeholder="{{ __('admin.auth.enter_username') }}">
             </div>
 
             <div class="form-group">
@@ -55,7 +55,7 @@
             <div style="margin-bottom:18px;display:flex;align-items:center;gap:8px;">
                 <input type="checkbox" name="remember" id="remember"
                     style="width:14px;height:14px;accent-color:#337ab7;cursor:pointer;">
-                <label for="remember" style="font-size:13px;color:#555;cursor:pointer;margin:0;">Remember me</label>
+                <label for="remember" style="font-size:13px;color:#555;cursor:pointer;margin:0;">{{ __('admin.auth.remember_me') }}</label>
             </div>
 
             <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:8px 14px;font-size:14px;">

@@ -1,10 +1,10 @@
 @extends('admin.layouts.app')
-@section('title', 'Ticket Statuses')
+@section('title', __('admin.ticket_statuses.title'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Ticket Statuses</h1>
-    <button type="button" onclick="document.getElementById('modal-add-ts').style.display='flex'" class="btn btn-primary btn-sm">+ Add Status</button>
+    <h1>{{ __('admin.ticket_statuses.title') }}</h1>
+    <button type="button" onclick="document.getElementById('modal-add-ts').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.ticket_statuses.add_status') }}</button>
 </div>
 <div class="card">
     @if(($statuses ?? collect())->isEmpty())
@@ -41,20 +41,20 @@
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-ts').style.display='none'"></div>
     <div style="position:relative;background:#fff;border-radius:4px;width:420px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;">Add Ticket Status</h4>
+            <h4 style="margin:0;font-size:16px;">{{ __('admin.ticket_statuses.add_status') }}</h4>
             <button type="button" onclick="document.getElementById('modal-add-ts').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form method="POST" action="{{ route('admin.config.ticket-statuses.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Status Name</label><input type="text" name="title" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.ticket_statuses.status_name') }}</label><input type="text" name="title" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">Color (hex)</label><input type="color" name="color" value="#337ab7" class="form-control" style="height:38px;padding:2px 6px;"></div>
-                <div class="form-group"><label class="form-label">Sort Order</label><input type="number" name="order" value="0" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.ticket_statuses.sort_order') }}</label><input type="number" name="order" value="0" class="form-control"></div>
                 <div class="form-group"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="show_client" value="1" checked> Show to clients</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-ts').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
-                <button type="submit" class="btn btn-primary btn-sm">Add Status</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.ticket_statuses.add_status') }}</button>
             </div>
         </form>
     </div>
@@ -70,9 +70,9 @@
         <form method="POST" id="edit-ts-form" action="">
             @csrf @method('PUT')
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Status Name</label><input type="text" name="title" id="ets-title" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Color</label><input type="color" name="color" id="ets-color" class="form-control" style="height:38px;padding:2px 6px;"></div>
-                <div class="form-group"><label class="form-label">Sort Order</label><input type="number" name="order" id="ets-order" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.ticket_statuses.status_name') }}</label><input type="text" name="title" id="ets-title" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.ticket_statuses.color') }}</label><input type="color" name="color" id="ets-color" class="form-control" style="height:38px;padding:2px 6px;"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.ticket_statuses.sort_order') }}</label><input type="number" name="order" id="ets-order" class="form-control"></div>
                 <div class="form-group"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="show_client" value="1" id="ets-show"> Show to clients</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

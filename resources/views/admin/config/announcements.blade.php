@@ -1,9 +1,9 @@
 @extends('admin.layouts.app')
-@section('title', 'Announcements')
+@section('title', __('admin.announcements.title'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Announcements</h1>
+    <h1>{{ __('admin.announcements.title') }}</h1>
     <button type="button" onclick="openModal('add-announcement')" class="btn btn-primary btn-sm">+ New Announcement</button>
 </div>
 <div class="card">
@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">No announcements posted.</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Title</th><th>{{ __('common.table.date') }}</th><th>Published</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>Title</th><th>{{ __('common.table.date') }}</th><th>{{ __('admin.announcements.published') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($announcements as $ann)
         <tr>
@@ -38,9 +38,9 @@
 <x-modal name="add-announcement" title="New Announcement" maxWidth="lg">
     <form method="POST" action="{{ route('admin.config.announcements.store') }}">
         @csrf
-        <div class="form-group"><label class="form-label">Title</label><input type="text" name="title" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
         <div class="form-group"><label class="form-label">Date</label><input type="date" name="date" value="{{ now()->toDateString() }}" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">Content</label><textarea name="body" rows="6" class="form-control" required></textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required></textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="checkbox" name="published" value="1" checked>
@@ -58,9 +58,9 @@
 <x-modal :name="'edit-ann-' . $loop->index" title="Edit Announcement" maxWidth="lg">
     <form method="POST" action="{{ route('admin.config.announcements.update', $ann) }}">
         @csrf @method('PUT')
-        <div class="form-group"><label class="form-label">Title</label><input type="text" name="title" value="{{ $ann->title }}" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $ann->title }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">Date</label><input type="date" name="date" value="{{ $ann->date?->format('Y-m-d') ?? $ann->created_at->format('Y-m-d') }}" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">Content</label><textarea name="body" rows="6" class="form-control" required>{{ $ann->body }}</textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required>{{ $ann->body }}</textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="hidden" name="published" value="0">

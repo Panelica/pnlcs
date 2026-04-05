@@ -1,17 +1,17 @@
 @extends('admin.layouts.app')
-@section('title', 'Banned Emails')
+@section('title', __('admin.banned_emails.title'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Banned Emails</h1>
-    <button type="button" onclick="document.getElementById('modal-add-be').style.display='flex'" class="btn btn-primary btn-sm">+ Ban Email</button>
+    <h1>{{ __('admin.banned_emails.title') }}</h1>
+    <button type="button" onclick="document.getElementById('modal-add-be').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.banned_emails.ban_email') }}</button>
 </div>
 <div class="card">
     @if(($bannedEmails ?? collect())->isEmpty())
-    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No banned emails or domains.</div>
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.banned_emails.no_banned') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Email / Domain</th><th>Reason</th><th>Banned On</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.banned_emails.email_domain') }}</th><th>{{ __('admin.banned_emails.reason') }}</th><th>{{ __('admin.banned_emails.banned_on') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($bannedEmails as $ban)
         <tr>
@@ -35,18 +35,18 @@
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-be').style.display='none'"></div>
     <div style="position:relative;background:#fff;border-radius:4px;width:420px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;">Ban Email / Domain</h4>
+            <h4 style="margin:0;font-size:16px;">{{ __('admin.banned_emails.ban_email_domain') }}</h4>
             <button type="button" onclick="document.getElementById('modal-add-be').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form method="POST" action="{{ route('admin.config.banned-emails.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Email or Domain</label><input type="text" name="email" required class="form-control" placeholder="spam@example.com or @example.com"></div>
-                <div class="form-group"><label class="form-label">Reason</label><input type="text" name="reason" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.email_domain') }}</label><input type="text" name="email" required class="form-control" placeholder="spam@example.com or @example.com"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.reason') }}</label><input type="text" name="reason" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-be').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
-                <button type="submit" class="btn btn-danger btn-sm">Ban Email</button>
+                <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.banned_emails.ban_email') }}</button>
             </div>
         </form>
     </div>

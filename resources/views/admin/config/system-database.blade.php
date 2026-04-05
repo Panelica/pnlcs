@@ -1,27 +1,27 @@
 @extends('admin.layouts.app')
-@section('title', 'System Database')
+@section('title', __('admin.system_database.title'))
 @section('content')
 
 <div class="page-header">
-    <h1>System Database</h1>
+    <h1>{{ __('admin.system_database.title') }}</h1>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:15px;">
     <div class="stat-card">
         <div class="stat-value">{{ $tableCount ?? '?' }}</div>
-        <div class="stat-label">Total Tables</div>
+        <div class="stat-label">{{ __('admin.system_database.total_tables') }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-value">{{ $dbSize ?? '?' }}</div>
-        <div class="stat-label">Database Size</div>
+        <div class="stat-label">{{ __('admin.system_database.database_size') }}</div>
     </div>
 </div>
 
 @if(isset($tables) && count($tables) > 0)
 <div class="card">
-    <div class="card-header"><strong>Table Status</strong></div>
+    <div class="card-header"><strong>{{ __('admin.system_database.table_status') }}</strong></div>
     <table class="data-table">
-        <thead><tr><th>Table Name</th><th>Engine</th><th>Rows</th><th>Data Size</th><th>Index Size</th><th>{{ __('common.table.status') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.system_database.table_name') }}</th><th>{{ __('admin.system_database.engine') }}</th><th>{{ __('admin.system_database.rows') }}</th><th>{{ __('admin.system_database.data_size') }}</th><th>{{ __('admin.system_database.index_size') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
         <tbody>
         @foreach($tables as $table)
         <tr>

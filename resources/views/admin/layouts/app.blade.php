@@ -57,51 +57,51 @@
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-plus"></i>{{ __('common.actions.add_new') }}</a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ route('admin.clients.create') }}"><i class="fas fa-user"></i> New Client</a></li>
-                    <li><a href="{{ route('admin.orders.index') }}"><i class="fas fa-cube"></i> New Order</a></li>
-                    <li><a href="{{ route('admin.invoices.create') }}"><i class="fas fa-file-invoice"></i> New Invoice</a></li>
-                    <li><a href="{{ route('admin.quotes.create') }}"><i class="fas fa-file-signature"></i> New Quote</a></li>
-                    <li><a href="{{ route('admin.tickets.index') }}"><i class="fas fa-life-ring"></i> New Ticket</a></li>
+                    <li><a href="{{ route('admin.clients.create') }}"><i class="fas fa-user"></i> {{ __('admin.nav.new_client') }}</a></li>
+                    <li><a href="{{ route('admin.orders.index') }}"><i class="fas fa-cube"></i> {{ __('admin.nav.new_order') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.create') }}"><i class="fas fa-file-invoice"></i> {{ __('admin.nav.new_invoice') }}</a></li>
+                    <li><a href="{{ route('admin.quotes.create') }}"><i class="fas fa-file-signature"></i> {{ __('admin.nav.new_quote') }}</a></li>
+                    <li><a href="{{ route('admin.tickets.index') }}"><i class="fas fa-life-ring"></i> {{ __('admin.nav.new_ticket') }}</a></li>
                 </ul>
             </li>
 
             {{-- Clients --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-user"></i> Clients</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-user"></i> {{ __('admin.nav.clients') }}</a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ route('admin.clients.index') }}">View/Search Clients</a></li>
-                    <li><a href="{{ route('admin.clients.create') }}">Add New Client</a></li>
+                    <li><a href="{{ route('admin.clients.index') }}">{{ __('admin.nav.view_search_clients') }}</a></li>
+                    <li><a href="{{ route('admin.clients.create') }}">{{ __('admin.nav.add_new_client') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.services.index') }}">Products/Services</a></li>
-                    <li><a href="{{ route('admin.domains.index') }}">Domains</a></li>
-                    <li><a href="{{ route('admin.ssl.index') }}"><i class="fas fa-lock"></i> SSL Certificates</a></li>
+                    <li><a href="{{ route('admin.services.index') }}">{{ __('admin.nav.products_services') }}</a></li>
+                    <li><a href="{{ route('admin.domains.index') }}">{{ __('admin.nav.domains') }}</a></li>
+                    <li><a href="{{ route('admin.ssl.index') }}"><i class="fas fa-lock"></i> {{ __('admin.nav.ssl_certificates') }}</a></li>
                 </ul>
             </li>
 
             {{-- Orders --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-shopping-cart"></i> Orders</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-shopping-cart"></i> {{ __('admin.nav.orders') }}</a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ route('admin.orders.index') }}">List All Orders</a></li>
-                    <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">Pending</a></li>
-                    <li><a href="{{ route('admin.orders.index', ['status' => 'active']) }}">Active</a></li>
-                    <li><a href="{{ route('admin.orders.index', ['status' => 'fraud']) }}">Fraud</a></li>
+                    <li><a href="{{ route('admin.orders.index') }}">{{ __('admin.nav.list_all_orders') }}</a></li>
+                    <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">{{ __('admin.nav.pending') }}</a></li>
+                    <li><a href="{{ route('admin.orders.index', ['status' => 'active']) }}">{{ __('admin.nav.active') }}</a></li>
+                    <li><a href="{{ route('admin.orders.index', ['status' => 'fraud']) }}">{{ __('admin.nav.fraud') }}</a></li>
                     <li><a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}">Cancelled</a></li>
                 </ul>
             </li>
 
             {{-- Billing --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-credit-card"></i> Billing</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-credit-card"></i> {{ __('admin.nav.billing') }}</a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ route('admin.invoices.index') }}">Invoices</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}">Paid Invoices</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Unpaid']) }}">Unpaid Invoices</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}">Overdue Invoices</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Cancelled']) }}">Cancelled Invoices</a></li>
+                    <li><a href="{{ route('admin.invoices.index') }}">{{ __('admin.nav.invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}">{{ __('admin.nav.paid_invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Unpaid']) }}">{{ __('admin.nav.unpaid_invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}">{{ __('admin.nav.overdue_invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Cancelled']) }}">{{ __('admin.nav.cancelled_invoices') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.transactions') }}">Transactions</a></li>
-                    <li><a href="{{ route('admin.config.billable-items') }}">Billable Items</a></li>
+                    <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
+                    <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.quotes.index') }}">Quotes</a></li>
                 </ul>
@@ -109,37 +109,37 @@
 
             {{-- Support --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-life-ring"></i> Support</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-life-ring"></i> {{ __('admin.nav.support') }}</a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ route('admin.tickets.index') }}">Support Tickets</a></li>
-                    <li><a href="{{ route('admin.tickets.index') }}">Open Ticket</a></li>
+                    <li><a href="{{ route('admin.tickets.index') }}">{{ __('admin.nav.support_tickets') }}</a></li>
+                    <li><a href="{{ route('admin.tickets.index') }}">{{ __('admin.nav.open_ticket') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.announcements') }}">Announcements</a></li>
-                    <li><a href="{{ route('admin.config.downloads') }}">Downloads</a></li>
-                    <li><a href="{{ route('admin.config.knowledge-base') }}">Knowledge Base</a></li>
-                    <li><a href="{{ route('admin.config.network-issues') }}">Network Issues</a></li>
+                    <li><a href="{{ route('admin.config.announcements') }}">{{ __('admin.nav.announcements') }}</a></li>
+                    <li><a href="{{ route('admin.config.downloads') }}">{{ __('admin.nav.downloads') }}</a></li>
+                    <li><a href="{{ route('admin.config.knowledge-base') }}">{{ __('admin.nav.knowledge_base') }}</a></li>
+                    <li><a href="{{ route('admin.config.network-issues') }}">{{ __('admin.nav.network_issues') }}</a></li>
                 </ul>
             </li>
 
             {{-- Reports --}}
             <li style="float:left; width:auto;">
-                <a href="{{ route('admin.reports.index') }}"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="{{ route('admin.reports.index') }}"><i class="fas fa-chart-bar"></i> {{ __('admin.nav.reports') }}</a>
             </li>
 
             {{-- Utilities --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-wrench"></i> Utilities</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-wrench"></i> {{ __('admin.nav.utilities') }}</a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ route('admin.config.automation') }}">Automation Status</a></li>
-                    <li><a href="{{ route('admin.config.todo') }}">To-Do List</a></li>
-                    <li><a href="{{ route('admin.calendar') }}">Calendar</a></li>
+                    <li><a href="{{ route('admin.config.automation') }}">{{ __('admin.nav.automation_status') }}</a></li>
+                    <li><a href="{{ route('admin.config.todo') }}">{{ __('admin.nav.todo_list') }}</a></li>
+                    <li><a href="{{ route('admin.calendar') }}">{{ __('admin.nav.calendar') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.activity-log') }}">Activity Log</a></li>
-                    <li><a href="{{ route('admin.logs.index') }}">System Logs</a></li>
+                    <li><a href="{{ route('admin.config.activity-log') }}">{{ __('admin.nav.activity_log') }}</a></li>
+                    <li><a href="{{ route('admin.logs.index') }}">{{ __('admin.nav.system_logs') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.system-database') }}">System Database</a></li>
-                    <li><a href="{{ route('admin.config.system-phpinfo') }}">PHP Info</a></li>
-                    <li><a href="{{ route('admin.whois.index') }}">WHOIS Lookup</a></li>
+                    <li><a href="{{ route('admin.config.system-database') }}">{{ __('admin.nav.system_database') }}</a></li>
+                    <li><a href="{{ route('admin.config.system-phpinfo') }}">{{ __('admin.nav.php_info') }}</a></li>
+                    <li><a href="{{ route('admin.whois.index') }}">{{ __('admin.nav.whois_lookup') }}</a></li>
                 </ul>
             </li>
         </ul>
@@ -161,7 +161,7 @@
             {{-- Pending Orders Badge --}}
             @if(($sidebarCounts->pending_orders ?? 0) > 0)
             <li style="float:left; width:auto;">
-                <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" title="Pending Orders" style="position:relative;">
+                <a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" title="{{ __('admin.nav.pending_orders') }}" style="position:relative;">
                     <i class="fas fa-shopping-cart"></i> <span class="nav-badge nav-badge-warning">{{ $sidebarCounts->pending_orders }}</span>
                 </a>
             </li>
@@ -170,7 +170,7 @@
             {{-- Overdue Invoices Badge --}}
             @if(($sidebarCounts->overdue_invoices ?? 0) > 0)
             <li style="float:left; width:auto;">
-                <a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}" title="Overdue Invoices" style="position:relative;">
+                <a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}" title="{{ __('admin.nav.overdue_invoices') }}" style="position:relative;">
                     <i class="fas fa-dollar-sign"></i> <span class="nav-badge">{{ $sidebarCounts->overdue_invoices }}</span>
                 </a>
             </li>
@@ -179,7 +179,7 @@
             {{-- Open Tickets Badge --}}
             @if(($sidebarCounts->open_tickets ?? 0) > 0)
             <li style="float:left; width:auto;">
-                <a href="{{ route('admin.tickets.index') }}" title="Open Tickets" style="position:relative;">
+                <a href="{{ route('admin.tickets.index') }}" title="{{ __('admin.nav.open_tickets') }}" style="position:relative;">
                     <i class="fas fa-ticket-alt"></i> <span class="nav-badge nav-badge-info">{{ $sidebarCounts->open_tickets }}</span>
                 </a>
             </li>
@@ -187,42 +187,42 @@
 
             {{-- Setup / Config --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
-                <a href="#" onclick="event.preventDefault();"><i class="fas fa-cogs"></i> Setup</a>
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-cogs"></i> {{ __('admin.nav.setup') }}</a>
                 <ul class="dropdown-menu" style="right:0; left:auto;">
-                    <li><a href="{{ route('admin.config.admins') }}">Admin Accounts</a></li>
-                    <li><a href="{{ route('admin.config.admin-roles') }}">Admin Roles</a></li>
-                    <li><a href="{{ route('admin.config.api-credentials') }}">API Credentials</a></li>
-                    <li><a href="{{ route('admin.api-docs') }}">API Documentation</a></li>
+                    <li><a href="{{ route('admin.config.admins') }}">{{ __('admin.nav.admin_accounts') }}</a></li>
+                    <li><a href="{{ route('admin.config.admin-roles') }}">{{ __('admin.nav.admin_roles') }}</a></li>
+                    <li><a href="{{ route('admin.config.api-credentials') }}">{{ __('admin.nav.api_credentials') }}</a></li>
+                    <li><a href="{{ route('admin.api-docs') }}">{{ __('admin.nav.api_documentation') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.products.index') }}">Products/Services</a></li>
-                    <li><a href="{{ route('admin.config.servers') }}">Servers</a></li>
-                    <li><a href="{{ route('admin.config.server-groups') }}">Server Groups</a></li>
-                    <li><a href="{{ route('admin.config.domain-pricing') }}">Domain Pricing</a></li>
+                    <li><a href="{{ route('admin.config.servers') }}">{{ __('admin.nav.servers') }}</a></li>
+                    <li><a href="{{ route('admin.config.server-groups') }}">{{ __('admin.nav.server_groups') }}</a></li>
+                    <li><a href="{{ route('admin.config.domain-pricing') }}">{{ __('admin.nav.domain_pricing') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.gateways') }}">Payment Gateways</a></li>
-                    <li><a href="{{ route('admin.config.registrars') }}">Domain Registrars</a></li>
-                    <li><a href="{{ route('admin.config.sslModules') }}">SSL Modules</a></li>
+                    <li><a href="{{ route('admin.config.gateways') }}">{{ __('admin.nav.payment_gateways') }}</a></li>
+                    <li><a href="{{ route('admin.config.registrars') }}">{{ __('admin.nav.domain_registrars') }}</a></li>
+                    <li><a href="{{ route('admin.config.sslModules') }}">{{ __('admin.nav.ssl_modules') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.languages.index') }}"><i class="fas fa-language"></i> Languages</a></li>
+                    <li><a href="{{ route('admin.config.languages.index') }}"><i class="fas fa-language"></i> {{ __('admin.nav.languages') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.currencies') }}">Currencies</a></li>
-                    <li><a href="{{ route('admin.config.tax') }}">Tax Rules</a></li>
-                    <li><a href="{{ route('admin.config.promotions') }}">Promotions</a></li>
+                    <li><a href="{{ route('admin.config.currencies') }}">{{ __('admin.nav.currencies') }}</a></li>
+                    <li><a href="{{ route('admin.config.tax') }}">{{ __('admin.nav.tax_rules') }}</a></li>
+                    <li><a href="{{ route('admin.config.promotions') }}">{{ __('admin.nav.promotions') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.ticket-departments') }}">Ticket Departments</a></li>
-                    <li><a href="{{ route('admin.config.ticket-statuses') }}">Ticket Statuses</a></li>
-                    <li><a href="{{ route('admin.config.email-templates') }}">Email Templates</a></li>
+                    <li><a href="{{ route('admin.config.ticket-departments') }}">{{ __('admin.nav.ticket_departments') }}</a></li>
+                    <li><a href="{{ route('admin.config.ticket-statuses') }}">{{ __('admin.nav.ticket_statuses') }}</a></li>
+                    <li><a href="{{ route('admin.config.email-templates') }}">{{ __('admin.nav.email_templates') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.settings.general') }}">General Settings</a></li>
-                    <li><a href="{{ route('admin.settings.appearance') }}">Appearance</a></li>
-                    <li><a href="{{ route('admin.config.banned-ips') }}">Banned IPs</a></li>
-                    <li><a href="{{ route('admin.config.banned-emails') }}">Banned Emails</a></li>
-                    <li><a href="{{ route('admin.config.client-groups') }}">Client Groups</a></li>
+                    <li><a href="{{ route('admin.settings.general') }}">{{ __('admin.nav.general_settings') }}</a></li>
+                    <li><a href="{{ route('admin.settings.appearance') }}">{{ __('admin.nav.appearance') }}</a></li>
+                    <li><a href="{{ route('admin.config.banned-ips') }}">{{ __('admin.nav.banned_ips') }}</a></li>
+                    <li><a href="{{ route('admin.config.banned-emails') }}">{{ __('admin.nav.banned_emails') }}</a></li>
+                    <li><a href="{{ route('admin.config.client-groups') }}">{{ __('admin.nav.client_groups') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.config.notifications') }}">Notification Channels</a></li>
-                    <li><a href="{{ route('admin.config.ticket-spam') }}">Ticket Spam Filter</a></li>
-                    <li><a href="{{ route('admin.config.addons') }}">Product Addons</a></li>
-                    <li><a href="{{ route('admin.config.bundles') }}">Product Bundles</a></li>
+                    <li><a href="{{ route('admin.config.notifications') }}">{{ __('admin.nav.notification_channels') }}</a></li>
+                    <li><a href="{{ route('admin.config.ticket-spam') }}">{{ __('admin.nav.ticket_spam_filter') }}</a></li>
+                    <li><a href="{{ route('admin.config.addons') }}">{{ __('admin.nav.product_addons') }}</a></li>
+                    <li><a href="{{ route('admin.config.bundles') }}">{{ __('admin.nav.product_bundles') }}</a></li>
                 </ul>
             </li>
 
@@ -232,8 +232,8 @@
                     <i class="fas fa-user"></i> {{ auth('admin')->user()->full_name ?? 'Admin' }}
                 </a>
                 <ul class="dropdown-menu" style="right:0; left:auto;">
-                    <li><a href="{{ route('admin.my-account') }}">My Account</a></li>
-                    <li><a href="/" target="_blank">Client Area</a></li>
+                    <li><a href="{{ route('admin.my-account') }}">{{ __('admin.nav.my_account') }}</a></li>
+                    <li><a href="/" target="_blank">{{ __('admin.nav.client_area') }}</a></li>
                     <li class="divider"></li>
                     <li>
                         <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">{{ __('common.actions.logout') }}</a>
@@ -260,82 +260,82 @@
 
     {{-- ── Dashboard Sidebar ── --}}
     @if($segment === '' || $segment === 'dashboard' || $routeName === 'admin.dashboard')
-        <div class="sidebar-header"><i class="fas fa-star"></i> Shortcuts</div>
+        <div class="sidebar-header"><i class="fas fa-star"></i> {{ __('admin.sidebar.shortcuts') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.clients.create') }}">Add New Client</a></li>
+            <li><a href="{{ route('admin.clients.create') }}">{{ __('admin.nav.add_new_client') }}</a></li>
             <li><a href="{{ route('admin.invoices.create') }}">Create Invoice</a></li>
-            <li><a href="{{ route('admin.quotes.create') }}">Create Quote</a></li>
-            <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">Pending Orders @if(($sidebarCounts->pending_orders ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}">Overdue Invoices @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.tickets.index') }}">Open Tickets @if(($sidebarCounts->open_tickets ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->open_tickets }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.quotes.create') }}">{{ __('admin.sidebar.create_quote') }}</a></li>
+            <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">{{ __('admin.nav.pending_orders') }} @if(($sidebarCounts->pending_orders ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}">{{ __('admin.nav.overdue_invoices') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.tickets.index') }}">{{ __('admin.nav.open_tickets') }} @if(($sidebarCounts->open_tickets ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->open_tickets }}</span>@endif</a></li>
         </ul>
 
-        <div class="sidebar-header"><i class="fas fa-wrench"></i> System Overview</div>
+        <div class="sidebar-header"><i class="fas fa-wrench"></i> {{ __('admin.sidebar.system_overview') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.automation') }}">Automation Status</a></li>
-            <li><a href="{{ route('admin.config.activity-log') }}">Activity Log</a></li>
+            <li><a href="{{ route('admin.config.automation') }}">{{ __('admin.nav.automation_status') }}</a></li>
+            <li><a href="{{ route('admin.config.activity-log') }}">{{ __('admin.nav.activity_log') }}</a></li>
             <li><a href="{{ route('admin.logs.index') }}">System Logs</a></li>
-            <li><a href="{{ route('admin.config.system-phpinfo') }}">PHP Info</a></li>
+            <li><a href="{{ route('admin.config.system-phpinfo') }}">{{ __('admin.nav.php_info') }}</a></li>
             <li><a href="{{ route('admin.whois.index') }}" @if($routeName === 'admin.whois.index' || $routeName === 'admin.whois.lookup') class="active" @endif>WHOIS Lookup</a></li>
         </ul>
 
     {{-- ── Clients Sidebar ── --}}
     @elseif(str_starts_with($segment, 'client'))
-        <div class="sidebar-header"><i class="fas fa-user"></i> Clients</div>
+        <div class="sidebar-header"><i class="fas fa-user"></i> {{ __('admin.sidebar.clients') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.clients.index') }}" @if($routeName === 'admin.clients.index') class="active" @endif>View/Search Clients</a></li>
+            <li><a href="{{ route('admin.clients.index') }}" @if($routeName === 'admin.clients.index') class="active" @endif>{{ __('admin.nav.view_search_clients') }}</a></li>
             <li><a href="{{ route('admin.clients.create') }}" @if($routeName === 'admin.clients.create') class="active" @endif>Add New Client</a></li>
         </ul>
-        <div class="sidebar-header"><i class="fas fa-cube"></i> Services</div>
+        <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.services') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.services.index') }}" @if($routeName === 'admin.services.index') class="active" @endif>Products/Services</a></li>
             <li><a href="{{ route('admin.domains.index') }}" @if($routeName === 'admin.domains.index') class="active" @endif>Domains</a></li>
         </ul>
-        <div class="sidebar-header"><i class="fas fa-coins"></i> Affiliates</div>
+        <div class="sidebar-header"><i class="fas fa-coins"></i> {{ __('admin.sidebar.affiliates') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.affiliates') }}">Affiliate Accounts</a></li>
+            <li><a href="{{ route('admin.config.affiliates') }}">{{ __('admin.sidebar.affiliate_accounts') }}</a></li>
         </ul>
 
     {{-- ── Orders Sidebar ── --}}
     @elseif($segment === 'orders')
-        <div class="sidebar-header"><i class="fas fa-cube"></i> Orders</div>
+        <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.orders') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.orders.index') }}" @if(!request()->has('status')) class="active" @endif>All Orders</a></li>
-            <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" @if(request()->get('status') === 'pending') class="active" @endif>Pending @if(($sidebarCounts->pending_orders ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.orders.index', ['status' => 'active']) }}" @if(request()->get('status') === 'active') class="active" @endif>Active</a></li>
-            <li><a href="{{ route('admin.orders.index', ['status' => 'fraud']) }}" @if(request()->get('status') === 'fraud') class="active" @endif>Fraud</a></li>
+            <li><a href="{{ route('admin.orders.index') }}" @if(!request()->has('status')) class="active" @endif>{{ __('admin.sidebar.all_orders') }}</a></li>
+            <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" @if(request()->get('status') === 'pending') class="active" @endif>{{ __('admin.nav.pending') }} @if(($sidebarCounts->pending_orders ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.orders.index', ['status' => 'active']) }}" @if(request()->get('status') === 'active') class="active" @endif>{{ __('admin.nav.active') }}</a></li>
+            <li><a href="{{ route('admin.orders.index', ['status' => 'fraud']) }}" @if(request()->get('status') === 'fraud') class="active" @endif>{{ __('admin.nav.fraud') }}</a></li>
             <li><a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}" @if(request()->get('status') === 'cancelled') class="active" @endif>Cancelled</a></li>
         </ul>
 
     {{-- ── Invoices / Billing Sidebar ── --}}
     @elseif($segment === 'invoices' || $segment === 'quotes' || $routeName === 'admin.config.transactions' || $routeName === 'admin.config.billable-items')
-        <div class="sidebar-header"><i class="fas fa-money-bill-wave"></i> Billing</div>
+        <div class="sidebar-header"><i class="fas fa-money-bill-wave"></i> {{ __('admin.nav.billing') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.invoices.index') }}" @if($routeName === 'admin.invoices.index' && !request()->has('status')) class="active" @endif>All Invoices</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}" @if(request()->get('status') === 'Paid') class="active" @endif>Paid</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Unpaid']) }}" @if(request()->get('status') === 'Unpaid') class="active" @endif>Unpaid @if(($sidebarCounts->unpaid_invoices ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}" @if(request()->get('status') === 'Overdue') class="active" @endif>Overdue @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.invoices.index') }}" @if($routeName === 'admin.invoices.index' && !request()->has('status')) class="active" @endif>{{ __('admin.sidebar.all_invoices') }}</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}" @if(request()->get('status') === 'Paid') class="active" @endif>{{ __('admin.sidebar.paid') }}</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'Unpaid']) }}" @if(request()->get('status') === 'Unpaid') class="active" @endif>{{ __('admin.sidebar.unpaid') }} @if(($sidebarCounts->unpaid_invoices ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}" @if(request()->get('status') === 'Overdue') class="active" @endif>{{ __('admin.sidebar.overdue') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
             <li><a href="{{ route('admin.invoices.index', ['status' => 'Cancelled']) }}" @if(request()->get('status') === 'Cancelled') class="active" @endif>Cancelled</a></li>
-            <li><a href="{{ route('admin.invoices.create') }}" @if($routeName === 'admin.invoices.create') class="active" @endif>Create Invoice</a></li>
+            <li><a href="{{ route('admin.invoices.create') }}" @if($routeName === 'admin.invoices.create') class="active" @endif>{{ __('admin.sidebar.create_invoice') }}</a></li>
         </ul>
-        <div class="sidebar-header"><i class="fas fa-coins"></i> Transactions</div>
+        <div class="sidebar-header"><i class="fas fa-coins"></i> {{ __('admin.nav.transactions') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.config.transactions') }}" @if($routeName === 'admin.config.transactions') class="active" @endif>Transactions</a></li>
-            <li><a href="{{ route('admin.config.billable-items') }}" @if($routeName === 'admin.config.billable-items') class="active" @endif>Billable Items</a></li>
+            <li><a href="{{ route('admin.config.billable-items') }}" @if($routeName === 'admin.config.billable-items') class="active" @endif>{{ __('admin.nav.billable_items') }}</a></li>
         </ul>
-        <div class="sidebar-header"><i class="fas fa-file-signature"></i> Quotes</div>
+        <div class="sidebar-header"><i class="fas fa-file-signature"></i> {{ __('admin.nav.quotes') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.quotes.index') }}" @if($routeName === 'admin.quotes.index') class="active" @endif>Quotes</a></li>
-            <li><a href="{{ route('admin.quotes.create') }}" @if($routeName === 'admin.quotes.create') class="active" @endif>Create Quote</a></li>
+            <li><a href="{{ route('admin.quotes.create') }}" @if($routeName === 'admin.quotes.create') class="active" @endif>{{ __('admin.sidebar.create_quote') }}</a></li>
         </ul>
 
     {{-- ── Support / Tickets Sidebar ── --}}
     @elseif($segment === 'tickets')
-        <div class="sidebar-header"><i class="fas fa-life-ring"></i> Support</div>
+        <div class="sidebar-header"><i class="fas fa-life-ring"></i> {{ __('admin.nav.support') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.tickets.index') }}" @if($routeName === 'admin.tickets.index' && !request()->has('status')) class="active" @endif>All Tickets @if(($sidebarCounts->active_tickets ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->active_tickets }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.tickets.index', ['status' => 'Open']) }}" @if(request()->get('status') === 'Open') class="active" @endif>Open @if(($sidebarCounts->open_tickets_only ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->open_tickets_only }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.tickets.index', ['status' => 'Customer-Reply']) }}" @if(request()->get('status') === 'Customer-Reply') class="active" @endif>Awaiting Reply @if(($sidebarCounts->awaiting_tickets ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->awaiting_tickets }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.tickets.index') }}" @if($routeName === 'admin.tickets.index' && !request()->has('status')) class="active" @endif>{{ __('admin.sidebar.all_tickets') }} @if(($sidebarCounts->active_tickets ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->active_tickets }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.tickets.index', ['status' => 'Open']) }}" @if(request()->get('status') === 'Open') class="active" @endif>{{ __('admin.sidebar.open') }} @if(($sidebarCounts->open_tickets_only ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->open_tickets_only }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.tickets.index', ['status' => 'Customer-Reply']) }}" @if(request()->get('status') === 'Customer-Reply') class="active" @endif>{{ __('admin.sidebar.awaiting_reply') }} @if(($sidebarCounts->awaiting_tickets ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->awaiting_tickets }}</span>@endif</a></li>
             <li><a href="{{ route('admin.tickets.index', ['status' => 'Closed']) }}" @if(request()->get('status') === 'Closed') class="active" @endif>Closed</a></li>
         </ul>
 
@@ -343,26 +343,26 @@
         <div class="advanced-search">
             <form action="{{ route('admin.tickets.index') }}" method="GET">
                 <select name="department">
-                    <option value="">-- Department --</option>
+                    <option value="">{{ __('admin.sidebar.department') }}</option>
                 </select>
                 <select name="status">
-                    <option value="">-- Status --</option>
-                    <option value="Open">Open</option>
-                    <option value="Answered">Answered</option>
-                    <option value="Customer-Reply">Customer Reply</option>
-                    <option value="Closed">Closed</option>
+                    <option value="">{{ __('admin.sidebar.status') }}</option>
+                    <option value="Open">{{ __('admin.sidebar.open') }}</option>
+                    <option value="Answered">{{ __('admin.sidebar.answered') }}</option>
+                    <option value="Customer-Reply">{{ __('admin.sidebar.customer_reply') }}</option>
+                    <option value="Closed">{{ __('admin.sidebar.closed') }}</option>
                 </select>
                 <select name="priority">
-                    <option value="">-- Priority --</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
+                    <option value="">{{ __('admin.sidebar.priority') }}</option>
+                    <option value="High">{{ __('admin.sidebar.high') }}</option>
+                    <option value="Medium">{{ __('admin.sidebar.medium') }}</option>
+                    <option value="Low">{{ __('admin.sidebar.low') }}</option>
                 </select>
                 <button type="submit" class="btn-go">{{ __('common.actions.filter') }}</button>
             </form>
         </div>
 
-        <div class="sidebar-header"><i class="fas fa-bullhorn"></i> Content</div>
+        <div class="sidebar-header"><i class="fas fa-bullhorn"></i> {{ __('admin.sidebar.content') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.config.announcements') }}">Announcements</a></li>
             <li><a href="{{ route('admin.config.downloads') }}">Downloads</a></li>
@@ -372,118 +372,118 @@
 
     {{-- ── Reports Sidebar ── --}}
     @elseif($segment === 'reports')
-        <div class="sidebar-header"><i class="fas fa-chart-bar"></i> Reports</div>
+        <div class="sidebar-header"><i class="fas fa-chart-bar"></i> {{ __('admin.nav.reports') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.reports.index') }}" class="active">Reports Overview</a></li>
+            <li><a href="{{ route('admin.reports.index') }}" class="active">{{ __('admin.sidebar.reports_overview') }}</a></li>
         </ul>
 
     {{-- ── Config / Setup Sidebar ── --}}
     @elseif($segment === 'config' || $segment === 'settings' || $segment === 'products')
-        <div class="sidebar-header"><i class="fas fa-users-cog"></i> Staff Management</div>
+        <div class="sidebar-header"><i class="fas fa-users-cog"></i> {{ __('admin.sidebar.staff_management') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.admins') }}" @if($routeName === 'admin.config.admins') class="active" @endif>Administrator Accounts</a></li>
-            <li><a href="{{ route('admin.config.admin-roles') }}" @if($routeName === 'admin.config.admin-roles') class="active" @endif>Administrator Roles</a></li>
+            <li><a href="{{ route('admin.config.admins') }}" @if($routeName === 'admin.config.admins') class="active" @endif>{{ __('admin.sidebar.administrator_accounts') }}</a></li>
+            <li><a href="{{ route('admin.config.admin-roles') }}" @if($routeName === 'admin.config.admin-roles') class="active" @endif>{{ __('admin.sidebar.administrator_roles') }}</a></li>
             <li><a href="{{ route('admin.config.api-credentials') }}" @if($routeName === 'admin.config.api-credentials') class="active" @endif>API Credentials</a></li>
-            <li><a href="{{ route('admin.api-docs') }}" @if($routeName === 'admin.api-docs') class="active" @endif>API Documentation</a></li>
+            <li><a href="{{ route('admin.api-docs') }}" @if($routeName === 'admin.api-docs') class="active" @endif>{{ __('admin.nav.api_documentation') }}</a></li>
         </ul>
 
-        <div class="sidebar-header"><i class="fas fa-credit-card"></i> Payments</div>
+        <div class="sidebar-header"><i class="fas fa-credit-card"></i> {{ __('admin.sidebar.payments') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.gateways') }}" @if($routeName === 'admin.config.gateways') class="active" @endif>Payment Gateways</a></li>
+            <li><a href="{{ route('admin.config.gateways') }}" @if($routeName === 'admin.config.gateways') class="active" @endif>{{ __('admin.nav.payment_gateways') }}</a></li>
             <li><a href="{{ route('admin.config.currencies') }}" @if($routeName === 'admin.config.currencies') class="active" @endif>Currencies</a></li>
             <li><a href="{{ route('admin.config.tax') }}" @if($routeName === 'admin.config.tax') class="active" @endif>Tax Rules</a></li>
-            <li><a href="{{ route('admin.config.promotions') }}" @if($routeName === 'admin.config.promotions') class="active" @endif>Promotions</a></li>
+            <li><a href="{{ route('admin.config.promotions') }}" @if($routeName === 'admin.config.promotions') class="active" @endif>{{ __('admin.nav.promotions') }}</a></li>
         </ul>
 
-        <div class="sidebar-header"><i class="fas fa-cube"></i> Products</div>
+        <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.products') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.products.index') }}" @if($routeName === 'admin.products.index') class="active" @endif>Products/Services</a></li>
-            <li><a href="{{ route('admin.products.create') }}" @if($routeName === 'admin.products.create') class="active" @endif>Create Product</a></li>
-            <li><a href="{{ route('admin.products.groups.create') }}" @if($routeName === 'admin.products.groups.create') class="active" @endif>Product Groups</a></li>
+            <li><a href="{{ route('admin.products.create') }}" @if($routeName === 'admin.products.create') class="active" @endif>{{ __('admin.sidebar.create_product') }}</a></li>
+            <li><a href="{{ route('admin.products.groups.create') }}" @if($routeName === 'admin.products.groups.create') class="active" @endif>{{ __('admin.sidebar.product_groups') }}</a></li>
         </ul>
 
-        <div class="sidebar-header"><i class="fas fa-server"></i> Servers &amp; Domains</div>
+        <div class="sidebar-header"><i class="fas fa-server"></i> {{ __('admin.sidebar.servers_domains') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.config.servers') }}" @if($routeName === 'admin.config.servers') class="active" @endif>Servers</a></li>
-            <li><a href="{{ route('admin.config.server-groups') }}" @if($routeName === 'admin.config.server-groups') class="active" @endif>Server Groups</a></li>
-            <li><a href="{{ route('admin.config.domain-pricing') }}" @if($routeName === 'admin.config.domain-pricing') class="active" @endif>Domain Pricing</a></li>
+            <li><a href="{{ route('admin.config.server-groups') }}" @if($routeName === 'admin.config.server-groups') class="active" @endif>{{ __('admin.nav.server_groups') }}</a></li>
+            <li><a href="{{ route('admin.config.domain-pricing') }}" @if($routeName === 'admin.config.domain-pricing') class="active" @endif>{{ __('admin.nav.domain_pricing') }}</a></li>
             <li><a href="{{ route('admin.config.registrars') }}" @if($routeName === 'admin.config.registrars') class="active" @endif>Domain Registrars</a></li>
         </ul>
 
-        <div class="sidebar-header"><i class="fas fa-life-ring"></i> Support</div>
+        <div class="sidebar-header"><i class="fas fa-life-ring"></i> {{ __('admin.nav.support') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.ticket-departments') }}" @if($routeName === 'admin.config.ticket-departments') class="active" @endif>Ticket Departments</a></li>
-            <li><a href="{{ route('admin.config.ticket-statuses') }}" @if($routeName === 'admin.config.ticket-statuses') class="active" @endif>Ticket Statuses</a></li>
-            <li><a href="{{ route('admin.config.email-templates') }}" @if($routeName === 'admin.config.email-templates') class="active" @endif>Email Templates</a></li>
+            <li><a href="{{ route('admin.config.ticket-departments') }}" @if($routeName === 'admin.config.ticket-departments') class="active" @endif>{{ __('admin.nav.ticket_departments') }}</a></li>
+            <li><a href="{{ route('admin.config.ticket-statuses') }}" @if($routeName === 'admin.config.ticket-statuses') class="active" @endif>{{ __('admin.nav.ticket_statuses') }}</a></li>
+            <li><a href="{{ route('admin.config.email-templates') }}" @if($routeName === 'admin.config.email-templates') class="active" @endif>{{ __('admin.nav.email_templates') }}</a></li>
         </ul>
 
-        <div class="sidebar-header"><i class="fas fa-wrench"></i> Other</div>
+        <div class="sidebar-header"><i class="fas fa-wrench"></i> {{ __('admin.sidebar.other') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.settings.general') }}" @if($routeName === 'admin.settings.general') class="active" @endif>General Settings</a></li>
-            <li><a href="{{ route('admin.settings.appearance') }}" @if($routeName === 'admin.settings.appearance') class="active" @endif><i class="fas fa-palette"></i> Appearance</a></li>
+            <li><a href="{{ route('admin.settings.general') }}" @if($routeName === 'admin.settings.general') class="active" @endif>{{ __('admin.nav.general_settings') }}</a></li>
+            <li><a href="{{ route('admin.settings.appearance') }}" @if($routeName === 'admin.settings.appearance') class="active" @endif><i class="fas fa-palette"></i> {{ __('admin.nav.appearance') }}</a></li>
             <li><a href="{{ route('admin.config.client-groups') }}" @if($routeName === 'admin.config.client-groups') class="active" @endif>Client Groups</a></li>
             <li><a href="{{ route('admin.config.banned-ips') }}" @if($routeName === 'admin.config.banned-ips') class="active" @endif>Banned IPs</a></li>
-            <li><a href="{{ route('admin.config.banned-emails') }}" @if($routeName === 'admin.config.banned-emails') class="active" @endif>Banned Emails</a></li>
-            <li><a href="{{ route('admin.config.notifications') }}" @if($routeName === 'admin.config.notifications') class="active" @endif>Notification Channels</a></li>
-            <li><a href="{{ route('admin.config.ticket-spam') }}" @if($routeName === 'admin.config.ticket-spam') class="active" @endif>Ticket Spam Filter</a></li>
-            <li><a href="{{ route('admin.config.addons') }}" @if($routeName === 'admin.config.addons') class="active" @endif>Product Addons</a></li>
-            <li><a href="{{ route('admin.config.bundles') }}" @if($routeName === 'admin.config.bundles') class="active" @endif>Product Bundles</a></li>
+            <li><a href="{{ route('admin.config.banned-emails') }}" @if($routeName === 'admin.config.banned-emails') class="active" @endif>{{ __('admin.nav.banned_emails') }}</a></li>
+            <li><a href="{{ route('admin.config.notifications') }}" @if($routeName === 'admin.config.notifications') class="active" @endif>{{ __('admin.nav.notification_channels') }}</a></li>
+            <li><a href="{{ route('admin.config.ticket-spam') }}" @if($routeName === 'admin.config.ticket-spam') class="active" @endif>{{ __('admin.nav.ticket_spam_filter') }}</a></li>
+            <li><a href="{{ route('admin.config.addons') }}" @if($routeName === 'admin.config.addons') class="active" @endif>{{ __('admin.nav.product_addons') }}</a></li>
+            <li><a href="{{ route('admin.config.bundles') }}" @if($routeName === 'admin.config.bundles') class="active" @endif>{{ __('admin.nav.product_bundles') }}</a></li>
         </ul>
 
     {{-- ── Logs Sidebar ── --}}
     @elseif($segment === 'logs')
-        <div class="sidebar-header"><i class="fas fa-file-signature"></i> Logs</div>
+        <div class="sidebar-header"><i class="fas fa-file-signature"></i> {{ __('admin.sidebar.logs') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.logs.index') }}" @if($routeName === 'admin.logs.index') class="active" @endif>System Logs</a></li>
-            <li><a href="{{ route('admin.logs.gateway') }}" @if($routeName === 'admin.logs.gateway') class="active" @endif>Gateway Logs</a></li>
-            <li><a href="{{ route('admin.logs.module') }}" @if($routeName === 'admin.logs.module') class="active" @endif>Module Logs</a></li>
-            <li><a href="{{ route('admin.logs.email') }}" @if($routeName === 'admin.logs.email') class="active" @endif>Email Logs</a></li>
+            <li><a href="{{ route('admin.logs.index') }}" @if($routeName === 'admin.logs.index') class="active" @endif>{{ __('admin.nav.system_logs') }}</a></li>
+            <li><a href="{{ route('admin.logs.gateway') }}" @if($routeName === 'admin.logs.gateway') class="active" @endif>{{ __('admin.sidebar.gateway_logs') }}</a></li>
+            <li><a href="{{ route('admin.logs.module') }}" @if($routeName === 'admin.logs.module') class="active" @endif>{{ __('admin.sidebar.module_logs') }}</a></li>
+            <li><a href="{{ route('admin.logs.email') }}" @if($routeName === 'admin.logs.email') class="active" @endif>{{ __('admin.sidebar.email_logs') }}</a></li>
         </ul>
 
     {{-- ── Calendar Sidebar ── --}}
     @elseif($segment === 'calendar')
-        <div class="sidebar-header"><i class="fas fa-calendar-alt"></i> Calendar</div>
+        <div class="sidebar-header"><i class="fas fa-calendar-alt"></i> {{ __('admin.nav.calendar') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.calendar') }}" class="active">Calendar</a></li>
-            <li><a href="{{ route('admin.config.todo') }}">To-Do List</a></li>
+            <li><a href="{{ route('admin.config.todo') }}">{{ __('admin.nav.todo_list') }}</a></li>
         </ul>
-        <div class="sidebar-header"><i class="fas fa-wrench"></i> Utilities</div>
+        <div class="sidebar-header"><i class="fas fa-wrench"></i> {{ __('admin.sidebar.utilities') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.automation') }}">Automation Status</a></li>
+            <li><a href="{{ route('admin.config.automation') }}">{{ __('admin.nav.automation_status') }}</a></li>
             <li><a href="{{ route('admin.config.activity-log') }}">Activity Log</a></li>
         </ul>
 
     {{-- ── Default Sidebar (fallback) ── --}}
     @else
-        <div class="sidebar-header"><i class="fas fa-star"></i> Quick Links</div>
+        <div class="sidebar-header"><i class="fas fa-star"></i> {{ __('admin.sidebar.quick_links') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-            <li><a href="{{ route('admin.clients.index') }}">Clients</a></li>
-            <li><a href="{{ route('admin.orders.index') }}">Orders</a></li>
-            <li><a href="{{ route('admin.invoices.index') }}">Invoices</a></li>
-            <li><a href="{{ route('admin.tickets.index') }}">Tickets</a></li>
-            <li><a href="{{ route('admin.reports.index') }}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+            <li><a href="{{ route('admin.dashboard') }}">{{ __('admin.sidebar.dashboard') }}</a></li>
+            <li><a href="{{ route('admin.clients.index') }}">{{ __('admin.sidebar.clients') }}</a></li>
+            <li><a href="{{ route('admin.orders.index') }}">{{ __('admin.sidebar.orders') }}</a></li>
+            <li><a href="{{ route('admin.invoices.index') }}">{{ __('admin.sidebar.invoices') }}</a></li>
+            <li><a href="{{ route('admin.tickets.index') }}">{{ __('admin.sidebar.tickets') }}</a></li>
+            <li><a href="{{ route('admin.reports.index') }}"><i class="fas fa-chart-bar"></i> {{ __('admin.nav.reports') }}</a></li>
         </ul>
     @endif
 
     {{-- ── Advanced Search (always visible) ── --}}
-    <div class="sidebar-header"><i class="fas fa-binoculars"></i> Advanced Search</div>
+    <div class="sidebar-header"><i class="fas fa-binoculars"></i> {{ __('admin.sidebar.advanced_search') }}</div>
     <div class="advanced-search">
         <form action="{{ route('admin.clients.index') }}" method="GET">
-            <input type="text" name="search" placeholder="Client Name/Email...">
+            <input type="text" name="search" placeholder="{{ __('admin.sidebar.client_name_email') }}">
             <select name="search_type">
-                <option value="clients">Clients</option>
-                <option value="invoices">Invoices</option>
-                <option value="services">Services</option>
-                <option value="domains">Domains</option>
-                <option value="tickets">Tickets</option>
+                <option value="clients">{{ __('admin.sidebar.clients') }}</option>
+                <option value="invoices">{{ __('admin.sidebar.invoices') }}</option>
+                <option value="services">{{ __('admin.sidebar.services') }}</option>
+                <option value="domains">{{ __('admin.nav.domains') }}</option>
+                <option value="tickets">{{ __('admin.sidebar.tickets') }}</option>
             </select>
             <button type="submit" class="btn-go">{{ __('common.actions.search') }}</button>
         </form>
     </div>
 
     {{-- ── Staff Online ── --}}
-    <div class="sidebar-header"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> Staff Online</div>
+    <div class="sidebar-header"><i class="fas fa-circle" style="color:#22c55e;font-size:8px;"></i> {{ __('admin.sidebar.staff_online') }}</div>
     <div class="staff-online">
         <div class="staff-row">
             <span class="staff-dot"></span>
@@ -521,11 +521,11 @@
      ═══════════════════════════════════════════════ --}}
 <div class="footerbar clearfix" style="background-color:var(--theme-footer-bg, #1a4d80);">
     <div style="float:left;">
-        &copy; {{ date('Y') }} PNLCS - Billing &amp; Support System
+        &copy; {{ date('Y') }} PNLCS - {{ __('admin.footer.billing_support_system') }}
     </div>
     <div style="float:right;">
-        <a href="{{ route('admin.dashboard') }}">Admin Home</a> |
-        <a href="/" target="_blank">Client Area</a> |
+        <a href="{{ route('admin.dashboard') }}">{{ __('admin.footer.admin_home') }}</a> |
+        <a href="/" target="_blank">{{ __('admin.nav.client_area') }}</a> |
         <a href="{{ route('admin.logs.index') }}">Logs</a>
     </div>
 </div>

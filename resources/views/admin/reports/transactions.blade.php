@@ -2,8 +2,8 @@
 @section("title", __("admin.transactions_report"))
 @section("content")
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Transactions</h1>
-    <a href="{{ route("admin.reports.index") }}" class="btn btn-default btn-sm">&larr; Reports</a>
+    <h1>{{ __('admin.reports.transactions') }}</h1>
+    <a href="{{ route("admin.reports.index") }}" class="btn btn-default btn-sm">&larr; {{ __('admin.reports.back_to_reports') }}</a>
 </div>
 <div class="card">
     <table class="data-table">
@@ -12,10 +12,10 @@
                 <th>{{ __('common.table.date') }}</th>
                 <th>{{ __('common.table.client') }}</th>
                 <th>{{ __('common.table.description') }}</th>
-                <th>Gateway</th>
-                <th>Amount In</th>
-                <th>Amount Out</th>
-                <th>Transaction ID</th>
+                <th>{{ __('admin.reports.gateway') }}</th>
+                <th>{{ __('admin.reports.amount_in') }}</th>
+                <th>{{ __('admin.reports.amount_out') }}</th>
+                <th>{{ __('admin.reports.transaction_id') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -36,7 +36,7 @@
                 <td style="font-family:monospace;font-size:11px;">{{ $row->transaction_id ?? "-" }}</td>
             </tr>
             @empty
-            <tr><td colspan="7" style="text-align:center;color:#999;padding:30px;">No transactions found.</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:#999;padding:30px;">{{ __('admin.reports.no_transactions') }}</td></tr>
             @endforelse
         </tbody>
     </table>

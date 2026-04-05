@@ -34,12 +34,12 @@
 <div class="kb-wrap">
     <a href="{{ route('client.kb.index') }}" class="kb-back">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        Back to Knowledge Base
+        {{ __('client.kb.back_to_kb') }}
     </a>
 
     <div class="kb-header">
         <div class="kb-breadcrumb">
-            <a href="{{ route('client.kb.index') }}">Knowledge Base</a>
+            <a href="{{ route('client.kb.index') }}">{{ __('client.nav.knowledge_base') }}</a>
             <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
             @if($article->category)
             <span>{{ $article->category->name }}</span>
@@ -69,7 +69,7 @@
     </div>
 
     <div class="kb-helpful">
-        <div class="kb-helpful-title">Was this article helpful?</div>
+        <div class="kb-helpful-title">{{ __('client.kb.was_helpful') }}</div>
         <div class="kb-helpful-btns">
             <button class="kb-helpful-btn" onclick="this.classList.add('selected');this.innerHTML='&#128077; Thanks!';this.disabled=true;this.nextElementSibling.disabled=true">&#128077; Yes</button>
             <button class="kb-helpful-btn" onclick="this.classList.add('selected');this.innerHTML='&#128078; Noted';this.disabled=true;this.previousElementSibling.disabled=true">&#128078; No</button>
@@ -79,11 +79,11 @@
     <div class="kb-footer">
         <a href="{{ route('client.kb.index') }}">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-            All articles
+            {{ __('client.kb.all_articles') }}
         </a>
         @if($article->category)
         <a href="{{ route('client.kb.index') }}">
-            More in {{ $article->category->name }}
+            {{ __('client.kb.more_in') }} {{ $article->category->name }}
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </a>
         @endif

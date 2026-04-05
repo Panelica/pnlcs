@@ -128,7 +128,7 @@ class AuthController extends Controller
         session()->forget('2fa_setup_secret');
         session(['admin_2fa_verified' => true]);
 
-        return redirect()->route('admin.my-account')->with('success', '2FA enabled successfully. Save your backup codes: ' . implode(', ', $backupCodes));
+        return redirect()->route('admin.my-account')->with('success', __('admin.messages.2fa_enabled', ['codes' => implode(', ', $backupCodes)]));
     }
 
     public function disable2fa(Request $request)

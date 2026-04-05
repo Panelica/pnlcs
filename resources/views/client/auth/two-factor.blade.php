@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two-Factor Authentication - PNLCS</title>
+    <title>{{ __('client.auth.2fa_title') }} - PNLCS</title>
     @vite(['resources/css/app.css'])
     <style>
         * { box-sizing: border-box; }
@@ -20,8 +20,8 @@
 </head>
 <body>
 <div class="card">
-    <h2>Two-Factor Authentication</h2>
-    <p class="sub">Enter the 6-digit code from your authenticator app</p>
+    <h2>{{ __('client.auth.2fa_heading') }}</h2>
+    <p class="sub">{{ __('client.auth.2fa_subtitle') }}</p>
 
     @if($errors->any())
     <div class="alert">{{ $errors->first() }}</div>
@@ -30,17 +30,17 @@
     <form method="POST" action="{{ route('client.2fa.verify.submit') }}">
         @csrf
         <div style="margin-bottom:16px;">
-            <label>Verification Code</label>
+            <label>{{ __('client.auth.verification_code') }}</label>
             <input type="text" name="code" autofocus autocomplete="one-time-code" inputmode="numeric" maxlength="9" placeholder="000000">
         </div>
-        <button type="submit" class="btn">Verify</button>
+        <button type="submit" class="btn">{{ __('client.auth.verify') }}</button>
     </form>
 
-    <p style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted,#888);">You can also enter a backup code</p>
+    <p style="text-align:center;margin-top:14px;font-size:12px;color:var(--muted,#888);">{{ __('client.auth.backup_code_hint') }}</p>
 
     <form method="POST" action="{{ route('client.logout') }}" style="text-align:center;margin-top:8px;">
         @csrf
-        <button type="submit" style="background:none;border:none;color:var(--muted,#888);cursor:pointer;font-size:13px;">Cancel &amp; Logout</button>
+        <button type="submit" style="background:none;border:none;color:var(--muted,#888);cursor:pointer;font-size:13px;">{{ __('client.auth.cancel_logout') }}</button>
     </form>
 </div>
 </body>

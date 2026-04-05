@@ -1,10 +1,10 @@
 @extends('admin.layouts.app')
-@section('title', 'Create Invoice')
+@section('title', __('admin.invoices.create_invoice'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Create Invoice</h1>
-    <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; Back to Invoices</a>
+    <h1>{{ __('admin.invoices.create_invoice') }}</h1>
+    <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.invoices.back_to_invoices') }}</a>
 </div>
 
 @if($errors->any())
@@ -22,10 +22,10 @@
         {{-- Left column --}}
         <div>
             <div class="card" style="margin-bottom:15px;">
-                <div class="card-header"><strong>Client</strong></div>
+                <div class="card-header"><strong>{{ __('admin.invoices.client') }}</strong></div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label class="form-label">Select Client <span style="color:#d9534f;">*</span></label>
+                        <label class="form-label">{{ __('admin.invoices.select_client') }} <span style="color:#d9534f;">*</span></label>
                         <select name="client_id" required class="form-control">
                             <option value="">— Choose a client —</option>
                             @foreach($clients as $client)
@@ -41,7 +41,7 @@
             <div class="card" style="margin-bottom:15px;">
                 <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
                     <strong>Line Items</strong>
-                    <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ Add Item</button>
+                    <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ {{ __('admin.invoices.add_item') }}</button>
                 </div>
                 <div class="card-body">
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -80,7 +80,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header"><strong>Notes</strong></div>
+                <div class="card-header"><strong>{{ __('admin.invoices.notes') }}</strong></div>
                 <div class="card-body">
                     <div class="form-group" style="margin:0;">
                         <textarea name="notes" rows="3" placeholder="Optional notes visible on the invoice..." class="form-control">{{ old('notes') }}</textarea>
@@ -92,21 +92,21 @@
         {{-- Right column --}}
         <div>
             <div class="card" style="margin-bottom:15px;">
-                <div class="card-header"><strong>Dates</strong></div>
+                <div class="card-header"><strong>{{ __('admin.invoices.dates') }}</strong></div>
                 <div class="card-body">
                     <div class="form-group">
-                        <label class="form-label">Invoice Date <span style="color:#d9534f;">*</span></label>
+                        <label class="form-label">{{ __('admin.invoices.invoice_date') }} <span style="color:#d9534f;">*</span></label>
                         <input type="date" name="date" required value="{{ old('date', now()->toDateString()) }}" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Due Date <span style="color:#d9534f;">*</span></label>
+                        <label class="form-label">{{ __('admin.invoices.due_date') }} <span style="color:#d9534f;">*</span></label>
                         <input type="date" name="due_date" required value="{{ old('due_date', now()->addDays(14)->toDateString()) }}" class="form-control">
                     </div>
                 </div>
             </div>
 
             <div class="card" style="margin-bottom:15px;">
-                <div class="card-header"><strong>Payment Method</strong></div>
+                <div class="card-header"><strong>{{ __('admin.invoices.payment_method') }}</strong></div>
                 <div class="card-body">
                     <div class="form-group" style="margin:0;">
                         <select name="payment_method" class="form-control">
@@ -114,25 +114,25 @@
                             @foreach($paymentMethods as $pm)
                             <option value="{{ $pm->gateway_name }}" {{ old('payment_method') == $pm->gateway_name ? 'selected' : '' }}>{{ $pm->description }}</option>
                             @endforeach
-                            <option value="banktransfer" {{ old('payment_method') == 'banktransfer' ? 'selected' : '' }}>Bank Transfer</option>
-                            <option value="manual" {{ old('payment_method') == 'manual' ? 'selected' : '' }}>Manual</option>
+                            <option value="banktransfer" {{ old('payment_method') == 'banktransfer' ? 'selected' : '' }}>{{ __('admin.invoices.bank_transfer') }}</option>
+                            <option value="manual" {{ old('payment_method') == 'manual' ? 'selected' : '' }}>{{ __('admin.invoices.manual') }}</option>
                         </select>
                     </div>
                 </div>
             </div>
 
             <div class="card" style="margin-bottom:15px;">
-                <div class="card-header"><strong>Summary</strong></div>
+                <div class="card-header"><strong>{{ __('admin.invoices.summary') }}</strong></div>
                 <div class="card-body">
                     <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                        <tr><td style="padding:4px 0;color:#777;">Subtotal</td><td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="'$' + subtotal.toFixed(2)">$0.00</td></tr>
-                        <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td style="padding:6px 0;font-weight:700;">Est. Total</td><td style="padding:6px 0;text-align:right;font-weight:700;font-family:monospace;font-size:15px;" x-text="'$' + subtotal.toFixed(2)">$0.00</td></tr>
+                        <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.subtotal') }}</td><td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="'$' + subtotal.toFixed(2)">$0.00</td></tr>
+                        <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td style="padding:6px 0;font-weight:700;">{{ __('admin.invoices.est_total') }}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-family:monospace;font-size:15px;" x-text="'$' + subtotal.toFixed(2)">$0.00</td></tr>
                     </table>
-                    <p style="font-size:11px;color:#999;margin-top:6px;">Taxes calculated on save based on client location.</p>
+                    <p style="font-size:11px;color:#999;margin-top:6px;">{{ __('admin.invoices.taxes_note') }}</p>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">Create Invoice</button>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">{{ __('admin.invoices.create_invoice') }}</button>
         </div>
 
     </div>

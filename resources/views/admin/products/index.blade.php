@@ -1,11 +1,11 @@
 @extends('admin.layouts.app')
-@section('title', 'Products / Services')
+@section('title', __('admin.products.title'))
 @section('content')
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Products / Services</h1>
+    <h1>{{ __('admin.products.title') }}</h1>
     <div style="display:flex;gap:6px;">
-        <a href="{{ route('admin.products.groups.create') }}" class="btn btn-default btn-sm">+ New Group</a>
-        <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">+ New Product</a>
+        <a href="{{ route('admin.products.groups.create') }}" class="btn btn-default btn-sm">+ {{ __('admin.products.new_group') }}</a>
+        <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">+ {{ __('admin.products.new_product') }}</a>
     </div>
 </div>
 
@@ -17,7 +17,7 @@
     </div>
     @if($group->products->count() > 0)
     <table class="data-table">
-        <thead><tr><th>Product Name</th><th>{{ __('common.table.type') }}</th><th>Payment</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.products.product_name') }}</th><th>{{ __('common.table.type') }}</th><th>{{ __('admin.products.payment') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($group->products as $product)
         <tr>
@@ -40,14 +40,14 @@
         </tbody>
     </table>
     @else
-    <div class="card-body" style="color:#999;font-size:13px;">No products in this group. <a href="{{ route('admin.products.create') }}" style="color:#337ab7;">Add one</a></div>
+    <div class="card-body" style="color:#999;font-size:13px;">{{ __('admin.products.no_products_in_group') }} <a href="{{ route('admin.products.create') }}" style="color:#337ab7;">Add one</a></div>
     @endif
 </div>
 @empty
 <div class="card">
     <div class="card-body" style="text-align:center;padding:40px;">
-        <p style="color:#999;font-size:14px;margin-bottom:12px;">No product groups yet.</p>
-        <a href="{{ route('admin.products.groups.create') }}" class="btn btn-primary btn-sm">Create First Group</a>
+        <p style="color:#999;font-size:14px;margin-bottom:12px;">{{ __('admin.products.no_groups') }}</p>
+        <a href="{{ route('admin.products.groups.create') }}" class="btn btn-primary btn-sm">{{ __('admin.products.create_first_group') }}</a>
     </div>
 </div>
 @endforelse

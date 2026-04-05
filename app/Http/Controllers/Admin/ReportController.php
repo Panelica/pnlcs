@@ -43,7 +43,7 @@ class ReportController extends Controller
             "active-services"    => $this->activeServices(),
             "domains-overview"   => $this->domainsOverview(),
             "ticket-volume"      => $this->ticketVolume(),
-            default              => back()->with("error", "Report not found"),
+            default              => back()->with("error", __("admin.messages.report_not_found")),
         };
     }
 

@@ -35,6 +35,6 @@ class TicketController extends Controller
         ]);
         $ticket->update(["status" => "answered", "last_reply" => now()]);
         event(new TicketReplied($ticket, $validated["message"], true));
-        return back()->with("success", "Reply added.");
+        return back()->with("success", __("admin.messages.reply_added"));
     }
 }

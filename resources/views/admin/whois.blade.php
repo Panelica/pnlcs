@@ -7,7 +7,7 @@
 </div>
 
 <div class="card" style="margin-bottom:24px;">
-    <div class="card-header" style="font-weight:600;">Domain WHOIS Lookup</div>
+    <div class="card-header" style="font-weight:600;">{{ __('admin.whois.domain_whois_lookup') }}</div>
     <div class="card-body">
         <form method="POST" action="{{ route('admin.whois.lookup') }}">
             @csrf
@@ -16,7 +16,7 @@
             @endif
             <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
                 <div class="form-group" style="flex:1;min-width:240px;margin:0;">
-                    <label class="form-label">Domain Name</label>
+                    <label class="form-label">{{ __('admin.whois.domain_name') }}</label>
                     <input type="text" name="domain" value="{{ $domain ?? '' }}" class="form-control"
                         placeholder="e.g. google.com, github.io" required autofocus
                         style="font-family:monospace;font-size:15px;">
@@ -39,9 +39,9 @@
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
         <span style="font-weight:600;"><i class="fas fa-info-circle" style="margin-right:6px;color:#1a4d80;"></i> Domain Information: {{ $result['domain'] }}</span>
         @if($result['available'] ?? false)
-        <span class="badge-active">Available</span>
+        <span class="badge-active">{{ __('admin.whois.available') }}</span>
         @else
-        <span class="badge-suspended">Registered</span>
+        <span class="badge-suspended">{{ __('admin.whois.registered') }}</span>
         @endif
     </div>
     <div class="card-body">
@@ -78,7 +78,7 @@
 <div class="card" style="border:1px dashed #e2e8f0;background:#fafafa;">
     <div class="card-body" style="text-align:center;padding:48px 24px;">
         <i class="fas fa-globe" style="font-size:48px;color:#cbd5e1;margin-bottom:16px;display:block;"></i>
-        <h3 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px;">WHOIS Domain Lookup</h3>
+        <h3 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px;">{{ __('admin.whois.whois_domain_lookup') }}</h3>
         <p style="color:#64748b;font-size:14px;max-width:400px;margin:0 auto 16px;">
             Enter any domain name above to see its WHOIS record — registrar, expiry date, nameservers, and more.
         </p>

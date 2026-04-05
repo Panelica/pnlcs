@@ -1,5 +1,5 @@
 @extends('client.layouts.app')
-@section('title', 'Configure: '. $product->name)
+@section('title', __('client.cart.configure') . ': '. $product->name)
 @section('styles')
 <style>
     .config-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
@@ -19,8 +19,8 @@
 @section('content')
 
 <div class="page-header">
-    <h1>Configure: {{ $product->name }}</h1>
-    <a href="{{ route('client.store') }}" class="btn btn-outline btn-sm">&larr; Back</a>
+    <h1>{{ __('client.cart.configure') }}: {{ $product->name }}</h1>
+    <a href="{{ route('client.store') }}" class="btn btn-outline btn-sm">&larr; {{ __('client.actions.back') }}</a>
 </div>
 
 <form method="POST" action="{{ route('client.cart.add') }}" id="configForm">
@@ -31,7 +31,7 @@
         <div>
             {{-- Billing Cycle --}}
             <div class="pn-card" style="margin-bottom:16px;">
-                <div class="pn-card-header">Billing Cycle</div>
+                <div class="pn-card-header">{{ __('client.cart.billing_cycle') }}</div>
                 <div class="pn-card-body">
                     @php $pricing = $product->pricing->first(); $cycles = ['monthly','quarterly','semiannually','annually','biennially','triennially']; @endphp
                     <div class="cycle-options">
@@ -47,7 +47,7 @@
                                 @endif
                             @endforeach
                         @else
-                            <div style="color:#999; font-size:13px; grid-column:1/-1;">No pricing available.</div>
+                            <div style="color:#999; font-size:13px; grid-column:1/-1;">{{ __('client.cart.no_pricing') }}</div>
                         @endif
                     </div>
                 </div>
@@ -56,17 +56,17 @@
             {{-- Domain --}}
             @if($product->require_domain ?? false)
             <div class="pn-card" style="margin-bottom:16px;">
-                <div class="pn-card-header">Domain</div>
+                <div class="pn-card-header">{{ __('client.cart.domain') }}</div>
                 <div class="pn-card-body">
                     <div style="display:flex; gap:8px; margin-bottom:12px;">
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                            <input type="radio" name="domain_option" value="register" checked> Register new domain
+                            <input type="radio" name="domain_option" value="register" checked> {{ __('client.cart.register_new_domain') }}
                         </label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                            <input type="radio" name="domain_option" value="transfer"> Transfer existing
+                            <input type="radio" name="domain_option" value="transfer"> {{ __('client.cart.transfer_existing') }}
                         </label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                            <input type="radio" name="domain_option" value="own"> Use own domain
+                            <input type="radio" name="domain_option" value="own"> {{ __('client.cart.use_own_domain') }}
                         </label>
                     </div>
                     <div class="form-group">
@@ -78,9 +78,9 @@
 
             {{-- Additional Notes --}}
             <div class="pn-card">
-                <div class="pn-card-header">Additional Notes <span style="font-weight:400; color:#999;">(optional)</span></div>
+                <div class="pn-card-header">{{ __('client.cart.additional_notes') }} <span style="font-weight:400; color:#999;">({{ __('client.form.optional') }})</span></div>
                 <div class="pn-card-body">
-                    <textarea name="notes" rows="3" class="form-control" placeholder="Any special requirements...">{{ old('notes') }}</textarea>
+                    <textarea name="notes" rows="3" class="form-control" placeholder="{{ __('client.cart.special_requirements') }}">{{ old('notes') }}</textarea>
                 </div>
             </div>
         </div>
@@ -88,21 +88,21 @@
         {{-- Order Summary --}}
         <div class="order-summary">
             <div class="pn-card">
-                <div class="pn-card-header">Order Summary</div>
+                <div class="pn-card-header">{{ __('client.cart.order_summary') }}</div>
                 <div class="pn-card-body">
                     <div class="summary-row">
-                        <span style="color:#777;">Product</span>
+                        <span style="color:#777;">{{ __('client.cart.product') }}</span>
                         <span style="font-weight:500;">{{ $product->name }}</span>
                     </div>
                     <div class="summary-row">
-                        <span style="color:#777;">Billing Cycle</span>
+                        <span style="color:#777;">{{ __('client.cart.billing_cycle') }}</span>
                         <span id="summaryBilling">&mdash;</span>
                     </div>
                     <div class="summary-row">
-                        <span>Total</span>
+                        <span>{{ __('client.cart.total') }}</span>
                         <span id="summaryTotal" style="color:#1a4d80;">&mdash;</span>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:14px; justify-content:center;">Add to Cart &rarr;</button>
+                    <button type="submit" class="btn btn-primary" style="width:100%; margin-top:14px; justify-content:center;">{{ __('client.cart.add_to_cart') }} &rarr;</button>
                 </div>
             </div>
         </div>

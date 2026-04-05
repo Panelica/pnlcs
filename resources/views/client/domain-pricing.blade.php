@@ -1,25 +1,25 @@
 @extends("client.layouts.app")
 @section("title", __("client.domain_search.pricing_title"))
 @section("content")
-<div class="pn-page-header"><div><h1 class="pn-page-title">Domain Pricing</h1><p class="pn-page-subtitle">Browse our domain extensions and find the best price.</p></div></div>
+<div class="pn-page-header"><div><h1 class="pn-page-title">{{ __('client.nav.domain_pricing') }}</h1><p class="pn-page-subtitle">{{ __('client.domain_pricing.subtitle') }}</p></div></div>
 <div style="max-width:100%;padding:0;">
 
     <div style="text-align:center;margin-bottom:40px;">
-        <h1 style="font-size:32px;font-weight:800;color:#1a4d80;margin-bottom:8px;">Domain Pricing</h1>
-        <p style="color:#64748b;font-size:16px;margin-bottom:24px;">Transparent pricing for all popular extensions</p>
+        <h1 style="font-size:32px;font-weight:800;color:#1a4d80;margin-bottom:8px;">{{ __('client.nav.domain_pricing') }}</h1>
+        <p style="color:#64748b;font-size:16px;margin-bottom:24px;">{{ __('client.domain_pricing.transparent') }}</p>
         <a href="{{ route('client.domain.search') }}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 28px;background:#1a4d80;color:#fff;font-weight:700;font-size:15px;border-radius:8px;text-decoration:none;">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
-            Search Domain Availability
+            {{ __('client.domain_pricing.search_availability') }}
         </a>
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;" id="category-tabs">
-        <button onclick="filterTLDs('all')" id="tab-all" style="padding:8px 18px;background:#1a4d80;color:#fff;border:none;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">All</button>
-        <button onclick="filterTLDs('popular')" id="tab-popular" style="padding:8px 18px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">Popular</button>
-        <button onclick="filterTLDs('country')" id="tab-country" style="padding:8px 18px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">Country</button>
-        <button onclick="filterTLDs('new')" id="tab-new" style="padding:8px 18px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">New TLDs</button>
+        <button onclick="filterTLDs('all')" id="tab-all" style="padding:8px 18px;background:#1a4d80;color:#fff;border:none;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.all') }}</button>
+        <button onclick="filterTLDs('popular')" id="tab-popular" style="padding:8px 18px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.popular') }}</button>
+        <button onclick="filterTLDs('country')" id="tab-country" style="padding:8px 18px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.country_tab') }}</button>
+        <button onclick="filterTLDs('new')" id="tab-new" style="padding:8px 18px;background:#fff;color:#64748b;border:1px solid #e2e8f0;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.new_tlds') }}</button>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-            <input type="text" id="tld-filter" placeholder="Filter..." oninput="applyFilters()" style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:13px;outline:none;font-family:inherit;width:160px;">
+            <input type="text" id="tld-filter" placeholder="{{ __('client.domain_pricing.filter') }}" oninput="applyFilters()" style="border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:13px;outline:none;font-family:inherit;width:160px;">
         </div>
     </div>
 
@@ -27,12 +27,12 @@
         <table style="width:100%;border-collapse:collapse;" id="pricing-table">
             <thead>
                 <tr style="background:#1a4d80;">
-                    <th style="padding:12px 20px;text-align:left;color:#fff;font-size:13px;font-weight:600;">Extension</th>
+                    <th style="padding:12px 20px;text-align:left;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_search.extension') }}</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('common.actions.register') }}</th>
-                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Transfer</th>
-                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Renew</th>
-                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Min Yrs</th>
-                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">Action</th>
+                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_search.transfer') }}</th>
+                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_search.renew') }}</th>
+                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_pricing.min_years') }}</th>
+                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.security.action') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -65,11 +65,11 @@
                 @endforeach
             </tbody>
         </table>
-        <div id="no-results" style="display:none;text-align:center;padding:48px;color:#94a3b8;">No extensions match your search.</div>
+        <div id="no-results" style="display:none;text-align:center;padding:48px;color:#94a3b8;">{{ __('client.domain_pricing.no_results') }}</div>
     </div>
 
     <div style="margin-top:24px;padding:16px 20px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
-        <p style="font-size:13px;color:#64748b;margin:0;"><strong style="color:#1e293b;">Note:</strong> All prices are in USD per year. <a href="{{ route('client.domain.search') }}" style="color:#1a4d80;font-weight:600;">Search availability</a> to see current pricing for a specific domain.</p>
+        <p style="font-size:13px;color:#64748b;margin:0;"><strong style="color:#1e293b;">{{ __('client.domain_pricing.note') }}:</strong> {{ __('client.domain_pricing.note_text') }} <a href="{{ route('client.domain.search') }}" style="color:#1a4d80;font-weight:600;">{{ __('client.domain_pricing.search_link') }}</a> {{ __('client.domain_pricing.note_text_2') }}</p>
     </div>
 </div>
 

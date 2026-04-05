@@ -1,12 +1,12 @@
 @extends('admin.layouts.app')
-@section('title', 'Payment Gateways')
+@section('title', __('admin.gateways.title'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Payment Gateways</h1>
+    <h1>{{ __('admin.gateways.title') }}</h1>
 </div>
 
-<p style="color:#666;font-size:13px;margin-bottom:15px;">Configure payment gateway modules for accepting payments from customers.</p>
+<p style="color:#666;font-size:13px;margin-bottom:15px;">{{ __('admin.gateways.description') }}</p>
 
 @php
 $modules = [
@@ -29,7 +29,7 @@ $modules = [
         <div class="card-header" style="display:flex;align-items:center;gap:10px;">
             <i class="{{ $gw['icon'] }}" style="font-size:18px;color:#337ab7;width:24px;text-align:center;"></i>
             <span style="flex:1;font-weight:600;">{{ $gw['label'] }}</span>
-            <span class="badge {{ $isActive ? 'badge-active' : 'badge-cancelled' }}">{{ $isActive ? 'Active' : 'Inactive' }}</span>
+            <span class="badge {{ $isActive ? 'badge-active' : 'badge-cancelled' }}">{{ $isActive ? __('common.status.active') : __('common.status.inactive') }}</span>
         </div>
         <div class="card-body">
             <p style="font-size:12px;color:#777;margin-bottom:12px;">{{ $gw['desc'] }}</p>
@@ -37,28 +37,28 @@ $modules = [
                 @csrf
                 <div class="form-group">
                     <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                        <input type="checkbox" name="active" value="1" {{ $isActive ? 'checked' : '' }}> Enable this gateway
+                        <input type="checkbox" name="active" value="1" {{ $isActive ? 'checked' : '' }}> {{ __('admin.gateways.enable_gateway') }}
                     </label>
                 </div>
                 @if($gw['name'] === 'banktransfer')
-                <div class="form-group"><label class="form-label">Bank Name</label><input type="text" name="bank_name" value="{{ $settings['bank_name'] ?? '' }}" class="form-control" placeholder="e.g. First National Bank"></div>
-                <div class="form-group"><label class="form-label">Account Name</label><input type="text" name="account_name" value="{{ $settings['account_name'] ?? '' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Account Number / IBAN</label><input type="text" name="account_number" value="{{ $settings['account_number'] ?? '' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Sort Code / SWIFT</label><input type="text" name="sort_code" value="{{ $settings['sort_code'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.bank_name') }}</label><input type="text" name="bank_name" value="{{ $settings['bank_name'] ?? '' }}" class="form-control" placeholder="e.g. First National Bank"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.account_name') }}</label><input type="text" name="account_name" value="{{ $settings['account_name'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.account_number') }}</label><input type="text" name="account_number" value="{{ $settings['account_number'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.sort_code') }}</label><input type="text" name="sort_code" value="{{ $settings['sort_code'] ?? '' }}" class="form-control"></div>
                 @elseif($gw['name'] === 'paypal')
-                <div class="form-group"><label class="form-label">PayPal Email</label><input type="email" name="email" value="{{ $settings['email'] ?? '' }}" class="form-control" placeholder="paypal@example.com"></div>
-                <div class="form-group"><label class="form-label">Sandbox Mode</label><select name="sandbox" class="form-control"><option value="0" {{ ($settings['sandbox'] ?? '0') === '0' ? 'selected' : '' }}>Live</option><option value="1" {{ ($settings['sandbox'] ?? '0') === '1' ? 'selected' : '' }}>Sandbox</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.paypal_email') }}</label><input type="email" name="email" value="{{ $settings['email'] ?? '' }}" class="form-control" placeholder="paypal@example.com"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.sandbox_mode') }}</label><select name="sandbox" class="form-control"><option value="0" {{ ($settings['sandbox'] ?? '0') === '0' ? 'selected' : '' }}>Live</option><option value="1" {{ ($settings['sandbox'] ?? '0') === '1' ? 'selected' : '' }}>Sandbox</option></select></div>
                 @elseif($gw['name'] === 'stripe')
-                <div class="form-group"><label class="form-label">Publishable Key</label><input type="text" name="publishable_key" value="{{ $settings['publishable_key'] ?? '' }}" class="form-control" placeholder="pk_live_..."></div>
-                <div class="form-group"><label class="form-label">Secret Key</label><input type="password" name="secret_key" value="{{ $settings['secret_key'] ?? '' }}" class="form-control" placeholder="sk_live_..."></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.publishable_key') }}</label><input type="text" name="publishable_key" value="{{ $settings['publishable_key'] ?? '' }}" class="form-control" placeholder="pk_live_..."></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.secret_key') }}</label><input type="password" name="secret_key" value="{{ $settings['secret_key'] ?? '' }}" class="form-control" placeholder="sk_live_..."></div>
                 @elseif($gw['name'] === 'authorize')
-                <div class="form-group"><label class="form-label">API Login ID</label><input type="text" name="api_login" value="{{ $settings['api_login'] ?? '' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Transaction Key</label><input type="password" name="transaction_key" value="{{ $settings['transaction_key'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.api_login_id') }}</label><input type="text" name="api_login" value="{{ $settings['api_login'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.transaction_key') }}</label><input type="password" name="transaction_key" value="{{ $settings['transaction_key'] ?? '' }}" class="form-control"></div>
                 @else
-                <div class="form-group"><label class="form-label">API Key</label><input type="text" name="api_key" value="{{ $settings['api_key'] ?? '' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">API Secret</label><input type="password" name="api_secret" value="{{ $settings['api_secret'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.api_key') }}</label><input type="text" name="api_key" value="{{ $settings['api_key'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.api_secret') }}</label><input type="password" name="api_secret" value="{{ $settings['api_secret'] ?? '' }}" class="form-control"></div>
                 @endif
-                <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">Save Settings</button>
+                <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">{{ __('admin.gateways.save_settings') }}</button>
             </form>
         </div>
     </div>

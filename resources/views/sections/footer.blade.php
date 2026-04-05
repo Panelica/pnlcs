@@ -13,7 +13,7 @@
     $bSupportEmail = $footerSupportEmail ?? 'support@panelica.com';
     $bWebsite = $footerWebsite ?? 'panelica.com';
     $bCopyright = $brandCopyright ?? $bName;
-    $bDesc = $footerDesc ?? ($bName . ' is the billing & hosting management platform by Panelica. Domains, hosting, VPS, and SSL — all under one roof.');
+    $bDesc = $footerDesc ?? ($bName . ' ' . __('sections.footer.description'));
 @endphp
 <footer class="footer">
     <div class="container">
@@ -32,30 +32,30 @@
                 <div class="footer__contact-item"><i class="ri-global-line"></i> {{ $bWebsite }}</div>
             </div>
             <div>
-                <div class="footer__col-title">Domains</div>
-                <a href="/client/domain-search" class="footer__link">Domain Search</a>
-                <a href="/client/domain-search" class="footer__link">Domain Transfer</a>
-                <a href="/client/domain-search" class="footer__link">WHOIS Lookup</a>
+                <div class="footer__col-title">{{ __('sections.footer.col_domains') }}</div>
+                <a href="/client/domain-search" class="footer__link">{{ __('sections.footer.domain_search') }}</a>
+                <a href="/client/domain-search" class="footer__link">{{ __('sections.footer.domain_transfer') }}</a>
+                <a href="/client/domain-search" class="footer__link">{{ __('sections.footer.whois_lookup') }}</a>
             </div>
             <div>
-                <div class="footer__col-title">Hosting</div>
-                <a href="/client/store" class="footer__link">Shared Hosting</a>
-                <a href="/client/store" class="footer__link">WordPress Hosting</a>
-                <a href="/client/store" class="footer__link">Business Hosting</a>
-                <a href="/client/store" class="footer__link">Reseller Hosting</a>
-                <a href="/client/store" class="footer__link">VPS Server</a>
+                <div class="footer__col-title">{{ __('sections.footer.col_hosting') }}</div>
+                <a href="/client/store" class="footer__link">{{ __('sections.footer.shared_hosting') }}</a>
+                <a href="/client/store" class="footer__link">{{ __('sections.footer.wordpress_hosting') }}</a>
+                <a href="/client/store" class="footer__link">{{ __('sections.footer.business_hosting') }}</a>
+                <a href="/client/store" class="footer__link">{{ __('sections.footer.reseller_hosting') }}</a>
+                <a href="/client/store" class="footer__link">{{ __('sections.footer.vps_server') }}</a>
             </div>
             <div>
-                <div class="footer__col-title">Support</div>
-                <a href="/client/knowledgebase" class="footer__link">Knowledge Base</a>
-                <a href="/client/announcements" class="footer__link">Announcements</a>
-                <a href="/client/contact" class="footer__link">Contact Us</a>
+                <div class="footer__col-title">{{ __('sections.footer.col_support') }}</div>
+                <a href="/client/knowledgebase" class="footer__link">{{ __('sections.footer.knowledge_base') }}</a>
+                <a href="/client/announcements" class="footer__link">{{ __('sections.footer.announcements') }}</a>
+                <a href="/client/contact" class="footer__link">{{ __('sections.footer.contact_us') }}</a>
                 <a href="{{ $bUrl }}" class="footer__link">{{ $bWebsite }}</a>
-                <a href="{{ $bUrl }}/blog" class="footer__link">Blog</a>
+                <a href="{{ $bUrl }}/blog" class="footer__link">{{ __('sections.footer.blog') }}</a>
             </div>
         </div>
         <div class="footer__bottom">
-            <span>&copy; {{ date('Y') }} {{ $bCopyright }}. All rights reserved.</span>
+            <span>&copy; {{ date('Y') }} {{ $bCopyright }}. {{ __('sections.footer.copyright') }}</span>
             <div class="footer__payments">
                 <div class="footer__payment-icon">VISA</div>
                 <div class="footer__payment-icon">MC</div>

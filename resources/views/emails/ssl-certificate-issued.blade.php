@@ -1,31 +1,31 @@
 <x-mail::message>
-# SSL Certificate Issued
+# {{ __('email.ssl_issued.title') }}
 
-Hello {{ $order->client->first_name ?? 'Customer' }},
+{{ __('email.ssl_issued.hello', ['name' => $order->client->first_name ?? __('email.common.customer')]) }}
 
-Great news! Your SSL certificate has been issued and is ready for download.
+{{ __('email.ssl_issued.body') }}
 
-**Certificate Details:**
-- **Domain:** {{ $order->domain }}
-- **Issued:** {{ $order->completion_date?->format('d M Y') }}
-- **Expires:** {{ $order->crt_expires?->format('d M Y') }}
+**{{ __('email.ssl_issued.certificate_details') }}**
+- **{{ __('email.common.domain_label') }}:** {{ $order->domain }}
+- **{{ __('email.ssl_issued.issued') }}:** {{ $order->completion_date?->format('d M Y') }}
+- **{{ __('email.ssl_issued.expires') }}:** {{ $order->crt_expires?->format('d M Y') }}
 
 <x-mail::button :url="$downloadUrl">
-Download Certificate
+{{ __('email.ssl_issued.download_button') }}
 </x-mail::button>
 
 <x-mail::button :url="$viewUrl" color="secondary">
-View Certificate Details
+{{ __('email.ssl_issued.view_button') }}
 </x-mail::button>
 
-Your download will include:
-- Certificate file (.crt)
-- CA Bundle (.ca-bundle)
-- Full chain certificate (.fullchain.crt)
-- Private key (.key) — if stored
+{{ __('email.ssl_issued.download_includes') }}
+- {{ __('email.ssl_issued.include_crt') }}
+- {{ __('email.ssl_issued.include_ca') }}
+- {{ __('email.ssl_issued.include_fullchain') }}
+- {{ __('email.ssl_issued.include_key') }}
 
-Please install the certificate on your web server as soon as possible.
+{{ __('email.ssl_issued.install_asap') }}
 
-Thanks,<br>
+{{ __('email.ssl_issued.thanks') }}<br>
 {{ $companyName }}
 </x-mail::message>

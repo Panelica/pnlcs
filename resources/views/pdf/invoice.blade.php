@@ -45,10 +45,10 @@
             @if($company['city'])<div>{{ $company['city'] }} {{ $company['country'] }}</div>@endif
             @if($company['phone'])<div>{{ $company['phone'] }}</div>@endif
             @if($company['email'])<div>{{ $company['email'] }}</div>@endif
-            @if($company['tax_id'])<div>Tax ID: {{ $company['tax_id'] }}</div>@endif
+            @if($company['tax_id'])<div>{{ __('pdf.tax_id') }}: {{ $company['tax_id'] }}</div>@endif
         </div>
         <div class="header-right">
-            <div class="invoice-title">INVOICE</div>
+            <div class="invoice-title">{{ __('pdf.invoice') }}</div>
             <div class="invoice-number">#{{ $invoice->invoice_num ?? $invoice->id }}</div>
             <div style="margin-top: 10px;">
                 @php
@@ -66,7 +66,7 @@
 
     <div class="addresses">
         <div class="address-box">
-            <h4>Bill To</h4>
+            <h4>{{ __('pdf.bill_to') }}</h4>
             @if($invoice->client)
                 <strong>{{ $invoice->client->first_name }} {{ $invoice->client->last_name }}</strong><br>
                 @if($invoice->client->company_name){{ $invoice->client->company_name }}<br>@endif
@@ -77,15 +77,15 @@
             @endif
         </div>
         <div class="address-box">
-            <h4>Invoice Details</h4>
+            <h4>{{ __('pdf.invoice_details') }}</h4>
             <table class="meta-table">
-                <tr><td class="meta-label">Invoice Date:</td><td>{{ $invoice->date?->format('M d, Y') ?? '-' }}</td></tr>
-                <tr><td class="meta-label">Due Date:</td><td>{{ $invoice->due_date?->format('M d, Y') ?? '-' }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.invoice_date') }}:</td><td>{{ $invoice->date?->format('M d, Y') ?? '-' }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.due_date') }}:</td><td>{{ $invoice->due_date?->format('M d, Y') ?? '-' }}</td></tr>
                 @if($invoice->date_paid)
-                <tr><td class="meta-label">Date Paid:</td><td>{{ $invoice->date_paid->format('M d, Y') }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.date_paid') }}:</td><td>{{ $invoice->date_paid->format('M d, Y') }}</td></tr>
                 @endif
                 @if($invoice->payment_method)
-                <tr><td class="meta-label">Payment Method:</td><td>{{ ucfirst($invoice->payment_method) }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.payment_method') }}:</td><td>{{ ucfirst($invoice->payment_method) }}</td></tr>
                 @endif
             </table>
         </div>
@@ -95,7 +95,7 @@
         <thead>
             <tr>
                 <th style="width: 60%;">{{ __('common.table.description') }}</th>
-                <th class="text-right" style="width: 20%;">Taxed</th>
+                <th class="text-right" style="width: 20%;">{{ __('pdf.taxed') }}</th>
                 <th class="text-right" style="width: 20%;">{{ __('common.table.amount') }}</th>
             </tr>
         </thead>
@@ -103,31 +103,31 @@
             @forelse($invoice->items as $item)
             <tr>
                 <td>{{ $item->description }}</td>
-                <td class="text-right">{{ $item->taxed ? 'Yes' : 'No' }}</td>
+                <td class="text-right">{{ $item->taxed ? __('common.status.yes') : __('common.status.no') }}</td>
                 <td class="text-right">${{ number_format((float)$item->amount, 2) }}</td>
             </tr>
             @empty
-            <tr><td colspan="3" style="text-align:center; color:#999;">No items</td></tr>
+            <tr><td colspan="3" style="text-align:center; color:#999;">{{ __('pdf.no_items') }}</td></tr>
             @endforelse
         </tbody>
     </table>
 
     <div class="totals">
         <table>
-            <tr><td>Subtotal:</td><td class="text-right">${{ number_format((float)$invoice->subtotal, 2) }}</td></tr>
+            <tr><td>{{ __('pdf.subtotal') }}:</td><td class="text-right">${{ number_format((float)$invoice->subtotal, 2) }}</td></tr>
             @if((float)$invoice->tax > 0)
-            <tr><td>Tax:</td><td class="text-right">${{ number_format((float)$invoice->tax, 2) }}</td></tr>
+            <tr><td>{{ __('pdf.tax') }}:</td><td class="text-right">${{ number_format((float)$invoice->tax, 2) }}</td></tr>
             @endif
             @if((float)$invoice->credit > 0)
-            <tr><td>Credit:</td><td class="text-right">-${{ number_format((float)$invoice->credit, 2) }}</td></tr>
+            <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-${{ number_format((float)$invoice->credit, 2) }}</td></tr>
             @endif
-            <tr class="total-row"><td>Total:</td><td class="text-right">${{ number_format((float)$invoice->total, 2) }}</td></tr>
+            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right">${{ number_format((float)$invoice->total, 2) }}</td></tr>
         </table>
     </div>
 
     @if($invoice->notes)
     <div class="notes">
-        <strong>Notes:</strong><br>
+        <strong>{{ __('pdf.notes') }}:</strong><br>
         {{ $invoice->notes }}
     </div>
     @endif

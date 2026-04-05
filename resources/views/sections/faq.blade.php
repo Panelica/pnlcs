@@ -1,8 +1,8 @@
 {{-- ===== FAQ ===== --}}
 @php
     $c = $content ?? collect();
-    $faqTitle = $c->has('title') ? $c->get('title')->content_value : 'Frequently Asked Questions';
-    $faqSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : 'Everything you need to know about our hosting services';
+    $faqTitle = $c->has('title') ? $c->get('title')->content_value : __('sections.faq.title');
+    $faqSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : __('sections.faq.subtitle');
     $itemsJson = $c->has('items') ? $c->get('items')->content_value : null;
     $items = $itemsJson ? json_decode($itemsJson, true) : [];
 @endphp

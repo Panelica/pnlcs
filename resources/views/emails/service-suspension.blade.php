@@ -3,19 +3,19 @@
 <body style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
 <h2 style="color:#405189;">{{ $companyName }}</h2>
 
-<p>{{ __('email.common.greeting', ['name' => $service->client?->first_name ?? 'Customer']) }}</p>
+<p>{{ __('email.common.greeting', ['name' => $service->client?->first_name ?? __('email.common.customer')]) }}</p>
 
-<p style="color:#dc3545;"><strong>Your service has been suspended.</strong></p>
+<p style="color:#dc3545;"><strong>{{ __('email.service_suspension.suspended') }}</strong></p>
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Product</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->product?->name ?? 'N/A' }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Domain</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->domain ?? 'N/A' }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>Reason</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $reason ?? 'Unpaid invoice' }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.product_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->product?->name ?? 'N/A' }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.domain_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->domain ?? 'N/A' }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.reason_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $reason ?? __('email.common.unpaid_invoice') }}</td></tr>
 </table>
 
-<p>To reactivate your service, please log in to your account and settle any outstanding invoices.</p>
+<p>{{ __('email.service_suspension.reactivate') }}</p>
 
-<p>If you believe this is an error, please contact our support team.</p>
+<p>{{ __('email.service_suspension.error_contact') }}</p>
 
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

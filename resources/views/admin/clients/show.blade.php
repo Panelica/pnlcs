@@ -10,7 +10,7 @@
                 Login as Client
             </button>
         </form>
-        <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-primary btn-sm">Edit Client</a>
+        <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-primary btn-sm">{{ __('admin.clients.edit_client_btn') }}</a>
         <a href="{{ route('admin.clients.index') }}" class="btn btn-default btn-sm">{{ __('common.actions.close') }}</a>
         <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" style="display:inline;" onsubmit="return confirm('Delete client {{ $client->full_name }}? This cannot be undone.')">
             @csrf @method('DELETE')
@@ -23,15 +23,15 @@
 <div class="card" style="margin-bottom:15px;">
     <div class="card-body" style="padding:10px 15px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:8px;">
-            <strong style="font-size:13px;">Status:</strong>
+            <strong style="font-size:13px;">{{ __('admin.clients.status') }}:</strong>
             <span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-            <strong style="font-size:13px;">Credit Balance:</strong>
+            <strong style="font-size:13px;">{{ __('admin.clients.credit_balance') }}:</strong>
             <span style="color:#3c763d;font-weight:600;">${{ number_format($client->credit, 2) }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-            <strong style="font-size:13px;">Tax Exempt:</strong>
+            <strong style="font-size:13px;">{{ __('admin.clients.tax_exempt') }}:</strong>
             <span style="font-size:13px;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</span>
         </div>
     </div>
@@ -48,7 +48,7 @@
 
 {{-- Tab Navigation --}}
 @php
-$tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoices'=>'Invoices','tickets'=>'Tickets','notes'=>'Notes','log'=>'Activity Log'];
+$tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.clients.tab_services'),'domains'=>__('admin.clients.tab_domains'),'invoices'=>__('admin.clients.tab_invoices'),'tickets'=>__('admin.clients.tab_tickets'),'notes'=>__('admin.clients.tab_notes'),'log'=>__('admin.clients.tab_log')];
 @endphp
 <div style="border-bottom:2px solid #ddd;margin-bottom:15px;display:flex;gap:0;">
     @foreach($tabs as $key => $label)
@@ -67,16 +67,16 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
     {{-- Column 1 --}}
     <div>
         <div class="panel">
-            <div class="panel-heading panel-primary">Client Information</div>
+            <div class="panel-heading panel-primary">{{ __('admin.clients.client_information') }}</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:5px 0;color:#777;width:40%;">Name</td><td style="padding:5px 0;font-weight:600;">{{ $client->full_name }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Company</td><td style="padding:5px 0;">{{ $client->company_name ?: '-' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Email</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Phone</td><td style="padding:5px 0;">{{ $client->phone_number ?: '-' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Address</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Country</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Registered</td><td style="padding:5px 0;">{{ $client->created_at->format('d M Y') }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.clients.name') }}</td><td style="padding:5px 0;font-weight:600;">{{ $client->full_name }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.company') }}</td><td style="padding:5px 0;">{{ $client->company_name ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->phone_number ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format('d M Y') }}</td></tr>
                 </table>
             </div>
         </div>
@@ -85,7 +85,7 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
     {{-- Column 2 --}}
     <div>
         <div class="panel">
-            <div class="panel-heading panel-primary">Billing Summary</div>
+            <div class="panel-heading panel-primary">{{ __('admin.clients.billing_summary') }}</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     @php
@@ -94,22 +94,22 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
                         $ovrd   = isset($invoiceSummary) ? ($invoiceSummary['overdue'] ?? 0) : 0;
                         $total  = isset($invoiceSummary) ? ($invoiceSummary['total'] ?? 0) : 0;
                     @endphp
-                    <tr><td style="padding:5px 0;color:#777;width:50%;">Paid Invoices</td><td style="padding:5px 0;font-weight:600;color:#5cb85c;">{{ $paid }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Unpaid Invoices</td><td style="padding:5px 0;font-weight:600;color:#f0ad4e;">{{ $unpaid }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Overdue Invoices</td><td style="padding:5px 0;font-weight:600;color:#d9534f;">{{ $ovrd }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Total Invoices</td><td style="padding:5px 0;font-weight:600;">{{ $invoiceCount }}</td></tr>
-                    <tr style="border-top:1px solid #eee;"><td style="padding:8px 0 5px;color:#777;">Credit Balance</td><td style="padding:8px 0 5px;font-weight:600;color:#5cb85c;">${{ number_format($client->credit, 2) }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;width:50%;">{{ __('admin.clients.paid_invoices') }}</td><td style="padding:5px 0;font-weight:600;color:#5cb85c;">{{ $paid }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.unpaid_invoices') }}</td><td style="padding:5px 0;font-weight:600;color:#f0ad4e;">{{ $unpaid }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.overdue_invoices') }}</td><td style="padding:5px 0;font-weight:600;color:#d9534f;">{{ $ovrd }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.total_invoices') }}</td><td style="padding:5px 0;font-weight:600;">{{ $invoiceCount }}</td></tr>
+                    <tr style="border-top:1px solid #eee;"><td style="padding:8px 0 5px;color:#777;">{{ __('admin.clients.credit_balance') }}</td><td style="padding:8px 0 5px;font-weight:600;color:#5cb85c;">${{ number_format($client->credit, 2) }}</td></tr>
                 </table>
             </div>
         </div>
         <div class="panel" style="margin-top:10px;">
-            <div class="panel-heading panel-primary">Other Info</div>
+            <div class="panel-heading panel-primary">{{ __('admin.clients.other_info') }}</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:5px 0;color:#777;width:50%;">Status</td><td style="padding:5px 0;"><span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span></td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Tax Exempt</td><td style="padding:5px 0;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Created</td><td style="padding:5px 0;">{{ $client->created_at->format('d M Y') }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">Last Login</td><td style="padding:5px 0;">{{ $client->last_login?->diffForHumans() ?? 'Never' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;width:50%;">{{ __('admin.clients.status') }}</td><td style="padding:5px 0;"><span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.tax_exempt') }}</td><td style="padding:5px 0;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.created') }}</td><td style="padding:5px 0;">{{ $client->created_at->format('d M Y') }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.last_login') }}</td><td style="padding:5px 0;">{{ $client->last_login?->diffForHumans() ?? __('admin.clients.never') }}</td></tr>
                 </table>
             </div>
         </div>
@@ -118,35 +118,35 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
     {{-- Column 3 --}}
     <div>
         <div class="panel">
-            <div class="panel-heading panel-primary">Quick Actions</div>
+            <div class="panel-heading panel-primary">{{ __('admin.clients.quick_actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
-                <a href="{{ route('admin.clients.show', ['client' => $client, 'tab' => 'notes']) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">+ Add Note</a>
-                <a href="{{ route('admin.tickets.index') }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">+ New Ticket</a>
-                <a href="{{ route('admin.invoices.create', ['client_id' => $client->id]) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">+ New Invoice</a>
+                <a href="{{ route('admin.clients.show', ['client' => $client, 'tab' => 'notes']) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">{{ __('admin.clients.add_note_link') }}</a>
+                <a href="{{ route('admin.tickets.index') }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">{{ __('admin.clients.new_ticket_link') }}</a>
+                <a href="{{ route('admin.invoices.create', ['client_id' => $client->id]) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">{{ __('admin.clients.new_invoice_link') }}</a>
             </div>
         </div>
         <div class="panel" style="margin-top:10px;">
-            <div class="panel-heading panel-primary">Admin Notes</div>
+            <div class="panel-heading panel-primary">{{ __('admin.clients.admin_notes') }}</div>
             <div class="panel-body">
                 <form method="POST" action="{{ route('admin.clients.notes.store', $client) }}">
                     @csrf
                     <div class="form-group">
-                        <textarea name="note" rows="4" required placeholder="Type a note..." class="form-control" style="font-size:13px;resize:vertical;"></textarea>
+                        <textarea name="note" rows="4" required placeholder="{{ __('admin.clients.type_note') }}" class="form-control" style="font-size:13px;resize:vertical;"></textarea>
                     </div>
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
                         <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;">
                             <input type="checkbox" name="sticky" value="1"> Sticky
                         </label>
-                        <button type="submit" class="btn btn-primary btn-sm">Add Note</button>
+                        <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.clients.add_note') }}</button>
                     </div>
                 </form>
                 @forelse(($notes ?? collect())->take(3) as $note)
                 <div style="margin-top:10px;padding:8px;background:{{ $note->sticky ? '#fffbe6' : '#f9f9f9' }};border:1px solid {{ $note->sticky ? '#e6d200' : '#eee' }};border-radius:3px;font-size:12px;">
                     <p style="margin:0 0 4px;color:#333;">{{ $note->note }}</p>
-                    <span style="color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? ' — Pinned' : '' }}</span>
+                    <span style="color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
                 </div>
                 @empty
-                <p style="font-size:12px;color:#999;margin-top:8px;">No notes yet.</p>
+                <p style="font-size:12px;color:#999;margin-top:8px;">{{ __('admin.clients.no_notes') }}</p>
                 @endforelse
             </div>
         </div>
@@ -160,7 +160,7 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
     @else
     <table class="data-table">
         <thead><tr>
-            <th>{{ __('common.table.product') }}</th><th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>{{ __('common.table.amount') }}</th><th>Next Due</th><th>{{ __('common.table.status') }}</th>
+            <th>{{ __('common.table.product') }}</th><th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('admin.clients.next_due') }}</th><th>{{ __('common.table.status') }}</th>
         </tr></thead>
         <tbody>
         @foreach($services as $service)
@@ -186,7 +186,7 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
     @else
     <table class="data-table">
         <thead><tr>
-            <th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.registrar') }}</th><th>Registered</th><th>Expires</th><th>{{ __('common.table.status') }}</th>
+            <th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('admin.clients.registered') }}</th><th>{{ __('admin.domains.expiry_date') }}</th><th>{{ __('common.table.status') }}</th>
         </tr></thead>
         <tbody>
         @foreach($domains as $domain)
@@ -257,12 +257,12 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
 
 @elseif($tab === 'notes')
 <div class="card" style="margin-bottom:15px;">
-    <div class="card-header"><strong>Add Note</strong></div>
+    <div class="card-header"><strong>{{ __('admin.clients.add_note') }}</strong></div>
     <div class="card-body">
         <form method="POST" action="{{ route('admin.clients.notes.store', $client) }}">
             @csrf
             <div class="form-group">
-                <textarea name="note" rows="4" required placeholder="Type your note..." class="form-control"></textarea>
+                <textarea name="note" rows="4" required placeholder="{{ __('admin.clients.type_your_note') }}" class="form-control"></textarea>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
                 <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;">
@@ -281,17 +281,17 @@ $tabs = ['summary'=>'Summary','services'=>'Services','domains'=>'Domains','invoi
     </div>
 </div>
 @empty
-<p style="color:#999;font-size:13px;">No notes yet.</p>
+<p style="color:#999;font-size:13px;">{{ __('admin.clients.no_notes') }}</p>
 @endforelse
 
 @elseif($tab === 'log')
 <div class="card">
     @if($logs->isEmpty())
-    <div class="card-body" style="text-align:center;color:#999;padding:40px;">No activity log entries.</div>
+    <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.clients.no_activity') }}</div>
     @else
     <table class="data-table">
         <thead><tr>
-            <th>{{ __('common.table.date') }}</th><th>Admin</th><th>Action</th><th>{{ __('common.table.description') }}</th>
+            <th>{{ __('common.table.date') }}</th><th>{{ __('admin.clients.admin') }}</th><th>{{ __('admin.clients.action') }}</th><th>{{ __('common.table.description') }}</th>
         </tr></thead>
         <tbody>
         @foreach($logs as $log)

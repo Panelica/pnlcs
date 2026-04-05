@@ -209,7 +209,7 @@ class ClientController extends Controller
         // Login as the client's user
         auth()->login($user);
 
-        return redirect()->route('client.home')->with('success', 'Now viewing as ' . $client->first_name . ' ' . $client->last_name);
+        return redirect()->route('client.home')->with('success', __('admin.messages.viewing_as', ['name' => $client->first_name . ' ' . $client->last_name]));
     }
 
     /**

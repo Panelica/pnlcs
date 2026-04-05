@@ -4,8 +4,8 @@
 
 @section("content")
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">SSL Module Configuration</h1>
-    <a href="{{ route('admin.config.servers') }}" class="btn btn-secondary">Back to Config</a>
+    <h1 class="h3 mb-0">{{ __('admin.ssl_modules.title') }}</h1>
+    <a href="{{ route('admin.config.servers') }}" class="btn btn-secondary">{{ __('common.actions.back') }}</a>
 </div>
 
 @if(session('success'))
@@ -35,7 +35,7 @@
                             <input type="hidden" name="settings[{{ $key }}]" value="0">
                             <input type="checkbox" name="settings[{{ $key }}]" class="form-check-input" value="1"
                                 {{ ($settings[$name][$key] ?? $field['default'] ?? '0') === '1' ? 'checked' : '' }}>
-                            <label class="form-check-label">Enabled</label>
+                            <label class="form-check-label">{{ __('common.status.enabled') }}</label>
                         </div>
                     @elseif(($field['type'] ?? 'text') === 'password')
                         <input type="password" name="settings[{{ $key }}]" class="form-control"
@@ -48,7 +48,7 @@
                     @endif
                 </div>
             @endforeach
-            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <button type="submit" class="btn btn-primary">{{ __('admin.ssl_modules.save_settings') }}</button>
         </form>
     </div>
 </div>

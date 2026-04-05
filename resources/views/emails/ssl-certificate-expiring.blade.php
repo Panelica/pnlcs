@@ -1,22 +1,22 @@
 <x-mail::message>
-# SSL Certificate Expiring Soon
+# {{ __('email.ssl_expiring.title') }}
 
-Hello {{ $order->client->first_name ?? 'Customer' }},
+{{ __('email.ssl_expiring.hello', ['name' => $order->client->first_name ?? __('email.common.customer')]) }}
 
-Your SSL certificate is expiring in **{{ $daysRemaining }} day(s)**.
+{{ __('email.ssl_expiring.body', ['days' => $daysRemaining]) }}
 
-**Certificate Details:**
-- **Domain:** {{ $order->domain }}
-- **Expires:** {{ $order->crt_expires?->format('d M Y') }}
+**{{ __('email.ssl_expiring.certificate_details') }}**
+- **{{ __('email.common.domain_label') }}:** {{ $order->domain }}
+- **{{ __('email.ssl_expiring.expires') }}:** {{ $order->crt_expires?->format('d M Y') }}
 
-To avoid any service interruption, we recommend renewing your certificate as soon as possible.
+{{ __('email.ssl_expiring.renew_recommend') }}
 
 <x-mail::button :url="$viewUrl">
-View Certificate Details
+{{ __('email.ssl_expiring.view_button') }}
 </x-mail::button>
 
-If you have any questions about the renewal process, please contact our support team.
+{{ __('email.ssl_expiring.questions') }}
 
-Thanks,<br>
+{{ __('email.ssl_expiring.thanks') }}<br>
 {{ $companyName }}
 </x-mail::message>

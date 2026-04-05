@@ -1,12 +1,12 @@
 {{-- ===== HOSTING PLANS ===== --}}
 @php
     $c = $content ?? collect();
-    $hpTitle = $c->has('title') ? $c->get('title')->content_value : 'Popular Web Hosting Plans';
-    $hpSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : 'Choose the perfect plan for your website.';
+    $hpTitle = $c->has('title') ? $c->get('title')->content_value : __('sections.hosting.title');
+    $hpSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : __('sections.hosting.subtitle');
     $promoIcon = $c->has('promo_icon') ? $c->get('promo_icon')->content_value : 'ri-gift-2-line';
-    $promoTitle = $c->has('promo_title') ? $c->get('promo_title')->content_value : 'FREE .COM Domain with Annual Plans';
-    $promoText = $c->has('promo_text') ? $c->get('promo_text')->content_value : 'Get a free domain registration when you sign up for any annual hosting plan.';
-    $promoCta = $c->has('promo_cta') ? $c->get('promo_cta')->content_value : 'Claim Offer';
+    $promoTitle = $c->has('promo_title') ? $c->get('promo_title')->content_value : __('sections.hosting.promo_title');
+    $promoText = $c->has('promo_text') ? $c->get('promo_text')->content_value : __('sections.hosting.promo_text');
+    $promoCta = $c->has('promo_cta') ? $c->get('promo_cta')->content_value : __('sections.hosting.claim_offer');
 
     $hostingProducts = isset($products) ? $products->filter(fn($p) => $p->type === 'hosting') : collect();
     $icons = ['ri-rocket-line', 'ri-speed-line', 'ri-flashlight-line', 'ri-vip-crown-line'];
@@ -38,7 +38,7 @@
             @endphp
             <div class="plan-card {{ $isPopular ? 'plan-card--popular' : '' }}">
                 @if($isPopular)
-                <div class="plan-card__badge">Most Popular</div>
+                <div class="plan-card__badge">{{ __('sections.hosting.most_popular') }}</div>
                 @endif
                 <div class="plan-card__icon"><i class="{{ $icons[$idx] ?? 'ri-server-line' }}"></i></div>
                 <div class="plan-card__name">{{ $product->name }}</div>
@@ -54,9 +54,9 @@
                     </div>
                     @endforeach
                 </div>
-                <div class="plan-card__cp"><i class="ri-dashboard-line"></i> Panelica Control Panel</div>
+                <div class="plan-card__cp"><i class="ri-dashboard-line"></i> {{ __('sections.hosting.control_panel') }}</div>
                 <a href="/client/store/configure/{{ $product->slug }}" class="plan-card__btn {{ $isPopular ? 'plan-card__btn--primary' : 'plan-card__btn--outline' }}">
-                    Get Started <i class="ri-arrow-right-line"></i>
+                    {{ __('sections.hosting.get_started') }} <i class="ri-arrow-right-line"></i>
                 </a>
             </div>
             @endforeach

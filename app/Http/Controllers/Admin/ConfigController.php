@@ -582,16 +582,16 @@ class ConfigController extends Controller
         $host = $server->hostname ?? $server->ip_address;
         $port = $server->port ?? match($server->type) { "panelica" => 8443, "cpanel" => 2087, "plesk" => 8443, "directadmin" => 2222, default => 22 };
         if (empty($host)) {
-            return back()->with("error", "No hostname or IP address configured for this server.");
+            return back()->with("error", __("admin.messages.no_hostname"));
         }
         $start = microtime(true);
         $conn = @fsockopen($host, $port, $errno, $errstr, 5);
         $elapsed = round((microtime(true) - $start) * 1000);
         if ($conn) {
             fclose($conn);
-            return back()->with("success", "Connection to {$host}:{$port} successful ({$elapsed}ms). Module: " . ($server->type ?? "custom"));
+            return back()->with("success", __("admin.messages.connection_success", ["host" => $host, "port" => $port, "elapsed" => $elapsed, "module" => $server->type ?? "custom"]));
         }
-        return back()->with("error", "Connection to {$host}:{$port} failed: {$errstr} (errno: {$errno}, {$elapsed}ms)");
+        return back()->with("error", __("admin.messages.connection_failed", ["host" => $host, "port" => $port, "error" => $errstr, "errno" => $errno, "elapsed" => $elapsed]));
     }
 
     // Server Groups
@@ -721,7 +721,7 @@ class ConfigController extends Controller
                 ["value" => $value ?? ""]
             );
         }
-        return back()->with("success", "Gateway settings updated.");
+        return back()->with("success", __("admin.messages.gateway_updated"));
     }
     public function updateRegistrarSettings(Request $request, string $registrar) {
         return back()->with('success', __('messages.success.registrar_updated'));
@@ -740,17 +740,17 @@ class ConfigController extends Controller
 
     public function storeClientGroup(Request $request) {
         ClientGroup::create($request->validate(["name" => "required", "color" => "nullable|string|max:7", "discount_percent" => "nullable|numeric|min:0|max:100"]));
-        return back()->with("success", "Client group created.");
+        return back()->with("success", __("admin.messages.client_group_created"));
     }
 
     public function updateClientGroup(Request $request, ClientGroup $group) {
         $group->update($request->validate(["name" => "required", "color" => "nullable|string|max:7", "discount_percent" => "nullable|numeric|min:0|max:100"]));
-        return back()->with("success", "Client group updated.");
+        return back()->with("success", __("admin.messages.client_group_updated"));
     }
 
     public function destroyClientGroup(ClientGroup $group) {
         $group->delete();
-        return back()->with("success", "Client group deleted.");
+        return back()->with("success", __("admin.messages.client_group_deleted"));
     }
 
     // ===== API DOCS =====
@@ -822,7 +822,7 @@ class ConfigController extends Controller
             "description" => "nullable|string",
         ]);
         ConfigOptionGroup::create($validated);
-        return back()->with("success", "Config option group created.");
+        return back()->with("success", __("admin.messages.config_option_group_created"));
     }
 
     public function updateConfigOptionGroup(Request $request, $id)
@@ -833,13 +833,13 @@ class ConfigController extends Controller
             "description" => "nullable|string",
         ]);
         $group->update($validated);
-        return back()->with("success", "Config option group updated.");
+        return back()->with("success", __("admin.messages.config_option_group_updated"));
     }
 
     public function deleteConfigOptionGroup($id)
     {
         ConfigOptionGroup::findOrFail($id)->delete();
-        return back()->with("success", "Config option group deleted.");
+        return back()->with("success", __("admin.messages.config_option_group_deleted"));
     }
 
     public function storeConfigOption(Request $request)
@@ -851,13 +851,13 @@ class ConfigController extends Controller
             "sort_order" => "nullable|integer",
         ]);
         ConfigOption::create($validated);
-        return back()->with("success", "Config option created.");
+        return back()->with("success", __("admin.messages.config_option_created"));
     }
 
     public function deleteConfigOption($id)
     {
         ConfigOption::findOrFail($id)->delete();
-        return back()->with("success", "Config option deleted.");
+        return back()->with("success", __("admin.messages.config_option_deleted"));
     }
 
     public function storeConfigOptionSub(Request $request)
@@ -868,13 +868,13 @@ class ConfigController extends Controller
             "sort_order" => "nullable|integer",
         ]);
         ConfigOptionSub::create($validated);
-        return back()->with("success", "Sub-option created.");
+        return back()->with("success", __("admin.messages.sub_option_created"));
     }
 
     public function deleteConfigOptionSub($id)
     {
         ConfigOptionSub::findOrFail($id)->delete();
-        return back()->with("success", "Sub-option deleted.");
+        return back()->with("success", __("admin.messages.sub_option_deleted"));
     }
 
     // ===== TICKET ESCALATION =====
@@ -903,7 +903,7 @@ class ConfigController extends Controller
         ]);
         $validated["notify"] = $request->boolean("notify");
         TicketEscalation::create($validated);
-        return back()->with("success", "Escalation rule created.");
+        return back()->with("success", __("admin.messages.escalation_rule_created"));
     }
 
     public function updateTicketEscalation(Request $request, $id)
@@ -923,13 +923,13 @@ class ConfigController extends Controller
         ]);
         $validated["notify"] = $request->boolean("notify");
         $rule->update($validated);
-        return back()->with("success", "Escalation rule updated.");
+        return back()->with("success", __("admin.messages.escalation_rule_updated"));
     }
 
     public function deleteTicketEscalation($id)
     {
         TicketEscalation::findOrFail($id)->delete();
-        return back()->with("success", "Escalation rule deleted.");
+        return back()->with("success", __("admin.messages.escalation_rule_deleted"));
     }
 
 
@@ -956,7 +956,7 @@ class ConfigController extends Controller
         $v["active"] = $request->boolean("active");
         $v["settings"] = $request->input("settings", []);
         \App\Models\NotificationProvider::create($v);
-        return back()->with("success", "Notification provider created.");
+        return back()->with("success", __("admin.messages.notification_provider_created"));
     }
 
     public function updateNotificationProvider(Request $request, $id)
@@ -971,7 +971,7 @@ class ConfigController extends Controller
         $v["active"] = $request->boolean("active");
         $v["settings"] = $request->input("settings", []);
         $provider->update($v);
-        return back()->with("success", "Notification provider updated.");
+        return back()->with("success", __("admin.messages.notification_provider_updated"));
     }
 
     public function destroyNotificationProvider($id)
@@ -979,7 +979,7 @@ class ConfigController extends Controller
         $provider = \App\Models\NotificationProvider::findOrFail($id);
         $provider->rules()->delete();
         $provider->delete();
-        return back()->with("success", "Notification provider and its rules deleted.");
+        return back()->with("success", __("admin.messages.notification_provider_deleted"));
     }
 
     public function storeNotificationRule(Request $request)
@@ -993,13 +993,13 @@ class ConfigController extends Controller
         $v["active"] = $request->boolean("active");
         $v["conditions"] = $request->input("conditions", []);
         \App\Models\NotificationRule::create($v);
-        return back()->with("success", "Notification rule created.");
+        return back()->with("success", __("admin.messages.notification_rule_created"));
     }
 
     public function destroyNotificationRule($id)
     {
         \App\Models\NotificationRule::findOrFail($id)->delete();
-        return back()->with("success", "Notification rule deleted.");
+        return back()->with("success", __("admin.messages.notification_rule_deleted"));
     }
 
     // ===== TICKET SPAM FILTER (Phase 12) =====
@@ -1037,7 +1037,7 @@ class ConfigController extends Controller
         }
 
         Setting::set("TicketSpamMaxPerHour", $request->input("max_per_hour", 5), "tickets");
-        return back()->with("success", "Spam filter settings updated.");
+        return back()->with("success", __("admin.messages.spam_filter_updated"));
     }
 
     public function storeTicketSpamFilter(Request $request)
@@ -1047,13 +1047,13 @@ class ConfigController extends Controller
             "content" => "required|string|max:255",
         ]);
         \App\Models\TicketSpamFilter::create($v);
-        return back()->with("success", "Spam filter added.");
+        return back()->with("success", __("admin.messages.spam_filter_added"));
     }
 
     public function destroyTicketSpamFilter($id)
     {
         \App\Models\TicketSpamFilter::findOrFail($id)->delete();
-        return back()->with("success", "Spam filter removed.");
+        return back()->with("success", __("admin.messages.spam_filter_removed"));
     }
 
     // ===== PRODUCT ADDONS (Phase 14) =====
@@ -1083,7 +1083,7 @@ class ConfigController extends Controller
         $v["packages"] = !empty($packages) ? implode(",", $packages) : null;
 
         \App\Models\ProductAddon::create($v);
-        return back()->with("success", "Product addon created.");
+        return back()->with("success", __("admin.messages.addon_created"));
     }
 
     public function updateAddon(Request $request, $id)
@@ -1101,13 +1101,13 @@ class ConfigController extends Controller
         $v["retired"] = $request->boolean("retired");
         $v["tax"] = $request->boolean("tax");
         $addon->update($v);
-        return back()->with("success", "Product addon updated.");
+        return back()->with("success", __("admin.messages.addon_updated"));
     }
 
     public function destroyAddon($id)
     {
         \App\Models\ProductAddon::findOrFail($id)->delete();
-        return back()->with("success", "Product addon deleted.");
+        return back()->with("success", __("admin.messages.addon_deleted"));
     }
 
     // ===== PRODUCT BUNDLES (Phase 15) =====
@@ -1147,7 +1147,7 @@ class ConfigController extends Controller
             ]);
         }
 
-        return back()->with("success", "Product bundle created.");
+        return back()->with("success", __("admin.messages.bundle_created"));
     }
 
     public function destroyBundle($id)
@@ -1155,7 +1155,7 @@ class ConfigController extends Controller
         $bundle = \App\Models\ProductBundle::findOrFail($id);
         $bundle->items()->delete();
         $bundle->delete();
-        return back()->with("success", "Product bundle deleted.");
+        return back()->with("success", __("admin.messages.bundle_deleted"));
     }
 
 }

@@ -1,8 +1,8 @@
 @extends('admin.layouts.app')
-@section('title', 'Create Quote')
+@section('title', __('admin.quotes.create_quote'))
 @section('content')
 <div class="page-header">
-    <h1>Create Quote</h1>
+    <h1>{{ __('admin.quotes.create_quote') }}</h1>
     <a href="{{ route('admin.quotes.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
 </div>
 @if($errors->any())
@@ -15,11 +15,11 @@
     <div style="display:grid;grid-template-columns:1fr 280px;gap:15px;">
         <div>
             <div class="card" style="margin-bottom:15px;">
-                <div class="card-header"><strong>Quote Details</strong></div>
+                <div class="card-header"><strong>{{ __('admin.quotes.quote_details') }}</strong></div>
                 <div class="card-body">
-                    <div class="form-group"><label class="form-label">Client <span style="color:#d9534f;">*</span></label>
+                    <div class="form-group"><label class="form-label">{{ __('admin.quotes.client') }} <span style="color:#d9534f;">*</span></label>
                         <select name="client_id" required class="form-control">
-                            <option value="">Select a client...</option>
+                            <option value="">{{ __('admin.quotes.select_client') }}</option>
                             @foreach($clients as $client)
                             <option value="{{ $client->id }}" {{ old('client_id')==$client->id?'selected':'' }}>{{ $client->full_name }} ({{ $client->email }})</option>
                             @endforeach
@@ -27,25 +27,25 @@
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('common.form.subject') }}<span style="color:#d9534f;">*</span></label><input type="text" name="subject" value="{{ old('subject') }}" required class="form-control"></div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
-                        <div class="form-group"><label class="form-label">Date <span style="color:#d9534f;">*</span></label><input type="date" name="date" value="{{ old('date', now()->toDateString()) }}" required class="form-control"></div>
-                        <div class="form-group"><label class="form-label">Valid Until <span style="color:#d9534f;">*</span></label><input type="date" name="valid_until" value="{{ old('valid_until', now()->addDays(30)->toDateString()) }}" required class="form-control"></div>
+                        <div class="form-group"><label class="form-label">{{ __('common.form.date') }} <span style="color:#d9534f;">*</span></label><input type="date" name="date" value="{{ old('date', now()->toDateString()) }}" required class="form-control"></div>
+                        <div class="form-group"><label class="form-label">{{ __('admin.quotes.valid_until') }} <span style="color:#d9534f;">*</span></label><input type="date" name="valid_until" value="{{ old('valid_until', now()->addDays(30)->toDateString()) }}" required class="form-control"></div>
                     </div>
                 </div>
             </div>
 
             <div class="card" style="margin-bottom:15px;">
                 <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong>Line Items</strong>
+                    <strong>{{ __('admin.quotes.line_items') }}</strong>
                     <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ Add Item</button>
                 </div>
                 <div class="card-body" style="padding:0;">
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
                         <thead><tr style="border-bottom:1px solid #ddd;background:#f9f9f9;">
                             <th style="padding:6px 10px;text-align:left;font-weight:600;color:#555;">{{ __('common.table.description') }}</th>
-                            <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">Qty</th>
-                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:90px;">Unit Price</th>
+                            <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">{{ __('admin.quotes.qty') }}</th>
+                            <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:90px;">{{ __('admin.quotes.unit_price') }}</th>
                             <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">{{ __('common.table.discount') }}</th>
-                            <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">Taxable</th>
+                            <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">{{ __('admin.quotes.taxable') }}</th>
                             <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:80px;">{{ __('common.table.amount') }}</th>
                             <th style="width:30px;"></th>
                         </tr></thead>
@@ -64,8 +64,8 @@
                             <tr x-show="items.length===0"><td colspan="7" style="text-align:center;color:#999;padding:20px;font-size:13px;">No items. Click "+ Add Item".</td></tr>
                         </tbody>
                         <tfoot style="border-top:2px solid #aaa;">
-                            <tr><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:600;">Subtotal</td><td style="padding:8px;text-align:right;font-weight:600;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
-                            <tr style="background:#f5f5f5;"><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:700;font-size:14px;">Total</td><td style="padding:8px;text-align:right;font-weight:700;font-size:14px;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
+                            <tr><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:600;">{{ __('admin.quotes.subtotal') }}</td><td style="padding:8px;text-align:right;font-weight:600;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
+                            <tr style="background:#f5f5f5;"><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:700;font-size:14px;">{{ __('admin.quotes.total') }}</td><td style="padding:8px;text-align:right;font-weight:700;font-size:14px;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
                         </tfoot>
                     </table>
                 </div>
@@ -74,14 +74,14 @@
 
         <div>
             <div class="card" style="margin-bottom:15px;">
-                <div class="card-header"><strong>Notes</strong></div>
+                <div class="card-header"><strong>{{ __('admin.quotes.notes') }}</strong></div>
                 <div class="card-body">
-                    <div class="form-group"><label class="form-label">Admin Notes</label><textarea name="notes" rows="3" class="form-control">{{ old('notes') }}</textarea></div>
-                    <div class="form-group"><label class="form-label">Customer Notes</label><textarea name="customer_notes" rows="3" class="form-control">{{ old('customer_notes') }}</textarea></div>
-                    <div class="form-group"><label class="form-label">Proposal</label><textarea name="proposal" rows="4" placeholder="Proposal text..." class="form-control">{{ old('proposal') }}</textarea></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.quotes.admin_notes') }}</label><textarea name="notes" rows="3" class="form-control">{{ old('notes') }}</textarea></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.quotes.customer_notes') }}</label><textarea name="customer_notes" rows="3" class="form-control">{{ old('customer_notes') }}</textarea></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.quotes.proposal') }}</label><textarea name="proposal" rows="4" placeholder="Proposal text..." class="form-control">{{ old('proposal') }}</textarea></div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">Create Quote</button>
+            <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">{{ __('admin.quotes.create_quote') }}</button>
         </div>
     </div>
 </form>

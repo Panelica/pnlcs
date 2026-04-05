@@ -1,20 +1,20 @@
 @extends('admin.layouts.app')
-@section('title', 'Affiliates')
+@section('title', __('admin.affiliates.title'))
 @section('content')
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
-    <h1>Affiliates</h1>
+    <h1>{{ __('admin.affiliates.title') }}</h1>
 </div>
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
-    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ $totalAffiliates }}</div><div style="color:#888;font-size:13px;">Total Affiliates</div></div></div>
-    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">${{ number_format($totalEarnings, 2) }}</div><div style="color:#888;font-size:13px;">Total Earnings</div></div></div>
-    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">${{ number_format($totalWithdrawn, 2) }}</div><div style="color:#888;font-size:13px;">Total Withdrawn</div></div></div>
-    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ number_format($totalVisitors) }}</div><div style="color:#888;font-size:13px;">Total Visitors</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ $totalAffiliates }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_affiliates') }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">${{ number_format($totalEarnings, 2) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_earnings') }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">${{ number_format($totalWithdrawn, 2) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_withdrawn') }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ number_format($totalVisitors) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_visitors') }}</div></div></div>
 </div>
 
 <div class="card">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-        <strong>All Affiliates</strong>
+        <strong>{{ __('admin.affiliates.all_affiliates') }}</strong>
         <form method="GET" style="display:flex;gap:8px;">
             <input type="text" name="search" class="form-control form-control-sm" placeholder="{{ __('common.placeholder.search') }}" value="{{ request('search') }}" style="width:200px;">
             <button class="btn btn-sm btn-default" type="submit">{{ __('common.actions.search') }}</button>
@@ -22,7 +22,7 @@
     </div>
     <div class="card-body-flush">
         <table class="table table-striped mb-0">
-            <thead><tr><th>{{ __('common.table.client') }}</th><th>Visitors</th><th>{{ __('common.table.type') }}</th><th>{{ __('common.table.rate') }}</th><th>Balance</th><th>Withdrawn</th><th>{{ __('common.table.actions') }}</th></tr></thead>
+            <thead><tr><th>{{ __('common.table.client') }}</th><th>{{ __('admin.affiliates.visitors') }}</th><th>{{ __('common.table.type') }}</th><th>{{ __('common.table.rate') }}</th><th>{{ __('admin.affiliates.balance') }}</th><th>{{ __('admin.affiliates.withdrawn') }}</th><th>{{ __('common.table.actions') }}</th></tr></thead>
             <tbody>
             @forelse($affiliates as $aff)
             <tr>
@@ -35,7 +35,7 @@
                 <td><a href="{{ route('admin.affiliates.show', $aff) }}" class="btn btn-sm btn-default">{{ __('common.actions.view') }}</a></td>
             </tr>
             @empty
-            <tr><td colspan="7" style="text-align:center;color:#999;">No affiliates found.</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:#999;">{{ __('admin.affiliates.no_affiliates') }}</td></tr>
             @endforelse
             </tbody>
         </table>

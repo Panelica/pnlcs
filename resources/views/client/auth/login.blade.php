@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Login - PNLCS</title>
+    <title>{{ __('client.auth.login_title') }} - PNLCS</title>
     @vite(['resources/css/app.css'])
     @if(!empty($customFavicon))
     <link rel="icon" href="{{ $customFavicon }}" type="image/png">
@@ -43,7 +43,7 @@
         @else
             <h1>PNLCS</h1>
         @endif
-        <p>Client Area</p>
+        <p>{{ __('client.auth.client_area') }}</p>
     </div>
     <div class="card">
         <div class="card-body">
@@ -63,16 +63,16 @@
                 </div>
                 <div class="remember-row">
                     <label>
-                        <input type="checkbox" name="remember"> Remember me
+                        <input type="checkbox" name="remember"> {{ __('client.auth.remember_me') }}
                     </label>
-                    <a href="{{ route("client.password.request") }}">Forgot Password?</a>
+                    <a href="{{ route("client.password.request") }}">{{ __('client.auth.forgot_password') }}</a>
                 </div>
-                <button type="submit" class="btn btn-primary">Sign In</button>
+                <button type="submit" class="btn btn-primary">{{ __('client.auth.sign_in') }}</button>
             </form>
         </div>
     </div>
     <div class="register-link">
-        Don&rsquo;t have an account? <a href="{{ route('client.register') }}">{{ __('common.actions.register') }}</a>
+        {{ __('client.auth.no_account') }} <a href="{{ route('client.register') }}">{{ __('common.actions.register') }}</a>
     </div>
 </div>
 </body>

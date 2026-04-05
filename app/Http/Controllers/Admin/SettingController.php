@@ -123,7 +123,7 @@ class SettingController extends Controller
 
         $admin->update($data);
 
-        return back()->with("success", "Account updated successfully.");
+        return back()->with("success", __("admin.messages.account_updated"));
     }
 
     // ═══════════════════════════════════════════════════════
@@ -225,7 +225,7 @@ class SettingController extends Controller
         $slug = $request->input('slug');
 
         if ($themeManager->activate($slug)) {
-            return back()->with('success', "Theme \"{$slug}\" activated successfully.");
+            return back()->with('success', __('admin.messages.theme_activated', ['name' => $slug]));
         }
 
         return back()->with('error', __('messages.error.theme_not_found_or_invalid'));
@@ -240,7 +240,7 @@ class SettingController extends Controller
         $result = $themeManager->install($request->file('theme_zip'));
 
         if ($result['success']) {
-            return back()->with('success', "Theme \"{$result['name']}\" installed successfully.");
+            return back()->with('success', __('admin.messages.theme_installed', ['name' => $result['name']]));
         }
 
         return back()->with('error', $result['message']);
@@ -356,7 +356,7 @@ class SettingController extends Controller
         Setting::set("custom_favicon_path", "", "appearance");
         ThemeService::clearCache();
 
-        return back()->with("success", "Favicon removed.");
+        return back()->with("success", __("admin.messages.favicon_removed"));
     }
 
     public function sectionsList()

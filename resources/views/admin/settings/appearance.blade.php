@@ -3,25 +3,25 @@
 
 @section("content")
 <div class="page-header">
-    <h1><i class="fas fa-palette"></i> Appearance Settings</h1>
+    <h1><i class="fas fa-palette"></i> {{ __('admin.settings.appearance_settings') }}</h1>
 </div>
 
 {{-- TAB NAVIGATION --}}
 <div style="display:flex; gap:0; border-bottom:2px solid #e5e7eb; margin-bottom:24px;">
     <button class="appearance-tab active" data-tab="themes" onclick="switchTab('themes', this)">
-        <i class="fas fa-swatchbook"></i> Themes
+        <i class="fas fa-swatchbook"></i> {{ __('admin.appearance.tab_themes') }}
     </button>
     <button class="appearance-tab" data-tab="colors" onclick="switchTab('colors', this)">
-        <i class="fas fa-tint"></i> Color Presets
+        <i class="fas fa-tint"></i> {{ __('admin.appearance.tab_colors') }}
     </button>
     <button class="appearance-tab" data-tab="builder" onclick="switchTab('builder', this)">
-        <i class="fas fa-puzzle-piece"></i> Homepage Builder
+        <i class="fas fa-puzzle-piece"></i> {{ __('admin.appearance.tab_builder') }}
     </button>
     <button class="appearance-tab" data-tab="whitelabel" onclick="switchTab('whitelabel', this)">
-        <i class="fas fa-tag"></i> White-Label
+        <i class="fas fa-tag"></i> {{ __('admin.appearance.tab_whitelabel') }}
     </button>
     <button class="appearance-tab" data-tab="darkmode" onclick="switchTab('darkmode', this)">
-        <i class="fas fa-moon"></i> Dark Mode
+        <i class="fas fa-moon"></i> {{ __('admin.appearance.tab_darkmode') }}
     </button>
 </div>
 
@@ -55,7 +55,7 @@
     {{-- LOGO & FAVICON --}}
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
         <div class="card">
-            <div class="card-header">Logo</div>
+            <div class="card-header">{{ __('admin.appearance.logo') }}</div>
             <div class="card-body">
                 @if($logoPath)
                 <div style="margin-bottom:12px; padding:12px; background:#f9f9f9; border-radius:6px; text-align:center;">
@@ -63,38 +63,38 @@
                 </div>
                 <form action="{{ route('admin.settings.appearance.logo.remove') }}" method="POST" style="margin-bottom:12px;">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-xs btn-danger"><i class="fas fa-trash"></i> Remove Logo</button>
+                    <button type="submit" class="btn btn-xs btn-danger"><i class="fas fa-trash"></i> {{ __('admin.appearance.remove_logo') }}</button>
                 </form>
                 @else
-                <p style="color:#999; font-size:12px; margin-bottom:12px;">No custom logo uploaded. Text brand is shown.</p>
+                <p style="color:#999; font-size:12px; margin-bottom:12px;">{{ __('admin.appearance.no_logo') }}</p>
                 @endif
                 <form action="{{ route('admin.settings.appearance.logo') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="file" name="logo" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="form-control" style="margin-bottom:8px;">
-                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> Upload Logo</button>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> {{ __('admin.appearance.upload_logo') }}</button>
                     <span style="font-size:11px; color:#999; margin-left:6px;">PNG, JPG, SVG, WebP. Max 2MB.</span>
                 </form>
             </div>
         </div>
         <div class="card">
-            <div class="card-header">Favicon</div>
+            <div class="card-header">{{ __('admin.appearance.favicon') }}</div>
             <div class="card-body">
                 @if($faviconPath)
                 <div style="margin-bottom:12px; padding:12px; background:#f9f9f9; border-radius:6px; display:flex; align-items:center; gap:10px;">
                     <img src="{{ $faviconPath }}" alt="Favicon" style="width:32px; height:32px;">
-                    <span style="font-size:12px; color:#555;">Current favicon</span>
+                    <span style="font-size:12px; color:#555;">{{ __('admin.appearance.current_favicon') }}</span>
                 </div>
                 <form action="{{ route('admin.settings.appearance.favicon.remove') }}" method="POST" style="margin-bottom:12px;">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-xs btn-danger"><i class="fas fa-trash"></i> Remove Favicon</button>
+                    <button type="submit" class="btn btn-xs btn-danger"><i class="fas fa-trash"></i> {{ __('admin.appearance.remove_favicon') }}</button>
                 </form>
                 @else
-                <p style="color:#999; font-size:12px; margin-bottom:12px;">No custom favicon uploaded.</p>
+                <p style="color:#999; font-size:12px; margin-bottom:12px;">{{ __('admin.appearance.no_favicon') }}</p>
                 @endif
                 <form action="{{ route('admin.settings.appearance.favicon') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="file" name="favicon" accept="image/png,image/x-icon,image/svg+xml" class="form-control" style="margin-bottom:8px;">
-                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> Upload Favicon</button>
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> {{ __('admin.appearance.upload_favicon') }}</button>
                     <span style="font-size:11px; color:#999; margin-left:6px;">PNG, ICO, SVG. Max 512KB.</span>
                 </form>
             </div>
@@ -103,11 +103,11 @@
 
     <div class="card">
         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <span><i class="fas fa-palette"></i> Installed Themes</span>
+            <span><i class="fas fa-palette"></i> {{ __('admin.appearance.installed_themes') }}</span>
             <span style="font-size:12px; color:#999;">{{ count($installedThemes) }} theme(s) installed</span>
         </div>
         <div class="card-body">
-            <p style="margin-bottom:20px; color:#666; font-size:13px;">Select a theme to change the entire look and feel of your website. Each theme includes its own layout, colors, and styling.</p>
+            <p style="margin-bottom:20px; color:#666; font-size:13px;">{{ __('admin.appearance.theme_description') }}</p>
 
             <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:16px; margin-bottom:24px;">
                 @foreach($installedThemes as $slug => $themeInfo)
@@ -140,7 +140,7 @@
                         @endif
 
                         @if($themeInfo->isActive)
-                        <button class="btn btn-sm btn-default" style="width:100%;" disabled>Currently Active</button>
+                        <button class="btn btn-sm btn-default" style="width:100%;" disabled>{{ __('admin.appearance.currently_active') }}</button>
                         @else
                         <div style="display:flex; gap:8px;">
                             <form action="{{ route('admin.settings.appearance.theme.activate') }}" method="POST" style="flex:1;">
@@ -168,10 +168,10 @@
                         @csrf
                         <label class="theme-upload" for="themeZipInput" style="height:100%; min-height:280px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0; border:none;">
                             <i class="fas fa-cloud-upload-alt" style="font-size:48px; color:#d1d5db; margin-bottom:16px;"></i>
-                            <span style="font-size:15px; font-weight:700; color:#666; margin-bottom:4px;">Upload Theme</span>
-                            <span style="font-size:12px; color:#999; margin-bottom:16px;">ZIP file containing theme.json</span>
+                            <span style="font-size:15px; font-weight:700; color:#666; margin-bottom:4px;">{{ __('admin.appearance.upload_theme') }}</span>
+                            <span style="font-size:12px; color:#999; margin-bottom:16px;">{{ __('admin.appearance.theme_zip_hint') }}</span>
                             <input type="file" name="theme_zip" id="themeZipInput" accept=".zip" style="display:none;" onchange="document.getElementById('themeUploadForm').submit();">
-                            <span class="btn btn-sm btn-outline" style="pointer-events:none;"><i class="fas fa-folder-open"></i> Choose File</span>
+                            <span class="btn btn-sm btn-outline" style="pointer-events:none;"><i class="fas fa-folder-open"></i> {{ __('admin.appearance.choose_file') }}</span>
                         </label>
                     </form>
                 </div>
@@ -196,9 +196,9 @@
 <div class="tab-pane" id="tab-colors">
     {{-- PRESET CARDS --}}
     <div class="card">
-        <div class="card-header">Color Presets</div>
+        <div class="card-header">{{ __('admin.appearance.color_presets') }}</div>
         <div class="card-body">
-            <p style="margin-bottom:16px; color:#666; font-size:13px;">Quick-apply a color preset or customize individual tokens below.</p>
+            <p style="margin-bottom:16px; color:#666; font-size:13px;">{{ __('admin.appearance.preset_description') }}</p>
             <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px;">
                 @foreach($presets as $key => $preset)
                 <div style="border:2px solid {{ $activePreset === $key ? '#337ab7' : '#e5e7eb' }}; border-radius:8px; padding:20px; position:relative; transition:all 0.2s; {{ $activePreset === $key ? 'box-shadow:0 0 0 3px rgba(51,122,183,0.2);' : '' }}">
@@ -219,7 +219,7 @@
                         <button type="submit" class="btn btn-sm btn-primary" style="width:100%;">Activate {{ $preset['name'] }}</button>
                     </form>
                     @else
-                    <button class="btn btn-sm btn-default" style="width:100%;" disabled>Currently Active</button>
+                    <button class="btn btn-sm btn-default" style="width:100%;" disabled>{{ __('admin.appearance.currently_active') }}</button>
                     @endif
                 </div>
                 @endforeach
@@ -231,7 +231,7 @@
     <div class="card">
         <div class="card-header">Custom Colors & Tokens ({{ count($tokenLabels) }} tokens)</div>
         <div class="card-body">
-            <p style="margin-bottom:16px; color:#666; font-size:13px;">Fine-tune individual tokens. Changes will set the color preset to "Custom".</p>
+            <p style="margin-bottom:16px; color:#666; font-size:13px;">{{ __('admin.appearance.custom_tokens_description') }}</p>
             <form action="{{ route('admin.settings.appearance.update') }}" method="POST" id="customColorForm">
                 @csrf
                 <input type="hidden" name="preset" value="custom">
@@ -265,8 +265,8 @@
                 @endforeach
 
                 <div style="margin-top:16px; display:flex; gap:8px;">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Custom Tokens</button>
-                    <button type="button" class="btn btn-default" onclick="window.location.reload()"><i class="fas fa-undo"></i> Reset to Active Preset</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ __('admin.appearance.save_custom_tokens') }}</button>
+                    <button type="button" class="btn btn-default" onclick="window.location.reload()"><i class="fas fa-undo"></i> {{ __('admin.appearance.reset_to_preset') }}</button>
                 </div>
             </form>
         </div>
@@ -274,7 +274,7 @@
 
     {{-- LIVE PREVIEW --}}
     <div class="card">
-        <div class="card-header">Live Preview</div>
+        <div class="card-header">{{ __('admin.appearance.live_preview') }}</div>
         <div class="card-body" id="themePreview">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                 <div>
@@ -318,11 +318,11 @@
 <div class="tab-pane" id="tab-builder">
     <div class="card">
         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>Homepage Sections</span>
-            <a href="/" target="_blank" class="btn btn-sm btn-default"><i class="fas fa-external-link-alt"></i> Preview</a>
+            <span>{{ __('admin.appearance.homepage_sections') }}</span>
+            <a href="/" target="_blank" class="btn btn-sm btn-default"><i class="fas fa-external-link-alt"></i> {{ __('common.actions.preview') }}</a>
         </div>
         <div class="card-body">
-            <p style="margin-bottom:16px; color:#666; font-size:13px;">Drag sections to reorder, toggle visibility, and edit content. Changes take effect immediately on the public welcome page.</p>
+            <p style="margin-bottom:16px; color:#666; font-size:13px;">{{ __('admin.appearance.sections_description') }}</p>
             <div id="sectionList" style="display:flex; flex-direction:column; gap:8px;">
                 @foreach($sections as $section)
                 <div class="section-row" data-id="{{ $section->id }}" data-slug="{{ $section->slug }}" style="display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; transition:box-shadow 0.2s;">
@@ -368,9 +368,9 @@
 {{-- ═══════════════════════════════════════════════════════════ --}}
 <div class="tab-pane" id="tab-whitelabel">
     <div class="card">
-        <div class="card-header">White-Label Settings</div>
+        <div class="card-header">{{ __('admin.appearance.whitelabel_settings') }}</div>
         <div class="card-body">
-            <p style="margin-bottom:16px; color:#666; font-size:13px;">Replace PNLCS branding with your own company identity across all pages.</p>
+            <p style="margin-bottom:16px; color:#666; font-size:13px;">{{ __('admin.appearance.whitelabel_description') }}</p>
             <form action="{{ route('admin.settings.appearance.whitelabel') }}" method="POST">
                 @csrf
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
@@ -380,15 +380,15 @@
                         <span style="font-size:11px; color:#999;">Replaces "PNLCS" in navigation, footer, emails</span>
                     </div>
                     <div>
-                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">Company URL</label>
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('admin.appearance.company_url') }}</label>
                         <input type="url" name="company_url" value="{{ $whitelabel['company_url'] }}" class="form-control" placeholder="https://myhosting.com">
                     </div>
                     <div>
-                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">Support Email</label>
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('admin.appearance.support_email') }}</label>
                         <input type="email" name="support_email" value="{{ $whitelabel['support_email'] }}" class="form-control" placeholder="support@myhosting.com">
                     </div>
                     <div>
-                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">Copyright Text</label>
+                        <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('admin.appearance.copyright_text') }}</label>
                         <input type="text" name="copyright" value="{{ $whitelabel['copyright'] }}" class="form-control" placeholder="e.g. MyHosting LLC">
                         <span style="font-size:11px; color:#999;">Shown in footer: &copy; 2026 [this text]</span>
                     </div>
@@ -396,10 +396,10 @@
                 <div style="margin-bottom:16px;">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                         <input type="checkbox" name="remove_branding" value="1" {{ $whitelabel['remove_branding'] === '1' ? 'checked' : '' }}>
-                        <span style="font-size:14px; font-weight:600;">Remove PNLCS / Panelica branding references</span>
+                        <span style="font-size:14px; font-weight:600;">{{ __('admin.appearance.remove_branding') }}</span>
                     </label>
                 </div>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save White-Label Settings</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ __('admin.appearance.save_whitelabel') }}</button>
             </form>
         </div>
     </div>
@@ -410,15 +410,15 @@
 {{-- ═══════════════════════════════════════════════════════════ --}}
 <div class="tab-pane" id="tab-darkmode">
     <div class="card">
-        <div class="card-header">Dark Mode</div>
+        <div class="card-header">{{ __('admin.appearance.dark_mode') }}</div>
         <div class="card-body">
-            <p style="margin-bottom:16px; color:#666; font-size:13px;">Allow visitors to switch between light and dark mode on the public welcome page and client portal.</p>
+            <p style="margin-bottom:16px; color:#666; font-size:13px;">{{ __('admin.appearance.darkmode_description') }}</p>
             <form action="{{ route('admin.settings.appearance.darkmode') }}" method="POST">
                 @csrf
                 <div style="margin-bottom:16px;">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
                         <input type="checkbox" name="dark_mode_enabled" value="1" {{ $darkModeEnabled === '1' ? 'checked' : '' }}>
-                        <span style="font-size:14px; font-weight:600;">Enable dark mode toggle for visitors</span>
+                        <span style="font-size:14px; font-weight:600;">{{ __('admin.appearance.enable_darkmode') }}</span>
                     </label>
                     <p style="font-size:12px; color:#999; margin-top:4px;">When enabled, a sun/moon toggle appears in the navigation bar. Visitor preference is saved via cookie and persists across sessions.</p>
                 </div>
@@ -434,7 +434,7 @@
                     </ul>
                 </div>
 
-                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Dark Mode Settings</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> {{ __('admin.appearance.save_darkmode') }}</button>
             </form>
         </div>
     </div>

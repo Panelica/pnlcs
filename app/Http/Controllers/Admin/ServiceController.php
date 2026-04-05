@@ -39,9 +39,9 @@ class ServiceController extends Controller
         };
 
         if ($result['success'] ?? false) {
-            return back()->with('success', ucfirst($action) . ' completed successfully.');
+            return back()->with('success', __('admin.messages.module_action_success', ['action' => ucfirst($action)]));
         }
 
-        return back()->with('error', $result['message'] ?? 'Module action failed.');
+        return back()->with('error', $result['message'] ?? __('admin.messages.module_action_failed'));
     }
 }

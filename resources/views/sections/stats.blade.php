@@ -6,10 +6,10 @@
 
     if (!$statItems) {
         $statItems = [
-            ['number' => '5', 'suffix' => '+', 'label' => 'PHP Versions'],
-            ['number' => '20', 'suffix' => '+', 'label' => 'Managed Services'],
-            ['number' => '24', 'suffix' => '/7', 'label' => 'Monitoring & Alerts'],
-            ['number' => '100', 'suffix' => '%', 'label' => 'Resource Isolation'],
+            ['number' => '5', 'suffix' => '+', 'label' => __('sections.stats.php_versions')],
+            ['number' => '20', 'suffix' => '+', 'label' => __('sections.stats.managed_services')],
+            ['number' => '24', 'suffix' => '/7', 'label' => __('sections.stats.monitoring')],
+            ['number' => '100', 'suffix' => '%', 'label' => __('sections.stats.isolation')],
         ];
     }
 @endphp

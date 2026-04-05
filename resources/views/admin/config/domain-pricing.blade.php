@@ -1,17 +1,17 @@
 @extends('admin.layouts.app')
-@section('title', 'Domain Pricing')
+@section('title', __('admin.domain_pricing.title'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Domain Pricing</h1>
-    <button type="button" onclick="openAddTLD()" class="btn btn-primary btn-sm">+ Add TLD</button>
+    <h1>{{ __('admin.domain_pricing.title') }}</h1>
+    <button type="button" onclick="openAddTLD()" class="btn btn-primary btn-sm">+ {{ __('admin.domain_pricing.add_tld') }}</button>
 </div>
 <div class="card">
     @if($tlds->isEmpty())
-    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No domain pricing configured.</div>
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.domain_pricing.no_pricing') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Extension</th><th>{{ __('common.actions.register') }}</th><th>Transfer</th><th>Renew</th><th>Grace</th><th>Min/Max Yrs</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.domain_pricing.extension') }}</th><th>{{ __('common.actions.register') }}</th><th>{{ __('admin.domain_pricing.transfer') }}</th><th>{{ __('admin.domain_pricing.renew') }}</th><th>{{ __('admin.domain_pricing.grace') }}</th><th>{{ __('admin.domain_pricing.min_max_years') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($tlds as $tld)
         <tr>
@@ -21,8 +21,8 @@
             <td>${{ number_format($tld->renew_price, 2) }}</td>
             <td>{{ $tld->grace_period }}d</td>
             <td>{{ $tld->min_years }}-{{ $tld->max_years }}</td>
-            <td>{{ $tld->auto_registrar ?: 'Manual' }}</td>
-            <td><span class="badge-{{ $tld->enabled ? 'active' : 'suspended' }}">{{ $tld->enabled ? 'Enabled' : 'Disabled' }}</span></td>
+            <td>{{ $tld->auto_registrar ?: __('admin.domain_pricing.manual') }}</td>
+            <td><span class="badge-{{ $tld->enabled ? 'active' : 'suspended' }}">{{ $tld->enabled ? __('common.status.enabled') : __('common.status.disabled') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs" onclick="openEditTLD({{ json_encode($tld) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.domain-pricing.destroy', $tld) }}" style="display:inline;" onsubmit="return confirm('Delete .{{ $tld->extension }}?')">
@@ -49,16 +49,16 @@
             <span id="tld-method-field"></span>
             <div style="padding:20px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">Extension</label><input type="text" name="extension" id="tld-ext" required class="form-control" placeholder=".com"></div>
-                    <div class="form-group"><label class="form-label">Register Price ($)</label><input type="number" name="register_price" id="tld-reg" step="0.01" required class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Transfer Price ($)</label><input type="number" name="transfer_price" id="tld-trans" step="0.01" required class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Renew Price ($)</label><input type="number" name="renew_price" id="tld-ren" step="0.01" required class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Grace Period (days)</label><input type="number" name="grace_period" id="tld-grace" value="0" min="0" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Min Years</label><input type="number" name="min_years" id="tld-min" value="1" min="1" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Max Years</label><input type="number" name="max_years" id="tld-max" value="10" min="1" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Auto Registrar</label><input type="text" name="auto_registrar" id="tld-reg2" class="form-control" placeholder="none"></div>
-                    <div class="form-group"><label class="form-label">Sort Order</label><input type="number" name="sort_order" id="tld-sort" value="0" class="form-control"></div>
-                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="enabled" value="1" id="tld-enabled" checked> Enabled</label></div>
+                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.domain_pricing.extension') }}</label><input type="text" name="extension" id="tld-ext" required class="form-control" placeholder=".com"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.register_price') }}</label><input type="number" name="register_price" id="tld-reg" step="0.01" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.transfer_price') }}</label><input type="number" name="transfer_price" id="tld-trans" step="0.01" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.renew_price') }}</label><input type="number" name="renew_price" id="tld-ren" step="0.01" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.grace_period') }}</label><input type="number" name="grace_period" id="tld-grace" value="0" min="0" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.min_years') }}</label><input type="number" name="min_years" id="tld-min" value="1" min="1" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.max_years') }}</label><input type="number" name="max_years" id="tld-max" value="10" min="1" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.auto_registrar') }}</label><input type="text" name="auto_registrar" id="tld-reg2" class="form-control" placeholder="none"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.sort_order') }}</label><input type="number" name="sort_order" id="tld-sort" value="0" class="form-control"></div>
+                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="enabled" value="1" id="tld-enabled" checked> {{ __('common.status.enabled') }}</label></div>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

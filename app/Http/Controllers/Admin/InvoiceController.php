@@ -102,7 +102,7 @@ class InvoiceController extends Controller
 
         return redirect()
             ->route('admin.invoices.show', $invoice)
-            ->with('success', "Invoice #{$invoice->invoice_num} created successfully.");
+            ->with('success', __('admin.messages.invoice_created', ['num' => $invoice->invoice_num]));
     }
 
     /**
@@ -125,7 +125,7 @@ class InvoiceController extends Controller
             $validated['gateway'] ?? 'manual'
         );
 
-        return back()->with('success', "Invoice #{$invoice->invoice_num} marked as paid.");
+        return back()->with('success', __('admin.messages.invoice_marked_paid', ['num' => $invoice->invoice_num]));
     }
 
     /**
@@ -139,7 +139,7 @@ class InvoiceController extends Controller
 
         $this->invoiceService->cancelInvoice($invoice);
 
-        return back()->with('success', "Invoice #{$invoice->invoice_num} has been cancelled.");
+        return back()->with('success', __('admin.messages.invoice_cancelled', ['num' => $invoice->invoice_num]));
     }
 
     /**

@@ -4,13 +4,13 @@
 
 <a href="{{ route("client.cart.index") }}" class="pn-back">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-    Back to Cart
+    {{ __('client.cart.back_to_cart') }}
 </a>
 
 <div class="pn-page-header">
     <div>
         <h1 class="pn-page-title">{{ __('common.actions.checkout') }}</h1>
-        <p class="pn-page-subtitle">Review your order and choose a payment method.</p>
+        <p class="pn-page-subtitle">{{ __('client.checkout.subtitle') }}</p>
     </div>
 </div>
 
@@ -21,7 +21,7 @@
     <div class="pn-checkout-grid">
         <div>
             <div class="pn-card mb-16">
-                <div class="pn-card-header"><span class="pn-card-title">Contact Details</span></div>
+                <div class="pn-card-header"><span class="pn-card-title">{{ __('client.checkout.contact_details') }}</span></div>
                 <div class="pn-card-body">
                     <div class="form-grid-2">
                         <div class="form-group">
@@ -41,7 +41,7 @@
             </div>
 
             <div class="pn-card mb-16">
-                <div class="pn-card-header"><span class="pn-card-title">Payment Method</span></div>
+                <div class="pn-card-header"><span class="pn-card-title">{{ __('client.checkout.payment_method') }}</span></div>
                 <div class="pn-card-body">
                     @foreach($paymentMethods as $value => $label)
                     <label class="pn-pay-option {{ $loop->first ? "selected" : "" }}" onclick="selectPay(this)">
@@ -57,14 +57,14 @@
             <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px;background:#f8fafc;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
                 <input type="checkbox" name="terms" id="terms" value="1" required style="margin-top:2px;flex-shrink:0;accent-color:var(--primary)">
                 <span style="font-size:13px;color:var(--muted)">
-                    I agree to the <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>.
+                    {{ __('client.auth.i_agree_to') }} <a href="#" class="link">{{ __('client.auth.terms_of_service') }}</a> {{ __('client.auth.and') }} <a href="#" class="link">{{ __('client.auth.privacy_policy') }}</a>.
                 </span>
             </label>
         </div>
 
         <div>
             <div class="pn-card" style="position:sticky;top:80px">
-                <div class="pn-card-header"><span class="pn-card-title">Order Summary</span></div>
+                <div class="pn-card-header"><span class="pn-card-title">{{ __('client.cart.order_summary') }}</span></div>
                 <div class="pn-card-body">
                     @foreach($totals["items"] as $item)
                     <div class="pn-order-row">
@@ -74,23 +74,23 @@
                     @endforeach
                     @if(($totals["discount"] ?? 0) > 0)
                     <div class="pn-order-row" style="color:var(--success)">
-                        <span>Discount</span><span>-${{ number_format($totals["discount"], 2) }}</span>
+                        <span>{{ __('client.cart.discount') }}</span><span>-${{ number_format($totals["discount"], 2) }}</span>
                     </div>
                     @endif
                     @if(($totals["tax"] ?? 0) > 0)
                     <div class="pn-order-row">
-                        <span class="key">Tax</span><span>${{ number_format($totals["tax"], 2) }}</span>
+                        <span class="key">{{ __('client.cart.tax') }}</span><span>${{ number_format($totals["tax"], 2) }}</span>
                     </div>
                     @endif
                     <div class="pn-order-row">
-                        <span>Total</span>
+                        <span>{{ __('client.cart.total') }}</span>
                         <span style="color:var(--primary);font-size:18px">${{ number_format($totals["total"], 2) }}</span>
                     </div>
                     <button type="submit" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:20px;font-size:15px;padding:12px">
-                        Place Order &rarr;
+                        {{ __('client.checkout.place_order') }} &rarr;
                     </button>
                     <p class="text-muted text-sm" style="text-align:center;margin-top:10px">
-                        Secure checkout &mdash; ${{ number_format($totals["total"], 2) }}
+                        {{ __('client.checkout.secure_checkout') }} &mdash; ${{ number_format($totals["total"], 2) }}
                     </p>
                 </div>
             </div>

@@ -1,8 +1,8 @@
 {{-- ===== TESTIMONIALS ===== --}}
 @php
     $c = $content ?? collect();
-    $testTitle = $c->has('title') ? $c->get('title')->content_value : 'What Our Customers Say';
-    $testSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : 'Trusted by thousands of businesses worldwide';
+    $testTitle = $c->has('title') ? $c->get('title')->content_value : __('sections.testimonials.title');
+    $testSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : __('sections.testimonials.subtitle');
     $itemsJson = $c->has('items') ? $c->get('items')->content_value : null;
     $items = $itemsJson ? json_decode($itemsJson, true) : [];
 @endphp

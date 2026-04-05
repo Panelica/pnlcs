@@ -1,25 +1,25 @@
 <x-mail::message>
-# SSL Certificate Configuration Submitted
+# {{ __('email.ssl_config_submitted.title') }}
 
-Hello {{ $order->client->first_name ?? 'Customer' }},
+{{ __('email.ssl_config_submitted.hello', ['name' => $order->client->first_name ?? __('email.common.customer')]) }}
 
-Your SSL certificate configuration has been submitted to the Certificate Authority for processing.
+{{ __('email.ssl_config_submitted.body') }}
 
-**Order Details:**
-- **Domain:** {{ $order->domain }}
-- **Validation Method:** {{ $order->validation_method }}
-- **Status:** Configuration Submitted
+**{{ __('email.ssl_config_submitted.order_details') }}**
+- **{{ __('email.common.domain_label') }}:** {{ $order->domain }}
+- **{{ __('email.ssl_config_submitted.validation_method') }}:** {{ $order->validation_method }}
+- **{{ __('email.common.status_label') }}:** {{ __('email.ssl_config_submitted.configuration_submitted') }}
 
 @if($order->validation_method === 'EMAIL')
-A validation email will be sent to **{{ $order->approver_email }}**. Please check your inbox and approve the certificate request.
+{{ __('email.ssl_config_submitted.email_validation', ['email' => $order->approver_email]) }}
 @elseif($order->validation_method === 'HTTP')
-Please ensure the HTTP validation file is accessible on your web server.
+{{ __('email.ssl_config_submitted.http_validation') }}
 @elseif($order->validation_method === 'DNS')
-Please ensure the DNS CNAME record has been created for your domain.
+{{ __('email.ssl_config_submitted.dns_validation') }}
 @endif
 
-You will be notified once your certificate has been issued.
+{{ __('email.ssl_config_submitted.notified_when_issued') }}
 
-Thanks,<br>
-{{ config('app.name') }}
+{{ __('email.ssl_config_submitted.thanks') }}<br>
+{{ $companyName }}
 </x-mail::message>

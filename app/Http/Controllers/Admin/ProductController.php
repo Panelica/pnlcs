@@ -27,7 +27,7 @@ class ProductController extends Controller
         $validated = $request->validate(["name" => "required|string|max:255", "headline" => "nullable|string", "tagline" => "nullable|string"]);
         $validated["slug"] = Str::slug($validated["name"]);
         ProductGroup::create($validated);
-        return redirect()->route("admin.products.index")->with("success", "Product group created.");
+        return redirect()->route("admin.products.index")->with("success", __("admin.messages.product_group_created"));
     }
 
     public function create()
@@ -64,7 +64,7 @@ class ProductController extends Controller
             ]);
         }
 
-        return redirect()->route("admin.products.edit", $product)->with("success", "Product created.");
+        return redirect()->route("admin.products.edit", $product)->with("success", __("admin.messages.product_created"));
     }
 
     public function edit(Product $product)
@@ -115,12 +115,12 @@ class ProductController extends Controller
             );
         }
 
-        return back()->with("success", "Product updated.");
+        return back()->with("success", __("admin.messages.product_updated"));
     }
 
     public function destroy(Product $product)
     {
         $product->delete();
-        return redirect()->route("admin.products.index")->with("success", "Product deleted.");
+        return redirect()->route("admin.products.index")->with("success", __("admin.messages.product_deleted"));
     }
 }

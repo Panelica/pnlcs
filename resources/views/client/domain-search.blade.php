@@ -1,19 +1,19 @@
 @extends("client.layouts.app")
 @section("title", __("client.domain_search.title"))
 @section("content")
-<div class="pn-page-header"><div><h1 class="pn-page-title">Domain Search</h1><p class="pn-page-subtitle">Check domain availability and register your perfect domain name.</p></div></div>
+<div class="pn-page-header"><div><h1 class="pn-page-title">{{ __('client.domain_search.heading') }}</h1><p class="pn-page-subtitle">{{ __('client.domain_search.subtitle') }}</p></div></div>
 <div style="max-width:100%;padding:0;">
 
     <div style="text-align:center;margin-bottom:32px;">
-        <h1 style="font-size:32px;font-weight:800;color:#1a4d80;margin-bottom:8px;">Find Your Perfect Domain</h1>
-        <p style="color:#64748b;font-size:16px;">Search availability and register or transfer in seconds</p>
+        <h1 style="font-size:32px;font-weight:800;color:#1a4d80;margin-bottom:8px;">{{ __('client.domain_search.find_perfect') }}</h1>
+        <p style="color:#64748b;font-size:16px;">{{ __('client.domain_search.search_desc') }}</p>
     </div>
 
     <form method="GET" action="{{ route('client.domain.search') }}" id="domain-search-form" style="margin-bottom:32px;">
         <div style="display:flex;background:#fff;border:2px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
             <input type="text" name="domain" id="domain-input"
                 value="{{ $searchDomain ? explode('.', $searchDomain)[0] : old('domain') }}"
-                placeholder="Enter domain name (e.g. mysite)" required
+                placeholder="{{ __('client.domain_search.placeholder') }}" required
                 style="flex:1;border:none;outline:none;padding:16px 20px;font-size:18px;font-family:inherit;color:#1e293b;background:transparent;min-width:0;">
             <div style="display:flex;align-items:center;border-left:1px solid #e2e8f0;">
                 <select name="tld" id="tld-select" style="border:none;outline:none;font-size:16px;font-weight:600;color:#1a4d80;background:transparent;padding:0 12px;cursor:pointer;font-family:inherit;height:58px;">
@@ -46,9 +46,9 @@
             <div>
                 <div style="font-size:22px;font-weight:700;color:#1e293b;">{{ $primary['domain'] }}</div>
                 <div style="font-size:14px;color:{{ $primary['available'] ? '#16a34a' : '#dc2626' }};font-weight:600;">
-                    {{ $primary['available'] ? 'Available!' : 'Already Registered' }}
+                    {{ $primary['available'] ? __('client.domain_search.available') : __('client.domain_search.already_registered') }}
                     @if($primary['whois_error'] ?? false)
-                    <span style="color:#94a3b8;font-weight:400;font-size:12px;">(availability unconfirmed)</span>
+                    <span style="color:#94a3b8;font-weight:400;font-size:12px;">({{ __('client.domain_search.unconfirmed') }})</span>
                     @endif
                 </div>
             </div>
@@ -57,7 +57,7 @@
             @if($primary['available'])
             <div style="text-align:right;">
                 <div style="font-size:24px;font-weight:800;color:#1a4d80;">${{ number_format($primary['price'], 2) }}<span style="font-size:13px;font-weight:400;color:#94a3b8;">/yr</span></div>
-                <div style="font-size:11px;color:#94a3b8;">Renews at ${{ number_format($primary['renew_price'], 2) }}/yr</div>
+                <div style="font-size:11px;color:#94a3b8;">{{ __('client.domain_search.renews_at') }} ${{ number_format($primary['renew_price'], 2) }}/yr</div>
             </div>
             <form method="POST" action="{{ route('client.cart.add-domain') }}">
                 @csrf
@@ -72,7 +72,7 @@
                 <input type="hidden" name="domain" value="{{ $primary['domain'] }}">
                 <input type="hidden" name="type" value="transfer">
                 <input type="hidden" name="years" value="1">
-                <button type="submit" style="padding:12px 24px;background:#64748b;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">Transfer Domain</button>
+                <button type="submit" style="padding:12px 24px;background:#64748b;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">{{ __('client.domains.transfer_domain') }}</button>
             </form>
             @endif
         </div>
@@ -81,7 +81,7 @@
 
     @if(!empty($results['alternatives']))
     <div style="margin-bottom:40px;">
-        <h3 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:16px;">Other Options</h3>
+        <h3 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:16px;">{{ __('client.domain_search.other_options') }}</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
             @foreach($results['alternatives'] as $alt)
             @if($alt)
@@ -96,7 +96,7 @@
                     </div>
                     <div>
                         <div style="font-weight:600;color:#1e293b;font-size:15px;">{{ $alt['domain'] }}</div>
-                        <div style="font-size:12px;color:{{ $alt['available'] ? '#16a34a' : '#dc2626' }};font-weight:600;">{{ $alt['available'] ? 'Available' : 'Taken' }}</div>
+                        <div style="font-size:12px;color:{{ $alt['available'] ? '#16a34a' : '#dc2626' }};font-weight:600;">{{ $alt['available'] ? __('client.domain_search.available_short') : __('client.domain_search.taken') }}</div>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
@@ -110,7 +110,7 @@
                         <button type="submit" style="padding:6px 14px;background:#1a4d80;color:#fff;font-size:12px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">{{ __('common.actions.add') }}</button>
                     </form>
                     @else
-                    <span style="font-size:13px;color:#94a3b8;">Taken</span>
+                    <span style="font-size:13px;color:#94a3b8;">{{ __('client.domain_search.taken') }}</span>
                     @endif
                 </div>
             </div>
@@ -123,17 +123,17 @@
 
     <div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:32px;">
         <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
-            <h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0;">Domain Pricing</h2>
-            <a href="{{ route('client.domain.pricing') }}" style="font-size:13px;color:#1a4d80;font-weight:600;text-decoration:none;">View Full List &rarr;</a>
+            <h2 style="font-size:20px;font-weight:700;color:#1e293b;margin:0;">{{ __('client.nav.domain_pricing') }}</h2>
+            <a href="{{ route('client.domain.pricing') }}" style="font-size:13px;color:#1a4d80;font-weight:600;text-decoration:none;">{{ __('client.domain_search.view_full_list') }} &rarr;</a>
         </div>
         <table style="width:100%;border-collapse:collapse;">
             <thead>
                 <tr style="background:#f8fafc;">
-                    <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Extension</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">{{ __('client.domain_search.extension') }}</th>
                     <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">{{ __('common.actions.register') }}</th>
-                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Transfer</th>
-                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Renew</th>
-                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">Action</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">{{ __('client.domain_search.transfer') }}</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">{{ __('client.domain_search.renew') }}</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;">{{ __('client.security.action') }}</th>
                 </tr>
             </thead>
             <tbody>

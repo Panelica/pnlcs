@@ -45,12 +45,12 @@ class OrderController extends Controller
         }
 
         if (!in_array($order->status, ['Pending'])) {
-            return back()->with('error', "Only pending orders can be accepted. Current status: {$order->status}.");
+            return back()->with('error', __('admin.messages.order_pending_error', ['status' => $order->status]));
         }
 
         $this->orderService->acceptOrder($order);
 
-        return back()->with('success', "Order #{$order->order_num} has been accepted and services activated.");
+        return back()->with('success', __('admin.messages.order_accepted', ['num' => $order->order_num]));
     }
 
     /**
@@ -64,7 +64,7 @@ class OrderController extends Controller
 
         $this->orderService->cancelOrder($order);
 
-        return back()->with('success', "Order #{$order->order_num} has been cancelled.");
+        return back()->with('success', __('admin.messages.order_cancelled', ['num' => $order->order_num]));
     }
 
     /**
@@ -78,7 +78,7 @@ class OrderController extends Controller
 
         $this->orderService->markFraud($order);
 
-        return back()->with('success', "Order #{$order->order_num} has been marked as fraud and services suspended.");
+        return back()->with('success', __('admin.messages.order_fraud', ['num' => $order->order_num]));
     }
 
     /**
@@ -92,6 +92,6 @@ class OrderController extends Controller
 
         return redirect()
             ->route('admin.orders.index')
-            ->with('success', "Order #{$orderNum} has been deleted.");
+            ->with('success', __('admin.messages.order_deleted', ['num' => $orderNum]));
     }
 }

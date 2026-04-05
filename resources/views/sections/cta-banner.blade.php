@@ -1,11 +1,11 @@
 {{-- ===== CTA BANNER ===== --}}
 @php
     $c = $content ?? collect();
-    $ctaTitle = $c->has('title') ? $c->get('title')->content_value : 'Ready to Get Started?';
-    $ctaSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : 'Join thousands of satisfied customers.';
-    $ctaText = $c->has('cta_text') ? $c->get('cta_text')->content_value : 'Start Your Journey';
+    $ctaTitle = $c->has('title') ? $c->get('title')->content_value : __('sections.cta.title');
+    $ctaSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : __('sections.cta.subtitle');
+    $ctaText = $c->has('cta_text') ? $c->get('cta_text')->content_value : __('sections.cta.button');
     $ctaUrl = $c->has('cta_url') ? $c->get('cta_url')->content_value : '/client/register';
-    $noteText = $c->has('note_text') ? $c->get('note_text')->content_value : 'No credit card required. 30-day money-back guarantee.';
+    $noteText = $c->has('note_text') ? $c->get('note_text')->content_value : __('sections.cta.note');
 @endphp
 <section class="cta-banner">
     <div class="container">

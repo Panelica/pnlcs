@@ -3,8 +3,8 @@
 @section("content")
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Configurable Options</h1>
-    <button type="button" onclick="document.getElementById('modal-add-group').style.display='flex'" class="btn btn-primary btn-sm">+ Add Group</button>
+    <h1>{{ __('admin.config_options.title') }}</h1>
+    <button type="button" onclick="document.getElementById('modal-add-group').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.config_options.add_group') }}</button>
 </div>
 
 @if(($groups ?? collect())->isEmpty())
@@ -95,7 +95,7 @@
         <form method="POST" action="{{ route('admin.config.config-option-groups.update', $group->id) }}">
             @csrf @method("PUT")
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Group Name</label><input type="text" name="name" value="{{ $group->name }}" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.config_options.group_name') }}</label><input type="text" name="name" value="{{ $group->name }}" required class="form-control"></div>
                 <div class="form-group" style="margin-top:12px;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" class="form-control" rows="2">{{ $group->description }}</textarea></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -145,7 +145,7 @@
         <form method="POST" action="{{ route('admin.config.config-option-groups.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Group Name</label><input type="text" name="name" required class="form-control" placeholder="e.g. RAM Options"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.config_options.group_name') }}</label><input type="text" name="name" required class="form-control" placeholder="e.g. RAM Options"></div>
                 <div class="form-group" style="margin-top:12px;"><label class="form-label">Description (optional)</label><textarea name="description" class="form-control" rows="2" placeholder="Optional description for this group"></textarea></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

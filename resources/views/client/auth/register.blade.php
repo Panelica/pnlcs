@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - PNLCS</title>
+    <title>{{ __('client.auth.register_title') }} - PNLCS</title>
     @vite(['resources/css/app.css'])
     <style>
         * { box-sizing: border-box; }
@@ -34,7 +34,7 @@
 <div class="register-box">
     <div class="login-logo">
         <h1>PNLCS</h1>
-        <p>Create Your Account</p>
+        <p>{{ __('client.auth.create_your_account') }}</p>
     </div>
     <div class="card">
         <div class="card-body">
@@ -74,27 +74,27 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="phone_number">Phone <span style="color:#999; font-weight:400;">(optional)</span></label>
+                        <label class="form-label" for="phone_number">{{ __('client.form.phone') }} <span style="color:#999; font-weight:400;">({{ __('client.form.optional') }})</span></label>
                         <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="company_name">Company <span style="color:#999; font-weight:400;">(optional)</span></label>
+                        <label class="form-label" for="company_name">{{ __('client.form.company') }} <span style="color:#999; font-weight:400;">({{ __('client.form.optional') }})</span></label>
                         <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" class="form-control">
                     </div>
                 </div>
                 <div style="margin-bottom:16px;">
                     <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;">
                         <input type="checkbox" name="tos" value="1" {{ old('tos') ? 'checked' : '' }} style="margin-top:3px;" required>
-                        <span>I agree to the <a href="{{ \App\Models\Setting::get('TOSUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">Terms of Service</a> and <a href="{{ \App\Models\Setting::get('PrivacyUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">Privacy Policy</a>.</span>
+                        <span>{{ __('client.auth.i_agree_to') }} <a href="{{ \App\Models\Setting::get('TOSUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">{{ __('client.auth.terms_of_service') }}</a> {{ __('client.auth.and') }} <a href="{{ \App\Models\Setting::get('PrivacyUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">{{ __('client.auth.privacy_policy') }}</a>.</span>
                     </label>
                     @error('tos') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                 </div>
-                <button type="submit" class="btn btn-primary" style="margin-top:4px;">Create Account</button>
+                <button type="submit" class="btn btn-primary" style="margin-top:4px;">{{ __('client.auth.create_account') }}</button>
             </form>
         </div>
     </div>
     <div class="login-link">
-        Already have an account? <a href="{{ route('client.login') }}">Sign In</a>
+        {{ __('client.auth.already_have_account') }} <a href="{{ route('client.login') }}">{{ __('client.auth.sign_in') }}</a>
     </div>
 </div>
 </body>

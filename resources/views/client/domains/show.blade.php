@@ -18,26 +18,26 @@
     </div>
     <div style="display:flex; align-items:center; gap:8px;">
         <span class="badge badge-{{ strtolower($domain->status ?? 'active') }}">{{ ucfirst($domain->status ?? 'Active') }}</span>
-        <a href="{{ route('client.domains.index') }}" class="btn btn-outline btn-sm">&larr; My Domains</a>
+        <a href="{{ route('client.domains.index') }}" class="btn btn-outline btn-sm">&larr; {{ __('client.nav.my_domains') }}</a>
     </div>
 </div>
 
 <div class="detail-grid">
     <div class="pn-card">
-        <div class="pn-card-header">Domain Information</div>
+        <div class="pn-card-header">{{ __('client.domains.domain_info') }}</div>
         <div class="pn-card-body">
             <dl>
-                <div class="detail-row"><dt>Domain Name</dt><dd>{{ $domain->domain }}</dd></div>
-                <div class="detail-row"><dt>Registration Date</dt><dd>{{ $domain->registration_date?->format('d M Y') ?? 'N/A' }}</dd></div>
-                <div class="detail-row"><dt>Expiry Date</dt><dd>{{ $domain->expiry_date?->format('d M Y') ?? 'N/A' }}</dd></div>
-                <div class="detail-row"><dt>Auto-Renew</dt><dd>{{ ($domain->auto_renew ?? false) ? 'Enabled' : 'Disabled' }}</dd></div>
-                <div class="detail-row"><dt>ID Protection</dt><dd>{{ ($domain->id_protection ?? false) ? 'Enabled' : 'Disabled' }}</dd></div>
-                <div class="detail-row"><dt>Registrar Lock</dt><dd>{{ $domain->status === 'Locked' ? 'Locked' : 'Unlocked' }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.domain_name') }}</dt><dd>{{ $domain->domain }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.services.registration_date') }}</dt><dd>{{ $domain->registration_date?->format('d M Y') ?? 'N/A' }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.expiry_date') }}</dt><dd>{{ $domain->expiry_date?->format('d M Y') ?? 'N/A' }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.services.auto_renew') }}</dt><dd>{{ ($domain->auto_renew ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.id_protection') }}</dt><dd>{{ ($domain->id_protection ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.registrar_lock') }}</dt><dd>{{ $domain->status === 'Locked' ? __("client.status.locked") : __("client.status.unlocked") }}</dd></div>
             </dl>
         </div>
     </div>
     <div class="pn-card">
-        <div class="pn-card-header">Nameservers</div>
+        <div class="pn-card-header">{{ __('client.domains.nameservers') }}</div>
         <div class="pn-card-body">
             @if(isset($domain->ns1))
             <dl>
@@ -48,7 +48,7 @@
                 @endforeach
             </dl>
             @else
-            <p style="font-size:13px; color:#999; margin:0;">Nameserver information not available.</p>
+            <p style="font-size:13px; color:#999; margin:0;">{{ __('client.domains.ns_not_available') }}</p>
             @endif
         </div>
     </div>
@@ -56,22 +56,22 @@
 
 @if($domain->dns_management ?? false)
 <div class="pn-card" style="margin-bottom:20px;">
-    <div class="pn-card-header">DNS Management</div>
+    <div class="pn-card-header">{{ __('client.domains.dns_management') }}</div>
     <div class="pn-card-body">
-        <p style="font-size:13px; color:#555; margin-bottom:12px;">DNS management is enabled for this domain.</p>
-        <a href="#" class="btn btn-primary btn-sm">Manage DNS Records &rarr;</a>
+        <p style="font-size:13px; color:#555; margin-bottom:12px;">{{ __('client.domains.dns_enabled') }}</p>
+        <a href="#" class="btn btn-primary btn-sm">{{ __('client.domains.manage_dns') }} &rarr;</a>
     </div>
 </div>
 @endif
 
 {{-- EPP Code --}}
 <div class="pn-card" style="margin-bottom:20px;">
-    <div class="pn-card-header">Transfer Domain</div>
+    <div class="pn-card-header">{{ __('client.domains.transfer_domain') }}</div>
     <div class="pn-card-body">
-        <p style="font-size:13px; color:#555; margin-bottom:12px;">Request your EPP/Auth code to transfer this domain to another registrar.</p>
+        <p style="font-size:13px; color:#555; margin-bottom:12px;">{{ __('client.domains.epp_desc') }}</p>
         <form method="POST" action="{{ route('client.domains.epp', $domain) }}" style="display:inline;">
             @csrf
-            <button type="submit" class="btn btn-outline btn-sm">Get EPP / Auth Code</button>
+            <button type="submit" class="btn btn-outline btn-sm">{{ __('client.domains.get_epp_code') }}</button>
         </form>
         @if(session('epp_code'))
         <div style="margin-top:12px; padding:10px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; font-size:13px; font-family:monospace;">

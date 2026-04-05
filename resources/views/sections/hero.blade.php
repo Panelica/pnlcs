@@ -1,20 +1,20 @@
 {{-- ===== HERO SECTION ===== --}}
 @php
     $c = $content ?? collect();
-    $heroTitle = $c->get('title')->content_value ?? 'Hosting That <span>Simply Works</span>';
-    $heroSubtitle = $c->get('subtitle')->content_value ?? 'Panelica-Powered Isolated Infrastructure';
-    $heroDesc = $c->get('description')->content_value ?? 'Launch your website on Panelica\'s isolated hosting platform with NVMe storage, per-account resource limits, and free SSL — from $1.99/month.';
-    $badgeText = $c->get('badge_text')->content_value ?? 'Powered by Panelica Infrastructure';
-    $ctaText = $c->get('cta_text')->content_value ?? 'Get Started Now';
+    $heroTitle = $c->get('title')->content_value ?? __('sections.hero.title');
+    $heroSubtitle = $c->get('subtitle')->content_value ?? __('sections.hero.subtitle');
+    $heroDesc = $c->get('description')->content_value ?? __('sections.hero.description');
+    $badgeText = $c->get('badge_text')->content_value ?? __('sections.hero.badge');
+    $ctaText = $c->get('cta_text')->content_value ?? __('sections.hero.cta');
     $ctaUrl = $c->get('cta_url')->content_value ?? '/client/register';
     $stat1Icon = $c->get('stat_1_icon')->content_value ?? 'ri-shield-user-line';
-    $stat1Text = $c->get('stat_1_text')->content_value ?? 'Cgroups v2 Isolation';
+    $stat1Text = $c->get('stat_1_text')->content_value ?? __('sections.hero.stat_1');
     $stat2Icon = $c->get('stat_2_icon')->content_value ?? 'ri-speed-line';
-    $stat2Text = $c->get('stat_2_text')->content_value ?? 'Nginx + PHP-FPM';
+    $stat2Text = $c->get('stat_2_text')->content_value ?? __('sections.hero.stat_2');
     $callout1Icon = $c->get('callout_1_icon')->content_value ?? 'ri-gift-line';
-    $callout1Text = $c->get('callout_1_text')->content_value ?? 'FREE Domain with annual plans';
+    $callout1Text = $c->get('callout_1_text')->content_value ?? __('sections.hero.callout_1');
     $callout2Icon = $c->get('callout_2_icon')->content_value ?? 'ri-lock-line';
-    $callout2Text = $c->get('callout_2_text')->content_value ?? 'Free SSL Included';
+    $callout2Text = $c->get('callout_2_text')->content_value ?? __('sections.hero.callout_2');
 @endphp
 <section class="hero">
     <div class="hero__orb hero__orb--1"></div>

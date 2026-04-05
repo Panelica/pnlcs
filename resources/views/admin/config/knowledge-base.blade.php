@@ -1,9 +1,9 @@
 @extends('admin.layouts.app')
-@section('title', 'Knowledge Base')
+@section('title', __('admin.knowledge_base.title'))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Knowledge Base</h1>
+    <h1>{{ __('admin.knowledge_base.title') }}</h1>
     <div style="display:flex;gap:6px;">
         <button type="button" onclick="openModal('add-kb-cat')" class="btn btn-default btn-sm">+ Category</button>
         <button type="button" onclick="openModal('add-kb-article')" class="btn btn-primary btn-sm">+ New Article</button>
@@ -11,10 +11,10 @@
 </div>
 <div class="card">
     @if(($articles ?? collect())->isEmpty())
-    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No knowledge base articles yet.</div>
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.knowledge_base.no_articles') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Title</th><th>Category</th><th>Views</th><th>Published</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>Title</th><th>{{ __('admin.knowledge_base.category') }}</th><th>{{ __('admin.knowledge_base.views') }}</th><th>{{ __('admin.knowledge_base.published') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($articles as $art)
         <tr>
@@ -42,11 +42,11 @@
 <x-modal name="add-kb-cat" title="Add KB Category" maxWidth="sm">
     <form method="POST" action="{{ route('admin.config.knowledge-base.categories.store') }}">
         @csrf
-        <div class="form-group"><label class="form-label">Category Name</label><input type="text" name="name" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category_name') }}</label><input type="text" name="name" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('add-kb-cat')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
-            <button type="submit" class="btn btn-primary btn-sm">Add Category</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.knowledge_base.add_category') }}</button>
         </div>
     </form>
 </x-modal>
@@ -54,8 +54,8 @@
 <x-modal name="add-kb-article" title="New KB Article" maxWidth="xl">
     <form method="POST" action="{{ route('admin.config.knowledge-base.articles.store') }}">
         @csrf
-        <div class="form-group"><label class="form-label">Title</label><input type="text" name="title" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">Category</label>
+        <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category') }}</label>
             <select name="kbcategory_id" class="form-control">
                 <option value="">— Uncategorized —</option>
                 @foreach($categories ?? [] as $cat)
@@ -63,7 +63,7 @@
                 @endforeach
             </select>
         </div>
-        <div class="form-group"><label class="form-label">Content</label><textarea name="body" rows="8" class="form-control" required></textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="body" rows="8" class="form-control" required></textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="checkbox" name="published" value="1" checked>
@@ -81,8 +81,8 @@
 <x-modal :name="'edit-art-' . $loop->index" title="Edit Article" maxWidth="xl">
     <form method="POST" action="{{ route('admin.config.knowledge-base.articles.update', $art) }}">
         @csrf @method('PUT')
-        <div class="form-group"><label class="form-label">Title</label><input type="text" name="title" value="{{ $art->title }}" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">Category</label>
+        <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $art->title }}" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category') }}</label>
             <select name="kbcategory_id" class="form-control">
                 <option value="">— Uncategorized —</option>
                 @foreach($categories ?? [] as $cat)
@@ -90,7 +90,7 @@
                 @endforeach
             </select>
         </div>
-        <div class="form-group"><label class="form-label">Content</label><textarea name="body" rows="8" class="form-control" required>{{ $art->body }}</textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="body" rows="8" class="form-control" required>{{ $art->body }}</textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="hidden" name="published" value="0">

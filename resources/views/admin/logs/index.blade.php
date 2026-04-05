@@ -6,7 +6,7 @@
 
 {{-- Tab Navigation --}}
 <div style="border-bottom:2px solid #ddd;margin-bottom:15px;display:flex;">
-    @foreach(['admin.logs.index'=>'Activity','admin.logs.gateway'=>'Gateway','admin.logs.module'=>'Module','admin.logs.email'=>'Email'] as $route=>$label)
+    @foreach(['admin.logs.index'=>__('admin.logs.activity'),'admin.logs.gateway'=>__('admin.logs.gateway'),'admin.logs.module'=>__('admin.logs.module'),'admin.logs.email'=>__('admin.logs.email')] as $route=>$label)
     <a href="{{ route($route) }}" style="padding:8px 16px;font-size:13px;text-decoration:none;border-bottom:3px solid transparent;margin-bottom:-2px;{{ request()->routeIs($route) ? 'border-bottom-color:#337ab7;color:#337ab7;font-weight:600;' : 'color:#555;' }}">{{ $label }}</a>
     @endforeach
 </div>

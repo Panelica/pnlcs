@@ -1,8 +1,8 @@
 {{-- ===== INFRASTRUCTURE ===== --}}
 @php
     $c = $content ?? collect();
-    $infraTitle = $c->has('title') ? $c->get('title')->content_value : 'Enterprise-Grade Infrastructure';
-    $infraSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : 'Built for performance, reliability, and security from the ground up';
+    $infraTitle = $c->has('title') ? $c->get('title')->content_value : __('sections.infra.title');
+    $infraSubtitle = $c->has('subtitle') ? $c->get('subtitle')->content_value : __('sections.infra.subtitle');
     $cardsJson = $c->has('cards') ? $c->get('cards')->content_value : null;
     $cards = $cardsJson ? json_decode($cardsJson, true) : [];
 @endphp
