@@ -284,18 +284,19 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::get("whois", [WhoisController::class, "index"])->name("whois.index");
     Route::post("whois", [WhoisController::class, "lookup"])->name("whois.lookup");
 
-});
-// ── SSL Orders ──────────────────────────────────────────────────
-Route::prefix('ssl-orders')->name('ssl.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\Admin\SslOrderController::class, 'index'])->name('index');
-    Route::get('/{sslOrder}', [\App\Http\Controllers\Admin\SslOrderController::class, 'show'])->name('show');
-    Route::post('/{sslOrder}/action', [\App\Http\Controllers\Admin\SslOrderController::class, 'moduleAction'])->name('action');
-    Route::get('/{sslOrder}/download', [\App\Http\Controllers\Admin\SslOrderController::class, 'downloadCert'])->name('download');
-});
 
-// SSL Module Settings (inside config)
-Route::prefix('config')->name('config.')->group(function () {
-    Route::get('/ssl-modules', [\App\Http\Controllers\Admin\ConfigController::class, 'sslModules'])->name('sslModules');
-    Route::post('/ssl-modules/{module}', [\App\Http\Controllers\Admin\ConfigController::class, 'updateSslModuleSettings'])->name('updateSslModuleSettings');
-    Route::post('/ssl-modules/{module}/test', [\App\Http\Controllers\Admin\ConfigController::class, 'testSslConnection'])->name('testSslConnection');
+    // ── SSL Orders ──────────────────────────────────────────────────
+    Route::prefix("ssl-orders")->name("ssl.")->group(function () {
+        Route::get("/", [\App\Http\Controllers\Admin\SslOrderController::class, "index"])->name("index");
+        Route::get("/{sslOrder}", [\App\Http\Controllers\Admin\SslOrderController::class, "show"])->name("show");
+        Route::post("/{sslOrder}/action", [\App\Http\Controllers\Admin\SslOrderController::class, "moduleAction"])->name("action");
+        Route::get("/{sslOrder}/download", [\App\Http\Controllers\Admin\SslOrderController::class, "downloadCert"])->name("download");
+    });
+
+    // SSL Module Settings (inside config)
+    Route::prefix("config")->name("config.")->group(function () {
+        Route::get("/ssl-modules", [\App\Http\Controllers\Admin\ConfigController::class, "sslModules"])->name("sslModules");
+        Route::post("/ssl-modules/{module}", [\App\Http\Controllers\Admin\ConfigController::class, "updateSslModuleSettings"])->name("updateSslModuleSettings");
+        Route::post("/ssl-modules/{module}/test", [\App\Http\Controllers\Admin\ConfigController::class, "testSslConnection"])->name("testSslConnection");
+    });
 });

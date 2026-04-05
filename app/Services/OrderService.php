@@ -135,6 +135,22 @@ class OrderService
                 ->where('status', 'Pending')
                 ->update(['status' => 'Active']);
 
+
+            // Auto-provision activated services
+            $activatedServices = Service::where("order_id", $order->id)
+                ->where("status", "Active")
+                ->with("product")
+                ->get();
+            foreach ($activatedServices as $svc) {
+                if ($svc->product && $svc->product->server_type) {
+                    try {
+                        $this->provisioning->createAccount($svc);
+                        Log::info("Auto-provisioned service #" . $svc->id . " on order accept");
+                    } catch (\Throwable $e) {
+                        Log::error("Auto-provision failed for service #" . $svc->id . ": " . $e->getMessage());
+                    }
+                }
+            }
             return $order->fresh();
         });
     }

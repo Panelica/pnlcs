@@ -101,6 +101,7 @@ class InvoiceService
             'total'    => $total,
         ]);
 
+
         return $invoice->fresh();
     }
 
@@ -134,6 +135,13 @@ class InvoiceService
                 'invoice_id'     => $invoice->id,
             ]);
 
+
+            // Process affiliate commission if applicable
+            try {
+                app(\App\Services\AffiliateService::class)->processCommission($invoice);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Affiliate commission failed for invoice #" . $invoice->id . ": " . $e->getMessage());
+            }
             return $invoice->fresh();
         });
     }
@@ -175,6 +183,7 @@ class InvoiceService
                 $this->markPaid($invoice->fresh(), null, 'credit');
             }
 
+
             return $invoice->fresh();
         });
     }
@@ -209,6 +218,7 @@ class InvoiceService
         }
 
         $invoice->update(['status' => 'Cancelled']);
+
 
         return $invoice->fresh();
     }
