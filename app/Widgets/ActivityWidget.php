@@ -16,7 +16,7 @@ class ActivityWidget implements WidgetModuleInterface
 
     public function getData(): array
     {
-        return DB::table("activity_logs")->select("description", "admin", "ip_address", "created_at")->orderBy("created_at", "desc")->limit(8)->get()->toArray();
+        return DB::table("activity_logs")->select("description", "user", "ip_address", "created_at")->orderBy("created_at", "desc")->limit(8)->get()->toArray();
     }
 
     public function render(array $data): string

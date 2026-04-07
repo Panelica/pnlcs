@@ -17,7 +17,7 @@ class HealthWidget implements WidgetModuleInterface
     public function getData(): array
     {
         return [
-            "php" => PHP_VERSION,
+            "php" => (string) PHP_VERSION,
             "laravel" => app()->version(),
             "db_size" => DB::selectOne("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS size FROM information_schema.tables WHERE table_schema = DATABASE()")->size ?? 0,
             "disk_free" => round(disk_free_space("/") / 1024 / 1024 / 1024, 1),
