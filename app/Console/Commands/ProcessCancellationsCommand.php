@@ -18,7 +18,7 @@ class ProcessCancellationsCommand extends Command
     {
         $services = Service::with('server', 'product', 'client')
             ->where('status', 'Active')
-            ->whereNotNull('cancellation_type')
+            ->whereHas('cancellationRequest')
             ->where('next_due_date', '<=', now())
             ->get();
 

@@ -16,6 +16,7 @@ class Service extends Model {
     public function order() { return $this->belongsTo(Order::class); }
     public function addons() { return $this->hasMany(ServiceAddon::class); }
     public function sslOrder() { return $this->hasOne(\App\Models\SslOrder::class); }
+    public function cancellationRequest() { return $this->hasOne(CancellationRequest::class); }
 
     public function scopeActive($q) { return $q->where("status", "active"); }
 
