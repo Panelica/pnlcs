@@ -11,7 +11,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.network_issues.no_issues') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Title</th><th>{{ __('common.table.type') }}</th><th>{{ __('admin.network_issues.reported') }}</th><th>Resolved</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('common.form.title') }}</th><th>{{ __('common.table.type') }}</th><th>{{ __('admin.network_issues.reported') }}</th><th>{{ __('admin.network_issues.resolved') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($networkIssues as $issue)
         <tr>
@@ -19,9 +19,9 @@
             <td style="text-transform:capitalize;">{{ $issue->type ?? 'General' }}</td>
             <td style="font-size:12px;">{{ $issue->created_at->format('d M Y H:i') }}</td>
             <td style="font-size:12px;">{{ $issue->resolved_at?->format('d M Y H:i') ?? '&mdash;' }}</td>
-            <td><span class="badge-{{ $issue->resolved_at ? 'active' : 'open' }}">{{ $issue->resolved_at ? 'Resolved' : 'Active' }}</span></td>
+            <td><span class="badge-{{ $issue->resolved_at ? 'active' : 'open' }}">{{ $issue->resolved_at ? __('admin.network_issues.resolved') : __('admin.network_issues.active') }}</span></td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.network-issues.destroy', $issue) }}" style="display:inline;" onsubmit="return confirm('Delete this issue?')">
+                <form method="POST" action="{{ route('admin.config.network-issues.destroy', $issue) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.network_issues.confirm_delete\") }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
@@ -44,7 +44,7 @@
             @csrf
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Type</label><select name="type" class="form-control"><option value="general">General</option><option value="network">Network</option><option value="server">Server</option><option value="datacenter">Datacenter</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.network_issues.type_label') }}</label><select name="type" class="form-control"><option value="general">{{ __('admin.network_issues.type_general') }}</option><option value="network">{{ __('admin.network_issues.type_network') }}</option><option value="server">{{ __('admin.network_issues.type_server') }}</option><option value="datacenter">{{ __('admin.network_issues.type_datacenter') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" required class="form-control"></textarea></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

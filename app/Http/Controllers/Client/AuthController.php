@@ -87,7 +87,7 @@ class AuthController extends Controller
             }
         }
 
-        return back()->withErrors(['code' => 'Invalid verification code.']);
+        return back()->withErrors(['code' => __('auth.invalid_verification_code')]);
     }
 
     public function enable2fa(Request $request, TwoFactorService $twoFactor)
@@ -110,7 +110,7 @@ class AuthController extends Controller
 
         $secret = session('2fa_setup_secret');
         if (!$secret || !$twoFactor->verify($secret, $request->code)) {
-            return back()->withErrors(['code' => 'Invalid code. Please try again.']);
+            return back()->withErrors(['code' => __('auth.invalid_code_try_again')]);
         }
 
         $backupCodes = $twoFactor->generateBackupCodes();
@@ -134,7 +134,7 @@ class AuthController extends Controller
         $user = Auth::user();
 
         if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Incorrect password.']);
+            return back()->withErrors(['password' => __('auth.incorrect_password')]);
         }
 
         $user->update([
@@ -236,14 +236,14 @@ class AuthController extends Controller
         ]);
         $record = DB::table('password_reset_tokens')->where('email', $request->email)->first();
         if (!$record || !Hash::check($request->token, $record->token)) {
-            return back()->withErrors(['email' => 'Invalid or expired reset token.']);
+            return back()->withErrors(['email' => __('auth.invalid_or_expired_reset_token')]);
         }
         if (now()->diffInMinutes($record->created_at) > 60) {
-            return back()->withErrors(['email' => 'Reset link expired. Request a new one.']);
+            return back()->withErrors(['email' => __('auth.reset_link_expired')]);
         }
         $user = User::where('email', $request->email)->first();
         if (!$user) {
-            return back()->withErrors(['email' => 'User not found.']);
+            return back()->withErrors(['email' => __('auth.user_not_found')]);
         }
         $user->password = Hash::make($request->password);
         $user->save();

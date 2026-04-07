@@ -4,8 +4,8 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">My Invoices</h1>
-        <p class="pn-page-subtitle">View and pay your invoices.</p>
+        <h1 class="pn-page-title">{{ __('client.invoices.page_title') }}</h1>
+        <p class="pn-page-subtitle">{{ __('client.invoices.page_subtitle') }}</p>
     </div>
 </div>
 
@@ -19,7 +19,7 @@
                     <th>{{ __('common.table.due_date') }}</th>
                     <th>{{ __('common.table.total') }}</th>
                     <th>{{ __('common.table.status') }}</th>
-                    <th>Action</th>
+                    <th>{{ __('common.table.action') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -29,7 +29,7 @@
                     <td class="text-muted text-sm">{{ $inv->date?->format("d M Y") ?? "-" }}</td>
                     <td class="text-muted text-sm" style="{{ strtolower($inv->status) === "overdue" ? "color:var(--danger);font-weight:600" : "" }}">{{ $inv->due_date?->format("d M Y") ?? "-" }}</td>
                     <td style="font-weight:700">${{ number_format($inv->total, 2) }}</td>
-                    <td><span class="badge badge-{{ strtolower($inv->status) }}">{{ ucfirst($inv->status) }}</span></td>
+                    <td><span class="badge badge-{{ strtolower($inv->status) }}">{{ __('client.status.' . strtolower($inv->status)) }}</span></td>
                     <td>
                         @if(in_array(strtolower($inv->status), ["unpaid", "overdue"]))
                             <a href="{{ route("client.invoices.show", $inv) }}" class="btn btn-accent btn-xs">{{ __('common.actions.pay_now') }}</a>

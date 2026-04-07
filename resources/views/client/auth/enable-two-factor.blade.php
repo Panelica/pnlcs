@@ -3,7 +3,7 @@
 @section('content')
 <a href="{{ route('client.account.security') }}" class="pn-back">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-    Back to Security
+    {{ __('client.auth.back_to_security') }}
 </a>
 
 <div class="pn-page-header"><div><h1 class="pn-page-title">{{ __('client.auth.enable_2fa_title') }}</h1></div></div>

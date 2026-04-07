@@ -1,21 +1,21 @@
 @extends("admin.layouts.app")
-@section("title", __("admin.config.languages"))
+@section("title", __("admin.config.languages.title"))
 @section("content")
 
 <div class="page-header">
-    <h1>{{ __('admin.config.languages') }}</h1>
+    <h1>{{ __('admin.config.languages.title') }}</h1>
     <div style="display:flex;gap:8px;">
         <form method="POST" action="{{ route('admin.config.languages.cache-clear') }}" style="display:inline;">
             @csrf
-            <button type="submit" class="btn btn-default btn-sm"><i class="fas fa-sync"></i> Clear Cache</button>
+            <button type="submit" class="btn btn-default btn-sm"><i class="fas fa-sync"></i> {{ __('admin.config.languages.clear_cache') }}</button>
         </form>
     </div>
 </div>
 
 {{-- Tab navigation --}}
 <div style="display:flex;gap:4px;margin-bottom:16px;">
-    <button class="btn btn-sm" onclick="showTab('languages')" id="tab-languages" style="background:var(--theme-primary,#1a4d80);color:#fff;">Languages</button>
-    <button class="btn btn-default btn-sm" onclick="showTab('settings')" id="tab-settings">Settings</button>
+    <button class="btn btn-sm" onclick="showTab('languages')" id="tab-languages" style="background:var(--theme-primary,#1a4d80);color:#fff;">{{ __('admin.config.languages.tab_languages') }}</button>
+    <button class="btn btn-default btn-sm" onclick="showTab('settings')" id="tab-settings">{{ __('admin.config.languages.tab_settings') }}</button>
 </div>
 
 {{-- LANGUAGES TAB --}}
@@ -24,13 +24,13 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Flag</th>
+                <th>{{ __('admin.config.languages.flag') }}</th>
                 <th>{{ __('common.table.code') }}</th>
                 <th>{{ __('common.table.name') }}</th>
-                <th>Native Name</th>
-                <th>Direction</th>
+                <th>{{ __('admin.config.languages.native_name') }}</th>
+                <th>{{ __('admin.config.languages.direction') }}</th>
                 <th>{{ __('common.table.status') }}</th>
-                <th>Progress</th>
+                <th>{{ __('admin.config.languages.progress') }}</th>
                 <th>{{ __('common.table.actions') }}</th>
             </tr>
         </thead>
@@ -69,15 +69,15 @@
                 </td>
                 <td style="white-space:nowrap;">
                     @if($lang->code !== 'en')
-                    <a href="{{ route('admin.config.languages.translations', $lang->code) }}" class="btn btn-default btn-xs"><i class="fas fa-edit"></i> Translate</a>
+                    <a href="{{ route('admin.config.languages.translations', $lang->code) }}" class="btn btn-default btn-xs"><i class="fas fa-edit"></i> {{ __('admin.config.languages.translate') }}</a>
                     <form method="POST" action="{{ route('admin.config.languages.ai-translate', $lang->code) }}" style="display:inline;">
                         @csrf
-                        <button type="submit" class="btn btn-xs btn-primary" onclick="return confirm('AI translate all missing keys for {{ $lang->name }}?')">
+                        <button type="submit" class="btn btn-xs btn-primary" onclick="return confirm('{{ __('admin.config.languages.ai_translate_confirm', ['name' => $lang->name]) }}')">
                             <i class="fas fa-robot"></i> AI
                         </button>
                     </form>
                     @else
-                    <a href="{{ route('admin.config.languages.translations', $lang->code) }}" class="btn btn-default btn-xs"><i class="fas fa-eye"></i> View Keys</a>
+                    <a href="{{ route('admin.config.languages.translations', $lang->code) }}" class="btn btn-default btn-xs"><i class="fas fa-eye"></i> {{ __('admin.config.languages.view_keys') }}</a>
                     @endif
                 </td>
             </tr>
@@ -86,7 +86,7 @@
     </table>
 </div>
 <div style="padding:8px 0;font-size:13px;color:#666;">
-    Total: {{ $totalKeys }} translation keys across {{ $languages->where('is_active', true)->count() }} active languages.
+    {{ __('admin.config.languages.total_keys', ['count' => $totalKeys, 'active' => $languages->where('is_active', true)->count()]) }}
 </div>
 </div>
 
@@ -97,7 +97,7 @@
         <form method="POST" action="{{ route('admin.config.languages.set-default') }}">
             @csrf
             <div class="form-group">
-                <label class="form-label">Default Language</label>
+                <label class="form-label">{{ __('admin.config.languages.default_language') }}</label>
                 <select name="code" class="form-control" style="max-width:300px;">
                     @foreach($languages->where('is_active', true) as $lang)
                     <option value="{{ $lang->code }}" {{ $lang->is_default ? 'selected' : '' }}>{{ $lang->name }} ({{ $lang->native_name }})</option>
@@ -109,21 +109,21 @@
 
         <hr style="margin:24px 0;">
 
-        <h4 style="margin-bottom:12px;">AI Translation Settings</h4>
+        <h4 style="margin-bottom:12px;">{{ __('admin.config.languages.ai_settings') }}</h4>
         <form method="POST" action="{{ route('admin.settings.general.update') }}">
             @csrf
             <div class="form-group">
-                <label class="form-label">OpenAI API Key</label>
+                <label class="form-label">{{ __('admin.config.languages.openai_api_key') }}</label>
                 <input type="password" name="settings[OpenAIApiKey]" class="form-control" style="max-width:400px;"
                     value="{{ \App\Models\Setting::get('OpenAIApiKey', '') }}" placeholder="sk-...">
             </div>
             <div class="form-group">
-                <label class="form-label">OpenAI Model</label>
+                <label class="form-label">{{ __('admin.config.languages.openai_model') }}</label>
                 <select name="settings[OpenAIModel]" class="form-control" style="max-width:300px;">
                     @php $currentModel = \App\Models\Setting::get('OpenAIModel', 'gpt-4o-mini'); @endphp
-                    <option value="gpt-4o-mini" {{ $currentModel === 'gpt-4o-mini' ? 'selected' : '' }}>GPT-4o Mini (Cheapest)</option>
-                    <option value="gpt-4o" {{ $currentModel === 'gpt-4o' ? 'selected' : '' }}>GPT-4o (Best Quality)</option>
-                    <option value="gpt-3.5-turbo" {{ $currentModel === 'gpt-3.5-turbo' ? 'selected' : '' }}>GPT-3.5 Turbo (Legacy)</option>
+                    <option value="gpt-4o-mini" {{ $currentModel === 'gpt-4o-mini' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt4o_mini') }}</option>
+                    <option value="gpt-4o" {{ $currentModel === 'gpt-4o' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt4o') }}</option>
+                    <option value="gpt-3.5-turbo" {{ $currentModel === 'gpt-3.5-turbo' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt35') }}</option>
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>

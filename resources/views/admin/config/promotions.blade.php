@@ -19,10 +19,10 @@
             <td style="text-transform:capitalize;">{{ $promo->type }}</td>
             <td>{{ $promo->type === 'percentage' ? $promo->value . '%' : '$' . number_format($promo->value, 2) }}</td>
             <td>{{ $promo->uses ?? 0 }}{{ $promo->max_uses ? ' / ' . $promo->max_uses : '' }}</td>
-            <td style="font-size:12px;">{{ $promo->expiry_date?->format('d M Y') ?? 'Never' }}</td>
+            <td style="font-size:12px;">{{ $promo->expiry_date?->format('d M Y') ?? __('admin.promotions.never') }}</td>
             <td><span class="badge-{{ $promo->active ? 'active' : 'suspended' }}">{{ $promo->active ? __('common.status.active') : __('common.status.inactive') }}</span></td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.promotions.destroy', $promo) }}" style="display:inline;" onsubmit="return confirm('Delete promo code {{ $promo->code }}?')">
+                <form method="POST" action="{{ route('admin.config.promotions.destroy', $promo) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.promotions.confirm_delete\") }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
@@ -46,11 +46,11 @@
             <div style="padding:20px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.promotions.promo_code') }}</label><input type="text" name="code" required class="form-control" placeholder="SUMMER20" style="text-transform:uppercase;"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.promotions.discount_type') }}</label><select name="type" class="form-control"><option value="percentage">Percentage (%)</option><option value="fixed">Fixed Amount ($)</option></select></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.promotions.discount_type') }}</label><select name="type" class="form-control"><option value="percentage">{{ __('admin.promotions.percentage') }}</option><option value="fixed">Fixed Amount ($)</option></select></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.promotions.discount_value') }}</label><input type="number" name="value" step="0.01" required class="form-control" placeholder="10"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.promotions.max_uses') }} <small style="color:#999;">(0 = unlimited)</small></label><input type="number" name="max_uses" value="0" min="0" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.promotions.expiry_date') }} <small style="color:#999;">(optional)</small></label><input type="date" name="expiry_date" class="form-control"></div>
-                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="active" value="1" checked> Active</label></div>
+                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="active" value="1" checked> {{ __('admin.promotions.active') }}</label></div>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

@@ -91,7 +91,7 @@ class AuthController extends Controller
             }
         }
 
-        return back()->withErrors(['code' => 'Invalid verification code.']);
+        return back()->withErrors(['code' => __('auth.invalid_verification_code')]);
     }
 
     public function enable2fa(Request $request, TwoFactorService $twoFactor)
@@ -114,7 +114,7 @@ class AuthController extends Controller
 
         $secret = session('2fa_setup_secret');
         if (!$secret || !$twoFactor->verify($secret, $request->code)) {
-            return back()->withErrors(['code' => 'Invalid code. Please try again.']);
+            return back()->withErrors(['code' => __('auth.invalid_code_try_again')]);
         }
 
         $backupCodes = $twoFactor->generateBackupCodes();
@@ -138,7 +138,7 @@ class AuthController extends Controller
         $admin = Auth::guard('admin')->user();
 
         if (!Auth::guard('admin')->validate(['username' => $admin->username, 'password' => $request->password])) {
-            return back()->withErrors(['password' => 'Incorrect password.']);
+            return back()->withErrors(['password' => __('auth.incorrect_password')]);
         }
 
         $admin->update([

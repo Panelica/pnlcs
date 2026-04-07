@@ -4,8 +4,8 @@
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>{{ __('admin.products.edit_product') }}: {{ $product->name }}</h1>
     <div style="display:flex;gap:6px;">
-        <a href="{{ route('admin.products.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
-        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('Delete product {{ $product->name }}?')">
+        <a href="{{ route('admin.products.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.products.back') }}</a>
+        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('{{ __('admin.products.confirm_delete') }}')">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.products.delete_product') }}</button>
         </form>
@@ -16,16 +16,16 @@
     @csrf @method('PUT')
 
     <div class="card" style="margin-bottom:15px;">
-        <div class="card-header"><strong>Product Details</strong></div>
+        <div class="card-header"><strong>{{ __('admin.products.product_details') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.products.product_name') }} <span style="color:#d9534f;">*</span></label><input type="text" name="name" value="{{ $product->name }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.product_group') }}</label><select name="group_id" class="form-control">@foreach($groups as $g)<option value="{{ $g->id }}" {{ $product->group_id == $g->id ? 'selected' : '' }}>{{ $g->name }}</option>@endforeach</select></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.type') }}</label><select name="type" class="form-control"><option value="hosting" {{ $product->type=='hosting'?'selected':'' }}>Shared Hosting</option><option value="reseller" {{ $product->type=='reseller'?'selected':'' }}>Reseller</option><option value="vps" {{ $product->type=='vps'?'selected':'' }}>VPS/Dedicated</option><option value="ssl" {{ $product->type=='ssl'?'selected':'' }}>SSL Certificate</option><option value="other" {{ $product->type=='other'?'selected':'' }}>Other</option></select></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.products.payment') }}</label><select name="pay_type" class="form-control"><option value="recurring" {{ $product->pay_type=='recurring'?'selected':'' }}>Recurring</option><option value="onetime" {{ $product->pay_type=='onetime'?'selected':'' }}>One Time</option><option value="free" {{ $product->pay_type=='free'?'selected':'' }}>Free</option></select></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.products.auto_setup') }}</label><select name="auto_setup" class="form-control"><option value="order" {{ $product->auto_setup=='order'?'selected':'' }}>On Order</option><option value="payment" {{ $product->auto_setup=='payment'?'selected':'' }}>On Payment</option><option value="on" {{ $product->auto_setup=='on'?'selected':'' }}>Always</option><option value="off" {{ $product->auto_setup=='off'?'selected':'' }}>Never</option></select></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.products.server_module') }}</label><input type="text" name="server_type" value="{{ $product->server_type }}" placeholder="e.g. panelica, cpanel" class="form-control"></div>
-                <div class="form-group" x-data="{ show: '{{ $product->type }}' === 'ssl' }" x-show="show" x-cloak><label class="form-label">{{ __('admin.products.ssl_module') }}</label><select name="ssl_module" class="form-control"><option value="">None</option><option value="gogetssl" {{ $product->ssl_module=='gogetssl'?'selected':'' }}>GoGetSSL</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.type') }}</label><select name="type" class="form-control"><option value="hosting" {{ $product->type=='hosting'?'selected':'' }}>{{ __('admin.products.type_hosting') }}</option><option value="reseller" {{ $product->type=='reseller'?'selected':'' }}>{{ __('admin.products.type_reseller_label') }}</option><option value="vps" {{ $product->type=='vps'?'selected':'' }}>{{ __('admin.products.type_vps') }}</option><option value="ssl" {{ $product->type=='ssl'?'selected':'' }}>{{ __('admin.products.type_ssl') }}</option><option value="other" {{ $product->type=='other'?'selected':'' }}>{{ __('admin.products.type_other') }}</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.payment') }}</label><select name="pay_type" class="form-control"><option value="recurring" {{ $product->pay_type=='recurring'?'selected':'' }}>{{ __('admin.products.pay_recurring') }}</option><option value="onetime" {{ $product->pay_type=='onetime'?'selected':'' }}>{{ __('admin.products.pay_onetime') }}</option><option value="free" {{ $product->pay_type=='free'?'selected':'' }}>{{ __('admin.products.pay_free') }}</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.auto_setup') }}</label><select name="auto_setup" class="form-control"><option value="order" {{ $product->auto_setup=='order'?'selected':'' }}>{{ __('admin.products.auto_setup_order') }}</option><option value="payment" {{ $product->auto_setup=='payment'?'selected':'' }}>{{ __('admin.products.auto_setup_payment') }}</option><option value="on" {{ $product->auto_setup=='on'?'selected':'' }}>{{ __('admin.products.auto_setup_always') }}</option><option value="off" {{ $product->auto_setup=='off'?'selected':'' }}>{{ __('admin.products.auto_setup_never') }}</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.server_module') }}</label><input type="text" name="server_type" value="{{ $product->server_type }}" placeholder="{{ __('admin.products.module_placeholder') }}" class="form-control"></div>
+                <div class="form-group" x-data="{ show: '{{ $product->type }}' === 'ssl' }" x-show="show" x-cloak><label class="form-label">{{ __('admin.products.ssl_module') }}</label><select name="ssl_module" class="form-control"><option value="">{{ __('admin.products.ssl_none') }}</option><option value="gogetssl" {{ $product->ssl_module=='gogetssl'?'selected':'' }}>{{ __('admin.products.ssl_gogetssl') }}</option></select></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ $product->description }}</textarea></div>
                 <div class="form-group" style="grid-column:span 2;display:flex;gap:20px;">
                     <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="hidden" value="1" {{ $product->hidden?'checked':'' }}> {{ __('admin.products.hidden') }}</label>
@@ -37,7 +37,7 @@
     </div>
 
     <div class="card" style="margin-bottom:15px;">
-        <div class="card-header"><strong>Pricing</strong></div>
+        <div class="card-header"><strong>{{ __('admin.products.pricing') }}</strong></div>
         <div class="card-body">
             @foreach($currencies as $currency)
             @php $p = $pricing[$currency->id] ?? null; @endphp

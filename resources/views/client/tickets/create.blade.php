@@ -55,7 +55,7 @@
                     <option value="">-- {{ __('client.tickets.none') }} --</option>
                     @if(isset($services))
                         @foreach($services as $svc)
-                        <option value="{{ $svc->id }}">{{ $svc->product?->name ?? "Service" }}{{ $svc->domain ? " (".$svc->domain.")" : "" }}</option>
+                        <option value="{{ $svc->id }}">{{ $svc->product?->name ?? __('client.services.title') }}{{ $svc->domain ? " (".$svc->domain.")" : "" }}</option>
                         @endforeach
                     @endif
                 </select>
@@ -89,9 +89,9 @@
 <div class="pn-card" style="margin-top:16px">
 <div class="pn-card-header"><span class="pn-card-title">{{ __('client.tickets.response_times') }}</span></div>
 <div class="pn-card-body" style="font-size:13px">
-<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">{{ __('client.tickets.low_priority') }}</span><strong>24 hours</strong></div>
-<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">{{ __('client.tickets.medium_priority') }}</span><strong>12 hours</strong></div>
-<div style="display:flex;justify-content:space-between;padding:6px 0"><span style="color:var(--muted)">{{ __('client.tickets.high_priority') }}</span><strong style="color:#ef4444">4 hours</strong></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">{{ __('client.tickets.low_priority') }}</span><strong>{{ __('client.tickets.response_24h') }}</strong></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--muted)">{{ __('client.tickets.medium_priority') }}</span><strong>{{ __('client.tickets.response_12h') }}</strong></div>
+<div style="display:flex;justify-content:space-between;padding:6px 0"><span style="color:var(--muted)">{{ __('client.tickets.high_priority') }}</span><strong style="color:#ef4444">{{ __('client.tickets.response_4h') }}</strong></div>
 </div>
 </div>
 </div>

@@ -21,7 +21,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditSG({{ json_encode(['id'=>$group->id,'name'=>$group->name,'fill_type'=>$group->fill_type]) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.server-groups.destroy', $group) }}" style="display:inline;" onsubmit="return confirm('Delete group {{ $group->name }}?')">
+                <form method="POST" action="{{ route('admin.config.server-groups.destroy', $group) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.server_groups.confirm_delete\") }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
@@ -44,7 +44,7 @@
             @csrf
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.server_groups.group_name') }}</label><input type="text" name="name" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.server_groups.fill_type') }}</label><select name="fill_type" class="form-control"><option value="sequential">Sequential (fill one at a time)</option><option value="roundrobin">Round Robin (distribute evenly)</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.server_groups.fill_type') }}</label><select name="fill_type" class="form-control"><option value="sequential">{{ __('admin.server_groups.sequential') }}</option><option value="roundrobin">{{ __('admin.server_groups.roundrobin') }}</option></select></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-sg').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
@@ -65,7 +65,7 @@
             @csrf @method('PUT')
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.server_groups.group_name') }}</label><input type="text" name="name" id="esg-name" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.server_groups.fill_type') }}</label><select name="fill_type" id="esg-fill" class="form-control"><option value="sequential">Sequential</option><option value="roundrobin">Round Robin</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.server_groups.fill_type') }}</label><select name="fill_type" id="esg-fill" class="form-control"><option value="sequential">{{ __('admin.server_groups.sequential_short') }}</option><option value="roundrobin">{{ __('admin.server_groups.roundrobin_short') }}</option></select></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-edit-sg').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>

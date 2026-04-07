@@ -120,7 +120,7 @@ class ThemeManager
         $tmpPath = $file->getPathname();
 
         if ($zip->open($tmpPath) !== true) {
-            return ['success' => false, 'message' => 'Invalid ZIP file.'];
+            return ['success' => false, 'message' => __('messages.theme.invalid_zip')];
         }
 
         // Find theme.json inside ZIP
@@ -143,26 +143,26 @@ class ThemeManager
 
         if (!$themeJsonContent) {
             $zip->close();
-            return ['success' => false, 'message' => 'No theme.json found in ZIP.'];
+            return ['success' => false, 'message' => __('messages.theme.no_theme_json')];
         }
 
         $themeJson = json_decode($themeJsonContent, true);
         if (!is_array($themeJson) || empty($themeJson['slug'])) {
             $zip->close();
-            return ['success' => false, 'message' => 'Invalid theme.json: missing slug.'];
+            return ['success' => false, 'message' => __('messages.theme.invalid_theme_json')];
         }
 
         $slug = preg_replace('/[^a-z0-9_-]/', '', strtolower($themeJson['slug']));
         if (empty($slug)) {
             $zip->close();
-            return ['success' => false, 'message' => 'Invalid theme slug.'];
+            return ['success' => false, 'message' => __('messages.theme.invalid_slug')];
         }
 
         // Don't overwrite built-in themes
         $themes = $this->getInstalled();
         if (isset($themes[$slug]) && $themes[$slug]->isBuiltin) {
             $zip->close();
-            return ['success' => false, 'message' => 'Cannot overwrite built-in themes.'];
+            return ['success' => false, 'message' => __('messages.theme.cannot_overwrite_builtin')];
         }
 
         $destPath = $this->themesPath . '/' . $slug;
@@ -196,16 +196,16 @@ class ThemeManager
     {
         $themes = $this->getInstalled();
         if (isset($themes[$slug]) && $themes[$slug]->isBuiltin) {
-            return ['success' => false, 'message' => 'Cannot delete built-in themes.'];
+            return ['success' => false, 'message' => __('messages.theme.cannot_delete_builtin')];
         }
 
         if ($slug === $this->getActiveSlug()) {
-            return ['success' => false, 'message' => 'Cannot delete the active theme. Activate another theme first.'];
+            return ['success' => false, 'message' => __('messages.theme.cannot_delete_active')];
         }
 
         $path = $this->themesPath . '/' . $slug;
         if (!is_dir($path)) {
-            return ['success' => false, 'message' => 'Theme not found.'];
+            return ['success' => false, 'message' => __('messages.theme.not_found')];
         }
 
         File::deleteDirectory($path);

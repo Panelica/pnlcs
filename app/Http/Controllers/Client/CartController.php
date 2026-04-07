@@ -71,7 +71,7 @@ class CartController extends Controller
         );
 
         return redirect()->route("client.cart.index")
-            ->with("success", "Product added to cart successfully.");
+            ->with("success", __("messages.success.product_added_to_cart"));
     }
 
     /**
@@ -94,11 +94,11 @@ class CartController extends Controller
         $updatedCart = $this->cartService->addDomain($cart, $domain, $type, $years);
 
         if ($request->expectsJson()) {
-            return response()->json(["success" => true, "message" => ucfirst($type) . " for {$domain} added to cart."]);
+            return response()->json(["success" => true, "message" => __("messages.success.domain_added_to_cart", ["type" => ucfirst($type), "domain" => $domain])]);
         }
 
         return redirect()->route("client.cart.index")
-            ->with("success", ucfirst($type) . " for " . $domain . " added to cart.");
+            ->with("success", __("messages.success.domain_added_to_cart", ["type" => ucfirst($type), "domain" => $domain]));
     }
 
     public function removeItem(Request $request, int $index)
@@ -108,7 +108,7 @@ class CartController extends Controller
         $this->cartService->removeItem($cart, $index);
 
         return redirect()->route("client.cart.index")
-            ->with("success", "Item removed from cart.");
+            ->with("success", __("messages.success.item_removed_from_cart"));
     }
 
     public function applyPromo(Request $request)
@@ -136,7 +136,7 @@ class CartController extends Controller
 
         if (empty($totals["items"])) {
             return redirect()->route("client.cart.index")
-                ->with("error", "Your cart is empty.");
+                ->with("error", __("messages.error.cart_is_empty"));
         }
 
         $currency       = Currency::getDefault();
@@ -156,7 +156,7 @@ class CartController extends Controller
 
         if (!$clientId) {
             return redirect()->route("client.login")
-                ->with("error", "Please log in to complete your order.");
+                ->with("error", __("messages.error.login_required"));
         }
 
         $cart   = $this->cartService->getOrCreateCart($clientId);
@@ -164,13 +164,13 @@ class CartController extends Controller
 
         if (empty($totals["items"])) {
             return redirect()->route("client.cart.index")
-                ->with("error", "Your cart is empty.");
+                ->with("error", __("messages.error.cart_is_empty"));
         }
 
         $order = $this->cartService->checkout($cart, $clientId, $request->payment_method);
 
         return redirect()->route("client.invoices.show", $order->invoice_id)
-            ->with("success", "Order #" . $order->order_num . " placed successfully. Please complete payment.");
+            ->with("success", __("messages.success.order_placed", ["num" => $order->order_num]));
     }
 
     private function getClientId(): ?int
@@ -182,9 +182,9 @@ class CartController extends Controller
     private function getAvailablePaymentMethods(): array
     {
         return [
-            "banktransfer" => "Bank Transfer",
-            "paypal"       => "PayPal",
-            "stripe"       => "Credit / Debit Card",
+            "banktransfer" => __("messages.payment_method.bank_transfer"),
+            "paypal"       => __("messages.payment_method.paypal"),
+            "stripe"       => __("messages.payment_method.credit_debit_card"),
         ];
     }
 }

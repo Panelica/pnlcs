@@ -4,8 +4,8 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">Announcements</h1>
-        <p class="pn-page-subtitle">Latest news and updates from our team.</p>
+        <h1 class="pn-page-title">{{ __('client.announcements.page_title') }}</h1>
+        <p class="pn-page-subtitle">{{ __('client.announcements.page_subtitle') }}</p>
     </div>
 </div>
 
@@ -13,7 +13,7 @@
 <div class="pn-card">
     <div class="pn-empty">
         <div class="pn-empty-icon">&#128227;</div>
-        <p>No announcements at this time.</p>
+        <p>{{ __('client.announcements.no_announcements') }}</p>
     </div>
 </div>
 @else

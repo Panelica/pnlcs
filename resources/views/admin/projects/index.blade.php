@@ -1,9 +1,9 @@
 @extends('admin.layouts.app')
-@section('title', 'Projects')
+@section('title', __('admin.projects.title'))
 @section('content')
 <div class="page-header">
-    <h1>Projects</h1>
-    <a href="{{ route('admin.projects.create') }}" class="btn btn-primary btn-sm">+ New Project</a>
+    <h1>{{ __('admin.projects.title') }}</h1>
+    <a href="{{ route('admin.projects.create') }}" class="btn btn-primary btn-sm">+ {{ __('admin.projects.new_project') }}</a>
 </div>
 <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
     @foreach([''=>'All','pending'=>'Pending','in_progress'=>'In Progress','completed'=>'Completed','cancelled'=>'Cancelled'] as $val=>$label)
@@ -14,13 +14,13 @@
 
 <form method="GET" style="margin-bottom:10px;">
     <input type="hidden" name="status" value="{{ request('status') }}">
-    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by title or client..." class="form-control" style="max-width:300px;display:inline-block;">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.projects.search_placeholder') }}" class="form-control" style="max-width:300px;display:inline-block;">
 </form>
 
 <div class="card">
     <table class="data-table">
         <thead><tr>
-            <th>Title</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.status') }}</th><th>Progress</th><th>{{ __('common.table.due_date') }}</th><th>{{ __('common.table.actions') }}</th>
+            <th>{{ __('admin.projects.title_col') }}</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.status') }}</th><th>{{ __('admin.projects.progress') }}</th><th>{{ __('common.table.due_date') }}</th><th>{{ __('common.table.actions') }}</th>
         </tr></thead>
         <tbody>
             @forelse($projects as $project)
@@ -48,9 +48,9 @@
                     <div style="display:flex;gap:6px;">
                         <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                         <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
-                        <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('Delete this project?')" style="display:inline;">
+                        <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('{{ __('admin.projects.confirm_delete') }}')" style="display:inline;">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-xs">Del</button>
+                            <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.projects.del') }}</button>
                         </form>
                     </div>
                 </td>

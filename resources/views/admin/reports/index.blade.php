@@ -5,7 +5,7 @@
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
     <h4 style="margin:0;">{{ __("admin.reports.title") }}</h4>
     <div style="display:flex;gap:8px;">
-        <a href="{{ route('admin.reports.index') }}" class="btn btn-sm {{ !$selectedCategory ? 'btn-primary' : 'btn-outline' }}">All</a>
+        <a href="{{ route('admin.reports.index') }}" class="btn btn-sm {{ !$selectedCategory ? 'btn-primary' : 'btn-outline' }}">{{ __('admin.reports.all') }}</a>
         @foreach($categories as $cat)
         <a href="{{ route('admin.reports.index', ['category' => $cat]) }}" class="btn btn-sm {{ $selectedCategory === $cat ? 'btn-primary' : 'btn-outline' }}">{{ $cat }}</a>
         @endforeach
@@ -22,8 +22,8 @@
                 <div style="font-weight:600;font-size:14px;margin-bottom:4px;">{{ $report->getTitle() }}</div>
                 <div style="font-size:12px;color:var(--pn-muted);">{{ $report->getDescription() }}</div>
                 <div style="margin-top:8px;display:flex;gap:6px;">
-                    @if($report->hasDateFilter())<span style="font-size:10px;background:var(--pn-badge-bg);padding:2px 6px;border-radius:4px;">Date Filter</span>@endif
-                    @if($report->canExport())<span style="font-size:10px;background:var(--pn-badge-bg);padding:2px 6px;border-radius:4px;">CSV Export</span>@endif
+                    @if($report->hasDateFilter())<span style="font-size:10px;background:var(--pn-badge-bg);padding:2px 6px;border-radius:4px;">{{ __('admin.reports.date_filter') }}</span>@endif
+                    @if($report->canExport())<span style="font-size:10px;background:var(--pn-badge-bg);padding:2px 6px;border-radius:4px;">{{ __('admin.reports.csv_export') }}</span>@endif
                 </div>
             </div>
         </a>

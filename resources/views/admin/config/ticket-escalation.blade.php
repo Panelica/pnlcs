@@ -25,7 +25,7 @@
                         $deptNames = \App\Models\TicketDepartment::whereIn("id", $rule->departments)->pluck("name")->toArray();
                     }
                 @endphp
-                {{ $deptNames ? implode(", ", $deptNames) : "All" }}
+                {{ $deptNames ? implode(", ", $deptNames) : __("admin.tax.all") }}
             </td>
             <td>
                 @if(is_array($rule->priorities) && count($rule->priorities) > 0)
@@ -47,7 +47,7 @@
             <td style="text-transform:capitalize;">{{ $rule->new_priority ?? "-" }}</td>
             <td style="text-align:right;white-space:nowrap;">
                 <button type="button" onclick="document.getElementById('modal-edit-rule-{{ $rule->id }}').style.display='flex'" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.ticket-escalation.destroy', $rule->id) }}" style="display:inline;" onsubmit="return confirm('Delete rule {{ $rule->name }}?')">
+                <form method="POST" action="{{ route('admin.config.ticket-escalation.destroy', $rule->id) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.ticket_escalation.confirm_delete\") }}')">
                     @csrf @method("DELETE")
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
@@ -59,7 +59,7 @@
             <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="this.parentElement.style.display='none'"></div>
             <div style="position:relative;background:#fff;border-radius:4px;width:550px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
                 <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-                    <h4 style="margin:0;font-size:16px;">Edit Rule: {{ $rule->name }}</h4>
+                    <h4 style="margin:0;font-size:16px;">{{ __('admin.ticket_escalation.edit_rule_title', ['name' => $rule->name]) }}</h4>
                     <button type="button" onclick="this.closest('[id^=modal]').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
                 </div>
                 <form method="POST" action="{{ route('admin.config.ticket-escalation.update', $rule->id) }}">
@@ -70,18 +70,18 @@
                             <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.time_threshold_minutes') }}</label><input type="number" name="time_elapsed" value="{{ $rule->time_elapsed }}" required min="1" class="form-control"></div>
                             <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.new_priority') }}</label>
                                 <select name="new_priority" class="form-control">
-                                    <option value="">-- No change --</option>
-                                    <option value="low" {{ $rule->new_priority == "low" ? "selected" : "" }}>Low</option>
-                                    <option value="medium" {{ $rule->new_priority == "medium" ? "selected" : "" }}>Medium</option>
-                                    <option value="high" {{ $rule->new_priority == "high" ? "selected" : "" }}>High</option>
-                                    <option value="urgent" {{ $rule->new_priority == "urgent" ? "selected" : "" }}>Urgent</option>
+                                    <option value="">{{ __('admin.ticket_escalation.no_change') }}</option>
+                                    <option value="low" {{ $rule->new_priority == "low" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_low') }}</option>
+                                    <option value="medium" {{ $rule->new_priority == "medium" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_medium') }}</option>
+                                    <option value="high" {{ $rule->new_priority == "high" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_high') }}</option>
+                                    <option value="urgent" {{ $rule->new_priority == "urgent" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_urgent') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group" style="margin-top:12px;">
                             <label class="form-label">{{ __('admin.ticket_escalation.assign_to_admin') }}</label>
                             <select name="flag_to" class="form-control">
-                                <option value="">-- No change --</option>
+                                <option value="">{{ __('admin.ticket_escalation.no_change') }}</option>
                                 @foreach($admins as $admin)
                                 <option value="{{ $admin->id }}" {{ $rule->flag_to == $admin->id ? "selected" : "" }}>{{ $admin->first_name }} {{ $admin->last_name }}</option>
                                 @endforeach
@@ -90,7 +90,7 @@
                         <div class="form-group" style="margin-top:12px;">
                             <label class="form-label">{{ __('admin.ticket_escalation.move_to_department') }}</label>
                             <select name="new_department_id" class="form-control">
-                                <option value="">-- No change --</option>
+                                <option value="">{{ __('admin.ticket_escalation.no_change') }}</option>
                                 @foreach($departments as $dept)
                                 <option value="{{ $dept->id }}" {{ $rule->new_department_id == $dept->id ? "selected" : "" }}>{{ $dept->name }}</option>
                                 @endforeach
@@ -138,18 +138,18 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.time_threshold_minutes') }}</label><input type="number" name="time_elapsed" required min="1" value="60" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.new_priority') }}</label>
                         <select name="new_priority" class="form-control">
-                            <option value="">-- No change --</option>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
+                            <option value="">{{ __('admin.ticket_escalation.no_change') }}</option>
+                            <option value="low">{{ __('admin.ticket_escalation.priority_low') }}</option>
+                            <option value="medium">{{ __('admin.ticket_escalation.priority_medium') }}</option>
+                            <option value="high">{{ __('admin.ticket_escalation.priority_high') }}</option>
+                            <option value="urgent">{{ __('admin.ticket_escalation.priority_urgent') }}</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group" style="margin-top:12px;">
                     <label class="form-label">{{ __('admin.ticket_escalation.assign_to_admin') }}</label>
                     <select name="flag_to" class="form-control">
-                        <option value="">-- No assignment --</option>
+                        <option value="">{{ __('admin.ticket_escalation.no_assignment') }}</option>
                         @foreach($admins as $admin)
                         <option value="{{ $admin->id }}">{{ $admin->first_name }} {{ $admin->last_name }}</option>
                         @endforeach
@@ -158,7 +158,7 @@
                 <div class="form-group" style="margin-top:12px;">
                     <label class="form-label">{{ __('admin.ticket_escalation.move_to_department') }}</label>
                     <select name="new_department_id" class="form-control">
-                        <option value="">-- No change --</option>
+                        <option value="">{{ __('admin.ticket_escalation.no_change') }}</option>
                         @foreach($departments as $dept)
                         <option value="{{ $dept->id }}">{{ $dept->name }}</option>
                         @endforeach

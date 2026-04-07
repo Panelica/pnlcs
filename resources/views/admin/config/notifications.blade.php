@@ -134,7 +134,7 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.secret_optional') }}</label><input type="text" name="settings[secret]" class="form-control" placeholder="Shared secret for verification"></div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label"><input type="checkbox" name="active" value="1" checked> Active</label>
+                    <label class="form-label"><input type="checkbox" name="active" value="1" checked> {{ __('admin.notifications.active') }}</label>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -173,7 +173,7 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.secret') }}</label><input type="text" name="settings[secret]" id="edit-wh-secret" class="form-control"></div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label"><input type="checkbox" name="active" value="1" id="edit-prov-active"> Active</label>
+                    <label class="form-label"><input type="checkbox" name="active" value="1" id="edit-prov-active"> {{ __('admin.notifications.active') }}</label>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -213,7 +213,7 @@
                     <input type="email" name="conditions[recipient_email]" class="form-control" placeholder="admin@example.com">
                 </div>
                 <div class="form-group">
-                    <label class="form-label"><input type="checkbox" name="active" value="1" checked> Active</label>
+                    <label class="form-label"><input type="checkbox" name="active" value="1" checked> {{ __('admin.notifications.active') }}</label>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

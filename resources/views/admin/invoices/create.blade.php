@@ -40,7 +40,7 @@
 
             <div class="card" style="margin-bottom:15px;">
                 <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-                    <strong>Line Items</strong>
+                    <strong>{{ __('admin.invoices.line_items') }}</strong>
                     <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ {{ __('admin.invoices.add_item') }}</button>
                 </div>
                 <div class="card-body">
@@ -58,7 +58,7 @@
                                 <tr style="border-bottom:1px solid #f5f5f5;">
                                     <td style="padding:6px 8px;">
                                         <input type="text" :name="`items[${index}][description]`" x-model="item.description"
-                                               placeholder="Description" required class="form-control" style="font-size:13px;">
+                                               placeholder="{{ __('admin.invoices.description_placeholder') }}" required class="form-control" style="font-size:13px;">
                                     </td>
                                     <td style="padding:6px 8px;text-align:center;">
                                         <input type="checkbox" :name="`items[${index}][taxed]`" :value="1" x-model="item.taxed">
@@ -83,7 +83,7 @@
                 <div class="card-header"><strong>{{ __('admin.invoices.notes') }}</strong></div>
                 <div class="card-body">
                     <div class="form-group" style="margin:0;">
-                        <textarea name="notes" rows="3" placeholder="Optional notes visible on the invoice..." class="form-control">{{ old('notes') }}</textarea>
+                        <textarea name="notes" rows="3" placeholder="{{ __('admin.invoices.notes_placeholder') }}" class="form-control">{{ old('notes') }}</textarea>
                     </div>
                 </div>
             </div>

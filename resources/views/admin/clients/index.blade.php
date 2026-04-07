@@ -25,16 +25,16 @@
                     class="form-control">
             </div>
             <div class="form-group" style="margin:0;">
-                <label class="form-label">Status</label>
+                <label class="form-label">{{ __('admin.clients.status_label') }}</label>
                 <select name="status" class="form-control" style="width:auto;">
                     <option value="">{{ __('common.misc.all_statuses') }}</option>
-                    <option value="active" {{ request("status") == "active" ? "selected" : "" }}>Active</option>
-                    <option value="inactive" {{ request("status") == "inactive" ? "selected" : "" }}>Inactive</option>
-                    <option value="closed" {{ request("status") == "closed" ? "selected" : "" }}>Closed</option>
+                    <option value="active" {{ request("status") == "active" ? "selected" : "" }}>{{ __('admin.clients.active') }}</option>
+                    <option value="inactive" {{ request("status") == "inactive" ? "selected" : "" }}>{{ __('admin.clients.inactive') }}</option>
+                    <option value="closed" {{ request("status") == "closed" ? "selected" : "" }}>{{ __('admin.clients.closed') }}</option>
                 </select>
             </div>
             <div class="form-group" style="margin:0;">
-                <label class="form-label">Group</label>
+                <label class="form-label">{{ __('admin.clients.group_label') }}</label>
                 <select name="group_id" class="form-control" style="width:auto;">
                     <option value="">{{ __('common.misc.all_groups') }}</option>
                     @foreach($groups as $group)

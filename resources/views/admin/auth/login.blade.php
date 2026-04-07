@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - PNLCS</title>
+    <title>{{ __('admin.auth.admin_login_title') }} - PNLCS</title>
     @vite(["resources/css/app.css"])
 </head>
 <body style="margin:0;padding:0;background:#f6f6f6;font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;">
@@ -59,14 +59,14 @@
             </div>
 
             <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:8px 14px;font-size:14px;">
-                Sign In
+                {{ __('admin.auth.sign_in') }}
             </button>
         </form>
     </div>
 
     <!-- Footer -->
     <p style="text-align:center;font-size:12px;color:#999;margin-top:20px;">
-        &copy; {{ date("Y") }} PNLCS. All rights reserved.
+        &copy; {{ date("Y") }} PNLCS. {{ __('admin.auth.all_rights_reserved') }}
     </p>
 </div>
 

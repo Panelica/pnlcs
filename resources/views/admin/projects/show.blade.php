@@ -27,7 +27,7 @@
         </div>
         <div class="stat-label">{{ $pct }}% Progress</div>
     </div>
-    <div class="stat-card"><div class="stat-value" style="font-size:16px;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format('d M Y') : '—' }}</div><div class="stat-label">Due Date</div></div>
+    <div class="stat-card"><div class="stat-value" style="font-size:16px;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format('d M Y') : '—' }}</div><div class="stat-label">{{ __('admin.projects.due_date_label') }}</div></div>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 300px;gap:15px;">
@@ -49,7 +49,7 @@
                         @if($task->notes)<p style="margin:3px 0 0;font-size:12px;color:#999;">{{ $task->notes }}</p>@endif
                         @if($task->due_date)<p style="margin:3px 0 0;font-size:11px;color:#aaa;">Due: {{ \Carbon\Carbon::parse($task->due_date)->format('d M Y') }}</p>@endif
                     </div>
-                    <form method="POST" action="{{ route('admin.projects.tasks.destroy', [$project, $task]) }}" onsubmit="return confirm('Delete task?')">
+                    <form method="POST" action="{{ route('admin.projects.tasks.destroy', [$project, $task]) }}" onsubmit="return confirm('{{ __('admin.projects.confirm_delete_task') }}')">
                         @csrf @method('DELETE')
                         <button type="submit" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:14px;padding:0;">&times;</button>
                     </form>
@@ -119,10 +119,10 @@
             </div>
         </div>
         <div class="panel">
-            <div class="panel-heading panel-primary">Actions</div>
+            <div class="panel-heading panel-primary">{{ __('admin.projects.actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
                 <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-sm" style="width:100%;text-align:center;">{{ __('admin.projects.edit_project') }}</a>
-                <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('Delete this project and all its tasks?')">
+                <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('{{ __('admin.projects.confirm_delete_project') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">{{ __('admin.projects.delete_project') }}</button>
                 </form>

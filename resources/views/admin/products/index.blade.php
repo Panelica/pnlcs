@@ -23,14 +23,14 @@
         <tr>
             <td>
                 <a href="{{ route('admin.products.edit', $product) }}" style="color:#337ab7;font-weight:600;">{{ $product->name }}</a>
-                @if($product->is_featured) <span style="background:#fcf8e3;color:#8a6d3b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:4px;">Featured</span>@endif
+                @if($product->is_featured) <span style="background:#fcf8e3;color:#8a6d3b;padding:1px 5px;border-radius:3px;font-size:11px;margin-left:4px;">{{ __('admin.products.featured') }}</span>@endif
             </td>
             <td style="text-transform:capitalize;">{{ $product->type }}</td>
             <td style="text-transform:capitalize;">{{ $product->pay_type }}</td>
             <td>
-                @if($product->hidden)<span class="badge-suspended">Hidden</span>
-                @elseif($product->retired)<span class="badge-terminated">Retired</span>
-                @else<span class="badge-active">Active</span>@endif
+                @if($product->hidden)<span class="badge-suspended">{{ __('admin.products.hidden') }}</span>
+                @elseif($product->retired)<span class="badge-terminated">{{ __('admin.products.retired') }}</span>
+                @else<span class="badge-active">{{ __('admin.products.active') }}</span>@endif
             </td>
             <td style="text-align:right;">
                 <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
@@ -40,7 +40,7 @@
         </tbody>
     </table>
     @else
-    <div class="card-body" style="color:#999;font-size:13px;">{{ __('admin.products.no_products_in_group') }} <a href="{{ route('admin.products.create') }}" style="color:#337ab7;">Add one</a></div>
+    <div class="card-body" style="color:#999;font-size:13px;">{{ __('admin.products.no_products_in_group') }} <a href="{{ route('admin.products.create') }}" style="color:#337ab7;">{{ __('admin.products.add_one') }}</a></div>
     @endif
 </div>
 @empty

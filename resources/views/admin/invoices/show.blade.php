@@ -9,7 +9,7 @@
         <button type="button" class="btn btn-success btn-sm" onclick="document.getElementById('mark-paid-form').style.display=document.getElementById('mark-paid-form').style.display==='none'?'block':'none'">{{ __('admin.invoices.mark_paid_btn') }}</button>
         @endif
         @if($invoice->status !== 'Paid' && $invoice->status !== 'Cancelled')
-        <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}" style="display:inline;" onsubmit="return confirm('Cancel this invoice?')">
+        <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.invoices.confirm_cancel') }}')">
             @csrf
             <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.cancel') }}</button>
         </form>
@@ -31,14 +31,14 @@
                         <select name="gateway" class="form-control">
                             <option value="manual">{{ __('admin.invoices.manual') }}</option>
                             <option value="banktransfer">{{ __('admin.invoices.bank_transfer') }}</option>
-                            <option value="paypal">PayPal</option>
-                            <option value="stripe">Stripe</option>
+                            <option value="paypal">{{ __('admin.invoices.paypal') }}</option>
+                            <option value="stripe">{{ __('admin.invoices.stripe') }}</option>
                             <option value="credit">{{ __('admin.invoices.credit') }}</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin:0;flex:1;min-width:160px;">
                         <label class="form-label">{{ __('admin.invoices.transaction_id') }}</label>
-                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. ch_abc123">
+                        <input type="text" name="transaction_id" class="form-control" placeholder="{{ __('admin.invoices.transaction_id_placeholder') }}">
                     </div>
                     <div class="form-group" style="margin:0;flex:1;min-width:120px;">
                         <label class="form-label">{{ __('admin.invoices.amount') }}</label>

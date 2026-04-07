@@ -22,7 +22,7 @@ class ContactController extends Controller
     public function submit(Request $request)
     {
         // Honeypot spam protection
-        if ($request->filled("website_url")) { return back()->with("success", "Thank you."); }
+        if ($request->filled("website_url")) { return back()->with("success", __("messages.success.thank_you")); }
         $validated = $request->validate([
             'name'          => 'required|string|max:100',
             'email'         => 'required|email|max:200',

@@ -35,7 +35,7 @@ class SslProvisioningService
     {
         $module = $this->getModuleForOrder($order);
         if (!$module) {
-            return ['success' => false, 'message' => 'SSL module not found for this order'];
+            return ['success' => false, 'message' => __('messages.error.ssl_module_not_found')];
         }
 
         // Update order with configuration
@@ -72,7 +72,7 @@ class SslProvisioningService
     {
         $module = $this->getModuleForOrder($order);
         if (!$module) {
-            return ['success' => false, 'message' => 'SSL module not found'];
+            return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
         $previousStatus = $order->status;
@@ -91,7 +91,7 @@ class SslProvisioningService
     {
         $module = $this->getModuleForOrder($order);
         if (!$module) {
-            return ['success' => false, 'message' => 'SSL module not found'];
+            return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
         return $module->renewCertificate($order);
@@ -101,7 +101,7 @@ class SslProvisioningService
     {
         $module = $this->getModuleForOrder($order);
         if (!$module) {
-            return ['success' => false, 'message' => 'SSL module not found'];
+            return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
         return $module->revokeCertificate($order, $reason);
@@ -111,7 +111,7 @@ class SslProvisioningService
     {
         $module = $this->getModuleForOrder($order);
         if (!$module) {
-            return ['success' => false, 'message' => 'SSL module not found'];
+            return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
         return $module->reissueCertificate($order, $newCsr);
@@ -121,7 +121,7 @@ class SslProvisioningService
     {
         $module = $this->getModuleForOrder($order);
         if (!$module) {
-            return ['success' => false, 'message' => 'SSL module not found'];
+            return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
         return $module->resendValidationEmail($order);
@@ -131,7 +131,7 @@ class SslProvisioningService
     {
         $module = $this->getModuleForOrder($order);
         if (!$module) {
-            return ['success' => false, 'message' => 'SSL module not found'];
+            return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
         return $module->changeValidationMethod($order, $method);
@@ -140,7 +140,7 @@ class SslProvisioningService
     public function downloadCertificate(SslOrder $order): array
     {
         if (!$order->isCompleted()) {
-            return ['success' => false, 'message' => 'Certificate not yet issued'];
+            return ['success' => false, 'message' => __('messages.error.certificate_not_yet_issued')];
         }
 
         return [

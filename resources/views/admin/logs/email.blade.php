@@ -15,7 +15,7 @@
         <form method="GET" action="{{ route('admin.logs.email') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
             <div><label class="form-label">{{ __('common.form.status') }}</label>
                 <select name="status" onchange="this.form.submit()" class="form-control" style="width:140px;">
-                    <option value="">All</option>
+                    <option value="">{{ __('admin.logs.status_all') }}</option>
                     <option value="sent" {{ request('status')==='sent'?'selected':'' }}>{{ __('common.status.sent') }}</option>
                     <option value="pending" {{ request('status')==='pending'?'selected':'' }}>{{ __('common.status.pending') }}</option>
                     <option value="failed" {{ request('status')==='failed'?'selected':'' }}>{{ __('common.status.failed') }}</option>
@@ -44,9 +44,9 @@
                 <td style="font-size:12px;color:#777;">{{ $log->to ?? '-' }}</td>
                 <td>{{ $log->subject ?? '-' }}</td>
                 <td>
-                    @if($log->failed)<span class="badge-cancelled">Failed</span>
-                    @elseif($log->pending)<span class="badge-pending">Pending</span>
-                    @else<span class="badge-active">Sent</span>@endif
+                    @if($log->failed)<span class="badge-cancelled">{{ __('admin.logs.status_failed') }}</span>
+                    @elseif($log->pending)<span class="badge-pending">{{ __('admin.logs.status_pending') }}</span>
+                    @else<span class="badge-active">{{ __('admin.logs.status_sent') }}</span>@endif
                 </td>
             </tr>
             @empty

@@ -113,7 +113,7 @@
 <script>
 document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
     radio.addEventListener('change', function() {
-        var labels = { monthly: 'Monthly', quarterly: 'Quarterly', semiannually: 'Semi-Annually', annually: 'Annually', biennially: 'Biennially', triennially: 'Triennially' };
+        var labels = { monthly: '{{ __("client.cart.cycle_monthly") }}', quarterly: '{{ __("client.cart.cycle_quarterly") }}', semiannually: '{{ __("client.cart.cycle_semiannually") }}', annually: '{{ __("client.cart.cycle_annually") }}', biennially: '{{ __("client.cart.cycle_biennially") }}', triennially: '{{ __("client.cart.cycle_triennially") }}' };
         document.getElementById('summaryBilling').textContent = labels[this.value] || this.value;
         var label = this.closest('.cycle-option');
         var price = label ? label.querySelector('.cycle-price').textContent : '-';

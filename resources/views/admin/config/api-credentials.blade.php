@@ -28,13 +28,13 @@
         <tbody>
         @foreach($credentials as $cred)
         <tr>
-            <td style="font-weight:600;">{{ $cred->description ?: 'No description' }}</td>
+            <td style="font-weight:600;">{{ $cred->description ?: __('admin.api_credentials.no_description') }}</td>
             <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">{{ $cred->identifier }}</code></td>
             <td style="font-size:12px;">{{ $cred->admin->full_name ?? 'N/A' }}</td>
             <td style="font-size:12px;color:#777;">{{ $cred->created_at?->format('d M Y H:i') ?? '-' }}</td>
             <td><span class="badge {{ $cred->active ? 'badge-active' : 'badge-suspended' }}">{{ $cred->active ? __('common.status.active') : __('common.status.disabled') }}</span></td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $cred) }}" style="display:inline;" onsubmit="return confirm('Revoke this API key? This cannot be undone.')">
+                <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $cred) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.api_credentials.confirm_revoke") }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.api_credentials.revoke') }}</button>
                 </form>
@@ -47,7 +47,7 @@
 </div>
 
 <div style="margin-top:15px;padding:12px 15px;background:#d9edf7;border:1px solid #bce8f1;border-radius:4px;color:#31708f;font-size:13px;">
-    <strong>API Usage:</strong> Send POST requests to <code>/api/v1/{action}</code> with parameters <code>identifier</code> and <code>secret</code>.
+    <strong>{{ __('admin.api_credentials.api_usage') }}:</strong> {{ __('admin.api_credentials.api_usage_desc') }} <code>/api/v1/{action}</code> {{ __('admin.api_credentials.api_usage_params') }}
     @if(Route::has('admin.api-docs'))
     <a href="{{ route('admin.api-docs') }}" style="color:#337ab7;">{{ __('admin.api_credentials.view_docs') }}</a>
     @endif

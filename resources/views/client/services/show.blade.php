@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", $service->product?->name ?? "Service")
+@section("title", $service->product?->name ?? __("client.services.title"))
 @section("content")
 
 <a href="{{ route("client.services.index") }}" class="pn-back">
@@ -9,10 +9,10 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">{{ $service->product?->name ?? "Service" }}</h1>
+        <h1 class="pn-page-title">{{ $service->product?->name ?? __('client.services.title') }}</h1>
         @if($service->domain)<p class="pn-page-subtitle">{{ $service->domain }}</p>@endif
     </div>
-    <span class="badge badge-{{ strtolower($service->status) }}" style="font-size:13px;padding:5px 14px">{{ ucfirst($service->status) }}</span>
+    <span class="badge badge-{{ strtolower($service->status) }}" style="font-size:13px;padding:5px 14px">{{ __('client.status.' . strtolower($service->status)) }}</span>
 </div>
 
 <div class="pn-2col mb-24">
@@ -103,11 +103,11 @@
             <tbody>
                 @foreach($service->addons as $addon)
                 <tr>
-                    <td>Addon #{{ $addon->addon_id ?? $addon->id }}</td>
+                    <td>{{ __('client.services.addon_prefix', ['id' => $addon->addon_id ?? $addon->id]) }}</td>
                     <td>${{ number_format($addon->amount, 2) }}</td>
                     <td style="text-transform:capitalize">{{ $addon->billing_cycle }}</td>
                     <td class="text-muted text-sm">{{ $addon->next_due_date?->format("d M Y") ?? "-" }}</td>
-                    <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ ucfirst($addon->status) }}</span></td>
+                    <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ __('client.status.' . strtolower($addon->status)) }}</span></td>
                 </tr>
                 @endforeach
             </tbody>

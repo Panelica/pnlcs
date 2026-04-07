@@ -1,5 +1,5 @@
 @extends('admin.layouts.app')
-@section('title', 'Order #' . $order->order_num)
+@section('title', __('admin.orders.order_hash') . $order->order_num)
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
@@ -28,7 +28,7 @@
 
         @if($order->services->count() > 0)
         <div class="card" style="margin-bottom:15px;">
-            <div class="card-header"><strong>Services ({{ $order->services->count() }})</strong></div>
+            <div class="card-header"><strong>{{ __('admin.orders.services_header') }} ({{ $order->services->count() }})</strong></div>
             <table class="data-table">
                 <thead><tr><th>{{ __('common.table.product') }}</th><th>{{ __('common.table.domain') }}</th><th>{{ __('admin.orders.billing') }}</th><th style="text-align:right;">{{ __('common.table.amount') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
                 <tbody>
@@ -48,7 +48,7 @@
 
         @if($order->domains->count() > 0)
         <div class="card" style="margin-bottom:15px;">
-            <div class="card-header"><strong>Domains ({{ $order->domains->count() }})</strong></div>
+            <div class="card-header"><strong>{{ __('admin.orders.domains_header') }} ({{ $order->domains->count() }})</strong></div>
             <table class="data-table">
                 <thead><tr><th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.type') }}</th><th>{{ __('admin.orders.expiry') }}</th><th>{{ __('common.table.status') }}</th></tr></thead>
                 <tbody>
@@ -108,21 +108,21 @@
                 @endif
 
                 @if(!in_array($order->status, ['Cancelled', 'Fraud']))
-                <form method="POST" action="{{ route('admin.orders.cancel', $order) }}" onsubmit="return confirm('Cancel this order and terminate its services?')">
+                <form method="POST" action="{{ route('admin.orders.cancel', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_cancel') }}')">
                     @csrf
                     <button type="submit" class="btn btn-warning btn-sm" style="width:100%;">{{ __('admin.orders.cancel_order') }}</button>
                 </form>
                 @endif
 
                 @if($order->status !== 'Fraud')
-                <form method="POST" action="{{ route('admin.orders.fraud', $order) }}" onsubmit="return confirm('Mark this order as fraud? Services will be suspended.')">
+                <form method="POST" action="{{ route('admin.orders.fraud', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_fraud') }}')">
                     @csrf
                     <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">{{ __('common.actions.mark_fraud') }}</button>
                 </form>
                 @endif
 
                 @if(in_array($order->status, ['Cancelled', 'Fraud', 'Pending']))
-                <form method="POST" action="{{ route('admin.orders.delete', $order) }}" onsubmit="return confirm('Permanently delete order #{{ $order->order_num }}?')">
+                <form method="POST" action="{{ route('admin.orders.delete', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-default btn-sm" style="width:100%;color:#d9534f;">{{ __('admin.orders.delete_order') }}</button>
                 </form>
@@ -130,7 +130,7 @@
 
                 @if($order->invoice)
                 <a href="{{ route('admin.invoices.show', $order->invoice) }}" class="btn btn-default btn-sm" style="width:100%;text-align:center;">
-                    View Invoice #{{ $order->invoice->invoice_num }}
+                    {{ __('admin.orders.view_invoice') }} #{{ $order->invoice->invoice_num }}
                 </a>
                 @endif
             </div>

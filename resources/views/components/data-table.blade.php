@@ -1,9 +1,9 @@
 @props([
     'headers' => [],
-    'empty' => 'No records found.',
+    'empty' => __('common.table.no_records'),
     'title' => null,
     'createUrl' => null,
-    'createLabel' => 'Add New',
+    'createLabel' => __('common.actions.add_new'),
     'paginator' => null,
 ])
 

@@ -76,7 +76,7 @@ class WhoisController extends Controller
 
         $parts = explode(".", $domain);
         if (count($parts) < 2) {
-            return back()->withErrors(["domain" => "Invalid domain name."]);
+            return back()->withErrors(["domain" => __("messages.whois.invalid_domain")]);
         }
 
         // Determine TLD (could be 2-level like .co.uk)
@@ -100,7 +100,7 @@ class WhoisController extends Controller
 
         if (!$whoisServer) {
             $result = [
-                "raw"      => "No WHOIS server known for ." . $tldKey . ". Try querying whois.iana.org manually.",
+                "raw"      => __("messages.whois.no_server_known", ["tld" => $tldKey]),
                 "domain"   => $domain,
                 "server"   => "unknown",
                 "parsed"   => [],
@@ -127,7 +127,7 @@ class WhoisController extends Controller
     {
         $conn = @fsockopen($server, 43, $errno, $errstr, 8);
         if (!$conn) {
-            return "Error: Could not connect to " . $server . " (errno=" . $errno . ": " . $errstr . ")";
+            return __("messages.whois.connect_error", ["server" => $server, "errno" => $errno, "errstr" => $errstr]);
         }
 
         fwrite($conn, $domain . "\r\n");

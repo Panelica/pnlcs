@@ -91,7 +91,7 @@
                         <td><a href="{{ route("client.invoices.show", $invoice) }}">#{{ $invoice->invoice_num ?? $invoice->id }}</a></td>
                         <td class="text-muted text-sm">{{ $invoice->due_date?->format("d M Y") ?? "-" }}</td>
                         <td style="font-weight:600">${{ number_format($invoice->total, 2) }}</td>
-                        <td><span class="badge badge-{{ strtolower($invoice->status) }}">{{ ucfirst($invoice->status) }}</span></td>
+                        <td><span class="badge badge-{{ strtolower($invoice->status) }}">{{ __('client.status.' . strtolower($invoice->status)) }}</span></td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -115,7 +115,7 @@
                     @foreach($recentTickets as $ticket)
                     <tr>
                         <td><a href="{{ route("client.tickets.show", $ticket) }}">{{ Str::limit($ticket->title, 38) }}</a></td>
-                        <td><span class="badge badge-{{ strtolower(str_replace(" ", "-", $ticket->status)) }}">{{ ucfirst($ticket->status) }}</span></td>
+                        <td><span class="badge badge-{{ strtolower(str_replace(" ", "-", $ticket->status)) }}">{{ __('client.status.' . strtolower(str_replace(' ', '-', $ticket->status))) }}</span></td>
                         <td class="text-muted text-sm">{{ $ticket->last_reply?->diffForHumans() ?? $ticket->created_at?->diffForHumans() }}</td>
                     </tr>
                     @endforeach
@@ -143,7 +143,7 @@
                     <td class="text-muted">{{ $service->domain ?? "-" }}</td>
                     <td style="font-weight:600">${{ number_format($service->amount, 2) }}<span class="text-muted text-sm">/{{ $service->billing_cycle }}</span></td>
                     <td class="text-muted text-sm">{{ $service->next_due_date?->format("d M Y") ?? "N/A" }}</td>
-                    <td><span class="badge badge-active">Active</span></td>
+                    <td><span class="badge badge-active">{{ __('client.status.active') }}</span></td>
                 </tr>
                 @endforeach
             </tbody>

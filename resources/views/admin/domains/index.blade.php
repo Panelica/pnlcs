@@ -3,7 +3,7 @@
 @section("content")
 
 <div class="page-header">
-    <h1>Domains</h1>
+    <h1>{{ __('admin.domains.title') }}</h1>
     <span style="font-size:13px;color:#666;">{{ $domains->total() }} total</span>
 </div>
 
@@ -14,10 +14,10 @@
             <div class="form-group" style="margin:0;flex:1;min-width:180px;">
                 <label class="form-label">{{ __('common.actions.search') }}</label>
                 <input type="text" name="search" value="{{ request("search") }}"
-                    placeholder="Search domain..." class="form-control">
+                    placeholder="{{ __('admin.domains.search_placeholder') }}" class="form-control">
             </div>
             <div class="form-group" style="margin:0;">
-                <label class="form-label">Status</label>
+                <label class="form-label">{{ __('admin.domains.status_label') }}</label>
                 <select name="status" class="form-control" style="width:auto;">
                     <option value="">{{ __('common.misc.all_statuses') }}</option>
                     @foreach($statuses as $s)
@@ -27,9 +27,9 @@
             </div>
             @if($registrars->count() > 0)
             <div class="form-group" style="margin:0;">
-                <label class="form-label">Registrar</label>
+                <label class="form-label">{{ __('admin.domains.registrar_label') }}</label>
                 <select name="registrar" class="form-control" style="width:auto;">
-                    <option value="">All Registrars</option>
+                    <option value="">{{ __('admin.domains.all_registrars') }}</option>
                     @foreach($registrars as $r)
                     <option value="{{ $r }}" {{ request("registrar") == $r ? "selected" : "" }}>{{ ucfirst($r) }}</option>
                     @endforeach
@@ -37,12 +37,12 @@
             </div>
             @endif
             <div class="form-group" style="margin:0;">
-                <label class="form-label">Sort</label>
+                <label class="form-label">{{ __('admin.domains.sort') }}</label>
                 <select name="sort" class="form-control" style="width:auto;">
-                    <option value="created_at" {{ request("sort","created_at") == "created_at" ? "selected" : "" }}>Created</option>
-                    <option value="expiry_date" {{ request("sort") == "expiry_date" ? "selected" : "" }}>Expiry</option>
-                    <option value="registration_date" {{ request("sort") == "registration_date" ? "selected" : "" }}>Registration</option>
-                    <option value="domain" {{ request("sort") == "domain" ? "selected" : "" }}>Domain</option>
+                    <option value="created_at" {{ request("sort","created_at") == "created_at" ? "selected" : "" }}>{{ __('admin.domains.sort_created') }}</option>
+                    <option value="expiry_date" {{ request("sort") == "expiry_date" ? "selected" : "" }}>{{ __('admin.domains.sort_expiry') }}</option>
+                    <option value="registration_date" {{ request("sort") == "registration_date" ? "selected" : "" }}>{{ __('admin.domains.sort_registration') }}</option>
+                    <option value="domain" {{ request("sort") == "domain" ? "selected" : "" }}>{{ __('admin.domains.sort_domain') }}</option>
                 </select>
             </div>
             <div class="form-group" style="margin:0;">
@@ -63,8 +63,8 @@
                 <th>{{ __('common.table.domain') }}</th>
                 <th>{{ __('common.table.client') }}</th>
                 <th>{{ __('common.table.registrar') }}</th>
-                <th>Registered</th>
-                <th>Expires</th>
+                <th>{{ __('admin.domains.registered') }}</th>
+                <th>{{ __('admin.domains.expires') }}</th>
                 <th>{{ __('common.table.status') }}</th>
                 <th>{{ __('common.table.actions') }}</th>
             </tr>

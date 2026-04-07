@@ -1,8 +1,8 @@
 @extends('admin.layouts.app')
-@section('title', 'System Logs')
+@section('title', __('admin.logs.title'))
 @section('content')
 
-<div class="page-header"><h1>System Logs</h1></div>
+<div class="page-header"><h1>{{ __('admin.logs.title') }}</h1></div>
 
 {{-- Tab Navigation --}}
 <div style="border-bottom:2px solid #ddd;margin-bottom:15px;display:flex;">
@@ -14,9 +14,9 @@
 <div class="card" style="margin-bottom:15px;">
     <div class="card-body">
         <form method="GET" action="{{ route('admin.logs.index') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
-            <div><label class="form-label">Admin/User</label><input type="text" name="user" value="{{ request('user') }}" placeholder="Filter by user..." class="form-control" style="width:180px;"></div>
-            <div><label class="form-label">Date</label><input type="date" name="date" value="{{ request('date') }}" class="form-control"></div>
-            <div style="flex:1;min-width:200px;"><label class="form-label">{{ __('common.actions.search') }}</label><input type="text" name="search" value="{{ request('search') }}" placeholder="Search description..." class="form-control"></div>
+            <div><label class="form-label">{{ __('admin.logs.admin_user') }}</label><input type="text" name="user" value="{{ request('user') }}" placeholder="{{ __('admin.logs.filter_user_placeholder') }}" class="form-control" style="width:180px;"></div>
+            <div><label class="form-label">{{ __('admin.logs.date_label') }}</label><input type="date" name="date" value="{{ request('date') }}" class="form-control"></div>
+            <div style="flex:1;min-width:200px;"><label class="form-label">{{ __('common.actions.search') }}</label><input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.logs.search_description') }}" class="form-control"></div>
             <div style="display:flex;gap:6px;">
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.filter') }}</button>
                 <a href="{{ route('admin.logs.index') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>
@@ -27,7 +27,7 @@
 
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>{{ __('common.table.date') }}</th><th>User</th><th>{{ __('common.table.description') }}</th><th>{{ __('common.table.ip_address') }}</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('admin.logs.user_label') }}</th><th>{{ __('common.table.description') }}</th><th>{{ __('common.table.ip_address') }}</th></tr></thead>
         <tbody>
             @forelse($logs as $log)
             <tr>
@@ -37,7 +37,7 @@
                 <td style="font-family:monospace;font-size:12px;color:#777;">{{ $log->ip_address ?? '-' }}</td>
             </tr>
             @empty
-            <tr><td colspan="4" style="text-align:center;color:#999;padding:30px;">No activity log entries found.</td></tr>
+            <tr><td colspan="4" style="text-align:center;color:#999;padding:30px;">{{ __('admin.logs.no_activity_logs') }}</td></tr>
             @endforelse
         </tbody>
     </table>

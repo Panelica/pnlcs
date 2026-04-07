@@ -3,7 +3,7 @@
 @section("content")
 
 <div class="page-header">
-    <h1>Support Tickets</h1>
+    <h1>{{ __('admin.tickets.title') }}</h1>
 </div>
 
 <!-- Status Filter Tabs -->
@@ -22,7 +22,7 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th>Ticket #</th>
+                <th>{{ __('admin.tickets.ticket_num') }}</th>
                 <th>{{ __('common.table.department') }}</th>
                 <th>{{ __('common.table.subject') }}</th>
                 <th>{{ __('common.table.client') }}</th>

@@ -4,8 +4,8 @@
 
 <div class="pn-page-header" style="margin-bottom:24px">
     <div>
-        <h1 class="pn-page-title">Knowledge Base</h1>
-        <p class="pn-page-subtitle">Browse our guides and tutorials to get the most out of your hosting.</p>
+        <h1 class="pn-page-title">{{ __('client.kb.page_title') }}</h1>
+        <p class="pn-page-subtitle">{{ __('client.kb.page_subtitle') }}</p>
     </div>
 </div>
 
@@ -13,13 +13,13 @@
     <form method="GET" action="{{ route('client.kb.index') }}" style="display:flex;gap:10px;max-width:560px;margin:0 auto">
         <div style="position:relative;flex:1">
             <svg width="16" height="16" fill="none" stroke="var(--muted)" viewBox="0 0 24 24" style="position:absolute;left:14px;top:50%;transform:translateY(-50%)"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" name="q" value="{{ $searchQuery ?? '' }}" class="form-control" style="padding-left:40px;height:42px" placeholder="Search articles...">
+            <input type="text" name="q" value="{{ $searchQuery ?? '' }}" class="form-control" style="padding-left:40px;height:42px" placeholder="{{ __('client.kb.search_placeholder') }}">
         </div>
         <button type="submit" class="btn btn-primary" style="height:42px;padding:0 20px">{{ __('common.actions.search') }}</button>
     </form>
     @if(isset($searchQuery) && $searchQuery)
     <div class="text-muted text-sm" style="margin-top:12px;text-align:center">
-        Results for: <strong style="color:var(--text)">{{ $searchQuery }}</strong>
+        {{ __('client.kb.results_for') }} <strong style="color:var(--text)">{{ $searchQuery }}</strong>
     </div>
     @endif
 </div>
@@ -48,13 +48,13 @@
         </div>
         @else
         <div style="padding:20px 22px;text-align:center">
-            <p class="text-muted text-sm">No articles yet.</p>
+            <p class="text-muted text-sm">{{ __('client.kb.no_articles') }}</p>
         </div>
         @endif
     </div>
 @empty
     <div class="pn-card" style="grid-column:1/-1;padding:48px 24px;text-align:center">
-        <p class="text-muted">No knowledge base articles available yet.</p>
+        <p class="text-muted">{{ __('client.kb.no_articles_available') }}</p>
     </div>
 @endforelse
 </div>

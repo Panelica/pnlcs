@@ -521,7 +521,7 @@
 </div>
 
 <footer class="pn-footer">
-    <span>&copy; {{ date("Y") }} PNLCS. {{ __('client.footer.all_rights_reserved') }}</span>
+    <span>&copy; {{ date("Y") }} {{ __('client.footer.brand') }}. {{ __('client.footer.all_rights_reserved') }}</span>
     &nbsp;&middot;&nbsp;
     <a href="{{ route("client.contact") }}">{{ __('client.nav.contact') }}</a>
     &nbsp;&middot;&nbsp;

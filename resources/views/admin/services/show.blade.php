@@ -31,8 +31,8 @@
         <div class="panel-heading panel-primary">{{ __('admin.services.server_module') }}</div>
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.services.server') }}</td><td style="padding:5px 0;font-weight:600;">{{ $service->server->name ?? 'None assigned' }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.module') }}</td><td style="padding:5px 0;">{{ $service->product?->server_type ?? 'None' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.services.server') }}</td><td style="padding:5px 0;font-weight:600;">{{ $service->server->name ?? __('admin.services.none_assigned') }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.module') }}</td><td style="padding:5px 0;">{{ $service->product?->server_type ?? __('admin.services.none_label') }}</td></tr>
                 @if($service->suspension_date)
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.suspended') }}</td><td style="padding:5px 0;color:#d9534f;">{{ $service->suspension_date->format('d M Y') }}</td></tr>
                 @endif
@@ -99,16 +99,16 @@
         <p style="font-size:13px;color:#999;">{{ __('admin.services.no_module') }}</p>
         @else
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'create']) }}" onsubmit="return confirm('Create account on server?')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'create']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_create') }}')">
                 @csrf <button type="submit" class="btn btn-success btn-sm">{{ __('admin.services.create_account') }}</button>
             </form>
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'suspend']) }}" onsubmit="return confirm('Suspend this service?')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'suspend']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_suspend') }}')">
                 @csrf <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.services.suspend') }}</button>
             </form>
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'unsuspend']) }}" onsubmit="return confirm('Unsuspend this service?')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'unsuspend']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_unsuspend') }}')">
                 @csrf <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.services.unsuspend') }}</button>
             </form>
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'terminate']) }}" onsubmit="return confirm('TERMINATE this service? This cannot be undone.')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'terminate']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_terminate') }}')">
                 @csrf <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.services.terminate') }}</button>
             </form>
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'changepassword']) }}" style="display:flex;gap:4px;">
@@ -117,7 +117,7 @@
                 <button type="submit" class="btn btn-default btn-sm">{{ __('admin.services.change_password') }}</button>
             </form>
         </div>
-        <p style="font-size:11px;color:#999;">Module: <span style="font-family:monospace;">{{ $service->product?->server_type }}</span></p>
+        <p style="font-size:11px;color:#999;">{{ __('admin.services.module_label') }}: <span style="font-family:monospace;">{{ $service->product?->server_type }}</span></p>
         @endif
     </div>
 </div>

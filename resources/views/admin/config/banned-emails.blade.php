@@ -19,7 +19,7 @@
             <td style="font-size:13px;">{{ $ban->reason ?: '&mdash;' }}</td>
             <td style="font-size:12px;">{{ $ban->created_at->format('d M Y') }}</td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.banned-emails.destroy', $ban) }}" style="display:inline;" onsubmit="return confirm('Remove ban?')">
+                <form method="POST" action="{{ route('admin.config.banned-emails.destroy', $ban) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.banned_emails.confirm_remove") }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.remove') }}</button>
                 </form>
@@ -41,7 +41,7 @@
         <form method="POST" action="{{ route('admin.config.banned-emails.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.email_domain') }}</label><input type="text" name="email" required class="form-control" placeholder="spam@example.com or @example.com"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.email_domain') }}</label><input type="text" name="email" required class="form-control" placeholder="{{ __('admin.banned_emails.placeholder') }}"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.reason') }}</label><input type="text" name="reason" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

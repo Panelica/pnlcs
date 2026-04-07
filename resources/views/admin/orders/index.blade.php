@@ -3,7 +3,7 @@
 @section("content")
 
 <div class="page-header">
-    <h1>Orders</h1>
+    <h1>{{ __('admin.orders.title') }}</h1>
 </div>
 
 <!-- Status Filter Tabs -->

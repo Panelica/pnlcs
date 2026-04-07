@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", "Invoice #". ($invoice->invoice_num ?? $invoice->id))
+@section("title", __("client.invoices.invoice_prefix", ["id" => $invoice->invoice_num ?? $invoice->id]))
 @section("content")
 
 <a href="{{ route("client.invoices.index") }}" class="pn-back">
@@ -9,11 +9,11 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">Invoice #{{ $invoice->invoice_num ?? $invoice->id }}</h1>
-        <p class="pn-page-subtitle">Issued {{ $invoice->date?->format("d M Y") ?? "N/A" }}</p>
+        <h1 class="pn-page-title">{{ __('client.invoices.invoice_prefix', ['id' => $invoice->invoice_num ?? $invoice->id]) }}</h1>
+        <p class="pn-page-subtitle">{{ __('client.invoices.issued') }} {{ $invoice->date?->format("d M Y") ?? "N/A" }}</p>
     </div>
     <a href="{{ route('client.invoices.pdf', $invoice) }}" class="pn-btn" style="background:var(--primary);color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:13px;margin-right:8px;">{{ __('client.invoices.download_pdf') }}</a>
-    <span class="badge badge-{{ strtolower($invoice->status) }}" style="font-size:13px;padding:5px 14px">{{ ucfirst($invoice->status) }}</span>
+    <span class="badge badge-{{ strtolower($invoice->status) }}" style="font-size:13px;padding:5px 14px">{{ __('client.status.' . strtolower($invoice->status)) }}</span>
 </div>
 
 <div class="pn-card mb-24">
@@ -131,9 +131,9 @@ function stripePayNow(id) {
         method: "POST",
         headers: {"Content-Type": "application/json","X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]")?.content || ""}
     }).then(r => r.json()).then(d => {
-        if (d.success) { alert("Payment intent: " + d.client_secret); }
-        else { alert("Error: " + (d.message || "Unknown error")); }
-    }).catch(e => alert("Network error: " + e.message));
+        if (d.success) { alert("{{ __('client.invoices.payment_intent') }} " + d.client_secret); }
+        else { alert("{{ __('client.invoices.payment_error') }} " + (d.message || "{{ __('client.invoices.unknown_error') }}")); }
+    }).catch(e => alert("{{ __('client.invoices.network_error') }} " + e.message));
 }
 </script>
 @endsection

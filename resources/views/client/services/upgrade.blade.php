@@ -55,7 +55,7 @@
                     @if($price)
                     <div style="text-align:right; white-space:nowrap;">
                         <div style="font-weight:600; font-size:14px;">${{ number_format($price, 2) }}</div>
-                        <div style="font-size:11px; color:#999;">per {{ $cycle }}</div>
+                        <div style="font-size:11px; color:#999;">{{ __('client.services.per_cycle', ['cycle' => $cycle]) }}</div>
                     </div>
                     @endif
                 </label>

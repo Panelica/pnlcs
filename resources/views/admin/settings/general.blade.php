@@ -1,5 +1,5 @@
 @extends('admin.layouts.app')
-@section('title', 'General Settings')
+@section('title', __('admin.settings.title'))
 @section('content')
 
 <div class="page-header">
@@ -63,7 +63,7 @@
                     <div style="padding-top:8px;">
                         <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
                             <input type="checkbox" name="MailEnabled" value="1" {{ !empty($settings['MailEnabled']) && $settings['MailEnabled'] == '1' ? 'checked' : '' }}>
-                            Enable outgoing emails
+                            {{ __('admin.settings.enable_outgoing_emails') }}
                         </label>
                     </div>
                 </div>

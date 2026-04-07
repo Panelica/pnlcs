@@ -6,13 +6,13 @@
     <div style="display:flex;gap:6px;align-items:center;">
                 <form method="POST" action="{{ route('admin.clients.impersonate', $client) }}" style="display:inline;">
             @csrf
-            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Login as this client?')">
-                Login as Client
+            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('{{ __('admin.clients.confirm_login_as') }}')">
+                {{ __('admin.clients.login_as_client') }}
             </button>
         </form>
         <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-primary btn-sm">{{ __('admin.clients.edit_client_btn') }}</a>
         <a href="{{ route('admin.clients.index') }}" class="btn btn-default btn-sm">{{ __('common.actions.close') }}</a>
-        <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" style="display:inline;" onsubmit="return confirm('Delete client {{ $client->full_name }}? This cannot be undone.')">
+        <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.clients.confirm_delete') }}')">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.delete') }}</button>
         </form>
@@ -39,11 +39,11 @@
 
 {{-- Stats Row --}}
 <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:15px;">
-    <div class="stat-card"><div class="stat-value">{{ $serviceCount }}</div><div class="stat-label">Services</div></div>
-    <div class="stat-card"><div class="stat-value">{{ $domainCount }}</div><div class="stat-label">Domains</div></div>
-    <div class="stat-card"><div class="stat-value">{{ $invoiceCount }}</div><div class="stat-label">Invoices</div></div>
-    <div class="stat-card"><div class="stat-value">{{ $ticketCount }}</div><div class="stat-label">Tickets</div></div>
-    <div class="stat-card" style="border-color:#d9534f;"><div class="stat-value" style="color:#d9534f;">${{ number_format($unpaidInvoices, 2) }}</div><div class="stat-label">Unpaid</div></div>
+    <div class="stat-card"><div class="stat-value">{{ $serviceCount }}</div><div class="stat-label">{{ __('admin.clients.services') }}</div></div>
+    <div class="stat-card"><div class="stat-value">{{ $domainCount }}</div><div class="stat-label">{{ __('admin.clients.domains') }}</div></div>
+    <div class="stat-card"><div class="stat-value">{{ $invoiceCount }}</div><div class="stat-label">{{ __('admin.clients.invoices') }}</div></div>
+    <div class="stat-card"><div class="stat-value">{{ $ticketCount }}</div><div class="stat-label">{{ __('admin.clients.tickets') }}</div></div>
+    <div class="stat-card" style="border-color:#d9534f;"><div class="stat-value" style="color:#d9534f;">${{ number_format($unpaidInvoices, 2) }}</div><div class="stat-label">{{ __('admin.clients.unpaid') }}</div></div>
 </div>
 
 {{-- Tab Navigation --}}
@@ -266,9 +266,9 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
                 <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;">
-                    <input type="checkbox" name="sticky" value="1"> Sticky note
+                    <input type="checkbox" name="sticky" value="1"> {{ __('admin.clients.sticky_note') }}
                 </label>
-                <button type="submit" class="btn btn-primary btn-sm">Add Note</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.clients.add_note') }}</button>
             </div>
         </form>
     </div>
@@ -277,7 +277,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 <div class="card" style="margin-bottom:8px;{{ $note->sticky ? 'border-left:4px solid #f0ad4e;' : '' }}">
     <div class="card-body" style="padding:10px 15px;">
         <p style="margin:0 0 6px;font-size:13px;color:#333;">{{ $note->note }}</p>
-        <span style="font-size:11px;color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? ' &mdash; Pinned' : '' }}</span>
+        <span style="font-size:11px;color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? " ' &mdash; Pinned'mdash; {{ __('admin.clients.pinned') }}" : '' }}</span>
     </div>
 </div>
 @empty

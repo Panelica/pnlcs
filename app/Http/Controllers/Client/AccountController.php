@@ -79,7 +79,7 @@ class AccountController extends Controller
         ]);
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+            return back()->withErrors(['current_password' => __('messages.error.current_password_incorrect')]);
         }
 
         $user->update(['password' => Hash::make($request->password)]);
@@ -149,6 +149,6 @@ class AccountController extends Controller
         $client = auth()->user()->clients()->first();
         if (!$client || $contact->client_id !== $client->id) abort(403);
         $contact->delete();
-        return back()->with("success", "Contact removed.");
+        return back()->with("success", __("messages.success.contact_removed"));
     }
 }

@@ -1,17 +1,17 @@
 @extends('admin.layouts.app')
-@section('title', 'Activity Log')
+@section('title', __('admin.activity_log.title'))
 @section('content')
 
 <div class="page-header">
-    <h1>Activity Log</h1>
+    <h1>{{ __('admin.activity_log.title') }}</h1>
 </div>
 
 <div class="card">
     @if(($logs ?? collect())->isEmpty())
-    <div class="card-body" style="text-align:center;padding:40px;color:#999;">No activity log entries.</div>
+    <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.activity_log.no_entries') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>Date/Time</th><th>Admin</th><th>{{ __('common.table.ip_address') }}</th><th>{{ __('common.table.description') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.activity_log.date_time') }}</th><th>{{ __('admin.activity_log.admin') }}</th><th>{{ __('common.table.ip_address') }}</th><th>{{ __('common.table.description') }}</th></tr></thead>
         <tbody>
         @foreach($logs as $log)
         <tr>

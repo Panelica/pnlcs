@@ -35,7 +35,7 @@ class ServiceController extends Controller
             'unsuspend'      => $this->provisioning->unsuspendAccount($service),
             'terminate'      => $this->provisioning->terminateAccount($service),
             'changepassword' => $this->provisioning->changePassword($service, $request->get('password', '')),
-            default          => ['success' => false, 'message' => 'Unknown action: ' . $action],
+            default          => ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
         };
 
         if ($result['success'] ?? false) {

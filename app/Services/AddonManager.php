@@ -84,7 +84,7 @@ class AddonManager
     {
         $addon = $this->find($name);
         if (!$addon) {
-            return ['success' => false, 'message' => 'Addon not found'];
+            return ['success' => false, 'message' => __('messages.error.addon_not_found')];
         }
 
         $result = $addon->activate();
@@ -102,7 +102,7 @@ class AddonManager
     {
         $addon = $this->find($name);
         if (!$addon) {
-            return ['success' => false, 'message' => 'Addon not found'];
+            return ['success' => false, 'message' => __('messages.error.addon_not_found')];
         }
 
         $result = $addon->deactivate();

@@ -1,9 +1,9 @@
 @extends('admin.layouts.app')
-@section('title', 'Quotes')
+@section('title', __('admin.quotes.title'))
 @section('content')
 <div class="page-header">
-    <h1>Quotes</h1>
-    <a href="{{ route('admin.quotes.create') }}" class="btn btn-primary btn-sm">+ New Quote</a>
+    <h1>{{ __('admin.quotes.title') }}</h1>
+    <a href="{{ route('admin.quotes.create') }}" class="btn btn-primary btn-sm">+ {{ __('admin.quotes.new_quote') }}</a>
 </div>
 <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
     @foreach([''=>'All','Draft'=>'Draft','Sent'=>'Sent','Accepted'=>'Accepted','Declined'=>'Declined'] as $val=>$label)
@@ -13,13 +13,13 @@
 </div>
 <form method="GET" style="margin-bottom:10px;">
     <input type="hidden" name="status" value="{{ request('status') }}">
-    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by subject or client..." class="form-control" style="max-width:300px;display:inline-block;">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.quotes.search_placeholder') }}" class="form-control" style="max-width:300px;display:inline-block;">
 </form>
 
 <div class="card">
     <table class="data-table">
         <thead><tr>
-            <th>#</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.date') }}</th><th>Valid Until</th><th style="text-align:right;">{{ __('common.table.total') }}</th><th>{{ __('common.table.status') }}</th><th>{{ __('common.table.actions') }}</th>
+            <th>#</th><th>{{ __('common.table.subject') }}</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.date') }}</th><th>{{ __('admin.quotes.valid_until') }}</th><th style="text-align:right;">{{ __('common.table.total') }}</th><th>{{ __('common.table.status') }}</th><th>{{ __('common.table.actions') }}</th>
         </tr></thead>
         <tbody>
             @forelse($quotes as $quote)
@@ -38,9 +38,9 @@
                     <div style="display:flex;gap:4px;">
                         <a href="{{ route('admin.quotes.show', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                         <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
-                        <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return confirm('Delete this quote?')" style="display:inline;">
+                        <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return confirm('{{ __('admin.quotes.confirm_delete') }}')" style="display:inline;">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-xs">Del</button>
+                            <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.quotes.del') }}</button>
                         </form>
                     </div>
                 </td>

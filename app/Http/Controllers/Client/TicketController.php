@@ -31,7 +31,7 @@ class TicketController extends Controller
 
         $spamService = app(TicketSpamService::class);
         if ($spamService->isSpam($request->input("email", auth()->user()->email), $validated["subject"], $validated["message"])) {
-            return back()->with("error", "Your message was flagged as spam. Please contact support if this is an error.");
+            return back()->with("error", __("messages.error.message_flagged_as_spam"));
         }
 
         $ticket = Ticket::create([
@@ -54,7 +54,7 @@ class TicketController extends Controller
         }
 
         event(new TicketOpened($ticket, false));
-        return redirect()->route("client.tickets.show", $ticket)->with("success", "Ticket opened.");
+        return redirect()->route("client.tickets.show", $ticket)->with("success", __("messages.success.ticket_opened"));
     }
     public function show(Ticket $ticket) {
         abort_if($ticket->client_id !== $this->getClientId(), 403);
@@ -79,7 +79,7 @@ class TicketController extends Controller
         $ticket->replies()->create($replyData);
         $ticket->update(["status" => "customer-reply", "last_reply" => now()]);
         event(new TicketReplied($ticket, $validated["message"], false));
-        return back()->with("success", "Reply added.");
+        return back()->with("success", __("messages.success.reply_added"));
     }
     public function downloadAttachment(Ticket $ticket, ?int $replyId = null) {
         abort_if($ticket->client_id !== $this->getClientId(), 403);

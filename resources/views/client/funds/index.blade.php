@@ -60,8 +60,8 @@
                         </option>
                         @endforeach
                     @else
-                        <option value="banktransfer">Bank Transfer</option>
-                        <option value="paypal">PayPal</option>
+                        <option value="banktransfer">{{ __('client.funds.bank_transfer') }}</option>
+                        <option value="paypal">{{ __('client.funds.paypal') }}</option>
                     @endif
                 </select>
             </div>

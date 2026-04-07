@@ -24,7 +24,7 @@
             <td>{{ $group->discount_percent ?? 0 }}%</td>
             <td style="text-align:right;">
                 <button type="button" onclick="openModal('edit-group-{{ $group->id }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route("admin.config.client-groups.destroy", $group) }}" style="display:inline;" onsubmit="return confirm('Delete this group?')">@csrf @method("DELETE")<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
+                <form method="POST" action="{{ route("admin.config.client-groups.destroy", $group) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.client_groups.confirm_delete") }}')">@csrf @method("DELETE")<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
             </td>
         </tr>
         @endforeach
@@ -36,7 +36,7 @@
 <x-modal name="add-group" title="{{ __('admin.client_groups.add_group') }}" maxWidth="sm">
     <form method="POST" action="{{ route("admin.config.client-groups.store") }}">
         @csrf
-        <div class="form-group"><label class="form-label">Group Name</label><input type="text" name="name" required class="form-control" placeholder="e.g. VIP, Reseller, Enterprise"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.client_groups.group_name') }}</label><input type="text" name="name" required class="form-control" placeholder="{{ __('admin.client_groups.name_placeholder') }}"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.color') }}</label><input type="color" name="color" value="#405189" class="form-control" style="height:38px;padding:3px;"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.discount_pct') }}</label><input type="number" name="discount_percent" value="0" min="0" max="100" step="0.01" class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.notes') }}</label><textarea name="notes" rows="2" class="form-control"></textarea></div>

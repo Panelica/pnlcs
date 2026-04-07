@@ -1,23 +1,23 @@
 @extends("admin.layouts.app")
-@section("title", "Translations - " . $language->name)
+@section("title", __("admin.config.translations.title", ["name" => $language->name]))
 @section("content")
 
 <div class="page-header">
     <div>
-        <a href="{{ route('admin.config.languages.index') }}" style="color:#337ab7;text-decoration:none;font-size:13px;"><i class="fas fa-arrow-left"></i> Back to Languages</a>
-        <h1 style="margin-top:4px;">{{ $language->name }} ({{ $language->native_name }}) Translations</h1>
+        <a href="{{ route('admin.config.languages.index') }}" style="color:#337ab7;text-decoration:none;font-size:13px;"><i class="fas fa-arrow-left"></i> {{ __('admin.config.translations.back_to_languages') }}</a>
+        <h1 style="margin-top:4px;">{{ __('admin.config.translations.heading', ['name' => $language->name, 'native' => $language->native_name]) }}</h1>
     </div>
     <div style="display:flex;gap:8px;">
-        <a href="{{ route('admin.config.languages.export', $locale) }}" class="btn btn-default btn-sm"><i class="fas fa-download"></i> Export JSON</a>
+        <a href="{{ route('admin.config.languages.export', $locale) }}" class="btn btn-default btn-sm"><i class="fas fa-download"></i> {{ __('admin.config.translations.export_json') }}</a>
         <form method="POST" action="{{ route('admin.config.languages.import', $locale) }}" enctype="multipart/form-data" style="display:inline-flex;gap:4px;align-items:center;">
             @csrf
             <input type="file" name="file" accept=".json" style="font-size:12px;max-width:160px;">
-            <button type="submit" class="btn btn-default btn-sm"><i class="fas fa-upload"></i> Import</button>
+            <button type="submit" class="btn btn-default btn-sm"><i class="fas fa-upload"></i> {{ __('admin.config.translations.import') }}</button>
         </form>
         @if($locale !== 'en')
         <form method="POST" action="{{ route('admin.config.languages.ai-translate', $locale) }}" style="display:inline;">
             @csrf
-            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('AI translate all missing keys?')"><i class="fas fa-robot"></i> AI Translate Missing</button>
+            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('{{ __('admin.config.translations.ai_translate_confirm') }}')"><i class="fas fa-robot"></i> {{ __('admin.config.translations.ai_translate_missing') }}</button>
         </form>
         @endif
     </div>
@@ -29,12 +29,12 @@
         <form method="GET" style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
             <div class="form-group" style="margin:0;flex:1;min-width:200px;">
                 <label class="form-label">{{ __('common.actions.search') }}</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search keys or values..." class="form-control">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="{{ __('admin.config.translations.search_placeholder') }}" class="form-control">
             </div>
             <div class="form-group" style="margin:0;">
-                <label class="form-label">Group</label>
+                <label class="form-label">{{ __('admin.config.translations.group') }}</label>
                 <select name="group" class="form-control" style="width:auto;">
-                    <option value="">All Groups</option>
+                    <option value="">{{ __('admin.config.translations.all_groups') }}</option>
                     @foreach($groups as $g)
                     <option value="{{ $g }}" {{ request('group') === $g ? 'selected' : '' }}>{{ ucfirst($g) }}</option>
                     @endforeach
@@ -57,11 +57,11 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width:120px;">Group</th>
-                    <th style="width:200px;">Key</th>
-                    <th>English (Source)</th>
-                    <th>{{ $language->name }} (Target)</th>
-                    <th style="width:50px;">AI</th>
+                    <th style="width:120px;">{{ __('admin.config.translations.group') }}</th>
+                    <th style="width:200px;">{{ __('admin.config.translations.key') }}</th>
+                    <th>{{ __('admin.config.translations.source') }}</th>
+                    <th>{{ __('admin.config.translations.target', ['name' => $language->name]) }}</th>
+                    <th style="width:50px;">{{ __('admin.config.translations.ai') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -80,7 +80,7 @@
                         <input type="hidden" name="translations[{{ $i }}][key]" value="{{ $enKey->key }}">
                         <input type="text" name="translations[{{ $i }}][value]" value="{{ $targetValue }}"
                             class="form-control" style="font-size:13px;padding:5px 8px;"
-                            placeholder="{{ $locale === 'en' ? '' : 'Enter translation...' }}"
+                            placeholder="{{ $locale === 'en' ? '' : __('admin.config.translations.enter_translation') }}"
                             {{ $locale === 'en' ? 'readonly' : '' }}>
                     </td>
                     <td style="text-align:center;">

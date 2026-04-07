@@ -1,5 +1,5 @@
 @extends('admin.layouts.app')
-@section('title', 'Affiliate - ' . ($affiliate->client?->first_name ?? '') . ' ' . ($affiliate->client?->last_name ?? ''))
+@section('title', __('admin.affiliates.title_show') . ' - ' . ($affiliate->client?->first_name ?? '') . ' ' . ($affiliate->client?->last_name ?? ''))
 @section('content')
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
     <h1>Affiliate: {{ \$affiliate->client?->first_name }} {{ \$affiliate->client?->last_name }}</h1>
@@ -61,7 +61,7 @@
     <div class="card-header"><strong>{{ __('admin.affiliates.referral_history') }}</strong></div>
     <div class="card-body-flush">
         <table class="table table-striped mb-0">
-            <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.description') }}</th><th>{{ __('common.table.amount') }}</th><th>Gateway</th></tr></thead>
+            <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.description') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('admin.affiliates.gateway') }}</th></tr></thead>
             <tbody>
             @forelse(\$transactions as \$tx)
             <tr>

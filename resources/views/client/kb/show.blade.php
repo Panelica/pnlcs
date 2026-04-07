@@ -71,8 +71,8 @@
     <div class="kb-helpful">
         <div class="kb-helpful-title">{{ __('client.kb.was_helpful') }}</div>
         <div class="kb-helpful-btns">
-            <button class="kb-helpful-btn" onclick="this.classList.add('selected');this.innerHTML='&#128077; Thanks!';this.disabled=true;this.nextElementSibling.disabled=true">&#128077; Yes</button>
-            <button class="kb-helpful-btn" onclick="this.classList.add('selected');this.innerHTML='&#128078; Noted';this.disabled=true;this.previousElementSibling.disabled=true">&#128078; No</button>
+            <button class="kb-helpful-btn" onclick="this.classList.add('selected');this.innerHTML='this.innerHTML='&#128077; Thanks!'#128077; {{ __("client.kb.thanks") }}';this.disabled=true;this.nextElementSibling.disabled=true">>&#128077; Yes</button>#128077; {{ __('client.kb.yes') }}</button>
+            <button class="kb-helpful-btn" onclick="this.classList.add('selected');this.innerHTML='this.innerHTML='&#128078; Noted'#128078; {{ __("client.kb.noted") }}';this.disabled=true;this.previousElementSibling.disabled=true">>&#128078; No</button>#128078; {{ __('client.kb.no') }}</button>
         </div>
     </div>
 

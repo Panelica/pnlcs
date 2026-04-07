@@ -11,14 +11,14 @@
     <div>
         <h1 class="pn-page-title">#{{ $ticket->tid }} &mdash; {{ $ticket->title }}</h1>
         <p class="pn-page-subtitle">
-            {{ $ticket->department->name ?? "General" }}
+            {{ $ticket->department->name ?? __('client.tickets.general_dept') }}
             &nbsp;&middot;&nbsp; {{ __('client.tickets.opened') }} {{ $ticket->created_at->format("d M Y H:i") }}
             @if($ticket->last_reply) &nbsp;&middot;&nbsp; {{ __('client.tickets.last_reply') }} {{ $ticket->last_reply->diffForHumans() }} @endif
         </p>
     </div>
     <div class="flex gap-8 items-center">
-        <span class="badge badge-{{ strtolower(str_replace(" ", "-", $ticket->status)) }}" style="font-size:12.5px;padding:4px 12px">{{ ucfirst($ticket->status) }}</span>
-        <span class="badge badge-{{ strtolower($ticket->priority ?? "medium") }}" style="font-size:12.5px;padding:4px 12px">{{ ucfirst($ticket->priority ?? "Medium") }}</span>
+        <span class="badge badge-{{ strtolower(str_replace(" ", "-", $ticket->status)) }}" style="font-size:12.5px;padding:4px 12px">{{ __('client.status.' . strtolower(str_replace(' ', '-', $ticket->status))) }}</span>
+        <span class="badge badge-{{ strtolower($ticket->priority ?? "medium") }}" style="font-size:12.5px;padding:4px 12px">{{ __('client.status.' . strtolower($ticket->priority ?? 'medium')) }}</span>
     </div>
 </div>
 

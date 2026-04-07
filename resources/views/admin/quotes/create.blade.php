@@ -52,7 +52,7 @@
                         <tbody>
                             <template x-for="(item, index) in items" :key="index">
                                 <tr style="border-bottom:1px solid #f5f5f5;">
-                                    <td style="padding:6px 10px;"><input type="text" :name="`items[${index}][description]`" x-model="item.description" required placeholder="Item description..." class="form-control" style="font-size:13px;"></td>
+                                    <td style="padding:6px 10px;"><input type="text" :name="`items[${index}][description]`" x-model="item.description" required placeholder="{{ __('admin.quotes.item_desc_placeholder') }}" class="form-control" style="font-size:13px;"></td>
                                     <td style="padding:6px 8px;"><input type="number" :name="`items[${index}][quantity]`" x-model.number="item.quantity" @input="calcItem(item)" min="0.01" step="0.01" class="form-control" style="font-size:13px;text-align:center;"></td>
                                     <td style="padding:6px 8px;"><input type="number" :name="`items[${index}][unit_price]`" x-model.number="item.unit_price" @input="calcItem(item)" min="0" step="0.01" class="form-control" style="font-size:13px;text-align:right;"></td>
                                     <td style="padding:6px 8px;"><input type="number" :name="`items[${index}][discount]`" x-model.number="item.discount" @input="calcItem(item)" min="0" step="0.01" class="form-control" style="font-size:13px;text-align:right;"></td>
@@ -78,7 +78,7 @@
                 <div class="card-body">
                     <div class="form-group"><label class="form-label">{{ __('admin.quotes.admin_notes') }}</label><textarea name="notes" rows="3" class="form-control">{{ old('notes') }}</textarea></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.quotes.customer_notes') }}</label><textarea name="customer_notes" rows="3" class="form-control">{{ old('customer_notes') }}</textarea></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.quotes.proposal') }}</label><textarea name="proposal" rows="4" placeholder="Proposal text..." class="form-control">{{ old('proposal') }}</textarea></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.quotes.proposal') }}</label><textarea name="proposal" rows="4" placeholder="{{ __('admin.quotes.proposal_placeholder') }}" class="form-control">{{ old('proposal') }}</textarea></div>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;padding:10px;">{{ __('admin.quotes.create_quote') }}</button>

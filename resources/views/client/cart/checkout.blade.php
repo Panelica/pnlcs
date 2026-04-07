@@ -68,7 +68,7 @@
                 <div class="pn-card-body">
                     @foreach($totals["items"] as $item)
                     <div class="pn-order-row">
-                        <span class="key" style="font-size:13px">{{ $item["product_name"] ?? "Product" }}</span>
+                        <span class="key" style="font-size:13px">{{ $item["product_name"] ?? __('client.cart.product_fallback') }}</span>
                         <span style="font-weight:600">${{ number_format($item["price"] ?? 0, 2) }}</span>
                     </div>
                     @endforeach

@@ -24,11 +24,11 @@ class AddonController extends Controller
     {
         $addon = $this->manager->find($name);
         if (!$addon) {
-            return back()->with('error', 'Addon not found');
+            return back()->with('error', __('messages.error.addon_not_found'));
         }
 
         if (!$this->manager->isActive($name)) {
-            return back()->with('error', 'Addon is not active. Please activate it first.');
+            return back()->with('error', __('messages.error.addon_not_active'));
         }
 
         $output = $addon->output($request);

@@ -14,15 +14,15 @@
 @endphp
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1><i class="fas fa-calendar-alt"></i> Calendar</h1>
-    <button type="button" onclick="document.getElementById('modal-add-event').style.display='flex'" class="btn btn-primary btn-sm">+ Add Event</button>
+    <h1><i class="fas fa-calendar-alt"></i> {{ __('admin.calendar.title') }}</h1>
+    <button type="button" onclick="document.getElementById('modal-add-event').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.calendar.add_event') }}</button>
 </div>
 
 <div class="card" style="margin-bottom:20px;">
     <div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
-        <a href="?month={{ $prev->month }}&year={{ $prev->year }}" class="btn btn-default btn-sm"><i class="fas fa-chevron-left"></i> Previous</a>
+        <a href="?month={{ $prev->month }}&year={{ $prev->year }}" class="btn btn-default btn-sm"><i class="fas fa-chevron-left"></i> {{ __('admin.calendar.previous') }}</a>
         <h3 style="margin:0;font-size:18px;font-weight:600;">{{ $current->format('F Y') }}</h3>
-        <a href="?month={{ $next->month }}&year={{ $next->year }}" class="btn btn-default btn-sm">Next <i class="fas fa-chevron-right"></i></a>
+        <a href="?month={{ $next->month }}&year={{ $next->year }}" class="btn btn-default btn-sm">{{ __('admin.calendar.next') }} <i class="fas fa-chevron-right"></i></a>
     </div>
 </div>
 
@@ -80,20 +80,20 @@
 <div style="margin-top:20px;">
     <div class="card">
         <div class="card-header" style="padding:12px 20px;border-bottom:1px solid #e5e5e5;font-weight:600;">
-            <i class="fas fa-list"></i> Events This Month
+            <i class="fas fa-list"></i> {{ __('admin.calendar.events_this_month') }}
         </div>
         @php
             $monthEvents = $events->filter(fn($e) => $e->start && $e->start->month == $month && $e->start->year == $year)->sortBy('start');
         @endphp
         @if($monthEvents->isEmpty())
-            <div class="card-body" style="text-align:center;padding:30px;color:#999;">No events this month.</div>
+            <div class="card-body" style="text-align:center;padding:30px;color:#999;">{{ __('admin.calendar.no_events') }}</div>
         @else
         <table class="data-table">
             <thead><tr>
-                <th>Title</th>
+                <th>{{ __('admin.calendar.event_title') }}</th>
                 <th>{{ __('common.table.date') }}</th>
                 <th>{{ __('common.table.description') }}</th>
-                <th>By</th>
+                <th>{{ __('admin.calendar.by') }}</th>
                 <th style="text-align:right;">{{ __('common.table.actions') }}</th>
             </tr></thead>
             <tbody>
@@ -105,7 +105,7 @@
                 <td style="font-size:12px;">{{ $ev->admin ?? '-' }}</td>
                 <td style="text-align:right;">
                     <button type="button" class="btn btn-default btn-xs" onclick="editEvent({{ $ev->id }}, {{ json_encode($ev) }})">{{ __('common.actions.edit') }}</button>
-                    <form method="POST" action="{{ route('admin.calendar.destroy', $ev) }}" style="display:inline;" onsubmit="return confirm('Delete this event?')">
+                    <form method="POST" action="{{ route('admin.calendar.destroy', $ev) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.calendar.confirm_delete') }}')">
                         @csrf @method("DELETE")
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                     </form>
@@ -123,23 +123,23 @@
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-add-event').style.display='none'"></div>
     <div style="position:relative;background:#fff;border-radius:4px;width:480px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;">Add Event</h4>
+            <h4 style="margin:0;font-size:16px;">{{ __('admin.calendar.add_event_modal') }}</h4>
             <button type="button" onclick="document.getElementById('modal-add-event').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form method="POST" action="{{ route('admin.calendar.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Title *</label><input type="text" name="title" required class="form-control" placeholder="Event title"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control" placeholder="Optional notes"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.calendar.title_label') }}</label><input type="text" name="title" required class="form-control" placeholder="{{ __('admin.calendar.event_title_placeholder') }}"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control" placeholder="{{ __('admin.calendar.notes_placeholder') }}"></textarea></div>
                 <div style="display:flex;gap:10px;">
-                    <div class="form-group" style="flex:1;"><label class="form-label">Start Date *</label><input type="datetime-local" name="start" required class="form-control"></div>
-                    <div class="form-group" style="flex:1;"><label class="form-label">End Date</label><input type="datetime-local" name="end" class="form-control"></div>
+                    <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.calendar.start_date') }}</label><input type="datetime-local" name="start" required class="form-control"></div>
+                    <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.calendar.end_date') }}</label><input type="datetime-local" name="end" class="form-control"></div>
                 </div>
-                <div class="form-group"><label class="form-label"><input type="checkbox" name="recurring" value="1"> Recurring</label></div>
+                <div class="form-group"><label class="form-label"><input type="checkbox" name="recurring" value="1"> {{ __('admin.calendar.recurring') }}</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-event').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
-                <button type="submit" class="btn btn-primary btn-sm">Create Event</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.calendar.create_event') }}</button>
             </div>
         </form>
     </div>
@@ -150,19 +150,19 @@
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-edit-event').style.display='none'"></div>
     <div style="position:relative;background:#fff;border-radius:4px;width:480px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;">Edit Event</h4>
+            <h4 style="margin:0;font-size:16px;">{{ __('admin.calendar.edit_event_modal') }}</h4>
             <button type="button" onclick="document.getElementById('modal-edit-event').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form id="edit-event-form" method="POST" action="">
             @csrf @method("PUT")
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">Title *</label><input type="text" name="title" id="edit-ev-title" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.calendar.title_label') }}</label><input type="text" name="title" id="edit-ev-title" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" id="edit-ev-desc" rows="2" class="form-control"></textarea></div>
                 <div style="display:flex;gap:10px;">
-                    <div class="form-group" style="flex:1;"><label class="form-label">Start Date *</label><input type="datetime-local" name="start" id="edit-ev-start" required class="form-control"></div>
-                    <div class="form-group" style="flex:1;"><label class="form-label">End Date</label><input type="datetime-local" name="end" id="edit-ev-end" class="form-control"></div>
+                    <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.calendar.start_date') }}</label><input type="datetime-local" name="start" id="edit-ev-start" required class="form-control"></div>
+                    <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.calendar.end_date') }}</label><input type="datetime-local" name="end" id="edit-ev-end" class="form-control"></div>
                 </div>
-                <div class="form-group"><label class="form-label"><input type="checkbox" name="recurring" value="1" id="edit-ev-recurring"> Recurring</label></div>
+                <div class="form-group"><label class="form-label"><input type="checkbox" name="recurring" value="1" id="edit-ev-recurring"> {{ __('admin.calendar.recurring') }}</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-edit-event').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>

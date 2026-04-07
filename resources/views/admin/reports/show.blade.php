@@ -11,7 +11,7 @@
         @if($canExport && count($rows) > 0)
         <a href="{{ route('admin.reports.export', $report->getSlug()) }}?from={{ $from }}&to={{ $to }}&year={{ $year }}&month={{ $month }}" class="btn btn-sm btn-outline">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export CSV
+            {{ __('admin.reports.export_csv') }}
         </a>
         @endif
         <a href="{{ route('admin.reports.index') }}" class="btn btn-sm btn-outline">{{ __("admin.nav.back") }}</a>
@@ -22,11 +22,11 @@
 <div class="card" style="margin-bottom:16px;">
     <div class="card-body" style="padding:12px 16px;">
         <form method="GET" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-            <label style="font-size:13px;font-weight:500;">From</label>
+            <label style="font-size:13px;font-weight:500;">{{ __('admin.reports.from') }}</label>
             <input type="date" name="from" value="{{ $from }}" class="form-input" style="width:auto;">
-            <label style="font-size:13px;font-weight:500;">To</label>
+            <label style="font-size:13px;font-weight:500;">{{ __('admin.reports.to') }}</label>
             <input type="date" name="to" value="{{ $to }}" class="form-input" style="width:auto;">
-            <button type="submit" class="btn btn-sm btn-primary">Generate</button>
+            <button type="submit" class="btn btn-sm btn-primary">{{ __('admin.reports.generate') }}</button>
         </form>
     </div>
 </div>

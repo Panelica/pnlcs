@@ -4,13 +4,13 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">Edit Profile</h1>
-        <p class="pn-page-subtitle">Update your personal and contact information.</p>
+        <h1 class="pn-page-title">{{ __('client.profile.edit_profile') }}</h1>
+        <p class="pn-page-subtitle">{{ __('client.profile.edit_subtitle') }}</p>
     </div>
 </div>
 
 <div class="pn-card">
-    <div class="pn-card-header"><span class="pn-card-title">Personal Information</span></div>
+    <div class="pn-card-header"><span class="pn-card-title">{{ __('client.profile.personal_info') }}</span></div>
     <div class="pn-card-body">
         @if($errors->any())
         <div class="pn-alert pn-alert-error">
@@ -46,9 +46,9 @@
                     <input type="text" id="phone_number" name="phone_number" value="{{ old("phone_number", $user->phone_number) }}" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="country">Country</label>
+                    <label class="form-label" for="country">{{ __('common.form.country') }}</label>
                     <select id="country" name="country" class="form-control">
-                        <option value="">-- Select Country --</option>
+                        <option value="">{{ __('common.form.select_country') }}</option>
                         @if(isset($countries))
                             @foreach($countries as $code => $name)
                             <option value="{{ $code }}" {{ old("country", $user->country) == $code ? "selected" : "" }}>{{ $name }}</option>
@@ -58,8 +58,8 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label" for="address1">Street Address</label>
-                <input type="text" id="address1" name="address1" value="{{ old("address1", $user->address1) }}" class="form-control" placeholder="Street address, P.O. box, etc.">
+                <label class="form-label" for="address1">{{ __('common.form.street_address') }}</label>
+                <input type="text" id="address1" name="address1" value="{{ old("address1", $user->address1) }}" class="form-control" placeholder="{{ __('common.form.street_address_placeholder') }}">
             </div>
             <div class="form-grid-2">
                 <div class="form-group">
@@ -67,7 +67,7 @@
                     <input type="text" id="city" name="city" value="{{ old("city", $user->city) }}" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="postcode">Postcode / ZIP</label>
+                    <label class="form-label" for="postcode">{{ __('common.form.postcode') }}</label>
                     <input type="text" id="postcode" name="postcode" value="{{ old("postcode", $user->postcode) }}" class="form-control">
                 </div>
             </div>

@@ -1,6 +1,6 @@
 @extends("client.layouts.app")
 
-@section("title", "SSL Certificate - " . ($order->domain ?: 'Order #' . $order->id))
+@section("title", __("client.ssl.show_title", ["domain" => $order->domain ?: __("client.ssl.order_fallback", ["id" => $order->id])]))
 
 @section("content")
 <div class="mb-4">

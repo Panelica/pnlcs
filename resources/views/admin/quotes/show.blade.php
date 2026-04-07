@@ -1,5 +1,5 @@
 @extends('admin.layouts.app')
-@section('title', 'Quote #' . $quote->id)
+@section('title', __('admin.quotes.title') . ' #' . $quote->id)
 @section('content')
 <div class="page-header">
     <div>
@@ -13,7 +13,7 @@
     <div>
         <div class="card" style="margin-bottom:15px;">
             <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-                <strong>Line Items</strong>
+                <strong>{{ __('admin.quotes.line_items') }}</strong>
                 @php $badgeClass = match($quote->status) { 'Accepted'=>'badge-active', 'Sent'=>'badge-open', 'Declined'=>'badge-cancelled', default=>'badge-draft' }; @endphp
                 <span class="{{ $badgeClass }}">{{ $quote->status }}</span>
             </div>
@@ -104,7 +104,7 @@
                     @csrf<button type="submit" class="btn btn-primary btn-sm" style="width:100%;">{{ __('admin.quotes.convert_to_invoice') }}</button>
                 </form>
                 @endif
-                <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return confirm('Delete this quote?')">
+                <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return confirm('{{ __('admin.quotes.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-default btn-sm" style="width:100%;color:#d9534f;">{{ __('admin.quotes.delete_quote') }}</button>
                 </form>

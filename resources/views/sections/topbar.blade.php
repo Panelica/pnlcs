@@ -16,9 +16,9 @@
                 <div class="top-bar__divider"></div>
                 <a href="{{ route('client.register') }}" class="top-bar__item"><i class="ri-user-add-line"></i> {{ __('sections.topbar.sign_up') }}</a>
                 <div class="top-bar__divider"></div>
-                <span class="top-bar__item"><i class="ri-global-line"></i> EN</span>
+                <span class="top-bar__item"><i class="ri-global-line"></i> {{ __('client.topbar.language') }}</span>
                 <div class="top-bar__divider"></div>
-                <span class="top-bar__item"><i class="ri-money-dollar-circle-line"></i> USD</span>
+                <span class="top-bar__item"><i class="ri-money-dollar-circle-line"></i> {{ __('client.topbar.currency') }}</span>
             </div>
         </div>
     </div>

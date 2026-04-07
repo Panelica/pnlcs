@@ -39,7 +39,7 @@
                         <input type="radio" name="type" value="End of Billing Period" {{ old('type') === 'End of Billing Period' ? 'checked' : '' }} style="margin-top:2px;">
                         <div>
                             <div style="font-weight:500; font-size:13px;">{{ __('client.services.end_of_period') }}</div>
-                            <div style="font-size:12px; color:#777; margin-top:2px;">{{ __('client.services.end_of_period_desc') }} {{ $service->next_due_date?->format('d M Y') ?? 'the end of the billing period' }}.</div>
+                            <div style="font-size:12px; color:#777; margin-top:2px;">{{ __('client.services.end_of_period_desc') }} {{ $service->next_due_date?->format('d M Y') ?? __('client.services.end_of_period_fallback') }}.</div>
                         </div>
                     </label>
                 </div>

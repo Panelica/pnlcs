@@ -8,7 +8,7 @@
 </div>
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>{{ __('common.table.code') }}</th><th>{{ __('common.table.name') }}</th><th>Prefix</th><th>Suffix</th><th>{{ __('common.table.rate') }}</th><th>Default</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.code') }}</th><th>{{ __('common.table.name') }}</th><th>{{ __('admin.currencies.prefix') }}</th><th>{{ __('admin.currencies.suffix') }}</th><th>{{ __('common.table.rate') }}</th><th>{{ __('admin.currencies.default') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($currencies as $currency)
         <tr>
@@ -17,12 +17,12 @@
             <td style="font-family:monospace;">{{ $currency->prefix }}</td>
             <td style="font-family:monospace;">{{ $currency->suffix ?? '' }}</td>
             <td>{{ $currency->rate }}</td>
-            <td>{{ $currency->default ? '<span class="badge-active">Default</span>' : '' }}</td>
+            <td>@if($currency->default)<span class="badge-active">{{ __('admin.currencies.default') }}</span>@endif</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->default]) }})">{{ __('common.actions.edit') }}</button>
                 @if(!$currency->default)
-                <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return confirm('Delete currency {{ $currency->code }}?')">
+                <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.currencies.confirm_delete") }} {{ $currency->code }}?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
@@ -47,7 +47,7 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.code') }}</label><input type="text" name="code" required maxlength="3" class="form-control" placeholder="USD"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.exchange_rate') }}</label><input type="number" name="rate" step="0.000001" required value="1" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Prefix (symbol)</label><input type="text" name="prefix" class="form-control" placeholder="$"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.currencies.prefix_symbol') }}</label><input type="text" name="prefix" class="form-control" placeholder="$"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.suffix') }}</label><input type="text" name="suffix" class="form-control"></div>
                 </div>
             </div>
@@ -74,7 +74,7 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.exchange_rate') }}</label><input type="number" name="rate" id="ec-rate" step="0.000001" required class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.prefix') }}</label><input type="text" name="prefix" id="ec-prefix" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.suffix') }}</label><input type="text" name="suffix" id="ec-suffix" class="form-control"></div>
-                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="default" value="1" id="ec-default"> Set as Default Currency</label></div>
+                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="default" value="1" id="ec-default"> {{ __('admin.currencies.set_as_default') }}</label></div>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

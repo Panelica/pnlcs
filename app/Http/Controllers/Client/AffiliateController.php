@@ -45,7 +45,7 @@ class AffiliateController extends Controller
 
         $existing = Affiliate::where('client_id', $client->id)->first();
         if ($existing) {
-            return back()->with('info', 'You are already an affiliate.');
+            return back()->with('info', __('messages.info.already_an_affiliate'));
         }
 
         Affiliate::create([
@@ -83,6 +83,6 @@ class AffiliateController extends Controller
         $affiliate->increment('withdrawn', $amount);
         $affiliate->decrement('balance', $amount);
 
-        return back()->with('success', 'Withdrawal request of $' . number_format($amount, 2) . ' submitted successfully.');
+        return back()->with('success', __('messages.success.withdrawal_request_submitted', ['amount' => number_format($amount, 2)]));
     }
 }

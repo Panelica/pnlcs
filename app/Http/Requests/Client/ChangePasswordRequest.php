@@ -22,7 +22,7 @@ class ChangePasswordRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'current_password.current_password' => 'The current password is incorrect.',
+            'current_password.current_password' => __('messages.error.current_password_incorrect'),
         ];
     }
 }

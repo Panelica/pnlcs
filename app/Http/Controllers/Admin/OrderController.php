@@ -41,7 +41,7 @@ class OrderController extends Controller
     public function accept(Order $order): RedirectResponse
     {
         if ($order->status === 'Active') {
-            return back()->with('info', 'Order is already active.');
+            return back()->with('info', __('admin.messages.order_already_active'));
         }
 
         if (!in_array($order->status, ['Pending'])) {
@@ -59,7 +59,7 @@ class OrderController extends Controller
     public function cancel(Order $order): RedirectResponse
     {
         if (in_array($order->status, ['Cancelled', 'Fraud'])) {
-            return back()->with('info', 'Order is already cancelled.');
+            return back()->with('info', __('admin.messages.order_already_cancelled'));
         }
 
         $this->orderService->cancelOrder($order);
@@ -73,7 +73,7 @@ class OrderController extends Controller
     public function markFraud(Order $order): RedirectResponse
     {
         if ($order->status === 'Fraud') {
-            return back()->with('info', 'Order is already marked as fraud.');
+            return back()->with('info', __('admin.messages.order_already_fraud'));
         }
 
         $this->orderService->markFraud($order);

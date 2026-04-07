@@ -20,7 +20,7 @@ class ProvisioningService
         $module = $this->getModuleForService($service);
 
         if (!$module) {
-            return ['success' => false, 'message' => 'No server module configured for this product.'];
+            return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
         try {
@@ -48,7 +48,7 @@ class ProvisioningService
         $module = $this->getModuleForService($service);
 
         if (!$module) {
-            return ['success' => false, 'message' => 'No server module configured for this product.'];
+            return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
         try {
@@ -77,7 +77,7 @@ class ProvisioningService
         $module = $this->getModuleForService($service);
 
         if (!$module) {
-            return ['success' => false, 'message' => 'No server module configured for this product.'];
+            return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
         try {
@@ -105,7 +105,7 @@ class ProvisioningService
         $module = $this->getModuleForService($service);
 
         if (!$module) {
-            return ['success' => false, 'message' => 'No server module configured for this product.'];
+            return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
         try {
@@ -133,7 +133,7 @@ class ProvisioningService
         $module = $this->getModuleForService($service);
 
         if (!$module) {
-            return ['success' => false, 'message' => 'No server module configured for this product.'];
+            return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
         try {
@@ -152,7 +152,7 @@ class ProvisioningService
         $module = $this->getModuleForService($service);
 
         if (!$module) {
-            return ['success' => false, 'message' => 'No server module configured for this product.'];
+            return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
         try {

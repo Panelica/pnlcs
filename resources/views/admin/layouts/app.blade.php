@@ -86,7 +86,7 @@
                     <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">{{ __('admin.nav.pending') }}</a></li>
                     <li><a href="{{ route('admin.orders.index', ['status' => 'active']) }}">{{ __('admin.nav.active') }}</a></li>
                     <li><a href="{{ route('admin.orders.index', ['status' => 'fraud']) }}">{{ __('admin.nav.fraud') }}</a></li>
-                    <li><a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}">Cancelled</a></li>
+                    <li><a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}">{{ __('admin.status.cancelled') }}</a></li>
                 </ul>
             </li>
 
@@ -103,7 +103,7 @@
                     <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
                     <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.quotes.index') }}">Quotes</a></li>
+                    <li><a href="{{ route('admin.quotes.index') }}">{{ __('admin.nav.quotes') }}</a></li>
                 </ul>
             </li>
 
@@ -194,7 +194,7 @@
                     <li><a href="{{ route('admin.config.api-credentials') }}">{{ __('admin.nav.api_credentials') }}</a></li>
                     <li><a href="{{ route('admin.api-docs') }}">{{ __('admin.nav.api_documentation') }}</a></li>
                     <li class="divider"></li>
-                    <li><a href="{{ route('admin.products.index') }}">Products/Services</a></li>
+                    <li><a href="{{ route('admin.products.index') }}">{{ __('admin.nav.products_services') }}</a></li>
                     <li><a href="{{ route('admin.config.servers') }}">{{ __('admin.nav.servers') }}</a></li>
                     <li><a href="{{ route('admin.config.server-groups') }}">{{ __('admin.nav.server_groups') }}</a></li>
                     <li><a href="{{ route('admin.config.domain-pricing') }}">{{ __('admin.nav.domain_pricing') }}</a></li>
@@ -263,7 +263,7 @@
         <div class="sidebar-header"><i class="fas fa-star"></i> {{ __('admin.sidebar.shortcuts') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.clients.create') }}">{{ __('admin.nav.add_new_client') }}</a></li>
-            <li><a href="{{ route('admin.invoices.create') }}">Create Invoice</a></li>
+            <li><a href="{{ route('admin.invoices.create') }}">{{ __('admin.nav.create_invoice') }}</a></li>
             <li><a href="{{ route('admin.quotes.create') }}">{{ __('admin.sidebar.create_quote') }}</a></li>
             <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">{{ __('admin.nav.pending_orders') }} @if(($sidebarCounts->pending_orders ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a></li>
             <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}">{{ __('admin.nav.overdue_invoices') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
@@ -274,9 +274,9 @@
         <ul class="menu">
             <li><a href="{{ route('admin.config.automation') }}">{{ __('admin.nav.automation_status') }}</a></li>
             <li><a href="{{ route('admin.config.activity-log') }}">{{ __('admin.nav.activity_log') }}</a></li>
-            <li><a href="{{ route('admin.logs.index') }}">System Logs</a></li>
+            <li><a href="{{ route('admin.logs.index') }}">{{ __('admin.nav.system_logs') }}</a></li>
             <li><a href="{{ route('admin.config.system-phpinfo') }}">{{ __('admin.nav.php_info') }}</a></li>
-            <li><a href="{{ route('admin.whois.index') }}" @if($routeName === 'admin.whois.index' || $routeName === 'admin.whois.lookup') class="active" @endif>WHOIS Lookup</a></li>
+            <li><a href="{{ route('admin.whois.index') }}" @if($routeName === 'admin.whois.index' || $routeName === 'admin.whois.lookup') class="active" @endif>{{ __('admin.nav.whois_lookup') }}</a></li>
         </ul>
 
     {{-- ── Clients Sidebar ── --}}
@@ -284,12 +284,12 @@
         <div class="sidebar-header"><i class="fas fa-user"></i> {{ __('admin.sidebar.clients') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.clients.index') }}" @if($routeName === 'admin.clients.index') class="active" @endif>{{ __('admin.nav.view_search_clients') }}</a></li>
-            <li><a href="{{ route('admin.clients.create') }}" @if($routeName === 'admin.clients.create') class="active" @endif>Add New Client</a></li>
+            <li><a href="{{ route('admin.clients.create') }}" @if($routeName === 'admin.clients.create') class="active" @endif>{{ __('admin.nav.add_new_client') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.services') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.services.index') }}" @if($routeName === 'admin.services.index') class="active" @endif>Products/Services</a></li>
-            <li><a href="{{ route('admin.domains.index') }}" @if($routeName === 'admin.domains.index') class="active" @endif>Domains</a></li>
+            <li><a href="{{ route('admin.services.index') }}" @if($routeName === 'admin.services.index') class="active" @endif>{{ __('admin.nav.products_services') }}</a></li>
+            <li><a href="{{ route('admin.domains.index') }}" @if($routeName === 'admin.domains.index') class="active" @endif>{{ __('admin.nav.domains') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-coins"></i> {{ __('admin.sidebar.affiliates') }}</div>
         <ul class="menu">
@@ -304,7 +304,7 @@
             <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}" @if(request()->get('status') === 'pending') class="active" @endif>{{ __('admin.nav.pending') }} @if(($sidebarCounts->pending_orders ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a></li>
             <li><a href="{{ route('admin.orders.index', ['status' => 'active']) }}" @if(request()->get('status') === 'active') class="active" @endif>{{ __('admin.nav.active') }}</a></li>
             <li><a href="{{ route('admin.orders.index', ['status' => 'fraud']) }}" @if(request()->get('status') === 'fraud') class="active" @endif>{{ __('admin.nav.fraud') }}</a></li>
-            <li><a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}" @if(request()->get('status') === 'cancelled') class="active" @endif>Cancelled</a></li>
+            <li><a href="{{ route('admin.orders.index', ['status' => 'cancelled']) }}" @if(request()->get('status') === 'cancelled') class="active" @endif>{{ __('admin.status.cancelled') }}</a></li>
         </ul>
 
     {{-- ── Invoices / Billing Sidebar ── --}}
@@ -315,17 +315,17 @@
             <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}" @if(request()->get('status') === 'Paid') class="active" @endif>{{ __('admin.sidebar.paid') }}</a></li>
             <li><a href="{{ route('admin.invoices.index', ['status' => 'Unpaid']) }}" @if(request()->get('status') === 'Unpaid') class="active" @endif>{{ __('admin.sidebar.unpaid') }} @if(($sidebarCounts->unpaid_invoices ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a></li>
             <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}" @if(request()->get('status') === 'Overdue') class="active" @endif>{{ __('admin.sidebar.overdue') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Cancelled']) }}" @if(request()->get('status') === 'Cancelled') class="active" @endif>Cancelled</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'Cancelled']) }}" @if(request()->get('status') === 'Cancelled') class="active" @endif>{{ __('admin.status.cancelled') }}</a></li>
             <li><a href="{{ route('admin.invoices.create') }}" @if($routeName === 'admin.invoices.create') class="active" @endif>{{ __('admin.sidebar.create_invoice') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-coins"></i> {{ __('admin.nav.transactions') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.transactions') }}" @if($routeName === 'admin.config.transactions') class="active" @endif>Transactions</a></li>
+            <li><a href="{{ route('admin.config.transactions') }}" @if($routeName === 'admin.config.transactions') class="active" @endif>{{ __('admin.nav.transactions') }}</a></li>
             <li><a href="{{ route('admin.config.billable-items') }}" @if($routeName === 'admin.config.billable-items') class="active" @endif>{{ __('admin.nav.billable_items') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-file-signature"></i> {{ __('admin.nav.quotes') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.quotes.index') }}" @if($routeName === 'admin.quotes.index') class="active" @endif>Quotes</a></li>
+            <li><a href="{{ route('admin.quotes.index') }}" @if($routeName === 'admin.quotes.index') class="active" @endif>{{ __('admin.nav.quotes') }}</a></li>
             <li><a href="{{ route('admin.quotes.create') }}" @if($routeName === 'admin.quotes.create') class="active" @endif>{{ __('admin.sidebar.create_quote') }}</a></li>
         </ul>
 
@@ -336,10 +336,10 @@
             <li><a href="{{ route('admin.tickets.index') }}" @if($routeName === 'admin.tickets.index' && !request()->has('status')) class="active" @endif>{{ __('admin.sidebar.all_tickets') }} @if(($sidebarCounts->active_tickets ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->active_tickets }}</span>@endif</a></li>
             <li><a href="{{ route('admin.tickets.index', ['status' => 'Open']) }}" @if(request()->get('status') === 'Open') class="active" @endif>{{ __('admin.sidebar.open') }} @if(($sidebarCounts->open_tickets_only ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->open_tickets_only }}</span>@endif</a></li>
             <li><a href="{{ route('admin.tickets.index', ['status' => 'Customer-Reply']) }}" @if(request()->get('status') === 'Customer-Reply') class="active" @endif>{{ __('admin.sidebar.awaiting_reply') }} @if(($sidebarCounts->awaiting_tickets ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->awaiting_tickets }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.tickets.index', ['status' => 'Closed']) }}" @if(request()->get('status') === 'Closed') class="active" @endif>Closed</a></li>
+            <li><a href="{{ route('admin.tickets.index', ['status' => 'Closed']) }}" @if(request()->get('status') === 'Closed') class="active" @endif>{{ __('admin.status.closed') }}</a></li>
         </ul>
 
-        <div class="sidebar-header"><i class="fas fa-comments"></i> Filter Tickets</div>
+        <div class="sidebar-header"><i class="fas fa-comments"></i> {{ __('admin.sidebar.filter_tickets_header') }}</div>
         <div class="advanced-search">
             <form action="{{ route('admin.tickets.index') }}" method="GET">
                 <select name="department">
@@ -364,10 +364,10 @@
 
         <div class="sidebar-header"><i class="fas fa-bullhorn"></i> {{ __('admin.sidebar.content') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.announcements') }}">Announcements</a></li>
-            <li><a href="{{ route('admin.config.downloads') }}">Downloads</a></li>
-            <li><a href="{{ route('admin.config.knowledge-base') }}">Knowledge Base</a></li>
-            <li><a href="{{ route('admin.config.network-issues') }}">Network Issues</a></li>
+            <li><a href="{{ route('admin.config.announcements') }}">{{ __('admin.nav.announcements') }}</a></li>
+            <li><a href="{{ route('admin.config.downloads') }}">{{ __('admin.nav.downloads') }}</a></li>
+            <li><a href="{{ route('admin.config.knowledge-base') }}">{{ __('admin.nav.knowledge_base') }}</a></li>
+            <li><a href="{{ route('admin.config.network-issues') }}">{{ __('admin.nav.network_issues') }}</a></li>
         </ul>
 
     {{-- ── Reports Sidebar ── --}}
@@ -383,31 +383,31 @@
         <ul class="menu">
             <li><a href="{{ route('admin.config.admins') }}" @if($routeName === 'admin.config.admins') class="active" @endif>{{ __('admin.sidebar.administrator_accounts') }}</a></li>
             <li><a href="{{ route('admin.config.admin-roles') }}" @if($routeName === 'admin.config.admin-roles') class="active" @endif>{{ __('admin.sidebar.administrator_roles') }}</a></li>
-            <li><a href="{{ route('admin.config.api-credentials') }}" @if($routeName === 'admin.config.api-credentials') class="active" @endif>API Credentials</a></li>
+            <li><a href="{{ route('admin.config.api-credentials') }}" @if($routeName === 'admin.config.api-credentials') class="active" @endif>{{ __('admin.nav.api_credentials') }}</a></li>
             <li><a href="{{ route('admin.api-docs') }}" @if($routeName === 'admin.api-docs') class="active" @endif>{{ __('admin.nav.api_documentation') }}</a></li>
         </ul>
 
         <div class="sidebar-header"><i class="fas fa-credit-card"></i> {{ __('admin.sidebar.payments') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.config.gateways') }}" @if($routeName === 'admin.config.gateways') class="active" @endif>{{ __('admin.nav.payment_gateways') }}</a></li>
-            <li><a href="{{ route('admin.config.currencies') }}" @if($routeName === 'admin.config.currencies') class="active" @endif>Currencies</a></li>
-            <li><a href="{{ route('admin.config.tax') }}" @if($routeName === 'admin.config.tax') class="active" @endif>Tax Rules</a></li>
+            <li><a href="{{ route('admin.config.currencies') }}" @if($routeName === 'admin.config.currencies') class="active" @endif>{{ __('admin.nav.currencies') }}</a></li>
+            <li><a href="{{ route('admin.config.tax') }}" @if($routeName === 'admin.config.tax') class="active" @endif>{{ __('admin.nav.tax_rules') }}</a></li>
             <li><a href="{{ route('admin.config.promotions') }}" @if($routeName === 'admin.config.promotions') class="active" @endif>{{ __('admin.nav.promotions') }}</a></li>
         </ul>
 
         <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.products') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.products.index') }}" @if($routeName === 'admin.products.index') class="active" @endif>Products/Services</a></li>
+            <li><a href="{{ route('admin.products.index') }}" @if($routeName === 'admin.products.index') class="active" @endif>{{ __('admin.nav.products_services') }}</a></li>
             <li><a href="{{ route('admin.products.create') }}" @if($routeName === 'admin.products.create') class="active" @endif>{{ __('admin.sidebar.create_product') }}</a></li>
             <li><a href="{{ route('admin.products.groups.create') }}" @if($routeName === 'admin.products.groups.create') class="active" @endif>{{ __('admin.sidebar.product_groups') }}</a></li>
         </ul>
 
         <div class="sidebar-header"><i class="fas fa-server"></i> {{ __('admin.sidebar.servers_domains') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.config.servers') }}" @if($routeName === 'admin.config.servers') class="active" @endif>Servers</a></li>
+            <li><a href="{{ route('admin.config.servers') }}" @if($routeName === 'admin.config.servers') class="active" @endif>{{ __('admin.nav.servers') }}</a></li>
             <li><a href="{{ route('admin.config.server-groups') }}" @if($routeName === 'admin.config.server-groups') class="active" @endif>{{ __('admin.nav.server_groups') }}</a></li>
             <li><a href="{{ route('admin.config.domain-pricing') }}" @if($routeName === 'admin.config.domain-pricing') class="active" @endif>{{ __('admin.nav.domain_pricing') }}</a></li>
-            <li><a href="{{ route('admin.config.registrars') }}" @if($routeName === 'admin.config.registrars') class="active" @endif>Domain Registrars</a></li>
+            <li><a href="{{ route('admin.config.registrars') }}" @if($routeName === 'admin.config.registrars') class="active" @endif>{{ __('admin.nav.domain_registrars') }}</a></li>
         </ul>
 
         <div class="sidebar-header"><i class="fas fa-life-ring"></i> {{ __('admin.nav.support') }}</div>
@@ -421,13 +421,13 @@
         <ul class="menu">
             <li><a href="{{ route('admin.settings.general') }}" @if($routeName === 'admin.settings.general') class="active" @endif>{{ __('admin.nav.general_settings') }}</a></li>
             <li><a href="{{ route('admin.settings.appearance') }}" @if($routeName === 'admin.settings.appearance') class="active" @endif><i class="fas fa-palette"></i> {{ __('admin.nav.appearance') }}</a></li>
-            <li><a href="{{ route('admin.config.client-groups') }}" @if($routeName === 'admin.config.client-groups') class="active" @endif>Client Groups</a></li>
-            <li><a href="{{ route('admin.config.banned-ips') }}" @if($routeName === 'admin.config.banned-ips') class="active" @endif>Banned IPs</a></li>
+            <li><a href="{{ route('admin.config.client-groups') }}" @if($routeName === 'admin.config.client-groups') class="active" @endif>{{ __('admin.nav.client_groups') }}</a></li>
+            <li><a href="{{ route('admin.config.banned-ips') }}" @if($routeName === 'admin.config.banned-ips') class="active" @endif>{{ __('admin.nav.banned_ips') }}</a></li>
             <li><a href="{{ route('admin.config.banned-emails') }}" @if($routeName === 'admin.config.banned-emails') class="active" @endif>{{ __('admin.nav.banned_emails') }}</a></li>
             <li><a href="{{ route('admin.config.notifications') }}" @if($routeName === 'admin.config.notifications') class="active" @endif>{{ __('admin.nav.notification_channels') }}</a></li>
             <li><a href="{{ route('admin.config.ticket-spam') }}" @if($routeName === 'admin.config.ticket-spam') class="active" @endif>{{ __('admin.nav.ticket_spam_filter') }}</a></li>
             <li><a href="{{ route('admin.config.addons') }}" @if($routeName === 'admin.config.addons') class="active" @endif>{{ __('admin.nav.product_addons') }}</a></li>
-                    <li><a href="/admin/config/addons/modules">Addon Modules</a></li>
+                    <li><a href="/admin/config/addons/modules">{{ __('admin.nav.addon_modules') }}</a></li>
             <li><a href="{{ route('admin.config.bundles') }}" @if($routeName === 'admin.config.bundles') class="active" @endif>{{ __('admin.nav.product_bundles') }}</a></li>
         </ul>
 
@@ -445,13 +445,13 @@
     @elseif($segment === 'calendar')
         <div class="sidebar-header"><i class="fas fa-calendar-alt"></i> {{ __('admin.nav.calendar') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.calendar') }}" class="active">Calendar</a></li>
+            <li><a href="{{ route('admin.calendar') }}" class="active">{{ __('admin.nav.calendar') }}</a></li>
             <li><a href="{{ route('admin.config.todo') }}">{{ __('admin.nav.todo_list') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-wrench"></i> {{ __('admin.sidebar.utilities') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.config.automation') }}">{{ __('admin.nav.automation_status') }}</a></li>
-            <li><a href="{{ route('admin.config.activity-log') }}">Activity Log</a></li>
+            <li><a href="{{ route('admin.config.activity-log') }}">{{ __('admin.nav.activity_log') }}</a></li>
         </ul>
 
     {{-- ── Default Sidebar (fallback) ── --}}
@@ -527,12 +527,12 @@
     <div style="float:right;">
         <a href="{{ route('admin.dashboard') }}">{{ __('admin.footer.admin_home') }}</a> |
         <a href="/" target="_blank">{{ __('admin.nav.client_area') }}</a> |
-        <a href="{{ route('admin.logs.index') }}">Logs</a>
+        <a href="{{ route('admin.logs.index') }}">{{ __('admin.nav.logs') }}</a>
     </div>
 </div>
 
 @vite(["resources/js/app.js"])
-<button class="sidebar-toggle-btn" id="sidebarToggle" title="Toggle sidebar" onclick="toggleSidebar()">&#9776;</button>
+<button class="sidebar-toggle-btn" id="sidebarToggle" title="{{ __('admin.nav.toggle_sidebar') }}" onclick="toggleSidebar()">&#9776;</button>
 <script>
 (function(){
     var collapsed = localStorage.getItem("pnlcs_sidebar_collapsed") === "1";

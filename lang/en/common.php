@@ -1,0 +1,87 @@
+<?php
+
+return [
+    // Table headers
+    "table.action" => "Action",
+    "table.actions" => "Actions",
+    "table.status" => "Status",
+    "table.title" => "Title",
+    "table.date" => "Date",
+    "table.no_records" => "No records found.",
+    "table.name" => "Name",
+    "table.email" => "Email",
+    "table.subject" => "Subject",
+    "table.department" => "Department",
+    "table.priority" => "Priority",
+    "table.last_reply" => "Last Reply",
+    "table.product" => "Product",
+    "table.domain" => "Domain",
+    "table.billing_cycle" => "Billing Cycle",
+    "table.amount" => "Amount",
+    "table.next_due" => "Next Due",
+    "table.total" => "Total",
+    "table.invoice_num" => "Invoice #",
+    "table.due_date" => "Due Date",
+    "table.description" => "Description",
+
+    // Form labels
+    "form.country" => "Country",
+    "form.phone" => "Phone",
+    "form.description" => "Description",
+    "form.select_country" => "-- Select Country --",
+    "form.street_address" => "Street Address",
+    "form.street_address_placeholder" => "Street address, P.O. box, etc.",
+    "form.postcode" => "Postcode / ZIP",
+    "form.first_name" => "First Name",
+    "form.last_name" => "Last Name",
+    "form.email" => "Email",
+    "form.email_address" => "Email Address",
+    "form.company_name" => "Company Name",
+    "form.phone_number" => "Phone Number",
+    "form.city" => "City",
+    "form.new_password" => "New Password",
+    "form.confirm_password" => "Confirm Password",
+    "form.subject" => "Subject",
+    "form.message" => "Message",
+
+    // Actions
+    "actions.add_new" => "Add New",
+    "actions.save" => "Save",
+    "actions.save_changes" => "Save Changes",
+    "actions.cancel" => "Cancel",
+    "actions.delete" => "Delete",
+    "actions.edit" => "Edit",
+    "actions.remove" => "Remove",
+    "actions.view" => "View",
+    "actions.search" => "Search",
+    "actions.pay_now" => "Pay Now",
+    "actions.checkout" => "Checkout",
+    "actions.add_to_cart" => "Add to Cart",
+    "actions.add" => "Add",
+    "actions.register" => "Register",
+
+    // Statuses
+    "status.active" => "Active",
+    "status.inactive" => "Inactive",
+    "status.cancelled" => "Cancelled",
+    "status.closed" => "Closed",
+    "status.pending" => "Pending",
+    "status.suspended" => "Suspended",
+    "status.unpaid" => "Unpaid",
+    "status.paid" => "Paid",
+    "status.overdue" => "Overdue",
+    "status.open" => "Open",
+    "status.answered" => "Answered",
+    "status.customer-reply" => "Customer Reply",
+    "status.in-progress" => "In Progress",
+    "status.on-hold" => "On Hold",
+
+    // Misc
+    "loading" => "Loading...",
+    "none" => "None",
+
+
+    // Yes/No
+    "yes" => "Yes",
+    "no" => "No",
+];

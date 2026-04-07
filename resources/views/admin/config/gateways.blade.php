@@ -10,12 +10,12 @@
 
 @php
 $modules = [
-    ['name' => 'banktransfer', 'label' => 'Bank Transfer', 'icon' => 'fas fa-university', 'desc' => 'Accept payments via manual bank wire transfer.'],
-    ['name' => 'paypal', 'label' => 'PayPal', 'icon' => 'fab fa-paypal', 'desc' => 'Accept payments via PayPal standard checkout.'],
-    ['name' => 'stripe', 'label' => 'Stripe', 'icon' => 'fab fa-stripe-s', 'desc' => 'Accept credit/debit card payments via Stripe.'],
-    ['name' => 'razorpay', 'label' => 'Razorpay', 'icon' => 'fas fa-rupee-sign', 'desc' => 'Accept payments via Razorpay (India).'],
-    ['name' => 'mollie', 'label' => 'Mollie', 'icon' => 'fas fa-euro-sign', 'desc' => 'Accept payments via Mollie (Europe).'],
-    ['name' => 'authorize', 'label' => 'Authorize.net', 'icon' => 'fas fa-credit-card', 'desc' => 'Accept credit card payments via Authorize.net.'],
+    ['name' => 'banktransfer', 'label' => 'Bank Transfer', 'icon' => 'fas fa-university', 'desc' => __('admin.gateways.desc_banktransfer')],
+    ['name' => 'paypal', 'label' => 'PayPal', 'icon' => 'fab fa-paypal', 'desc' => __('admin.gateways.desc_paypal')],
+    ['name' => 'stripe', 'label' => 'Stripe', 'icon' => 'fab fa-stripe-s', 'desc' => __('admin.gateways.desc_stripe')],
+    ['name' => 'razorpay', 'label' => 'Razorpay', 'icon' => 'fas fa-rupee-sign', 'desc' => __('admin.gateways.desc_razorpay')],
+    ['name' => 'mollie', 'label' => 'Mollie', 'icon' => 'fas fa-euro-sign', 'desc' => __('admin.gateways.desc_mollie')],
+    ['name' => 'authorize', 'label' => 'Authorize.net', 'icon' => 'fas fa-credit-card', 'desc' => __('admin.gateways.desc_authorize')],
 ];
 @endphp
 
@@ -47,7 +47,7 @@ $modules = [
                 <div class="form-group"><label class="form-label">{{ __('admin.gateways.sort_code') }}</label><input type="text" name="sort_code" value="{{ $settings['sort_code'] ?? '' }}" class="form-control"></div>
                 @elseif($gw['name'] === 'paypal')
                 <div class="form-group"><label class="form-label">{{ __('admin.gateways.paypal_email') }}</label><input type="email" name="email" value="{{ $settings['email'] ?? '' }}" class="form-control" placeholder="paypal@example.com"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.gateways.sandbox_mode') }}</label><select name="sandbox" class="form-control"><option value="0" {{ ($settings['sandbox'] ?? '0') === '0' ? 'selected' : '' }}>Live</option><option value="1" {{ ($settings['sandbox'] ?? '0') === '1' ? 'selected' : '' }}>Sandbox</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.gateways.sandbox_mode') }}</label><select name="sandbox" class="form-control"><option value="0" {{ ($settings['sandbox'] ?? '0') === '0' ? 'selected' : '' }}>{{ __('admin.gateways.mode_live') }}</option><option value="1" {{ ($settings['sandbox'] ?? '0') === '1' ? 'selected' : '' }}>{{ __('admin.gateways.mode_sandbox') }}</option></select></div>
                 @elseif($gw['name'] === 'stripe')
                 <div class="form-group"><label class="form-label">{{ __('admin.gateways.publishable_key') }}</label><input type="text" name="publishable_key" value="{{ $settings['publishable_key'] ?? '' }}" class="form-control" placeholder="pk_live_..."></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.gateways.secret_key') }}</label><input type="password" name="secret_key" value="{{ $settings['secret_key'] ?? '' }}" class="form-control" placeholder="sk_live_..."></div>

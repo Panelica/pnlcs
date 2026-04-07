@@ -4,12 +4,12 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">My Products & Services</h1>
-        <p class="pn-page-subtitle">Manage your active hosting and service subscriptions.</p>
+        <h1 class="pn-page-title">{{ __('client.services.page_title') }}</h1>
+        <p class="pn-page-subtitle">{{ __('client.services.page_subtitle') }}</p>
     </div>
     <a href="{{ route("client.store") }}" class="btn btn-primary">
         <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Order New Service
+        {{ __('client.services.order_new') }}
     </a>
 </div>
 
@@ -37,7 +37,7 @@
                     <td class="text-muted" style="text-transform:capitalize">{{ $s->billing_cycle ?? "-" }}</td>
                     <td style="font-weight:600">${{ number_format($s->amount, 2) }}</td>
                     <td class="text-muted text-sm">{{ $s->next_due_date?->format("d M Y") ?? "-" }}</td>
-                    <td><span class="badge badge-{{ strtolower($s->status) }}">{{ ucfirst($s->status) }}</span></td>
+                    <td><span class="badge badge-{{ strtolower($s->status) }}">{{ __('client.status.' . strtolower($s->status)) }}</span></td>
                     <td><a href="{{ route("client.services.show", $s) }}" class="btn btn-outline btn-xs">{{ __('common.actions.view') }}</a></td>
                 </tr>
                 @empty
@@ -45,8 +45,8 @@
                     <td colspan="7">
                         <div class="pn-empty">
                             <div class="pn-empty-icon">&#128722;</div>
-                            <p>You have no services yet.</p>
-                            <a href="{{ route("client.store") }}" class="btn btn-primary">Order Your First Service</a>
+                            <p>{{ __('client.services.no_services') }}</p>
+                            <a href="{{ route("client.store") }}" class="btn btn-primary">{{ __('client.services.order_first') }}</a>
                         </div>
                     </td>
                 </tr>

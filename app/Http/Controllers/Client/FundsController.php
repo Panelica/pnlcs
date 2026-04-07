@@ -40,7 +40,7 @@ class FundsController extends Controller
         $configured = DB::table('gateway_settings')->where('gateway', $gateway)->exists();
 
         if (!$configured && !in_array($gateway, ['banktransfer'])) {
-            return back()->with('error', ucfirst($gateway) . ' is not configured yet. Please use Bank Transfer or contact support to set up ' . ucfirst($gateway) . '.');
+            return back()->with('error', __('messages.error.gateway_not_configured', ['gateway' => ucfirst($gateway)]));
         }
 
         $invoice = Invoice::create([
@@ -63,7 +63,7 @@ class FundsController extends Controller
             'invoice_id'  => $invoice->id,
             'client_id'   => $client->id,
             'type'        => 'AddFunds',
-            'description' => 'Add Funds to Account',
+            'description' => __('messages.invoice.add_funds_description'),
             'amount'      => $validated['amount'],
             'taxed'       => false,
         ]);

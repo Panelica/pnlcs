@@ -3,7 +3,7 @@
 @section("content")
 
 <div class="page-header">
-    <h1><i class="fas fa-search" style="margin-right:8px;color:#1a4d80;"></i> WHOIS Lookup</h1>
+    <h1><i class="fas fa-search" style="margin-right:8px;color:#1a4d80;"></i> {{ __('admin.whois.title') }}</h1>
 </div>
 
 <div class="card" style="margin-bottom:24px;">
@@ -22,11 +22,11 @@
                         style="font-family:monospace;font-size:15px;">
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> Lookup
+                    <i class="fas fa-search"></i> {{ __('admin.whois.lookup_btn') }}
                 </button>
             </div>
             <div style="margin-top:8px;font-size:12px;color:#94a3b8;">
-                Supports 50+ TLDs: .com, .net, .org, .io, .dev, .app, .ai, .me, country codes, and more.
+                {{ __('admin.whois.tld_support_hint') }}
             </div>
         </form>
     </div>
@@ -80,7 +80,7 @@
         <i class="fas fa-globe" style="font-size:48px;color:#cbd5e1;margin-bottom:16px;display:block;"></i>
         <h3 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:8px;">{{ __('admin.whois.whois_domain_lookup') }}</h3>
         <p style="color:#64748b;font-size:14px;max-width:400px;margin:0 auto 16px;">
-            Enter any domain name above to see its WHOIS record — registrar, expiry date, nameservers, and more.
+            {{ __('admin.whois.whois_desc_text') }}
         </p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
             @foreach(['google.com','github.io','cloudflare.com','stripe.com','panelica.com'] as $eg)

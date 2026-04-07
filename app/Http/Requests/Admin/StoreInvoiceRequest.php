@@ -29,9 +29,9 @@ class StoreInvoiceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'items.required' => 'At least one line item is required.',
-            'items.*.description.required' => 'Each line item must have a description.',
-            'items.*.amount.required' => 'Each line item must have an amount.',
+            'items.required' => __('messages.validation.at_least_one_line_item'),
+            'items.*.description.required' => __('messages.validation.line_item_description_required'),
+            'items.*.amount.required' => __('messages.validation.line_item_amount_required'),
         ];
     }
 }

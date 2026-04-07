@@ -104,7 +104,7 @@
     <div class="card">
         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
             <span><i class="fas fa-palette"></i> {{ __('admin.appearance.installed_themes') }}</span>
-            <span style="font-size:12px; color:#999;">{{ count($installedThemes) }} theme(s) installed</span>
+            <span style="font-size:12px; color:#999;">{{ count($installedThemes) }} {{ __('admin.appearance.themes_installed') }}</span>
         </div>
         <div class="card-body">
             <p style="margin-bottom:20px; color:#666; font-size:13px;">{{ __('admin.appearance.theme_description') }}</p>
@@ -113,9 +113,9 @@
                 @foreach($installedThemes as $slug => $themeInfo)
                 <div class="theme-card {{ $themeInfo->isActive ? 'active' : '' }}">
                     @if($themeInfo->isActive)
-                    <div class="theme-card__badge">ACTIVE</div>
+                    <div class="theme-card__badge">{{ __('admin.appearance.active_badge') }}</div>
                     @elseif($themeInfo->isBuiltin)
-                    <div class="theme-card__badge theme-card__badge--builtin">BUILT-IN</div>
+                    <div class="theme-card__badge theme-card__badge--builtin">{{ __('admin.appearance.built_in_badge') }}</div>
                     @endif
 
                     <div class="theme-card__screenshot">
@@ -180,9 +180,7 @@
             @if(!empty($installedThemes))
             <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px 16px; font-size:13px; color:#0369a1;">
                 <i class="fas fa-info-circle"></i>
-                <strong>How themes work:</strong> Each theme can override any view file (welcome page, navigation, hero, footer, client portal).
-                If a theme doesn't provide a specific view, the default template is used as fallback.
-                Theme colors are automatically applied when activated.
+                <strong>{{ __('admin.appearance.themes_how_work') }}</strong> {{ __('admin.appearance.themes_how_work_desc') }}
             </div>
             @endif
         </div>
@@ -216,7 +214,7 @@
                     <form action="{{ route('admin.settings.appearance.update') }}" method="POST">
                         @csrf
                         <input type="hidden" name="preset" value="{{ $key }}">
-                        <button type="submit" class="btn btn-sm btn-primary" style="width:100%;">Activate {{ $preset['name'] }}</button>
+                        <button type="submit" class="btn btn-sm btn-primary" style="width:100%;">{{ __('admin.appearance.activate_preset', ['name' => $preset['name']]) }}</button>
                     </form>
                     @else
                     <button class="btn btn-sm btn-default" style="width:100%;" disabled>{{ __('admin.appearance.currently_active') }}</button>
@@ -229,7 +227,7 @@
 
     {{-- CUSTOM COLORS (Collapsible Groups) --}}
     <div class="card">
-        <div class="card-header">Custom Colors & Tokens ({{ count($tokenLabels) }} tokens)</div>
+        <div class="card-header">{{ __('admin.appearance.custom_colors_tokens') }} ({{ count($tokenLabels) }} tokens)</div>
         <div class="card-body">
             <p style="margin-bottom:16px; color:#666; font-size:13px;">{{ __('admin.appearance.custom_tokens_description') }}</p>
             <form action="{{ route('admin.settings.appearance.update') }}" method="POST" id="customColorForm">
@@ -278,32 +276,32 @@
         <div class="card-body" id="themePreview">
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                 <div>
-                    <p style="font-size:11px; font-weight:700; color:#999; text-transform:uppercase; margin-bottom:8px;">Navigation & Sidebar</p>
+                    <p style="font-size:11px; font-weight:700; color:#999; text-transform:uppercase; margin-bottom:8px;">{{ __('admin.appearance.nav_sidebar_preview') }}</p>
                     <div style="border-radius:6px; overflow:hidden; border:1px solid #ddd;">
                         <div id="prev-nav" style="background:{{ $activeColors['nav_bg'] }}; padding:10px 16px; color:#fff; font-weight:700; font-size:13px;">
-                            PNLCS <span style="font-weight:400; opacity:0.7; margin-left:12px;">Dashboard</span>
+                            PNLCS <span style="font-weight:400; opacity:0.7; margin-left:12px;">{{ __('admin.appearance.preview_dashboard') }}</span>
                         </div>
                         <div style="display:flex;">
                             <div id="prev-sidebar" style="background:{{ $activeColors['sidebar_bg'] }}; width:120px; padding:10px;">
-                                <div style="font-size:11px; color:{{ $activeColors['sidebar_text'] }};">Menu Item 1</div>
-                                <div style="font-size:11px; color:{{ $activeColors['sidebar_text'] }}; margin-top:4px;">Menu Item 2</div>
+                                <div style="font-size:11px; color:{{ $activeColors['sidebar_text'] }};">{{ __("admin.appearance.preview_menu_item_1") }}</div>
+                                <div style="font-size:11px; color:{{ $activeColors['sidebar_text'] }}; margin-top:4px;">{{ __("admin.appearance.preview_menu_item_2") }}</div>
                             </div>
                             <div style="flex:1; padding:10px; background:#fff;">
-                                <div id="prev-btn" style="display:inline-block; padding:4px 12px; background:{{ $activeColors['primary'] }}; color:#fff; border-radius:3px; font-size:11px; font-weight:600;">Button</div>
+                                <div id="prev-btn" style="display:inline-block; padding:4px 12px; background:{{ $activeColors['primary'] }}; color:#fff; border-radius:3px; font-size:11px; font-weight:600;">{{ __("admin.appearance.preview_button") }}</div>
                             </div>
                         </div>
-                        <div id="prev-footer" style="background:{{ $activeColors['footer_bg'] }}; padding:6px 16px; color:#fff; font-size:10px; opacity:0.8;">Footer</div>
+                        <div id="prev-footer" style="background:{{ $activeColors['footer_bg'] }}; padding:6px 16px; color:#fff; font-size:10px; opacity:0.8;">{{ __("admin.appearance.preview_footer") }}</div>
                     </div>
                 </div>
                 <div>
-                    <p style="font-size:11px; font-weight:700; color:#999; text-transform:uppercase; margin-bottom:8px;">Welcome Page Hero</p>
+                    <p style="font-size:11px; font-weight:700; color:#999; text-transform:uppercase; margin-bottom:8px;">{{ __('admin.appearance.welcome_hero_preview') }}</p>
                     <div style="border-radius:6px; overflow:hidden; border:1px solid #ddd;">
                         <div id="prev-hero" style="background:linear-gradient(135deg, {{ $activeColors['hero_bg_start'] }}, {{ $activeColors['hero_bg_mid'] }}, {{ $activeColors['hero_bg_end'] }}); padding:28px; text-align:center;">
-                            <div style="color:#fff; font-size:18px; font-weight:800; margin-bottom:8px;">Your Website</div>
+                            <div style="color:#fff; font-size:18px; font-weight:800; margin-bottom:8px;">{{ __("admin.appearance.preview_your_website") }}</div>
                             <div id="prev-cta" style="display:inline-block; padding:6px 18px; background:{{ $activeColors['welcome_accent'] }}; color:#fff; border-radius:6px; font-size:11px; font-weight:700;">Get Started</div>
                         </div>
                         <div style="padding:12px; background:#fff;">
-                            <div id="prev-table-header" style="background:{{ $activeColors['table_header_bg'] }}; color:#fff; padding:4px 10px; font-size:11px; font-weight:600; border-radius:3px;">Table Header</div>
+                            <div id="prev-table-header" style="background:{{ $activeColors['table_header_bg'] }}; color:#fff; padding:4px 10px; font-size:11px; font-weight:600; border-radius:3px;">{{ __("admin.appearance.preview_table_header") }}</div>
                         </div>
                     </div>
                 </div>
@@ -349,11 +347,11 @@
     <div id="sectionEditModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
         <div style="background:#fff; border-radius:12px; max-width:700px; width:90%; max-height:80vh; overflow-y:auto; padding:24px; box-shadow:0 25px 80px rgba(0,0,0,0.2);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 id="modalTitle" style="font-size:18px; font-weight:700;">Edit Section</h3>
+                <h3 id="modalTitle" style="font-size:18px; font-weight:700;">{{ __('admin.appearance.edit_section') }}</h3>
                 <button onclick="closeSectionModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#999;">&times;</button>
             </div>
             <div id="modalContent">
-                <p style="color:#999;">Loading...</p>
+                <p style="color:#999;">{{ __("admin.appearance.preview_loading") }}</p>
             </div>
             <div style="margin-top:20px; display:flex; gap:8px; justify-content:flex-end;">
                 <button class="btn btn-default" onclick="closeSectionModal()">{{ __('common.actions.cancel') }}</button>
@@ -377,7 +375,7 @@
                     <div>
                         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('common.form.company_name') }}</label>
                         <input type="text" name="company_name" value="{{ $whitelabel['company_name'] }}" class="form-control" placeholder="e.g. MyHosting">
-                        <span style="font-size:11px; color:#999;">Replaces "PNLCS" in navigation, footer, emails</span>
+                        <span style="font-size:11px; color:#999;">{{ __('admin.appearance.replaces_hint') }}</span>
                     </div>
                     <div>
                         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('admin.appearance.company_url') }}</label>
@@ -390,7 +388,7 @@
                     <div>
                         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('admin.appearance.copyright_text') }}</label>
                         <input type="text" name="copyright" value="{{ $whitelabel['copyright'] }}" class="form-control" placeholder="e.g. MyHosting LLC">
-                        <span style="font-size:11px; color:#999;">Shown in footer: &copy; 2026 [this text]</span>
+                        <span style="font-size:11px; color:#999;">{{ __('admin.appearance.copyright_hint') }}</span>
                     </div>
                 </div>
                 <div style="margin-bottom:16px;">
@@ -420,17 +418,17 @@
                         <input type="checkbox" name="dark_mode_enabled" value="1" {{ $darkModeEnabled === '1' ? 'checked' : '' }}>
                         <span style="font-size:14px; font-weight:600;">{{ __('admin.appearance.enable_darkmode') }}</span>
                     </label>
-                    <p style="font-size:12px; color:#999; margin-top:4px;">When enabled, a sun/moon toggle appears in the navigation bar. Visitor preference is saved via cookie and persists across sessions.</p>
+                    <p style="font-size:12px; color:#999; margin-top:4px;">{{ __('admin.appearance.darkmode_hint') }}</p>
                 </div>
 
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px;">
-                    <p style="font-size:13px; font-weight:600; margin-bottom:8px;">How it works:</p>
+                    <p style="font-size:13px; font-weight:600; margin-bottom:8px;">{{ __('admin.appearance.how_it_works') }}</p>
                     <ul style="font-size:12px; color:#666; padding-left:20px; margin:0;">
                         <li>A moon/sun icon toggle appears in the navigation bar</li>
-                        <li>Clicking it switches between light and dark themes instantly</li>
-                        <li>Preference is stored in a cookie (1 year) - no page reload needed</li>
-                        <li>Each theme defines its own dark mode colors in theme.json</li>
-                        <li>Dark mode affects: welcome page, client portal, cards, forms, tables</li>
+                        <li>{{ __("admin.appearance.darkmode_bullet_1") }}</li>
+                        <li>{{ __("admin.appearance.darkmode_bullet_2") }}</li>
+                        <li>{{ __("admin.appearance.darkmode_bullet_3") }}</li>
+                        <li>{{ __("admin.appearance.darkmode_bullet_4") }}</li>
                     </ul>
                 </div>
 
@@ -506,7 +504,7 @@ let currentEditSlug = null;
 function editSection(slug, title) {
     currentEditSlug = slug;
     document.getElementById('modalTitle').textContent = 'Edit: ' + title;
-    document.getElementById('modalContent').innerHTML = '<p style="color:#999;">Loading...</p>';
+    document.getElementById('modalContent').innerHTML = '<p style="color:#999;">{{ __("admin.appearance.preview_loading") }}</p>';
     document.getElementById('sectionEditModal').style.display = 'flex';
 
     fetch('/admin/settings/appearance/sections/' + slug + '/content')

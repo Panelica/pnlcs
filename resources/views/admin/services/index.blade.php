@@ -3,7 +3,7 @@
 @section("content")
 
 <div class="page-header">
-    <h1>Products / Services</h1>
+    <h1>{{ __('admin.services.title') }}</h1>
 </div>
 
 <!-- Status Filter Tabs -->
@@ -28,7 +28,7 @@
                 <th>{{ __('common.table.domain') }}</th>
                 <th>{{ __('common.table.billing_cycle') }}</th>
                 <th style="text-align:right;">{{ __('common.table.amount') }}</th>
-                <th>Next Due</th>
+                <th>{{ __('admin.services.next_due') }}</th>
                 <th>{{ __('common.table.status') }}</th>
                 <th>{{ __('common.table.actions') }}</th>
             </tr>

@@ -4,7 +4,7 @@
 
 @section("content")
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">SSL Certificate Orders</h1>
+    <h1 class="h3 mb-0">{{ __('admin.ssl.title') }}</h1>
 </div>
 
 {{-- Filters --}}
@@ -12,7 +12,7 @@
     <div class="card-body">
         <form method="GET" action="{{ route('admin.ssl.index') }}" class="row g-3">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="Search domain, client..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control" placeholder="{{ __('admin.ssl.search_placeholder') }}" value="{{ request('search') }}">
             </div>
             <div class="col-md-3">
                 <select name="status" class="form-select">
@@ -39,8 +39,8 @@
                     <th>{{ __('common.table.type') }}</th>
                     <th>{{ __('common.table.client') }}</th>
                     <th>{{ __('common.table.status') }}</th>
-                    <th>Order Date</th>
-                    <th>Expires</th>
+                    <th>{{ __('admin.ssl.order_date') }}</th>
+                    <th>{{ __('admin.ssl.expires') }}</th>
                     <th>{{ __('common.table.actions') }}</th>
                 </tr>
             </thead>
@@ -70,9 +70,9 @@
                         @if($order->crt_expires)
                             {{ $order->crt_expires->format('d M Y') }}
                             @if($order->daysUntilExpiry() !== null && $order->daysUntilExpiry() <= 30 && $order->daysUntilExpiry() > 0)
-                                <br><small class="text-warning">{{ $order->daysUntilExpiry() }} days left</small>
+                                <br><small class="text-warning">{{ $order->daysUntilExpiry() }} {{ __('admin.ssl.days') }}</small>
                             @elseif($order->daysUntilExpiry() !== null && $order->daysUntilExpiry() <= 0)
-                                <br><small class="text-danger">Expired</small>
+                                <br><small class="text-danger">{{ __('admin.ssl.expired') }}</small>
                             @endif
                         @else
                             —

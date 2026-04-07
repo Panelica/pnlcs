@@ -70,7 +70,7 @@
             <td><code>{{ $filter->content }}</code></td>
             <td style="font-size:12px;">{{ $filter->created_at?->format('d M Y') ?? '-' }}</td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.ticket-spam.filter.destroy', $filter->id) }}" style="display:inline;" onsubmit="return confirm('Remove this filter?')">
+                <form method="POST" action="{{ route('admin.config.ticket-spam.filter.destroy', $filter->id) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.ticket_spam.confirm_delete_filter\") }}')">
                     @csrf @method("DELETE")
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
@@ -95,8 +95,8 @@
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.ticket_spam.type') }} *</label>
                     <select name="type" required class="form-control">
-                        <option value="email">Email Pattern</option>
-                        <option value="keyword">Keyword</option>
+                        <option value="email">{{ __('admin.ticket_spam.email_pattern') }}</option>
+                        <option value="keyword">{{ __('admin.ticket_spam.keyword') }}</option>
                     </select>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.ticket_spam.content') }} *</label>

@@ -26,7 +26,7 @@
             </div>
             <div class="card">
                 <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-                    <strong>Line Items</strong>
+                    <strong>{{ __('admin.quotes.line_items') }}</strong>
                     <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ Add Item</button>
                 </div>
                 <div class="card-body" style="padding:0;">
@@ -52,11 +52,11 @@
                                     <td style="text-align:center;"><button type="button" @click="removeItem(index)" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:16px;">&times;</button></td>
                                 </tr>
                             </template>
-                            <tr x-show="items.length===0"><td colspan="7" style="text-align:center;color:#999;padding:20px;font-size:13px;">No items.</td></tr>
+                            <tr x-show="items.length===0"><td colspan="7" style="text-align:center;color:#999;padding:20px;font-size:13px;">{{ __('admin.quotes.no_items') }}</td></tr>
                         </tbody>
                         <tfoot style="border-top:2px solid #aaa;">
-                            <tr><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:600;">Subtotal</td><td style="padding:8px;text-align:right;font-weight:600;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
-                            <tr style="background:#f5f5f5;"><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:700;font-size:14px;">Total</td><td style="padding:8px;text-align:right;font-weight:700;font-size:14px;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
+                            <tr><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:600;">{{ __('admin.quotes.subtotal') }}</td><td style="padding:8px;text-align:right;font-weight:600;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
+                            <tr style="background:#f5f5f5;"><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:700;font-size:14px;">{{ __('admin.quotes.total') }}</td><td style="padding:8px;text-align:right;font-weight:700;font-size:14px;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>
                         </tfoot>
                     </table>
                 </div>

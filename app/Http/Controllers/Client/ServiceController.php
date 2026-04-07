@@ -59,7 +59,7 @@ class ServiceController extends Controller
         }
 
         return redirect()->route("client.services.show", $service)
-            ->with("success", "Your cancellation request has been submitted.");
+            ->with("success", __("messages.success.cancellation_request_submitted"));
     }
 
     public function upgrade(Service $service)
@@ -96,7 +96,7 @@ class ServiceController extends Controller
         ]);
 
         return redirect()->route("client.services.show", $service)
-            ->with("success", "Your upgrade request has been submitted and is pending review.");
+            ->with("success", __("messages.success.upgrade_request_submitted"));
     }
 
     public function toggleAutoRenew(Request $request, Service $service)
@@ -108,7 +108,7 @@ class ServiceController extends Controller
         ]);
 
         $status = $service->auto_renew ? "enabled" : "disabled";
-        return back()->with("success", "Auto-renewal {$status} for {$service->domain}.");
+        return back()->with("success", __("messages.success.auto_renewal_toggled", ["status" => $status, "domain" => $service->domain]));
     }
 
     private function getClientId(): int

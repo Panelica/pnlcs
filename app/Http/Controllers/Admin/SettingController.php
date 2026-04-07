@@ -50,7 +50,7 @@ class SettingController extends Controller
         if (empty($toAddress)) {
             return response()->json([
                 'success' => false,
-                'message' => 'No recipient address configured. Set System Email Address first.',
+                'message' => __('messages.error.no_recipient_address_configured'),
             ]);
         }
 
@@ -79,15 +79,15 @@ class SettingController extends Controller
         }
 
         try {
-            Mail::raw('This is a test email sent from PNLCS to verify your mail configuration is working correctly.', function ($message) use ($toAddress, $fromAddress, $fromName) {
+            Mail::raw(__('messages.email.test_body'), function ($message) use ($toAddress, $fromAddress, $fromName) {
                 $message->to($toAddress)
-                         ->subject('PNLCS Test Email')
+                         ->subject(__('messages.email.test_subject'))
                          ->from($fromAddress, $fromName);
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Test email sent successfully to ' . $toAddress,
+                'message' => __('messages.email.test_sent', ['address' => $toAddress]),
             ]);
         } catch (\Throwable $e) {
             return response()->json([

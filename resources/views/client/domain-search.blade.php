@@ -20,7 +20,7 @@
                     @foreach($tlds->whereIn('extension', ['.com','.net','.org','.io','.dev','.app','.co','.ai','.me','.xyz']) as $t)
                     <option value="{{ $t->extension }}" {{ ($results['tld'] ?? '.com') === $t->extension ? 'selected' : '' }}>{{ $t->extension }}</option>
                     @endforeach
-                    <optgroup label="More TLDs">
+                    <optgroup label="{{ __('client.domain_search.more_tlds') }}">
                         @foreach($tlds->reject(fn($t) => in_array($t->extension, ['.com','.net','.org','.io','.dev','.app','.co','.ai','.me','.xyz'])) as $t)
                         <option value="{{ $t->extension }}" {{ ($results['tld'] ?? '') === $t->extension ? 'selected' : '' }}>{{ $t->extension }}</option>
                         @endforeach

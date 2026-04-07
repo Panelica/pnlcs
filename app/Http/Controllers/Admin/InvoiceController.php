@@ -111,7 +111,7 @@ class InvoiceController extends Controller
     public function markPaid(Request $request, Invoice $invoice): RedirectResponse
     {
         if ($invoice->status === 'Paid') {
-            return back()->with('info', 'Invoice is already paid.');
+            return back()->with('info', __('admin.messages.invoice_already_paid'));
         }
 
         $validated = $request->validate([

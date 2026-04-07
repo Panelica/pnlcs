@@ -53,7 +53,7 @@ class DomainController extends Controller
         $newStatus = $domain->status === 'Locked' ? 'Active' : 'Locked';
         $domain->update(['status' => $newStatus]);
 
-        $message = $newStatus === 'Locked' ? 'Domain locked successfully.' : 'Domain unlocked successfully.';
+        $message = $newStatus === 'Locked' ? __('messages.success.domain_locked') : __('messages.success.domain_unlocked');
         return redirect()->route('client.domains.show', $domain)->with('success', $message);
     }
 
@@ -66,7 +66,7 @@ class DomainController extends Controller
 
         $state = $payment !== 'none' ? 'enabled' : 'disabled';
         return redirect()->route('client.domains.show', $domain)
-            ->with('success', 'Auto-renew ' . $state . '.');
+            ->with('success', __('messages.success.auto_renew_toggled', ['state' => $state]));
     }
 
     public function getEppCode(Domain $domain)
@@ -76,7 +76,7 @@ class DomainController extends Controller
         $eppCode = $domain->notes ? md5($domain->domain . $domain->id) : null;
 
         return response()->json([
-            'epp_code' => $eppCode ?? 'Contact support to retrieve your EPP code.',
+            'epp_code' => $eppCode ?? __('messages.info.contact_support_for_epp'),
         ]);
     }
 
@@ -88,7 +88,7 @@ class DomainController extends Controller
     private function authorizeClientDomain(Domain $domain): void
     {
         if ($domain->client_id !== $this->getClientId()) {
-            abort(403, 'This domain does not belong to your account.');
+            abort(403, __('messages.error.domain_not_yours'));
         }
     }
 }
