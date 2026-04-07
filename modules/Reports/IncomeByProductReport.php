@@ -17,7 +17,7 @@ class IncomeByProductReport extends AbstractReport
         [$from, $to] = $this->getDateRange($request);
         $rows = DB::table("invoice_items")
             ->join("invoices", "invoices.id", "=", "invoice_items.invoice_id")
-            ->leftJoin("services", "services.id", "=", "invoice_items.related_id")
+            ->leftJoin("services", "services.id", "=", "invoice_items.rel_id")
             ->leftJoin("products", "products.id", "=", "services.product_id")
             ->selectRaw("COALESCE(products.name, invoice_items.description) as product, COUNT(DISTINCT invoices.id) as invoices, SUM(invoice_items.amount) as revenue")
             ->where("invoices.status", "paid")

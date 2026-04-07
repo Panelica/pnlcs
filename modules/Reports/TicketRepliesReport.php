@@ -16,8 +16,8 @@ class TicketRepliesReport extends AbstractReport
     {
         [$from, $to] = $this->getDateRange($request);
         $rows = DB::table("ticket_replies")
-            ->leftJoin("admins", "admins.id", "=", "ticket_replies.admin_id")
-            ->selectRaw("COALESCE(CONCAT(admins.first_name, ' ', admins.last_name), 'Client') as staff, COUNT(*) as replies")
+            
+            ->selectRaw("COALESCE(NULLIF(ticket_replies.admin, ''), 'Client') as staff, COUNT(*) as replies")
             ->whereBetween("ticket_replies.created_at", [$from, $to." 23:59:59"])
             ->groupBy("staff")->orderBy("replies", "desc")->get();
         return ["columns" => ["Staff", "Replies"], "rows" => $rows->toArray(), "totals" => ["Total", $rows->sum("replies")]];

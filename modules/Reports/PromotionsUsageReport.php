@@ -15,7 +15,7 @@ class PromotionsUsageReport extends AbstractReport
     public function generate(Request $request): array
     {
         $rows = DB::table("promotions")
-            ->selectRaw("code, type, value, uses, max_uses, CASE WHEN expires_at IS NOT NULL AND expires_at < NOW() THEN 'Expired' WHEN max_uses > 0 AND uses >= max_uses THEN 'Maxed' ELSE 'Active' END as status, recurring, starts_at, expires_at")
+            ->selectRaw("code, type, value, uses, max_uses, CASE WHEN expiration_date IS NOT NULL AND expiration_date < NOW() THEN 'Expired' WHEN max_uses > 0 AND uses >= max_uses THEN 'Maxed' ELSE 'Active' END as status, recurring, start_date, expiration_date")
             ->orderBy("uses", "desc")->get();
         return ["columns" => ["Code", "Type", "Value", "Uses", "Max", "Status", "Recurring", "Start", "Expiry"], "rows" => $rows->toArray()];
     }
