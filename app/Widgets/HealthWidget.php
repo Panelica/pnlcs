@@ -12,7 +12,7 @@ class HealthWidget implements WidgetModuleInterface
     public function getColumns(): int { return 1; }
     public function getWeight(): int { return 80; }
     public function getPermission(): ?string { return null; }
-    public function getCacheTtl(): int { return 300; }
+    public function getCacheTtl(): int { return 0; }
 
     public function getData(): array
     {

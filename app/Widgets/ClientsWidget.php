@@ -19,14 +19,14 @@ class ClientsWidget implements WidgetModuleInterface
         return [
             "total" => DB::table("clients")->count(),
             "active" => DB::table("clients")->where("status", "active")->count(),
-            "recent" => DB::table("clients")->select("id", "first_name", "last_name", "email", "created_at")->orderBy("created_at", "desc")->limit(5)->get(),
+            "recent" => DB::table("clients")->select("id", "first_name", "last_name", "email", "created_at")->orderBy("created_at", "desc")->limit(5)->get()->map(fn($r) => (array) $r)->toArray(),
         ];
     }
 
     public function render(array $data): string
     {
         $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);display:flex;justify-content:space-between;"><span style="font-size:13px;">Total: <b>'.$data["total"].'</b></span><span style="font-size:13px;color:#46a546;">Active: <b>'.$data["active"].'</b></span></div>';
-        foreach ($data["recent"] as $c) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><a href="/admin/clients/'.$c->id.'" style="color:var(--pn-link);">'.$c->first_name.' '.$c->last_name.'</a><div style="font-size:11px;color:var(--pn-muted);">'.$c->email.'</div></div>'; }
+        foreach ($data["recent"] as $c) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><a href="/admin/clients/'.$c["id"].'" style="color:var(--pn-link);">'.$c["first_name"].' '.$c["last_name"].'</a><div style="font-size:11px;color:var(--pn-muted);">'.$c["email"].'</div></div>'; }
         return $html;
     }
 }

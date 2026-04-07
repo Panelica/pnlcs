@@ -16,13 +16,13 @@ class StaffWidget implements WidgetModuleInterface
 
     public function getData(): array
     {
-        return DB::table("admins")->select("id", "first_name", "last_name", "email", "last_login")->orderByDesc("last_login")->limit(5)->get()->toArray();
+        return DB::table("admins")->select("id", "first_name", "last_name", "email", "last_login")->orderByDesc("last_login")->limit(5)->get()->map(fn($r) => (array) $r)->toArray();
     }
 
     public function render(array $data): string
     {
         $html = "";
-        foreach ($data as $a) { $a = (object)$a; $ago = $a->last_login ? \Carbon\Carbon::parse($a->last_login)->diffForHumans() : "Never"; $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;">'.$a->first_name.' '.$a->last_name.'<span style="float:right;font-size:11px;color:var(--pn-muted);">'.$ago.'</span></div>'; }
+        foreach ($data as $a) { $ago = ($a["last_login"] ?? null) ? \Carbon\Carbon::parse($a["last_login"])->diffForHumans() : "Never"; $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;">'.$a["first_name"].' '.$a["last_name"].'<span style="float:right;font-size:11px;color:var(--pn-muted);">'.$ago.'</span></div>'; }
         return $html;
     }
 }

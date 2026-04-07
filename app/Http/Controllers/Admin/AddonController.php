@@ -17,7 +17,7 @@ class AddonController extends Controller
         foreach ($addons as $name => $addon) {
             $statuses[$name] = $this->manager->isActive($name);
         }
-        return view('admin.config.addons', compact('addons', 'statuses'));
+        return view('admin.config.addon-modules', compact('addons', 'statuses'));
     }
 
     public function show(string $name, Request $request)
