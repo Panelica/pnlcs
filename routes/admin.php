@@ -116,6 +116,7 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     // Reports
     Route::get("reports", [\App\Http\Controllers\Admin\ReportController::class, "index"])->name("reports.index");
     Route::get("reports/{slug}", [\App\Http\Controllers\Admin\ReportController::class, "show"])->name("reports.show");
+    Route::get("reports/{slug}/export", [\App\Http\Controllers\Admin\ReportController::class, "export"])->name("reports.export");
 
     // =============================================
     // Configuration Routes
@@ -269,6 +270,10 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
         Route::post("addons", [ConfigController::class, "storeAddon"])->name("addons.store");
         Route::put("addons/{id}", [ConfigController::class, "updateAddon"])->name("addons.update");
         Route::delete("addons/{id}", [ConfigController::class, "destroyAddon"])->name("addons.destroy");
+    // Addon module routes
+    Route::get("addons/modules", [\App\Http\Controllers\Admin\AddonController::class, "index"])->name("addons.modules");
+    Route::get("addons/modules/{name}", [\App\Http\Controllers\Admin\AddonController::class, "show"])->name("addons.modules.show");
+    Route::post("addons/modules/{name}/toggle", [\App\Http\Controllers\Admin\AddonController::class, "toggle"])->name("addons.modules.toggle");
 
         // Product Bundles (Phase 15)
         Route::get("bundles", [ConfigController::class, "bundles"])->name("bundles");

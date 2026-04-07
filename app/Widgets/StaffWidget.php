@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Widgets;
+
+use App\Contracts\WidgetModuleInterface;
+use Illuminate\Support\Facades\DB;
+
+class StaffWidget implements WidgetModuleInterface
+{
+    public function getTitle(): string { return 'Staff Online'; }
+    public function getDescription(): string { return 'Admin login status'; }
+    public function getColumns(): int { return 1; }
+    public function getWeight(): int { return 110; }
+    public function getPermission(): ?string { return null; }
+    public function getCacheTtl(): int { return 120; }
+
+    public function getData(): array
+    {
+        return DB::table("admins")->select("id", "first_name", "last_name", "email", "last_login")->orderByDesc("last_login")->limit(5)->get()->toArray();
+    }
+
+    public function render(array $data): string
+    {
+        $html = "";
+        foreach ($data as $a) { $a = (object)$a; $ago = $a->last_login ? \Carbon\Carbon::parse($a->last_login)->diffForHumans() : "Never"; $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;">'.$a->first_name.' '.$a->last_name.'<span style="float:right;font-size:11px;color:var(--pn-muted);">'.$ago.'</span></div>'; }
+        return $html;
+    }
+}
