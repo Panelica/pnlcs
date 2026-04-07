@@ -199,7 +199,7 @@ Route::prefix('v1')->group(function () {
 });
 
 // ── SSL API ──────────────────────────────────────────────────
-Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->group(function () {
     Route::get('/getsslorders', [\App\Http\Controllers\Api\SslApiController::class, 'getSslOrders']);
     Route::get('/getsslorder', [\App\Http\Controllers\Api\SslApiController::class, 'getSslOrder']);
     Route::post('/addsslorder', [\App\Http\Controllers\Api\SslApiController::class, 'addSslOrder']);

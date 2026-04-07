@@ -59,13 +59,24 @@ class SetLocale
         }
 
         // 3. Authenticated user/client language
-        if ($user = auth()->user()) {
-            if ($client = $user->clients()->first()) {
-                if (!empty($client->language)) {
-                    return $client->language;
+        try {
+            if ($user = auth()->user()) {
+                if (method_exists($user, "clients")) {
+                    $client = $user->clients()->first();
+                    if ($client && !empty($client->language)) {
+                        return $client->language;
+                    }
                 }
             }
-        }
+        } catch (\Throwable $e) {}
+
+
+
+
+
+
+
+
 
         // 4. Admin language
         if ($admin = auth('admin')->user()) {
