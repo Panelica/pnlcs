@@ -95,10 +95,10 @@
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-credit-card"></i> {{ __('admin.nav.billing') }}</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.invoices.index') }}">{{ __('admin.nav.invoices') }}</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}">{{ __('admin.nav.paid_invoices') }}</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Unpaid']) }}">{{ __('admin.nav.unpaid_invoices') }}</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}">{{ __('admin.nav.overdue_invoices') }}</a></li>
-                    <li><a href="{{ route('admin.invoices.index', ['status' => 'Cancelled']) }}">{{ __('admin.nav.cancelled_invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'paid']) }}">{{ __('admin.nav.paid_invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'unpaid']) }}">{{ __('admin.nav.unpaid_invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'overdue']) }}">{{ __('admin.nav.overdue_invoices') }}</a></li>
+                    <li><a href="{{ route('admin.invoices.index', ['status' => 'cancelled']) }}">{{ __('admin.nav.cancelled_invoices') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
                     <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
@@ -170,7 +170,7 @@
             {{-- Overdue Invoices Badge --}}
             @if(($sidebarCounts->overdue_invoices ?? 0) > 0)
             <li style="float:left; width:auto;">
-                <a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}" title="{{ __('admin.nav.overdue_invoices') }}" style="position:relative;">
+                <a href="{{ route('admin.invoices.index', ['status' => 'overdue']) }}" title="{{ __('admin.nav.overdue_invoices') }}" style="position:relative;">
                     <i class="fas fa-dollar-sign"></i> <span class="nav-badge">{{ $sidebarCounts->overdue_invoices }}</span>
                 </a>
             </li>
@@ -266,7 +266,7 @@
             <li><a href="{{ route('admin.invoices.create') }}">{{ __('admin.nav.create_invoice') }}</a></li>
             <li><a href="{{ route('admin.quotes.create') }}">{{ __('admin.sidebar.create_quote') }}</a></li>
             <li><a href="{{ route('admin.orders.index', ['status' => 'pending']) }}">{{ __('admin.nav.pending_orders') }} @if(($sidebarCounts->pending_orders ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_orders }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}">{{ __('admin.nav.overdue_invoices') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'overdue']) }}">{{ __('admin.nav.overdue_invoices') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
             <li><a href="{{ route('admin.tickets.index') }}">{{ __('admin.nav.open_tickets') }} @if(($sidebarCounts->open_tickets ?? 0) > 0)<span class="sb-badge sb-badge-info">{{ $sidebarCounts->open_tickets }}</span>@endif</a></li>
         </ul>
 
@@ -312,10 +312,10 @@
         <div class="sidebar-header"><i class="fas fa-money-bill-wave"></i> {{ __('admin.nav.billing') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.invoices.index') }}" @if($routeName === 'admin.invoices.index' && !request()->has('status')) class="active" @endif>{{ __('admin.sidebar.all_invoices') }}</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Paid']) }}" @if(request()->get('status') === 'Paid') class="active" @endif>{{ __('admin.sidebar.paid') }}</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Unpaid']) }}" @if(request()->get('status') === 'Unpaid') class="active" @endif>{{ __('admin.sidebar.unpaid') }} @if(($sidebarCounts->unpaid_invoices ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Overdue']) }}" @if(request()->get('status') === 'Overdue') class="active" @endif>{{ __('admin.sidebar.overdue') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
-            <li><a href="{{ route('admin.invoices.index', ['status' => 'Cancelled']) }}" @if(request()->get('status') === 'Cancelled') class="active" @endif>{{ __('admin.status.cancelled') }}</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'paid']) }}" @if(request()->get('status') === 'paid') class="active" @endif>{{ __('admin.sidebar.paid') }}</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'unpaid']) }}" @if(request()->get('status') === 'unpaid') class="active" @endif>{{ __('admin.sidebar.unpaid') }} @if(($sidebarCounts->unpaid_invoices ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'overdue']) }}" @if(request()->get('status') === 'overdue') class="active" @endif>{{ __('admin.sidebar.overdue') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'cancelled']) }}" @if(request()->get('status') === 'cancelled') class="active" @endif>{{ __('admin.status.cancelled') }}</a></li>
             <li><a href="{{ route('admin.invoices.create') }}" @if($routeName === 'admin.invoices.create') class="active" @endif>{{ __('admin.sidebar.create_invoice') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-coins"></i> {{ __('admin.nav.transactions') }}</div>

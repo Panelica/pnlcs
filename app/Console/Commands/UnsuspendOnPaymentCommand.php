@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\InvoiceStatus;
+use App\Enums\ServiceStatus;
 use App\Models\Invoice;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
@@ -18,14 +20,14 @@ class UnsuspendOnPaymentCommand extends Command
     public function handle(): int
     {
         // Find suspended services with recently paid invoices
-        $services = Service::with('client')->where('status', 'Suspended')->get();
+        $services = Service::with('client')->where('status', ServiceStatus::Suspended->value)->get();
         $unsuspended = 0;
         $registry = app(ModuleRegistry::class);
 
         foreach ($services as $service) {
             // Check if there's a related paid invoice (paid today or recently)
             $hasPaidInvoice = Invoice::where('client_id', $service->client_id)
-                ->whereIn('status', ['Paid', 'paid'])
+                ->where('status', InvoiceStatus::Paid->value)
                 ->whereHas('items', function ($q) use ($service) {
                     $q->where('rel_id', $service->id)
                       ->whereIn('type', ['Hosting', 'Service', 'hosting', 'service']);
@@ -35,7 +37,7 @@ class UnsuspendOnPaymentCommand extends Command
 
             // Also check if all overdue invoices for this client are now paid
             $hasOverdue = Invoice::where('client_id', $service->client_id)
-                ->whereIn('status', ['Overdue', 'overdue', 'Unpaid', 'unpaid'])
+                ->whereIn('status', [InvoiceStatus::Overdue->value, InvoiceStatus::Unpaid->value])
                 ->whereHas('items', function ($q) use ($service) {
                     $q->where('rel_id', $service->id);
                 })
@@ -60,7 +62,7 @@ class UnsuspendOnPaymentCommand extends Command
                 }
 
                 $service->update([
-                    'status' => 'Active',
+                    'status' => ServiceStatus::Active->value,
                     'suspension_date' => null,
                     'suspension_reason' => null,
                 ]);

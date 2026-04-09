@@ -1,14 +1,16 @@
 <?php
 namespace App\Models;
+
+use App\Enums\ServiceStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Service extends Model {
     use HasFactory;
 
-    protected $fillable = ["client_id", "order_id", "product_id", "server_id", "domain", "payment_method", "qty", "first_payment_amount", "amount", "billing_cycle", "next_due_date", "registration_date", "status", "username", "password", "disk_usage", "disk_limit", "bw_usage", "bw_limit", "suspension_date", "suspension_reason", "termination_date", "notes", "auto_renew"];
-    protected $hidden = ["password"];
-    protected function casts(): array { return ["next_due_date" => "date", "registration_date" => "date", "suspension_date" => "date", "termination_date" => "date", "amount" => "decimal:2", "first_payment_amount" => "decimal:2", "auto_renew" => "boolean", "password" => "encrypted"]; }
+    protected $fillable = ['client_id', 'order_id', 'product_id', 'server_id', 'domain', 'payment_method', 'qty', 'first_payment_amount', 'amount', 'billing_cycle', 'next_due_date', 'registration_date', 'status', 'username', 'password', 'disk_usage', 'disk_limit', 'bw_usage', 'bw_limit', 'suspension_date', 'suspension_reason', 'termination_date', 'notes', 'auto_renew', 'override_auto_suspend_date'];
+    protected $hidden = ['password'];
+    protected function casts(): array { return ['next_due_date' => 'date', 'registration_date' => 'date', 'suspension_date' => 'date', 'termination_date' => 'date', 'amount' => 'decimal:2', 'first_payment_amount' => 'decimal:2', 'auto_renew' => 'boolean', 'password' => 'encrypted']; }
 
     public function client() { return $this->belongsTo(Client::class); }
     public function product() { return $this->belongsTo(Product::class); }
@@ -18,6 +20,5 @@ class Service extends Model {
     public function sslOrder() { return $this->hasOne(\App\Models\SslOrder::class); }
     public function cancellationRequest() { return $this->hasOne(CancellationRequest::class); }
 
-    public function scopeActive($q) { return $q->where("status", "active"); }
-
+    public function scopeActive($q) { return $q->where('status', ServiceStatus::Active->value); }
 }

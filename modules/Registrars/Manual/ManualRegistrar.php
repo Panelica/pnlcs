@@ -29,7 +29,7 @@ class ManualRegistrar implements RegistrarModuleInterface
     public function register(Domain $domain, int $years, array $params = []): array
     {
         $domain->update([
-            "status"              => "Active",
+            "status"              => "active",
             "registrar"           => "Manual",
             "registration_period" => $years,
             "registration_date"   => now(),
@@ -50,7 +50,7 @@ class ManualRegistrar implements RegistrarModuleInterface
     public function transfer(Domain $domain, string $eppCode): array
     {
         $domain->update([
-            "status"    => "Pending Transfer",
+            "status"    => "pending_transfer",
             "registrar" => "Manual",
         ]);
 
@@ -72,7 +72,7 @@ class ManualRegistrar implements RegistrarModuleInterface
         $domain->update([
             "expiry_date"   => $newExpiry,
             "next_due_date" => $newExpiry,
-            "status"        => "Active",
+            "status"        => "active",
         ]);
 
         return [

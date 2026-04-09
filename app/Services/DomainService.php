@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DomainStatus;
 use App\Models\Domain;
 use App\Models\Client;
 
@@ -15,7 +16,7 @@ class DomainService
             'registration_date' => now(),
             'expiry_date' => now()->addYears($data['registration_period'] ?? 1),
             'next_due_date' => now()->addYears($data['registration_period'] ?? 1),
-            'status' => 'Pending',
+            'status' => DomainStatus::Pending->value,
         ]));
     }
 
@@ -36,7 +37,7 @@ class DomainService
 
     public function cancelDomain(Domain $domain): Domain
     {
-        $domain->update(['status' => 'Cancelled']);
+        $domain->update(['status' => DomainStatus::Cancelled->value]);
         return $domain->fresh();
     }
 }

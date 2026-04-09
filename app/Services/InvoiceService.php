@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -26,7 +27,7 @@ class InvoiceService
                 'invoice_num'    => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
                 'date'           => $options['date'] ?? now()->toDateString(),
                 'due_date'       => $options['due_date'] ?? now()->addDays(14)->toDateString(),
-                'status'         => $options['status'] ?? 'Unpaid',
+                'status'         => $options['status'] ?? InvoiceStatus::Unpaid->value,
                 'payment_method' => $options['payment_method'] ?? null,
                 'notes'          => $options['notes'] ?? null,
                 'subtotal'       => 0,
@@ -117,13 +118,13 @@ class InvoiceService
      */
     public function markPaid(Invoice $invoice, ?string $transactionId = null, string $gateway = 'manual'): Invoice
     {
-        if ($invoice->status === 'Paid') {
+        if ($invoice->status === InvoiceStatus::Paid->value) {
             return $invoice;
         }
 
         $paidInvoice = DB::transaction(function () use ($invoice, $transactionId, $gateway) {
             $invoice->update([
-                'status'    => 'Paid',
+                'status'    => InvoiceStatus::Paid->value,
                 'date_paid' => now(),
             ]);
 
@@ -146,7 +147,7 @@ class InvoiceService
             try {
                 app(\App\Services\AffiliateService::class)->processCommission($invoice);
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning("Affiliate commission failed for invoice #" . $invoice->id . ": " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::warning('Affiliate commission failed for invoice #' . $invoice->id . ': ' . $e->getMessage());
             }
             return $invoice->fresh();
         });
@@ -162,7 +163,7 @@ class InvoiceService
      */
     public function applyCredit(Invoice $invoice, float $amount): Invoice
     {
-        if ($invoice->status === 'Paid' || $invoice->status === 'Cancelled') {
+        if ($invoice->status === InvoiceStatus::Paid->value || $invoice->status === InvoiceStatus::Cancelled->value) {
             return $invoice;
         }
 
@@ -223,11 +224,11 @@ class InvoiceService
      */
     public function cancelInvoice(Invoice $invoice): Invoice
     {
-        if ($invoice->status === 'Paid') {
+        if ($invoice->status === InvoiceStatus::Paid->value) {
             return $invoice;
         }
 
-        $invoice->update(['status' => 'Cancelled']);
+        $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
 
 
         return $invoice->fresh();

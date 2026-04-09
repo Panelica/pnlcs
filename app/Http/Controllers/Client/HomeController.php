@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Enums\InvoiceStatus;
+use App\Enums\ServiceStatus;
+use App\Enums\DomainStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
 use App\Models\Invoice;
@@ -16,13 +19,13 @@ class HomeController extends Controller
         $clientIds = $user->clients()->pluck('clients.id');
 
         $data = [
-            'serviceCount'   => Service::whereIn('client_id', $clientIds)->where('status', 'Active')->count(),
-            'domainCount'    => Domain::whereIn('client_id', $clientIds)->where('status', 'Active')->count(),
-            'unpaidInvoices' => Invoice::whereIn('client_id', $clientIds)->where('status', 'Unpaid')->count(),
+            'serviceCount'   => Service::whereIn('client_id', $clientIds)->where('status', ServiceStatus::Active->value)->count(),
+            'domainCount'    => Domain::whereIn('client_id', $clientIds)->where('status', DomainStatus::Active->value)->count(),
+            'unpaidInvoices' => Invoice::whereIn('client_id', $clientIds)->where('status', InvoiceStatus::Unpaid->value)->count(),
             'openTickets'    => Ticket::whereIn('client_id', $clientIds)->whereIn('status', ['Open', 'Customer-Reply'])->count(),
             'recentInvoices' => Invoice::whereIn('client_id', $clientIds)->orderBy('id', 'desc')->limit(5)->get(),
             'recentTickets'  => Ticket::whereIn('client_id', $clientIds)->orderBy('id', 'desc')->limit(5)->get(),
-            'activeServices' => Service::whereIn('client_id', $clientIds)->where('status', 'Active')->with('product')->limit(5)->get(),
+            'activeServices' => Service::whereIn('client_id', $clientIds)->where('status', ServiceStatus::Active->value)->with('product')->limit(5)->get(),
         ];
 
         return view('client.home', $data);

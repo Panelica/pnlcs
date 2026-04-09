@@ -69,7 +69,7 @@ class EnomRegistrar implements RegistrarModuleInterface
 
         if (($response["ErrCount"] ?? "1") === "0") {
             $domain->update([
-                "status"            => "Active",
+                "status"            => "active",
                 "registrar"         => "Enom",
                 "registration_date" => now(),
                 "expiry_date"       => now()->addYears($years),
@@ -93,7 +93,7 @@ class EnomRegistrar implements RegistrarModuleInterface
         ]);
 
         if (($response["ErrCount"] ?? "1") === "0") {
-            $domain->update(["status" => "Pending Transfer", "registrar" => "Enom"]);
+            $domain->update(["status" => "pending_transfer", "registrar" => "Enom"]);
             return ["success" => true, "message" => "Transfer order created at eNom."];
         }
 

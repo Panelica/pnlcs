@@ -2,6 +2,10 @@
 
 namespace App\Services;
 
+use App\Enums\DomainStatus;
+use App\Enums\InvoiceStatus;
+use App\Enums\OrderStatus;
+use App\Enums\ServiceStatus;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Order;
@@ -46,7 +50,7 @@ class OrderService
                 'date'           => now()->toDateString(),
                 'amount'         => $totalAmount,
                 'payment_method' => $paymentMethod,
-                'status'         => 'Pending',
+                'status'         => OrderStatus::Pending->value,
                 'ip_address'     => request()->ip() ?? '0.0.0.0',
                 'promo_code'     => $promoCode,
             ]);
@@ -94,19 +98,6 @@ class OrderService
             // Link invoice to order
             $order->update(['invoice_id' => $invoice->id]);
 
-            // Auto-provision: trigger module create for each service
-            $services = Service::where("order_id", $order->id)->where("status", "Active")->with("product")->get();
-            foreach ($services as $svc) {
-                if ($svc->product && $svc->product->server_type) {
-                    try {
-                        $this->provisioning->createAccount($svc);
-                        Log::info("Auto-provisioned service #" . $svc->id);
-                    } catch (\Throwable $e) {
-                        Log::error("Auto-provision failed for service #" . $svc->id . ": " . $e->getMessage());
-                    }
-                }
-            }
-
             return $order->fresh();
         });
 
@@ -120,39 +111,39 @@ class OrderService
      */
     public function acceptOrder(Order $order): Order
     {
-        if ($order->status === 'Active') {
+        if ($order->status === OrderStatus::Active->value) {
             return $order;
         }
 
         return DB::transaction(function () use ($order) {
-            $order->update(['status' => 'Active']);
+            $order->update(['status' => OrderStatus::Active->value]);
 
             // Activate all pending services on this order
             Service::where('order_id', $order->id)
-                ->where('status', 'Pending')
+                ->where('status', ServiceStatus::Pending->value)
                 ->update([
-                    'status'            => 'Active',
+                    'status'            => ServiceStatus::Active->value,
                     'registration_date' => now()->toDateString(),
                 ]);
 
             // Activate pending domains on this order
             Domain::where('order_id', $order->id)
-                ->where('status', 'Pending')
-                ->update(['status' => 'Active']);
+                ->where('status', DomainStatus::Pending->value)
+                ->update(['status' => DomainStatus::Active->value]);
 
 
             // Auto-provision activated services
-            $activatedServices = Service::where("order_id", $order->id)
-                ->where("status", "Active")
-                ->with("product")
+            $activatedServices = Service::where('order_id', $order->id)
+                ->where('status', ServiceStatus::Active->value)
+                ->with('product')
                 ->get();
             foreach ($activatedServices as $svc) {
                 if ($svc->product && $svc->product->server_type) {
                     try {
                         $this->provisioning->createAccount($svc);
-                        Log::info("Auto-provisioned service #" . $svc->id . " on order accept");
+                        Log::info('Auto-provisioned service #' . $svc->id . ' on order accept');
                     } catch (\Throwable $e) {
-                        Log::error("Auto-provision failed for service #" . $svc->id . ": " . $e->getMessage());
+                        Log::error('Auto-provision failed for service #' . $svc->id . ': ' . $e->getMessage());
                     }
                 }
             }
@@ -165,28 +156,28 @@ class OrderService
      */
     public function cancelOrder(Order $order): Order
     {
-        if (in_array($order->status, ['Cancelled', 'Fraud'])) {
+        if (in_array($order->status, [OrderStatus::Cancelled->value, OrderStatus::Fraud->value])) {
             return $order;
         }
 
         return DB::transaction(function () use ($order) {
-            $order->update(['status' => 'Cancelled']);
+            $order->update(['status' => OrderStatus::Cancelled->value]);
 
             Service::where('order_id', $order->id)
-                ->whereNotIn('status', ['Terminated', 'Cancelled'])
+                ->whereNotIn('status', [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value])
                 ->update([
-                    'status'           => 'Cancelled',
+                    'status'           => ServiceStatus::Cancelled->value,
                     'termination_date' => now()->toDateString(),
                 ]);
 
             Domain::where('order_id', $order->id)
-                ->whereNotIn('status', ['Expired', 'Cancelled'])
-                ->update(['status' => 'Cancelled']);
+                ->whereNotIn('status', [DomainStatus::Expired->value, DomainStatus::Cancelled->value])
+                ->update(['status' => DomainStatus::Cancelled->value]);
 
             // Cancel the linked invoice if still unpaid
             if ($order->invoice_id) {
                 $invoice = $order->invoice;
-                if ($invoice && in_array($invoice->status, ['Unpaid', 'Overdue'])) {
+                if ($invoice && in_array($invoice->status, [InvoiceStatus::Unpaid->value, InvoiceStatus::Overdue->value])) {
                     $this->invoiceService->cancelInvoice($invoice);
                 }
             }
@@ -202,15 +193,15 @@ class OrderService
     {
         return DB::transaction(function () use ($order) {
             $order->update([
-                'status'       => 'Fraud',
+                'status'       => OrderStatus::Fraud->value,
                 'fraud_module' => 'manual',
                 'fraud_output' => 'Manually marked as fraud by admin on ' . now()->toDateTimeString(),
             ]);
 
             Service::where('order_id', $order->id)
-                ->where('status', 'Active')
+                ->where('status', ServiceStatus::Active->value)
                 ->update([
-                    'status'             => 'Suspended',
+                    'status'             => ServiceStatus::Suspended->value,
                     'suspension_date'    => now()->toDateString(),
                     'suspension_reason'  => 'Order marked as fraud',
                 ]);
@@ -218,7 +209,7 @@ class OrderService
             // Cancel unpaid invoice
             if ($order->invoice_id) {
                 $invoice = $order->invoice;
-                if ($invoice && in_array($invoice->status, ['Unpaid', 'Overdue'])) {
+                if ($invoice && in_array($invoice->status, [InvoiceStatus::Unpaid->value, InvoiceStatus::Overdue->value])) {
                     $this->invoiceService->cancelInvoice($invoice);
                 }
             }
@@ -259,7 +250,7 @@ class OrderService
             'billing_cycle'        => $billingCycle,
             'next_due_date'        => $this->calculateNextDueDate($billingCycle),
             'registration_date'    => now()->toDateString(),
-            'status'               => 'Pending',
+            'status'               => ServiceStatus::Pending->value,
             'username'             => $item['username'] ?? null,
             'notes'                => $item['notes'] ?? null,
         ]);
@@ -275,7 +266,7 @@ class OrderService
             'registrar'          => $item['registrar'] ?? null,
             'registration_date'  => now()->toDateString(),
             'expiry_date'        => now()->addYear()->toDateString(),
-            'status'             => 'Pending',
+            'status'             => DomainStatus::Pending->value,
             'recurring_amount'   => $item['amount'] ?? 0,
             'payment_method'     => $order->payment_method,
         ]);

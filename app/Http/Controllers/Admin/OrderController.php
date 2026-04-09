@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderService;
@@ -40,11 +41,11 @@ class OrderController extends Controller
      */
     public function accept(Order $order): RedirectResponse
     {
-        if ($order->status === 'Active') {
+        if ($order->status === OrderStatus::Active->value) {
             return back()->with('info', __('admin.messages.order_already_active'));
         }
 
-        if (!in_array($order->status, ['Pending'])) {
+        if ($order->status !== OrderStatus::Pending->value) {
             return back()->with('error', __('admin.messages.order_pending_error', ['status' => $order->status]));
         }
 
@@ -58,7 +59,7 @@ class OrderController extends Controller
      */
     public function cancel(Order $order): RedirectResponse
     {
-        if (in_array($order->status, ['Cancelled', 'Fraud'])) {
+        if (in_array($order->status, [OrderStatus::Cancelled->value, OrderStatus::Fraud->value])) {
             return back()->with('info', __('admin.messages.order_already_cancelled'));
         }
 
@@ -72,7 +73,7 @@ class OrderController extends Controller
      */
     public function markFraud(Order $order): RedirectResponse
     {
-        if ($order->status === 'Fraud') {
+        if ($order->status === OrderStatus::Fraud->value) {
             return back()->with('info', __('admin.messages.order_already_fraud'));
         }
 

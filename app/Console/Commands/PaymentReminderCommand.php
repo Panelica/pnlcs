@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +20,7 @@ class PaymentReminderCommand extends Command
         // Invoices due in 1, 3, 7 days
         foreach ([1, 3, 7] as $days) {
             $invoices = Invoice::with('client')
-                ->whereIn('status', ['Unpaid', 'unpaid'])
+                ->where('status', InvoiceStatus::Unpaid->value)
                 ->whereDate('due_date', now()->addDays($days)->toDateString())
                 ->get();
 
@@ -42,7 +43,7 @@ class PaymentReminderCommand extends Command
         // Overdue reminders (1, 3, 7 days past due)
         foreach ([1, 3, 7] as $days) {
             $invoices = Invoice::with('client')
-                ->whereIn('status', ['Overdue', 'overdue'])
+                ->where('status', InvoiceStatus::Overdue->value)
                 ->whereDate('due_date', now()->subDays($days)->toDateString())
                 ->get();
 

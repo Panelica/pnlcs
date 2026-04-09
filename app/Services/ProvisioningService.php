@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\ServerModuleInterface;
+use App\Enums\ServiceStatus;
 use App\Models\Product;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
@@ -27,7 +28,7 @@ class ProvisioningService
             $result = $module->create($service);
 
             if ($result['success'] ?? false) {
-                $service->status = 'Active';
+                $service->status = ServiceStatus::Active->value;
                 $service->registration_date = $service->registration_date ?? now();
                 $service->save();
                 event(new ServiceActivated($service));
@@ -55,7 +56,7 @@ class ProvisioningService
             $result = $module->suspend($service, $reason);
 
             if ($result['success'] ?? false) {
-                $service->status = 'Suspended';
+                $service->status = ServiceStatus::Suspended->value;
                 $service->suspension_date = now();
                 $service->suspension_reason = $reason;
                 $service->save();
@@ -84,7 +85,7 @@ class ProvisioningService
             $result = $module->unsuspend($service);
 
             if ($result['success'] ?? false) {
-                $service->status = 'Active';
+                $service->status = ServiceStatus::Active->value;
                 $service->suspension_date = null;
                 $service->suspension_reason = null;
                 $service->save();
@@ -112,7 +113,7 @@ class ProvisioningService
             $result = $module->terminate($service);
 
             if ($result['success'] ?? false) {
-                $service->status = 'Terminated';
+                $service->status = ServiceStatus::Terminated->value;
                 $service->termination_date = now();
                 $service->save();
                 event(new ServiceTerminated($service));
@@ -137,7 +138,14 @@ class ProvisioningService
         }
 
         try {
-            return $module->changePassword($service, $newPassword);
+            $result = $module->changePassword($service, $newPassword);
+
+            if ($result['success'] ?? false) {
+                $service->password = $newPassword;
+                $service->save();
+            }
+
+            return $result;
         } catch (\Throwable $e) {
             Log::error('ProvisioningService::changePassword failed', [
                 'service_id' => $service->id,
@@ -173,11 +181,13 @@ class ProvisioningService
         }
     }
 
-    public function getModuleForService(Service $service): ?ServerModuleInterface
+    private function getModuleForService(Service $service): ?ServerModuleInterface
     {
-        $serverType = $service->product?->server_type;
+        $service->loadMissing('product', 'server');
 
-        if (empty($serverType)) {
+        $serverType = $service->server?->type ?? $service->product?->server_type ?? null;
+
+        if (!$serverType) {
             return null;
         }
 

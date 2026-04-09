@@ -50,10 +50,10 @@ class DomainController extends Controller
     {
         $this->authorizeClientDomain($domain);
 
-        $newStatus = $domain->status === 'Locked' ? 'Active' : 'Locked';
+        $newStatus = $domain->status === 'locked' ? 'active' : 'locked';
         $domain->update(['status' => $newStatus]);
 
-        $message = $newStatus === 'Locked' ? __('messages.success.domain_locked') : __('messages.success.domain_unlocked');
+        $message = $newStatus === 'locked' ? __('messages.success.domain_locked') : __('messages.success.domain_unlocked');
         return redirect()->route('client.domains.show', $domain)->with('success', $message);
     }
 

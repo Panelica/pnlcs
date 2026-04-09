@@ -196,7 +196,7 @@ class CartService
             "promo_code"     => $totals["promo_code"],
             "amount"         => $totals["total"],
             "payment_method" => $paymentMethod,
-            "status"         => "Pending",
+            "status"         => "pending",
             "ip_address"     => request()->ip(),
         ]);
 
@@ -227,7 +227,7 @@ class CartService
                     "domain"            => $item["domain"],
                     "registrar"         => "Manual",
                     "registration_period" => $item["years"] ?? 1,
-                    "status"            => "Pending",
+                    "status"            => "pending",
                     "payment_method"    => $paymentMethod,
                     "first_payment_amount" => $item["price"],
                     "recurring_amount"  => $item["price"],
@@ -266,7 +266,7 @@ class CartService
                     "billing_cycle"        => $item["billing_cycle"],
                     "next_due_date"        => $this->getNextDueDate($item["billing_cycle"]),
                     "registration_date"    => now(),
-                    "status"               => "Pending",
+                    "status"               => "pending",
                     "first_payment_amount" => $item["price"],
                 ]);
             }
@@ -357,7 +357,7 @@ class CartService
     private function getTaxRate(): float
     {
         $rule = TaxRule::where("level", 1)->first();
-        return $rule ? (float) $rule->rate : 0.0;
+        return $rule ? (float) $rule->tax_rate : 0.0;
     }
 
     private function getNextDueDate(string $billingCycle): \Carbon\Carbon

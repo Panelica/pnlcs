@@ -171,7 +171,7 @@ class PanelicaModule extends AbstractServerModule
             'panelica_domain_id' => $domainId,
         ]);
 
-        $service->update(['username' => $username, 'status' => 'Active']);
+        $service->update(['username' => $username, 'status' => 'active']);
 
         $result = $this->buildResult(true, 'Account and domain created successfully.', [
             'panelica_user_id'   => $userId,
@@ -202,7 +202,7 @@ class PanelicaModule extends AbstractServerModule
             return $this->buildResult(false, "Suspend failed: {$msg}");
         }
 
-        $service->update(['status' => 'Suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
+        $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         $result = $this->buildResult(true, 'Account suspended.');
         $this->logAction($service, 'suspend', $result);
         return $result;
@@ -229,7 +229,7 @@ class PanelicaModule extends AbstractServerModule
             return $this->buildResult(false, "Unsuspend failed: {$msg}");
         }
 
-        $service->update(['status' => 'Active', 'suspension_date' => null, 'suspension_reason' => null]);
+        $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         $result = $this->buildResult(true, 'Account unsuspended.');
         $this->logAction($service, 'unsuspend', $result);
         return $result;
@@ -256,7 +256,7 @@ class PanelicaModule extends AbstractServerModule
             return $this->buildResult(false, "Terminate failed: {$msg}");
         }
 
-        $service->update(['status' => 'Terminated', 'termination_date' => now()]);
+        $service->update(['status' => 'terminated', 'termination_date' => now()]);
         $result = $this->buildResult(true, 'Account terminated.');
         $this->logAction($service, 'terminate', $result);
         return $result;
@@ -327,7 +327,7 @@ class PanelicaModule extends AbstractServerModule
     public function usageUpdate(Server $server): array
     {
         $services = \App\Models\Service::where('server_id', $server->id)
-            ->where('status', 'Active')
+            ->where('status', 'active')
             ->get();
 
         $updated = 0;
