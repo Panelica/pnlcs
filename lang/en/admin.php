@@ -337,7 +337,7 @@ return [
     "clients.type_note" => 'Type a note...',
     "clients.type_your_note" => 'Type your note...',
     "clients.unpaid_invoices" => 'Unpaid Invoices',
-    "clients.update_client" => 'Update Client',
+    "clients.update_client" => 'Update Client',\n    "clients.active" => "Active",\n    "clients.inactive" => "Inactive",\n    "clients.closed" => "Closed",\n    "clients.status_label" => "Status",\n    "clients.group_label" => "Group",
     "closed" => 'Closed',
     "config.languages.ai_settings" => 'AI Translation Settings',
     "config.languages.ai_translate_confirm" => 'AI translate all missing keys for :name?',
