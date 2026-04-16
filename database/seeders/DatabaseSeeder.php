@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             EmailTemplateSeeder::class,
             DomainPricingSeeder::class,
             HomepageSectionSeeder::class,
+            LanguageSeeder::class,
+            TranslationSeeder::class,
         ]);
     }
 
