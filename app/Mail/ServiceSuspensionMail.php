@@ -9,8 +9,9 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class ServiceSuspensionMail extends Mailable
+class ServiceSuspensionMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

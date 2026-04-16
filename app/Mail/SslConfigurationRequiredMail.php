@@ -8,8 +8,9 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class SslConfigurationRequiredMail extends Mailable
+class SslConfigurationRequiredMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 

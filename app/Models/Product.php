@@ -5,8 +5,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model {
     use HasFactory, \Illuminate\Database\Eloquent\SoftDeletes;
-    protected $fillable = ["type", "group_id", "name", "slug", "description", "hidden", "show_domain_options", "is_featured", "retired", "pay_type", "auto_setup", "server_type", "server_group_id", "stock_control", "stock_qty", "welcome_email_template", "sort_order", "config_options", "tax", "ssl_module"];
-    protected function casts(): array { return ["hidden" => "boolean", "is_featured" => "boolean", "retired" => "boolean", "stock_control" => "boolean", "tax" => "boolean", "config_options" => "array"]; }
+    protected $fillable = ["type", "group_id", "name", "slug", "description", "hidden", "show_domain_options", "is_featured", "retired", "pay_type", "auto_setup", "server_type", "server_group_id", "stock_control", "stock_qty", "welcome_email_template", "sort_order", "config_options", "tax", "ssl_module", "overage_enabled", "overage_disk_rate", "overage_bw_rate"];
+    protected function casts(): array { return ["hidden" => "boolean", "is_featured" => "boolean", "retired" => "boolean", "stock_control" => "boolean", "tax" => "boolean", "overage_enabled" => "boolean", "overage_disk_rate" => "decimal:4", "overage_bw_rate" => "decimal:4", "config_options" => "array"]; }
 
     public function group() { return $this->belongsTo(ProductGroup::class, "group_id"); }
     public function serverGroup() { return $this->belongsTo(ServerGroup::class, "server_group_id"); }

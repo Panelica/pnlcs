@@ -174,6 +174,12 @@ class InvoiceGenerationService
                 'taxed'       => $service->product->tax ?? true,
                 'due_date'    => $dueDate->toDateString(),
             ];
+
+            // Overage billing: disk
+            $overageItems = $this->calculateOverageItems($service);
+            foreach ($overageItems as $overageItem) {
+                $items[] = $overageItem;
+            }
         }
 
         $options = [
@@ -182,5 +188,63 @@ class InvoiceGenerationService
         ];
 
         return $this->invoiceService->createInvoice($client, $items, $options);
+    }
+
+    /**
+     * Calculate overage line items for a service based on disk/bandwidth usage.
+     * Only applies if the product has overage_enabled = true.
+     *
+     * @return array Line items for overage charges
+     */
+    private function calculateOverageItems(Service $service): array
+    {
+        $product = $service->product;
+        if (!$product || !$product->overage_enabled) {
+            return [];
+        }
+
+        $items = [];
+
+        // Disk overage
+        $diskUsage = (int) ($service->disk_usage ?? 0);
+        $diskLimit = (int) ($service->disk_limit ?? 0);
+        $diskRate  = (float) ($product->overage_disk_rate ?? 0);
+
+        if ($diskLimit > 0 && $diskUsage > $diskLimit && $diskRate > 0) {
+            $overageMb = $diskUsage - $diskLimit;
+            $amount = round($overageMb * $diskRate, 2);
+
+            if ($amount > 0) {
+                $items[] = [
+                    'type'        => 'Overage',
+                    'rel_id'      => $service->id,
+                    'description' => "Disk Overage: {$overageMb} MB over {$diskLimit} MB limit @ \${$diskRate}/MB — {$service->domain}",
+                    'amount'      => $amount,
+                    'taxed'       => $product->tax ?? true,
+                ];
+            }
+        }
+
+        // Bandwidth overage
+        $bwUsage = (int) ($service->bw_usage ?? 0);
+        $bwLimit = (int) ($service->bw_limit ?? 0);
+        $bwRate  = (float) ($product->overage_bw_rate ?? 0);
+
+        if ($bwLimit > 0 && $bwUsage > $bwLimit && $bwRate > 0) {
+            $overageMb = $bwUsage - $bwLimit;
+            $amount = round($overageMb * $bwRate, 2);
+
+            if ($amount > 0) {
+                $items[] = [
+                    'type'        => 'Overage',
+                    'rel_id'      => $service->id,
+                    'description' => "Bandwidth Overage: {$overageMb} MB over {$bwLimit} MB limit @ \${$bwRate}/MB — {$service->domain}",
+                    'amount'      => $amount,
+                    'taxed'       => $product->tax ?? true,
+                ];
+            }
+        }
+
+        return $items;
     }
 }

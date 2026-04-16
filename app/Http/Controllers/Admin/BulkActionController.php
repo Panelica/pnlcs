@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BulkMassMail;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Service;
@@ -29,21 +30,22 @@ class BulkActionController extends Controller
         ]);
 
         $clients = Client::whereIn("id", $validated["client_ids"])->get();
-        $sent = 0;
+        $queued = 0;
 
         foreach ($clients as $client) {
             if (!$client->email) continue;
             try {
-                Mail::raw($validated["message"], function ($mail) use ($client, $validated) {
-                    $mail->to($client->email)->subject($validated["subject"]);
-                });
-                $sent++;
+                $name = trim("{$client->first_name} {$client->last_name}") ?: $client->email;
+                Mail::to($client->email)->queue(
+                    new BulkMassMail($validated["subject"], $validated["message"], $name)
+                );
+                $queued++;
             } catch (\Throwable $e) {
-                Log::error("Bulk email failed for client #{$client->id}: " . $e->getMessage());
+                Log::error("Bulk email queue failed for client #{$client->id}: " . $e->getMessage());
             }
         }
 
-        return back()->with("success", __("admin.messages.emails_sent", ["count" => $sent]));
+        return back()->with("success", __("admin.messages.emails_sent", ["count" => $queued]));
     }
 
     public function bulkInvoice(Request $request, InvoiceService $invoiceService)

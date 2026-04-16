@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Order;
+use App\Services\FraudDetectionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -80,6 +81,16 @@ class OrderApiController extends BaseApiController
     {
         $order = Order::find($request->orderid);
         if (!$order) return $this->error('Order Not Found', 404);
-        return $this->success(['orderid' => $order->id, 'fraud' => false]);
+
+        $fraudService = app(FraudDetectionService::class);
+        $result = $fraudService->evaluate($order);
+
+        return $this->success([
+            'orderid' => $order->id,
+            'fraud' => $result['score'] >= 60,
+            'fraud_score' => $result['score'],
+            'risk_level' => $result['risk_level'],
+            'reasons' => $result['reasons'],
+        ]);
     }
 }

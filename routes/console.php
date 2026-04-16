@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Schedule;
 
+// Queue worker — process redis jobs, restart every 55s to avoid overlap
+Schedule::command("queue:work redis --stop-when-empty --max-time=55 --sleep=3 --tries=3")->everyMinute()->withoutOverlapping();
+
 Schedule::command("pnlcs:generate-invoices")->daily()->at("06:00");
 Schedule::command("pnlcs:mark-overdue")->daily()->at("06:30");
 Schedule::command("pnlcs:auto-suspend")->daily()->at("07:00");

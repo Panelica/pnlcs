@@ -9,8 +9,9 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class CancellationConfirmMail extends Mailable
+class CancellationConfirmMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
