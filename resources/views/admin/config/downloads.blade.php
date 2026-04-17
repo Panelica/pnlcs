@@ -17,7 +17,7 @@
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
         <strong>{{ $category->name }}</strong>
         <div style="display:flex;gap:6px;">
-            <form method="POST" action="{{ route('admin.config.downloads.categories.destroy', $category) }}" onsubmit="return confirm('{{ __(\"admin.downloads.confirm_delete_category\") }}')">
+            <form method="POST" action="{{ route('admin.config.downloads.categories.destroy', $category) }}" onsubmit="return confirm('{{ __('admin.downloads.confirm_delete_category') }}')">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.downloads.delete_category') }}</button>
             </form>
@@ -37,7 +37,7 @@
             <td>{{ $dl->downloads ?? 0 }}</td>
             <td><span class="badge-{{ $dl->published ? 'active' : 'draft' }}">{{ $dl->published ? __('admin.downloads.published') : __('admin.downloads.draft') }}</span></td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.downloads.destroy', $dl) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.downloads.confirm_delete_download\") }}')">
+                <form method="POST" action="{{ route('admin.config.downloads.destroy', $dl) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.downloads.confirm_delete_download') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

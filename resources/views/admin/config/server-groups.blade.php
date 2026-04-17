@@ -21,7 +21,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditSG({{ json_encode(['id'=>$group->id,'name'=>$group->name,'fill_type'=>$group->fill_type]) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.server-groups.destroy', $group) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.server_groups.confirm_delete\") }}')">
+                <form method="POST" action="{{ route('admin.config.server-groups.destroy', $group) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.server_groups.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

@@ -25,7 +25,7 @@
             <td><span class="badge-{{ $tld->enabled ? 'active' : 'suspended' }}">{{ $tld->enabled ? __('common.status.enabled') : __('common.status.disabled') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs" onclick="openEditTLD({{ json_encode($tld) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.domain-pricing.destroy', $tld) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.domain_pricing.confirm_delete\") }}')">
+                <form method="POST" action="{{ route('admin.config.domain-pricing.destroy', $tld) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.domain_pricing.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

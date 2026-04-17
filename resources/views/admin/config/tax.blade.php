@@ -24,7 +24,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditTax({{ json_encode(['id'=>$tax->id,'name'=>$tax->name,'rate'=>$tax->rate,'country'=>$tax->country,'state'=>$tax->state,'level'=>$tax->level,'compound'=>$tax->compound]) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.tax.destroy', $tax) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.tax.confirm_delete\") }}')">
+                <form method="POST" action="{{ route('admin.config.tax.destroy', $tax) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.tax.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

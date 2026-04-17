@@ -25,7 +25,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditTS({{ json_encode(['id'=>$status->id,'title'=>$status->title,'color'=>$status->color,'show_client'=>$status->show_client,'order'=>$status->order]) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.ticket-statuses.destroy', $status) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.ticket_statuses.confirm_delete\") }}')">
+                <form method="POST" action="{{ route('admin.config.ticket-statuses.destroy', $status) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.ticket_statuses.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

@@ -22,7 +22,7 @@
             <td style="font-size:12px;">{{ $promo->expiry_date?->format('d M Y') ?? __('admin.promotions.never') }}</td>
             <td><span class="badge-{{ $promo->active ? 'active' : 'suspended' }}">{{ $promo->active ? __('common.status.active') : __('common.status.inactive') }}</span></td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.promotions.destroy', $promo) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.promotions.confirm_delete\") }}')">
+                <form method="POST" action="{{ route('admin.config.promotions.destroy', $promo) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.promotions.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

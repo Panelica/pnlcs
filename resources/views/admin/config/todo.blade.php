@@ -43,7 +43,7 @@
                     <button type="submit" class="btn btn-success btn-xs">{{ __('admin.todo.complete') }}</button>
                 </form>
                 @endif
-                <form method="POST" action="{{ route('admin.config.todo.destroy', $todo) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.todo.confirm_delete\") }}')">
+                <form method="POST" action="{{ route('admin.config.todo.destroy', $todo) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.todo.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

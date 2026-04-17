@@ -23,7 +23,7 @@
             <td><span class="badge-{{ strtolower($quote->stage ?? 'draft') }}">{{ $quote->stage ?? 'Draft' }}</span></td>
             <td style="text-align:right;">
                 <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
-                <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" style="display:inline;" onsubmit="return confirm('{{ __(\"admin.quotes.confirm_delete\") }}')">
+                <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.quotes.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

@@ -36,13 +36,14 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
         Route::get("clients", [ClientController::class, "index"])->name("clients.index");
         Route::get("clients/export/csv", [ClientController::class, "exportCsv"])->name("clients.export");
     });
-    Route::middleware("admin.permission:view_clients")->group(function () {
-        Route::get("clients/{client}", [ClientController::class, "show"])->name("clients.show");
-    });
     Route::middleware("admin.permission:create_clients")->group(function () {
         Route::get("clients/create", [ClientController::class, "create"])->name("clients.create");
         Route::post("clients", [ClientController::class, "store"])->name("clients.store");
     });
+    Route::middleware("admin.permission:view_clients")->group(function () {
+        Route::get("clients/{client}", [ClientController::class, "show"])->name("clients.show");
+    });
+    
     Route::middleware("admin.permission:edit_clients")->group(function () {
         Route::get("clients/{client}/edit", [ClientController::class, "edit"])->name("clients.edit");
         Route::put("clients/{client}", [ClientController::class, "update"])->name("clients.update");
@@ -94,14 +95,15 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
         Route::get("invoices", [InvoiceController::class, "index"])->name("invoices.index");
         Route::get("invoices/export/csv", [InvoiceController::class, "exportCsv"])->name("invoices.export");
     });
-    Route::middleware("admin.permission:view_invoices")->group(function () {
-        Route::get("invoices/{invoice}", [InvoiceController::class, "show"])->name("invoices.show");
-        Route::get("invoices/{invoice}/pdf", [InvoiceController::class, "downloadPdf"])->name("invoices.pdf");
-    });
     Route::middleware("admin.permission:create_invoices")->group(function () {
         Route::get("invoices/create", [InvoiceController::class, "create"])->name("invoices.create");
         Route::post("invoices", [InvoiceController::class, "store"])->name("invoices.store");
     });
+    Route::middleware("admin.permission:view_invoices")->group(function () {
+        Route::get("invoices/{invoice}", [InvoiceController::class, "show"])->name("invoices.show");
+        Route::get("invoices/{invoice}/pdf", [InvoiceController::class, "downloadPdf"])->name("invoices.pdf");
+    });
+    
     Route::middleware("admin.permission:manage_invoices")->group(function () {
         Route::post("invoices/{invoice}/mark-paid", [InvoiceController::class, "markPaid"])->name("invoices.mark-paid");
         Route::post("invoices/{invoice}/cancel", [InvoiceController::class, "cancel"])->name("invoices.cancel");

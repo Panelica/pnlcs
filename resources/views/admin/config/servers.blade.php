@@ -31,7 +31,7 @@
                     <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.test') }}</button>
                 </form>
                 <button type="button" class="btn btn-default btn-xs" onclick="editServer({{ $server->id }},{{ json_encode($server->name) }},{{ json_encode($server->hostname) }},{{ json_encode($server->ip_address) }},{{ json_encode($server->type) }},{{ (int)($server->port ?? 8443) }},{{ json_encode($server->username) }},{{ (int)($server->max_accounts ?? 500) }},{{ json_encode($server->nameserver1 ?? '') }},{{ json_encode($server->nameserver2 ?? '') }},{{ $server->active ? 'true' : 'false' }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.servers.destroy', $server) }}" style="display:inline;" onsubmit="return confirm('{{ __(\'admin.servers.confirm_delete\') }}')">
+                <form method="POST" action="{{ route('admin.config.servers.destroy', $server) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.servers.confirm_delete') }}')">
                     @csrf @method("DELETE")
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
