@@ -511,6 +511,22 @@ Please keep in mind:
 
 ---
 
+## Support & Community
+
+Need help, want to report a bug, or have a feature request?
+
+- 🐛 **Bug reports & feature requests** — [GitHub Issues](https://github.com/Panelica/pnlcs/issues)
+- 💬 **Community forum** — [forum.panelica.com](https://forum.panelica.com)
+- 📧 **Email** — [info@panelica.com](mailto:info@panelica.com)
+- 🌐 **Main site** — [panelica.com](https://panelica.com)
+- 🔒 **Security disclosures** — [security@panelica.com](mailto:security@panelica.com) *(please do not open public issues for security)*
+
+We're happy to help from the forum or by email, but since this is a side
+project your patience is appreciated. For urgent matters, the forum tends
+to get the fastest community response.
+
+---
+
 ## Credits
 
 - **Panelica Server Management Panel** team — initial development and
