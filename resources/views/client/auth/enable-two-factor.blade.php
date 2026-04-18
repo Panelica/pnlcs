@@ -14,16 +14,16 @@
         <p style="margin-bottom:16px;">{{ __('client.auth.scan_qr_code') }}</p>
 
         <div style="text-align:center;margin:20px 0;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode(\$qrUrl) }}" alt="QR Code" style="border:4px solid var(--border,#eee);border-radius:8px;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($qrUrl) }}" alt="QR Code" style="border:4px solid var(--border,#eee);border-radius:8px;">
         </div>
 
         <p style="text-align:center;font-size:13px;color:var(--muted);">{{ __('client.auth.or_enter_manually') }}</p>
         <div style="text-align:center;margin-bottom:20px;">
-            <code style="font-size:16px;background:var(--bg-alt,#f5f5f5);padding:8px 16px;border-radius:6px;letter-spacing:2px;">{{ \$secret }}</code>
+            <code style="font-size:16px;background:var(--bg-alt,#f5f5f5);padding:8px 16px;border-radius:6px;letter-spacing:2px;">{{ $secret }}</code>
         </div>
 
-        @if(\$errors->any())
-        <div class="pn-alert pn-alert-danger" style="margin-bottom:16px;">{{ \$errors->first() }}</div>
+        @if($errors->any())
+        <div class="pn-alert pn-alert-danger" style="margin-bottom:16px;">{{ $errors->first() }}</div>
         @endif
 
         <form method="POST" action="{{ route('client.2fa.enable') }}">
