@@ -1,0 +1,10 @@
+{
+    "name": "gogetssl",
+    "type": "ssl",
+    "version": "1.0.0",
+    "display_name": "GoGetSSL",
+    "description": "GoGetSSL API integration for SSL certificate provisioning. Supports Sectigo, DigiCert, RapidSSL, GeoTrust, Thawte certificates with sandbox mode.",
+    "author": {
+        "name": "PNLCS"
+    }
+}

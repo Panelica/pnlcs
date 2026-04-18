@@ -1,0 +1,50 @@
+/* ═══════════════════════════════════════
+   RTL (Right-to-Left) Support
+   Loaded conditionally for ar, fa, he
+   ═══════════════════════════════════════ */
+
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+[dir="rtl"] .sidebar { left: auto; right: 0; border-right: none; border-left: 1px solid #e5e7eb; }
+[dir="rtl"] .sidebar + .contentarea { margin-left: 0; margin-right: 225px; border-left: none; border-right: 1px solid #e5e7eb; }
+[dir="rtl"] .sidebar.collapsed + .contentarea { margin-right: 0; }
+
+/* Navbar */
+[dir="rtl"] .navbar-collapse ul li { float: right; }
+[dir="rtl"] .nav-right-items { float: left; }
+[dir="rtl"] .dropdown-menu { left: auto; right: 0; }
+
+/* Tables */
+[dir="rtl"] .data-table th,
+[dir="rtl"] .data-table td,
+[dir="rtl"] .pn-table th,
+[dir="rtl"] .pn-table td { text-align: right; }
+
+/* Forms */
+[dir="rtl"] .form-control { text-align: right; }
+[dir="rtl"] select.form-control { padding-right: 13px; padding-left: 30px; }
+
+/* Buttons */
+[dir="rtl"] .btn { flex-direction: row-reverse; }
+[dir="rtl"] .btn svg,
+[dir="rtl"] .btn i { margin-right: 0; margin-left: 4px; }
+
+/* Margins & Paddings flip */
+[dir="rtl"] .ml-auto { margin-left: 0 !important; margin-right: auto !important; }
+[dir="rtl"] .mr-auto { margin-right: 0 !important; margin-left: auto !important; }
+
+/* Sidebar toggle */
+[dir="rtl"] .sidebar-toggle-btn { left: auto; right: 16px; }
+[dir="rtl"] .sidebar.collapsed ~ .sidebar-toggle-btn { right: 8px; }
+
+/* Card body flush */
+[dir="rtl"] .page-header { flex-direction: row-reverse; }
+
+/* Client layout */
+[dir="rtl"] .pn-nav { flex-direction: row-reverse; }
+[dir="rtl"] .pn-nav-right { margin-left: 0; margin-right: auto; }
+[dir="rtl"] .pn-dropdown { left: 0; right: auto; }
+[dir="rtl"] .pn-back svg { transform: rotate(180deg); }

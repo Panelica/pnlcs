@@ -1,0 +1,38 @@
+{
+    "name": "Arctic",
+    "slug": "arctic",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Ice blue theme — crisp arctic design, clean lines, and a refreshingly minimal interface.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#0c4a6e",
+        "accent": "#38bdf8",
+        "nav_bg": "#082f49",
+        "hero_bg_start": "#020e1a",
+        "hero_bg_mid": "#071e34",
+        "hero_bg_end": "#051524",
+        "welcome_accent": "#38bdf8",
+        "footer_bg": "#082f49"
+    },
+    "dark_colors": {
+        "body_bg": "#020e1a",
+        "card_bg": "#0a2540",
+        "text_color": "#bae6fd",
+        "heading_color": "#f0f9ff",
+        "muted_color": "#7dd3fc",
+        "border_color": "#0c4a6e",
+        "sidebar_bg": "#0a2540",
+        "sidebar_text": "#7dd3fc",
+        "input_bg": "#0a2540",
+        "input_border": "#0369a1",
+        "table_header_bg": "#0a2540",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Manrope",
+        "heading": "Manrope"
+    }
+}

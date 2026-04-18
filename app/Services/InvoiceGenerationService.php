@@ -1,0 +1,250 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Invoice;
+use App\Models\Promotion;
+use App\Models\Service;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class InvoiceGenerationService
+{
+    public function __construct(
+        protected InvoiceService $invoiceService
+    ) {}
+
+    /**
+     * Scan services where next_due_date is within the generation window,
+     * group by client, and create one invoice per client for all due items.
+     *
+     * @return array{generated: int, skipped: int, errors: int, invoice_ids: int[]}
+     */
+    public function generateDueInvoices(): array
+    {
+        $daysAhead = (int) config('billing.invoice_days_before_due', 14);
+        $cutoff    = now()->addDays($daysAhead)->endOfDay();
+
+        // Only active services that are due for renewal and not already invoiced recently
+        $services = Service::with('client', 'product')
+            ->where('status', 'Active')
+            ->whereNotNull('next_due_date')
+            ->where('next_due_date', '<=', $cutoff)
+            ->whereHas('client')
+            ->get();
+
+        $grouped  = $services->groupBy('client_id');
+        $summary  = ['generated' => 0, 'skipped' => 0, 'errors' => 0, 'invoice_ids' => []];
+
+        foreach ($grouped as $clientId => $clientServices) {
+            $client = $clientServices->first()->client;
+
+            if (!$client) {
+                $summary['skipped']++;
+                continue;
+            }
+
+            try {
+                $invoice = $this->generateForServices($client, $clientServices->all());
+
+                if ($invoice) {
+                    $summary['generated']++;
+                    $summary['invoice_ids'][] = $invoice->id;
+                } else {
+                    $summary['skipped']++;
+                }
+            } catch (\Throwable $e) {
+                Log::error('Invoice generation failed for client ' . $clientId . ': ' . $e->getMessage());
+                $summary['errors']++;
+            }
+        }
+
+        return $summary;
+    }
+
+    /**
+     * Generate an invoice for a specific service.
+     */
+    public function generateForService(Service $service): ?Invoice
+    {
+        $service->loadMissing('client', 'product');
+
+        if (!$service->client) {
+            return null;
+        }
+
+        return $this->generateForServices($service->client, [$service]);
+    }
+
+    /**
+     * Apply a promotion code to an invoice.
+     * Validates the code, applies the discount, and increments usage counter.
+     *
+     * @return bool True if promotion was applied successfully.
+     */
+    public function applyPromotion(Invoice $invoice, string $promoCode): bool
+    {
+        $promo = Promotion::where('code', $promoCode)->first();
+
+        if (!$promo || !$promo->isValid()) {
+            return false;
+        }
+
+        $invoice->loadMissing('items');
+
+        return DB::transaction(function () use ($invoice, $promo) {
+            $subtotal = (float) $invoice->subtotal;
+
+            if ($subtotal <= 0) {
+                return false;
+            }
+
+            // Calculate discount amount
+            $discount = match ($promo->type) {
+                'percentage' => round($subtotal * ($promo->value / 100), 2),
+                'fixed'      => min((float) $promo->value, $subtotal),
+                default      => 0.0,
+            };
+
+            if ($discount <= 0) {
+                return false;
+            }
+
+            // Apply as credit on the invoice
+            $newCredit = (float) $invoice->credit + $discount;
+            $newTotal  = max(0, $subtotal + (float) $invoice->tax + (float) $invoice->tax2 - $newCredit);
+
+            $invoice->update([
+                'credit'     => $newCredit,
+                'total'      => $newTotal,
+                'notes'      => trim(($invoice->notes ?? '') . "\nPromo applied: {$promo->code} (-\${$discount})"),
+            ]);
+
+            // Increment promo usage counter
+            $promo->increment('uses');
+
+            return true;
+        });
+    }
+
+    /**
+     * Mark overdue invoices (unpaid and past due date).
+     *
+     * @return int Number of invoices marked as Overdue.
+     */
+    public function markOverdueInvoices(): int
+    {
+        return Invoice::where('status', 'Unpaid')
+            ->whereNotNull('due_date')
+            ->where('due_date', '<', now()->startOfDay())
+            ->update(['status' => 'Overdue']);
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Build line items from a list of services and create a single invoice.
+     *
+     * @param  Service[]  $services
+     */
+    private function generateForServices(\App\Models\Client $client, array $services): ?Invoice
+    {
+        if (empty($services)) {
+            return null;
+        }
+
+        $items = [];
+
+        foreach ($services as $service) {
+            $service->loadMissing('product');
+            $productName = $service->product->name ?? 'Hosting Service';
+            $billingCycle = $service->billing_cycle ?? 'Monthly';
+            $dueDate = $service->next_due_date instanceof Carbon
+                ? $service->next_due_date
+                : Carbon::parse($service->next_due_date);
+
+            $items[] = [
+                'type'        => 'Hosting',
+                'rel_id'      => $service->id,
+                'description' => "{$productName} ({$billingCycle}) — {$service->domain} — Due: {$dueDate->format('d M Y')}",
+                'amount'      => (float) $service->amount,
+                'taxed'       => $service->product->tax ?? true,
+                'due_date'    => $dueDate->toDateString(),
+            ];
+
+            // Overage billing: disk
+            $overageItems = $this->calculateOverageItems($service);
+            foreach ($overageItems as $overageItem) {
+                $items[] = $overageItem;
+            }
+        }
+
+        $options = [
+            'due_date' => now()->addDays((int) config('billing.invoice_due_days', 14))->toDateString(),
+            'notes'    => 'Auto-generated renewal invoice.',
+        ];
+
+        return $this->invoiceService->createInvoice($client, $items, $options);
+    }
+
+    /**
+     * Calculate overage line items for a service based on disk/bandwidth usage.
+     * Only applies if the product has overage_enabled = true.
+     *
+     * @return array Line items for overage charges
+     */
+    private function calculateOverageItems(Service $service): array
+    {
+        $product = $service->product;
+        if (!$product || !$product->overage_enabled) {
+            return [];
+        }
+
+        $items = [];
+
+        // Disk overage
+        $diskUsage = (int) ($service->disk_usage ?? 0);
+        $diskLimit = (int) ($service->disk_limit ?? 0);
+        $diskRate  = (float) ($product->overage_disk_rate ?? 0);
+
+        if ($diskLimit > 0 && $diskUsage > $diskLimit && $diskRate > 0) {
+            $overageMb = $diskUsage - $diskLimit;
+            $amount = round($overageMb * $diskRate, 2);
+
+            if ($amount > 0) {
+                $items[] = [
+                    'type'        => 'Overage',
+                    'rel_id'      => $service->id,
+                    'description' => "Disk Overage: {$overageMb} MB over {$diskLimit} MB limit @ \${$diskRate}/MB — {$service->domain}",
+                    'amount'      => $amount,
+                    'taxed'       => $product->tax ?? true,
+                ];
+            }
+        }
+
+        // Bandwidth overage
+        $bwUsage = (int) ($service->bw_usage ?? 0);
+        $bwLimit = (int) ($service->bw_limit ?? 0);
+        $bwRate  = (float) ($product->overage_bw_rate ?? 0);
+
+        if ($bwLimit > 0 && $bwUsage > $bwLimit && $bwRate > 0) {
+            $overageMb = $bwUsage - $bwLimit;
+            $amount = round($overageMb * $bwRate, 2);
+
+            if ($amount > 0) {
+                $items[] = [
+                    'type'        => 'Overage',
+                    'rel_id'      => $service->id,
+                    'description' => "Bandwidth Overage: {$overageMb} MB over {$bwLimit} MB limit @ \${$bwRate}/MB — {$service->domain}",
+                    'amount'      => $amount,
+                    'taxed'       => $product->tax ?? true,
+                ];
+            }
+        }
+
+        return $items;
+    }
+}

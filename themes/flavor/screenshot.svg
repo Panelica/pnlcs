@@ -1,0 +1,29 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fhero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="50%" stop-color="#27272a"/>
+      <stop offset="100%" stop-color="#1c1917"/>
+    </linearGradient>
+    <linearGradient id="forange" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="100" fill="#18181b" opacity="0.95"/>
+  <text x="40" y="60" fill="white" font-family="Plus Jakarta Sans,sans-serif" font-size="28" font-weight="900">PNLCS</text>
+  <circle cx="135" cy="55" r="5" fill="#f97316"/>
+  <rect y="100" width="1200" height="400" fill="url(#fhero)"/>
+  <circle cx="900" cy="300" r="120" fill="#f97316" opacity="0.08"/>
+  <circle cx="850" cy="250" r="80" fill="#ea580c" opacity="0.06"/>
+  <text x="100" y="260" fill="white" font-family="Plus Jakarta Sans,sans-serif" font-size="42" font-weight="900">Launch Your Digital Presence</text>
+  <text x="100" y="310" fill="rgba(255,255,255,0.5)" font-family="Plus Jakarta Sans,sans-serif" font-size="18">Bold orange theme with glassmorphism and particle effects</text>
+  <rect x="100" y="340" width="180" height="48" rx="10" fill="url(#forange)"/>
+  <text x="130" y="370" fill="white" font-family="Plus Jakarta Sans,sans-serif" font-size="15" font-weight="700">Explore Plans</text>
+  <rect y="500" width="1200" height="200" fill="#fafaf9"/>
+  <rect x="80" y="530" width="320" height="140" rx="16" fill="rgba(255,255,255,0.7)" stroke="#e4e4e7"/>
+  <rect x="440" y="530" width="320" height="140" rx="16" fill="rgba(255,255,255,0.7)" stroke="#e4e4e7"/>
+  <rect x="800" y="530" width="320" height="140" rx="16" fill="rgba(255,255,255,0.7)" stroke="#e4e4e7"/>
+  <rect y="700" width="1200" height="100" fill="#18181b"/>
+  <text x="40" y="760" fill="rgba(255,255,255,0.5)" font-family="Plus Jakarta Sans,sans-serif" font-size="13">© 2026 PNLCS. All rights reserved.</text>
+</svg>

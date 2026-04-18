@@ -1,0 +1,199 @@
+/* ===== PANELICA THEME CSS ===== */
+/* Official Panelica theme — deep blue (#405189) with teal accents (#0ab39c) */
+/* Matches the Panelica server management panel branding exactly */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* Font override */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.section-title, .hero__title, .hero__title-sub, h1, h2, h3, h4 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Navigation: Panelica deep blue */
+.main-nav {
+    background: rgba(64, 81, 137, 0.95) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+.main-nav.scrolled {
+    background: rgba(64, 81, 137, 0.98) !important;
+    box-shadow: 0 4px 30px rgba(64, 81, 137, 0.3) !important;
+}
+
+/* Top bar */
+.top-bar {
+    background: rgba(42, 53, 91, 0.95) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+/* Buttons: teal gradient (Panelica success color) */
+.btn-primary {
+    background: linear-gradient(135deg, #0ab39c, #099885) !important;
+    box-shadow: 0 4px 15px rgba(10, 179, 156, 0.3) !important;
+    border: none !important;
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #099885, #088a76) !important;
+    box-shadow: 0 8px 25px rgba(10, 179, 156, 0.4) !important;
+}
+.btn-accent {
+    background: linear-gradient(135deg, #405189, #364374) !important;
+    box-shadow: 0 4px 15px rgba(64, 81, 137, 0.3) !important;
+}
+.btn-accent:hover {
+    box-shadow: 0 8px 25px rgba(64, 81, 137, 0.45) !important;
+}
+
+/* Cards: clean white with subtle border */
+.plan-card, .infra-card, .testimonial-card, .vps-card, .faq__item {
+    background: #ffffff !important;
+    border: 1px solid #e9ebec !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+}
+.plan-card:hover, .infra-card:hover, .testimonial-card:hover, .vps-card:hover {
+    box-shadow: 0 12px 40px rgba(64, 81, 137, 0.08) !important;
+    transform: translateY(-4px) !important;
+    border-color: rgba(64, 81, 137, 0.15) !important;
+}
+
+/* Hero badge */
+.hero__badge {
+    background: rgba(10, 179, 156, 0.12) !important;
+    border-color: rgba(10, 179, 156, 0.25) !important;
+    color: #0ab39c !important;
+}
+
+/* Hero title accent — teal highlight */
+.hero__title span {
+    color: #0ab39c !important;
+}
+
+/* Hero stats */
+.hero__stat {
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    background: rgba(255,255,255,0.08) !important;
+}
+.hero__stat i {
+    color: #0ab39c !important;
+}
+
+/* Callout cards */
+.hero__callout {
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+}
+.hero__callout--1 i { color: #0ab39c !important; }
+.hero__callout--2 i { color: #299cdb !important; }
+
+/* Plan card badge — Panelica blue */
+.plan-card__badge {
+    background: #405189 !important;
+}
+.plan-card__btn--primary {
+    background: linear-gradient(135deg, #0ab39c, #099885) !important;
+}
+.plan-card__discount {
+    background: rgba(10, 179, 156, 0.1) !important;
+    color: #099885 !important;
+}
+
+/* Hosting promo gradient */
+.hosting-plans__promo {
+    background: linear-gradient(135deg, #405189, #2d3766) !important;
+}
+.vps__visual {
+    background: linear-gradient(135deg, #405189, #0ab39c) !important;
+}
+.cta-banner {
+    background: linear-gradient(135deg, #1a2140, #2d3766, #1e2850) !important;
+}
+.stats {
+    background: linear-gradient(135deg, #1a2140, #2d3766, #1e2850) !important;
+}
+
+/* Mega menu promo */
+.main-nav__mega-promo {
+    background: linear-gradient(135deg, #405189, #0ab39c) !important;
+}
+
+/* Nav login hover */
+.main-nav__login:hover {
+    border-color: #0ab39c !important;
+    background: #0ab39c !important;
+    color: #fff !important;
+}
+
+/* Brand dot — teal */
+.main-nav__brand-dot, .footer__brand-dot {
+    background: #0ab39c !important;
+}
+
+/* Dropdown link hover */
+.main-nav__dropdown-link:hover { color: #405189 !important; }
+.main-nav__dropdown-link i { color: #405189 !important; }
+
+/* Footer */
+.footer__contact-item i { color: #0ab39c !important; }
+
+/* Promo cards — Panelica palette */
+.promo-card--1 { background: linear-gradient(135deg, #405189, #6b7caa) !important; }
+.promo-card--2 { background: linear-gradient(135deg, #0ab39c, #099885) !important; }
+.promo-card--3 { background: linear-gradient(135deg, #299cdb, #2388c1) !important; }
+.promo-card--4 { background: linear-gradient(135deg, #1a2140, #2d3766) !important; }
+
+/* Stats accent */
+.stats__number span { color: #0ab39c !important; }
+
+/* Infra card icons — Panelica palette */
+.infra-card__icon--1 { background: rgba(64, 81, 137, 0.1) !important; color: #405189 !important; }
+.infra-card__icon--2 { background: rgba(10, 179, 156, 0.1) !important; color: #0ab39c !important; }
+.infra-card__icon--3 { background: rgba(41, 156, 219, 0.1) !important; color: #299cdb !important; }
+.infra-card__icon--4 { background: rgba(247, 184, 75, 0.1) !important; color: #f7b84b !important; }
+.infra-card__icon--5 { background: rgba(240, 101, 72, 0.1) !important; color: #f06548 !important; }
+.infra-card__icon--6 { background: rgba(64, 81, 137, 0.1) !important; color: #405189 !important; }
+
+/* VPS card badge */
+.vps-card__badge--popular { background: #405189 !important; }
+.vps-card__badge--value { background: #0ab39c !important; }
+
+/* Domain search */
+.domain-search__bar:focus-within {
+    border-color: #405189 !important;
+    box-shadow: 0 8px 30px rgba(64, 81, 137, 0.12) !important;
+}
+.domain-search__btn {
+    background: linear-gradient(135deg, #0ab39c, #099885) !important;
+}
+.domain-search__ext:hover {
+    border-color: #405189 !important;
+    box-shadow: 0 4px 20px rgba(64, 81, 137, 0.1) !important;
+}
+
+/* Testimonial avatars */
+.testimonial-card__avatar--1 { background: #405189 !important; }
+.testimonial-card__avatar--2 { background: #0ab39c !important; }
+.testimonial-card__avatar--3 { background: #299cdb !important; }
+
+/* Section backgrounds */
+.hosting-plans, .faq, .vps {
+    background: #f3f3f9 !important;
+}
+
+/* Scrollbar — Panelica blue tint */
+::-webkit-scrollbar-thumb {
+    background: rgba(64, 81, 137, 0.3);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(64, 81, 137, 0.5);
+}
+
+/* Selection highlight */
+::selection {
+    background: rgba(64, 81, 137, 0.2);
+    color: #212529;
+}

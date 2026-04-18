@@ -1,0 +1,38 @@
+{
+    "name": "Forest",
+    "slug": "forest",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Natural green theme — earthy tones, organic feel, and warm, inviting design.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#15803d",
+        "accent": "#84cc16",
+        "nav_bg": "#14532d",
+        "hero_bg_start": "#031a09",
+        "hero_bg_mid": "#052e10",
+        "hero_bg_end": "#041408",
+        "welcome_accent": "#84cc16",
+        "footer_bg": "#14532d"
+    },
+    "dark_colors": {
+        "body_bg": "#041408",
+        "card_bg": "#0a2615",
+        "text_color": "#bbf7d0",
+        "heading_color": "#f0fdf4",
+        "muted_color": "#86efac",
+        "border_color": "#14532d",
+        "sidebar_bg": "#0a2615",
+        "sidebar_text": "#86efac",
+        "input_bg": "#0a2615",
+        "input_border": "#166534",
+        "table_header_bg": "#0a2615",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Nunito",
+        "heading": "Nunito"
+    }
+}

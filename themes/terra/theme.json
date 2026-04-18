@@ -1,0 +1,38 @@
+{
+    "name": "Terra",
+    "slug": "terra",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Warm earth-toned theme — amber and brown hues, solid ground, timeless and dependable.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#92400e",
+        "accent": "#d97706",
+        "nav_bg": "#78350f",
+        "hero_bg_start": "#1a0f02",
+        "hero_bg_mid": "#2d1a06",
+        "hero_bg_end": "#221104",
+        "welcome_accent": "#d97706",
+        "footer_bg": "#78350f"
+    },
+    "dark_colors": {
+        "body_bg": "#1a0f02",
+        "card_bg": "#2d1a06",
+        "text_color": "#fde68a",
+        "heading_color": "#fffbeb",
+        "muted_color": "#fcd34d",
+        "border_color": "#78350f",
+        "sidebar_bg": "#2d1a06",
+        "sidebar_text": "#fcd34d",
+        "input_bg": "#2d1a06",
+        "input_border": "#92400e",
+        "table_header_bg": "#2d1a06",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "Merriweather Sans",
+        "heading": "Merriweather Sans"
+    }
+}

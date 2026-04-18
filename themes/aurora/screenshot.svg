@@ -1,0 +1,52 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="auroraHero" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f0a1e"/>
+      <stop offset="40%" stop-color="#1e1046"/>
+      <stop offset="100%" stop-color="#0d1a2d"/>
+    </linearGradient>
+    <linearGradient id="auroraGlow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#34d399" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="auroraBtn" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <!-- Nav -->
+  <rect width="1200" height="80" fill="#0f0a1e"/>
+  <text x="40" y="50" fill="white" font-family="Space Grotesk,sans-serif" font-size="26" font-weight="800">PNLCS</text>
+  <circle cx="130" cy="44" r="5" fill="#34d399"/>
+  <!-- Hero -->
+  <rect y="80" width="1200" height="380" fill="url(#auroraHero)"/>
+  <!-- Aurora glow bands -->
+  <ellipse cx="600" cy="180" rx="500" ry="60" fill="url(#auroraGlow)"/>
+  <ellipse cx="500" cy="220" rx="400" ry="40" fill="#8b5cf6" opacity="0.08"/>
+  <ellipse cx="700" cy="260" rx="350" ry="30" fill="#34d399" opacity="0.06"/>
+  <!-- Hero text -->
+  <text x="100" y="250" fill="white" font-family="Space Grotesk,sans-serif" font-size="44" font-weight="800">Illuminate Your Cloud</text>
+  <text x="100" y="295" fill="rgba(255,255,255,0.5)" font-family="Space Grotesk,sans-serif" font-size="17">Aurora theme — purple-green gradients, neon accents, futuristic design</text>
+  <!-- CTA button -->
+  <rect x="100" y="320" width="180" height="46" rx="10" fill="url(#auroraBtn)"/>
+  <text x="135" y="349" fill="white" font-family="Space Grotesk,sans-serif" font-size="15" font-weight="700">Get Started</text>
+  <!-- Cards section -->
+  <rect y="460" width="1200" height="240" fill="#faf5ff"/>
+  <rect x="60" y="490" width="340" height="170" rx="16" fill="white" stroke="#e9d5ff" stroke-width="1.5"/>
+  <rect x="430" y="490" width="340" height="170" rx="16" fill="white" stroke="#e9d5ff" stroke-width="1.5"/>
+  <rect x="800" y="490" width="340" height="170" rx="16" fill="white" stroke="#e9d5ff" stroke-width="1.5"/>
+  <!-- Card accents -->
+  <circle cx="90" cy="530" r="18" fill="#ede9fe"/>
+  <circle cx="460" cy="530" r="18" fill="#d1fae5"/>
+  <circle cx="830" cy="530" r="18" fill="#cffafe"/>
+  <!-- Footer -->
+  <rect y="700" width="1200" height="100" fill="#0f0a1e"/>
+  <text x="40" y="758" fill="rgba(255,255,255,0.4)" font-family="Space Grotesk,sans-serif" font-size="13">© 2026 PNLCS. All rights reserved.</text>
+  <!-- Decorative stars -->
+  <circle cx="900" cy="120" r="2" fill="#8b5cf6" opacity="0.6"/>
+  <circle cx="950" cy="160" r="1.5" fill="#34d399" opacity="0.5"/>
+  <circle cx="1050" cy="140" r="2.5" fill="#06b6d4" opacity="0.4"/>
+  <circle cx="850" cy="180" r="1" fill="white" opacity="0.3"/>
+  <circle cx="1100" cy="200" r="2" fill="#a78bfa" opacity="0.5"/>
+</svg>

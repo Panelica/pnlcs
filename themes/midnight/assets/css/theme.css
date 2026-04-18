@@ -1,0 +1,130 @@
+/* ===== MIDNIGHT THEME CSS ===== */
+/* Overrides default styles when Midnight theme is active */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+
+/* Font override */
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.section-title, .hero__title, .hero__title-sub, h1, h2, h3, h4 {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Navigation */
+.main-nav {
+    background: rgba(15, 13, 46, 0.92) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+}
+.main-nav.scrolled {
+    background: rgba(15, 13, 46, 0.98) !important;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.4) !important;
+}
+
+/* Buttons: gradient */
+.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #1e1b4b) !important;
+    box-shadow: 0 4px 20px rgba(30, 27, 75, 0.35) !important;
+}
+.btn-primary:hover {
+    box-shadow: 0 8px 30px rgba(30, 27, 75, 0.5) !important;
+}
+.btn-accent {
+    background: linear-gradient(135deg, #6366f1, #1e1b4b) !important;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3) !important;
+}
+.btn-accent:hover {
+    box-shadow: 0 8px 30px rgba(99, 102, 241, 0.45) !important;
+}
+
+/* Cards: glassmorphism */
+.plan-card, .infra-card, .testimonial-card, .vps-card, .faq__item {
+    background: rgba(255,255,255,0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0,0,0,0.06) !important;
+    transition: all 0.3s ease !important;
+}
+.plan-card:hover, .infra-card:hover, .testimonial-card:hover, .vps-card:hover {
+    background: rgba(255,255,255,0.95) !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* Hero badge */
+.hero__badge {
+    background: rgba(99, 102, 241, 0.15) !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+    color: #6366f1 !important;
+}
+
+/* Hero title accent */
+.hero__title span {
+    color: #6366f1 !important;
+}
+
+/* Hero stats */
+.hero__stat i {
+    color: #6366f1 !important;
+}
+
+/* Callout cards */
+.hero__callout--1 i { color: #1e1b4b !important; }
+.hero__callout--2 i { color: #6366f1 !important; }
+
+/* Plan card badge */
+.plan-card__badge { background: linear-gradient(135deg, #6366f1, #1e1b4b) !important; }
+.plan-card__btn--primary {
+    background: linear-gradient(135deg, #6366f1, #1e1b4b) !important;
+}
+.plan-card__discount {
+    background: rgba(99, 102, 241, 0.1) !important;
+    color: #1e1b4b !important;
+}
+
+/* Hosting promo gradient */
+.hosting-plans__promo {
+    background: linear-gradient(135deg, #1e1b4b, #6366f1) !important;
+}
+.vps__visual {
+    background: linear-gradient(135deg, #1e1b4b, #6366f1) !important;
+}
+.cta-banner {
+    background: linear-gradient(135deg, #0f0d2e, #0f0d2e) !important;
+}
+
+/* Mega menu promo */
+.main-nav__mega-promo {
+    background: linear-gradient(135deg, #1e1b4b, #6366f1) !important;
+}
+
+/* Nav login hover */
+.main-nav__login:hover {
+    border-color: #6366f1 !important;
+    background: #6366f1 !important;
+}
+
+/* Brand dot */
+.main-nav__brand-dot, .footer__brand-dot {
+    background: #6366f1 !important;
+}
+
+/* Dropdown link hover */
+.main-nav__dropdown-link:hover { color: #1e1b4b !important; }
+.main-nav__dropdown-link i { color: #1e1b4b !important; }
+
+/* Footer contact icon */
+.footer__contact-item i { color: #6366f1 !important; }
+
+/* Promo cards */
+.promo-card--1 { background: linear-gradient(135deg, #1e1b4b, #6366f1) !important; }
+.promo-card--2 { background: linear-gradient(135deg, #0f0d2e, #0f0d2e) !important; }
+
+/* Stats accent */
+.stats__number span { color: #6366f1 !important; }
+
+/* VPS card badge */
+.vps-card__badge--popular { background: #1e1b4b !important; }
+.vps-card__badge--value { background: #6366f1 !important; }

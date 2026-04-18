@@ -1,0 +1,38 @@
+{
+    "name": "Ocean",
+    "slug": "ocean",
+    "version": "1.0.0",
+    "author": "PNLCS",
+    "description": "Deep ocean blue-cyan theme — calming gradients, fluid design, and crystal-clear navigation.",
+    "screenshot": "screenshot.svg",
+    "supports": ["dark-mode", "white-label", "section-builder"],
+    "colors": {
+        "primary": "#0369a1",
+        "accent": "#06b6d4",
+        "nav_bg": "#0c4a6e",
+        "hero_bg_start": "#001220",
+        "hero_bg_mid": "#042f4a",
+        "hero_bg_end": "#0a1929",
+        "welcome_accent": "#06b6d4",
+        "footer_bg": "#0c4a6e"
+    },
+    "dark_colors": {
+        "body_bg": "#0a1929",
+        "card_bg": "#0c2d48",
+        "text_color": "#bae6fd",
+        "heading_color": "#f0f9ff",
+        "muted_color": "#7dd3fc",
+        "border_color": "#0c3547",
+        "sidebar_bg": "#0c2d48",
+        "sidebar_text": "#7dd3fc",
+        "input_bg": "#0c2d48",
+        "input_border": "#164e63",
+        "table_header_bg": "#0c2d48",
+        "card_shadow": "rgba(0,0,0,0.4)",
+        "overlay_bg": "rgba(0,0,0,0.8)"
+    },
+    "fonts": {
+        "primary": "DM Sans",
+        "heading": "DM Sans"
+    }
+}
