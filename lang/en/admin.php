@@ -1509,4 +1509,5 @@ return [
     "clients.status_label" => 'Status',
     "clients.group_label" => 'Group',
     "tickets.ticket_num" => 'Ticket #',
+    "errors.record_not_found" => "The requested :model record was not found.",
 ];
