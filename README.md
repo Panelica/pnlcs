@@ -1,10 +1,20 @@
 <h1 align="center">PNLCS</h1>
+
 <p align="center">
-  <b>Self-hosted hosting billing platform</b> — a WHMCS-inspired alternative.
+  <b>Open-source, self-hosted hosting billing platform — a free WHMCS alternative.</b><br>
+  Client portal · invoicing · domain &amp; SSL management · support tickets · reseller hosting.
 </p>
 
 <p align="center">
-  Built on Laravel 13 · MySQL · Alpine.js · Tailwind CSS 4
+  Built with <b>Laravel 13</b> · <b>PHP 8.3+</b> · <b>MySQL 8</b> · <b>Alpine.js</b> · <b>Tailwind CSS 4</b>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Panelica/pnlcs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Panelica/pnlcs?color=blue" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.0+">
+  <a href="https://github.com/Panelica/pnlcs/stargazers"><img src="https://img.shields.io/github/stars/Panelica/pnlcs?style=social" alt="Stars"></a>
 </p>
 
 <p align="center">
@@ -18,12 +28,19 @@
 
 ---
 
-## About
+## About — Open-Source WHMCS Alternative
 
-PNLCS is a hosting billing and customer management system for web hosting
-companies, reseller hosts, and infrastructure providers. It is heavily inspired
-by **WHMCS** — most of the workflows, terminology, and module ecosystem will
-look familiar to anyone who has used WHMCS.
+**PNLCS** is a free, open-source, self-hosted **hosting billing platform**
+and **client portal** — an open alternative to WHMCS for web hosting
+companies, reseller hosts, and infrastructure providers. It covers the full
+customer lifecycle: product catalog, checkout, recurring invoicing, domain
+registration, SSL certificate management, support tickets, knowledge base,
+and affiliate tracking.
+
+If you have used WHMCS, you will feel at home: the data model, workflows,
+and module ecosystem (servers, gateways, registrars, SSL providers) are
+deliberately familiar. The difference is that PNLCS is **MIT-licensed**,
+**self-hosted**, and free to fork, study, and extend.
 
 This project is built and maintained by the **Panelica Server Management
 Panel** team in our spare time, alongside our main product. We wanted an
@@ -55,7 +72,7 @@ it helps us enormously.
 
 ---
 
-## Screenshots
+## Screenshots — Admin Panel & Client Portal
 
 ### Admin Panel
 
@@ -84,7 +101,7 @@ it helps us enormously.
 
 ---
 
-## Features
+## Hosting Billing Features
 
 ### 💼 Client Portal
 
@@ -175,7 +192,7 @@ it helps us enormously.
 
 ---
 
-## Installation
+## Self-Hosted Installation
 
 ### 1. Clone the repository
 
@@ -428,10 +445,13 @@ Always back up your database before pulling new migrations.
 
 ---
 
-## Modules
+## Modules — Servers, Payment Gateways & Domain Registrars
 
 PNLCS ships with modular **server**, **gateway**, **registrar**, and **SSL
-provider** integrations under the `modules/` directory.
+provider** integrations under the `modules/` directory. Add control-panel
+servers (cPanel, Plesk, DirectAdmin, Proxmox, Panelica), configure
+payment gateways (Stripe, PayPal, bank transfer), and connect domain
+registrars (Enom) without touching core code.
 
 | Module        | Type      | Status            |
 |---------------|-----------|-------------------|
@@ -540,3 +560,14 @@ to get the fastest community response.
 ## License
 
 Released under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+
+---
+
+<p align="center">
+  <sub>
+    <b>Keywords:</b> WHMCS alternative · open-source hosting billing · self-hosted
+    billing platform · Laravel billing · PHP client portal · hosting management
+    software · free WHMCS · invoicing system · reseller hosting software ·
+    domain management · SSL management · support ticket system · hosting CRM
+  </sub>
+</p>
