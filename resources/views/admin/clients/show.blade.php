@@ -277,7 +277,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 <div class="card" style="margin-bottom:8px;{{ $note->sticky ? 'border-left:4px solid #f0ad4e;' : '' }}">
     <div class="card-body" style="padding:10px 15px;">
         <p style="margin:0 0 6px;font-size:13px;color:#333;">{{ $note->note }}</p>
-        <span style="font-size:11px;color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? " ' &mdash; Pinned'mdash; {{ __('admin.clients.pinned') }}" : '' }}</span>
+        <span style="font-size:11px;color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
     </div>
 </div>
 @empty
