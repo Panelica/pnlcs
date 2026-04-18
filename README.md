@@ -1,58 +1,250 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PNLCS — Panelica License & Customer System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Self-hosted WHMCS alternative for hosting companies. Client portal, billing, licenses,
+domain/SSL management, ticketing, and reseller support — built on Laravel 13.
 
-## About Laravel
+**Live demo:** [hosting.panelica.com](https://hosting.panelica.com)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Software | Version |
+|----------|---------|
+| PHP      | **8.3** or **8.4** |
+| Extensions | `bcmath`, `curl`, `dom`, `fileinfo`, `gd`, `mbstring`, `mysqli`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip` |
+| MySQL    | **8.0+** (or MariaDB 10.6+) |
+| Node.js  | **18+** (for asset build) |
+| Composer | **2.x** |
+| Web server | Nginx or Apache with PHP-FPM |
 
-## Learning Laravel
+**Optional:** Redis (for faster cache/session), Postfix/SMTP relay (for real email delivery).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Installation
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 1. Clone the repository
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/Panelica/pnlcs.git
+cd pnlcs
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Install PHP dependencies
 
-## Contributing
+```bash
+composer install --no-dev --optimize-autoloader
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Create the database
 
-## Code of Conduct
+```sql
+CREATE DATABASE pnlcs CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'pnlcs'@'localhost' IDENTIFIED BY 'strong-password-here';
+GRANT ALL PRIVILEGES ON pnlcs.* TO 'pnlcs'@'localhost';
+FLUSH PRIVILEGES;
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Configure `.env`
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Edit `.env` and set **at minimum**:
+
+```ini
+APP_URL=https://your-domain.com
+APP_ENV=production
+APP_DEBUG=false
+
+DB_DATABASE=pnlcs
+DB_USERNAME=pnlcs
+DB_PASSWORD=strong-password-here
+
+# Uncomment if using Unix socket instead of TCP
+# DB_SOCKET=/var/run/mysqld/mysqld.sock
+
+MAIL_FROM_ADDRESS="noreply@your-domain.com"
+```
+
+### 5. Generate application key
+
+```bash
+php artisan key:generate
+```
+
+### 6. Run migrations and seed default data
+
+```bash
+php artisan migrate --force
+php artisan db:seed --force
+```
+
+This creates:
+- Default admin: **`admin` / `admin123`** — change immediately after first login
+- 4 currencies (USD, EUR, GBP, TRY)
+- Ticket departments & statuses
+- 2,232 translation keys (English)
+- 30 language entries (English active by default)
+- Default homepage sections, email templates, domain pricing
+
+### 7. Build frontend assets
+
+```bash
+npm install
+npm run build
+```
+
+### 8. Create storage symlink
+
+```bash
+php artisan storage:link
+```
+
+### 9. Cache configuration (production)
+
+```bash
+php artisan optimize
+```
+
+### 10. Set file permissions
+
+```bash
+chmod -R 775 storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache   # adjust user for your server
+```
+
+### 11. Configure your web server
+
+Point the document root to **`public/`** (NOT the project root).
+
+**Nginx example:**
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+
+    root /var/www/pnlcs/public;
+    index index.php;
+
+    ssl_certificate /path/to/fullchain.pem;
+    ssl_certificate_key /path/to/privkey.pem;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+}
+```
+
+### 12. Set up scheduler (cron)
+
+Add this line to your crontab (`crontab -e` as the web user):
+
+```
+* * * * * cd /var/www/pnlcs && php artisan schedule:run >> /dev/null 2>&1
+```
+
+### 13. (Optional) Set up queue worker via supervisor
+
+For email delivery and background jobs, run a queue worker:
+
+```ini
+[program:pnlcs-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /var/www/pnlcs/artisan queue:work database --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/log/pnlcs-worker.log
+```
+
+---
+
+## First Login
+
+1. Visit `https://your-domain.com/admin/login`
+2. Login with: **`admin` / `admin123`**
+3. **Change the password immediately** (My Account → Change Password)
+4. Configure general settings: Settings → General
+5. Configure mail: Settings → Email
+6. Add payment gateways: Configuration → Gateways
+
+---
+
+## Upgrading
+
+```bash
+git pull
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+npm install
+npm run build
+php artisan optimize:clear
+php artisan optimize
+```
+
+---
+
+## Modules
+
+PNLCS ships with modular **gateways**, **server** integrations, and **domain registrars**.
+
+**Payment Gateways:** Stripe, PayPal, Bank Transfer, Authorize.Net
+**Server Modules:** Panelica, cPanel, Plesk, DirectAdmin, Proxmox, Custom
+**Domain Registrars:** Enom, Manual, PandiPlus
+**SSL Providers:** GoGetSSL, Sectigo, Manual
+
+New modules can be added under `modules/` — see the existing ones as reference.
+
+---
+
+## Features
+
+- **Client Portal** — billing, services, domains, tickets, knowledge base
+- **Admin Panel** — 260+ routes across clients, orders, invoices, services, tickets, products, promotions, reports
+- **Multi-language** — 30 locales, admin-editable translations via UI
+- **Theme system** — 15 built-in themes, WordPress-style installation
+- **RBAC** — fine-grained admin permissions with full-admin override
+- **2FA** — TOTP for admin and customer portals
+- **Invoicing** — PDF generation, tax rules, promotions, coupons, recurring billing
+- **Overage billing** — disk/bandwidth usage metering (optional per-product)
+- **API** — RESTful API with key-based auth for integration
+
+---
+
+## Security
+
+- All admin routes behind `admin.auth` middleware
+- Permission middleware on 250+ admin endpoints
+- CSRF tokens on all forms
+- Rate limiting on login, 2FA, password reset
+- Webhook routes CSRF-excluded but HMAC-signed
+- SQL injection protection via Eloquent parameter binding
+
+If you find a security issue, please email **security@panelica.com** — do **not** open a public issue.
+
+---
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Released under the [MIT License](LICENSE).
+
+---
+
+## Support
+
+- **Documentation:** [docs.panelica.com/pnlcs](https://docs.panelica.com/pnlcs)
+- **Issues:** [GitHub Issues](https://github.com/Panelica/pnlcs/issues)
+- **Community:** [forum.panelica.com](https://forum.panelica.com)
+- **Commercial support:** [panelica.com/support](https://panelica.com/support)
