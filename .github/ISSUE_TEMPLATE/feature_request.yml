@@ -1,0 +1,129 @@
+name: Feature request
+description: Suggest a new feature or an improvement to an existing one.
+title: "[Feature] "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea. We read every request and use thumbs-up reactions to gauge demand.
+
+        - **Search first** — your idea may already be on file.
+        - **One idea per issue** — splitting big proposals helps us discuss them properly.
+        - **Tell us the problem first**, then your proposed solution. The "why" matters more than the "what".
+        - For **architectural / RFC-level ideas**, prefer a [Discussion](https://github.com/Panelica/pnlcs/discussions) so it can mature before turning into a tracked feature.
+
+  - type: checkboxes
+    id: prereqs
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues and discussions for the same idea.
+          required: true
+        - label: This is a feature request, not a bug or a question.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: |
+        Describe the pain point in plain language. Who hits it, when, and why does it matter?
+        A good problem statement makes the solution almost obvious.
+      placeholder: |
+        e.g. "When a customer cancels a service mid-cycle, refunds are calculated to the
+        cancellation day but the customer-facing email still shows the original full-period
+        amount. Customers email me thinking they were overcharged."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like PNLCS to behave? UI sketch, code shape, config option — whatever fits.
+      placeholder: |
+        e.g. "Add a 'pro-rated refund' toggle in Billing → Settings. When on, the cancellation
+        confirmation email shows the actual refund amount and the calculation breakdown."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this touch?
+      multiple: true
+      options:
+        - "Billing / invoices / orders"
+        - "Payments / gateways"
+        - "Domains / registrars"
+        - "Server adapters"
+        - "Tickets / support"
+        - "Customer portal"
+        - "Admin UI"
+        - "Authentication / 2FA / sessions"
+        - "Reseller features"
+        - "Themes / theming"
+        - "Translations / i18n"
+        - "Mail / notifications"
+        - "Queues / scheduled jobs"
+        - "API"
+        - "Documentation"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Workarounds you currently use, similar features in WHMCS / Blesta / HostBill / FOSSBilling, or other ways to solve the same problem.
+
+  - type: dropdown
+    id: who
+    attributes:
+      label: Who benefits most from this?
+      multiple: true
+      options:
+        - "Hosting providers (Admin / Staff)"
+        - "Resellers"
+        - "End customers"
+        - "Developers extending PNLCS (modules, themes, API consumers)"
+        - "Migration / onboarding flow"
+        - "Other"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      options:
+        - "Nice-to-have — small quality-of-life win"
+        - "Useful — would meaningfully improve my workflow"
+        - "Important — I'm losing time / money without it"
+        - "Blocking — I can't switch to / stay on PNLCS without it"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you be willing to contribute?
+      description: PNLCS is MIT-licensed and we welcome PRs. No pressure either way — just helpful for prioritisation.
+      options:
+        - "Yes, I'd open the PR myself if we agree on the approach"
+        - "Maybe, with guidance from a maintainer"
+        - "Probably not — I'm reporting the need"
+
+  - type: input
+    id: pnlcs-version
+    attributes:
+      label: PNLCS version you're using
+      placeholder: e.g. "1.4.2" or "main@abc1234"
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Mockups, links to similar features elsewhere, edge cases to consider, related issues, business impact — anything that helps us scope this.

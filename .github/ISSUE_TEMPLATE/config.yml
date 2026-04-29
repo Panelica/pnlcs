@@ -1,0 +1,20 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question (Q&A discussions)
+    url: https://github.com/Panelica/pnlcs/discussions/new?category=q-a
+    about: Got a "how do I…?" or "is this supposed to…?" question? Ask in Discussions instead of opening an issue.
+  - name: Documentation
+    url: https://github.com/Panelica/pnlcs/tree/main/docs
+    about: Most setup, deployment and module questions are covered in the docs — please check there first.
+  - name: Discussions (ideas, RFCs, show & tell)
+    url: https://github.com/Panelica/pnlcs/discussions
+    about: Open-ended ideas, design proposals, or showing off what you built with PNLCS.
+  - name: Community forum
+    url: https://forum.panelica.com
+    about: Peer-to-peer help, tips, and general discussion.
+  - name: Report a security vulnerability (private)
+    url: https://github.com/Panelica/pnlcs/security/advisories/new
+    about: Found a security issue? DO NOT open a public issue — use private reporting or email security@panelica.com.
+  - name: Commercial / paid support (Panelica panel users)
+    url: https://panelica.com/contact
+    about: PNLCS is open-source and unsupported as such. If you're a paying Panelica customer, ticket support is available via your customer portal.

@@ -1,0 +1,192 @@
+name: Bug report
+description: Something doesn't work the way it should? File a bug here.
+title: "[Bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. The more specific you are, the faster we can fix it.
+
+        - Please **search [open](https://github.com/Panelica/pnlcs/issues) and [closed](https://github.com/Panelica/pnlcs/issues?q=is%3Aissue+is%3Aclosed) issues** first — your bug may already be tracked.
+        - For **questions** ("how do I…?"), use [Discussions](https://github.com/Panelica/pnlcs/discussions) instead.
+        - For **security vulnerabilities**, **do not** post here — see [SECURITY.md](https://github.com/Panelica/pnlcs/blob/main/SECURITY.md).
+
+  - type: checkboxes
+    id: prereqs
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched existing issues and didn't find a duplicate.
+          required: true
+        - label: I'm running the latest tagged release (or `main` is fine if you're testing an unreleased build).
+          required: true
+        - label: This is a bug, not a question or a feature request.
+          required: true
+        - label: This is **not** a security vulnerability (those go to [SECURITY.md](https://github.com/Panelica/pnlcs/blob/main/SECURITY.md)).
+          required: true
+
+  - type: input
+    id: summary
+    attributes:
+      label: One-line summary
+      description: A specific title in plain English. Avoid generic phrases like "doesn't work".
+      placeholder: e.g. "Stripe webhook signature verification fails when invoice contains a coupon"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area is this about?
+      options:
+        - "Billing / invoices / orders"
+        - "Payments / gateways (Stripe, PayPal, Bank Transfer, Authorize.Net)"
+        - "Domains / registrars"
+        - "Server adapter (Panelica, cPanel, Plesk, DirectAdmin, Proxmox, Custom)"
+        - "Tickets / support"
+        - "Customer portal"
+        - "Admin UI"
+        - "Authentication / sessions / 2FA"
+        - "Reseller features"
+        - "Themes / Blade views"
+        - "Translations / i18n"
+        - "Migrations / install / upgrade"
+        - "Mail / notifications"
+        - "Queues / scheduled jobs"
+        - "API"
+        - "Other / not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Numbered steps that anyone with a fresh PNLCS install can follow.
+        Include exact menu paths, button names, or copy-pasteable commands.
+      placeholder: |
+        1. Log in as Admin
+        2. Open Billing → Invoices → Create invoice
+        3. Apply coupon "WELCOME10"
+        4. …
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened? Include exact error messages.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: How serious is it?
+      options:
+        - "Minor — annoying but I have a workaround"
+        - "Moderate — feature partly broken, blocks specific tasks"
+        - "Major — feature broken, no workaround"
+        - "Critical — data loss / outage / payment-impacting / security-adjacent"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: How often does it happen?
+      options:
+        - "Every time"
+        - "Sometimes (intermittent)"
+        - "Once / hard to reproduce"
+    validations:
+      required: true
+
+  - type: input
+    id: pnlcs-version
+    attributes:
+      label: PNLCS version
+      description: Find this in the admin footer or `composer show panelica/pnlcs`.
+      placeholder: e.g. "1.4.2" or "main@abc1234"
+    validations:
+      required: true
+
+  - type: input
+    id: php-version
+    attributes:
+      label: PHP version
+      placeholder: e.g. "8.3.12"
+    validations:
+      required: true
+
+  - type: input
+    id: db-version
+    attributes:
+      label: Database version
+      placeholder: e.g. "MySQL 8.0.36" or "MariaDB 10.11.7"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / distribution
+      placeholder: e.g. "Ubuntu 24.04", "Debian 12"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser (only if it's a UI bug)
+      placeholder: e.g. "Chrome 134", "Firefox 138 on macOS 14.5"
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Logged-in role when the bug occurred
+      options:
+        - "Admin"
+        - "Staff"
+        - "Reseller"
+        - "Customer"
+        - "Not logged in (public-facing page)"
+        - "Other / not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: theme
+    attributes:
+      label: Active theme (only if relevant to a UI bug)
+      placeholder: e.g. "default", "midnight", custom theme name
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Useful sources:
+        - `storage/logs/laravel.log`
+        - Browser DevTools console / network tab
+        - Failed-job table for queue issues
+        - Webhook delivery logs for gateway issues
+        Paste only the relevant excerpt. **Redact passwords, API keys, customer info, and payment details.**
+      render: shell
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, screen recordings, related issues, recent code changes, custom modules in use — anything that helps.
