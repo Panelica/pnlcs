@@ -1,9 +1,25 @@
 <?php
 
 use App\Http\Controllers\GatewayWebhookController;
+use App\Http\Controllers\InstallController;
+use App\Http\Middleware\EnsureNotInstalled;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('home');
+
+// ===== Install Wizard (gated by EnsureNotInstalled — 404 once admins exist) =====
+Route::middleware(['web', EnsureNotInstalled::class])->prefix('install')->group(function () {
+    Route::get('/',                  [InstallController::class, 'index']);
+    Route::get('/requirements',      [InstallController::class, 'requirements']);
+    Route::get('/database',          [InstallController::class, 'database']);
+    Route::post('/database/test',    [InstallController::class, 'testDatabase']);
+    Route::post('/database',         [InstallController::class, 'saveDatabase']);
+    Route::get('/admin',             [InstallController::class, 'admin']);
+    Route::post('/admin',            [InstallController::class, 'saveAdmin']);
+    Route::get('/app',               [InstallController::class, 'app']);
+    Route::post('/app',              [InstallController::class, 'saveApp']);
+    Route::get('/finish',            [InstallController::class, 'finish']);
+});
 
 // ===== Gateway Webhooks (no CSRF — verified by signature) =====
 Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->group(function () {
