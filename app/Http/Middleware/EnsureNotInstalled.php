@@ -22,12 +22,7 @@ class EnsureNotInstalled
     public function handle(Request $request, Closure $next)
     {
         // Permanent lock — wizard finished or pre-existing installation auto-locked.
-        // Exception: the finish page is shown once if the wizard just completed
-        // (session flag set in step 4), so users see the success screen.
         if (file_exists(storage_path('installed.lock'))) {
-            if ($request->is('install/finish') && $request->session()->pull('install.completed') === true) {
-                return $next($request);
-            }
             throw new NotFoundHttpException();
         }
 
