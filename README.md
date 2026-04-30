@@ -230,43 +230,26 @@ unless you know what you're doing (some migrations use MySQL-specific SQL).
 php artisan key:generate
 ```
 
-### 6. Run migrations and seed default data
-
-```bash
-php artisan migrate --force
-php artisan db:seed --force
-```
-
-The seeder creates:
-
-- A default admin account: **`admin` / `admin123`** (change this immediately
-  after your first login)
-- Four starter currencies (USD, EUR, GBP, TRY)
-- Ticket departments, statuses, email templates
-- 30 language entries (English active by default)
-- 2,232 English translation keys
-- Default homepage sections and domain pricing rows
-
-### 7. Build frontend assets
+### 6. Build frontend assets
 
 ```bash
 npm install
 npm run build
 ```
 
-### 8. Create the public storage symlink
+### 7. Create the public storage symlink
 
 ```bash
 php artisan storage:link
 ```
 
-### 9. Cache configuration for production
+### 8. Cache configuration for production
 
 ```bash
 php artisan optimize
 ```
 
-### 10. Set directory permissions
+### 9. Set directory permissions
 
 ```bash
 chmod -R 775 storage bootstrap/cache
@@ -275,10 +258,41 @@ chown -R www-data:www-data storage bootstrap/cache
 
 *(adjust the user to match your server — `nginx`, `apache`, or your panel user)*
 
-### 11. Point your web server to `public/`
+### 10. Point your web server to `public/`
 
 Whatever you use — a control panel, raw Nginx, Apache, Caddy — make sure
 **the document root is the `public/` directory**, not the project root.
+
+### 11. Open the install wizard
+
+With the web server up and pointing to `public/`, open in your browser:
+
+```
+https://billing.your-domain.com/install
+```
+
+The 5-step wizard:
+
+1. **Requirements** — verifies PHP version, extensions, writable directories
+2. **Database** — confirms your DB credentials and runs migrations
+3. **Admin account** — you choose the username, email, and password
+4. **App settings** — public URL, application name, default locale
+5. **Done** — wizard locks itself permanently and redirects to login
+
+The wizard creates:
+
+- Your administrator account (credentials you choose, no defaults)
+- Four starter currencies (USD, EUR, GBP, TRY)
+- Ticket departments, statuses, email templates
+- 30 language entries (English active by default)
+- 2,232 English translation keys
+- Default homepage sections and domain pricing rows
+
+> **Advanced / unattended install:** if you cannot use the browser wizard
+> (e.g. headless deploy, Ansible role), you can run the equivalent steps
+> from the CLI: `php artisan migrate --force && php artisan db:seed --force`.
+> This bootstraps a default `admin / admin123` account that you must change
+> on first login.
 
 ### 12. Schedule the cron runner
 
@@ -310,13 +324,13 @@ user=www-data
 
 Once the site loads and you can reach `/admin/login`, do these in order:
 
-### 1. Sign in and change the admin password
+### 1. Sign in to the admin panel
 
 - URL: `https://billing.your-domain.com/admin/login`
-- Username: **`admin`**
-- Password: **`admin123`**
-- Immediately open **My Account → Change Password** and set a strong password.
-- (Recommended) Enable **Two-Factor Authentication** from the same screen.
+- Use the **username and password you chose during the install wizard**
+- (If you ran the unattended CLI install: username `admin`, password `admin123`
+  — change this immediately under My Account → Change Password)
+- (Recommended) Enable **Two-Factor Authentication** from My Account → Security.
 
 ### 2. Configure General Settings
 
