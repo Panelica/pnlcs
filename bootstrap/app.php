@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prependToGroup("web", \App\Http\Middleware\RedirectToInstaller::class);
         $middleware->appendToGroup("web", AffiliateTracking::class);
         $middleware->appendToGroup("web", SetLocale::class);
         $middleware->appendToGroup("api", \App\Http\Middleware\ApiKeyAuth::class);
