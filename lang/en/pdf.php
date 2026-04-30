@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'amount' => 'Amount',
+    'bill_to' => 'Bill To',
+    'credit' => 'Credit',
+    'date_paid' => 'Date Paid',
+    'description' => 'Description',
+    'due_date' => 'Due Date',
+    'invoice' => 'INVOICE',
+    'invoice_date' => 'Invoice Date',
+    'invoice_details' => 'Invoice Details',
+    'invoice_number' => 'Invoice Number',
+    'invoice_to' => 'Invoice To',
+    'item' => 'Item',
+    'no_items' => 'No items',
+    'notes' => 'Notes',
+    'payment_method' => 'Payment Method',
+    'payment_status' => 'Payment Status',
+    'subtotal' => 'Subtotal',
+    'tax' => 'Tax',
+    'tax_id' => 'Tax ID',
+    'taxed' => 'Taxed',
+    'thank_you' => 'Thank you for your business!',
+    'total' => 'Total',
+];

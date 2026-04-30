@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'amount' => 'Tutar',
+    'bill_to' => 'Bill To',
+    'credit' => 'Kredi',
+    'date_paid' => 'Tarih Odendi',
+    'description' => 'Aciklama',
+    'due_date' => 'Vade Tarihi',
+    'invoice' => 'INVOICE',
+    'invoice_date' => 'Fatura Tarih',
+    'invoice_details' => 'Fatura Detaylar',
+    'invoice_number' => 'Fatura Numara',
+    'invoice_to' => 'Fatura To',
+    'item' => 'Item',
+    'no_items' => 'No items',
+    'notes' => 'Notlar',
+    'payment_method' => 'Odeme Yontem',
+    'payment_status' => 'Odeme Durum',
+    'subtotal' => 'Subtotal',
+    'tax' => 'Vergi',
+    'tax_id' => 'Vergi ID',
+    'taxed' => 'Vergied',
+    'thank_you' => 'Thank you for sizin business!',
+    'total' => 'Toplam',
+];
