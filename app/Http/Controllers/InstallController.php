@@ -225,8 +225,9 @@ class InstallController extends Controller
         Artisan::call('route:cache');
         Artisan::call('view:cache');
 
-        // Create lock file to permanently disable wizard.
+        // Create lock file to permanently disable wizard, then clear session flag.
         @file_put_contents(storage_path('installed.lock'), date('c'));
+        $request->session()->forget('install.in_progress');
 
         return redirect('/install/finish');
     }
