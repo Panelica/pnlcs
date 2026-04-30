@@ -18,12 +18,18 @@
 </p>
 
 <p align="center">
+  <a href="#quick-start-with-docker">Docker</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#first-steps-after-installation">First Steps</a> ·
   <a href="#screenshots">Screenshots</a> ·
   <a href="#features">Features</a> ·
   <a href="#modules">Modules</a> ·
   <a href="#contributing">Contributing</a>
+</p>
+
+<p align="center">
+  <a href="https://hub.docker.com/r/panelica/pnlcs-runtime"><img src="https://img.shields.io/docker/pulls/panelica/pnlcs-runtime?logo=docker&label=Docker%20Pulls" alt="Docker Pulls"></a>
+  <a href="https://hub.docker.com/r/panelica/pnlcs-runtime"><img src="https://img.shields.io/badge/Docker%20Hub-panelica%2Fpnlcs--runtime-2496ED?logo=docker&logoColor=white" alt="Docker Hub"></a>
 </p>
 
 ---
@@ -189,6 +195,45 @@ it helps us enormously.
 
 **Optional but recommended:** Redis (session/cache), SMTP server or relay
 (email delivery), supervisor (queue worker).
+
+---
+
+## Quick Start with Docker
+
+The fastest way to try PNLCS is the official Docker image
+[**`panelica/pnlcs-runtime`**](https://hub.docker.com/r/panelica/pnlcs-runtime).
+It bundles PHP-FPM 8.4 + nginx + Node.js 20 + supervisor and clones the latest
+code from this repository on first start. No manual `composer install` or
+`npm run build` — the entrypoint handles everything.
+
+```bash
+docker network create pnlcs-net
+
+docker run -d --name pnlcs-db --network pnlcs-net \
+  -e MYSQL_ROOT_PASSWORD=changeme \
+  -e MYSQL_DATABASE=pnlcs -e MYSQL_USER=pnlcs -e MYSQL_PASSWORD=changeme \
+  mariadb:11
+
+docker run -d --name pnlcs --network pnlcs-net -p 8090:80 \
+  -e DB_HOST=pnlcs-db -e DB_DATABASE=pnlcs \
+  -e DB_USERNAME=pnlcs -e DB_PASSWORD=changeme \
+  -e APP_URL=http://localhost:8090 \
+  panelica/pnlcs-runtime:1.0
+```
+
+Wait 3–5 minutes for the first start (composer install + npm build), then
+visit **http://localhost:8090** and login with **`admin`** / **`admin`**
+(change the password immediately).
+
+To pull the latest code from this repo into a running container:
+
+```bash
+docker exec pnlcs /usr/local/bin/update.sh
+```
+
+📦 **Full image documentation, environment variables, screenshots, and
+production deployment notes:**
+👉 https://hub.docker.com/r/panelica/pnlcs-runtime
 
 ---
 
