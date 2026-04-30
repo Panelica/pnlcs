@@ -18,8 +18,12 @@ Route::middleware(['web', EnsureNotInstalled::class])->prefix('install')->group(
     Route::post('/admin',            [InstallController::class, 'saveAdmin']);
     Route::get('/app',               [InstallController::class, 'app']);
     Route::post('/app',              [InstallController::class, 'saveApp']);
-    Route::get('/finish',            [InstallController::class, 'finish']);
 });
+
+// Finish page is intentionally OUTSIDE the gating middleware so users can land
+// on it after the lock file is written. It only displays a success message and
+// a link to /admin/login — no sensitive data and no actions.
+Route::middleware('web')->get('/install/finish', [InstallController::class, 'finish']);
 
 // ===== Gateway Webhooks (no CSRF — verified by signature) =====
 Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->group(function () {

@@ -225,15 +225,11 @@ class InstallController extends Controller
         Artisan::call('route:cache');
         Artisan::call('view:cache');
 
-        // Create lock file to permanently disable wizard. Mark wizard completed
-        // so middleware allows the final finish page (one-shot view); next
-        // request without that flag will be 404'd.
+        // Create lock file to permanently disable wizard.
         @file_put_contents(storage_path('installed.lock'), date('c'));
         $request->session()->forget('install.in_progress');
-        $request->session()->put('install.completed', true);
 
-        // Use the current request's scheme+host to avoid Laravel URL generator
-        // picking up a stale cached APP_URL.
+        // Use current request's scheme+host (bypass stale URL generator).
         return redirect($request->getSchemeAndHttpHost() . '/install/finish');
     }
 
