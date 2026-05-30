@@ -14,6 +14,7 @@ use App\Events\ServiceSuspended;
 use App\Events\ServiceTerminated;
 use App\Listeners\SendNotificationListener;
 use App\Listeners\LogActivityListener;
+use App\Listeners\AutoAcceptOrderListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -37,6 +38,7 @@ class EventServiceProvider extends ServiceProvider
         ],
         InvoicePaid::class => [
             [SendNotificationListener::class, 'handleInvoicePaid'],
+            [AutoAcceptOrderListener::class, 'handleInvoicePaid'],
             LogActivityListener::class,
         ],
         TicketOpened::class => [
