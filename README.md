@@ -1,13 +1,24 @@
 <h1 align="center">PNLCS</h1>
+
 <p align="center">
-  <b>Self-hosted hosting billing platform</b> — a WHMCS-inspired alternative.
+  <b>Open-source, self-hosted hosting billing platform — a free WHMCS alternative.</b><br>
+  Client portal · invoicing · domain &amp; SSL management · support tickets · reseller hosting.
 </p>
 
 <p align="center">
-  Built on Laravel 13 · MySQL · Alpine.js · Tailwind CSS 4
+  Built with <b>Laravel 13</b> · <b>PHP 8.3+</b> · <b>MySQL 8</b> · <b>Alpine.js</b> · <b>Tailwind CSS 4</b>
 </p>
 
 <p align="center">
+  <a href="https://github.com/Panelica/pnlcs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Panelica/pnlcs?color=blue" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.0+">
+  <a href="https://github.com/Panelica/pnlcs/stargazers"><img src="https://img.shields.io/github/stars/Panelica/pnlcs?style=social" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start-with-docker">Docker</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#first-steps-after-installation">First Steps</a> ·
   <a href="#screenshots">Screenshots</a> ·
@@ -16,14 +27,26 @@
   <a href="#contributing">Contributing</a>
 </p>
 
+<p align="center">
+  <a href="https://hub.docker.com/r/panelica/pnlcs-runtime"><img src="https://img.shields.io/docker/pulls/panelica/pnlcs-runtime?logo=docker&label=Docker%20Pulls" alt="Docker Pulls"></a>
+  <a href="https://hub.docker.com/r/panelica/pnlcs-runtime"><img src="https://img.shields.io/badge/Docker%20Hub-panelica%2Fpnlcs--runtime-2496ED?logo=docker&logoColor=white" alt="Docker Hub"></a>
+</p>
+
 ---
 
-## About
+## About — Open-Source WHMCS Alternative
 
-PNLCS is a hosting billing and customer management system for web hosting
-companies, reseller hosts, and infrastructure providers. It is heavily inspired
-by **WHMCS** — most of the workflows, terminology, and module ecosystem will
-look familiar to anyone who has used WHMCS.
+**PNLCS** is a free, open-source, self-hosted **hosting billing platform**
+and **client portal** — an open alternative to WHMCS for web hosting
+companies, reseller hosts, and infrastructure providers. It covers the full
+customer lifecycle: product catalog, checkout, recurring invoicing, domain
+registration, SSL certificate management, support tickets, knowledge base,
+and affiliate tracking.
+
+If you have used WHMCS, you will feel at home: the data model, workflows,
+and module ecosystem (servers, gateways, registrars, SSL providers) are
+deliberately familiar. The difference is that PNLCS is **MIT-licensed**,
+**self-hosted**, and free to fork, study, and extend.
 
 This project is built and maintained by the **Panelica Server Management
 Panel** team in our spare time, alongside our main product. We wanted an
@@ -55,7 +78,7 @@ it helps us enormously.
 
 ---
 
-## Screenshots
+## Screenshots — Admin Panel & Client Portal
 
 ### Admin Panel
 
@@ -84,7 +107,7 @@ it helps us enormously.
 
 ---
 
-## Features
+## Hosting Billing Features
 
 ### 💼 Client Portal
 
@@ -108,8 +131,6 @@ it helps us enormously.
 - **Dashboard** — revenue, new signups, pending orders, open tickets at a glance
 - **Client management** — profiles, impersonation, notes, billing summary
 - **Orders & invoices** — manual create, bulk actions, mass mail, PDF export
-- **Refunds** — full or partial, through the original gateway or offline
-- **Bank-transfer approval queue** — review and approve reported payments in one click
 - **Products & bundles** — configurable options, addons, pricing matrices
 - **Ticket system** — internal notes, escalation rules, spam filter
 - **Reports** — revenue, conversion funnel, MRR, churn, affiliate stats
@@ -155,10 +176,8 @@ it helps us enormously.
 - **Auto-renew** services and domains with billing integration
 - **Unified payment engine** — one path for gateways, manual and credit, with partial-payment and overpayment-to-credit handling
 - **Reliable provisioning** — a service only activates after the server module succeeds; failures are queued and retried automatically with admin alerts
-- **Refunds** — reverse a payment via the gateway API (or offline) with full/partial support
-- **Exchange-rate auto-update** — daily refresh of currency rates
-- **Automated database backups** — daily gzip dumps with rotation
-- **Log retention** — high-volume log tables are pruned on a schedule
+- **Refunds** — reverse a payment via the gateway API (or offline), full or partial
+- **Exchange-rate auto-update**, **automated database backups**, and **log retention** on a schedule
 
 ### ⚙️ Developer Features
 
@@ -190,7 +209,48 @@ it helps us enormously.
 
 ---
 
-## Installation
+## Quick Start with Docker
+
+The fastest way to try PNLCS is the official Docker image
+[**`panelica/pnlcs-runtime`**](https://hub.docker.com/r/panelica/pnlcs-runtime).
+It bundles PHP-FPM 8.4 + nginx + Node.js 20 + supervisor and clones the latest
+code from this repository on first start. No manual `composer install` or
+`npm run build` — the entrypoint handles everything.
+
+```bash
+docker network create pnlcs-net
+
+docker run -d --name pnlcs-db --network pnlcs-net \
+  -e MYSQL_ROOT_PASSWORD=changeme \
+  -e MYSQL_DATABASE=pnlcs -e MYSQL_USER=pnlcs -e MYSQL_PASSWORD=changeme \
+  mariadb:11
+
+docker run -d --name pnlcs --network pnlcs-net -p 8090:80 \
+  -e DB_HOST=pnlcs-db -e DB_DATABASE=pnlcs \
+  -e DB_USERNAME=pnlcs -e DB_PASSWORD=changeme \
+  -e APP_URL=http://localhost:8090 \
+  panelica/pnlcs-runtime:1.2
+```
+
+Wait 3–5 minutes for the first start (composer install + npm build), then
+visit **http://localhost:8090/install** to run the in-app install wizard.
+The wizard guides you through requirements check, admin account creation
+(you choose username + password), and application settings — then locks
+itself permanently.
+
+To pull the latest code from this repo into a running container:
+
+```bash
+docker exec pnlcs /usr/local/bin/update.sh
+```
+
+📦 **Full image documentation, environment variables, screenshots, and
+production deployment notes:**
+👉 https://hub.docker.com/r/panelica/pnlcs-runtime
+
+---
+
+## Self-Hosted Installation
 
 ### 1. Clone the repository
 
@@ -245,26 +305,43 @@ unless you know what you're doing (some migrations use MySQL-specific SQL).
 php artisan key:generate
 ```
 
-### 6. Build frontend assets
+### 6. Run migrations and seed default data
+
+```bash
+php artisan migrate --force
+php artisan db:seed --force
+```
+
+The seeder creates:
+
+- A default admin account: **`admin` / `admin123`** (change this immediately
+  after your first login)
+- Four starter currencies (USD, EUR, GBP, TRY)
+- Ticket departments, statuses, email templates
+- 30 language entries (English active by default)
+- 2,232 English translation keys
+- Default homepage sections and domain pricing rows
+
+### 7. Build frontend assets
 
 ```bash
 npm install
 npm run build
 ```
 
-### 7. Create the public storage symlink
+### 8. Create the public storage symlink
 
 ```bash
 php artisan storage:link
 ```
 
-### 8. Cache configuration for production
+### 9. Cache configuration for production
 
 ```bash
 php artisan optimize
 ```
 
-### 9. Set directory permissions
+### 10. Set directory permissions
 
 ```bash
 chmod -R 775 storage bootstrap/cache
@@ -273,41 +350,10 @@ chown -R www-data:www-data storage bootstrap/cache
 
 *(adjust the user to match your server — `nginx`, `apache`, or your panel user)*
 
-### 10. Point your web server to `public/`
+### 11. Point your web server to `public/`
 
 Whatever you use — a control panel, raw Nginx, Apache, Caddy — make sure
 **the document root is the `public/` directory**, not the project root.
-
-### 11. Open the install wizard
-
-With the web server up and pointing to `public/`, open in your browser:
-
-```
-https://billing.your-domain.com/install
-```
-
-The 5-step wizard:
-
-1. **Requirements** — verifies PHP version, extensions, writable directories
-2. **Database** — confirms your DB credentials and runs migrations
-3. **Admin account** — you choose the username, email, and password
-4. **App settings** — public URL, application name, default locale
-5. **Done** — wizard locks itself permanently and redirects to login
-
-The wizard creates:
-
-- Your administrator account (credentials you choose, no defaults)
-- Four starter currencies (USD, EUR, GBP, TRY)
-- Ticket departments, statuses, email templates
-- 30 language entries (English active by default)
-- 2,232 English translation keys
-- Default homepage sections and domain pricing rows
-
-> **Advanced / unattended install:** if you cannot use the browser wizard
-> (e.g. headless deploy, Ansible role), you can run the equivalent steps
-> from the CLI: `php artisan migrate --force && php artisan db:seed --force`.
-> This bootstraps a default `admin / admin123` account that you must change
-> on first login.
 
 ### 12. Schedule the cron runner
 
@@ -339,13 +385,13 @@ user=www-data
 
 Once the site loads and you can reach `/admin/login`, do these in order:
 
-### 1. Sign in to the admin panel
+### 1. Sign in and change the admin password
 
 - URL: `https://billing.your-domain.com/admin/login`
-- Use the **username and password you chose during the install wizard**
-- (If you ran the unattended CLI install: username `admin`, password `admin123`
-  — change this immediately under My Account → Change Password)
-- (Recommended) Enable **Two-Factor Authentication** from My Account → Security.
+- Username: **`admin`**
+- Password: **`admin123`**
+- Immediately open **My Account → Change Password** and set a strong password.
+- (Recommended) Enable **Two-Factor Authentication** from the same screen.
 
 ### 2. Configure General Settings
 
@@ -457,10 +503,13 @@ Always back up your database before pulling new migrations.
 
 ---
 
-## Modules
+## Modules — Servers, Payment Gateways & Domain Registrars
 
 PNLCS ships with modular **server**, **gateway**, **registrar**, and **SSL
-provider** integrations under the `modules/` directory.
+provider** integrations under the `modules/` directory. Add control-panel
+servers (cPanel, Plesk, DirectAdmin, Proxmox, Panelica), configure
+payment gateways (Stripe, PayPal, bank transfer), and connect domain
+registrars (Enom) without touching core code.
 
 | Module        | Type      | Status            |
 |---------------|-----------|-------------------|
@@ -569,3 +618,14 @@ to get the fastest community response.
 ## License
 
 Released under the **MIT License**. See [`LICENSE`](LICENSE) for details.
+
+---
+
+<p align="center">
+  <sub>
+    <b>Keywords:</b> WHMCS alternative · open-source hosting billing · self-hosted
+    billing platform · Laravel billing · PHP client portal · hosting management
+    software · free WHMCS · invoicing system · reseller hosting software ·
+    domain management · SSL management · support ticket system · hosting CRM
+  </sub>
+</p>
