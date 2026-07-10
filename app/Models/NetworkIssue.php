@@ -9,4 +9,12 @@ class NetworkIssue extends Model {
     protected $table = "network_issues";
     protected $fillable = ["title", "description", "type", "status", "priority", "affected_server", "start_date", "end_date", "last_updated"];
 
+    protected function casts(): array
+    {
+        return [
+            "start_date"   => "datetime",
+            "end_date"     => "datetime",
+            "last_updated" => "datetime",
+        ];
+    }
 }

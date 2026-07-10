@@ -15,6 +15,8 @@ use App\Events\ServiceTerminated;
 use App\Listeners\SendNotificationListener;
 use App\Listeners\LogActivityListener;
 use App\Listeners\AutoAcceptOrderListener;
+use App\Listeners\LogSentEmailListener;
+use Illuminate\Mail\Events\MessageSent;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -60,6 +62,9 @@ class EventServiceProvider extends ServiceProvider
         ServiceTerminated::class => [
             [SendNotificationListener::class, 'handleServiceTerminated'],
             LogActivityListener::class,
+        ],
+        MessageSent::class => [
+            LogSentEmailListener::class,
         ],
     ];
 

@@ -45,6 +45,7 @@
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.network_issues.type_label') }}</label><select name="type" class="form-control"><option value="general">{{ __('admin.network_issues.type_general') }}</option><option value="network">{{ __('admin.network_issues.type_network') }}</option><option value="server">{{ __('admin.network_issues.type_server') }}</option><option value="datacenter">{{ __('admin.network_issues.type_datacenter') }}</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('common.table.status') }}</label><select name="status" class="form-control"><option value="open">{{ __('admin.network_issues.status_open') }}</option><option value="scheduled">{{ __('admin.network_issues.status_scheduled') }}</option><option value="investigating">{{ __('admin.network_issues.status_investigating') }}</option><option value="resolved">{{ __('admin.network_issues.status_resolved') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" required class="form-control"></textarea></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

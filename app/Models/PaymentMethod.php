@@ -5,7 +5,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentMethod extends Model {
     use SoftDeletes;
-    protected $fillable = ["client_id", "description", "contact_id", "gateway_name", "payment_type", "last_four", "expiry_date", "remote_token"];
+    protected $fillable = ["client_id", "description", "contact_id", "gateway_name", "payment_type", "last_four", "expiry_date", "remote_token", "is_default"];
     protected $hidden = ["remote_token"];
+    protected function casts(): array { return ["is_default" => "boolean"]; }
     public function client() { return $this->belongsTo(Client::class); }
 }

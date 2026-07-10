@@ -8,6 +8,10 @@ use App\Http\Controllers\Client\CartController;
 use App\Http\Controllers\Client\ContactController;
 use App\Http\Controllers\Client\DomainController;
 use App\Http\Controllers\Client\DownloadController;
+use App\Http\Controllers\Client\EmailController;
+use App\Http\Controllers\Client\NetworkStatusController;
+use App\Http\Controllers\Client\PaymentMethodController;
+use App\Http\Controllers\Client\QuoteController;
 use App\Http\Controllers\Client\FundsController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\InvoiceController;
@@ -35,6 +39,8 @@ Route::prefix('client')->name('client.')->group(function () {
 
     // Announcements (public)
     Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+    // Network / server status (public)
+    Route::get('network-status', [NetworkStatusController::class, 'index'])->name('network-status');
     Route::get('announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
 
     // Contact (public)
@@ -82,6 +88,22 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::post('invoices/{invoice}/payment-notification', [InvoiceController::class, 'submitPaymentNotification'])->name('invoices.payment-notification');
+
+        // Quotes
+        Route::get('quotes', [QuoteController::class, 'index'])->name('quotes.index');
+        Route::get('quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
+        Route::post('quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
+        Route::post('quotes/{quote}/decline', [QuoteController::class, 'decline'])->name('quotes.decline');
+
+        // Payment methods
+        Route::get('payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
+        Route::post('payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+        Route::post('payment-methods/{paymentMethod}/default', [PaymentMethodController::class, 'setDefault'])->name('payment-methods.default');
+        Route::delete('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+
+        // Email history
+        Route::get('emails', [EmailController::class, 'index'])->name('emails.index');
+        Route::get('emails/{email}', [EmailController::class, 'show'])->name('emails.show');
 
         // Tickets
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');
