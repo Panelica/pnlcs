@@ -46,7 +46,9 @@ class CPanelModule extends AbstractServerModule
 
         $resp = Http::withHeaders(['Authorization' => $this->authHeader($server)])
             ->withoutVerifying()
-            ->get($url, $params);
+            ->timeout(60)
+            ->asForm()
+            ->post($url, $params);
 
         if (!$resp->successful()) {
             Log::error("CPanelModule::{$function} HTTP error", ['status' => $resp->status(), 'body' => $resp->body()]);
@@ -82,32 +84,40 @@ class CPanelModule extends AbstractServerModule
             return $this->buildResult(false, 'Service is missing client or domain.');
         }
 
-        // WHM username: alphanumeric only, max 8 chars
+        // WHM username: lowercase alphanumeric, must start with a letter, max 8 chars
         $username = preg_replace('/[^a-z0-9]/', '', strtolower(explode('.', $domain)[0]));
-        $username = substr($username ?: 'user', 0, 8);
-
-        // Ensure username is unique by appending numeric suffix if needed
-        $baseUsername = $username;
-        $suffix = 1;
-        // We'll attempt creation; WHM will reject if username exists
+        $username = ltrim($username, '0123456789') ?: 'u' . $service->id;
+        $username = substr($username, 0, 8);
 
         $password = $service->password ?: bin2hex(random_bytes(8));
-        $package  = $this->getRemotePackage($service) ?? 'default';
+        $package  = $this->getRemotePackage($service);
 
-        $result = $this->call($server, 'createacct', [
+        $params = [
             'username'     => $username,
             'domain'       => $domain,
             'password'     => $password,
-            'plan'         => $package,
             'contactemail' => $client->email,
-        ]);
+        ];
+        if ($package) {
+            $params['plan'] = $package; // only send a plan when one is configured
+        }
+
+        // Retry with a numeric suffix when the username is already taken
+        $result = $this->call($server, 'createacct', $params);
+        $attempt = 1;
+        while (!$result['success'] && $attempt <= 3 && stripos($result['message'], 'already') !== false) {
+            $params['username'] = substr($username, 0, 7 - strlen((string) $attempt)) . $attempt;
+            $result = $this->call($server, 'createacct', $params);
+            $attempt++;
+        }
+        $username = $params['username'];
 
         if (!$result['success']) {
             return $this->buildResult(false, "cPanel account creation failed: {$result['message']}");
         }
 
         $this->setModuleData($service, ['cpanel_username' => $username]);
-        $service->update(['username' => $username, 'status' => 'active']);
+        $service->update(['username' => $username, 'password' => $password, 'status' => 'active']);
 
         $out = $this->buildResult(true, 'cPanel account created successfully.', ['cpanel_username' => $username]);
         $this->logAction($service, 'create', $out);
@@ -277,18 +287,20 @@ class CPanelModule extends AbstractServerModule
                 continue;
             }
 
-            $raw       = $result['raw'];
-            $acct      = $raw['acct'][0] ?? $raw ?? [];
-            $diskUsed  = $acct['diskused']  ?? null;
-            $diskLimit = $acct['disklimit'] ?? null;
-            $bwUsed    = $acct['bandwidth'] ?? null;
-            $bwLimit   = $acct['bwlimit']   ?? null;
+            $raw  = $result['raw'];
+            $acct = $raw['acct'][0] ?? $raw ?? [];
+
+            // WHM returns values like "12M" or "unlimited"
+            $toMb = function ($v): ?int {
+                if ($v === null || strcasecmp((string) $v, 'unlimited') === 0) return null;
+                return (int) $v;
+            };
 
             $updateData = [];
-            if ($diskUsed  !== null) $updateData['disk_usage'] = (int)$diskUsed;
-            if ($diskLimit !== null) $updateData['disk_limit'] = (int)$diskLimit;
-            if ($bwUsed    !== null) $updateData['bw_usage']   = (int)$bwUsed;
-            if ($bwLimit   !== null) $updateData['bw_limit']   = (int)$bwLimit;
+            if (($n = $toMb($acct['diskused']  ?? null)) !== null) $updateData['disk_usage'] = $n;
+            if (($n = $toMb($acct['disklimit'] ?? null)) !== null) $updateData['disk_limit'] = $n;
+            if (($n = $toMb($acct['bandwidth'] ?? null)) !== null) $updateData['bw_usage']   = $n;
+            if (($n = $toMb($acct['bwlimit']   ?? null)) !== null) $updateData['bw_limit']   = $n;
 
             if (!empty($updateData)) {
                 $service->update($updateData);

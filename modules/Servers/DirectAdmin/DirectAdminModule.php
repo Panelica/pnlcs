@@ -45,6 +45,11 @@ class DirectAdminModule extends AbstractServerModule
 
     private function parseDA(string $body): array
     {
+        // An HTML body means we hit the login page → authentication failed.
+        if (stripos($body, '<html') !== false || stripos($body, '<!doctype') !== false) {
+            return ['error' => '1', 'text' => 'DirectAdmin authentication failed (login page returned)'];
+        }
+
         // DirectAdmin CMD_API responses are URL-encoded key=value pairs
         $result = [];
         parse_str($body, $result);
@@ -95,6 +100,7 @@ class DirectAdminModule extends AbstractServerModule
         }
 
         $this->setModuleData($service, ['da_username' => $username]);
+        $service->update(['username' => $username, 'password' => $password]);
 
         $this->logAction($service, 'create', ['success' => true]);
         return $this->buildResult(true, 'DirectAdmin account created successfully.', [
@@ -112,8 +118,9 @@ class DirectAdminModule extends AbstractServerModule
         }
 
         $resp = $this->http($server)->asForm()->post("{$this->baseUrl($server)}/CMD_API_SELECT_USERS", [
-            'action'  => 'suspend',
-            'select0' => $username,
+            'location' => 'USER_SHOW',
+            'suspend'  => 'Suspend',
+            'select0'  => $username,
         ]);
 
         $data   = $this->parseDA($resp->body());
@@ -133,8 +140,9 @@ class DirectAdminModule extends AbstractServerModule
         }
 
         $resp = $this->http($server)->asForm()->post("{$this->baseUrl($server)}/CMD_API_SELECT_USERS", [
-            'action'  => 'unsuspend',
-            'select0' => $username,
+            'location' => 'USER_SHOW',
+            'suspend'  => 'Unsuspend',
+            'select0'  => $username,
         ]);
 
         $data   = $this->parseDA($resp->body());
@@ -154,8 +162,9 @@ class DirectAdminModule extends AbstractServerModule
         }
 
         $resp = $this->http($server)->asForm()->post("{$this->baseUrl($server)}/CMD_API_SELECT_USERS", [
-            'action'  => 'delete',
-            'select0' => $username,
+            'confirmed' => 'Confirm',
+            'delete'    => 'yes',
+            'select0'   => $username,
         ]);
 
         $data   = $this->parseDA($resp->body());

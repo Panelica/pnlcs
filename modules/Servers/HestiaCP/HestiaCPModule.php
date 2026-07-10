@@ -29,16 +29,22 @@ class HestiaCPModule extends AbstractServerModule
         return "https://{$server->hostname}:{$port}/api";
     }
 
-    private function call(Server $server, string $command, array $params = []): array
+    /**
+     * Action commands run with returncode=yes → body is the numeric exit code.
+     * List commands ($json = true) run with returncode=no → body is JSON.
+     * (With returncode=no a FAILING command returns an error STRING, which the
+     * old integer-cast logic silently treated as success.)
+     */
+    private function call(Server $server, string $command, array $params = [], bool $json = false): array
     {
         $url = $this->baseUrl($server);
         $username = $server->username ?: 'admin';
-        $password = $server->access_hash ?? '';
+        $password = $server->access_hash ?: ($server->password ?? '');
 
         $postData = array_merge([
             'user' => $username,
             'password' => $password,
-            'returncode' => 'no',
+            'returncode' => $json ? 'no' : 'yes',
             'cmd' => $command,
         ], $params);
 
@@ -52,20 +58,26 @@ class HestiaCPModule extends AbstractServerModule
                 return ['success' => false, 'message' => "HestiaCP API HTTP {$response->status()}", 'raw' => []];
             }
 
-            $body = $response->body();
-            $json = json_decode($body, true);
+            $body = trim($response->body());
 
-            // HestiaCP returns 0 for success in returncode mode
-            if (is_array($json)) {
-                return ['success' => true, 'message' => 'OK', 'raw' => $json];
+            if ($json) {
+                $decoded = json_decode($body, true);
+                if (is_array($decoded)) {
+                    return ['success' => true, 'message' => 'OK', 'raw' => $decoded];
+                }
+                return ['success' => false, 'message' => 'HestiaCP returned non-JSON: ' . substr($body, 0, 200), 'raw' => []];
             }
 
-            // Non-JSON response = command output
-            $exitCode = (int) trim($body);
+            // returncode=yes → body must be a bare exit code
+            if (!preg_match('/^\d+$/', $body)) {
+                return ['success' => false, 'message' => 'Unexpected HestiaCP response: ' . substr($body, 0, 200), 'raw' => []];
+            }
+
+            $exitCode = (int) $body;
             return [
                 'success' => $exitCode === 0,
-                'message' => $exitCode === 0 ? 'OK' : "HestiaCP command failed (code: {$exitCode})",
-                'raw' => ['exit_code' => $exitCode, 'output' => $body],
+                'message' => $exitCode === 0 ? 'OK' : "HestiaCP command failed (exit code {$exitCode})",
+                'raw' => ['exit_code' => $exitCode],
             ];
         } catch (\Throwable $e) {
             Log::error("HestiaCPModule API error: {$e->getMessage()}");
@@ -115,7 +127,7 @@ class HestiaCPModule extends AbstractServerModule
         }
 
         $this->setModuleData($service, ['hestia_username' => $username]);
-        $service->update(['username' => $username, 'status' => 'active']);
+        $service->update(['username' => $username, 'password' => $password, 'status' => 'active']);
 
         $out = $this->buildResult(true, 'HestiaCP account created.', ['hestia_username' => $username]);
         $this->logAction($service, 'create', $out);
@@ -260,7 +272,7 @@ class HestiaCPModule extends AbstractServerModule
 
     public function usageUpdate(Server $server): array
     {
-        $result = $this->call($server, 'v-list-users', ['arg1' => 'json']);
+        $result = $this->call($server, 'v-list-users', ['arg1' => 'json'], json: true);
 
         if (!$result['success'] || !is_array($result['raw'])) {
             return ['updated' => 0, 'errors' => 1];
@@ -300,7 +312,7 @@ class HestiaCPModule extends AbstractServerModule
     public function testConnection(Server $server): bool
     {
         try {
-            $result = $this->call($server, 'v-list-sys-info', ['arg1' => 'json']);
+            $result = $this->call($server, 'v-list-sys-info', ['arg1' => 'json'], json: true);
             return $result['success'];
         } catch (\Throwable $e) {
             Log::error("HestiaCPModule::testConnection: {$e->getMessage()}");

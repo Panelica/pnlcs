@@ -82,8 +82,8 @@ test('plesk test connection returns false on API error', function () {
 
 test('plesk create account succeeds with mocked API', function () {
     Http::fake([
-        '*/api/v2/clients'   => Http::response(['id' => 'client-uuid-111', 'login' => 'testuser'], 200),
-        '*/api/v2/webspaces' => Http::response(['id' => 'ws-uuid-222', 'name' => 'test.com'], 200),
+        '*/api/v2/clients'   => Http::response(['id' => 'client-uuid-111', 'login' => 'testuser'], 201),
+        '*/api/v2/domains'   => Http::response(['id' => 'dom-uuid-222', 'name' => 'test.com'], 201),
     ]);
 
     $server  = Server::factory()->create(['type' => 'plesk', 'hostname' => 'plesk.test', 'port' => 8443, 'access_hash' => 'sk']);
@@ -110,14 +110,14 @@ test('plesk create account succeeds with mocked API', function () {
 
     expect($result['success'])->toBeTrue();
     expect($result['data']['plesk_client_id'])->toBe('client-uuid-111');
-    expect($result['data']['plesk_webspace_id'])->toBe('ws-uuid-222');
+    expect($result['data']['plesk_domain_id'])->toBe('dom-uuid-222');
 });
 
 test('plesk create account rolls back client on webspace failure', function () {
     Http::fake([
-        '*/api/v2/clients'    => Http::response(['id' => 'client-uuid-rollback'], 200),
+        '*/api/v2/clients'    => Http::response(['id' => 'client-uuid-rollback'], 201),
         '*/api/v2/clients/*'  => Http::response(null, 200),
-        '*/api/v2/webspaces'  => Http::response('Internal Server Error', 500),
+        '*/api/v2/domains'    => Http::response('Internal Server Error', 500),
     ]);
 
     $server  = Server::factory()->create(['type' => 'plesk', 'hostname' => 'plesk.test', 'port' => 8443, 'access_hash' => 'sk']);
@@ -743,8 +743,8 @@ test('provisioning service returns null for product without server_type', functi
 
 test('provisioning createAccount with plesk succeeds end-to-end', function () {
     Http::fake([
-        '*/api/v2/clients'   => Http::response(['id' => 'c-e2e-111'], 200),
-        '*/api/v2/webspaces' => Http::response(['id' => 'ws-e2e-222'], 200),
+        '*/api/v2/clients'   => Http::response(['id' => 'c-e2e-111'], 201),
+        '*/api/v2/domains'   => Http::response(['id' => 'dom-e2e-222'], 201),
     ]);
 
     $server  = Server::factory()->create(['type' => 'plesk', 'hostname' => 'plesk.test', 'port' => 8443, 'access_hash' => 'key']);

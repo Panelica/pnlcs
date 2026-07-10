@@ -31,7 +31,8 @@ class ProxmoxModule extends AbstractServerModule
 
     private function http(Server $server): \Illuminate\Http\Client\PendingRequest
     {
-        $client = Http::withoutVerifying()->timeout(60);
+        // PVE accepts JSON bodies only on 7.2+; form-encoding works everywhere.
+        $client = Http::asForm()->withoutVerifying()->timeout(60);
         $token = $server->access_hash ?? '';
         if (str_starts_with($token, 'PVEAPIToken=')) {
             return $client->withHeaders(['Authorization' => $token]);
@@ -53,7 +54,7 @@ class ProxmoxModule extends AbstractServerModule
         $key = "proxmox_ticket_{$server->id}";
         if ($cached = cache($key)) return $cached;
 
-        $resp = Http::withoutVerifying()->post($this->baseUrl($server) . '/access/ticket', [
+        $resp = Http::asForm()->withoutVerifying()->post($this->baseUrl($server) . '/access/ticket', [
             'username' => $server->username ?: 'root@pam',
             'password' => $server->password ?? '',
         ]);
@@ -207,7 +208,7 @@ class ProxmoxModule extends AbstractServerModule
             }
 
             // Configure resources after successful clone
-            $http->put("{$base}/nodes/{$node}/qemu/{$vmid}/config", [
+            $cfgResp = $http->put("{$base}/nodes/{$node}/qemu/{$vmid}/config", [
                 'cores'      => $cores,
                 'memory'     => $memory,
                 'name'       => $hostname,
@@ -215,12 +216,18 @@ class ProxmoxModule extends AbstractServerModule
                 'cipassword' => $password,
                 'net0'       => "virtio,bridge={$bridge}",
             ]);
+            if (!$cfgResp->successful()) {
+                return $this->buildResult(false, 'VM cloned but config (password/resources) failed: ' . $cfgResp->body());
+            }
 
             // Resize disk (absolute size, only grows)
-            $http->put("{$base}/nodes/{$node}/qemu/{$vmid}/resize", [
+            $rsResp = $http->put("{$base}/nodes/{$node}/qemu/{$vmid}/resize", [
                 'disk' => 'scsi0',
                 'size' => "{$disk}G",
             ]);
+            if (!$rsResp->successful()) {
+                Log::warning('Proxmox disk resize failed (VM still usable)', ['vmid' => $vmid, 'body' => $rsResp->body()]);
+            }
         } else {
             // Create VM from scratch (no template)
             $resp = $http->post("{$base}/nodes/{$node}/qemu", [
@@ -239,6 +246,10 @@ class ProxmoxModule extends AbstractServerModule
 
             if (!$resp->successful()) {
                 return $this->buildResult(false, 'VM create failed: ' . $resp->body());
+            }
+
+            if ($upid = $resp->json('data')) {
+                $this->waitTask($server, $node, $upid, 120);
             }
         }
 
@@ -348,10 +359,7 @@ class ProxmoxModule extends AbstractServerModule
         }
 
         // Destroy VM with disk cleanup
-        $resp = $http->delete("{$base}/nodes/{$node}/{$ep}/{$vmid}", [
-            'purge'                      => 1,
-            'destroy-unreferenced-disks' => 1,
-        ]);
+        $resp = $http->delete("{$base}/nodes/{$node}/{$ep}/{$vmid}?purge=1&destroy-unreferenced-disks=1");
 
         if ($resp->successful()) {
             $service->update(['status' => 'terminated', 'termination_date' => now()]);

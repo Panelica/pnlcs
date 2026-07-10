@@ -88,7 +88,7 @@ class VultrModule extends AbstractServerModule
             'os_id' => $osId,
             'label' => $label,
             'hostname' => $hostname,
-            'tag' => "pnlcs-service-{$service->id}",
+            'tags' => ["pnlcs-service-{$service->id}"],
         ]);
 
         if (!$result['success']) {
@@ -109,7 +109,6 @@ class VultrModule extends AbstractServerModule
             'status' => 'active',
             'username' => 'root',
             'password' => $defaultPassword,
-            'dedicated_ip' => $mainIp,
         ]);
 
         $out = $this->buildResult(true, 'Vultr VPS created.', [
@@ -234,7 +233,7 @@ class VultrModule extends AbstractServerModule
 
     public function usageUpdate(Server $server): array
     {
-        $result = $this->api($server, 'GET', 'instances', ['per_page' => 500, 'tag' => 'pnlcs']);
+        $result = $this->api($server, 'GET', 'instances', ['per_page' => 500]);
 
         if (!$result['success']) {
             return ['updated' => 0, 'errors' => 1];
@@ -256,14 +255,16 @@ class VultrModule extends AbstractServerModule
 
             $updateData = [];
             if (isset($instance['disk'])) {
-                $updateData['disk_limit'] = (int) $instance['disk'];
+                $updateData['disk_limit'] = ((int) $instance['disk']) * 1024; // GB → MB
             }
-            if (isset($instance['ram'])) {
-                $updateData['notes'] = json_encode(array_merge(
-                    $this->getModuleData($service),
-                    ['vultr_ram' => $instance['ram'], 'vultr_vcpu' => $instance['vcpu_count'] ?? 0, 'vultr_main_ip' => $instance['main_ip'] ?? '']
-                ));
-            }
+            $updateData['notes'] = json_encode(array_merge(
+                $this->getModuleData($service),
+                [
+                    'vultr_ram'     => $instance['ram'] ?? null,
+                    'vultr_vcpu'    => $instance['vcpu_count'] ?? 0,
+                    'vultr_main_ip' => $instance['main_ip'] ?? '',
+                ]
+            ));
 
             if (!empty($updateData)) {
                 $service->update($updateData);
