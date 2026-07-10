@@ -92,6 +92,11 @@ it helps us enormously.
 - **Service management** — upgrade, downgrade, cancel, auto-renew toggle
 - **Domain management** — register, transfer, renew, EPP code, WHOIS
 - **Invoicing** — view, pay online, download PDF, add-funds, credit balance
+- **Quotes** — review, accept (auto-converts to invoice) or decline pre-sales quotes
+- **Payment methods** — save bank-transfer references, set a default
+- **Bank-transfer notifications** — report an offline payment with receipt upload
+- **Email history** — read every email the system has sent you
+- **Network status** — live view of active incidents and scheduled maintenance
 - **Support tickets** — attachments, priority, department routing
 - **Knowledge base & announcements** — searchable, categorized
 - **SSL certificates** — CSR generation, approver emails, auto-install
@@ -103,6 +108,8 @@ it helps us enormously.
 - **Dashboard** — revenue, new signups, pending orders, open tickets at a glance
 - **Client management** — profiles, impersonation, notes, billing summary
 - **Orders & invoices** — manual create, bulk actions, mass mail, PDF export
+- **Refunds** — full or partial, through the original gateway or offline
+- **Bank-transfer approval queue** — review and approve reported payments in one click
 - **Products & bundles** — configurable options, addons, pricing matrices
 - **Ticket system** — internal notes, escalation rules, spam filter
 - **Reports** — revenue, conversion funnel, MRR, churn, affiliate stats
@@ -146,6 +153,12 @@ it helps us enormously.
 - **Credit balances** & add-funds flow
 - **Automated reminders** — invoice, payment, CC expiry, domain renewal
 - **Auto-renew** services and domains with billing integration
+- **Unified payment engine** — one path for gateways, manual and credit, with partial-payment and overpayment-to-credit handling
+- **Reliable provisioning** — a service only activates after the server module succeeds; failures are queued and retried automatically with admin alerts
+- **Refunds** — reverse a payment via the gateway API (or offline) with full/partial support
+- **Exchange-rate auto-update** — daily refresh of currency rates
+- **Automated database backups** — daily gzip dumps with rotation
+- **Log retention** — high-volume log tables are pruned on a schedule
 
 ### ⚙️ Developer Features
 
@@ -153,6 +166,8 @@ it helps us enormously.
 - **Webhooks** — inbound (gateway callbacks) and outbound (events)
 - **Queue workers** for email and background jobs
 - **Scheduled commands** — invoice generation, reminders, polling
+- **Hook system** — WHMCS-compatible `add_hook()` / `run_hook()` with 20+ hook points; a failing hook can never break billing or provisioning
+- **Email piping** — inbound IMAP/POP3 mailboxes turn emails into tickets and replies
 - **Modular architecture** — add server / gateway / registrar modules
   without touching core
 - **Eloquent everywhere** — no raw SQL, no string concatenation
@@ -168,7 +183,7 @@ it helps us enormously.
 | Node.js   | 18+ |
 | Composer  | 2.x |
 | Web server | Nginx or Apache with PHP-FPM |
-| PHP extensions | `bcmath`, `curl`, `dom`, `fileinfo`, `gd`, `mbstring`, `mysqli`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip` |
+| PHP extensions | `bcmath`, `curl`, `dom`, `fileinfo`, `gd`, `mbstring`, `mysqli`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip`, `imap` |
 
 **Optional but recommended:** Redis (session/cache), SMTP server or relay
 (email delivery), supervisor (queue worker).
