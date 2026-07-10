@@ -1,0 +1,19 @@
+<?php
+
+/**
+ * Example project-level hook file.
+ * Rename to example.php (drop ".disabled") to activate — every *.php file in
+ * app/Hooks/ is loaded at boot. See docs/HOOKS.md for all hook points.
+ */
+
+add_hook('InvoicePaid', 10, function (array $vars) {
+    \Illuminate\Support\Facades\Log::info('Hook example: invoice paid', [
+        'invoice_id' => $vars['invoice']->id ?? null,
+    ]);
+});
+
+add_hook('AfterModuleCreate', 10, function (array $vars) {
+    \Illuminate\Support\Facades\Log::info('Hook example: service provisioned', [
+        'service_id' => $vars['service']->id ?? null,
+    ]);
+});

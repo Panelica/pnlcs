@@ -25,6 +25,8 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
+        run_hook('PreModuleCreate', ['service' => $service]);
+
         try {
             $result = $module->create($service);
 
@@ -32,6 +34,7 @@ class ProvisioningService
                 $service->status = ServiceStatus::Active->value;
                 $service->registration_date = $service->registration_date ?? now();
                 $service->save();
+                run_hook('AfterModuleCreate', ['service' => $service, 'result' => $result]);
                 event(new ServiceActivated($service));
             } elseif ($queueOnFail) {
                 $this->enqueueRetry($service, 'create', $result['message'] ?? 'Module create failed');
@@ -58,6 +61,8 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
+        run_hook('PreModuleSuspend', ['service' => $service, 'reason' => $reason]);
+
         try {
             $result = $module->suspend($service, $reason);
 
@@ -66,6 +71,7 @@ class ProvisioningService
                 $service->suspension_date = now();
                 $service->suspension_reason = $reason;
                 $service->save();
+                run_hook('AfterModuleSuspend', ['service' => $service, 'reason' => $reason]);
                 event(new ServiceSuspended($service, $reason));
             } elseif ($queueOnFail) {
                 $this->enqueueRetry($service, 'suspend', $result['message'] ?? 'Module suspend failed', ['reason' => $reason]);
@@ -92,6 +98,8 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
+        run_hook('PreModuleUnsuspend', ['service' => $service]);
+
         try {
             $result = $module->unsuspend($service);
 
@@ -100,6 +108,7 @@ class ProvisioningService
                 $service->suspension_date = null;
                 $service->suspension_reason = null;
                 $service->save();
+                run_hook('AfterModuleUnsuspend', ['service' => $service]);
             } elseif ($queueOnFail) {
                 $this->enqueueRetry($service, 'unsuspend', $result['message'] ?? 'Module unsuspend failed');
             }
@@ -125,6 +134,8 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
+        run_hook('PreModuleTerminate', ['service' => $service]);
+
         try {
             $result = $module->terminate($service);
 
@@ -132,6 +143,7 @@ class ProvisioningService
                 $service->status = ServiceStatus::Terminated->value;
                 $service->termination_date = now();
                 $service->save();
+                run_hook('AfterModuleTerminate', ['service' => $service]);
                 event(new ServiceTerminated($service));
             } elseif ($queueOnFail) {
                 $this->enqueueRetry($service, 'terminate', $result['message'] ?? 'Module terminate failed');
@@ -164,6 +176,7 @@ class ProvisioningService
             if ($result['success'] ?? false) {
                 $service->password = $newPassword;
                 $service->save();
+                run_hook('AfterModulePassword', ['service' => $service]);
             }
 
             return $result;
@@ -190,6 +203,7 @@ class ProvisioningService
             if ($result['success'] ?? false) {
                 $service->product_id = $newProduct->id;
                 $service->save();
+                run_hook('AfterModuleChangePackage', ['service' => $service, 'newProduct' => $newProduct]);
             }
 
             return $result;
@@ -208,6 +222,8 @@ class ProvisioningService
      */
     private function enqueueRetry(Service $service, string $action, string $error, array $payload = []): void
     {
+        run_hook('ModuleActionFailed', ['service' => $service, 'action' => $action, 'error' => $error]);
+
         try {
             $existing = ModuleQueue::where('service_id', $service->id)
                 ->where('action', $action)

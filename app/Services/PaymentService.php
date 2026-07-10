@@ -94,7 +94,7 @@ class PaymentService
                 Log::info("PaymentService: partial payment on invoice #{$invoice->id}", [
                     'gateway' => $gateway, 'amount' => $amount, 'remaining' => $balance,
                 ]);
-                return ['success' => true, 'status' => InvoiceStatus::PartiallyPaid->value, 'balance' => $balance, 'paid_event' => false];
+                return ['success' => true, 'status' => InvoiceStatus::PartiallyPaid->value, 'balance' => $balance, 'paid_event' => false, 'partial_amount' => $amount];
             }
 
             // Fully covered. Overpayment goes to client credit.
@@ -125,7 +125,14 @@ class PaymentService
         if ($result['paid_event'] ?? false) {
             event(new InvoicePaid($invoice->fresh(), $transactionId));
         }
-        unset($result['paid_event']);
+        if (($result['status'] ?? null) === InvoiceStatus::PartiallyPaid->value && ($result['success'] ?? false)) {
+            run_hook('InvoicePartiallyPaid', [
+                'invoice' => $invoice->fresh(),
+                'amount'  => $result['partial_amount'] ?? null,
+                'balance' => $result['balance'] ?? null,
+            ]);
+        }
+        unset($result['paid_event'], $result['partial_amount']);
 
         return $result;
     }

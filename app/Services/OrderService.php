@@ -198,6 +198,7 @@ class OrderService
 
         if ($awaitingManual) {
             // Keep the order pending so it shows up for admin review.
+            run_hook('PendingOrder', ['order' => $order]);
             app(NotificationService::class)->dispatch('order.awaiting_acceptance', [
                 'event_type' => 'order.awaiting_acceptance',
                 'subject'    => 'Order awaiting manual acceptance',
@@ -207,6 +208,7 @@ class OrderService
             ]);
         } else {
             $order->update(['status' => OrderStatus::Active->value]);
+            run_hook('AcceptOrder', ['order' => $order->fresh(), 'manual' => $manual]);
         }
 
         return $order->fresh();
@@ -220,6 +222,8 @@ class OrderService
         if (in_array($order->status, [OrderStatus::Cancelled->value, OrderStatus::Fraud->value])) {
             return $order;
         }
+
+        run_hook('CancelOrder', ['order' => $order]);
 
         return DB::transaction(function () use ($order) {
             $order->update(['status' => OrderStatus::Cancelled->value]);
@@ -252,6 +256,8 @@ class OrderService
      */
     public function markFraud(Order $order): Order
     {
+        run_hook('FraudOrder', ['order' => $order]);
+
         return DB::transaction(function () use ($order) {
             $order->update([
                 'status'       => OrderStatus::Fraud->value,
