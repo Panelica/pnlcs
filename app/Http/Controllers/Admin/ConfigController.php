@@ -541,7 +541,22 @@ class ConfigController extends Controller
 
     // Ticket Departments
     public function updateTicketDepartment(Request $request, TicketDepartment $department) {
-        $department->update($request->validate(['name'=>'required','description'=>'nullable|string','email'=>'nullable|email','clients_only'=>'boolean','hidden'=>'boolean','sort_order'=>'nullable|integer','feedback_request'=>'boolean']));
+        $v = $request->validate([
+            'name'=>'required','description'=>'nullable|string','email'=>'nullable|email',
+            'clients_only'=>'boolean','hidden'=>'boolean','sort_order'=>'nullable|integer','feedback_request'=>'boolean',
+            'import_protocol'=>'nullable|in:imap,pop3','import_host'=>'nullable|string|max:255',
+            'import_port'=>'nullable|integer|min:1|max:65535','import_encryption'=>'nullable|in:ssl,tls,none',
+            'import_username'=>'nullable|string|max:255','import_password'=>'nullable|string|max:255',
+            'import_folder'=>'nullable|string|max:255',
+        ]);
+        $v['import_active'] = $request->boolean('import_active');
+        $v['import_delete'] = $request->boolean('import_delete');
+        $v['import_allow_unknown'] = $request->boolean('import_allow_unknown');
+        // Blank password = keep the stored one
+        if (($v['import_password'] ?? '') === '' || $v['import_password'] === null) {
+            unset($v['import_password']);
+        }
+        $department->update($v);
         return back()->with('success', __('messages.success.department_updated'));
     }
     public function destroyTicketDepartment(TicketDepartment $department) {

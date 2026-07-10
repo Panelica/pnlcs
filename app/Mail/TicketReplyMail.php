@@ -26,7 +26,7 @@ class TicketReplyMail extends Mailable implements ShouldQueue
         $tid = $this->ticket->tid ?? $this->ticket->id;
         $title = $this->ticket->title ?? $this->ticket->subject ?? '';
 
-        return new Envelope(subject: "Re: Ticket #{$tid}: {$title}");
+        return new Envelope(subject: "Re: [Ticket #{$tid}] {$title}");
     }
 
     public function content(): Content

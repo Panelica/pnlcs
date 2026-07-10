@@ -17,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ModuleRegistry::class);
+        $this->app->bind(\App\Contracts\MailboxClientInterface::class, \App\Services\Mail\ImapMailboxClient::class);
         $this->app->singleton(ThemeManager::class);
         $this->app->singleton(ReportManager::class);
         $this->app->singleton(AddonManager::class);

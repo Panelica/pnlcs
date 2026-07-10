@@ -29,3 +29,6 @@ Schedule::command('pnlcs:usage-polling')->hourly();
 
 // Module queue — retry failed provisioning actions every 5 minutes
 Schedule::command('pnlcs:module-queue')->everyFiveMinutes()->withoutOverlapping();
+
+// Support mailbox import (IMAP/POP3 → tickets) — every 5 minutes
+Schedule::command('pnlcs:mail-import')->everyFiveMinutes()->withoutOverlapping();
