@@ -32,3 +32,9 @@ Schedule::command('pnlcs:module-queue')->everyFiveMinutes()->withoutOverlapping(
 
 // Support mailbox import (IMAP/POP3 → tickets) — every 5 minutes
 Schedule::command('pnlcs:mail-import')->everyFiveMinutes()->withoutOverlapping();
+
+// Exchange rates — daily before invoice generation
+Schedule::command('pnlcs:currency-update')->daily()->at('05:30');
+
+// Database backup — daily, before the billing crons
+Schedule::command('pnlcs:db-backup')->daily()->at('04:30')->withoutOverlapping();
