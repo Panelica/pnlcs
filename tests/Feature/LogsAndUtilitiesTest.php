@@ -97,6 +97,6 @@ test('invoice CSV export returns text/csv content type', function () {
 });
 
 test('invoice CSV export with status filter', function () {
-    $response = $this->get(route('admin.invoices.export', ['status' => 'Paid']));
+    $response = $this->get(route('admin.invoices.export', ['status' => 'paid']));
     $response->assertStatus(200);
 });

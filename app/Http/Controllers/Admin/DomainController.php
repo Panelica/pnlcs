@@ -23,7 +23,7 @@ class DomainController extends Controller
         $domains = $query->orderBy($sortField, $sortDir)->paginate(25);
 
         $registrars = Domain::distinct()->pluck('registrar')->filter()->sort()->values();
-        $statuses = ['Active', 'Pending', 'Expired', 'Cancelled', 'Transferred Away'];
+        $statuses = ['active', 'pending', 'grace', 'redemption', 'expired', 'cancelled', 'transferred_away'];
 
         return view('admin.domains.index', compact('domains', 'registrars', 'statuses'));
     }

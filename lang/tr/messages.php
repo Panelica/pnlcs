@@ -5,6 +5,7 @@ return [
     'email.test_sent' => 'Test email sent successfully to :address.',
     'email.test_subject' => 'PNLCS Test Email',
     'error' => [
+        'invoice_not_awaiting_payment' => 'Bu fatura ödeme bekleyen durumda değil.',
         '2fa_invalid' => 'Invalid auntication code.',
         'account_disabled' => 'Sizin account  devre disi birakildi.',
         'already_activated' => 'Already aktiflestirildi.',
@@ -67,7 +68,11 @@ return [
     'payment_method.bank_transfer' => 'Bank Transfer',
     'payment_method.credit_debit_card' => 'Credit / Debit Card',
     'payment_method.paypal' => 'PayPal',
+    'info' => [
+        'payment_notification_already_pending' => 'Bu fatura için zaten incelenmekte olan bir ödeme bildiriminiz var.',
+    ],
     'success' => [
+        'payment_notification_submitted' => 'Teşekkürler! Ödeme bildiriminiz alındı, en kısa sürede incelenecek.',
         '2fa_disabled' => 'Two-factor auntication devre disi birakildi.',
         '2fa_enabled' => 'Two-factor auntication etkinlestirildi.',
         '2fa_enabled_successfully' => 'Two-factor auntication etkinlestirildi basariyla.',

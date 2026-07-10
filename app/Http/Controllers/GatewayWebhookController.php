@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
-use App\Models\Transaction;
 use App\Services\Module\ModuleRegistry;
+use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class GatewayWebhookController extends Controller
 {
-    public function __construct(private readonly ModuleRegistry $registry) {}
+    public function __construct(
+        private readonly ModuleRegistry $registry,
+        private readonly PaymentService $payments,
+    ) {}
 
     /**
      * PayPal webhook endpoint.
@@ -168,34 +171,20 @@ class GatewayWebhookController extends Controller
     }
 
     /**
-     * Record a successful payment transaction and mark the invoice as paid.
+     * Record a successful gateway payment through the central payment chain.
+     * PaymentService handles idempotency, partial payments, overpayment credit,
+     * and fires InvoicePaid → auto-accept order → provisioning.
      */
     private function recordTransaction(Invoice $invoice, string $gateway, string $transactionId, float $amount): void
     {
-        // Idempotent — do not double-record
-        $exists = Transaction::where("transaction_id", $transactionId)->exists();
-        if ($exists) {
-            return;
-        }
+        $result = $this->payments->applyPayment($invoice, $gateway, $transactionId, $amount > 0 ? $amount : null);
 
-        Transaction::create([
-            "client_id"      => $invoice->client_id,
-            "invoice_id"     => $invoice->id,
-            "gateway"        => $gateway,
-            "date"           => now(),
-            "description"    => "Payment for Invoice #" . ($invoice->invoice_num ?? $invoice->id),
-            "amount_in"      => $amount,
-            "fees"           => 0,
-            "amount_out"     => 0,
-            "transaction_id" => $transactionId,
+        Log::info("Webhook payment processed for invoice #{$invoice->id} via {$gateway}", [
+            'transaction_id' => $transactionId,
+            'status'         => $result['status'] ?? null,
+            'balance'        => $result['balance'] ?? null,
+            'duplicate'      => $result['duplicate'] ?? false,
         ]);
-
-        $invoice->update([
-            "status"    => "paid",
-            "date_paid" => now(),
-        ]);
-
-        Log::info("Invoice #{$invoice->id} marked as paid via {$gateway}", ["transaction_id" => $transactionId]);
     }
 
     // ========== Mollie ==========

@@ -209,7 +209,7 @@ test('process checkout creates order and invoice', function () {
 
     $response->assertRedirect();
 
-    $this->assertDatabaseHas('orders', ['client_id' => $client->id, 'status' => 'Pending']);
+    $this->assertDatabaseHas('orders', ['client_id' => $client->id, 'status' => 'pending']);
     $this->assertDatabaseHas('invoices', ['client_id' => $client->id, 'status' => 'unpaid']);
     $this->assertDatabaseHas('services', ['client_id' => $client->id, 'domain' => $domainName]);
 });

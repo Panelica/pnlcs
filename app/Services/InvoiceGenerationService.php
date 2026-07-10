@@ -28,7 +28,7 @@ class InvoiceGenerationService
 
         // Only active services that are due for renewal and not already invoiced recently
         $services = Service::with('client', 'product')
-            ->where('status', 'Active')
+            ->where('status', 'active')
             ->whereNotNull('next_due_date')
             ->where('next_due_date', '<=', $cutoff)
             ->whereHas('client')
@@ -135,10 +135,10 @@ class InvoiceGenerationService
      */
     public function markOverdueInvoices(): int
     {
-        return Invoice::where('status', 'Unpaid')
+        return Invoice::where('status', 'unpaid')
             ->whereNotNull('due_date')
             ->where('due_date', '<', now()->startOfDay())
-            ->update(['status' => 'Overdue']);
+            ->update(['status' => 'overdue']);
     }
 
     // -------------------------------------------------------------------------

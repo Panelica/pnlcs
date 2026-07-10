@@ -21,7 +21,7 @@
                 <select name="status" class="form-control" style="width:auto;">
                     <option value="">{{ __('common.misc.all_statuses') }}</option>
                     @foreach($statuses as $s)
-                    <option value="{{ $s }}" {{ request("status") == $s ? "selected" : "" }}>{{ $s }}</option>
+                    <option value="{{ $s }}" {{ request("status") == $s ? "selected" : "" }}>{{ ucwords(str_replace("_", " ", $s)) }}</option>
                     @endforeach
                 </select>
             </div>

@@ -17,7 +17,7 @@ class OrderFactory extends Factory
             'amount' => fake()->randomFloat(2, 10, 500),
             'payment_method' => 'banktransfer',
             'invoice_id' => null,
-            'status' => 'Active',
+            'status' => 'active',
             'ip_address' => fake()->ipv4(),
             'notes' => fake()->optional(0.2)->sentence(),
         ];
@@ -25,16 +25,16 @@ class OrderFactory extends Factory
 
     public function pending(): static
     {
-        return $this->state(fn () => ['status' => 'Pending']);
+        return $this->state(fn () => ['status' => 'pending']);
     }
 
     public function fraud(): static
     {
-        return $this->state(fn () => ['status' => 'Fraud']);
+        return $this->state(fn () => ['status' => 'fraud']);
     }
 
     public function cancelled(): static
     {
-        return $this->state(fn () => ['status' => 'Cancelled']);
+        return $this->state(fn () => ['status' => 'cancelled']);
     }
 }

@@ -81,6 +81,7 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+        Route::post('invoices/{invoice}/payment-notification', [InvoiceController::class, 'submitPaymentNotification'])->name('invoices.payment-notification');
 
         // Tickets
         Route::get('tickets', [TicketController::class, 'index'])->name('tickets.index');

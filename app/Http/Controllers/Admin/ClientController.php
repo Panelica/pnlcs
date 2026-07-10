@@ -67,7 +67,7 @@ class ClientController extends Controller
         $data['domainCount'] = $client->domains()->count();
         $data['invoiceCount'] = $client->invoices()->count();
         $data['ticketCount'] = $client->tickets()->count();
-        $data['unpaidInvoices'] = $client->invoices()->where('status', 'Unpaid')->sum('total');
+        $data['unpaidInvoices'] = $client->invoices()->where('status', 'unpaid')->sum('total');
 
         switch ($tab) {
             case 'services':
@@ -95,7 +95,7 @@ class ClientController extends Controller
                 $data['domainCount'] = $client->domains()->count();
                 $data['invoiceCount'] = $client->invoices()->count();
                 $data['ticketCount'] = $client->tickets()->count();
-                $data['unpaidInvoices'] = $client->invoices()->where('status', 'Unpaid')->sum('total');
+                $data['unpaidInvoices'] = $client->invoices()->where('status', 'unpaid')->sum('total');
                 $data['recentInvoices'] = $client->invoices()->orderBy('id', 'desc')->limit(5)->get();
                 $data['recentTickets'] = $client->tickets()->with('department')->orderBy('id', 'desc')->limit(5)->get();
                 $data['recentServices'] = $client->services()->with('product')->orderBy('id', 'desc')->limit(5)->get();

@@ -25,7 +25,7 @@ class InvoiceFactory extends Factory
             'total' => 0,
             'tax_rate' => 0,
             'tax_rate2' => 0,
-            'status' => 'Unpaid',
+            'status' => 'unpaid',
             'payment_method' => 'banktransfer',
             'notes' => fake()->optional(0.3)->sentence(),
         ];
@@ -34,7 +34,7 @@ class InvoiceFactory extends Factory
     public function paid(): static
     {
         return $this->state(fn () => [
-            'status' => 'Paid',
+            'status' => 'paid',
             'date_paid' => now(),
         ]);
     }
@@ -42,13 +42,13 @@ class InvoiceFactory extends Factory
     public function overdue(): static
     {
         return $this->state(fn () => [
-            'status' => 'Unpaid',
+            'status' => 'unpaid',
             'due_date' => now()->subDays(fake()->numberBetween(1, 30)),
         ]);
     }
 
     public function cancelled(): static
     {
-        return $this->state(fn () => ['status' => 'Cancelled']);
+        return $this->state(fn () => ['status' => 'cancelled']);
     }
 }

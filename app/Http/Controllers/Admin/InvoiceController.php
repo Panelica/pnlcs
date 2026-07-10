@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
 use App\Models\Client;
 use App\Models\Invoice;
+use App\Enums\InvoiceStatus;
 use App\Models\PaymentMethod;
 use App\Services\InvoiceService;
 use Illuminate\Http\RedirectResponse;
@@ -110,7 +111,7 @@ class InvoiceController extends Controller
      */
     public function markPaid(Request $request, Invoice $invoice): RedirectResponse
     {
-        if ($invoice->status === 'Paid') {
+        if (strtolower((string) $invoice->status) === InvoiceStatus::Paid->value) {
             return back()->with('info', __('admin.messages.invoice_already_paid'));
         }
 
@@ -133,7 +134,7 @@ class InvoiceController extends Controller
      */
     public function cancel(Invoice $invoice): RedirectResponse
     {
-        if ($invoice->status === 'Paid') {
+        if (strtolower((string) $invoice->status) === InvoiceStatus::Paid->value) {
             return back()->with('error', __('messages.error.paid_invoices_cannot_be_cancelled'));
         }
 

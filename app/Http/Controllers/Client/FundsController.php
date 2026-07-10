@@ -55,7 +55,7 @@ class FundsController extends Controller
             'total'          => $validated['amount'],
             'tax_rate'       => 0,
             'tax_rate2'      => 0,
-            'status'         => 'Unpaid',
+            'status'         => 'unpaid',
             'payment_method' => $gateway,
         ]);
 

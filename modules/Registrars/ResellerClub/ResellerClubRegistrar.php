@@ -69,7 +69,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
         }
 
         $domain->update([
-            'status' => 'Active',
+            'status' => 'active',
             'registrar' => 'ResellerClub',
             'registration_date' => now(),
             'expiry_date' => now()->addYears($years),

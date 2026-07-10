@@ -107,7 +107,7 @@ class CPanelModule extends AbstractServerModule
         }
 
         $this->setModuleData($service, ['cpanel_username' => $username]);
-        $service->update(['username' => $username, 'status' => 'Active']);
+        $service->update(['username' => $username, 'status' => 'active']);
 
         $out = $this->buildResult(true, 'cPanel account created successfully.', ['cpanel_username' => $username]);
         $this->logAction($service, 'create', $out);
@@ -134,7 +134,7 @@ class CPanelModule extends AbstractServerModule
             return $this->buildResult(false, "Suspend failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
+        $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         $out = $this->buildResult(true, 'cPanel account suspended.');
         $this->logAction($service, 'suspend', $out);
         return $out;
@@ -160,7 +160,7 @@ class CPanelModule extends AbstractServerModule
             return $this->buildResult(false, "Unsuspend failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Active', 'suspension_date' => null, 'suspension_reason' => null]);
+        $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         $out = $this->buildResult(true, 'cPanel account unsuspended.');
         $this->logAction($service, 'unsuspend', $out);
         return $out;
@@ -186,7 +186,7 @@ class CPanelModule extends AbstractServerModule
             return $this->buildResult(false, "Terminate failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Terminated', 'termination_date' => now()]);
+        $service->update(['status' => 'terminated', 'termination_date' => now()]);
         $out = $this->buildResult(true, 'cPanel account terminated.');
         $this->logAction($service, 'terminate', $out);
         return $out;
@@ -255,7 +255,7 @@ class CPanelModule extends AbstractServerModule
     public function usageUpdate(Server $server): array
     {
         $services = \App\Models\Service::where('server_id', $server->id)
-            ->where('status', 'Active')
+            ->where('status', 'active')
             ->get();
 
         $updated = 0;

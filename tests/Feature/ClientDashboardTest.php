@@ -27,8 +27,8 @@ test('dashboard shows real service count', function () {
     $client = Client::factory()->create();
     $user->clients()->attach($client->id);
 
-    Service::factory()->count(3)->create(['client_id' => $client->id, 'status' => 'Active']);
-    Service::factory()->create(['client_id' => $client->id, 'status' => 'Cancelled']);
+    Service::factory()->count(3)->create(['client_id' => $client->id, 'status' => 'active']);
+    Service::factory()->create(['client_id' => $client->id, 'status' => 'cancelled']);
 
     $this->actingAs($user)
         ->get(route('client.home'))
@@ -41,7 +41,7 @@ test('dashboard shows real domain count', function () {
     $client = Client::factory()->create();
     $user->clients()->attach($client->id);
 
-    Domain::factory()->count(2)->create(['client_id' => $client->id, 'status' => 'Active']);
+    Domain::factory()->count(2)->create(['client_id' => $client->id, 'status' => 'active']);
 
     $this->actingAs($user)
         ->get(route('client.home'))
@@ -54,8 +54,8 @@ test('dashboard shows unpaid invoice count', function () {
     $client = Client::factory()->create();
     $user->clients()->attach($client->id);
 
-    Invoice::factory()->count(2)->create(['client_id' => $client->id, 'status' => 'Unpaid']);
-    Invoice::factory()->create(['client_id' => $client->id, 'status' => 'Paid']);
+    Invoice::factory()->count(2)->create(['client_id' => $client->id, 'status' => 'unpaid']);
+    Invoice::factory()->create(['client_id' => $client->id, 'status' => 'paid']);
 
     $this->actingAs($user)
         ->get(route('client.home'))
@@ -85,7 +85,7 @@ test('dashboard only shows data for authenticated user clients', function () {
     $user->clients()->attach($client->id);
 
     $otherClient = Client::factory()->create();
-    Service::factory()->count(5)->create(['client_id' => $otherClient->id, 'status' => 'Active']);
+    Service::factory()->count(5)->create(['client_id' => $otherClient->id, 'status' => 'active']);
 
     $this->actingAs($user)
         ->get(route('client.home'))
@@ -112,7 +112,7 @@ test('dashboard shows active services section when services exist', function () 
     $client = Client::factory()->create();
     $user->clients()->attach($client->id);
 
-    Service::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    Service::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     $this->actingAs($user)
         ->get(route('client.home'))

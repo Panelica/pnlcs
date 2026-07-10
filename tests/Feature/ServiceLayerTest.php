@@ -110,7 +110,7 @@ test('domain service registers domain', function () {
         'registrar' => 'custom',
         'registration_period' => 1,
     ]);
-    expect($domain->status)->toBe('Pending')
+    expect($domain->status)->toBe('pending')
         ->and($domain->type)->toBe('Register')
         ->and($domain->client_id)->toBe($client->id);
 });
@@ -119,7 +119,7 @@ test('domain service cancels domain', function () {
     $service = new DomainService();
     $domain = Domain::factory()->create();
     $service->cancelDomain($domain);
-    expect($domain->fresh()->status)->toBe('Cancelled');
+    expect($domain->fresh()->status)->toBe('cancelled');
 });
 
 // TransactionService tests

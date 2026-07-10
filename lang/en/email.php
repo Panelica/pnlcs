@@ -110,6 +110,12 @@ return [
         'amount' => 'Amount',
         'generated' => 'A new invoice has been generated for your account.',
     ],
+    'payment_notification_rejected' => [
+        'intro' => 'Unfortunately we could not verify the bank transfer you reported for invoice #:number.',
+        'next_steps' => 'Please check the details below and submit a new payment notification, or contact support if you believe this is an error.',
+        'reason' => 'Reason',
+        'reported_amount' => 'Reported Amount',
+    ],
     'invoice_overdue' => [
         'amount_due' => 'Amount Due',
         'days_overdue' => 'Days Overdue',

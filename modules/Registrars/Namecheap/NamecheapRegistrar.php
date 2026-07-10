@@ -90,7 +90,7 @@ class NamecheapRegistrar implements RegistrarModuleInterface
 
         if ($response['success']) {
             $domain->update([
-                'status' => 'Active',
+                'status' => 'active',
                 'registrar' => 'Namecheap',
                 'registration_date' => now(),
                 'expiry_date' => now()->addYears($years),

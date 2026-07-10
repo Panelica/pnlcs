@@ -21,7 +21,7 @@ class StoreProductRequest extends FormRequest
             'hidden' => 'boolean',
             'retired' => 'boolean',
             'pay_type' => 'required|in:free,onetime,recurring',
-            'auto_setup' => 'nullable|in:order,payment,on,manual',
+            'auto_setup' => 'nullable|in:order,payment,manual',
             'server_type' => 'nullable|string|max:50',
             'server_group_id' => 'nullable|exists:server_groups,id',
             'tax' => 'boolean',

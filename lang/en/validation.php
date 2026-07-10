@@ -4,7 +4,6 @@ return [
     'accepted' => 'The :attribute field must be accepted.',
     'active_url' => 'The :attribute field is not a valid URL.',
     'attributes' => [
-,
     ],
     'confirmed' => 'The :attribute confirmation does not match.',
     'email' => 'Please enter a valid email address.',

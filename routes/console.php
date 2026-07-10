@@ -26,3 +26,6 @@ Schedule::command('pnlcs:ticket-escalation')->everyFifteenMinutes();
 
 // Usage Polling - hourly
 Schedule::command('pnlcs:usage-polling')->hourly();
+
+// Module queue — retry failed provisioning actions every 5 minutes
+Schedule::command('pnlcs:module-queue')->everyFiveMinutes()->withoutOverlapping();

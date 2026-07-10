@@ -101,7 +101,7 @@ test('plesk create account succeeds with mocked API', function () {
         'server_id'  => $server->id,
         'order_id'   => $order->id,
         'domain'     => 'test.com',
-        'status'     => 'Pending',
+        'status'     => 'pending',
         'username'   => 'testuser',
     ]);
 
@@ -158,7 +158,7 @@ test('plesk suspend account with mocked API', function () {
         'server_id'  => $server->id,
         'order_id'   => $order->id,
         'notes'      => json_encode(['plesk_client_id' => 'client-555', 'plesk_webspace_id' => 'ws-555']),
-        'status'     => 'Active',
+        'status'     => 'active',
     ]);
 
     $module = new \Modules\Servers\Plesk\PleskModule();
@@ -310,7 +310,7 @@ test('directadmin create account succeeds with mocked API', function () {
         'order_id'   => $order->id,
         'domain'     => 'example.com',
         'username'   => 'dauser',
-        'status'     => 'Pending',
+        'status'     => 'pending',
     ]);
 
     $module = new \Modules\Servers\DirectAdmin\DirectAdminModule();
@@ -357,7 +357,7 @@ test('directadmin suspend account with mocked API', function () {
         'server_id'  => $server->id,
         'order_id'   => $order->id,
         'username'   => 'dauser',
-        'status'     => 'Active',
+        'status'     => 'active',
     ]);
 
     $module = new \Modules\Servers\DirectAdmin\DirectAdminModule();
@@ -542,7 +542,7 @@ test('panelica create account with mocked API', function () {
         'server_id'  => $server->id,
         'order_id'   => $order->id,
         'domain'     => 'test.com',
-        'status'     => 'Pending',
+        'status'     => 'pending',
     ]);
 
     $module = new \Modules\Servers\Panelica\PanelicaModule();
@@ -570,7 +570,7 @@ test('panelica suspend with mocked API', function () {
         'server_id'  => $server->id,
         'order_id'   => $order->id,
         'notes'      => json_encode(['panelica_user_id' => 'uuid-123']),
-        'status'     => 'Active',
+        'status'     => 'active',
     ]);
 
     $module = new \Modules\Servers\Panelica\PanelicaModule();
@@ -645,7 +645,7 @@ test('cpanel create account with mocked API', function () {
         'server_id'  => $server->id,
         'order_id'   => $order->id,
         'domain'     => 'example.com',
-        'status'     => 'Pending',
+        'status'     => 'pending',
     ]);
 
     $module = new \Modules\Servers\CPanel\CPanelModule();
@@ -759,14 +759,14 @@ test('provisioning createAccount with plesk succeeds end-to-end', function () {
         'order_id'   => $order->id,
         'domain'     => 'e2e.com',
         'username'   => 'e2euser',
-        'status'     => 'Pending',
+        'status'     => 'pending',
     ]);
 
     $provisioning = app(ProvisioningService::class);
     $result = $provisioning->createAccount($service->fresh(['product', 'server', 'client']));
 
     expect($result['success'])->toBeTrue();
-    expect($service->fresh()->status)->toBe('Active');
+    expect($service->fresh()->status)->toBe('active');
 });
 
 test('provisioning createAccount with directadmin succeeds end-to-end', function () {
@@ -786,12 +786,12 @@ test('provisioning createAccount with directadmin succeeds end-to-end', function
         'order_id'   => $order->id,
         'domain'     => 'datest.com',
         'username'   => 'dauser',
-        'status'     => 'Pending',
+        'status'     => 'pending',
     ]);
 
     $provisioning = app(ProvisioningService::class);
     $result = $provisioning->createAccount($service->fresh(['product', 'server', 'client']));
 
     expect($result['success'])->toBeTrue();
-    expect($service->fresh()->status)->toBe('Active');
+    expect($service->fresh()->status)->toBe('active');
 });

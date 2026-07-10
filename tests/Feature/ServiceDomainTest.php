@@ -66,7 +66,7 @@ test('module action create dispatches to ProvisioningService', function () {
 
     $response->assertRedirect();
     $response->assertSessionHas('success');
-    expect($service->fresh()->status)->toBe('Active');
+    expect($service->fresh()->status)->toBe('active');
 });
 
 test('module action suspend updates service status', function () {
@@ -79,7 +79,7 @@ test('module action suspend updates service status', function () {
         ]);
 
     $response->assertRedirect();
-    expect($service->fresh()->status)->toBe('Suspended');
+    expect($service->fresh()->status)->toBe('suspended');
     expect($service->fresh()->suspension_reason)->toBe('Test suspension');
 });
 
@@ -91,7 +91,7 @@ test('module action unsuspend restores service', function () {
         ->post(route('admin.services.module-action', [$service, 'unsuspend']));
 
     $response->assertRedirect();
-    expect($service->fresh()->status)->toBe('Active');
+    expect($service->fresh()->status)->toBe('active');
 });
 
 test('module action terminate sets termination_date', function () {
@@ -102,7 +102,7 @@ test('module action terminate sets termination_date', function () {
         ->post(route('admin.services.module-action', [$service, 'terminate']));
 
     $response->assertRedirect();
-    expect($service->fresh()->status)->toBe('Terminated');
+    expect($service->fresh()->status)->toBe('terminated');
     expect($service->fresh()->termination_date)->not->toBeNull();
 });
 
@@ -129,10 +129,10 @@ test('admin can view domain list', function () {
 });
 
 test('domain list supports status filter', function () {
-    Domain::factory()->create(['status' => 'Active', 'domain' => 'active-domain.com']);
+    Domain::factory()->create(['status' => 'active', 'domain' => 'active-domain.com']);
     Domain::factory()->expired()->create(['domain' => 'expired-domain.com']);
 
-    $response = $this->get(route('admin.domains.index', ['status' => 'Active']));
+    $response = $this->get(route('admin.domains.index', ['status' => 'active']));
 
     $response->assertStatus(200);
     $response->assertSee('active-domain.com');

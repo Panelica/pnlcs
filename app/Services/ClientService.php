@@ -21,7 +21,7 @@ class ClientService
     public function closeClient(Client $client): Client
     {
         $client->update(['status' => 'closed']);
-        $client->services()->where('status', 'Active')->update(['status' => 'Cancelled']);
+        $client->services()->where('status', 'active')->update(['status' => 'cancelled']);
         return $client->fresh();
     }
 

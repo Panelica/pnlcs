@@ -17,8 +17,9 @@ class ViewServiceProvider extends ServiceProvider
             $counts = DB::selectOne("
                 SELECT
                     (SELECT COUNT(*) FROM orders WHERE status = 'pending') as pending_orders,
-                    (SELECT COUNT(*) FROM invoices WHERE status = 'Unpaid') as unpaid_invoices,
-                    (SELECT COUNT(*) FROM invoices WHERE status = 'Overdue') as overdue_invoices,
+                    (SELECT COUNT(*) FROM invoices WHERE status = 'unpaid') as unpaid_invoices,
+                    (SELECT COUNT(*) FROM invoices WHERE status = 'overdue') as overdue_invoices,
+                    (SELECT COUNT(*) FROM payment_notifications WHERE status = 'pending') as pending_payment_notifications,
                     (SELECT COUNT(*) FROM tickets WHERE status IN ('Open','Customer-Reply')) as open_tickets,
                     (SELECT COUNT(*) FROM tickets WHERE status = 'Open') as open_tickets_only,
                     (SELECT COUNT(*) FROM tickets WHERE status = 'Customer-Reply') as awaiting_tickets,
@@ -27,7 +28,7 @@ class ViewServiceProvider extends ServiceProvider
             ");
 
             $view->with('sidebarCounts', $counts ?: (object)[
-                'pending_orders' => 0, 'unpaid_invoices' => 0, 'overdue_invoices' => 0,
+                'pending_orders' => 0, 'unpaid_invoices' => 0, 'overdue_invoices' => 0, 'pending_payment_notifications' => 0,
                 'open_tickets' => 0, 'open_tickets_only' => 0, 'awaiting_tickets' => 0,
                 'active_tickets' => 0, 'high_priority_tickets' => 0,
             ]);

@@ -17,7 +17,7 @@ class ProcessCancellationsCommand extends Command
     public function handle(): int
     {
         $services = Service::with('server', 'product', 'client')
-            ->where('status', 'Active')
+            ->where('status', 'active')
             ->whereHas('cancellationRequest')
             ->where('next_due_date', '<=', now())
             ->get();
@@ -42,7 +42,7 @@ class ProcessCancellationsCommand extends Command
             }
 
             $service->update([
-                'status' => 'Cancelled',
+                'status' => 'cancelled',
                 'termination_date' => now(),
             ]);
 

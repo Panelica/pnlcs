@@ -59,7 +59,7 @@ test('create invoice sets status to Unpaid by default', function () {
         ['description' => 'Hosting', 'amount' => 9.99, 'taxed' => false],
     ]);
 
-    expect($invoice->status)->toBe('Unpaid');
+    expect($invoice->status)->toBe('unpaid');
 });
 
 test('create invoice uses provided date and due_date', function () {
@@ -149,18 +149,18 @@ test('recalculate totals skips tax for non-taxed items', function () {
 test('mark paid changes invoice status to Paid', function () {
     $client  = Client::factory()->create();
     $service = app(InvoiceService::class);
-    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'Unpaid', 'total' => 29.99]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 29.99]);
 
     $updated = $service->markPaid($invoice);
 
-    expect($updated->status)->toBe('Paid')
+    expect($updated->status)->toBe('paid')
         ->and($updated->date_paid)->not->toBeNull();
 });
 
 test('mark paid creates a transaction record', function () {
     $client  = Client::factory()->create();
     $service = app(InvoiceService::class);
-    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'Unpaid', 'total' => 49.00]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 49.00]);
 
     $service->markPaid($invoice, 'TXN-12345', 'stripe');
 
@@ -192,7 +192,7 @@ test('apply credit reduces invoice total', function () {
     $service = app(InvoiceService::class);
     $invoice = Invoice::factory()->create([
         'client_id' => $client->id,
-        'status'    => 'Unpaid',
+        'status'    => 'unpaid',
         'subtotal'  => 30.00,
         'total'     => 30.00,
         'credit'    => 0,
@@ -209,7 +209,7 @@ test('apply credit deducts from client credit balance', function () {
     $service = app(InvoiceService::class);
     $invoice = Invoice::factory()->create([
         'client_id' => $client->id,
-        'status'    => 'Unpaid',
+        'status'    => 'unpaid',
         'subtotal'  => 50.00,
         'total'     => 50.00,
         'credit'    => 0,
@@ -225,7 +225,7 @@ test('apply credit cannot exceed available client credit', function () {
     $service = app(InvoiceService::class);
     $invoice = Invoice::factory()->create([
         'client_id' => $client->id,
-        'status'    => 'Unpaid',
+        'status'    => 'unpaid',
         'subtotal'  => 100.00,
         'total'     => 100.00,
         'credit'    => 0,
@@ -243,7 +243,7 @@ test('apply credit auto-marks invoice paid when fully covered', function () {
     $service = app(InvoiceService::class);
     $invoice = Invoice::factory()->create([
         'client_id' => $client->id,
-        'status'    => 'Unpaid',
+        'status'    => 'unpaid',
         'subtotal'  => 20.00,
         'total'     => 20.00,
         'credit'    => 0,
@@ -251,7 +251,7 @@ test('apply credit auto-marks invoice paid when fully covered', function () {
 
     $service->applyCredit($invoice, 20.00);
 
-    expect($invoice->fresh()->status)->toBe('Paid');
+    expect($invoice->fresh()->status)->toBe('paid');
 });
 
 test('apply credit does not affect paid invoices', function () {
@@ -275,11 +275,11 @@ test('apply credit does not affect paid invoices', function () {
 test('cancel invoice sets status to Cancelled', function () {
     $client  = Client::factory()->create();
     $service = app(InvoiceService::class);
-    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'Unpaid']);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid']);
 
     $updated = $service->cancelInvoice($invoice);
 
-    expect($updated->status)->toBe('Cancelled');
+    expect($updated->status)->toBe('cancelled');
 });
 
 test('cancel invoice does not cancel paid invoices', function () {
@@ -289,7 +289,7 @@ test('cancel invoice does not cancel paid invoices', function () {
 
     $updated = $service->cancelInvoice($invoice);
 
-    expect($updated->status)->toBe('Paid');
+    expect($updated->status)->toBe('paid');
 });
 
 // ---------------------------------------------------------------------------

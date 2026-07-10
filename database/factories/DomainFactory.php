@@ -20,7 +20,7 @@ class DomainFactory extends Factory
             'registration_date' => now(),
             'expiry_date' => now()->addYear(),
             'next_due_date' => now()->addYear(),
-            'status' => 'Active',
+            'status' => 'active',
             'dns_management' => false,
             'email_forwarding' => false,
             'id_protection' => false,
@@ -46,6 +46,6 @@ class DomainFactory extends Factory
 
     public function pending(): static
     {
-        return $this->state(fn () => ['status' => 'Pending']);
+        return $this->state(fn () => ['status' => 'pending']);
     }
 }

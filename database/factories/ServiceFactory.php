@@ -25,7 +25,7 @@ class ServiceFactory extends Factory
             'billing_cycle' => fake()->randomElement(['Monthly', 'Quarterly', 'Semi-Annually', 'Annually']),
             'next_due_date' => fake()->dateTimeBetween('now', '+1 year'),
             'registration_date' => now(),
-            'status' => 'Active',
+            'status' => 'active',
             'username' => fake()->optional(0.5)->userName(),
             'password' => null,
             'notes' => fake()->optional(0.2)->sentence(),
@@ -34,13 +34,13 @@ class ServiceFactory extends Factory
 
     public function active(): static
     {
-        return $this->state(fn () => ['status' => 'Active']);
+        return $this->state(fn () => ['status' => 'active']);
     }
 
     public function suspended(): static
     {
         return $this->state(fn () => [
-            'status' => 'Suspended',
+            'status' => 'suspended',
             'suspension_date' => now(),
             'suspension_reason' => fake()->sentence(),
         ]);
@@ -49,13 +49,13 @@ class ServiceFactory extends Factory
     public function terminated(): static
     {
         return $this->state(fn () => [
-            'status' => 'Terminated',
+            'status' => 'terminated',
             'termination_date' => now(),
         ]);
     }
 
     public function pending(): static
     {
-        return $this->state(fn () => ['status' => 'Pending']);
+        return $this->state(fn () => ['status' => 'pending']);
     }
 }

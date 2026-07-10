@@ -60,16 +60,36 @@
                 <span>{{ __('client.invoices.total_due') }}</span>
                 <span>${{ number_format($invoice->total, 2) }}</span>
             </div>
+            @if(isset($balance) && $balance > 0 && $balance < (float) $invoice->total)
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-top:1px solid #f1f5f9">
+                <span class="text-muted">{{ __('client.invoices.amount_paid') }}</span>
+                <span>${{ number_format((float) $invoice->total - $balance, 2) }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:14px;font-weight:700;color:#dc3545">
+                <span>{{ __('client.invoices.remaining_balance') }}</span>
+                <span>${{ number_format($balance, 2) }}</span>
+            </div>
+            @endif
         </div>
     </div>
 </div>
 
-@if(in_array(strtolower($invoice->status), ["unpaid", "overdue"]))
+@if(strtolower($invoice->status) === "payment_pending" || (isset($pendingNotification) && $pendingNotification))
+<div class="pn-alert pn-alert-info mb-24" style="padding:14px 18px;">
+    <strong>{{ __('client.invoices.payment_notification_pending_title') }}</strong><br>
+    {{ __('client.invoices.payment_notification_pending_text') }}
+    @if(isset($pendingNotification) && $pendingNotification)
+    <br><small class="text-muted">{{ __('client.invoices.reported_on') }} {{ $pendingNotification->created_at->format('d M Y H:i') }} — ${{ number_format((float) $pendingNotification->amount, 2) }}</small>
+    @endif
+</div>
+@endif
+
+@if(in_array(strtolower($invoice->status), ["unpaid", "overdue", "partially_paid"]))
 <div class="pn-card mb-24">
     <div class="pn-card-header" style="background:linear-gradient(135deg,var(--primary),#1e5fa0);border-radius:12px 12px 0 0">
         <span style="font-size:15px;font-weight:700;color:#fff">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:-2px;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-            {{ __('client.invoices.pay_this_invoice') }} — ${{ number_format($invoice->total, 2) }}
+            {{ __('client.invoices.pay_this_invoice') }} — ${{ number_format($balance ?? $invoice->total, 2) }}
         </span>
     </div>
     <div class="pn-card-body">
@@ -77,7 +97,7 @@
         <p class="text-muted text-sm mb-16">{{ __('client.invoices.select_payment_method') }}</p>
         <div class="gw-tabs">
             @foreach($gateways as $i => $gw)
-            <div class="gw-tab {{ $i === 0 ? "active" : "" }}" onclick="switchGw(event, "{{ $gw }}")">
+            <div class="gw-tab {{ $i === 0 ? "active" : "" }}" onclick="switchGw(event, '{{ $gw }}')">
                 {{ $gatewayLabels[$gw] ?? ucfirst($gw) }}
             </div>
             @endforeach
@@ -86,6 +106,9 @@
         <div id="gw-{{ $gw }}" class="gw-panel {{ $i === 0 ? "active" : "" }}">
             @if(isset($gatewayForms[$gw]) && $gatewayForms[$gw])
                 {!! $gatewayForms[$gw] !!}
+                @if($gw === "banktransfer" && !(isset($pendingNotification) && $pendingNotification))
+                    @include("client.invoices.partials.payment-notification-form")
+                @endif
             @elseif($gw === "stripe")
                 <div class="gw-form-box">
                     <p class="text-muted text-sm mb-16">{{ __('client.invoices.stripe_desc') }}</p>

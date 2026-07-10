@@ -5,6 +5,7 @@ return [
     'email.test_sent' => 'Test email sent successfully to :address.',
     'email.test_subject' => 'PNLCS Test Email',
     'error' => [
+        'invoice_not_awaiting_payment' => 'This invoice is not awaiting payment.',
         '2fa_invalid' => 'Invalid authentication code.',
         'account_disabled' => 'Your account has been disabled.',
         'already_activated' => 'Already activated.',
@@ -67,7 +68,11 @@ return [
     'payment_method.bank_transfer' => 'Bank Transfer',
     'payment_method.credit_debit_card' => 'Credit / Debit Card',
     'payment_method.paypal' => 'PayPal',
+    'info' => [
+        'payment_notification_already_pending' => 'You already have a payment notification under review for this invoice.',
+    ],
     'success' => [
+        'payment_notification_submitted' => 'Thank you! Your payment notification was submitted and will be reviewed shortly.',
         '2fa_disabled' => 'Two-factor authentication disabled.',
         '2fa_enabled' => 'Two-factor authentication enabled.',
         '2fa_enabled_successfully' => 'Two-factor authentication enabled successfully.',

@@ -16,7 +16,7 @@ function makeAuthUserWithClient(): array
 
 test('authenticated user can view service detail', function () {
     [$user, $client] = makeAuthUserWithClient();
-    $service = Service::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $service = Service::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     $this->actingAs($user)
         ->get(route('client.services.show', $service))
@@ -35,7 +35,7 @@ test('user cannot view service belonging to another client', function () {
 
 test('authenticated user can view cancellation form', function () {
     [$user, $client] = makeAuthUserWithClient();
-    $service = Service::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $service = Service::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     $this->actingAs($user)
         ->get(route('client.services.cancel', $service))
@@ -54,7 +54,7 @@ test('user cannot view cancellation form for another client service', function (
 
 test('authenticated user can submit cancellation request', function () {
     [$user, $client] = makeAuthUserWithClient();
-    $service = Service::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $service = Service::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     $response = $this->actingAs($user)->post(route('client.services.cancel.submit', $service), [
         'type'   => 'Immediate',

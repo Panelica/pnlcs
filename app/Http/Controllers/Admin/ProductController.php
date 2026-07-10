@@ -86,7 +86,7 @@ class ProductController extends Controller
             "hidden" => "nullable|boolean",
             "retired" => "nullable|boolean",
             "is_featured" => "nullable|boolean",
-            "auto_setup" => "nullable|in:order,payment,on,off",
+            "auto_setup" => "nullable|in:order,payment,manual",
             "server_type" => "nullable|string",
             "welcome_email_template" => "nullable|string",
         "ssl_module" => "nullable|string|max:100",

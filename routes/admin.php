@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DomainController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PaymentNotificationController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
@@ -107,6 +108,12 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::middleware("admin.permission:manage_invoices")->group(function () {
         Route::post("invoices/{invoice}/mark-paid", [InvoiceController::class, "markPaid"])->name("invoices.mark-paid");
         Route::post("invoices/{invoice}/cancel", [InvoiceController::class, "cancel"])->name("invoices.cancel");
+
+        // Offline payment notifications (bank transfer review queue)
+        Route::get("payment-notifications", [PaymentNotificationController::class, "index"])->name("payment-notifications.index");
+        Route::get("payment-notifications/{paymentNotification}/receipt", [PaymentNotificationController::class, "receipt"])->name("payment-notifications.receipt");
+        Route::post("payment-notifications/{paymentNotification}/approve", [PaymentNotificationController::class, "approve"])->name("payment-notifications.approve");
+        Route::post("payment-notifications/{paymentNotification}/reject", [PaymentNotificationController::class, "reject"])->name("payment-notifications.reject");
     });
 
     // =============================================

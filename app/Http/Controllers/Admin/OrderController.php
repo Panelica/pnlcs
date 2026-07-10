@@ -49,7 +49,7 @@ class OrderController extends Controller
             return back()->with('error', __('admin.messages.order_pending_error', ['status' => $order->status]));
         }
 
-        $this->orderService->acceptOrder($order);
+        $this->orderService->acceptOrder($order, manual: true);
 
         return back()->with('success', __('admin.messages.order_accepted', ['num' => $order->order_num]));
     }

@@ -171,7 +171,7 @@ class ProxmoxModule extends AbstractServerModule
         $service->update([
             'username' => 'root',
             'password' => $password,
-            'status'   => 'Active',
+            'status'   => 'active',
         ]);
 
         $out = $this->buildResult(true, ucfirst($type) . " #{$vmid} created on {$node}.", compact('vmid', 'node', 'type', 'hostname', 'cores', 'memory', 'disk'));
@@ -309,7 +309,7 @@ class ProxmoxModule extends AbstractServerModule
     {
         $r = $this->vmAction($service, 'shutdown');
         if ($r['success']) {
-            $service->update(['status' => 'Suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
+            $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         }
         $this->logAction($service, 'suspend', $r);
         return $r;
@@ -319,7 +319,7 @@ class ProxmoxModule extends AbstractServerModule
     {
         $r = $this->vmAction($service, 'start');
         if ($r['success']) {
-            $service->update(['status' => 'Active', 'suspension_date' => null, 'suspension_reason' => null]);
+            $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         }
         $this->logAction($service, 'unsuspend', $r);
         return $r;
@@ -354,7 +354,7 @@ class ProxmoxModule extends AbstractServerModule
         ]);
 
         if ($resp->successful()) {
-            $service->update(['status' => 'Terminated', 'termination_date' => now()]);
+            $service->update(['status' => 'terminated', 'termination_date' => now()]);
         }
 
         $out = $this->buildResult($resp->successful(), $resp->successful() ? "VM #{$vmid} destroyed." : "Destroy failed: " . $resp->body());
@@ -447,7 +447,7 @@ class ProxmoxModule extends AbstractServerModule
         $vms = collect($resp->json('data') ?? []);
         $updated = 0;
 
-        foreach (Service::where('server_id', $server->id)->where('status', 'Active')->get() as $svc) {
+        foreach (Service::where('server_id', $server->id)->where('status', 'active')->get() as $svc) {
             $vmid = $this->getModuleData($svc)['proxmox_vmid'] ?? null;
             if (!$vmid) continue;
 

@@ -24,7 +24,7 @@ class LateFeeCommand extends Command
         }
 
         $invoices = Invoice::with('items')
-            ->whereIn('status', ['Overdue', 'overdue'])
+            ->where('status', 'overdue')
             ->where('due_date', '<=', now()->subDays($lateFeeMinDays))
             ->get();
 

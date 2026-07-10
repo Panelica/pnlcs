@@ -110,6 +110,12 @@ return [
         'amount' => 'Tutar',
         'generated' => 'A new invoice  generated for sizin account.',
     ],
+    'payment_notification_rejected' => [
+        'intro' => '#:number numaralı fatura için bildirdiğiniz havale/EFT maalesef doğrulanamadı.',
+        'next_steps' => 'Lütfen bilgileri kontrol edip yeni bir ödeme bildirimi gönderin veya bunun bir hata olduğunu düşünüyorsanız destek ekibiyle iletişime geçin.',
+        'reason' => 'Sebep',
+        'reported_amount' => 'Bildirilen Tutar',
+    ],
     'invoice_overdue' => [
         'amount_due' => 'Tutar Due',
         'days_overdue' => 'Guns Vadesi Gecmis',

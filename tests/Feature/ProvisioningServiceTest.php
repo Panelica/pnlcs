@@ -20,7 +20,7 @@ test('createAccount sets service status to Active', function () {
     $result = $provisioning->createAccount($service->fresh(['product']));
 
     expect($result['success'])->toBeTrue();
-    expect($service->fresh()->status)->toBe('Active');
+    expect($service->fresh()->status)->toBe('active');
 });
 
 test('suspendAccount sets suspension_date and reason', function () {
@@ -32,7 +32,7 @@ test('suspendAccount sets suspension_date and reason', function () {
 
     expect($result['success'])->toBeTrue();
     $fresh = $service->fresh();
-    expect($fresh->status)->toBe('Suspended');
+    expect($fresh->status)->toBe('suspended');
     expect($fresh->suspension_date)->not->toBeNull();
     expect($fresh->suspension_reason)->toBe('Non-payment');
 });
@@ -46,7 +46,7 @@ test('unsuspendAccount clears suspension fields', function () {
 
     expect($result['success'])->toBeTrue();
     $fresh = $service->fresh();
-    expect($fresh->status)->toBe('Active');
+    expect($fresh->status)->toBe('active');
     expect($fresh->suspension_date)->toBeNull();
     expect($fresh->suspension_reason)->toBeNull();
 });
@@ -60,7 +60,7 @@ test('terminateAccount sets termination_date', function () {
 
     expect($result['success'])->toBeTrue();
     $fresh = $service->fresh();
-    expect($fresh->status)->toBe('Terminated');
+    expect($fresh->status)->toBe('terminated');
     expect($fresh->termination_date)->not->toBeNull();
 });
 

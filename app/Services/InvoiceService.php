@@ -118,43 +118,15 @@ class InvoiceService
      */
     public function markPaid(Invoice $invoice, ?string $transactionId = null, string $gateway = 'manual'): Invoice
     {
-        if ($invoice->status === InvoiceStatus::Paid->value) {
+        if (strtolower((string) $invoice->status) === InvoiceStatus::Paid->value) {
             return $invoice;
         }
 
-        $paidInvoice = DB::transaction(function () use ($invoice, $transactionId, $gateway) {
-            $invoice->update([
-                'status'    => InvoiceStatus::Paid->value,
-                'date_paid' => now(),
-            ]);
+        // Settle the remaining balance through the single payment entry point
+        // (partial payments, overpay-to-credit, AddFunds, affiliate, InvoicePaid).
+        app(PaymentService::class)->applyPayment($invoice, $gateway, $transactionId, null);
 
-            Transaction::create([
-                'client_id'      => $invoice->client_id,
-                'currency_id'    => null,
-                'gateway'        => $gateway,
-                'date'           => now()->toDateString(),
-                'description'    => 'Invoice #' . $invoice->invoice_num . ' Payment',
-                'amount_in'      => $invoice->total,
-                'fees'           => 0,
-                'amount_out'     => 0,
-                'rate'           => 1,
-                'transaction_id' => $transactionId,
-                'invoice_id'     => $invoice->id,
-            ]);
-
-
-            // Process affiliate commission if applicable
-            try {
-                app(\App\Services\AffiliateService::class)->processCommission($invoice);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Affiliate commission failed for invoice #' . $invoice->id . ': ' . $e->getMessage());
-            }
-            return $invoice->fresh();
-        });
-
-        event(new InvoicePaid($paidInvoice, $transactionId));
-
-        return $paidInvoice;
+        return $invoice->fresh();
     }
 
     /**
@@ -163,23 +135,26 @@ class InvoiceService
      */
     public function applyCredit(Invoice $invoice, float $amount): Invoice
     {
-        if ($invoice->status === InvoiceStatus::Paid->value || $invoice->status === InvoiceStatus::Cancelled->value) {
+        $status = strtolower((string) $invoice->status);
+        if (in_array($status, [InvoiceStatus::Paid->value, InvoiceStatus::Cancelled->value, InvoiceStatus::Refunded->value], true)) {
             return $invoice;
         }
 
         $client = $invoice->client;
         $availableCredit = (float) $client->credit;
 
-        // Cap at available credit and invoice remaining balance
-        $amount = min($amount, $availableCredit, (float) $invoice->total);
+        // Cap at available credit and the invoice's remaining balance
+        // (balance accounts for partial payments already recorded).
+        $balance = app(PaymentService::class)->balance($invoice);
+        $amount  = min($amount, $availableCredit, $balance);
 
         if ($amount <= 0) {
             return $invoice;
         }
 
-        return DB::transaction(function () use ($invoice, $amount, $client) {
+        $invoice = DB::transaction(function () use ($invoice, $amount, $client) {
             $newCredit = (float) $invoice->credit + $amount;
-            $newTotal  = max(0, (float) $invoice->subtotal + (float) $invoice->tax + (float) $invoice->tax2 - $newCredit);
+            $newTotal  = max(0, (float) $invoice->total - $amount);
 
             $invoice->update([
                 'credit' => $newCredit,
@@ -189,14 +164,16 @@ class InvoiceService
             // Deduct from client credit balance
             $client->decrement('credit', $amount);
 
-            // Auto-mark paid if fully covered
-            if ($newTotal <= 0.001) {
-                $this->markPaid($invoice->fresh(), null, 'credit');
-            }
-
-
             return $invoice->fresh();
         });
+
+        // Fully covered? Settle through the payment chain (fires InvoicePaid).
+        if (app(PaymentService::class)->balance($invoice) <= 0.009) {
+            $this->markPaid($invoice, null, 'credit');
+            $invoice = $invoice->fresh();
+        }
+
+        return $invoice;
     }
 
     /**

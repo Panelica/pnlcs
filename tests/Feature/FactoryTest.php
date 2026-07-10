@@ -40,12 +40,12 @@ test('invoice factory creates valid record', function () {
     $invoice = Invoice::factory()->create();
     expect($invoice)->toBeInstanceOf(Invoice::class)
         ->and($invoice->client_id)->not->toBeNull()
-        ->and($invoice->status)->toBe('Unpaid');
+        ->and($invoice->status)->toBe('unpaid');
 });
 
 test('invoice factory paid state works', function () {
     $invoice = Invoice::factory()->paid()->create();
-    expect($invoice->status)->toBe('Paid')
+    expect($invoice->status)->toBe('paid')
         ->and($invoice->date_paid)->not->toBeNull();
 });
 
@@ -60,12 +60,12 @@ test('service factory creates valid record', function () {
     $service = Service::factory()->create();
     expect($service)->toBeInstanceOf(Service::class)
         ->and($service->client_id)->not->toBeNull()
-        ->and($service->status)->toBe('Active');
+        ->and($service->status)->toBe('active');
 });
 
 test('service factory suspended state works', function () {
     $service = Service::factory()->suspended()->create();
-    expect($service->status)->toBe('Suspended')
+    expect($service->status)->toBe('suspended')
         ->and($service->suspension_date)->not->toBeNull();
 });
 
@@ -87,14 +87,14 @@ test('order factory creates valid record', function () {
     $order = Order::factory()->create();
     expect($order)->toBeInstanceOf(Order::class)
         ->and($order->client_id)->not->toBeNull()
-        ->and($order->status)->toBe('Active');
+        ->and($order->status)->toBe('active');
 });
 
 test('domain factory creates valid record', function () {
     $domain = Domain::factory()->create();
     expect($domain)->toBeInstanceOf(Domain::class)
         ->and($domain->domain)->not->toBeNull()
-        ->and($domain->status)->toBe('Active');
+        ->and($domain->status)->toBe('active');
 });
 
 test('domain factory transfer state works', function () {

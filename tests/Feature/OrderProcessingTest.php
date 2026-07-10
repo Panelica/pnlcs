@@ -36,7 +36,7 @@ test('process order creates an order record', function () {
 
     expect($order)->toBeInstanceOf(Order::class)
         ->and($order->client_id)->toBe($client->id)
-        ->and($order->status)->toBe('Pending');
+        ->and($order->status)->toBe('pending');
 });
 
 test('process order creates services for service items', function () {
@@ -58,7 +58,7 @@ test('process order creates services for service items', function () {
 
     expect($createdServices)->toHaveCount(1)
         ->and($createdServices->first()->product_id)->toBe($product->id)
-        ->and($createdServices->first()->status)->toBe('Pending');
+        ->and($createdServices->first()->status)->toBe('pending');
 });
 
 test('process order creates domains for domain items', function () {
@@ -78,7 +78,7 @@ test('process order creates domains for domain items', function () {
 
     expect($createdDomains)->toHaveCount(1)
         ->and($createdDomains->first()->domain)->toBe('newdomain.com')
-        ->and($createdDomains->first()->status)->toBe('Pending');
+        ->and($createdDomains->first()->status)->toBe('pending');
 });
 
 test('process order generates an invoice', function () {
@@ -101,7 +101,7 @@ test('process order generates an invoice', function () {
     $invoice = Invoice::find($order->invoice_id);
     expect($invoice)->not->toBeNull()
         ->and($invoice->client_id)->toBe($client->id)
-        ->and($invoice->status)->toBe('Unpaid');
+        ->and($invoice->status)->toBe('unpaid');
 });
 
 test('process order calculates invoice total from items', function () {
@@ -156,7 +156,7 @@ test('accept order changes status to Active', function () {
 
     $updated = $service->acceptOrder($order);
 
-    expect($updated->status)->toBe('Active');
+    expect($updated->status)->toBe('active');
 });
 
 test('accept order activates pending services', function () {
@@ -169,17 +169,17 @@ test('accept order activates pending services', function () {
 
     $service->acceptOrder($order);
 
-    expect($svc->fresh()->status)->toBe('Active')
+    expect($svc->fresh()->status)->toBe('active')
         ->and($svc->fresh()->registration_date)->not->toBeNull();
 });
 
 test('accept order is idempotent for already-active orders', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     $updated = makeOrderService()->acceptOrder($order);
 
-    expect($updated->status)->toBe('Active');
+    expect($updated->status)->toBe('active');
 });
 
 // ---------------------------------------------------------------------------
@@ -192,38 +192,38 @@ test('cancel order changes status to Cancelled', function () {
 
     makeOrderService()->cancelOrder($order);
 
-    expect($order->fresh()->status)->toBe('Cancelled');
+    expect($order->fresh()->status)->toBe('cancelled');
 });
 
 test('cancel order terminates active services', function () {
     $client  = Client::factory()->create();
     $product = Product::factory()->create();
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
     $svc     = Service::factory()->active()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
 
     makeOrderService()->cancelOrder($order);
 
-    expect($svc->fresh()->status)->toBe('Cancelled');
+    expect($svc->fresh()->status)->toBe('cancelled');
 });
 
 test('cancel order also cancels unpaid invoice', function () {
     $client  = Client::factory()->create(['tax_exempt' => true]);
-    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'Unpaid']);
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'Pending', 'invoice_id' => $invoice->id]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid']);
+    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'pending', 'invoice_id' => $invoice->id]);
 
     makeOrderService()->cancelOrder($order);
 
-    expect($invoice->fresh()->status)->toBe('Cancelled');
+    expect($invoice->fresh()->status)->toBe('cancelled');
 });
 
 test('cancel order does not cancel paid invoice', function () {
     $client  = Client::factory()->create(['tax_exempt' => true]);
     $invoice = Invoice::factory()->paid()->create(['client_id' => $client->id]);
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'Active', 'invoice_id' => $invoice->id]);
+    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'active', 'invoice_id' => $invoice->id]);
 
     makeOrderService()->cancelOrder($order);
 
-    expect($invoice->fresh()->status)->toBe('Paid');
+    expect($invoice->fresh()->status)->toBe('paid');
 });
 
 // ---------------------------------------------------------------------------
@@ -232,28 +232,28 @@ test('cancel order does not cancel paid invoice', function () {
 
 test('mark fraud changes order status to Fraud', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     makeOrderService()->markFraud($order);
 
-    expect($order->fresh()->status)->toBe('Fraud');
+    expect($order->fresh()->status)->toBe('fraud');
 });
 
 test('mark fraud suspends active services', function () {
     $client  = Client::factory()->create();
     $product = Product::factory()->create();
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
     $svc     = Service::factory()->active()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
 
     makeOrderService()->markFraud($order);
 
-    expect($svc->fresh()->status)->toBe('Suspended')
+    expect($svc->fresh()->status)->toBe('suspended')
         ->and($svc->fresh()->suspension_reason)->toBe('Order marked as fraud');
 });
 
 test('mark fraud records fraud output', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'Active']);
+    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     makeOrderService()->markFraud($order);
 

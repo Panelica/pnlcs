@@ -103,52 +103,113 @@ class OrderService
 
         event(new OrderPlaced($order));
 
-        return $order;
+        // Products configured with auto_setup = 'order' are provisioned the
+        // moment the order is placed, without waiting for payment.
+        $this->provisionOnOrderPlacement($order);
+
+        // Zero-total invoices (free products, 100% promotions) settle
+        // immediately, which drives the normal payment→provisioning chain.
+        $invoice = $order->invoice()->first();
+        if ($invoice && (float) $invoice->total <= 0.009) {
+            $this->invoiceService->markPaid($invoice, null, 'system');
+        }
+
+        return $order->fresh();
     }
 
     /**
-     * Accept a pending order: transition to Active and activate all services.
+     * Provision services whose product opts into setup-on-order-placement.
+     * Runs outside the order transaction — module calls hit external APIs.
      */
-    public function acceptOrder(Order $order): Order
+    private function provisionOnOrderPlacement(Order $order): void
+    {
+        $services = Service::where('order_id', $order->id)
+            ->where('status', ServiceStatus::Pending->value)
+            ->with('product')
+            ->get();
+
+        foreach ($services as $svc) {
+            $autoSetup = strtolower((string) ($svc->product?->auto_setup ?? ''));
+            if ($autoSetup === 'order' && $svc->product?->server_type) {
+                $result = $this->provisioning->createAccount($svc);
+                Log::info('Setup-on-order provisioning for service #' . $svc->id, [
+                    'success' => $result['success'] ?? false,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Accept a pending order and provision its services.
+     *
+     * $manual = true  → admin explicitly accepted: everything is provisioned,
+     *                   including products with auto_setup = 'manual'.
+     * $manual = false → automatic acceptance (payment received / order placed):
+     *                   auto_setup = 'manual' services stay pending and the
+     *                   order remains pending for admin review.
+     *
+     * Services are activated only AFTER their module create succeeds; failures
+     * stay pending and land in the module queue for automatic retry.
+     */
+    public function acceptOrder(Order $order, bool $manual = false): Order
     {
         if ($order->status === OrderStatus::Active->value) {
             return $order;
         }
 
-        return DB::transaction(function () use ($order) {
-            $order->update(['status' => OrderStatus::Active->value]);
+        $pendingServices = Service::where('order_id', $order->id)
+            ->where('status', ServiceStatus::Pending->value)
+            ->with('product')
+            ->get();
 
-            // Activate all pending services on this order
-            Service::where('order_id', $order->id)
-                ->where('status', ServiceStatus::Pending->value)
-                ->update([
-                    'status'            => ServiceStatus::Active->value,
-                    'registration_date' => now()->toDateString(),
-                ]);
+        $awaitingManual = false;
 
-            // Activate pending domains on this order
-            Domain::where('order_id', $order->id)
-                ->where('status', DomainStatus::Pending->value)
-                ->update(['status' => DomainStatus::Active->value]);
+        foreach ($pendingServices as $svc) {
+            $autoSetup = strtolower((string) ($svc->product?->auto_setup ?? 'payment'));
 
-
-            // Auto-provision activated services
-            $activatedServices = Service::where('order_id', $order->id)
-                ->where('status', ServiceStatus::Active->value)
-                ->with('product')
-                ->get();
-            foreach ($activatedServices as $svc) {
-                if ($svc->product && $svc->product->server_type) {
-                    try {
-                        $this->provisioning->createAccount($svc);
-                        Log::info('Auto-provisioned service #' . $svc->id . ' on order accept');
-                    } catch (\Throwable $e) {
-                        Log::error('Auto-provision failed for service #' . $svc->id . ': ' . $e->getMessage());
-                    }
-                }
+            if (!$manual && $autoSetup === 'manual') {
+                $awaitingManual = true;
+                continue;
             }
-            return $order->fresh();
-        });
+
+            if ($svc->product && $svc->product->server_type) {
+                // createAccount activates the service and fires ServiceActivated
+                // on success; on failure it queues a retry and the service
+                // stays pending (no "active but never provisioned" state).
+                $result = $this->provisioning->createAccount($svc);
+                if ($result['success'] ?? false) {
+                    Log::info('Auto-provisioned service #' . $svc->id . ' on order accept');
+                } else {
+                    Log::error('Auto-provision failed for service #' . $svc->id . ': ' . ($result['message'] ?? 'unknown'));
+                }
+            } else {
+                // No server module involved — plain activation.
+                $svc->update([
+                    'status'            => ServiceStatus::Active->value,
+                    'registration_date' => $svc->registration_date ?? now()->toDateString(),
+                ]);
+            }
+        }
+
+        // Activate pending domains on this order
+        Domain::where('order_id', $order->id)
+            ->where('status', DomainStatus::Pending->value)
+            ->update(['status' => DomainStatus::Active->value]);
+
+        if ($awaitingManual) {
+            // Keep the order pending so it shows up for admin review.
+            app(NotificationService::class)->dispatch('order.awaiting_acceptance', [
+                'event_type' => 'order.awaiting_acceptance',
+                'subject'    => 'Order awaiting manual acceptance',
+                'message'    => "Order #{$order->order_num} is paid but contains products that require manual acceptance.",
+                'order_id'   => $order->id,
+                'order_num'  => $order->order_num,
+            ]);
+        } else {
+            $order->update(['status' => OrderStatus::Active->value]);
+        }
+
+        return $order->fresh();
     }
 
     /**

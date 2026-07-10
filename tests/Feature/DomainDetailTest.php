@@ -13,7 +13,7 @@ function makeDomainClient(): array
     $domain = Domain::factory()->create([
         'client_id'   => $client->id,
         'domain'      => 'mysite_' . uniqid() . '.com',
-        'status'      => 'Active',
+        'status'      => 'active',
         'nameservers' => json_encode(['ns1' => 'ns1.example.com', 'ns2' => 'ns2.example.com']),
     ]);
     return [$user, $client, $domain];
@@ -91,7 +91,7 @@ test('user cannot update nameservers of another clients domain', function () {
 
 test('user can toggle domain lock', function () {
     [$user, $client, $domain] = makeDomainClient();
-    expect($domain->status)->toBe('Active');
+    expect($domain->status)->toBe('active');
 
     $this->actingAs($user)->post(route('client.domains.lock', $domain));
     $domain->refresh();
@@ -99,7 +99,7 @@ test('user can toggle domain lock', function () {
 
     $this->actingAs($user)->post(route('client.domains.lock', $domain));
     $domain->refresh();
-    expect($domain->status)->toBe('Active');
+    expect($domain->status)->toBe('active');
 });
 
 test('user can toggle auto-renew', function () {

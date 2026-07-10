@@ -145,7 +145,7 @@ class QuoteService
             'credit'      => 0,
             'tax2'        => 0,
             'tax_rate2'   => 0,
-            'status'      => 'Unpaid',
+            'status'      => 'unpaid',
             'notes'       => $quote->notes,
         ]);
 

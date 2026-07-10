@@ -6,6 +6,7 @@ use App\Contracts\ServerModuleInterface;
 use App\Enums\ServiceStatus;
 use App\Models\Product;
 use App\Models\Service;
+use App\Models\ModuleQueue;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\Log;
 use App\Events\ServiceActivated;
@@ -16,7 +17,7 @@ class ProvisioningService
 {
     public function __construct(private ModuleRegistry $registry) {}
 
-    public function createAccount(Service $service): array
+    public function createAccount(Service $service, bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
 
@@ -32,6 +33,8 @@ class ProvisioningService
                 $service->registration_date = $service->registration_date ?? now();
                 $service->save();
                 event(new ServiceActivated($service));
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'create', $result['message'] ?? 'Module create failed');
             }
 
             return $result;
@@ -40,11 +43,14 @@ class ProvisioningService
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
             ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'create', $e->getMessage());
+            }
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
-    public function suspendAccount(Service $service, string $reason = ''): array
+    public function suspendAccount(Service $service, string $reason = '', bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
 
@@ -61,6 +67,8 @@ class ProvisioningService
                 $service->suspension_reason = $reason;
                 $service->save();
                 event(new ServiceSuspended($service, $reason));
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'suspend', $result['message'] ?? 'Module suspend failed', ['reason' => $reason]);
             }
 
             return $result;
@@ -69,11 +77,14 @@ class ProvisioningService
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
             ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'suspend', $e->getMessage(), ['reason' => $reason]);
+            }
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
-    public function unsuspendAccount(Service $service): array
+    public function unsuspendAccount(Service $service, bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
 
@@ -89,6 +100,8 @@ class ProvisioningService
                 $service->suspension_date = null;
                 $service->suspension_reason = null;
                 $service->save();
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'unsuspend', $result['message'] ?? 'Module unsuspend failed');
             }
 
             return $result;
@@ -97,11 +110,14 @@ class ProvisioningService
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
             ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'unsuspend', $e->getMessage());
+            }
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
-    public function terminateAccount(Service $service): array
+    public function terminateAccount(Service $service, bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
 
@@ -117,6 +133,8 @@ class ProvisioningService
                 $service->termination_date = now();
                 $service->save();
                 event(new ServiceTerminated($service));
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'terminate', $result['message'] ?? 'Module terminate failed');
             }
 
             return $result;
@@ -125,6 +143,9 @@ class ProvisioningService
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
             ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'terminate', $e->getMessage());
+            }
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -178,6 +199,45 @@ class ProvisioningService
                 'error' => $e->getMessage(),
             ]);
             return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Queue a failed module action for automatic retry (see pnlcs:module-queue).
+     * Deduplicates on (service, action, pending) and notifies admins once.
+     */
+    private function enqueueRetry(Service $service, string $action, string $error, array $payload = []): void
+    {
+        try {
+            $existing = ModuleQueue::where('service_id', $service->id)
+                ->where('action', $action)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existing) {
+                $existing->update(['last_error' => $error]);
+                return;
+            }
+
+            ModuleQueue::create([
+                'service_id'      => $service->id,
+                'action'          => $action,
+                'status'          => 'pending',
+                'attempts'        => 0,
+                'next_attempt_at' => now()->addMinutes(5),
+                'last_error'      => $error,
+                'payload'         => $payload ?: null,
+            ]);
+
+            app(NotificationService::class)->dispatch('module.failed', [
+                'event_type' => 'module.failed',
+                'subject'    => 'Module action failed — queued for retry',
+                'message'    => "Module '{$action}' failed for service #{$service->id} ({$service->domain}): {$error}. Queued for automatic retry.",
+                'service_id' => $service->id,
+                'action'     => $action,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::enqueueRetry failed', ['service_id' => $service->id, 'error' => $e->getMessage()]);
         }
     }
 

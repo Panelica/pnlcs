@@ -100,6 +100,7 @@
                     <li><a href="{{ route('admin.invoices.index', ['status' => 'overdue']) }}">{{ __('admin.nav.overdue_invoices') }}</a></li>
                     <li><a href="{{ route('admin.invoices.index', ['status' => 'cancelled']) }}">{{ __('admin.nav.cancelled_invoices') }}</a></li>
                     <li class="divider"></li>
+                    <li><a href="{{ route('admin.payment-notifications.index') }}">{{ __('admin.nav.payment_notifications') }} @if(($sidebarCounts->pending_payment_notifications ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_payment_notifications }}</span>@endif</a></li>
                     <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
                     <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
                     <li class="divider"></li>

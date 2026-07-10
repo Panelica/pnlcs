@@ -106,7 +106,7 @@ class VultrModule extends AbstractServerModule
         ]);
 
         $service->update([
-            'status' => 'Active',
+            'status' => 'active',
             'username' => 'root',
             'password' => $defaultPassword,
             'dedicated_ip' => $mainIp,
@@ -139,7 +139,7 @@ class VultrModule extends AbstractServerModule
             return $this->buildResult(false, "Halt failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
+        $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         $out = $this->buildResult(true, 'Vultr instance halted (suspended).');
         $this->logAction($service, 'suspend', $out);
         return $out;
@@ -163,7 +163,7 @@ class VultrModule extends AbstractServerModule
             return $this->buildResult(false, "Start failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Active', 'suspension_date' => null, 'suspension_reason' => null]);
+        $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         $out = $this->buildResult(true, 'Vultr instance started (unsuspended).');
         $this->logAction($service, 'unsuspend', $out);
         return $out;
@@ -187,7 +187,7 @@ class VultrModule extends AbstractServerModule
             return $this->buildResult(false, "Destroy failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Terminated', 'termination_date' => now()]);
+        $service->update(['status' => 'terminated', 'termination_date' => now()]);
         $out = $this->buildResult(true, 'Vultr instance destroyed.');
         $this->logAction($service, 'terminate', $out);
         return $out;
@@ -246,7 +246,7 @@ class VultrModule extends AbstractServerModule
         foreach ($instances as $instance) {
             $instanceId = $instance['id'] ?? null;
             $service = \App\Models\Service::where('server_id', $server->id)
-                ->where('status', 'Active')
+                ->where('status', 'active')
                 ->whereRaw("notes LIKE ?", ["%{$instanceId}%"])
                 ->first();
 

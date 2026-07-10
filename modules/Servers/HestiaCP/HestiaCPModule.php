@@ -115,7 +115,7 @@ class HestiaCPModule extends AbstractServerModule
         }
 
         $this->setModuleData($service, ['hestia_username' => $username]);
-        $service->update(['username' => $username, 'status' => 'Active']);
+        $service->update(['username' => $username, 'status' => 'active']);
 
         $out = $this->buildResult(true, 'HestiaCP account created.', ['hestia_username' => $username]);
         $this->logAction($service, 'create', $out);
@@ -140,7 +140,7 @@ class HestiaCPModule extends AbstractServerModule
             return $this->buildResult(false, "Suspend failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
+        $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         $out = $this->buildResult(true, 'HestiaCP account suspended.');
         $this->logAction($service, 'suspend', $out);
         return $out;
@@ -164,7 +164,7 @@ class HestiaCPModule extends AbstractServerModule
             return $this->buildResult(false, "Unsuspend failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Active', 'suspension_date' => null, 'suspension_reason' => null]);
+        $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         $out = $this->buildResult(true, 'HestiaCP account unsuspended.');
         $this->logAction($service, 'unsuspend', $out);
         return $out;
@@ -188,7 +188,7 @@ class HestiaCPModule extends AbstractServerModule
             return $this->buildResult(false, "Terminate failed: {$result['message']}");
         }
 
-        $service->update(['status' => 'Terminated', 'termination_date' => now()]);
+        $service->update(['status' => 'terminated', 'termination_date' => now()]);
         $out = $this->buildResult(true, 'HestiaCP account terminated.');
         $this->logAction($service, 'terminate', $out);
         return $out;
@@ -270,7 +270,7 @@ class HestiaCPModule extends AbstractServerModule
         foreach ($result['raw'] as $username => $userData) {
             $service = \App\Models\Service::where('server_id', $server->id)
                 ->where('username', $username)
-                ->where('status', 'Active')
+                ->where('status', 'active')
                 ->first();
 
             if (!$service) {
