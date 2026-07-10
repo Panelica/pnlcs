@@ -38,3 +38,6 @@ Schedule::command('pnlcs:currency-update')->daily()->at('05:30');
 
 // Database backup — daily, before the billing crons
 Schedule::command('pnlcs:db-backup')->daily()->at('04:30')->withoutOverlapping();
+
+// Prune high-volume log/history tables — daily, off-peak
+Schedule::command('pnlcs:prune-logs')->daily()->at('03:45')->withoutOverlapping();

@@ -4,11 +4,15 @@
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>Invoice #{{ $invoice->invoice_num }} <span class="badge-{{ strtolower($invoice->status) }}" style="font-size:14px;vertical-align:middle;">{{ ucfirst($invoice->status) }}</span></h1>
+    @php $st = strtolower((string) $invoice->status); @endphp
     <div style="display:flex;gap:6px;align-items:center;">
-        @if(in_array($invoice->status, ['Unpaid', 'Overdue']))
+        @if(in_array($st, ['unpaid', 'overdue', 'partially_paid', 'payment_pending']))
         <button type="button" class="btn btn-success btn-sm" onclick="document.getElementById('mark-paid-form').style.display=document.getElementById('mark-paid-form').style.display==='none'?'block':'none'">{{ __('admin.invoices.mark_paid_btn') }}</button>
         @endif
-        @if($invoice->status !== 'Paid' && $invoice->status !== 'Cancelled')
+        @if(in_array($st, ['paid', 'partially_paid']))
+        <button type="button" class="btn btn-warning btn-sm" onclick="document.getElementById('refund-form').style.display=document.getElementById('refund-form').style.display==='none'?'block':'none'">{{ __('admin.invoices.refund_btn') }}</button>
+        @endif
+        @if(!in_array($st, ['paid', 'cancelled', 'refunded']))
         <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.invoices.confirm_cancel') }}')">
             @csrf
             <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.cancel') }}</button>
@@ -18,7 +22,39 @@
         <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.invoices.back') }}</a>
     </div>
 </div>
-@if(in_array($invoice->status, ['Unpaid', 'Overdue']))
+
+@if(in_array($st, ['paid', 'partially_paid']))
+<div id="refund-form" style="display:none;margin-bottom:15px;">
+    <div class="card">
+        <div class="card-header"><strong>{{ __('admin.invoices.refund_invoice') }}</strong></div>
+        <div class="card-body">
+            <form method="POST" action="{{ route('admin.invoices.refund', $invoice) }}" onsubmit="return confirm('{{ __('admin.invoices.confirm_refund') }}')">
+                @csrf
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+                        <label class="form-label">{{ __('admin.invoices.refund_amount') }}</label>
+                        <input type="number" name="amount" step="0.01" min="0.01" value="{{ number_format((float) $invoice->total, 2, '.', '') }}" class="form-control">
+                        <small class="text-muted">{{ __('admin.invoices.refund_amount_hint') }}</small>
+                    </div>
+                    <div class="form-group" style="margin:0;flex:2;min-width:200px;">
+                        <label class="form-label">{{ __('admin.invoices.refund_reason') }}</label>
+                        <input type="text" name="reason" maxlength="500" class="form-control">
+                    </div>
+                    <div class="form-group" style="margin:0;min-width:180px;">
+                        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="checkbox" name="gateway_refund" value="1" checked> {{ __('admin.invoices.refund_via_gateway') }}
+                        </label>
+                        <small class="text-muted">{{ __('admin.invoices.refund_via_gateway_hint') }}</small>
+                    </div>
+                    <button type="submit" class="btn btn-warning btn-sm" style="margin-bottom:0;">{{ __('admin.invoices.confirm_refund_btn') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+@if(in_array($st, ['unpaid', 'overdue', 'partially_paid', 'payment_pending']))
 <div id="mark-paid-form" style="display:none;margin-bottom:15px;">
     <div class="card">
         <div class="card-header"><strong>{{ __('admin.invoices.mark_invoice_paid') }}</strong></div>

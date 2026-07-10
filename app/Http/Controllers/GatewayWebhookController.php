@@ -49,13 +49,25 @@ class GatewayWebhookController extends Controller
     public function paypalCapture(Request $request, Invoice $invoice)
     {
         $captureId = $request->input("capture_id");
-        $orderId   = $request->input("order_id");
 
         if (!$captureId) {
             return response()->json(["success" => false, "message" => "Missing capture_id."]);
         }
 
-        $this->recordTransaction($invoice, "paypal", $captureId, (float) $invoice->total);
+        // The capture_id comes from the browser — verify it against PayPal
+        // before crediting anything, and trust PayPal's amount, not the client's.
+        $module = $this->registry->getGatewayModule("paypal");
+        if (!$module || !method_exists($module, "verifyCapture")) {
+            return response()->json(["success" => false, "message" => "PayPal module not available."]);
+        }
+
+        $verified = $module->verifyCapture($captureId);
+        if (!($verified["success"] ?? false)) {
+            Log::warning("PayPal capture rejected", ["invoice" => $invoice->id, "reason" => $verified["message"] ?? "unknown"]);
+            return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
+        }
+
+        $this->recordTransaction($invoice, "paypal", $captureId, (float) ($verified["amount"] ?? $invoice->total));
 
         return response()->json([
             "success"      => true,

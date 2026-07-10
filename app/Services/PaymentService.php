@@ -148,6 +148,111 @@ class PaymentService
         return round((float) $invoice->total - $paid, 2);
     }
 
+    /**
+     * Net amount actually paid on an invoice (payments minus refunds).
+     */
+    public function amountPaid(Invoice $invoice): float
+    {
+        return round((float) Transaction::where('invoice_id', $invoice->id)->sum(DB::raw('amount_in - amount_out')), 2);
+    }
+
+    /**
+     * Refund an invoice (fully or partially).
+     *
+     * Calls the original gateway's refund API when possible, records a refund
+     * transaction (amount_out), and moves the invoice to refunded / partially
+     * refunded. 'credit' and 'manual'/'banktransfer' gateways skip the API call
+     * (offline refund) but still record the transaction so books stay balanced.
+     *
+     * @param  float|null $amount  null = refund the full paid amount
+     * @param  array      $options ['gateway_refund' => bool (default true), 'reason' => string, 'note' => string]
+     * @return array{success: bool, message: string, amount?: float, status?: string}
+     */
+    public function refundInvoice(Invoice $invoice, ?float $amount = null, array $options = []): array
+    {
+        $paid = $this->amountPaid($invoice);
+        if ($paid <= 0.009) {
+            return ['success' => false, 'message' => 'Nothing has been paid on this invoice.'];
+        }
+
+        $amount = $amount === null ? $paid : round((float) $amount, 2);
+        if ($amount <= 0) {
+            return ['success' => false, 'message' => 'Refund amount must be positive.'];
+        }
+        if ($amount - $paid > 0.009) {
+            return ['success' => false, 'message' => "Refund amount exceeds the paid amount ({$paid})."];
+        }
+
+        // Find the settling payment transaction to refund against.
+        $payment = Transaction::where('invoice_id', $invoice->id)
+            ->where('amount_in', '>', 0)
+            ->whereNotNull('transaction_id')
+            ->orderByDesc('id')
+            ->first();
+
+        $gateway = $payment->gateway ?? $invoice->payment_method ?? 'manual';
+        $refundRef = null;
+        $offlineGateways = ['manual', 'banktransfer', 'credit', 'system'];
+        $useGateway = ($options['gateway_refund'] ?? true) && !in_array($gateway, $offlineGateways, true);
+
+        if ($useGateway) {
+            $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule($gateway);
+            if (!$module) {
+                return ['success' => false, 'message' => "Gateway '{$gateway}' is not available for an automatic refund. Use an offline refund instead."];
+            }
+            if (!$payment || !$payment->transaction_id) {
+                return ['success' => false, 'message' => 'No gateway transaction reference found to refund against.'];
+            }
+
+            $result = $module->refund($payment->transaction_id, $amount);
+            if (!($result['success'] ?? false)) {
+                Log::error('PaymentService: gateway refund failed', ['invoice_id' => $invoice->id, 'gateway' => $gateway, 'message' => $result['message'] ?? '']);
+                return ['success' => false, 'message' => 'Gateway refund failed: ' . ($result['message'] ?? 'unknown error')];
+            }
+            $refundRef = $result['refund_id'] ?? null;
+        }
+
+        DB::transaction(function () use ($invoice, $gateway, $amount, $refundRef, $options, $payment) {
+            Transaction::create([
+                'client_id'      => $invoice->client_id,
+                'invoice_id'     => $invoice->id,
+                'gateway'        => $gateway,
+                'date'           => now()->toDateString(),
+                'description'    => 'Refund for Invoice #' . ($invoice->invoice_num ?? $invoice->id)
+                    . (!empty($options['reason']) ? ' — ' . $options['reason'] : ''),
+                'amount_in'      => 0,
+                'fees'           => 0,
+                'amount_out'     => $amount,
+                'rate'           => 1,
+                'transaction_id' => $refundRef,
+                'refund_id'      => $payment?->id,
+            ]);
+
+            $stillPaid = $this->amountPaid($invoice->fresh());
+            $invoice->update([
+                'status' => $stillPaid <= 0.009
+                    ? InvoiceStatus::Refunded->value
+                    : InvoiceStatus::PartiallyPaid->value,
+            ]);
+        });
+
+        run_hook('RefundIssued', [
+            'invoice'  => $invoice->fresh(),
+            'amount'   => $amount,
+            'gateway'  => $gateway,
+            'refund_id' => $refundRef,
+        ]);
+
+        Log::info('PaymentService: refund issued', ['invoice_id' => $invoice->id, 'gateway' => $gateway, 'amount' => $amount, 'via_gateway' => $useGateway]);
+
+        return [
+            'success' => true,
+            'message' => 'Refund of ' . number_format($amount, 2) . ' processed.',
+            'amount'  => $amount,
+            'status'  => $invoice->fresh()->status,
+        ];
+    }
+
     private function recordTransaction(Invoice $invoice, string $gateway, ?string $transactionId, float $amount, array $options): Transaction
     {
         return Transaction::create([

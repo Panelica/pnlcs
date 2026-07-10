@@ -130,6 +130,32 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Refund an invoice (full or partial) through the original gateway,
+     * or offline for bank transfer / manual payments.
+     */
+    public function refund(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $validated = $request->validate([
+            'amount'         => ['nullable', 'numeric', 'min:0.01'],
+            'reason'         => ['nullable', 'string', 'max:500'],
+            'gateway_refund' => ['nullable', 'boolean'],
+        ]);
+
+        $result = app(\App\Services\PaymentService::class)->refundInvoice(
+            $invoice,
+            $validated['amount'] ?? null,
+            [
+                'reason'         => $validated['reason'] ?? null,
+                'gateway_refund' => $request->boolean('gateway_refund', true),
+            ]
+        );
+
+        return $result['success']
+            ? back()->with('success', $result['message'])
+            : back()->with('error', $result['message']);
+    }
+
+    /**
      * Cancel an invoice.
      */
     public function cancel(Invoice $invoice): RedirectResponse

@@ -219,6 +219,46 @@ paypal.Buttons({
 HTML;
     }
 
+    /**
+     * Verify a capture directly against the PayPal API.
+     *
+     * The webhook payload and the browser-supplied capture_id are both
+     * untrusted — anyone can POST a fake PAYMENT.CAPTURE.COMPLETED. We
+     * re-fetch the capture from PayPal and only trust its status/amount.
+     *
+     * @return array{success: bool, message?: string, amount?: float, currency?: string, invoice_ref?: ?string}
+     */
+    public function verifyCapture(string $captureId): array
+    {
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            return ["success" => false, "message" => "PayPal credentials not configured."];
+        }
+
+        $response = Http::withToken($accessToken)
+            ->get($this->getBaseUrl() . "/v2/payments/captures/" . urlencode($captureId));
+
+        if (!$response->successful()) {
+            Log::warning("PayPal: capture verification request failed", [
+                "capture_id" => $captureId,
+                "status"     => $response->status(),
+            ]);
+            return ["success" => false, "message" => "Could not verify capture with PayPal."];
+        }
+
+        $status = $response->json("status");
+        if ($status !== "COMPLETED") {
+            return ["success" => false, "message" => "Capture status is '{$status}', not COMPLETED."];
+        }
+
+        return [
+            "success"     => true,
+            "amount"      => (float) $response->json("amount.value", 0),
+            "currency"    => $response->json("amount.currency_code"),
+            "invoice_ref" => $response->json("invoice_id") ?? $response->json("custom_id"),
+        ];
+    }
+
     public function processWebhook(array $data): array
     {
         $eventType = $data["event_type"] ?? "";
@@ -235,17 +275,29 @@ HTML;
             return ["success" => false, "message" => "Missing capture ID or invoice reference."];
         }
 
+        // Never trust the webhook body — confirm the capture with PayPal.
+        $verified = $this->verifyCapture($captureId);
+        if (!($verified["success"] ?? false)) {
+            Log::warning("PayPal webhook rejected — capture not verified", [
+                "capture_id" => $captureId,
+                "reason"     => $verified["message"] ?? "unknown",
+            ]);
+            return ["success" => false, "message" => $verified["message"] ?? "Capture verification failed."];
+        }
+
         $invoiceId = str_replace("INV-", "", (string) $invoiceRef);
 
-        Log::info("PayPal webhook: PAYMENT.CAPTURE.COMPLETED", [
+        Log::info("PayPal webhook: PAYMENT.CAPTURE.COMPLETED verified", [
             "capture_id" => $captureId,
             "invoice_id" => $invoiceId,
+            "amount"     => $verified["amount"],
         ]);
 
         return [
             "success"        => true,
             "transaction_id" => $captureId,
             "invoice_id"     => $invoiceId,
+            "amount"         => $verified["amount"],
             "gateway"        => "paypal",
         ];
     }
