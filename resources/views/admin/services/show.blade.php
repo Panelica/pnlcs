@@ -69,7 +69,7 @@
         <div>
             <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
                 <span style="color:#777;">{{ __('admin.services.disk_usage') }}</span>
-                <span style="font-weight:600;">{{ number_format($service->disk_usage / 1024 / 1024, 1) }} MB / {{ number_format($service->disk_limit / 1024 / 1024, 1) }} MB</span>
+                <span style="font-weight:600;">{{ number_format($service->disk_usage) }} MB / {{ number_format($service->disk_limit) }} MB</span>
             </div>
             <div style="background:#e9e9e9;border-radius:3px;height:12px;">
                 <div style="height:12px;border-radius:3px;background:{{ $diskPct > 85 ? '#d9534f' : '#337ab7' }};width:{{ $diskPct }}%;"></div>
@@ -81,7 +81,7 @@
         <div>
             <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
                 <span style="color:#777;">{{ __('admin.services.bandwidth') }}</span>
-                <span style="font-weight:600;">{{ number_format($service->bw_usage / 1024 / 1024, 1) }} MB / {{ number_format($service->bw_limit / 1024 / 1024, 1) }} MB</span>
+                <span style="font-weight:600;">{{ number_format($service->bw_usage) }} MB / {{ number_format($service->bw_limit) }} MB</span>
             </div>
             <div style="background:#e9e9e9;border-radius:3px;height:12px;">
                 <div style="height:12px;border-radius:3px;background:{{ $bwPct > 85 ? '#d9534f' : '#5cb85c' }};width:{{ $bwPct }}%;"></div>

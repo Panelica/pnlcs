@@ -701,7 +701,7 @@ test('provisioning service dispatches to plesk module', function () {
     ]);
 
     $provisioning = app(ProvisioningService::class);
-    $module = $provisioning->getModuleForService($service->fresh(['product']));
+    $module = $provisioning->resolveModule($service->fresh(['product']));
     expect($module)->not->toBeNull();
     expect($module->getModuleName())->toBe('plesk');
 });
@@ -720,7 +720,7 @@ test('provisioning service dispatches to directadmin module', function () {
     ]);
 
     $provisioning = app(ProvisioningService::class);
-    $module = $provisioning->getModuleForService($service->fresh(['product']));
+    $module = $provisioning->resolveModule($service->fresh(['product']));
     expect($module)->not->toBeNull();
     expect($module->getModuleName())->toBe('directadmin');
 });
@@ -737,7 +737,7 @@ test('provisioning service returns null for product without server_type', functi
     ]);
 
     $provisioning = app(ProvisioningService::class);
-    $module = $provisioning->getModuleForService($service->fresh(['product']));
+    $module = $provisioning->resolveModule($service->fresh(['product']));
     expect($module)->toBeNull();
 });
 

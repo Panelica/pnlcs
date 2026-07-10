@@ -69,7 +69,7 @@ test('getModuleForService returns null when product has no server_type', functio
     $service = Service::factory()->create(['product_id' => $product->id]);
 
     $provisioning = app(ProvisioningService::class);
-    $module = $provisioning->getModuleForService($service->fresh(['product']));
+    $module = $provisioning->resolveModule($service->fresh(['product']));
 
     expect($module)->toBeNull();
 });
@@ -79,7 +79,7 @@ test('getModuleForService resolves custom module', function () {
     $service = Service::factory()->create(['product_id' => $product->id]);
 
     $provisioning = app(ProvisioningService::class);
-    $module = $provisioning->getModuleForService($service->fresh(['product']));
+    $module = $provisioning->resolveModule($service->fresh(['product']));
 
     expect($module)->toBeInstanceOf(\App\Contracts\ServerModuleInterface::class);
 });

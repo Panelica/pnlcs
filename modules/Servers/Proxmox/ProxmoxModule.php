@@ -462,9 +462,11 @@ class ProxmoxModule extends AbstractServerModule
             $vm = $vms->firstWhere('vmid', (int) $vmid);
             if (!$vm) continue;
 
+            // Canonical unit for services.disk_*/bw_* is MB (overage billing
+            // and the client area both assume MB).
             $u = [];
-            if (isset($vm['disk']))    $u['disk_usage'] = (int) round($vm['disk'] / 1073741824);
-            if (isset($vm['maxdisk'])) $u['disk_limit'] = (int) round($vm['maxdisk'] / 1073741824);
+            if (isset($vm['disk']))    $u['disk_usage'] = (int) round($vm['disk'] / 1048576);
+            if (isset($vm['maxdisk'])) $u['disk_limit'] = (int) round($vm['maxdisk'] / 1048576);
             if (isset($vm['netin']))   $u['bw_usage'] = (int) round(($vm['netin'] + ($vm['netout'] ?? 0)) / 1048576);
 
             if (!empty($u)) { $svc->update($u); $updated++; }

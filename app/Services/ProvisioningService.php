@@ -257,6 +257,14 @@ class ProvisioningService
         }
     }
 
+    /**
+     * Public resolver — which server module would handle this service.
+     */
+    public function resolveModule(Service $service): ?ServerModuleInterface
+    {
+        return $this->getModuleForService($service);
+    }
+
     private function getModuleForService(Service $service): ?ServerModuleInterface
     {
         $service->loadMissing('product', 'server');
