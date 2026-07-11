@@ -15,7 +15,7 @@ class AdminFactory extends Factory
     {
         return [
             "uuid" => Str::uuid(),
-            "role_id" => AdminRole::factory(),
+            "role_id" => AdminRole::factory()->fullAdmin(),
             "username" => fake()->unique()->userName(),
             "email" => fake()->unique()->safeEmail(),
             "password" => static::$password ??= Hash::make("password"),

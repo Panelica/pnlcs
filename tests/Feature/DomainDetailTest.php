@@ -95,7 +95,7 @@ test('user can toggle domain lock', function () {
 
     $this->actingAs($user)->post(route('client.domains.lock', $domain));
     $domain->refresh();
-    expect($domain->status)->toBe('Locked');
+    expect($domain->status)->toBe('locked');
 
     $this->actingAs($user)->post(route('client.domains.lock', $domain));
     $domain->refresh();

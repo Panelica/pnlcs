@@ -399,20 +399,26 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
         Route::get("affiliates", [ConfigController::class, "affiliates"])->name("affiliates");
         Route::get("quotes", [ConfigController::class, "quotes"])->name("quotes");
 
-        Route::get("billable-items", [ConfigController::class, "billableItems"])->name("billable-items");
-        Route::post("billable-items", [ConfigController::class, "storeBillableItem"])->name("billable-items.store");
-        Route::delete("billable-items/{item}", [ConfigController::class, "destroyBillableItem"])->name("billable-items.destroy");
+        Route::middleware("admin.permission:manage_invoices")->group(function () {
+            Route::get("billable-items", [ConfigController::class, "billableItems"])->name("billable-items");
+            Route::post("billable-items", [ConfigController::class, "storeBillableItem"])->name("billable-items.store");
+            Route::delete("billable-items/{item}", [ConfigController::class, "destroyBillableItem"])->name("billable-items.destroy");
+        });
 
         Route::get("transactions", [ConfigController::class, "transactions"])->name("transactions");
 
         Route::get("automation", [ConfigController::class, "automation"])->name("automation");
-        Route::get("client-groups", [ConfigController::class, "clientGroups"])->name("client-groups");
-        Route::post("client-groups", [ConfigController::class, "storeClientGroup"])->name("client-groups.store");
-        Route::put("client-groups/{group}", [ConfigController::class, "updateClientGroup"])->name("client-groups.update");
-        Route::delete("client-groups/{group}", [ConfigController::class, "destroyClientGroup"])->name("client-groups.destroy");
+        Route::middleware("admin.permission:edit_clients")->group(function () {
+            Route::get("client-groups", [ConfigController::class, "clientGroups"])->name("client-groups");
+            Route::post("client-groups", [ConfigController::class, "storeClientGroup"])->name("client-groups.store");
+            Route::put("client-groups/{group}", [ConfigController::class, "updateClientGroup"])->name("client-groups.update");
+            Route::delete("client-groups/{group}", [ConfigController::class, "destroyClientGroup"])->name("client-groups.destroy");
+        });
 
-        Route::get("system-database", [ConfigController::class, "systemDatabase"])->name("system-database");
-        Route::get("system-phpinfo", [ConfigController::class, "systemPhpInfo"])->name("system-phpinfo");
+        Route::middleware("admin.permission:manage_security")->group(function () {
+            Route::get("system-database", [ConfigController::class, "systemDatabase"])->name("system-database");
+            Route::get("system-phpinfo", [ConfigController::class, "systemPhpInfo"])->name("system-phpinfo");
+        });
 
         // SSL Modules — manage_servers
         Route::middleware("admin.permission:manage_servers")->group(function () {
@@ -425,18 +431,22 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     // =============================================
     // Quotes
     // =============================================
-    Route::resource("quotes", QuoteController::class);
-    Route::post("quotes/{quote}/send", [QuoteController::class, "send"])->name("quotes.send");
-    Route::post("quotes/{quote}/convert", [QuoteController::class, "convertToInvoice"])->name("quotes.convert");
-    Route::post("quotes/{quote}/accept", [QuoteController::class, "accept"])->name("quotes.accept");
-    Route::post("quotes/{quote}/decline", [QuoteController::class, "decline"])->name("quotes.decline");
+    Route::middleware("admin.permission:manage_quotes")->group(function () {
+        Route::resource("quotes", QuoteController::class);
+        Route::post("quotes/{quote}/send", [QuoteController::class, "send"])->name("quotes.send");
+        Route::post("quotes/{quote}/convert", [QuoteController::class, "convertToInvoice"])->name("quotes.convert");
+        Route::post("quotes/{quote}/accept", [QuoteController::class, "accept"])->name("quotes.accept");
+        Route::post("quotes/{quote}/decline", [QuoteController::class, "decline"])->name("quotes.decline");
+    });
 
     // Projects
-    Route::resource("projects", ProjectController::class);
-    Route::post("projects/{project}/tasks", [ProjectController::class, "addTask"])->name("projects.tasks.store");
-    Route::put("projects/{project}/tasks/{task}", [ProjectController::class, "updateTask"])->name("projects.tasks.update");
-    Route::delete("projects/{project}/tasks/{task}", [ProjectController::class, "deleteTask"])->name("projects.tasks.destroy");
-    Route::post("projects/{project}/messages", [ProjectController::class, "addMessage"])->name("projects.messages.store");
+    Route::middleware("admin.permission:manage_projects")->group(function () {
+        Route::resource("projects", ProjectController::class);
+        Route::post("projects/{project}/tasks", [ProjectController::class, "addTask"])->name("projects.tasks.store");
+        Route::put("projects/{project}/tasks/{task}", [ProjectController::class, "updateTask"])->name("projects.tasks.update");
+        Route::delete("projects/{project}/tasks/{task}", [ProjectController::class, "deleteTask"])->name("projects.tasks.destroy");
+        Route::post("projects/{project}/messages", [ProjectController::class, "addMessage"])->name("projects.messages.store");
+    });
 
     // Logs — view_activity_log
     Route::middleware("admin.permission:view_activity_log")->group(function () {
@@ -450,10 +460,12 @@ Route::middleware(["admin.auth"])->prefix("admin")->name("admin.")->group(functi
     Route::get("api-docs", [ConfigController::class, "apiDocs"])->name("api-docs");
 
     // Affiliates
-    Route::get("affiliates", [AffiliateController::class, "index"])->name("affiliates.index");
-    Route::get("affiliates/{affiliate}", [AffiliateController::class, "show"])->name("affiliates.show");
-    Route::put("affiliates/{affiliate}", [AffiliateController::class, "update"])->name("affiliates.update");
-    Route::post("affiliates/{affiliate}/payout", [AffiliateController::class, "payout"])->name("affiliates.payout");
+    Route::middleware("admin.permission:manage_affiliates")->group(function () {
+        Route::get("affiliates", [AffiliateController::class, "index"])->name("affiliates.index");
+        Route::get("affiliates/{affiliate}", [AffiliateController::class, "show"])->name("affiliates.show");
+        Route::put("affiliates/{affiliate}", [AffiliateController::class, "update"])->name("affiliates.update");
+        Route::post("affiliates/{affiliate}/payout", [AffiliateController::class, "payout"])->name("affiliates.payout");
+    });
 
     // WHOIS Lookup — no permission required
     Route::get("whois", [WhoisController::class, "index"])->name("whois.index");
