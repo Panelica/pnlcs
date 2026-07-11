@@ -101,8 +101,12 @@ hosting — a fresh alternative to cPanel, Plesk, and CyberPanel.
 
 PNLCS integrates natively with Panelica through the built-in **Panelica server
 module**: sell hosting plans and accounts are provisioned on your Panelica
-servers automatically. It works with other control panels too — but Panelica
-is where it feels most at home.
+servers automatically.
+
+**Not only Panelica.** PNLCS is control-panel agnostic — you can connect and
+provision on **cPanel, Plesk, DirectAdmin, HestiaCP, Proxmox, and Vultr** too,
+right alongside your Panelica servers. Mix and match panels in a single install;
+Panelica is simply where PNLCS feels most at home.
 
 👉 **Learn more at [panelica.com](https://panelica.com)**
 
