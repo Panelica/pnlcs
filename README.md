@@ -18,6 +18,7 @@
 </p>
 
 <p align="center">
+  <a href="https://panelica.github.io/pnlcs/">Documentation</a> ·
   <a href="#quick-start-with-docker">Docker</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#first-steps-after-installation">First Steps</a> ·
@@ -416,6 +417,12 @@ user=www-data
 ---
 
 ## First Steps After Installation
+
+> 📖 **New to hosting billing?** The full
+> **[user guide](https://panelica.github.io/pnlcs/)** walks you through every
+> concept and task in plain language — start with
+> **[Your First Sale](https://panelica.github.io/pnlcs/getting-started/your-first-sale/)**
+> for an end-to-end walkthrough. The steps below are the quick version.
 
 Once the site loads and you can reach `/admin/login`, do these in order:
 
