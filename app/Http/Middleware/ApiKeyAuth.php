@@ -39,6 +39,9 @@ class ApiKeyAuth
                 if (!$apiSecret || !hash_equals((string) $cred->secret, (string) $apiSecret)) {
                     return response()->json(['result' => 'error', 'message' => 'Invalid API secret'], 401);
                 }
+                if (!$this->ipAllowed($cred, $request->ip())) {
+                    return response()->json(['result' => 'error', 'message' => 'IP address not allowed for this credential'], 403);
+                }
                 return $next($request);
             }
         }
@@ -58,6 +61,9 @@ class ApiKeyAuth
             // Check if it matches any API credential secret
             $cred = \App\Models\ApiCredential::where('secret', $bearer)->where('active', true)->first();
             if ($cred) {
+                if (!$this->ipAllowed($cred, $request->ip())) {
+                    return response()->json(['result' => 'error', 'message' => 'IP address not allowed for this credential'], 403);
+                }
                 return $next($request);
             }
         }
@@ -67,5 +73,26 @@ class ApiKeyAuth
             'result' => 'error',
             'message' => 'Authentication required. Provide api_key+api_secret, username+password, or Bearer token.',
         ], 401);
+    }
+
+    /**
+     * An empty or unset allowed_ips list means no restriction. Otherwise the
+     * request IP must match one of the entries — plain IPs or CIDR ranges,
+     * IPv4/IPv6.
+     */
+    private function ipAllowed(\App\Models\ApiCredential $cred, ?string $ip): bool
+    {
+        $allowed = $cred->allowed_ips;
+        if (is_string($allowed)) {
+            $allowed = json_decode($allowed, true);
+        }
+        if (!is_array($allowed)) {
+            return true;
+        }
+        $ranges = array_values(array_filter(array_map('trim', $allowed), fn ($r) => $r !== ''));
+        if (empty($ranges)) {
+            return true;
+        }
+        return $ip !== null && \Symfony\Component\HttpFoundation\IpUtils::checkIp($ip, $ranges);
     }
 }
