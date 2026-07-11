@@ -176,6 +176,51 @@ class RazorpayModule implements GatewayModuleInterface
 HTML;
     }
 
+    /**
+     * Verify a client-side Razorpay checkout result before crediting an invoice.
+     * Confirms the signature (proves the order/payment pair came from Razorpay
+     * for our account), that the order belongs to THIS invoice, and uses the
+     * amount Razorpay recorded — never a client-supplied value.
+     */
+    public function verifyPayment(string $orderId, string $paymentId, string $signature, int $expectedInvoiceId): array
+    {
+        $keyId = $this->getSetting('key_id');
+        $keySecret = $this->getSetting('key_secret');
+        if (!$keyId || !$keySecret) {
+            return ['success' => false, 'message' => 'Razorpay credentials not configured.'];
+        }
+        if (!$orderId || !$paymentId || !$signature) {
+            return ['success' => false, 'message' => 'Missing Razorpay payment fields.'];
+        }
+
+        $expected = hash_hmac('sha256', "{$orderId}|{$paymentId}", $keySecret);
+        if (!hash_equals($expected, $signature)) {
+            Log::warning('Razorpay: checkout signature verification failed', ['order' => $orderId, 'payment' => $paymentId]);
+            return ['success' => false, 'message' => 'Invalid payment signature.'];
+        }
+
+        // Confirm the order belongs to this invoice and read the authoritative amount.
+        $orderResp = Http::withBasicAuth($keyId, $keySecret)->get("{$this->apiUrl}/orders/{$orderId}");
+        if (!$orderResp->successful()) {
+            return ['success' => false, 'message' => 'Razorpay: order lookup failed.'];
+        }
+        $order = $orderResp->json();
+        $orderInvoiceId = (int) ($order['notes']['invoice_id'] ?? 0);
+        if ($orderInvoiceId !== $expectedInvoiceId) {
+            Log::warning('Razorpay: order invoice mismatch', ['expected' => $expectedInvoiceId, 'actual' => $orderInvoiceId]);
+            return ['success' => false, 'message' => 'Payment does not match this invoice.'];
+        }
+        if (($order['status'] ?? null) !== 'paid') {
+            return ['success' => false, 'message' => 'Payment not completed.'];
+        }
+
+        return [
+            'success'        => true,
+            'transaction_id' => $paymentId,
+            'amount'         => (int) ($order['amount_paid'] ?? $order['amount'] ?? 0) / 100,
+        ];
+    }
+
     public function processWebhook(array $data): array
     {
         $webhookSecret = $this->getSetting('webhook_secret');

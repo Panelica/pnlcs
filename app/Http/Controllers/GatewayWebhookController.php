@@ -100,7 +100,20 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => false, "message" => "Missing payment_intent_id."]);
         }
 
-        $this->recordTransaction($invoice, "stripe", $paymentIntentId, (float) $invoice->total);
+        // The intent id comes from the browser — verify it with Stripe and use
+        // Stripe's captured amount, never the client-supplied value.
+        $module = $this->registry->getGatewayModule("stripe");
+        if (!$module || !method_exists($module, "verifyPaymentIntent")) {
+            return response()->json(["success" => false, "message" => "Stripe module not available."]);
+        }
+
+        $verified = $module->verifyPaymentIntent($paymentIntentId, (int) $invoice->id);
+        if (!($verified["success"] ?? false)) {
+            Log::warning("Stripe confirm rejected", ["invoice" => $invoice->id, "reason" => $verified["message"] ?? "unknown"]);
+            return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
+        }
+
+        $this->recordTransaction($invoice, "stripe", $verified["transaction_id"] ?? $paymentIntentId, (float) ($verified["amount"] ?? $invoice->total));
 
         return response()->json([
             "success"      => true,
@@ -254,13 +267,27 @@ class GatewayWebhookController extends Controller
         $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("razorpay");
         if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
         if ($request->input("confirm")) {
-            // Confirm payment
+            // Confirm payment — verify the Razorpay signature and order server-side
+            // before crediting; never trust the browser-supplied result.
             $paymentId = $request->input("razorpay_payment_id");
-            if ($paymentId) {
-                $this->recordTransaction($invoice, "razorpay", $paymentId, (float)$invoice->total);
-                return response()->json(["success" => true, "redirect_url" => url("/client/invoices/{$invoice->id}?payment=success")]);
+            $orderId   = $request->input("razorpay_order_id");
+            $signature = $request->input("razorpay_signature");
+
+            if (!$paymentId || !$orderId || !$signature) {
+                return response()->json(["success" => false, "message" => "Missing payment confirmation fields."]);
             }
-            return response()->json(["success" => false, "message" => "Missing payment ID"]);
+            if (!method_exists($module, "verifyPayment")) {
+                return response()->json(["success" => false, "message" => "Razorpay module not available."]);
+            }
+
+            $verified = $module->verifyPayment($orderId, $paymentId, $signature, (int) $invoice->id);
+            if (!($verified["success"] ?? false)) {
+                Log::warning("Razorpay confirm rejected", ["invoice" => $invoice->id, "reason" => $verified["message"] ?? "unknown"]);
+                return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
+            }
+
+            $this->recordTransaction($invoice, "razorpay", $verified["transaction_id"] ?? $paymentId, (float) ($verified["amount"] ?? $invoice->total));
+            return response()->json(["success" => true, "redirect_url" => url("/client/invoices/{$invoice->id}?payment=success")]);
         }
         // Create order
         $result = $module->capture($invoice, (float)$invoice->total);

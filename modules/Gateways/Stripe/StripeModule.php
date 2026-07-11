@@ -206,6 +206,49 @@ class StripeModule implements GatewayModuleInterface
 HTML;
     }
 
+    /**
+     * Verify a PaymentIntent server-side before crediting an invoice.
+     * The intent id arrives from the browser, so confirm with Stripe that it
+     * actually succeeded, that it belongs to THIS invoice, and use Stripe's
+     * captured amount — never a client-supplied value.
+     */
+    public function verifyPaymentIntent(string $intentId, int $expectedInvoiceId): array
+    {
+        $secretKey = $this->getSetting("secret_key");
+        if (!$secretKey) {
+            return ["success" => false, "message" => "Stripe secret key not configured."];
+        }
+
+        $response = Http::withToken($secretKey)
+            ->get("https://api.stripe.com/v1/payment_intents/{$intentId}");
+
+        if (!$response->successful()) {
+            return ["success" => false, "message" => "Stripe: payment intent lookup failed."];
+        }
+
+        $intent = $response->json();
+
+        if (($intent["status"] ?? null) !== "succeeded") {
+            return ["success" => false, "message" => "Payment not completed."];
+        }
+
+        $intentInvoiceId = (int) ($intent["metadata"]["invoice_id"] ?? 0);
+        if ($intentInvoiceId !== $expectedInvoiceId) {
+            Log::warning("Stripe: payment intent invoice mismatch", [
+                "intent"   => $intentId,
+                "expected" => $expectedInvoiceId,
+                "actual"   => $intentInvoiceId,
+            ]);
+            return ["success" => false, "message" => "Payment does not match this invoice."];
+        }
+
+        return [
+            "success"        => true,
+            "transaction_id" => $intent["id"] ?? $intentId,
+            "amount"         => (int) ($intent["amount_received"] ?? 0) / 100,
+        ];
+    }
+
     public function processWebhook(array $data): array
     {
         $webhookSecret = $this->getSetting("webhook_secret");
