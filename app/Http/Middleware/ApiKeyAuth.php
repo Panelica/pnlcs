@@ -34,7 +34,9 @@ class ApiKeyAuth
                 ->first();
             
             if ($cred) {
-                if ($apiSecret && $cred->secret !== $apiSecret) {
+                // Secret is MANDATORY and compared in constant time. Previously a
+                // request with a valid identifier but no secret was let through.
+                if (!$apiSecret || !hash_equals((string) $cred->secret, (string) $apiSecret)) {
                     return response()->json(['result' => 'error', 'message' => 'Invalid API secret'], 401);
                 }
                 return $next($request);
