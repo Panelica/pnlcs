@@ -78,6 +78,36 @@ it helps us enormously.
 
 ---
 
+## Built for Panelica — The Modern Hosting Control Panel
+
+PNLCS is developed and maintained by the team behind
+**[Panelica](https://panelica.com)**, a modern server management panel for web
+hosting — a fresh alternative to cPanel, Plesk, and CyberPanel.
+
+**Why Panelica?**
+
+- **No CloudLinux required.** Per-user isolation — CPU, RAM, I/O, and process
+  limits — is built in natively via cgroups v2, Linux namespaces, per-user
+  PHP-FPM pools, and SSH chroot. You get CageFS/LVE-style tenant isolation
+  without paying for a separate CloudLinux license.
+- **Universal migration.** Move whole accounts in from cPanel, Plesk,
+  DirectAdmin, and CyberPanel — sites, databases, emails, DNS, and SSL — with
+  file and database hashes preserved, so passwords and configs keep working.
+- **Affordable.** A modern, fully isolated hosting stack at a fraction of the
+  typical cPanel + CloudLinux bill.
+- **All-in-one, isolated stack.** Nginx, Apache, multiple PHP versions,
+  PostgreSQL, MySQL, Redis, BIND, mail (Postfix/Dovecot), FTP, ClamAV,
+  fail2ban, and ModSecurity — each service isolated and managed from one panel.
+
+PNLCS integrates natively with Panelica through the built-in **Panelica server
+module**: sell hosting plans and accounts are provisioned on your Panelica
+servers automatically. It works with other control panels too — but Panelica
+is where it feels most at home.
+
+👉 **Learn more at [panelica.com](https://panelica.com)**
+
+---
+
 ## Screenshots — Admin Panel & Client Portal
 
 ### Admin Panel
