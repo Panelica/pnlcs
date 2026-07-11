@@ -193,6 +193,7 @@
                     <li><a href="{{ route('admin.config.admins') }}">{{ __('admin.nav.admin_accounts') }}</a></li>
                     <li><a href="{{ route('admin.config.admin-roles') }}">{{ __('admin.nav.admin_roles') }}</a></li>
                     <li><a href="{{ route('admin.config.api-credentials') }}">{{ __('admin.nav.api_credentials') }}</a></li>
+                    <li><a href="https://panelica.github.io/pnlcs/" target="_blank" rel="noopener">{{ __('admin.nav.user_guide') }}</a></li>
                     <li><a href="{{ route('admin.api-docs') }}">{{ __('admin.nav.api_documentation') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.products.index') }}">{{ __('admin.nav.products_services') }}</a></li>
@@ -385,6 +386,7 @@
             <li><a href="{{ route('admin.config.admins') }}" @if($routeName === 'admin.config.admins') class="active" @endif>{{ __('admin.sidebar.administrator_accounts') }}</a></li>
             <li><a href="{{ route('admin.config.admin-roles') }}" @if($routeName === 'admin.config.admin-roles') class="active" @endif>{{ __('admin.sidebar.administrator_roles') }}</a></li>
             <li><a href="{{ route('admin.config.api-credentials') }}" @if($routeName === 'admin.config.api-credentials') class="active" @endif>{{ __('admin.nav.api_credentials') }}</a></li>
+            <li><a href="https://panelica.github.io/pnlcs/" target="_blank" rel="noopener">{{ __('admin.nav.user_guide') }}</a></li>
             <li><a href="{{ route('admin.api-docs') }}" @if($routeName === 'admin.api-docs') class="active" @endif>{{ __('admin.nav.api_documentation') }}</a></li>
         </ul>
 

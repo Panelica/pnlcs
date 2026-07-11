@@ -2,6 +2,31 @@
 @section("title", __("admin.dashboard.title"))
 @section("content")
 
+@if(!empty($setup) && !$setup['complete'])
+<div class="card" style="margin-bottom:16px;border-left:4px solid var(--pn-primary,#4f46e5);">
+    <div class="card-body" style="padding:16px 20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div>
+                <strong style="font-size:15px;">{{ __('admin.setup.title') }}</strong>
+                <span style="color:var(--pn-muted,#888);font-size:13px;margin-left:8px;">{{ __('admin.setup.progress', ['done' => $setup['done'], 'total' => $setup['total']]) }}</span>
+            </div>
+            <a href="https://panelica.github.io/pnlcs/getting-started/setup-checklist/" target="_blank" rel="noopener" style="font-size:13px;">{{ __('admin.setup.open_guide') }} &rarr;</a>
+        </div>
+        <div style="height:6px;background:var(--pn-border,#e5e7eb);border-radius:4px;margin:12px 0;overflow:hidden;">
+            <div style="height:100%;width:{{ $setup['total'] ? round($setup['done'] / $setup['total'] * 100) : 0 }}%;background:var(--pn-primary,#4f46e5);"></div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 18px;">
+            @foreach($setup['items'] as $item)
+            <a href="{{ route($item['route']) }}" style="display:flex;align-items:center;gap:7px;font-size:13.5px;text-decoration:none;color:{{ $item['done'] ? 'var(--pn-muted,#9ca3af)' : 'var(--pn-text,#374151)' }};">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:11px;{{ $item['done'] ? 'background:#16a34a;color:#fff;' : 'border:1.5px solid var(--pn-border,#d1d5db);color:transparent;' }}">&#10003;</span>
+                <span style="{{ $item['done'] ? 'text-decoration:line-through;' : '' }}">{{ __('admin.setup.step_' . $item['key']) }}</span>
+            </a>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
+
 <div style="display:flex;flex-direction:column;gap:16px;">
 @foreach($widgetOutput as $key => $item)
     @php $widget = $item['widget']; $cols = $widget->getColumns(); @endphp
