@@ -17,7 +17,7 @@ class SslController extends Controller
 
     public function index()
     {
-        $orders = SslOrder::where('client_id', auth()->id())
+        $orders = SslOrder::where('client_id', $this->getClientId())
             ->with('service.product')
             ->orderByDesc('created_at')
             ->paginate(15);
@@ -27,7 +27,7 @@ class SslController extends Controller
 
     public function show(SslOrder $sslOrder)
     {
-        if ($sslOrder->client_id !== auth()->id()) {
+        if ($sslOrder->client_id !== $this->getClientId()) {
             abort(403);
         }
 
@@ -37,7 +37,7 @@ class SslController extends Controller
 
     public function configure(SslOrder $sslOrder)
     {
-        if ($sslOrder->client_id !== auth()->id()) {
+        if ($sslOrder->client_id !== $this->getClientId()) {
             abort(403);
         }
 
@@ -57,7 +57,7 @@ class SslController extends Controller
 
     public function submitConfiguration(Request $request, SslOrder $sslOrder)
     {
-        if ($sslOrder->client_id !== auth()->id()) {
+        if ($sslOrder->client_id !== $this->getClientId()) {
             abort(403);
         }
 
@@ -100,7 +100,7 @@ class SslController extends Controller
 
     public function getApproverEmails(Request $request, SslOrder $sslOrder)
     {
-        if ($sslOrder->client_id !== auth()->id()) {
+        if ($sslOrder->client_id !== $this->getClientId()) {
             return response()->json(['emails' => []], 403);
         }
 
@@ -117,7 +117,7 @@ class SslController extends Controller
 
     public function downloadCert(SslOrder $sslOrder)
     {
-        if ($sslOrder->client_id !== auth()->id()) {
+        if ($sslOrder->client_id !== $this->getClientId()) {
             abort(403);
         }
 
@@ -145,7 +145,7 @@ class SslController extends Controller
 
     public function resendValidation(SslOrder $sslOrder)
     {
-        if ($sslOrder->client_id !== auth()->id()) {
+        if ($sslOrder->client_id !== $this->getClientId()) {
             abort(403);
         }
 
@@ -156,5 +156,10 @@ class SslController extends Controller
         }
 
         return back()->with('error', $result['message']);
+    }
+
+    private function getClientId(): int
+    {
+        return auth()->user()->clients()->first()?->id ?? 0;
     }
 }
