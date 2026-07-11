@@ -20,6 +20,9 @@ concurrency:
 
 jobs:
   build:
+    # Only the public repository publishes docs. Private mirrors
+    # (e.g. pnlcs-internal) skip this entirely — they have no GitHub Pages.
+    if: github.repository == 'Panelica/pnlcs'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
