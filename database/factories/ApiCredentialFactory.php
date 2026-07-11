@@ -12,6 +12,9 @@ class ApiCredentialFactory extends Factory
 {
     protected $model = ApiCredential::class;
 
+    /** Plaintext secret whose SHA-256 hash is stored; tests authenticate with this. */
+    public const PLAINTEXT_SECRET = 'test-secret-plaintext-0123456789abcdef0123456789abcdef01234567';
+
     public function definition(): array
     {
         return [
@@ -21,7 +24,7 @@ class ApiCredentialFactory extends Factory
             },
             'api_role_id' => null,
             'identifier' => 'test_' . Str::random(16),
-            'secret' => Str::random(32),
+            'secret' => ApiCredential::hashSecret(self::PLAINTEXT_SECRET),
             'description' => 'Test API credential',
             'allowed_ips' => null,
             'active' => true,

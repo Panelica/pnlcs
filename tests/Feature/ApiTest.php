@@ -7,7 +7,7 @@ use App\Models\ApiCredential;
 
 beforeEach(function () {
     $this->apiCred = ApiCredential::factory()->create();
-    $this->apiHeaders = ['X-API-Key' => $this->apiCred->identifier, 'X-API-Secret' => $this->apiCred->secret];
+    $this->apiHeaders = ['X-API-Key' => $this->apiCred->identifier, 'X-API-Secret' => \Database\Factories\ApiCredentialFactory::PLAINTEXT_SECRET];
 });
 
 test("api health returns ok", function () {
