@@ -17,7 +17,7 @@ function apiCred(string $identifier, string $secret): ApiCredential
     return ApiCredential::create([
         'admin_id'   => $admin->id,
         'identifier' => $identifier,
-        'secret'     => $secret,
+        'secret'     => ApiCredential::hashSecret($secret),
         'active'     => true,
     ]);
 }
@@ -51,7 +51,7 @@ it('still rejects an inactive credential even with the right secret', function (
     $admin = Admin::factory()->create();
     ApiCredential::create([
         'admin_id' => $admin->id, 'identifier' => 'id_inactive',
-        'secret' => 'sec', 'active' => false,
+        'secret' => ApiCredential::hashSecret('sec'), 'active' => false,
     ]);
 
     $this->getJson('/api/v1/getstats', ['X-API-Key' => 'id_inactive', 'X-API-Secret' => 'sec'])

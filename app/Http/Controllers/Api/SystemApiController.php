@@ -457,8 +457,10 @@ class SystemApiController extends BaseApiController
     }
 
     public function createOAuthCredential(Request $request) {
-        $cred = \App\Models\ApiCredential::create(["admin_id"=>\App\Models\Admin::first()->id ?? 18080, "identifier"=>\Illuminate\Support\Str::random(32), "secret"=>\Illuminate\Support\Str::random(64), "description"=>$request->description, "active"=>true]);
-        return $this->success(["credentialid"=>$cred->id, "identifier"=>$cred->identifier, "secret"=>$cred->secret]);
+        $plain = \Illuminate\Support\Str::random(64);
+        $cred = \App\Models\ApiCredential::create(["admin_id"=>\App\Models\Admin::first()->id ?? 18080, "identifier"=>\Illuminate\Support\Str::random(32), "secret"=>\App\Models\ApiCredential::hashSecret($plain), "description"=>$request->description, "active"=>true]);
+        // Return the plaintext secret once — only its hash is stored.
+        return $this->success(["credentialid"=>$cred->id, "identifier"=>$cred->identifier, "secret"=>$plain]);
     }
 
     public function updateOAuthCredential(Request $request) {

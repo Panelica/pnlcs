@@ -152,7 +152,7 @@ class ConfigController extends Controller
         ApiCredential::create([
             'admin_id'    => auth('admin')->id(),
             'identifier'  => Str::random(32),
-            'secret'      => $secret,
+            'secret'      => ApiCredential::hashSecret($secret),
             'description' => $request->description,
             'active'      => true,
         ]);

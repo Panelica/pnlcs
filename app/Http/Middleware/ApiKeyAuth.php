@@ -36,7 +36,7 @@ class ApiKeyAuth
             if ($cred) {
                 // Secret is MANDATORY and compared in constant time. Previously a
                 // request with a valid identifier but no secret was let through.
-                if (!$apiSecret || !hash_equals((string) $cred->secret, (string) $apiSecret)) {
+                if (!$apiSecret || !hash_equals((string) $cred->secret, \App\Models\ApiCredential::hashSecret((string) $apiSecret))) {
                     return response()->json(['result' => 'error', 'message' => 'Invalid API secret'], 401);
                 }
                 if (!$this->ipAllowed($cred, $request->ip())) {
@@ -59,7 +59,7 @@ class ApiKeyAuth
         $bearer = $request->bearerToken();
         if ($bearer) {
             // Check if it matches any API credential secret
-            $cred = \App\Models\ApiCredential::where('secret', $bearer)->where('active', true)->first();
+            $cred = \App\Models\ApiCredential::where('secret', \App\Models\ApiCredential::hashSecret($bearer))->where('active', true)->first();
             if ($cred) {
                 if (!$this->ipAllowed($cred, $request->ip())) {
                     return response()->json(['result' => 'error', 'message' => 'IP address not allowed for this credential'], 403);

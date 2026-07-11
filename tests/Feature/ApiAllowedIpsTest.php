@@ -15,7 +15,7 @@ function ipCredHeaders(?array $allowedIps): array
     ApiCredential::create([
         'admin_id'    => $admin->id,
         'identifier'  => 'ipid',
-        'secret'      => 'ipsec',
+        'secret'      => ApiCredential::hashSecret('ipsec'),
         'active'      => true,
         'allowed_ips' => $allowedIps,
     ]);
