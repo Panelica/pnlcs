@@ -22,7 +22,7 @@
 <div class="pn-card">
     <div class="pn-card-header">{{ __('client.services.select_new_plan') }}</div>
     <div class="pn-card-body">
-        <form method="POST" action="{{ route('client.services.upgrade.submit', $service) }}">
+        <form method="POST" action="{{ route('client.services.upgrade.process', $service) }}">
             @csrf
             @if($errors->any())
             <div style="background:#f2dede;border:1px solid #ebccd1;color:#a94442;padding:10px 14px;border-radius:4px;font-size:13px;margin-bottom:16px;">

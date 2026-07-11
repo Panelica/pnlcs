@@ -16,6 +16,8 @@ use App\Listeners\SendNotificationListener;
 use App\Listeners\LogActivityListener;
 use App\Listeners\AutoAcceptOrderListener;
 use App\Listeners\LogSentEmailListener;
+use App\Listeners\RenewOnPaymentListener;
+use App\Listeners\ApplyUpgradeListener;
 use Illuminate\Mail\Events\MessageSent;
 
 class EventServiceProvider extends ServiceProvider
@@ -41,6 +43,8 @@ class EventServiceProvider extends ServiceProvider
         InvoicePaid::class => [
             [SendNotificationListener::class, 'handleInvoicePaid'],
             [AutoAcceptOrderListener::class, 'handleInvoicePaid'],
+            [RenewOnPaymentListener::class, 'handleInvoicePaid'],
+            [ApplyUpgradeListener::class, 'handleInvoicePaid'],
             LogActivityListener::class,
         ],
         TicketOpened::class => [

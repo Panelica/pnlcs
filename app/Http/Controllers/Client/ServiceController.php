@@ -72,7 +72,7 @@ class ServiceController extends Controller
             ->with("pricing")
             ->get();
 
-        return view("client.services.upgrade", compact("service", "availableProducts"));
+        return view("client.services.upgrade", ["service" => $service, "upgrades" => $availableProducts]);
     }
 
     public function processUpgrade(Request $request, Service $service)
@@ -83,20 +83,52 @@ class ServiceController extends Controller
             "new_product_id" => "required|exists:products,id",
         ]);
 
-        $newProduct = Product::findOrFail($validated["new_product_id"]);
+        $newProduct = Product::with("pricing")->findOrFail($validated["new_product_id"]);
 
-        Upgrade::create([
+        if ((int) $newProduct->id === (int) $service->product_id) {
+            return back()->with("error", __("messages.error.already_on_this_product"));
+        }
+
+        $upgrades = app(\App\Services\UpgradeService::class);
+        $calc = $upgrades->calculateProration($service, $newProduct);
+
+        if (!($calc["available"] ?? false)) {
+            return back()->with("error", __("messages.error.upgrade_not_available_for_cycle"));
+        }
+
+        $service->loadMissing("product", "client");
+        $currentName = $service->product->name ?? "Current plan";
+
+        $upgrade = Upgrade::create([
             "client_id"      => $this->getClientId(),
             "type"           => "product",
             "rel_id"         => $service->id,
             "original_value" => $service->product_id,
             "new_value"      => $newProduct->id,
-            "amount"         => 0,
+            "amount"         => $calc["prorated_diff"],
             "status"         => "pending",
         ]);
 
-        return redirect()->route("client.services.show", $service)
-            ->with("success", __("messages.success.upgrade_request_submitted"));
+        // Positive prorated cost -> bill it; ApplyUpgradeListener applies the
+        // package change once the invoice is paid.
+        if ($calc["prorated_diff"] > 0.009) {
+            $invoice = app(\App\Services\InvoiceService::class)->createInvoice($service->client, [[
+                "type"        => "Upgrade",
+                "rel_id"      => $upgrade->id,
+                "description" => "Upgrade: {$currentName} -> {$newProduct->name} ({$service->billing_cycle}) - prorated for {$calc['remaining_days']} days - {$service->domain}",
+                "amount"      => $calc["prorated_diff"],
+                "taxed"       => $newProduct->tax ?? true,
+            ]], ["notes" => "Prorated product upgrade charge."]);
+
+            return redirect()->route("client.invoices.show", $invoice)
+                ->with("success", __("messages.success.upgrade_invoice_created"));
+        }
+
+        // Downgrade or same price -> apply immediately, no charge (no auto-credit).
+        $upgrades->apply($upgrade);
+
+        return redirect()->route("client.services.show", $service->fresh())
+            ->with("success", __("messages.success.package_changed"));
     }
 
     public function toggleAutoRenew(Request $request, Service $service)
