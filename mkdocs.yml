@@ -1,0 +1,80 @@
+site_name: PNLCS Documentation
+site_description: User guide for PNLCS — the open-source, self-hosted WHMCS alternative
+site_url: https://panelica.github.io/pnlcs/
+repo_url: https://github.com/Panelica/pnlcs
+repo_name: Panelica/pnlcs
+edit_uri: edit/main/docs/
+copyright: Built and maintained by the Panelica team · MIT Licensed
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - First Login: getting-started/first-login.md
+      - Setup Checklist: getting-started/setup-checklist.md
+      - Your First Sale: getting-started/your-first-sale.md
+  - Concepts:
+      - How PNLCS Is Organized: concepts/overview.md
+      - Products, Services, Orders & Invoices: concepts/products-services-orders-invoices.md
+      - Servers & Modules: concepts/servers-and-modules.md
+      - The Billing Lifecycle: concepts/billing-lifecycle.md
+  - Guides:
+      - Configure Email: guides/configure-email.md
+      - Payment Gateways: guides/payment-gateways.md
+      - Connect a Server: guides/connect-a-server.md
+      - Sell Domains: guides/sell-domains.md
+      - Tax Rules: guides/tax-rules.md
+      - Themes & Branding: guides/themes-and-branding.md
+      - Staff & Roles: guides/staff-and-roles.md
+      - Support Mail Piping: guides/support-mail-piping.md
+      - Migrate from WHMCS: guides/migrate-from-whmcs.md
+  - Troubleshooting:
+      - Common Issues: troubleshooting/common-issues.md
+  - Reference:
+      - Scheduled Commands: reference/scheduled-commands.md
+      - Developer API & Hooks: reference/developer.md
