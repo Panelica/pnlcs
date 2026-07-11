@@ -66,15 +66,13 @@ class RenewOnPaymentListener
             return;
         }
 
-        $years   = max(1, (int) $domain->registration_period);
-        $dueBase = $domain->next_due_date ? Carbon::parse($domain->next_due_date) : now();
-        $expBase = $domain->expiry_date ? Carbon::parse($domain->expiry_date) : $dueBase;
+        $years = max(1, (int) $domain->registration_period);
 
-        $domain->update([
-            'next_due_date' => $dueBase->copy()->addYears($years)->toDateString(),
-            'expiry_date'   => $expBase->copy()->addYears($years)->toDateString(),
-        ]);
+        // Delegate to DomainService, which performs the real registrar renewal
+        // API call and advances the dates (falling back to a local advance when
+        // no registrar module is configured or the API fails).
+        app(\App\Services\DomainService::class)->renewDomain($domain, $years);
 
-        Log::info("RenewOnPayment: domain #{$domain->id} ({$domain->domain}) renewed {$years}y to {$domain->expiry_date}");
+        Log::info("RenewOnPayment: domain #{$domain->id} ({$domain->domain}) renewed {$years}y");
     }
 }
