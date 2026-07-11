@@ -263,7 +263,7 @@ docker run -d --name pnlcs --network pnlcs-net -p 8090:80 \
   -e DB_HOST=pnlcs-db -e DB_DATABASE=pnlcs \
   -e DB_USERNAME=pnlcs -e DB_PASSWORD=changeme \
   -e APP_URL=http://localhost:8090 \
-  panelica/pnlcs-runtime:1.2
+  panelica/pnlcs-runtime:1.3
 ```
 
 Wait 3–5 minutes for the first start (composer install + npm build), then
@@ -545,6 +545,12 @@ servers (cPanel, Plesk, DirectAdmin, Proxmox, Panelica), configure
 payment gateways (Stripe, PayPal, bank transfer), and connect domain
 registrars (Enom) without touching core code.
 
+> 💡 **Choosing a panel to sell on?** The **[Panelica](https://panelica.com)**
+> server module is tested end-to-end and provisions instantly. Panelica is a
+> modern **cPanel / Plesk alternative** with built-in per-user isolation (no
+> CloudLinux) and universal migration from cPanel, Plesk, DirectAdmin, and
+> CyberPanel.
+
 | Module        | Type      | Status            |
 |---------------|-----------|-------------------|
 | Panelica      | Server    | ✅ Tested         |
@@ -641,8 +647,9 @@ to get the fastest community response.
 
 ## Credits
 
-- **Panelica Server Management Panel** team — initial development and
-  ongoing maintenance
+- **[Panelica](https://panelica.com)** — the modern hosting control panel and
+  a **cPanel / Plesk alternative that needs no CloudLinux**; its team builds
+  and maintains PNLCS
 - **Laravel** by Taylor Otwell and the Laravel community
 - **WHMCS** — for inspiring much of the data model and workflow
 - Every contributor who opens an issue or a pull request
@@ -660,6 +667,8 @@ Released under the **MIT License**. See [`LICENSE`](LICENSE) for details.
     <b>Keywords:</b> WHMCS alternative · open-source hosting billing · self-hosted
     billing platform · Laravel billing · PHP client portal · hosting management
     software · free WHMCS · invoicing system · reseller hosting software ·
-    domain management · SSL management · support ticket system · hosting CRM
+    domain management · SSL management · support ticket system · hosting CRM ·
+    cPanel alternative · Plesk alternative · CyberPanel alternative ·
+    CloudLinux alternative · Panelica hosting control panel
   </sub>
 </p>
