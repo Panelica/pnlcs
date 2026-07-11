@@ -218,7 +218,13 @@ class AuthController extends Controller
             ['email' => $request->email],
             ['token' => Hash::make($token), 'created_at' => now()]
         );
-        Log::info("Password reset for {$request->email}: {$token}");
+        $resetUrl = route('client.password.reset', ['token' => $token]) . '?email=' . urlencode($request->email);
+        try {
+            \Illuminate\Support\Facades\Mail::to($request->email)->send(new \App\Mail\PasswordResetMail($resetUrl, $request->email));
+        } catch (\Throwable $e) {
+            // Never log the token; only the delivery failure.
+            Log::error('Password reset email failed for ' . $request->email . ': ' . $e->getMessage());
+        }
         return back()->with('success', __('messages.success.if_an_account_exists_with_that_email_a_password_re'));
     }
 
