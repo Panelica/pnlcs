@@ -5,4 +5,5 @@ use Illuminate\Database\Eloquent\Model;
 class RegistrarSettings extends Model {
     protected $table    = "registrar_settings";
     protected $fillable = ["registrar", "setting", "value"];
-}
+
+    protected $casts = ["value" => \App\Casts\EncryptedValue::class];}
