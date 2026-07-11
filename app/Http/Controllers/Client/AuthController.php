@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use App\Events\ClientCreated;
 
 class AuthController extends Controller
@@ -31,7 +33,15 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        $key = Str::transliterate(Str::lower($request->input('email')) . '|' . $request->ip());
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            throw ValidationException::withMessages([
+                'email' => __('auth.throttle', ['seconds' => RateLimiter::availableIn($key)]),
+            ]);
+        }
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::clear($key);
             $request->session()->regenerate();
 
             $user = Auth::user();
@@ -45,6 +55,7 @@ class AuthController extends Controller
             return redirect()->intended(route('client.home'));
         }
 
+        RateLimiter::hit($key, 900);
         return back()->withErrors(['email' => __('auth.failed')])->onlyInput('email');
     }
 

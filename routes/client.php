@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('client')->name('client.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post("login", [AuthController::class, "login"])->middleware("throttle:30,5")->name("login.submit");
+    Route::post("login", [AuthController::class, "login"])->middleware("throttle:10,1")->name("login.submit");
     Route::get('register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('register', [AuthController::class, 'register'])->name('register.submit');
 

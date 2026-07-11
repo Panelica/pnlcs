@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Services\TwoFactorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -25,7 +28,15 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        $key = Str::transliterate(Str::lower($request->input('username')) . '|' . $request->ip());
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            throw ValidationException::withMessages([
+                'username' => __('auth.throttle', ['seconds' => RateLimiter::availableIn($key)]),
+            ]);
+        }
+
         if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::clear($key);
             $admin = Auth::guard('admin')->user();
 
             if ($admin->is_disabled) {
@@ -49,6 +60,7 @@ class AuthController extends Controller
             return redirect()->intended(route('admin.dashboard'));
         }
 
+        RateLimiter::hit($key, 900);
         return back()->withErrors(['username' => __('auth.failed')])->onlyInput('username');
     }
 
