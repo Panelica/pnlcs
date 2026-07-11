@@ -60,12 +60,12 @@ class DemoSeeder extends Seeder
         AdminRole::firstOrCreate(
             ['name' => 'Support Agent'],
             ['description' => 'Support tickets only', 'is_full_admin' => false,
-             'permissions' => ['list_clients','view_clients','list_tickets','open_ticket','reply_ticket','manage_kb']]
+             'permissions' => ['list_clients', 'view_clients', 'list_tickets', 'view_tickets', 'reply_tickets', 'list_services', 'view_services', 'list_orders', 'view_orders']]
         );
         AdminRole::firstOrCreate(
             ['name' => 'Billing Manager'],
             ['description' => 'Billing and orders', 'is_full_admin' => false,
-             'permissions' => ['list_clients','view_clients','add_clients','list_invoices','create_invoice','edit_invoice','list_transactions','view_orders','accept_order']]
+             'permissions' => ['list_clients', 'view_clients', 'list_invoices', 'view_invoices', 'create_invoices', 'manage_invoices', 'list_orders', 'view_orders', 'manage_orders', 'list_quotes', 'manage_quotes']]
         );
 
         // 3. Admin users
