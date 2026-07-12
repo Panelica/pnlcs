@@ -460,28 +460,84 @@ class PanelicaModule extends AbstractServerModule
                 continue;
             }
 
-            $resp = $this->get($server, "/v1/accounts/{$userId}/stats");
+            $updateData = [];
 
-            if (!$resp->successful()) {
-                $errors++;
-                continue;
+            // Disk: dedicated endpoint returns real used + quota (MB).
+            $diskResp = $this->get($server, "/v1/accounts/{$userId}/disk-usage");
+            if ($diskResp->successful()) {
+                $d = $diskResp->json('data') ?? [];
+                if (isset($d['used_mb']))  { $updateData['disk_usage'] = (int) $d['used_mb']; }
+                if (isset($d['quota_mb'])) { $updateData['disk_limit'] = (int) $d['quota_mb']; }
             }
 
-            $stats      = $resp->json('data') ?? $resp->json() ?? [];
-            $diskUsage  = $stats['disk_used']      ?? $stats['disk_usage']      ?? null;
-            $bwUsage    = $stats['bandwidth_used']  ?? $stats['bw_usage']        ?? null;
-
-            $updateData = [];
-            if ($diskUsage !== null) $updateData['disk_usage'] = $diskUsage;
-            if ($bwUsage   !== null) $updateData['bw_usage']   = $bwUsage;
+            // Bandwidth: the stats endpoint reports this month's usage as bandwidth_mb.
+            $statResp = $this->get($server, "/v1/accounts/{$userId}/stats");
+            if ($statResp->successful()) {
+                $st = $statResp->json('data') ?? [];
+                if (isset($st['bandwidth_mb'])) { $updateData['bw_usage'] = (int) $st['bandwidth_mb']; }
+            }
 
             if (!empty($updateData)) {
                 $service->update($updateData);
                 $updated++;
+            } else {
+                $errors++;
             }
         }
 
         return ['updated' => $updated, 'errors' => $errors];
+    }
+
+    /**
+     * List the hosting plans defined on the panel (GET /v1/plans) for the
+     * product editor's plan dropdown.
+     *
+     * @return array<int, array>
+     */
+    public function listPlans(Server $server): array
+    {
+        $resp = $this->get($server, '/v1/plans');
+        if (!$resp->successful()) {
+            return [];
+        }
+        $plans = $resp->json('data') ?? $resp->json() ?? [];
+        return is_array($plans) ? $plans : [];
+    }
+
+    /**
+     * Live resource usage for a service, pulled straight from the panel:
+     * disk (GET /v1/accounts/{id}/disk-usage) and bandwidth + account counts
+     * (GET /v1/accounts/{id}/stats). Used to render the client usage graphs.
+     */
+    public function liveUsage(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $userId = $this->getModuleData($service)['panelica_user_id'] ?? null;
+        if (!$server || !$userId) {
+            return ['available' => false];
+        }
+
+        $out = ['available' => true, 'disk' => null, 'bandwidth' => null, 'counts' => null];
+
+        $diskResp = $this->get($server, "/v1/accounts/{$userId}/disk-usage");
+        if ($diskResp->successful()) {
+            $d = $diskResp->json('data') ?? [];
+            $out['disk'] = ['used_mb' => (int) ($d['used_mb'] ?? 0), 'quota_mb' => (int) ($d['quota_mb'] ?? 0)];
+        }
+
+        $statResp = $this->get($server, "/v1/accounts/{$userId}/stats");
+        if ($statResp->successful()) {
+            $st = $statResp->json('data') ?? [];
+            $out['bandwidth'] = ['used_mb' => (int) ($st['bandwidth_mb'] ?? 0)];
+            $out['counts'] = [
+                'domains'   => (int) ($st['domain_count'] ?? 0),
+                'emails'    => (int) ($st['email_count'] ?? 0),
+                'ftp'       => (int) ($st['ftp_count'] ?? 0),
+                'databases' => (int) ($st['database_count'] ?? 0),
+            ];
+        }
+
+        return $out;
     }
 
     /**

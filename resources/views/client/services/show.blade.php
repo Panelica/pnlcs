@@ -59,32 +59,36 @@
     </div>
 </div>
 
-@if($service->disk_limit || $service->bw_limit)
+@if((($service->server?->type ?? $service->product?->server_type ?? '') === 'panelica') && strtolower($service->status) === 'active')
 <div class="pn-card mb-24">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.services.resource_usage') }}</span></div>
-    <div class="pn-card-body">
-        @if($service->disk_limit)
-        @php $dp = $service->disk_limit > 0 ? min(100, round(($service->disk_usage / $service->disk_limit) * 100)) : 0; $dc = $dp >= 90 ? "var(--danger)" : ($dp >= 75 ? "var(--warning)" : "var(--primary)"); @endphp
-        <div style="margin-bottom:20px">
-            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
-                <span style="font-weight:600">{{ __('client.services.disk_usage') }}</span>
-                <span class="text-muted">{{ number_format($service->disk_usage) }} / {{ number_format($service->disk_limit) }} MB — <strong>{{ $dp }}%</strong></span>
-            </div>
-            <div class="pn-progress-wrap"><div class="pn-progress-fill" style="width:{{ $dp }}%;background:{{ $dc }}"></div></div>
-        </div>
-        @endif
-        @if($service->bw_limit)
-        @php $bp = $service->bw_limit > 0 ? min(100, round(($service->bw_usage / $service->bw_limit) * 100)) : 0; $bc = $bp >= 90 ? "var(--danger)" : ($bp >= 75 ? "var(--warning)" : "var(--success)"); @endphp
-        <div>
-            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px">
-                <span style="font-weight:600">{{ __('client.services.bandwidth_usage') }}</span>
-                <span class="text-muted">{{ number_format($service->bw_usage) }} / {{ number_format($service->bw_limit) }} MB — <strong>{{ $bp }}%</strong></span>
-            </div>
-            <div class="pn-progress-wrap"><div class="pn-progress-fill" style="width:{{ $bp }}%;background:{{ $bc }}"></div></div>
-        </div>
-        @endif
-    </div>
+    <div class="pn-card-body" id="pn-live-usage"><span class="text-muted">Loading&hellip;</span></div>
 </div>
+<script>
+(function(){
+    var el=document.getElementById('pn-live-usage');
+    function bar(label,used,limit,unit){
+        var pct=limit>0?Math.min(100,Math.round(used/limit*100)):0;
+        var col=pct>=90?'var(--danger)':(pct>=75?'var(--warning)':'var(--primary)');
+        return '<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">'
+          +'<span style="font-weight:600">'+label+'</span><span class="text-muted">'+used.toLocaleString()
+          +(limit>0?' / '+limit.toLocaleString():'')+' '+unit+(limit>0?' &mdash; <strong>'+pct+'%</strong>':'')+'</span></div>'
+          +(limit>0?'<div class="pn-progress-wrap"><div class="pn-progress-fill" style="width:'+pct+'%;background:'+col+'"></div></div>':'')+'</div>';
+    }
+    fetch("{{ route('client.services.usage', $service) }}",{headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .then(function(r){return r.json();}).then(function(u){
+        if(!u||!u.available){el.innerHTML='<span class="text-muted">Live usage is not available right now.</span>';return;}
+        var html='';
+        if(u.disk) html+=bar("{{ __('client.services.disk_usage') }}",u.disk.used_mb||0,u.disk.quota_mb||0,'MB');
+        if(u.bandwidth) html+=bar("{{ __('client.services.bandwidth_usage') }}",u.bandwidth.used_mb||0,0,'MB');
+        if(u.counts){html+='<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:6px">';
+          [['domains','Websites'],['databases','Databases'],['emails','Email'],['ftp','FTP']].forEach(function(p){
+            html+='<span class="text-muted"><strong>'+(u.counts[p[0]]||0)+'</strong> '+p[1]+'</span>';});
+          html+='</div>';}
+        el.innerHTML=html||'<span class="text-muted">No usage data yet.</span>';
+      }).catch(function(){el.innerHTML='<span class="text-muted">Live usage is not available right now.</span>';});
+})();
+</script>
 @endif
 
 @if(in_array(strtolower($service->status), ["active"]))

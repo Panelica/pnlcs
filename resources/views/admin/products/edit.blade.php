@@ -75,7 +75,16 @@
             </label>
             <div class="form-group" style="margin-bottom:14px;">
                 <label class="form-label" style="font-size:12px;">Or use an existing panel plan ID (leave managed unchecked)</label>
+                @if(!empty($panelicaPlans))
+                <select name="panelica_plan_id" class="form-control" style="font-size:12px;">
+                    <option value="">&mdash; none (use managed limits below) &mdash;</option>
+                    @foreach($panelicaPlans as $pl)
+                    <option value="{{ $pl['id'] ?? '' }}" {{ (string)($cfg['panelica_plan_id'] ?? '') === (string)($pl['id'] ?? '') ? 'selected' : '' }}>{{ $pl['name'] ?? ($pl['id'] ?? 'plan') }}</option>
+                    @endforeach
+                </select>
+                @else
                 <input type="text" name="panelica_plan_id" value="{{ $cfg['panelica_plan_id'] ?? '' }}" class="form-control" style="font-size:12px;" placeholder="d6875821-...">
+                @endif
             </div>
             @php $numFields = [
                 'res_cpu_percent'=>['CPU Limit (%) &mdash; 100 = 1 core',100],'res_memory_mb'=>['RAM (MB)',1024],

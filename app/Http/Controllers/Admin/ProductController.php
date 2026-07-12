@@ -72,7 +72,22 @@ class ProductController extends Controller
         $groups = ProductGroup::orderBy("sort_order")->get();
         $currencies = Currency::all();
         $pricing = Pricing::where("type", "product")->where("rel_id", $product->id)->get()->keyBy("currency_id");
-        return view("admin.products.edit", compact("product", "groups", "currencies", "pricing"));
+
+        // Best-effort: load panel plans for the Panelica plan dropdown.
+        $panelicaPlans = [];
+        $server = \App\Models\Server::where("type", "panelica")->where("active", true)->first();
+        if ($server) {
+            try {
+                $module = app(\App\Services\Module\ModuleRegistry::class)->getServerModule("panelica");
+                if ($module && method_exists($module, "listPlans")) {
+                    $panelicaPlans = $module->listPlans($server);
+                }
+            } catch (\Throwable $e) {
+                $panelicaPlans = [];
+            }
+        }
+
+        return view("admin.products.edit", compact("product", "groups", "currencies", "pricing", "panelicaPlans"));
     }
 
     public function update(Request $request, Product $product)

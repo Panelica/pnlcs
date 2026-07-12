@@ -32,6 +32,20 @@ class ServiceController extends Controller
     }
 
     /**
+     * Live resource usage (disk / bandwidth / counts) for the client usage graphs.
+     */
+    public function usage(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = app(\App\Services\ProvisioningService::class)->resolveModule($service);
+        if (!$module || !method_exists($module, "liveUsage")) {
+            return response()->json(["available" => false]);
+        }
+        return response()->json($module->liveUsage($service));
+    }
+
+    /**
      * Single sign-on into the hosting control panel for this service.
      */
     public function loginToPanel(Service $service)
