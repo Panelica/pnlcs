@@ -27,6 +27,27 @@
 </div>
 @endif
 
+@php $me = auth('admin')->user(); @endphp
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <strong style="font-size:14px;">{{ __('admin.dashboard.quick_actions') }}</strong>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;">
+            @if($me && $me->hasPermission('manage_products'))
+                <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">+ {{ __('admin.dashboard.new_product') }}</a>
+            @endif
+            @if($me && $me->hasPermission('manage_servers'))
+                <a href="{{ route('admin.config.servers') }}" class="btn btn-default btn-sm">+ {{ __('admin.dashboard.add_server') }}</a>
+            @endif
+            @if($me && $me->hasPermission('create_clients'))
+                <a href="{{ route('admin.clients.create') }}" class="btn btn-default btn-sm">+ {{ __('admin.dashboard.add_client') }}</a>
+            @endif
+            @if($me && $me->hasPermission('create_invoices'))
+                <a href="{{ route('admin.invoices.create') }}" class="btn btn-default btn-sm">+ {{ __('admin.dashboard.new_invoice') }}</a>
+            @endif
+        </div>
+    </div>
+</div>
+
 <div style="display:flex;flex-direction:column;gap:16px;">
 @foreach($widgetOutput as $key => $item)
     @php $widget = $item['widget']; $cols = $widget->getColumns(); @endphp
