@@ -96,6 +96,31 @@ class ProductController extends Controller
         $validated["is_featured"] = $request->boolean("is_featured");
         $product->update($validated);
 
+        // Panelica managed resources -> merged into config_options (preserves
+        // feature text f1..f7 and any other existing keys).
+        if ($request->boolean("res_section")) {
+            $config = is_string($product->config_options)
+                ? (json_decode($product->config_options, true) ?: [])
+                : ($product->config_options ?? []);
+            foreach ([
+                "res_disk_mb","res_bandwidth_mb","res_max_domains","res_max_subdomains",
+                "res_max_email","res_max_db","res_max_ftp","res_max_cron","res_max_containers",
+                "res_cpu_percent","res_memory_mb","res_process_limit","res_io_mbs","res_iops",
+                "res_network_mbit","res_inode_quota","res_php_memory_mb","res_php_exec","res_php_upload",
+            ] as $k) {
+                $v = $request->input($k);
+                if ($v !== null && $v !== "") { $config[$k] = (int) $v; }
+            }
+            $config["res_ssh_level"]  = $request->input("res_ssh_level", "none");
+            $config["res_quota_mode"] = $request->input("res_quota_mode", "strict");
+            $config["res_modsec"]     = $request->input("res_modsec", "on");
+            $config["res_backup"]     = $request->input("res_backup", "on");
+            $config["res_managed"]    = $request->boolean("res_managed") ? 1 : 0;
+            $planId = trim((string) $request->input("panelica_plan_id", ""));
+            if ($planId !== "") { $config["panelica_plan_id"] = $planId; } else { unset($config["panelica_plan_id"]); }
+            $product->update(["config_options" => json_encode($config)]);
+        }
+
         // Update pricing
         foreach (Currency::all() as $currency) {
             Pricing::updateOrCreate(

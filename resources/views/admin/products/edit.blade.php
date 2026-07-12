@@ -64,6 +64,68 @@
         </div>
     </div>
 
+    @php $cfg = is_string($product->config_options) ? (json_decode($product->config_options, true) ?: []) : ($product->config_options ?? []); @endphp
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>Panelica Resources</strong> <span style="font-size:11px;color:#888;">&mdash; enforced cgroups/quota limits (full panel parity)</span></div>
+        <div class="card-body">
+            <input type="hidden" name="res_section" value="1">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;">
+                <input type="checkbox" name="res_managed" value="1" {{ !empty($cfg['res_managed']) ? 'checked' : '' }}>
+                <strong>Managed mode</strong> &mdash; build a matching panel plan from the limits below on provisioning
+            </label>
+            <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label" style="font-size:12px;">Or use an existing panel plan ID (leave managed unchecked)</label>
+                <input type="text" name="panelica_plan_id" value="{{ $cfg['panelica_plan_id'] ?? '' }}" class="form-control" style="font-size:12px;" placeholder="d6875821-...">
+            </div>
+            @php $numFields = [
+                'res_cpu_percent'=>['CPU Limit (%) &mdash; 100 = 1 core',100],'res_memory_mb'=>['RAM (MB)',1024],
+                'res_inode_quota'=>['Inode Quota (-1 = unlimited)',-1],'res_iops'=>['IOPS (0 = unlimited)',0],
+                'res_io_mbs'=>['Disk I/O (MB/s)',0],'res_disk_mb'=>['Disk (MB)',5120],
+                'res_bandwidth_mb'=>['Bandwidth (MB)',51200],'res_process_limit'=>['Max Processes',100],
+                'res_max_domains'=>['Max Websites',1],'res_max_subdomains'=>['Max Subdomains',10],
+                'res_max_email'=>['Max Email',10],'res_max_db'=>['Max Databases',5],
+                'res_max_ftp'=>['Max FTP',5],'res_max_cron'=>['Max Cron',5],
+                'res_max_containers'=>['Max Containers',0],'res_network_mbit'=>['Network (Mbit/s)',0],
+                'res_php_memory_mb'=>['PHP Memory (MB)',256],'res_php_exec'=>['PHP Exec (s)',30],
+                'res_php_upload'=>['PHP Upload (MB)',64],
+            ]; @endphp
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+                @foreach($numFields as $k => $meta)
+                <div>
+                    <label class="form-label" style="font-size:11px;">{!! $meta[0] !!}</label>
+                    <input type="number" name="{{ $k }}" value="{{ $cfg[$k] ?? $meta[1] }}" class="form-control" style="font-size:12px;">
+                </div>
+                @endforeach
+                <div>
+                    <label class="form-label" style="font-size:11px;">SSH Access</label>
+                    <select name="res_ssh_level" class="form-control" style="font-size:12px;">
+                        @foreach(['none','jailed','full'] as $o)<option value="{{ $o }}" {{ ($cfg['res_ssh_level'] ?? 'none')===$o?'selected':'' }}>{{ ucfirst($o) }}</option>@endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:11px;">Quota Mode</label>
+                    <select name="res_quota_mode" class="form-control" style="font-size:12px;">
+                        @foreach(['strict','monitor','oversell'] as $o)<option value="{{ $o }}" {{ ($cfg['res_quota_mode'] ?? 'strict')===$o?'selected':'' }}>{{ ucfirst($o) }}</option>@endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:11px;">ModSecurity</label>
+                    <select name="res_modsec" class="form-control" style="font-size:12px;">
+                        <option value="on" {{ ($cfg['res_modsec'] ?? 'on')!=='off'?'selected':'' }}>On</option>
+                        <option value="off" {{ ($cfg['res_modsec'] ?? 'on')==='off'?'selected':'' }}>Off</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:11px;">Backups</label>
+                    <select name="res_backup" class="form-control" style="font-size:12px;">
+                        <option value="on" {{ ($cfg['res_backup'] ?? 'on')!=='off'?'selected':'' }}>On</option>
+                        <option value="off" {{ ($cfg['res_backup'] ?? 'on')==='off'?'selected':'' }}>Off</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div style="display:flex;gap:8px;">
         <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
         <a href="{{ route('admin.products.index') }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
