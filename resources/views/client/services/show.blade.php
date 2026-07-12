@@ -89,6 +89,9 @@
 
 @if(in_array(strtolower($service->status), ["active"]))
 <div class="pn-actions mb-24">
+    @if((($service->server?->type ?? $service->product?->server_type ?? '') === 'panelica') && $service->status === 'active')
+    <a href="{{ route("client.services.login", $service) }}" class="btn btn-primary">{{ __('client.services.login_to_panel') }}</a>
+    @endif
     <a href="{{ route("client.services.upgrade", $service) }}" class="btn btn-primary">{{ __('client.services.upgrade_downgrade') }}</a>
     <a href="{{ route("client.services.cancel", $service) }}" class="btn btn-danger">{{ __('client.services.request_cancellation') }}</a>
 </div>

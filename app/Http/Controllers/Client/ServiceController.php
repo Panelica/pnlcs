@@ -31,6 +31,26 @@ class ServiceController extends Controller
         return view("client.services.show", compact("service"));
     }
 
+    /**
+     * Single sign-on into the hosting control panel for this service.
+     */
+    public function loginToPanel(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = app(\App\Services\ProvisioningService::class)->resolveModule($service);
+        if (!$module || !method_exists($module, "ssoLogin")) {
+            return back()->with("error", __("messages.error.panel_login_unavailable"));
+        }
+
+        $result = $module->ssoLogin($service);
+        if (($result["success"] ?? false) && !empty($result["data"]["url"])) {
+            return redirect()->away($result["data"]["url"]);
+        }
+
+        return back()->with("error", $result["message"] ?? __("messages.error.panel_login_unavailable"));
+    }
+
     public function requestCancellation(Service $service)
     {
         abort_if($service->client_id !== $this->getClientId(), 403);

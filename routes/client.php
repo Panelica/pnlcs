@@ -69,6 +69,7 @@ Route::prefix('client')->name('client.')->group(function () {
         // Services
         Route::get('services', [ServiceController::class, 'index'])->name('services.index');
         Route::get('services/{service}', [ServiceController::class, 'show'])->name('services.show');
+        Route::get('services/{service}/login', [ServiceController::class, 'loginToPanel'])->name('services.login');
         Route::get('services/{service}/cancel', [ServiceController::class, 'requestCancellation'])->name('services.cancel');
         Route::post('services/{service}/cancel', [ServiceController::class, 'submitCancellation'])->name('services.cancel.submit');
         Route::get('services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');

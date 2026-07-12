@@ -663,6 +663,7 @@ return [
         'title' => 'My Services',
         'upgrade' => 'Upgrade/Downgrade',
         'upgrade_downgrade' => 'Upgrade / Downgrade',
+        'login_to_panel' => 'Login to Control Panel',
         'upgrade_downgrade_title' => 'Upgrade / Downgrade Service',
         'username' => 'Username',
     ],

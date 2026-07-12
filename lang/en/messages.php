@@ -49,6 +49,7 @@ return [
     'error.current_password_incorrect' => 'The current password is incorrect.',
     'error.domain_not_yours' => 'This domain does not belong to your account.',
     'error.gateway_not_configured' => ':gateway is not configured yet. Please use Bank Transfer or contact support to set up :gateway.',
+    'error.panel_login_unavailable' => 'The hosting control panel login is not available right now. Please try again later or contact support.',
     'error.login_required' => 'Please log in to complete your order.',
     'error.message_flagged_as_spam' => 'Your message was flagged as spam. Please contact support if this is an error.',
     'error.no_affiliate_account_found' => 'No affiliate account found.',

@@ -484,6 +484,33 @@ class PanelicaModule extends AbstractServerModule
         return ['updated' => $updated, 'errors' => $errors];
     }
 
+    /**
+     * Mint a one-time single-sign-on URL so the customer can jump straight into
+     * their hosting control panel (POST /v1/accounts/{id}/sso-login).
+     */
+    public function ssoLogin(Service $service): array
+    {
+        $server = $this->getServer($service);
+        if (!$server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        $userId = $this->getModuleData($service)['panelica_user_id'] ?? null;
+        if (!$userId) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+
+        $resp = $this->post($server, "/v1/accounts/{$userId}/sso-login", []);
+        if (!$resp->successful()) {
+            Log::error('PanelicaModule::ssoLogin failed', ['user_id' => $userId, 'body' => $resp->body()]);
+            return $this->buildResult(false, 'Could not create a panel login session.');
+        }
+        $url = $resp->json('data.url') ?? $resp->json('url') ?? $resp->json('data.login_url') ?? null;
+        if (!$url) {
+            return $this->buildResult(false, 'Panel did not return a login URL.');
+        }
+        return $this->buildResult(true, 'SSO URL issued.', ['url' => $url]);
+    }
+
     public function testConnection(Server $server): bool
     {
         try {
