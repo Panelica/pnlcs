@@ -570,10 +570,10 @@ registrars (Enom) without touching core code.
 | Module        | Type      | Status            |
 |---------------|-----------|-------------------|
 | Panelica      | Server    | ✅ Tested         |
-| cPanel        | Server    | ⚠️ Needs testing  |
-| Plesk         | Server    | ⚠️ Needs testing  |
+| cPanel        | Server    | ✅ Tested         |
+| Plesk         | Server    | ✅ Tested         |
 | DirectAdmin   | Server    | ⚠️ Needs testing  |
-| Proxmox       | Server    | ⚠️ Needs testing  |
+| Proxmox       | Server    | ✅ Tested         |
 | Custom        | Server    | ⚠️ Needs testing  |
 | Stripe        | Gateway   | ✅ Tested         |
 | PayPal        | Gateway   | ⚠️ Needs testing  |
