@@ -18,6 +18,15 @@
 </p>
 
 <p align="center">
+  <a href="https://hosting.panelica.com/"><img src="https://img.shields.io/badge/%F0%9F%9A%80%20Live%20Demo-hosting.panelica.com-22C55E?style=for-the-badge&logoColor=white" alt="Live Demo — hosting.panelica.com"></a>
+</p>
+
+<p align="center">
+  <b>👉 Try the live demo: <a href="https://hosting.panelica.com/">hosting.panelica.com</a></b>
+</p>
+
+<p align="center">
+  <a href="https://hosting.panelica.com/"><b>Live Demo</b></a> ·
   <a href="https://panelica.github.io/pnlcs/">Documentation</a> ·
   <a href="#quick-start-with-docker">Docker</a> ·
   <a href="#installation">Installation</a> ·
