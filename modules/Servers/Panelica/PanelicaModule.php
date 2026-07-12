@@ -88,6 +88,114 @@ class PanelicaModule extends AbstractServerModule
     // Interface implementation
     // -------------------------------------------------------------------------
 
+    /**
+     * Build a panel plan spec from a product's managed resource config. Mirrors
+     * the Panelica WHMCS module contract exactly (POST /v1/plans basic columns +
+     * PATCH /v1/plans/{id} advanced columns), so a PNLCS "managed" product
+     * enforces the same cgroups/quota limits as WHMCS. Returns null when the
+     * product does not use managed mode (res_managed falsy).
+     *
+     * @return array{basic: array, advanced: array}|null
+     */
+    private function managedPlanSpec(array $c): ?array
+    {
+        if (empty($c['res_managed'])) {
+            return null;
+        }
+        $int = fn ($k, $d) => (isset($c[$k]) && is_numeric($c[$k])) ? (int) $c[$k] : $d;
+        $str = fn ($k, $d) => (isset($c[$k]) && trim((string) $c[$k]) !== '') ? trim((string) $c[$k]) : $d;
+
+        $ssh = $str('res_ssh_level', 'none');
+        if (!in_array($ssh, ['none', 'jailed', 'full'], true)) { $ssh = 'none'; }
+        $quotaMode = $str('res_quota_mode', 'strict');
+        if (!in_array($quotaMode, ['strict', 'monitor', 'oversell'], true)) { $quotaMode = 'strict'; }
+
+        $ioMbs     = max(0, $int('res_io_mbs', 0));
+        $netMbit   = max(0, $int('res_network_mbit', 0));
+        $maxCron   = $int('res_max_cron', 5);
+        $phpUpload = $int('res_php_upload', 64);
+
+        return [
+            'basic' => [
+                'disk_quota_mb'        => $int('res_disk_mb', 5120),
+                'monthly_bandwidth_mb' => $int('res_bandwidth_mb', 51200),
+                'max_domains'          => $int('res_max_domains', 1),
+                'max_subdomains'       => $int('res_max_subdomains', 10),
+                'max_email_accounts'   => $int('res_max_email', 10),
+                'max_databases'        => $int('res_max_db', 5),
+                'max_ftp_accounts'     => $int('res_max_ftp', 5),
+                'max_cron_jobs'        => $maxCron,
+                'ssh_access_enabled'   => ($ssh !== 'none'),
+                'ftp_access_enabled'   => true,
+                'mysql_access_enabled' => true,
+                'cron_jobs_enabled'    => ($maxCron !== 0),
+                'ssl_enabled'          => true,
+                'backup_enabled'       => $str('res_backup', 'on') !== 'off',
+            ],
+            'advanced' => [
+                'cpu_limit_percent'          => $int('res_cpu_percent', 100),
+                'memory_limit_mb'            => $int('res_memory_mb', 1024),
+                'process_limit'              => $int('res_process_limit', 100),
+                'io_read_bps'                => $ioMbs * 1048576,
+                'io_write_bps'               => $ioMbs * 1048576,
+                'network_bps_limit'          => $netMbit * 125000,
+                'max_containers'             => $int('res_max_containers', 0),
+                'inode_quota'                => $int('res_inode_quota', -1),
+                'iops_limit'                 => $int('res_iops', 0),
+                'quota_mode'                 => $quotaMode,
+                'ssh_access_level'           => $ssh,
+                'modsecurity_enabled'        => $str('res_modsec', 'on') !== 'off',
+                'php_memory_limit_mb'        => $int('res_php_memory_mb', 256),
+                'php_max_execution_time'     => $int('res_php_exec', 30),
+                'php_upload_max_filesize_mb' => $phpUpload,
+                'php_post_max_size_mb'       => $phpUpload,
+            ],
+        ];
+    }
+
+    /** Find an existing panel plan id by name, or null. */
+    private function findPlanByName(Server $server, string $name): ?string
+    {
+        $resp = $this->get($server, '/v1/plans');
+        if (!$resp->successful()) {
+            return null;
+        }
+        foreach (($resp->json('data') ?? $resp->json() ?? []) as $p) {
+            if (($p['name'] ?? null) === $name) {
+                return (string) ($p['id'] ?? '') ?: null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Create or update the managed plan for this product on the panel and return
+     * its id. Basic columns go via POST /v1/plans (create) or PATCH (update);
+     * advanced columns always via PATCH /v1/plans/{id}.
+     */
+    private function ensureManagedPlan(Server $server, Service $service, array $spec): ?string
+    {
+        $name   = 'pnlcs-p' . ($service->product_id ?? 'x');
+        $planId = $this->findPlanByName($server, $name);
+
+        if (!$planId) {
+            $resp = $this->post($server, '/v1/plans', array_merge($spec['basic'], ['name' => $name]));
+            if (!$resp->successful()) {
+                Log::error('PanelicaModule::ensureManagedPlan create failed', ['body' => $resp->body()]);
+                return null;
+            }
+            $planId = (string) ($resp->json('data.id') ?? $resp->json('id') ?? '') ?: null;
+        } else {
+            // Keep an existing managed plan in sync with the product config.
+            $this->patch($server, "/v1/plans/{$planId}", $spec['basic']);
+        }
+
+        if ($planId) {
+            $this->patch($server, "/v1/plans/{$planId}", $spec['advanced']);
+        }
+        return $planId;
+    }
+
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
@@ -114,6 +222,16 @@ class PanelicaModule extends AbstractServerModule
             ? json_decode($product->config_options, true)
             : ($product->config_options ?? []);
         $planId = $config['panelica_plan_id'] ?? null;
+
+        // Managed mode: build/sync a panel plan from the product's resource
+        // config (cpu/ram/inode/iops/...) and use it — full Panelica parity.
+        $spec = $this->managedPlanSpec($config);
+        if ($spec) {
+            $managed = $this->ensureManagedPlan($server, $service, $spec);
+            if ($managed) {
+                $planId = $managed;
+            }
+        }
 
         // Step 1: Create account
         $accountPayload = [
