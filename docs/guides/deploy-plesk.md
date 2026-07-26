@@ -28,8 +28,17 @@ to miss on Plesk specifically.
 ## Option A — Using Plesk's Laravel Toolkit (recommended)
 
 1. Install the **Laravel Toolkit** extension in Plesk if it isn't already.
-2. Go to **Domains → your domain → Laravel Toolkit**.
-3. Point it at your repository (HTTPS Git URL) and branch.
+2. Go to Laravel in Plesk and click on Install Application
+   <img width="943" height="425" alt="image" src="https://github.com/user-attachments/assets/059a963d-7033-4b56-89a0-e9eb4cecdb5b" />
+
+
+   <img width="1471" height="722" alt="image" src="https://github.com/user-attachments/assets/d838d72b-08e6-43af-805c-2e78317e06d1" />
+
+
+3. Choose a Domain, add the repository `https://github.com/Panelica/pnlcs.git`,
+   and click **Install Application**
+   <img width="449" height="455" alt="image" src="https://github.com/user-attachments/assets/727d94f7-8ea7-414b-95f1-df9ed93944fb" />
+
 4. Set **Deployment mode** to **Manual** (safer for a first install — you
    control exactly when it deploys) or **Automatic** if you want it to
    redeploy on every push.
