@@ -9,6 +9,14 @@
     </div>
 </div>
 
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:15px;">
+    <ul style="margin:0;padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    </ul>
+</div>
+@endif
+
 <div class="card">
     @if(($servers ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.servers.no_servers') }}</div>
@@ -167,6 +175,9 @@ function editServer(id, name, hostname, ip, type, port, username, maxAccounts, n
     document.getElementById('form-edit-server').action = serverRouteBase + '/' + id;
     document.getElementById('modal-edit-server').style.display = 'flex';
 }
+@if($errors->any())
+document.getElementById('modal-add-server').style.display = 'flex';
+@endif
 </script>
 @endpush
 
