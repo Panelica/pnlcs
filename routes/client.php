@@ -23,7 +23,7 @@ use App\Http\Controllers\DomainSearchController;
 use App\Http\Middleware\TwoFactorVerify;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('client')->name('client.')->group(function () {
+Route::prefix('client')->name('client.')->middleware('banned.ip')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.submit');
     Route::get('register', [AuthController::class, 'showRegister'])->name('register');
