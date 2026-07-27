@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ClientStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -15,37 +16,37 @@ class Client extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        "first_name",
-        "last_name",
-        "company_name",
-        "email",
-        "address1",
-        "address2",
-        "city",
-        "state",
-        "postcode",
-        "country",
-        "phone_number",
-        "tax_id",
-        "status",
-        "group_id",
-        "currency_id",
-        "credit",
-        "tax_exempt",
-        "language",
-        "notes",
-        "affiliate_id",
-        "ip_address",
+        'first_name',
+        'last_name',
+        'company_name',
+        'email',
+        'address1',
+        'address2',
+        'city',
+        'state',
+        'postcode',
+        'country',
+        'phone_number',
+        'tax_id',
+        'status',
+        'group_id',
+        'currency_id',
+        'credit',
+        'tax_exempt',
+        'language',
+        'notes',
+        'affiliate_id',
+        'ip_address',
     ];
 
     protected function casts(): array
     {
         return [
-            "status" => ClientStatus::class,
-            "credit" => "decimal:2",
-            "tax_exempt" => "boolean",
-            "late_fee_overide" => "boolean",
-            "override_auto_suspend" => "boolean",
+            'status' => ClientStatus::class,
+            'credit' => 'decimal:2',
+            'tax_exempt' => 'boolean',
+            'late_fee_overide' => 'boolean',
+            'override_auto_suspend' => 'boolean',
         ];
     }
 
@@ -60,14 +61,21 @@ class Client extends Model
         // Cascade delete: clean up all child records
         static::deleting(function (Client $client) {
             $client->services()->delete();
-            $client->invoices()->each(function($inv) { $inv->items()->delete(); $inv->delete(); });
-            $client->tickets()->each(function($t) { $t->replies()->delete(); $t->notes()->delete(); $t->delete(); });
+            $client->invoices()->each(function ($inv) {
+                $inv->items()->delete();
+                $inv->delete();
+            });
+            $client->tickets()->each(function ($t) {
+                $t->replies()->delete();
+                $t->notes()->delete();
+                $t->delete();
+            });
             $client->domains()->delete();
             $client->contacts()->delete();
             $client->orders()->delete();
-            \App\Models\Affiliate::where("client_id", $client->id)->delete();
-            \App\Models\Credit::where("client_id", $client->id)->delete();
-            \App\Models\ClientNote::where("client_id", $client->id)->delete();
+            Affiliate::where('client_id', $client->id)->delete();
+            Credit::where('client_id', $client->id)->delete();
+            ClientNote::where('client_id', $client->id)->delete();
             $client->users()->detach(); // Remove pivot entries
         });
     }
@@ -84,9 +92,15 @@ class Client extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, "user_client")
-            ->withPivot("owner", "permissions")
+        return $this->belongsToMany(User::class, 'user_client')
+            ->withPivot('owner', 'permissions')
             ->withTimestamps();
+    }
+
+    /** The affiliate that referred this client (set at registration). */
+    public function referredBy(): BelongsTo
+    {
+        return $this->belongsTo(Affiliate::class, 'affiliate_id');
     }
 
     public function invoices(): HasMany
@@ -121,21 +135,21 @@ class Client extends Model
 
     public function owner(): ?User
     {
-        return $this->users()->wherePivot("owner", true)->first();
+        return $this->users()->wherePivot('owner', true)->first();
     }
 
     public function scopeActive($query)
     {
-        return $query->where("status", ClientStatus::Active);
+        return $query->where('status', ClientStatus::Active);
     }
 
     public function scopeSearch($query, string $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where("first_name", "like", "%{$term}%")
-                ->orWhere("last_name", "like", "%{$term}%")
-                ->orWhere("email", "like", "%{$term}%")
-                ->orWhere("company_name", "like", "%{$term}%");
+            $q->where('first_name', 'like', "%{$term}%")
+                ->orWhere('last_name', 'like', "%{$term}%")
+                ->orWhere('email', 'like', "%{$term}%")
+                ->orWhere('company_name', 'like', "%{$term}%");
         });
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\AffiliateWelcomeMail;
 use App\Models\Affiliate;
 use App\Models\Client;
 use App\Models\Invoice;
@@ -9,7 +10,6 @@ use App\Models\Setting;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\AffiliateWelcomeMail;
 
 class AffiliateService
 {
@@ -50,7 +50,7 @@ class AffiliateService
         Transaction::create([
             'client_id' => $affiliate->client_id,
             'gateway' => 'affiliate_payout',
-            'transaction_id' => 'AFF-' . strtoupper(uniqid()),
+            'transaction_id' => 'AFF-'.strtoupper(uniqid()),
             'amount_in' => 0,
             'amount_out' => $amount,
             'description' => "Affiliate withdrawal - \${$amount}",
@@ -67,18 +67,18 @@ class AffiliateService
     public function processCommission(Invoice $invoice): void
     {
         $client = $invoice->client;
-        if (!$client) {
+        if (! $client) {
             return;
         }
 
         // Check if the client was referred via cookie (stored on client record or via referral tracking)
         $affiliateId = $client->affiliate_id ?? null;
-        if (!$affiliateId) {
+        if (! $affiliateId) {
             return;
         }
 
         $affiliate = Affiliate::find($affiliateId);
-        if (!$affiliate) {
+        if (! $affiliate) {
             return;
         }
 
@@ -105,7 +105,7 @@ class AffiliateService
             'client_id' => $affiliate->client_id,
             'invoice_id' => $invoice->id,
             'gateway' => 'affiliate_commission',
-            'transaction_id' => 'AFFCOM-' . strtoupper(uniqid()),
+            'transaction_id' => 'AFFCOM-'.strtoupper(uniqid()),
             'amount_in' => $commission,
             'amount_out' => 0,
             'description' => "Affiliate referral commission - client#{$client->id} invoice#{$invoice->id}",
@@ -134,15 +134,22 @@ class AffiliateService
     public function linkClientToAffiliate(Client $client, int $affiliateId): void
     {
         $affiliate = Affiliate::find($affiliateId);
-        if (!$affiliate) {
+        if (! $affiliate) {
             return;
         }
 
-        // Don't let affiliates refer themselves
+        // Don't let affiliates refer themselves.
         if ($affiliate->client_id === $client->id) {
             return;
         }
 
+        // First referral wins — a later cookie must not steal an existing one.
+        if ($client->affiliate_id) {
+            return;
+        }
+
         $client->update(['affiliate_id' => $affiliateId]);
+
+        Log::info("Affiliate referral linked: affiliate#{$affiliate->id} -> client#{$client->id}");
     }
 }

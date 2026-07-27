@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Client;
 
 use App\Events\ClientCreated;
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\AffiliateTracking;
 use App\Mail\PasswordResetMail;
 use App\Models\Client;
 use App\Models\User;
+use App\Services\AffiliateService;
 use App\Services\TwoFactorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -208,6 +210,14 @@ class AuthController extends Controller
             'phone_number' => $validated['phone_number'] ?? null,
         ]);
         $client->users()->attach($user->id, ['owner' => true]);
+
+        // Convert the referral cookie dropped by AffiliateTracking into a real
+        // link. Nothing used to read this cookie, so no referral was ever
+        // attributed and no commission was ever paid.
+        $referralId = $request->cookie(AffiliateTracking::COOKIE);
+        if ($referralId) {
+            app(AffiliateService::class)->linkClientToAffiliate($client, (int) $referralId);
+        }
 
         event(new ClientCreated($client));
 
