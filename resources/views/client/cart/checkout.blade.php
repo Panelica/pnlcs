@@ -26,16 +26,16 @@
                     <div class="form-grid-2">
                         <div class="form-group">
                             <label class="form-label">{{ __('common.form.first_name') }}<span class="req">*</span></label>
-                            <input type="text" name="first_name" class="form-control" value="{{ auth()->user()?->first_name ?? old("first_name") }}" required>
+                            <input type="text" class="form-control" value="{{ auth()->user()?->first_name }}" readonly>
                         </div>
                         <div class="form-group">
                             <label class="form-label">{{ __('common.form.last_name') }}<span class="req">*</span></label>
-                            <input type="text" name="last_name" class="form-control" value="{{ auth()->user()?->last_name ?? old("last_name") }}" required>
+                            <input type="text" class="form-control" value="{{ auth()->user()?->last_name }}" readonly>
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ __('common.form.email_address') }}<span class="req">*</span></label>
-                        <input type="email" name="email" class="form-control" value="{{ auth()->user()?->email ?? old("email") }}" required>
+                        <input type="email" class="form-control" value="{{ auth()->user()?->email }}" readonly>
                     </div>
                 </div>
             </div>

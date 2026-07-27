@@ -6,6 +6,14 @@
     <h1>{{ __('admin.billable_items.title') }}</h1>
     <button type="button" onclick="document.getElementById('modal-add-bi').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.billable_items.add_item') }}</button>
 </div>
+
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:15px;">
+    <ul style="margin:0;padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    </ul>
+</div>
+@endif
 <div class="card">
     @if(($billableItems ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.billable_items.no_items') }}</div>
@@ -43,7 +51,13 @@
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><input type="text" name="description" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">Amount ($)</label><input type="number" name="amount" step="0.01" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.billable_items.type') }}</label><select name="type" class="form-control"><option value="standard">{{ __('admin.billable_items.type_standard') }}</option><option value="credit">{{ __('admin.billable_items.type_credit') }}</option><option value="debit">{{ __('admin.billable_items.type_debit') }}</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('common.table.client') }}</label>
+                    <select name="client_id" required class="form-control">
+                        @foreach($clients ?? [] as $c)
+                        <option value="{{ $c->id }}" @selected(old('client_id') == $c->id)>{{ trim($c->first_name.' '.$c->last_name) }}{{ $c->company_name ? ' — '.$c->company_name : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-bi').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>

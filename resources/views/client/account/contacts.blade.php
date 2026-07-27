@@ -29,7 +29,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ __('common.form.phone') }}</label>
-                    <input type="text" name="phone" class="form-control">
+                    <input type="text" name="phone_number" class="form-control">
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('client.contacts.save_contact') }}</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('addContactForm').style.display='none'">{{ __('common.actions.cancel') }}</button>

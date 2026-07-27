@@ -12,6 +12,7 @@ use App\Models\ApiCredential;
 use App\Models\BannedEmail;
 use App\Models\BannedIp;
 use App\Models\BillableItem;
+use App\Models\Client;
 use App\Models\ClientGroup;
 use App\Models\ConfigOption;
 use App\Models\ConfigOptionGroup;
@@ -32,6 +33,7 @@ use App\Models\ProductAddon;
 use App\Models\ProductBundle;
 use App\Models\Promotion;
 use App\Models\Quote;
+use App\Models\RegistrarSettings;
 use App\Models\Server;
 use App\Models\ServerGroup;
 use App\Models\Setting;
@@ -446,7 +448,8 @@ class ConfigController extends Controller
 
     public function storeTicketDepartment(Request $request)
     {
-        $v = $request->validate(['name' => 'required', 'email' => 'nullable|email']);
+        $v = $request->validate(['name' => 'required', 'email' => 'nullable|email', 'description' => 'nullable|string', 'hidden' => 'boolean']);
+        $v['hidden'] = $request->boolean('hidden');
         TicketDepartment::create($v);
 
         return back()->with('success', __('messages.success.department_created'));
@@ -497,9 +500,17 @@ class ConfigController extends Controller
 
     public function storeAnnouncement(Request $request)
     {
-        $v = $request->validate(['title' => 'required', 'announcement' => 'required']);
-        $v['announcement'] = $v['announcement'] ?: ($request->body ?? '');
-        Announcement::create($v);
+        // The admin form posts the content as "body"; the API and older
+        // callers use "announcement". Accept either.
+        if (! $request->filled('announcement') && $request->filled('body')) {
+            $request->merge(['announcement' => $request->input('body')]);
+        }
+        $v = $request->validate(['title' => 'required', 'announcement' => 'required|string', 'published' => 'boolean']);
+        Announcement::create([
+            'title' => $v['title'],
+            'announcement' => $v['announcement'],
+            'published' => $request->boolean('published'),
+        ]);
 
         return back()->with('success', __('messages.success.announcement_published'));
     }
@@ -524,10 +535,25 @@ class ConfigController extends Controller
 
     public function storeKbArticle(Request $request)
     {
-        $v = $request->validate(['category_id' => 'required|exists:kb_categories,id', 'title' => 'required', 'article' => 'required']);
+        $v = $this->validateKbArticle($request);
         KbArticle::create($v);
 
         return back()->with('success', __('messages.success.article_created'));
+    }
+
+    private function validateKbArticle(Request $request): array
+    {
+        $v = $request->validate([
+            'category_id' => 'required|exists:kb_categories,id',
+            'title' => 'required|string',
+            'article' => 'required|string',
+            'published' => 'boolean',
+        ]);
+        // kb_articles has a "private" column; the form speaks in "published".
+        $v['private'] = ! $request->boolean('published');
+        unset($v['published']);
+
+        return $v;
     }
 
     // ===== NETWORK ISSUES =====
@@ -563,6 +589,7 @@ class ConfigController extends Controller
     {
         return view('admin.config.billable-items', [
             'items' => BillableItem::with('client')->orderBy('id', 'desc')->paginate(25),
+            'clients' => Client::orderBy('first_name')->get(['id', 'first_name', 'last_name', 'company_name']),
         ]);
     }
 
@@ -586,7 +613,7 @@ class ConfigController extends Controller
 
     public function storeTodo(Request $request)
     {
-        TodoItem::create($request->validate(['title' => 'required', 'due_date' => 'nullable|date']));
+        TodoItem::create($request->validate(['title' => 'required', 'description' => 'nullable|string', 'due_date' => 'nullable|date']));
 
         return back()->with('success', __('messages.success.todo_added'));
     }
@@ -647,14 +674,18 @@ class ConfigController extends Controller
     // Ticket Statuses
     public function storeTicketStatus(Request $request)
     {
-        TicketStatus::create($request->validate(['title' => 'required', 'color' => 'nullable|string', 'sort_order' => 'nullable|integer', 'show_active' => 'boolean', 'show_awaiting' => 'boolean', 'auto_close' => 'boolean']));
+        $v = $request->validate(['title' => 'required', 'color' => 'nullable|string', 'sort_order' => 'nullable|integer', 'show_active' => 'boolean', 'show_awaiting' => 'boolean', 'auto_close' => 'boolean']);
+        $v['show_active'] = $request->boolean('show_active');
+        TicketStatus::create($v);
 
         return back()->with('success', __('messages.success.ticket_status_created'));
     }
 
     public function updateTicketStatus(Request $request, TicketStatus $status)
     {
-        $status->update($request->validate(['title' => 'required', 'color' => 'nullable|string', 'sort_order' => 'nullable|integer', 'show_active' => 'boolean', 'show_awaiting' => 'boolean', 'auto_close' => 'boolean']));
+        $v = $request->validate(['title' => 'required', 'color' => 'nullable|string', 'sort_order' => 'nullable|integer', 'show_active' => 'boolean', 'show_awaiting' => 'boolean', 'auto_close' => 'boolean']);
+        $v['show_active'] = $request->boolean('show_active');
+        $status->update($v);
 
         return back()->with('success', __('messages.success.ticket_status_updated'));
     }
@@ -669,7 +700,7 @@ class ConfigController extends Controller
     // Email Templates
     public function updateEmailTemplate(Request $request, EmailTemplate $template)
     {
-        $template->update($request->validate(['name' => 'nullable|string', 'subject' => 'nullable|string', 'message' => 'nullable|string', 'from_name' => 'nullable|string', 'from_email' => 'nullable|email', 'disabled' => 'boolean']));
+        $template->update($request->validate(['type' => 'nullable|string', 'name' => 'nullable|string', 'subject' => 'nullable|string', 'message' => 'nullable|string', 'from_name' => 'nullable|string', 'from_email' => 'nullable|email', 'disabled' => 'boolean']));
 
         return back()->with('success', __('messages.success.template_updated'));
     }
@@ -789,7 +820,7 @@ class ConfigController extends Controller
 
     public function updateKbArticle(Request $request, KbArticle $article)
     {
-        $article->update($request->validate(['category_id' => 'required|exists:kb_categories,id', 'title' => 'required', 'article' => 'required', 'hidden' => 'boolean']));
+        $article->update($this->validateKbArticle($request));
 
         return back()->with('success', __('messages.success.article_updated'));
     }
@@ -873,7 +904,9 @@ class ConfigController extends Controller
 
     public function storeBannedEmail(Request $request)
     {
-        BannedEmail::create($request->validate(['domain' => 'required', 'type' => 'nullable|string', 'reason' => 'nullable|string']));
+        // banned_emails has no "type" column; the form field is named "domain"
+        // (it accepts a full address or a domain pattern).
+        BannedEmail::create($request->validate(['domain' => 'required|string', 'reason' => 'nullable|string']));
 
         return back()->with('success', __('messages.success.email_banned'));
     }
@@ -966,6 +999,24 @@ class ConfigController extends Controller
 
     public function updateRegistrarSettings(Request $request, string $registrar)
     {
+        // Mirrors updateGatewaySettings: individual settings[key] inputs, with
+        // an optional raw-JSON textarea as fallback. This method used to be an
+        // empty stub that reported success without persisting anything.
+        $settings = $request->input('settings', []);
+        $json = $request->input('settings_json');
+        if ($json && empty($settings)) {
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                $settings = $decoded;
+            }
+        }
+        foreach ($settings as $key => $value) {
+            RegistrarSettings::updateOrCreate(
+                ['registrar' => $registrar, 'setting' => $key],
+                ['value' => $value ?? '']
+            );
+        }
+
         return back()->with('success', __('messages.success.registrar_updated'));
     }
 

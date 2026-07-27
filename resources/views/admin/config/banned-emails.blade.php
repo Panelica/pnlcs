@@ -6,6 +6,14 @@
     <h1>{{ __('admin.banned_emails.title') }}</h1>
     <button type="button" onclick="document.getElementById('modal-add-be').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.banned_emails.ban_email') }}</button>
 </div>
+
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:15px;">
+    <ul style="margin:0;padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    </ul>
+</div>
+@endif
 <div class="card">
     @if(($bannedEmails ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.banned_emails.no_banned') }}</div>
@@ -41,7 +49,7 @@
         <form method="POST" action="{{ route('admin.config.banned-emails.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.email_domain') }}</label><input type="text" name="email" required class="form-control" placeholder="{{ __('admin.banned_emails.placeholder') }}"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.email_domain') }}</label><input type="text" name="domain" required class="form-control" placeholder="{{ __('admin.banned_emails.placeholder') }}"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.banned_emails.reason') }}</label><input type="text" name="reason" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

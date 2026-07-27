@@ -39,7 +39,6 @@
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.group_name') }}</label><input type="text" name="name" required class="form-control" placeholder="{{ __('admin.client_groups.name_placeholder') }}"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.color') }}</label><input type="color" name="color" value="#405189" class="form-control" style="height:38px;padding:3px;"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.discount_pct') }}</label><input type="number" name="discount_percent" value="0" min="0" max="100" step="0.01" class="form-control"></div>
-        <div class="form-group"><label class="form-label">{{ __('admin.client_groups.notes') }}</label><textarea name="notes" rows="2" class="form-control"></textarea></div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('add-group')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.client_groups.create_group') }}</button>

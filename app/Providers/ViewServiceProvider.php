@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\TicketDepartment;
+use App\View\Composers\LanguageComposer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -27,11 +29,15 @@ class ViewServiceProvider extends ServiceProvider
                     (SELECT COUNT(*) FROM tickets WHERE priority = 'High' AND status NOT IN ('Closed')) as high_priority_tickets
             ");
 
-            $view->with('sidebarCounts', $counts ?: (object)[
+            $view->with('sidebarCounts', $counts ?: (object) [
                 'pending_orders' => 0, 'unpaid_invoices' => 0, 'overdue_invoices' => 0, 'pending_payment_notifications' => 0,
                 'open_tickets' => 0, 'open_tickets_only' => 0, 'awaiting_tickets' => 0,
                 'active_tickets' => 0, 'high_priority_tickets' => 0,
             ]);
+
+            // The sidebar ticket-search form needs the department list; it used
+            // to render an empty select posting a parameter nothing read.
+            $view->with('sidebarDepartments', TicketDepartment::orderBy('name')->get(['id', 'name']));
         });
 
         View::composer([
@@ -42,6 +48,6 @@ class ViewServiceProvider extends ServiceProvider
             'client.auth.register',
             'client.auth.forgot-password',
             'client.auth.reset-password',
-        ], \App\View\Composers\LanguageComposer::class);
+        ], LanguageComposer::class);
     }
 }

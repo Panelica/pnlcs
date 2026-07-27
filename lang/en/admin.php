@@ -1229,6 +1229,7 @@ return [
         'invoice_cancelled' => 'Invoice #:num has been cancelled.',
         'invoice_created' => 'Invoice #:num created successfully.',
         'invoice_marked_paid' => 'Invoice #:num marked as paid.',
+        'invoice_partially_paid' => 'Partial payment recorded on invoice #:num — remaining balance: :balance',
         'invoices_created' => 'Created :count invoice(s).',
         'module_action_failed' => 'Module action failed.',
         'module_action_success' => ':action completed successfully.',

@@ -9,6 +9,14 @@
         <button type="button" onclick="openModal('add-kb-article')" class="btn btn-primary btn-sm">+ {{ __('admin.knowledge_base.new_article') }}</button>
     </div>
 </div>
+
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:15px;">
+    <ul style="margin:0;padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    </ul>
+</div>
+@endif
 <div class="card">
     @if(($articles ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.knowledge_base.no_articles') }}</div>
@@ -56,14 +64,14 @@
         @csrf
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category') }}</label>
-            <select name="kbcategory_id" class="form-control">
+            <select name="category_id" class="form-control">
                 <option value="">{{ __('admin.knowledge_base.uncategorized_option') }}</option>
                 @foreach($categories ?? [] as $cat)
                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="body" rows="8" class="form-control" required></textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="article" rows="8" class="form-control" required></textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="checkbox" name="published" value="1" checked>
@@ -83,18 +91,18 @@
         @csrf @method('PUT')
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $art->title }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category') }}</label>
-            <select name="kbcategory_id" class="form-control">
+            <select name="category_id" class="form-control">
                 <option value="">{{ __('admin.knowledge_base.uncategorized_option') }}</option>
                 @foreach($categories ?? [] as $cat)
-                <option value="{{ $cat->id }}" @selected($art->kbcategory_id == $cat->id)>{{ $cat->name }}</option>
+                <option value="{{ $cat->id }}" @selected($art->category_id == $cat->id)>{{ $cat->name }}</option>
                 @endforeach
             </select>
         </div>
-        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="body" rows="8" class="form-control" required>{{ $art->body }}</textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="article" rows="8" class="form-control" required>{{ $art->article }}</textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="hidden" name="published" value="0">
-                <input type="checkbox" name="published" value="1" @checked($art->published)>
+                <input type="checkbox" name="published" value="1" @checked(! $art->private)>
                 <span>{{ __('admin.knowledge_base.published') }}</span>
             </label>
         </div>

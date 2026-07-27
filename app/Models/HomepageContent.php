@@ -12,7 +12,7 @@ class HomepageContent extends Model
 
     public function section()
     {
-        return $this->belongsTo(HomepageSection::class, 'slug', 'section_slug');
+        return $this->belongsTo(HomepageSection::class, 'section_slug', 'slug');
     }
 
     public static function getValue(string $sectionSlug, string $key, string $default = ''): string

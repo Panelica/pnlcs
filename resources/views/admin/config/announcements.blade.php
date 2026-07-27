@@ -6,6 +6,14 @@
     <h1>{{ __('admin.announcements.title') }}</h1>
     <button type="button" onclick="openModal('add-announcement')" class="btn btn-primary btn-sm">+ {{ __('admin.announcements.new_announcement') }}</button>
 </div>
+
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:15px;">
+    <ul style="margin:0;padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    </ul>
+</div>
+@endif
 <div class="card">
     @if(($announcements ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.announcements.no_announcements_posted') }}</div>
@@ -39,7 +47,6 @@
     <form method="POST" action="{{ route('admin.config.announcements.store') }}">
         @csrf
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">{{ __('admin.announcements.date') }}</label><input type="date" name="date" value="{{ now()->toDateString() }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required></textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -59,7 +66,6 @@
     <form method="POST" action="{{ route('admin.config.announcements.update', $ann) }}">
         @csrf @method('PUT')
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $ann->title }}" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">{{ __('admin.announcements.date') }}</label><input type="date" name="date" value="{{ $ann->date?->format('Y-m-d') ?? $ann->created_at->format('Y-m-d') }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required>{{ $ann->body }}</textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">

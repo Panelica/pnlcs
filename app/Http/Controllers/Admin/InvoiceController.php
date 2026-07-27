@@ -2,25 +2,27 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Enums\InvoiceStatus;
 use App\Models\PaymentMethod;
+use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
+use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use App\Services\InvoicePdfService;
 
 class InvoiceController extends Controller
 {
     use CsvExportable;
 
     public function __construct(
-        protected InvoiceService $invoiceService
+        protected InvoiceService $invoiceService,
+        protected PaymentService $paymentService
     ) {}
 
     public function index(Request $request): View
@@ -34,10 +36,9 @@ class InvoiceController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('invoice_num', 'like', "%{$request->search}%")
-                  ->orWhereHas('client', fn ($c) =>
-                      $c->where('first_name', 'like', "%{$request->search}%")
+                    ->orWhereHas('client', fn ($c) => $c->where('first_name', 'like', "%{$request->search}%")
                         ->orWhere('last_name', 'like', "%{$request->search}%")
-                  );
+                    );
             });
         }
 
@@ -58,7 +59,7 @@ class InvoiceController extends Controller
      */
     public function create(Request $request): View
     {
-        $clients        = Client::orderBy('first_name')->get();
+        $clients = Client::orderBy('first_name')->get();
         $paymentMethods = PaymentMethod::orderBy('description')->get();
 
         $selectedClient = $request->filled('client_id')
@@ -74,31 +75,31 @@ class InvoiceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'client_id'       => ['required', 'exists:clients,id'],
-            'date'            => ['required', 'date'],
-            'due_date'        => ['required', 'date'],
-            'payment_method'  => ['nullable', 'string', 'max:100'],
-            'notes'           => ['nullable', 'string', 'max:2000'],
-            'items'           => ['required', 'array', 'min:1'],
+            'client_id' => ['required', 'exists:clients,id'],
+            'date' => ['required', 'date'],
+            'due_date' => ['required', 'date'],
+            'payment_method' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
-            'items.*.amount'      => ['required', 'numeric', 'min:0'],
-            'items.*.taxed'       => ['nullable', 'boolean'],
+            'items.*.amount' => ['required', 'numeric', 'min:0'],
+            'items.*.taxed' => ['nullable', 'boolean'],
         ]);
 
         $client = Client::findOrFail($validated['client_id']);
 
         $items = array_map(fn ($item) => [
-            'type'        => 'Other',
+            'type' => 'Other',
             'description' => $item['description'],
-            'amount'      => (float) $item['amount'],
-            'taxed'       => isset($item['taxed']) ? (bool) $item['taxed'] : true,
+            'amount' => (float) $item['amount'],
+            'taxed' => isset($item['taxed']) ? (bool) $item['taxed'] : true,
         ], $validated['items']);
 
         $invoice = $this->invoiceService->createInvoice($client, $items, [
-            'date'           => $validated['date'],
-            'due_date'       => $validated['due_date'],
+            'date' => $validated['date'],
+            'due_date' => $validated['due_date'],
             'payment_method' => $validated['payment_method'] ?? null,
-            'notes'          => $validated['notes'] ?? null,
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         return redirect()
@@ -117,14 +118,27 @@ class InvoiceController extends Controller
 
         $validated = $request->validate([
             'transaction_id' => ['nullable', 'string', 'max:255'],
-            'gateway'        => ['nullable', 'string', 'max:100'],
+            'gateway' => ['nullable', 'string', 'max:100'],
+            'amount' => ['nullable', 'numeric', 'min:0.01'],
         ]);
 
-        $this->invoiceService->markPaid(
+        // The form's amount field used to be silently ignored, marking the
+        // invoice fully paid regardless of what the admin entered. Routing
+        // through PaymentService keeps partial payments, overpayment-to-credit
+        // and the InvoicePaid event chain consistent.
+        $result = $this->paymentService->applyPayment(
             $invoice,
+            $validated['gateway'] ?? 'manual',
             $validated['transaction_id'] ?? null,
-            $validated['gateway'] ?? 'manual'
+            isset($validated['amount']) ? (float) $validated['amount'] : null
         );
+
+        if (($result['balance'] ?? 0) > 0.009) {
+            return back()->with('success', __('admin.messages.invoice_partially_paid', [
+                'num' => $invoice->invoice_num,
+                'balance' => number_format($result['balance'], 2),
+            ]));
+        }
 
         return back()->with('success', __('admin.messages.invoice_marked_paid', ['num' => $invoice->invoice_num]));
     }
@@ -136,16 +150,16 @@ class InvoiceController extends Controller
     public function refund(Request $request, Invoice $invoice): RedirectResponse
     {
         $validated = $request->validate([
-            'amount'         => ['nullable', 'numeric', 'min:0.01'],
-            'reason'         => ['nullable', 'string', 'max:500'],
+            'amount' => ['nullable', 'numeric', 'min:0.01'],
+            'reason' => ['nullable', 'string', 'max:500'],
             'gateway_refund' => ['nullable', 'boolean'],
         ]);
 
-        $result = app(\App\Services\PaymentService::class)->refundInvoice(
+        $result = app(PaymentService::class)->refundInvoice(
             $invoice,
             $validated['amount'] ?? null,
             [
-                'reason'         => $validated['reason'] ?? null,
+                'reason' => $validated['reason'] ?? null,
                 'gateway_refund' => $request->boolean('gateway_refund', true),
             ]
         );
@@ -198,12 +212,11 @@ class InvoiceController extends Controller
         ]);
 
         return $this->streamCsvDownload(
-            'invoices-' . now()->format('Y-m-d') . '.csv',
+            'invoices-'.now()->format('Y-m-d').'.csv',
             ['ID', 'Invoice #', 'Client', 'Email', 'Status', 'Subtotal', 'Tax', 'Total', 'Payment Method', 'Date', 'Due Date', 'Date Paid'],
             $rows
         );
     }
-
 
     /**
      * Download invoice as PDF.

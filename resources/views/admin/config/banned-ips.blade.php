@@ -44,7 +44,6 @@
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.banned_ips.ip_address') }}</label><input type="text" name="ip" required class="form-control" placeholder="192.168.1.1"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.banned_ips.reason') }}</label><input type="text" name="reason" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.banned_ips.expires') }} <small style="color:#999;">({{ __('admin.banned_ips.blank_permanent') }})</small></label><input type="datetime-local" name="expires_at" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-ip').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>

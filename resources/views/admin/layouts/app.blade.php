@@ -344,8 +344,11 @@
         <div class="sidebar-header"><i class="fas fa-comments"></i> {{ __('admin.sidebar.filter_tickets_header') }}</div>
         <div class="advanced-search">
             <form action="{{ route('admin.tickets.index') }}" method="GET">
-                <select name="department">
+                <select name="department_id">
                     <option value="">{{ __('admin.sidebar.department') }}</option>
+                    @foreach($sidebarDepartments ?? [] as $dep)
+                    <option value="{{ $dep->id }}" @selected(request('department_id') == $dep->id)>{{ $dep->name }}</option>
+                    @endforeach
                 </select>
                 <select name="status">
                     <option value="">{{ __('admin.sidebar.status') }}</option>
@@ -475,13 +478,6 @@
     <div class="advanced-search">
         <form action="{{ route('admin.clients.index') }}" method="GET">
             <input type="text" name="search" placeholder="{{ __('admin.sidebar.client_name_email') }}">
-            <select name="search_type">
-                <option value="clients">{{ __('admin.sidebar.clients') }}</option>
-                <option value="invoices">{{ __('admin.sidebar.invoices') }}</option>
-                <option value="services">{{ __('admin.sidebar.services') }}</option>
-                <option value="domains">{{ __('admin.nav.domains') }}</option>
-                <option value="tickets">{{ __('admin.sidebar.tickets') }}</option>
-            </select>
             <button type="submit" class="btn-go">{{ __('common.actions.search') }}</button>
         </form>
     </div>
