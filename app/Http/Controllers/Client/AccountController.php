@@ -12,12 +12,40 @@ use Illuminate\Validation\Rules\Password;
 
 class AccountController extends Controller
 {
+    /** ISO 3166-1 alpha-2 country list for the profile form. */
+    private const COUNTRIES = [
+        'AF' => 'Afghanistan', 'AL' => 'Albania', 'DZ' => 'Algeria', 'AR' => 'Argentina', 'AM' => 'Armenia',
+        'AU' => 'Australia', 'AT' => 'Austria', 'AZ' => 'Azerbaijan', 'BH' => 'Bahrain', 'BD' => 'Bangladesh',
+        'BY' => 'Belarus', 'BE' => 'Belgium', 'BA' => 'Bosnia and Herzegovina', 'BR' => 'Brazil',
+        'BG' => 'Bulgaria', 'KH' => 'Cambodia', 'CA' => 'Canada', 'CL' => 'Chile', 'CN' => 'China',
+        'CO' => 'Colombia', 'CR' => 'Costa Rica', 'HR' => 'Croatia', 'CY' => 'Cyprus', 'CZ' => 'Czechia',
+        'DK' => 'Denmark', 'DO' => 'Dominican Republic', 'EC' => 'Ecuador', 'EG' => 'Egypt', 'EE' => 'Estonia',
+        'ET' => 'Ethiopia', 'FI' => 'Finland', 'FR' => 'France', 'GE' => 'Georgia', 'DE' => 'Germany',
+        'GH' => 'Ghana', 'GR' => 'Greece', 'HK' => 'Hong Kong', 'HU' => 'Hungary', 'IS' => 'Iceland',
+        'IN' => 'India', 'ID' => 'Indonesia', 'IQ' => 'Iraq', 'IE' => 'Ireland', 'IL' => 'Israel',
+        'IT' => 'Italy', 'JP' => 'Japan', 'JO' => 'Jordan', 'KZ' => 'Kazakhstan', 'KE' => 'Kenya',
+        'KW' => 'Kuwait', 'LV' => 'Latvia', 'LB' => 'Lebanon', 'LT' => 'Lithuania', 'LU' => 'Luxembourg',
+        'MY' => 'Malaysia', 'MT' => 'Malta', 'MX' => 'Mexico', 'MD' => 'Moldova', 'MA' => 'Morocco',
+        'NL' => 'Netherlands', 'NZ' => 'New Zealand', 'NG' => 'Nigeria', 'MK' => 'North Macedonia',
+        'NO' => 'Norway', 'OM' => 'Oman', 'PK' => 'Pakistan', 'PS' => 'Palestine', 'PA' => 'Panama',
+        'PY' => 'Paraguay', 'PE' => 'Peru', 'PH' => 'Philippines', 'PL' => 'Poland', 'PT' => 'Portugal',
+        'QA' => 'Qatar', 'RO' => 'Romania', 'RU' => 'Russia', 'SA' => 'Saudi Arabia', 'RS' => 'Serbia',
+        'SG' => 'Singapore', 'SK' => 'Slovakia', 'SI' => 'Slovenia', 'ZA' => 'South Africa',
+        'KR' => 'South Korea', 'ES' => 'Spain', 'LK' => 'Sri Lanka', 'SE' => 'Sweden', 'CH' => 'Switzerland',
+        'TW' => 'Taiwan', 'TZ' => 'Tanzania', 'TH' => 'Thailand', 'TN' => 'Tunisia', 'TR' => 'Türkiye',
+        'UA' => 'Ukraine', 'AE' => 'United Arab Emirates', 'GB' => 'United Kingdom', 'US' => 'United States',
+        'UY' => 'Uruguay', 'UZ' => 'Uzbekistan', 'VE' => 'Venezuela', 'VN' => 'Vietnam',
+    ];
+
     public function profile()
     {
         $user = auth()->user();
         $client = $user->clients()->first();
+        // The blade renders a country <select> from $countries; without it the
+        // dropdown had nothing but its placeholder and no country could be set.
+        $countries = self::COUNTRIES;
 
-        return view('client.account.profile', compact('user', 'client'));
+        return view('client.account.profile', compact('user', 'client', 'countries'));
     }
 
     public function updateProfile(Request $request)
@@ -92,10 +120,9 @@ class AccountController extends Controller
 
     public function paymentMethods()
     {
-        $client = auth()->user()->clients()->first();
-        $paymentMethods = collect();
-
-        return view('client.account.payment_methods', compact('paymentMethods'));
+        // Legacy alias for client.payment-methods.index (the nav links there).
+        // It used to render an unconditionally empty list.
+        return redirect()->route('client.payment-methods.index');
     }
 
     public function contacts()

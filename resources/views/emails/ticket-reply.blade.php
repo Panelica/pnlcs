@@ -9,7 +9,7 @@
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.ticket_reply.ticket_id') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">#{{ $ticket->tid ?? $ticket->id }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.subject_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $ticket->subject }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.subject_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $ticket->title }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.ticket_reply.reply_from') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ ($isStaffReply ?? false) ? __('email.common.staff') : __('email.common.client') }}</td></tr>
 </table>
 

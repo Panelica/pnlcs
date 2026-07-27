@@ -425,7 +425,27 @@ class ConfigController extends Controller
 
     public function registrars()
     {
-        return view('admin.config.registrars');
+        // The blade iterates $registrars; it used to receive nothing at all,
+        // so the page always claimed no registrars were configured. Mirrors the
+        // gateways() shape: every installed module, enriched with its settings.
+        $stored = RegistrarSettings::all()->groupBy('registrar');
+
+        $registrars = collect(app(ModuleRegistry::class)->getRegistrarModules())
+            ->merge($stored->keys())
+            ->unique()
+            ->sort()
+            ->map(function ($name) use ($stored) {
+                $settings = ($stored[$name] ?? collect())->pluck('value', 'setting');
+
+                return (object) [
+                    'registrar_name' => $name,
+                    'description' => $settings->get('name', ucfirst($name)),
+                    'disabled' => $settings->get('visible', '1') === '0',
+                    'settings' => $settings->except(['name', 'visible'])->toArray(),
+                ];
+            })->values();
+
+        return view('admin.config.registrars', ['registrars' => $registrars]);
     }
 
     // ===== EMAIL TEMPLATES =====
@@ -469,7 +489,7 @@ class ConfigController extends Controller
     public function bannedIps()
     {
         return view('admin.config.banned-ips', [
-            'ips' => BannedIp::all(),
+            'bannedIps' => BannedIp::orderByDesc('id')->get(),
         ]);
     }
 
@@ -485,7 +505,7 @@ class ConfigController extends Controller
     public function bannedEmails()
     {
         return view('admin.config.banned-emails', [
-            'emails' => BannedEmail::all(),
+            'bannedEmails' => BannedEmail::orderByDesc('id')->get(),
         ]);
     }
 
@@ -529,7 +549,8 @@ class ConfigController extends Controller
     public function knowledgeBase()
     {
         return view('admin.config.knowledge-base', [
-            'categories' => KbCategory::with('articles')->get(),
+            'categories' => KbCategory::orderBy('name')->get(),
+            'articles' => KbArticle::with('category')->orderByDesc('id')->get(),
         ]);
     }
 
@@ -561,7 +582,7 @@ class ConfigController extends Controller
     public function networkIssues()
     {
         return view('admin.config.network-issues', [
-            'issues' => NetworkIssue::orderBy('id', 'desc')->get(),
+            'networkIssues' => NetworkIssue::orderBy('id', 'desc')->get(),
         ]);
     }
 
@@ -588,7 +609,7 @@ class ConfigController extends Controller
     public function billableItems()
     {
         return view('admin.config.billable-items', [
-            'items' => BillableItem::with('client')->orderBy('id', 'desc')->paginate(25),
+            'billableItems' => BillableItem::with('client')->orderBy('id', 'desc')->paginate(25),
             'clients' => Client::orderBy('first_name')->get(['id', 'first_name', 'last_name', 'company_name']),
         ]);
     }

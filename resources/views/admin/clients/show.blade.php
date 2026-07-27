@@ -109,7 +109,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;width:50%;">{{ __('admin.clients.status') }}</td><td style="padding:5px 0;"><span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.tax_exempt') }}</td><td style="padding:5px 0;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.created') }}</td><td style="padding:5px 0;">{{ $client->created_at->format('d M Y') }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.last_login') }}</td><td style="padding:5px 0;">{{ $client->last_login?->diffForHumans() ?? __('admin.clients.never') }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.last_login') }}</td><td style="padding:5px 0;">{{ $client->users->max('last_login')?->diffForHumans() ?? __('admin.clients.never') }}</td></tr>
                 </table>
             </div>
         </div>

@@ -23,7 +23,7 @@
         <tbody>
         @foreach($bannedEmails as $ban)
         <tr>
-            <td style="font-family:monospace;">{{ $ban->email }}</td>
+            <td style="font-family:monospace;">{{ $ban->domain }}</td>
             <td style="font-size:13px;">{{ $ban->reason ?: '&mdash;' }}</td>
             <td style="font-size:12px;">{{ $ban->created_at->format('d M Y') }}</td>
             <td style="text-align:right;">

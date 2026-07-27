@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Events\ClientCreated;
 use App\Http\Controllers\Controller;
+use App\Mail\PasswordResetMail;
 use App\Models\Client;
 use App\Models\User;
 use App\Services\TwoFactorService;
@@ -11,10 +13,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use App\Events\ClientCreated;
 
 class AuthController extends Controller
 {
@@ -23,6 +25,7 @@ class AuthController extends Controller
         if (Auth::check()) {
             return redirect()->route('client.home');
         }
+
         return view('client.auth.login');
     }
 
@@ -33,7 +36,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $key = Str::transliterate(Str::lower($request->input('email')) . '|' . $request->ip());
+        $key = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
         if (RateLimiter::tooManyAttempts($key, 5)) {
             throw ValidationException::withMessages([
                 'email' => __('auth.throttle', ['seconds' => RateLimiter::availableIn($key)]),
@@ -45,10 +48,15 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+            $user->forceFill([
+                'last_login' => now(),
+                'last_login_ip' => $request->ip(),
+            ])->save();
 
             // Check 2FA
             if ($user->second_factor_type && $user->second_factor_secret) {
                 session(['2fa_pending' => true]);
+
                 return redirect()->route('client.2fa.verify');
             }
 
@@ -56,12 +64,13 @@ class AuthController extends Controller
         }
 
         RateLimiter::hit($key, 900);
+
         return back()->withErrors(['email' => __('auth.failed')])->onlyInput('email');
     }
 
     public function show2faVerify()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('client.login');
         }
 
@@ -73,7 +82,7 @@ class AuthController extends Controller
         $request->validate(['code' => 'required|string']);
 
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('client.login');
         }
 
@@ -83,17 +92,19 @@ class AuthController extends Controller
         if ($twoFactor->verify($user->second_factor_secret, $code)) {
             session(['2fa_verified' => true]);
             session()->forget('2fa_pending');
+
             return redirect()->intended(route('client.home'));
         }
 
         // Try backup code
         $backupCodes = $user->backup_codes ?? [];
-        if (!empty($backupCodes)) {
+        if (! empty($backupCodes)) {
             $result = $twoFactor->verifyBackupCode($backupCodes, $code);
             if ($result['valid']) {
                 $user->update(['backup_codes' => $result['remaining']]);
                 session(['2fa_verified' => true]);
                 session()->forget('2fa_pending');
+
                 return redirect()->intended(route('client.home'));
             }
         }
@@ -120,7 +131,7 @@ class AuthController extends Controller
         $request->validate(['code' => 'required|string|size:6']);
 
         $secret = session('2fa_setup_secret');
-        if (!$secret || !$twoFactor->verify($secret, $request->code)) {
+        if (! $secret || ! $twoFactor->verify($secret, $request->code)) {
             return back()->withErrors(['code' => __('auth.invalid_code_try_again')]);
         }
 
@@ -144,7 +155,7 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
-        if (!Hash::check($request->password, $user->password)) {
+        if (! Hash::check($request->password, $user->password)) {
             return back()->withErrors(['password' => __('auth.incorrect_password')]);
         }
 
@@ -201,6 +212,7 @@ class AuthController extends Controller
         event(new ClientCreated($client));
 
         Auth::login($user);
+
         return redirect()->route('client.home');
     }
 
@@ -209,6 +221,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect()->route('client.login');
     }
 
@@ -221,7 +234,7 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
         $user = User::where('email', $request->email)->first();
-        if (!$user) {
+        if (! $user) {
             return back()->with('success', __('messages.success.if_an_account_exists_with_that_email_a_password_re'));
         }
         $token = Str::random(64);
@@ -229,13 +242,14 @@ class AuthController extends Controller
             ['email' => $request->email],
             ['token' => Hash::make($token), 'created_at' => now()]
         );
-        $resetUrl = route('client.password.reset', ['token' => $token]) . '?email=' . urlencode($request->email);
+        $resetUrl = route('client.password.reset', ['token' => $token]).'?email='.urlencode($request->email);
         try {
-            \Illuminate\Support\Facades\Mail::to($request->email)->send(new \App\Mail\PasswordResetMail($resetUrl, $request->email));
+            Mail::to($request->email)->send(new PasswordResetMail($resetUrl, $request->email));
         } catch (\Throwable $e) {
             // Never log the token; only the delivery failure.
-            Log::error('Password reset email failed for ' . $request->email . ': ' . $e->getMessage());
+            Log::error('Password reset email failed for '.$request->email.': '.$e->getMessage());
         }
+
         return back()->with('success', __('messages.success.if_an_account_exists_with_that_email_a_password_re'));
     }
 
@@ -252,19 +266,20 @@ class AuthController extends Controller
             'password' => 'required|min:8|confirmed',
         ]);
         $record = DB::table('password_reset_tokens')->where('email', $request->email)->first();
-        if (!$record || !Hash::check($request->token, $record->token)) {
+        if (! $record || ! Hash::check($request->token, $record->token)) {
             return back()->withErrors(['email' => __('auth.invalid_or_expired_reset_token')]);
         }
         if (now()->diffInMinutes($record->created_at) > 60) {
             return back()->withErrors(['email' => __('auth.reset_link_expired')]);
         }
         $user = User::where('email', $request->email)->first();
-        if (!$user) {
+        if (! $user) {
             return back()->withErrors(['email' => __('auth.user_not_found')]);
         }
         $user->password = Hash::make($request->password);
         $user->save();
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
         return redirect()->route('client.login')->with('success', __('messages.success.password_reset_successfully_please_log_in'));
     }
 }

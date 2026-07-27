@@ -29,7 +29,7 @@
             <td style="font-weight:600;">{{ $art->title }}</td>
             <td>{{ $art->category->name ?? __('admin.knowledge_base.uncategorized') }}</td>
             <td>{{ $art->views ?? 0 }}</td>
-            <td><span class="badge-{{ $art->published ? 'active' : 'draft' }}">{{ $art->published ? __('admin.knowledge_base.published') : __('admin.knowledge_base.draft') }}</span></td>
+            <td><span class="badge-{{ $art->private ? 'draft' : 'active' }}">{{ $art->private ? __('admin.knowledge_base.draft') : __('admin.knowledge_base.published') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" onclick="openModal('edit-art-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.knowledge-base.articles.destroy', $art) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.knowledge_base.confirm_delete_article') }}')">

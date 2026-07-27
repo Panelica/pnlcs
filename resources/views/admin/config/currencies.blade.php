@@ -17,11 +17,11 @@
             <td style="font-family:monospace;">{{ $currency->prefix }}</td>
             <td style="font-family:monospace;">{{ $currency->suffix ?? '' }}</td>
             <td>{{ $currency->rate }}</td>
-            <td>@if($currency->default)<span class="badge-active">{{ __('admin.currencies.default') }}</span>@endif</td>
+            <td>@if($currency->is_default)<span class="badge-active">{{ __('admin.currencies.default') }}</span>@endif</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
-                    onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->default]) }})">{{ __('common.actions.edit') }}</button>
-                @if(!$currency->default)
+                    onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->is_default]) }})">{{ __('common.actions.edit') }}</button>
+                @if(!$currency->is_default)
                 <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.currencies.confirm_delete") }} {{ $currency->code }}?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
