@@ -3,15 +3,21 @@
 namespace Modules\Registrars\Namecheap;
 
 use App\Contracts\RegistrarModuleInterface;
+use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class NamecheapRegistrar implements RegistrarModuleInterface
+class NamecheapRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
     protected string $apiUrl;
+
     protected string $apiUser;
+
     protected string $apiKey;
+
     protected string $clientIp;
 
     public function __construct()
@@ -96,6 +102,7 @@ class NamecheapRegistrar implements RegistrarModuleInterface
                 'expiry_date' => now()->addYears($years),
                 'next_due_date' => now()->addYears($years),
             ]);
+
             return ['success' => true, 'message' => 'Domain registered via Namecheap.'];
         }
 
@@ -112,6 +119,7 @@ class NamecheapRegistrar implements RegistrarModuleInterface
 
         if ($response['success']) {
             $domain->update(['status' => 'Pending Transfer', 'registrar' => 'Namecheap']);
+
             return ['success' => true, 'message' => 'Transfer initiated via Namecheap.'];
         }
 
@@ -128,6 +136,7 @@ class NamecheapRegistrar implements RegistrarModuleInterface
         if ($response['success']) {
             $newExpiry = ($domain->expiry_date ?? now())->addYears($years);
             $domain->update(['expiry_date' => $newExpiry, 'next_due_date' => $newExpiry]);
+
             return ['success' => true, 'message' => "Domain renewed for {$years} year(s)."];
         }
 
@@ -156,6 +165,7 @@ class NamecheapRegistrar implements RegistrarModuleInterface
 
         if ($response['success']) {
             $domain->update(['nameservers' => json_encode($nameservers)]);
+
             return true;
         }
 
@@ -211,19 +221,19 @@ class NamecheapRegistrar implements RegistrarModuleInterface
             'Command' => $command,
         ], $params);
 
-        $url = $this->apiUrl . '?' . http_build_query($queryParams);
+        try {
+            $response = Http::timeout(30)->get($this->apiUrl, $queryParams);
+        } catch (\Throwable $e) {
+            Log::error("Namecheap API error: {$e->getMessage()}");
 
-        $ctx = stream_context_create([
-            'http' => ['timeout' => 30, 'method' => 'GET'],
-            'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
-        ]);
-
-        $raw = @file_get_contents($url, false, $ctx);
-        if ($raw === false) {
             return ['success' => false, 'error' => 'Could not connect to Namecheap API'];
         }
 
-        return $this->parseResponse($raw, $command);
+        if (! $response->successful()) {
+            return ['success' => false, 'error' => "HTTP {$response->status()} from Namecheap API"];
+        }
+
+        return $this->parseResponse($response->body(), $command);
     }
 
     protected function parseResponse(string $xml, string $command): array
@@ -240,8 +250,9 @@ class NamecheapRegistrar implements RegistrarModuleInterface
                 $errors = $doc->Errors->Error ?? [];
                 $errorMsg = '';
                 foreach ($errors as $err) {
-                    $errorMsg .= (string) $err . ' ';
+                    $errorMsg .= (string) $err.' ';
                 }
+
                 return ['success' => false, 'error' => trim($errorMsg) ?: 'Unknown Namecheap error'];
             }
 
@@ -265,6 +276,26 @@ class NamecheapRegistrar implements RegistrarModuleInterface
                 $result['nameservers'] = $ns;
             }
 
+            // Parse the domain list (used by syncDomain)
+            if (str_contains($command, 'domains.getList')) {
+                $domains = [];
+                $rows = $doc->CommandResponse->DomainGetListResult->Domain ?? [];
+                foreach ($rows as $row) {
+                    $name = strtolower((string) ($row['Name'] ?? ''));
+                    if ($name === '') {
+                        continue;
+                    }
+                    $domains[$name] = [
+                        'expires' => (string) ($row['Expires'] ?? ''),
+                        'created' => (string) ($row['Created'] ?? ''),
+                        'is_expired' => strtolower((string) ($row['IsExpired'] ?? 'false')) === 'true',
+                        'is_locked' => strtolower((string) ($row['IsLocked'] ?? 'false')) === 'true',
+                        'auto_renew' => strtolower((string) ($row['AutoRenew'] ?? 'false')) === 'true',
+                    ];
+                }
+                $result['domains'] = $domains;
+            }
+
             // Parse registrar lock
             if (str_contains($command, 'getRegistrarLock')) {
                 $lockResult = $doc->CommandResponse->DomainGetRegistrarLockResult ?? null;
@@ -274,6 +305,7 @@ class NamecheapRegistrar implements RegistrarModuleInterface
             return $result;
         } catch (\Throwable $e) {
             Log::error("Namecheap XML parse error: {$e->getMessage()}");
+
             return ['success' => false, 'error' => 'XML parse error'];
         }
     }
@@ -281,6 +313,7 @@ class NamecheapRegistrar implements RegistrarModuleInterface
     protected function splitDomain(string $domain): array
     {
         $parts = explode('.', $domain, 2);
+
         return ['sld' => $parts[0] ?? '', 'tld' => $parts[1] ?? ''];
     }
 
@@ -292,9 +325,62 @@ class NamecheapRegistrar implements RegistrarModuleInterface
             foreach ($rows as $row) {
                 $settings[$row->setting] = $row->value;
             }
+
             return $settings;
         } catch (\Throwable $e) {
             return [];
+        }
+    }
+
+    /**
+     * Namecheap exposes the authoritative per-domain state through
+     * namecheap.domains.getList: the Domain element carries Expires,
+     * IsExpired, IsLocked and AutoRenew as attributes. SearchTerm narrows the
+     * list to the single domain we care about.
+     *
+     * Verified against the official Namecheap SDK response fixture
+     * (namecheap/go-namecheap-sdk, namecheaptest/fixtures/domains_getList.xml).
+     */
+    public function syncDomain(Domain $domain): array
+    {
+        $response = $this->call('namecheap.domains.getList', [
+            'SearchTerm' => $domain->domain,
+            'PageSize' => 100,
+        ]);
+
+        if (! ($response['success'] ?? false)) {
+            return ['success' => false, 'message' => $response['error'] ?? 'Namecheap lookup failed.'];
+        }
+
+        $row = $response['domains'][strtolower($domain->domain)] ?? null;
+        if (! $row) {
+            return ['success' => false, 'message' => 'Domain not found in the Namecheap account.'];
+        }
+
+        return [
+            'success' => true,
+            // Namecheap formats dates as MM/DD/YYYY.
+            'expiry_date' => $this->parseDate($row['expires'] ?? null),
+            'status' => ($row['is_expired'] ?? false) ? 'expired' : 'active',
+            'locked' => $row['is_locked'] ?? null,
+            'nameservers' => [],
+        ];
+    }
+
+    private function parseDate(?string $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        try {
+            return Carbon::createFromFormat('m/d/Y', trim($value))->toDateString();
+        } catch (\Throwable) {
+            try {
+                return Carbon::parse($value)->toDateString();
+            } catch (\Throwable) {
+                return null;
+            }
         }
     }
 }

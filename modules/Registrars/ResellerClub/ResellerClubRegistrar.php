@@ -3,15 +3,19 @@
 namespace Modules\Registrars\ResellerClub;
 
 use App\Contracts\RegistrarModuleInterface;
+use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class ResellerClubRegistrar implements RegistrarModuleInterface
+class ResellerClubRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
     protected string $apiUrl;
+
     protected string $resellerId;
+
     protected string $apiKey;
 
     public function __construct()
@@ -43,7 +47,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
     {
         // First, get/create customer
         $customerId = $this->getOrCreateCustomer($params);
-        if (!$customerId) {
+        if (! $customerId) {
             return ['success' => false, 'message' => 'Failed to create/find customer at ResellerClub.'];
         }
 
@@ -65,6 +69,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
         if (isset($response['status']) && $response['status'] === 'ERROR') {
             $error = $response['message'] ?? 'Registration failed';
             Log::error("ResellerClub register failed: {$error}");
+
             return ['success' => false, 'message' => $error];
         }
 
@@ -93,13 +98,14 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
         }
 
         $domain->update(['status' => 'Pending Transfer', 'registrar' => 'ResellerClub']);
+
         return ['success' => true, 'message' => 'Transfer initiated via ResellerClub.'];
     }
 
     public function renew(Domain $domain, int $years): array
     {
         $orderId = $this->getOrderId($domain->domain);
-        if (!$orderId) {
+        if (! $orderId) {
             return ['success' => false, 'message' => 'Domain order not found at ResellerClub.'];
         }
 
@@ -116,13 +122,14 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
 
         $newExpiry = ($domain->expiry_date ?? now())->addYears($years);
         $domain->update(['expiry_date' => $newExpiry, 'next_due_date' => $newExpiry]);
+
         return ['success' => true, 'message' => "Domain renewed for {$years} year(s)."];
     }
 
     public function getNameservers(Domain $domain): array
     {
         $orderId = $this->getOrderId($domain->domain);
-        if (!$orderId) {
+        if (! $orderId) {
             return json_decode($domain->nameservers ?? '[]', true);
         }
 
@@ -134,7 +141,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
     public function saveNameservers(Domain $domain, array $nameservers): bool
     {
         $orderId = $this->getOrderId($domain->domain);
-        if (!$orderId) {
+        if (! $orderId) {
             return false;
         }
 
@@ -143,8 +150,9 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
             'ns' => $nameservers,
         ], 'POST');
 
-        if (!isset($response['status']) || $response['status'] !== 'ERROR') {
+        if (! isset($response['status']) || $response['status'] !== 'ERROR') {
             $domain->update(['nameservers' => json_encode($nameservers)]);
+
             return true;
         }
 
@@ -154,7 +162,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
     public function getEPPCode(Domain $domain): string
     {
         $orderId = $this->getOrderId($domain->domain);
-        if (!$orderId) {
+        if (! $orderId) {
             return '(Not available)';
         }
 
@@ -166,7 +174,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
     public function getLockStatus(Domain $domain): bool
     {
         $orderId = $this->getOrderId($domain->domain);
-        if (!$orderId) {
+        if (! $orderId) {
             return true;
         }
 
@@ -178,14 +186,14 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
     public function toggleLock(Domain $domain, bool $lock): bool
     {
         $orderId = $this->getOrderId($domain->domain);
-        if (!$orderId) {
+        if (! $orderId) {
             return false;
         }
 
         $endpoint = $lock ? 'domains/enable-theft-protection.json' : 'domains/disable-theft-protection.json';
         $response = $this->call($endpoint, ['order-id' => $orderId], 'POST');
 
-        return !isset($response['status']) || $response['status'] !== 'ERROR';
+        return ! isset($response['status']) || $response['status'] !== 'ERROR';
     }
 
     public function checkAvailability(string $domain): array
@@ -219,13 +227,14 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
                 ? Http::asForm()->timeout(30)->post($url, $params)
                 : Http::timeout(30)->get($url, $params);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return ['status' => 'ERROR', 'message' => "HTTP {$response->status()}"];
             }
 
             return $response->json() ?? [];
         } catch (\Throwable $e) {
             Log::error("ResellerClub API error: {$e->getMessage()}");
+
             return ['status' => 'ERROR', 'message' => $e->getMessage()];
         }
     }
@@ -249,7 +258,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
     protected function getOrCreateCustomer(array $params): ?string
     {
         $email = $params['email'] ?? '';
-        if (!$email) {
+        if (! $email) {
             return null;
         }
 
@@ -263,7 +272,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
         $response = $this->call('customers/signup.json', [
             'username' => $email,
             'passwd' => bin2hex(random_bytes(8)),
-            'name' => ($params['firstname'] ?? 'Admin') . ' ' . ($params['lastname'] ?? ''),
+            'name' => ($params['firstname'] ?? 'Admin').' '.($params['lastname'] ?? ''),
             'company' => $params['company'] ?? 'N/A',
             'address-line-1' => $params['address'] ?? '123 Main St',
             'city' => $params['city'] ?? 'Anytown',
@@ -288,6 +297,7 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
     protected function splitDomain(string $domain): array
     {
         $parts = explode('.', $domain, 2);
+
         return ['sld' => $parts[0] ?? '', 'tld' => $parts[1] ?? ''];
     }
 
@@ -299,9 +309,54 @@ class ResellerClubRegistrar implements RegistrarModuleInterface
             foreach ($rows as $row) {
                 $settings[$row->setting] = $row->value;
             }
+
             return $settings;
         } catch (\Throwable $e) {
             return [];
         }
+    }
+
+    /**
+     * LogicBoxes/ResellerClub exposes order state through
+     * domains/details-by-name.json (options=All): endtime is the expiry as a
+     * unix timestamp, currentstatus is the order state and orderstatus carries
+     * the lock flags (resellerlock / transferlock).
+     *
+     * Verified against the LogicBoxes HTTP API command list
+     * (github.com/phillipsdata/logicboxes, commands/logicboxes_domains.php).
+     */
+    public function syncDomain(Domain $domain): array
+    {
+        $response = $this->call('domains/details-by-name.json', [
+            'domain-name' => $domain->domain,
+            'options' => 'All',
+        ]);
+
+        if (($response['status'] ?? '') === 'ERROR' || isset($response['message'])) {
+            return ['success' => false, 'message' => $response['message'] ?? 'ResellerClub lookup failed.'];
+        }
+
+        $expiry = null;
+        if (! empty($response['endtime']) && is_numeric($response['endtime'])) {
+            $expiry = Carbon::createFromTimestamp((int) $response['endtime'])->toDateString();
+        }
+
+        $orderStatus = (array) ($response['orderstatus'] ?? []);
+        $current = strtolower((string) ($response['currentstatus'] ?? ''));
+
+        $nameservers = [];
+        for ($i = 1; $i <= 5; $i++) {
+            if (! empty($response['ns'.$i])) {
+                $nameservers[] = strtolower((string) $response['ns'.$i]);
+            }
+        }
+
+        return [
+            'success' => true,
+            'expiry_date' => $expiry,
+            'status' => $current === 'active' ? 'active' : ($current ?: null),
+            'locked' => in_array('resellerlock', $orderStatus, true) || in_array('transferlock', $orderStatus, true),
+            'nameservers' => $nameservers,
+        ];
     }
 }
