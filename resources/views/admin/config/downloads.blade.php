@@ -9,6 +9,15 @@
         <button type="button" onclick="document.getElementById('modal-add-dl').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.downloads.add_download') }}</button>
     </div>
 </div>
+
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:15px;">
+    <ul style="margin:0;padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    </ul>
+</div>
+@endif
+
 @if(($categories ?? collect())->isEmpty())
 <div class="card"><div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.downloads.no_categories') }}</div></div>
 @else
@@ -27,15 +36,15 @@
     <div class="card-body" style="color:#999;font-size:13px;">{{ __('admin.downloads.no_downloads') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>{{ __('admin.downloads.filename') }}</th><th>{{ __('common.table.description') }}</th><th>{{ __('admin.downloads.size') }}</th><th>{{ __('admin.downloads.downloads_count') }}</th><th>{{ __('admin.downloads.published') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.downloads.filename') }}</th><th>{{ __('common.table.description') }}</th><th>{{ __('admin.downloads.file_url') }}</th><th>{{ __('admin.downloads.downloads_count') }}</th><th>{{ __('admin.downloads.published') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($category->downloads as $dl)
         <tr>
-            <td style="font-weight:600;">{{ $dl->name }}</td>
+            <td style="font-weight:600;">{{ $dl->title }}</td>
             <td style="font-size:12px;color:#555;">{{ Str::limit($dl->description, 60) }}</td>
-            <td style="font-size:12px;">{{ $dl->size ?? '-' }}</td>
-            <td>{{ $dl->downloads ?? 0 }}</td>
-            <td><span class="badge-{{ $dl->published ? 'active' : 'draft' }}">{{ $dl->published ? __('admin.downloads.published') : __('admin.downloads.draft') }}</span></td>
+            <td style="font-size:12px;font-family:monospace;">{{ Str::limit($dl->location, 40) }}</td>
+            <td>{{ $dl->download_count ?? 0 }}</td>
+            <td><span class="badge-{{ $dl->hidden ? 'draft' : 'active' }}">{{ $dl->hidden ? __('admin.downloads.draft') : __('admin.downloads.published') }}</span></td>
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.downloads.destroy', $dl) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.downloads.confirm_delete_download') }}')">
                     @csrf @method('DELETE')
@@ -82,16 +91,16 @@
         <form method="POST" action="{{ route('admin.config.downloads.store') }}" enctype="multipart/form-data">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">{{ __('common.form.name') }}</label><input type="text" name="name" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.name') }}</label><input type="text" name="title" value="{{ old('title') }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.downloads.category') }}</label>
                     <select name="category_id" required class="form-control">
                         @foreach($categories ?? [] as $cat)
-                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        <option value="{{ $cat->id }}" @selected(old('category_id') == $cat->id)>{{ $cat->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.downloads.file_url') }}</label><input type="text" name="url" class="form-control" placeholder="https://..."></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control">{{ old('description') }}</textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.downloads.file_url') }}</label><input type="text" name="location" value="{{ old('location') }}" required class="form-control" placeholder="https://..."></div>
                 <div class="form-group"><label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="published" value="1" checked> {{ __('admin.downloads.published') }}</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -101,4 +110,8 @@
         </form>
     </div>
 </div>
+
+@if($errors->any())
+<script>document.getElementById('modal-add-dl').style.display = 'flex';</script>
+@endif
 @endsection

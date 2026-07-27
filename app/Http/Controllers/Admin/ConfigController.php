@@ -382,7 +382,19 @@ class ConfigController extends Controller
 
     public function storeTld(Request $request)
     {
-        $v = $request->validate(['extension' => 'required|string|unique:domain_pricing']);
+        $v = $request->validate([
+            'extension' => 'required|string|unique:domain_pricing',
+            'register_price' => 'required|numeric|min:0',
+            'transfer_price' => 'required|numeric|min:0',
+            'renew_price' => 'required|numeric|min:0',
+            'grace_period' => 'nullable|integer|min:0',
+            'min_years' => 'nullable|integer|min:1',
+            'max_years' => 'nullable|integer|min:1',
+            'auto_registrar' => 'nullable|string',
+            'sort_order' => 'nullable|integer',
+            'enabled' => 'boolean',
+        ]);
+        $v['enabled'] = $request->boolean('enabled');
         DomainPricing::create($v);
 
         return back()->with('success', __('messages.success.tld_created'));
@@ -792,14 +804,32 @@ class ConfigController extends Controller
     // Downloads
     public function storeDownloadCategory(Request $request)
     {
-        DownloadCategory::create($request->validate(['name' => 'required']));
+        DownloadCategory::create($request->validate(['name' => 'required', 'description' => 'nullable|string']));
 
         return back()->with('success', __('messages.success.category_created'));
     }
 
+    public function destroyDownloadCategory(DownloadCategory $category)
+    {
+        // downloads.category_id is constrained with cascadeOnDelete — the
+        // category's downloads are removed with it.
+        $category->delete();
+
+        return back()->with('success', __('messages.success.category_deleted'));
+    }
+
     public function storeDownload(Request $request)
     {
-        Download::create($request->validate(['category_id' => 'nullable', 'title' => 'required', 'description' => 'nullable|string', 'location' => 'required']));
+        $v = $request->validate([
+            'category_id' => 'required|exists:download_categories,id',
+            'title' => 'required|string',
+            'description' => 'nullable|string',
+            'location' => 'required|string',
+            'published' => 'boolean',
+        ]);
+        $v['hidden'] = ! $request->boolean('published');
+        unset($v['published']);
+        Download::create($v);
 
         return back()->with('success', __('messages.success.download_created'));
     }
@@ -888,7 +918,20 @@ class ConfigController extends Controller
     // Domain Pricing
     public function updateTld(Request $request, DomainPricing $domainPricing)
     {
-        $domainPricing->update($request->validate(['extension' => 'required', 'register_price' => 'nullable|numeric', 'transfer_price' => 'nullable|numeric', 'renew_price' => 'nullable|numeric']));
+        $v = $request->validate([
+            'extension' => 'required|string|unique:domain_pricing,extension,'.$domainPricing->id,
+            'register_price' => 'nullable|numeric|min:0',
+            'transfer_price' => 'nullable|numeric|min:0',
+            'renew_price' => 'nullable|numeric|min:0',
+            'grace_period' => 'nullable|integer|min:0',
+            'min_years' => 'nullable|integer|min:1',
+            'max_years' => 'nullable|integer|min:1',
+            'auto_registrar' => 'nullable|string',
+            'sort_order' => 'nullable|integer',
+            'enabled' => 'boolean',
+        ]);
+        $v['enabled'] = $request->boolean('enabled');
+        $domainPricing->update($v);
 
         return back()->with('success', __('messages.success.tld_updated'));
     }

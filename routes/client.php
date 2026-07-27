@@ -9,29 +9,31 @@ use App\Http\Controllers\Client\ContactController;
 use App\Http\Controllers\Client\DomainController;
 use App\Http\Controllers\Client\DownloadController;
 use App\Http\Controllers\Client\EmailController;
-use App\Http\Controllers\Client\NetworkStatusController;
-use App\Http\Controllers\Client\PaymentMethodController;
-use App\Http\Controllers\Client\QuoteController;
 use App\Http\Controllers\Client\FundsController;
 use App\Http\Controllers\Client\HomeController;
 use App\Http\Controllers\Client\InvoiceController;
 use App\Http\Controllers\Client\KbController;
+use App\Http\Controllers\Client\NetworkStatusController;
+use App\Http\Controllers\Client\PaymentMethodController;
+use App\Http\Controllers\Client\QuoteController;
 use App\Http\Controllers\Client\ServiceController;
+use App\Http\Controllers\Client\SslController;
 use App\Http\Controllers\Client\TicketController;
 use App\Http\Controllers\DomainSearchController;
+use App\Http\Middleware\TwoFactorVerify;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('client')->name('client.')->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post("login", [AuthController::class, "login"])->middleware("throttle:10,1")->name("login.submit");
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.submit');
     Route::get('register', [AuthController::class, 'showRegister'])->name('register');
     Route::post('register', [AuthController::class, 'register'])->name('register.submit');
 
     // Password Reset
-    Route::get("forgot-password", [AuthController::class, "showForgotPassword"])->name("password.request");
-    Route::post("forgot-password", [AuthController::class, "sendResetLink"])->name("password.email");
-    Route::get("reset-password/{token}", [AuthController::class, "showResetForm"])->name("password.reset");
-    Route::post("reset-password", [AuthController::class, "resetPassword"])->name("password.update.reset");
+    Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update.reset');
 
     // Knowledge Base (public)
     Route::get('knowledgebase', [KbController::class, 'index'])->name('kb.index');
@@ -57,7 +59,7 @@ Route::prefix('client')->name('client.')->group(function () {
     Route::get('store/configure/{product:slug}', [CartController::class, 'configure'])->name('store.configure');
 
     // 2FA verification (requires login but not 2FA yet)
-    Route::middleware('auth')->withoutMiddleware([\App\Http\Middleware\TwoFactorVerify::class])->group(function () {
+    Route::middleware('auth')->withoutMiddleware([TwoFactorVerify::class])->group(function () {
         Route::get('2fa', [AuthController::class, 'show2faVerify'])->name('2fa.verify');
         Route::post('2fa', [AuthController::class, 'verify2fa'])->name('2fa.verify.submit');
     });
@@ -75,7 +77,7 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('services/{service}/cancel', [ServiceController::class, 'submitCancellation'])->name('services.cancel.submit');
         Route::get('services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');
         Route::post('services/{service}/upgrade', [ServiceController::class, 'processUpgrade'])->name('services.upgrade.process');
-        Route::post("services/{service}/autorenew", [ServiceController::class, "toggleAutoRenew"])->name("services.autorenew");
+        Route::post('services/{service}/autorenew', [ServiceController::class, 'toggleAutoRenew'])->name('services.autorenew');
 
         // Domains
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
@@ -113,8 +115,8 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('tickets', [TicketController::class, 'store'])->name('tickets.store');
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
         Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
-        Route::get("tickets/{ticket}/attachment", [TicketController::class, "downloadAttachment"])->name("tickets.attachment");
-        Route::get("tickets/{ticket}/reply/{replyId}/attachment", [TicketController::class, "downloadAttachment"])->name("tickets.reply.attachment");
+        Route::get('tickets/{ticket}/attachment', [TicketController::class, 'downloadAttachment'])->name('tickets.attachment');
+        Route::get('tickets/{ticket}/reply/{replyId}/attachment', [TicketController::class, 'downloadAttachment'])->name('tickets.reply.attachment');
 
         // Downloads (auth required)
         Route::get('downloads', [DownloadController::class, 'index'])->name('downloads.index');
@@ -146,21 +148,21 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::get('account/contacts', [AccountController::class, 'contacts'])->name('account.contacts');
         Route::post('account/contacts', [AccountController::class, 'storeContact'])->name('account.contacts.store');
         Route::delete('account/contacts/{contact}', [AccountController::class, 'destroyContact'])->name('account.contacts.destroy');
-        Route::get("account/payment-methods", [AccountController::class, "paymentMethods"])->name("account.payment_methods");
+        Route::get('account/payment-methods', [AccountController::class, 'paymentMethods'])->name('account.payment_methods');
         Route::get('account/security', [AccountController::class, 'security'])->name('account.security');
+        Route::post('account/security/sessions/{sessionId}/logout', [AccountController::class, 'logoutSession'])->name('account.security.logout_session');
         Route::match(['get', 'post'], '2fa/enable', [AuthController::class, 'enable2fa'])->name('2fa.enable');
         Route::post('2fa/disable', [AuthController::class, 'disable2fa'])->name('2fa.disable');
 
         // ── SSL Certificates ──────────────────────────────────────────
-        Route::prefix("ssl")->name("ssl.")->group(function () {
-            Route::get("/", [\App\Http\Controllers\Client\SslController::class, "index"])->name("index");
-            Route::get("/{sslOrder}", [\App\Http\Controllers\Client\SslController::class, "show"])->name("show");
-            Route::get("/{sslOrder}/configure", [\App\Http\Controllers\Client\SslController::class, "configure"])->name("configure");
-            Route::post("/{sslOrder}/configure", [\App\Http\Controllers\Client\SslController::class, "submitConfiguration"])->name("submitConfiguration");
-            Route::get("/{sslOrder}/approver-emails", [\App\Http\Controllers\Client\SslController::class, "getApproverEmails"])->name("approverEmails");
-            Route::get("/{sslOrder}/download", [\App\Http\Controllers\Client\SslController::class, "downloadCert"])->name("download");
-            Route::post("/{sslOrder}/resend-validation", [\App\Http\Controllers\Client\SslController::class, "resendValidation"])->name("resendValidation");
+        Route::prefix('ssl')->name('ssl.')->group(function () {
+            Route::get('/', [SslController::class, 'index'])->name('index');
+            Route::get('/{sslOrder}', [SslController::class, 'show'])->name('show');
+            Route::get('/{sslOrder}/configure', [SslController::class, 'configure'])->name('configure');
+            Route::post('/{sslOrder}/configure', [SslController::class, 'submitConfiguration'])->name('submitConfiguration');
+            Route::get('/{sslOrder}/approver-emails', [SslController::class, 'getApproverEmails'])->name('approverEmails');
+            Route::get('/{sslOrder}/download', [SslController::class, 'downloadCert'])->name('download');
+            Route::post('/{sslOrder}/resend-validation', [SslController::class, 'resendValidation'])->name('resendValidation');
         });
     });
 });
-

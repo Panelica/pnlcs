@@ -6,6 +6,15 @@
     <h1>{{ __('admin.domain_pricing.title') }}</h1>
     <button type="button" onclick="openAddTLD()" class="btn btn-primary btn-sm">+ {{ __('admin.domain_pricing.add_tld') }}</button>
 </div>
+
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:15px;">
+    <ul style="margin:0;padding-left:18px;">
+        @foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach
+    </ul>
+</div>
+@endif
+
 <div class="card">
     @if($tlds->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.domain_pricing.no_pricing') }}</div>
@@ -102,5 +111,8 @@ function openEditTLD(d) {
     document.getElementById('tld-enabled').checked = !!d.enabled;
     document.getElementById('modal-tld').style.display = 'flex';
 }
+@if($errors->any())
+document.getElementById('modal-tld').style.display = 'flex';
+@endif
 </script>
 @endsection

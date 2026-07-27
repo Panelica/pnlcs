@@ -112,6 +112,7 @@ return [
         'bundle_deleted' => 'Bundle deleted.',
         'cancellation_submitted' => 'Cancellation request submitted.',
         'category_created' => 'Category created.',
+        'category_deleted' => 'Category deleted.',
         'client_created' => 'Client created successfully.',
         'client_deleted' => 'Client deleted.',
         'client_group_created' => 'Client group created.',

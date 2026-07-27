@@ -30,6 +30,7 @@
     </div>
 </div>
 
+@if($sessionsSupported ?? false)
 <div class="pn-card">
     <div class="pn-card-header">{{ __('client.security.active_sessions') }}</div>
     <div class="pn-card-body" style="padding:0;">
@@ -69,5 +70,6 @@
         </table>
     </div>
 </div>
+@endif
 
 @endsection
