@@ -17,36 +17,36 @@ class TicketEscalationService
         $escalated = 0;
 
         foreach ($rules as $rule) {
-            if ($rule->time_elapsed <= 0) continue;
+            if ($rule->time_elapsed <= 0) {
+                continue;
+            }
 
             $threshold = now()->subMinutes($rule->time_elapsed);
 
-            $query = Ticket::where("last_reply", "<=", $threshold);
+            $query = Ticket::where('last_reply', '<=', $threshold);
 
             // Filter by statuses (JSON array or fallback to open+customer-reply)
             $statuses = $rule->statuses;
-            if (!empty($statuses) && is_array($statuses)) {
-                $query->whereIn("status", $statuses);
+            if (! empty($statuses) && is_array($statuses)) {
+                $query->whereIn('status', $statuses);
             } else {
-                $query->whereIn("status", ["open", "customer-reply"]);
+                $query->whereIn('status', ['open', 'customer-reply']);
             }
 
             // Filter by departments
             $departments = $rule->departments;
-            if (!empty($departments) && is_array($departments)) {
-                $query->whereIn("department_id", $departments);
+            if (! empty($departments) && is_array($departments)) {
+                $query->whereIn('department_id', $departments);
             }
 
             // Filter by priorities
             $priorities = $rule->priorities;
-            if (!empty($priorities) && is_array($priorities)) {
-                $query->whereIn("priority", $priorities);
+            if (! empty($priorities) && is_array($priorities)) {
+                $query->whereIn('priority', $priorities);
             }
 
-            // Skip already-escalated tickets (flagged as escalated)
-            $query->where(function ($q) {
-                $q->whereNull("flag")->orWhere("flag", "!=", "escalated");
-            });
+            // Skip tickets already escalated since the last reply.
+            $query->whereNull('escalated_at');
 
             $tickets = $query->get();
 
@@ -55,9 +55,16 @@ class TicketEscalationService
 
                 if ($rule->flag_to) {
                     $ticket->admin = $rule->flag_to;
-                    $ticket->flag = "escalated";
+                    // flag is the assigned-admin id the support widget counts.
+                    $ticket->flag = (int) $rule->flag_to;
                     $changes[] = "assigned to admin #{$rule->flag_to}";
                 }
+
+                // Record the escalation on its own column. It used to be written
+                // into flag as the string "escalated", which that integer column
+                // rejected, so a rule that only sent an auto-reply re-fired every
+                // cycle and mailed the customer the same message forever.
+                $ticket->escalated_at = now();
 
                 if ($rule->new_priority) {
                     $ticket->priority = $rule->new_priority;
@@ -73,24 +80,24 @@ class TicketEscalationService
 
                 // Add a note about the escalation
                 $noteMessage = "Auto-escalated by rule \"{$rule->name}\": No response for {$rule->time_elapsed} minutes.";
-                if (!empty($changes)) {
-                    $noteMessage .= " Actions: " . implode(", ", $changes) . ".";
+                if (! empty($changes)) {
+                    $noteMessage .= ' Actions: '.implode(', ', $changes).'.';
                 }
 
                 $ticket->notes()->create([
-                    "message" => $noteMessage,
-                    "admin" => "System",
+                    'message' => $noteMessage,
+                    'admin' => 'System',
                 ]);
 
                 // Add auto-reply if configured
-                if (!empty($rule->add_reply)) {
+                if (! empty($rule->add_reply)) {
                     $ticket->replies()->create([
-                        "message" => $rule->add_reply,
-                        "admin" => "System",
-                        "name" => "System",
-                        "email" => "system@localhost",
+                        'message' => $rule->add_reply,
+                        'admin' => 'System',
+                        'name' => 'System',
+                        'email' => 'system@localhost',
                     ]);
-                    $ticket->update(["last_reply" => now()]);
+                    $ticket->update(['last_reply' => now()]);
                 }
 
                 $escalated++;

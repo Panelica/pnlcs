@@ -92,7 +92,12 @@ class TicketController extends Controller
         }
 
         $ticket->replies()->create($replyData);
-        $ticket->update(['status' => 'customer-reply', 'last_reply' => now()]);
+        // Clearing the escalation marker lets a later period of silence escalate
+        // again; leaving it set would freeze escalation for the ticket's life.
+        // Clearing escalated_at lets a later period of silence escalate again;
+        // leaving it set would freeze escalation for the ticket's life. flag is
+        // the assigned admin and must survive a reply.
+        $ticket->update(['status' => 'Customer-Reply', 'last_reply' => now(), 'escalated_at' => null]);
         event(new TicketReplied($ticket, $validated['message'], false));
 
         return back()->with('success', __('messages.success.reply_added'));
