@@ -80,19 +80,37 @@ abstract class AbstractServerModule implements ServerModuleInterface
         return ['success' => $success, 'message' => $message, 'data' => $data];
     }
 
+    /**
+     * Module data (remote account ids and the like) lives in its own column.
+     * It used to share services.notes with the customer's own note, so the
+     * first module write replaced whatever the customer had typed — and a
+     * human note made the module data unreadable. Legacy rows that still hold
+     * JSON in notes are read here for backwards compatibility.
+     */
     protected function getModuleData(Service $service): array
     {
-        $notes = $service->notes ?? '';
-        $json = json_decode($notes, true);
+        $data = $service->module_data;
+        if (is_array($data) && $data !== []) {
+            return $data;
+        }
 
-        return is_array($json) ? $json : [];
+        $legacy = json_decode((string) $service->getRawOriginal('notes'), true);
+
+        return is_array($legacy) ? $legacy : [];
     }
 
     protected function setModuleData(Service $service, array $data): void
     {
-        $existing = $this->getModuleData($service);
-        $merged = array_merge($existing, $data);
-        $service->update(['notes' => json_encode($merged)]);
+        $merged = array_merge($this->getModuleData($service), $data);
+        $attributes = ['module_data' => $merged];
+
+        // Drop a legacy JSON payload from notes so it cannot shadow the real
+        // column later; a genuine customer note is left untouched.
+        if (is_array(json_decode((string) $service->getRawOriginal('notes'), true))) {
+            $attributes['notes'] = null;
+        }
+
+        $service->forceFill($attributes)->save();
     }
 
     protected function logAction(Service $service, string $action, array $result): void
