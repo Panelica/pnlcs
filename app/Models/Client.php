@@ -103,6 +103,12 @@ class Client extends Model
         return $this->belongsTo(Affiliate::class, 'affiliate_id');
     }
 
+    /** Client group (carries the suspend/terminate exemption flags). */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(ClientGroup::class, 'group_id');
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
