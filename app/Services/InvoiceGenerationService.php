@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Promotion;
 use App\Models\Service;
@@ -24,24 +25,31 @@ class InvoiceGenerationService
     public function generateDueInvoices(): array
     {
         $daysAhead = (int) config('billing.invoice_days_before_due', 14);
-        $cutoff    = now()->addDays($daysAhead)->endOfDay();
+        $cutoff = now()->addDays($daysAhead)->endOfDay();
 
-        // Only active services that are due for renewal and not already invoiced recently
+        // Only active services that are due for renewal and not already
+        // invoiced. The dedup guard used to be missing entirely despite what
+        // this comment claimed, so calling this twice billed the customer
+        // twice.
         $services = Service::with('client', 'product')
             ->where('status', 'active')
             ->whereNotNull('next_due_date')
             ->where('next_due_date', '<=', $cutoff)
             ->whereHas('client')
+            ->whereDoesntHave('client.invoices', fn ($q) => $q
+                ->whereIn('status', ['unpaid', 'overdue'])
+                ->whereHas('items', fn ($i) => $i->where('type', 'Hosting')->whereColumn('rel_id', 'services.id')))
             ->get();
 
-        $grouped  = $services->groupBy('client_id');
-        $summary  = ['generated' => 0, 'skipped' => 0, 'errors' => 0, 'invoice_ids' => []];
+        $grouped = $services->groupBy('client_id');
+        $summary = ['generated' => 0, 'skipped' => 0, 'errors' => 0, 'invoice_ids' => []];
 
         foreach ($grouped as $clientId => $clientServices) {
             $client = $clientServices->first()->client;
 
-            if (!$client) {
+            if (! $client) {
                 $summary['skipped']++;
+
                 continue;
             }
 
@@ -55,7 +63,7 @@ class InvoiceGenerationService
                     $summary['skipped']++;
                 }
             } catch (\Throwable $e) {
-                Log::error('Invoice generation failed for client ' . $clientId . ': ' . $e->getMessage());
+                Log::error('Invoice generation failed for client '.$clientId.': '.$e->getMessage());
                 $summary['errors']++;
             }
         }
@@ -70,7 +78,7 @@ class InvoiceGenerationService
     {
         $service->loadMissing('client', 'product');
 
-        if (!$service->client) {
+        if (! $service->client) {
             return null;
         }
 
@@ -87,7 +95,7 @@ class InvoiceGenerationService
     {
         $promo = Promotion::where('code', $promoCode)->first();
 
-        if (!$promo || !$promo->isValid()) {
+        if (! $promo || ! $promo->isValid()) {
             return false;
         }
 
@@ -103,8 +111,8 @@ class InvoiceGenerationService
             // Calculate discount amount
             $discount = match ($promo->type) {
                 'percentage' => round($subtotal * ($promo->value / 100), 2),
-                'fixed'      => min((float) $promo->value, $subtotal),
-                default      => 0.0,
+                'fixed' => min((float) $promo->value, $subtotal),
+                default => 0.0,
             };
 
             if ($discount <= 0) {
@@ -113,12 +121,12 @@ class InvoiceGenerationService
 
             // Apply as credit on the invoice
             $newCredit = (float) $invoice->credit + $discount;
-            $newTotal  = max(0, $subtotal + (float) $invoice->tax + (float) $invoice->tax2 - $newCredit);
+            $newTotal = max(0, $subtotal + (float) $invoice->tax + (float) $invoice->tax2 - $newCredit);
 
             $invoice->update([
-                'credit'     => $newCredit,
-                'total'      => $newTotal,
-                'notes'      => trim(($invoice->notes ?? '') . "\nPromo applied: {$promo->code} (-\${$discount})"),
+                'credit' => $newCredit,
+                'total' => $newTotal,
+                'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-\${$discount})"),
             ]);
 
             // Increment promo usage counter
@@ -150,7 +158,7 @@ class InvoiceGenerationService
      *
      * @param  Service[]  $services
      */
-    private function generateForServices(\App\Models\Client $client, array $services): ?Invoice
+    private function generateForServices(Client $client, array $services): ?Invoice
     {
         if (empty($services)) {
             return null;
@@ -167,12 +175,12 @@ class InvoiceGenerationService
                 : Carbon::parse($service->next_due_date);
 
             $items[] = [
-                'type'        => 'Hosting',
-                'rel_id'      => $service->id,
+                'type' => 'Hosting',
+                'rel_id' => $service->id,
                 'description' => "{$productName} ({$billingCycle}) — {$service->domain} — Due: {$dueDate->format('d M Y')}",
-                'amount'      => (float) $service->amount,
-                'taxed'       => $service->product->tax ?? true,
-                'due_date'    => $dueDate->toDateString(),
+                'amount' => (float) $service->amount,
+                'taxed' => $service->product->tax ?? true,
+                'due_date' => $dueDate->toDateString(),
             ];
 
             // Overage billing: disk
@@ -184,7 +192,7 @@ class InvoiceGenerationService
 
         $options = [
             'due_date' => now()->addDays((int) config('billing.invoice_due_days', 14))->toDateString(),
-            'notes'    => 'Auto-generated renewal invoice.',
+            'notes' => 'Auto-generated renewal invoice.',
         ];
 
         return $this->invoiceService->createInvoice($client, $items, $options);
@@ -196,10 +204,10 @@ class InvoiceGenerationService
      *
      * @return array Line items for overage charges
      */
-    private function calculateOverageItems(Service $service): array
+    public function calculateOverageItems(Service $service): array
     {
         $product = $service->product;
-        if (!$product || !$product->overage_enabled) {
+        if (! $product || ! $product->overage_enabled) {
             return [];
         }
 
@@ -208,7 +216,7 @@ class InvoiceGenerationService
         // Disk overage
         $diskUsage = (int) ($service->disk_usage ?? 0);
         $diskLimit = (int) ($service->disk_limit ?? 0);
-        $diskRate  = (float) ($product->overage_disk_rate ?? 0);
+        $diskRate = (float) ($product->overage_disk_rate ?? 0);
 
         if ($diskLimit > 0 && $diskUsage > $diskLimit && $diskRate > 0) {
             $overageMb = $diskUsage - $diskLimit;
@@ -216,11 +224,11 @@ class InvoiceGenerationService
 
             if ($amount > 0) {
                 $items[] = [
-                    'type'        => 'Overage',
-                    'rel_id'      => $service->id,
+                    'type' => 'Overage',
+                    'rel_id' => $service->id,
                     'description' => "Disk Overage: {$overageMb} MB over {$diskLimit} MB limit @ \${$diskRate}/MB — {$service->domain}",
-                    'amount'      => $amount,
-                    'taxed'       => $product->tax ?? true,
+                    'amount' => $amount,
+                    'taxed' => $product->tax ?? true,
                 ];
             }
         }
@@ -228,7 +236,7 @@ class InvoiceGenerationService
         // Bandwidth overage
         $bwUsage = (int) ($service->bw_usage ?? 0);
         $bwLimit = (int) ($service->bw_limit ?? 0);
-        $bwRate  = (float) ($product->overage_bw_rate ?? 0);
+        $bwRate = (float) ($product->overage_bw_rate ?? 0);
 
         if ($bwLimit > 0 && $bwUsage > $bwLimit && $bwRate > 0) {
             $overageMb = $bwUsage - $bwLimit;
@@ -236,11 +244,11 @@ class InvoiceGenerationService
 
             if ($amount > 0) {
                 $items[] = [
-                    'type'        => 'Overage',
-                    'rel_id'      => $service->id,
+                    'type' => 'Overage',
+                    'rel_id' => $service->id,
                     'description' => "Bandwidth Overage: {$overageMb} MB over {$bwLimit} MB limit @ \${$bwRate}/MB — {$service->domain}",
-                    'amount'      => $amount,
-                    'taxed'       => $product->tax ?? true,
+                    'amount' => $amount,
+                    'taxed' => $product->tax ?? true,
                 ];
             }
         }

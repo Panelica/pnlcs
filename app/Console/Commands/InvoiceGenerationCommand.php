@@ -1,23 +1,27 @@
 <?php
+
 namespace App\Console\Commands;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatus;
-use App\Models\Service;
 use App\Models\Domain;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Service;
+use App\Services\InvoiceGenerationService;
 use App\Services\InvoiceService;
 use Illuminate\Console\Command;
 
 class InvoiceGenerationCommand extends Command
 {
     protected $signature = 'pnlcs:generate-invoices';
+
     protected $description = 'Generate invoices for services due within the next billing period';
 
     public function handle(): int
     {
         $invoiceService = app(InvoiceService::class);
+        $generator = app(InvoiceGenerationService::class);
 
         $services = Service::where('status', ServiceStatus::Active->value)
             ->whereNotNull('next_due_date')
@@ -31,7 +35,9 @@ class InvoiceGenerationCommand extends Command
                 ->where('status', InvoiceStatus::Unpaid->value)
                 ->whereHas('items', fn ($q) => $q->where('type', 'Hosting')->where('rel_id', $service->id))
                 ->exists();
-            if ($existingInvoice) continue;
+            if ($existingInvoice) {
+                continue;
+            }
 
             $invoice = Invoice::create([
                 'client_id' => $service->client_id,
@@ -47,11 +53,27 @@ class InvoiceGenerationCommand extends Command
                 'client_id' => $service->client_id,
                 'type' => 'Hosting',
                 'rel_id' => $service->id,
-                'description' => ($service->product->name ?? 'Service') . ' - ' . ($service->domain ?? ''),
+                'description' => ($service->product->name ?? 'Service').' - '.($service->domain ?? ''),
                 'amount' => $service->amount,
                 'taxed' => true,
                 'due_date' => $service->next_due_date?->format('Y-m-d'),
             ]);
+
+            // Disk and bandwidth overage. The charge was only ever assembled by
+            // InvoiceGenerationService, which this command does not call, so a
+            // product with overage enabled never billed a single cent of it.
+            foreach ($generator->calculateOverageItems($service) as $overage) {
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'client_id' => $service->client_id,
+                    'type' => $overage['type'],
+                    'rel_id' => $overage['rel_id'],
+                    'description' => $overage['description'],
+                    'amount' => $overage['amount'],
+                    'taxed' => $overage['taxed'],
+                    'due_date' => $service->next_due_date?->format('Y-m-d'),
+                ]);
+            }
 
             $invoiceService->recalculateTotals($invoice->fresh());
             $count++;
@@ -70,7 +92,9 @@ class InvoiceGenerationCommand extends Command
                 ->where('client_id', $domain->client_id)
                 ->whereHas('items', fn ($q) => $q->where('type', 'Domain')->where('rel_id', $domain->id))
                 ->exists();
-            if ($existing) continue;
+            if ($existing) {
+                continue;
+            }
 
             $invoice = Invoice::create([
                 'client_id' => $domain->client_id,
@@ -86,7 +110,7 @@ class InvoiceGenerationCommand extends Command
                 'client_id' => $domain->client_id,
                 'type' => 'Domain',
                 'rel_id' => $domain->id,
-                'description' => 'Domain Renewal: ' . $domain->domain . ' (' . ((int) ($domain->registration_period ?? 1)) . 'y)',
+                'description' => 'Domain Renewal: '.$domain->domain.' ('.((int) ($domain->registration_period ?? 1)).'y)',
                 'amount' => $domain->recurring_amount,
                 'taxed' => true,
                 'due_date' => $domain->next_due_date?->format('Y-m-d'),
@@ -97,6 +121,7 @@ class InvoiceGenerationCommand extends Command
         }
 
         $this->info("Generated {$count} invoices.");
+
         return Command::SUCCESS;
     }
 }
