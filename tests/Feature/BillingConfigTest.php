@@ -3,15 +3,15 @@
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Currency;
-use App\Models\TaxRule;
 use App\Models\Promotion;
-
+use App\Models\TaxRule;
 
 // ===== HELPERS =====
 
 function makeBillingAdmin(array $attrs = []): Admin
 {
     $role = AdminRole::factory()->fullAdmin()->create();
+
     return Admin::factory()->create(array_merge(['role_id' => $role->id], $attrs));
 }
 
@@ -35,15 +35,17 @@ test('currencies page lists existing currencies', function () {
 test('admin can add a currency', function () {
     $admin = makeBillingAdmin();
 
+    // XTS is the ISO code reserved for testing, so this never collides with a
+    // currency the installer seeds.
     $response = $this->actingAs($admin, 'admin')->post(route('admin.config.currencies.store'), [
-        'code'   => 'GBP',
+        'code' => 'XTS',
         'prefix' => '£',
         'suffix' => '',
-        'rate'   => 0.79,
+        'rate' => 0.79,
     ]);
 
     $response->assertRedirect()->assertSessionHas('success');
-    $this->assertDatabaseHas('currencies', ['code' => 'GBP', 'prefix' => '£']);
+    $this->assertDatabaseHas('currencies', ['code' => 'XTS', 'prefix' => '£']);
 });
 
 test('add currency requires code and rate', function () {
@@ -69,9 +71,9 @@ test('admin can update a currency', function () {
     $currency = Currency::factory()->create(['code' => 'USD', 'rate' => 1.0]);
 
     $response = $this->actingAs($admin, 'admin')->put(route('admin.config.currencies.update', $currency), [
-        'code'   => 'USD',
+        'code' => 'USD',
         'prefix' => '$',
-        'rate'   => 1.05,
+        'rate' => 1.05,
     ]);
 
     $response->assertRedirect()->assertSessionHas('success');
@@ -132,10 +134,10 @@ test('admin can create a tax rule', function () {
     $admin = makeBillingAdmin();
 
     $response = $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), [
-        'name'     => 'VAT',
+        'name' => 'VAT',
         'tax_rate' => 20.0,
-        'country'  => 'GB',
-        'level'    => 1,
+        'country' => 'GB',
+        'level' => 1,
     ]);
 
     $response->assertRedirect()->assertSessionHas('success');
@@ -152,12 +154,12 @@ test('tax rate must be between 0 and 100', function () {
     $admin = makeBillingAdmin();
 
     $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), [
-        'name'     => 'Bad Tax',
+        'name' => 'Bad Tax',
         'tax_rate' => 150,
     ])->assertSessionHasErrors('tax_rate');
 
     $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), [
-        'name'     => 'Bad Tax',
+        'name' => 'Bad Tax',
         'tax_rate' => -5,
     ])->assertSessionHasErrors('tax_rate');
 });
@@ -167,7 +169,7 @@ test('admin can update a tax rule', function () {
     $rule = TaxRule::factory()->create(['name' => 'Old Tax', 'tax_rate' => 5.0]);
 
     $response = $this->actingAs($admin, 'admin')->put(route('admin.config.tax.update', $rule), [
-        'name'     => 'New Tax',
+        'name' => 'New Tax',
         'tax_rate' => 10.0,
     ]);
 
@@ -207,10 +209,10 @@ test('admin can create a promotion', function () {
     $admin = makeBillingAdmin();
 
     $response = $this->actingAs($admin, 'admin')->post(route('admin.config.promotions.store'), [
-        'code'      => 'LAUNCH10',
-        'type'      => 'percentage',
-        'value'     => 10.0,
-        'max_uses'  => 100,
+        'code' => 'LAUNCH10',
+        'type' => 'percentage',
+        'value' => 10.0,
+        'max_uses' => 100,
         'recurring' => false,
     ]);
 
@@ -229,8 +231,8 @@ test('create promotion enforces unique code', function () {
     Promotion::factory()->create(['code' => 'EXISTING']);
 
     $response = $this->actingAs($admin, 'admin')->post(route('admin.config.promotions.store'), [
-        'code'  => 'EXISTING',
-        'type'  => 'percentage',
+        'code' => 'EXISTING',
+        'type' => 'percentage',
         'value' => 10,
     ]);
 
@@ -241,8 +243,8 @@ test('promotion type must be valid', function () {
     $admin = makeBillingAdmin();
 
     $response = $this->actingAs($admin, 'admin')->post(route('admin.config.promotions.store'), [
-        'code'  => 'BADTYPE',
-        'type'  => 'invalid_type',
+        'code' => 'BADTYPE',
+        'type' => 'invalid_type',
         'value' => 10,
     ]);
 
@@ -254,9 +256,9 @@ test('admin can update a promotion', function () {
     $promo = Promotion::factory()->create(['code' => 'OLD', 'type' => 'percentage', 'value' => 5.0]);
 
     $response = $this->actingAs($admin, 'admin')->put(route('admin.config.promotions.update', $promo), [
-        'code'      => 'UPDATED',
-        'type'      => 'percentage',
-        'value'     => 15.0,
+        'code' => 'UPDATED',
+        'type' => 'percentage',
+        'value' => 15.0,
         'recurring' => false,
     ]);
 
@@ -286,10 +288,10 @@ test('expiry date must be after start date', function () {
     $admin = makeBillingAdmin();
 
     $response = $this->actingAs($admin, 'admin')->post(route('admin.config.promotions.store'), [
-        'code'            => 'BADDATE',
-        'type'            => 'percentage',
-        'value'           => 10,
-        'start_date'      => '2026-12-01',
+        'code' => 'BADDATE',
+        'type' => 'percentage',
+        'value' => 10,
+        'start_date' => '2026-12-01',
         'expiration_date' => '2026-01-01',
     ]);
 
