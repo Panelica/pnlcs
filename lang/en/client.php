@@ -128,6 +128,7 @@ return [
         'configure' => 'Configure',
         'configurable_options' => 'Configurable Options',
         'addons' => 'Addons',
+        'domain_tld_unsupported' => 'We do not currently sell :tld domains.',
         'addon_invalid' => 'That addon is not available for this product.',
         'option_invalid' => 'The selection for :option is not available for this product.',
         'option_quantity_invalid' => 'Choose between :min and :max for :option.',

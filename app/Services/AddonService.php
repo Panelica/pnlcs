@@ -188,6 +188,10 @@ class AddonService
             ->whereNotNull('next_due_date')
             ->where('next_due_date', '<=', $cutoff)
             ->whereHas('client')
+            // A suspended service is still owed for — suspension is usually
+            // non-payment and paying is what lifts it. A terminated or
+            // cancelled one is not.
+            ->whereHas('service', fn ($q) => $q->whereNotIn('status', ['terminated', 'cancelled', 'fraud']))
             ->whereDoesntHave('client.invoices', fn ($q) => $q
                 ->whereIn('status', ['unpaid', 'overdue'])
                 ->whereHas('items', fn ($i) => $i->where('type', 'Addon')->whereColumn('rel_id', 'service_addons.id')));

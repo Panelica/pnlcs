@@ -161,12 +161,24 @@ class InvoiceGenerationService
                 return false;
             }
 
-            // Apply as credit on the invoice
+            // Apply as credit on the invoice. The discount comes off the
+            // taxable amount as well: taxing the full price and then knocking
+            // the discount off the total charges tax on money the customer
+            // never pays, and it disagreed with the figure the cart quoted.
             $newCredit = (float) $invoice->credit + $discount;
-            $newTotal = max(0, $subtotal + (float) $invoice->tax + (float) $invoice->tax2 - $newCredit);
+
+            $taxable = max(0, (float) $invoice->items->where('taxed', true)->sum('amount') - $discount);
+            $taxRate = (float) $invoice->tax_rate;
+            $taxRate2 = (float) $invoice->tax_rate2;
+            $newTax = $taxRate > 0 ? round($taxable * ($taxRate / 100), 2) : 0.0;
+            $newTax2 = $taxRate2 > 0 ? round($taxable * ($taxRate2 / 100), 2) : 0.0;
+
+            $newTotal = max(0, $subtotal + $newTax + $newTax2 - $newCredit);
 
             $invoice->update([
                 'credit' => $newCredit,
+                'tax' => $newTax,
+                'tax2' => $newTax2,
                 'total' => $newTotal,
                 'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-\${$discount})"),
             ]);

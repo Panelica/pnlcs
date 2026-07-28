@@ -4,14 +4,14 @@ namespace App\Services;
 
 use App\Contracts\ServerModuleInterface;
 use App\Enums\ServiceStatus;
-use App\Models\Product;
-use App\Models\Service;
-use App\Models\ModuleQueue;
-use App\Services\Module\ModuleRegistry;
-use Illuminate\Support\Facades\Log;
 use App\Events\ServiceActivated;
 use App\Events\ServiceSuspended;
 use App\Events\ServiceTerminated;
+use App\Models\ModuleQueue;
+use App\Models\Product;
+use App\Models\Service;
+use App\Services\Module\ModuleRegistry;
+use Illuminate\Support\Facades\Log;
 
 class ProvisioningService
 {
@@ -21,7 +21,7 @@ class ProvisioningService
     {
         $module = $this->getModuleForService($service);
 
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
@@ -49,6 +49,7 @@ class ProvisioningService
             if ($queueOnFail) {
                 $this->enqueueRetry($service, 'create', $e->getMessage());
             }
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -57,7 +58,7 @@ class ProvisioningService
     {
         $module = $this->getModuleForService($service);
 
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
@@ -86,6 +87,7 @@ class ProvisioningService
             if ($queueOnFail) {
                 $this->enqueueRetry($service, 'suspend', $e->getMessage(), ['reason' => $reason]);
             }
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -94,7 +96,7 @@ class ProvisioningService
     {
         $module = $this->getModuleForService($service);
 
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
@@ -122,6 +124,7 @@ class ProvisioningService
             if ($queueOnFail) {
                 $this->enqueueRetry($service, 'unsuspend', $e->getMessage());
             }
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -130,7 +133,7 @@ class ProvisioningService
     {
         $module = $this->getModuleForService($service);
 
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
@@ -158,6 +161,7 @@ class ProvisioningService
             if ($queueOnFail) {
                 $this->enqueueRetry($service, 'terminate', $e->getMessage());
             }
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -166,7 +170,7 @@ class ProvisioningService
     {
         $module = $this->getModuleForService($service);
 
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
@@ -185,6 +189,7 @@ class ProvisioningService
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
             ]);
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -193,7 +198,7 @@ class ProvisioningService
     {
         $module = $this->getModuleForService($service);
 
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
@@ -212,6 +217,7 @@ class ProvisioningService
                 'service_id' => $service->id,
                 'error' => $e->getMessage(),
             ]);
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -232,25 +238,26 @@ class ProvisioningService
 
             if ($existing) {
                 $existing->update(['last_error' => $error]);
+
                 return;
             }
 
             ModuleQueue::create([
-                'service_id'      => $service->id,
-                'action'          => $action,
-                'status'          => 'pending',
-                'attempts'        => 0,
+                'service_id' => $service->id,
+                'action' => $action,
+                'status' => 'pending',
+                'attempts' => 0,
                 'next_attempt_at' => now()->addMinutes(5),
-                'last_error'      => $error,
-                'payload'         => $payload ?: null,
+                'last_error' => $error,
+                'payload' => $payload ?: null,
             ]);
 
             app(NotificationService::class)->dispatch('module.failed', [
                 'event_type' => 'module.failed',
-                'subject'    => 'Module action failed — queued for retry',
-                'message'    => "Module '{$action}' failed for service #{$service->id} ({$service->domain}): {$error}. Queued for automatic retry.",
+                'subject' => 'Module action failed — queued for retry',
+                'message' => "Module '{$action}' failed for service #{$service->id} ({$service->domain}): {$error}. Queued for automatic retry.",
                 'service_id' => $service->id,
-                'action'     => $action,
+                'action' => $action,
             ]);
         } catch (\Throwable $e) {
             Log::error('ProvisioningService::enqueueRetry failed', ['service_id' => $service->id, 'error' => $e->getMessage()]);
@@ -271,7 +278,7 @@ class ProvisioningService
 
         $serverType = $service->server?->type ?? $service->product?->server_type ?? null;
 
-        if (!$serverType) {
+        if (! $serverType) {
             return null;
         }
 

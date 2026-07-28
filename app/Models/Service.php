@@ -14,6 +14,27 @@ class Service extends Model
 
     protected $hidden = ['password'];
 
+    protected static function booted(): void
+    {
+        // An addon cannot outlive the service it hangs off. Several places end
+        // a service - the provisioning module, the cancellation cron, an
+        // operator on the admin screen - so this is enforced here rather than
+        // in each of them.
+        static::updated(function (self $service) {
+            if (! $service->wasChanged('status')) {
+                return;
+            }
+
+            if (! in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true)) {
+                return;
+            }
+
+            ServiceAddon::where('service_id', $service->id)
+                ->whereIn('status', ['active', 'pending'])
+                ->update(['status' => 'cancelled', 'next_due_date' => null]);
+        });
+    }
+
     public function configOptions()
     {
         return $this->hasMany(ServiceConfigOption::class);

@@ -534,3 +534,64 @@ test('the addons API endpoint returns addons instead of failing', function () {
         ->assertStatus(200)
         ->assertJson(['result' => 'success']);
 });
+
+// ---------------------------------------------------------------------------
+// The addon must not outlive the service
+// ---------------------------------------------------------------------------
+
+function addonOnService(array $fx, string $serviceStatus): ServiceAddon
+{
+    $client = Client::factory()->create();
+    $service = Service::factory()->create([
+        'client_id' => $client->id,
+        'product_id' => $fx['product']->id,
+        'status' => $serviceStatus,
+        'amount' => 20,
+        'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addMonths(6),
+        'domain' => $serviceStatus.'-addon.com',
+    ]);
+
+    return ServiceAddon::create([
+        'service_id' => $service->id,
+        'addon_id' => $fx['addon']->id,
+        'client_id' => $client->id,
+        'qty' => 1,
+        'amount' => 5,
+        'billing_cycle' => 'Monthly',
+        'next_due_date' => now()->addDays(2),
+        'status' => 'active',
+    ]);
+}
+
+test('an addon on a terminated service is not billed', function () {
+    $fx = addonShop();
+    $terminated = addonOnService($fx, 'terminated');
+    $cancelled = addonOnService($fx, 'cancelled');
+
+    $this->artisan('pnlcs:generate-invoices')->assertSuccessful();
+
+    expect(Invoice::where('client_id', $terminated->client_id)->count())->toBe(0)
+        ->and(Invoice::where('client_id', $cancelled->client_id)->count())->toBe(0);
+});
+
+test('an addon on a suspended service is still billed', function () {
+    // Suspension is usually non-payment; the customer still owes for what they
+    // bought, and paying is what brings the account back.
+    $fx = addonShop();
+    $suspended = addonOnService($fx, 'suspended');
+
+    $this->artisan('pnlcs:generate-invoices')->assertSuccessful();
+
+    expect(Invoice::where('client_id', $suspended->client_id)->count())->toBe(1);
+});
+
+test('terminating a service stops its addons', function () {
+    $fx = addonShop();
+    $addon = addonOnService($fx, 'active');
+    $service = Service::findOrFail($addon->service_id);
+
+    $service->update(['status' => 'terminated']);
+
+    expect(strtolower($addon->fresh()->status))->toBe('cancelled');
+});

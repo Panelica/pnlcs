@@ -59,14 +59,20 @@ class OrderService
                 $type = strtolower($item['type'] ?? 'service');
 
                 if ($type === 'domain') {
-                    $this->createDomainForOrder($order, $client, $item);
+                    $domain = $this->createDomainForOrder($order, $client, $item);
+                    $years = max(1, (int) ($item['registration_period'] ?? 1));
+                    $action = strtolower((string) ($item['domain_type'] ?? 'register')) === 'transfer'
+                        ? 'Transfer'
+                        : 'Registration';
 
                     $invoiceItems[] = [
                         'type' => 'Domain',
-                        'rel_id' => 0,
-                        'description' => 'Domain Registration: '.($item['domain'] ?? ''),
+                        // Points at the domain: paying this line is what renews
+                        // it, and the renewal generator dedupes on it.
+                        'rel_id' => $domain->id,
+                        'description' => "Domain {$action}: ".($item['domain'] ?? '')." — {$years} Year(s)",
                         'amount' => (float) ($item['amount'] ?? 0),
-                        'taxed' => false,
+                        'taxed' => true,
                     ];
                 } else {
                     $service = $this->createServiceForOrder($order, $client, $item);
@@ -362,9 +368,10 @@ class OrderService
             'order_id' => $order->id,
             'domain' => $item['domain'] ?? '',
             'type' => $item['domain_type'] ?? 'register',
-            'registrar' => $item['registrar'] ?? null,
+            'registrar' => $item['registrar'] ?? 'Manual',
             'registration_date' => now()->toDateString(),
-            'expiry_date' => now()->addYear()->toDateString(),
+            'expiry_date' => now()->addYears(max(1, (int) ($item['registration_period'] ?? 1)))->toDateString(),
+            'next_due_date' => now()->addYears(max(1, (int) ($item['registration_period'] ?? 1)))->toDateString(),
             'status' => DomainStatus::Pending->value,
             'registration_period' => (int) ($item['registration_period'] ?? 1),
             'recurring_amount' => $item['amount'] ?? 0,

@@ -11,8 +11,8 @@ use App\Models\Order;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\Promotion;
-use App\Models\TaxRule;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class CartService
 {
@@ -114,7 +114,11 @@ class CartService
         $pricing = DomainPricing::where('extension', $tld)->where('enabled', true)->first();
 
         if (! $pricing) {
-            return $cart; // TLD not supported
+            // Returning the cart untouched meant the controller reported success
+            // and the customer checked out without the domain they asked for.
+            throw ValidationException::withMessages([
+                'domain' => __('client.cart.domain_tld_unsupported', ['tld' => $tld]),
+            ]);
         }
 
         $price = ($type === 'transfer') ? $pricing->transfer_price : $pricing->register_price;
@@ -202,8 +206,9 @@ class CartService
             }
         }
 
-        $taxableAmount = $subtotal - $discount;
-        $taxRate = $this->getTaxRate();
+        $taxableAmount = max(0, $subtotal - $discount);
+        // carts.user_id holds the client id, despite the column name.
+        $taxRate = $this->getTaxRate($cart->user_id);
         $taxAmount = round($taxableAmount * ($taxRate / 100), 2);
         $total = round($taxableAmount + $taxAmount, 2);
 
@@ -347,11 +352,13 @@ class CartService
         return $cycles;
     }
 
-    private function getTaxRate(): float
+    /**
+     * The rate the invoice will actually use, so the cart quotes the figure the
+     * customer ends up being charged.
+     */
+    private function getTaxRate(?int $clientId = null): float
     {
-        $rule = TaxRule::where('level', 1)->first();
-
-        return $rule ? (float) $rule->tax_rate : 0.0;
+        return (float) app(InvoiceService::class)->calculateTax(0.0, $clientId)['tax_rate'];
     }
 
     private function getNextDueDate(string $billingCycle): Carbon
