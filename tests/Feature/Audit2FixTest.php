@@ -5,11 +5,13 @@ use App\Models\Announcement;
 use App\Models\BannedEmail;
 use App\Models\BillableItem;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\HomepageContent;
 use App\Models\HomepageSection;
 use App\Models\Invoice;
 use App\Models\KbArticle;
 use App\Models\KbCategory;
+use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\RegistrarSettings;
@@ -244,6 +246,14 @@ test('cart items keep customer notes and the domain intent reaches the service',
         'group_id' => ProductGroup::factory()->create()->id,
         'server_type' => null,
     ]);
+
+    // A product with no price cannot be ordered at all, so give it one.
+    $currency = Currency::where('is_default', true)->first()
+        ?? Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1, 'is_default' => true]);
+    Pricing::updateOrCreate(
+        ['type' => 'product', 'rel_id' => $product->id, 'currency_id' => $currency->id],
+        ['monthly' => 10]
+    );
 
     $svc = app(CartService::class);
     $cart = $svc->getOrCreateCart($client->id);

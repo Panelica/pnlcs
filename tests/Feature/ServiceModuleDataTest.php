@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Order;
+use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Server;
@@ -90,6 +92,14 @@ test('a cart note reaches the service and survives provisioning', function () {
         'group_id' => ProductGroup::factory()->create()->id,
         'server_type' => null,
     ]);
+
+    // A product with no price cannot be ordered at all, so give it one.
+    $currency = Currency::where('is_default', true)->first()
+        ?? Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1, 'is_default' => true]);
+    Pricing::updateOrCreate(
+        ['type' => 'product', 'rel_id' => $product->id, 'currency_id' => $currency->id],
+        ['monthly' => 10]
+    );
 
     $cart = app(CartService::class)->getOrCreateCart($client->id);
     app(CartService::class)->addProduct($cart, $product, 'monthly', 'yeni-site.com', [], 'SSL de kurun lütfen', 'register');

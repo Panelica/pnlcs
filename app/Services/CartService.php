@@ -65,6 +65,15 @@ class CartService
     {
         $price = $this->getProductPrice($product, $billingCycle);
 
+        // The order form only offers cycles the product is priced for, but the
+        // request accepted any cycle in the enum, so posting an unpriced one
+        // bought the product for nothing.
+        if ($price <= 0) {
+            throw ValidationException::withMessages([
+                'billing_cycle' => __('client.cart.cycle_unavailable'),
+            ]);
+        }
+
         // Configurable options are part of the recurring price. They used to be
         // stored on the cart item and never charged for.
         $optionService = app(ConfigOptionService::class);

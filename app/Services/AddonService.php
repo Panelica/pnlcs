@@ -146,6 +146,12 @@ class AddonService
             throw ValidationException::withMessages(['addon_id' => __('client.cart.addon_invalid')]);
         }
 
+        // Selling an extra for an account that has ended raises an invoice for
+        // something the customer can never use.
+        if (in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true)) {
+            throw ValidationException::withMessages(['addon_id' => __('client.services.addon_service_ended')]);
+        }
+
         $cycle = $cycle ?: ($service->billing_cycle ?: 'Monthly');
         $price = $addon->priceFor($cycle);
 

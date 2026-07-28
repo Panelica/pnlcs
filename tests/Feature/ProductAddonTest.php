@@ -595,3 +595,23 @@ test('terminating a service stops its addons', function () {
 
     expect(strtolower($addon->fresh()->status))->toBe('cancelled');
 });
+
+test('an addon cannot be bought for a service that has ended', function () {
+    $fx = addonShop();
+    $user = User::factory()->create();
+    $client = Client::factory()->create();
+    $user->clients()->attach($client->id);
+    $service = Service::factory()->create([
+        'client_id' => $client->id,
+        'product_id' => $fx['product']->id,
+        'status' => 'terminated',
+        'domain' => 'gone.com',
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('client.services.addons.store', $service), ['addon_id' => $fx['addon']->id])
+        ->assertSessionHasErrors();
+
+    expect(ServiceAddon::count())->toBe(0)
+        ->and(Invoice::count())->toBe(0);
+});
