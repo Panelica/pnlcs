@@ -2,22 +2,24 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use App\Events\ClientCreated;
-use App\Events\OrderPlaced;
 use App\Events\InvoiceCreated;
 use App\Events\InvoicePaid;
-use App\Events\TicketOpened;
-use App\Events\TicketReplied;
+use App\Events\OrderPlaced;
 use App\Events\ServiceActivated;
 use App\Events\ServiceSuspended;
 use App\Events\ServiceTerminated;
-use App\Listeners\SendNotificationListener;
-use App\Listeners\LogActivityListener;
+use App\Events\TicketOpened;
+use App\Events\TicketReplied;
+use App\Listeners\ApplyUpgradeListener;
 use App\Listeners\AutoAcceptOrderListener;
+use App\Listeners\LogActivityListener;
 use App\Listeners\LogSentEmailListener;
 use App\Listeners\RenewOnPaymentListener;
-use App\Listeners\ApplyUpgradeListener;
+use App\Listeners\SendNotificationListener;
+use App\Listeners\SuppressMailWhenDisabled;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 
 class EventServiceProvider extends ServiceProvider
@@ -28,6 +30,10 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string|array>>
      */
     protected $listen = [
+        // Must stay first: cancels the send when mail is disabled in settings.
+        MessageSending::class => [
+            SuppressMailWhenDisabled::class,
+        ],
         ClientCreated::class => [
             [SendNotificationListener::class, 'handleClientCreated'],
             LogActivityListener::class,
