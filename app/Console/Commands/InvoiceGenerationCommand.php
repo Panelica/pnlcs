@@ -8,6 +8,7 @@ use App\Models\Domain;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Service;
+use App\Services\AddonService;
 use App\Services\InvoiceGenerationService;
 use App\Services\InvoiceService;
 use Illuminate\Console\Command;
@@ -22,6 +23,9 @@ class InvoiceGenerationCommand extends Command
     {
         $invoiceService = app(InvoiceService::class);
         $generator = app(InvoiceGenerationService::class);
+        $addonService = app(AddonService::class);
+        $cutoff = now()->addDays(14);
+        $billedAddonIds = [];
 
         $services = Service::where('status', ServiceStatus::Active->value)
             ->whereNotNull('next_due_date')
@@ -74,6 +78,50 @@ class InvoiceGenerationCommand extends Command
                     'due_date' => $service->next_due_date?->format('Y-m-d'),
                 ]);
             }
+
+            // Addons renew with the service they belong to when both fall due.
+            foreach ($addonService->dueQuery($cutoff)->where('service_id', $service->id)->get() as $serviceAddon) {
+                $line = $addonService->lineItem($serviceAddon);
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'client_id' => $service->client_id,
+                    'type' => $line['type'],
+                    'rel_id' => $line['rel_id'],
+                    'description' => $line['description'],
+                    'amount' => $line['amount'],
+                    'taxed' => $line['taxed'],
+                    'due_date' => $line['due_date'],
+                ]);
+                $billedAddonIds[] = $serviceAddon->id;
+            }
+
+            $invoiceService->recalculateTotals($invoice->fresh());
+            $count++;
+        }
+
+        // Addons bought after the fact come due on their own dates, so they
+        // have to be billable without the service being due.
+        foreach ($addonService->dueQuery($cutoff)->whereNotIn('id', $billedAddonIds ?: [0])->get() as $serviceAddon) {
+            $line = $addonService->lineItem($serviceAddon);
+
+            $invoice = Invoice::create([
+                'client_id' => $serviceAddon->client_id,
+                'invoice_num' => $invoiceService->generateInvoiceNumber(),
+                'date' => now()->format('Y-m-d'),
+                'due_date' => $line['due_date'] ?? now()->addDays(14)->format('Y-m-d'),
+                'status' => InvoiceStatus::Unpaid->value,
+            ]);
+
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'client_id' => $serviceAddon->client_id,
+                'type' => $line['type'],
+                'rel_id' => $line['rel_id'],
+                'description' => $line['description'],
+                'amount' => $line['amount'],
+                'taxed' => $line['taxed'],
+                'due_date' => $line['due_date'],
+            ]);
 
             $invoiceService->recalculateTotals($invoice->fresh());
             $count++;

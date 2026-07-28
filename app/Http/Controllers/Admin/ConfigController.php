@@ -1447,7 +1447,7 @@ class ConfigController extends Controller
 
     public function addons()
     {
-        $addons = ProductAddon::orderBy('sort_order')->get();
+        $addons = ProductAddon::with('pricing')->orderBy('sort_order')->get();
         $products = Product::orderBy('name')->get();
 
         return view('admin.config.addons', compact('addons', 'products'));
@@ -1470,7 +1470,8 @@ class ConfigController extends Controller
         $packages = $request->input('packages', []);
         $v['packages'] = ! empty($packages) ? implode(',', $packages) : null;
 
-        ProductAddon::create($v);
+        $addon = ProductAddon::create($v);
+        $this->saveAddonPricing($addon, $request);
 
         return back()->with('success', __('admin.messages.addon_created'));
     }
@@ -1489,9 +1490,47 @@ class ConfigController extends Controller
         $v['hidden'] = $request->boolean('hidden');
         $v['retired'] = $request->boolean('retired');
         $v['tax'] = $request->boolean('tax');
+
+        // Only the create form used to send this, so saving an edit wiped the
+        // addon's product list.
+        if ($request->has('packages')) {
+            $packages = $request->input('packages', []);
+            $v['packages'] = ! empty($packages) ? implode(',', $packages) : null;
+        }
+
         $addon->update($v);
+        $this->saveAddonPricing($addon, $request);
 
         return back()->with('success', __('admin.messages.addon_updated'));
+    }
+
+    /**
+     * Write the addon's per-cycle prices. An addon with no price is free, which
+     * is a valid thing to sell, so a blank field means zero rather than "leave
+     * whatever was there".
+     */
+    private function saveAddonPricing(ProductAddon $addon, Request $request): void
+    {
+        $cycles = ['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'];
+        $prices = (array) $request->input('pricing', []);
+
+        if ($prices === []) {
+            return;
+        }
+
+        $values = [];
+        foreach ($cycles as $cycle) {
+            $values[$cycle] = round((float) ($prices[$cycle] ?? 0), 2);
+        }
+
+        Pricing::updateOrCreate(
+            [
+                'type' => ProductAddon::PRICING_TYPE,
+                'rel_id' => $addon->id,
+                'currency_id' => Currency::getDefault()?->id,
+            ],
+            $values
+        );
     }
 
     public function destroyAddon($id)

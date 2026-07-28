@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Currency;
 use App\Models\Product;
 use App\Models\ProductGroup;
+use App\Services\AddonService;
 use App\Services\CartService;
 use App\Services\ConfigOptionService;
 use Illuminate\Http\Request;
@@ -37,8 +38,9 @@ class CartController extends Controller
         $cycles = $this->cartService->getAvailableCycles($product);
         $currency = Currency::getDefault();
         $optionGroups = app(ConfigOptionService::class)->groupsFor($product);
+        $addons = app(AddonService::class)->availableFor($product);
 
-        return view('client.cart.configure', compact('product', 'cycles', 'currency', 'optionGroups'));
+        return view('client.cart.configure', compact('product', 'cycles', 'currency', 'optionGroups', 'addons'));
     }
 
     public function index()
@@ -60,6 +62,8 @@ class CartController extends Controller
             'domain_option' => 'nullable|string|in:register,transfer,own',
             'notes' => 'nullable|string|max:2000',
             'config_options' => 'nullable|array',
+            'addons' => 'nullable|array',
+            'addons.*' => 'integer',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -73,7 +77,8 @@ class CartController extends Controller
             $request->domain,
             $request->input('config_options', []),
             $request->input('notes'),
-            $request->input('domain_option')
+            $request->input('domain_option'),
+            $request->input('addons', [])
         );
 
         return redirect()->route('client.cart.index')

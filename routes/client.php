@@ -78,6 +78,8 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::get('services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');
         Route::post('services/{service}/upgrade', [ServiceController::class, 'processUpgrade'])->name('services.upgrade.process');
         Route::post('services/{service}/autorenew', [ServiceController::class, 'toggleAutoRenew'])->name('services.autorenew');
+        Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
+        Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
 
         // Domains
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');

@@ -17,6 +17,7 @@
             <th>{{ __('common.table.description') }}</th>
             <th>{{ __('admin.addons.visibility') }}</th>
             <th>{{ __('common.table.status') }}</th>
+            <th>{{ __('admin.addons.monthly_price') }}</th>
             <th>{{ __('admin.addons.sort') }}</th>
             <th style="text-align:right;">{{ __('common.table.actions') }}</th>
         </tr></thead>
@@ -39,6 +40,7 @@
                     <span class="badge badge-active">{{ __('admin.addons.active') }}</span>
                 @endif
             </td>
+            <td>{{ number_format((float) ($addon->pricing->first()->monthly ?? 0), 2) }}</td>
             <td>{{ $addon->sort_order }}</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs" onclick="editAddon({{ $addon->id }}, {{ json_encode($addon) }})">{{ __('common.actions.edit') }}</button>
@@ -78,6 +80,18 @@
                 <div style="display:flex;gap:10px;">
                     <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.addons.sort_order') }}</label><input type="number" name="sort_order" value="0" class="form-control"></div>
                 </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.addons.pricing') }}</label>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="0" name="pricing[monthly]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="0" name="pricing[quarterly]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="0" name="pricing[semiannually]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="0" name="pricing[annually]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="0" name="pricing[biennially]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="0" name="pricing[triennially]" value="0" class="form-control"></div>
+                    </div>
+                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.pricing_hint') }}</p>
+                </div>
+
                 <div class="form-group" style="display:flex;gap:16px;">
                     <label class="form-label"><input type="checkbox" name="hidden" value="1"> {{ __('admin.addons.hidden') }}</label>
                     <label class="form-label"><input type="checkbox" name="tax" value="1" checked> {{ __('admin.addons.apply_tax') }}</label>
@@ -104,9 +118,29 @@
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.name') }} *</label><input type="text" name="name" id="edit-addon-name" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" id="edit-addon-desc" rows="2" class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.addons.applicable_products') }}</label>
+                    <select name="packages[]" id="edit-addon-packages" multiple class="form-control" style="height:100px;">
+                        @foreach($products as $product)
+                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                        @endforeach
+                    </select>
+                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.applicable_products_hint') }}</p>
+                </div>
                 <div style="display:flex;gap:10px;">
                     <div class="form-group" style="flex:1;"><label class="form-label">{{ __('admin.addons.sort_order') }}</label><input type="number" name="sort_order" id="edit-addon-sort" class="form-control"></div>
                 </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.addons.pricing') }}</label>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="0" name="pricing[monthly]" value="0" id="edit-addon-price-monthly" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="0" name="pricing[quarterly]" value="0" id="edit-addon-price-quarterly" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="0" name="pricing[semiannually]" value="0" id="edit-addon-price-semiannually" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="0" name="pricing[annually]" value="0" id="edit-addon-price-annually" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="0" name="pricing[biennially]" value="0" id="edit-addon-price-biennially" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="0" name="pricing[triennially]" value="0" id="edit-addon-price-triennially" class="form-control"></div>
+                    </div>
+                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.pricing_hint') }}</p>
+                </div>
+
                 <div class="form-group" style="display:flex;gap:16px;">
                     <label class="form-label"><input type="checkbox" name="hidden" value="1" id="edit-addon-hidden"> {{ __('admin.addons.hidden') }}</label>
                     <label class="form-label"><input type="checkbox" name="retired" value="1" id="edit-addon-retired"> {{ __('admin.addons.retired') }}</label>
@@ -125,6 +159,14 @@
 <script>
 function editAddon(id, data) {
     document.getElementById('edit-addon-form').action = '/admin/config/addons/' + id;
+    var packages = String(data.packages || '').split(',').filter(Boolean);
+    Array.prototype.forEach.call(document.getElementById('edit-addon-packages').options, function (opt) {
+        opt.selected = packages.indexOf(opt.value) !== -1;
+    });
+    var pricing = (data.pricing && data.pricing[0]) || {};
+    ['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'].forEach(function (cycle) {
+        document.getElementById('edit-addon-price-' + cycle).value = pricing[cycle] || 0;
+    });
     document.getElementById('edit-addon-name').value = data.name || '';
     document.getElementById('edit-addon-desc').value = data.description || '';
     document.getElementById('edit-addon-sort').value = data.sort_order || 0;

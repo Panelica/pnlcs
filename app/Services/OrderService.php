@@ -6,19 +6,17 @@ use App\Enums\DomainStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ServiceStatus;
+use App\Events\OrderPlaced;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Service;
-use App\Models\SslOrder;
-use App\Services\SslProvisioningService;
-use Carbon\Carbon;
+use App\Models\ServiceAddon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use App\Events\OrderPlaced;
 
 class OrderService
 {
@@ -41,18 +39,18 @@ class OrderService
     public function processOrder(Client $client, array $items, string $paymentMethod, ?string $promoCode = null): Order
     {
         $order = DB::transaction(function () use ($client, $items, $paymentMethod, $promoCode) {
-            $orderNum  = $this->generateOrderNumber();
+            $orderNum = $this->generateOrderNumber();
             $totalAmount = array_sum(array_column($items, 'amount'));
 
             $order = Order::create([
-                'order_num'      => $orderNum,
-                'client_id'      => $client->id,
-                'date'           => now()->toDateString(),
-                'amount'         => $totalAmount,
+                'order_num' => $orderNum,
+                'client_id' => $client->id,
+                'date' => now()->toDateString(),
+                'amount' => $totalAmount,
                 'payment_method' => $paymentMethod,
-                'status'         => OrderStatus::Pending->value,
-                'ip_address'     => request()->ip() ?? '0.0.0.0',
-                'promo_code'     => $promoCode,
+                'status' => OrderStatus::Pending->value,
+                'ip_address' => request()->ip() ?? '0.0.0.0',
+                'promo_code' => $promoCode,
             ]);
 
             $invoiceItems = [];
@@ -64,21 +62,21 @@ class OrderService
                     $this->createDomainForOrder($order, $client, $item);
 
                     $invoiceItems[] = [
-                        'type'        => 'Domain',
-                        'rel_id'      => 0,
-                        'description' => 'Domain Registration: ' . ($item['domain'] ?? ''),
-                        'amount'      => (float) ($item['amount'] ?? 0),
-                        'taxed'       => false,
+                        'type' => 'Domain',
+                        'rel_id' => 0,
+                        'description' => 'Domain Registration: '.($item['domain'] ?? ''),
+                        'amount' => (float) ($item['amount'] ?? 0),
+                        'taxed' => false,
                     ];
                 } else {
                     $service = $this->createServiceForOrder($order, $client, $item);
 
                     $invoiceItems[] = [
-                        'type'        => 'Hosting',
-                        'rel_id'      => $service->id,
+                        'type' => 'Hosting',
+                        'rel_id' => $service->id,
                         'description' => $this->buildServiceDescription($service, $item),
-                        'amount'      => (float) ($item['amount'] ?? $service->amount),
-                        'taxed'       => true,
+                        'amount' => (float) ($item['amount'] ?? $service->amount),
+                        'taxed' => true,
                     ];
                 }
             }
@@ -86,7 +84,7 @@ class OrderService
             // Generate invoice for the order
             $invoice = $this->invoiceService->createInvoice($client, $invoiceItems, [
                 'payment_method' => $paymentMethod,
-                'notes'          => "Order #{$orderNum}",
+                'notes' => "Order #{$orderNum}",
             ]);
 
             // Apply promotion if provided
@@ -132,7 +130,7 @@ class OrderService
             $autoSetup = strtolower((string) ($svc->product?->auto_setup ?? ''));
             if ($autoSetup === 'order' && $svc->product?->server_type) {
                 $result = $this->provisioning->createAccount($svc);
-                Log::info('Setup-on-order provisioning for service #' . $svc->id, [
+                Log::info('Setup-on-order provisioning for service #'.$svc->id, [
                     'success' => $result['success'] ?? false,
                 ]);
             }
@@ -167,8 +165,9 @@ class OrderService
         foreach ($pendingServices as $svc) {
             $autoSetup = strtolower((string) ($svc->product?->auto_setup ?? 'payment'));
 
-            if (!$manual && $autoSetup === 'manual') {
+            if (! $manual && $autoSetup === 'manual') {
                 $awaitingManual = true;
+
                 continue;
             }
 
@@ -178,14 +177,14 @@ class OrderService
                 // stays pending (no "active but never provisioned" state).
                 $result = $this->provisioning->createAccount($svc);
                 if ($result['success'] ?? false) {
-                    Log::info('Auto-provisioned service #' . $svc->id . ' on order accept');
+                    Log::info('Auto-provisioned service #'.$svc->id.' on order accept');
                 } else {
-                    Log::error('Auto-provision failed for service #' . $svc->id . ': ' . ($result['message'] ?? 'unknown'));
+                    Log::error('Auto-provision failed for service #'.$svc->id.': '.($result['message'] ?? 'unknown'));
                 }
             } else {
                 // No server module involved — plain activation.
                 $svc->update([
-                    'status'            => ServiceStatus::Active->value,
+                    'status' => ServiceStatus::Active->value,
                     'registration_date' => $svc->registration_date ?? now()->toDateString(),
                 ]);
             }
@@ -196,15 +195,26 @@ class OrderService
             ->where('status', DomainStatus::Pending->value)
             ->update(['status' => DomainStatus::Active->value]);
 
+        // Addons ordered alongside a service start billing from the service's
+        // own renewal date, which is what the customer was quoted.
+        foreach (ServiceAddon::where('order_id', $order->id)->where('status', 'pending')->get() as $serviceAddon) {
+            $serviceAddon->update([
+                'status' => 'active',
+                'next_due_date' => $serviceAddon->next_due_date
+                    ?? $serviceAddon->service?->next_due_date
+                    ?? BillingCycleHelper::advance(now(), $serviceAddon->billing_cycle ?: 'Monthly')->toDateString(),
+            ]);
+        }
+
         if ($awaitingManual) {
             // Keep the order pending so it shows up for admin review.
             run_hook('PendingOrder', ['order' => $order]);
             app(NotificationService::class)->dispatch('order.awaiting_acceptance', [
                 'event_type' => 'order.awaiting_acceptance',
-                'subject'    => 'Order awaiting manual acceptance',
-                'message'    => "Order #{$order->order_num} is paid but contains products that require manual acceptance.",
-                'order_id'   => $order->id,
-                'order_num'  => $order->order_num,
+                'subject' => 'Order awaiting manual acceptance',
+                'message' => "Order #{$order->order_num} is paid but contains products that require manual acceptance.",
+                'order_id' => $order->id,
+                'order_num' => $order->order_num,
             ]);
         } else {
             $order->update(['status' => OrderStatus::Active->value]);
@@ -231,7 +241,7 @@ class OrderService
             Service::where('order_id', $order->id)
                 ->whereNotIn('status', [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value])
                 ->update([
-                    'status'           => ServiceStatus::Cancelled->value,
+                    'status' => ServiceStatus::Cancelled->value,
                     'termination_date' => now()->toDateString(),
                 ]);
 
@@ -260,17 +270,17 @@ class OrderService
 
         return DB::transaction(function () use ($order) {
             $order->update([
-                'status'       => OrderStatus::Fraud->value,
+                'status' => OrderStatus::Fraud->value,
                 'fraud_module' => 'manual',
-                'fraud_output' => 'Manually marked as fraud by admin on ' . now()->toDateTimeString(),
+                'fraud_output' => 'Manually marked as fraud by admin on '.now()->toDateTimeString(),
             ]);
 
             Service::where('order_id', $order->id)
                 ->where('status', ServiceStatus::Active->value)
                 ->update([
-                    'status'             => ServiceStatus::Suspended->value,
-                    'suspension_date'    => now()->toDateString(),
-                    'suspension_reason'  => 'Order marked as fraud',
+                    'status' => ServiceStatus::Suspended->value,
+                    'suspension_date' => now()->toDateString(),
+                    'suspension_reason' => 'Order marked as fraud',
                 ]);
 
             // Cancel unpaid invoice
@@ -305,59 +315,59 @@ class OrderService
         $billingCycle = $item['billing_cycle'] ?? 'Monthly';
 
         return Service::create([
-            'client_id'            => $client->id,
-            'order_id'             => $order->id,
-            'product_id'           => $item['product_id'] ?? null,
-            'server_id'            => $item['server_id'] ?? null,
-            'domain'               => $item['domain'] ?? null,
-            'payment_method'       => $order->payment_method,
-            'qty'                  => $item['qty'] ?? 1,
+            'client_id' => $client->id,
+            'order_id' => $order->id,
+            'product_id' => $item['product_id'] ?? null,
+            'server_id' => $item['server_id'] ?? null,
+            'domain' => $item['domain'] ?? null,
+            'payment_method' => $order->payment_method,
+            'qty' => $item['qty'] ?? 1,
             'first_payment_amount' => $item['first_payment_amount'] ?? $item['amount'] ?? 0,
-            'amount'               => $item['amount'] ?? 0,
-            'billing_cycle'        => $billingCycle,
-            'next_due_date'        => $this->calculateNextDueDate($billingCycle),
-            'registration_date'    => now()->toDateString(),
-            'status'               => ServiceStatus::Pending->value,
-            'username'             => $item['username'] ?? null,
-            'notes'                => $item['notes'] ?? null,
+            'amount' => $item['amount'] ?? 0,
+            'billing_cycle' => $billingCycle,
+            'next_due_date' => $this->calculateNextDueDate($billingCycle),
+            'registration_date' => now()->toDateString(),
+            'status' => ServiceStatus::Pending->value,
+            'username' => $item['username'] ?? null,
+            'notes' => $item['notes'] ?? null,
         ]);
     }
 
     private function createDomainForOrder(Order $order, Client $client, array $item): Domain
     {
         return Domain::create([
-            'client_id'          => $client->id,
-            'order_id'           => $order->id,
-            'domain'             => $item['domain'] ?? '',
-            'type'               => $item['domain_type'] ?? 'register',
-            'registrar'          => $item['registrar'] ?? null,
-            'registration_date'  => now()->toDateString(),
-            'expiry_date'        => now()->addYear()->toDateString(),
-            'status'             => DomainStatus::Pending->value,
-            'recurring_amount'   => $item['amount'] ?? 0,
-            'payment_method'     => $order->payment_method,
+            'client_id' => $client->id,
+            'order_id' => $order->id,
+            'domain' => $item['domain'] ?? '',
+            'type' => $item['domain_type'] ?? 'register',
+            'registrar' => $item['registrar'] ?? null,
+            'registration_date' => now()->toDateString(),
+            'expiry_date' => now()->addYear()->toDateString(),
+            'status' => DomainStatus::Pending->value,
+            'recurring_amount' => $item['amount'] ?? 0,
+            'payment_method' => $order->payment_method,
         ]);
     }
 
     private function calculateNextDueDate(string $billingCycle): string
     {
         return match (strtolower($billingCycle)) {
-            'monthly'        => now()->addMonth()->toDateString(),
-            'quarterly'      => now()->addMonths(3)->toDateString(),
-            'semi-annually'  => now()->addMonths(6)->toDateString(),
-            'annually'       => now()->addYear()->toDateString(),
-            'biennially'     => now()->addYears(2)->toDateString(),
-            'triennially'    => now()->addYears(3)->toDateString(),
-            default          => now()->addMonth()->toDateString(),
+            'monthly' => now()->addMonth()->toDateString(),
+            'quarterly' => now()->addMonths(3)->toDateString(),
+            'semi-annually' => now()->addMonths(6)->toDateString(),
+            'annually' => now()->addYear()->toDateString(),
+            'biennially' => now()->addYears(2)->toDateString(),
+            'triennially' => now()->addYears(3)->toDateString(),
+            default => now()->addMonth()->toDateString(),
         };
     }
 
     private function buildServiceDescription(Service $service, array $item): string
     {
         $product = $service->product;
-        $name    = $product?->name ?? ($item['description'] ?? 'Hosting Service');
-        $cycle   = $service->billing_cycle ?? 'Monthly';
-        $domain  = $service->domain ? " — {$service->domain}" : '';
+        $name = $product?->name ?? ($item['description'] ?? 'Hosting Service');
+        $cycle = $service->billing_cycle ?? 'Monthly';
+        $domain = $service->domain ? " — {$service->domain}" : '';
 
         return "{$name} ({$cycle}){$domain}";
     }

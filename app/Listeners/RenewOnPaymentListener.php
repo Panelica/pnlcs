@@ -6,7 +6,9 @@ use App\Events\InvoicePaid;
 use App\Models\Domain;
 use App\Models\Order;
 use App\Models\Service;
+use App\Models\ServiceAddon;
 use App\Services\BillingCycleHelper;
+use App\Services\DomainService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -36,9 +38,11 @@ class RenewOnPaymentListener
                     $this->renewService((int) $item->rel_id);
                 } elseif ($item->type === 'Domain') {
                     $this->renewDomain((int) $item->rel_id);
+                } elseif ($item->type === 'Addon') {
+                    $this->renewAddon((int) $item->rel_id);
                 }
             } catch (\Throwable $e) {
-                Log::error("RenewOnPayment failed for invoice #{$invoice->id} item {$item->id}: " . $e->getMessage());
+                Log::error("RenewOnPayment failed for invoice #{$invoice->id} item {$item->id}: ".$e->getMessage());
             }
         }
     }
@@ -46,12 +50,12 @@ class RenewOnPaymentListener
     private function renewService(int $serviceId): void
     {
         $service = Service::find($serviceId);
-        if (!$service) {
+        if (! $service) {
             return;
         }
 
         $cycle = $service->billing_cycle ?: 'Monthly';
-        $base  = $service->next_due_date ? Carbon::parse($service->next_due_date) : now();
+        $base = $service->next_due_date ? Carbon::parse($service->next_due_date) : now();
         $service->update([
             'next_due_date' => BillingCycleHelper::advance($base, $cycle)->toDateString(),
         ]);
@@ -59,10 +63,41 @@ class RenewOnPaymentListener
         Log::info("RenewOnPayment: service #{$service->id} advanced to {$service->next_due_date}");
     }
 
+    /**
+     * An addon invoice is either its first one, in which case paying it starts
+     * the addon, or a renewal, in which case it moves the date on.
+     */
+    private function renewAddon(int $serviceAddonId): void
+    {
+        $addon = ServiceAddon::find($serviceAddonId);
+        if (! $addon) {
+            return;
+        }
+
+        $cycle = $addon->billing_cycle ?: 'Monthly';
+
+        if (strtolower((string) $addon->status) === 'pending' || ! $addon->next_due_date) {
+            $addon->update([
+                'status' => 'active',
+                'next_due_date' => BillingCycleHelper::advance(now(), $cycle)->toDateString(),
+            ]);
+
+            Log::info("RenewOnPayment: addon #{$addon->id} activated, due {$addon->next_due_date}");
+
+            return;
+        }
+
+        $addon->update([
+            'next_due_date' => BillingCycleHelper::advance(Carbon::parse($addon->next_due_date), $cycle)->toDateString(),
+        ]);
+
+        Log::info("RenewOnPayment: addon #{$addon->id} advanced to {$addon->next_due_date}");
+    }
+
     private function renewDomain(int $domainId): void
     {
         $domain = Domain::find($domainId);
-        if (!$domain) {
+        if (! $domain) {
             return;
         }
 
@@ -71,7 +106,7 @@ class RenewOnPaymentListener
         // Delegate to DomainService, which performs the real registrar renewal
         // API call and advances the dates (falling back to a local advance when
         // no registrar module is configured or the API fails).
-        app(\App\Services\DomainService::class)->renewDomain($domain, $years);
+        app(DomainService::class)->renewDomain($domain, $years);
 
         Log::info("RenewOnPayment: domain #{$domain->id} ({$domain->domain}) renewed {$years}y");
     }

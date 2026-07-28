@@ -133,6 +133,8 @@ Route::middleware(['admin.auth'])->prefix('admin')->name('admin.')->group(functi
     });
     Route::middleware('admin.permission:manage_services')->group(function () {
         Route::post('services/{service}/module/{action}', [ServiceController::class, 'moduleAction'])->name('services.module-action');
+        Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
+        Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
     });
 
     // =============================================

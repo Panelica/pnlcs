@@ -64,7 +64,7 @@ class CartService
         return $cart;
     }
 
-    public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null): Cart
+    public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null, array $addons = []): Cart
     {
         $price = $this->getProductPrice($product, $billingCycle);
 
@@ -85,9 +85,17 @@ class CartService
             $notes = trim(($notes ? $notes."\n" : '').$intent);
         }
 
+        // Addons keep their own price: they are billed as separate lines and
+        // renew on their own dates.
+        $addonService = app(AddonService::class);
+        $addonPayload = $addonService->toCartPayload(
+            $addonService->normalise($product, $addons, $billingCycle)
+        );
+
         $data['items'][] = [
             'type' => 'product',
             'product_id' => $product->id,
+            'addons' => $addonPayload,
             'product_name' => $product->name,
             'billing_cycle' => $billingCycle,
             'domain' => $domain,
@@ -173,8 +181,16 @@ class CartService
 
         foreach ($items as $item) {
             $price = (float) ($item['price'] ?? 0);
-            $subtotal += $price;
-            $enrichedItems[] = array_merge($item, ['price' => $price]);
+            $addonTotal = array_sum(array_map(
+                fn ($a) => (float) ($a['price'] ?? 0),
+                $item['addons'] ?? []
+            ));
+            $subtotal += $price + $addonTotal;
+            $enrichedItems[] = array_merge($item, [
+                'price' => $price,
+                'addon_total' => round($addonTotal, 2),
+                'line_total' => round($price + $addonTotal, 2),
+            ]);
         }
 
         $discount = 0.0;
@@ -298,6 +314,22 @@ class CartService
                 // can see it; the money is already inside the service amount.
                 if (! empty($item['config_options'])) {
                     app(ConfigOptionService::class)->attachToService($service, $item['config_options']);
+                }
+
+                if (! empty($item['addons'])) {
+                    $addonService = app(AddonService::class);
+                    foreach ($addonService->attachToService($service, $item['addons'], $order) as $serviceAddon) {
+                        InvoiceItem::create([
+                            'invoice_id' => $invoice->id,
+                            'client_id' => $clientId,
+                            'type' => 'Addon',
+                            'rel_id' => $serviceAddon->id,
+                            'description' => $addonService->describe($serviceAddon),
+                            'amount' => $serviceAddon->amount,
+                            'taxed' => true,
+                            'due_date' => now()->addDays(7),
+                        ]);
+                    }
                 }
             }
         }

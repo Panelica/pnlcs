@@ -122,6 +122,34 @@
             </div>
             @endif
 
+
+            {{-- Addons --}}
+            @if(($addons ?? collect())->isNotEmpty())
+            <div class="pn-card" style="margin-bottom:16px;">
+                <div class="pn-card-header">{{ __('client.cart.addons') }}</div>
+                <div class="pn-card-body">
+                    @php $selectedCycle = old('billing_cycle', $cycles[0] ?? 'monthly'); @endphp
+                    @php $previousAddons = array_map('intval', (array) old('addons', [])); @endphp
+                    @foreach($addons as $addon)
+                        @php $addonPrice = $addon->priceFor($selectedCycle); @endphp
+                        <label style="display:flex; align-items:flex-start; gap:8px; margin-bottom:10px; cursor:pointer;">
+                            <input type="checkbox" name="addons[]" value="{{ $addon->id }}"
+                                   class="cart-addon" data-unit-price="{{ $addonPrice }}"
+                                   @checked(in_array($addon->id, $previousAddons, true))>
+                            <span>
+                                <strong>{{ $addon->name }}</strong>
+                                @if($addonPrice > 0)
+                                    <span style="color:#777;">(+{{ $currency?->prefix }}{{ number_format($addonPrice, 2) }})</span>
+                                @endif
+                                @if($addon->description)
+                                    <br><small style="color:#777;">{{ $addon->description }}</small>
+                                @endif
+                            </span>
+                        </label>
+                    @endforeach
+                </div>
+            </div>
+            @endif
             {{-- Domain --}}
             @if($product->require_domain ?? false)
             <div class="pn-card" style="margin-bottom:16px;">

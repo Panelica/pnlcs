@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Promotion;
 use App\Models\Service;
+use App\Models\ServiceAddon;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -41,11 +42,18 @@ class InvoiceGenerationService
                 ->whereHas('items', fn ($i) => $i->where('type', 'Hosting')->whereColumn('rel_id', 'services.id')))
             ->get();
 
+        // Addons renew on their own dates, so they are collected separately and
+        // then billed on the same invoice as the client's due services.
+        $addons = app(AddonService::class)->dueQuery($cutoff)->get();
+
         $grouped = $services->groupBy('client_id');
+        $groupedAddons = $addons->groupBy('client_id');
         $summary = ['generated' => 0, 'skipped' => 0, 'errors' => 0, 'invoice_ids' => []];
 
-        foreach ($grouped as $clientId => $clientServices) {
-            $client = $clientServices->first()->client;
+        foreach ($grouped->keys()->merge($groupedAddons->keys())->unique() as $clientId) {
+            $clientServices = $grouped->get($clientId, collect());
+            $clientAddons = $groupedAddons->get($clientId, collect());
+            $client = $clientServices->first()?->client ?? $clientAddons->first()?->client;
 
             if (! $client) {
                 $summary['skipped']++;
@@ -54,7 +62,7 @@ class InvoiceGenerationService
             }
 
             try {
-                $invoice = $this->generateForServices($client, $clientServices->all());
+                $invoice = $this->generateForServices($client, $clientServices->all(), $clientAddons->all());
 
                 if ($invoice) {
                     $summary['generated']++;
@@ -82,7 +90,14 @@ class InvoiceGenerationService
             return null;
         }
 
-        return $this->generateForServices($service->client, [$service]);
+        $addons = ServiceAddon::with('addon', 'service')
+            ->where('service_id', $service->id)
+            ->billable()
+            ->whereNotNull('next_due_date')
+            ->get()
+            ->all();
+
+        return $this->generateForServices($service->client, [$service], $addons);
     }
 
     /**
@@ -158,9 +173,9 @@ class InvoiceGenerationService
      *
      * @param  Service[]  $services
      */
-    private function generateForServices(Client $client, array $services): ?Invoice
+    private function generateForServices(Client $client, array $services, array $addons = []): ?Invoice
     {
-        if (empty($services)) {
+        if (empty($services) && empty($addons)) {
             return null;
         }
 
@@ -188,6 +203,12 @@ class InvoiceGenerationService
             foreach ($overageItems as $overageItem) {
                 $items[] = $overageItem;
             }
+        }
+
+        $addonService = app(AddonService::class);
+
+        foreach ($addons as $addon) {
+            $items[] = $addonService->lineItem($addon);
         }
 
         $options = [
