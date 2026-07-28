@@ -7,6 +7,7 @@ use App\Events\InvoicePaid;
 use App\Models\Credit;
 use App\Models\Invoice;
 use App\Models\Transaction;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -36,11 +37,10 @@ class PaymentService
     /**
      * Record a payment against an invoice.
      *
-     * @param  Invoice      $invoice
-     * @param  string       $gateway        Gateway key (e.g. 'stripe', 'banktransfer', 'manual', 'credit')
+     * @param  string  $gateway  Gateway key (e.g. 'stripe', 'banktransfer', 'manual', 'credit')
      * @param  string|null  $transactionId  Gateway transaction reference (used for idempotency)
-     * @param  float|null   $amount         Paid amount; null = remaining balance of the invoice
-     * @param  array        $options        ['fees' => float, 'description' => string]
+     * @param  float|null  $amount  Paid amount; null = remaining balance of the invoice
+     * @param  array  $options  ['fees' => float, 'description' => string]
      * @return array{success: bool, status: string, balance: float, duplicate?: bool}
      */
     public function applyPayment(Invoice $invoice, string $gateway, ?string $transactionId, ?float $amount = null, array $options = []): array
@@ -55,9 +55,10 @@ class PaymentService
                     ->where('transaction_id', $transactionId)
                     ->exists();
                 if ($exists) {
-                    Log::info("PaymentService: duplicate transaction ignored", [
+                    Log::info('PaymentService: duplicate transaction ignored', [
                         'invoice_id' => $invoice->id, 'gateway' => $gateway, 'transaction_id' => $transactionId,
                     ]);
+
                     return ['success' => true, 'status' => $invoice->status, 'balance' => $this->balance($invoice), 'duplicate' => true, 'paid_event' => false];
                 }
             }
@@ -66,12 +67,13 @@ class PaymentService
 
             // Money arriving on a non-payable invoice (already paid, cancelled,
             // refunded) is never discarded — it becomes client credit.
-            if (!in_array($status, self::PAYABLE_STATUSES, true)) {
+            if (! in_array($status, self::PAYABLE_STATUSES, true)) {
                 $amount = (float) ($amount ?? 0);
                 if ($amount > 0) {
                     $this->recordTransaction($invoice, $gateway, $transactionId, $amount, $options);
                     $this->addClientCredit($invoice, $amount, "Payment received on {$status} invoice #{$invoice->invoice_num} — added as credit");
                 }
+
                 return ['success' => true, 'status' => $invoice->status, 'balance' => 0.0, 'paid_event' => false];
             }
 
@@ -94,6 +96,7 @@ class PaymentService
                 Log::info("PaymentService: partial payment on invoice #{$invoice->id}", [
                     'gateway' => $gateway, 'amount' => $amount, 'remaining' => $balance,
                 ]);
+
                 return ['success' => true, 'status' => InvoiceStatus::PartiallyPaid->value, 'balance' => $balance, 'paid_event' => false, 'partial_amount' => $amount];
             }
 
@@ -104,7 +107,7 @@ class PaymentService
             }
 
             $invoice->update([
-                'status'    => InvoiceStatus::Paid->value,
+                'status' => InvoiceStatus::Paid->value,
                 'date_paid' => now(),
             ]);
 
@@ -115,7 +118,7 @@ class PaymentService
             try {
                 app(AffiliateService::class)->processCommission($invoice);
             } catch (\Throwable $e) {
-                Log::warning('PaymentService: affiliate commission failed for invoice #' . $invoice->id . ': ' . $e->getMessage());
+                Log::warning('PaymentService: affiliate commission failed for invoice #'.$invoice->id.': '.$e->getMessage());
             }
 
             return ['success' => true, 'status' => InvoiceStatus::Paid->value, 'balance' => 0.0, 'paid_event' => true];
@@ -128,7 +131,7 @@ class PaymentService
         if (($result['status'] ?? null) === InvoiceStatus::PartiallyPaid->value && ($result['success'] ?? false)) {
             run_hook('InvoicePartiallyPaid', [
                 'invoice' => $invoice->fresh(),
-                'amount'  => $result['partial_amount'] ?? null,
+                'amount' => $result['partial_amount'] ?? null,
                 'balance' => $result['balance'] ?? null,
             ]);
         }
@@ -164,8 +167,8 @@ class PaymentService
      * refunded. 'credit' and 'manual'/'banktransfer' gateways skip the API call
      * (offline refund) but still record the transaction so books stay balanced.
      *
-     * @param  float|null $amount  null = refund the full paid amount
-     * @param  array      $options ['gateway_refund' => bool (default true), 'reason' => string, 'note' => string]
+     * @param  float|null  $amount  null = refund the full paid amount
+     * @param  array  $options  ['gateway_refund' => bool (default true), 'reason' => string, 'note' => string]
      * @return array{success: bool, message: string, amount?: float, status?: string}
      */
     public function refundInvoice(Invoice $invoice, ?float $amount = null, array $options = []): array
@@ -193,40 +196,72 @@ class PaymentService
         $gateway = $payment->gateway ?? $invoice->payment_method ?? 'manual';
         $refundRef = null;
         $offlineGateways = ['manual', 'banktransfer', 'credit', 'system'];
-        $useGateway = ($options['gateway_refund'] ?? true) && !in_array($gateway, $offlineGateways, true);
+        $useGateway = ($options['gateway_refund'] ?? true) && ! in_array($gateway, $offlineGateways, true);
 
         if ($useGateway) {
-            $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule($gateway);
-            if (!$module) {
+            $module = app(ModuleRegistry::class)->getGatewayModule($gateway);
+            if (! $module) {
                 return ['success' => false, 'message' => "Gateway '{$gateway}' is not available for an automatic refund. Use an offline refund instead."];
             }
-            if (!$payment || !$payment->transaction_id) {
+            if (! $payment || ! $payment->transaction_id) {
                 return ['success' => false, 'message' => 'No gateway transaction reference found to refund against.'];
             }
 
             $result = $module->refund($payment->transaction_id, $amount);
-            if (!($result['success'] ?? false)) {
+            if (! ($result['success'] ?? false)) {
                 Log::error('PaymentService: gateway refund failed', ['invoice_id' => $invoice->id, 'gateway' => $gateway, 'message' => $result['message'] ?? '']);
-                return ['success' => false, 'message' => 'Gateway refund failed: ' . ($result['message'] ?? 'unknown error')];
+
+                return ['success' => false, 'message' => 'Gateway refund failed: '.($result['message'] ?? 'unknown error')];
             }
             $refundRef = $result['refund_id'] ?? null;
         }
 
         DB::transaction(function () use ($invoice, $gateway, $amount, $refundRef, $options, $payment) {
             Transaction::create([
-                'client_id'      => $invoice->client_id,
-                'invoice_id'     => $invoice->id,
-                'gateway'        => $gateway,
-                'date'           => now()->toDateString(),
-                'description'    => 'Refund for Invoice #' . ($invoice->invoice_num ?? $invoice->id)
-                    . (!empty($options['reason']) ? ' — ' . $options['reason'] : ''),
-                'amount_in'      => 0,
-                'fees'           => 0,
-                'amount_out'     => $amount,
-                'rate'           => 1,
+                'client_id' => $invoice->client_id,
+                'invoice_id' => $invoice->id,
+                'gateway' => $gateway,
+                'date' => now()->toDateString(),
+                'description' => 'Refund for Invoice #'.($invoice->invoice_num ?? $invoice->id)
+                    .(! empty($options['reason']) ? ' — '.$options['reason'] : ''),
+                'amount_in' => 0,
+                'fees' => 0,
+                'amount_out' => $amount,
+                'rate' => 1,
                 'transaction_id' => $refundRef,
-                'refund_id'      => $payment?->id,
+                'refund_id' => $payment?->id,
             ]);
+
+            // Money paid into an Add Funds invoice became client credit when it
+            // was settled. Handing the cash back has to take that balance with
+            // it, or the customer keeps the funds twice.
+            $addFunds = (float) $invoice->items()->where('type', 'AddFunds')->sum('amount');
+            $client = $invoice->client;
+
+            if ($addFunds > 0.009 && $client) {
+                $reclaim = min($amount, $addFunds, (float) $client->credit);
+
+                if ($reclaim > 0.009) {
+                    $client->decrement('credit', $reclaim);
+                    Credit::create([
+                        'client_id' => $client->id,
+                        'admin_id' => null,
+                        'date' => now()->toDateString(),
+                        'description' => "Refund of invoice #{$invoice->invoice_num} — funds returned",
+                        'amount' => -$reclaim,
+                    ]);
+                }
+
+                if ($amount - $reclaim > 0.009) {
+                    // They had already spent some of it; the rest cannot be
+                    // clawed back from a balance that is no longer there.
+                    Log::warning('PaymentService: refunded more than the remaining credit', [
+                        'invoice_id' => $invoice->id,
+                        'refunded' => $amount,
+                        'reclaimed' => $reclaim,
+                    ]);
+                }
+            }
 
             $stillPaid = $this->amountPaid($invoice->fresh());
             $invoice->update([
@@ -237,9 +272,9 @@ class PaymentService
         });
 
         run_hook('RefundIssued', [
-            'invoice'  => $invoice->fresh(),
-            'amount'   => $amount,
-            'gateway'  => $gateway,
+            'invoice' => $invoice->fresh(),
+            'amount' => $amount,
+            'gateway' => $gateway,
             'refund_id' => $refundRef,
         ]);
 
@@ -247,24 +282,24 @@ class PaymentService
 
         return [
             'success' => true,
-            'message' => 'Refund of ' . number_format($amount, 2) . ' processed.',
-            'amount'  => $amount,
-            'status'  => $invoice->fresh()->status,
+            'message' => 'Refund of '.number_format($amount, 2).' processed.',
+            'amount' => $amount,
+            'status' => $invoice->fresh()->status,
         ];
     }
 
     private function recordTransaction(Invoice $invoice, string $gateway, ?string $transactionId, float $amount, array $options): Transaction
     {
         return Transaction::create([
-            'client_id'      => $invoice->client_id,
-            'invoice_id'     => $invoice->id,
-            'gateway'        => $gateway,
-            'date'           => now()->toDateString(),
-            'description'    => $options['description'] ?? ('Payment for Invoice #' . ($invoice->invoice_num ?? $invoice->id)),
-            'amount_in'      => $amount,
-            'fees'           => (float) ($options['fees'] ?? 0),
-            'amount_out'     => 0,
-            'rate'           => 1,
+            'client_id' => $invoice->client_id,
+            'invoice_id' => $invoice->id,
+            'gateway' => $gateway,
+            'date' => now()->toDateString(),
+            'description' => $options['description'] ?? ('Payment for Invoice #'.($invoice->invoice_num ?? $invoice->id)),
+            'amount_in' => $amount,
+            'fees' => (float) ($options['fees'] ?? 0),
+            'amount_out' => 0,
+            'rate' => 1,
             'transaction_id' => $transactionId,
         ]);
     }
@@ -272,17 +307,17 @@ class PaymentService
     private function addClientCredit(Invoice $invoice, float $amount, string $description): void
     {
         $client = $invoice->client;
-        if (!$client) {
+        if (! $client) {
             return;
         }
 
         $client->increment('credit', $amount);
         Credit::create([
-            'client_id'   => $client->id,
-            'admin_id'    => null,
-            'date'        => now()->toDateString(),
+            'client_id' => $client->id,
+            'admin_id' => null,
+            'date' => now()->toDateString(),
             'description' => $description,
-            'amount'      => $amount,
+            'amount' => $amount,
         ]);
     }
 

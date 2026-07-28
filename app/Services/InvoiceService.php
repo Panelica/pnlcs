@@ -3,15 +3,14 @@
 namespace App\Services;
 
 use App\Enums\InvoiceStatus;
+use App\Events\InvoiceCreated;
+use App\Events\InvoicePaid;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\TaxRule;
 use App\Models\Transaction;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Events\InvoiceCreated;
-use App\Events\InvoicePaid;
 
 class InvoiceService
 {
@@ -23,20 +22,20 @@ class InvoiceService
     {
         $invoice = DB::transaction(function () use ($client, $items, $options) {
             $invoice = Invoice::create([
-                'client_id'      => $client->id,
-                'invoice_num'    => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
-                'date'           => $options['date'] ?? now()->toDateString(),
-                'due_date'       => $options['due_date'] ?? now()->addDays(14)->toDateString(),
-                'status'         => $options['status'] ?? InvoiceStatus::Unpaid->value,
+                'client_id' => $client->id,
+                'invoice_num' => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
+                'date' => $options['date'] ?? now()->toDateString(),
+                'due_date' => $options['due_date'] ?? now()->addDays(14)->toDateString(),
+                'status' => $options['status'] ?? InvoiceStatus::Unpaid->value,
                 'payment_method' => $options['payment_method'] ?? null,
-                'notes'          => $options['notes'] ?? null,
-                'subtotal'       => 0,
-                'credit'         => 0,
-                'tax'            => 0,
-                'tax2'           => 0,
-                'total'          => 0,
-                'tax_rate'       => 0,
-                'tax_rate2'      => 0,
+                'notes' => $options['notes'] ?? null,
+                'subtotal' => 0,
+                'credit' => 0,
+                'tax' => 0,
+                'tax2' => 0,
+                'total' => 0,
+                'tax_rate' => 0,
+                'tax_rate2' => 0,
             ]);
 
             foreach ($items as $itemData) {
@@ -48,7 +47,9 @@ class InvoiceService
 
         event(new InvoiceCreated($invoice));
 
-        return $invoice;
+        $this->applyAvailableCredit($invoice);
+
+        return $invoice->fresh();
     }
 
     /**
@@ -57,14 +58,14 @@ class InvoiceService
     public function addLineItem(Invoice $invoice, array $itemData): InvoiceItem
     {
         $item = InvoiceItem::create([
-            'invoice_id'  => $invoice->id,
-            'client_id'   => $invoice->client_id,
-            'type'        => $itemData['type'] ?? 'Other',
-            'rel_id'      => $itemData['rel_id'] ?? 0,
+            'invoice_id' => $invoice->id,
+            'client_id' => $invoice->client_id,
+            'type' => $itemData['type'] ?? 'Other',
+            'rel_id' => $itemData['rel_id'] ?? 0,
             'description' => $itemData['description'] ?? '',
-            'amount'      => $itemData['amount'] ?? 0,
-            'taxed'       => $itemData['taxed'] ?? true,
-            'due_date'    => $itemData['due_date'] ?? null,
+            'amount' => $itemData['amount'] ?? 0,
+            'taxed' => $itemData['taxed'] ?? true,
+            'due_date' => $itemData['due_date'] ?? null,
         ]);
 
         $this->recalculateTotals($invoice->fresh());
@@ -86,28 +87,27 @@ class InvoiceService
             ->sum('amount');
 
         // Use stored tax rates if available, otherwise calculate from rules
-        $taxRate  = (float) $invoice->tax_rate;
+        $taxRate = (float) $invoice->tax_rate;
         $taxRate2 = (float) $invoice->tax_rate2;
 
-        if ($taxRate === 0.0 && !$invoice->client->tax_exempt) {
+        if ($taxRate === 0.0 && ! $invoice->client->tax_exempt) {
             $taxData = $this->calculateTax($taxableAmount, $invoice->client_id);
             $taxRate = $taxData['tax_rate'];
         }
 
-        $taxAmount  = $taxRate  > 0 ? round($taxableAmount * ($taxRate  / 100), 2) : 0;
+        $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
         $taxAmount2 = $taxRate2 > 0 ? round($taxableAmount * ($taxRate2 / 100), 2) : 0;
 
         $credit = (float) $invoice->credit;
-        $total  = max(0, $subtotal + $taxAmount + $taxAmount2 - $credit);
+        $total = max(0, $subtotal + $taxAmount + $taxAmount2 - $credit);
 
         $invoice->update([
             'subtotal' => $subtotal,
-            'tax'      => $taxAmount,
-            'tax2'     => $taxAmount2,
+            'tax' => $taxAmount,
+            'tax2' => $taxAmount2,
             'tax_rate' => $taxRate,
-            'total'    => $total,
+            'total' => $total,
         ]);
-
 
         return $invoice->fresh();
     }
@@ -130,6 +130,30 @@ class InvoiceService
     }
 
     /**
+     * Spend whatever the customer has already paid in.
+     *
+     * Credit arrives from the Add Funds page, from overpayments and from money
+     * landing on an already-settled invoice. Nothing called applyCredit(), so
+     * the balance sat there while the customer was invoiced in full.
+     */
+    private function applyAvailableCredit(Invoice $invoice): void
+    {
+        $client = $invoice->client;
+
+        if (! $client || (float) $client->credit <= 0) {
+            return;
+        }
+
+        // An Add Funds invoice must not be settled out of the balance it is
+        // meant to top up, or the money goes round in a circle.
+        if ($invoice->items()->where('type', 'AddFunds')->exists()) {
+            return;
+        }
+
+        $this->applyCredit($invoice, (float) $client->credit);
+    }
+
+    /**
      * Apply client credit to an invoice.
      * Reduces the balance by the given amount (capped at invoice total).
      */
@@ -146,7 +170,7 @@ class InvoiceService
         // Cap at available credit and the invoice's remaining balance
         // (balance accounts for partial payments already recorded).
         $balance = app(PaymentService::class)->balance($invoice);
-        $amount  = min($amount, $availableCredit, $balance);
+        $amount = min($amount, $availableCredit, $balance);
 
         if ($amount <= 0) {
             return $invoice;
@@ -154,11 +178,11 @@ class InvoiceService
 
         $invoice = DB::transaction(function () use ($invoice, $amount, $client) {
             $newCredit = (float) $invoice->credit + $amount;
-            $newTotal  = max(0, (float) $invoice->total - $amount);
+            $newTotal = max(0, (float) $invoice->total - $amount);
 
             $invoice->update([
                 'credit' => $newCredit,
-                'total'  => $newTotal,
+                'total' => $newTotal,
             ]);
 
             // Deduct from client credit balance
@@ -182,7 +206,7 @@ class InvoiceService
     public function generateInvoiceNumber(): string
     {
         $prefix = config('billing.invoice_prefix', 'INV-');
-        $latest = Invoice::where('invoice_num', 'like', $prefix . '%')
+        $latest = Invoice::where('invoice_num', 'like', $prefix.'%')
             ->orderByDesc('id')
             ->value('invoice_num');
 
@@ -193,7 +217,7 @@ class InvoiceService
             $next = 1;
         }
 
-        return $prefix . str_pad($next, 6, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($next, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -206,7 +230,6 @@ class InvoiceService
         }
 
         $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
-
 
         return $invoice->fresh();
     }
@@ -221,9 +244,9 @@ class InvoiceService
             return ['tax' => 0.0, 'tax_rate' => 0.0];
         }
 
-        $client = \App\Models\Client::find($clientId);
+        $client = Client::find($clientId);
 
-        if (!$client || $client->tax_exempt) {
+        if (! $client || $client->tax_exempt) {
             return ['tax' => 0.0, 'tax_rate' => 0.0];
         }
 
@@ -231,18 +254,18 @@ class InvoiceService
         $rule = TaxRule::where('country', $client->country)
             ->where(function ($q) use ($client) {
                 $q->where('state', $client->state)
-                  ->orWhere('state', '')
-                  ->orWhereNull('state');
+                    ->orWhere('state', '')
+                    ->orWhereNull('state');
             })
-            ->orderByRaw("CASE WHEN state = ? THEN 0 ELSE 1 END", [$client->state ?? ''])
+            ->orderByRaw('CASE WHEN state = ? THEN 0 ELSE 1 END', [$client->state ?? ''])
             ->where('level', 1)
             ->first();
 
-        if (!$rule) {
+        if (! $rule) {
             return ['tax' => 0.0, 'tax_rate' => 0.0];
         }
 
-        $rate      = (float) $rule->tax_rate;
+        $rate = (float) $rule->tax_rate;
         $taxAmount = round($amount * ($rate / 100), 2);
 
         return ['tax' => $taxAmount, 'tax_rate' => $rate];
