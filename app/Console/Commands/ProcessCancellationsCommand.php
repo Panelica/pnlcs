@@ -2,24 +2,33 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\ServiceTerminationMail;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\ServiceTerminationMail;
 
 class ProcessCancellationsCommand extends Command
 {
     protected $signature = 'pnlcs:process-cancellations';
+
     protected $description = 'Process services with pending end-of-billing cancellations';
 
     public function handle(): int
     {
-        $services = Service::with('server', 'product', 'client')
+        // The request type used to be ignored entirely: every cancellation
+        // waited for the paid period to end, so a customer who asked to stop
+        // immediately kept a running service and the choice on the form meant
+        // nothing.
+        $services = Service::with('server', 'product', 'client', 'cancellationRequest')
             ->where('status', 'active')
             ->whereHas('cancellationRequest')
-            ->where('next_due_date', '<=', now())
+            ->where(function ($q) {
+                $q->whereHas('cancellationRequest', fn ($c) => $c->whereRaw(
+                    "LOWER(REPLACE(REPLACE(type, ' ', '_'), '-', '_')) = ?", ['immediate']
+                ))->orWhere('next_due_date', '<=', now());
+            })
             ->get();
 
         $processed = 0;
@@ -33,7 +42,7 @@ class ProcessCancellationsCommand extends Command
             if ($serverModule) {
                 try {
                     $result = $serverModule->terminate($service);
-                    if (!$result['success']) {
+                    if (! $result['success']) {
                         Log::warning("Cancellation terminate failed for service #{$service->id}: {$result['message']}");
                     }
                 } catch (\Throwable $e) {
@@ -58,6 +67,7 @@ class ProcessCancellationsCommand extends Command
         }
 
         $this->info("Processed {$processed} cancellation(s).");
+
         return Command::SUCCESS;
     }
 }
