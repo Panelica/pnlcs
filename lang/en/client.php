@@ -807,6 +807,10 @@ return [
         'type_network' => 'Network',
         'type_server' => 'Server',
     ],
+    'maintenance' => [
+        'title' => 'We are back shortly',
+        'body' => 'The customer portal is temporarily unavailable while we carry out scheduled maintenance. Please try again in a little while — existing services are unaffected.',
+    ],
     'payment_methods' => [
         'account_label' => 'Account holder / bank name',
         'account_placeholder' => 'e.g. John Doe — Example Bank',

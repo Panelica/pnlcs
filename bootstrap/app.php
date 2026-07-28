@@ -6,6 +6,7 @@ use App\Http\Middleware\AffiliateTracking;
 use App\Http\Middleware\ApiKeyAuth;
 use App\Http\Middleware\BlockBannedIp;
 use App\Http\Middleware\CheckAdminPermission;
+use App\Http\Middleware\MaintenanceMode;
 use App\Http\Middleware\RedirectToInstaller;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TwoFactorVerify;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToGroup('web', RedirectToInstaller::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', SetLocale::class);
+        $middleware->appendToGroup('web', MaintenanceMode::class);
         $middleware->appendToGroup('api', ApiKeyAuth::class);
         $middleware->alias([
             'banned.ip' => BlockBannedIp::class,

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Providers;
 
 use App\Models\Setting;
@@ -17,20 +18,20 @@ class MailConfigProvider extends ServiceProvider
                     : ($settings['SMTPSecurity'] ?? 'tls');
 
                 config([
-                    'mail.default'                => 'smtp',
-                    'mail.mailers.smtp.host'       => $settings['SMTPHost'] ?? 'localhost',
-                    'mail.mailers.smtp.port'       => (int)($settings['SMTPPort'] ?? 587),
-                    'mail.mailers.smtp.username'   => $settings['SMTPUsername'] ?? null,
-                    'mail.mailers.smtp.password'   => $settings['SMTPPassword'] ?? null,
+                    'mail.default' => 'smtp',
+                    'mail.mailers.smtp.host' => $settings['SMTPHost'] ?? 'localhost',
+                    'mail.mailers.smtp.port' => (int) ($settings['SMTPPort'] ?? 587),
+                    'mail.mailers.smtp.username' => $settings['SMTPUsername'] ?? null,
+                    'mail.mailers.smtp.password' => $settings['SMTPPassword'] ?? null,
                     'mail.mailers.smtp.encryption' => $encryption,
                 ]);
             }
 
-            if (!empty($settings['SystemEmailAddress'])) {
+            if (! empty($settings['SystemEmailAddress'])) {
                 config(['mail.from.address' => $settings['SystemEmailAddress']]);
             }
 
-            if (!empty($settings['EmailFromName'])) {
+            if (! empty($settings['EmailFromName'])) {
                 config(['mail.from.name' => $settings['EmailFromName']]);
             }
         } catch (\Throwable $e) {
