@@ -28,7 +28,7 @@
             <td style="text-transform:capitalize;">{{ $promo->type }}</td>
             <td>{{ $promo->type === 'percentage' ? $promo->value . '%' : '$' . number_format($promo->value, 2) }}</td>
             <td>{{ $promo->uses ?? 0 }}{{ $promo->max_uses ? ' / ' . $promo->max_uses : '' }}</td>
-            <td style="font-size:12px;">{{ $promo->expiration_date?->format('d M Y') ?? __('admin.promotions.never') }}</td>
+            <td style="font-size:12px;">{{ $promo->expiration_date?->format(date_fmt()) ?? __('admin.promotions.never') }}</td>
             <td><span class="badge-{{ $promo->isValid() ? 'active' : 'suspended' }}">{{ $promo->isValid() ? __('common.status.active') : __('common.status.inactive') }}</span></td>
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.promotions.destroy', $promo) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.promotions.confirm_delete') }}')">

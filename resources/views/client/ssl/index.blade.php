@@ -28,7 +28,7 @@
                 @if($order->crt_expires)
                     <p class="mb-2">
                         <small class="text-muted">{{ __('client.ssl.expires') }}</small>
-                        {{ $order->crt_expires->format('d M Y') }}
+                        {{ $order->crt_expires->format(date_fmt()) }}
                         @if($order->daysUntilExpiry() !== null && $order->daysUntilExpiry() <= 30)
                             <span class="text-warning">({{ $order->daysUntilExpiry() }}d)</span>
                         @endif
@@ -37,7 +37,7 @@
 
                 <p class="mb-0">
                     <small class="text-muted">{{ __('client.ssl.ordered') }}</small>
-                    {{ $order->created_at->format('d M Y') }}
+                    {{ $order->created_at->format(date_fmt()) }}
                 </p>
             </div>
             <div class="card-footer bg-transparent">

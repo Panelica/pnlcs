@@ -37,7 +37,8 @@
             "Modules\\": "modules/"
         },
         "files": [
-            "app/Support/hooks.php"
+            "app/Support/hooks.php",
+            "app/Support/formatting.php"
         ]
     },
     "autoload-dev": {

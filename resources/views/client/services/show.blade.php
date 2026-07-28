@@ -23,8 +23,8 @@
                 <li><span class="key">{{ __('client.cart.product') }}</span><span class="val">{{ $service->product?->name ?? "N/A" }}</span></li>
                 <li><span class="key">{{ __('client.cart.billing_cycle') }}</span><span class="val" style="text-transform:capitalize">{{ $service->billing_cycle ?? "N/A" }}</span></li>
                 <li><span class="key">{{ __('client.services.amount') }}</span><span class="val">${{ number_format($service->amount, 2) }} / {{ $service->billing_cycle }}</span></li>
-                <li><span class="key">{{ __('client.services.next_due_date') }}</span><span class="val">{{ $service->next_due_date?->format("d M Y") ?? "N/A" }}</span></li>
-                <li><span class="key">{{ __('client.services.registration_date') }}</span><span class="val">{{ $service->registration_date?->format("d M Y") ?? "N/A" }}</span></li>
+                <li><span class="key">{{ __('client.services.next_due_date') }}</span><span class="val">{{ $service->next_due_date?->format(date_fmt()) ?? "N/A" }}</span></li>
+                <li><span class="key">{{ __('client.services.registration_date') }}</span><span class="val">{{ $service->registration_date?->format(date_fmt()) ?? "N/A" }}</span></li>
                 <li><span class="key">{{ __('client.checkout.payment_method') }}</span><span class="val" style="text-transform:capitalize">{{ $service->payment_method ?? "N/A" }}</span></li>
                 <li>
                     <span class="key">{{ __('client.services.auto_renew') }}</span>
@@ -113,7 +113,7 @@
                     <td>{{ __('client.services.addon_prefix', ['id' => $addon->addon_id ?? $addon->id]) }}</td>
                     <td>${{ number_format($addon->amount, 2) }}</td>
                     <td style="text-transform:capitalize">{{ $addon->billing_cycle }}</td>
-                    <td class="text-muted text-sm">{{ $addon->next_due_date?->format("d M Y") ?? "-" }}</td>
+                    <td class="text-muted text-sm">{{ $addon->next_due_date?->format(date_fmt()) ?? "-" }}</td>
                     <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ __('client.status.' . strtolower($addon->status)) }}</span></td>
                 </tr>
                 @endforeach

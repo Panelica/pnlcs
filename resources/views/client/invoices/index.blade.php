@@ -26,8 +26,8 @@
                 @forelse($invoices as $inv)
                 <tr style="{{ in_array(strtolower($inv->status), ["unpaid","overdue"]) ? "background:#fffbeb" : "" }}">
                     <td><a href="{{ route("client.invoices.show", $inv) }}" style="font-weight:600">#{{ $inv->invoice_num ?? $inv->id }}</a></td>
-                    <td class="text-muted text-sm">{{ $inv->date?->format("d M Y") ?? "-" }}</td>
-                    <td class="text-muted text-sm" style="{{ strtolower($inv->status) === "overdue" ? "color:var(--danger);font-weight:600" : "" }}">{{ $inv->due_date?->format("d M Y") ?? "-" }}</td>
+                    <td class="text-muted text-sm">{{ $inv->date?->format(date_fmt()) ?? "-" }}</td>
+                    <td class="text-muted text-sm" style="{{ strtolower($inv->status) === "overdue" ? "color:var(--danger);font-weight:600" : "" }}">{{ $inv->due_date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="font-weight:700">${{ number_format($inv->total, 2) }}</td>
                     <td><span class="badge badge-{{ strtolower($inv->status) }}">{{ __('client.status.' . strtolower($inv->status)) }}</span></td>
                     <td>

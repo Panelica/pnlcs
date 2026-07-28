@@ -11,8 +11,8 @@
     <div>
         <h1 class="pn-page-title">{{ __('client.quotes.quote_prefix', ['id' => $quote->id]) }} — {{ $quote->subject }}</h1>
         <p class="pn-page-subtitle">
-            {{ __('client.quotes.issued') }} {{ $quote->date ? \Carbon\Carbon::parse($quote->date)->format('d M Y') : '-' }}
-            @if($quote->valid_until) &nbsp;·&nbsp; {{ __('client.quotes.valid_until') }}: <strong>{{ \Carbon\Carbon::parse($quote->valid_until)->format('d M Y') }}</strong> @endif
+            {{ __('client.quotes.issued') }} {{ $quote->date ? \Carbon\Carbon::parse($quote->date)->format(date_fmt()) : '-' }}
+            @if($quote->valid_until) &nbsp;·&nbsp; {{ __('client.quotes.valid_until') }}: <strong>{{ \Carbon\Carbon::parse($quote->valid_until)->format(date_fmt()) }}</strong> @endif
         </p>
     </div>
     <span class="badge badge-{{ strtolower($quote->status) }}" style="font-size:13px;padding:5px 14px">{{ __('client.status.' . strtolower($quote->status)) }}</span>

@@ -7,8 +7,8 @@
 
 **{{ __('email.ssl_issued.certificate_details') }}**
 - **{{ __('email.common.domain_label') }}:** {{ $order->domain }}
-- **{{ __('email.ssl_issued.issued') }}:** {{ $order->completion_date?->format('d M Y') }}
-- **{{ __('email.ssl_issued.expires') }}:** {{ $order->crt_expires?->format('d M Y') }}
+- **{{ __('email.ssl_issued.issued') }}:** {{ $order->completion_date?->format(date_fmt()) }}
+- **{{ __('email.ssl_issued.expires') }}:** {{ $order->crt_expires?->format(date_fmt()) }}
 
 <x-mail::button :url="$downloadUrl">
 {{ __('email.ssl_issued.download_button') }}

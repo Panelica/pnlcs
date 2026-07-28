@@ -4,7 +4,7 @@
 <div class="page-header">
     <div>
         <h1>{{ $project->title }}</h1>
-        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $project->client?->full_name ?? 'N/A' }} &bull; Created {{ $project->created_at->format('d M Y') }}</div>
+        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $project->client?->full_name ?? 'N/A' }} &bull; Created {{ $project->created_at->format(date_fmt()) }}</div>
     </div>
     <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.projects.back') }}</a>
 </div>
@@ -27,7 +27,7 @@
         </div>
         <div class="stat-label">{{ $pct }}% Progress</div>
     </div>
-    <div class="stat-card"><div class="stat-value" style="font-size:16px;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format('d M Y') : '—' }}</div><div class="stat-label">{{ __('admin.projects.due_date_label') }}</div></div>
+    <div class="stat-card"><div class="stat-value" style="font-size:16px;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format(date_fmt()) : '—' }}</div><div class="stat-label">{{ __('admin.projects.due_date_label') }}</div></div>
 </div>
 
 <div style="display:grid;grid-template-columns:1fr 300px;gap:15px;">
@@ -47,7 +47,7 @@
                     <div style="flex:1;">
                         <p style="margin:0;font-size:13px;{{ $task->completed ? 'text-decoration:line-through;color:#999;' : '' }}">{{ $task->task }}</p>
                         @if($task->notes)<p style="margin:3px 0 0;font-size:12px;color:#999;">{{ $task->notes }}</p>@endif
-                        @if($task->due_date)<p style="margin:3px 0 0;font-size:11px;color:#aaa;">Due: {{ \Carbon\Carbon::parse($task->due_date)->format('d M Y') }}</p>@endif
+                        @if($task->due_date)<p style="margin:3px 0 0;font-size:11px;color:#aaa;">Due: {{ \Carbon\Carbon::parse($task->due_date)->format(date_fmt()) }}</p>@endif
                     </div>
                     <form method="POST" action="{{ route('admin.projects.tasks.destroy', [$project, $task]) }}" onsubmit="return confirm('{{ __('admin.projects.confirm_delete_task') }}')">
                         @csrf @method('DELETE')
@@ -106,8 +106,8 @@
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.client') }}</td><td style="padding:4px 0;font-weight:600;">{{ $project->client?->full_name ?? 'N/A' }}</td></tr>
-                    @if($project->start_date)<tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.start') }}</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->start_date)->format('d M Y') }}</td></tr>@endif
-                    @if($project->due_date)<tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.due') }}</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->due_date)->format('d M Y') }}</td></tr>@endif
+                    @if($project->start_date)<tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.start') }}</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->start_date)->format(date_fmt()) }}</td></tr>@endif
+                    @if($project->due_date)<tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.due') }}</td><td style="padding:4px 0;">{{ \Carbon\Carbon::parse($project->due_date)->format(date_fmt()) }}</td></tr>@endif
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.projects.messages') }}</td><td style="padding:4px 0;">{{ $project->messages->count() }}</td></tr>
                 </table>
                 @if($project->description)

@@ -21,9 +21,9 @@
         <div class="panel-heading panel-primary">{{ __('admin.domains.registration') }}</div>
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.domains.registration_date') }}</td><td style="padding:5px 0;">{{ $domain->registration_date?->format('d M Y') ?? '-' }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.expiry_date') }}</td><td style="padding:5px 0;{{ $domain->expiry_date?->isPast() ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $domain->expiry_date?->format('d M Y') ?? '-' }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.next_due_date') }}</td><td style="padding:5px 0;">{{ $domain->next_due_date?->format('d M Y') ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.domains.registration_date') }}</td><td style="padding:5px 0;">{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.expiry_date') }}</td><td style="padding:5px 0;{{ $domain->expiry_date?->isPast() ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $domain->expiry_date?->format(date_fmt()) ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.next_due_date') }}</td><td style="padding:5px 0;">{{ $domain->next_due_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.period') }}</td><td style="padding:5px 0;">{{ $domain->registration_period }} year(s)</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.type') }}</td><td style="padding:5px 0;">{{ $domain->type }}</td></tr>
                 @if($domain->order_id)

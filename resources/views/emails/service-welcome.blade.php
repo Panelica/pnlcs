@@ -13,7 +13,7 @@
 @if($service->username)
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.username_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->username }}</td></tr>
 @endif
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.service_welcome.next_due_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->next_due_date?->format('M d, Y') ?? 'N/A' }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.service_welcome.next_due_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->next_due_date?->format(date_fmt()) ?? 'N/A' }}</td></tr>
 </table>
 
 <p>{{ __('email.service_welcome.manage_service') }}</p>

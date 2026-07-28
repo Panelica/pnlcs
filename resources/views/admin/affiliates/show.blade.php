@@ -65,7 +65,7 @@
             <tbody>
             @forelse($transactions as $tx)
             <tr>
-                <td>{{ $tx->date?->format('d M Y H:i') ?? 'N/A' }}</td>
+                <td>{{ $tx->date?->format(datetime_fmt()) ?? 'N/A' }}</td>
                 <td>{{ $tx->description }}</td>
                 <td>${{ number_format(abs($tx->amount), 2) }}</td>
                 <td>{{ $tx->gateway }}</td>

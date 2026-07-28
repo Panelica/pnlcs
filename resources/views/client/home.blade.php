@@ -89,7 +89,7 @@
                     @foreach($recentInvoices as $invoice)
                     <tr>
                         <td><a href="{{ route("client.invoices.show", $invoice) }}">#{{ $invoice->invoice_num ?? $invoice->id }}</a></td>
-                        <td class="text-muted text-sm">{{ $invoice->due_date?->format("d M Y") ?? "-" }}</td>
+                        <td class="text-muted text-sm">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
                         <td style="font-weight:600">${{ number_format($invoice->total, 2) }}</td>
                         <td><span class="badge badge-{{ strtolower($invoice->status) }}">{{ __('client.status.' . strtolower($invoice->status)) }}</span></td>
                     </tr>
@@ -142,7 +142,7 @@
                     <td><a href="{{ route("client.services.show", $service) }}">{{ $service->product?->name ?? __('client.dashboard.service_fallback', ['id' => $service->id]) }}</a></td>
                     <td class="text-muted">{{ $service->domain ?? "-" }}</td>
                     <td style="font-weight:600">${{ number_format($service->amount, 2) }}<span class="text-muted text-sm">/{{ $service->billing_cycle }}</span></td>
-                    <td class="text-muted text-sm">{{ $service->next_due_date?->format("d M Y") ?? "N/A" }}</td>
+                    <td class="text-muted text-sm">{{ $service->next_due_date?->format(date_fmt()) ?? "N/A" }}</td>
                     <td><span class="badge badge-active">{{ __('client.status.active') }}</span></td>
                 </tr>
                 @endforeach

@@ -49,7 +49,7 @@
                     <a href="{{ route("admin.clients.show", $order->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $order->client?->full_name ?? "Deleted Client" }}</a>
                     @else N/A @endif
                 </td>
-                <td style="color:#666;">{{ $order->date?->format("d M Y") ?? "-" }}</td>
+                <td style="color:#666;">{{ $order->date?->format(date_fmt()) ?? "-" }}</td>
                 <td style="text-align:right;font-weight:500;">${{ number_format($order->amount, 2) }}</td>
                 <td style="color:#666;">{{ $order->payment_method ?? "-" }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($order->status ?? "") }}</span></td>

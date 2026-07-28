@@ -31,7 +31,7 @@
             <td style="font-weight:600;">{{ $cred->description ?: __('admin.api_credentials.no_description') }}</td>
             <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">{{ $cred->identifier }}</code></td>
             <td style="font-size:12px;">{{ $cred->admin->full_name ?? 'N/A' }}</td>
-            <td style="font-size:12px;color:#777;">{{ $cred->created_at?->format('d M Y H:i') ?? '-' }}</td>
+            <td style="font-size:12px;color:#777;">{{ $cred->created_at?->format(datetime_fmt()) ?? '-' }}</td>
             <td><span class="badge {{ $cred->active ? 'badge-active' : 'badge-suspended' }}">{{ $cred->active ? __('common.status.active') : __('common.status.disabled') }}</span></td>
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $cred) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.api_credentials.confirm_revoke") }}')">

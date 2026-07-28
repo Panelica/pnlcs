@@ -5,6 +5,7 @@ use App\Models\AdminRole;
 use App\Models\Domain;
 use App\Models\Product;
 use App\Models\Service;
+use App\Models\Setting;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 
 beforeEach(function () {
@@ -165,6 +166,10 @@ test('domain detail shows registration dates', function () {
         'registration_date' => '2024-01-15',
         'expiry_date' => '2025-01-15',
     ]);
+
+    // Dates follow the DateFormat setting rather than a pattern baked
+    // into the view.
+    Setting::updateOrCreate(['setting' => 'DateFormat'], ['value' => 'd M Y']);
 
     $response = $this->get(route('admin.domains.show', $domain));
 

@@ -79,10 +79,10 @@
         <div class="address-box">
             <h4>{{ __('pdf.invoice_details') }}</h4>
             <table class="meta-table">
-                <tr><td class="meta-label">{{ __('pdf.invoice_date') }}:</td><td>{{ $invoice->date?->format('M d, Y') ?? '-' }}</td></tr>
-                <tr><td class="meta-label">{{ __('pdf.due_date') }}:</td><td>{{ $invoice->due_date?->format('M d, Y') ?? '-' }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.invoice_date') }}:</td><td>{{ $invoice->date?->format(date_fmt()) ?? '-' }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.due_date') }}:</td><td>{{ $invoice->due_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 @if($invoice->date_paid)
-                <tr><td class="meta-label">{{ __('pdf.date_paid') }}:</td><td>{{ $invoice->date_paid->format('M d, Y') }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.date_paid') }}:</td><td>{{ $invoice->date_paid->format(date_fmt()) }}</td></tr>
                 @endif
                 @if($invoice->payment_method)
                 <tr><td class="meta-label">{{ __('pdf.payment_method') }}:</td><td>{{ ucfirst($invoice->payment_method) }}</td></tr>

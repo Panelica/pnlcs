@@ -9,8 +9,8 @@
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.domain_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->domain }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.domain_registration.registration_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->registration_date?->format('M d, Y') ?? now()->format('M d, Y') }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.domain_registration.expiry_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->expiry_date?->format('M d, Y') ?? 'N/A' }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.domain_registration.registration_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->registration_date?->format(date_fmt()) ?? now()->format(date_fmt()) }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.domain_registration.expiry_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->expiry_date?->format(date_fmt()) ?? 'N/A' }}</td></tr>
 @if($domain->nameservers)
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.domain_registration.nameservers') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->nameservers }}</td></tr>
 @endif

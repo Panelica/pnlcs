@@ -89,9 +89,9 @@
                     @else N/A @endif
                 </td>
                 <td style="color:#666;">{{ ucfirst($domain->registrar ?? "-") }}</td>
-                <td style="color:#666;">{{ $domain->registration_date?->format("d M Y") ?? "-" }}</td>
+                <td style="color:#666;">{{ $domain->registration_date?->format(date_fmt()) ?? "-" }}</td>
                 <td style="color:{{ $expired ? "#c43c35" : ($expirySoon ? "#d68100" : "#666") }};font-weight:{{ ($expired || $expirySoon) ? "600" : "400" }};">
-                    {{ $domain->expiry_date?->format("d M Y") ?? "-" }}
+                    {{ $domain->expiry_date?->format(date_fmt()) ?? "-" }}
                     @if($expirySoon) <small style="font-size:11px;">(soon)</small> @endif
                     @if($expired) <small style="font-size:11px;">(expired)</small> @endif
                 </td>

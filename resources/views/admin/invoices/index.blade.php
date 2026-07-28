@@ -59,8 +59,8 @@
                     <a href="{{ route("admin.clients.show", $invoice->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $invoice->client->full_name }}</a>
                     @else N/A @endif
                 </td>
-                <td style="color:#666;">{{ $invoice->date?->format("d M Y") ?? "-" }}</td>
-                <td style="color:#666;">{{ $invoice->due_date?->format("d M Y") ?? "-" }}</td>
+                <td style="color:#666;">{{ $invoice->date?->format(date_fmt()) ?? "-" }}</td>
+                <td style="color:#666;">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
                 <td style="text-align:right;font-weight:500;">${{ number_format($invoice->total, 2) }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
                 <td>

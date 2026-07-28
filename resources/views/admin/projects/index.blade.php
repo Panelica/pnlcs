@@ -43,7 +43,7 @@
                     </div>
                     <span style="font-size:11px;color:#777;">{{ $done }}/{{ $total }} tasks</span>
                 </td>
-                <td style="font-size:12px;color:#777;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format('d M Y') : '-' }}</td>
+                <td style="font-size:12px;color:#777;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format(date_fmt()) : '-' }}</td>
                 <td>
                     <div style="display:flex;gap:6px;">
                         <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>

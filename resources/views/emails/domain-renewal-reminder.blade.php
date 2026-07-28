@@ -9,7 +9,7 @@
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.domain_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->domain }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.domain_registration.expiry_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->expiry_date?->format('M d, Y') ?? 'N/A' }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.domain_registration.expiry_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $domain->expiry_date?->format(date_fmt()) ?? 'N/A' }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;color:#f7b84b;"><strong>{{ __('email.domain_renewal.days_until_expiry') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#f7b84b;"><strong>{{ $daysUntilExpiry }}</strong></td></tr>
 </table>
 

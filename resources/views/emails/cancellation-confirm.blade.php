@@ -12,7 +12,7 @@
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.domain_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->domain ?? 'N/A' }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.cancellation_confirm.cancellation_type') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $cancellationType === 'immediate' ? __('email.cancellation_confirm.immediate') : __('email.cancellation_confirm.end_of_period') }}</td></tr>
 @if($cancellationType !== 'immediate' && $service->next_due_date)
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.cancellation_confirm.effective_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->next_due_date->format('M d, Y') }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.cancellation_confirm.effective_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->next_due_date->format(date_fmt()) }}</td></tr>
 @endif
 </table>
 

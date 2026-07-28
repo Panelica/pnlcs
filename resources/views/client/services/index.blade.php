@@ -36,7 +36,7 @@
                     <td class="text-muted">{{ $s->domain ?? "-" }}</td>
                     <td class="text-muted" style="text-transform:capitalize">{{ $s->billing_cycle ?? "-" }}</td>
                     <td style="font-weight:600">${{ number_format($s->amount, 2) }}</td>
-                    <td class="text-muted text-sm">{{ $s->next_due_date?->format("d M Y") ?? "-" }}</td>
+                    <td class="text-muted text-sm">{{ $s->next_due_date?->format(date_fmt()) ?? "-" }}</td>
                     <td><span class="badge badge-{{ strtolower($s->status) }}">{{ __('client.status.' . strtolower($s->status)) }}</span></td>
                     <td><a href="{{ route("client.services.show", $s) }}" class="btn btn-outline btn-xs">{{ __('common.actions.view') }}</a></td>
                 </tr>

@@ -22,7 +22,7 @@
             @endif
         </div>
         <div><strong style="color:#777;">{{ __('admin.tickets.email_label') }}</strong> {{ $ticket->email }}</div>
-        <div><strong style="color:#777;">{{ __('admin.tickets.created_label') }}</strong> {{ $ticket->created_at->format('d M Y H:i') }}</div>
+        <div><strong style="color:#777;">{{ __('admin.tickets.created_label') }}</strong> {{ $ticket->created_at->format(datetime_fmt()) }}</div>
     </div>
 </div>
 
@@ -30,7 +30,7 @@
 <div class="card" style="margin-bottom:10px;">
     <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
         <strong>{{ $ticket->name ?? $ticket->client?->full_name ?? $ticket->email }}</strong>
-        <span style="font-size:12px;color:#777;">{{ $ticket->created_at->format('d M Y H:i') }}</span>
+        <span style="font-size:12px;color:#777;">{{ $ticket->created_at->format(datetime_fmt()) }}</span>
     </div>
     <div class="card-body" style="font-size:13px;line-height:1.6;color:#333;">{!! nl2br(e($ticket->message)) !!}</div>
 </div>
@@ -40,7 +40,7 @@
 <div style="margin-bottom:10px;border-radius:4px;overflow:hidden;border:1px solid {{ $reply->admin ? '#bce8f1' : '#ddd' }};border-left:4px solid {{ $reply->admin ? '#31708f' : '#ccc' }};">
     <div style="padding:8px 15px;background:{{ $reply->admin ? '#d9edf7' : '#f9f9f9' }};display:flex;justify-content:space-between;align-items:center;">
         <strong style="font-size:13px;">{{ $reply->admin ? 'Staff: '.$reply->admin : ($ticket->client?->full_name ?? $ticket->name ?? $ticket->email) }}</strong>
-        <span style="font-size:12px;color:#777;">{{ $reply->created_at->format('d M Y H:i') }}</span>
+        <span style="font-size:12px;color:#777;">{{ $reply->created_at->format(datetime_fmt()) }}</span>
     </div>
     <div style="padding:12px 15px;font-size:13px;line-height:1.6;color:#333;background:#fff;">{!! nl2br(e($reply->message)) !!}</div>
 </div>
@@ -70,7 +70,7 @@
     <div style="margin-bottom:8px;background:#fcf8e3;border:1px solid #faebcc;border-left:4px solid #e6ac00;border-radius:3px;overflow:hidden;">
         <div style="padding:6px 12px;background:#faf3cd;display:flex;justify-content:space-between;align-items:center;">
             <strong style="font-size:12px;">{{ $note->admin }}</strong>
-            <span style="font-size:11px;color:#8a6d3b;">{{ $note->created_at->format('d M Y H:i') }}</span>
+            <span style="font-size:11px;color:#8a6d3b;">{{ $note->created_at->format(datetime_fmt()) }}</span>
         </div>
         <div style="padding:10px 12px;font-size:13px;color:#333;">{!! nl2br(e($note->message)) !!}</div>
     </div>

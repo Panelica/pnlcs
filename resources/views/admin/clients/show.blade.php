@@ -76,7 +76,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->phone_number ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format('d M Y') }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                 </table>
             </div>
         </div>
@@ -108,7 +108,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:5px 0;color:#777;width:50%;">{{ __('admin.clients.status') }}</td><td style="padding:5px 0;"><span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.tax_exempt') }}</td><td style="padding:5px 0;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.created') }}</td><td style="padding:5px 0;">{{ $client->created_at->format('d M Y') }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.created') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.last_login') }}</td><td style="padding:5px 0;">{{ $client->users->max('last_login')?->diffForHumans() ?? __('admin.clients.never') }}</td></tr>
                 </table>
             </div>
@@ -143,7 +143,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 @forelse(($notes ?? collect())->take(3) as $note)
                 <div style="margin-top:10px;padding:8px;background:{{ $note->sticky ? '#fffbe6' : '#f9f9f9' }};border:1px solid {{ $note->sticky ? '#e6d200' : '#eee' }};border-radius:3px;font-size:12px;">
                     <p style="margin:0 0 4px;color:#333;">{{ $note->note }}</p>
-                    <span style="color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
+                    <span style="color:#999;">{{ $note->created_at->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
                 </div>
                 @empty
                 <p style="font-size:12px;color:#999;margin-top:8px;">{{ __('admin.clients.no_notes') }}</p>
@@ -169,7 +169,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <td>{{ $service->domain ?? '-' }}</td>
             <td>{{ $service->billing_cycle }}</td>
             <td>${{ number_format($service->amount, 2) }}</td>
-            <td>{{ $service->next_due_date?->format('d M Y') ?? '-' }}</td>
+            <td>{{ $service->next_due_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge-{{ strtolower($service->status) }}">{{ ucfirst($service->status) }}</span></td>
         </tr>
         @endforeach
@@ -193,8 +193,8 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
         <tr>
             <td style="font-weight:600;">{{ $domain->domain }}</td>
             <td>{{ $domain->registrar ?? '-' }}</td>
-            <td>{{ $domain->registration_date?->format('d M Y') ?? '-' }}</td>
-            <td>{{ $domain->expiry_date?->format('d M Y') ?? '-' }}</td>
+            <td>{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td>
+            <td>{{ $domain->expiry_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge-{{ strtolower($domain->status) }}">{{ ucfirst($domain->status) }}</span></td>
         </tr>
         @endforeach
@@ -217,8 +217,8 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
         @foreach($invoices as $inv)
         <tr>
             <td><a href="{{ route('admin.invoices.show', $inv) }}" style="color:#337ab7;">{{ $inv->invoice_num }}</a></td>
-            <td>{{ $inv->date?->format('d M Y') ?? '-' }}</td>
-            <td>{{ $inv->due_date?->format('d M Y') ?? '-' }}</td>
+            <td>{{ $inv->date?->format(date_fmt()) ?? '-' }}</td>
+            <td>{{ $inv->due_date?->format(date_fmt()) ?? '-' }}</td>
             <td style="font-weight:600;">${{ number_format($inv->total, 2) }}</td>
             <td><span class="badge-{{ strtolower($inv->status) }}">{{ ucfirst($inv->status) }}</span></td>
         </tr>
@@ -277,7 +277,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 <div class="card" style="margin-bottom:8px;{{ $note->sticky ? 'border-left:4px solid #f0ad4e;' : '' }}">
     <div class="card-body" style="padding:10px 15px;">
         <p style="margin:0 0 6px;font-size:13px;color:#333;">{{ $note->note }}</p>
-        <span style="font-size:11px;color:#999;">{{ $note->created_at->format('d M Y H:i') }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
+        <span style="font-size:11px;color:#999;">{{ $note->created_at->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
     </div>
 </div>
 @empty
@@ -296,7 +296,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
         <tbody>
         @foreach($logs as $log)
         <tr>
-            <td style="font-size:12px;white-space:nowrap;">{{ $log->created_at->format('d M Y H:i') }}</td>
+            <td style="font-size:12px;white-space:nowrap;">{{ $log->created_at->format(datetime_fmt()) }}</td>
             <td>{{ $log->admin ?? '-' }}</td>
             <td>{{ $log->action ?? '-' }}</td>
             <td>{{ $log->description }}</td>

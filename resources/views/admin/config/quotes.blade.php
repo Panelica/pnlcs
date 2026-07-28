@@ -19,7 +19,7 @@
             <td>{{ $quote->client?->full_name ?? __("admin.quotes.deleted_client") ?? __('admin.quotes.deleted_client') }}</td>
             <td>{{ $quote->subject }}</td>
             <td style="font-weight:600;">${{ number_format($quote->total ?? 0, 2) }}</td>
-            <td style="font-size:12px;">{{ $quote->valid_until?->format('d M Y') ?? '&mdash;' }}</td>
+            <td style="font-size:12px;">{{ $quote->valid_until?->format(date_fmt()) ?? '&mdash;' }}</td>
             <td><span class="badge-{{ strtolower($quote->status ?? 'Draft') }}">{{ $quote->status ?? 'Draft' }}</span></td>
             <td style="text-align:right;">
                 <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>

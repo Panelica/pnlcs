@@ -30,8 +30,8 @@
                 <td style="font-family:monospace;font-size:12px;color:#777;">{{ $quote->id }}</td>
                 <td><a href="{{ route('admin.quotes.show', $quote) }}" style="color:#337ab7;font-weight:600;">{{ $quote->subject }}</a></td>
                 <td>{{ $quote->client?->full_name ?? 'N/A' }}</td>
-                <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->date)->format('d M Y') }}</td>
-                <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->valid_until)->format('d M Y') }}</td>
+                <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->date)->format(date_fmt()) }}</td>
+                <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->valid_until)->format(date_fmt()) }}</td>
                 <td style="text-align:right;font-weight:600;">${{ number_format($quote->total,2) }}</td>
                 <td><span class="{{ $badgeClass }}">{{ $quote->status }}</span></td>
                 <td>

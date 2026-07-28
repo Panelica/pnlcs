@@ -15,7 +15,7 @@
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:5px 0;color:#777;width:35%;">{{ __('admin.orders.order_number') }}</td><td style="padding:5px 0;font-family:monospace;font-weight:600;">{{ $order->order_num }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.date') }}</td><td style="padding:5px 0;">{{ $order->date?->format('d M Y') }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.date') }}</td><td style="padding:5px 0;">{{ $order->date?->format(date_fmt()) }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.amount') }}</td><td style="padding:5px 0;font-weight:700;font-size:15px;">${{ number_format($order->amount, 2) }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.payment_method_label') }}</td><td style="padding:5px 0;text-transform:capitalize;">{{ $order->payment_method ?? '&mdash;' }}</td></tr>
                     @if($order->promo_code)
@@ -56,7 +56,7 @@
                 <tr>
                     <td style="font-family:monospace;font-weight:600;">{{ $dom->domain }}</td>
                     <td style="text-transform:capitalize;">{{ $dom->type }}</td>
-                    <td>{{ $dom->expiry_date?->format('d M Y') ?? '&mdash;' }}</td>
+                    <td>{{ $dom->expiry_date?->format(date_fmt()) ?? '&mdash;' }}</td>
                     <td><span class="badge-{{ strtolower($dom->status) }}">{{ ucfirst($dom->status) }}</span></td>
                 </tr>
                 @endforeach

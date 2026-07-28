@@ -21,7 +21,7 @@
         <tbody>
             @forelse($data as $row)
             <tr>
-                <td style="font-size:12px;color:#777;">{{ $row->date ? $row->date->format("d M Y") : "-" }}</td>
+                <td style="font-size:12px;color:#777;">{{ $row->date ? $row->date->format(date_fmt()) : "-" }}</td>
                 <td>
                     @if($row->client)
                         <a href="{{ $row->client ? route("admin.clients.show", $row->client) : "#" }}" style="color:#337ab7;text-decoration:none;">{{ $row->client?->full_name ?? "Deleted Client" }}</a>

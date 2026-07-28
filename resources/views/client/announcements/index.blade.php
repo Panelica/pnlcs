@@ -30,7 +30,7 @@
                     {{ strip_tags($announcement->announcement) }}
                 </div>
             </div>
-            <time style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0;margin-top:2px">{{ $announcement->created_at->format("d M Y") }}</time>
+            <time style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0;margin-top:2px">{{ $announcement->created_at->format(date_fmt()) }}</time>
         </div>
     </a>
     @endforeach

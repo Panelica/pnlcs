@@ -11,7 +11,7 @@
     <div>
         <h1 class="pn-page-title">{{ $email->subject }}</h1>
         <p class="pn-page-subtitle">
-            {{ $email->date?->format('d M Y H:i') ?? $email->created_at?->format('d M Y H:i') }}
+            {{ $email->date?->format(datetime_fmt()) ?? $email->created_at?->format(datetime_fmt()) }}
             &nbsp;·&nbsp; {{ __('client.emails.sent_to') }}: {{ $email->to }}
         </p>
     </div>

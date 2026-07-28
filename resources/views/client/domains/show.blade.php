@@ -28,8 +28,8 @@
         <div class="pn-card-body">
             <dl>
                 <div class="detail-row"><dt>{{ __('client.domains.domain_name') }}</dt><dd>{{ $domain->domain }}</dd></div>
-                <div class="detail-row"><dt>{{ __('client.services.registration_date') }}</dt><dd>{{ $domain->registration_date?->format('d M Y') ?? 'N/A' }}</dd></div>
-                <div class="detail-row"><dt>{{ __('client.domains.expiry_date') }}</dt><dd>{{ $domain->expiry_date?->format('d M Y') ?? 'N/A' }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.services.registration_date') }}</dt><dd>{{ $domain->registration_date?->format(date_fmt()) ?? 'N/A' }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.expiry_date') }}</dt><dd>{{ $domain->expiry_date?->format(date_fmt()) ?? 'N/A' }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.services.auto_renew') }}</dt><dd>{{ ($domain->auto_renew ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.domains.id_protection') }}</dt><dd>{{ ($domain->id_protection ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.domains.registrar_lock') }}</dt><dd>{{ $domain->status === 'Locked' ? __("client.status.locked") : __("client.status.unlocked") }}</dd></div>

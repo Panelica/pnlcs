@@ -65,10 +65,10 @@
                         @endif
                     </td>
                     <td><span class="badge {{ $order->getStatusBadgeClass() }}">{{ $order->status }}</span></td>
-                    <td>{{ $order->order_date?->format('d M Y') ?: $order->created_at->format('d M Y') }}</td>
+                    <td>{{ $order->order_date?->format(date_fmt()) ?: $order->created_at->format(date_fmt()) }}</td>
                     <td>
                         @if($order->crt_expires)
-                            {{ $order->crt_expires->format('d M Y') }}
+                            {{ $order->crt_expires->format(date_fmt()) }}
                             @if($order->daysUntilExpiry() !== null && $order->daysUntilExpiry() <= 30 && $order->daysUntilExpiry() > 0)
                                 <br><small class="text-warning">{{ $order->daysUntilExpiry() }} {{ __('admin.ssl.days') }}</small>
                             @elseif($order->daysUntilExpiry() !== null && $order->daysUntilExpiry() <= 0)

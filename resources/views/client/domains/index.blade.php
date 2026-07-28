@@ -34,9 +34,9 @@
                 <tr>
                     <td style="font-weight:600">{{ $d->domain }}</td>
                     <td><span class="badge badge-{{ strtolower($d->status) }}">{{ ucfirst($d->status) }}</span></td>
-                    <td class="text-muted text-sm">{{ $d->registration_date?->format("d M Y") ?? "-" }}</td>
+                    <td class="text-muted text-sm">{{ $d->registration_date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="{{ $expired ? "color:var(--danger);font-weight:600" : ($expiringSoon ? "color:var(--warning);font-weight:600" : "") }}">
-                        {{ $d->expiry_date?->format("d M Y") ?? "-" }}
+                        {{ $d->expiry_date?->format(date_fmt()) ?? "-" }}
                         @if($expired) <span class="badge badge-overdue" style="margin-left:6px">{{ __('client.domains.expired') }}</span>
                         @elseif($expiringSoon) <span class="badge badge-pending" style="margin-left:6px">{{ __('client.domains.expiring') }}</span>
                         @endif

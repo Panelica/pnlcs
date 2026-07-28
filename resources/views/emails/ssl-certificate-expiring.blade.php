@@ -7,7 +7,7 @@
 
 **{{ __('email.ssl_expiring.certificate_details') }}**
 - **{{ __('email.common.domain_label') }}:** {{ $order->domain }}
-- **{{ __('email.ssl_expiring.expires') }}:** {{ $order->crt_expires?->format('d M Y') }}
+- **{{ __('email.ssl_expiring.expires') }}:** {{ $order->crt_expires?->format(date_fmt()) }}
 
 {{ __('email.ssl_expiring.renew_recommend') }}
 

@@ -24,7 +24,7 @@
         @foreach($announcements as $ann)
         <tr>
             <td style="font-weight:600;">{{ $ann->title }}</td>
-            <td style="font-size:12px;">{{ $ann->date?->format('d M Y') ?? $ann->created_at->format('d M Y') }}</td>
+            <td style="font-size:12px;">{{ $ann->date?->format(date_fmt()) ?? $ann->created_at->format(date_fmt()) }}</td>
             <td><span class="badge-{{ $ann->published ? 'active' : 'draft' }}">{{ $ann->published ? __('admin.announcements.status_published') : __('admin.announcements.status_draft') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" onclick="openModal('edit-ann-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>

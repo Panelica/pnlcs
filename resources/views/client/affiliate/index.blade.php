@@ -55,7 +55,7 @@
             <tbody>
                 @forelse($commissions ?? [] as $comm)
                 <tr>
-                    <td class="text-muted text-sm">{{ $comm->created_at?->format("d M Y") }}</td>
+                    <td class="text-muted text-sm">{{ $comm->created_at?->format(date_fmt()) }}</td>
                     <td>{{ $comm->referredClient->email ?? "-" }}</td>
                     <td style="text-transform:capitalize">{{ $comm->type ?? "signup" }}</td>
                     <td style="font-weight:700;color:var(--success)">${{ number_format($comm->amount, 2) }}</td>

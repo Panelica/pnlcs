@@ -45,12 +45,12 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="text-muted small">{{ __('client.ssl.issued_date') }}</label>
-                        <p class="mb-0">{{ $order->completion_date?->format('d M Y') ?: '—' }}</p>
+                        <p class="mb-0">{{ $order->completion_date?->format(date_fmt()) ?: '—' }}</p>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="text-muted small">{{ __('client.domains.expiry_date') }}</label>
                         <p class="mb-0">
-                            {{ $order->crt_expires->format('d M Y') }}
+                            {{ $order->crt_expires->format(date_fmt()) }}
                             @if($order->daysUntilExpiry() !== null)
                                 <small class="{{ $order->daysUntilExpiry() <= 7 ? 'text-danger' : ($order->daysUntilExpiry() <= 30 ? 'text-warning' : 'text-success') }}">
                                     ({{ $order->daysUntilExpiry() }} {{ __('client.ssl.days_remaining') }})

@@ -32,7 +32,7 @@
             <td style="font-weight:600;">{{ $todo->title }}</td>
             <td style="font-size:12px;color:#777;">{{ Str::limit($todo->description ?? '', 60) ?: '-' }}</td>
             <td><span class="badge {{ $badgeClass }}">{{ ucfirst($todo->status ?? 'New') }}</span></td>
-            <td style="font-size:12px;{{ ($todo->due_date && $todo->due_date->isPast() && strtolower($todo->status) !== 'completed') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $todo->due_date?->format('d M Y') ?? '-' }}</td>
+            <td style="font-size:12px;{{ ($todo->due_date && $todo->due_date->isPast() && strtolower($todo->status) !== 'completed') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $todo->due_date?->format(date_fmt()) ?? '-' }}</td>
             <td style="font-size:12px;">{{ $todo->admin ?? '-' }}</td>
             <td style="text-align:right;">
                 @if(strtolower($todo->status ?? '') !== 'completed')

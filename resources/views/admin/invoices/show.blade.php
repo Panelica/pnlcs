@@ -134,7 +134,7 @@
                 <tbody>
                 @foreach($invoice->transactions as $tx)
                 <tr>
-                    <td>{{ $tx->date?->format('d M Y') }}</td>
+                    <td>{{ $tx->date?->format(date_fmt()) }}</td>
                     <td style="text-transform:capitalize;">{{ $tx->gateway }}</td>
                     <td style="font-family:monospace;font-size:12px;">{{ $tx->transaction_id ?? '&mdash;' }}</td>
                     <td style="text-align:right;color:#5cb85c;font-weight:600;">+${{ number_format($tx->amount_in, 2) }}</td>
@@ -178,13 +178,13 @@
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:4px 0;color:#777;width:45%;">{{ __('admin.invoices.invoice_hash') }}</td><td style="padding:4px 0;font-family:monospace;font-weight:600;">{{ $invoice->invoice_num }}</td></tr>
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.date') }}</td><td style="padding:4px 0;">{{ $invoice->date?->format('d M Y') }}</td></tr>
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.due_date') }}</td><td style="padding:4px 0;{{ ($invoice->due_date?->isPast() && $invoice->status !== 'Paid') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $invoice->due_date?->format('d M Y') }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.date') }}</td><td style="padding:4px 0;">{{ $invoice->date?->format(date_fmt()) }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.due_date') }}</td><td style="padding:4px 0;{{ ($invoice->due_date?->isPast() && $invoice->status !== 'Paid') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $invoice->due_date?->format(date_fmt()) }}</td></tr>
                     @if($invoice->payment_method)
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.payment') }}</td><td style="padding:4px 0;text-transform:capitalize;">{{ $invoice->payment_method }}</td></tr>
                     @endif
                     @if($invoice->status === 'Paid' && $invoice->date_paid)
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.paid_on') }}</td><td style="padding:4px 0;color:#5cb85c;font-weight:600;">{{ $invoice->date_paid->format('d M Y H:i') }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.paid_on') }}</td><td style="padding:4px 0;color:#5cb85c;font-weight:600;">{{ $invoice->date_paid->format(datetime_fmt()) }}</td></tr>
                     @endif
                 </table>
             </div>
@@ -194,7 +194,7 @@
             <div class="panel-heading panel-primary">{{ __('admin.invoices.actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
                 @if($invoice->status === 'Paid')
-                <div style="padding:8px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:3px;text-align:center;color:#3c763d;font-size:13px;">&#10003; Paid on {{ $invoice->date_paid?->format('d M Y H:i') }}</div>
+                <div style="padding:8px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:3px;text-align:center;color:#3c763d;font-size:13px;">&#10003; Paid on {{ $invoice->date_paid?->format(datetime_fmt()) }}</div>
                 @endif
                 @if($invoice->status === 'Cancelled')
                 <div style="padding:8px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;text-align:center;color:#777;font-size:13px;">{{ __('admin.invoices.invoice_cancelled') }}</div>

@@ -68,7 +68,7 @@
         <tr>
             <td><span class="badge {{ $filter->type === 'email' ? 'badge-pending' : 'badge-open' }}">{{ ucfirst($filter->type) }}</span></td>
             <td><code>{{ $filter->content }}</code></td>
-            <td style="font-size:12px;">{{ $filter->created_at?->format('d M Y') ?? '-' }}</td>
+            <td style="font-size:12px;">{{ $filter->created_at?->format(date_fmt()) ?? '-' }}</td>
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.ticket-spam.filter.destroy', $filter->id) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.ticket_spam.confirm_delete_filter') }}')">
                     @csrf @method("DELETE")

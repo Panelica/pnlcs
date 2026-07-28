@@ -11,7 +11,7 @@
     <div class="pn-card-header">
         <div>
             <div style="font-size:18px;font-weight:800;color:var(--primary);letter-spacing:-0.3px">{{ $announcement->title }}</div>
-            <div class="text-muted text-sm" style="margin-top:4px">{{ __('client.announcements.published_at') }} {{ $announcement->created_at->format("d F Y") }} at {{ $announcement->created_at->format("H:i") }}</div>
+            <div class="text-muted text-sm" style="margin-top:4px">{{ __('client.announcements.published_at') }} {{ $announcement->created_at->format(date_fmt()) }} at {{ $announcement->created_at->format("H:i") }}</div>
         </div>
     </div>
     <div class="pn-card-body">
