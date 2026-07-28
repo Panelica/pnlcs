@@ -20,16 +20,16 @@ function makeOrderService(): OrderService
 // ---------------------------------------------------------------------------
 
 test('process order creates an order record', function () {
-    $client  = Client::factory()->create(['tax_exempt' => true]);
+    $client = Client::factory()->create(['tax_exempt' => true]);
     $product = Product::factory()->create(['tax' => false]);
     $service = makeOrderService();
 
     $order = $service->processOrder($client, [
         [
-            'type'       => 'service',
+            'type' => 'service',
             'product_id' => $product->id,
-            'domain'     => 'example.com',
-            'amount'     => 9.99,
+            'domain' => 'example.com',
+            'amount' => 9.99,
             'billing_cycle' => 'Monthly',
         ],
     ], 'banktransfer');
@@ -40,16 +40,17 @@ test('process order creates an order record', function () {
 });
 
 test('process order creates services for service items', function () {
-    $client  = Client::factory()->create(['tax_exempt' => true]);
-    $product = Product::factory()->create(['tax' => false]);
+    $client = Client::factory()->create(['tax_exempt' => true]);
+    // Setup on payment: the service must wait for the invoice to be settled.
+    $product = Product::factory()->create(['tax' => false, 'auto_setup' => 'payment']);
     $service = makeOrderService();
 
     $order = $service->processOrder($client, [
         [
-            'type'          => 'service',
-            'product_id'    => $product->id,
-            'domain'        => 'mysite.com',
-            'amount'        => 9.99,
+            'type' => 'service',
+            'product_id' => $product->id,
+            'domain' => 'mysite.com',
+            'amount' => 9.99,
             'billing_cycle' => 'Monthly',
         ],
     ], 'banktransfer');
@@ -61,15 +62,44 @@ test('process order creates services for service items', function () {
         ->and($createdServices->first()->status)->toBe('pending');
 });
 
+test('a product set up on order placement is provisioned before payment', function () {
+    $client = Client::factory()->create(['tax_exempt' => true]);
+    // auto_setup = order with the Custom (manual) module, which reports success
+    // without contacting anything, so placing the order activates the service.
+    $product = Product::factory()->create([
+        'tax' => false,
+        'auto_setup' => 'order',
+        'server_type' => 'custom',
+    ]);
+
+    $order = makeOrderService()->processOrder($client, [
+        [
+            'type' => 'service',
+            'product_id' => $product->id,
+            'domain' => 'setup-on-order.com',
+            'amount' => 9.99,
+            'billing_cycle' => 'Monthly',
+        ],
+    ], 'banktransfer');
+
+    $created = Service::where('order_id', $order->id)->firstOrFail();
+
+    expect($created->status)->toBe('active')
+        ->and($created->registration_date)->not->toBeNull()
+        // The invoice is still waiting: activation here is deliberate, not a
+        // payment being skipped.
+        ->and(Invoice::find($order->invoice_id)->status)->toBe('unpaid');
+});
+
 test('process order creates domains for domain items', function () {
-    $client  = Client::factory()->create(['tax_exempt' => true]);
+    $client = Client::factory()->create(['tax_exempt' => true]);
     $service = makeOrderService();
 
     $order = $service->processOrder($client, [
         [
-            'type'        => 'domain',
-            'domain'      => 'newdomain.com',
-            'amount'      => 12.00,
+            'type' => 'domain',
+            'domain' => 'newdomain.com',
+            'amount' => 12.00,
             'domain_type' => 'register',
         ],
     ], 'banktransfer');
@@ -82,16 +112,16 @@ test('process order creates domains for domain items', function () {
 });
 
 test('process order generates an invoice', function () {
-    $client  = Client::factory()->create(['tax_exempt' => true]);
+    $client = Client::factory()->create(['tax_exempt' => true]);
     $product = Product::factory()->create(['tax' => false]);
     $service = makeOrderService();
 
     $order = $service->processOrder($client, [
         [
-            'type'          => 'service',
-            'product_id'    => $product->id,
-            'domain'        => 'invoice-test.com',
-            'amount'        => 19.99,
+            'type' => 'service',
+            'product_id' => $product->id,
+            'domain' => 'invoice-test.com',
+            'amount' => 19.99,
             'billing_cycle' => 'Monthly',
         ],
     ], 'banktransfer');
@@ -105,7 +135,7 @@ test('process order generates an invoice', function () {
 });
 
 test('process order calculates invoice total from items', function () {
-    $client  = Client::factory()->create(['tax_exempt' => true]);
+    $client = Client::factory()->create(['tax_exempt' => true]);
     $product = Product::factory()->create(['tax' => false]);
     $service = makeOrderService();
 
@@ -125,11 +155,11 @@ test('process order applies valid promotion code', function () {
     $product = Product::factory()->create(['tax' => false]);
 
     $promo = Promotion::factory()->create([
-        'code'     => 'SAVE10',
-        'type'     => 'fixed',
-        'value'    => 10.00,
+        'code' => 'SAVE10',
+        'type' => 'fixed',
+        'value' => 10.00,
         'max_uses' => 0,
-        'uses'     => 0,
+        'uses' => 0,
     ]);
 
     $service = makeOrderService();
@@ -149,7 +179,7 @@ test('process order applies valid promotion code', function () {
 // ---------------------------------------------------------------------------
 
 test('accept order changes status to Active', function () {
-    $client  = Client::factory()->create();
+    $client = Client::factory()->create();
     $service = makeOrderService();
 
     $order = Order::factory()->pending()->create(['client_id' => $client->id]);
@@ -160,12 +190,12 @@ test('accept order changes status to Active', function () {
 });
 
 test('accept order activates pending services', function () {
-    $client  = Client::factory()->create();
+    $client = Client::factory()->create();
     $product = Product::factory()->create();
     $service = makeOrderService();
 
     $order = Order::factory()->pending()->create(['client_id' => $client->id]);
-    $svc   = Service::factory()->pending()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
+    $svc = Service::factory()->pending()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
 
     $service->acceptOrder($order);
 
@@ -175,7 +205,7 @@ test('accept order activates pending services', function () {
 
 test('accept order is idempotent for already-active orders', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     $updated = makeOrderService()->acceptOrder($order);
 
@@ -188,7 +218,7 @@ test('accept order is idempotent for already-active orders', function () {
 
 test('cancel order changes status to Cancelled', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->pending()->create(['client_id' => $client->id]);
+    $order = Order::factory()->pending()->create(['client_id' => $client->id]);
 
     makeOrderService()->cancelOrder($order);
 
@@ -196,10 +226,10 @@ test('cancel order changes status to Cancelled', function () {
 });
 
 test('cancel order terminates active services', function () {
-    $client  = Client::factory()->create();
+    $client = Client::factory()->create();
     $product = Product::factory()->create();
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
-    $svc     = Service::factory()->active()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
+    $svc = Service::factory()->active()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
 
     makeOrderService()->cancelOrder($order);
 
@@ -207,9 +237,9 @@ test('cancel order terminates active services', function () {
 });
 
 test('cancel order also cancels unpaid invoice', function () {
-    $client  = Client::factory()->create(['tax_exempt' => true]);
+    $client = Client::factory()->create(['tax_exempt' => true]);
     $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid']);
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'pending', 'invoice_id' => $invoice->id]);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'pending', 'invoice_id' => $invoice->id]);
 
     makeOrderService()->cancelOrder($order);
 
@@ -217,9 +247,9 @@ test('cancel order also cancels unpaid invoice', function () {
 });
 
 test('cancel order does not cancel paid invoice', function () {
-    $client  = Client::factory()->create(['tax_exempt' => true]);
+    $client = Client::factory()->create(['tax_exempt' => true]);
     $invoice = Invoice::factory()->paid()->create(['client_id' => $client->id]);
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'active', 'invoice_id' => $invoice->id]);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'active', 'invoice_id' => $invoice->id]);
 
     makeOrderService()->cancelOrder($order);
 
@@ -232,7 +262,7 @@ test('cancel order does not cancel paid invoice', function () {
 
 test('mark fraud changes order status to Fraud', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     makeOrderService()->markFraud($order);
 
@@ -240,10 +270,10 @@ test('mark fraud changes order status to Fraud', function () {
 });
 
 test('mark fraud suspends active services', function () {
-    $client  = Client::factory()->create();
+    $client = Client::factory()->create();
     $product = Product::factory()->create();
-    $order   = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
-    $svc     = Service::factory()->active()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
+    $svc = Service::factory()->active()->create(['order_id' => $order->id, 'client_id' => $client->id, 'product_id' => $product->id]);
 
     makeOrderService()->markFraud($order);
 
@@ -253,7 +283,7 @@ test('mark fraud suspends active services', function () {
 
 test('mark fraud records fraud output', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
 
     makeOrderService()->markFraud($order);
 
@@ -267,7 +297,7 @@ test('mark fraud records fraud output', function () {
 
 test('delete order soft-deletes the order record', function () {
     $client = Client::factory()->create();
-    $order  = Order::factory()->cancelled()->create(['client_id' => $client->id]);
+    $order = Order::factory()->cancelled()->create(['client_id' => $client->id]);
 
     $orderId = $order->id;
     makeOrderService()->deleteOrder($order);
