@@ -16,6 +16,7 @@ use App\Models\ServiceConfigOption;
 use App\Models\User;
 use App\Services\CartService;
 use App\Services\ConfigOptionService;
+use App\Services\PaymentService;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -201,7 +202,16 @@ test('the renewal invoice keeps charging for the options', function () {
     $svc->addProduct($cart, $fx['product'], 'monthly', null, [$fx['ram']->id => $fx['ram4']->id]);
     $order = $svc->checkout($cart, $client->id, 'banktransfer');
 
-    $service = Service::where('order_id', $order->id)->firstOrFail();
+    $service = Service::where('order_id', '=', $order->id)->firstOrFail();
+
+    // The first invoice has to be settled before a renewal is due, otherwise
+    // the generator is right to hold off: the customer already owes for this
+    // service. Paying it is also what makes the service active for real.
+    app(PaymentService::class)->applyPayment(
+        Invoice::findOrFail($order->invoice_id), 'banktransfer', 'TXN-OPT', 25.0
+    );
+
+    $service->refresh();
     $service->update(['status' => 'active', 'next_due_date' => now()->addDays(3)]);
 
     $this->artisan('pnlcs:generate-invoices')->assertSuccessful();

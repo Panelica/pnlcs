@@ -3,19 +3,16 @@
 namespace App\Services;
 
 use App\Models\Cart;
+use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Domain;
 use App\Models\DomainPricing;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Models\Order;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\Promotion;
-use App\Models\Service;
 use App\Models\TaxRule;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 class CartService
 {
@@ -221,118 +218,51 @@ class CartService
         ];
     }
 
+    /**
+     * Turn the cart into an order.
+     *
+     * The order itself, its invoice, the services and the domains are all
+     * created by OrderService, which is the single place that knows how an
+     * order is put together. This method's job is to translate cart entries
+     * into that shape.
+     */
     public function checkout(Cart $cart, int $clientId, string $paymentMethod): Order
     {
-        $totals = $this->calculateTotal($cart);
+        $data = $this->getData($cart);
+        $client = Client::findOrFail($clientId);
+        $items = [];
 
-        $order = Order::create([
-            'order_num' => strtoupper(Str::random(8)),
-            'client_id' => $clientId,
-            'date' => now(),
-            'promo_code' => $totals['promo_code'],
-            'amount' => $totals['total'],
-            'payment_method' => $paymentMethod,
-            'status' => 'pending',
-            'ip_address' => request()->ip(),
-        ]);
-
-        $invoice = Invoice::create([
-            'client_id' => $clientId,
-            'invoice_num' => 'INV-'.strtoupper(Str::random(8)),
-            'date' => now(),
-            'due_date' => now()->addDays(7),
-            'subtotal' => $totals['subtotal'],
-            'tax' => $totals['tax'],
-            'total' => $totals['total'],
-            'tax_rate' => $totals['tax_rate'],
-            'status' => 'unpaid',
-            'payment_method' => $paymentMethod,
-        ]);
-
-        $order->update(['invoice_id' => $invoice->id]);
-
-        foreach ($totals['items'] as $item) {
-            $itemType = $item['type'] ?? 'product';
-
-            if ($itemType === 'domain') {
-                // Create domain record
-                $domain = Domain::create([
-                    'client_id' => $clientId,
-                    'order_id' => $order->id,
-                    'type' => $item['action'] === 'transfer' ? 'Transfer' : 'Register',
+        foreach ($data['items'] ?? [] as $item) {
+            if (($item['type'] ?? 'product') === 'domain') {
+                $items[] = [
+                    'type' => 'domain',
                     'domain' => $item['domain'],
-                    'registrar' => 'Manual',
-                    'registration_period' => $item['years'] ?? 1,
-                    'status' => 'pending',
-                    'payment_method' => $paymentMethod,
-                    'first_payment_amount' => $item['price'],
-                    'recurring_amount' => $item['price'],
-                ]);
+                    'domain_type' => ($item['action'] ?? 'register') === 'transfer' ? 'Transfer' : 'Register',
+                    'registration_period' => (int) ($item['years'] ?? 1),
+                    'amount' => (float) ($item['price'] ?? 0),
+                ];
 
-                InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
-                    'client_id' => $clientId,
-                    'type' => 'Domain',
-                    'rel_id' => $domain->id,
-                    'description' => ucfirst($item['action']).' '.$item['domain'].' — '.($item['years'] ?? 1).' Year(s)',
-                    'amount' => $item['price'],
-                    'taxed' => true,
-                    'due_date' => now()->addDays(7),
-                ]);
-            } else {
-                // Existing product handling
-                InvoiceItem::create([
-                    'invoice_id' => $invoice->id,
-                    'client_id' => $clientId,
-                    'type' => 'Hosting',
-                    'rel_id' => $item['product_id'],
-                    'description' => $item['product_name'].' — '.ucfirst($item['billing_cycle'])
-                        .(! empty($item['config_options'])
-                            ? ' ('.app(ConfigOptionService::class)->summarise($item['config_options']).')'
-                            : ''),
-                    'amount' => $item['price'],
-                    'taxed' => true,
-                    'due_date' => now()->addDays(7),
-                ]);
-
-                $service = Service::create([
-                    'client_id' => $clientId,
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'domain' => $item['domain'] ?? '',
-                    'payment_method' => $paymentMethod,
-                    'amount' => $item['price'],
-                    'billing_cycle' => $item['billing_cycle'],
-                    'next_due_date' => $this->getNextDueDate($item['billing_cycle']),
-                    'registration_date' => now(),
-                    'status' => 'pending',
-                    'first_payment_amount' => $item['price'],
-                    'notes' => $item['notes'] ?? null,
-                ]);
-
-                // Record what was configured so the panel and the server module
-                // can see it; the money is already inside the service amount.
-                if (! empty($item['config_options'])) {
-                    app(ConfigOptionService::class)->attachToService($service, $item['config_options']);
-                }
-
-                if (! empty($item['addons'])) {
-                    $addonService = app(AddonService::class);
-                    foreach ($addonService->attachToService($service, $item['addons'], $order) as $serviceAddon) {
-                        InvoiceItem::create([
-                            'invoice_id' => $invoice->id,
-                            'client_id' => $clientId,
-                            'type' => 'Addon',
-                            'rel_id' => $serviceAddon->id,
-                            'description' => $addonService->describe($serviceAddon),
-                            'amount' => $serviceAddon->amount,
-                            'taxed' => true,
-                            'due_date' => now()->addDays(7),
-                        ]);
-                    }
-                }
+                continue;
             }
+
+            $items[] = [
+                'type' => 'service',
+                'product_id' => $item['product_id'],
+                'domain' => $item['domain'] ?? '',
+                'amount' => (float) ($item['price'] ?? 0),
+                'billing_cycle' => $item['billing_cycle'] ?? 'Monthly',
+                'notes' => $item['notes'] ?? null,
+                'config_options' => $item['config_options'] ?? [],
+                'addons' => $item['addons'] ?? [],
+            ];
         }
+
+        $order = app(OrderService::class)->processOrder(
+            $client,
+            $items,
+            $paymentMethod,
+            $data['promo_code'] ?? null
+        );
 
         $this->clearCart($cart);
 

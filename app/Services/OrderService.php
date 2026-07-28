@@ -71,6 +71,28 @@ class OrderService
                 } else {
                     $service = $this->createServiceForOrder($order, $client, $item);
 
+                    // Configurable options are already inside the service price;
+                    // recording them is what lets the panel and the server
+                    // module see what was ordered.
+                    if (! empty($item['config_options'])) {
+                        app(ConfigOptionService::class)->attachToService($service, $item['config_options']);
+                    }
+
+                    // Addons are billed separately and renew on their own dates.
+                    if (! empty($item['addons'])) {
+                        $addonService = app(AddonService::class);
+                        foreach ($addonService->attachToService($service, $item['addons'], $order) as $serviceAddon) {
+                            $line = $addonService->lineItem($serviceAddon);
+                            $invoiceItems[] = [
+                                'type' => $line['type'],
+                                'rel_id' => $line['rel_id'],
+                                'description' => $line['description'],
+                                'amount' => $line['amount'],
+                                'taxed' => $line['taxed'],
+                            ];
+                        }
+                    }
+
                     $invoiceItems[] = [
                         'type' => 'Hosting',
                         'rel_id' => $service->id,
@@ -344,7 +366,9 @@ class OrderService
             'registration_date' => now()->toDateString(),
             'expiry_date' => now()->addYear()->toDateString(),
             'status' => DomainStatus::Pending->value,
+            'registration_period' => (int) ($item['registration_period'] ?? 1),
             'recurring_amount' => $item['amount'] ?? 0,
+            'first_payment_amount' => $item['amount'] ?? 0,
             'payment_method' => $order->payment_method,
         ]);
     }
@@ -369,7 +393,11 @@ class OrderService
         $cycle = $service->billing_cycle ?? 'Monthly';
         $domain = $service->domain ? " — {$service->domain}" : '';
 
-        return "{$name} ({$cycle}){$domain}";
+        $configured = ! empty($item['config_options'])
+            ? app(ConfigOptionService::class)->summarise($item['config_options'])
+            : '';
+
+        return "{$name} ({$cycle}){$domain}".($configured ? " ({$configured})" : '');
     }
 
     private function generateOrderNumber(): string

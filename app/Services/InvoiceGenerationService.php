@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Client;
+use App\Models\Domain;
 use App\Models\Invoice;
 use App\Models\Promotion;
 use App\Models\Service;
@@ -36,6 +37,7 @@ class InvoiceGenerationService
             ->where('status', 'active')
             ->whereNotNull('next_due_date')
             ->where('next_due_date', '<=', $cutoff)
+            ->where('amount', '>', 0)
             ->whereHas('client')
             ->whereDoesntHave('client.invoices', fn ($q) => $q
                 ->whereIn('status', ['unpaid', 'overdue'])
@@ -46,14 +48,34 @@ class InvoiceGenerationService
         // then billed on the same invoice as the client's due services.
         $addons = app(AddonService::class)->dueQuery($cutoff)->get();
 
+        $domains = Domain::with('client')
+            ->where('status', 'active')
+            ->whereNotNull('next_due_date')
+            ->where('next_due_date', '<=', $cutoff)
+            ->where('recurring_amount', '>', 0)
+            ->whereHas('client')
+            ->whereDoesntHave('client.invoices', fn ($q) => $q
+                ->whereIn('status', ['unpaid', 'overdue'])
+                ->whereHas('items', fn ($i) => $i->where('type', 'Domain')->whereColumn('rel_id', 'domains.id')))
+            ->get();
+
         $grouped = $services->groupBy('client_id');
         $groupedAddons = $addons->groupBy('client_id');
+        $groupedDomains = $domains->groupBy('client_id');
         $summary = ['generated' => 0, 'skipped' => 0, 'errors' => 0, 'invoice_ids' => []];
 
-        foreach ($grouped->keys()->merge($groupedAddons->keys())->unique() as $clientId) {
+        $clientIds = $grouped->keys()
+            ->merge($groupedAddons->keys())
+            ->merge($groupedDomains->keys())
+            ->unique();
+
+        foreach ($clientIds as $clientId) {
             $clientServices = $grouped->get($clientId, collect());
             $clientAddons = $groupedAddons->get($clientId, collect());
-            $client = $clientServices->first()?->client ?? $clientAddons->first()?->client;
+            $clientDomains = $groupedDomains->get($clientId, collect());
+            $client = $clientServices->first()?->client
+                ?? $clientAddons->first()?->client
+                ?? $clientDomains->first()?->client;
 
             if (! $client) {
                 $summary['skipped']++;
@@ -62,7 +84,12 @@ class InvoiceGenerationService
             }
 
             try {
-                $invoice = $this->generateForServices($client, $clientServices->all(), $clientAddons->all());
+                $invoice = $this->generateForServices(
+                    $client,
+                    $clientServices->all(),
+                    $clientAddons->all(),
+                    $clientDomains->all()
+                );
 
                 if ($invoice) {
                     $summary['generated']++;
@@ -173,9 +200,9 @@ class InvoiceGenerationService
      *
      * @param  Service[]  $services
      */
-    private function generateForServices(Client $client, array $services, array $addons = []): ?Invoice
+    private function generateForServices(Client $client, array $services, array $addons = [], array $domains = []): ?Invoice
     {
-        if (empty($services) && empty($addons)) {
+        if (empty($services) && empty($addons) && empty($domains)) {
             return null;
         }
 
@@ -209,6 +236,17 @@ class InvoiceGenerationService
 
         foreach ($addons as $addon) {
             $items[] = $addonService->lineItem($addon);
+        }
+
+        foreach ($domains as $domain) {
+            $items[] = [
+                'type' => 'Domain',
+                'rel_id' => $domain->id,
+                'description' => 'Domain Renewal: '.$domain->domain.' ('.((int) ($domain->registration_period ?? 1)).'y)',
+                'amount' => (float) $domain->recurring_amount,
+                'taxed' => true,
+                'due_date' => $domain->next_due_date?->toDateString(),
+            ];
         }
 
         $options = [
