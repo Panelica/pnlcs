@@ -23,7 +23,7 @@
                 @forelse($emails as $email)
                 <tr>
                     <td><a href="{{ route('client.emails.show', $email) }}" style="font-weight:600">{{ $email->subject }}</a></td>
-                    <td class="text-muted text-sm">{{ $email->date?->format(datetime_fmt()) ?? $email->created_at?->format(datetime_fmt()) }}</td>
+                    <td class="text-muted text-sm">{{ $email->date?->timezone(display_tz())->format(datetime_fmt()) ?? $email->created_at?->timezone(display_tz())->format(datetime_fmt()) }}</td>
                     <td><a href="{{ route('client.emails.show', $email) }}" class="btn btn-outline btn-xs">{{ __('common.actions.view') }}</a></td>
                 </tr>
                 @empty

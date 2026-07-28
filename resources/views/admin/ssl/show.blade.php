@@ -52,11 +52,11 @@
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="text-muted small">{{ __('admin.ssl.order_date') }}</label>
-                        <p class="mb-0">{{ $order->order_date?->format(datetime_fmt()) ?: $order->created_at->format(datetime_fmt()) }}</p>
+                        <p class="mb-0">{{ $order->order_date?->timezone(display_tz())->format(datetime_fmt()) ?: $order->created_at->timezone(display_tz())->format(datetime_fmt()) }}</p>
                     </div>
                     <div class="col-md-4">
                         <label class="text-muted small">{{ __('admin.ssl.completion_date') }}</label>
-                        <p class="mb-0">{{ $order->completion_date?->format(datetime_fmt()) ?: '—' }}</p>
+                        <p class="mb-0">{{ $order->completion_date?->timezone(display_tz())->format(datetime_fmt()) ?: '—' }}</p>
                     </div>
                     <div class="col-md-4">
                         <label class="text-muted small">{{ __('admin.ssl.expires') }}</label>
@@ -190,15 +190,15 @@
             <div class="card-header"><h5 class="mb-0">{{ __('admin.ssl.timeline') }}</h5></div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.created') }}</small><br>{{ $order->created_at->format(datetime_fmt()) }}</li>
+                    <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.created') }}</small><br>{{ $order->created_at->timezone(display_tz())->format(datetime_fmt()) }}</li>
                     @if($order->order_date)
-                        <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.submitted_ca') }}</small><br>{{ $order->order_date->format(datetime_fmt()) }}</li>
+                        <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.submitted_ca') }}</small><br>{{ $order->order_date->timezone(display_tz())->format(datetime_fmt()) }}</li>
                     @endif
                     @if($order->completion_date)
-                        <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.completed') }}</small><br>{{ $order->completion_date->format(datetime_fmt()) }}</li>
+                        <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.completed') }}</small><br>{{ $order->completion_date->timezone(display_tz())->format(datetime_fmt()) }}</li>
                     @endif
                     @if($order->last_polled_at)
-                        <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.last_polled') }}</small><br>{{ $order->last_polled_at->format(datetime_fmt()) }}</li>
+                        <li class="mb-2"><small class="text-muted">{{ __('admin.ssl.last_polled') }}</small><br>{{ $order->last_polled_at->timezone(display_tz())->format(datetime_fmt()) }}</li>
                     @endif
                 </ul>
             </div>

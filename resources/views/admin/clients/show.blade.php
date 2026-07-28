@@ -143,7 +143,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 @forelse(($notes ?? collect())->take(3) as $note)
                 <div style="margin-top:10px;padding:8px;background:{{ $note->sticky ? '#fffbe6' : '#f9f9f9' }};border:1px solid {{ $note->sticky ? '#e6d200' : '#eee' }};border-radius:3px;font-size:12px;">
                     <p style="margin:0 0 4px;color:#333;">{{ $note->note }}</p>
-                    <span style="color:#999;">{{ $note->created_at->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
+                    <span style="color:#999;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
                 </div>
                 @empty
                 <p style="font-size:12px;color:#999;margin-top:8px;">{{ __('admin.clients.no_notes') }}</p>
@@ -277,7 +277,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 <div class="card" style="margin-bottom:8px;{{ $note->sticky ? 'border-left:4px solid #f0ad4e;' : '' }}">
     <div class="card-body" style="padding:10px 15px;">
         <p style="margin:0 0 6px;font-size:13px;color:#333;">{{ $note->note }}</p>
-        <span style="font-size:11px;color:#999;">{{ $note->created_at->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
+        <span style="font-size:11px;color:#999;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
     </div>
 </div>
 @empty
@@ -296,7 +296,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
         <tbody>
         @foreach($logs as $log)
         <tr>
-            <td style="font-size:12px;white-space:nowrap;">{{ $log->created_at->format(datetime_fmt()) }}</td>
+            <td style="font-size:12px;white-space:nowrap;">{{ $log->created_at->timezone(display_tz())->format(datetime_fmt()) }}</td>
             <td>{{ $log->admin ?? '-' }}</td>
             <td>{{ $log->action ?? '-' }}</td>
             <td>{{ $log->description }}</td>

@@ -79,7 +79,7 @@
     <strong>{{ __('client.invoices.payment_notification_pending_title') }}</strong><br>
     {{ __('client.invoices.payment_notification_pending_text') }}
     @if(isset($pendingNotification) && $pendingNotification)
-    <br><small class="text-muted">{{ __('client.invoices.reported_on') }} {{ $pendingNotification->created_at->format(datetime_fmt()) }} — ${{ number_format((float) $pendingNotification->amount, 2) }}</small>
+    <br><small class="text-muted">{{ __('client.invoices.reported_on') }} {{ $pendingNotification->created_at->timezone(display_tz())->format(datetime_fmt()) }} — ${{ number_format((float) $pendingNotification->amount, 2) }}</small>
     @endif
 </div>
 @endif

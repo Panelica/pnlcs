@@ -38,3 +38,30 @@ if (! function_exists('datetime_fmt')) {
         return date_fmt().' H:i';
     }
 }
+
+if (! function_exists('display_tz')) {
+    /**
+     * The timezone the operator picked in Settings → General.
+     *
+     * Timestamps are stored in UTC and stay that way; this is only the clock
+     * the panel shows them on. Resolved once per request, since Setting::get()
+     * is a query every time.
+     */
+    function display_tz(): string
+    {
+        if (app()->bound('pnlcs.display_tz')) {
+            return app('pnlcs.display_tz');
+        }
+
+        $fallback = (string) config('app.timezone', 'UTC');
+        $tz = trim((string) Setting::get('Timezone', ''));
+
+        if ($tz === '' || ! in_array($tz, timezone_identifiers_list(), true)) {
+            $tz = $fallback;
+        }
+
+        app()->instance('pnlcs.display_tz', $tz);
+
+        return $tz;
+    }
+}

@@ -100,7 +100,7 @@
             @foreach($monthEvents as $ev)
             <tr>
                 <td style="font-weight:600;">{{ $ev->title }}</td>
-                <td style="font-size:12px;">{{ $ev->start?->format(datetime_fmt()) }}@if($ev->end) - {{ $ev->end->format(datetime_fmt()) }}@endif</td>
+                <td style="font-size:12px;">{{ $ev->start?->timezone(display_tz())->format(datetime_fmt()) }}@if($ev->end) - {{ $ev->end->timezone(display_tz())->format(datetime_fmt()) }}@endif</td>
                 <td style="font-size:12px;color:#777;">{{ \Illuminate\Support\Str::limit($ev->description ?? '', 60) ?: '-' }}</td>
                 <td style="font-size:12px;">{{ $ev->admin ?? '-' }}</td>
                 <td style="text-align:right;">

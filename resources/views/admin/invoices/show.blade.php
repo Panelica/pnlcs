@@ -184,7 +184,7 @@
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.payment') }}</td><td style="padding:4px 0;text-transform:capitalize;">{{ $invoice->payment_method }}</td></tr>
                     @endif
                     @if($invoice->status === 'Paid' && $invoice->date_paid)
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.paid_on') }}</td><td style="padding:4px 0;color:#5cb85c;font-weight:600;">{{ $invoice->date_paid->format(datetime_fmt()) }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.paid_on') }}</td><td style="padding:4px 0;color:#5cb85c;font-weight:600;">{{ $invoice->date_paid->timezone(display_tz())->format(datetime_fmt()) }}</td></tr>
                     @endif
                 </table>
             </div>
@@ -194,7 +194,7 @@
             <div class="panel-heading panel-primary">{{ __('admin.invoices.actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
                 @if($invoice->status === 'Paid')
-                <div style="padding:8px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:3px;text-align:center;color:#3c763d;font-size:13px;">&#10003; Paid on {{ $invoice->date_paid?->format(datetime_fmt()) }}</div>
+                <div style="padding:8px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:3px;text-align:center;color:#3c763d;font-size:13px;">&#10003; Paid on {{ $invoice->date_paid?->timezone(display_tz())->format(datetime_fmt()) }}</div>
                 @endif
                 @if($invoice->status === 'Cancelled')
                 <div style="padding:8px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;text-align:center;color:#777;font-size:13px;">{{ __('admin.invoices.invoice_cancelled') }}</div>

@@ -34,7 +34,7 @@
             <small class="text-muted">
                 {{ __('client.network_status.type_' . strtolower($issue->type ?: 'general')) }}
                 @if($issue->affected_server) &nbsp;·&nbsp; {{ __('client.network_status.affecting') }}: {{ $issue->affected_server }} @endif
-                @if($issue->start_date) &nbsp;·&nbsp; {{ __('client.network_status.since') }} {{ $issue->start_date->format(datetime_fmt()) }} @endif
+                @if($issue->start_date) &nbsp;·&nbsp; {{ __('client.network_status.since') }} {{ $issue->start_date->timezone(display_tz())->format(datetime_fmt()) }} @endif
             </small>
         </div>
         @endforeach
@@ -59,7 +59,7 @@
                 <tr>
                     <td>{{ $issue->title }}</td>
                     <td class="text-muted text-sm">{{ __('client.network_status.type_' . strtolower($issue->type ?: 'general')) }}</td>
-                    <td class="text-muted text-sm">{{ $issue->end_date?->format(datetime_fmt()) ?? '-' }}</td>
+                    <td class="text-muted text-sm">{{ $issue->end_date?->timezone(display_tz())->format(datetime_fmt()) ?? '-' }}</td>
                 </tr>
                 @endforeach
             </tbody>

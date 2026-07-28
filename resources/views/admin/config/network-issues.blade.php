@@ -17,8 +17,8 @@
         <tr>
             <td style="font-weight:600;">{{ $issue->title }}</td>
             <td style="text-transform:capitalize;">{{ $issue->type ?? 'General' }}</td>
-            <td style="font-size:12px;">{{ $issue->created_at->format(datetime_fmt()) }}</td>
-            <td style="font-size:12px;">{{ $issue->resolved_at?->format(datetime_fmt()) ?? '&mdash;' }}</td>
+            <td style="font-size:12px;">{{ $issue->created_at->timezone(display_tz())->format(datetime_fmt()) }}</td>
+            <td style="font-size:12px;">{{ $issue->resolved_at?->timezone(display_tz())->format(datetime_fmt()) ?? '&mdash;' }}</td>
             <td><span class="badge-{{ $issue->resolved_at ? 'active' : 'open' }}">{{ $issue->resolved_at ? __('admin.network_issues.resolved') : __('admin.network_issues.active') }}</span></td>
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.network-issues.destroy', $issue) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.network_issues.confirm_delete') }}')">

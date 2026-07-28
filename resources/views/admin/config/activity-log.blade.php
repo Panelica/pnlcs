@@ -15,7 +15,7 @@
         <tbody>
         @foreach($logs as $log)
         <tr>
-            <td style="white-space:nowrap;font-size:12px;">{{ $log->created_at->format(datetime_fmt()) }}</td>
+            <td style="white-space:nowrap;font-size:12px;">{{ $log->created_at->timezone(display_tz())->format(datetime_fmt()) }}</td>
             <td>{{ $log->user ?? $log->admin ?? '-' }}</td>
             <td style="font-family:monospace;font-size:12px;">{{ $log->ip_address ?? $log->ip ?? '-' }}</td>
             <td>{{ $log->description ?? $log->action }}</td>

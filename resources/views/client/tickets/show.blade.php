@@ -12,7 +12,7 @@
         <h1 class="pn-page-title">#{{ $ticket->tid }} &mdash; {{ $ticket->title }}</h1>
         <p class="pn-page-subtitle">
             {{ $ticket->department->name ?? __('client.tickets.general_dept') }}
-            &nbsp;&middot;&nbsp; {{ __('client.tickets.opened') }} {{ $ticket->created_at->format(datetime_fmt()) }}
+            &nbsp;&middot;&nbsp; {{ __('client.tickets.opened') }} {{ $ticket->created_at->timezone(display_tz())->format(datetime_fmt()) }}
             @if($ticket->last_reply) &nbsp;&middot;&nbsp; {{ __('client.tickets.last_reply') }} {{ $ticket->last_reply->diffForHumans() }} @endif
         </p>
     </div>
@@ -26,7 +26,7 @@
 <div class="pn-msg">
     <div class="pn-msg-head">
         <span class="pn-msg-author">{{ $ticket->name ?? auth()->user()->full_name }}</span>
-        <span class="pn-msg-date">{{ $ticket->created_at->format(datetime_fmt()) }}</span>
+        <span class="pn-msg-date">{{ $ticket->created_at->timezone(display_tz())->format(datetime_fmt()) }}</span>
     </div>
     <div class="pn-msg-body">{{ $ticket->message }}</div>
     @if($ticket->attachment)
@@ -51,7 +51,7 @@
                 {{ auth()->user()->full_name }}
             @endif
         </span>
-        <span class="pn-msg-date">{{ $reply->created_at->format(datetime_fmt()) }}</span>
+        <span class="pn-msg-date">{{ $reply->created_at->timezone(display_tz())->format(datetime_fmt()) }}</span>
     </div>
     <div class="pn-msg-body">{{ $reply->message }}</div>
     @if($reply->attachment)
