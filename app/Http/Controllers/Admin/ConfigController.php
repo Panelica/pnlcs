@@ -16,6 +16,7 @@ use App\Models\Client;
 use App\Models\ClientGroup;
 use App\Models\ConfigOption;
 use App\Models\ConfigOptionGroup;
+use App\Models\ConfigOptionLink;
 use App\Models\ConfigOptionSub;
 use App\Models\Currency;
 use App\Models\DomainPricing;
@@ -28,6 +29,7 @@ use App\Models\KbCategory;
 use App\Models\NetworkIssue;
 use App\Models\NotificationProvider;
 use App\Models\NotificationRule;
+use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\ProductBundle;
@@ -1131,9 +1133,27 @@ class ConfigController extends Controller
 
     public function configOptions()
     {
-        $groups = ConfigOptionGroup::with('options.subs')->get();
+        $groups = ConfigOptionGroup::with(['options.subs.pricing', 'productLinks'])->get();
+        $products = Product::orderBy('name')->get(['id', 'name']);
 
-        return view('admin.config.config-options', compact('groups'));
+        return view('admin.config.config-options', compact('groups', 'products'));
+    }
+
+    /** Which products offer this option group. */
+    public function linkConfigOptionGroup(Request $request, int $id)
+    {
+        $group = ConfigOptionGroup::findOrFail($id);
+        $v = $request->validate([
+            'product_ids' => 'nullable|array',
+            'product_ids.*' => 'integer|exists:products,id',
+        ]);
+
+        ConfigOptionLink::where('group_id', $group->id)->delete();
+        foreach ($v['product_ids'] ?? [] as $productId) {
+            ConfigOptionLink::create(['group_id' => $group->id, 'product_id' => $productId]);
+        }
+
+        return back()->with('success', __('admin.messages.config_option_group_linked'));
     }
 
     public function storeConfigOptionGroup(Request $request)
@@ -1192,8 +1212,34 @@ class ConfigController extends Controller
             'config_id' => 'required|exists:config_options,id',
             'option_name' => 'required|string|max:255',
             'sort_order' => 'nullable|integer',
+            'monthly' => 'nullable|numeric|min:0',
+            'quarterly' => 'nullable|numeric|min:0',
+            'semiannually' => 'nullable|numeric|min:0',
+            'annually' => 'nullable|numeric|min:0',
+            'biennially' => 'nullable|numeric|min:0',
+            'triennially' => 'nullable|numeric|min:0',
         ]);
-        ConfigOptionSub::create($validated);
+
+        $sub = ConfigOptionSub::create([
+            'config_id' => $validated['config_id'],
+            'option_name' => $validated['option_name'],
+            'sort_order' => $validated['sort_order'] ?? 0,
+        ]);
+
+        // Prices live in the shared pricing table, the same shape products use.
+        // Without this the customer could pick an option and be charged nothing.
+        $currency = Currency::getDefault();
+        Pricing::updateOrCreate(
+            ['type' => ConfigOptionSub::PRICING_TYPE, 'rel_id' => $sub->id, 'currency_id' => $currency?->id ?? 1],
+            [
+                'monthly' => (float) ($request->input('monthly') ?? 0),
+                'quarterly' => (float) ($request->input('quarterly') ?? 0),
+                'semiannually' => (float) ($request->input('semiannually') ?? 0),
+                'annually' => (float) ($request->input('annually') ?? 0),
+                'biennially' => (float) ($request->input('biennially') ?? 0),
+                'triennially' => (float) ($request->input('triennially') ?? 0),
+            ]
+        );
 
         return back()->with('success', __('admin.messages.sub_option_created'));
     }

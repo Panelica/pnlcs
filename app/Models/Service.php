@@ -14,6 +14,11 @@ class Service extends Model
 
     protected $hidden = ['password'];
 
+    public function configOptions()
+    {
+        return $this->hasMany(ServiceConfigOption::class);
+    }
+
     protected function casts(): array
     {
         return ['next_due_date' => 'date', 'registration_date' => 'date', 'suspension_date' => 'date', 'termination_date' => 'date', 'amount' => 'decimal:2', 'first_payment_amount' => 'decimal:2', 'auto_renew' => 'boolean', 'password' => 'encrypted', 'module_data' => 'array'];

@@ -7,6 +7,7 @@ use App\Models\Currency;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Services\CartService;
+use App\Services\ConfigOptionService;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -35,8 +36,9 @@ class CartController extends Controller
 
         $cycles = $this->cartService->getAvailableCycles($product);
         $currency = Currency::getDefault();
+        $optionGroups = app(ConfigOptionService::class)->groupsFor($product);
 
-        return view('client.cart.configure', compact('product', 'cycles', 'currency'));
+        return view('client.cart.configure', compact('product', 'cycles', 'currency', 'optionGroups'));
     }
 
     public function index()
@@ -57,6 +59,7 @@ class CartController extends Controller
             'domain' => 'nullable|string|max:255',
             'domain_option' => 'nullable|string|in:register,transfer,own',
             'notes' => 'nullable|string|max:2000',
+            'config_options' => 'nullable|array',
         ]);
 
         $product = Product::findOrFail($request->product_id);

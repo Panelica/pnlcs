@@ -53,6 +53,75 @@
                 </div>
             </div>
 
+            {{-- Configurable Options --}}
+            @if(($optionGroups ?? collect())->isNotEmpty())
+            <div class="pn-card" style="margin-bottom:16px;">
+                <div class="pn-card-header">{{ __('client.cart.configurable_options') }}</div>
+                <div class="pn-card-body">
+                    @foreach($optionGroups as $group)
+                        @foreach($group->options as $option)
+                            @continue($option->subs->isEmpty())
+                            @php
+                                $selectedCycle = old('billing_cycle', $cycles[0] ?? 'monthly');
+                                $previous = old('config_options.'.$option->id);
+                            @endphp
+                            <div class="form-group" style="margin-bottom:14px;">
+                                <label class="form-label" for="opt-{{ $option->id }}">{{ $option->option_name }}</label>
+
+                                @if($option->isQuantity())
+                                    @php $unit = $option->subs->first(); @endphp
+                                    <input type="number" id="opt-{{ $option->id }}"
+                                           name="config_options[{{ $option->id }}]"
+                                           class="form-control config-option"
+                                           data-unit-price="{{ $unit?->priceFor($selectedCycle) ?? 0 }}"
+                                           value="{{ $previous ?? $option->qty_minimum ?? 0 }}"
+                                           min="{{ $option->qty_minimum ?? 0 }}"
+                                           @if($option->qty_maximum) max="{{ $option->qty_maximum }}" @endif>
+                                    <small style="color:#777;">
+                                        {{ $currency?->prefix }}{{ number_format($unit?->priceFor($selectedCycle) ?? 0, 2) }}
+                                        {{ __('client.cart.per_unit') }}
+                                    </small>
+
+                                @elseif($option->isCheckbox())
+                                    @php $sub = $option->subs->first(); @endphp
+                                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer;">
+                                        <input type="checkbox" id="opt-{{ $option->id }}"
+                                               name="config_options[{{ $option->id }}]" value="1"
+                                               class="config-option"
+                                               data-unit-price="{{ $sub?->priceFor($selectedCycle) ?? 0 }}"
+                                               @checked($previous)>
+                                        <span>{{ $sub?->option_name ?? $option->option_name }}
+                                            @if(($sub?->priceFor($selectedCycle) ?? 0) > 0)
+                                                (+{{ $currency?->prefix }}{{ number_format($sub->priceFor($selectedCycle), 2) }})
+                                            @endif
+                                        </span>
+                                    </label>
+
+                                @else
+                                    <select id="opt-{{ $option->id }}"
+                                            name="config_options[{{ $option->id }}]"
+                                            class="form-control config-option" required>
+                                        @foreach($option->subs as $sub)
+                                            @php $price = $sub->priceFor($selectedCycle); @endphp
+                                            <option value="{{ $sub->id }}"
+                                                    data-unit-price="{{ $price }}"
+                                                    @selected((string) $previous === (string) $sub->id)>
+                                                {{ $sub->option_name }}@if($price > 0) (+{{ $currency?->prefix }}{{ number_format($price, 2) }})@endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                @endif
+
+                                @error('config_options.'.$option->id)
+                                    <div style="color:#c0392b; font-size:12px; margin-top:4px;">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endforeach
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             {{-- Domain --}}
             @if($product->require_domain ?? false)
             <div class="pn-card" style="margin-bottom:16px;">

@@ -394,6 +394,7 @@ Route::middleware(['admin.auth'])->prefix('admin')->name('admin.')->group(functi
             Route::delete('config-options/{id}', [ConfigController::class, 'deleteConfigOption'])->name('config-options.destroy');
             Route::post('config-option-subs', [ConfigController::class, 'storeConfigOptionSub'])->name('config-option-subs.store');
             Route::delete('config-option-subs/{id}', [ConfigController::class, 'deleteConfigOptionSub'])->name('config-option-subs.destroy');
+            Route::post('config-option-groups/{id}/products', [ConfigController::class, 'linkConfigOptionGroup'])->name('config-option-groups.link');
         });
 
         // No permission: todo, affiliates, quotes, billable-items, transactions, automation, client-groups, system

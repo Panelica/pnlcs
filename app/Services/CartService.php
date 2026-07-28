@@ -67,6 +67,14 @@ class CartService
     public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null): Cart
     {
         $price = $this->getProductPrice($product, $billingCycle);
+
+        // Configurable options are part of the recurring price. They used to be
+        // stored on the cart item and never charged for.
+        $optionService = app(ConfigOptionService::class);
+        $normalised = $optionService->normalise($product, $configOptions, $billingCycle);
+        $options = $optionService->toCartPayload($normalised);
+        $price += $optionService->priceOf($normalised);
+
         $data = $this->getData($cart);
 
         // A register/transfer intent must survive into the order — fold it into
@@ -84,8 +92,8 @@ class CartService
             'billing_cycle' => $billingCycle,
             'domain' => $domain,
             'domain_option' => $domainOption,
-            'config_options' => $configOptions,
-            'price' => $price,
+            'config_options' => $options,
+            'price' => round($price, 2),
             'notes' => $notes,
         ];
 
@@ -262,13 +270,16 @@ class CartService
                     'client_id' => $clientId,
                     'type' => 'Hosting',
                     'rel_id' => $item['product_id'],
-                    'description' => $item['product_name'].' — '.ucfirst($item['billing_cycle']),
+                    'description' => $item['product_name'].' — '.ucfirst($item['billing_cycle'])
+                        .(! empty($item['config_options'])
+                            ? ' ('.app(ConfigOptionService::class)->summarise($item['config_options']).')'
+                            : ''),
                     'amount' => $item['price'],
                     'taxed' => true,
                     'due_date' => now()->addDays(7),
                 ]);
 
-                Service::create([
+                $service = Service::create([
                     'client_id' => $clientId,
                     'order_id' => $order->id,
                     'product_id' => $item['product_id'],
@@ -282,6 +293,12 @@ class CartService
                     'first_payment_amount' => $item['price'],
                     'notes' => $item['notes'] ?? null,
                 ]);
+
+                // Record what was configured so the panel and the server module
+                // can see it; the money is already inside the service amount.
+                if (! empty($item['config_options'])) {
+                    app(ConfigOptionService::class)->attachToService($service, $item['config_options']);
+                }
             }
         }
 

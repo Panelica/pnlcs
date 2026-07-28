@@ -31,6 +31,25 @@
         </div>
     </div>
     <div class="card-body" style="padding:0;">
+        {{-- Which products offer this group. Without a link the customer never
+             sees these options, however many are defined. --}}
+        <div style="padding:12px 16px;border-bottom:1px solid #eee;background:#fcfcfd;">
+            <form method="POST" action="{{ route('admin.config.config-option-groups.link', $group->id) }}"
+                  style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+                @csrf
+                @php $linked = $group->productLinks->pluck('product_id')->all(); @endphp
+                <div class="form-group" style="margin:0;flex:1;min-width:260px;">
+                    <label class="form-label" style="font-size:11px;">{{ __('admin.config_options.applies_to_products') }}</label>
+                    <select name="product_ids[]" multiple size="4" class="form-control" style="font-size:12px;">
+                        @foreach($products ?? [] as $p)
+                        <option value="{{ $p->id }}" @selected(in_array($p->id, $linked, true))>{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-default btn-sm">{{ __('common.actions.save') }}</button>
+            </form>
+        </div>
+
         @if($group->options->isEmpty())
         <div style="padding:20px;text-align:center;color:#999;font-size:13px;">{{ __('admin.config_options.no_options') }}</div>
         @else
@@ -120,6 +139,17 @@
             <input type="hidden" name="config_id" value="{{ $option->id }}">
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.config_options.sub_option_name') }}</label><input type="text" name="option_name" required class="form-control" placeholder="{{ __('admin.config_options.sub_option_placeholder') }}"></div>
+                <div style="margin-top:10px;">
+                    <div style="font-size:12px;font-weight:600;margin-bottom:6px;">{{ __('admin.config_options.pricing') }}</div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                    <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:11px;">{{ __('admin.config_options.price_monthly') }}</label><input type="number" step="0.01" min="0" name="monthly" value="0" class="form-control" style="font-size:12px;padding:5px 8px;"></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:11px;">{{ __('admin.config_options.price_quarterly') }}</label><input type="number" step="0.01" min="0" name="quarterly" value="0" class="form-control" style="font-size:12px;padding:5px 8px;"></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:11px;">{{ __('admin.config_options.price_semiannually') }}</label><input type="number" step="0.01" min="0" name="semiannually" value="0" class="form-control" style="font-size:12px;padding:5px 8px;"></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:11px;">{{ __('admin.config_options.price_annually') }}</label><input type="number" step="0.01" min="0" name="annually" value="0" class="form-control" style="font-size:12px;padding:5px 8px;"></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:11px;">{{ __('admin.config_options.price_biennially') }}</label><input type="number" step="0.01" min="0" name="biennially" value="0" class="form-control" style="font-size:12px;padding:5px 8px;"></div>
+                    <div class="form-group" style="margin:0;"><label class="form-label" style="font-size:11px;">{{ __('admin.config_options.price_triennially') }}</label><input type="number" step="0.01" min="0" name="triennially" value="0" class="form-control" style="font-size:12px;padding:5px 8px;"></div>
+                    </div>
+                </div>
                 <div class="form-group" style="margin-top:12px;"><label class="form-label">{{ __('admin.config_options.sort_order') }}</label><input type="number" name="sort_order" value="0" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
