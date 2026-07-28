@@ -35,6 +35,9 @@ class InvoiceGenerationService
         // twice.
         $services = Service::with('client', 'product')
             ->where('status', 'active')
+            // The customer turned renewal off; billing them anyway is what got
+            // the account suspended for an invoice they never wanted.
+            ->where('auto_renew', true)
             ->whereNotNull('next_due_date')
             ->where('next_due_date', '<=', $cutoff)
             ->where('amount', '>', 0)
@@ -50,6 +53,11 @@ class InvoiceGenerationService
 
         $domains = Domain::with('client')
             ->where('status', 'active')
+            // A domain has no auto-renew column: the customer's switch flips
+            // payment_method to none, which is the signal to leave it alone.
+            // A null is not a no: SQL would drop those rows from the comparison
+            // and quietly stop billing them.
+            ->where(fn ($q) => $q->whereNull('payment_method')->orWhere('payment_method', '!=', 'none'))
             ->whereNotNull('next_due_date')
             ->where('next_due_date', '<=', $cutoff)
             ->where('recurring_amount', '>', 0)

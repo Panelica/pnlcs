@@ -197,7 +197,10 @@ class AddonService
             // A suspended service is still owed for — suspension is usually
             // non-payment and paying is what lifts it. A terminated or
             // cancelled one is not.
-            ->whereHas('service', fn ($q) => $q->whereNotIn('status', ['terminated', 'cancelled', 'fraud']))
+            ->whereHas('service', fn ($q) => $q
+                ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+                // An addon renews with the service it belongs to.
+                ->where('auto_renew', true))
             ->whereDoesntHave('client.invoices', fn ($q) => $q
                 ->whereIn('status', ['unpaid', 'overdue'])
                 ->whereHas('items', fn ($i) => $i->where('type', 'Addon')->whereColumn('rel_id', 'service_addons.id')));
