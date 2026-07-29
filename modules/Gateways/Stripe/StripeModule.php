@@ -29,6 +29,8 @@ class StripeModule implements GatewayModuleInterface
         ];
     }
 
+    /** How stale a signed webhook may be, matching Stripe's own libraries. */
+    private const WEBHOOK_TOLERANCE_SECONDS = 300;
     private function getSetting(string $key): ?string
     {
         $row = GatewaySettings::where("gateway", "stripe")->where("setting", $key)->first();
@@ -274,6 +276,14 @@ HTML;
             if (!$timestamp || !$sigReceived || !hash_equals($sigExpected, $sigReceived)) {
                 Log::warning("Stripe: webhook signature verification failed");
                 return ["success" => false, "message" => "Invalid webhook signature."];
+            }
+
+            // The timestamp is signed too, so a caller cannot alter it — but a
+            // signature stays valid forever unless we refuse stale ones.
+            // Stripe's own libraries allow five minutes.
+            if (abs(time() - (int) $timestamp) > self::WEBHOOK_TOLERANCE_SECONDS) {
+                Log::warning("Stripe: webhook timestamp outside tolerance", ["timestamp" => $timestamp]);
+                return ["success" => false, "message" => "Webhook timestamp is too old."];
             }
         }
 
