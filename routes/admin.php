@@ -402,14 +402,21 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('config-option-groups/{id}/products', [ConfigController::class, 'linkConfigOptionGroup'])->name('config-option-groups.link');
         });
 
-        // No permission: todo, affiliates, quotes, billable-items, transactions, automation, client-groups, system
+        // No permission: todo (an admin's own scratchpad, not business data)
         Route::get('todo', [ConfigController::class, 'todoList'])->name('todo');
         Route::post('todo', [ConfigController::class, 'storeTodo'])->name('todo.store');
         Route::put('todo/{todo}', [ConfigController::class, 'updateTodo'])->name('todo.update');
         Route::delete('todo/{todo}', [ConfigController::class, 'destroyTodo'])->name('todo.destroy');
 
-        Route::get('affiliates', [ConfigController::class, 'affiliates'])->name('affiliates');
-        Route::get('quotes', [ConfigController::class, 'quotes'])->name('quotes');
+        // Same data as admin.affiliates.index, which requires this.
+        Route::middleware('admin.permission:manage_affiliates')->group(function () {
+            Route::get('affiliates', [ConfigController::class, 'affiliates'])->name('affiliates');
+        });
+
+        // Same data as admin.quotes.index, which requires this.
+        Route::middleware('admin.permission:manage_quotes')->group(function () {
+            Route::get('quotes', [ConfigController::class, 'quotes'])->name('quotes');
+        });
 
         Route::middleware('admin.permission:manage_invoices')->group(function () {
             Route::get('billable-items', [ConfigController::class, 'billableItems'])->name('billable-items');
@@ -417,9 +424,14 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::delete('billable-items/{item}', [ConfigController::class, 'destroyBillableItem'])->name('billable-items.destroy');
         });
 
-        Route::get('transactions', [ConfigController::class, 'transactions'])->name('transactions');
+        // Every payment the business has taken, with the client on each one.
+        Route::middleware('admin.permission:view_reports')->group(function () {
+            Route::get('transactions', [ConfigController::class, 'transactions'])->name('transactions');
+        });
 
-        Route::get('automation', [ConfigController::class, 'automation'])->name('automation');
+        Route::middleware('admin.permission:manage_settings')->group(function () {
+            Route::get('automation', [ConfigController::class, 'automation'])->name('automation');
+        });
         Route::middleware('admin.permission:edit_clients')->group(function () {
             Route::get('client-groups', [ConfigController::class, 'clientGroups'])->name('client-groups');
             Route::post('client-groups', [ConfigController::class, 'storeClientGroup'])->name('client-groups.store');
