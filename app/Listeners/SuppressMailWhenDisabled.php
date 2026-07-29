@@ -20,10 +20,18 @@ use Illuminate\Support\Facades\Log;
  */
 class SuppressMailWhenDisabled
 {
-    public function handle(MessageSending $event): bool
+    /**
+     * Returns null to allow, false to cancel.
+     *
+     * MessageSending is dispatched with halting: the chain stops at the first
+     * listener that returns anything other than null. Returning true here to
+     * mean "allowed" silently cancelled every listener registered after this
+     * one, so any other mail hook the panel adds would never run.
+     */
+    public function handle(MessageSending $event): ?bool
     {
         if ($this->mailEnabled()) {
-            return true;
+            return null;
         }
 
         Log::info('Outgoing mail suppressed: mail is disabled in the panel settings.', [

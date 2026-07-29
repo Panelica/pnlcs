@@ -1,0 +1,133 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\EmailTemplate;
+use App\Models\Setting;
+
+/**
+ * The email templates screen edits 19 templates with merge fields, a disable
+ * switch, a from name and address, and a copy-to address — and not one of the
+ * 23 mailables read any of it. An operator could rewrite the invoice email,
+ * switch off the suspension notice or add an accounts address to every copy,
+ * save, and nothing changed.
+ *
+ * This maps a mailable to its template and fills the merge fields in.
+ */
+class EmailTemplateService
+{
+    /**
+     * Mailable class → template name, as seeded.
+     *
+     * Deliberately explicit: guessing from the class name would silently attach
+     * the wrong template the first time somebody renames one.
+     */
+    private const MAP = [
+        'AccountSignupMail' => 'Account Signup Email',
+        'AffiliateWelcomeMail' => 'Affiliate Welcome Email',
+        'CancellationConfirmMail' => 'Cancellation Confirmation',
+        'DomainRegistrationMail' => 'Domain Registration Confirmation',
+        'DomainRenewalReminderMail' => 'Domain Renewal Reminder',
+        'InvoiceCreatedMail' => 'Invoice Created',
+        'InvoiceOverdueMail' => 'Invoice Overdue',
+        'InvoicePaidMail' => 'Invoice Payment Confirmation',
+        'OrderConfirmationMail' => 'Order Confirmation',
+        'PasswordResetMail' => 'Password Reset Confirmation',
+        'PaymentReminderMail' => 'Invoice Reminder',
+        'ServiceSuspensionMail' => 'Service Suspension',
+        'ServiceTerminationMail' => 'Service Termination',
+        'ServiceUnsuspensionMail' => 'Service Unsuspension',
+        'ServiceWelcomeMail' => 'Service Welcome Email',
+        'TicketOpenedMail' => 'Support Ticket Opened',
+        'TicketReplyMail' => 'Support Ticket Reply',
+    ];
+
+    /**
+     * The mailable arrives as a class name: Laravel puts the string, not the
+     * instance, into the event data under __laravel_mailable.
+     */
+    public function forMailable(object|string $mailable): ?EmailTemplate
+    {
+        $short = class_basename($mailable);
+
+        if (! isset(self::MAP[$short])) {
+            return null;
+        }
+
+        try {
+            return EmailTemplate::where('name', self::MAP[$short])->first();
+        } catch (\Throwable) {
+            // Templates unreadable (installer, broken database) — never let this
+            // stand between a customer and their email.
+            return null;
+        }
+    }
+
+    /** Replace {merge_field} with what the mailable is carrying. */
+    public function merge(string $text, array $vars): string
+    {
+        foreach ($vars as $key => $value) {
+            $text = str_replace('{'.$key.'}', (string) $value, $text);
+        }
+
+        return $text;
+    }
+
+    /**
+     * The values a template can refer to, taken from the view data the
+     * mailable carries — the same models it hands to its Blade view.
+     *
+     * @return array<string, string>
+     */
+    public function varsFor(array $data): array
+    {
+        $vars = ['CompanyName' => $this->companyName()];
+
+        $client = null;
+
+        foreach (['invoice', 'service', 'order', 'domain', 'ticket', 'client'] as $property) {
+            $model = $data[$property] ?? null;
+
+            if (! is_object($model)) {
+                continue;
+            }
+
+            match ($property) {
+                'invoice' => $vars += [
+                    'invoice_num' => $model->invoice_num ?? $model->id,
+                    'invoice_total' => number_format((float) $model->total, 2),
+                    'invoice_due_date' => $model->due_date?->format(date_fmt()) ?? '',
+                ],
+                'service' => $vars += [
+                    'service_domain' => $model->domain ?? '',
+                    'service_product' => $model->product->name ?? '',
+                ],
+                'order' => $vars += ['order_num' => $model->order_num ?? $model->id],
+                'domain' => $vars += ['domain_name' => $model->domain ?? ''],
+                'ticket' => $vars += [
+                    'ticket_tid' => $model->tid ?? '',
+                    'ticket_subject' => $model->title ?? '',
+                ],
+                default => null,
+            };
+
+            $client ??= $model->client ?? ($property === 'client' ? $model : null);
+        }
+
+        if ($client) {
+            $vars['client_name'] = trim(($client->first_name ?? '').' '.($client->last_name ?? ''));
+            $vars['client_email'] = $client->email ?? '';
+        }
+
+        return $vars;
+    }
+
+    private function companyName(): string
+    {
+        try {
+            return (string) (Setting::get('whitelabel_company_name') ?: config('app.name', 'PNLCS'));
+        } catch (\Throwable) {
+            return (string) config('app.name', 'PNLCS');
+        }
+    }
+}

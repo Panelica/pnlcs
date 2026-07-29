@@ -61,7 +61,9 @@ test('the listener cancels delivery when the switch is off', function () {
     expect($listener->handle(new MessageSending($message)))->toBeFalse();
 
     Setting::set('MailEnabled', '1', 'general');
-    expect($listener->handle(new MessageSending($message)))->toBeTrue();
+    // null means allow: the event halts on any other return value, which
+    // would switch off every mail hook registered after this one.
+    expect($listener->handle(new MessageSending($message)))->toBeNull();
 });
 
 test('the listener is registered on the sending event', function () {
@@ -74,5 +76,7 @@ test('unreadable settings never swallow mail', function () {
     $message = (new Email)
         ->from('panel@example.com')->to('customer@example.com')->subject('x')->text('y');
 
-    expect($listener->handle(new MessageSending($message)))->toBeTrue();
+    // null means allow: the event halts on any other return value, which
+    // would switch off every mail hook registered after this one.
+    expect($listener->handle(new MessageSending($message)))->toBeNull();
 });

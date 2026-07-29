@@ -11,6 +11,7 @@ use App\Events\ServiceSuspended;
 use App\Events\ServiceTerminated;
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
+use App\Listeners\ApplyEmailTemplate;
 use App\Listeners\ApplyUpgradeListener;
 use App\Listeners\AutoAcceptOrderListener;
 use App\Listeners\LogActivityListener;
@@ -33,6 +34,7 @@ class EventServiceProvider extends ServiceProvider
         // Must stay first: cancels the send when mail is disabled in settings.
         MessageSending::class => [
             SuppressMailWhenDisabled::class,
+            ApplyEmailTemplate::class,
         ],
         ClientCreated::class => [
             [SendNotificationListener::class, 'handleClientCreated'],
