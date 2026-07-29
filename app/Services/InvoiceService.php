@@ -275,9 +275,18 @@ class InvoiceService
      */
     public function cancelInvoice(Invoice $invoice): Invoice
     {
-        if ($invoice->status === InvoiceStatus::Paid->value) {
+        $status = strtolower((string) $invoice->status);
+
+        // A paid invoice is refunded, not cancelled; an already cancelled one
+        // must not hand its money over a second time.
+        if (in_array($status, [InvoiceStatus::Paid->value, InvoiceStatus::Cancelled->value], true)) {
             return $invoice;
         }
+
+        app(PaymentService::class)->returnPaymentsToCredit(
+            $invoice,
+            "Invoice #{$invoice->invoice_num} cancelled — payment returned as credit"
+        );
 
         $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
 

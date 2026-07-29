@@ -327,6 +327,26 @@ class PaymentService
         ]);
     }
 
+    /**
+     * Hand what has been paid on an invoice back to the customer's balance.
+     *
+     * Used when an invoice is cancelled with money already on it. Nothing is
+     * going back through the gateway, so it has to stay spendable rather than
+     * disappear with the invoice.
+     */
+    public function returnPaymentsToCredit(Invoice $invoice, string $description): float
+    {
+        $paid = $this->amountPaid($invoice);
+
+        if ($paid <= 0.009) {
+            return 0.0;
+        }
+
+        $this->addClientCredit($invoice, $paid, $description);
+
+        return $paid;
+    }
+
     private function addClientCredit(Invoice $invoice, float $amount, string $description): void
     {
         $client = $invoice->client;
