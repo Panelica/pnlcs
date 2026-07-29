@@ -81,6 +81,20 @@ class Client extends Model
         });
     }
 
+    /**
+     * Services that have not been terminated.
+     *
+     * Deleting the client takes these rows with it, and nothing closes the
+     * accounts on the control panel, so the hosting would carry on running
+     * with nothing left to say it exists.
+     */
+    public function liveServiceCount(): int
+    {
+        return $this->services()
+            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+            ->count();
+    }
+
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";

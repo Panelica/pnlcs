@@ -169,9 +169,7 @@ class ClientController extends Controller
         // themselves are never terminated on the control panel - the hosting
         // would carry on running with nothing left to say it exists or who it
         // belongs to. Terminate first, then delete.
-        $live = $client->services()
-            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
-            ->count();
+        $live = $client->liveServiceCount();
 
         if ($live > 0) {
             return back()->with('error', __('admin.messages.client_has_live_services', ['count' => $live]));
