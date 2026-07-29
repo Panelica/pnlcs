@@ -1727,6 +1727,8 @@ return [
     'products.product_type' => 'Product Type',
     'products.retired' => 'Retired',
     'products.server_module' => 'Server Module',
+    'products.stock_control' => 'Stock',
+    'products.stock_control_hint' => 'Limit how many can be sold',
     'products.ssl_module' => 'SSL Module',
     'products.tagline' => 'Tagline',
     'products.title' => 'Products / Services',

@@ -21,6 +21,12 @@ class Product extends Model
         return $this->belongsTo(ProductGroup::class, 'group_id');
     }
 
+    /** Whether the shelf is empty. A product without stock control never is. */
+    public function outOfStock(): bool
+    {
+        return (bool) $this->stock_control && (int) $this->stock_qty <= 0;
+    }
+
     public function serverGroup()
     {
         return $this->belongsTo(ServerGroup::class, 'server_group_id');

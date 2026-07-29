@@ -55,9 +55,15 @@
                 @else
                     <div style="flex:1;margin-bottom:16px"></div>
                 @endif
+                @if($product->outOfStock())
+                    <span class="btn btn-outline" style="justify-content:center;text-align:center;opacity:.65;cursor:default">
+                        {{ __('client.cart.out_of_stock') }}
+                    </span>
+                @else
                 <a href="{{ route("client.store.configure", $product) }}" class="btn {{ $product->is_featured ? "btn-accent" : "btn-primary" }}" style="justify-content:center;text-align:center">
                     {{ __('client.store.order_now') }} &rarr;
                 </a>
+                @endif
             </div>
             @endforeach
         </div>

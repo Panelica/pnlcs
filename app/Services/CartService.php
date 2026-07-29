@@ -73,6 +73,12 @@ class CartService
             ]);
         }
 
+        if ($product->outOfStock()) {
+            throw ValidationException::withMessages([
+                'product_id' => __('client.cart.out_of_stock'),
+            ]);
+        }
+
         $price = $this->getProductPrice($product, $billingCycle);
 
         // The order form only offers cycles the product is priced for, but the

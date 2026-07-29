@@ -18,6 +18,7 @@ use App\Models\SslOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
@@ -76,6 +77,22 @@ class OrderService
                         'taxed' => true,
                     ];
                 } else {
+                    $product = Product::find($item['product_id'] ?? null);
+
+                    // Guarded at the database, not in PHP: two customers can be
+                    // buying the last one at the same moment.
+                    if ($product && $product->stock_control) {
+                        $taken = Product::whereKey($product->id)
+                            ->where('stock_qty', '>', 0)
+                            ->decrement('stock_qty');
+
+                        if ($taken === 0) {
+                            throw ValidationException::withMessages([
+                                'product_id' => __('client.cart.out_of_stock'),
+                            ]);
+                        }
+                    }
+
                     $service = $this->createServiceForOrder($order, $client, $item);
 
                     // Configurable options are already inside the service price;
