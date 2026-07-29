@@ -8,6 +8,7 @@ use App\Models\Credit;
 use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Services\Module\ModuleRegistry;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -146,7 +147,7 @@ class PaymentService
      */
     public function balance(Invoice $invoice): float
     {
-        $paid = (float) Transaction::where('invoice_id', $invoice->id)->sum(DB::raw('amount_in - amount_out'));
+        $paid = (float) $this->invoicePayments($invoice)->sum(DB::raw('amount_in - amount_out'));
 
         return round((float) $invoice->total - $paid, 2);
     }
@@ -156,7 +157,21 @@ class PaymentService
      */
     public function amountPaid(Invoice $invoice): float
     {
-        return round((float) Transaction::where('invoice_id', $invoice->id)->sum(DB::raw('amount_in - amount_out')), 2);
+        return round((float) $this->invoicePayments($invoice)->sum(DB::raw('amount_in - amount_out')), 2);
+    }
+
+    /**
+     * The money movements that settle this invoice.
+     *
+     * Scoped to the invoice's own customer: affiliate commission is recorded
+     * against the invoice that earned it but belongs to somebody else, and
+     * counting it made a settled invoice look overpaid.
+     */
+    private function invoicePayments(Invoice $invoice): Builder
+    {
+        return Transaction::query()
+            ->where('invoice_id', $invoice->id)
+            ->where('client_id', $invoice->client_id);
     }
 
     /**
@@ -187,7 +202,7 @@ class PaymentService
         }
 
         // Find the settling payment transaction to refund against.
-        $payment = Transaction::where('invoice_id', $invoice->id)
+        $payment = $this->invoicePayments($invoice)
             ->where('amount_in', '>', 0)
             ->whereNotNull('transaction_id')
             ->orderByDesc('id')
@@ -261,6 +276,14 @@ class PaymentService
                         'reclaimed' => $reclaim,
                     ]);
                 }
+            }
+
+            // Commission was paid on money that is going back; take the same
+            // share of it back. Never blocks the refund.
+            try {
+                app(AffiliateService::class)->reverseCommission($invoice, $amount);
+            } catch (\Throwable $e) {
+                Log::warning('PaymentService: affiliate reversal failed for invoice #'.$invoice->id.': '.$e->getMessage());
             }
 
             $stillPaid = $this->amountPaid($invoice->fresh());

@@ -119,6 +119,68 @@ class AffiliateService
     }
 
     /**
+     * Take back the commission on money that has been handed back.
+     *
+     * A part refund takes back the same part. An affiliate who has already
+     * withdrawn the balance is not pushed into the red — the shortfall is
+     * logged, the same way an Add Funds refund handles a balance that has
+     * already been spent.
+     */
+    public function reverseCommission(Invoice $invoice, float $refundedAmount): void
+    {
+        $commission = Transaction::where('gateway', 'affiliate_commission')
+            ->where('invoice_id', $invoice->id)
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $commission) {
+            return;
+        }
+
+        $earned = (float) $commission->amount_in;
+        $invoiceTotal = (float) $invoice->total;
+
+        $share = $invoiceTotal > 0 ? min(1.0, $refundedAmount / $invoiceTotal) : 1.0;
+        $reversal = round($earned * $share, 2);
+
+        if ($reversal <= 0.009) {
+            return;
+        }
+
+        $affiliate = Affiliate::where('client_id', $commission->client_id)->first();
+
+        if (! $affiliate) {
+            return;
+        }
+
+        $reclaim = min($reversal, (float) $affiliate->balance);
+
+        if ($reclaim > 0.009) {
+            $affiliate->decrement('balance', $reclaim);
+        }
+
+        Transaction::create([
+            'client_id' => $affiliate->client_id,
+            'invoice_id' => $invoice->id,
+            'gateway' => 'affiliate_commission',
+            'transaction_id' => 'AFFREV-'.strtoupper(uniqid()),
+            'amount_in' => 0,
+            'amount_out' => $reversal,
+            'description' => "Affiliate commission reversed — invoice#{$invoice->id} refunded",
+            'date' => now(),
+        ]);
+
+        if ($reversal - $reclaim > 0.009) {
+            Log::warning('AffiliateService: commission reversed beyond the remaining balance', [
+                'affiliate' => $affiliate->id,
+                'invoice' => $invoice->id,
+                'reversed' => $reversal,
+                'reclaimed' => $reclaim,
+            ]);
+        }
+    }
+
+    /**
      * Calculate commission based on affiliate's pay type and optional tiers.
      */
     public function calculateCommission(Affiliate $affiliate, float $invoiceTotal): float
