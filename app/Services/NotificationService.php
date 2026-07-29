@@ -10,6 +10,42 @@ use Illuminate\Support\Facades\Mail;
 
 class NotificationService
 {
+    /**
+     * Every event a rule can be created for.
+     *
+     * Anything dispatched but missing from here cannot be subscribed to on the
+     * notifications screen, so it is delivered to nobody. Add the event here
+     * in the same change that dispatches it.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const EVENT_TYPES = [
+        'business' => [
+            'client.created',
+            'order.placed',
+            'order.awaiting_acceptance',
+            'invoice.created',
+            'invoice.paid',
+            'payment.notification_received',
+            'ticket.opened',
+            'ticket.replied',
+            'service.activated',
+            'service.suspended',
+            'service.terminated',
+        ],
+        'system' => [
+            'backup.failed',
+            'module.failed',
+            'module.failed_permanently',
+        ],
+    ];
+
+    /** @return array<int, string> */
+    public static function eventTypes(): array
+    {
+        return array_merge(...array_values(self::EVENT_TYPES));
+    }
+
     public function dispatch(string $eventType, array $data = []): void
     {
         $rules = NotificationRule::with("provider")

@@ -1333,10 +1333,10 @@ class ConfigController extends Controller
     public function notifications()
     {
         $providers = NotificationProvider::with('rules')->get();
-        $eventTypes = [
-            'client.created', 'order.placed', 'invoice.created', 'invoice.paid',
-            'ticket.opened', 'ticket.replied', 'service.activated', 'service.suspended', 'service.terminated',
-        ];
+
+        // Every dispatchable event, so the operator can subscribe to the ones
+        // that matter most — a failed backup, provisioning that gave up.
+        $eventTypes = \App\Services\NotificationService::eventTypes();
 
         return view('admin.config.notifications', compact('providers', 'eventTypes'));
     }
