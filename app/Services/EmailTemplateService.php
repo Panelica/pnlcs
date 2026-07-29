@@ -145,6 +145,7 @@ class EmailTemplateService
                     'ticket_id' => $model->tid ?? '',
                     'ticket_subject' => $model->title ?? '',
                     'ticket_dept' => $model->department->name ?? '',
+                    'ticket_message' => $model->message ?? '',
                 ],
                 default => null,
             };
@@ -156,6 +157,28 @@ class EmailTemplateService
             $vars['client_name'] = trim(($client->first_name ?? '').' '.($client->last_name ?? ''));
             $vars['client_email'] = $client->email ?? '';
         }
+
+        // What the mailable carries alongside its models. Without these an
+        // operator who customised a body sent "{reset_url}" to a customer who
+        // had asked to change their password.
+        if (is_object($data['affiliate'] ?? null)) {
+            $vars['affiliate_link'] = url('/?ref='.$data['affiliate']->id);
+        }
+
+        foreach ([
+            'resetUrl' => 'reset_url',
+            'replyMessage' => 'ticket_reply',
+            'reason' => 'suspend_reason',
+        ] as $property => $name) {
+            if (is_string($data[$property] ?? null) && $data[$property] !== '') {
+                $vars[$name] = $data[$property];
+            }
+        }
+
+        // {whmcs_url} is what the seeded templates call the client area. The
+        // second name is for templates written from here on.
+        $vars['client_area_url'] = url('/client');
+        $vars['whmcs_url'] = $vars['client_area_url'];
 
         return $vars;
     }

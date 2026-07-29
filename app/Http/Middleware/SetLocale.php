@@ -62,7 +62,12 @@ class SetLocale
         try {
             if ($user = auth()->user()) {
                 if (method_exists($user, "clients")) {
-                    $client = $user->clients()->first();
+                    // A login can belong to more than one account: follow the
+                    // one being looked at, the same as every page does.
+                    $selected = session('active_client_id');
+                    $client = $selected ? $user->clients()->whereKey($selected)->first() : null;
+                    $client ??= $user->clients()->first();
+
                     if ($client && !empty($client->language)) {
                         return $client->language;
                     }
