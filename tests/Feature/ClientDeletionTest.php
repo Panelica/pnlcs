@@ -2,13 +2,16 @@
 
 use App\Models\Admin;
 use App\Models\Client;
+use App\Models\Credit;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Service;
 use App\Models\Transaction;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Modules\Reports\IncomeSummaryReport;
 
 /**
@@ -80,7 +83,7 @@ test('a customer with nothing attached can be deleted', function () {
     expect(Client::find($client->id))->toBeNull();
 });
 
-test('deleting a customer still clears their invoices', function () {
+test('deleting a customer keeps their invoices', function () {
     $admin = Admin::factory()->create();
     $client = Client::factory()->create();
     $invoice = Invoice::factory()->create(['client_id' => $client->id]);
@@ -89,7 +92,8 @@ test('deleting a customer still clears their invoices', function () {
         ->delete(route('admin.clients.destroy', $client))
         ->assertRedirect();
 
-    expect(Invoice::find($invoice->id))->toBeNull();
+    // What was charged is part of the books, same as what was paid.
+    expect(Invoice::find($invoice->id))->not->toBeNull();
 });
 
 test('deleting a customer keeps the record of money that moved', function () {
@@ -132,4 +136,63 @@ test('the income summary still counts a deleted customer payments', function () 
     // Revenue reported for a past month must not change because someone
     // tidied up the client list.
     expect((float) $report['totals'][1])->toBe(250.0);
+});
+
+test('the invoice pages still work once the customer is gone', function () {
+    $admin = Admin::factory()->create();
+    $client = Client::factory()->create(['first_name' => 'Ghost', 'last_name' => 'Client']);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 60]);
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id,
+        'client_id' => $client->id,
+        'type' => 'Hosting',
+        'rel_id' => 0,
+        'description' => 'Hosting',
+        'amount' => 60,
+        'taxed' => false,
+    ]);
+
+    $this->actingAs($admin, 'admin')->delete(route('admin.clients.destroy', $client))->assertRedirect();
+
+    // Keeping the invoice is only safe if the pages that list it survive a
+    // client relation that now resolves to nothing.
+    $this->actingAs($admin, 'admin')->get(route('admin.invoices.index'))->assertOk();
+    $this->actingAs($admin, 'admin')->get(route('admin.invoices.show', $invoice))->assertOk();
+    $this->actingAs($admin, 'admin')->get(route('admin.dashboard'))->assertOk();
+});
+
+test('a deleted customer credit balance is still on record', function () {
+    $admin = Admin::factory()->create();
+    $client = Client::factory()->create(['credit' => 0]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 40]);
+
+    // Overpay, so a credit row is written.
+    app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-CRED', 100.0);
+    expect(Credit::where('client_id', $client->id)->count())->toBe(1);
+
+    $this->actingAs($admin, 'admin')->delete(route('admin.clients.destroy', $client))->assertRedirect();
+
+    expect(Credit::where('client_id', $client->id)->count())->toBe(1);
+});
+
+test('a deleted customer is not chased for the invoices we kept', function () {
+    Mail::fake();
+
+    $admin = Admin::factory()->create();
+    $client = Client::factory()->create(['email' => 'chased@example.com']);
+    Invoice::factory()->create([
+        'client_id' => $client->id,
+        'status' => 'unpaid',
+        'total' => 75,
+        'due_date' => now()->addDays(3),
+    ]);
+
+    $this->actingAs($admin, 'admin')->delete(route('admin.clients.destroy', $client))->assertRedirect();
+
+    $this->artisan('pnlcs:payment-reminders')->assertSuccessful();
+
+    // Keeping the paperwork must not mean emailing someone who has been
+    // removed from the system.
+    Mail::assertNothingQueued();
+    Mail::assertNothingSent();
 });

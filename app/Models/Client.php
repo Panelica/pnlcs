@@ -61,10 +61,12 @@ class Client extends Model
         // Cascade delete: clean up all child records
         static::deleting(function (Client $client) {
             $client->services()->delete();
-            $client->invoices()->each(function ($inv) {
-                $inv->items()->delete();
-                $inv->delete();
-            });
+
+            // Invoices and credits stay. Together with the transactions they
+            // are the record of what was charged and what was paid, and a
+            // client being removed from the list is not a reason for last
+            // year's books to change. The client row itself is only soft
+            // deleted, so they still point at something.
             $client->tickets()->each(function ($t) {
                 $t->replies()->delete();
                 $t->notes()->delete();
@@ -74,7 +76,6 @@ class Client extends Model
             $client->contacts()->delete();
             $client->orders()->delete();
             Affiliate::where('client_id', $client->id)->delete();
-            Credit::where('client_id', $client->id)->delete();
             ClientNote::where('client_id', $client->id)->delete();
             $client->users()->detach(); // Remove pivot entries
         });
