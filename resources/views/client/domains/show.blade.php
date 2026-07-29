@@ -32,7 +32,7 @@
                 <div class="detail-row"><dt>{{ __('client.domains.expiry_date') }}</dt><dd>{{ $domain->expiry_date?->format(date_fmt()) ?? 'N/A' }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.services.auto_renew') }}</dt><dd>{{ ($domain->auto_renew ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.domains.id_protection') }}</dt><dd>{{ ($domain->id_protection ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
-                <div class="detail-row"><dt>{{ __('client.domains.registrar_lock') }}</dt><dd>{{ $domain->status === 'Locked' ? __("client.status.locked") : __("client.status.unlocked") }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.registrar_lock') }}</dt><dd>{{ $locked === null ? __('client.status.unknown') : ($locked ? __("client.status.locked") : __("client.status.unlocked")) }}</dd></div>
             </dl>
         </div>
     </div>

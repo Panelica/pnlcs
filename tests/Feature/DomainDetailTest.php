@@ -3,19 +3,20 @@
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\User;
-
+use Illuminate\Support\Facades\Http;
 
 function makeDomainClient(): array
 {
-    $user   = User::factory()->create();
+    $user = User::factory()->create();
     $client = Client::factory()->create(['email' => $user->email]);
     $user->clients()->attach($client->id, ['owner' => true, 'permissions' => null]);
     $domain = Domain::factory()->create([
-        'client_id'   => $client->id,
-        'domain'      => 'mysite_' . uniqid() . '.com',
-        'status'      => 'active',
+        'client_id' => $client->id,
+        'domain' => 'mysite_'.uniqid().'.com',
+        'status' => 'active',
         'nameservers' => json_encode(['ns1' => 'ns1.example.com', 'ns2' => 'ns2.example.com']),
     ]);
+
     return [$user, $client, $domain];
 }
 
@@ -89,17 +90,20 @@ test('user cannot update nameservers of another clients domain', function () {
     $response->assertStatus(403);
 });
 
-test('user can toggle domain lock', function () {
+test('toggling the domain lock leaves the domain status alone', function () {
+    // This used to assert the opposite: that locking writes the word into the
+    // status column. status says whether the domain is active, expired or
+    // cancelled - the lock belongs to the registrar, and unlocking an expired
+    // domain by setting it active put it back in front of the renewal cron.
+    Http::fake(['*' => Http::response('<?xml version="1.0"?><ApiResponse Status="OK"></ApiResponse>', 200)]);
+
     [$user, $client, $domain] = makeDomainClient();
+    $domain->update(['registrar' => 'Namecheap']);
     expect($domain->status)->toBe('active');
 
     $this->actingAs($user)->post(route('client.domains.lock', $domain));
-    $domain->refresh();
-    expect($domain->status)->toBe('locked');
 
-    $this->actingAs($user)->post(route('client.domains.lock', $domain));
-    $domain->refresh();
-    expect($domain->status)->toBe('active');
+    expect($domain->fresh()->status)->toBe('active');
 });
 
 test('user can toggle auto-renew', function () {
@@ -133,7 +137,7 @@ test('domains list only shows client owned domains', function () {
     [$user, $client, $domain] = makeDomainClient();
 
     $otherClient = Client::factory()->create();
-    $otherDomain = Domain::factory()->create(['client_id' => $otherClient->id, 'domain' => 'other_' . uniqid() . '.com']);
+    $otherDomain = Domain::factory()->create(['client_id' => $otherClient->id, 'domain' => 'other_'.uniqid().'.com']);
 
     $response = $this->actingAs($user)->get(route('client.domains.index'));
     $response->assertStatus(200);
