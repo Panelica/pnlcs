@@ -33,7 +33,7 @@ class TicketApiController extends BaseApiController
         if (!$ticket) return $this->error('Ticket Not Found', 404);
         $v = $request->validate(['message'=>'required|string']);
         $reply = $ticket->replies()->create(['message'=>$v['message'],'admin'=>$request->adminusername,'client_id'=>$request->userid]);
-        $ticket->update(['status'=>$request->adminusername?'answered':'customer-reply','last_reply'=>now()]);
+        $ticket->recordReply($request->adminusername ? 'answered' : 'customer-reply');
         return $this->success(['replyid'=>$reply->id]);
     }
     public function addTicketNote(Request $request)

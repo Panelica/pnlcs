@@ -97,7 +97,7 @@ class TicketController extends Controller
         // Clearing escalated_at lets a later period of silence escalate again;
         // leaving it set would freeze escalation for the ticket's life. flag is
         // the assigned admin and must survive a reply.
-        $ticket->update(['status' => 'Customer-Reply', 'last_reply' => now(), 'escalated_at' => null]);
+        $ticket->recordReply('Customer-Reply');
         event(new TicketReplied($ticket, $validated['message'], false));
 
         return back()->with('success', __('messages.success.reply_added'));

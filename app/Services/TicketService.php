@@ -12,6 +12,7 @@ class TicketService
         $data['tid'] = $this->generateTicketId();
         $data['status'] = $data['status'] ?? 'Open';
         $data['last_reply'] = now();
+
         return Ticket::create($data);
     }
 
@@ -24,20 +25,23 @@ class TicketService
             'message' => $data['message'],
         ]);
 
-        $newStatus = !empty($data['admin']) ? 'Answered' : 'Customer-Reply';
-        $ticket->update(['status' => $newStatus, 'last_reply' => now()]);
+        $newStatus = ! empty($data['admin']) ? 'Answered' : 'Customer-Reply';
+        $ticket->recordReply($newStatus);
+
         return $reply;
     }
 
     public function closeTicket(Ticket $ticket): Ticket
     {
         $ticket->update(['status' => 'Closed']);
+
         return $ticket->fresh();
     }
 
     public function reopenTicket(Ticket $ticket): Ticket
     {
         $ticket->update(['status' => 'Open']);
+
         return $ticket->fresh();
     }
 
@@ -46,6 +50,7 @@ class TicketService
         do {
             $tid = str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
         } while (Ticket::where('tid', $tid)->exists());
+
         return $tid;
     }
 }

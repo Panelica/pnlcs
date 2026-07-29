@@ -42,7 +42,7 @@ class TicketController extends Controller
             'message' => $validated['message'],
             'admin' => auth('admin')->user()->username,
         ]);
-        $ticket->update(['status' => 'Answered', 'last_reply' => now(), 'escalated_at' => null]);
+        $ticket->recordReply('Answered');
         event(new TicketReplied($ticket, $validated['message'], true));
 
         return back()->with('success', __('admin.messages.reply_added'));
