@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
+use App\Models\ActivityLog;
+use App\Models\Admin;
 use App\Models\Client;
 use App\Models\ClientGroup;
 use App\Models\ClientNote;
@@ -18,11 +20,18 @@ class ClientController extends Controller
     public function index(Request $request)
     {
         $query = Client::with('contacts');
-        if ($request->filled('search')) { $query->search($request->search); }
-        if ($request->filled('status')) { $query->where('status', $request->status); }
-        if ($request->filled('group_id')) { $query->where('group_id', $request->group_id); }
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('group_id')) {
+            $query->where('group_id', $request->group_id);
+        }
         $clients = $query->orderBy('created_at', 'desc')->paginate(25);
         $groups = ClientGroup::all();
+
         return view('admin.clients.index', compact('clients', 'groups'));
     }
 
@@ -30,6 +39,7 @@ class ClientController extends Controller
     {
         $groups = ClientGroup::all();
         $currencies = Currency::all();
+
         return view('admin.clients.create', compact('groups', 'currencies'));
     }
 
@@ -51,6 +61,7 @@ class ClientController extends Controller
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
         $client = Client::create($validated);
+
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_created'));
     }
 
@@ -86,8 +97,8 @@ class ClientController extends Controller
                 $data['notes'] = ClientNote::where('client_id', $client->id)->orderBy('id', 'desc')->get();
                 break;
             case 'log':
-                $data['logs'] = \App\Models\ActivityLog::where('description', 'LIKE', '%client #' . $client->id . '%')
-                    ->orWhere('description', 'LIKE', '%' . $client->email . '%')
+                $data['logs'] = ActivityLog::where('description', 'LIKE', '%client #'.$client->id.'%')
+                    ->orWhere('description', 'LIKE', '%'.$client->email.'%')
                     ->orderBy('id', 'desc')->paginate(25);
                 break;
             default: // summary
@@ -126,6 +137,7 @@ class ClientController extends Controller
     {
         $groups = ClientGroup::all();
         $currencies = Currency::all();
+
         return view('admin.clients.edit', compact('client', 'groups', 'currencies'));
     }
 
@@ -147,12 +159,26 @@ class ClientController extends Controller
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
         $client->update($validated);
+
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_updated'));
     }
 
     public function destroy(Client $client)
     {
+        // Deleting a client cascades their services away, but the accounts
+        // themselves are never terminated on the control panel - the hosting
+        // would carry on running with nothing left to say it exists or who it
+        // belongs to. Terminate first, then delete.
+        $live = $client->services()
+            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+            ->count();
+
+        if ($live > 0) {
+            return back()->with('error', __('admin.messages.client_has_live_services', ['count' => $live]));
+        }
+
         $client->delete();
+
         return redirect()->route('admin.clients.index')->with('success', __('messages.success.client_deleted'));
     }
 
@@ -162,9 +188,15 @@ class ClientController extends Controller
     public function exportCsv(Request $request): StreamedResponse
     {
         $query = Client::query();
-        if ($request->filled('search')) { $query->search($request->search); }
-        if ($request->filled('status')) { $query->where('status', $request->status); }
-        if ($request->filled('group_id')) { $query->where('group_id', $request->group_id); }
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('group_id')) {
+            $query->where('group_id', $request->group_id);
+        }
 
         $clients = $query->orderBy('id', 'asc')->get([
             'id', 'first_name', 'last_name', 'email', 'company_name',
@@ -185,7 +217,7 @@ class ClientController extends Controller
         ]);
 
         return $this->streamCsvDownload(
-            'clients-' . now()->format('Y-m-d') . '.csv',
+            'clients-'.now()->format('Y-m-d').'.csv',
             ['ID', 'First Name', 'Last Name', 'Email', 'Company', 'Status', 'Country', 'Phone', 'Credit', 'Created At'],
             $rows
         );
@@ -202,14 +234,14 @@ class ClientController extends Controller
 
         // Find the user associated with this client
         $user = $client->users()->first();
-        if (!$user) {
+        if (! $user) {
             return back()->with('error', __('messages.error.no_user_linked'));
         }
 
         // Login as the client's user
         auth()->login($user);
 
-        return redirect()->route('client.home')->with('success', __('admin.messages.viewing_as', ['name' => $client->first_name . ' ' . $client->last_name]));
+        return redirect()->route('client.home')->with('success', __('admin.messages.viewing_as', ['name' => $client->first_name.' '.$client->last_name]));
     }
 
     /**
@@ -218,7 +250,7 @@ class ClientController extends Controller
     public function stopImpersonation()
     {
         $adminId = session('impersonating_admin_id');
-        if (!$adminId) {
+        if (! $adminId) {
             return redirect()->route('admin.dashboard');
         }
 
@@ -226,7 +258,7 @@ class ClientController extends Controller
         auth()->logout();
 
         // Login back as admin
-        $admin = \App\Models\Admin::find($adminId);
+        $admin = Admin::find($adminId);
         if ($admin) {
             auth('admin')->login($admin);
         }
