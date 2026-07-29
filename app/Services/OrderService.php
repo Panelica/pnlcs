@@ -130,6 +130,23 @@ class OrderService
 
         event(new OrderPlaced($order));
 
+        // Screen the order the customer just placed. This only ever ran from
+        // an API endpoint before, so a banned email or IP ordering through the
+        // shop was never looked at.
+        try {
+            $fraud = app(FraudDetectionService::class)->evaluate($order);
+
+            if (($fraud['score'] ?? 0) >= 60) {
+                Log::warning('Order #'.$order->order_num.' held as fraud', ['reasons' => $fraud['reasons'] ?? []]);
+                $order = $this->markFraud($order);
+
+                return $order->fresh();
+            }
+        } catch (\Throwable $e) {
+            // Screening must never stop a legitimate customer from ordering.
+            Log::error('Fraud screening failed for order #'.$order->id.': '.$e->getMessage());
+        }
+
         // Products configured with auto_setup = 'order' are provisioned the
         // moment the order is placed, without waiting for payment.
         $this->provisionOnOrderPlacement($order);
@@ -181,6 +198,14 @@ class OrderService
     public function acceptOrder(Order $order, bool $manual = false): Order
     {
         if ($order->status === OrderStatus::Active->value) {
+            return $order;
+        }
+
+        // A held order stays held. Paying for it is not a reason to provision
+        // it; an operator has to look at it first.
+        if (in_array($order->status, [OrderStatus::Fraud->value, OrderStatus::Cancelled->value], true)) {
+            Log::info('Order #'.$order->order_num.' not accepted: status is '.$order->status);
+
             return $order;
         }
 

@@ -23,7 +23,7 @@ class FraudDetectionService
         $order->loadMissing('client');
         $client = $order->client;
 
-        if (!$client) {
+        if (! $client) {
             return ['score' => 0, 'reasons' => ['No client associated'], 'risk_level' => 'low'];
         }
 
@@ -62,17 +62,21 @@ class FraudDetectionService
 
         // Rule 4: Email in banned list (+80)
         if ($client->email) {
-            $domain = explode('@', $client->email)[1] ?? '';
+            // Bans live in banned_emails.domain, which holds either a whole
+            // address or a bare domain. There is no email column; asking for
+            // one threw and took the entire fraud check with it.
+            $domain = strtolower(explode('@', $client->email)[1] ?? '');
             $emailBanned = BannedEmail::where(function ($q) use ($client, $domain) {
-                $q->where('email', $client->email);
-                if ($domain) {
-                    $q->orWhere('email', '%@' . $domain);
+                $q->whereRaw('LOWER(domain) = ?', [strtolower($client->email)]);
+                if ($domain !== '') {
+                    $q->orWhereRaw('LOWER(domain) = ?', [$domain])
+                        ->orWhereRaw('LOWER(domain) = ?', ['@'.$domain]);
                 }
             })->exists();
 
             if ($emailBanned) {
                 $score += 80;
-                $reasons[] = "Client email matches banned list";
+                $reasons[] = 'Client email matches banned list';
             }
         }
 
@@ -82,7 +86,7 @@ class FraudDetectionService
 
             if ($ipBanned) {
                 $score += 80;
-                $reasons[] = "Order IP matches banned list";
+                $reasons[] = 'Order IP matches banned list';
             }
         }
 
