@@ -18,10 +18,12 @@ class BillingWidget implements WidgetModuleInterface
     {
         $today = \Carbon\Carbon::today();
         return [
-            "today" => DB::table("transactions")->whereDate("date", $today)->sum("amount_in"),
-            "month" => DB::table("transactions")->where("date", ">=", $today->startOfMonth())->sum("amount_in"),
-            "year" => DB::table("transactions")->where("date", ">=", $today->startOfYear())->sum("amount_in"),
-            "all" => DB::table("transactions")->sum("amount_in"),
+            // Affiliate commission and payouts share this table and are not
+            // money the business took in.
+            "today" => \App\Models\Transaction::revenue()->whereDate("date", $today)->sum("amount_in"),
+            "month" => \App\Models\Transaction::revenue()->where("date", ">=", $today->startOfMonth())->sum("amount_in"),
+            "year" => \App\Models\Transaction::revenue()->where("date", ">=", $today->startOfYear())->sum("amount_in"),
+            "all" => \App\Models\Transaction::revenue()->sum("amount_in"),
         ];
     }
 

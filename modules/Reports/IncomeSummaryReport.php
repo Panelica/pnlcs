@@ -16,6 +16,7 @@ class IncomeSummaryReport extends AbstractReport
     {
         [$from, $to] = $this->getDateRange($request);
         $rows = DB::table("transactions")
+            ->whereNotIn("gateway", \App\Models\Transaction::NON_REVENUE_GATEWAYS)
             ->selectRaw("DATE_FORMAT(date, '%Y-%m') as month, SUM(amount_in) as income, SUM(fees) as fees, SUM(amount_out) as refunds")
             ->whereBetween("date", [$from, $to])
             ->groupBy("month")->orderBy("month", "desc")->get();

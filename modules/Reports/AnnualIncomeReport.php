@@ -16,6 +16,7 @@ class AnnualIncomeReport extends AbstractReport
     {
         $year = $this->getYear($request);
         $rows = DB::table("transactions")
+            ->whereNotIn("gateway", \App\Models\Transaction::NON_REVENUE_GATEWAYS)
             ->selectRaw("MONTH(date) as month_num, MONTHNAME(date) as month, SUM(amount_in) as income, SUM(fees) as fees, SUM(amount_out) as refunds, (SUM(amount_in) - SUM(fees) - SUM(amount_out)) as net")
             ->whereYear("date", $year)
             ->groupByRaw("MONTH(date), MONTHNAME(date)")->orderByRaw("MONTH(date)")->get();

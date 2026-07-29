@@ -30,6 +30,7 @@ class TopClientsReport extends AbstractReport
         // this list even though their money is still in the bank.
         $rows = DB::table('transactions')
             ->join('clients', 'clients.id', '=', 'transactions.client_id')
+            ->whereNotIn('transactions.gateway', \App\Models\Transaction::NON_REVENUE_GATEWAYS)
             ->selectRaw("clients.id, CONCAT(clients.first_name, ' ', clients.last_name) as client, clients.email, clients.company_name, COUNT(DISTINCT transactions.invoice_id) as invoices, SUM(transactions.amount_in - transactions.amount_out) as revenue")
             ->groupBy('clients.id', 'clients.first_name', 'clients.last_name', 'clients.email', 'clients.company_name')
             ->havingRaw('SUM(transactions.amount_in - transactions.amount_out) > 0')
