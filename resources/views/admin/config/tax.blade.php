@@ -11,19 +11,18 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.tax.no_rules') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>{{ __('admin.tax.tax_name_col') }}</th><th>{{ __('admin.tax.rate_col') }}</th><th>{{ __('common.table.country') }}</th><th>{{ __('common.table.state') }}</th><th>{{ __('admin.tax.level') }}</th><th>{{ __('admin.tax.compound') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.tax.tax_name_col') }}</th><th>{{ __('admin.tax.rate_col') }}</th><th>{{ __('common.table.country') }}</th><th>{{ __('common.table.state') }}</th><th>{{ __('admin.tax.level') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($taxes as $tax)
         <tr>
             <td style="font-weight:600;">{{ $tax->name }}</td>
-            <td>{{ $tax->rate }}%</td>
+            <td>{{ (float) $tax->tax_rate }}%</td>
             <td>{{ $tax->country ?: __('admin.tax.all') }}</td>
             <td>{{ $tax->state ?: __('admin.tax.all') }}</td>
             <td>{{ $tax->level == 1 ? __('admin.tax.tax1') : __('admin.tax.tax2') }}</td>
-            <td>{{ $tax->compound ? __('admin.tax.yes') : __('admin.tax.no') }}</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
-                    onclick="openEditTax({{ json_encode(['id'=>$tax->id,'name'=>$tax->name,'rate'=>$tax->rate,'country'=>$tax->country,'state'=>$tax->state,'level'=>$tax->level,'compound'=>$tax->compound]) }})">{{ __('common.actions.edit') }}</button>
+                    onclick="openEditTax({{ json_encode(['id'=>$tax->id,'name'=>$tax->name,'rate'=>$tax->tax_rate,'country'=>$tax->country,'state'=>$tax->state,'level'=>$tax->level]) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.tax.destroy', $tax) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.tax.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>

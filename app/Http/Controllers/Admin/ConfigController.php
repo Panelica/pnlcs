@@ -248,8 +248,10 @@ class ConfigController extends Controller
 
     public function tax()
     {
+        // The screen reads $taxes; passing 'rules' meant it always showed
+        // the empty state, however many rules were configured.
         return view('admin.config.tax', [
-            'rules' => TaxRule::all(),
+            'taxes' => TaxRule::orderBy('level')->orderBy('country')->get(),
         ]);
     }
 

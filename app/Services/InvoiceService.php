@@ -90,9 +90,10 @@ class InvoiceService
         $taxRate = (float) $invoice->tax_rate;
         $taxRate2 = (float) $invoice->tax_rate2;
 
-        if ($taxRate === 0.0 && ! $invoice->client->tax_exempt) {
+        if ($taxRate === 0.0 && $taxRate2 === 0.0 && ! $invoice->client->tax_exempt) {
             $taxData = $this->calculateTax($taxableAmount, $invoice->client_id);
             $taxRate = $taxData['tax_rate'];
+            $taxRate2 = $taxData['tax_rate2'];
         }
 
         $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
@@ -106,6 +107,7 @@ class InvoiceService
             'tax' => $taxAmount,
             'tax2' => $taxAmount2,
             'tax_rate' => $taxRate,
+            'tax_rate2' => $taxRate2,
             'total' => $total,
         ]);
 
@@ -250,7 +252,26 @@ class InvoiceService
             return ['tax' => 0.0, 'tax_rate' => 0.0];
         }
 
-        // Match by country + state (most specific first), then country only
+        $rate = $this->rateFor($client, 1);
+        $rate2 = $this->rateFor($client, 2);
+
+        return [
+            'tax' => round($amount * ($rate / 100), 2),
+            'tax_rate' => $rate,
+            'tax2' => round($amount * ($rate2 / 100), 2),
+            'tax_rate2' => $rate2,
+        ];
+    }
+
+    /**
+     * The rate that applies to a customer at one tax level.
+     *
+     * Matched on country and state, most specific first. Level 2 is the second
+     * tax an operator can configure — a provincial one on top of a federal
+     * one — and until now nothing asked for it.
+     */
+    private function rateFor(Client $client, int $level): float
+    {
         $rule = TaxRule::where('country', $client->country)
             ->where(function ($q) use ($client) {
                 $q->where('state', $client->state)
@@ -258,16 +279,9 @@ class InvoiceService
                     ->orWhereNull('state');
             })
             ->orderByRaw('CASE WHEN state = ? THEN 0 ELSE 1 END', [$client->state ?? ''])
-            ->where('level', 1)
+            ->where('level', $level)
             ->first();
 
-        if (! $rule) {
-            return ['tax' => 0.0, 'tax_rate' => 0.0];
-        }
-
-        $rate = (float) $rule->tax_rate;
-        $taxAmount = round($amount * ($rate / 100), 2);
-
-        return ['tax' => $taxAmount, 'tax_rate' => $rate];
+        return $rule ? (float) $rule->tax_rate : 0.0;
     }
 }
