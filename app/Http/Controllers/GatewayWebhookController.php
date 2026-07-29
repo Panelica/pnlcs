@@ -16,6 +16,21 @@ class GatewayWebhookController extends Controller
     ) {}
 
     /**
+     * Refuse to start a payment on an invoice that is not the caller's.
+     *
+     * The capture endpoints are reached from the customer's own browser, so
+     * the invoice has to belong to the account that is signed in. Webhooks are
+     * a different matter: they arrive from the gateway and are verified by
+     * signature instead.
+     */
+    private function authoriseInvoice(Invoice $invoice): void
+    {
+        $clientIds = auth()->user()?->clients()->pluck('clients.id');
+
+        abort_if(! $clientIds || ! $clientIds->contains($invoice->client_id), 403);
+    }
+
+    /**
      * PayPal webhook endpoint.
      * URL: POST /gateway/paypal/webhook
      */
@@ -48,6 +63,8 @@ class GatewayWebhookController extends Controller
      */
     public function paypalCapture(Request $request, Invoice $invoice)
     {
+        $this->authoriseInvoice($invoice);
+
         $captureId = $request->input("capture_id");
 
         if (!$captureId) {
@@ -81,6 +98,8 @@ class GatewayWebhookController extends Controller
      */
     public function stripeIntent(Request $request, Invoice $invoice)
     {
+        $this->authoriseInvoice($invoice);
+
         $module = $this->registry->getGatewayModule("stripe");
         if (!$module) {
             return response()->json(["success" => false, "message" => "Stripe module not available."]);
@@ -95,6 +114,8 @@ class GatewayWebhookController extends Controller
      */
     public function stripeConfirm(Request $request, Invoice $invoice)
     {
+        $this->authoriseInvoice($invoice);
+
         $paymentIntentId = $request->input("payment_intent_id");
         if (!$paymentIntentId) {
             return response()->json(["success" => false, "message" => "Missing payment_intent_id."]);
@@ -126,6 +147,8 @@ class GatewayWebhookController extends Controller
      */
     public function authorizeCapture(Request $request, Invoice $invoice)
     {
+        $this->authoriseInvoice($invoice);
+
         $module = $this->registry->getGatewayModule("authorize");
         if (!$module) {
             return response()->json(["success" => false, "message" => "Authorize.net module not available."]);
@@ -231,6 +254,8 @@ class GatewayWebhookController extends Controller
 
     public function mollieCapture(Request $request, \App\Models\Invoice $invoice)
     {
+        $this->authoriseInvoice($invoice);
+
         $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("mollie");
         if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
         $result = $module->capture($invoice, (float)$invoice->total, [
@@ -264,6 +289,8 @@ class GatewayWebhookController extends Controller
 
     public function razorpayCapture(Request $request, \App\Models\Invoice $invoice)
     {
+        $this->authoriseInvoice($invoice);
+
         $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("razorpay");
         if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
         if ($request->input("confirm")) {
