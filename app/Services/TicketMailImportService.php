@@ -26,7 +26,9 @@ class TicketMailImportService
     private const TID_PATTERN = '/\[?\s*Ticket\s*(?:ID\s*)?[:#]?\s*#?\s*(\d{6})\s*\]?/i';
 
     private const MAX_ATTACHMENTS = 5;
+
     private const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+
     private const ALLOWED_ATTACHMENT_EXT = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'txt', 'log', 'zip'];
 
     public function __construct(
@@ -100,6 +102,7 @@ class TicketMailImportService
             || preg_match('/mailer-daemon|postmaster@|no-?reply@/i', $mail['from_email'])
             || strcasecmp($mail['from_email'], (string) $department->email) === 0) {
             $this->log($department, $mail, 'skipped_auto');
+
             return 'skipped';
         }
 
@@ -116,7 +119,7 @@ class TicketMailImportService
 
                 $reply = $this->tickets->addReply($ticket, [
                     'client_id' => $ticket->client_id,
-                    'message'   => $body,
+                    'message' => $body,
                 ]);
                 if ($attachment) {
                     $reply->update(['attachment' => $attachment]);
@@ -130,19 +133,28 @@ class TicketMailImportService
             // Unknown/foreign tid → fall through and treat as a new ticket request.
         }
 
-        if (!$client && !$department->import_allow_unknown) {
+        if (! $client && ! $department->import_allow_unknown) {
             $this->log($department, $mail, 'rejected_unknown');
+
+            return 'rejected';
+        }
+
+        // Mail is where the spam arrives. The screen that configures the
+        // filters was only ever consulted on the logged-in ticket form.
+        if (app(TicketSpamService::class)->isSpam($mail['from_email'], $subject, $body)) {
+            $this->log($department, $mail, 'rejected_spam');
+
             return 'rejected';
         }
 
         $ticket = $this->tickets->createTicket([
             'department_id' => $department->id,
-            'client_id'     => $client?->id,
-            'name'          => $mail['from_name'] ?: ($client ? trim($client->first_name . ' ' . $client->last_name) : $mail['from_email']),
-            'email'         => $mail['from_email'],
-            'title'         => Str::limit($subject, 250, ''),
-            'message'       => $body,
-            'priority'      => 'medium',
+            'client_id' => $client?->id,
+            'name' => $mail['from_name'] ?: ($client ? trim($client->first_name.' '.$client->last_name) : $mail['from_email']),
+            'email' => $mail['from_email'],
+            'title' => Str::limit($subject, 250, ''),
+            'message' => $body,
+            'priority' => 'medium',
         ]);
 
         $attachment = $this->storeAttachments($ticket, $mail['attachments']);
@@ -179,14 +191,14 @@ class TicketMailImportService
 
         foreach (array_slice($attachments, 0, self::MAX_ATTACHMENTS) as $attachment) {
             $ext = strtolower(pathinfo($attachment['filename'], PATHINFO_EXTENSION));
-            if (!in_array($ext, self::ALLOWED_ATTACHMENT_EXT, true)) {
+            if (! in_array($ext, self::ALLOWED_ATTACHMENT_EXT, true)) {
                 continue;
             }
             if (strlen($attachment['content']) > self::MAX_ATTACHMENT_BYTES || $attachment['content'] === '') {
                 continue;
             }
 
-            $safeName = Str::random(20) . '.' . $ext;
+            $safeName = Str::random(20).'.'.$ext;
             $path = "ticket-attachments/{$ticket->id}/{$safeName}";
             Storage::disk('local')->put($path, $attachment['content']);
             $stored[] = $path;
@@ -199,16 +211,16 @@ class TicketMailImportService
     {
         try {
             TicketMailLog::create([
-                'date'    => now(),
-                'to'      => $department->email ?: $department->import_username,
-                'name'    => Str::limit((string) $mail['from_name'], 250, ''),
-                'email'   => Str::limit((string) $mail['from_email'], 250, ''),
+                'date' => now(),
+                'to' => $department->email ?: $department->import_username,
+                'name' => Str::limit((string) $mail['from_name'], 250, ''),
+                'email' => Str::limit((string) $mail['from_email'], 250, ''),
                 'subject' => Str::limit((string) $mail['subject'], 250, ''),
                 'message' => Str::limit((string) $mail['body_text'], 5000),
-                'status'  => $status,
+                'status' => $status,
             ]);
         } catch (\Throwable $e) {
-            Log::warning('Mail import: log write failed: ' . $e->getMessage());
+            Log::warning('Mail import: log write failed: '.$e->getMessage());
         }
     }
 }
