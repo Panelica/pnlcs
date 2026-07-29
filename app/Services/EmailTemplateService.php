@@ -124,12 +124,27 @@ class EmailTemplateService
                 'service' => $vars += [
                     'service_domain' => $model->domain ?? '',
                     'service_product' => $model->product->name ?? '',
+                    // The templates say {product_name}.
+                    'product_name' => $model->product->name ?? '',
                 ],
-                'order' => $vars += ['order_num' => $model->order_num ?? $model->id],
-                'domain' => $vars += ['domain_name' => $model->domain ?? ''],
+                'order' => $vars += [
+                    'order_num' => $model->order_num ?? $model->id,
+                    'order_total' => number_format((float) $model->amount, 2),
+                ],
+                'domain' => $vars += [
+                    'domain_name' => $model->domain ?? '',
+                    // The templates say {domain}, and every domain email went
+                    // out with the braces showing until they agreed.
+                    'domain' => $model->domain ?? '',
+                    'expiry_date' => $model->expiry_date?->format(date_fmt()) ?? '',
+                    'reg_date' => $model->registration_date?->format(date_fmt()) ?? '',
+                ],
                 'ticket' => $vars += [
                     'ticket_tid' => $model->tid ?? '',
+                    // The templates say {ticket_id}.
+                    'ticket_id' => $model->tid ?? '',
                     'ticket_subject' => $model->title ?? '',
+                    'ticket_dept' => $model->department->name ?? '',
                 ],
                 default => null,
             };
