@@ -97,8 +97,7 @@ class ClientController extends Controller
                 $data['notes'] = ClientNote::where('client_id', $client->id)->orderBy('id', 'desc')->get();
                 break;
             case 'log':
-                $data['logs'] = ActivityLog::where('description', 'LIKE', '%client #'.$client->id.'%')
-                    ->orWhere('description', 'LIKE', '%'.$client->email.'%')
+                $data['logs'] = ActivityLog::forClient($client)
                     ->orderBy('id', 'desc')->paginate(25);
                 break;
             default: // summary

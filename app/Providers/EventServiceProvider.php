@@ -16,9 +16,11 @@ use App\Listeners\ApplyUpgradeListener;
 use App\Listeners\AutoAcceptOrderListener;
 use App\Listeners\LogActivityListener;
 use App\Listeners\LogSentEmailListener;
+use App\Listeners\RecordCronHeartbeat;
 use App\Listeners\RenewOnPaymentListener;
 use App\Listeners\SendNotificationListener;
 use App\Listeners\SuppressMailWhenDisabled;
+use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
@@ -77,6 +79,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         MessageSent::class => [
             LogSentEmailListener::class,
+        ],
+        ScheduledTaskFinished::class => [
+            RecordCronHeartbeat::class,
         ],
     ];
 

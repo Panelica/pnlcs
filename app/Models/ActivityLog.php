@@ -1,15 +1,46 @@
 <?php
-namespace App\Models;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class ActivityLog extends Model {
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class ActivityLog extends Model
+{
     use HasFactory;
 
-    protected $fillable = ["date", "description", "user", "ip_address"];
-    protected function casts(): array { return ["date" => "datetime"]; }
+    protected $fillable = ['date', 'client_id', 'description', 'user', 'ip_address'];
 
-    public static function log(string $description, ?string $user = null): void {
-        static::create(["date" => now(), "description" => $description, "user" => $user, "ip_address" => request()->ip()]);
+    protected function casts(): array
+    {
+        return ['date' => 'datetime'];
+    }
+
+    public static function log(string $description, ?string $user = null, ?int $clientId = null): void
+    {
+        static::create([
+            'date' => now(),
+            'client_id' => $clientId,
+            'description' => $description,
+            'user' => $user,
+            'ip_address' => request()->ip(),
+        ]);
+    }
+
+    /**
+     * Everything recorded about one customer.
+     *
+     * This used to be asked as a description search for "client #1", which
+     * also matched client #12 and every other id starting with a 1.
+     */
+    public function scopeForClient($query, Client $client)
+    {
+        return $query->where(function ($q) use ($client) {
+            $q->where('client_id', $client->id);
+
+            if ($client->email) {
+                $q->orWhere('description', 'like', '%'.$client->email.'%');
+            }
+        });
     }
 }
