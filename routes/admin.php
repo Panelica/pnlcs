@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\SslOrderController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\WhoisController;
+use App\Http\Middleware\AdminTwoFactorVerify;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
@@ -30,10 +31,12 @@ Route::post('/admin/login', [AuthController::class, 'login'])->middleware('throt
 Route::get('/admin/2fa', [AuthController::class, 'show2faVerify'])->name('admin.2fa.verify');
 Route::post('/admin/2fa', [AuthController::class, 'verify2fa'])->name('admin.2fa.verify.submit');
 
-Route::middleware(['admin.auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard, logout, search — no permission required (all admins)
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+    // Signing out must stay reachable while the code is outstanding.
+    Route::post('/logout', [AuthController::class, 'logout'])
+        ->withoutMiddleware([AdminTwoFactorVerify::class])->name('logout');
 
     // =============================================
     // Clients CRUD

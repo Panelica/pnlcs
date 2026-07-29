@@ -64,9 +64,11 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('2fa', [AuthController::class, 'verify2fa'])->name('2fa.verify.submit');
     });
 
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', '2fa'])->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
-        Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+        // Signing out must stay reachable while the code is outstanding.
+        Route::post('logout', [AuthController::class, 'logout'])
+            ->withoutMiddleware([TwoFactorVerify::class])->name('logout');
 
         // Services
         Route::get('services', [ServiceController::class, 'index'])->name('services.index');
