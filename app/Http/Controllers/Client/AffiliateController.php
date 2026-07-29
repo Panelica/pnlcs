@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
+use App\Models\Client;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,11 @@ class AffiliateController extends Controller
 
         $stats = [
             'referrals' => $affiliate?->visitors ?? 0,
-            'signups' => 0,
+            // The customers who arrived through this affiliate's link. It used
+            // to be a hardcoded zero, however many they had brought in.
+            'signups' => $affiliate
+                ? Client::where('affiliate_id', $affiliate->id)->count()
+                : 0,
             'earnings' => ($affiliate?->balance ?? 0) + ($affiliate?->withdrawn ?? 0),
             'pending' => $affiliate?->balance ?? 0,
         ];
@@ -26,7 +31,7 @@ class AffiliateController extends Controller
         $commissions = collect();
         if ($affiliate) {
             $commissions = Transaction::where('client_id', $client->id)
-                ->where('description', 'like', '%affiliate%')
+                ->where('gateway', 'affiliate_commission')
                 ->orderBy('date', 'desc')
                 ->limit(50)
                 ->get();
