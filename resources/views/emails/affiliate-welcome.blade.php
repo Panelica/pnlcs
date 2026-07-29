@@ -8,8 +8,8 @@
 <p>{{ __('email.affiliate_welcome.welcome', ['company' => $companyName]) }}</p>
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.affiliate_welcome.commission_rate') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $affiliate->commission_rate ?? '0' }}%</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.affiliate_welcome.commission_type') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ ucfirst($affiliate->commission_type ?? 'percentage') }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.affiliate_welcome.commission_rate') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $affiliate->pay_type === 'percentage' ? rtrim(rtrim(number_format((float) $affiliate->pay_amount, 2), '0'), '.').'%' : number_format((float) $affiliate->pay_amount, 2) }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.affiliate_welcome.commission_type') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ ucfirst($affiliate->pay_type ?? 'percentage') }}</td></tr>
 </table>
 
 <h3 style="color:#405189;font-size:16px;">{{ __('email.affiliate_welcome.how_it_works') }}</h3>

@@ -151,7 +151,7 @@
             </div>
             @endif
             {{-- Domain --}}
-            @if($product->require_domain ?? false)
+            @if($product->show_domain_options)
             <div class="pn-card" style="margin-bottom:16px;">
                 <div class="pn-card-header">{{ __('client.cart.domain') }}</div>
                 <div class="pn-card-body">
