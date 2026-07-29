@@ -17,6 +17,8 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                 <div class="form-group"><label class="form-label">{{ __('common.form.phone_number') }}</label><input type="text" name="PhoneNumber" value="{{ $settings['PhoneNumber'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.company_email') }}</label><input type="email" name="Email" value="{{ $settings['Email'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="CompanyCity" value="{{ $settings['CompanyCity'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label><input type="text" name="TaxID" value="{{ $settings['TaxID'] ?? '' }}" class="form-control"></div>
             </div>
         </div>
     </div>
