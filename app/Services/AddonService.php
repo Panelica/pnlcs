@@ -202,7 +202,7 @@ class AddonService
                 // An addon renews with the service it belongs to.
                 ->where('auto_renew', true))
             ->whereDoesntHave('client.invoices', fn ($q) => $q
-                ->whereIn('status', ['unpaid', 'overdue'])
+                ->whereNotIn('status', \App\Enums\InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Addon')->whereColumn('rel_id', 'service_addons.id')));
     }
 

@@ -43,7 +43,7 @@ class InvoiceGenerationService
             ->where('amount', '>', 0)
             ->whereHas('client')
             ->whereDoesntHave('client.invoices', fn ($q) => $q
-                ->whereIn('status', ['unpaid', 'overdue'])
+                ->whereNotIn('status', \App\Enums\InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Hosting')->whereColumn('rel_id', 'services.id')))
             ->get();
 
@@ -63,7 +63,7 @@ class InvoiceGenerationService
             ->where('recurring_amount', '>', 0)
             ->whereHas('client')
             ->whereDoesntHave('client.invoices', fn ($q) => $q
-                ->whereIn('status', ['unpaid', 'overdue'])
+                ->whereNotIn('status', \App\Enums\InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Domain')->whereColumn('rel_id', 'domains.id')))
             ->get();
 
