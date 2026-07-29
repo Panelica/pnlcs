@@ -182,8 +182,8 @@ class CartService
             return ['success' => false, 'message' => 'Invalid promo code.', 'discount' => 0.0];
         }
 
-        if (! $promo->isValid()) {
-            return ['success' => false, 'message' => 'This promo code has expired or reached its usage limit.', 'discount' => 0.0];
+        if (! $promo->isValidFor($this->cartClient($cart), $this->cartProductIds($cart))) {
+            return ['success' => false, 'message' => 'This promo code cannot be used on this order.', 'discount' => 0.0];
         }
 
         $data = $this->getData($cart);
@@ -222,7 +222,7 @@ class CartService
         $discount = 0.0;
         if ($promoCode) {
             $promo = Promotion::where('code', $promoCode)->first();
-            if ($promo && $promo->isValid()) {
+            if ($promo && $promo->isValidFor($this->cartClient($cart), $this->cartProductIds($cart))) {
                 if ($promo->type === 'percentage') {
                     $discount = round($subtotal * ((float) $promo->value / 100), 2);
                 } else {
@@ -297,6 +297,26 @@ class CartService
         $this->clearCart($cart);
 
         return $order;
+    }
+
+    /** carts.user_id holds the client id, despite the column name. */
+    private function cartClient(Cart $cart): ?Client
+    {
+        return $cart->user_id ? Client::find($cart->user_id) : null;
+    }
+
+    /** @return array<int, int> */
+    private function cartProductIds(Cart $cart): array
+    {
+        $ids = [];
+
+        foreach ($this->getData($cart)['items'] ?? [] as $item) {
+            if (($item['type'] ?? 'product') !== 'domain' && ! empty($item['product_id'])) {
+                $ids[] = (int) $item['product_id'];
+            }
+        }
+
+        return $ids;
     }
 
     public function clearCart(Cart $cart): void

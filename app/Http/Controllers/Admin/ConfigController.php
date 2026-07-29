@@ -296,6 +296,7 @@ class ConfigController extends Controller
     {
         return view('admin.config.promotions', [
             'promotions' => Promotion::orderBy('id', 'desc')->get(),
+            'products' => Product::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -310,8 +311,19 @@ class ConfigController extends Controller
             'expiration_date' => 'nullable|date|after_or_equal:start_date',
             'recurring' => 'boolean',
             'notes' => 'nullable|string',
+            'applies_to' => 'nullable|array',
+            'applies_to.*' => 'integer|exists:products,id',
+            'apply_once' => 'boolean',
+            'new_signups_only' => 'boolean',
+            'existing_client' => 'boolean',
         ]);
         $v['recurring'] = $request->boolean('recurring');
+        $v['apply_once'] = $request->boolean('apply_once');
+        $v['new_signups_only'] = $request->boolean('new_signups_only');
+        $v['existing_client'] = $request->boolean('existing_client');
+        $v['applies_to'] = $request->filled('applies_to')
+            ? implode(',', $request->input('applies_to'))
+            : null;
         Promotion::create($v);
 
         return back()->with('success', __('messages.success.promotion_created'));
