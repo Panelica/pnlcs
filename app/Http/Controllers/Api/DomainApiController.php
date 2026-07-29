@@ -8,6 +8,7 @@ use App\Models\DomainPricing;
 use App\Services\DomainService;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class DomainApiController extends BaseApiController
@@ -101,6 +102,14 @@ class DomainApiController extends BaseApiController
         return $this->updateNameservers($request);
     }
 
+    private function registrarFor(Domain $domain): ?\App\Contracts\RegistrarModuleInterface
+    {
+        if (! filled($domain->registrar)) {
+            return null;
+        }
+
+        return app(\App\Services\Module\ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
+    }
     public function getLockStatus(Request $request)
     {
         $domain = Domain::find($request->domainid);
@@ -108,7 +117,19 @@ class DomainApiController extends BaseApiController
             return $this->error('Domain Not Found', 404);
         }
 
-        return $this->success(['domainid' => $domain->id, 'lockstatus' => (bool) ($domain->do_not_renew ?? false)]);
+        $module = $this->registrarFor($domain);
+
+        if (! $module) {
+            return $this->error('No registrar module is configured for this domain.', 422);
+        }
+
+        try {
+            return $this->success(['domainid' => $domain->id, 'lockstatus' => $module->getLockStatus($domain)]);
+        } catch (\Throwable $e) {
+            Log::error("Domain lock status lookup failed for {$domain->domain}: {$e->getMessage()}");
+
+            return $this->error('The registrar could not be reached.', 502);
+        }
     }
 
     public function domainGetLockingStatus(Request $request)
@@ -123,7 +144,27 @@ class DomainApiController extends BaseApiController
             return $this->error('Domain Not Found', 404);
         }
 
-return $this->success(['domainid' => $domain->id, 'lockstatus' => $request->boolean('lockstatus')]);
+        $module = $this->registrarFor($domain);
+
+        if (! $module) {
+            return $this->error('No registrar module is configured for this domain.', 422);
+        }
+
+        $lock = $request->boolean('lockstatus');
+
+        try {
+            // Echoing the request back said the domain was locked while the
+            // registrar had never been told.
+            if (! $module->toggleLock($domain, $lock)) {
+                return $this->error('The registrar refused the lock change.', 422);
+            }
+        } catch (\Throwable $e) {
+            Log::error("Domain lock change failed for {$domain->domain}: {$e->getMessage()}");
+
+            return $this->error('The registrar could not be reached.', 502);
+        }
+
+        return $this->success(['domainid' => $domain->id, 'lockstatus' => $lock]);
     }
 
     public function domainGetWhoisInfo(Request $request)
@@ -140,12 +181,9 @@ return $this->success(['domainid' => $domain->id, 'lockstatus' => $request->bool
 
     public function domainUpdateWhoisInfo(Request $request)
     {
-        $domain = Domain::find($request->domainid);
-        if (! $domain) {
-            return $this->error('Domain Not Found', 404);
-        }
-
-        return $this->success(['domainid' => $domain->id]);
+        // No registrar module implements a whois update. Reporting success and
+        // changing nothing is worse than saying so.
+        return $this->error('Updating whois contact details is not implemented. Change them at the registrar.', 501);
     }
 
     public function domainRequestEpp(Request $request)
@@ -155,7 +193,32 @@ return $this->success(['domainid' => $domain->id, 'lockstatus' => $request->bool
             return $this->error('Domain Not Found', 404);
         }
 
-        return $this->success(['domainid' => $domain->id, 'eppcode' => $domain->epp_code ?? strtoupper(Str::random(8))]);
+        $module = $this->registrarFor($domain);
+
+        if (! $module) {
+            return $this->error('No registrar module is configured for this domain.', 422);
+        }
+
+        try {
+            // Eight random characters is not a transfer code. Handing one out
+            // sends the customer to their new registrar with a code that
+            // cannot work.
+            $eppCode = trim($module->getEPPCode($domain));
+        } catch (\Throwable $e) {
+            Log::error("EPP code lookup failed for {$domain->domain}: {$e->getMessage()}");
+
+            return $this->error('The registrar could not be reached.', 502);
+        }
+
+        // A transfer code has no spaces in it; registrars that keep none
+        // answer with a sentence saying so, which is a message and not a code.
+        if ($eppCode === '' || str_contains($eppCode, ' ')) {
+            return $this->error($eppCode !== ''
+                ? $eppCode
+                : 'The registrar did not return a transfer code for this domain.', 422);
+        }
+
+        return $this->success(['domainid' => $domain->id, 'eppcode' => $eppCode]);
     }
 
     public function domainToggleIdProtect(Request $request)
