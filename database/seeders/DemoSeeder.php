@@ -609,7 +609,7 @@ class DemoSeeder extends Seeder
                     'registrar' => 'enom',
                     'registration_period' => 1,
                     'registration_date' => now()->subDays(rand(30, 500))->toDateString(),
-                    'expiry_date' => now()->addDays(rand(10, 365))->toDateString(),
+                    'expiry_date' => now()->addDays(rand(10, 365))->format('Y-m'),
                     'next_due_date' => now()->addDays(rand(10, 365))->toDateString(),
                     'status' => rand(0,9) < 8 ? 'Active' : 'Expired',
                     'dns_management' => true,
