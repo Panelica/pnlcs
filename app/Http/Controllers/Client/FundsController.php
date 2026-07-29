@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Support\Str;
 
 class FundsController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
         $gateways = DB::table('gateway_settings')
@@ -29,7 +32,7 @@ class FundsController extends Controller
             'payment_method' => 'required|string|max:50',
         ]);
 
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
 
         if (!$client) {
             return back()->with('error', __('messages.error.no_client_account_found_please_contact_support'));

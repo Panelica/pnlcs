@@ -2,6 +2,9 @@
 
 return [
     'account' => [
+        'account_switched' => 'You are now viewing :name.',
+        'accounts' => 'Your accounts',
+        'accounts_hint' => 'This login belongs to more than one account. Choose the one you want to work on.',
         'add_contact' => 'Add Contact',
         'billing_info' => 'Billing Information',
         'change_password' => 'Change Password',

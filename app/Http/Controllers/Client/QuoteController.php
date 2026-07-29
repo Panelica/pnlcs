@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Quote;
 use App\Services\QuoteService;
 use Illuminate\Http\Request;
 
 class QuoteController extends Controller
 {
+    use ResolvesClient;
+
     /**
      * Quote statuses a client is allowed to see (drafts stay internal).
      */
@@ -95,8 +98,4 @@ class QuoteController extends Controller
         abort_if(!in_array($quote->status, self::VISIBLE_STATUSES, true), 404);
     }
 
-    private function getClientId()
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
-    }
 }

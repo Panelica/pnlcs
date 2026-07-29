@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
@@ -15,6 +16,8 @@ use Illuminate\Support\Str;
 
 class TicketController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
         $tickets = Ticket::with('department')->where('client_id', $this->getClientId())->orderBy('last_reply', 'desc')->paginate(25);
@@ -128,8 +131,4 @@ class TicketController extends Controller
         return Storage::disk('local')->download($path, basename($path));
     }
 
-    private function getClientId()
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
-    }
 }

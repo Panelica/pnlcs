@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 
 class PaymentMethodController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
         $methods = PaymentMethod::where('client_id', $this->getClientId())
@@ -61,8 +64,4 @@ class PaymentMethodController extends Controller
         return back()->with('success', __('client.payment_methods.removed'));
     }
 
-    private function getClientId()
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
-    }
 }

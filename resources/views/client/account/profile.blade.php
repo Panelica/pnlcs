@@ -9,6 +9,22 @@
     </div>
 </div>
 
+@if(($accounts ?? collect())->count() > 1)
+<div class="pn-card" style="margin-bottom:16px;">
+    <div class="pn-card-header"><span class="pn-card-title">{{ __('client.account.accounts') }}</span></div>
+    <div class="pn-card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">{{ __('client.account.accounts_hint') }}</p>
+        @foreach($accounts as $account)
+            <form method="POST" action="{{ route('client.account.switch', $account) }}" style="display:inline-block;margin:0 8px 8px 0;">
+                @csrf
+                <button type="submit" class="btn {{ $client && $client->id === $account->id ? 'btn-primary' : 'btn-default' }} btn-sm" @disabled($client && $client->id === $account->id)>
+                    {{ trim($account->first_name.' '.$account->last_name) ?: $account->email }}
+                </button>
+            </form>
+        @endforeach
+    </div>
+</div>
+@endif
 <div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.profile.personal_info') }}</span></div>
     <div class="pn-card-body">

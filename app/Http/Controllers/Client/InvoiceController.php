@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\GatewaySettings;
 use App\Models\Invoice;
 use App\Models\PaymentNotification;
@@ -15,6 +16,8 @@ use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
         $invoices = Invoice::with('items')
@@ -139,8 +142,4 @@ class InvoiceController extends Controller
         return $pdfService->download($invoice);
     }
 
-    private function getClientId()
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
-    }
 }

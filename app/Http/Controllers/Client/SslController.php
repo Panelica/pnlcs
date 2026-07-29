@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\SslOrder;
 use App\Services\Module\ModuleRegistry;
 use App\Services\SslProvisioningService;
@@ -10,6 +11,8 @@ use Illuminate\Http\Request;
 
 class SslController extends Controller
 {
+    use ResolvesClient;
+
     public function __construct(
         protected SslProvisioningService $sslService,
         protected ModuleRegistry $registry,
@@ -158,8 +161,4 @@ class SslController extends Controller
         return back()->with('error', $result['message']);
     }
 
-    private function getClientId(): int
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
-    }
 }

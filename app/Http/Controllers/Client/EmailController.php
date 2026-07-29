@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Email;
 
 class EmailController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
         $emails = Email::where('client_id', $this->getClientId())
@@ -23,8 +26,4 @@ class EmailController extends Controller
         return view('client.emails.show', compact('email'));
     }
 
-    private function getClientId()
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
-    }
 }

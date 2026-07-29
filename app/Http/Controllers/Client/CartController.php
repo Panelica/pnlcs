@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Currency;
 use App\Models\GatewaySettings;
 use App\Models\Product;
@@ -16,6 +17,8 @@ use Illuminate\Validation\Rule;
 
 class CartController extends Controller
 {
+    use ResolvesClient;
+
     public function __construct(private CartService $cartService) {}
 
     public function store()
@@ -188,13 +191,6 @@ class CartController extends Controller
 
         return redirect()->route('client.invoices.show', $order->invoice_id)
             ->with('success', __('messages.success.order_placed', ['num' => $order->order_num]));
-    }
-
-    private function getClientId(): ?int
-    {
-        $user = auth()->user();
-
-        return $user ? $user->clients()->first()?->id : null;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Contracts\RegistrarModuleInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Domain;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class DomainController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
         $domains = Domain::where('client_id', $this->getClientId())->orderBy('id', 'desc')->paginate(25);
@@ -139,11 +142,6 @@ class DomainController extends Controller
         }
 
         return app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
-    }
-
-    private function getClientId(): int
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
     }
 
     private function authorizeClientDomain(Domain $domain): void

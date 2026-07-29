@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Mail\CancellationConfirmMail;
 use App\Models\CancellationRequest;
 use App\Models\Product;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\Mail;
 
 class ServiceController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
         $services = Service::with('product')
@@ -247,8 +250,4 @@ class ServiceController extends Controller
         return ! in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true);
     }
 
-    private function getClientId(): int
-    {
-        return auth()->user()->clients()->first()?->id ?? 0;
-    }
 }

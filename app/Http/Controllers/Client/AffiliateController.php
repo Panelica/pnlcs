@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Affiliate;
 use App\Models\Client;
 use App\Models\Transaction;
@@ -10,9 +11,11 @@ use Illuminate\Http\Request;
 
 class AffiliateController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
         $affiliate = $client ? Affiliate::where('client_id', $client->id)->first() : null;
 
         $stats = [
@@ -42,7 +45,7 @@ class AffiliateController extends Controller
 
     public function activate()
     {
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
 
         if (! $client) {
             return back()->with('error', __('messages.error.no_client_account_found'));
@@ -68,7 +71,7 @@ class AffiliateController extends Controller
 
     public function withdraw(Request $request)
     {
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
         $affiliate = $client ? Affiliate::where('client_id', $client->id)->first() : null;
 
         if (! $affiliate) {

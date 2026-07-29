@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
 use App\Services\TicketSpamService;
@@ -11,6 +12,8 @@ use Illuminate\Support\Str;
 
 class ContactController extends Controller
 {
+    use ResolvesClient;
+
     public function show()
     {
         $departments = TicketDepartment::where('hidden', false)
@@ -40,7 +43,7 @@ class ContactController extends Controller
             return back()->with('success', __('messages.success.your_message_has_been_sent_we_will_get_back_to_you'));
         }
 
-        $clientId = auth()->check() ? auth()->user()->clients()->first()?->id : null;
+        $clientId = auth()->check() ? $this->currentClient()?->id : null;
 
         Ticket::create([
             'tid' => strtoupper(Str::random(6)),

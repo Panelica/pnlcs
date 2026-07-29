@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ use Illuminate\Validation\Rules\Password;
 
 class AccountController extends Controller
 {
+    use ResolvesClient;
+
     /** ISO 3166-1 alpha-2 country list for the profile form. */
     private const COUNTRIES = [
         'AF' => 'Afghanistan', 'AL' => 'Albania', 'DZ' => 'Algeria', 'AR' => 'Argentina', 'AM' => 'Armenia',
@@ -40,18 +43,21 @@ class AccountController extends Controller
     public function profile()
     {
         $user = auth()->user();
-        $client = $user->clients()->first();
+        $client = $this->currentClient();
         // The blade renders a country <select> from $countries; without it the
         // dropdown had nothing but its placeholder and no country could be set.
         $countries = self::COUNTRIES;
 
-        return view('client.account.profile', compact('user', 'client', 'countries'));
+        // Most logins have one account and never see the switch.
+        $accounts = $user->clients()->orderBy('id')->get();
+
+        return view('client.account.profile', compact('user', 'client', 'countries', 'accounts'));
     }
 
     public function updateProfile(Request $request)
     {
         $user = auth()->user();
-        $client = $user->clients()->first();
+        $client = $this->currentClient();
 
         $request->validate([
             'first_name' => 'required|string|max:100',
@@ -127,7 +133,7 @@ class AccountController extends Controller
 
     public function contacts()
     {
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
         $contacts = $client ? $client->contacts()->orderBy('id')->get() : collect();
 
         return view('client.account.contacts', compact('contacts'));
@@ -135,7 +141,7 @@ class AccountController extends Controller
 
     public function storeContact(Request $request)
     {
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
 
         if (! $client) {
             return redirect()->route('client.account.contacts')
@@ -168,10 +174,27 @@ class AccountController extends Controller
             ->with('success', __('messages.success.contact_created'));
     }
 
+    /**
+     * Look at a different one of the accounts this login belongs to.
+     *
+     * Most customers have exactly one and never see this; the client area used
+     * to answer with the first account whatever the login was attached to.
+     */
+    public function switchAccount(\App\Models\Client $client)
+    {
+        abort_unless(auth()->user()->clients()->whereKey($client->id)->exists(), 403);
+
+        session(['active_client_id' => $client->id]);
+
+        return back()->with('success', __('client.account.account_switched', [
+            'name' => trim($client->first_name.' '.$client->last_name),
+        ]));
+    }
+
     /** The Edit button used to be a link to nowhere. */
     public function updateContact(Request $request, Contact $contact)
     {
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
 
         abort_if(! $client || $contact->client_id !== $client->id, 403);
 
@@ -228,7 +251,7 @@ class AccountController extends Controller
 
     public function destroyContact(Contact $contact)
     {
-        $client = auth()->user()->clients()->first();
+        $client = $this->currentClient();
         if (! $client || $contact->client_id !== $client->id) {
             abort(403);
         }

@@ -238,6 +238,10 @@ class ClientController extends Controller
         // Login as the client's user
         auth()->login($user);
 
+        // The user may belong to more than one account: open the one that was
+        // clicked, not whichever happens to come first.
+        session(['active_client_id' => $client->id]);
+
         return redirect()->route('client.home')->with('success', __('admin.messages.viewing_as', ['name' => $client->first_name.' '.$client->last_name]));
     }
 
@@ -261,7 +265,7 @@ class ClientController extends Controller
         }
 
         // Clear impersonation session
-        session()->forget(['impersonating_admin_id', 'impersonating_admin_name']);
+        session()->forget(['impersonating_admin_id', 'impersonating_admin_name', 'active_client_id']);
 
         return redirect()->route('admin.clients.index')->with('success', __('messages.success.impersonation_stopped'));
     }
