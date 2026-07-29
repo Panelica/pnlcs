@@ -10,6 +10,7 @@ use App\Models\Client;
 use App\Models\User;
 use App\Services\AffiliateService;
 use App\Services\TwoFactorService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -279,7 +280,10 @@ class AuthController extends Controller
         if (! $record || ! Hash::check($request->token, $record->token)) {
             return back()->withErrors(['email' => __('auth.invalid_or_expired_reset_token')]);
         }
-        if (now()->diffInMinutes($record->created_at) > 60) {
+        // diffInMinutes() is signed: for a time in the past it returns a
+        // negative number, so the old '> 60' was never true and every link
+        // stayed valid for good. Compare against the deadline instead.
+        if (Carbon::parse($record->created_at)->addMinutes(60)->isPast()) {
             return back()->withErrors(['email' => __('auth.reset_link_expired')]);
         }
         $user = User::where('email', $request->email)->first();

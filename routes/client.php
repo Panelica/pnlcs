@@ -31,9 +31,10 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
 
     // Password Reset
     Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-    Route::post('forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    // Unthrottled, this is a mail bomb aimed at any address the attacker likes.
+    Route::post('forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('password.email');
     Route::get('reset-password/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
-    Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('password.update.reset');
+    Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('password.update.reset');
 
     // Knowledge Base (public)
     Route::get('knowledgebase', [KbController::class, 'index'])->name('kb.index');
