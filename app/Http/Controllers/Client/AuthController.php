@@ -6,6 +6,7 @@ use App\Events\ClientCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\AffiliateTracking;
 use App\Mail\PasswordResetMail;
+use App\Models\BannedEmail;
 use App\Models\Client;
 use App\Models\User;
 use App\Services\AffiliateService;
@@ -192,6 +193,14 @@ class AuthController extends Controller
             'phone_number' => 'nullable|string|max:30',
             'tos' => 'required|accepted',
         ]);
+
+        // The ban list was only ever consulted when scoring an order, so a
+        // banned address could open an account and be back inside the panel.
+        if (BannedEmail::blocks($validated['email'])) {
+            return back()
+                ->withErrors(['email' => __('auth.email_not_accepted')])
+                ->onlyInput('email');
+        }
 
         $user = User::create([
             'first_name' => $validated['first_name'],

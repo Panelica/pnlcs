@@ -76,6 +76,7 @@ return [
     'sign_in' => 'Sign In',
     'signing_in' => 'Signing in...',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+    'email_not_accepted' => 'This email address cannot be used to register.',
     'user_not_found' => 'User not found.',
     'username' => 'Username',
     'username_placeholder' => 'Enter your username',

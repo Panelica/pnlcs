@@ -62,17 +62,7 @@ class FraudDetectionService
 
         // Rule 4: Email in banned list (+80)
         if ($client->email) {
-            // Bans live in banned_emails.domain, which holds either a whole
-            // address or a bare domain. There is no email column; asking for
-            // one threw and took the entire fraud check with it.
-            $domain = strtolower(explode('@', $client->email)[1] ?? '');
-            $emailBanned = BannedEmail::where(function ($q) use ($client, $domain) {
-                $q->whereRaw('LOWER(domain) = ?', [strtolower($client->email)]);
-                if ($domain !== '') {
-                    $q->orWhereRaw('LOWER(domain) = ?', [$domain])
-                        ->orWhereRaw('LOWER(domain) = ?', ['@'.$domain]);
-                }
-            })->exists();
+            $emailBanned = BannedEmail::blocks($client->email);
 
             if ($emailBanned) {
                 $score += 80;
