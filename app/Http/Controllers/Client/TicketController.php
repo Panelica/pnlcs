@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
 use App\Http\Controllers\Controller;
+use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
 use App\Services\TicketSpamService;
@@ -25,7 +26,15 @@ class TicketController extends Controller
     {
         $departments = TicketDepartment::where('hidden', false)->orderBy('sort_order')->get();
 
-        return view('client.tickets.create', compact('departments'));
+        // The form has always had a picker for the service the ticket is
+        // about; nothing ever gave it anything to show.
+        $services = Service::with('product')
+            ->where('client_id', $this->getClientId())
+            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+            ->orderBy('domain')
+            ->get();
+
+        return view('client.tickets.create', compact('departments', 'services'));
     }
 
     public function store(Request $request)

@@ -21,7 +21,7 @@ class HomeController extends Controller
         $data = [
             'serviceCount'   => Service::whereIn('client_id', $clientIds)->where('status', ServiceStatus::Active->value)->count(),
             'domainCount'    => Domain::whereIn('client_id', $clientIds)->where('status', DomainStatus::Active->value)->count(),
-            'unpaidInvoices' => Invoice::whereIn('client_id', $clientIds)->where('status', InvoiceStatus::Unpaid->value)->count(),
+            'unpaidInvoices' => Invoice::whereIn('client_id', $clientIds)->outstanding()->count(),
             'openTickets'    => Ticket::whereIn('client_id', $clientIds)->whereIn('status', ['Open', 'Customer-Reply'])->count(),
             'recentInvoices' => Invoice::whereIn('client_id', $clientIds)->orderBy('id', 'desc')->limit(5)->get(),
             'recentTickets'  => Ticket::whereIn('client_id', $clientIds)->orderBy('id', 'desc')->limit(5)->get(),
