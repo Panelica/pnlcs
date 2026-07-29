@@ -19,6 +19,11 @@ use Symfony\Component\Mime\Address;
  */
 class ApplyEmailTemplate
 {
+    /** Mailables that must never be copied to a second address. */
+    private const NEVER_COPIED = [
+        'PasswordResetMail',
+    ];
+
     public function __construct(private EmailTemplateService $templates) {}
 
     /** Returns null to allow, false to cancel — the dispatch halts on anything else. */
@@ -58,8 +63,18 @@ class ApplyEmailTemplate
             ));
         }
 
-        foreach ($this->copyTo($template->copy_to) as $address) {
-            $event->message->addBcc($address);
+        // Anything carrying a credential or a sign-in link goes to the person
+        // who asked for it and nobody else. Every contact on an account is
+        // flagged for general email, and a password reset is a general
+        // template, so copying these would hand the reset link to colleagues.
+        if (! in_array(class_basename($mailable), self::NEVER_COPIED, true)) {
+            foreach ($this->copyTo($template->copy_to) as $address) {
+                $event->message->addBcc($address);
+            }
+
+            foreach ($this->contactRecipients($event, $template) as $address) {
+                $event->message->addCc($address);
+            }
         }
 
         // Only once the operator has made it theirs: replacing the body of an
@@ -73,6 +88,43 @@ class ApplyEmailTemplate
         }
 
         return null;
+    }
+
+    /**
+     * The client's contacts who asked for this kind of email.
+     *
+     * @return array<int, string>
+     */
+    private function contactRecipients($event, $template): array
+    {
+        $client = $this->templates->clientFrom($event->data);
+
+        if (! $client) {
+            return [];
+        }
+
+        $already = array_map('strtolower', array_keys($event->message->getTo() ?? []));
+        $addresses = [];
+
+        try {
+            $contacts = $client->contacts()->get();
+        } catch (\Throwable) {
+            return [];
+        }
+
+        foreach ($contacts as $contact) {
+            $address = strtolower(trim((string) $contact->email));
+
+            if ($address === '' || in_array($address, $already, true)) {
+                continue;
+            }
+
+            if ($contact->wantsEmailsFor($template->type)) {
+                $addresses[] = $address;
+            }
+        }
+
+        return array_values(array_unique($addresses));
     }
 
     /**

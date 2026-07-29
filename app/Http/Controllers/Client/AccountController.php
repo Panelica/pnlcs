@@ -157,15 +157,42 @@ class AccountController extends Controller
             'email' => $request->email,
             'company_name' => $request->company_name,
             'phone_number' => $request->phone_number,
-            'general_emails' => true,
-            'product_emails' => false,
-            'domain_emails' => false,
-            'invoice_emails' => false,
-            'support_emails' => false,
+            'general_emails' => $request->boolean('general_emails'),
+            'product_emails' => $request->boolean('product_emails'),
+            'domain_emails' => $request->boolean('domain_emails'),
+            'invoice_emails' => $request->boolean('invoice_emails'),
+            'support_emails' => $request->boolean('support_emails'),
         ]);
 
         return redirect()->route('client.account.contacts')
             ->with('success', __('messages.success.contact_created'));
+    }
+
+    /** The Edit button used to be a link to nowhere. */
+    public function updateContact(Request $request, Contact $contact)
+    {
+        $client = auth()->user()->clients()->first();
+
+        abort_if(! $client || $contact->client_id !== $client->id, 403);
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'email' => 'required|email|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:50',
+        ]);
+
+        $contact->update($validated + [
+            'general_emails' => $request->boolean('general_emails'),
+            'product_emails' => $request->boolean('product_emails'),
+            'domain_emails' => $request->boolean('domain_emails'),
+            'invoice_emails' => $request->boolean('invoice_emails'),
+            'support_emails' => $request->boolean('support_emails'),
+        ]);
+
+        return redirect()->route('client.account.contacts')
+            ->with('success', __('messages.success.contact_updated'));
     }
 
     public function security()

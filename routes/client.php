@@ -152,6 +152,7 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::put('account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
         Route::get('account/contacts', [AccountController::class, 'contacts'])->name('account.contacts');
         Route::post('account/contacts', [AccountController::class, 'storeContact'])->name('account.contacts.store');
+        Route::put('account/contacts/{contact}', [AccountController::class, 'updateContact'])->name('account.contacts.update');
         Route::delete('account/contacts/{contact}', [AccountController::class, 'destroyContact'])->name('account.contacts.destroy');
         Route::get('account/payment-methods', [AccountController::class, 'paymentMethods'])->name('account.payment_methods');
         Route::get('account/security', [AccountController::class, 'security'])->name('account.security');

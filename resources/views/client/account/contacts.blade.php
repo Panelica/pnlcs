@@ -46,7 +46,7 @@
                     <th>{{ __('common.table.name') }}</th>
                     <th>{{ __('common.table.email') }}</th>
                     <th>{{ __('common.form.phone') }}</th>
-                    <th>{{ __('client.contacts.permissions') }}</th>
+                    <th>{{ __('client.contacts.receives') }}</th>
                     <th>{{ __('common.table.actions') }}</th>
                 </tr>
             </thead>
@@ -56,7 +56,18 @@
                     <td style="font-weight:500;">{{ $contact->first_name }} {{ $contact->last_name }}</td>
                     <td style="color:#555;">{{ $contact->email }}</td>
                     <td style="color:#777;">{{ $contact->phone ?? '-' }}</td>
-                    <td style="font-size:12px; color:#777;">{{ $contact->permissions ?? __('client.contacts.general') }}</td>
+                    <td style="font-size:12px; color:#777;">
+                        @php
+                            $kinds = collect([
+                                'general_emails' => __('client.contacts.kind_general'),
+                                'invoice_emails' => __('client.contacts.kind_invoice'),
+                                'product_emails' => __('client.contacts.kind_product'),
+                                'domain_emails' => __('client.contacts.kind_domain'),
+                                'support_emails' => __('client.contacts.kind_support'),
+                            ])->filter(fn ($label, $field) => $contact->{$field})->values();
+                        @endphp
+                        {{ $kinds->isEmpty() ? __('client.contacts.receives_nothing') : $kinds->implode(', ') }}
+                    </td>
                     <td>
                         <a href="#" class="btn btn-outline btn-xs">{{ __('common.actions.edit') }}</a>
                         <form method="POST" action="{{ route('client.account.contacts.destroy', $contact) }}" style="display:inline;" onsubmit="return confirm('{{ __("client.contacts.confirm_remove") }}')">

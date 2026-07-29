@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Client;
 use App\Models\EmailTemplate;
 use App\Models\Setting;
 
@@ -61,6 +62,28 @@ class EmailTemplateService
             // stand between a customer and their email.
             return null;
         }
+    }
+
+    /** The client an email is about, taken from whatever the mailable carries. */
+    public function clientFrom(array $data): ?Client
+    {
+        foreach (['invoice', 'service', 'order', 'domain', 'ticket', 'client'] as $property) {
+            $model = $data[$property] ?? null;
+
+            if (! is_object($model)) {
+                continue;
+            }
+
+            if ($property === 'client') {
+                return $model;
+            }
+
+            if (isset($model->client) && $model->client) {
+                return $model->client;
+            }
+        }
+
+        return null;
     }
 
     /** Replace {merge_field} with what the mailable is carrying. */
