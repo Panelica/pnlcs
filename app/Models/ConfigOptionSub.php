@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\BillingCycleHelper;
 use Illuminate\Database\Eloquent\Model;
 
 class ConfigOptionSub extends Model
@@ -29,19 +30,24 @@ class ConfigOptionSub extends Model
 
     public const PRICING_TYPE = 'configoptions';
 
-    /** Recurring price for a billing cycle, in the default currency. */
+    /** Recurring price for a billing cycle, in the currency being sold in. */
     public function priceFor(string $cycle): float
     {
-        $row = $this->relationLoaded('pricing')
-            ? $this->pricing->first()
-            : $this->pricing()->first();
+        $currencyId = Currency::getDefault()?->id;
 
-        if (! $row) {
+        $row = $this->relationLoaded('pricing')
+            ? $this->pricing->firstWhere('currency_id', $currencyId) ?? $this->pricing->first()
+            : $this->pricing()->where('currency_id', $currencyId)->first() ?? $this->pricing()->first();
+
+        $column = BillingCycleHelper::pricingColumn($cycle);
+
+        if (! $row || ! $column) {
             return 0.0;
         }
 
-        $cycle = strtolower($cycle);
+        $price = round((float) ($row->{$column} ?? 0), 2);
 
-        return isset($row->{$cycle}) ? round((float) $row->{$cycle}, 2) : 0.0;
+        // -1 marks a cycle the option is not offered on, not a discount.
+        return $price > 0 ? $price : 0.0;
     }
 }

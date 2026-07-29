@@ -4,11 +4,9 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Client;
-use App\Models\Currency;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\Order;
-use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\Promotion;
 use Carbon\Carbon;
@@ -324,59 +322,15 @@ class CartService
         $this->saveData($cart, ['items' => [], 'promo_code' => null, 'currency_id' => null]);
     }
 
+    /** Zero means the product is not sold on that cycle — addProduct refuses it. */
     public function getProductPrice(Product $product, string $billingCycle): float
     {
-        $currency = Currency::getDefault();
-        $currencyId = $currency ? $currency->id : 1;
-
-        $pricing = Pricing::where('type', 'product')
-            ->where('rel_id', $product->id)
-            ->where('currency_id', $currencyId)
-            ->first();
-
-        if (! $pricing) {
-            $pricing = Pricing::where('type', 'product')
-                ->where('rel_id', $product->id)
-                ->first();
-        }
-
-        if (! $pricing) {
-            return 0.0;
-        }
-
-        $cycle = $billingCycle;
-        if (isset($pricing->{$cycle}) && $pricing->{$cycle} !== null) {
-            return (float) $pricing->{$cycle};
-        }
-
-        foreach (['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'] as $fallback) {
-            if (isset($pricing->{$fallback}) && (float) $pricing->{$fallback} > 0) {
-                return (float) $pricing->{$fallback};
-            }
-        }
-
-        return 0.0;
+        return $product->priceFor($billingCycle) ?? 0.0;
     }
 
     public function getAvailableCycles(Product $product): array
     {
-        $currency = Currency::getDefault();
-        $currencyId = $currency ? $currency->id : 1;
-
-        $pricing = Pricing::where('type', 'product')
-            ->where('rel_id', $product->id)
-            ->where('currency_id', $currencyId)
-            ->first();
-
-        if (! $pricing) {
-            $pricing = Pricing::where('type', 'product')
-                ->where('rel_id', $product->id)
-                ->first();
-        }
-
-        if (! $pricing) {
-            return [];
-        }
+        $priced = $product->pricedCycles();
 
         $cycles = [];
         $labels = [
@@ -389,8 +343,8 @@ class CartService
         ];
 
         foreach ($labels as $key => $label) {
-            if (isset($pricing->{$key}) && (float) $pricing->{$key} > 0) {
-                $cycles[] = ['label' => $label, 'price' => (float) $pricing->{$key}];
+            if (isset($priced[$key])) {
+                $cycles[] = ['label' => $label, 'price' => $priced[$key]];
             }
         }
 

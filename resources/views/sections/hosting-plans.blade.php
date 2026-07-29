@@ -26,9 +26,10 @@
             {{-- Plan cards --}}
             @foreach($hostingProducts->take(3) as $idx => $product)
             @php
-                $pricing = $product->pricing->first();
-                $monthlyPrice = $pricing ? $pricing->monthly : '0.00';
-                $annualPrice = $pricing ? $pricing->annually : '0.00';
+                $priced = $product->pricedCycles($currency?->id ?? null);
+                $priceCycle = isset($priced['monthly']) ? 'monthly' : (string) array_key_first($priced);
+                $monthlyPrice = $priced[$priceCycle] ?? null;
+                $annualPrice = $priced['annually'] ?? null;
                 $configOptions = is_string($product->config_options) ? json_decode($product->config_options, true) : ($product->config_options ?? []);
                 $features = [];
                 for ($i = 1; $i <= 7; $i++) {
@@ -44,7 +45,11 @@
                 <div class="plan-card__name">{{ $product->name }}</div>
                 <div class="plan-card__subtitle">{{ $product->description }}</div>
                 <div class="plan-card__pricing">
-                    <div class="plan-card__price">${{ $monthlyPrice }}<small>/mo</small></div>
+                    @if($monthlyPrice !== null)
+                        <div class="plan-card__price">{{ $currency?->prefix ?? '$' }}{{ number_format($monthlyPrice, 2) }}{{ $currency?->suffix }}<small>/{{ $priceCycle === 'monthly' ? 'mo' : $priceCycle }}</small></div>
+                    @else
+                        <div class="plan-card__price">{{ __('client.store.contact_us') }}</div>
+                    @endif
                 </div>
                 <div class="plan-card__features">
                     @foreach($features as $feature)

@@ -33,18 +33,18 @@
             <div class="pn-card" style="margin-bottom:16px;">
                 <div class="pn-card-header">{{ __('client.cart.billing_cycle') }}</div>
                 <div class="pn-card-body">
-                    @php $pricing = $product->pricing->first(); $cycles = ['monthly','quarterly','semiannually','annually','biennially','triennially']; @endphp
+                    @php $pricedCycles = $product->pricedCycles($currency?->id); @endphp
                     <div class="cycle-options">
-                        @if($pricing)
-                            @foreach($cycles as $cycle)
-                                @if(isset($pricing->{$cycle}) && (float)$pricing->{$cycle} > 0)
+                        @if($pricedCycles !== [])
+                            {{-- Only the cycles the product is sold on, so the first one
+                                 really is the one that comes up selected. --}}
+                            @foreach($pricedCycles as $cycle => $cyclePrice)
                                 <label class="cycle-option {{ $loop->first ? 'selected' : '' }}">
                                     <input type="radio" name="billing_cycle" value="{{ $cycle }}" {{ $loop->first ? 'checked' : '' }}
                                         onchange="document.querySelectorAll('.cycle-option').forEach(e=>e.classList.remove('selected')); this.closest('.cycle-option').classList.add('selected')">
-                                    <div class="cycle-price">${{ number_format($pricing->{$cycle}, 2) }}</div>
+                                    <div class="cycle-price">{{ $currency?->prefix }}{{ number_format($cyclePrice, 2) }}{{ $currency?->suffix }}</div>
                                     <div class="cycle-label">{{ $cycle }}</div>
                                 </label>
-                                @endif
                             @endforeach
                         @else
                             <div style="color:#999; font-size:13px; grid-column:1/-1;">{{ __('client.cart.no_pricing') }}</div>
@@ -62,7 +62,7 @@
                         @foreach($group->options as $option)
                             @continue($option->subs->isEmpty())
                             @php
-                                $selectedCycle = old('billing_cycle', $cycles[0] ?? 'monthly');
+                                $selectedCycle = old('billing_cycle', (string) (array_key_first($pricedCycles) ?: 'monthly'));
                                 $previous = old('config_options.'.$option->id);
                             @endphp
                             <div class="form-group" style="margin-bottom:14px;">
@@ -128,7 +128,7 @@
             <div class="pn-card" style="margin-bottom:16px;">
                 <div class="pn-card-header">{{ __('client.cart.addons') }}</div>
                 <div class="pn-card-body">
-                    @php $selectedCycle = old('billing_cycle', $cycles[0] ?? 'monthly'); @endphp
+                    @php $selectedCycle = old('billing_cycle', (string) (array_key_first($pricedCycles) ?: 'monthly')); @endphp
                     @php $previousAddons = array_map('intval', (array) old('addons', [])); @endphp
                     @foreach($addons as $addon)
                         @php $addonPrice = $addon->priceFor($selectedCycle); @endphp

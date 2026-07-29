@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\BillingCycleHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,6 +36,59 @@ class Product extends Model
     public function pricing()
     {
         return $this->hasMany(Pricing::class, 'rel_id')->where('type', 'product');
+    }
+
+    /**
+     * The price row for a currency — the one being sold in unless asked
+     * otherwise, and whatever exists if the operator never priced that one.
+     */
+    public function pricingFor(?int $currencyId = null): ?Pricing
+    {
+        $currencyId ??= Currency::getDefault()?->id;
+
+        $rows = $this->relationLoaded('pricing') ? $this->pricing : $this->pricing()->get();
+
+        return $rows->firstWhere('currency_id', $currencyId) ?? $rows->first();
+    }
+
+    /**
+     * What one term costs, or null when the product is not sold on that cycle.
+     *
+     * The pricing table marks an unsold cycle with -1, which is a marker and
+     * not a price: anything that treats it as one bills a negative amount.
+     */
+    public function priceFor(string $cycle, ?int $currencyId = null): ?float
+    {
+        $column = BillingCycleHelper::pricingColumn($cycle);
+        $row = $column ? $this->pricingFor($currencyId) : null;
+
+        if (! $row || $row->{$column} === null) {
+            return null;
+        }
+
+        $price = round((float) $row->{$column}, 2);
+
+        return $price > 0 ? $price : null;
+    }
+
+    /**
+     * The cycles the product is actually sold on, cheapest term first.
+     *
+     * @return array<string, float>
+     */
+    public function pricedCycles(?int $currencyId = null): array
+    {
+        $prices = [];
+
+        foreach (['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'] as $cycle) {
+            $price = $this->priceFor($cycle, $currencyId);
+
+            if ($price !== null) {
+                $prices[$cycle] = $price;
+            }
+        }
+
+        return $prices;
     }
 
     public function services()

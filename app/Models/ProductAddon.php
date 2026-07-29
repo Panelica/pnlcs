@@ -82,6 +82,9 @@ class ProductAddon extends Model
             ? $this->pricing->firstWhere('currency_id', $currencyId) ?? $this->pricing->first()
             : $this->pricing()->where('currency_id', $currencyId)->first() ?? $this->pricing()->first();
 
-        return round((float) ($row->{$column} ?? 0), 2);
+        $price = round((float) ($row->{$column} ?? 0), 2);
+
+        // -1 marks a cycle the addon is not offered on, not a discount.
+        return $price > 0 ? $price : 0.0;
     }
 }

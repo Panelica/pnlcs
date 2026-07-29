@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Currency;
 use App\Models\DomainPricing;
 use App\Models\HomepageContent;
 use App\Models\HomepageSection;
@@ -28,8 +29,10 @@ class WelcomeController extends Controller
 
         $sectionContent = HomepageContent::all()
             ->groupBy('section_slug')
-            ->map(fn($items) => $items->keyBy('content_key'));
+            ->map(fn ($items) => $items->keyBy('content_key'));
 
-        return view('welcome', compact('products', 'domainPricing', 'sections', 'sectionContent'));
+        $currency = Currency::getDefault();
+
+        return view('welcome', compact('products', 'domainPricing', 'sections', 'sectionContent', 'currency'));
     }
 }

@@ -56,19 +56,16 @@ class UpgradeService
     public function calculateProration(Service $service, Product $newProduct): array
     {
         $cycle = $service->billing_cycle ?: 'Monthly';
-        $column = BillingCycleHelper::pricingColumn($cycle);
-        $pricing = $newProduct->relationLoaded('pricing')
-            ? $newProduct->pricing->first()
-            : $newProduct->pricing()->first();
+        $basePrice = $newProduct->priceFor($cycle);
 
-        if (! $column || ! $pricing || $pricing->{$column} === null) {
+        if ($basePrice === null) {
             return ['available' => false];
         }
 
         // What the service will actually renew at: the new package plus the
         // options it still offers. The current amount already includes options,
         // so comparing it against a bare base price understates the difference.
-        $newRecurring = round((float) $pricing->{$column} + $this->optionsAfterChange($service, $newProduct)['total'], 2);
+        $newRecurring = round($basePrice + $this->optionsAfterChange($service, $newProduct)['total'], 2);
         $currentRecurring = (float) $service->amount;
         $cycleDays = BillingCycleHelper::cycleDays($cycle);
 
@@ -129,11 +126,8 @@ class UpgradeService
             Log::error('UpgradeService::apply — changePackage threw: '.$e->getMessage(), ['upgrade' => $upgrade->id]);
         }
 
-        $column = BillingCycleHelper::pricingColumn($service->billing_cycle ?: 'Monthly');
-        $pricing = $newProduct->pricing->first();
-        $newRecurring = ($column && $pricing && $pricing->{$column} !== null)
-            ? (float) $pricing->{$column}
-            : (float) $service->amount;
+        $newRecurring = $newProduct->priceFor($service->billing_cycle ?: 'Monthly')
+            ?? (float) $service->amount;
 
         // Options the new product does not offer are dropped rather than left
         // attached to a package that cannot provide them.

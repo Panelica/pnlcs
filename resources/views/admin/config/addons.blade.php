@@ -40,7 +40,7 @@
                     <span class="badge badge-active">{{ __('admin.addons.active') }}</span>
                 @endif
             </td>
-            <td>{{ number_format((float) ($addon->pricing->first()->monthly ?? 0), 2) }}</td>
+            <td>{{ number_format($addon->priceFor('monthly'), 2) }}</td>
             <td>{{ $addon->sort_order }}</td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs" onclick="editAddon({{ $addon->id }}, {{ json_encode($addon) }})">{{ __('common.actions.edit') }}</button>

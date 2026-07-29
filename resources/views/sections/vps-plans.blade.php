@@ -30,8 +30,9 @@
             <div class="vps__grid">
                 @forelse($vpsProducts->take(4) as $idx => $product)
                 @php
-                    $pricing = $product->pricing->first();
-                    $monthlyPrice = $pricing ? $pricing->monthly : '0.00';
+                    $priced = $product->pricedCycles($currency?->id ?? null);
+                    $priceCycle = isset($priced['monthly']) ? 'monthly' : (string) array_key_first($priced);
+                    $monthlyPrice = $priced[$priceCycle] ?? null;
                     $configOptions = is_string($product->config_options) ? json_decode($product->config_options, true) : ($product->config_options ?? []);
                     $specs = [];
                     for ($i = 1; $i <= 5; $i++) {
@@ -48,7 +49,11 @@
                         <div class="vps-card__spec"><i class="ri-check-line"></i> {{ $spec }}</div>
                         @endforeach
                     </div>
-                    <div class="vps-card__price">${{ $monthlyPrice }}<small>/mo</small></div>
+                    @if($monthlyPrice !== null)
+                        <div class="vps-card__price">{{ $currency?->prefix ?? '$' }}{{ number_format($monthlyPrice, 2) }}{{ $currency?->suffix }}<small>/{{ $priceCycle === 'monthly' ? 'mo' : $priceCycle }}</small></div>
+                    @else
+                        <div class="vps-card__price">{{ __('client.store.contact_us') }}</div>
+                    @endif
                     <a href="/client/store/configure/{{ $product->slug }}" class="vps-card__btn">{{ __('sections.vps.configure') }} <i class="ri-arrow-right-line"></i></a>
                 </div>
                 @empty

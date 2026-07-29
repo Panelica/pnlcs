@@ -28,15 +28,9 @@
         <div class="pn-product-grid">
             @foreach($group->products as $product)
             @php
-                $pricingRecord = $product->pricing->first();
-                $startingPrice = null; $startingCycle = "";
-                if ($pricingRecord) {
-                    foreach (["monthly","quarterly","semiannually","annually","biennially","triennially"] as $cycle) {
-                        if (isset($pricingRecord->{$cycle}) && (float)$pricingRecord->{$cycle} > 0) {
-                            $startingPrice = $pricingRecord->{$cycle}; $startingCycle = $cycle; break;
-                        }
-                    }
-                }
+                $pricedCycles = $product->pricedCycles($currency?->id);
+                $startingCycle = (string) array_key_first($pricedCycles);
+                $startingPrice = $pricedCycles[$startingCycle] ?? null;
                 $currPrefix = $currency?->prefix ?? "$";
                 $currSuffix = $currency?->suffix ?? "";
             @endphp
