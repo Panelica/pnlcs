@@ -30,8 +30,12 @@ class InvoiceController extends Controller
         abort_if($invoice->client_id !== $this->getClientId(), 403);
         $invoice->load('items');
 
+        // The value is encrypted at rest, so it is compared after it comes
+        // back rather than in the query: a where() against the column can never
+        // match, and this page quietly showed bank transfer only.
         $gateways = GatewaySettings::where('setting', 'active')
-            ->where('value', '1')
+            ->get()
+            ->filter(fn ($row) => (string) $row->value === '1')
             ->pluck('gateway')
             ->unique()
             ->values()

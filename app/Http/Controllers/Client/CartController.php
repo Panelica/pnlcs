@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Models\GatewaySettings;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Services\AddonService;
 use App\Services\CartService;
 use App\Services\ConfigOptionService;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -191,12 +193,29 @@ class CartController extends Controller
         return $user ? $user->clients()->first()?->id : null;
     }
 
+    /**
+     * The gateways the operator has switched on.
+     *
+     * This used to be a fixed list of three, so a customer could pick a card
+     * payment on an installation where no card gateway was configured and be
+     * quietly handed a bank transfer at the next step.
+     */
     private function getAvailablePaymentMethods(): array
     {
-        return [
-            'banktransfer' => __('messages.payment_method.bank_transfer'),
-            'paypal' => __('messages.payment_method.paypal'),
-            'stripe' => __('messages.payment_method.credit_debit_card'),
-        ];
+        $registry = app(ModuleRegistry::class);
+
+        $active = GatewaySettings::where('setting', 'active')
+            ->get()
+            ->filter(fn ($row) => (string) $row->value === '1')
+            ->pluck('gateway')
+            ->unique();
+
+        if ($active->isEmpty()) {
+            return ['banktransfer' => __('messages.payment_method.bank_transfer')];
+        }
+
+        return $active->mapWithKeys(fn (string $name) => [
+            $name => $registry->getGatewayModule($name)?->getModuleName() ?? ucfirst($name),
+        ])->all();
     }
 }

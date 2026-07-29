@@ -420,21 +420,29 @@ class ConfigController extends Controller
 
     // ===== PAYMENT GATEWAYS / REGISTRARS =====
 
-    public function gateways()
+    public function gateways(ModuleRegistry $registry)
     {
-        $rows = GatewaySettings::orderBy('sort_order')->get();
-        $gateways = $rows->groupBy('gateway')->map(function ($items, $key) {
-            $settings = $items->pluck('value', 'setting');
+        $stored = GatewaySettings::all()->groupBy('gateway');
 
-            return (object) [
-                'gateway_name' => $key,
-                'description' => $settings->get('name', ucfirst($key)),
-                'type' => $settings->get('type', 'online'),
-                'disabled' => $settings->get('visible', '1') === '0',
-                'order_num' => $items->first()->sort_order ?? 0,
-                'settings' => $settings->except(['name', 'visible', 'type'])->toArray(),
-            ];
-        })->sortBy('order_num')->values();
+        // Every installed module, each asking for the settings it actually
+        // reads. The screen used to list the gateways and their fields by
+        // hand, which is how PayPal came to be asked for an email address it
+        // never looks at.
+        $gateways = collect($registry->getGatewayModules())
+            ->map(function (string $name) use ($registry, $stored) {
+                $module = $registry->getGatewayModule($name);
+                $values = ($stored[$name] ?? collect())->pluck('value', 'setting');
+
+                return (object) [
+                    'name' => $name,
+                    'label' => $module?->getModuleName() ?? ucfirst($name),
+                    'fields' => $module?->getConfigFields() ?? [],
+                    'values' => $values->toArray(),
+                    'active' => (string) ($values['active'] ?? '0') === '1',
+                ];
+            })
+            ->sortBy('label')
+            ->values();
 
         return view('admin.config.gateways', ['gateways' => $gateways]);
     }
@@ -1030,6 +1038,11 @@ class ConfigController extends Controller
                 $settings = $decoded;
             }
         }
+
+        // An unticked checkbox posts nothing, so it has to be written as off
+        // rather than left as it was.
+        $settings['active'] = $request->boolean('active') ? '1' : '0';
+
         foreach ($settings as $key => $value) {
             GatewaySettings::updateOrCreate(
                 ['gateway' => $gateway, 'setting' => $key],
