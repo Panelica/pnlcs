@@ -82,13 +82,16 @@ class AffiliateService
             return;
         }
 
-        // Check one-time: if already paid commission for this client, skip
+        // Paid once per referred customer. Asked of the invoices themselves:
+        // matching the description as text made "client#1" a prefix of
+        // "client#12" and cancelled commissions that were genuinely owed.
         if ($affiliate->onetime) {
-            $existingCommission = Transaction::where('client_id', $affiliate->client_id)
-                ->where('description', 'like', "%referral%client#{$client->id}%")
+            $alreadyPaid = Transaction::where('gateway', 'affiliate_commission')
+                ->where('client_id', $affiliate->client_id)
+                ->whereIn('invoice_id', Invoice::where('client_id', $client->id)->select('id'))
                 ->exists();
 
-            if ($existingCommission) {
+            if ($alreadyPaid) {
                 return;
             }
         }
