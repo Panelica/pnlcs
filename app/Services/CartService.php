@@ -144,7 +144,28 @@ class CartService
             ]);
         }
 
-        $price = ($type === 'transfer') ? $pricing->transfer_price : $pricing->register_price;
+        $minYears = max(1, (int) ($pricing->min_years ?: 1));
+        $maxYears = max($minYears, (int) ($pricing->max_years ?: 10));
+
+        if ($years < $minYears || $years > $maxYears) {
+            throw ValidationException::withMessages([
+                'years' => __('client.cart.domain_years_unsupported', [
+                    'tld' => $tld,
+                    'min' => $minYears,
+                    'max' => $maxYears,
+                ]),
+            ]);
+        }
+
+        // The customer is buying a term, not a year: the order registers the
+        // domain for all of it and the invoice line says so.
+        $unit = ($type === 'transfer') ? $pricing->transfer_price : $pricing->register_price;
+        $price = round((float) $unit * $years, 2);
+
+        // What the next renewal will cost — the renewal rate for the same
+        // term, not the introductory one that was paid to get the domain.
+        $renewal = round((float) $pricing->renew_price * $years, 2);
+
         $data = $this->getData($cart);
 
         $data['items'][] = [
@@ -154,6 +175,7 @@ class CartService
             'action' => $type, // register | transfer
             'years' => $years,
             'price' => $price,
+            'renewal_amount' => $renewal,
         ];
 
         return $this->saveData($cart, $data);
@@ -268,6 +290,7 @@ class CartService
                     'domain_type' => ($item['action'] ?? 'register') === 'transfer' ? 'Transfer' : 'Register',
                     'registration_period' => (int) ($item['years'] ?? 1),
                     'amount' => (float) ($item['price'] ?? 0),
+                    'renewal_amount' => (float) ($item['renewal_amount'] ?? $item['price'] ?? 0),
                 ];
 
                 continue;

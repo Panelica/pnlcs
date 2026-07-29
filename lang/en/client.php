@@ -129,6 +129,7 @@ return [
         'configurable_options' => 'Configurable Options',
         'addons' => 'Addons',
         'domain_tld_unsupported' => 'We do not currently sell :tld domains.',
+        'domain_years_unsupported' => ':tld domains are sold for between :min and :max years.',
         'out_of_stock' => 'Out of stock',
         'product_unavailable' => 'That product is not available to order.',
         'cycle_unavailable' => 'This product is not sold on that billing cycle.',

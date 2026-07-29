@@ -439,7 +439,8 @@ class OrderService
             'next_due_date' => now()->addYears(max(1, (int) ($item['registration_period'] ?? 1)))->toDateString(),
             'status' => DomainStatus::Pending->value,
             'registration_period' => (int) ($item['registration_period'] ?? 1),
-            'recurring_amount' => $item['amount'] ?? 0,
+            // What the renewal costs, which is not what was paid to register.
+            'recurring_amount' => $item['renewal_amount'] ?? $item['amount'] ?? 0,
             'first_payment_amount' => $item['amount'] ?? 0,
             'payment_method' => $order->payment_method,
         ]);
