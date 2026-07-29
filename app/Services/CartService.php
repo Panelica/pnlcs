@@ -63,6 +63,16 @@ class CartService
 
     public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null, array $addons = []): Cart
     {
+        // The configure page refuses these and the listing leaves them out, but
+        // the request that gets here only checked that the id exists — enough to
+        // buy a discontinued plan from an old link, or a draft one nobody meant
+        // to sell.
+        if ($product->hidden || $product->retired) {
+            throw ValidationException::withMessages([
+                'product_id' => __('client.cart.product_unavailable'),
+            ]);
+        }
+
         $price = $this->getProductPrice($product, $billingCycle);
 
         // The order form only offers cycles the product is priced for, but the

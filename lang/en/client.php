@@ -129,6 +129,7 @@ return [
         'configurable_options' => 'Configurable Options',
         'addons' => 'Addons',
         'domain_tld_unsupported' => 'We do not currently sell :tld domains.',
+        'product_unavailable' => 'That product is not available to order.',
         'cycle_unavailable' => 'This product is not sold on that billing cycle.',
         'addon_invalid' => 'That addon is not available for this product.',
         'option_invalid' => 'The selection for :option is not available for this product.',
