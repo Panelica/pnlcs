@@ -14,6 +14,7 @@ use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Service;
 use App\Models\ServiceAddon;
+use App\Models\SslOrder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -222,6 +223,28 @@ class OrderService
         Domain::where('order_id', $order->id)
             ->where('status', DomainStatus::Pending->value)
             ->update(['status' => DomainStatus::Active->value]);
+
+        // A certificate cannot be issued until the customer supplies a CSR, so
+        // paying for one has to open the order and ask them for it.
+        foreach ($pendingServices as $svc) {
+            if (strtolower((string) ($svc->product?->type ?? '')) !== 'ssl') {
+                continue;
+            }
+
+            $sslOrder = SslOrder::firstOrCreate(
+                ['service_id' => $svc->id],
+                [
+                    'client_id' => $svc->client_id,
+                    'module' => $svc->product?->ssl_module,
+                    'domain' => $svc->domain,
+                    'status' => 'Awaiting Configuration',
+                ]
+            );
+
+            if ($sslOrder->wasRecentlyCreated) {
+                app(SslProvisioningService::class)->sendConfigurationRequiredEmail($sslOrder);
+            }
+        }
 
         // Addons ordered alongside a service start billing from the service's
         // own renewal date, which is what the customer was quoted.
