@@ -12,6 +12,7 @@ use App\Services\CartService;
 use App\Services\ConfigOptionService;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CartController extends Controller
 {
@@ -160,8 +161,11 @@ class CartController extends Controller
 
     public function processCheckout(Request $request)
     {
+        // Only what the customer was actually offered: anything else ends up
+        // written onto the order and the service as a gateway nobody can
+        // refund through.
         $request->validate([
-            'payment_method' => 'required|string',
+            'payment_method' => ['required', 'string', Rule::in(array_keys($this->getAvailablePaymentMethods()))],
             'terms' => 'accepted',
         ]);
 
