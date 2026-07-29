@@ -8,19 +8,38 @@ use Illuminate\Support\Facades\DB;
 
 class TopClientsReport extends AbstractReport
 {
-    public function getTitle(): string { return 'Top 10 Clients by Income'; }
-    public function getDescription(): string { return 'Highest revenue generating clients'; }
-    public function getCategory(): string { return 'Client'; }
+    public function getTitle(): string
+    {
+        return 'Top 10 Clients by Income';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Highest revenue generating clients';
+    }
+
+    public function getCategory(): string
+    {
+        return 'Client';
+    }
 
     public function generate(Request $request): array
     {
-        $rows = DB::table("invoices")
-            ->join("clients", "clients.id", "=", "invoices.client_id")
-            ->selectRaw("clients.id, CONCAT(clients.first_name, ' ', clients.last_name) as client, clients.email, clients.company_name, COUNT(invoices.id) as invoices, SUM(invoices.total) as revenue")
-            ->where("invoices.status", "paid")
-            ->groupBy("clients.id", "clients.first_name", "clients.last_name", "clients.email", "clients.company_name")
-            ->orderBy("revenue", "desc")->limit(10)->get();
-        return ["columns" => ["ID", "Client", "Email", "Company", "Invoices", "Revenue"], "rows" => $rows->toArray()];
+        // Read the ledger, not invoice status: a partial payment or a refund
+        // takes an invoice off 'paid', which used to drop the customer out of
+        // this list even though their money is still in the bank.
+        $rows = DB::table('transactions')
+            ->join('clients', 'clients.id', '=', 'transactions.client_id')
+            ->selectRaw("clients.id, CONCAT(clients.first_name, ' ', clients.last_name) as client, clients.email, clients.company_name, COUNT(DISTINCT transactions.invoice_id) as invoices, SUM(transactions.amount_in - transactions.amount_out) as revenue")
+            ->groupBy('clients.id', 'clients.first_name', 'clients.last_name', 'clients.email', 'clients.company_name')
+            ->havingRaw('SUM(transactions.amount_in - transactions.amount_out) > 0')
+            ->orderBy('revenue', 'desc')->limit(10)->get();
+
+        return ['columns' => ['ID', 'Client', 'Email', 'Company', 'Invoices', 'Revenue'], 'rows' => $rows->toArray()];
     }
-    public function hasDateFilter(): bool { return false; }
+
+    public function hasDateFilter(): bool
+    {
+        return false;
+    }
 }
