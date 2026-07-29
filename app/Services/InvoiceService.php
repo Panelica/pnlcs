@@ -42,6 +42,8 @@ class InvoiceService
                 $this->addLineItem($invoice, $itemData);
             }
 
+            $this->applyGroupDiscount($invoice->fresh());
+
             return $this->recalculateTotals($invoice->fresh());
         });
 
@@ -55,6 +57,52 @@ class InvoiceService
     /**
      * Add a line item to an invoice and recalculate totals.
      */
+    /**
+     * Take the customer's group discount off the invoice.
+     *
+     * A line of its own rather than a quiet adjustment to the total: the
+     * customer can see what they were given, and the taxable amount drops with
+     * it so tax lands on what they actually pay.
+     *
+     * Topping up an account balance is never discounted — buying 100 of credit
+     * for 85 would be a way to print money.
+     */
+    private function applyGroupDiscount(Invoice $invoice): void
+    {
+        $percent = (float) ($invoice->client?->group?->discount_percent ?? 0);
+
+        if ($percent <= 0) {
+            return;
+        }
+
+        if ($invoice->items->contains(fn ($item) => $item->type === 'AddFunds')) {
+            return;
+        }
+
+        if ($invoice->items->contains(fn ($item) => $item->type === 'Discount')) {
+            return;
+        }
+
+        $groupName = $invoice->client->group->name;
+
+        // Taxable and untaxed lines are discounted separately so the taxable
+        // amount falls by exactly the discount given on taxable work.
+        foreach ([true, false] as $taxed) {
+            $base = (float) $invoice->items->where('taxed', $taxed)->sum('amount');
+
+            if ($base <= 0) {
+                continue;
+            }
+
+            $this->addLineItem($invoice, [
+                'type' => 'Discount',
+                'rel_id' => 0,
+                'description' => "{$groupName} discount ({$percent}%)",
+                'amount' => -round($base * ($percent / 100), 2),
+                'taxed' => $taxed,
+            ]);
+        }
+    }
     public function addLineItem(Invoice $invoice, array $itemData): InvoiceItem
     {
         $item = InvoiceItem::create([
