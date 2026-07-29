@@ -678,6 +678,8 @@ return [
         'upgrade_downgrade_title' => 'Upgrade / Downgrade Service',
         'username' => 'Username',
     ],
+    'services.not_live_for_action' => 'This service has ended, so that can no longer be done to it.',
+    'services.cancellation_already_requested' => 'A cancellation has already been requested for this service.',
     'services.addon_cancel' => 'Cancel',
     'services.addon_cancel_confirm' => 'Cancel this addon? The service itself keeps running.',
     'services.addon_cancelled' => 'Addon cancelled. It will not be billed again.',

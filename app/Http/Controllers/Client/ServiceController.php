@@ -124,6 +124,16 @@ class ServiceController extends Controller
             'reason' => 'required|string|max:1000',
         ]);
 
+        if (! $this->isLive($service)) {
+            return back()->with('error', __('client.services.not_live_for_action'));
+        }
+
+        // A second request would send another confirmation and give the
+        // cancellation cron two rows for the same service.
+        if (CancellationRequest::where('service_id', $service->id)->exists()) {
+            return back()->with('error', __('client.services.cancellation_already_requested'));
+        }
+
         CancellationRequest::create([
             'service_id' => $service->id,
             'type' => $validated['type'],
@@ -160,7 +170,17 @@ class ServiceController extends Controller
             'new_product_id' => 'required|exists:products,id',
         ]);
 
+        if (! $this->isLive($service)) {
+            return back()->with('error', __('client.services.not_live_for_action'));
+        }
+
         $newProduct = Product::with('pricing')->findOrFail($validated['new_product_id']);
+
+        // The upgrade page only lists what the shop is selling; the request
+        // that follows it accepted any product id at all.
+        if ($newProduct->hidden || $newProduct->retired) {
+            return back()->with('error', __('client.cart.product_unavailable'));
+        }
 
         if ((int) $newProduct->id === (int) $service->product_id) {
             return back()->with('error', __('messages.error.already_on_this_product'));
@@ -219,6 +239,12 @@ class ServiceController extends Controller
         $status = $service->auto_renew ? 'enabled' : 'disabled';
 
         return back()->with('success', __('messages.success.auto_renewal_toggled', ['status' => $status, 'domain' => $service->domain]));
+    }
+
+    /** A service that has ended cannot be upgraded, cancelled or renewed. */
+    private function isLive(Service $service): bool
+    {
+        return ! in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true);
     }
 
     private function getClientId(): int
