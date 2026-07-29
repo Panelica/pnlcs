@@ -723,7 +723,13 @@ class ConfigController extends Controller
     // Email Templates
     public function updateEmailTemplate(Request $request, EmailTemplate $template)
     {
-        $template->update($request->validate(['type' => 'nullable|string', 'name' => 'nullable|string', 'subject' => 'nullable|string', 'message' => 'nullable|string', 'from_name' => 'nullable|string', 'from_email' => 'nullable|email', 'disabled' => 'boolean']));
+        $validated = $request->validate(['type' => 'nullable|string', 'name' => 'nullable|string', 'subject' => 'nullable|string', 'message' => 'nullable|string', 'from_name' => 'nullable|string', 'from_email' => 'nullable|email', 'disabled' => 'boolean']);
+
+        // Saving makes the template the operator's own, which is what lets
+        // their wording replace the built-in design when the mail goes out.
+        $validated['custom'] = true;
+
+        $template->update($validated);
 
         return back()->with('success', __('messages.success.template_updated'));
     }

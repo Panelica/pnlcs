@@ -62,6 +62,16 @@ class ApplyEmailTemplate
             $event->message->addBcc($address);
         }
 
+        // Only once the operator has made it theirs: replacing the body of an
+        // untouched template would swap every email's design for the seeded
+        // plain text.
+        if ($template->custom && filled($template->message)) {
+            $body = $this->templates->merge((string) $template->message, $vars);
+
+            $event->message->html(nl2br(e($body), false));
+            $event->message->text($body);
+        }
+
         return null;
     }
 
