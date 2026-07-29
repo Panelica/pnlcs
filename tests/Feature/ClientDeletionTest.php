@@ -6,6 +6,10 @@ use App\Models\Invoice;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Service;
+use App\Models\Transaction;
+use App\Services\PaymentService;
+use Illuminate\Http\Request;
+use Modules\Reports\IncomeSummaryReport;
 
 /**
  * Deleting a customer.
@@ -86,4 +90,46 @@ test('deleting a customer still clears their invoices', function () {
         ->assertRedirect();
 
     expect(Invoice::find($invoice->id))->toBeNull();
+});
+
+test('deleting a customer keeps the record of money that moved', function () {
+    $admin = Admin::factory()->create();
+    $client = Client::factory()->create(['first_name' => 'Deleted', 'last_name' => 'Customer', 'email' => 'gone@example.com']);
+
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 90]);
+    app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-KEEP', 90.0);
+
+    $txnId = Transaction::where('transaction_id', 'TXN-KEEP')->firstOrFail()->id;
+
+    $this->actingAs($admin, 'admin')
+        ->delete(route('admin.clients.destroy', $client))
+        ->assertRedirect();
+
+    expect(Client::find($client->id))->toBeNull();
+
+    $txn = Transaction::find($txnId);
+
+    // The client row is soft deleted, so the cascade never fires and the
+    // ledger keeps both the money and who it came from. This is what stops
+    // last year reported revenue changing because someone tidied up the
+    // client list.
+    expect($txn)->not->toBeNull()
+        ->and((float) $txn->amount_in)->toBe(90.0)
+        ->and($txn->client_id)->toBe($client->id)
+        ->and(Client::withTrashed()->find($client->id))->not->toBeNull();
+});
+
+test('the income summary still counts a deleted customer payments', function () {
+    $admin = Admin::factory()->create();
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 250]);
+    app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-HIST', 250.0);
+
+    $this->actingAs($admin, 'admin')->delete(route('admin.clients.destroy', $client))->assertRedirect();
+
+    $report = (new IncomeSummaryReport)->generate(new Request);
+
+    // Revenue reported for a past month must not change because someone
+    // tidied up the client list.
+    expect((float) $report['totals'][1])->toBe(250.0);
 });
