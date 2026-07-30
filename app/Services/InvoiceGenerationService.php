@@ -52,7 +52,9 @@ class InvoiceGenerationService
         $addons = app(AddonService::class)->dueQuery($cutoff)->get();
 
         $domains = Domain::with('client')
-            ->where('status', 'active')
+            // Grace counts as billable: the registry still renews at the
+            // ordinary price and the customer can still keep the domain.
+            ->whereIn('status', ['active', 'grace'])
             // A domain has no auto-renew column: the customer's switch flips
             // payment_method to none, which is the signal to leave it alone.
             // A null is not a no: SQL would drop those rows from the comparison

@@ -3,9 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Contracts\SyncsDomainData;
+use App\Enums\DomainStatus;
 use App\Models\Domain;
+use App\Models\DomainPricing;
 use App\Services\Module\ModuleRegistry;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -98,9 +102,70 @@ class DomainSyncCommand extends Command
             Log::info("Domain sync updated {$domain->domain}: {$summary}");
         }
 
-        $this->info("Domain sync: {$checked} checked, {$updated} updated, {$skipped} without a syncing module, {$failed} failed.");
+        $lapsed = $dryRun ? 0 : $this->applyLifecycle($domains);
+
+        $this->info("Domain sync: {$checked} checked, {$updated} updated, {$skipped} without a syncing module, {$failed} failed, {$lapsed} past expiry.");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Move a domain along once its expiry date has passed.
+     *
+     * Grace first, where the registry still renews at the ordinary price and
+     * the customer is still invoiced; then redemption, which costs a
+     * restoration fee and so is not billed automatically; then expired. The
+     * lengths come from the TLD, where the operator set them and nothing had
+     * ever read them.
+     *
+     * @param  Collection<int, Domain>  $domains
+     */
+    private function applyLifecycle($domains): int
+    {
+        $periods = DomainPricing::all()->keyBy(fn ($row) => strtolower(ltrim((string) $row->extension, '.')));
+        $today = now()->startOfDay();
+        $moved = 0;
+
+        foreach ($domains as $domain) {
+            if (! $domain->expiry_date) {
+                continue;
+            }
+
+            // A registrar that reports its own lifecycle status is believed.
+            if (! in_array(strtolower((string) $domain->status), ['active', 'grace', 'redemption'], true)) {
+                continue;
+            }
+
+            $expiry = Carbon::parse($domain->expiry_date)->startOfDay();
+
+            if ($expiry->greaterThanOrEqualTo($today)) {
+                continue;
+            }
+
+            $tld = strtolower(ltrim(substr((string) $domain->domain, strpos((string) $domain->domain, '.') ?: 0), '.'));
+            $row = $periods->get($tld);
+
+            $grace = max(0, (int) ($row->grace_period ?? 0));
+            $redemption = max(0, (int) ($row->redemption_grace_period ?? 0));
+
+            $daysPast = $expiry->diffInDays($today);
+
+            $status = match (true) {
+                $daysPast <= $grace => DomainStatus::Grace->value,
+                $daysPast <= $grace + $redemption => DomainStatus::Redemption->value,
+                default => DomainStatus::Expired->value,
+            };
+
+            if (strtolower((string) $domain->status) === $status) {
+                continue;
+            }
+
+            $domain->update(['status' => $status]);
+            $moved++;
+            Log::info("Domain {$domain->domain} moved to {$status} ({$daysPast} days past expiry)");
+        }
+
+        return $moved;
     }
 
     /**

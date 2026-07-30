@@ -191,8 +191,11 @@ test('billing dates are never overwritten by a registry sync', function () {
 });
 
 test('an unchanged domain is not rewritten', function () {
-    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', '01/01/2026'), 200)]);
-    $domain = syncDomainFor('Namecheap');
+    // A date still ahead of us: a domain whose expiry has passed is moved along
+    // the lifecycle, which is a change and belongs to its own test.
+    $ahead = now()->addYear();
+    Http::fake(['*namecheap*' => Http::response(namecheapListXml('sync-example.com', $ahead->format('m/d/Y')), 200)]);
+    $domain = syncDomainFor('Namecheap', ['expiry_date' => $ahead->toDateString()]);
     $before = $domain->updated_at;
 
     $this->travel(2)->seconds();
