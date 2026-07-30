@@ -53,6 +53,78 @@ class UpgradeService
         return ['total' => round($total, 2), 'drop' => $drop];
     }
 
+    /**
+     * Move a service onto another package, the way the client area does it.
+     *
+     * A positive prorated difference is invoiced and applied when that invoice
+     * is paid; a downgrade or a like-for-like change is applied at once. The
+     * API used to write product_id and nothing else, which left the customer
+     * on a bigger plan at the old price with a server that had not been told.
+     *
+     * @return array{success: bool, message: ?string, upgrade: ?Upgrade, invoice: ?\App\Models\Invoice, applied: bool}
+     */
+    public function requestProductChange(Service $service, Product $newProduct): array
+    {
+        $refuse = fn (string $message) => [
+            'success' => false, 'message' => $message,
+            'upgrade' => null, 'invoice' => null, 'applied' => false,
+        ];
+
+        if (in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true)) {
+            return $refuse(__('client.services.not_live_for_action'));
+        }
+
+        if ($newProduct->hidden || $newProduct->retired) {
+            return $refuse(__('client.cart.product_unavailable'));
+        }
+
+        if ((int) $newProduct->id === (int) $service->product_id) {
+            return $refuse(__('messages.error.already_on_this_product'));
+        }
+
+        $calc = $this->calculateProration($service, $newProduct);
+
+        if (! ($calc['available'] ?? false)) {
+            return $refuse(__('messages.error.upgrade_not_available_for_cycle'));
+        }
+
+        $service->loadMissing('product', 'client');
+        $currentName = $service->product->name ?? 'Current plan';
+
+        $upgrade = Upgrade::create([
+            'client_id' => $service->client_id,
+            'type' => 'product',
+            'rel_id' => $service->id,
+            'original_value' => $service->product_id,
+            'new_value' => $newProduct->id,
+            'amount' => $calc['prorated_diff'],
+            'status' => 'pending',
+        ]);
+
+        if ($calc['prorated_diff'] > 0.009) {
+            $invoice = app(\App\Services\InvoiceService::class)->createInvoice($service->client, [[
+                'type' => 'Upgrade',
+                'rel_id' => $upgrade->id,
+                'description' => "Upgrade: {$currentName} -> {$newProduct->name} ({$service->billing_cycle}) - prorated for {$calc['remaining_days']} days - {$service->domain}",
+                'amount' => $calc['prorated_diff'],
+                'taxed' => $newProduct->tax ?? true,
+            ]], ['notes' => 'Prorated product upgrade charge.']);
+
+            return [
+                'success' => true, 'message' => null,
+                'upgrade' => $upgrade, 'invoice' => $invoice, 'applied' => false,
+            ];
+        }
+
+        // A downgrade or a like-for-like change costs nothing, so it happens now.
+        $this->apply($upgrade);
+
+        return [
+            'success' => true, 'message' => null,
+            'upgrade' => $upgrade, 'invoice' => null, 'applied' => true,
+        ];
+    }
+
     public function calculateProration(Service $service, Product $newProduct): array
     {
         $cycle = $service->billing_cycle ?: 'Monthly';

@@ -160,21 +160,35 @@ class ServiceApiController extends BaseApiController
             return $this->error('Service Not Found', 404);
         }
 
-        return $this->success(['serviceid' => $service->id, 'result' => 'Custom function executed']);
+        // No server module exposes custom functions, and saying one ran is
+        // worse than saying there is nothing to run.
+        return $this->error('Custom module functions are not implemented.', 501);
     }
 
     public function upgradeProduct(Request $request)
     {
-        $service = Service::find($request->serviceid);
-        if (! $service) {
-            return $this->error('Service Not Found', 404);
-        }
-        if ($request->filled('packageid')) {
-            $service->product_id = $request->packageid;
-            $service->save();
+        $validated = $request->validate([
+            'serviceid' => 'required|exists:services,id',
+            'packageid' => 'required|exists:products,id',
+        ]);
+
+        $service = Service::with('product', 'client')->findOrFail($validated['serviceid']);
+        $newProduct = \App\Models\Product::with('pricing')->findOrFail($validated['packageid']);
+
+        // Writing product_id on its own left the customer on a bigger plan at
+        // the old price, with the difference unbilled and the server untold.
+        $result = app(\App\Services\UpgradeService::class)->requestProductChange($service, $newProduct);
+
+        if (! $result['success']) {
+            return $this->error($result['message'] ?? 'The package change was refused.', 422);
         }
 
-        return $this->success(['serviceid' => $service->id]);
+        return $this->success([
+            'serviceid' => $service->id,
+            'upgradeid' => $result['upgrade']->id,
+            'invoiceid' => $result['invoice']->id ?? null,
+            'applied' => $result['applied'],
+        ]);
     }
 
     public function addCancelRequest(Request $request)
@@ -197,6 +211,7 @@ class ServiceApiController extends BaseApiController
 
     public function addProduct(Request $request)
     {
-        return $this->success(['message' => 'Use addorder to create services']);
+        // A refusal, not a success: nothing was created.
+        return $this->error('Services are created through addorder.', 501);
     }
 }
