@@ -6,6 +6,7 @@ use App\Contracts\MailboxClientInterface;
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
 use App\Models\Client;
+use App\Models\Contact;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
 use App\Models\TicketMailLog;
@@ -178,7 +179,17 @@ class TicketMailImportService
             return true;
         }
 
-        return strcasecmp((string) $ticket->email, $fromEmail) === 0;
+        if (strcasecmp((string) $ticket->email, $fromEmail) === 0) {
+            return true;
+        }
+
+        // A colleague on the same account: support mail is copied to the
+        // contacts who asked for it, and an answer from one of them belongs on
+        // the thread rather than in a ticket of its own.
+        return $ticket->client_id
+            && Contact::where('client_id', $ticket->client_id)
+                ->whereRaw('LOWER(email) = ?', [strtolower($fromEmail)])
+                ->exists();
     }
 
     /**
