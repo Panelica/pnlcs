@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Mail\ServiceTerminationMail;
 use App\Models\Service;
-use App\Services\Module\ModuleRegistry;
+use App\Services\ProvisioningService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -32,24 +32,25 @@ class ProcessCancellationsCommand extends Command
             ->get();
 
         $processed = 0;
-        $registry = app(ModuleRegistry::class);
+        $provisioning = app(ProvisioningService::class);
 
         foreach ($services as $service) {
-            $serverModule = $service->server
-                ? $registry->getServerModule($service->server->type ?? 'custom')
-                : null;
+            // Through the provisioning service, which queues a retry when the
+            // server cannot be reached and announces what happened. Calling the
+            // module here meant a failed termination was logged and forgotten.
+            if ($service->server_id && $provisioning->resolveModule($service)) {
+                $result = $provisioning->terminateAccount($service);
 
-            if ($serverModule) {
-                try {
-                    $result = $serverModule->terminate($service);
-                    if (! $result['success']) {
-                        Log::warning("Cancellation terminate failed for service #{$service->id}: {$result['message']}");
-                    }
-                } catch (\Throwable $e) {
-                    Log::error("Cancellation exception for service #{$service->id}: {$e->getMessage()}");
+                if (! ($result['success'] ?? false)) {
+                    Log::warning("Cancellation terminate failed for service #{$service->id}: "
+                        .($result['message'] ?? 'unknown error').' — left open for the retry queue');
+
+                    continue;
                 }
             }
 
+            // The customer asked to stop, so it is recorded as cancelled rather
+            // than terminated.
             $service->update([
                 'status' => 'cancelled',
                 'termination_date' => now(),
