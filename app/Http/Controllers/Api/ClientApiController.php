@@ -227,17 +227,22 @@ class ClientApiController extends BaseApiController
 
     public function createClientInvite(Request $request)
     {
-        return $this->success(['invite_code' => Str::random(32)]);
+        // An invite code that is stored nowhere can never be redeemed.
+        return $this->error('Client invites are not implemented.', 501);
     }
 
     public function getUserPermissions(Request $request)
     {
-        return $this->success(['permissions' => ['view_invoices', 'view_services', 'view_domains', 'view_tickets', 'submit_tickets', 'manage_contacts']]);
+        // The list was the same whoever was asked about, because nothing stores
+        // per-user permissions: every login on an account has the same access.
+        return $this->error('Per-user permissions are not implemented; every login on an account has the same access.', 501);
     }
 
     public function updateUserPermissions(Request $request)
     {
-        return $this->success(['message' => 'Permissions updated']);
+        // Reporting that access had been restricted while storing nothing is
+        // the worst answer of the three available.
+        return $this->error('Per-user permissions are not implemented.', 501);
     }
 
     public function getClientPassword(Request $request)
@@ -247,11 +252,8 @@ class ClientApiController extends BaseApiController
 
     public function createSSOToken(Request $request)
     {
-        $client = Client::find($request->clientid);
-        if (! $client) {
-            return $this->error('Client Not Found', 404);
-        }
-
-        return $this->success(['token' => Str::random(64), 'redirect_url' => url('/client')]);
+        // The token was random characters kept nowhere, so the link it came
+        // with could never have signed anyone in.
+        return $this->error('Single sign-on tokens are not implemented.', 501);
     }
 }

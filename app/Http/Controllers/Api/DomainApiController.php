@@ -235,12 +235,9 @@ class DomainApiController extends BaseApiController
 
     public function domainRelease(Request $request)
     {
-        $domain = Domain::find($request->domainid);
-        if (! $domain) {
-            return $this->error('Domain Not Found', 404);
-        }
-
-        return $this->success(['domainid' => $domain->id]);
+        // No registrar module implements a release, so the domain stayed
+        // exactly where it was while the caller was told otherwise.
+        return $this->error('Releasing a domain to another registrar is not implemented. Request the transfer code instead.', 501);
     }
 
     public function domainRegister(Request $request)

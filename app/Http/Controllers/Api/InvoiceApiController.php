@@ -144,12 +144,10 @@ class InvoiceApiController extends BaseApiController
 
     public function capturePayment(Request $request)
     {
-        $invoice = Invoice::find($request->invoiceid);
-        if (! $invoice) {
-            return $this->error('Invoice Not Found', 404);
-        }
-
-        return $this->success(['invoiceid' => $invoice->id, 'status' => 'captured']);
+        // Charging a stored payment method needs a tokenising gateway and a
+        // token to charge; neither exists here. Answering "captured" told the
+        // caller money had been taken when the invoice was untouched.
+        return $this->error('Capturing a stored payment method is not implemented. Take the payment from the client area.', 501);
     }
 
     public function addBillableItem(Request $request)
