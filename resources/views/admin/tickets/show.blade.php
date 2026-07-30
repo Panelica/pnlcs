@@ -14,6 +14,12 @@
 <div class="card" style="margin-bottom:15px;">
     <div class="card-body" style="padding:10px 15px;display:flex;gap:20px;flex-wrap:wrap;font-size:13px;">
         <div><strong style="color:#777;">{{ __('admin.tickets.department_label') }}</strong> {{ $ticket->department->name ?? 'N/A' }}</div>
+        @php $relatedService = $ticket->service ? \App\Models\Service::with('product')->find($ticket->service) : null; @endphp
+        @if($relatedService)
+        <div><strong style="color:#777;">{{ __('admin.tickets.related_service_label') }}</strong>
+            <a href="{{ route('admin.services.show', $relatedService) }}">{{ $relatedService->product->name ?? __('admin.tickets.service') }}{{ $relatedService->domain ? ' ('.$relatedService->domain.')' : '' }}</a>
+        </div>
+        @endif
         <div><strong style="color:#777;">{{ __('admin.tickets.client_label') }}</strong>
             @if($ticket->client)
             <a href="{{ $ticket->client ? route("admin.clients.show", $ticket->client) : "#" }}" style="color:#337ab7;">{{ $ticket->client?->full_name ?? $ticket->name ?? $ticket->email }}</a>

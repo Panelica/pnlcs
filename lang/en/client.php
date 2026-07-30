@@ -975,6 +975,7 @@ return [
         'post_reply' => 'Post a Reply',
         'post_reply_btn' => 'Post Reply',
         'priority' => 'Priority',
+        'service_not_yours' => 'That service is not on your account.',
         'related_service' => 'Related Service',
         'reply_placeholder' => 'Type your reply here...',
         'response_times' => 'Response Times',

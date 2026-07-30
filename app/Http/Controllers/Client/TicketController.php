@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Client;
 
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
@@ -48,7 +48,20 @@ class TicketController extends Controller
             'message' => 'required|string',
             'priority' => 'nullable|in:low,medium,high',
             'attachment' => 'nullable|file|max:10240|mimes:jpg,png,gif,pdf,doc,docx,txt,zip',
+            'related_service' => 'nullable|integer',
         ]);
+
+        // The picker only lists the customer's own services, but the request
+        // that follows it would take any id at all.
+        if (! empty($validated['related_service'])) {
+            $owned = Service::where('id', $validated['related_service'])
+                ->where('client_id', $this->getClientId())
+                ->exists();
+
+            if (! $owned) {
+                return back()->withErrors(['related_service' => __('client.tickets.service_not_yours')])->withInput();
+            }
+        }
 
         $spamService = app(TicketSpamService::class);
         if ($spamService->isSpam($request->input('email', auth()->user()->email), $validated['subject'], $validated['message'])) {
@@ -66,6 +79,7 @@ class TicketController extends Controller
             'priority' => $validated['priority'] ?? 'medium',
             'status' => 'Open',
             'last_reply' => now(),
+            'service' => ! empty($validated['related_service']) ? (string) $validated['related_service'] : null,
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -130,5 +144,4 @@ class TicketController extends Controller
 
         return Storage::disk('local')->download($path, basename($path));
     }
-
 }

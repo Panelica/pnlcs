@@ -2452,6 +2452,8 @@ return [
         'client_reply' => 'Client Reply',
         'close_ticket' => 'Close Ticket',
         'created_label' => 'Created label',
+        'related_service_label' => 'Service:',
+        'service' => 'Service',
         'department_label' => 'Department label',
         'email_label' => 'Email label',
         'internal_notes' => 'Internal notes',
