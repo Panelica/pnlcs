@@ -45,16 +45,79 @@ class InvoiceApiController extends BaseApiController
             'duedate' => 'nullable|date',
             'paymentmethod' => 'nullable|string',
             'status' => 'nullable|in:draft,unpaid,paid',
-        ]);
-        $invoice = Invoice::create([
-            'client_id' => $validated['userid'],
-            'date' => $validated['date'] ?? now()->format('Y-m-d'),
-            'due_date' => $validated['duedate'] ?? now()->addDays(7)->format('Y-m-d'),
-            'payment_method' => $validated['paymentmethod'] ?? null,
-            'status' => $validated['status'] ?? 'unpaid',
+            'notes' => 'nullable|string',
+            'items' => 'nullable|array',
+            'items.*.description' => 'required_with:items|string|max:255',
+            'items.*.amount' => 'required_with:items|numeric',
+            'items.*.taxed' => 'nullable|boolean',
         ]);
 
-        return $this->success(['invoiceid' => $invoice->id]);
+        $items = $this->lineItemsFrom($request, $validated);
+
+        if ($items === []) {
+            return $this->error('An invoice needs at least one line: send items[] or itemdescription1 with itemamount1.', 422);
+        }
+
+        $client = \App\Models\Client::findOrFail($validated['userid']);
+
+        // Through the invoice service, so the totals, the tax, the customer's
+        // group discount and the created event happen as they do everywhere
+        // else. This endpoint used to write an empty invoice on its own.
+        $invoice = app(\App\Services\InvoiceService::class)->createInvoice($client, $items, array_filter([
+            'date' => $validated['date'] ?? null,
+            'due_date' => $validated['duedate'] ?? null,
+            'payment_method' => $validated['paymentmethod'] ?? null,
+            'status' => $validated['status'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+        ]));
+
+        return $this->success(['invoiceid' => $invoice->id, 'total' => (float) $invoice->total]);
+    }
+
+    /**
+     * The lines, however they were sent: items[] or WHMCS-style numbered fields.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function lineItemsFrom(Request $request, array $validated): array
+    {
+        $items = [];
+
+        foreach ($validated['items'] ?? [] as $item) {
+            $items[] = [
+                'type' => 'Other',
+                'rel_id' => 0,
+                'description' => $item['description'],
+                'amount' => (float) $item['amount'],
+                'taxed' => (bool) ($item['taxed'] ?? true),
+            ];
+        }
+
+        for ($i = 1; $i <= 50; $i++) {
+            $description = $request->input("itemdescription{$i}");
+
+            if ($description === null || $description === '') {
+                continue;
+            }
+
+            $amount = $request->input("itemamount{$i}");
+
+            if (! is_numeric($amount)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "itemamount{$i}" => "itemamount{$i} is required and must be a number.",
+                ]);
+            }
+
+            $items[] = [
+                'type' => 'Other',
+                'rel_id' => 0,
+                'description' => (string) $description,
+                'amount' => (float) $amount,
+                'taxed' => (bool) $request->input("itemtaxed{$i}", true),
+            ];
+        }
+
+        return $items;
     }
 
     public function updateInvoice(Request $request)

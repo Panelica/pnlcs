@@ -166,6 +166,10 @@ test('createInvoice creates invoice for existing client', function () {
         'duedate' => now()->addDays(14)->format('Y-m-d'),
         'paymentmethod' => 'stripe',
         'status' => 'unpaid',
+        // An invoice needs a line: one with none is worth nothing and is
+        // refused now.
+        'itemdescription1' => 'Consultancy',
+        'itemamount1' => 120,
     ], $this->apiHeaders);
 
     $response->assertStatus(200)
