@@ -182,7 +182,7 @@ class AuthorizeNetModule implements GatewayModuleInterface
         $loginId   = $this->getSetting("api_login_id") ?? "";
         $clientKey = $this->getSetting("client_key") ?? "";
         $sandbox   = $this->getSetting("sandbox") === "1";
-        $amount    = number_format((float) $invoice->total, 2, ".", "");
+        $amount    = money_fmt($invoice->total);
         $invoiceId = (int) $invoice->id;
 
         if (!$loginId || !$clientKey) {

@@ -46,7 +46,7 @@ class RazorpayModule implements GatewayModuleInterface
             return ['success' => false, 'message' => 'Razorpay credentials not configured.'];
         }
 
-        $currency = strtoupper($params['currency'] ?? 'INR');
+        $currency = strtoupper($params['currency'] ?? shop_currency_code());
         $amountPaise = (int) round($amount * 100);
         $invoiceNum = $invoice->invoice_num ?? $invoice->id;
 
@@ -113,7 +113,8 @@ class RazorpayModule implements GatewayModuleInterface
         $amount = (int) round((float) $invoice->total * 100);
         $invoiceId = (int) $invoice->id;
         $invoiceNum = $invoice->invoice_num ?? $invoice->id;
-        $displayAmount = number_format((float) $invoice->total, 2);
+        $displayAmount = money_fmt($invoice->total);
+        $currency = shop_currency_code();
         $captureUrl = url("/gateway/razorpay/capture/{$invoiceId}");
         $companyName = htmlspecialchars(\App\Models\Setting::get('CompanyName', 'PNLCS'), ENT_QUOTES, 'UTF-8');
 
@@ -123,7 +124,7 @@ class RazorpayModule implements GatewayModuleInterface
 
         return <<<HTML
 <div class="my-3">
-    <button id="rzp-pay-btn" class="btn btn-primary w-100" type="button">Pay ₹{$displayAmount} with Razorpay</button>
+    <button id="rzp-pay-btn" class="btn btn-primary w-100" type="button">Pay {$displayAmount} with Razorpay</button>
     <div id="rzp-message" class="mt-2"></div>
 </div>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -144,7 +145,7 @@ class RazorpayModule implements GatewayModuleInterface
             var options = {
                 key: "{$keyId}",
                 amount: data.amount,
-                currency: data.currency || "INR",
+                currency: data.currency || "{$currency}",
                 name: "{$companyName}",
                 description: "Invoice #{$invoiceNum}",
                 order_id: data.order_id,

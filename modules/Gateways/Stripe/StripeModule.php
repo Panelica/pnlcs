@@ -44,7 +44,7 @@ class StripeModule implements GatewayModuleInterface
             return ["success" => false, "message" => "Stripe secret key not configured."];
         }
 
-        $currency = strtolower($params["currency"] ?? "usd");
+        $currency = strtolower($params["currency"] ?? shop_currency_code());
         $amountCents = (int) round($amount * 100);
 
         $response = Http::asForm()

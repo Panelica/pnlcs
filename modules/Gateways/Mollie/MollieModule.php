@@ -47,7 +47,7 @@ class MollieModule implements GatewayModuleInterface
             return ['success' => false, 'message' => 'Mollie API key not configured.'];
         }
 
-        $currency = strtoupper($params['currency'] ?? 'EUR');
+        $currency = strtoupper($params['currency'] ?? shop_currency_code());
         $invoiceNum = $invoice->invoice_num ?? $invoice->id;
         $redirectUrl = $params['redirect_url'] ?? url("/client/invoices/{$invoice->id}?payment=success");
         $webhookUrl = $params['webhook_url'] ?? route('gateway.mollie.webhook');
@@ -93,7 +93,7 @@ class MollieModule implements GatewayModuleInterface
         $response = Http::withToken($apiKey)
             ->post("{$this->apiUrl}/payments/{$transactionId}/refunds", [
                 'amount' => [
-                    'currency' => 'EUR',
+                    'currency' => shop_currency_code(),
                     'value' => number_format($amount, 2, '.', ''),
                 ],
             ]);
@@ -114,6 +114,7 @@ class MollieModule implements GatewayModuleInterface
     public function getPaymentForm(Invoice $invoice): string
     {
         $amount = number_format((float) $invoice->total, 2, '.', '');
+        $display = money_fmt($invoice->total);
         $invoiceId = (int) $invoice->id;
         $captureUrl = url("/gateway/mollie/capture/{$invoiceId}");
 
@@ -123,7 +124,7 @@ class MollieModule implements GatewayModuleInterface
     <form method="POST" action="{$captureUrl}">
         <input type="hidden" name="_token" value="" id="mollie-csrf">
         <button type="submit" class="btn btn-primary w-100" id="mollie-pay-btn">
-            Pay &euro;{$amount} with Mollie
+            Pay {$display} with Mollie
         </button>
     </form>
 </div>

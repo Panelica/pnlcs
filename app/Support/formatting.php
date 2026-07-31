@@ -30,7 +30,27 @@ if (! function_exists('money_fmt')) {
             : '$'.$value;
     }
 }
-if (! function_exists('company_name')) {
+if (! function_exists('shop_currency_code')) {
+    /**
+     * The three-letter code of the currency the shop sells in.
+     *
+     * Everything is priced, invoiced and charged in this one currency; the
+     * gateways used to be told nothing and each fell back to a different
+     * default of its own.
+     */
+    function shop_currency_code(): string
+    {
+        if (! app()->bound('pnlcs.currency')) {
+            try {
+                app()->instance('pnlcs.currency', ['currency' => Currency::getDefault()]);
+            } catch (Throwable) {
+                app()->instance('pnlcs.currency', ['currency' => null]);
+            }
+        }
+
+        return strtoupper((string) (app('pnlcs.currency')['currency']->code ?? 'USD'));
+    }
+}if (! function_exists('company_name')) {
     /**
      * What the business calls itself.
      *
