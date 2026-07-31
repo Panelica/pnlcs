@@ -19,11 +19,13 @@ class ApiCredentialFactory extends Factory
     {
         return [
             'admin_id' => function () {
-                $role = AdminRole::first() ?? AdminRole::factory()->fullAdmin()->create();
+                $role = AdminRole::where('is_full_admin', true)->first()
+                    ?? AdminRole::factory()->fullAdmin()->create();
+
                 return Admin::factory()->create(['role_id' => $role->id])->id;
             },
             'api_role_id' => null,
-            'identifier' => 'test_' . Str::random(16),
+            'identifier' => 'test_'.Str::random(16),
             'secret' => ApiCredential::hashSecret(self::PLAINTEXT_SECRET),
             'description' => 'Test API credential',
             'allowed_ips' => null,
