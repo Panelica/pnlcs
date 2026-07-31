@@ -1,7 +1,35 @@
 <?php
 
+use App\Models\Currency;
 use App\Models\Setting;
 
+if (! function_exists('money_fmt')) {
+    /**
+     * An amount in the currency the shop sells in.
+     *
+     * Emails printed a dollar sign whatever the operator had configured, so a
+     * customer buying in euros was billed in euros and told about dollars.
+     */
+    function money_fmt(float|int|string|null $amount): string
+    {
+        $value = number_format((float) $amount, 2);
+
+        // Wrapped in an array: the container cannot resolve a bare null.
+        if (! app()->bound('pnlcs.currency')) {
+            try {
+                app()->instance('pnlcs.currency', ['currency' => Currency::getDefault()]);
+            } catch (Throwable) {
+                app()->instance('pnlcs.currency', ['currency' => null]);
+            }
+        }
+
+        $currency = app('pnlcs.currency')['currency'] ?? null;
+
+        return $currency
+            ? $currency->prefix.$value.$currency->suffix
+            : '$'.$value;
+    }
+}
 if (! function_exists('company_name')) {
     /**
      * What the business calls itself.

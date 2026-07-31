@@ -15,5 +15,7 @@
 
 <p>{{ __('email.common.login_link') }} {{ __('email.domain_renewal.renew_before') }}</p>
 
+@include('emails.partials.action', ['url' => route('client.domains.show', $domain->id), 'label' => __('email.common.view_domain')])
+
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

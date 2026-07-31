@@ -22,5 +22,7 @@
 
 <p>{{ __('email.affiliate_welcome.start_earning') }}</p>
 
+@include('emails.partials.action', ['url' => route('client.affiliates.index'), 'label' => __('email.common.go_to_account')])
+
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

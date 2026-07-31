@@ -20,5 +20,7 @@
 
 <p>{{ __('email.ticket_reply.view_conversation') }}</p>
 
+@include('emails.partials.action', ['url' => route('client.tickets.show', $ticket->id), 'label' => __('email.common.view_ticket')])
+
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

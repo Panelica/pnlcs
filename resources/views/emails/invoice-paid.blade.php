@@ -9,12 +9,14 @@
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.invoice_number_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $invoice->invoice_num ?? $invoice->id }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_paid.amount_paid') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">${{ number_format((float)$invoice->total, 2) }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_paid.amount_paid') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ money_fmt($invoice->total) }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_paid.transaction_id') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $transactionId ?? 'N/A' }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_paid.payment_date') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $invoice->date_paid?->format(date_fmt()) ?? now()->format(date_fmt()) }}</td></tr>
 </table>
 
 <p>{{ __('email.invoice_paid.marked_paid') }}</p>
+
+@include('emails.partials.action', ['url' => route('client.invoices.show', $invoice->id), 'label' => __('email.common.view_invoice')])
 
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

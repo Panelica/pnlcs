@@ -9,5 +9,7 @@
 
 <p>{{ __('email.cc_expiry.update_payment') }}</p>
 
+@include('emails.partials.action', ['url' => route('client.payment-methods.index'), 'label' => __('email.common.update_payment_method')])
+
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

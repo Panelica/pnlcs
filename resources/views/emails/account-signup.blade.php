@@ -16,5 +16,7 @@
 
 <p>{{ __('email.account_signup.questions') }}</p>
 
+@include('emails.partials.action', ['url' => route('client.home'), 'label' => __('email.common.go_to_account')])
+
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

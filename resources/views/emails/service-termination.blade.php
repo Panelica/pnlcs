@@ -16,5 +16,7 @@
 
 <p>{{ __('email.service_termination.new_service') }}</p>
 
+@include('emails.partials.action', ['url' => route('client.services.show', $service->id), 'label' => __('email.common.view_service')])
+
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

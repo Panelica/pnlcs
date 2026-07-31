@@ -46,6 +46,14 @@ return [
         'update_payment' => 'To avoid any service interruptions, please update your payment method in your account area.',
     ],
     'common' => [
+        'view_invoice' => 'View invoice',
+        'pay_invoice' => 'Pay invoice',
+        'view_ticket' => 'View ticket',
+        'view_service' => 'View service',
+        'view_domain' => 'View domain',
+        'update_payment_method' => 'Update payment method',
+        'go_to_account' => 'Go to your account',
+
         'amount_label' => 'Amount',
         'client' => 'Client',
         'customer' => 'Customer',
@@ -144,6 +152,7 @@ return [
     'payment_reminder' => [
         'due_in' => 'This is a friendly reminder that Invoice #:number is due in :days day(s).',
         'overdue' => 'Invoice #:number is now :days day(s) overdue.',
+        'to_pay_intro' => 'You can settle this invoice from your account:',
         'to_pay' => 'to make a payment.',
     ],
     'service' => [
