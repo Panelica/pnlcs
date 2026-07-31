@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
+use App\Models\AdminRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -46,22 +48,22 @@ class InstallController extends Controller
         }
 
         $writable = [
-            'storage/'                => is_writable(storage_path()),
-            'storage/framework/'      => is_writable(storage_path('framework')),
-            'storage/logs/'           => is_writable(storage_path('logs')),
-            'bootstrap/cache/'        => is_writable(base_path('bootstrap/cache')),
+            'storage/' => is_writable(storage_path()),
+            'storage/framework/' => is_writable(storage_path('framework')),
+            'storage/logs/' => is_writable(storage_path('logs')),
+            'bootstrap/cache/' => is_writable(base_path('bootstrap/cache')),
         ];
 
         $assets = [
-            'vendor/'        => is_dir(base_path('vendor')) && file_exists(base_path('vendor/autoload.php')),
-            'public/build/'  => is_dir(base_path('public/build')),
-            '.env'           => file_exists(base_path('.env')),
+            'vendor/' => is_dir(base_path('vendor')) && file_exists(base_path('vendor/autoload.php')),
+            'public/build/' => is_dir(base_path('public/build')),
+            '.env' => file_exists(base_path('.env')),
         ];
 
         $allOk = $phpOk
-            && !in_array(false, $extensions, true)
-            && !in_array(false, $writable, true)
-            && !in_array(false, $assets, true);
+            && ! in_array(false, $extensions, true)
+            && ! in_array(false, $writable, true)
+            && ! in_array(false, $assets, true);
 
         return view('install.requirements', compact('php', 'phpOk', 'extensions', 'writable', 'assets', 'allOk'));
     }
@@ -74,11 +76,12 @@ class InstallController extends Controller
             if (Schema::hasTable('migrations')) {
                 return redirect('/install/admin');
             }
-        } catch (\Throwable $e) { /* DB not configured yet */ }
+        } catch (\Throwable $e) { /* DB not configured yet */
+        }
 
         return view('install.database', [
-            'host'     => config('database.connections.mysql.host', '127.0.0.1'),
-            'port'     => config('database.connections.mysql.port', '3306'),
+            'host' => config('database.connections.mysql.host', '127.0.0.1'),
+            'port' => config('database.connections.mysql.port', '3306'),
             'database' => config('database.connections.mysql.database', 'pnlcs'),
             'username' => config('database.connections.mysql.username', 'pnlcs'),
         ]);
@@ -87,8 +90,8 @@ class InstallController extends Controller
     public function testDatabase(Request $request)
     {
         $data = $request->validate([
-            'host'     => 'required|string|max:255',
-            'port'     => 'required|integer|min:1|max:65535',
+            'host' => 'required|string|max:255',
+            'port' => 'required|integer|min:1|max:65535',
             'database' => 'required|string|max:255',
             'username' => 'required|string|max:255',
             'password' => 'nullable|string|max:255',
@@ -101,6 +104,7 @@ class InstallController extends Controller
                 \PDO::ATTR_TIMEOUT => 5,
             ]);
             $pdo->query('SELECT 1');
+
             return response()->json(['ok' => true, 'message' => 'Connection successful.']);
         } catch (\Throwable $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
@@ -110,8 +114,8 @@ class InstallController extends Controller
     public function saveDatabase(Request $request)
     {
         $data = $request->validate([
-            'host'     => 'required|string|max:255',
-            'port'     => 'required|integer|min:1|max:65535',
+            'host' => 'required|string|max:255',
+            'port' => 'required|integer|min:1|max:65535',
             'database' => 'required|string|max:255',
             'username' => 'required|string|max:255',
             'password' => 'nullable|string|max:255',
@@ -119,19 +123,19 @@ class InstallController extends Controller
 
         $this->writeEnv([
             'DB_CONNECTION' => 'mysql',
-            'DB_HOST'       => $data['host'],
-            'DB_PORT'       => (string) $data['port'],
-            'DB_DATABASE'   => $data['database'],
-            'DB_USERNAME'   => $data['username'],
-            'DB_PASSWORD'   => $data['password'] ?? '',
+            'DB_HOST' => $data['host'],
+            'DB_PORT' => (string) $data['port'],
+            'DB_DATABASE' => $data['database'],
+            'DB_USERNAME' => $data['username'],
+            'DB_PASSWORD' => $data['password'] ?? '',
         ]);
 
         // Reload config + reset connection so artisan migrate uses new creds.
         Artisan::call('config:clear');
         DB::purge('mysql');
         config([
-            'database.connections.mysql.host'     => $data['host'],
-            'database.connections.mysql.port'     => (int) $data['port'],
+            'database.connections.mysql.host' => $data['host'],
+            'database.connections.mysql.port' => (int) $data['port'],
             'database.connections.mysql.database' => $data['database'],
             'database.connections.mysql.username' => $data['username'],
             'database.connections.mysql.password' => $data['password'] ?? '',
@@ -140,7 +144,7 @@ class InstallController extends Controller
         try {
             Artisan::call('migrate', ['--force' => true, '--no-interaction' => true]);
         } catch (\Throwable $e) {
-            return back()->withInput()->withErrors(['migrate' => 'Migration failed: ' . $e->getMessage()]);
+            return back()->withInput()->withErrors(['migrate' => 'Migration failed: '.$e->getMessage()]);
         }
 
         return redirect('/install/admin');
@@ -155,41 +159,69 @@ class InstallController extends Controller
     public function saveAdmin(Request $request)
     {
         $data = $request->validate([
-            'username'   => 'required|string|min:3|max:64|alpha_dash',
-            'email'      => 'required|email|max:255',
+            'username' => 'required|string|min:3|max:64|alpha_dash',
+            'email' => 'required|email|max:255',
             'first_name' => 'required|string|max:64',
-            'last_name'  => 'nullable|string|max:64',
-            'password'   => 'required|string|min:6|max:255|confirmed',
+            'last_name' => 'nullable|string|max:64',
+            'password' => 'required|string|min:6|max:255|confirmed',
         ]);
 
-        // Run db:seed first so AdminRole + base data exist (idempotent — firstOrCreate).
-        try {
-            Artisan::call('db:seed', ['--force' => true, '--no-interaction' => true]);
-        } catch (\Throwable $e) {
-            // Continue — seeder failure shouldn't block admin creation if role already exists.
+        // Asked before the seeder runs, because the seeder creates an
+        // administrator of its own and would make every install look finished.
+        $before = Admin::query()->count();
+        $mine = (int) $request->session()->get('install.admin_id');
+
+        if ($before > 0 && ! ($before === 1 && $mine > 0 && Admin::whereKey($mine)->exists())) {
+            abort(404);
         }
 
-        $role = \App\Models\AdminRole::query()->orderBy('id')->first();
-        if (!$role) {
-            $role = \App\Models\AdminRole::create([
+        // Run db:seed first so AdminRole + base data exist. Only once per
+        // install: the seeded administrator is renamed to whatever the operator
+        // chose just below, so a second run no longer recognises it and would
+        // create "admin" / "admin123" all over again.
+        if (! $request->session()->get('install.seeded')) {
+            try {
+                Artisan::call('db:seed', ['--force' => true, '--no-interaction' => true]);
+                $request->session()->put('install.seeded', true);
+            } catch (\Throwable $e) {
+                // Continue — seeder failure shouldn't block admin creation if role already exists.
+            }
+        }
+
+        // The seeder may have created an administrator during this very
+        // request; on a first install that row is ours to fill in.
+        if ($mine === 0 && $before === 0) {
+            $mine = (int) (Admin::query()->orderBy('id')->value('id') ?? 0);
+        }
+
+        $role = AdminRole::query()->orderBy('id')->first();
+        if (! $role) {
+            $role = AdminRole::create([
                 'name' => 'Super Administrator',
                 'slug' => 'super-admin',
                 'permissions' => ['*'],
             ]);
         }
 
-        \App\Models\Admin::updateOrCreate(
-            ['username' => $data['username']],
+        // Keyed on the row this session created, not on the username: keying on
+        // the username is what allowed an existing administrator's password to
+        // be written.
+        $admin = Admin::updateOrCreate(
+            ['id' => $mine ?: null],
             [
-                'role_id'    => $role->id,
-                'email'      => $data['email'],
+                'username' => $data['username'],
+                'role_id' => $role->id,
+                'email' => $data['email'],
                 'first_name' => $data['first_name'],
-                'last_name'  => $data['last_name'] ?? '',
-                'password'   => Hash::make($data['password']),
+                'last_name' => $data['last_name'] ?? '',
+                'password' => Hash::make($data['password']),
             ]
         );
 
-        session(['install.admin_username' => $data['username']]);
+        session([
+            'install.admin_username' => $data['username'],
+            'install.admin_id' => $admin->id,
+        ]);
 
         return redirect('/install/app');
     }
@@ -198,8 +230,8 @@ class InstallController extends Controller
     public function app()
     {
         return view('install.app', [
-            'app_url'    => config('app.url', 'http://localhost'),
-            'app_name'   => config('app.name', 'PNLCS'),
+            'app_url' => config('app.url', 'http://localhost'),
+            'app_name' => config('app.name', 'PNLCS'),
             'app_locale' => config('app.locale', 'en'),
         ]);
     }
@@ -207,17 +239,17 @@ class InstallController extends Controller
     public function saveApp(Request $request)
     {
         $data = $request->validate([
-            'app_url'    => 'required|url|max:255',
-            'app_name'   => 'required|string|max:64',
+            'app_url' => 'required|url|max:255',
+            'app_name' => 'required|string|max:64',
             'app_locale' => ['required', Rule::in(['en', 'tr', 'de', 'fr', 'es', 'it', 'ru', 'pt-br', 'nl', 'pl', 'cs', 'tr'])],
         ]);
 
         $this->writeEnv([
-            'APP_URL'    => $data['app_url'],
-            'APP_NAME'   => '"' . str_replace('"', '\"', $data['app_name']) . '"',
+            'APP_URL' => $data['app_url'],
+            'APP_NAME' => '"'.str_replace('"', '\"', $data['app_name']).'"',
             'APP_LOCALE' => $data['app_locale'],
-            'APP_DEBUG'  => 'false',
-            'APP_ENV'    => 'production',
+            'APP_DEBUG' => 'false',
+            'APP_ENV' => 'production',
         ]);
 
         Artisan::call('config:clear');
@@ -230,7 +262,7 @@ class InstallController extends Controller
         $request->session()->forget('install.in_progress');
 
         // Use current request's scheme+host (bypass stale URL generator).
-        return redirect($request->getSchemeAndHttpHost() . '/install/finish');
+        return redirect($request->getSchemeAndHttpHost().'/install/finish');
     }
 
     // ─── Step 5: Finish ─────────────────────────────────────────────────
@@ -245,7 +277,7 @@ class InstallController extends Controller
     private function writeEnv(array $values): void
     {
         $path = base_path('.env');
-        if (!file_exists($path)) {
+        if (! file_exists($path)) {
             copy(base_path('.env.example'), $path);
         }
         $content = file_get_contents($path);
@@ -255,7 +287,7 @@ class InstallController extends Controller
             if (preg_match("/^{$key}=.*/m", $content)) {
                 $content = preg_replace("/^{$key}=.*/m", $line, $content);
             } else {
-                $content .= "\n" . $line;
+                $content .= "\n".$line;
             }
         }
         file_put_contents($path, $content);
