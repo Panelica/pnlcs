@@ -749,6 +749,7 @@ return [
     'services.upgrade_downgrade_title' => 'Upgrade / Downgrade',
     'services.username' => 'Username',
     'ssl' => [
+        'select_approver_email' => 'Choose an address',
         'action_required' => 'Action Required',
         'actions' => 'Actions',
         'additional_san' => 'Additional SAN Domains',

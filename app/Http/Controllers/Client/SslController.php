@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
 use App\Models\SslOrder;
 use App\Services\Module\ModuleRegistry;
 use App\Services\SslProvisioningService;
@@ -35,6 +35,7 @@ class SslController extends Controller
         }
 
         $sslOrder->load('service.product');
+
         return view('client.ssl.show', ['order' => $sslOrder]);
     }
 
@@ -55,6 +56,9 @@ class SslController extends Controller
         return view('client.ssl.configure', [
             'order' => $sslOrder,
             'webServerTypes' => $webServerTypes,
+            // In the markup, not left to a script: the page is written against
+            // Alpine, which the client layout does not load.
+            'approverEmails' => $this->approverEmailsFor($sslOrder, $sslOrder->domain),
         ]);
     }
 
@@ -86,7 +90,7 @@ class SslController extends Controller
         $module = $this->sslService->getModuleForOrder($sslOrder);
         if ($module) {
             $csrDecode = $module->decodeCsr($validated['csr']);
-            if (!empty($csrDecode['data']['cn'])) {
+            if (! empty($csrDecode['data']['cn'])) {
                 $validated['domain'] = $csrDecode['data']['cn'];
             }
         }
@@ -112,10 +116,43 @@ class SslController extends Controller
             return response()->json(['emails' => []]);
         }
 
-        $module = $this->sslService->getModuleForOrder($sslOrder);
-        $emails = $module ? $module->getApproverEmails($domain) : [];
+        return response()->json(['emails' => $this->approverEmailsFor($sslOrder, $domain)]);
+    }
 
-        return response()->json(['emails' => $emails]);
+    /**
+     * The addresses a certificate authority will send validation to.
+     *
+     * The module knows best; when it is not configured or answers with nothing
+     * the conventional five are still accepted, and an empty select is no use
+     * to anybody.
+     *
+     * @return array<int, string>
+     */
+    private function approverEmailsFor(SslOrder $sslOrder, ?string $domain): array
+    {
+        $domain = trim((string) $domain);
+
+        if ($domain === '') {
+            return [];
+        }
+
+        try {
+            $module = $this->sslService->getModuleForOrder($sslOrder);
+            $emails = $module ? $module->getApproverEmails($domain) : [];
+        } catch (\Throwable) {
+            $emails = [];
+        }
+
+        if (! empty($emails)) {
+            return array_values($emails);
+        }
+
+        $bare = preg_replace('/^www\./i', '', $domain);
+
+        return array_map(
+            fn (string $mailbox) => $mailbox.'@'.$bare,
+            ['admin', 'administrator', 'hostmaster', 'postmaster', 'webmaster']
+        );
     }
 
     public function downloadCert(SslOrder $sslOrder)
@@ -126,20 +163,28 @@ class SslController extends Controller
 
         $result = $this->sslService->downloadCertificate($sslOrder);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return back()->with('error', $result['message']);
         }
 
         $data = $result['data'];
         $domain = $data['domain'] ?? 'certificate';
-        $zip = new \ZipArchive();
-        $zipPath = tempnam(sys_get_temp_dir(), 'ssl_') . '.zip';
+        $zip = new \ZipArchive;
+        $zipPath = tempnam(sys_get_temp_dir(), 'ssl_').'.zip';
 
         if ($zip->open($zipPath, \ZipArchive::CREATE) === true) {
-            if ($data['cert']) $zip->addFromString("{$domain}.crt", $data['cert']);
-            if ($data['ca_cert']) $zip->addFromString("{$domain}.ca-bundle", $data['ca_cert']);
-            if ($data['fullchain']) $zip->addFromString("{$domain}.fullchain.crt", $data['fullchain']);
-            if ($data['private_key']) $zip->addFromString("{$domain}.key", $data['private_key']);
+            if ($data['cert']) {
+                $zip->addFromString("{$domain}.crt", $data['cert']);
+            }
+            if ($data['ca_cert']) {
+                $zip->addFromString("{$domain}.ca-bundle", $data['ca_cert']);
+            }
+            if ($data['fullchain']) {
+                $zip->addFromString("{$domain}.fullchain.crt", $data['fullchain']);
+            }
+            if ($data['private_key']) {
+                $zip->addFromString("{$domain}.key", $data['private_key']);
+            }
             $zip->close();
         }
 
@@ -160,5 +205,4 @@ class SslController extends Controller
 
         return back()->with('error', $result['message']);
     }
-
 }

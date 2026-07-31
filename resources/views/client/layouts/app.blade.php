@@ -548,6 +548,8 @@
 </footer>
 
 @yield("scripts")
+{{-- A page may push instead of yielding; without this the block is silently discarded. --}}
+@stack('scripts')
 <script>
 // Dropdown click toggle for mobile/touch
 document.querySelectorAll(".pn-nav-item > .pn-nav-link, .pn-nav-item > button.pn-nav-link").forEach(function(link) {

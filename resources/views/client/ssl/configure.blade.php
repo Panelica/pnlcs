@@ -75,10 +75,12 @@
             <div x-show="validationMethod === 'EMAIL'" class="mb-3">
                 <label class="form-label">{{ __('client.ssl.approver_email') }} <span class="text-danger">*</span></label>
                 <select name="approver_email" class="form-select" x-model="approverEmail">
-                    <option value="">{{ __('client.ssl.loading_emails') }}</option>
-                    <template x-for="email in approverEmails" :key="email">
-                        <option :value="email" x-text="email"></option>
-                    </template>
+                    <option value="">{{ __('client.ssl.select_approver_email') }}</option>
+                    {{-- Rendered here rather than fetched: the page must work
+                         whether or not the browser ran anything. --}}
+                    @foreach($approverEmails ?? [] as $email)
+                        <option value="{{ $email }}" @selected(old('approver_email') === $email)>{{ $email }}</option>
+                    @endforeach
                 </select>
                 <small class="text-muted">{{ __('client.ssl.approver_email_hint') }}</small>
             </div>
