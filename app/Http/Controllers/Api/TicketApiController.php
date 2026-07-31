@@ -82,7 +82,53 @@ class TicketApiController extends BaseApiController
         if (!$ticket) return $this->error('Ticket Not Found', 404);
         return $this->success(['notes'=>\App\Models\TicketNote::where('ticket_id',$ticket->id)->get()->toArray()]);
     }
-    public function getTicketAttachment(Request $request) { return $this->success(['attachments'=>[]]); }
+    /**
+     * The files on a ticket.
+     *
+     * Without attachmentindex the call lists what is there; with it, the file
+     * itself comes back base64 encoded, which is how the WHMCS-compatible
+     * clients expect to read one.
+     */
+    public function getTicketAttachment(Request $request)
+    {
+        $ticket = Ticket::with('replies')->find($request->ticketid);
+        if (! $ticket) {
+            return $this->error('Ticket Not Found', 404);
+        }
+
+        $files = [];
+        if ($ticket->attachment) {
+            $files[] = ['replyid' => null, 'path' => $ticket->attachment];
+        }
+        foreach ($ticket->replies->whereNotNull('attachment') as $reply) {
+            $files[] = ['replyid' => $reply->id, 'path' => $reply->attachment];
+        }
+
+        $listed = [];
+        foreach ($files as $index => $file) {
+            $listed[] = [
+                'index' => $index,
+                'replyid' => $file['replyid'],
+                'filename' => basename($file['path']),
+            ];
+        }
+
+        if (! $request->has('attachmentindex')) {
+            return $this->success(['attachments' => $listed]);
+        }
+
+        $index = (int) $request->attachmentindex;
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+
+        if (! isset($files[$index]) || ! $disk->exists($files[$index]['path'])) {
+            return $this->error('Attachment Not Found', 404);
+        }
+
+        return $this->success([
+            'filename' => basename($files[$index]['path']),
+            'data' => base64_encode($disk->get($files[$index]['path'])),
+        ]);
+    }
     public function updateTicketReply(Request $request)
     {
         $reply = TicketReply::find($request->replyid);
