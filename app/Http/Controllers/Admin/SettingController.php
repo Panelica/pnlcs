@@ -19,16 +19,29 @@ class SettingController extends Controller
         return view('admin.settings.general', compact('settings'));
     }
 
+    /**
+     * The settings this form owns.
+     *
+     * Anything else in the request is ignored. It used to be stored, so a
+     * stray field became a setting of its own, and a field named after a
+     * setting belonging to another screen was overwritten and moved into
+     * "general" - Setting::set() writes the group as well as the value, and
+     * the screen that owns it looks it up by group.
+     */
+    private const GENERAL_KEYS = [
+        'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
+        'Country', 'DateFormat', 'DefaultLanguage', 'Domain', 'Email', 'EmailFromName',
+        'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
+        'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
+        'SystemEmailAddress', 'TaxID', 'Timezone',
+    ];
+
     public function updateGeneral(Request $request)
     {
-        $mailKeys = [
-            'MailType', 'SMTPHost', 'SMTPPort', 'SMTPUsername', 'SMTPPassword',
-            'SMTPSecurity', 'SystemEmailAddress', 'EmailFromName', 'MailEnabled',
-        ];
+        $data = $request->only(self::GENERAL_KEYS);
 
-        $data = $request->except('_token');
-
-        if (!isset($data['MailEnabled'])) {
+        // An unticked checkbox is absent from the request, not false.
+        if (! isset($data['MailEnabled'])) {
             $data['MailEnabled'] = '0';
         }
 
