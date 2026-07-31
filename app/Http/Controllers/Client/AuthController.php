@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Events\ClientCreated;
+use App\Enums\ClientStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\AffiliateTracking;
 use App\Mail\PasswordResetMail;
@@ -52,6 +53,18 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+
+            // A closed account is finished. Nothing read the status the admin
+            // screen sets, so a customer whose account had been closed could
+            // still sign in and carry on.
+            if ($user->clients()->exists() && ! $user->clients()->where('status', '!=', ClientStatus::Closed->value)->exists()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors(['email' => __('auth.account_closed')])->onlyInput('email');
+            }
+
             $user->forceFill([
                 'last_login' => now(),
                 'last_login_ip' => $request->ip(),

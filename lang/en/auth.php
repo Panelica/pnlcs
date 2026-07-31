@@ -15,6 +15,7 @@ return [
     ],
     'admin_login' => 'Administration Area',
     'disabled' => 'Your account has been disabled.',
+    'account_closed' => 'This account has been closed. Please contact support.',
     'failed' => 'These credentials do not match our records.',
     'forgot' => [
         'back_to_login' => 'Back to login',

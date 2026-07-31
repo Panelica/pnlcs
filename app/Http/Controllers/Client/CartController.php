@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Enums\ClientStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Currency;
@@ -148,6 +149,14 @@ class CartController extends Controller
     public function checkout()
     {
         $clientId = $this->getClientId();
+        $client = $this->currentClient();
+
+        // Closing or suspending an account should stop new business; the
+        // status was set on the admin screen and read by nothing.
+        if (! $client || $client->status !== ClientStatus::Active) {
+            return back()->withErrors(['payment_method' => __('client.cart.account_not_active')]);
+        }
+
         $cart = $this->cartService->getOrCreateCart($clientId);
         $totals = $this->cartService->calculateTotal($cart);
 
@@ -177,6 +186,14 @@ class CartController extends Controller
         if (! $clientId) {
             return redirect()->route('client.login')
                 ->with('error', __('messages.error.login_required'));
+        }
+
+        $client = $this->currentClient();
+
+        // Closing or suspending an account should stop new business; the
+        // status was set on the admin screen and read by nothing.
+        if (! $client || $client->status !== ClientStatus::Active) {
+            return back()->withErrors(['payment_method' => __('client.cart.account_not_active')]);
         }
 
         $cart = $this->cartService->getOrCreateCart($clientId);

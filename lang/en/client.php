@@ -135,6 +135,7 @@ return [
         'domain_years_unsupported' => ':tld domains are sold for between :min and :max years.',
         'out_of_stock' => 'Out of stock',
         'product_unavailable' => 'That product is not available to order.',
+        'account_not_active' => 'Your account cannot place new orders. Please contact support.',
         'cycle_unavailable' => 'This product is not sold on that billing cycle.',
         'addon_invalid' => 'That addon is not available for this product.',
         'option_invalid' => 'The selection for :option is not available for this product.',
