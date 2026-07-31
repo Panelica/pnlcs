@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Constants\Permissions;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Admin;
@@ -48,9 +49,11 @@ use App\Models\TicketStatus;
 use App\Models\TodoItem;
 use App\Models\Transaction;
 use App\Services\Module\ModuleRegistry;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ConfigController extends Controller
 {
@@ -116,17 +119,15 @@ class ConfigController extends Controller
     {
         return view('admin.config.admin-roles', [
             'roles' => AdminRole::withCount('admins')->get(),
+            'permissionGroups' => Permissions::grouped(),
         ]);
     }
 
     public function storeRole(Request $request)
     {
-        $v = $request->validate([
-            'name' => 'required|unique:admin_roles',
-            'description' => 'nullable|string',
-            'is_full_admin' => 'boolean',
-        ]);
+        $v = $request->validate($this->roleRules());
         $v['is_full_admin'] = $request->boolean('is_full_admin');
+        $v['permissions'] = $v['is_full_admin'] ? [] : ($v['permissions'] ?? []);
         AdminRole::create($v);
 
         return back()->with('success', __('messages.success.role_created_successfully'));
@@ -134,15 +135,39 @@ class ConfigController extends Controller
 
     public function updateRole(Request $request, AdminRole $role)
     {
-        $v = $request->validate([
-            'name' => 'required|unique:admin_roles,name,'.$role->id,
-            'description' => 'nullable|string',
-            'is_full_admin' => 'boolean',
-        ]);
+        $v = $request->validate($this->roleRules($role));
         $v['is_full_admin'] = $request->boolean('is_full_admin');
+        $v['permissions'] = $v['is_full_admin'] ? [] : ($v['permissions'] ?? []);
+
+        // Editing your own role down to something that cannot administer roles
+        // leaves the installation with no way back in but the database.
+        $self = auth('admin')->user();
+
+        if ($self && $self->role_id === $role->id
+            && ! $v['is_full_admin']
+            && ! in_array(Permissions::MANAGE_ROLES, $v['permissions'], true)) {
+            return back()->withInput()->withErrors([
+                'permissions' => __('messages.error.cannot_remove_own_role_management'),
+            ]);
+        }
+
         $role->update($v);
 
         return back()->with('success', __('messages.success.role_updated_successfully'));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function roleRules(?AdminRole $role = null): array
+    {
+        return [
+            'name' => 'required|unique:admin_roles'.($role ? ',name,'.$role->id : ''),
+            'description' => 'nullable|string',
+            'is_full_admin' => 'boolean',
+            'permissions' => 'nullable|array',
+            'permissions.*' => Rule::in(Permissions::all()),
+        ];
     }
 
     public function destroyRole(AdminRole $role)
@@ -1351,7 +1376,7 @@ class ConfigController extends Controller
 
         // Every dispatchable event, so the operator can subscribe to the ones
         // that matter most — a failed backup, provisioning that gave up.
-        $eventTypes = \App\Services\NotificationService::eventTypes();
+        $eventTypes = NotificationService::eventTypes();
 
         return view('admin.config.notifications', compact('providers', 'eventTypes'));
     }

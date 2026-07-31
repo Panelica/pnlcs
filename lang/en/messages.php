@@ -5,6 +5,7 @@ return [
     'email.test_sent' => 'Test email sent successfully to :address.',
     'email.test_subject' => 'PNLCS Test Email',
     'error' => [
+        'cannot_remove_own_role_management' => 'You cannot take role management away from your own role - nobody would be able to grant it back.',
         'ip_banned' => 'Access denied: your IP address has been banned from this site.',
         'invoice_not_awaiting_payment' => 'This invoice is not awaiting payment.',
         '2fa_invalid' => 'Invalid authentication code.',
