@@ -128,6 +128,7 @@ return [
         'config_sub_created' => 'Sub-option created.',
         'config_sub_deleted' => 'Sub-option deleted.',
         'contact_created' => 'Contact added successfully.',
+        'contact_updated' => 'Contact updated successfully.',
         'contact_deleted' => 'Contact removed.',
         'created' => ':item created successfully.',
         'currency_created' => 'Currency added.',
