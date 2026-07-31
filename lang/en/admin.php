@@ -47,6 +47,8 @@ return [
     'addons.title' => 'Product Addons',
     'addons.visibility' => 'Visibility',
     'addons.visible' => 'Visible',
+    'settings.sending_via' => 'Sending via: :transport',
+    'settings.mail_goes_to_log' => 'Nothing is delivered - messages are written to the log file.',
     'admin_roles.add_role' => 'Add Role',
     'admin_roles.full_administrator' => 'Full administrator',
     'admin_roles.full_administrator_hint' => 'Everything, everywhere. Leave this off to choose what the role may do.',

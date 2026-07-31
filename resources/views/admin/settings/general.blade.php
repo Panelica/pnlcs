@@ -59,6 +59,12 @@
                         <option value="php_mail" {{ ($settings['MailType'] ?? 'php_mail') === 'php_mail' ? 'selected' : '' }}>{{ __('admin.settings.php_mail') }}</option>
                         <option value="smtp" {{ ($settings['MailType'] ?? '') === 'smtp' ? 'selected' : '' }}>{{ __('admin.settings.smtp') }}</option>
                     </select>
+                    <div style="color:#777;font-size:12px;margin-top:6px;">
+                        {{ __('admin.settings.sending_via', ['transport' => $mailTransport ?? config('mail.default')]) }}
+                        @if(($mailTransport ?? config('mail.default')) === 'log')
+                            <strong style="color:#c00;">{{ __('admin.settings.mail_goes_to_log') }}</strong>
+                        @endif
+                    </div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ __('admin.settings.enable_email_sending') }}</label>

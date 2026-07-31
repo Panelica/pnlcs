@@ -16,7 +16,11 @@ class SettingController extends Controller
     public function general()
     {
         $settings = Setting::where('group', 'general')->pluck('value', 'setting');
-        return view('admin.settings.general', compact('settings'));
+
+        return view('admin.settings.general', [
+            'settings' => $settings,
+            'mailTransport' => (string) config('mail.default'),
+        ]);
     }
 
     /**
@@ -67,29 +71,13 @@ class SettingController extends Controller
             ]);
         }
 
-        $mailType = $settings['MailType'] ?? 'php_mail';
-        $fromAddress = $settings['SystemEmailAddress'] ?? 'noreply@example.com';
-        $fromName    = $settings['EmailFromName'] ?? 'PNLCS';
+        // The same resolver the application boots with. This used to be a
+        // second copy that handled PHP mail when the real one did not, so the
+        // button could succeed down a road no real email ever travelled.
+        $transport = \App\Support\MailTransport::configure();
 
-        if ($mailType === 'smtp') {
-            $encryption = ($settings['SMTPSecurity'] ?? 'tls') === 'none' ? null : ($settings['SMTPSecurity'] ?? 'tls');
-            config([
-                'mail.default'                     => 'smtp',
-                'mail.mailers.smtp.host'            => $settings['SMTPHost'] ?? 'localhost',
-                'mail.mailers.smtp.port'            => (int)($settings['SMTPPort'] ?? 587),
-                'mail.mailers.smtp.username'        => $settings['SMTPUsername'] ?? null,
-                'mail.mailers.smtp.password'        => $settings['SMTPPassword'] ?? null,
-                'mail.mailers.smtp.encryption'      => $encryption,
-                'mail.from.address'                 => $fromAddress,
-                'mail.from.name'                    => $fromName,
-            ]);
-        } else {
-            config([
-                'mail.default'          => 'sendmail',
-                'mail.from.address'     => $fromAddress,
-                'mail.from.name'        => $fromName,
-            ]);
-        }
+        $fromAddress = $settings['SystemEmailAddress'] ?? 'noreply@example.com';
+        $fromName = $settings['EmailFromName'] ?? 'PNLCS';
 
         try {
             Mail::raw(__('messages.email.test_body'), function ($message) use ($toAddress, $fromAddress, $fromName) {
@@ -100,7 +88,11 @@ class SettingController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => __('messages.email.test_sent', ['address' => $toAddress]),
+                // Which road it went down. "log" means it went into a file and
+                // nobody received it, which is worth saying out loud.
+                'transport' => $transport,
+                'message' => __('messages.email.test_sent', ['address' => $toAddress])
+                    .' ('.__('admin.settings.sending_via', ['transport' => $transport]).')',
             ]);
         } catch (\Throwable $e) {
             return response()->json([
