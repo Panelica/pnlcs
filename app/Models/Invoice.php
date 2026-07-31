@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Invoice extends Model {
     use HasFactory;
 
-    protected $fillable = ['client_id', 'invoice_num', 'date', 'due_date', 'date_paid', 'subtotal', 'credit', 'tax', 'tax2', 'total', 'tax_rate', 'tax_rate2', 'status', 'payment_method', 'pay_method_id', 'notes'];
+    protected $fillable = ['client_id', 'invoice_num', 'date', 'due_date', 'date_paid', 'subtotal', 'credit', 'tax', 'tax2', 'total', 'tax_rate', 'tax_rate2', 'status', 'reminder_stage', 'reminder_sent_at', 'payment_method', 'pay_method_id', 'notes'];
 
     /**
      * Invoices the customer still owes money on.
