@@ -35,7 +35,7 @@ class CreditCardExpiryMail extends Mailable implements ShouldQueue
             with: [
                 'client' => $this->client,
                 'paymentMethod' => $this->paymentMethod,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

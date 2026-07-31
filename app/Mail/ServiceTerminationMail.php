@@ -32,7 +32,7 @@ class ServiceTerminationMail extends Mailable implements ShouldQueue
             view: 'emails.service-termination',
             with: [
                 'service' => $this->service,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

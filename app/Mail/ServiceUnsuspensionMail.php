@@ -32,7 +32,7 @@ class ServiceUnsuspensionMail extends Mailable implements ShouldQueue
             view: 'emails.service-unsuspension',
             with: [
                 'service' => $this->service,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

@@ -37,7 +37,7 @@ class TicketReplyMail extends Mailable implements ShouldQueue
                 'ticket' => $this->ticket,
                 'replyMessage' => $this->replyMessage,
                 'isStaffReply' => $this->isStaffReply,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

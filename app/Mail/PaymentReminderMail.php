@@ -41,7 +41,7 @@ class PaymentReminderMail extends Mailable implements ShouldQueue
             with: [
                 'invoice' => $this->invoice,
                 'daysOffset' => $this->daysOffset,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

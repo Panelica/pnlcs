@@ -32,7 +32,7 @@ class ServiceWelcomeMail extends Mailable implements ShouldQueue
             view: 'emails.service-welcome',
             with: [
                 'service' => $this->service,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

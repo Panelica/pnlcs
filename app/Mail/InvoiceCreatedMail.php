@@ -32,7 +32,7 @@ class InvoiceCreatedMail extends Mailable implements ShouldQueue
             view: 'emails.invoice-created',
             with: [
                 'invoice' => $this->invoice,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

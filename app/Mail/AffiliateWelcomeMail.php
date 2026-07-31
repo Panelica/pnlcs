@@ -33,7 +33,7 @@ class AffiliateWelcomeMail extends Mailable implements ShouldQueue
             with: [
                 'client' => $this->client,
                 'affiliate' => $this->affiliate,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

@@ -34,7 +34,7 @@ class ServiceSuspensionMail extends Mailable implements ShouldQueue
             with: [
                 'service' => $this->service,
                 'reason' => $this->reason,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

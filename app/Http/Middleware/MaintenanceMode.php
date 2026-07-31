@@ -36,7 +36,7 @@ class MaintenanceMode
         }
 
         return response()->view('errors.maintenance', [
-            'companyName' => Setting::get('CompanyName', config('app.name')),
+            'companyName' => company_name(),
         ], 503)->header('Retry-After', 3600);
     }
 

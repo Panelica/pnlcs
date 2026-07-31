@@ -34,7 +34,7 @@ class InvoicePaidMail extends Mailable implements ShouldQueue
             with: [
                 'invoice' => $this->invoice,
                 'transactionId' => $this->transactionId,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

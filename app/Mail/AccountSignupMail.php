@@ -21,7 +21,7 @@ class AccountSignupMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $companyName = Setting::get('CompanyName', 'PNLCS');
+        $companyName = company_name();
 
         return new Envelope(subject: "Welcome to {$companyName}!");
     }
@@ -32,7 +32,7 @@ class AccountSignupMail extends Mailable implements ShouldQueue
             view: 'emails.account-signup',
             with: [
                 'client' => $this->client,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

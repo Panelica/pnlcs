@@ -34,7 +34,7 @@ class CancellationConfirmMail extends Mailable implements ShouldQueue
             with: [
                 'service' => $this->service,
                 'cancellationType' => $this->cancellationType,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

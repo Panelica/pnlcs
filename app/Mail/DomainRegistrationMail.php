@@ -32,7 +32,7 @@ class DomainRegistrationMail extends Mailable implements ShouldQueue
             view: 'emails.domain-registration',
             with: [
                 'domain' => $this->domain,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

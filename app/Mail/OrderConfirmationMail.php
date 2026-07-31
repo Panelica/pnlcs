@@ -32,7 +32,7 @@ class OrderConfirmationMail extends Mailable implements ShouldQueue
             view: 'emails.order-confirmation',
             with: [
                 'order' => $this->order,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

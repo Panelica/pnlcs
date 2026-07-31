@@ -2,6 +2,35 @@
 
 use App\Models\Setting;
 
+if (! function_exists('company_name')) {
+    /**
+     * What the business calls itself.
+     *
+     * The white-label name wins when the operator has set one — that is what
+     * white-labelling means — then the company name from Settings, then the
+     * application name. Subjects and bodies used to resolve this differently
+     * and an email could carry both names at once.
+     */
+    function company_name(): string
+    {
+        if (app()->bound('pnlcs.company_name')) {
+            return app('pnlcs.company_name');
+        }
+
+        try {
+            $name = trim((string) Setting::get('whitelabel_company_name', ''))
+                ?: trim((string) Setting::get('CompanyName', ''));
+        } catch (Throwable) {
+            $name = '';
+        }
+
+        $name = $name !== '' ? $name : (string) config('app.name', 'PNLCS');
+
+        app()->instance('pnlcs.company_name', $name);
+
+        return $name;
+    }
+}
 if (! function_exists('date_fmt')) {
     /**
      * The date format the operator picked in Settings → General.

@@ -31,7 +31,7 @@ class PaymentNotificationRejectedMail extends Mailable implements ShouldQueue
             with: [
                 'notification' => $this->notification,
                 'invoice'      => $this->notification->invoice,
-                'companyName'  => Setting::get('CompanyName', 'PNLCS'),
+                'companyName'  => company_name(),
             ],
         );
     }

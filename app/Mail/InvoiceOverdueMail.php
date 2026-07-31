@@ -34,7 +34,7 @@ class InvoiceOverdueMail extends Mailable implements ShouldQueue
             with: [
                 'invoice' => $this->invoice,
                 'daysOverdue' => $this->daysOverdue,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

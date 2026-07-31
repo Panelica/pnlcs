@@ -35,7 +35,7 @@ class TicketOpenedMail extends Mailable implements ShouldQueue
             with: [
                 'ticket' => $this->ticket,
                 'isAdmin' => $this->isAdmin,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

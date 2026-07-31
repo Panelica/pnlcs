@@ -24,7 +24,7 @@ class PasswordResetMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $companyName = Setting::get('CompanyName', 'PNLCS');
+        $companyName = company_name();
 
         return new Envelope(subject: "Reset your {$companyName} password");
     }
@@ -36,7 +36,7 @@ class PasswordResetMail extends Mailable
             with: [
                 'resetUrl'    => $this->resetUrl,
                 'email'       => $this->email,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }

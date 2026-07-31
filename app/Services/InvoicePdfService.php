@@ -22,7 +22,7 @@ class InvoicePdfService
     public function companyDetails(): array
     {
         return [
-            'name' => Setting::get('CompanyName', 'PNLCS'),
+            'name' => company_name(),
             'domain' => Setting::get('Domain', ''),
             'address' => $this->firstFilled(['Address', 'CompanyAddress']),
             'city' => $this->firstFilled(['CompanyCity', 'City']),

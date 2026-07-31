@@ -186,7 +186,7 @@ class EmailTemplateService
     private function companyName(): string
     {
         try {
-            return (string) (Setting::get('whitelabel_company_name') ?: config('app.name', 'PNLCS'));
+            return company_name();
         } catch (\Throwable) {
             return (string) config('app.name', 'PNLCS');
         }

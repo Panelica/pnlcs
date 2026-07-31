@@ -34,7 +34,7 @@ class DomainRenewalReminderMail extends Mailable implements ShouldQueue
             with: [
                 'domain' => $this->domain,
                 'daysUntilExpiry' => $this->daysUntilExpiry,
-                'companyName' => Setting::get('CompanyName', 'PNLCS'),
+                'companyName' => company_name(),
             ],
         );
     }
