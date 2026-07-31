@@ -66,7 +66,7 @@
 @endforeach
 
 {{-- Reply form --}}
-@if($ticket->status !== "closed")
+@if(strtolower($ticket->status) !== 'closed')
 <div class="pn-card mt-24">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.tickets.post_reply') }}</span></div>
     <div class="pn-card-body">

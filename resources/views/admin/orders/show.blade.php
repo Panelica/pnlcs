@@ -65,7 +65,7 @@
         </div>
         @endif
 
-        @if($order->status === 'Fraud' && $order->fraud_output)
+        @if(strtolower($order->status) === 'fraud' && $order->fraud_output)
         <div style="padding:12px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;margin-bottom:15px;">
             <strong style="color:#a94442;">{{ __('admin.orders.fraud_info') }}</strong>
             <p style="margin:6px 0 0;font-size:13px;color:#a94442;">{{ $order->fraud_output }}</p>
@@ -100,28 +100,28 @@
         <div class="panel">
             <div class="panel-heading panel-primary">{{ __('admin.orders.actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
-                @if($order->status === 'Pending')
+                @if(strtolower($order->status) === 'pending')
                 <form method="POST" action="{{ route('admin.orders.accept', $order) }}">
                     @csrf
                     <button type="submit" class="btn btn-success btn-sm" style="width:100%;">{{ __('admin.orders.accept_order') }}</button>
                 </form>
                 @endif
 
-                @if(!in_array($order->status, ['Cancelled', 'Fraud']))
+                @if(! in_array(strtolower($order->status), ['cancelled', 'fraud']))
                 <form method="POST" action="{{ route('admin.orders.cancel', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_cancel') }}')">
                     @csrf
                     <button type="submit" class="btn btn-warning btn-sm" style="width:100%;">{{ __('admin.orders.cancel_order') }}</button>
                 </form>
                 @endif
 
-                @if($order->status !== 'Fraud')
+                @if(strtolower($order->status) !== 'fraud')
                 <form method="POST" action="{{ route('admin.orders.fraud', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_fraud') }}')">
                     @csrf
                     <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">{{ __('common.actions.mark_fraud') }}</button>
                 </form>
                 @endif
 
-                @if(in_array($order->status, ['Cancelled', 'Fraud', 'Pending']))
+                @if(in_array(strtolower($order->status), ['cancelled', 'fraud', 'pending']))
                 <form method="POST" action="{{ route('admin.orders.delete', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_delete') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-default btn-sm" style="width:100%;color:#d9534f;">{{ __('admin.orders.delete_order') }}</button>
