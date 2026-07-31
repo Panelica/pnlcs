@@ -2,6 +2,8 @@
 
 return [
     'account' => [
+        'email_change_needs_password' => 'Changing this address requires your account password.',
+        'current_password' => 'Current password',
         'account_switched' => 'You are now viewing :name.',
         'accounts' => 'Your accounts',
         'accounts_hint' => 'This login belongs to more than one account. Choose the one you want to work on.',

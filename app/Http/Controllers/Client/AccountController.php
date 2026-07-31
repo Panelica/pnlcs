@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
+use App\Mail\LoginEmailChangedMail;
+use App\Models\Client;
 use App\Models\Contact;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -69,15 +73,47 @@ class AccountController extends Controller
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'postcode' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:2',
+            // The column will not hold null, so asking is better than crashing.
+            'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:50',
         ]);
+
+        $previousEmail = (string) $user->email;
+        $changingLogin = strcasecmp($previousEmail, (string) $request->email) !== 0;
+
+        // The sign-in address is where a password reset is delivered, so
+        // changing it is as good as changing the password - and that asks for
+        // the current one.
+        if ($changingLogin) {
+            $request->validate(['current_password' => 'required|string']);
+
+            if (! Hash::check((string) $request->current_password, (string) $user->password)) {
+                return back()->withInput()->withErrors([
+                    'current_password' => __('messages.error.current_password_incorrect'),
+                ]);
+            }
+        }
 
         $user->update([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
         ]);
+
+        if ($changingLogin) {
+            // The address losing the account hears about it; that is the one
+            // warning somebody has if it was not them.
+            try {
+                Mail::to($previousEmail)->send(
+                    new LoginEmailChangedMail($previousEmail, (string) $request->email)
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Could not tell the previous address its account moved', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         if ($client) {
             $client->update([
@@ -180,7 +216,7 @@ class AccountController extends Controller
      * Most customers have exactly one and never see this; the client area used
      * to answer with the first account whatever the login was attached to.
      */
-    public function switchAccount(\App\Models\Client $client)
+    public function switchAccount(Client $client)
     {
         abort_unless(auth()->user()->clients()->whereKey($client->id)->exists(), 403);
 

@@ -51,6 +51,13 @@
             <div class="form-group">
                 <label class="form-label" for="email">{{ __('common.form.email_address') }}<span class="req">*</span></label>
                 <input type="email" id="email" name="email" value="{{ old("email", $user->email) }}" required class="form-control">
+
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="current_password">{{ __('client.account.current_password') }}</label>
+                <input type="password" id="current_password" name="current_password" autocomplete="current-password" class="form-control">
+                <div style="color:#777;font-size:12px;margin-top:4px;">{{ __('client.account.email_change_needs_password') }}</div>
+                @error('current_password')<div style="color:#c00;font-size:12px;margin-top:4px;">{{ $message }}</div>@enderror
             </div>
             <div class="form-group">
                 <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>
@@ -93,3 +100,4 @@
 </div>
 
 @endsection
+
