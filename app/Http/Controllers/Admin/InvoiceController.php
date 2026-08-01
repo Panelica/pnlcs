@@ -92,7 +92,10 @@ class InvoiceController extends Controller
             'type' => 'Other',
             'description' => $item['description'],
             'amount' => (float) $item['amount'],
-            'taxed' => isset($item['taxed']) ? (bool) $item['taxed'] : true,
+            // Absent means the box was unticked: a browser does not submit
+            // a checkbox it was left off, and reading that as taxed billed the
+            // customer for lines the admin had excluded.
+            'taxed' => (bool) ($item['taxed'] ?? false),
         ], $validated['items']);
 
         $invoice = $this->invoiceService->createInvoice($client, $items, [

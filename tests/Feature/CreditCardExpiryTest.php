@@ -65,3 +65,24 @@ test('a card that expired last year is left alone', function () {
 
     Mail::assertNothingQueued();
 });
+
+test('the warning does not depend on what day of the month it is', function () {
+    // The command is scheduled monthly, so it runs on the first - and the old
+    // window, counted in days, never left the current month on that date. This
+    // only came to light because a suite run happened to fall on the 1st.
+    foreach (['2026-08-01', '2026-08-15', '2026-02-28', '2026-12-01'] as $today) {
+        Carbon\Carbon::setTestNow($today.' 00:00:00');
+        Mail::fake();
+
+        $card = cardExpiring(now()->addMonthNoOverflow()->format('Y-m'));
+
+        $this->artisan('pnlcs:cc-expiry-alerts')->assertSuccessful();
+
+        Mail::assertQueued(
+            CreditCardExpiryMail::class,
+            fn ($mail) => $mail->hasTo($card->client->email)
+        );
+    }
+
+    Carbon\Carbon::setTestNow();
+});

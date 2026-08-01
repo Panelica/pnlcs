@@ -18,11 +18,16 @@ class CreditCardExpiryCommand extends Command
     {
         $sent = 0;
 
-        // Cards expiring between this month and the end of the month the next
-        // 30 days reach into. expiry_date holds a year and a month (2026-08),
-        // which compares correctly as text.
-        $from = now()->startOfMonth()->format('Y-m');
-        $to = now()->addDays(30)->endOfMonth()->format('Y-m');
+        // This month and next. Counting days instead put the far end of the
+        // window inside the current month whenever the command ran early in a
+        // 31-day month - and it is scheduled monthly, so it always runs on the
+        // first: nobody was ever warned about a card dying next month, only
+        // about one dying this month.
+        //
+        // expiry_date holds a year and a month (2026-08), which compares
+        // correctly as text.
+        $from = now()->format('Y-m');
+        $to = now()->addMonthNoOverflow()->format('Y-m');
 
         $methods = PaymentMethod::with('client')
             ->where('payment_type', 'cc')

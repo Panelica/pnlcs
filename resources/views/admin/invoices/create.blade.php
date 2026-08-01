@@ -61,6 +61,7 @@
                                                placeholder="{{ __('admin.invoices.description_placeholder') }}" required class="form-control" style="font-size:13px;">
                                     </td>
                                     <td style="padding:6px 8px;text-align:center;">
+                                        <input type="hidden" :name="`items[${index}][taxed]`" value="0">
                                         <input type="checkbox" :name="`items[${index}][taxed]`" :value="1" x-model="item.taxed">
                                     </td>
                                     <td style="padding:6px 8px;">
