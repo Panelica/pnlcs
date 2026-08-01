@@ -61,12 +61,12 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>
-                <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $user->company_name) }}" class="form-control">
+                <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
             </div>
             <div class="form-grid-2">
                 <div class="form-group">
                     <label class="form-label" for="phone_number">{{ __('common.form.phone_number') }}</label>
-                    <input type="text" id="phone_number" name="phone_number" value="{{ old("phone_number", $user->phone_number) }}" class="form-control">
+                    <input type="text" id="phone_number" name="phone_number" value="{{ old("phone_number", $client?->phone_number) }}" class="form-control">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="country">{{ __('common.form.country') }}</label>
@@ -74,7 +74,7 @@
                         <option value="">{{ __('common.form.select_country') }}</option>
                         @if(isset($countries))
                             @foreach($countries as $code => $name)
-                            <option value="{{ $code }}" {{ old("country", $user->country) == $code ? "selected" : "" }}>{{ $name }}</option>
+                            <option value="{{ $code }}" {{ old("country", $client?->country) == $code ? "selected" : "" }}>{{ $name }}</option>
                             @endforeach
                         @endif
                     </select>
@@ -82,16 +82,16 @@
             </div>
             <div class="form-group">
                 <label class="form-label" for="address1">{{ __('common.form.street_address') }}</label>
-                <input type="text" id="address1" name="address1" value="{{ old("address1", $user->address1) }}" class="form-control" placeholder="{{ __('common.form.street_address_placeholder') }}">
+                <input type="text" id="address1" name="address1" value="{{ old("address1", $client?->address1) }}" class="form-control" placeholder="{{ __('common.form.street_address_placeholder') }}">
             </div>
             <div class="form-grid-2">
                 <div class="form-group">
                     <label class="form-label" for="city">{{ __('common.form.city') }}</label>
-                    <input type="text" id="city" name="city" value="{{ old("city", $user->city) }}" class="form-control">
+                    <input type="text" id="city" name="city" value="{{ old("city", $client?->city) }}" class="form-control">
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="postcode">{{ __('common.form.postcode') }}</label>
-                    <input type="text" id="postcode" name="postcode" value="{{ old("postcode", $user->postcode) }}" class="form-control">
+                    <input type="text" id="postcode" name="postcode" value="{{ old("postcode", $client?->postcode) }}" class="form-control">
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
