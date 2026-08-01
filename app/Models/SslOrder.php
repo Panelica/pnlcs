@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class SslOrder extends Model
 {
@@ -19,6 +19,7 @@ class SslOrder extends Model
         'admin_org', 'admin_address', 'admin_city', 'admin_state',
         'admin_zip', 'admin_country', 'completion_date', 'crt_expires',
         'approver_email', 'order_date', 'last_polled_at',
+        'expiry_notice_days', 'expiry_notice_sent_at',
     ];
 
     protected function casts(): array
@@ -30,6 +31,7 @@ class SslOrder extends Model
             'crt_expires' => 'date',
             'order_date' => 'datetime',
             'last_polled_at' => 'datetime',
+            'expiry_notice_sent_at' => 'datetime',
         ];
     }
 
@@ -73,26 +75,27 @@ class SslOrder extends Model
         return $query->whereIn('status', ['Awaiting Issuance', 'Configuration Submitted'])
             ->where(function ($q) {
                 $q->whereNull('last_polled_at')
-                  ->orWhere('last_polled_at', '<', now()->subMinutes(5));
+                    ->orWhere('last_polled_at', '<', now()->subMinutes(5));
             });
     }
 
     // Helpers
     public function isConfigured(): bool
     {
-        return !empty($this->csr) && !empty($this->validation_method);
+        return ! empty($this->csr) && ! empty($this->validation_method);
     }
 
     public function isCompleted(): bool
     {
-        return $this->status === 'Completed' && !empty($this->cert);
+        return $this->status === 'Completed' && ! empty($this->cert);
     }
 
     public function daysUntilExpiry(): ?int
     {
-        if (!$this->crt_expires) {
+        if (! $this->crt_expires) {
             return null;
         }
+
         return (int) now()->diffInDays($this->crt_expires, false);
     }
 
@@ -101,6 +104,7 @@ class SslOrder extends Model
         if (empty($this->domains)) {
             return [];
         }
+
         return array_filter(array_map('trim', explode("\n", $this->domains)));
     }
 
