@@ -33,6 +33,21 @@
     @endif
 </div>
 
+@foreach($groups as $group)
+<x-modal name="edit-group-{{ $group->id }}" title="{{ __('admin.client_groups.edit_group') }}" maxWidth="sm">
+    <form method="POST" action="{{ route('admin.config.client-groups.update', $group) }}">
+        @csrf @method('PUT')
+        <div class="form-group"><label class="form-label">{{ __('admin.client_groups.group_name') }}</label><input type="text" name="name" required class="form-control" value="{{ $group->name }}"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.client_groups.color') }}</label><input type="color" name="color" value="{{ $group->color ?: '#405189' }}" class="form-control" style="height:38px;padding:3px;"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.client_groups.discount_pct') }}</label><input type="number" name="discount_percent" value="{{ $group->discount_percent }}" min="0" max="100" step="0.01" class="form-control"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+            <button type="button" onclick="closeModal('edit-group-{{ $group->id }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
+        </div>
+    </form>
+</x-modal>
+@endforeach
+
 <x-modal name="add-group" title="{{ __('admin.client_groups.add_group') }}" maxWidth="sm">
     <form method="POST" action="{{ route("admin.config.client-groups.store") }}">
         @csrf

@@ -19,6 +19,12 @@
             <td>{{ $currency->rate }}</td>
             <td>@if($currency->is_default)<span class="badge-active">{{ __('admin.currencies.default') }}</span>@endif</td>
             <td style="text-align:right;">
+                @unless($currency->is_default)
+                <form method="POST" action="{{ route('admin.config.currencies.default', $currency) }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-xs">{{ __('admin.currencies.make_default') }}</button>
+                </form>
+                @endunless
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->is_default]) }})">{{ __('common.actions.edit') }}</button>
                 @if(!$currency->is_default)
