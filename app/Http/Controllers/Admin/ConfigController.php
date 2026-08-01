@@ -951,14 +951,14 @@ class ConfigController extends Controller
     // Network Issues
     public function storeNetworkIssue(Request $request)
     {
-        NetworkIssue::create($request->validate(['title' => 'required', 'description' => 'nullable|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
+        NetworkIssue::create($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
 
         return back()->with('success', __('messages.success.network_issue_created'));
     }
 
     public function updateNetworkIssue(Request $request, NetworkIssue $issue)
     {
-        $issue->update($request->validate(['title' => 'required', 'description' => 'nullable|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
+        $issue->update($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
 
         return back()->with('success', __('messages.success.network_issue_updated'));
     }

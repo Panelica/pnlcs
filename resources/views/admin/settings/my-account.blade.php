@@ -61,4 +61,29 @@
     </div>
 </form>
 
+<div class="card" style="margin-top:16px;">
+    <div class="card-header">{{ __('admin.settings.two_factor') }}</div>
+    <div class="card-body">
+        <p style="color:#777;font-size:13px;margin-top:0;">{{ __('admin.settings.two_factor_desc') }}</p>
+        @if($admin->second_factor_type)
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <span style="font-size:13px;color:#3c763d;font-weight:500;">&#10003; {{ __('admin.settings.two_factor_on') }}</span>
+                <form method="POST" action="{{ route('admin.2fa.disable') }}" style="display:flex;gap:8px;align-items:flex-start;margin:0;">
+                    @csrf
+                    <div>
+                        <input type="password" name="password" class="form-control" placeholder="{{ __('admin.settings.confirm_with_password') }}" autocomplete="current-password" style="min-width:220px;">
+                        @error('password')<div style="color:#c43c35;font-size:12px;margin-top:4px;">{{ $message }}</div>@enderror
+                    </div>
+                    <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.settings.two_factor_turn_off') }}</button>
+                </form>
+            </div>
+        @else
+            <div style="display:flex;align-items:center;gap:12px;">
+                <span style="font-size:13px;color:#777;">{{ __('admin.settings.two_factor_off') }}</span>
+                <a href="{{ route('admin.2fa.enable') }}" class="btn btn-primary btn-sm">{{ __('admin.settings.two_factor_turn_on') }}</a>
+            </div>
+        @endif
+    </div>
+</div>
+
 @endsection
