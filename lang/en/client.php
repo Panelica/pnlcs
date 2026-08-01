@@ -29,6 +29,12 @@ return [
     'actions.warning' => 'Warning',
     'add_funds' => 'Add Funds',
     'affiliates' => [
+        'join_title' => 'Join the affiliate programme',
+        'join_desc' => 'Earn a share of what the customers you send us spend.',
+        'join_button' => 'Join the programme',
+        'withdraw' => 'Withdraw',
+        'withdraw_desc' => 'Ask us to pay out your balance. The smallest amount we can pay is :minimum.',
+        'amount' => 'amount',
         'activate' => 'Activate Affiliate Account',
         'available_balance' => 'Available Balance',
         'commission_history' => 'Commission History',

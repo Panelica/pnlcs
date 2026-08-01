@@ -28,16 +28,49 @@
     </div>
 </div>
 
+@if($affiliate)
 <div class="pn-card mb-24">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.affiliates.referral_link') }}</span></div>
     <div class="pn-card-body">
         <p class="text-muted text-sm mb-16">{{ __('client.affiliates.referral_share_desc') }}</p>
         <div style="display:flex;gap:8px;max-width:520px">
-            <input type="text" id="refLink" class="form-control" value="{{ $referralLink ?? url("/") . "?ref=" . (auth()->user()->id ?? "") }}" readonly style="background:#f8fafc;font-size:13px">
+            <input type="text" id="refLink" class="form-control" value="{{ $referralLink }}" readonly style="background:#f8fafc;font-size:13px">
             <button type="button" class="btn btn-primary" id="copyBtn" onclick="copyLink()" style="flex-shrink:0">{{ __('client.affiliates.copy_link') }}</button>
         </div>
     </div>
 </div>
+
+@if(($affiliate->balance ?? 0) > 0)
+<div class="pn-card mb-24">
+    <div class="pn-card-header"><span class="pn-card-title">{{ __('client.affiliates.withdraw') }}</span></div>
+    <div class="pn-card-body">
+        <p class="text-muted text-sm mb-16">
+            {{ __('client.affiliates.withdraw_desc', ['minimum' => money_fmt(\App\Models\Setting::get('AffiliateMinPayout', 25))]) }}
+        </p>
+        <form method="POST" action="{{ route('client.affiliates.withdraw') }}" style="display:flex;gap:8px;max-width:520px;align-items:flex-start">
+            @csrf
+            <div style="flex:1">
+                <input type="number" name="amount" step="0.01" min="0" max="{{ $affiliate->balance }}"
+                       value="{{ old('amount') }}" class="form-control" placeholder="0.00">
+                @error('amount')<div style="color:#c00;font-size:12px;margin-top:4px">{{ $message }}</div>@enderror
+            </div>
+            <button type="submit" class="btn btn-primary" style="flex-shrink:0">{{ __('client.affiliates.withdraw') }}</button>
+        </form>
+    </div>
+</div>
+@endif
+@else
+<div class="pn-card mb-24">
+    <div class="pn-card-header"><span class="pn-card-title">{{ __('client.affiliates.join_title') }}</span></div>
+    <div class="pn-card-body">
+        <p class="text-muted text-sm mb-16">{{ __('client.affiliates.join_desc') }}</p>
+        <form method="POST" action="{{ route('client.affiliates.activate') }}">
+            @csrf
+            <button type="submit" class="btn btn-primary">{{ __('client.affiliates.join_button') }}</button>
+        </form>
+    </div>
+</div>
+@endif
 
 <div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.affiliates.commission_history') }}</span></div>

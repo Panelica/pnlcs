@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Setting;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -46,6 +47,16 @@ class AffiliateService
 
         $affiliate->decrement('balance', $amount);
         $affiliate->increment('withdrawn', $amount);
+
+        // The ledger the admin screens count from. It existed and nothing had
+        // ever written a row to it.
+        DB::table('affiliate_withdrawals')->insert([
+            'affiliate_id' => $affiliate->id,
+            'date' => now(),
+            'amount' => $amount,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         Transaction::create([
             'client_id' => $affiliate->client_id,

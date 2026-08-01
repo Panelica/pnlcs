@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\Client;
+use App\Models\Setting;
 use App\Models\Transaction;
+use App\Services\AffiliateService;
 use Illuminate\Http\Request;
 
 class AffiliateController extends Controller
@@ -29,7 +31,7 @@ class AffiliateController extends Controller
             'pending' => $affiliate?->balance ?? 0,
         ];
 
-        $referralLink = url('/') . '?ref=' . ($affiliate?->id ?? '');
+        $referralLink = url('/').'?ref='.($affiliate?->id ?? '');
 
         $commissions = collect();
         if ($affiliate) {
@@ -58,11 +60,11 @@ class AffiliateController extends Controller
 
         Affiliate::create([
             'client_id' => $client->id,
-            'visitors'  => 0,
-            'pay_type'  => 'percentage',
-            'pay_amount'=> 10,
-            'onetime'   => false,
-            'balance'   => 0,
+            'visitors' => 0,
+            'pay_type' => 'percentage',
+            'pay_amount' => 10,
+            'onetime' => false,
+            'balance' => 0,
             'withdrawn' => 0,
         ]);
 
@@ -82,14 +84,22 @@ class AffiliateController extends Controller
             return back()->with('error', __('messages.error.you_have_no_balance_to_withdraw'));
         }
 
+        $minimum = (float) Setting::get('AffiliateMinPayout', 25);
+
         $request->validate([
-            'amount' => 'required|numeric|min:1|max:' . $affiliate->balance,
-        ]);
+            'amount' => 'required|numeric|min:'.$minimum.'|max:'.$affiliate->balance,
+        ], [], ['amount' => __('client.affiliates.amount')]);
 
         $amount = (float) $request->amount;
 
-        $affiliate->increment('withdrawn', $amount);
-        $affiliate->decrement('balance', $amount);
+        // Through the service, so the movement is recorded: a transaction, a
+        // row in the withdrawals ledger, and the minimum payout honoured. This
+        // used to move the balance and leave no trace of it anywhere.
+        if (! app(AffiliateService::class)->requestWithdrawal($affiliate, $amount)) {
+            return back()->withErrors([
+                'amount' => __('messages.error.withdrawal_not_possible', ['minimum' => number_format($minimum, 2)]),
+            ]);
+        }
 
         return back()->with('success', __('messages.success.withdrawal_request_submitted', ['amount' => number_format($amount, 2)]));
     }
