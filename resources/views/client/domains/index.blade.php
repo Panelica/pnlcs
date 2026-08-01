@@ -42,8 +42,8 @@
                         @endif
                     </td>
                     <td>
-                        <span class="badge {{ ($d->auto_renew ?? false) ? "badge-active" : "badge-no" }}">
-                            {{ ($d->auto_renew ?? false) ? __('client.domains.yes') : __('client.domains.no') }}
+                        <span class="badge {{ $d->auto_renew ? "badge-active" : "badge-no" }}">
+                            {{ $d->auto_renew ? __('client.domains.yes') : __('client.domains.no') }}
                         </span>
                     </td>
                 </tr>

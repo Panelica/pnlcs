@@ -30,7 +30,13 @@
                 <div class="detail-row"><dt>{{ __('client.domains.domain_name') }}</dt><dd>{{ $domain->domain }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.services.registration_date') }}</dt><dd>{{ $domain->registration_date?->format(date_fmt()) ?? 'N/A' }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.domains.expiry_date') }}</dt><dd>{{ $domain->expiry_date?->format(date_fmt()) ?? 'N/A' }}</dd></div>
-                <div class="detail-row"><dt>{{ __('client.services.auto_renew') }}</dt><dd>{{ ($domain->auto_renew ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.services.auto_renew') }}</dt><dd>
+                    {{ $domain->auto_renew ? __("client.status.enabled") : __("client.status.disabled") }}
+                    <form method="POST" action="{{ route('client.domains.autorenew', $domain) }}" style="display:inline;margin-left:8px;">
+                        @csrf
+                        <button type="submit" class="btn btn-default btn-xs">{{ $domain->auto_renew ? __('client.domains.turn_off') : __('client.domains.turn_on') }}</button>
+                    </form>
+                </dd></div>
                 <div class="detail-row"><dt>{{ __('client.domains.id_protection') }}</dt><dd>{{ ($domain->id_protection ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.domains.registrar_lock') }}</dt><dd>{{ $locked === null ? __('client.status.unknown') : ($locked ? __("client.status.locked") : __("client.status.unlocked")) }}</dd></div>
             </dl>

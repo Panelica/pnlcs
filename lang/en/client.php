@@ -362,6 +362,8 @@ return [
     'domain_search.unconfirmed' => 'unconfirmed',
     'domain_search.view_full_list' => 'View Full Pricing',
     'domains' => [
+        'turn_on' => 'Turn on',
+        'turn_off' => 'Turn off',
         'auto_renew' => 'Auto Renew',
         'auto_renew_col' => 'Auto-Renew',
         'dns_enabled' => 'DNS management is enabled for this domain.',
