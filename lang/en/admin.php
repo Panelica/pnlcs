@@ -51,6 +51,8 @@ return [
     'settings.mail_goes_to_log' => 'Nothing is delivered - messages are written to the log file.',
     'currencies.make_default' => 'Make default',
     'client_groups.edit_group' => 'Edit group',
+    'promotions.recurring' => 'Applies to renewals as well',
+    'promotions.edit_promo' => 'Edit promotion',
     'admin_roles.add_role' => 'Add Role',
     'admin_roles.full_administrator' => 'Full administrator',
     'admin_roles.full_administrator_hint' => 'Everything, everywhere. Leave this off to choose what the role may do.',

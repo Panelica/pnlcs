@@ -55,7 +55,7 @@
                 <tr>
                     <td style="font-weight:500;">{{ $contact->first_name }} {{ $contact->last_name }}</td>
                     <td style="color:#555;">{{ $contact->email }}</td>
-                    <td style="color:#777;">{{ $contact->phone ?? '-' }}</td>
+                    <td style="color:#777;">{{ $contact->phone_number ?: '-' }}</td>
                     <td style="font-size:12px; color:#777;">
                         @php
                             $kinds = collect([
@@ -69,7 +69,7 @@
                         {{ $kinds->isEmpty() ? __('client.contacts.receives_nothing') : $kinds->implode(', ') }}
                     </td>
                     <td>
-                        <a href="#" class="btn btn-outline btn-xs">{{ __('common.actions.edit') }}</a>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="openModal('edit-contact-{{ $contact->id }}')">{{ __('common.actions.edit') }}</button>
                         <form method="POST" action="{{ route('client.account.contacts.destroy', $contact) }}" style="display:inline;" onsubmit="return confirm('{{ __("client.contacts.confirm_remove") }}')">
                             @csrf
                             @method('DELETE')
@@ -86,5 +86,34 @@
         </table>
     </div>
 </div>
+
+
+@foreach($contacts as $contact)
+<x-modal name="edit-contact-{{ $contact->id }}" title="{{ __('client.contacts.edit_contact') }}" maxWidth="md">
+    <form method="POST" action="{{ route('client.account.contacts.update', $contact) }}">
+        @csrf @method('PUT')
+        <div class="form-grid-2">
+            <div class="form-group"><label class="form-label">{{ __('common.form.first_name') }}</label><input type="text" name="first_name" value="{{ $contact->first_name }}" required class="form-control"></div>
+            <div class="form-group"><label class="form-label">{{ __('common.form.last_name') }}</label><input type="text" name="last_name" value="{{ $contact->last_name }}" required class="form-control"></div>
+        </div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.email_address') }}</label><input type="email" name="email" value="{{ $contact->email }}" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.company_name') }}</label><input type="text" name="company_name" value="{{ $contact->company_name }}" class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.phone_number') }}</label><input type="text" name="phone_number" value="{{ $contact->phone_number }}" class="form-control"></div>
+        <div class="form-group">
+            <label class="form-label">{{ __('client.contacts.receives') }}</label>
+            @foreach(['general_emails' => 'kind_general', 'invoice_emails' => 'kind_invoice', 'product_emails' => 'kind_product', 'domain_emails' => 'kind_domain', 'support_emails' => 'kind_support'] as $field => $label)
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;">
+                <input type="checkbox" name="{{ $field }}" value="1" @checked($contact->{$field})>
+                {{ __('client.contacts.'.$label) }}
+            </label>
+            @endforeach
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+            <button type="button" onclick="closeModal('edit-contact-{{ $contact->id }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
+        </div>
+    </form>
+</x-modal>
+@endforeach
 
 @endsection

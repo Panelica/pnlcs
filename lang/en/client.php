@@ -231,6 +231,7 @@ return [
     ],
     'contact.department' => 'Department',
     'contact.select_department' => 'Select Department',
+    'contacts.edit_contact' => 'Edit contact',
     'contacts.add_contact' => '+ Add Contact',
     'contacts.add_new_contact' => 'Add New Contact',
     'contacts.receives' => 'Receives',
