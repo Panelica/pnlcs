@@ -96,8 +96,17 @@ class AffiliateService
             }
         }
 
-        // Calculate commission
-        $commission = $this->calculateCommission($affiliate, (float) $invoice->total);
+        // What was actually sold. Not the invoice total: that carries tax,
+        // which belongs to the tax authority, and it counts an Add Funds line
+        // as revenue - so a hundred put on account earned a commission on the
+        // way in and another one when it was spent on hosting.
+        $base = $this->commissionBase($invoice);
+
+        if ($base <= 0) {
+            return;
+        }
+
+        $commission = $this->calculateCommission($affiliate, $base);
         if ($commission <= 0) {
             return;
         }
@@ -128,24 +137,36 @@ class AffiliateService
      */
     public function reverseCommission(Invoice $invoice, float $refundedAmount): void
     {
-        $commission = Transaction::where('gateway', 'affiliate_commission')
+        $rows = Transaction::where('gateway', 'affiliate_commission')
             ->where('invoice_id', $invoice->id)
-            ->orderByDesc('id')
-            ->first();
+            ->get();
 
-        if (! $commission) {
+        if ($rows->isEmpty()) {
             return;
         }
 
-        $earned = (float) $commission->amount_in;
+        // Everything earned on this invoice, and everything already taken back.
+        // Reading only the latest row meant that after one part refund the
+        // reversal itself was mistaken for the earning - its amount_in is zero,
+        // so a second part refund took nothing and the affiliate kept the rest.
+        $earned = (float) $rows->sum('amount_in');
+        $alreadyReversed = (float) $rows->sum('amount_out');
+        $outstanding = round($earned - $alreadyReversed, 2);
+
+        if ($outstanding <= 0.009) {
+            return;
+        }
+
         $invoiceTotal = (float) $invoice->total;
 
         $share = $invoiceTotal > 0 ? min(1.0, $refundedAmount / $invoiceTotal) : 1.0;
-        $reversal = round($earned * $share, 2);
+        $reversal = min(round($earned * $share, 2), $outstanding);
 
         if ($reversal <= 0.009) {
             return;
         }
+
+        $commission = $rows->firstWhere(fn ($row) => (float) $row->amount_in > 0) ?? $rows->first();
 
         $affiliate = Affiliate::where('client_id', $commission->client_id)->first();
 
@@ -183,6 +204,26 @@ class AffiliateService
     /**
      * Calculate commission based on affiliate's pay type and optional tiers.
      */
+    /**
+     * The part of an invoice a commission is owed on.
+     *
+     * The lines themselves, less anything that only moves money onto the
+     * customer's account. Tax is not among them, and neither is credit the
+     * customer is buying rather than spending.
+     */
+    public function commissionBase(Invoice $invoice): float
+    {
+        if ($invoice->items()->count() === 0) {
+            // Nothing to leave out. Refusing a commission on an invoice that
+            // carries no lines would be worse than counting its total.
+            return (float) $invoice->total;
+        }
+
+        return (float) $invoice->items()
+            ->where('type', '!=', 'AddFunds')
+            ->sum('amount');
+    }
+
     public function calculateCommission(Affiliate $affiliate, float $invoiceTotal): float
     {
         if ($affiliate->pay_type === 'percentage') {
