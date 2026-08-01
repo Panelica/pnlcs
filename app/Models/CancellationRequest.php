@@ -9,7 +9,12 @@ class CancellationRequest extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['service_id', 'type', 'reason'];
+    protected $fillable = ['service_id', 'type', 'reason', 'processed_at'];
+
+    protected function casts(): array
+    {
+        return ['processed_at' => 'datetime'];
+    }
 
     public function service()
     {

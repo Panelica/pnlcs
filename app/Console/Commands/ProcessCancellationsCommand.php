@@ -21,11 +21,16 @@ class ProcessCancellationsCommand extends Command
         // waited for the paid period to end, so a customer who asked to stop
         // immediately kept a running service and the choice on the form meant
         // nothing.
+        // Suspended services count too. A customer who wants out should not be
+        // held to a service because they are behind on it - one request here
+        // has been waiting since April for that reason.
         $services = Service::with('server', 'product', 'client', 'cancellationRequest')
-            ->where('status', 'active')
-            ->whereHas('cancellationRequest')
+            ->whereIn('status', ['active', 'suspended'])
+            // Only requests nobody has acted on. Nothing used to close them,
+            // so a service put back to work was cancelled again the next night.
+            ->whereHas('cancellationRequest', fn ($c) => $c->whereNull('processed_at'))
             ->where(function ($q) {
-                $q->whereHas('cancellationRequest', fn ($c) => $c->whereRaw(
+                $q->whereHas('cancellationRequest', fn ($c) => $c->whereNull('processed_at')->whereRaw(
                     "LOWER(REPLACE(REPLACE(type, ' ', '_'), '-', '_')) = ?", ['immediate']
                 ))->orWhere('next_due_date', '<=', now());
             })
@@ -55,6 +60,9 @@ class ProcessCancellationsCommand extends Command
                 'status' => 'cancelled',
                 'termination_date' => now(),
             ]);
+
+            // The request has been honoured; it is not asked again.
+            $service->cancellationRequest?->update(['processed_at' => now()]);
 
             if ($service->client?->email) {
                 try {

@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
 use App\Mail\CancellationConfirmMail;
 use App\Models\CancellationRequest;
 use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\Service;
 use App\Models\ServiceAddon;
-use App\Models\Upgrade;
 use App\Services\AddonService;
-use App\Services\InvoiceService;
 use App\Services\ProvisioningService;
 use App\Services\UpgradeService;
 use Illuminate\Http\Request;
@@ -133,7 +131,10 @@ class ServiceController extends Controller
 
         // A second request would send another confirmation and give the
         // cancellation cron two rows for the same service.
-        if (CancellationRequest::where('service_id', $service->id)->exists()) {
+        // Only one open request at a time. It used to be one ever: a
+        // request that had already been acted on blocked the customer from
+        // asking again for the rest of the service's life.
+        if (CancellationRequest::where('service_id', $service->id)->whereNull('processed_at')->exists()) {
             return back()->with('error', __('client.services.cancellation_already_requested'));
         }
 
@@ -208,5 +209,4 @@ class ServiceController extends Controller
     {
         return ! in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true);
     }
-
 }

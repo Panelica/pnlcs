@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Services\ProvisioningService;
+use App\Services\UpgradeService;
 use Illuminate\Http\Request;
 
 class ServiceApiController extends BaseApiController
@@ -173,11 +174,11 @@ class ServiceApiController extends BaseApiController
         ]);
 
         $service = Service::with('product', 'client')->findOrFail($validated['serviceid']);
-        $newProduct = \App\Models\Product::with('pricing')->findOrFail($validated['packageid']);
+        $newProduct = Product::with('pricing')->findOrFail($validated['packageid']);
 
         // Writing product_id on its own left the customer on a bigger plan at
         // the old price, with the difference unbilled and the server untold.
-        $result = app(\App\Services\UpgradeService::class)->requestProductChange($service, $newProduct);
+        $result = app(UpgradeService::class)->requestProductChange($service, $newProduct);
 
         if (! $result['success']) {
             return $this->error($result['message'] ?? 'The package change was refused.', 422);
@@ -197,6 +198,12 @@ class ServiceApiController extends BaseApiController
         if (! $service) {
             return $this->error('Service Not Found', 404);
         }
+        $open = CancellationRequest::where('service_id', $service->id)->whereNull('processed_at')->first();
+
+        if ($open) {
+            return $this->error('A cancellation request is already open for this service', 409);
+        }
+
         CancellationRequest::create(['service_id' => $service->id, 'type' => $request->get('type', 'end_of_billing'), 'reason' => $request->get('reason', '')]);
 
         return $this->success(['serviceid' => $service->id]);
