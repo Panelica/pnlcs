@@ -13,6 +13,7 @@ use App\Services\TicketSpamService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class TicketController extends Controller
 {
@@ -43,7 +44,9 @@ class TicketController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'department_id' => 'required|exists:ticket_departments,id',
+            // Not merely a department that exists: one the customer was
+            // actually offered. Hidden ones are not for them to post into.
+            'department_id' => ['required', Rule::exists('ticket_departments', 'id')->where('hidden', false)],
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
             'priority' => 'nullable|in:low,medium,high',
