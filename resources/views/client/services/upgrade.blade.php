@@ -16,7 +16,7 @@
 </div>
 @else
 <div style="background:#d9edf7; border:1px solid #bce8f1; color:#31708f; padding:12px 16px; border-radius:4px; font-size:13px; margin-bottom:20px;">
-    {{ __('client.services.currently_on') }}: <strong>{{ $service->product?->name ?? 'Service' }}</strong> &mdash; ${{ number_format($service->amount, 2) }}/{{ $service->billing_cycle }}
+    {{ __('client.services.currently_on') }}: <strong>{{ $service->product?->name ?? 'Service' }}</strong> &mdash; {{ money_fmt($service->amount) }}/{{ $service->billing_cycle }}
 </div>
 
 <div class="pn-card">
@@ -54,7 +54,7 @@
                     </div>
                     @if($price)
                     <div style="text-align:right; white-space:nowrap;">
-                        <div style="font-weight:600; font-size:14px;">${{ number_format($price, 2) }}</div>
+                        <div style="font-weight:600; font-size:14px;">{{ money_fmt($price) }}</div>
                         <div style="font-size:11px; color:#999;">{{ __('client.services.per_cycle', ['cycle' => $cycle]) }}</div>
                     </div>
                     @endif

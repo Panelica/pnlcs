@@ -55,7 +55,7 @@
                     @if($pn->bank_name)<br><small style="color:#888;">{{ $pn->bank_name }}</small>@endif
                     @if($pn->reference)<br><small style="color:#888;">{{ __('admin.payment_notifications.reference') }}: {{ $pn->reference }}</small>@endif
                 </td>
-                <td style="text-align:right;"><strong>${{ number_format((float) $pn->amount, 2) }}</strong></td>
+                <td style="text-align:right;"><strong>{{ money_fmt((float) $pn->amount) }}</strong></td>
                 <td>{{ $pn->transfer_date?->format('Y-m-d') }}</td>
                 <td>
                     @if($pn->receipt_path)

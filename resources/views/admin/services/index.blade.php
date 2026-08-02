@@ -55,7 +55,7 @@
                 </td>
                 <td style="font-family:monospace;font-size:12px;color:#666;">{{ $service->domain ?? "-" }}</td>
                 <td style="color:#666;">{{ ucfirst($service->billing_cycle ?? "-") }}</td>
-                <td style="text-align:right;font-weight:500;">${{ number_format($service->amount, 2) }}</td>
+                <td style="text-align:right;font-weight:500;">{{ money_fmt($service->amount) }}</td>
                 <td style="color:#666;">{{ $service->next_due_date?->format(date_fmt()) ?? "-" }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($service->status ?? "") }}</span></td>
                 <td>

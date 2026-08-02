@@ -13,8 +13,8 @@
             <table class="table mb-0">
                 <tr><td style="width:140px;"><strong>{{ __('admin.affiliates.client_label') }}</strong></td><td>{{ $affiliate->client?->first_name }} {{ $affiliate->client?->last_name }} ({{ $affiliate->client?->email }})</td></tr>
                 <tr><td><strong>{{ __('admin.affiliates.visitors_label') }}</strong></td><td>{{ number_format($affiliate->visitors) }}</td></tr>
-                <tr><td><strong>{{ __('admin.affiliates.balance_label') }}</strong></td><td><strong>${{ number_format($affiliate->balance, 2) }}</strong></td></tr>
-                <tr><td><strong>{{ __('admin.affiliates.withdrawn_label') }}</strong></td><td>${{ number_format($affiliate->withdrawn, 2) }}</td></tr>
+                <tr><td><strong>{{ __('admin.affiliates.balance_label') }}</strong></td><td><strong>{{ money_fmt($affiliate->balance) }}</strong></td></tr>
+                <tr><td><strong>{{ __('admin.affiliates.withdrawn_label') }}</strong></td><td>{{ money_fmt($affiliate->withdrawn) }}</td></tr>
                 <tr><td><strong>{{ __('admin.affiliates.referral_link') }}</strong></td><td><code>{{ url('/') }}?ref={{ $affiliate->id }}</code></td></tr>
             </table>
         </div>
@@ -67,7 +67,7 @@
             <tr>
                 <td>{{ $tx->date?->timezone(display_tz())->format(datetime_fmt()) ?? 'N/A' }}</td>
                 <td>{{ $tx->description }}</td>
-                <td>${{ number_format(abs($tx->amount), 2) }}</td>
+                <td>{{ money_fmt(abs($tx->amount)) }}</td>
                 <td>{{ $tx->gateway }}</td>
             </tr>
             @empty

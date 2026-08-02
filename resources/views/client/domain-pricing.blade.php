@@ -54,9 +54,9 @@
                         <span style="font-family:monospace;font-size:15px;font-weight:700;color:#1a4d80;">{{ $tld->extension }}</span>
                         @if($tld->dns_management)<span style="margin-left:6px;font-size:10px;background:#eff6ff;color:#2563eb;padding:2px 6px;border-radius:4px;font-weight:600;">DNS</span>@endif
                     </td>
-                    <td style="padding:12px 20px;text-align:center;font-weight:700;color:#1e293b;font-size:15px;">${{ number_format($tld->register_price, 2) }}<span style="font-size:11px;color:#94a3b8;font-weight:400;">/yr</span></td>
-                    <td style="padding:12px 20px;text-align:center;color:#64748b;">${{ number_format($tld->transfer_price, 2) }}</td>
-                    <td style="padding:12px 20px;text-align:center;color:#64748b;">${{ number_format($tld->renew_price, 2) }}</td>
+                    <td style="padding:12px 20px;text-align:center;font-weight:700;color:#1e293b;font-size:15px;">{{ money_fmt($tld->register_price) }}<span style="font-size:11px;color:#94a3b8;font-weight:400;">/yr</span></td>
+                    <td style="padding:12px 20px;text-align:center;color:#64748b;">{{ money_fmt($tld->transfer_price) }}</td>
+                    <td style="padding:12px 20px;text-align:center;color:#64748b;">{{ money_fmt($tld->renew_price) }}</td>
                     <td style="padding:12px 20px;text-align:center;color:#94a3b8;font-size:13px;">{{ $tld->min_years }}</td>
                     <td style="padding:12px 20px;text-align:center;">
                         <a href="{{ route('client.domain.search') }}?tld={{ $tld->extension }}" style="padding:6px 14px;background:#06d6a0;color:#0f172a;font-size:12px;font-weight:700;border-radius:6px;text-decoration:none;display:inline-block;">{{ __('common.actions.register') }}</a>

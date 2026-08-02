@@ -22,7 +22,7 @@
             <ul class="pn-detail-list">
                 <li><span class="key">{{ __('client.cart.product') }}</span><span class="val">{{ $service->product?->name ?? "N/A" }}</span></li>
                 <li><span class="key">{{ __('client.cart.billing_cycle') }}</span><span class="val" style="text-transform:capitalize">{{ $service->billing_cycle ?? "N/A" }}</span></li>
-                <li><span class="key">{{ __('client.services.amount') }}</span><span class="val">${{ number_format($service->amount, 2) }} / {{ $service->billing_cycle }}</span></li>
+                <li><span class="key">{{ __('client.services.amount') }}</span><span class="val">{{ money_fmt($service->amount) }} / {{ $service->billing_cycle }}</span></li>
                 <li><span class="key">{{ __('client.services.next_due_date') }}</span><span class="val">{{ $service->next_due_date?->format(date_fmt()) ?? "N/A" }}</span></li>
                 <li><span class="key">{{ __('client.services.registration_date') }}</span><span class="val">{{ $service->registration_date?->format(date_fmt()) ?? "N/A" }}</span></li>
                 <li><span class="key">{{ __('client.checkout.payment_method') }}</span><span class="val" style="text-transform:capitalize">{{ $service->payment_method ?? "N/A" }}</span></li>
@@ -111,7 +111,7 @@
                 @foreach($service->addons as $addon)
                 <tr>
                     <td>{{ $addon->label() }}</td>
-                    <td>${{ number_format($addon->amount, 2) }}</td>
+                    <td>{{ money_fmt($addon->amount) }}</td>
                     <td style="text-transform:capitalize">{{ $addon->billing_cycle }}</td>
                     <td class="text-muted text-sm">{{ $addon->next_due_date?->format(date_fmt()) ?? "-" }}</td>
                     <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ __('client.status.' . strtolower($addon->status)) }}</span></td>
@@ -146,7 +146,7 @@
                 @if($available->description)<br><small class="text-muted">{{ $available->description }}</small>@endif
             </span>
             <span style="white-space:nowrap;">
-                ${{ number_format($available->priceFor($service->billing_cycle ?: 'Monthly'), 2) }}
+                {{ money_fmt($available->priceFor($service->billing_cycle ?: 'Monthly')) }}
                 <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.addon_order') }}</button>
             </span>
         </form>

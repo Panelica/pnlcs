@@ -19,11 +19,11 @@
         <div class="pn-aff-lbl">{{ __('client.affiliates.signups') }}</div>
     </div>
     <div class="pn-card pn-aff-stat">
-        <div class="pn-aff-val" style="color:var(--success)">${{ number_format($stats["earnings"] ?? 0, 2) }}</div>
+        <div class="pn-aff-val" style="color:var(--success)">{{ money_fmt($stats["earnings"] ?? 0) }}</div>
         <div class="pn-aff-lbl">{{ __('client.affiliates.total_earnings') }}</div>
     </div>
     <div class="pn-card pn-aff-stat">
-        <div class="pn-aff-val" style="color:var(--warning)">${{ number_format($stats["pending"] ?? 0, 2) }}</div>
+        <div class="pn-aff-val" style="color:var(--warning)">{{ money_fmt($stats["pending"] ?? 0) }}</div>
         <div class="pn-aff-lbl">{{ __('client.affiliates.pending') }}</div>
     </div>
 </div>
@@ -91,7 +91,7 @@
                     <td class="text-muted text-sm">{{ $comm->created_at?->format(date_fmt()) }}</td>
                     <td>{{ $comm->referredClient->email ?? "-" }}</td>
                     <td style="text-transform:capitalize">{{ $comm->type ?? "signup" }}</td>
-                    <td style="font-weight:700;color:var(--success)">${{ number_format($comm->amount, 2) }}</td>
+                    <td style="font-weight:700;color:var(--success)">{{ money_fmt($comm->amount) }}</td>
                     <td><span class="badge badge-{{ strtolower($comm->status ?? "pending") }}">{{ ucfirst($comm->status ?? "pending") }}</span></td>
                 </tr>
                 @empty

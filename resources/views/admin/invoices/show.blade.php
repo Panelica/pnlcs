@@ -104,24 +104,24 @@
                 <tr>
                     <td><span style="font-size:11px;color:#999;text-transform:uppercase;margin-right:4px;">{{ $item->type }}</span>{{ $item->description }}</td>
                     <td style="text-align:center;">{{ $item->taxed ? '&#10003;' : '&mdash;' }}</td>
-                    <td style="text-align:right;font-family:monospace;">${{ number_format($item->amount, 2) }}</td>
+                    <td style="text-align:right;font-family:monospace;">{{ money_fmt($item->amount) }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="3" style="text-align:center;color:#999;padding:20px;">{{ __('admin.invoices.no_line_items') }}</td></tr>
                 @endforelse
                 </tbody>
                 <tfoot>
-                    <tr><td colspan="2" style="text-align:right;padding:8px 12px;color:#555;">{{ __('admin.invoices.subtotal') }}</td><td style="text-align:right;padding:8px 12px;font-weight:600;font-family:monospace;">${{ number_format($invoice->subtotal, 2) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:8px 12px;color:#555;">{{ __('admin.invoices.subtotal') }}</td><td style="text-align:right;padding:8px 12px;font-weight:600;font-family:monospace;">{{ money_fmt($invoice->subtotal) }}</td></tr>
                     @if($invoice->tax > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax') }}{{ $invoice->tax_rate > 0 ? " (" . $invoice->tax_rate . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax, 2) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax') }}{{ $invoice->tax_rate > 0 ? " (" . $invoice->tax_rate . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">{{ money_fmt($invoice->tax) }}</td></tr>
                     @endif
                     @if($invoice->tax2 > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax_2') }}{{ $invoice->tax_rate2 > 0 ? " (" . $invoice->tax_rate2 . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">${{ number_format($invoice->tax2, 2) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax_2') }}{{ $invoice->tax_rate2 > 0 ? " (" . $invoice->tax_rate2 . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">{{ money_fmt($invoice->tax2) }}</td></tr>
                     @endif
                     @if($invoice->credit > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#5cb85c;">{{ __('admin.invoices.credit_applied') }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;color:#5cb85c;">-${{ number_format($invoice->credit, 2) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#5cb85c;">{{ __('admin.invoices.credit_applied') }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;color:#5cb85c;">-{{ money_fmt($invoice->credit) }}</td></tr>
                     @endif
-                    <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td colspan="2" style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;">{{ __('admin.invoices.total') }}</td><td style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;font-family:monospace;">${{ number_format($invoice->total, 2) }}</td></tr>
+                    <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td colspan="2" style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;">{{ __('admin.invoices.total') }}</td><td style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;font-family:monospace;">{{ money_fmt($invoice->total) }}</td></tr>
                 </tfoot>
             </table>
         </div>
@@ -137,7 +137,7 @@
                     <td>{{ $tx->date?->format(date_fmt()) }}</td>
                     <td style="text-transform:capitalize;">{{ $tx->gateway }}</td>
                     <td style="font-family:monospace;font-size:12px;">{{ $tx->transaction_id ?? '&mdash;' }}</td>
-                    <td style="text-align:right;color:#5cb85c;font-weight:600;">+${{ number_format($tx->amount_in, 2) }}</td>
+                    <td style="text-align:right;color:#5cb85c;font-weight:600;">+{{ money_fmt($tx->amount_in) }}</td>
                 </tr>
                 @endforeach
                 </tbody>

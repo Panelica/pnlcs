@@ -32,7 +32,7 @@
                 <td>{{ $quote->client?->full_name ?? 'N/A' }}</td>
                 <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->date)->format(date_fmt()) }}</td>
                 <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->valid_until)->format(date_fmt()) }}</td>
-                <td style="text-align:right;font-weight:600;">${{ number_format($quote->total,2) }}</td>
+                <td style="text-align:right;font-weight:600;">{{ money_fmt($quote->total) }}</td>
                 <td><span class="{{ $badgeClass }}">{{ $quote->status }}</span></td>
                 <td>
                     <div style="display:flex;gap:4px;">

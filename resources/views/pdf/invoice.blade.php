@@ -104,7 +104,7 @@
             <tr>
                 <td>{{ $item->description }}</td>
                 <td class="text-right">{{ $item->taxed ? __('common.status.yes') : __('common.status.no') }}</td>
-                <td class="text-right">${{ number_format((float)$item->amount, 2) }}</td>
+                <td class="text-right">{{ money_fmt((float)$item->amount) }}</td>
             </tr>
             @empty
             <tr><td colspan="3" style="text-align:center; color:#999;">{{ __('pdf.no_items') }}</td></tr>
@@ -114,14 +114,14 @@
 
     <div class="totals">
         <table>
-            <tr><td>{{ __('pdf.subtotal') }}:</td><td class="text-right">${{ number_format((float)$invoice->subtotal, 2) }}</td></tr>
+            <tr><td>{{ __('pdf.subtotal') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->subtotal) }}</td></tr>
             @if((float)$invoice->tax > 0)
-            <tr><td>{{ __('pdf.tax') }}:</td><td class="text-right">${{ number_format((float)$invoice->tax, 2) }}</td></tr>
+            <tr><td>{{ __('pdf.tax') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->tax) }}</td></tr>
             @endif
             @if((float)$invoice->credit > 0)
-            <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-${{ number_format((float)$invoice->credit, 2) }}</td></tr>
+            <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ money_fmt((float)$invoice->credit) }}</td></tr>
             @endif
-            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right">${{ number_format((float)$invoice->total, 2) }}</td></tr>
+            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->total) }}</td></tr>
         </table>
     </div>
 

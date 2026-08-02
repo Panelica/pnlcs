@@ -25,9 +25,9 @@
         @foreach($tlds as $tld)
         <tr>
             <td style="font-family:monospace;font-weight:600;">{{ $tld->extension }}</td>
-            <td>${{ number_format($tld->register_price, 2) }}</td>
-            <td>${{ number_format($tld->transfer_price, 2) }}</td>
-            <td>${{ number_format($tld->renew_price, 2) }}</td>
+            <td>{{ money_fmt($tld->register_price) }}</td>
+            <td>{{ money_fmt($tld->transfer_price) }}</td>
+            <td>{{ money_fmt($tld->renew_price) }}</td>
             <td>{{ $tld->grace_period }}d</td>
             <td>{{ $tld->min_years }}-{{ $tld->max_years }}</td>
             <td>{{ $tld->auto_registrar ?: __('admin.domain_pricing.manual') }}</td>

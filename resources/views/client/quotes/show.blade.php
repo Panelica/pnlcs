@@ -37,8 +37,8 @@
                 <tr>
                     <td>{{ $item->description }}</td>
                     <td style="text-align:right">{{ $item->quantity }}</td>
-                    <td style="text-align:right">${{ number_format((float) $item->unit_price, 2) }}</td>
-                    <td style="text-align:right;font-weight:600">${{ number_format(max(0, ($item->quantity * $item->unit_price) - $item->discount), 2) }}</td>
+                    <td style="text-align:right">{{ money_fmt((float) $item->unit_price) }}</td>
+                    <td style="text-align:right;font-weight:600">{{ money_fmt(max(0, ($item->quantity * $item->unit_price) - $item->discount)) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -49,18 +49,18 @@
             @if((float) $quote->subtotal !== (float) $quote->total)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.subtotal') }}</span>
-                <span>${{ number_format((float) $quote->subtotal, 2) }}</span>
+                <span>{{ money_fmt((float) $quote->subtotal) }}</span>
             </div>
             @endif
             @if((float) $quote->tax > 0)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.tax') }}</span>
-                <span>${{ number_format((float) $quote->tax, 2) }}</span>
+                <span>{{ money_fmt((float) $quote->tax) }}</span>
             </div>
             @endif
             <div style="display:flex;justify-content:space-between;padding:12px 0 4px;font-size:17px;font-weight:800;color:var(--primary)">
                 <span>{{ __('common.table.total') }}</span>
-                <span>${{ number_format((float) $quote->total, 2) }}</span>
+                <span>{{ money_fmt((float) $quote->total) }}</span>
             </div>
         </div>
     </div>

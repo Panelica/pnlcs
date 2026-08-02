@@ -30,7 +30,7 @@
                     <td><a href="{{ route('client.quotes.show', $quote) }}" style="font-weight:600">{{ $quote->subject }}</a></td>
                     <td class="text-muted text-sm">{{ $quote->date ? \Carbon\Carbon::parse($quote->date)->format(date_fmt()) : '-' }}</td>
                     <td class="text-muted text-sm">{{ $quote->valid_until ? \Carbon\Carbon::parse($quote->valid_until)->format(date_fmt()) : '-' }}</td>
-                    <td style="font-weight:700">${{ number_format((float) $quote->total, 2) }}</td>
+                    <td style="font-weight:700">{{ money_fmt((float) $quote->total) }}</td>
                     <td><span class="badge badge-{{ strtolower($quote->status) }}">{{ __('client.status.' . strtolower($quote->status)) }}</span></td>
                     <td><a href="{{ route('client.quotes.show', $quote) }}" class="btn btn-outline btn-xs">{{ __('common.actions.view') }}</a></td>
                 </tr>

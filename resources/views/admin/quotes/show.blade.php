@@ -26,18 +26,18 @@
                     <tr>
                         <td>{{ $item->description }}</td>
                         <td style="text-align:right;">{{ $item->quantity }}</td>
-                        <td style="text-align:right;">${{ number_format($item->unit_price,2) }}</td>
+                        <td style="text-align:right;">{{ money_fmt($item->unit_price) }}</td>
                         <td style="text-align:right;">{{ $item->discount>0?'$'.number_format($item->discount,2):'-' }}</td>
-                        <td style="text-align:right;font-weight:600;font-family:monospace;">${{ number_format(max(0,($item->quantity*$item->unit_price)-$item->discount),2) }}</td>
+                        <td style="text-align:right;font-weight:600;font-family:monospace;">{{ money_fmt(max(0,($item->quantity*$item->unit_price)-$item->discount)) }}</td>
                     </tr>
                     @empty
                     <tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">{{ __('admin.quotes.no_line_items') }}</td></tr>
                     @endforelse
                 </tbody>
                 <tfoot style="border-top:2px solid #aaa;">
-                    <tr><td colspan="4" style="padding:8px 12px;text-align:right;font-weight:600;">{{ __('admin.quotes.subtotal') }}</td><td style="padding:8px 12px;text-align:right;font-weight:600;font-family:monospace;">${{ number_format($quote->subtotal,2) }}</td></tr>
-                    @if($quote->tax>0)<tr><td colspan="4" style="padding:4px 12px;text-align:right;color:#777;">{{ __('admin.quotes.tax') }}</td><td style="padding:4px 12px;text-align:right;font-family:monospace;">${{ number_format($quote->tax,2) }}</td></tr>@endif
-                    <tr style="background:#f5f5f5;"><td colspan="4" style="padding:8px 12px;text-align:right;font-weight:700;font-size:14px;">{{ __('admin.quotes.total') }}</td><td style="padding:8px 12px;text-align:right;font-weight:700;font-size:14px;font-family:monospace;">${{ number_format($quote->total,2) }}</td></tr>
+                    <tr><td colspan="4" style="padding:8px 12px;text-align:right;font-weight:600;">{{ __('admin.quotes.subtotal') }}</td><td style="padding:8px 12px;text-align:right;font-weight:600;font-family:monospace;">{{ money_fmt($quote->subtotal) }}</td></tr>
+                    @if($quote->tax>0)<tr><td colspan="4" style="padding:4px 12px;text-align:right;color:#777;">{{ __('admin.quotes.tax') }}</td><td style="padding:4px 12px;text-align:right;font-family:monospace;">{{ money_fmt($quote->tax) }}</td></tr>@endif
+                    <tr style="background:#f5f5f5;"><td colspan="4" style="padding:8px 12px;text-align:right;font-weight:700;font-size:14px;">{{ __('admin.quotes.total') }}</td><td style="padding:8px 12px;text-align:right;font-weight:700;font-size:14px;font-family:monospace;">{{ money_fmt($quote->total) }}</td></tr>
                 </tfoot>
             </table>
         </div>

@@ -46,7 +46,7 @@
                                 @if(!empty($item["domain"]))<div class="text-muted text-sm">{{ $item["domain"] }}</div>@endif
                             </td>
                             <td class="text-muted" style="text-transform:capitalize">{{ $item["billing_cycle"] ?? "-" }}</td>
-                            <td style="text-align:right;font-weight:700">${{ number_format($item["price"] ?? 0, 2) }}</td>
+                            <td style="text-align:right;font-weight:700">{{ money_fmt($item["price"] ?? 0) }}</td>
                             <td>
                                 <form method="POST" action="{{ route("client.cart.remove", $key) }}" style="display:inline">
                                     @csrf
@@ -80,14 +80,14 @@
         <div class="pn-card" style="position:sticky;top:80px">
             <div class="pn-card-header"><span class="pn-card-title">{{ __('client.cart.order_summary') }}</span></div>
             <div class="pn-card-body">
-                <div class="pn-order-row"><span class="key">{{ __('client.cart.subtotal') }}</span><span>${{ number_format($totals["subtotal"], 2) }}</span></div>
+                <div class="pn-order-row"><span class="key">{{ __('client.cart.subtotal') }}</span><span>{{ money_fmt($totals["subtotal"]) }}</span></div>
                 @if(($totals["discount"] ?? 0) > 0)
-                <div class="pn-order-row" style="color:var(--success)"><span>{{ __('client.cart.discount') }}</span><span>-${{ number_format($totals["discount"], 2) }}</span></div>
+                <div class="pn-order-row" style="color:var(--success)"><span>{{ __('client.cart.discount') }}</span><span>-{{ money_fmt($totals["discount"]) }}</span></div>
                 @endif
                 @if(($totals["tax"] ?? 0) > 0)
-                <div class="pn-order-row"><span class="key">{{ __('client.cart.tax') }} ({{ $totals["tax_rate"] ?? 0 }}%)</span><span>${{ number_format($totals["tax"], 2) }}</span></div>
+                <div class="pn-order-row"><span class="key">{{ __('client.cart.tax') }} ({{ $totals["tax_rate"] ?? 0 }}%)</span><span>{{ money_fmt($totals["tax"]) }}</span></div>
                 @endif
-                <div class="pn-order-row"><span>{{ __('client.cart.total') }}</span><span style="color:var(--primary)">${{ number_format($totals["total"], 2) }}</span></div>
+                <div class="pn-order-row"><span>{{ __('client.cart.total') }}</span><span style="color:var(--primary)">{{ money_fmt($totals["total"]) }}</span></div>
                 <a href="{{ route("client.cart.checkout") }}" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:16px">
                     {{ __('client.cart.checkout') }} &rarr;
                 </a>

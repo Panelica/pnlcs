@@ -24,7 +24,7 @@
         @foreach($billableItems as $item)
         <tr>
             <td style="font-weight:600;">{{ $item->description }}</td>
-            <td>${{ number_format($item->amount, 2) }}</td>
+            <td>{{ money_fmt($item->amount) }}</td>
             <td style="text-transform:capitalize;">{{ $item->type ?? 'standard' }}</td>
             <td style="text-align:right;">
                 <form method="POST" action="{{ route('admin.config.billable-items.destroy', $item) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.billable_items.confirm_delete") }}')">

@@ -22,8 +22,8 @@
                 @endif
             </td>
             <td>{{ $aff->visitors ?? 0 }}</td>
-            <td>${{ number_format($aff->pay_amount ?? 0, 2) }}</td>
-            <td style="font-weight:600;color:#5cb85c;">${{ number_format($aff->balance ?? 0, 2) }}</td>
+            <td>{{ money_fmt($aff->pay_amount ?? 0) }}</td>
+            <td style="font-weight:600;color:#5cb85c;">{{ money_fmt($aff->balance ?? 0) }}</td>
             <td><span style="padding:2px 8px;border-radius:4px;font-size:12px;background:{{ $aff->balance > 0 ? '#d4edda' : '#f8f9fa' }};color:{{ $aff->balance > 0 ? '#155724' : '#6c757d' }}">{{ $aff->balance > 0 ? __('admin.affiliates.active') : __('admin.affiliates.inactive') }}</span></td>
         </tr>
         @endforeach

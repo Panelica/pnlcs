@@ -28,7 +28,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
             <strong style="font-size:13px;">{{ __('admin.clients.credit_balance') }}:</strong>
-            <span style="color:#3c763d;font-weight:600;">${{ number_format($client->credit, 2) }}</span>
+            <span style="color:#3c763d;font-weight:600;">{{ money_fmt($client->credit) }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
             <strong style="font-size:13px;">{{ __('admin.clients.tax_exempt') }}:</strong>
@@ -43,7 +43,7 @@
     <div class="stat-card"><div class="stat-value">{{ $domainCount }}</div><div class="stat-label">{{ __('admin.clients.domains') }}</div></div>
     <div class="stat-card"><div class="stat-value">{{ $invoiceCount }}</div><div class="stat-label">{{ __('admin.clients.invoices') }}</div></div>
     <div class="stat-card"><div class="stat-value">{{ $ticketCount }}</div><div class="stat-label">{{ __('admin.clients.tickets') }}</div></div>
-    <div class="stat-card" style="border-color:#d9534f;"><div class="stat-value" style="color:#d9534f;">${{ number_format($unpaidInvoices, 2) }}</div><div class="stat-label">{{ __('admin.clients.unpaid') }}</div></div>
+    <div class="stat-card" style="border-color:#d9534f;"><div class="stat-value" style="color:#d9534f;">{{ money_fmt($unpaidInvoices) }}</div><div class="stat-label">{{ __('admin.clients.unpaid') }}</div></div>
 </div>
 
 {{-- Tab Navigation --}}
@@ -98,7 +98,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.unpaid_invoices') }}</td><td style="padding:5px 0;font-weight:600;color:#f0ad4e;">{{ $unpaid }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.overdue_invoices') }}</td><td style="padding:5px 0;font-weight:600;color:#d9534f;">{{ $ovrd }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.total_invoices') }}</td><td style="padding:5px 0;font-weight:600;">{{ $invoiceCount }}</td></tr>
-                    <tr style="border-top:1px solid #eee;"><td style="padding:8px 0 5px;color:#777;">{{ __('admin.clients.credit_balance') }}</td><td style="padding:8px 0 5px;font-weight:600;color:#5cb85c;">${{ number_format($client->credit, 2) }}</td></tr>
+                    <tr style="border-top:1px solid #eee;"><td style="padding:8px 0 5px;color:#777;">{{ __('admin.clients.credit_balance') }}</td><td style="padding:8px 0 5px;font-weight:600;color:#5cb85c;">{{ money_fmt($client->credit) }}</td></tr>
                 </table>
             </div>
         </div>
@@ -168,7 +168,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <td><a href="{{ route('admin.services.show', $service) }}" style="color:#337ab7;">{{ $service->product?->name ?? 'N/A' }}</a></td>
             <td>{{ $service->domain ?? '-' }}</td>
             <td>{{ $service->billing_cycle }}</td>
-            <td>${{ number_format($service->amount, 2) }}</td>
+            <td>{{ money_fmt($service->amount) }}</td>
             <td>{{ $service->next_due_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge-{{ strtolower($service->status) }}">{{ ucfirst($service->status) }}</span></td>
         </tr>
@@ -219,7 +219,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <td><a href="{{ route('admin.invoices.show', $inv) }}" style="color:#337ab7;">{{ $inv->invoice_num }}</a></td>
             <td>{{ $inv->date?->format(date_fmt()) ?? '-' }}</td>
             <td>{{ $inv->due_date?->format(date_fmt()) ?? '-' }}</td>
-            <td style="font-weight:600;">${{ number_format($inv->total, 2) }}</td>
+            <td style="font-weight:600;">{{ money_fmt($inv->total) }}</td>
             <td><span class="badge-{{ strtolower($inv->status) }}">{{ ucfirst($inv->status) }}</span></td>
         </tr>
         @endforeach

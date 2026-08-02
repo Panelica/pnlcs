@@ -36,8 +36,8 @@
         <div class="panel-heading panel-primary">{{ __('admin.domains.billing') }}</div>
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.domains.first_payment') }}</td><td style="padding:5px 0;font-weight:700;">${{ number_format($domain->first_payment_amount, 2) }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.recurring_amount') }}</td><td style="padding:5px 0;font-weight:700;">${{ number_format($domain->recurring_amount, 2) }}/year</td></tr>
+                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.domains.first_payment') }}</td><td style="padding:5px 0;font-weight:700;">{{ money_fmt($domain->first_payment_amount) }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.recurring_amount') }}</td><td style="padding:5px 0;font-weight:700;">{{ money_fmt($domain->recurring_amount) }}/year</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.payment_method') }}</td><td style="padding:5px 0;">{{ $domain->payment_method ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.premium') }}</td><td style="padding:5px 0;">{{ $domain->is_premium ? 'Yes' : 'No' }}</td></tr>
             </table>

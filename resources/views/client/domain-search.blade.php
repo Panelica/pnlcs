@@ -56,8 +56,8 @@
         <div style="display:flex;align-items:center;gap:20px;">
             @if($primary['available'])
             <div style="text-align:right;">
-                <div style="font-size:24px;font-weight:800;color:#1a4d80;">${{ number_format($primary['price'], 2) }}<span style="font-size:13px;font-weight:400;color:#94a3b8;">/yr</span></div>
-                <div style="font-size:11px;color:#94a3b8;">{{ __('client.domain_search.renews_at') }} ${{ number_format($primary['renew_price'], 2) }}/yr</div>
+                <div style="font-size:24px;font-weight:800;color:#1a4d80;">{{ money_fmt($primary['price']) }}<span style="font-size:13px;font-weight:400;color:#94a3b8;">/yr</span></div>
+                <div style="font-size:11px;color:#94a3b8;">{{ __('client.domain_search.renews_at') }} {{ money_fmt($primary['renew_price']) }}/yr</div>
             </div>
             <form method="POST" action="{{ route('client.cart.add-domain') }}">
                 @csrf
@@ -101,7 +101,7 @@
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
                     @if($alt['available'])
-                    <div style="font-size:15px;font-weight:700;color:#1a4d80;">${{ number_format($alt['price'], 2) }}<span style="font-size:11px;font-weight:400;color:#94a3b8;">/yr</span></div>
+                    <div style="font-size:15px;font-weight:700;color:#1a4d80;">{{ money_fmt($alt['price']) }}<span style="font-size:11px;font-weight:400;color:#94a3b8;">/yr</span></div>
                     <form method="POST" action="{{ route('client.cart.add-domain') }}">
                         @csrf
                         <input type="hidden" name="domain" value="{{ $alt['domain'] }}">
@@ -140,9 +140,9 @@
                 @foreach($tlds->take(20) as $tld)
                 <tr style="border-top:1px solid #f1f5f9;">
                     <td style="padding:10px 16px;font-family:monospace;font-weight:700;color:#1a4d80;font-size:15px;">{{ $tld->extension }}</td>
-                    <td style="padding:10px 16px;text-align:center;font-weight:600;color:#1e293b;">${{ number_format($tld->register_price, 2) }}</td>
-                    <td style="padding:10px 16px;text-align:center;color:#64748b;">${{ number_format($tld->transfer_price, 2) }}</td>
-                    <td style="padding:10px 16px;text-align:center;color:#64748b;">${{ number_format($tld->renew_price, 2) }}</td>
+                    <td style="padding:10px 16px;text-align:center;font-weight:600;color:#1e293b;">{{ money_fmt($tld->register_price) }}</td>
+                    <td style="padding:10px 16px;text-align:center;color:#64748b;">{{ money_fmt($tld->transfer_price) }}</td>
+                    <td style="padding:10px 16px;text-align:center;color:#64748b;">{{ money_fmt($tld->renew_price) }}</td>
                     <td style="padding:10px 16px;text-align:center;">
                         <a href="{{ route('client.domain.search') }}?tld={{ $tld->extension }}" style="padding:5px 12px;background:#eff6ff;color:#1a4d80;font-size:12px;font-weight:600;border:1px solid #bfdbfe;border-radius:5px;text-decoration:none;">{{ __('common.actions.search') }}</a>
                     </td>

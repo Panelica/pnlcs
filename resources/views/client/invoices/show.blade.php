@@ -36,7 +36,7 @@
                 @foreach($invoice->items as $item)
                 <tr>
                     <td>{{ $item->description }}</td>
-                    <td style="text-align:right;font-weight:600">${{ number_format($item->amount, 2) }}</td>
+                    <td style="text-align:right;font-weight:600">{{ money_fmt($item->amount) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -47,27 +47,27 @@
             @if($invoice->subtotal && $invoice->subtotal != $invoice->total)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.subtotal') }}</span>
-                <span>${{ number_format($invoice->subtotal, 2) }}</span>
+                <span>{{ money_fmt($invoice->subtotal) }}</span>
             </div>
             @endif
             @if($invoice->tax ?? false)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.tax') }}</span>
-                <span>${{ number_format($invoice->tax, 2) }}</span>
+                <span>{{ money_fmt($invoice->tax) }}</span>
             </div>
             @endif
             <div style="display:flex;justify-content:space-between;padding:12px 0 4px;font-size:17px;font-weight:800;color:var(--primary)">
                 <span>{{ __('client.invoices.total_due') }}</span>
-                <span>${{ number_format($invoice->total, 2) }}</span>
+                <span>{{ money_fmt($invoice->total) }}</span>
             </div>
             @if(isset($balance) && $balance > 0 && $balance < (float) $invoice->total)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-top:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.invoices.amount_paid') }}</span>
-                <span>${{ number_format((float) $invoice->total - $balance, 2) }}</span>
+                <span>{{ money_fmt((float) $invoice->total - $balance) }}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:14px;font-weight:700;color:#dc3545">
                 <span>{{ __('client.invoices.remaining_balance') }}</span>
-                <span>${{ number_format($balance, 2) }}</span>
+                <span>{{ money_fmt($balance) }}</span>
             </div>
             @endif
         </div>
@@ -79,7 +79,7 @@
     <strong>{{ __('client.invoices.payment_notification_pending_title') }}</strong><br>
     {{ __('client.invoices.payment_notification_pending_text') }}
     @if(isset($pendingNotification) && $pendingNotification)
-    <br><small class="text-muted">{{ __('client.invoices.reported_on') }} {{ $pendingNotification->created_at->timezone(display_tz())->format(datetime_fmt()) }} — ${{ number_format((float) $pendingNotification->amount, 2) }}</small>
+    <br><small class="text-muted">{{ __('client.invoices.reported_on') }} {{ $pendingNotification->created_at->timezone(display_tz())->format(datetime_fmt()) }} — {{ money_fmt((float) $pendingNotification->amount) }}</small>
     @endif
 </div>
 @endif
@@ -89,7 +89,7 @@
     <div class="pn-card-header" style="background:linear-gradient(135deg,var(--primary),#1e5fa0);border-radius:12px 12px 0 0">
         <span style="font-size:15px;font-weight:700;color:#fff">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:-2px;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-            {{ __('client.invoices.pay_this_invoice') }} — ${{ number_format($balance ?? $invoice->total, 2) }}
+            {{ __('client.invoices.pay_this_invoice') }} — {{ money_fmt($balance ?? $invoice->total) }}
         </span>
     </div>
     <div class="pn-card-body">

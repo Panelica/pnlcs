@@ -18,7 +18,7 @@
             <td style="font-family:monospace;font-weight:600;">{{ $quote->id }}</td>
             <td>{{ $quote->client?->full_name ?? __("admin.quotes.deleted_client") ?? __('admin.quotes.deleted_client') }}</td>
             <td>{{ $quote->subject }}</td>
-            <td style="font-weight:600;">${{ number_format($quote->total ?? 0, 2) }}</td>
+            <td style="font-weight:600;">{{ money_fmt($quote->total ?? 0) }}</td>
             <td style="font-size:12px;">{{ $quote->valid_until?->format(date_fmt()) ?? '&mdash;' }}</td>
             <td><span class="badge-{{ strtolower($quote->status ?? 'Draft') }}">{{ $quote->status ?? 'Draft' }}</span></td>
             <td style="text-align:right;">

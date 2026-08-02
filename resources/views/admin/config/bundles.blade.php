@@ -44,7 +44,7 @@
                 @if($bundle->discount_type === 'percentage')
                     <span style="font-weight:600;color:#5cb85c;">{{ number_format($bundle->discount_value, 0) }}{{ __('admin.bundles.percent_off') }}</span>
                 @else
-                    <span style="font-weight:600;color:#5cb85c;">${{ number_format($bundle->discount_value, 2) }} off</span>
+                    <span style="font-weight:600;color:#5cb85c;">{{ money_fmt($bundle->discount_value) }} off</span>
                 @endif
             </td>
             <td>

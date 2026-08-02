@@ -7,8 +7,8 @@
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
     <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ $totalAffiliates }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_affiliates') }}</div></div></div>
-    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">${{ number_format($totalEarnings, 2) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_earnings') }}</div></div></div>
-    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">${{ number_format($totalWithdrawn, 2) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_withdrawn') }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ money_fmt($totalEarnings) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_earnings') }}</div></div></div>
+    <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ money_fmt($totalWithdrawn) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_withdrawn') }}</div></div></div>
     <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ number_format($totalVisitors) }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_visitors') }}</div></div></div>
 </div>
 
@@ -30,8 +30,8 @@
                 <td>{{ number_format($aff->visitors) }}</td>
                 <td>{{ ucfirst($aff->pay_type) }}</td>
                 <td>{{ $aff->pay_type === 'percentage' ? $aff->pay_amount . '%' : '$' . number_format($aff->pay_amount, 2) }}</td>
-                <td><strong>${{ number_format($aff->balance, 2) }}</strong></td>
-                <td>${{ number_format($aff->withdrawn, 2) }}</td>
+                <td><strong>{{ money_fmt($aff->balance) }}</strong></td>
+                <td>{{ money_fmt($aff->withdrawn) }}</td>
                 <td><a href="{{ route('admin.affiliates.show', $aff) }}" class="btn btn-sm btn-default">{{ __('common.actions.view') }}</a></td>
             </tr>
             @empty

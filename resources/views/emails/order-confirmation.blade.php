@@ -25,7 +25,7 @@
 <tr>
 <td style="padding:8px;border-bottom:1px solid #eee;">{{ $item->product?->name ?? __('email.common.service') }}</td>
 <td style="padding:8px;border-bottom:1px solid #eee;">{{ $item->domain ?? '-' }}</td>
-<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">${{ number_format((float)($item->price ?? 0), 2) }}</td>
+<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">{{ money_fmt((float)($item->price ?? 0)) }}</td>
 </tr>
 @endforeach
 <tr style="background:#f8f9fa;">

@@ -61,7 +61,7 @@
                 </td>
                 <td style="color:#666;">{{ $invoice->date?->format(date_fmt()) ?? "-" }}</td>
                 <td style="color:#666;">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
-                <td style="text-align:right;font-weight:500;">${{ number_format($invoice->total, 2) }}</td>
+                <td style="text-align:right;font-weight:500;">{{ money_fmt($invoice->total) }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
                 <td>
                     <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>

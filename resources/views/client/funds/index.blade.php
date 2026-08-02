@@ -13,7 +13,7 @@
 <div class="pn-card mb-24" style="max-width:100%;background:linear-gradient(135deg,var(--primary),#1e5fa0);border:none">
     <div class="pn-card-body" style="text-align:center;padding:28px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(255,255,255,0.65);margin-bottom:8px">{{ __('client.funds.current_credit') }}</div>
-        <div style="font-size:42px;font-weight:900;color:#fff;letter-spacing:-1px">${{ number_format($credit, 2) }}</div>
+        <div style="font-size:42px;font-weight:900;color:#fff;letter-spacing:-1px">{{ money_fmt($credit) }}</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);margin-top:6px">{{ __('client.funds.available_credit_desc') }}</div>
     </div>
 </div>
