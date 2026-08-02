@@ -11,6 +11,7 @@ use App\Models\ClientGroup;
 use App\Models\ClientNote;
 use App\Models\Currency;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ClientController extends Controller
@@ -145,13 +146,16 @@ class ClientController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:clients,email',
+            // Excluding the row being edited: without it a client's own
+            // address counted as taken and no change could be saved at all.
+            'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)],
             'company_name' => 'nullable|string|max:255',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
             'postcode' => 'nullable|string|max:20',
-            'country' => 'nullable|string|max:2',
+            // The column will not hold a null, so asking beats a 500.
+            'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:30',
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
