@@ -26,6 +26,7 @@ use App\Models\Setting;
 use App\Models\Ticket;
 use App\Models\TodoItem;
 use App\Models\User;
+use App\Services\QuoteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -477,13 +478,21 @@ class SystemApiController extends BaseApiController
         $validated = $request->validate(['clientid' => 'required|exists:clients,id', 'valid_until' => 'nullable|date']);
         $quote = Quote::create(['client_id' => $validated['clientid'], 'date' => now()->format('Y-m-d'), 'valid_until' => $validated['valid_until'] ?? now()->addDays(30)->format('Y-m-d'), 'subject' => $request->get('subject', 'Quote'), 'status' => 'draft', 'subtotal' => 0, 'tax' => 0, 'total' => 0]);
         if ($request->has('items')) {
-            $total = 0;
             foreach ((array) $request->items as $item) {
-                $amount = (float) ($item['amount'] ?? 0);
-                $quote->items()->create(['description' => $item['description'] ?? '', 'amount' => $amount, 'quantity' => (int) ($item['quantity'] ?? 1), 'taxed' => ($item['taxed'] ?? false)]);
-                $total += $amount * (int) ($item['quantity'] ?? 1);
+                // Through the same service the panel uses, so the columns are
+                // named once. "amount" and "taxed" are the words this endpoint
+                // has always taken from callers; the table calls them
+                // unit_price and taxable.
+                app(QuoteService::class)->addItem($quote, [
+                    'description' => $item['description'] ?? '',
+                    'quantity' => (int) ($item['quantity'] ?? 1),
+                    'unit_price' => (float) ($item['unit_price'] ?? $item['amount'] ?? 0),
+                    'discount' => (float) ($item['discount'] ?? 0),
+                    'taxable' => (bool) ($item['taxable'] ?? $item['taxed'] ?? false),
+                ]);
             }
-            $quote->update(['subtotal' => $total, 'total' => $total]);
+
+            $quote->refresh();
         }
 
         return $this->success(['quoteid' => $quote->id]);

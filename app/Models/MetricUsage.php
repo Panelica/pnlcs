@@ -6,20 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class MetricUsage extends Model
 {
-    protected $table = "metric_usage";
+    protected $table = 'metric_usage';
 
     protected $fillable = [
-        "service_id",
-        "metric_type",
-        "value",
-        "recorded_at",
+        'service_id',
+        'metric',
+        'value',
+        'measured_at',
     ];
 
     protected function casts(): array
     {
         return [
-            "value" => "decimal:2",
-            "recorded_at" => "datetime",
+            'value' => 'decimal:2',
+            'measured_at' => 'datetime',
         ];
     }
 
