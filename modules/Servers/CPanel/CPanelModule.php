@@ -272,60 +272,78 @@ class CPanelModule extends AbstractServerModule
         return $out;
     }
 
+    /**
+     * Disk and bandwidth for every account this server hosts.
+     *
+     * Two calls, not one per account: listaccts carries the disk figures and
+     * showbw the bandwidth. accountsummary - which this used to ask, once per
+     * service - does not return bandwidth at all, so bw_usage and bw_limit
+     * were never written and the overage billing that reads them could not
+     * fire.
+     */
     public function usageUpdate(Server $server): array
     {
         $services = Service::where('server_id', $server->id)
             ->where('status', 'active')
             ->get();
 
+        if ($services->isEmpty()) {
+            return ['updated' => 0, 'errors' => 0];
+        }
+
+        $disk = $this->indexByUser($this->call($server, 'listaccts'));
+        $bandwidth = $this->indexByUser($this->call($server, 'showbw'));
+
+        if ($disk === [] && $bandwidth === []) {
+            return ['updated' => 0, 'errors' => $services->count()];
+        }
+
         $updated = 0;
         $errors = 0;
 
         foreach ($services as $service) {
             $data = $this->getModuleData($service);
-            $username = $data['cpanel_username'] ?? $service->username;
+            $username = strtolower((string) ($data['cpanel_username'] ?? $service->username ?? ''));
 
-            if (! $username) {
+            if ($username === '') {
                 $errors++;
 
                 continue;
             }
 
-            $result = $this->call($server, 'accountsummary', ['user' => $username]);
+            $account = $disk[$username] ?? null;
+            $bw = $bandwidth[$username] ?? null;
 
-            if (! $result['success']) {
+            if (! $account && ! $bw) {
+                // The account is gone from the server, or was never made.
                 $errors++;
 
                 continue;
             }
-
-            $raw = $result['raw'];
-            $acct = $raw['acct'][0] ?? $raw ?? [];
-
-            // WHM returns values like "12M" or "unlimited"
-            $toMb = function ($v): ?int {
-                if ($v === null || strcasecmp((string) $v, 'unlimited') === 0) {
-                    return null;
-                }
-
-                return (int) $v;
-            };
 
             $updateData = [];
-            if (($n = $toMb($acct['diskused'] ?? null)) !== null) {
-                $updateData['disk_usage'] = $n;
-            }
-            if (($n = $toMb($acct['disklimit'] ?? null)) !== null) {
-                $updateData['disk_limit'] = $n;
-            }
-            if (($n = $toMb($acct['bandwidth'] ?? null)) !== null) {
-                $updateData['bw_usage'] = $n;
-            }
-            if (($n = $toMb($acct['bwlimit'] ?? null)) !== null) {
-                $updateData['bw_limit'] = $n;
+
+            // "1024M", "0M", or "unlimited".
+            foreach (['diskused' => 'disk_usage', 'disklimit' => 'disk_limit'] as $key => $column) {
+                $value = $account[$key] ?? null;
+
+                if ($value !== null && strcasecmp((string) $value, 'unlimited') !== 0) {
+                    $updateData[$column] = (int) $value;
+                }
             }
 
-            if (! empty($updateData)) {
+            // showbw answers in bytes, and a limit of zero means unlimited.
+            if ($bw) {
+                $updateData['bw_usage'] = (int) round(((float) ($bw['totalbytes'] ?? 0)) / 1048576);
+
+                $limit = (float) ($bw['limit'] ?? 0);
+
+                if ($limit > 0) {
+                    $updateData['bw_limit'] = (int) round($limit / 1048576);
+                }
+            }
+
+            if ($updateData !== []) {
                 $service->update($updateData);
                 $updated++;
             }
@@ -335,46 +353,28 @@ class CPanelModule extends AbstractServerModule
     }
 
     /**
-     * WHM's packages, as the product form offers them.
-     *
-     * @return array<int, array{id: string, name: string}>
+     * @param  array{success: bool, raw: mixed}  $result
+     * @return array<string, array<string, mixed>>
      */
-    public function listPackages(Server $server): array
+    private function indexByUser(array $result): array
     {
-        $result = $this->call($server, 'listpkgs');
-
         if (! ($result['success'] ?? false)) {
             return [];
         }
 
-        $packages = $result['raw']['pkg'] ?? [];
-        $out = [];
+        $accounts = $result['raw']['acct'] ?? [];
+        $indexed = [];
 
-        foreach ($packages as $pkg) {
-            $name = $pkg['name'] ?? null;
+        foreach ($accounts as $account) {
+            $user = $account['user'] ?? null;
 
-            if (! $name) {
-                continue;
+            if ($user) {
+                $indexed[strtolower((string) $user)] = $account;
             }
-
-            $quota = $pkg['QUOTA'] ?? null;
-            $mail = $pkg['MAXPOP'] ?? null;
-            $detail = array_filter([
-                $quota !== null ? 'disk '.$quota : null,
-                $mail !== null ? 'email '.$mail : null,
-            ]);
-
-            $out[] = [
-                'id' => $name,
-                'name' => $detail === [] ? $name : $name.' ('.implode(', ', $detail).')',
-            ];
         }
 
-        usort($out, fn ($a, $b) => strcmp($a['id'], $b['id']));
-
-        return $out;
+        return $indexed;
     }
-
     public function testConnection(Server $server): bool
     {
         try {
