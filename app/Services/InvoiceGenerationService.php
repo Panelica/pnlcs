@@ -334,6 +334,33 @@ class InvoiceGenerationService
      *
      * @return array Line items for overage charges
      */
+    /**
+     * The allowance to bill against, in megabytes.
+     *
+     * What the panel reported, and failing that what the product was sold
+     * with. Only the cPanel module records both figures; Panelica records the
+     * disk quota alone and Plesk neither, so without this an overage line
+     * could never be raised on those panels however much was used.
+     */
+    private function limitFor(Service $service, string $kind): int
+    {
+        $recorded = (int) ($kind === 'disk' ? $service->disk_limit : $service->bw_limit);
+
+        if ($recorded > 0) {
+            return $recorded;
+        }
+
+        $config = is_string($service->product?->config_options)
+            ? json_decode($service->product->config_options, true)
+            : ($service->product?->config_options ?? []);
+
+        if (! is_array($config)) {
+            return 0;
+        }
+
+        return (int) ($config[$kind === 'disk' ? 'res_disk_mb' : 'res_bandwidth_mb'] ?? 0);
+    }
+
     public function calculateOverageItems(Service $service): array
     {
         $product = $service->product;
@@ -345,7 +372,7 @@ class InvoiceGenerationService
 
         // Disk overage
         $diskUsage = (int) ($service->disk_usage ?? 0);
-        $diskLimit = (int) ($service->disk_limit ?? 0);
+        $diskLimit = $this->limitFor($service, 'disk');
         $diskRate = (float) ($product->overage_disk_rate ?? 0);
 
         if ($diskLimit > 0 && $diskUsage > $diskLimit && $diskRate > 0) {
@@ -365,7 +392,7 @@ class InvoiceGenerationService
 
         // Bandwidth overage
         $bwUsage = (int) ($service->bw_usage ?? 0);
-        $bwLimit = (int) ($service->bw_limit ?? 0);
+        $bwLimit = $this->limitFor($service, 'bw');
         $bwRate = (float) ($product->overage_bw_rate ?? 0);
 
         if ($bwLimit > 0 && $bwUsage > $bwLimit && $bwRate > 0) {
