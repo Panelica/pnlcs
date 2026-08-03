@@ -1383,6 +1383,8 @@ return [
     'messages.product_updated' => 'Product updated.',
     'messages.reply_added' => 'Reply added.',
     'messages.report_not_found' => 'Report not found',
+    'messages.services_update_failed' => ':count service(s) could not be changed on their server and were left as they were. A retry has been queued.',
+    'messages.bulk_suspension_reason' => 'Suspended by administrator',
     'messages.services_updated' => 'Updated :count service(s) to :status.',
     'messages.spam_filter_added' => 'Spam filter added.',
     'messages.spam_filter_removed' => 'Spam filter removed.',
