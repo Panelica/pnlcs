@@ -31,9 +31,30 @@ abstract class AbstractServerModule implements ServerModuleInterface
             return $hostname;
         }
 
-        return @gethostbyname($hostname) === $hostname && ! filter_var($hostname, FILTER_VALIDATE_IP)
-            ? $ip          // did not resolve at all
-            : $hostname;
+        $resolved = @gethostbynamel($hostname) ?: [];
+
+        if ($resolved === []) {
+            Log::warning('Server hostname does not resolve; using the recorded address', [
+                'server_id' => $server->id,
+                'hostname' => $hostname,
+                'ip' => $ip,
+            ]);
+
+            return $ip;
+        }
+
+        if (! in_array($ip, $resolved, true)) {
+            Log::warning('Server hostname resolves elsewhere; using the recorded address', [
+                'server_id' => $server->id,
+                'hostname' => $hostname,
+                'resolved' => $resolved,
+                'ip' => $ip,
+            ]);
+
+            return $ip;
+        }
+
+        return $hostname;
     }
 
     protected function getServer(Service $service): ?Server
