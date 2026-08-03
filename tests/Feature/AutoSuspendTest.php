@@ -155,3 +155,42 @@ test('dry run reports without changing anything', function () {
     expect($service->fresh()->status)->toBe('active');
     Http::assertNothingSent();
 });
+
+// A product can name a server module while the service itself was never put on
+// a server. Resolving the module from the product alone is enough to reach it,
+// and the module then picks a server by itself and stamps it on the service -
+// suspending an account that was never created there, on a box the customer
+// has nothing to do with.
+test('an overdue service that was never provisioned is not sent to somebody elses server', function () {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
+
+    $client = Client::factory()->create();
+    $server = Server::factory()->create(['type' => 'panelica', 'hostname' => 'unrelated.test', 'active' => true]);
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'panelica',
+    ]);
+    $service = Service::factory()->create([
+        'client_id' => $client->id,
+        'product_id' => $product->id,
+        'server_id' => null,
+        'status' => 'active',
+        'override_auto_suspend_date' => null,
+    ]);
+    $invoice = Invoice::factory()->create([
+        'client_id' => $client->id, 'status' => 'overdue',
+        'due_date' => now()->subDays(10), 'total' => 25,
+    ]);
+    InvoiceItem::create([
+        'invoice_id' => $invoice->id, 'client_id' => $client->id,
+        'type' => 'Hosting', 'rel_id' => $service->id,
+        'description' => 'x', 'amount' => 25, 'taxed' => false, 'due_date' => now()->subDays(10),
+    ]);
+
+    $this->artisan('pnlcs:auto-suspend')->assertSuccessful();
+
+    Http::assertNothingSent();
+
+    expect($service->fresh()->server_id)->toBeNull()
+        ->and(strtolower($service->fresh()->status))->toBe('suspended');
+});

@@ -50,7 +50,10 @@ class SuspensionCommand extends Command
             // A service backed by a server module must be suspended ON THE
             // SERVER — flipping the local status alone used to leave the
             // hosting account fully live while the panel claimed otherwise.
-            if ($provisioning->resolveModule($service)) {
+            // The server itself is the test, not the module: a product can name
+            // a module while this service was never put on a server, and the
+            // module would then pick one by itself and stamp it on the service.
+            if ($service->server_id && $provisioning->resolveModule($service)) {
                 $result = $provisioning->suspendAccount($service, 'Overdue Invoice - Automatic Suspension');
                 if ($result['success'] ?? false) {
                     $suspended++;

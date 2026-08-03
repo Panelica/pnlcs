@@ -9,9 +9,12 @@ use App\Models\Order;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
+use App\Models\Server;
 use App\Models\Service;
 use App\Models\User;
 use App\Services\FraudDetectionService;
+use App\Services\OrderService;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -147,4 +150,34 @@ test('an ordinary customer orders exactly as before', function () {
         ->assertRedirect();
 
     expect(Service::where('order_id', $order->id)->firstOrFail()->status)->toBe('active');
+});
+
+// Marking an order as fraud suspended the service with a query-builder update:
+// no server was told, so the account a fraudster ordered carried on serving.
+test('marking an order as fraud suspends the account on the server', function () {
+    Http::fake(['*' => Http::response(['metadata' => ['result' => 1, 'reason' => 'OK']], 200)]);
+
+    $client = Client::factory()->create();
+    $server = Server::factory()->create([
+        'type' => 'cpanel', 'hostname' => 'whm.fraud.test',
+        'access_hash' => 'token-123', 'active' => true,
+    ]);
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'cpanel',
+    ]);
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'pending']);
+    $service = Service::factory()->create([
+        'client_id' => $client->id,
+        'product_id' => $product->id,
+        'server_id' => $server->id,
+        'order_id' => $order->id,
+        'username' => 'frauduser',
+        'status' => 'active',
+    ]);
+
+    app(OrderService::class)->markFraud($order);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'suspendacct'));
+    expect(strtolower($service->fresh()->status))->toBe('suspended');
 });

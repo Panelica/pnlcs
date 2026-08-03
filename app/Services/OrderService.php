@@ -366,6 +366,9 @@ class OrderService
         });
     }
 
+    /** Written onto every service an order's fraud verdict suspends. */
+    private const FRAUD_SUSPENSION_REASON = 'Order marked as fraud';
+
     /**
      * Mark an order as fraud and suspend all related services.
      */
@@ -373,20 +376,30 @@ class OrderService
     {
         run_hook('FraudOrder', ['order' => $order]);
 
-        return DB::transaction(function () use ($order) {
+        $services = DB::transaction(function () use ($order) {
             $order->update([
                 'status' => OrderStatus::Fraud->value,
                 'fraud_module' => 'manual',
                 'fraud_output' => 'Manually marked as fraud by admin on '.now()->toDateTimeString(),
             ]);
 
-            Service::where('order_id', $order->id)
+            $services = Service::where('order_id', $order->id)
                 ->where('status', ServiceStatus::Active->value)
-                ->update([
+                ->get();
+
+            foreach ($services as $service) {
+                // A service on a server is suspended below, on the server, and
+                // ProvisioningService writes the status once that succeeds.
+                if ($service->server_id) {
+                    continue;
+                }
+
+                $service->update([
                     'status' => ServiceStatus::Suspended->value,
                     'suspension_date' => now()->toDateString(),
-                    'suspension_reason' => 'Order marked as fraud',
+                    'suspension_reason' => self::FRAUD_SUSPENSION_REASON,
                 ]);
+            }
 
             // Cancel unpaid invoice
             if ($order->invoice_id) {
@@ -396,8 +409,21 @@ class OrderService
                 }
             }
 
-            return $order->fresh();
+            return $services;
         });
+
+        // The whole point of calling an order fraudulent is that the account
+        // stops serving. This used to be a query-builder update: no server was
+        // ever told, so the site the fraudster ordered carried on running.
+        // Kept outside the transaction so an unreachable panel cannot hold it
+        // open; a refusal is queued for retry by ProvisioningService.
+        foreach ($services as $service) {
+            if ($service->server_id) {
+                $this->provisioning->suspendAccount($service, self::FRAUD_SUSPENSION_REASON);
+            }
+        }
+
+        return $order->fresh();
     }
 
     /**
