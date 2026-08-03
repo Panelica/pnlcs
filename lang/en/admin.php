@@ -83,6 +83,8 @@ return [
     'products.package_list_empty' => ':host returned no plans. Create one on the panel first.',
     'products.package_list_unreachable' => 'Could not reach the server for its plan list.',
     'servers.hostname_invalid' => 'That does not leave a hostname. Give the host on its own, without http:// or a port.',
+    'servers.has_services' => ':name still has :count account(s) on it. Move or terminate them first - deleting the record would leave the hosting running with nothing pointing at it.',
+    'servers.group_in_use' => ':count product(s) sell from :name. Point them elsewhere first, or they would be provisioned on any server of that type.',
     'admin_roles.add_role' => 'Add Role',
     'admin_roles.full_administrator' => 'Full administrator',
     'admin_roles.full_administrator_hint' => 'Everything, everywhere. Leave this off to choose what the role may do.',

@@ -39,6 +39,7 @@ use App\Models\Quote;
 use App\Models\RegistrarSettings;
 use App\Models\Server;
 use App\Models\ServerGroup;
+use App\Models\Service;
 use App\Models\Setting;
 use App\Models\SslModuleSettings;
 use App\Models\TaxRule;
@@ -920,6 +921,20 @@ class ConfigController extends Controller
 
     public function destroyServer(Server $server)
     {
+        // Accounts that still exist somewhere. A terminated or cancelled
+        // service has nothing left on the machine, so it does not hold the
+        // record hostage.
+        $live = Service::where('server_id', $server->id)
+            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+            ->count();
+
+        if ($live > 0) {
+            return back()->with('error', __('admin.servers.has_services', [
+                'count' => $live,
+                'name' => $server->name,
+            ]));
+        }
+
         $server->delete();
 
         return back()->with('success', __('messages.success.server_deleted'));
@@ -1007,6 +1022,17 @@ class ConfigController extends Controller
 
     public function destroyServerGroup(ServerGroup $serverGroup)
     {
+        // A product selling from this group would fall back to "any server of
+        // that type" - quietly provisioning outside the group it was put in.
+        $products = Product::where('server_group_id', $serverGroup->id)->count();
+
+        if ($products > 0) {
+            return back()->with('error', __('admin.servers.group_in_use', [
+                'count' => $products,
+                'name' => $serverGroup->name,
+            ]));
+        }
+
         $serverGroup->delete();
 
         return back()->with('success', __('messages.success.server_group_deleted'));
