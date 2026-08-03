@@ -8,8 +8,11 @@ use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Services\InvoiceGenerationService;
+use App\Services\InvoiceService;
+use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceApiController extends BaseApiController
 {
@@ -58,12 +61,12 @@ class InvoiceApiController extends BaseApiController
             return $this->error('An invoice needs at least one line: send items[] or itemdescription1 with itemamount1.', 422);
         }
 
-        $client = \App\Models\Client::findOrFail($validated['userid']);
+        $client = Client::findOrFail($validated['userid']);
 
         // Through the invoice service, so the totals, the tax, the customer's
         // group discount and the created event happen as they do everywhere
         // else. This endpoint used to write an empty invoice on its own.
-        $invoice = app(\App\Services\InvoiceService::class)->createInvoice($client, $items, array_filter([
+        $invoice = app(InvoiceService::class)->createInvoice($client, $items, array_filter([
             'date' => $validated['date'] ?? null,
             'due_date' => $validated['duedate'] ?? null,
             'payment_method' => $validated['paymentmethod'] ?? null,
@@ -103,7 +106,7 @@ class InvoiceApiController extends BaseApiController
             $amount = $request->input("itemamount{$i}");
 
             if (! is_numeric($amount)) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     "itemamount{$i}" => "itemamount{$i} is required and must be a number.",
                 ]);
             }
@@ -136,19 +139,48 @@ class InvoiceApiController extends BaseApiController
         return $this->success(['invoiceid' => $invoice->id]);
     }
 
-    public function addInvoicePayment(Request $request)
+    /**
+     * Record a payment against an invoice.
+     *
+     * This used to write the transaction and flip the status by hand, which
+     * skipped everything a payment is supposed to set off: the same reference
+     * could be banked twice, a part payment was not recognised as one, an
+     * overpayment disappeared instead of becoming credit, and nothing waiting
+     * on a paid invoice - a suspended service, an order still to be
+     * provisioned, an upgrade to apply - was ever told. PaymentService is the
+     * one place that does all of it, and every other way of taking money
+     * already goes through it.
+     */
+    public function addInvoicePayment(Request $request, PaymentService $payments)
     {
         $invoice = Invoice::find($request->invoiceid);
         if (! $invoice) {
             return $this->error('Invoice Not Found', 404);
         }
-        $validated = $request->validate(['transid' => 'required|string', 'amount' => 'required|numeric', 'gateway' => 'nullable|string']);
-        $tx = Transaction::create(['client_id' => $invoice->client_id, 'date' => now()->format('Y-m-d'), 'description' => "Invoice #{$invoice->id} Payment", 'amount_in' => $validated['amount'], 'transaction_id' => $validated['transid'], 'invoice_id' => $invoice->id, 'gateway' => $validated['gateway'] ?? null]);
-        if ($validated['amount'] >= $invoice->total) {
-            $invoice->update(['status' => 'paid', 'date_paid' => now()]);
+        $validated = $request->validate(['transid' => 'required|string', 'amount' => 'required|numeric|min:0.01', 'gateway' => 'nullable|string']);
+
+        $result = $payments->applyPayment(
+            $invoice,
+            $validated['gateway'] ?? 'banktransfer',
+            $validated['transid'],
+            (float) $validated['amount'],
+        );
+
+        if (! ($result['success'] ?? false)) {
+            return $this->error($result['message'] ?? 'Payment could not be recorded', 422);
         }
 
-        return $this->success(['transactionid' => $tx->id]);
+        $transaction = Transaction::where('transaction_id', $validated['transid'])
+            ->where('invoice_id', $invoice->id)
+            ->latest('id')
+            ->first();
+
+        return $this->success([
+            'transactionid' => $transaction?->id,
+            'status' => $result['status'] ?? $invoice->fresh()->status,
+            'balance' => $result['balance'] ?? null,
+            'duplicate' => (bool) ($result['duplicate'] ?? false),
+        ]);
     }
 
     public function addTransaction(Request $request)
