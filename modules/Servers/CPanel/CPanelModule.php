@@ -375,6 +375,48 @@ class CPanelModule extends AbstractServerModule
 
         return $indexed;
     }
+
+    /**
+     * WHM's packages, as the product form offers them.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        $result = $this->call($server, 'listpkgs');
+
+        if (! ($result['success'] ?? false)) {
+            return [];
+        }
+
+        $packages = $result['raw']['pkg'] ?? [];
+        $out = [];
+
+        foreach ($packages as $pkg) {
+            $name = $pkg['name'] ?? null;
+
+            if (! $name) {
+                continue;
+            }
+
+            $quota = $pkg['QUOTA'] ?? null;
+            $mail = $pkg['MAXPOP'] ?? null;
+            $detail = array_filter([
+                $quota !== null ? 'disk '.$quota : null,
+                $mail !== null ? 'email '.$mail : null,
+            ]);
+
+            $out[] = [
+                'id' => $name,
+                'name' => $detail === [] ? $name : $name.' ('.implode(', ', $detail).')',
+            ];
+        }
+
+        usort($out, fn ($a, $b) => strcmp($a['id'], $b['id']));
+
+        return $out;
+    }
+
     public function testConnection(Server $server): bool
     {
         try {
