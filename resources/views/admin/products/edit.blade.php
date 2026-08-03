@@ -24,7 +24,23 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.type') }}</label><select name="type" class="form-control"><option value="hosting" {{ $product->type=='hosting'?'selected':'' }}>{{ __('admin.products.type_hosting') }}</option><option value="reseller" {{ $product->type=='reseller'?'selected':'' }}>{{ __('admin.products.type_reseller_label') }}</option><option value="vps" {{ $product->type=='vps'?'selected':'' }}>{{ __('admin.products.type_vps') }}</option><option value="ssl" {{ $product->type=='ssl'?'selected':'' }}>{{ __('admin.products.type_ssl') }}</option><option value="other" {{ $product->type=='other'?'selected':'' }}>{{ __('admin.products.type_other') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.payment') }}</label><select name="pay_type" class="form-control"><option value="recurring" {{ $product->pay_type=='recurring'?'selected':'' }}>{{ __('admin.products.pay_recurring') }}</option><option value="onetime" {{ $product->pay_type=='onetime'?'selected':'' }}>{{ __('admin.products.pay_onetime') }}</option><option value="free" {{ $product->pay_type=='free'?'selected':'' }}>{{ __('admin.products.pay_free') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.auto_setup') }}</label><select name="auto_setup" class="form-control"><option value="order" {{ $product->auto_setup=='order'?'selected':'' }}>{{ __('admin.products.auto_setup_order') }}</option><option value="payment" {{ $product->auto_setup=='payment'?'selected':'' }}>{{ __('admin.products.auto_setup_payment') }}</option><option value="manual" {{ $product->auto_setup=='manual'?'selected':'' }}>{{ __('admin.products.auto_setup_manual') }}</option></select></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.products.server_module') }}</label><input type="text" name="server_type" value="{{ $product->server_type }}" placeholder="{{ __('admin.products.module_placeholder') }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.server_module') }}</label>
+                    <select name="server_type" class="form-control">
+                        <option value="">{{ __('admin.products.server_module_none') }}</option>
+                        @foreach($serverModules as $key => $label)
+                        <option value="{{ $key }}" @selected(strtolower((string) $product->server_type) === $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <div style="color:#777;font-size:12px;margin-top:4px;">{{ __('admin.products.server_module_hint') }}</div>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.server_group') }}</label>
+                    <select name="server_group_id" class="form-control">
+                        <option value="">{{ __('admin.products.server_group_any') }}</option>
+                        @foreach($serverGroups as $sg)
+                        <option value="{{ $sg->id }}" @selected((int) $product->server_group_id === (int) $sg->id)>{{ $sg->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.stock_control') }}</label><div style="display:flex;gap:12px;align-items:center;"><label style="font-size:12px;"><input type="checkbox" name="stock_control" value="1" {{ $product->stock_control ? 'checked' : '' }}> {{ __('admin.products.stock_control_hint') }}</label><input type="number" min="0" name="stock_qty" value="{{ $product->stock_qty ?? 0 }}" class="form-control" style="max-width:120px;"></div></div>
                 <div class="form-group" x-data="{ show: '{{ $product->type }}' === 'ssl' }" x-show="show" x-cloak><label class="form-label">{{ __('admin.products.ssl_module') }}</label><select name="ssl_module" class="form-control"><option value="">{{ __('admin.products.ssl_none') }}</option><option value="gogetssl" {{ $product->ssl_module=='gogetssl'?'selected':'' }}>{{ __('admin.products.ssl_gogetssl') }}</option></select></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ $product->description }}</textarea></div>

@@ -29,7 +29,7 @@ class DirectAdminModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 2222;
-        return "https://{$server->hostname}:{$port}";
+        return "https://{$this->serverHost($server)}:{$port}";
     }
 
     private function http(Server $server)

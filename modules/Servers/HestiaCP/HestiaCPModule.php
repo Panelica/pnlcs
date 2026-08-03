@@ -26,7 +26,7 @@ class HestiaCPModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 8083;
-        return "https://{$server->hostname}:{$port}/api";
+        return "https://{$this->serverHost($server)}:{$port}/api";
     }
 
     /**

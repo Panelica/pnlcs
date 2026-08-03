@@ -10,6 +10,32 @@ use Illuminate\Support\Facades\Log;
 
 abstract class AbstractServerModule implements ServerModuleInterface
 {
+    /**
+     * The address to talk to.
+     *
+     * The hostname when it resolves, and the recorded IP when it does not.
+     * A server record carries both and only the hostname was ever used, so a
+     * stale or mistyped hostname sent the call somewhere else with no sign of
+     * what had happened.
+     */
+    protected function serverHost(Server $server): string
+    {
+        $hostname = trim((string) $server->hostname);
+        $ip = trim((string) $server->ip_address);
+
+        if ($hostname === '') {
+            return $ip;
+        }
+
+        if ($ip === '' || filter_var($hostname, FILTER_VALIDATE_IP)) {
+            return $hostname;
+        }
+
+        return @gethostbyname($hostname) === $hostname && ! filter_var($hostname, FILTER_VALIDATE_IP)
+            ? $ip          // did not resolve at all
+            : $hostname;
+    }
+
     protected function getServer(Service $service): ?Server
     {
         if ($service->server) {

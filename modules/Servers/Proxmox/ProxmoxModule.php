@@ -26,7 +26,7 @@ class ProxmoxModule extends AbstractServerModule
 
     private function baseUrl(Server $server): string
     {
-        return "https://{$server->hostname}:" . ($server->port ?: 8006) . "/api2/json";
+        return "https://{$this->serverHost($server)}:" . ($server->port ?: 8006) . "/api2/json";
     }
 
     private function http(Server $server): \Illuminate\Http\Client\PendingRequest
@@ -521,7 +521,7 @@ class ProxmoxModule extends AbstractServerModule
         // FIX BUG 10: Use 'kvm' for QEMU, 'lxc' for LXC
         $consoleType = $ep === 'lxc' ? 'lxc' : 'kvm';
 
-        return "https://{$server->hostname}:{$pvePort}/?console={$consoleType}&novnc=1" .
+        return "https://{$this->serverHost($server)}:{$pvePort}/?console={$consoleType}&novnc=1" .
             "&vmid={$d['proxmox_vmid']}&vmname=" . urlencode($service->domain ?? '') .
             "&node={$d['proxmox_node']}&resize=off&port={$port}&vncticket=" . urlencode($ticket);
     }

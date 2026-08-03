@@ -23,7 +23,30 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.products.product_group') }} <span style="color:#d9534f;">*</span></label><select name="group_id" required class="form-control">@foreach($groups as $g)<option value="{{ $g->id }}">{{ $g->name }}</option>@endforeach</select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.product_type') }} <span style="color:#d9534f;">*</span></label><select name="type" class="form-control"><option value="hosting">{{ __('admin.products.type_hosting') }}</option><option value="reseller">{{ __('admin.products.type_reseller') }}</option><option value="vps">{{ __('admin.products.type_vps') }}</option><option value="ssl">{{ __('admin.products.type_ssl') }}</option><option value="other">{{ __('admin.products.type_other') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.payment_type') }} <span style="color:#d9534f;">*</span></label><select name="pay_type" class="form-control"><option value="recurring">{{ __('admin.products.pay_recurring') }}</option><option value="onetime">{{ __('admin.products.pay_onetime') }}</option><option value="free">{{ __('admin.products.pay_free') }}</option></select></div>
-                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ old('description') }}</textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.auto_setup') }}</label>
+                    <select name="auto_setup" class="form-control">
+                        <option value="payment">{{ __('admin.products.auto_setup_payment') }}</option>
+                        <option value="order">{{ __('admin.products.auto_setup_order') }}</option>
+                        <option value="manual">{{ __('admin.products.auto_setup_manual') }}</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.server_module') }}</label>
+                    <select name="server_type" class="form-control">
+                        <option value="">{{ __('admin.products.server_module_none') }}</option>
+                        @foreach($serverModules as $key => $label)
+                        <option value="{{ $key }}" @selected(old('server_type') === $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <div style="color:#777;font-size:12px;margin-top:4px;">{{ __('admin.products.server_module_hint') }}</div>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.server_group') }}</label>
+                    <select name="server_group_id" class="form-control">
+                        <option value="">{{ __('admin.products.server_group_any') }}</option>
+                        @foreach($serverGroups as $sg)
+                        <option value="{{ $sg->id }}" @selected((string) old('server_group_id') === (string) $sg->id)>{{ $sg->name }}</option>
+                        @endforeach
+                    </select>
+                </div>                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ old('description') }}</textarea></div>
             </div>
         </div>
     </div>

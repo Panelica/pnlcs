@@ -30,7 +30,7 @@ class PanelicaModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         // The external API runs on port stored in server->port (8443) with prefix /api/external
-        return "https://{$server->hostname}:{$server->port}/api/external";
+        return "https://{$this->serverHost($server)}:{$server->port}/api/external";
     }
 
     private function apiKey(Server $server): string

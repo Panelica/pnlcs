@@ -409,9 +409,18 @@ class ConfigController extends Controller
         ]);
         // The active checkbox sends nothing when unchecked.
         $v['active'] = $request->boolean('active');
-        Server::create($v);
 
-        return back()->with('success', __('messages.success.server_created'));
+        if ($error = $this->credentialError($request)) {
+            return back()->withInput()->withErrors(['access_hash' => $error]);
+        }
+
+        $server = Server::create($v);
+
+        $warning = $this->hostnameWarning($server->hostname, $server->ip_address);
+
+        return back()
+            ->with('success', __('messages.success.server_created'))
+            ->with($warning ? 'warning' : 'ignored', $warning);
     }
 
     // ===== DOMAIN PRICING =====
@@ -792,9 +801,79 @@ class ConfigController extends Controller
             }
         }
         $v['active'] = $request->boolean('active');
+
+        if ($error = $this->credentialError($request, $server)) {
+            return back()->withInput()->withErrors(['access_hash' => $error]);
+        }
+
         $server->update($v);
 
-        return back()->with('success', __('messages.success.server_updated'));
+        $warning = $this->hostnameWarning($server->hostname, $server->ip_address);
+
+        return back()
+            ->with('success', __('messages.success.server_updated'))
+            ->with($warning ? 'warning' : 'ignored', $warning);
+    }
+
+    /**
+     * Refuse a server record that cannot possibly sign in.
+     *
+     * Almost every module authenticates with the API key; a password in the
+     * other box is not a substitute and the panel used to accept it in
+     * silence, leaving provisioning to fail later with "Access denied".
+     */
+    private function credentialError(Request $request, ?Server $existing = null): ?string
+    {
+        // A record still being set up can be saved inactive and finished
+        // later; an active one is a server the panel will try to provision on.
+        if (! $request->boolean('active')) {
+            return null;
+        }
+
+        $need = app(ModuleRegistry::class)->serverCredentialRequirement($request->input('type'));
+
+        $token = $request->filled('access_hash') ? $request->input('access_hash') : $existing?->access_hash;
+        $password = $request->filled('password') ? $request->input('password') : $existing?->password;
+
+        if ($need === 'token' && blank($token)) {
+            return __('admin.servers.needs_api_token', ['type' => strtoupper((string) $request->input('type'))]);
+        }
+
+        if ($need === 'either' && blank($token) && blank($password)) {
+            return __('admin.servers.needs_credentials', ['type' => strtoupper((string) $request->input('type'))]);
+        }
+
+        return null;
+    }
+
+    /**
+     * A hostname that resolves somewhere other than the address beside it is
+     * the likeliest way to point a server record at the wrong machine.
+     */
+    private function hostnameWarning(?string $hostname, ?string $ip): ?string
+    {
+        $hostname = trim((string) $hostname);
+        $ip = trim((string) $ip);
+
+        if ($hostname === '' || $ip === '' || filter_var($hostname, FILTER_VALIDATE_IP)) {
+            return null;
+        }
+
+        $resolved = @gethostbynamel($hostname) ?: [];
+
+        if ($resolved === []) {
+            return __('admin.servers.hostname_unresolved', ['host' => $hostname]);
+        }
+
+        if (! in_array($ip, $resolved, true)) {
+            return __('admin.servers.hostname_mismatch', [
+                'host' => $hostname,
+                'resolved' => implode(', ', $resolved),
+                'ip' => $ip,
+            ]);
+        }
+
+        return null;
     }
 
     public function destroyServer(Server $server)
@@ -818,6 +897,28 @@ class ConfigController extends Controller
         $elapsed = round((microtime(true) - $start) * 1000);
         if ($conn) {
             fclose($conn);
+
+            // The port being open says nothing about the credentials. This
+            // used to stop here and report success, so a server that could
+            // never sign in was given a green light and provisioning failed
+            // later with nobody watching.
+            $module = app(ModuleRegistry::class)->getServerModule((string) $server->type);
+
+            if ($module) {
+                try {
+                    if (! $module->testConnection($server)) {
+                        return back()->with('error', __('admin.servers.auth_failed', [
+                            'host' => $host,
+                            'type' => strtoupper((string) $server->type),
+                        ]));
+                    }
+                } catch (\Throwable $e) {
+                    return back()->with('error', __('admin.servers.auth_error', [
+                        'host' => $host,
+                        'error' => $e->getMessage(),
+                    ]));
+                }
+            }
 
             return back()->with('success', __('admin.messages.connection_success', ['host' => $host, 'port' => $port, 'elapsed' => $elapsed, 'module' => $server->type ?? 'custom']));
         }

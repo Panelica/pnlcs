@@ -49,6 +49,44 @@ class ModuleRegistry
         $this->sslModules[self::key($name)] = $class;
     }
 
+    /**
+     * The server modules this installation has, for the product form to offer.
+     *
+     * @return array<string, string> registration key => display name
+     */
+    public function serverModuleNames(): array
+    {
+        $names = [];
+
+        foreach (array_keys($this->serverModules) as $key) {
+            try {
+                $names[$key] = $this->getServerModule($key)?->getModuleName() ?: ucfirst($key);
+            } catch (\Throwable) {
+                $names[$key] = ucfirst($key);
+            }
+        }
+
+        ksort($names);
+
+        return $names;
+    }
+
+    /**
+     * Which credential a server module signs in with.
+     *
+     * 'token'  → the API key field, and nothing else will do
+     * 'either' → an API key or a password
+     * 'none'   → neither (a bare record, no remote calls)
+     */
+    public function serverCredentialRequirement(?string $type): string
+    {
+        return match (self::key((string) $type)) {
+            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr' => 'token',
+            'directadmin', 'hestiacp' => 'either',
+            default => 'none',
+        };
+    }
+
     public function getServerModule(string $name): ?ServerModuleInterface
     {
         $class = $this->serverModules[self::key($name)] ?? null;

@@ -44,7 +44,7 @@ class PleskModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 8443;
-        return "https://{$server->hostname}:{$port}/api/v2";
+        return "https://{$this->serverHost($server)}:{$port}/api/v2";
     }
 
     private function http(Server $server)

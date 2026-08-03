@@ -29,7 +29,7 @@ class CPanelModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 2087;
-        return "https://{$server->hostname}:{$port}/json-api/";
+        return "https://{$this->serverHost($server)}:{$port}/json-api/";
     }
 
     private function authHeader(Server $server): string

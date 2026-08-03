@@ -253,7 +253,19 @@ class OrderService
                     Log::error('Auto-provision failed for service #'.$svc->id.': '.($result['message'] ?? 'unknown'));
                 }
             } else {
-                // No server module involved — plain activation.
+                // No server module involved — plain activation. Legitimate for
+                // a product that is not hosted anywhere; for one that is, this
+                // is the whole order quietly doing nothing, so say so.
+                if (in_array((string) $svc->product?->type, ['hosting', 'reseller', 'vps'], true)) {
+                    Log::warning('Service activated with no server module: nothing was created on any server', [
+                        'service_id' => $svc->id,
+                        'product_id' => $svc->product?->id,
+                        'product' => $svc->product?->name,
+                        'product_type' => $svc->product?->type,
+                        'hint' => 'Set the product\'s server module.',
+                    ]);
+                }
+
                 $svc->update([
                     'status' => ServiceStatus::Active->value,
                     'registration_date' => $svc->registration_date ?? now()->toDateString(),

@@ -8,9 +8,11 @@ use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Server;
+use App\Models\ServerGroup;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -40,7 +42,14 @@ class ProductController extends Controller
         $groups = ProductGroup::orderBy('sort_order')->get();
         $currencies = Currency::all();
 
-        return view('admin.products.create', compact('groups', 'currencies'));
+        return view('admin.products.create', [
+            'groups' => $groups,
+            'currencies' => $currencies,
+            // Without these the form could not say how the product is set up,
+            // and a product with no module is sold and never provisioned.
+            'serverModules' => app(ModuleRegistry::class)->serverModuleNames(),
+            'serverGroups' => ServerGroup::orderBy('name')->get(),
+        ]);
     }
 
     public function store(Request $request)
@@ -51,6 +60,9 @@ class ProductController extends Controller
             'type' => 'required|in:hosting,reseller,vps,ssl,other',
             'description' => 'nullable|string',
             'pay_type' => 'required|in:free,onetime,recurring',
+            'auto_setup' => 'nullable|in:order,payment,manual',
+            'server_type' => ['nullable', Rule::in(array_keys(app(ModuleRegistry::class)->serverModuleNames()))],
+            'server_group_id' => 'nullable|exists:server_groups,id',
         ]);
         $validated['slug'] = Str::slug($validated['name']);
         $product = Product::create($validated);
@@ -93,7 +105,15 @@ class ProductController extends Controller
             }
         }
 
-        return view('admin.products.edit', compact('product', 'groups', 'currencies', 'pricing', 'panelicaPlans'));
+        return view('admin.products.edit', [
+            'product' => $product,
+            'groups' => $groups,
+            'currencies' => $currencies,
+            'pricing' => $pricing,
+            'panelicaPlans' => $panelicaPlans,
+            'serverModules' => app(ModuleRegistry::class)->serverModuleNames(),
+            'serverGroups' => ServerGroup::orderBy('name')->get(),
+        ]);
     }
 
     public function update(Request $request, Product $product)
@@ -108,7 +128,10 @@ class ProductController extends Controller
             'retired' => 'nullable|boolean',
             'is_featured' => 'nullable|boolean',
             'auto_setup' => 'nullable|in:order,payment,manual',
-            'server_type' => 'nullable|string',
+            // Only a module this installation actually has: it used to be free
+            // text, so a typo left the product unprovisionable and silent.
+            'server_type' => ['nullable', Rule::in(array_keys(app(ModuleRegistry::class)->serverModuleNames()))],
+            'server_group_id' => 'nullable|exists:server_groups,id',
             'welcome_email_template' => 'nullable|string',
             'ssl_module' => 'nullable|string|max:100',
             'stock_control' => 'nullable|boolean',
