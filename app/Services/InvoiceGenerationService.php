@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\InvoiceStatus;
+use App\Models\BillableItem;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Invoice;
@@ -70,23 +71,47 @@ class InvoiceGenerationService
                 ->whereHas('items', fn ($i) => $i->where('type', 'Domain')->whereColumn('rel_id', 'domains.id')))
             ->get();
 
+        // One-off charges an operator has added to an account. They have their
+        // own due date and, until now, no way of reaching an invoice at all.
+        $charges = BillableItem::with('client')
+            ->whereNull('invoice_id')
+            ->where(fn ($q) => $q->whereNull('due_date')->orWhere('due_date', '<=', $cutoff))
+            ->whereHas('client')
+            ->get();
+
+        // Recurring ones are a feature nobody has built: billing them once and
+        // marking them done would be wrong, so they are left alone and said
+        // out loud rather than dropped in silence.
+        [$recurring, $charges] = $charges->partition(fn ($c) => (bool) $c->recur);
+
+        if ($recurring->isNotEmpty()) {
+            Log::warning('InvoiceGenerationService: recurring billable items are not billed', [
+                'count' => $recurring->count(),
+                'ids' => $recurring->pluck('id')->all(),
+            ]);
+        }
+
         $grouped = $services->groupBy('client_id');
         $groupedAddons = $addons->groupBy('client_id');
         $groupedDomains = $domains->groupBy('client_id');
+        $groupedCharges = $charges->groupBy('client_id');
         $summary = ['generated' => 0, 'skipped' => 0, 'errors' => 0, 'invoice_ids' => []];
 
         $clientIds = $grouped->keys()
             ->merge($groupedAddons->keys())
             ->merge($groupedDomains->keys())
+            ->merge($groupedCharges->keys())
             ->unique();
 
         foreach ($clientIds as $clientId) {
             $clientServices = $grouped->get($clientId, collect());
             $clientAddons = $groupedAddons->get($clientId, collect());
             $clientDomains = $groupedDomains->get($clientId, collect());
+            $clientCharges = $groupedCharges->get($clientId, collect());
             $client = $clientServices->first()?->client
                 ?? $clientAddons->first()?->client
-                ?? $clientDomains->first()?->client;
+                ?? $clientDomains->first()?->client
+                ?? $clientCharges->first()?->client;
 
             if (! $client) {
                 $summary['skipped']++;
@@ -99,7 +124,8 @@ class InvoiceGenerationService
                     $client,
                     $clientServices->all(),
                     $clientAddons->all(),
-                    $clientDomains->all()
+                    $clientDomains->all(),
+                    $clientCharges->all()
                 );
 
                 if ($invoice) {
@@ -223,9 +249,12 @@ class InvoiceGenerationService
      *
      * @param  Service[]  $services
      */
-    private function generateForServices(Client $client, array $services, array $addons = [], array $domains = []): ?Invoice
+    /**
+     * @param  array<int, BillableItem>  $charges
+     */
+    private function generateForServices(Client $client, array $services, array $addons = [], array $domains = [], array $charges = []): ?Invoice
     {
-        if (empty($services) && empty($addons) && empty($domains)) {
+        if (empty($services) && empty($addons) && empty($domains) && empty($charges)) {
             return null;
         }
 
@@ -261,6 +290,16 @@ class InvoiceGenerationService
             $items[] = $addonService->lineItem($addon);
         }
 
+        foreach ($charges as $charge) {
+            $items[] = [
+                'type' => 'BillableItem',
+                'rel_id' => $charge->id,
+                'description' => $charge->description,
+                'amount' => (float) $charge->amount,
+                'taxed' => true,
+            ];
+        }
+
         foreach ($domains as $domain) {
             $items[] = [
                 'type' => 'Domain',
@@ -277,7 +316,16 @@ class InvoiceGenerationService
             'notes' => 'Auto-generated renewal invoice.',
         ];
 
-        return $this->invoiceService->createInvoice($client, $items, $options);
+        $invoice = $this->invoiceService->createInvoice($client, $items, $options);
+
+        // Which invoice each one-off charge went on. Without this the same
+        // charge would be added to every invoice the client is ever sent.
+        if ($charges !== []) {
+            BillableItem::whereIn('id', array_map(fn ($c) => $c->id, $charges))
+                ->update(['invoice_id' => $invoice->id]);
+        }
+
+        return $invoice;
     }
 
     /**
