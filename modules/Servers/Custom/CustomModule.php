@@ -8,6 +8,16 @@ use App\Models\Service;
 
 class CustomModule implements ServerModuleInterface
 {
+    /**
+     * Nothing to list: this module is the operator doing it themselves.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        return [];
+    }
+
     public function create(Service $service): array
     {
         return ['success' => true, 'message' => 'Service created manually'];

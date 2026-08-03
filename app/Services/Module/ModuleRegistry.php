@@ -60,7 +60,10 @@ class ModuleRegistry
 
         foreach (array_keys($this->serverModules) as $key) {
             try {
-                $names[$key] = $this->getServerModule($key)?->getModuleName() ?: ucfirst($key);
+                // getModuleName() is the lookup key for most modules, which
+                // makes a poor label; only use it when it says something more.
+                $name = (string) ($this->getServerModule($key)?->getModuleName() ?? '');
+                $names[$key] = strtolower($name) === $key || $name === '' ? ucfirst($key) : $name;
             } catch (\Throwable) {
                 $names[$key] = ucfirst($key);
             }
