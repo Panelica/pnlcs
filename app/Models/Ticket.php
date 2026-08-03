@@ -57,4 +57,28 @@ class Ticket extends Model
     {
         return $q->where('status', 'open');
     }
+
+    /**
+     * Tickets in a status the operator counts as still open.
+     *
+     * From the statuses table rather than a list in code: an operator who adds
+     * "Waiting on supplier" and marks it open means it, and the home page used
+     * to count Open and Customer-Reply alone - Answered, On Hold and In
+     * Progress went uncounted however they were configured.
+     */
+    public function scopeStillOpen($q)
+    {
+        try {
+            $titles = TicketStatus::where('show_active', true)->pluck('title')->all();
+        } catch (\Throwable) {
+            $titles = [];
+        }
+
+        if ($titles === []) {
+            // Nothing configured: everything but a closed ticket.
+            return $q->whereRaw('LOWER(status) <> ?', ['closed']);
+        }
+
+        return $q->whereIn('status', $titles);
+    }
 }
