@@ -82,6 +82,7 @@ return [
     'products.package_list_failed' => 'The server could not be asked for its plans: :error',
     'products.package_list_empty' => ':host returned no plans. Create one on the panel first.',
     'products.package_list_unreachable' => 'Could not reach the server for its plan list.',
+    'servers.hostname_invalid' => 'That does not leave a hostname. Give the host on its own, without http:// or a port.',
     'admin_roles.add_role' => 'Add Role',
     'admin_roles.full_administrator' => 'Full administrator',
     'admin_roles.full_administrator_hint' => 'Everything, everywhere. Leave this off to choose what the role may do.',

@@ -409,6 +409,11 @@ class ConfigController extends Controller
         ]);
         // The active checkbox sends nothing when unchecked.
         $v['active'] = $request->boolean('active');
+        $v['hostname'] = $this->normaliseHostname($v['hostname'] ?? null);
+
+        if ($v['hostname'] === '') {
+            return back()->withInput()->withErrors(['hostname' => __('admin.servers.hostname_invalid')]);
+        }
 
         if ($error = $this->credentialError($request)) {
             return back()->withInput()->withErrors(['access_hash' => $error]);
@@ -802,6 +807,14 @@ class ConfigController extends Controller
         }
         $v['active'] = $request->boolean('active');
 
+        if (array_key_exists('hostname', $v)) {
+            $v['hostname'] = $this->normaliseHostname($v['hostname']);
+
+            if ($v['hostname'] === '') {
+                return back()->withInput()->withErrors(['hostname' => __('admin.servers.hostname_invalid')]);
+            }
+        }
+
         if ($error = $this->credentialError($request, $server)) {
             return back()->withInput()->withErrors(['access_hash' => $error]);
         }
@@ -822,6 +835,35 @@ class ConfigController extends Controller
      * other box is not a substitute and the panel used to accept it in
      * silence, leaving provisioning to fail later with "Access denied".
      */
+    /**
+     * The address as a module can use it.
+     *
+     * Operators paste what their browser shows them - a scheme, a port, a
+     * trailing slash - and every module builds its URL by hand from this
+     * field. Anything but the host itself produced a URL that could not
+     * resolve and an error that explained nothing.
+     */
+    private function normaliseHostname(?string $hostname): string
+    {
+        $hostname = trim((string) $hostname);
+
+        if ($hostname === '') {
+            return '';
+        }
+
+        // Scheme, path, credentials, trailing slash.
+        $hostname = preg_replace('#^[a-z][a-z0-9+.-]*://#i', '', $hostname) ?? $hostname;
+        $hostname = explode('/', $hostname, 2)[0];
+        $hostname = str_contains($hostname, '@') ? substr($hostname, strrpos($hostname, '@') + 1) : $hostname;
+
+        // A port on the end - but not the colons of an IPv6 address.
+        if (! str_contains($hostname, '[') && substr_count($hostname, ':') === 1) {
+            $hostname = explode(':', $hostname, 2)[0];
+        }
+
+        return trim($hostname, " \t\n\r\0\x0B.");
+    }
+
     private function credentialError(Request $request, ?Server $existing = null): ?string
     {
         // A record still being set up can be saved inactive and finished
