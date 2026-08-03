@@ -14,6 +14,42 @@ class Service extends Model
 
     protected $hidden = ['password'];
 
+    /**
+     * How many months each billing cycle covers, so an amount charged once a
+     * year is not read as an amount charged every month.
+     *
+     * Keyed on the cycle with spaces and hyphens stripped: the same cycle is
+     * stored as "Semi-Annually", "semiannually" and "Annually" in different
+     * places.
+     */
+    public const CYCLE_MONTHS = [
+        'monthly' => 1,
+        'quarterly' => 3,
+        'semiannually' => 6,
+        'annually' => 12,
+        'biennially' => 24,
+        'triennially' => 36,
+    ];
+
+    /**
+     * The number of months this service's price covers. Anything unrecognised
+     * counts as one month, which is what the code did before there was a map.
+     */
+    public static function monthsInCycle(?string $cycle): int
+    {
+        $key = strtolower(str_replace([' ', '-', '_'], '', (string) $cycle));
+
+        return self::CYCLE_MONTHS[$key] ?? 1;
+    }
+
+    /**
+     * What this service is worth per month, whatever it is billed in.
+     */
+    public function monthlyAmount(): float
+    {
+        return round((float) $this->amount / self::monthsInCycle($this->billing_cycle), 2);
+    }
+
     protected static function booted(): void
     {
         // An addon cannot outlive the service it hangs off. Several places end
