@@ -81,6 +81,14 @@ class ServiceController extends Controller
     {
         abort_if($service->client_id !== $this->getClientId(), 403);
 
+        // Reading is not a reason to choose a server. Asking a module for one
+        // makes it pick and write it onto the service, so a customer opening
+        // this page used to nail an order that was never provisioned to
+        // whichever server the module happened to return.
+        if (! $service->server_id) {
+            return response()->json(['available' => false]);
+        }
+
         $module = app(ProvisioningService::class)->resolveModule($service);
         if (! $module || ! method_exists($module, 'liveUsage')) {
             return response()->json(['available' => false]);
@@ -95,6 +103,12 @@ class ServiceController extends Controller
     public function loginToPanel(Service $service)
     {
         abort_if($service->client_id !== $this->getClientId(), 403);
+
+        // No server yet means there is no account to sign in to; asking the
+        // module would pick a server and bind the service to it.
+        if (! $service->server_id) {
+            return back()->with('error', __('messages.error.panel_login_unavailable'));
+        }
 
         $module = app(ProvisioningService::class)->resolveModule($service);
         if (! $module || ! method_exists($module, 'ssoLogin')) {

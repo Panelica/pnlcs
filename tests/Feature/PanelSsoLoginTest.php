@@ -12,11 +12,10 @@ use Illuminate\Support\Facades\Http;
  * The client login route mints a panel SSO url via the module and redirects to
  * it; another client cannot use it (scoped by client_id).
  */
-
 function ssoService(): array
 {
     $client = Client::factory()->create();
-    $user   = User::factory()->create();
+    $user = User::factory()->create();
     $user->clients()->attach($client->id);
 
     $server = Server::create([
@@ -47,11 +46,62 @@ it('redirects the client to the panel single sign-on url', function () {
 it('forbids single sign-on into another client service', function () {
     [$user, $service] = ssoService();
 
-    $other       = User::factory()->create();
+    $other = User::factory()->create();
     $otherClient = Client::factory()->create();
     $other->clients()->attach($otherClient->id);
 
     $this->actingAs($other)
         ->get(route('client.services.login', $service))
         ->assertForbidden();
+});
+
+/**
+ * A service that was ordered but never put on a server.
+ */
+function unprovisionedService(): array
+{
+    $client = Client::factory()->create();
+    $user = User::factory()->create();
+    $user->clients()->attach($client->id);
+
+    Server::create([
+        'name' => 'Unrelated', 'hostname' => 'unrelated.test', 'ip_address' => '10.0.0.9',
+        'type' => 'panelica', 'username' => 'u', 'password' => 'pk', 'access_hash' => 'sk',
+        'port' => 8443, 'active' => true,
+    ]);
+
+    $product = Product::factory()->create(['server_type' => 'panelica']);
+    $service = Service::factory()->create([
+        'client_id' => $client->id, 'product_id' => $product->id, 'server_id' => null,
+        'status' => 'pending',
+    ]);
+
+    return [$user, $service];
+}
+
+// Asking the module for a server picks one and writes it onto the service. On
+// a service that was never provisioned that means a customer opening a page
+// silently nails their order to whichever server the module happened to pick,
+// and the panel is asked about an account that does not exist there.
+it('does not bind a never provisioned service to a server when the customer asks to log in', function () {
+    Http::fake();
+    [$user, $service] = unprovisionedService();
+
+    $this->actingAs($user)->get(route('client.services.login', $service));
+
+    Http::assertNothingSent();
+    expect($service->fresh()->server_id)->toBeNull();
+});
+
+it('does not bind a never provisioned service to a server when the usage graph is drawn', function () {
+    Http::fake();
+    [$user, $service] = unprovisionedService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.usage', $service))
+        ->assertOk()
+        ->assertJson(['available' => false]);
+
+    Http::assertNothingSent();
+    expect($service->fresh()->server_id)->toBeNull();
 });
