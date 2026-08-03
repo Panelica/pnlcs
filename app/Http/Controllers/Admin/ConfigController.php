@@ -1485,26 +1485,61 @@ class ConfigController extends Controller
         $rules = TicketEscalation::all();
         $departments = TicketDepartment::all();
         $admins = Admin::where('is_disabled', false)->get();
+        $statuses = TicketStatus::orderBy('sort_order')->pluck('title')->all();
+        $priorities = self::TICKET_PRIORITIES;
 
-        return view('admin.config.ticket-escalation', compact('rules', 'departments', 'admins'));
+        return view('admin.config.ticket-escalation', compact('rules', 'departments', 'admins', 'statuses', 'priorities'));
     }
 
-    public function storeTicketEscalation(Request $request)
+    /**
+     * The priorities tickets are actually opened with. The escalation form used
+     * to offer an "urgent" option that exists nowhere else: a rule set to it
+     * wrote a priority no other screen can produce and the dashboard's
+     * high-priority counter stopped seeing the ticket.
+     */
+    private const TICKET_PRIORITIES = ['low', 'medium', 'high'];
+
+    /**
+     * Validate a rule and normalise its scope columns.
+     *
+     * The scope (departments / statuses / priorities) is cast to array on the
+     * model, so it has to arrive as an array. It used to be validated as
+     * "json", which no HTML form can send and which the array cast would
+     * double-encode into a string the escalation service silently ignores —
+     * every rule then applied to every ticket in the system.
+     */
+    private function validateEscalationRule(Request $request): array
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'departments' => 'nullable|json',
-            'statuses' => 'nullable|json',
-            'priorities' => 'nullable|json',
+            'departments' => 'nullable|array',
+            'departments.*' => 'exists:ticket_departments,id',
+            'statuses' => 'nullable|array',
+            'statuses.*' => 'string|max:255',
+            'priorities' => 'nullable|array',
+            'priorities.*' => 'string|max:255',
             'time_elapsed' => 'required|integer|min:1',
             'new_department_id' => 'nullable|exists:ticket_departments,id',
-            'new_priority' => 'nullable|string',
+            'new_priority' => ['nullable', Rule::in(self::TICKET_PRIORITIES)],
             'flag_to' => 'nullable|exists:admins,id',
             'notify' => 'boolean',
             'add_reply' => 'nullable|string',
         ]);
+
         $validated['notify'] = $request->boolean('notify');
-        TicketEscalation::create($validated);
+
+        // An empty multi-select submits nothing; store an empty scope rather
+        // than leaving the previous one in place on update.
+        foreach (['departments', 'statuses', 'priorities'] as $scope) {
+            $validated[$scope] = array_values(array_map('strval', $validated[$scope] ?? []));
+        }
+
+        return $validated;
+    }
+
+    public function storeTicketEscalation(Request $request)
+    {
+        TicketEscalation::create($this->validateEscalationRule($request));
 
         return back()->with('success', __('admin.messages.escalation_rule_created'));
     }
@@ -1512,20 +1547,7 @@ class ConfigController extends Controller
     public function updateTicketEscalation(Request $request, $id)
     {
         $rule = TicketEscalation::findOrFail($id);
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'departments' => 'nullable|json',
-            'statuses' => 'nullable|json',
-            'priorities' => 'nullable|json',
-            'time_elapsed' => 'required|integer|min:1',
-            'new_department_id' => 'nullable|exists:ticket_departments,id',
-            'new_priority' => 'nullable|string',
-            'flag_to' => 'nullable|exists:admins,id',
-            'notify' => 'boolean',
-            'add_reply' => 'nullable|string',
-        ]);
-        $validated['notify'] = $request->boolean('notify');
-        $rule->update($validated);
+        $rule->update($this->validateEscalationRule($request));
 
         return back()->with('success', __('admin.messages.escalation_rule_updated'));
     }

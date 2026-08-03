@@ -74,10 +74,10 @@
                                     <option value="low" {{ $rule->new_priority == "low" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_low') }}</option>
                                     <option value="medium" {{ $rule->new_priority == "medium" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_medium') }}</option>
                                     <option value="high" {{ $rule->new_priority == "high" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_high') }}</option>
-                                    <option value="urgent" {{ $rule->new_priority == "urgent" ? "selected" : "" }}>{{ __('admin.ticket_escalation.priority_urgent') }}</option>
                                 </select>
                             </div>
                         </div>
+                        @include('admin.config.partials.escalation-scope', ['rule' => $rule, 'departments' => $departments, 'statuses' => $statuses, 'priorities' => $priorities])
                         <div class="form-group" style="margin-top:12px;">
                             <label class="form-label">{{ __('admin.ticket_escalation.assign_to_admin') }}</label>
                             <select name="flag_to" class="form-control">
@@ -142,10 +142,10 @@
                             <option value="low">{{ __('admin.ticket_escalation.priority_low') }}</option>
                             <option value="medium">{{ __('admin.ticket_escalation.priority_medium') }}</option>
                             <option value="high">{{ __('admin.ticket_escalation.priority_high') }}</option>
-                            <option value="urgent">{{ __('admin.ticket_escalation.priority_urgent') }}</option>
                         </select>
                     </div>
                 </div>
+                @include('admin.config.partials.escalation-scope', ['rule' => null, 'departments' => $departments, 'statuses' => $statuses, 'priorities' => $priorities])
                 <div class="form-group" style="margin-top:12px;">
                     <label class="form-label">{{ __('admin.ticket_escalation.assign_to_admin') }}</label>
                     <select name="flag_to" class="form-control">
