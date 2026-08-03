@@ -56,7 +56,7 @@ class FraudDetectionService
             $amount = (float) ($order->amount ?? 0);
             if ($amount > 100) {
                 $score += 20;
-                $reasons[] = "New client (< 24h) with high order amount (\${$amount})";
+                $reasons[] = 'New client (< 24h) with high order amount ('.money_fmt($amount).')';
             }
         }
 

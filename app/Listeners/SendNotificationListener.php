@@ -2,17 +2,28 @@
 
 namespace App\Listeners;
 
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use App\Events\ClientCreated;
-use App\Events\OrderPlaced;
 use App\Events\InvoiceCreated;
 use App\Events\InvoicePaid;
-use App\Events\TicketOpened;
-use App\Events\TicketReplied;
+use App\Events\OrderPlaced;
 use App\Events\ServiceActivated;
 use App\Events\ServiceSuspended;
 use App\Events\ServiceTerminated;
+use App\Events\TicketOpened;
+use App\Events\TicketReplied;
+use App\Mail\AccountSignupMail;
+use App\Mail\InvoiceCreatedMail;
+use App\Mail\InvoicePaidMail;
+use App\Mail\OrderConfirmationMail;
+use App\Mail\ServiceSuspensionMail;
+use App\Mail\ServiceTerminationMail;
+use App\Mail\ServiceWelcomeMail;
+use App\Mail\TicketOpenedMail;
+use App\Mail\TicketReplyMail;
+use App\Models\Setting;
+use App\Services\NotificationService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendNotificationListener
 {
@@ -20,10 +31,10 @@ class SendNotificationListener
     {
         try {
             if ($event->client->email) {
-                Mail::to($event->client->email)->queue(new \App\Mail\AccountSignupMail($event->client));
+                Mail::to($event->client->email)->queue(new AccountSignupMail($event->client));
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: ClientCreated email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: ClientCreated email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('client.created', [
@@ -39,10 +50,10 @@ class SendNotificationListener
         try {
             $email = $event->order->client?->email;
             if ($email) {
-                Mail::to($email)->queue(new \App\Mail\OrderConfirmationMail($event->order));
+                Mail::to($email)->queue(new OrderConfirmationMail($event->order));
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: OrderPlaced email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: OrderPlaced email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('order.placed', [
@@ -59,16 +70,16 @@ class SendNotificationListener
         try {
             $email = $event->invoice->client?->email;
             if ($email) {
-                Mail::to($email)->queue(new \App\Mail\InvoiceCreatedMail($event->invoice));
+                Mail::to($email)->queue(new InvoiceCreatedMail($event->invoice));
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: InvoiceCreated email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: InvoiceCreated email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('invoice.created', [
             'event_type' => 'invoice.created',
             'subject' => 'Invoice Created',
-            'message' => "Invoice #{$event->invoice->invoice_num} created for {$event->invoice->client?->first_name} {$event->invoice->client?->last_name} — \${$event->invoice->total}",
+            'message' => "Invoice #{$event->invoice->invoice_num} created for {$event->invoice->client?->first_name} {$event->invoice->client?->last_name} — ".money_fmt($event->invoice->total),
             'invoice_id' => $event->invoice->id,
         ]);
     }
@@ -78,16 +89,16 @@ class SendNotificationListener
         try {
             $email = $event->invoice->client?->email;
             if ($email) {
-                Mail::to($email)->queue(new \App\Mail\InvoicePaidMail($event->invoice, $event->transactionId));
+                Mail::to($email)->queue(new InvoicePaidMail($event->invoice, $event->transactionId));
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: InvoicePaid email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: InvoicePaid email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('invoice.paid', [
             'event_type' => 'invoice.paid',
             'subject' => 'Invoice Paid',
-            'message' => "Invoice #{$event->invoice->invoice_num} paid — \${$event->invoice->total}",
+            'message' => "Invoice #{$event->invoice->invoice_num} paid — ".money_fmt($event->invoice->total),
             'invoice_id' => $event->invoice->id,
             'transaction_id' => $event->transactionId,
         ]);
@@ -97,16 +108,16 @@ class SendNotificationListener
     {
         try {
             if ($event->ticket->email) {
-                Mail::to($event->ticket->email)->queue(new \App\Mail\TicketOpenedMail($event->ticket, false));
+                Mail::to($event->ticket->email)->queue(new TicketOpenedMail($event->ticket, false));
             }
-            if (!$event->isAdmin) {
-                $adminEmail = \App\Models\Setting::get('Email', null);
+            if (! $event->isAdmin) {
+                $adminEmail = Setting::get('Email', null);
                 if ($adminEmail) {
-                    Mail::to($adminEmail)->queue(new \App\Mail\TicketOpenedMail($event->ticket, true));
+                    Mail::to($adminEmail)->queue(new TicketOpenedMail($event->ticket, true));
                 }
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: TicketOpened email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: TicketOpened email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('ticket.opened', [
@@ -122,22 +133,22 @@ class SendNotificationListener
         try {
             if ($event->isStaffReply) {
                 if ($event->ticket->email) {
-                    Mail::to($event->ticket->email)->queue(new \App\Mail\TicketReplyMail($event->ticket, $event->replyMessage, true));
+                    Mail::to($event->ticket->email)->queue(new TicketReplyMail($event->ticket, $event->replyMessage, true));
                 }
             } else {
-                $adminEmail = \App\Models\Setting::get('Email', null);
+                $adminEmail = Setting::get('Email', null);
                 if ($adminEmail) {
-                    Mail::to($adminEmail)->queue(new \App\Mail\TicketReplyMail($event->ticket, $event->replyMessage, false));
+                    Mail::to($adminEmail)->queue(new TicketReplyMail($event->ticket, $event->replyMessage, false));
                 }
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: TicketReplied email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: TicketReplied email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('ticket.replied', [
             'event_type' => 'ticket.replied',
             'subject' => 'Ticket Reply',
-            'message' => "Ticket #{$event->ticket->id} received a " . ($event->isStaffReply ? 'staff' : 'client') . ' reply',
+            'message' => "Ticket #{$event->ticket->id} received a ".($event->isStaffReply ? 'staff' : 'client').' reply',
             'ticket_id' => $event->ticket->id,
         ]);
     }
@@ -147,10 +158,10 @@ class SendNotificationListener
         try {
             $email = $event->service->client?->email;
             if ($email) {
-                Mail::to($email)->queue(new \App\Mail\ServiceWelcomeMail($event->service));
+                Mail::to($email)->queue(new ServiceWelcomeMail($event->service));
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: ServiceActivated email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: ServiceActivated email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('service.activated', [
@@ -166,10 +177,10 @@ class SendNotificationListener
         try {
             $email = $event->service->client?->email;
             if ($email) {
-                Mail::to($email)->queue(new \App\Mail\ServiceSuspensionMail($event->service, $event->reason));
+                Mail::to($email)->queue(new ServiceSuspensionMail($event->service, $event->reason));
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: ServiceSuspended email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: ServiceSuspended email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('service.suspended', [
@@ -185,10 +196,10 @@ class SendNotificationListener
         try {
             $email = $event->service->client?->email;
             if ($email) {
-                Mail::to($email)->queue(new \App\Mail\ServiceTerminationMail($event->service));
+                Mail::to($email)->queue(new ServiceTerminationMail($event->service));
             }
         } catch (\Throwable $e) {
-            Log::error("SendNotification: ServiceTerminated email failed", ['error' => $e->getMessage()]);
+            Log::error('SendNotification: ServiceTerminated email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('service.terminated', [
@@ -206,7 +217,7 @@ class SendNotificationListener
     private function dispatchNotification(string $eventType, array $data): void
     {
         try {
-            app(\App\Services\NotificationService::class)->dispatch($eventType, $data);
+            app(NotificationService::class)->dispatch($eventType, $data);
         } catch (\Throwable $e) {
             Log::error("NotificationService dispatch failed for {$eventType}", ['error' => $e->getMessage()]);
         }

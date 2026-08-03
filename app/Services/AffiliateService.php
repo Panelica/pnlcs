@@ -64,7 +64,7 @@ class AffiliateService
             'transaction_id' => 'AFF-'.strtoupper(uniqid()),
             'amount_in' => 0,
             'amount_out' => $amount,
-            'description' => "Affiliate withdrawal - \${$amount}",
+            'description' => 'Affiliate withdrawal - '.money_fmt($amount),
             'date' => now(),
         ]);
 

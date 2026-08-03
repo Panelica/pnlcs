@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Invoice;
@@ -43,7 +44,7 @@ class InvoiceGenerationService
             ->where('amount', '>', 0)
             ->whereHas('client')
             ->whereDoesntHave('client.invoices', fn ($q) => $q
-                ->whereNotIn('status', \App\Enums\InvoiceStatus::settled())
+                ->whereNotIn('status', InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Hosting')->whereColumn('rel_id', 'services.id')))
             ->get();
 
@@ -65,7 +66,7 @@ class InvoiceGenerationService
             ->where('recurring_amount', '>', 0)
             ->whereHas('client')
             ->whereDoesntHave('client.invoices', fn ($q) => $q
-                ->whereNotIn('status', \App\Enums\InvoiceStatus::settled())
+                ->whereNotIn('status', InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Domain')->whereColumn('rel_id', 'domains.id')))
             ->get();
 
@@ -190,7 +191,7 @@ class InvoiceGenerationService
                 'tax' => $newTax,
                 'tax2' => $newTax2,
                 'total' => $newTotal,
-                'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-\${$discount})"),
+                'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-".money_fmt($discount).')'),
             ]);
 
             // Increment promo usage counter
@@ -307,7 +308,7 @@ class InvoiceGenerationService
                 $items[] = [
                     'type' => 'Overage',
                     'rel_id' => $service->id,
-                    'description' => "Disk Overage: {$overageMb} MB over {$diskLimit} MB limit @ \${$diskRate}/MB — {$service->domain}",
+                    'description' => "Disk Overage: {$overageMb} MB over {$diskLimit} MB limit @ ".currency_symbol()."{$diskRate}/MB — {$service->domain}",
                     'amount' => $amount,
                     'taxed' => $product->tax ?? true,
                 ];
@@ -327,7 +328,7 @@ class InvoiceGenerationService
                 $items[] = [
                     'type' => 'Overage',
                     'rel_id' => $service->id,
-                    'description' => "Bandwidth Overage: {$overageMb} MB over {$bwLimit} MB limit @ \${$bwRate}/MB — {$service->domain}",
+                    'description' => "Bandwidth Overage: {$overageMb} MB over {$bwLimit} MB limit @ ".currency_symbol()."{$bwRate}/MB — {$service->domain}",
                     'amount' => $amount,
                     'taxed' => $product->tax ?? true,
                 ];

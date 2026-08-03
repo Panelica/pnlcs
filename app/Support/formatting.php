@@ -30,7 +30,26 @@ if (! function_exists('money_fmt')) {
             : '$'.$value;
     }
 }
-if (! function_exists('shop_currency_code')) {
+if (! function_exists('currency_symbol')) {
+    /**
+     * The sign in front of an amount in the currency the shop sells in.
+     *
+     * For the few places that print a rate rather than an amount - a price per
+     * megabyte, say - where rounding to two decimals would misstate it.
+     */
+    function currency_symbol(): string
+    {
+        if (! app()->bound('pnlcs.currency')) {
+            try {
+                app()->instance('pnlcs.currency', ['currency' => Currency::getDefault()]);
+            } catch (Throwable) {
+                app()->instance('pnlcs.currency', ['currency' => null]);
+            }
+        }
+
+        return (string) (app('pnlcs.currency')['currency']->prefix ?? '$');
+    }
+}if (! function_exists('shop_currency_code')) {
     /**
      * The three-letter code of the currency the shop sells in.
      *
