@@ -35,7 +35,7 @@ class VultrModule extends AbstractServerModule
     private function api(Server $server, string $method, string $endpoint, array $data = []): array
     {
         $apiKey = $this->getApiKey($server);
-        if (!$apiKey) {
+        if (! $apiKey) {
             return ['success' => false, 'message' => 'Vultr API key not configured.'];
         }
 
@@ -51,14 +51,16 @@ class VultrModule extends AbstractServerModule
                 default => $request->get("{$this->apiUrl}/{$endpoint}", $data),
             };
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 $error = $response->json('error', "HTTP {$response->status()}");
+
                 return ['success' => false, 'message' => is_string($error) ? $error : json_encode($error), 'raw' => $response->json()];
             }
 
             return ['success' => true, 'message' => 'OK', 'raw' => $response->json() ?? []];
         } catch (\Throwable $e) {
             Log::error("VultrModule API error: {$e->getMessage()}");
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -66,7 +68,7 @@ class VultrModule extends AbstractServerModule
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No Vultr server configured.');
         }
 
@@ -91,7 +93,7 @@ class VultrModule extends AbstractServerModule
             'tags' => ["pnlcs-service-{$service->id}"],
         ]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "VPS creation failed: {$result['message']}");
         }
 
@@ -116,6 +118,7 @@ class VultrModule extends AbstractServerModule
             'main_ip' => $mainIp,
         ]);
         $this->logAction($service, 'create', $out);
+
         return $out;
     }
 
@@ -123,72 +126,75 @@ class VultrModule extends AbstractServerModule
     {
         // Vultr doesn't have native suspend — we halt the instance
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No Vultr server configured.');
         }
 
         $data = $this->getModuleData($service);
         $instanceId = $data['vultr_instance_id'] ?? null;
-        if (!$instanceId) {
+        if (! $instanceId) {
             return $this->buildResult(false, 'Vultr instance ID not found.');
         }
 
         $result = $this->api($server, 'POST', "instances/{$instanceId}/halt");
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Halt failed: {$result['message']}");
         }
 
         $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         $out = $this->buildResult(true, 'Vultr instance halted (suspended).');
         $this->logAction($service, 'suspend', $out);
+
         return $out;
     }
 
     public function unsuspend(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No Vultr server configured.');
         }
 
         $data = $this->getModuleData($service);
         $instanceId = $data['vultr_instance_id'] ?? null;
-        if (!$instanceId) {
+        if (! $instanceId) {
             return $this->buildResult(false, 'Vultr instance ID not found.');
         }
 
         $result = $this->api($server, 'POST', "instances/{$instanceId}/start");
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Start failed: {$result['message']}");
         }
 
         $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         $out = $this->buildResult(true, 'Vultr instance started (unsuspended).');
         $this->logAction($service, 'unsuspend', $out);
+
         return $out;
     }
 
     public function terminate(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No Vultr server configured.');
         }
 
         $data = $this->getModuleData($service);
         $instanceId = $data['vultr_instance_id'] ?? null;
-        if (!$instanceId) {
+        if (! $instanceId) {
             return $this->buildResult(false, 'Vultr instance ID not found.');
         }
 
         $result = $this->api($server, 'DELETE', "instances/{$instanceId}");
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Destroy failed: {$result['message']}");
         }
 
         $service->update(['status' => 'terminated', 'termination_date' => now()]);
         $out = $this->buildResult(true, 'Vultr instance destroyed.');
         $this->logAction($service, 'terminate', $out);
+
         return $out;
     }
 
@@ -202,13 +208,13 @@ class VultrModule extends AbstractServerModule
     public function changePackage(Service $service, array $newPackage): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No Vultr server configured.');
         }
 
         $data = $this->getModuleData($service);
         $instanceId = $data['vultr_instance_id'] ?? null;
-        if (!$instanceId) {
+        if (! $instanceId) {
             return $this->buildResult(false, 'Vultr instance ID not found.');
         }
 
@@ -217,17 +223,18 @@ class VultrModule extends AbstractServerModule
             : ($newPackage['config_options'] ?? []);
         $plan = $config['vultr_plan'] ?? $config['plan'] ?? null;
 
-        if (!$plan) {
+        if (! $plan) {
             return $this->buildResult(false, 'No vultr_plan configured in product.');
         }
 
         $result = $this->api($server, 'PATCH', "instances/{$instanceId}", ['plan' => $plan]);
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Upgrade failed: {$result['message']}");
         }
 
         $out = $this->buildResult(true, 'Vultr instance plan changed.');
         $this->logAction($service, 'changePackage', $out);
+
         return $out;
     }
 
@@ -235,7 +242,7 @@ class VultrModule extends AbstractServerModule
     {
         $result = $this->api($server, 'GET', 'instances', ['per_page' => 500]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return ['updated' => 0, 'errors' => 1];
         }
 
@@ -244,12 +251,12 @@ class VultrModule extends AbstractServerModule
 
         foreach ($instances as $instance) {
             $instanceId = $instance['id'] ?? null;
-            $service = \App\Models\Service::where('server_id', $server->id)
+            $service = Service::where('server_id', $server->id)
                 ->where('status', 'active')
-                ->whereRaw("notes LIKE ?", ["%{$instanceId}%"])
+                ->whereRaw('notes LIKE ?', ["%{$instanceId}%"])
                 ->first();
 
-            if (!$service) {
+            if (! $service) {
                 continue;
             }
 
@@ -260,13 +267,13 @@ class VultrModule extends AbstractServerModule
             $updateData['notes'] = json_encode(array_merge(
                 $this->getModuleData($service),
                 [
-                    'vultr_ram'     => $instance['ram'] ?? null,
-                    'vultr_vcpu'    => $instance['vcpu_count'] ?? 0,
+                    'vultr_ram' => $instance['ram'] ?? null,
+                    'vultr_vcpu' => $instance['vcpu_count'] ?? 0,
                     'vultr_main_ip' => $instance['main_ip'] ?? '',
                 ]
             ));
 
-            if (!empty($updateData)) {
+            if (! empty($updateData)) {
                 $service->update($updateData);
                 $updated++;
             }
@@ -279,9 +286,11 @@ class VultrModule extends AbstractServerModule
     {
         try {
             $result = $this->api($server, 'GET', 'account');
+
             return $result['success'];
         } catch (\Throwable $e) {
             Log::error("VultrModule::testConnection: {$e->getMessage()}");
+
             return false;
         }
     }

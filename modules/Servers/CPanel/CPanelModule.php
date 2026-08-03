@@ -1,4 +1,5 @@
 <?php
+
 namespace Modules\Servers\CPanel;
 
 use App\Models\Server;
@@ -29,20 +30,22 @@ class CPanelModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 2087;
+
         return "https://{$this->serverHost($server)}:{$port}/json-api/";
     }
 
     private function authHeader(Server $server): string
     {
-        $user  = $server->username ?: 'root';
+        $user = $server->username ?: 'root';
         $token = $server->access_hash ?? '';
+
         return "whm {$user}:{$token}";
     }
 
     private function call(Server $server, string $function, array $params = []): array
     {
         $params['api.version'] = 1;
-        $url = $this->baseUrl($server) . $function;
+        $url = $this->baseUrl($server).$function;
 
         $resp = Http::withHeaders(['Authorization' => $this->authHeader($server)])
             ->withoutVerifying()
@@ -50,18 +53,19 @@ class CPanelModule extends AbstractServerModule
             ->asForm()
             ->post($url, $params);
 
-        if (!$resp->successful()) {
+        if (! $resp->successful()) {
             Log::error("CPanelModule::{$function} HTTP error", ['status' => $resp->status(), 'body' => $resp->body()]);
+
             return ['success' => false, 'message' => "WHM API HTTP error {$resp->status()}", 'raw' => []];
         }
 
-        $json   = $resp->json() ?? [];
-        $result = (int)($json['metadata']['result'] ?? $json['result'] ?? 0);
+        $json = $resp->json() ?? [];
+        $result = (int) ($json['metadata']['result'] ?? $json['result'] ?? 0);
 
         return [
             'success' => $result === 1,
             'message' => $json['metadata']['reason'] ?? $json['reason'] ?? ($result === 1 ? 'OK' : 'WHM API call failed'),
-            'raw'     => $json['data'] ?? $json,
+            'raw' => $json['data'] ?? $json,
         ];
     }
 
@@ -72,30 +76,30 @@ class CPanelModule extends AbstractServerModule
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No cPanel/WHM server configured.');
         }
 
-        $client  = $service->client;
-        $domain  = $service->domain;
+        $client = $service->client;
+        $domain = $service->domain;
         $product = $service->product;
 
-        if (!$client || !$domain) {
+        if (! $client || ! $domain) {
             return $this->buildResult(false, 'Service is missing client or domain.');
         }
 
         // WHM username: lowercase alphanumeric, must start with a letter, max 8 chars
         $username = preg_replace('/[^a-z0-9]/', '', strtolower(explode('.', $domain)[0]));
-        $username = ltrim($username, '0123456789') ?: 'u' . $service->id;
+        $username = ltrim($username, '0123456789') ?: 'u'.$service->id;
         $username = substr($username, 0, 8);
 
         $password = $service->password ?: bin2hex(random_bytes(8));
-        $package  = $this->getRemotePackage($service);
+        $package = $this->getRemotePackage($service);
 
         $params = [
-            'username'     => $username,
-            'domain'       => $domain,
-            'password'     => $password,
+            'username' => $username,
+            'domain' => $domain,
+            'password' => $password,
             'contactemail' => $client->email,
         ];
         if ($package) {
@@ -105,14 +109,14 @@ class CPanelModule extends AbstractServerModule
         // Retry with a numeric suffix when the username is already taken
         $result = $this->call($server, 'createacct', $params);
         $attempt = 1;
-        while (!$result['success'] && $attempt <= 3 && stripos($result['message'], 'already') !== false) {
-            $params['username'] = substr($username, 0, 7 - strlen((string) $attempt)) . $attempt;
+        while (! $result['success'] && $attempt <= 3 && stripos($result['message'], 'already') !== false) {
+            $params['username'] = substr($username, 0, 7 - strlen((string) $attempt)).$attempt;
             $result = $this->call($server, 'createacct', $params);
             $attempt++;
         }
         $username = $params['username'];
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "cPanel account creation failed: {$result['message']}");
         }
 
@@ -121,124 +125,129 @@ class CPanelModule extends AbstractServerModule
 
         $out = $this->buildResult(true, 'cPanel account created successfully.', ['cpanel_username' => $username]);
         $this->logAction($service, 'create', $out);
+
         return $out;
     }
 
     public function suspend(Service $service, string $reason = ''): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No cPanel/WHM server configured.');
         }
 
-        $data     = $this->getModuleData($service);
+        $data = $this->getModuleData($service);
         $username = $data['cpanel_username'] ?? $service->username;
 
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'cPanel username not found in service notes.');
         }
 
         $result = $this->call($server, 'suspendacct', ['user' => $username, 'reason' => $reason]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Suspend failed: {$result['message']}");
         }
 
         $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         $out = $this->buildResult(true, 'cPanel account suspended.');
         $this->logAction($service, 'suspend', $out);
+
         return $out;
     }
 
     public function unsuspend(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No cPanel/WHM server configured.');
         }
 
-        $data     = $this->getModuleData($service);
+        $data = $this->getModuleData($service);
         $username = $data['cpanel_username'] ?? $service->username;
 
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'cPanel username not found in service notes.');
         }
 
         $result = $this->call($server, 'unsuspendacct', ['user' => $username]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Unsuspend failed: {$result['message']}");
         }
 
         $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         $out = $this->buildResult(true, 'cPanel account unsuspended.');
         $this->logAction($service, 'unsuspend', $out);
+
         return $out;
     }
 
     public function terminate(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No cPanel/WHM server configured.');
         }
 
-        $data     = $this->getModuleData($service);
+        $data = $this->getModuleData($service);
         $username = $data['cpanel_username'] ?? $service->username;
 
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'cPanel username not found in service notes.');
         }
 
         $result = $this->call($server, 'removeacct', ['user' => $username]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Terminate failed: {$result['message']}");
         }
 
         $service->update(['status' => 'terminated', 'termination_date' => now()]);
         $out = $this->buildResult(true, 'cPanel account terminated.');
         $this->logAction($service, 'terminate', $out);
+
         return $out;
     }
 
     public function changePassword(Service $service, string $newPassword): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No cPanel/WHM server configured.');
         }
 
-        $data     = $this->getModuleData($service);
+        $data = $this->getModuleData($service);
         $username = $data['cpanel_username'] ?? $service->username;
 
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'cPanel username not found in service notes.');
         }
 
         $result = $this->call($server, 'passwd', ['user' => $username, 'password' => $newPassword]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Password change failed: {$result['message']}");
         }
 
         $service->update(['password' => $newPassword]);
         $out = $this->buildResult(true, 'Password changed successfully.');
         $this->logAction($service, 'changePassword', $out);
+
         return $out;
     }
 
     public function changePackage(Service $service, array $newPackage): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No cPanel/WHM server configured.');
         }
 
-        $data     = $this->getModuleData($service);
+        $data = $this->getModuleData($service);
         $username = $data['cpanel_username'] ?? $service->username;
 
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'cPanel username not found in service notes.');
         }
 
@@ -247,62 +256,76 @@ class CPanelModule extends AbstractServerModule
             : ($newPackage['config_options'] ?? []);
         $packageName = $config['cpanel_package'] ?? $config['package_name'] ?? null;
 
-        if (!$packageName) {
+        if (! $packageName) {
             return $this->buildResult(false, 'New product does not have a cpanel_package configured.');
         }
 
         $result = $this->call($server, 'changepackage', ['user' => $username, 'pkg' => $packageName]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Package change failed: {$result['message']}");
         }
 
         $out = $this->buildResult(true, 'Package changed successfully.');
         $this->logAction($service, 'changePackage', $out);
+
         return $out;
     }
 
     public function usageUpdate(Server $server): array
     {
-        $services = \App\Models\Service::where('server_id', $server->id)
+        $services = Service::where('server_id', $server->id)
             ->where('status', 'active')
             ->get();
 
         $updated = 0;
-        $errors  = 0;
+        $errors = 0;
 
         foreach ($services as $service) {
-            $data     = $this->getModuleData($service);
+            $data = $this->getModuleData($service);
             $username = $data['cpanel_username'] ?? $service->username;
 
-            if (!$username) {
+            if (! $username) {
                 $errors++;
+
                 continue;
             }
 
             $result = $this->call($server, 'accountsummary', ['user' => $username]);
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 $errors++;
+
                 continue;
             }
 
-            $raw  = $result['raw'];
+            $raw = $result['raw'];
             $acct = $raw['acct'][0] ?? $raw ?? [];
 
             // WHM returns values like "12M" or "unlimited"
             $toMb = function ($v): ?int {
-                if ($v === null || strcasecmp((string) $v, 'unlimited') === 0) return null;
+                if ($v === null || strcasecmp((string) $v, 'unlimited') === 0) {
+                    return null;
+                }
+
                 return (int) $v;
             };
 
             $updateData = [];
-            if (($n = $toMb($acct['diskused']  ?? null)) !== null) $updateData['disk_usage'] = $n;
-            if (($n = $toMb($acct['disklimit'] ?? null)) !== null) $updateData['disk_limit'] = $n;
-            if (($n = $toMb($acct['bandwidth'] ?? null)) !== null) $updateData['bw_usage']   = $n;
-            if (($n = $toMb($acct['bwlimit']   ?? null)) !== null) $updateData['bw_limit']   = $n;
+            if (($n = $toMb($acct['diskused'] ?? null)) !== null) {
+                $updateData['disk_usage'] = $n;
+            }
+            if (($n = $toMb($acct['disklimit'] ?? null)) !== null) {
+                $updateData['disk_limit'] = $n;
+            }
+            if (($n = $toMb($acct['bandwidth'] ?? null)) !== null) {
+                $updateData['bw_usage'] = $n;
+            }
+            if (($n = $toMb($acct['bwlimit'] ?? null)) !== null) {
+                $updateData['bw_limit'] = $n;
+            }
 
-            if (!empty($updateData)) {
+            if (! empty($updateData)) {
                 $service->update($updateData);
                 $updated++;
             }
@@ -311,13 +334,56 @@ class CPanelModule extends AbstractServerModule
         return ['updated' => $updated, 'errors' => $errors];
     }
 
+    /**
+     * WHM's packages, as the product form offers them.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        $result = $this->call($server, 'listpkgs');
+
+        if (! ($result['success'] ?? false)) {
+            return [];
+        }
+
+        $packages = $result['raw']['pkg'] ?? [];
+        $out = [];
+
+        foreach ($packages as $pkg) {
+            $name = $pkg['name'] ?? null;
+
+            if (! $name) {
+                continue;
+            }
+
+            $quota = $pkg['QUOTA'] ?? null;
+            $mail = $pkg['MAXPOP'] ?? null;
+            $detail = array_filter([
+                $quota !== null ? 'disk '.$quota : null,
+                $mail !== null ? 'email '.$mail : null,
+            ]);
+
+            $out[] = [
+                'id' => $name,
+                'name' => $detail === [] ? $name : $name.' ('.implode(', ', $detail).')',
+            ];
+        }
+
+        usort($out, fn ($a, $b) => strcmp($a['id'], $b['id']));
+
+        return $out;
+    }
+
     public function testConnection(Server $server): bool
     {
         try {
             $result = $this->call($server, 'version');
+
             return $result['success'];
         } catch (\Throwable $e) {
             Log::error('CPanelModule::testConnection exception', ['error' => $e->getMessage()]);
+
             return false;
         }
     }

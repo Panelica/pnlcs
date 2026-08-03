@@ -46,6 +46,18 @@
                         <option value="{{ $sg->id }}" @selected((string) old('server_group_id') === (string) $sg->id)>{{ $sg->name }}</option>
                         @endforeach
                     </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.products.package') }}</label>
+                    <select name="package_name" id="package-select" class="form-control">
+                        <option value="">{{ __('admin.products.package_default') }}</option>
+                        @foreach(($packageList['packages'] ?? []) as $pkg)
+                        <option value="{{ $pkg['id'] }}" @selected(($selectedPackage ?? '') === $pkg['id'])>{{ $pkg['name'] }}</option>
+                        @endforeach
+                    </select>
+                    <div id="package-note" style="color:#777;font-size:12px;margin-top:4px;">
+                        {{ $packageList['error'] ?? __('admin.products.package_hint') }}
+                    </div>
                 </div>                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ old('description') }}</textarea></div>
             </div>
         </div>
@@ -77,3 +89,39 @@
     </div>
 </form>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    var moduleSelect = document.querySelector('select[name="server_type"]');
+    var packageSelect = document.getElementById('package-select');
+    var note = document.getElementById('package-note');
+    if (! moduleSelect || ! packageSelect) { return; }
+
+    moduleSelect.addEventListener('change', function () {
+        var chosen = packageSelect.value;
+        packageSelect.innerHTML = '<option value="">@lang('admin.products.package_loading')</option>';
+
+        fetch('{{ route('admin.products.packages') }}?module=' + encodeURIComponent(moduleSelect.value), {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            packageSelect.innerHTML = '<option value="">@lang('admin.products.package_default')</option>';
+            (data.packages || []).forEach(function (p) {
+                var o = document.createElement('option');
+                o.value = p.id;
+                o.textContent = p.name;
+                if (p.id === chosen) { o.selected = true; }
+                packageSelect.appendChild(o);
+            });
+            note.textContent = data.error || '@lang('admin.products.package_hint')';
+        })
+        .catch(function () {
+            packageSelect.innerHTML = '<option value="">@lang('admin.products.package_default')</option>';
+            note.textContent = '@lang('admin.products.package_list_unreachable')';
+        });
+    });
+})();
+</script>
+@endpush

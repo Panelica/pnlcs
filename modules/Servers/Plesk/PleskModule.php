@@ -44,6 +44,7 @@ class PleskModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 8443;
+
         return "https://{$this->serverHost($server)}:{$port}/api/v2";
     }
 
@@ -51,9 +52,9 @@ class PleskModule extends AbstractServerModule
     {
         return Http::withoutVerifying()
             ->withHeaders([
-                'X-API-Key'    => $server->access_hash,
+                'X-API-Key' => $server->access_hash,
                 'Content-Type' => 'application/json',
-                'Accept'       => 'application/json',
+                'Accept' => 'application/json',
             ])
             ->timeout(30);
     }
@@ -83,21 +84,21 @@ class PleskModule extends AbstractServerModule
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No server assigned to this service.');
         }
 
         $client = $service->client;
         $domain = $service->domain ?: '';
-        if (!$client || !$domain) {
+        if (! $client || ! $domain) {
             return $this->buildResult(false, 'Service is missing client or domain.');
         }
 
         // Plesk login: derived from the domain, must be unique on the server
         $login = preg_replace('/[^a-z0-9]/', '', strtolower(explode('.', $domain)[0]));
-        $login = substr(ltrim($login, '0123456789') ?: 'u' . $service->id, 0, 16) . $service->id;
+        $login = substr(ltrim($login, '0123456789') ?: 'u'.$service->id, 0, 16).$service->id;
 
-        $password = $service->password ?: bin2hex(random_bytes(9)) . 'aA1';
+        $password = $service->password ?: bin2hex(random_bytes(9)).'aA1';
         $planName = $this->getRemotePackage($service);
 
         $base = $this->baseUrl($server);
@@ -105,16 +106,17 @@ class PleskModule extends AbstractServerModule
 
         // Step 1 – create customer
         $clientResp = $http->post("{$base}/clients", [
-            'name'     => trim($client->first_name . ' ' . $client->last_name) ?: $login,
-            'login'    => $login,
+            'name' => trim($client->first_name.' '.$client->last_name) ?: $login,
+            'login' => $login,
             'password' => $password,
-            'email'    => $client->email ?? '',
-            'type'     => 'customer',
+            'email' => $client->email ?? '',
+            'type' => 'customer',
         ]);
 
-        if (!$clientResp->successful()) {
+        if (! $clientResp->successful()) {
             Log::error('Plesk create client failed', ['body' => $clientResp->body()]);
-            return $this->buildResult(false, 'Failed to create Plesk client: ' . $this->errorMessage($clientResp));
+
+            return $this->buildResult(false, 'Failed to create Plesk client: '.$this->errorMessage($clientResp));
         }
 
         $clientId = $clientResp->json('id');
@@ -122,13 +124,13 @@ class PleskModule extends AbstractServerModule
         // Step 2 – create the subscription: POST /domains with virtual hosting.
         // ftp_login + ftp_password are REQUIRED when creating a subscription.
         $payload = [
-            'name'             => $domain,
-            'hosting_type'     => 'virtual',
+            'name' => $domain,
+            'hosting_type' => 'virtual',
             'hosting_settings' => [
-                'ftp_login'    => $login,
+                'ftp_login' => $login,
                 'ftp_password' => $password,
             ],
-            'owner_client'     => ['id' => $clientId],
+            'owner_client' => ['id' => $clientId],
         ];
         if ($planName) {
             $payload['plan'] = ['name' => $planName];
@@ -136,11 +138,12 @@ class PleskModule extends AbstractServerModule
 
         $domainResp = $http->post("{$base}/domains", $payload);
 
-        if (!$domainResp->successful()) {
+        if (! $domainResp->successful()) {
             // Rollback: delete the client we just created
             Log::error('Plesk create domain failed - rolling back client', ['body' => $domainResp->body()]);
             $http->delete("{$base}/clients/{$clientId}");
-            return $this->buildResult(false, 'Failed to create Plesk subscription: ' . $this->errorMessage($domainResp));
+
+            return $this->buildResult(false, 'Failed to create Plesk subscription: '.$this->errorMessage($domainResp));
         }
 
         $domainId = $domainResp->json('id');
@@ -152,6 +155,7 @@ class PleskModule extends AbstractServerModule
         $service->update(['username' => $login, 'password' => $password]);
 
         $this->logAction($service, 'create', ['success' => true]);
+
         return $this->buildResult(true, 'Plesk account created successfully.', [
             'plesk_client_id' => $clientId,
             'plesk_domain_id' => $domainId,
@@ -160,10 +164,10 @@ class PleskModule extends AbstractServerModule
 
     public function suspend(Service $service, string $reason = ''): array
     {
-        $server   = $this->getServer($service);
+        $server = $this->getServer($service);
         $clientId = $this->getClientId($service);
 
-        if (!$server || !$clientId) {
+        if (! $server || ! $clientId) {
             return $this->buildResult(false, 'Missing server or Plesk client ID.');
         }
 
@@ -171,15 +175,16 @@ class PleskModule extends AbstractServerModule
 
         $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account suspended.' : $this->errorMessage($resp));
         $this->logAction($service, 'suspend', $result);
+
         return $result;
     }
 
     public function unsuspend(Service $service): array
     {
-        $server   = $this->getServer($service);
+        $server = $this->getServer($service);
         $clientId = $this->getClientId($service);
 
-        if (!$server || !$clientId) {
+        if (! $server || ! $clientId) {
             return $this->buildResult(false, 'Missing server or Plesk client ID.');
         }
 
@@ -187,15 +192,16 @@ class PleskModule extends AbstractServerModule
 
         $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account unsuspended.' : $this->errorMessage($resp));
         $this->logAction($service, 'unsuspend', $result);
+
         return $result;
     }
 
     public function terminate(Service $service): array
     {
-        $server   = $this->getServer($service);
+        $server = $this->getServer($service);
         $clientId = $this->getClientId($service);
 
-        if (!$server || !$clientId) {
+        if (! $server || ! $clientId) {
             return $this->buildResult(false, 'Missing server or Plesk client ID.');
         }
 
@@ -204,15 +210,16 @@ class PleskModule extends AbstractServerModule
 
         $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account terminated.' : $this->errorMessage($resp));
         $this->logAction($service, 'terminate', $result);
+
         return $result;
     }
 
     public function changePassword(Service $service, string $newPassword): array
     {
-        $server   = $this->getServer($service);
+        $server = $this->getServer($service);
         $clientId = $this->getClientId($service);
 
-        if (!$server || !$clientId) {
+        if (! $server || ! $clientId) {
             return $this->buildResult(false, 'Missing server or Plesk client ID.');
         }
 
@@ -229,7 +236,7 @@ class PleskModule extends AbstractServerModule
 
     public function changePackage(Service $service, array $newPackage): array
     {
-        $server   = $this->getServer($service);
+        $server = $this->getServer($service);
         $domainId = $this->getDomainId($service);
 
         $config = is_string($newPackage['config_options'] ?? null)
@@ -237,7 +244,7 @@ class PleskModule extends AbstractServerModule
             : ($newPackage['config_options'] ?? []);
         $planName = $config['plesk_plan'] ?? $config['package_name'] ?? $newPackage['package_name'] ?? $newPackage['name'] ?? null;
 
-        if (!$server || !$domainId || !$planName) {
+        if (! $server || ! $domainId || ! $planName) {
             return $this->buildResult(false, 'Missing server, domain ID, or plan name.');
         }
 
@@ -255,7 +262,7 @@ class PleskModule extends AbstractServerModule
     public function usageUpdate(Server $server): array
     {
         $updated = 0;
-        $errors  = 0;
+        $errors = 0;
 
         $services = Service::where('server_id', $server->id)
             ->where('status', 'active')
@@ -263,14 +270,15 @@ class PleskModule extends AbstractServerModule
 
         foreach ($services as $service) {
             $clientId = $this->getClientId($service);
-            if (!$clientId) {
+            if (! $clientId) {
                 continue;
             }
 
             try {
                 $resp = $this->http($server)->get("{$this->baseUrl($server)}/clients/{$clientId}/statistics");
-                if (!$resp->successful()) {
+                if (! $resp->successful()) {
                     $errors++;
+
                     continue;
                 }
 
@@ -300,9 +308,11 @@ class PleskModule extends AbstractServerModule
     {
         try {
             $resp = $this->http($server)->get("{$this->baseUrl($server)}/server");
+
             return $resp->successful();
         } catch (\Throwable $e) {
             Log::warning('Plesk testConnection failed', ['server' => $server->id, 'error' => $e->getMessage()]);
+
             return false;
         }
     }

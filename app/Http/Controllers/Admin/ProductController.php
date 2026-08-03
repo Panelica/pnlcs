@@ -37,6 +37,68 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_group_created'));
     }
 
+    /**
+     * The plans a module's server offers, for the product form.
+     *
+     * Asked of the first active server of that type - the plans are the
+     * panel's, not ours. Anything that goes wrong answers with an empty list
+     * and a reason, so the form can say why instead of showing an empty box.
+     *
+     * @return array{packages: array<int, array{id: string, name: string}>, error: ?string}
+     */
+    /**
+     * @return array<string, mixed>
+     */
+    private function productConfig(Product $product): array
+    {
+        $config = is_string($product->config_options)
+            ? json_decode($product->config_options, true)
+            : ($product->config_options ?? []);
+
+        return is_array($config) ? $config : [];
+    }
+
+    private function packagesFor(?string $moduleType): array
+    {
+        $moduleType = trim((string) $moduleType);
+
+        if ($moduleType === '') {
+            return ['packages' => [], 'error' => null];
+        }
+
+        $server = Server::where('type', $moduleType)->where('active', true)->first();
+
+        if (! $server) {
+            return ['packages' => [], 'error' => __('admin.products.no_server_for_module')];
+        }
+
+        $module = app(ModuleRegistry::class)->getServerModule($moduleType);
+
+        if (! $module || ! method_exists($module, 'listPackages')) {
+            return ['packages' => [], 'error' => __('admin.products.module_lists_no_packages')];
+        }
+
+        try {
+            $packages = $module->listPackages($server);
+        } catch (\Throwable $e) {
+            return ['packages' => [], 'error' => __('admin.products.package_list_failed', ['error' => $e->getMessage()])];
+        }
+
+        if ($packages === []) {
+            return ['packages' => [], 'error' => __('admin.products.package_list_empty', ['host' => $server->hostname ?: $server->ip_address])];
+        }
+
+        return ['packages' => $packages, 'error' => null];
+    }
+
+    /**
+     * Live lookup for the form when the module is changed.
+     */
+    public function packages(Request $request)
+    {
+        return response()->json($this->packagesFor($request->query('module')));
+    }
+
     public function create()
     {
         $groups = ProductGroup::orderBy('sort_order')->get();
@@ -49,6 +111,7 @@ class ProductController extends Controller
             // and a product with no module is sold and never provisioned.
             'serverModules' => app(ModuleRegistry::class)->serverModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
+            'packageList' => ['packages' => [], 'error' => null],
         ]);
     }
 
@@ -65,6 +128,12 @@ class ProductController extends Controller
             'server_group_id' => 'nullable|exists:server_groups,id',
         ]);
         $validated['slug'] = Str::slug($validated['name']);
+
+        // The plan lives on the panel; the product records which one it sells.
+        if ($request->filled('package_name')) {
+            $validated['config_options'] = json_encode(['package_name' => $request->input('package_name')]);
+        }
+
         $product = Product::create($validated);
 
         // Create default pricing for each currency
@@ -113,6 +182,11 @@ class ProductController extends Controller
             'panelicaPlans' => $panelicaPlans,
             'serverModules' => app(ModuleRegistry::class)->serverModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
+            'packageList' => $this->packagesFor($product->server_type),
+            'selectedPackage' => (string) ($this->productConfig($product)['package_name']
+                ?? $this->productConfig($product)['panelica_plan_id']
+                ?? $this->productConfig($product)['cpanel_package']
+                ?? ''),
         ]);
     }
 
@@ -143,6 +217,13 @@ class ProductController extends Controller
         $validated['retired'] = $request->boolean('retired');
         $validated['is_featured'] = $request->boolean('is_featured');
         $product->update($validated);
+
+        // The plan the product sells, in the one key every module reads.
+        if ($request->has('package_name')) {
+            $config = $this->productConfig($product->fresh());
+            $config['package_name'] = (string) $request->input('package_name');
+            $product->update(['config_options' => json_encode($config)]);
+        }
 
         // Panelica managed resources -> merged into config_options (preserves
         // feature text f1..f7 and any other existing keys).

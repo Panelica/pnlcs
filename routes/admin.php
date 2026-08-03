@@ -69,6 +69,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // Products
     // =============================================
     Route::middleware('admin.permission:list_products')->group(function () {
+        // The product form asks the server which plans it offers.
+        Route::get('products/packages', [ProductController::class, 'packages'])->name('products.packages');
         Route::get('products', [ProductController::class, 'index'])->name('products.index');
     });
     Route::middleware('admin.permission:manage_products')->group(function () {

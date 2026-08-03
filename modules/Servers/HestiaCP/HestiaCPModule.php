@@ -26,6 +26,7 @@ class HestiaCPModule extends AbstractServerModule
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 8083;
+
         return "https://{$this->serverHost($server)}:{$port}/api";
     }
 
@@ -54,7 +55,7 @@ class HestiaCPModule extends AbstractServerModule
                 ->timeout(30)
                 ->post($url, $postData);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 return ['success' => false, 'message' => "HestiaCP API HTTP {$response->status()}", 'raw' => []];
             }
 
@@ -65,15 +66,17 @@ class HestiaCPModule extends AbstractServerModule
                 if (is_array($decoded)) {
                     return ['success' => true, 'message' => 'OK', 'raw' => $decoded];
                 }
-                return ['success' => false, 'message' => 'HestiaCP returned non-JSON: ' . substr($body, 0, 200), 'raw' => []];
+
+                return ['success' => false, 'message' => 'HestiaCP returned non-JSON: '.substr($body, 0, 200), 'raw' => []];
             }
 
             // returncode=yes → body must be a bare exit code
-            if (!preg_match('/^\d+$/', $body)) {
-                return ['success' => false, 'message' => 'Unexpected HestiaCP response: ' . substr($body, 0, 200), 'raw' => []];
+            if (! preg_match('/^\d+$/', $body)) {
+                return ['success' => false, 'message' => 'Unexpected HestiaCP response: '.substr($body, 0, 200), 'raw' => []];
             }
 
             $exitCode = (int) $body;
+
             return [
                 'success' => $exitCode === 0,
                 'message' => $exitCode === 0 ? 'OK' : "HestiaCP command failed (exit code {$exitCode})",
@@ -81,6 +84,7 @@ class HestiaCPModule extends AbstractServerModule
             ];
         } catch (\Throwable $e) {
             Log::error("HestiaCPModule API error: {$e->getMessage()}");
+
             return ['success' => false, 'message' => $e->getMessage(), 'raw' => []];
         }
     }
@@ -88,13 +92,13 @@ class HestiaCPModule extends AbstractServerModule
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No HestiaCP server configured.');
         }
 
         $client = $service->client;
         $domain = $service->domain;
-        if (!$client || !$domain) {
+        if (! $client || ! $domain) {
             return $this->buildResult(false, 'Service is missing client or domain.');
         }
 
@@ -112,7 +116,7 @@ class HestiaCPModule extends AbstractServerModule
             'arg4' => $package,
         ]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Account creation failed: {$result['message']}");
         }
 
@@ -122,7 +126,7 @@ class HestiaCPModule extends AbstractServerModule
             'arg2' => $domain,
         ]);
 
-        if (!$domResult['success']) {
+        if (! $domResult['success']) {
             Log::warning("HestiaCP: user created but domain add failed: {$domResult['message']}");
         }
 
@@ -131,91 +135,95 @@ class HestiaCPModule extends AbstractServerModule
 
         $out = $this->buildResult(true, 'HestiaCP account created.', ['hestia_username' => $username]);
         $this->logAction($service, 'create', $out);
+
         return $out;
     }
 
     public function suspend(Service $service, string $reason = ''): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No HestiaCP server configured.');
         }
 
         $data = $this->getModuleData($service);
         $username = $data['hestia_username'] ?? $service->username;
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'HestiaCP username not found.');
         }
 
         $result = $this->call($server, 'v-suspend-user', ['arg1' => $username]);
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Suspend failed: {$result['message']}");
         }
 
         $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
         $out = $this->buildResult(true, 'HestiaCP account suspended.');
         $this->logAction($service, 'suspend', $out);
+
         return $out;
     }
 
     public function unsuspend(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No HestiaCP server configured.');
         }
 
         $data = $this->getModuleData($service);
         $username = $data['hestia_username'] ?? $service->username;
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'HestiaCP username not found.');
         }
 
         $result = $this->call($server, 'v-unsuspend-user', ['arg1' => $username]);
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Unsuspend failed: {$result['message']}");
         }
 
         $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
         $out = $this->buildResult(true, 'HestiaCP account unsuspended.');
         $this->logAction($service, 'unsuspend', $out);
+
         return $out;
     }
 
     public function terminate(Service $service): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No HestiaCP server configured.');
         }
 
         $data = $this->getModuleData($service);
         $username = $data['hestia_username'] ?? $service->username;
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'HestiaCP username not found.');
         }
 
         $result = $this->call($server, 'v-delete-user', ['arg1' => $username]);
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Terminate failed: {$result['message']}");
         }
 
         $service->update(['status' => 'terminated', 'termination_date' => now()]);
         $out = $this->buildResult(true, 'HestiaCP account terminated.');
         $this->logAction($service, 'terminate', $out);
+
         return $out;
     }
 
     public function changePassword(Service $service, string $newPassword): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No HestiaCP server configured.');
         }
 
         $data = $this->getModuleData($service);
         $username = $data['hestia_username'] ?? $service->username;
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'HestiaCP username not found.');
         }
 
@@ -224,26 +232,27 @@ class HestiaCPModule extends AbstractServerModule
             'arg2' => $newPassword,
         ]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Password change failed: {$result['message']}");
         }
 
         $service->update(['password' => $newPassword]);
         $out = $this->buildResult(true, 'Password changed.');
         $this->logAction($service, 'changePassword', $out);
+
         return $out;
     }
 
     public function changePackage(Service $service, array $newPackage): array
     {
         $server = $this->getServer($service);
-        if (!$server) {
+        if (! $server) {
             return $this->buildResult(false, 'No HestiaCP server configured.');
         }
 
         $data = $this->getModuleData($service);
         $username = $data['hestia_username'] ?? $service->username;
-        if (!$username) {
+        if (! $username) {
             return $this->buildResult(false, 'HestiaCP username not found.');
         }
 
@@ -252,7 +261,7 @@ class HestiaCPModule extends AbstractServerModule
             : ($newPackage['config_options'] ?? []);
         $packageName = $config['hestia_package'] ?? $config['package_name'] ?? null;
 
-        if (!$packageName) {
+        if (! $packageName) {
             return $this->buildResult(false, 'No hestia_package configured in product.');
         }
 
@@ -261,12 +270,13 @@ class HestiaCPModule extends AbstractServerModule
             'arg2' => $packageName,
         ]);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return $this->buildResult(false, "Package change failed: {$result['message']}");
         }
 
         $out = $this->buildResult(true, 'Package changed.');
         $this->logAction($service, 'changePackage', $out);
+
         return $out;
     }
 
@@ -274,18 +284,18 @@ class HestiaCPModule extends AbstractServerModule
     {
         $result = $this->call($server, 'v-list-users', ['arg1' => 'json'], json: true);
 
-        if (!$result['success'] || !is_array($result['raw'])) {
+        if (! $result['success'] || ! is_array($result['raw'])) {
             return ['updated' => 0, 'errors' => 1];
         }
 
         $updated = 0;
         foreach ($result['raw'] as $username => $userData) {
-            $service = \App\Models\Service::where('server_id', $server->id)
+            $service = Service::where('server_id', $server->id)
                 ->where('username', $username)
                 ->where('status', 'active')
                 ->first();
 
-            if (!$service) {
+            if (! $service) {
                 continue;
             }
 
@@ -300,7 +310,7 @@ class HestiaCPModule extends AbstractServerModule
                 $updateData['bw_usage'] = (int) $userData['BANDWIDTH'];
             }
 
-            if (!empty($updateData)) {
+            if (! empty($updateData)) {
                 $service->update($updateData);
                 $updated++;
             }
@@ -313,9 +323,11 @@ class HestiaCPModule extends AbstractServerModule
     {
         try {
             $result = $this->call($server, 'v-list-sys-info', ['arg1' => 'json'], json: true);
+
             return $result['success'];
         } catch (\Throwable $e) {
             Log::error("HestiaCPModule::testConnection: {$e->getMessage()}");
+
             return false;
         }
     }

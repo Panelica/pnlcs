@@ -18,6 +18,20 @@ abstract class AbstractServerModule implements ServerModuleInterface
      * stale or mistyped hostname sent the call somewhere else with no sign of
      * what had happened.
      */
+    /**
+     * The plans this server offers, for the product form to choose from.
+     *
+     * A panel owns its own plans; the product picks one by name. Modules that
+     * cannot list them return nothing and the form says so rather than
+     * pretending there is a choice.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        return [];
+    }
+
     protected function serverHost(Server $server): string
     {
         $hostname = trim((string) $server->hostname);
