@@ -34,6 +34,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', SetLocale::class);
         $middleware->appendToGroup('web', MaintenanceMode::class);
+        // Counted before anything is checked, so a wrong key costs the caller
+        // an attempt too.
+        $middleware->throttleApi('api');
         $middleware->appendToGroup('api', ApiKeyAuth::class);
         $middleware->alias([
             'banned.ip' => BlockBannedIp::class,

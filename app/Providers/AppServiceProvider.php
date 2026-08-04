@@ -11,6 +11,9 @@ use App\Services\AddonManager;
 use App\View\Composers\ThemeComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +44,31 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // How many times the API will let someone try.
+        //
+        // The admin login form allows ten attempts a minute. The API accepts
+        // the same admin username and password - it is there for WHMCS-shaped
+        // clients - and had no limit at all, so the form's limit could be
+        // walked around by posting the guesses to any API endpoint instead.
+        //
+        // A caller presenting a credential is counted on that credential, so
+        // one integration cannot use up another's allowance and guessing from
+        // a new address cannot lock a working one out. A caller presenting
+        // none is counted on its address, and gets far less room: there is no
+        // honest reason to call this API anonymously more than a few times a
+        // minute.
+        RateLimiter::for('api', function (Request $request) {
+            $credential = $request->header('X-API-Key')
+                ?? $request->bearerToken()
+                ?? $request->input('api_key')
+                ?? $request->input('identifier');
+
+            if ($credential) {
+                return Limit::perMinute(300)->by('api-key:'.sha1((string) $credential));
+            }
+
+            return Limit::perMinute(10)->by('api-ip:'.$request->ip());
+        });
         $registry = $this->app->make(ModuleRegistry::class);
 
         // Server modules
