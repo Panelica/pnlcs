@@ -1,9 +1,15 @@
 <?php
 
+use App\Mail\ServiceUnsuspensionMail;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\ModuleQueue;
+use App\Models\Product;
+use App\Models\ProductGroup;
+use App\Models\Server;
 use App\Models\Service;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -116,4 +122,59 @@ test('a service suspended by hand is left to the person who suspended it', funct
     $this->artisan('pnlcs:unsuspend-on-payment')->assertSuccessful();
 
     expect(strtolower($service->fresh()->status))->toBe('suspended');
+});
+
+/**
+ * A suspended service that really lives on a panel.
+ */
+function suspendedOnPanel(): Service
+{
+    $service = suspendedServiceFor('Overdue Invoice - Automatic Suspension', now()->subDays(3)->toDateString());
+
+    $server = Server::factory()->create([
+        'type' => 'cpanel', 'hostname' => 'whm.unsuspend.test',
+        'access_hash' => 'token-123', 'active' => true,
+    ]);
+
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'cpanel',
+    ]);
+
+    $service->update(['server_id' => $server->id, 'product_id' => $product->id, 'username' => 'paiduser']);
+
+    return $service->fresh();
+}
+
+// The command called the module itself instead of going through the
+// provisioning service, so a refusal was written to the log and forgotten: no
+// retry was queued and nobody was told. The customer had paid, and their site
+// stayed switched off until somebody happened to read the log. On this
+// installation that warning has been repeating every half hour for days.
+test('a panel that refuses to switch the service back on is queued to try again', function () {
+    Mail::fake();
+    Http::fake(['*' => Http::response(['metadata' => ['result' => 0, 'reason' => 'no such account']], 200)]);
+
+    $service = suspendedOnPanel();
+
+    $this->artisan('pnlcs:unsuspend-on-payment')->assertSuccessful();
+
+    expect(strtolower($service->fresh()->status))->toBe('suspended')
+        ->and(ModuleQueue::where('service_id', $service->id)->where('action', 'unsuspend')->count())->toBe(1);
+});
+
+// Left the customer paid up and switched off: once the panel agrees, the
+// service comes back and the customer is told.
+test('a service the panel switches back on is active and the customer told', function () {
+    Mail::fake();
+    Http::fake(['*' => Http::response(['metadata' => ['result' => 1, 'reason' => 'OK']], 200)]);
+
+    $service = suspendedOnPanel();
+
+    $this->artisan('pnlcs:unsuspend-on-payment')->assertSuccessful();
+
+    expect(strtolower($service->fresh()->status))->toBe('active')
+        ->and($service->fresh()->suspension_reason)->toBeNull();
+
+    Mail::assertQueued(ServiceUnsuspensionMail::class);
 });

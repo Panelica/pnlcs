@@ -8,6 +8,7 @@ use App\Mail\ServiceUnsuspensionMail;
 use App\Models\Invoice;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
+use App\Services\ProvisioningService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -18,7 +19,7 @@ class UnsuspendOnPaymentCommand extends Command
 
     protected $description = 'Unsuspend services when their overdue invoices are paid';
 
-    public function handle(): int
+    public function handle(ProvisioningService $provisioning): int
     {
         // Find suspended services with recently paid invoices
         $services = Service::with('client')->where('status', ServiceStatus::Suspended->value)->get();
@@ -55,30 +56,35 @@ class UnsuspendOnPaymentCommand extends Command
                 ->exists();
 
             if ($hasPaidInvoice && ! $hasOverdue) {
-                $serverModule = $service->server
+                $serverModule = $service->server_id
                     ? $registry->getServerModule($service->server->type ?? 'custom')
                     : null;
 
                 if ($serverModule) {
-                    try {
-                        $result = $serverModule->unsuspend($service);
-                        if (! $result['success']) {
-                            Log::warning("Unsuspend failed for service #{$service->id}: {$result['message']}");
+                    // Through the provisioning service, which queues a retry
+                    // and raises the alert. Calling the module here meant a
+                    // refusal went to the log and no further: no retry, nobody
+                    // told, and a customer who had paid left switched off until
+                    // somebody happened to read it. On this installation that
+                    // warning had been repeating every half hour for days.
+                    $result = $provisioning->unsuspendAccount($service);
 
-                            continue;
-                        }
-                    } catch (\Throwable $e) {
-                        Log::error("Unsuspend exception for service #{$service->id}: {$e->getMessage()}");
+                    if (! ($result['success'] ?? false)) {
+                        Log::warning("Unsuspend failed for service #{$service->id}: "
+                            .($result['message'] ?? 'unknown error').' — queued for retry');
 
                         continue;
                     }
-                }
 
-                $service->update([
-                    'status' => ServiceStatus::Active->value,
-                    'suspension_date' => null,
-                    'suspension_reason' => null,
-                ]);
+                    // unsuspendAccount has already cleared the suspension.
+                    $service->refresh();
+                } else {
+                    $service->update([
+                        'status' => ServiceStatus::Active->value,
+                        'suspension_date' => null,
+                        'suspension_reason' => null,
+                    ]);
+                }
 
                 if ($service->client?->email) {
                     try {
