@@ -35,6 +35,26 @@
         </div>
     </div>
 
+    {{-- Where the terms are. The registration form asks customers to agree to
+         them and links both; with nowhere to enter the addresses the links
+         went to "#". --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.legal') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.tos_url') }}</label>
+                    <input type="url" name="TOSUrl" value="{{ $settings['TOSUrl'] ?? '' }}" class="form-control" placeholder="https://example.com/terms">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.privacy_url') }}</label>
+                    <input type="url" name="PrivacyUrl" value="{{ $settings['PrivacyUrl'] ?? '' }}" class="form-control" placeholder="https://example.com/privacy">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;">{{ __('admin.settings.legal_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Late fees. The command that charges them has always read these three
          settings; there was nowhere to enter them, so it read "none" every
          morning and stopped. --}}

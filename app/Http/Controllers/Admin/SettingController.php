@@ -38,7 +38,7 @@ class SettingController extends Controller
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
-        'SystemEmailAddress', 'TaxID', 'Timezone',
+        'PrivacyUrl', 'SystemEmailAddress', 'TaxID', 'Timezone', 'TOSUrl',
     ];
 
     public function updateGeneral(Request $request)

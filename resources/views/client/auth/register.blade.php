@@ -85,7 +85,19 @@
                 <div style="margin-bottom:16px;">
                     <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;">
                         <input type="checkbox" name="tos" value="1" {{ old('tos') ? 'checked' : '' }} style="margin-top:3px;" required>
-                        <span>{{ __('client.auth.i_agree_to') }} <a href="{{ \App\Models\Setting::get('TOSUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">{{ __('client.auth.terms_of_service') }}</a> {{ __('client.auth.and') }} <a href="{{ \App\Models\Setting::get('PrivacyUrl', '#') }}" target="_blank" style="color:#337ab7;text-decoration:underline;">{{ __('client.auth.privacy_policy') }}</a>.</span>
+                        @php
+                            // A link to "#" reads as a document the customer can
+                            // open and is not one. Name the thing either way;
+                            // link it only when there is somewhere to go.
+                            $legalLink = function (string $url, string $label) {
+                                $url = trim($url);
+
+                                return $url === ''
+                                    ? e($label)
+                                    : '<a href="'.e($url).'" target="_blank" rel="noopener" style="color:#337ab7;text-decoration:underline;">'.e($label).'</a>';
+                            };
+                        @endphp
+                        <span>{{ __('client.auth.i_agree_to') }} {!! $legalLink((string) \App\Models\Setting::get('TOSUrl', ''), __('client.auth.terms_of_service')) !!} {{ __('client.auth.and') }} {!! $legalLink((string) \App\Models\Setting::get('PrivacyUrl', ''), __('client.auth.privacy_policy')) !!}.</span>
                     </label>
                     @error('tos') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                 </div>
