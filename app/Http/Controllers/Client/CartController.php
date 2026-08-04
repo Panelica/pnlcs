@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Client;
 
 use App\Enums\ClientStatus;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Models\Domain;
 use App\Models\GatewaySettings;
 use App\Models\Product;
 use App\Models\ProductGroup;
@@ -81,7 +82,9 @@ class CartController extends Controller
             $cart,
             $product,
             $request->billing_cycle,
-            $request->domain,
+            // The same reading the search box gives it: a customer pastes an
+            // address, and it used to be stored exactly as pasted.
+            Domain::normalise($request->domain) ?: null,
             $request->input('config_options', []),
             $request->input('notes'),
             $request->input('domain_option'),
@@ -103,7 +106,7 @@ class CartController extends Controller
             'years' => 'integer|min:1|max:10',
         ]);
 
-        $domain = strtolower(trim($request->domain));
+        $domain = Domain::normalise($request->domain);
         $type = $request->type;
         $years = (int) ($request->years ?? 1);
         $clientId = $this->getClientId();

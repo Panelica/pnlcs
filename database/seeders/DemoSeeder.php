@@ -601,7 +601,7 @@ class DemoSeeder extends Seeder
             if ($idx % 3 === 0 || $idx < 5) {
                 $tlds = ['com', 'net', 'org', 'io', 'co'];
                 $tld = $tlds[array_rand($tlds)];
-                $domainBase = strtolower(preg_replace('/[^a-z0-9]/', '', $client->company_name ?: $client->last_name));
+                $domainBase = preg_replace('/[^a-z0-9]/', '', strtolower($client->company_name ?: $client->last_name));
                 $domainBase = $domainBase ?: 'domain' . $idx;
                 Domain::firstOrCreate(['domain' => $domainBase . '.' . $tld], [
                     'client_id' => $client->id,

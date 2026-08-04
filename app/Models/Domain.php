@@ -29,6 +29,42 @@ class Domain extends Model
         return ($this->payment_method ?? '') !== 'none';
     }
 
+    /**
+     * The domain a customer meant, from whatever they typed.
+     *
+     * The search box lower-cased its input and the order form did not, so the
+     * same address arrived in two shapes depending on which box it went in.
+     * People also paste URLs rather than domains, and a scheme, a www or a
+     * trailing dot would be handed to the panel and the registrar as part of
+     * the name.
+     */
+    public static function normalise(?string $domain): string
+    {
+        $domain = strtolower(trim((string) $domain));
+
+        if ($domain === '') {
+            return '';
+        }
+
+        // Scheme, then anything after the host: a pasted address brings both.
+        $domain = preg_replace('#^[a-z][a-z0-9+.-]*://#', '', $domain) ?? $domain;
+        $domain = preg_split('#[/?\#]#', $domain)[0] ?? $domain;
+
+        // Credentials and a port, if the paste carried them.
+        if (str_contains($domain, '@')) {
+            $domain = substr($domain, strrpos($domain, '@') + 1);
+        }
+        $domain = preg_replace('/:\d+$/', '', $domain) ?? $domain;
+
+        // "www." is a host under the domain, never the domain being ordered.
+        // Only as a label of its own: wwwshop.com keeps its name.
+        if (str_starts_with($domain, 'www.')) {
+            $domain = substr($domain, 4);
+        }
+
+        return trim($domain, '.');
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);
