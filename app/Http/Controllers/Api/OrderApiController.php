@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Client;
 use App\Models\Order;
+use App\Models\Product;
 use App\Services\FraudDetectionService;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class OrderApiController extends BaseApiController
 {
@@ -27,24 +28,85 @@ class OrderApiController extends BaseApiController
         return $this->paginated($orders);
     }
 
-    public function addOrder(Request $request)
+    /**
+     * Place an order.
+     *
+     * This used to create an order with nothing on it - no service, no domain,
+     * no invoice - and there is no endpoint that could add one afterwards. The
+     * integration got back an id for something that could never be provisioned
+     * or paid for, and accepting it later did nothing because there was
+     * nothing to provision. Orders are now put together by OrderService, the
+     * same way the shop does it.
+     */
+    public function addOrder(Request $request, OrderService $orders)
     {
         $validated = $request->validate([
             'clientid' => 'required|exists:clients,id',
             'paymentmethod' => 'nullable|string',
             'promocode' => 'nullable|string',
-        ]);
-        $order = Order::create([
-            'order_num' => strtoupper(Str::random(10)),
-            'client_id' => $validated['clientid'],
-            'date' => now()->format('Y-m-d'),
-            'promo_code' => $validated['promocode'] ?? null,
-            'payment_method' => $validated['paymentmethod'] ?? null,
-            'status' => 'pending',
-            'ip_address' => $request->ip(),
+            'pid' => 'nullable|array',
+            'pid.*' => 'exists:products,id',
+            'domain' => 'nullable|array',
+            'billingcycle' => 'nullable|array',
+            'priceoverride' => 'nullable|array',
         ]);
 
-        return $this->success(['orderid' => $order->id, 'ordernum' => $order->order_num]);
+        $items = $this->orderedItems($request, $validated);
+
+        if ($items === []) {
+            return $this->error('An order needs at least one product: send pid[] with a matching billingcycle[].', 422);
+        }
+
+        $order = $orders->processOrder(
+            Client::findOrFail($validated['clientid']),
+            $items,
+            $validated['paymentmethod'] ?? 'banktransfer',
+            $validated['promocode'] ?? null,
+        );
+
+        return $this->success([
+            'orderid' => $order->id,
+            'ordernum' => $order->order_num,
+            'invoiceid' => $order->invoice_id,
+        ]);
+    }
+
+    /**
+     * What was ordered, from the parallel arrays WHMCS-shaped clients send.
+     *
+     * A price may be given per line; without one the product's own price for
+     * that cycle is used, and a cycle the product is not sold on is skipped
+     * rather than billed at zero.
+     */
+    private function orderedItems(Request $request, array $validated): array
+    {
+        $items = [];
+
+        foreach (($validated['pid'] ?? []) as $index => $productId) {
+            $product = Product::find($productId);
+
+            if (! $product) {
+                continue;
+            }
+
+            $cycle = strtolower((string) ($request->input("billingcycle.{$index}") ?? 'monthly'));
+            $override = $request->input("priceoverride.{$index}");
+            $amount = $override !== null ? (float) $override : $product->priceFor($cycle);
+
+            if ($amount === null) {
+                continue;
+            }
+
+            $items[] = [
+                'type' => 'service',
+                'product_id' => $product->id,
+                'domain' => (string) ($request->input("domain.{$index}") ?? ''),
+                'billing_cycle' => $cycle,
+                'amount' => (float) $amount,
+            ];
+        }
+
+        return $items;
     }
 
     /**
