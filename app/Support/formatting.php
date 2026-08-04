@@ -161,3 +161,22 @@ if (! function_exists('display_tz')) {
         return $tz;
     }
 }
+
+if (! function_exists('branding_removed')) {
+    /**
+     * Whether the operator asked for the product's own name to be taken off
+     * the pages their customers see.
+     *
+     * Settings -> Appearance has offered this switch all along; nothing read
+     * it, so a reseller who turned it on still handed their customers pages
+     * headed PNLCS.
+     */
+    function branding_removed(): bool
+    {
+        try {
+            return (string) Setting::get('whitelabel_remove_branding', '0') === '1';
+        } catch (Throwable) {
+            return false;
+        }
+    }
+}

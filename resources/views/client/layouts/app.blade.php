@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield("title", __("client.my_account")) - PNLCS</title>
+    <title>@yield("title", __("client.my_account")) - {{ company_name() }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -315,7 +315,7 @@
 
 <nav class="pn-navbar">
     <div class="pn-navbar-inner">
-        <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="Logo" style="max-height:32px;">@else PNLCS <span class="pn-brand-dot"></span>@endif</a>
+        <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="Logo" style="max-height:32px;">@else {{ company_name() }} <span class="pn-brand-dot"></span>@endif</a>
 
         <div class="pn-nav">
             <div class="pn-nav-item">
@@ -538,7 +538,7 @@
 </div>
 
 <footer class="pn-footer">
-    <span>&copy; {{ date("Y") }} {{ __('client.footer.brand') }}. {{ __('client.footer.all_rights_reserved') }}</span>
+    <span>&copy; {{ date("Y") }} {{ company_name() }}. {{ __('client.footer.all_rights_reserved') }}</span>
     &nbsp;&middot;&nbsp;
     <a href="{{ route("client.contact") }}">{{ __('client.nav.contact') }}</a>
     &nbsp;&middot;&nbsp;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('client.auth.register_title') }} - PNLCS</title>
+    <title>{{ __('client.auth.register_title') }} - {{ company_name() }}</title>
     @vite(['resources/css/app.css'])
     <style>
         * { box-sizing: border-box; }
@@ -33,7 +33,7 @@
 <body>
 <div class="register-box">
     <div class="login-logo">
-        <h1>PNLCS</h1>
+        <h1>{{ company_name() }}</h1>
         <p>{{ __('client.auth.create_your_account') }}</p>
     </div>
     <div class="card">

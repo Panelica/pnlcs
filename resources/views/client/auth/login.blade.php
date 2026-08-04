@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('client.auth.login_title') }} - PNLCS</title>
+    <title>{{ __('client.auth.login_title') }} - {{ company_name() }}</title>
     @vite(['resources/css/app.css'])
     @if(!empty($customFavicon))
     <link rel="icon" href="{{ $customFavicon }}" type="image/png">
@@ -41,7 +41,7 @@
         @if(!empty($customLogo))
             <img src="{{ $customLogo }}" alt="Logo" style="max-height:48px; margin-bottom:8px;">
         @else
-            <h1>PNLCS</h1>
+            <h1>{{ company_name() }}</h1>
         @endif
         <p>{{ __('client.auth.client_area') }}</p>
     </div>

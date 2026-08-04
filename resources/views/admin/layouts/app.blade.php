@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield("title", "Admin") - PNLCS</title>
+    <title>@yield("title", "Admin") - {{ company_name() }}</title>
     @vite(["resources/css/app.css"])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
     @if(!empty($customFavicon))
@@ -37,7 +37,7 @@
         @if(!empty($customLogo))
             <img src="{{ $customLogo }}" alt="Logo" style="max-height:30px; vertical-align:middle;">
         @else
-            PNLCS
+            {{ company_name() }}
         @endif
     </a>
 
@@ -521,7 +521,7 @@
      ═══════════════════════════════════════════════ --}}
 <div class="footerbar clearfix" style="background-color:var(--theme-footer-bg, #1a4d80);">
     <div style="float:left;">
-        &copy; {{ date('Y') }} PNLCS - {{ __('admin.footer.billing_support_system') }}
+        &copy; {{ date('Y') }} {{ company_name() }}@if(! branding_removed()) - {{ __('admin.footer.billing_support_system') }}@endif
     </div>
     <div style="float:right;">
         <a href="{{ route('admin.dashboard') }}">{{ __('admin.footer.admin_home') }}</a> |

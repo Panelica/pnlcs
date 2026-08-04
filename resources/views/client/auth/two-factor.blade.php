@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ __('client.auth.2fa_title') }} - PNLCS</title>
+    <title>{{ __('client.auth.2fa_title') }} - {{ company_name() }}</title>
     @vite(['resources/css/app.css'])
     <style>
         * { box-sizing: border-box; }
