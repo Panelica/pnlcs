@@ -14,10 +14,10 @@ class CustomerRetentionReport extends AbstractReport
 
     public function generate(Request $request): array
     {
-        $active = DB::table("clients")->where("status", "active")->count();
-        $inactive = DB::table("clients")->where("status", "!=", "active")->count();
+        $active = DB::table("clients")->whereNull("deleted_at")->where("status", "active")->count();
+        $inactive = DB::table("clients")->whereNull("deleted_at")->where("status", "!=", "active")->count();
         $total = $active + $inactive;
-        $avgAge = DB::table("clients")->where("status", "active")->selectRaw("AVG(DATEDIFF(NOW(), created_at)) as avg_days")->value("avg_days");
+        $avgAge = DB::table("clients")->whereNull("deleted_at")->where("status", "active")->selectRaw("AVG(DATEDIFF(NOW(), created_at)) as avg_days")->value("avg_days");
         $rows = [
             (object)["metric" => "Active Clients", "value" => $active],
             (object)["metric" => "Inactive/Closed", "value" => $inactive],

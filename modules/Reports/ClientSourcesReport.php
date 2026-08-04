@@ -14,7 +14,7 @@ class ClientSourcesReport extends AbstractReport
 
     public function generate(Request $request): array
     {
-        $rows = DB::table("clients")
+        $rows = DB::table("clients")->whereNull("deleted_at")
             ->selectRaw("COALESCE(NULLIF(TRIM(notes), ''), 'Direct/Unknown') as source, COUNT(*) as clients")
             ->groupBy("source")->orderBy("clients", "desc")->limit(20)->get();
         return ["columns" => ["Source", "Clients"], "rows" => $rows->toArray()];

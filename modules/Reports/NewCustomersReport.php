@@ -15,7 +15,7 @@ class NewCustomersReport extends AbstractReport
     public function generate(Request $request): array
     {
         [$from, $to] = $this->getDateRange($request);
-        $rows = DB::table("clients")
+        $rows = DB::table("clients")->whereNull("deleted_at")
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as new_clients")
             ->whereBetween("created_at", [$from, $to." 23:59:59"])
             ->groupBy("month")->orderBy("month", "desc")->get();

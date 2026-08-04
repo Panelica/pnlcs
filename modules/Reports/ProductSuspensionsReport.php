@@ -16,6 +16,7 @@ class ProductSuspensionsReport extends AbstractReport
     {
         $rows = DB::table("services")
             ->join("clients", "clients.id", "=", "services.client_id")
+->whereNull("clients.deleted_at")
             ->leftJoin("products", "products.id", "=", "services.product_id")
             ->selectRaw("services.id, CONCAT(clients.first_name, ' ', clients.last_name) as client, COALESCE(products.name, 'N/A') as product, services.domain, services.suspension_reason, services.updated_at as suspended_at")
             ->where("services.status", "suspended")

@@ -16,6 +16,7 @@ class DiskUsageReport extends AbstractReport
     {
         $rows = DB::table("services")
             ->join("clients", "clients.id", "=", "services.client_id")
+->whereNull("clients.deleted_at")
             ->selectRaw("services.id, CONCAT(clients.first_name, ' ', clients.last_name) as client, services.domain, services.disk_usage as disk_mb, services.disk_limit as limit_mb, CASE WHEN services.disk_limit > 0 THEN ROUND((services.disk_usage / services.disk_limit) * 100, 1) ELSE 0 END as pct")
             ->where("services.status", "active")
             ->where("services.disk_usage", ">", 0)

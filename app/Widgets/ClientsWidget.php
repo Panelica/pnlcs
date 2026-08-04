@@ -17,9 +17,9 @@ class ClientsWidget implements WidgetModuleInterface
     public function getData(): array
     {
         return [
-            "total" => DB::table("clients")->count(),
-            "active" => DB::table("clients")->where("status", "active")->count(),
-            "recent" => DB::table("clients")->select("id", "first_name", "last_name", "email", "created_at")->orderBy("created_at", "desc")->limit(5)->get()->map(fn($r) => (array) $r)->toArray(),
+            "total" => DB::table("clients")->whereNull("deleted_at")->count(),
+            "active" => DB::table("clients")->whereNull("deleted_at")->where("status", "active")->count(),
+            "recent" => DB::table("clients")->whereNull("deleted_at")->select("id", "first_name", "last_name", "email", "created_at")->orderBy("created_at", "desc")->limit(5)->get()->map(fn($r) => (array) $r)->toArray(),
         ];
     }
 

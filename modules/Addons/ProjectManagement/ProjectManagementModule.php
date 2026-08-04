@@ -60,6 +60,7 @@ class ProjectManagementModule implements AddonModuleInterface
 
         $projects = DB::table('projects')
             ->leftJoin('clients', 'clients.id', '=', 'projects.client_id')
+            ->where(function ($q) { $q->whereNull('clients.deleted_at')->orWhereNull('clients.id'); })
             ->leftJoin('admins', 'admins.id', '=', 'projects.admin_id')
             ->select('projects.*', DB::raw("CONCAT(clients.first_name, ' ', clients.last_name) as client_name"), DB::raw("CONCAT(admins.first_name, ' ', admins.last_name) as admin_name"))
             ->orderBy('projects.created_at', 'desc')
@@ -92,7 +93,7 @@ class ProjectManagementModule implements AddonModuleInterface
 
     private function renderCreateForm(): string
     {
-        $clients = DB::table('clients')->select('id', 'first_name', 'last_name')->orderBy('first_name')->get();
+        $clients = DB::table('clients')->whereNull('deleted_at')->select('id', 'first_name', 'last_name')->orderBy('first_name')->get();
         $admins = DB::table('admins')->select('id', 'first_name', 'last_name')->get();
 
         $html = '<h5>Create New Project</h5>';

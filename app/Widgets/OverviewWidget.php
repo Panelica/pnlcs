@@ -17,7 +17,7 @@ class OverviewWidget implements WidgetModuleInterface
     public function getData(): array
     {
         return [
-            "clients" => DB::table("clients")->count(),
+            "clients" => DB::table("clients")->whereNull("deleted_at")->count(),
             "services" => DB::table("services")->where("status", "active")->count(),
             "domains" => DB::table("domains")->where("status", "active")->count(),
             "orders_pending" => DB::table("orders")->where("status", "pending")->count(),

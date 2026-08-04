@@ -14,7 +14,7 @@ class ClientsByCountryReport extends AbstractReport
 
     public function generate(Request $request): array
     {
-        $rows = DB::table("clients")
+        $rows = DB::table("clients")->whereNull("deleted_at")
             ->selectRaw("COALESCE(NULLIF(TRIM(country), ''), 'Unknown') as country, COUNT(*) as clients, SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) as active")
             ->groupBy("country")->orderBy("clients", "desc")->get();
         return ["columns" => ["Country", "Total Clients", "Active"], "rows" => $rows->toArray()];

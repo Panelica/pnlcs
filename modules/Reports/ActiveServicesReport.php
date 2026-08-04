@@ -16,6 +16,7 @@ class ActiveServicesReport extends AbstractReport
     {
         $rows = DB::table("services")
             ->join("clients", "clients.id", "=", "services.client_id")
+->whereNull("clients.deleted_at")
             ->leftJoin("products", "products.id", "=", "services.product_id")
             ->selectRaw("services.id, CONCAT(clients.first_name, ' ', clients.last_name) as client, COALESCE(products.name, 'N/A') as product, services.domain, services.amount, services.billing_cycle, services.next_due_date, services.status")
             ->where("services.status", "active")

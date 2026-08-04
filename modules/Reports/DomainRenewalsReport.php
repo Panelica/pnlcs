@@ -16,6 +16,7 @@ class DomainRenewalsReport extends AbstractReport
     {
         $rows = DB::table("domains")
             ->join("clients", "clients.id", "=", "domains.client_id")
+->whereNull("clients.deleted_at")
             ->selectRaw("domains.id, domains.domain, CONCAT(clients.first_name, ' ', clients.last_name) as client, domains.registrar, domains.expiry_date, DATEDIFF(domains.expiry_date, NOW()) as days_left, domains.recurring_amount")
             ->where("domains.status", "active")
             ->whereRaw("domains.expiry_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 90 DAY)")

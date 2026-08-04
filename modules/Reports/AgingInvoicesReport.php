@@ -16,6 +16,7 @@ class AgingInvoicesReport extends AbstractReport
     {
         $rows = DB::table("invoices")
             ->join("clients", "clients.id", "=", "invoices.client_id")
+->whereNull("clients.deleted_at")
             ->selectRaw("invoices.id, CONCAT(clients.first_name, ' ', clients.last_name) as client, invoices.total, invoices.due_date, DATEDIFF(NOW(), invoices.due_date) as days_overdue, CASE WHEN DATEDIFF(NOW(), invoices.due_date) <= 30 THEN '0-30 days' WHEN DATEDIFF(NOW(), invoices.due_date) <= 60 THEN '31-60 days' WHEN DATEDIFF(NOW(), invoices.due_date) <= 90 THEN '61-90 days' ELSE '90+ days' END as aging_bracket")
             ->whereIn("invoices.status", ["unpaid", "overdue"])
             ->orderBy("days_overdue", "desc")->get();
