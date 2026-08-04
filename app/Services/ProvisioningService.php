@@ -231,13 +231,28 @@ class ProvisioningService
         run_hook('ModuleActionFailed', ['service' => $service, 'action' => $action, 'error' => $error]);
 
         try {
+            // Anything not finished counts, including an entry the queue has
+            // already given up on. Looking only at pending ones meant a nightly
+            // job that keeps failing wrote a fresh row - and raised the same
+            // alert - every single night, for as long as it stayed broken.
             $existing = ModuleQueue::where('service_id', $service->id)
                 ->where('action', $action)
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'failed'])
                 ->first();
 
             if ($existing) {
-                $existing->update(['last_error' => $error]);
+                $reopened = $existing->status === 'failed';
+
+                $existing->update([
+                    'last_error' => $error,
+                    // Given up on before, but the work is still wanted: let it
+                    // try again rather than leaving the row dead. A server that
+                    // was unreachable last night may answer tonight.
+                    'status' => 'pending',
+                    'attempts' => $reopened ? 0 : $existing->attempts,
+                    'next_attempt_at' => $reopened ? now()->addMinutes(5) : $existing->next_attempt_at,
+                    'payload' => $payload ?: $existing->payload,
+                ]);
 
                 return;
             }
