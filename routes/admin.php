@@ -416,7 +416,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         });
 
         // Same data as admin.quotes.index, which requires this.
-        Route::middleware('admin.permission:manage_quotes')->group(function () {
+        Route::middleware('admin.permission:list_quotes|manage_quotes')->group(function () {
             Route::get('quotes', [ConfigController::class, 'quotes'])->name('quotes');
         });
 
@@ -441,7 +441,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::delete('client-groups/{group}', [ConfigController::class, 'destroyClientGroup'])->name('client-groups.destroy');
         });
 
-        Route::middleware('admin.permission:manage_security')->group(function () {
+        Route::middleware('admin.permission:view_system|manage_security')->group(function () {
             Route::get('system-database', [ConfigController::class, 'systemDatabase'])->name('system-database');
             Route::get('system-phpinfo', [ConfigController::class, 'systemPhpInfo'])->name('system-phpinfo');
         });
@@ -458,7 +458,17 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // Quotes
     // =============================================
     Route::middleware('admin.permission:manage_quotes')->group(function () {
-        Route::resource('quotes', QuoteController::class);
+        Route::resource('quotes', QuoteController::class)->except(['index', 'show']);
+    });
+
+    // Seeing quotes is its own permission; sending, converting and the
+    // rest stay behind managing them.
+    Route::middleware('admin.permission:list_quotes|manage_quotes')->group(function () {
+        Route::get('quotes', [QuoteController::class, 'index'])->name('quotes.index');
+        Route::get('quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
+    });
+
+    Route::middleware('admin.permission:manage_quotes')->group(function () {
         Route::post('quotes/{quote}/send', [QuoteController::class, 'send'])->name('quotes.send');
         Route::post('quotes/{quote}/convert', [QuoteController::class, 'convertToInvoice'])->name('quotes.convert');
         Route::post('quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
@@ -466,12 +476,19 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
 
     // Projects
+    // Writing is registered first: projects/create would otherwise be read as
+    // projects/{project} and looked up as a project called "create".
     Route::middleware('admin.permission:manage_projects')->group(function () {
-        Route::resource('projects', ProjectController::class);
+        Route::resource('projects', ProjectController::class)->except(['index', 'show']);
         Route::post('projects/{project}/tasks', [ProjectController::class, 'addTask'])->name('projects.tasks.store');
         Route::put('projects/{project}/tasks/{task}', [ProjectController::class, 'updateTask'])->name('projects.tasks.update');
         Route::delete('projects/{project}/tasks/{task}', [ProjectController::class, 'deleteTask'])->name('projects.tasks.destroy');
         Route::post('projects/{project}/messages', [ProjectController::class, 'addMessage'])->name('projects.messages.store');
+    });
+
+    // Seeing the list is its own permission; changing anything is not.
+    Route::middleware('admin.permission:list_projects|manage_projects')->group(function () {
+        Route::resource('projects', ProjectController::class)->only(['index', 'show']);
     });
 
     // Logs — view_activity_log
