@@ -526,26 +526,46 @@ class SystemApiController extends BaseApiController
         return $this->success();
     }
 
-    public function sendQuote(Request $request)
+    /**
+     * Both of these wrote the status themselves, in lower case, while the rest
+     * of the application writes and reads it capitalised and the customer area
+     * compares it exactly. A quote sent this way was missing from the
+     * customer's list, 404 on its own page and impossible to accept.
+     */
+    public function sendQuote(Request $request, QuoteService $quotes)
     {
         $quote = Quote::find($request->quoteid);
         if (! $quote) {
             return $this->error('Quote Not Found', 404);
         }
-        $quote->update(['status' => 'sent']);
 
-        return $this->success(['quoteid' => $quote->id]);
+        $quote = $quotes->sendQuote($quote);
+
+        return $this->success(['quoteid' => $quote->id, 'status' => $quote->status]);
     }
 
-    public function acceptQuote(Request $request)
+    /**
+     * Accepting also has to leave the invoice the customer is meant to pay -
+     * the customer's own accept button has always done that, this one did not.
+     */
+    public function acceptQuote(Request $request, QuoteService $quotes)
     {
         $quote = Quote::find($request->quoteid);
         if (! $quote) {
             return $this->error('Quote Not Found', 404);
         }
-        $quote->update(['status' => 'accepted']);
 
-        return $this->success(['quoteid' => $quote->id]);
+        if (strtolower((string) $quote->status) === 'accepted') {
+            return $this->success(['quoteid' => $quote->id, 'status' => $quote->status]);
+        }
+
+        $invoice = $quotes->convertToInvoice($quote);
+
+        return $this->success([
+            'quoteid' => $quote->id,
+            'status' => $quote->fresh()->status,
+            'invoiceid' => $invoice->id,
+        ]);
     }
 
     // ===== PROJECTS =====
