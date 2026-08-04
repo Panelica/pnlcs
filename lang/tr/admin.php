@@ -1179,6 +1179,7 @@ return [
         'viewing_as' => 'Now viewing as :name',
     ],
     'messages.2fa_enabled' => '2FA enabled successfully. Kaydet your backup codes: :codes',
+    'messages.client_has_live_domains' => 'Bu musterinin :count kayitli alan adi var. Once devredin veya iptal edin; aksi halde kayit, kime ait oldugunu soyleyecek hicbir sey kalmadan surer.',
     'messages.account_updated' => 'Hesap basariyla guncellendi.',
     'messages.addon_created' => 'Ürün addon created.',
     'messages.addon_deleted' => 'Ürün addon deleted.',

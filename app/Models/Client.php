@@ -95,6 +95,20 @@ class Client extends Model
             ->count();
     }
 
+    /**
+     * Domains still registered in this customer's name.
+     *
+     * The same reason services are counted: deleting the customer takes the
+     * domain row with it, and then nothing renews the registration and nothing
+     * says it exists, while it carries on at the registrar until it lapses.
+     */
+    public function liveDomainCount(): int
+    {
+        return $this->domains()
+            ->whereNotIn('status', ['cancelled', 'expired', 'transferred_away', 'fraud'])
+            ->count();
+    }
+
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";

@@ -178,6 +178,15 @@ class ClientController extends Controller
             return back()->with('error', __('admin.messages.client_has_live_services', ['count' => $live]));
         }
 
+        // A registration outlives the panel record: delete the customer and the
+        // domain row goes with them, so nothing renews it and nothing says it
+        // is theirs, while it stays registered until it quietly lapses.
+        $domains = $client->liveDomainCount();
+
+        if ($domains > 0) {
+            return back()->with('error', __('admin.messages.client_has_live_domains', ['count' => $domains]));
+        }
+
         $client->delete();
 
         return redirect()->route('admin.clients.index')->with('success', __('messages.success.client_deleted'));

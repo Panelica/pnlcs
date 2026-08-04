@@ -1331,6 +1331,7 @@ return [
     'messages.bundle_created' => 'Product bundle created.',
     'messages.bundle_deleted' => 'Product bundle deleted.',
     'messages.cache_cleared' => 'Translation cache cleared.',
+    'messages.client_has_live_domains' => 'This customer still has :count registered domain(s). Transfer or cancel them first, or the registration carries on with nothing left to say whose it is.',
     'messages.client_has_live_services' => 'This client still has :count service(s) that have not been terminated. Terminate them first so the accounts are closed on the server.',
     'messages.client_group_created' => 'Client group created.',
     'messages.client_group_deleted' => 'Client group deleted.',

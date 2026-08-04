@@ -9,7 +9,6 @@ use App\Models\Contact;
 use App\Models\Credit;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ClientApiController extends BaseApiController
 {
@@ -75,6 +74,11 @@ class ClientApiController extends BaseApiController
         $live = $client->liveServiceCount();
         if ($live > 0) {
             return $this->error("Client still has {$live} service(s) that have not been terminated.", 422);
+        }
+
+        $domains = $client->liveDomainCount();
+        if ($domains > 0) {
+            return $this->error("Client still has {$domains} registered domain(s).", 422);
         }
 
         $client->delete();
