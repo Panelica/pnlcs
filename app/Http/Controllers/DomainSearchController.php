@@ -156,70 +156,26 @@ class DomainSearchController extends Controller
             return null;
         }
 
-        // Check availability via WHOIS
-        $whoisServer = $this->whoisServers[$tldKey] ?? null;
-        $available   = true;
-        $whoisError  = false;
-
-        if ($whoisServer) {
-            $whoisResult = $this->queryWhois($fullDomain, $whoisServer);
-            $available   = $whoisResult["available"];
-            $whoisError  = $whoisResult["error"];
-        }
+        // Check availability via WHOIS. An unanswered lookup is not an answer:
+        // it used to be read as "available", so a registry being unreachable
+        // put a price and an add-to-cart button next to a name nobody had
+        // checked - and the customer paid for a registration that then failed.
+        $whoisResult = app(\App\Services\WhoisLookup::class)
+            ->check($fullDomain, $this->whoisServers[$tldKey] ?? null);
 
         return [
             "domain"      => $fullDomain,
             "tld"         => $tld,
             "sld"         => $sld,
-            "available"   => $available,
-            "whois_error" => $whoisError,
+            "available"   => $whoisResult["available"],
+            "checked"     => $whoisResult["checked"],
+            "whois_error" => ! $whoisResult["checked"],
             "price"       => $pricing->register_price,
             "renew_price" => $pricing->renew_price,
             "transfer_price" => $pricing->transfer_price,
         ];
     }
 
-    protected function queryWhois(string $domain, string $server): array
-    {
-        $conn = @fsockopen($server, 43, $errno, $errstr, 5);
-        if (!$conn) {
-            // Cannot reach WHOIS — assume available
-            return ["available" => true, "error" => true, "response" => ""];
-        }
-
-        fwrite($conn, $domain . "\r\n");
-        $response = "";
-        $timeout  = microtime(true) + 5;
-        while (!feof($conn) && microtime(true) < $timeout) {
-            $response .= fgets($conn, 1024);
-        }
-        fclose($conn);
-
-        $availablePhrases = [
-            "No match for",
-            "NOT FOUND",
-            "No Data Found",
-            "Status: free",
-            "No entries found",
-            "not found",
-            "is free",
-            "No match",
-            "Object not found",
-            "No information available",
-            "Domain not found",
-            "Available",
-            "This domain is available",
-        ];
-
-        foreach ($availablePhrases as $phrase) {
-            if (stripos($response, $phrase) !== false) {
-                return ["available" => true, "error" => false, "response" => $response];
-            }
-        }
-
-        // If we got data back but no "not found" phrase, domain is likely registered
-        return ["available" => false, "error" => false, "response" => $response];
-    }
 
     public function rawWhois(Request $request)
     {

@@ -312,6 +312,8 @@ return [
         'unconfirmed' => 'availability unonaylandi',
         'view_full_list' => 'Goruntule Full Liste',
     ],
+    'domain_search.could_not_check' => 'Bu adi su anda kontrol edemedik',
+    'domain_search.could_not_check_short' => 'Kontrol edilemedi',
     'domain_search.already_registered' => 'Sorry, this domain is already registered.',
     'domain_search.available' => 'Congratulations! This domain is available!',
     'domain_search.available_short' => 'Available',

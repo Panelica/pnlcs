@@ -34,10 +34,10 @@
     @if($results)
     @php $primary = $results['primary']; @endphp
     @if($primary)
-    <div style="background:#fff;border-radius:12px;border:2px solid {{ $primary['available'] ? '#22c55e' : '#ef4444' }};padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div style="background:#fff;border-radius:12px;border:2px solid {{ ($primary['checked'] ?? true) ? ($primary['available'] ? '#22c55e' : '#ef4444') : '#f59e0b' }};padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
         <div style="display:flex;align-items:center;gap:16px;">
-            <div style="width:44px;height:44px;border-radius:50%;background:{{ $primary['available'] ? '#dcfce7' : '#fee2e2' }};display:flex;align-items:center;justify-content:center;">
-                @if($primary['available'])
+            <div style="width:44px;height:44px;border-radius:50%;background:{{ ($primary['checked'] ?? true) ? ($primary['available'] ? '#dcfce7' : '#fee2e2') : '#fef3c7' }};display:flex;align-items:center;justify-content:center;">
+                @if($primary['available'] && ($primary['checked'] ?? true))
                 <svg width="22" height="22" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 @else
                 <svg width="22" height="22" fill="none" stroke="#dc2626" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -45,16 +45,18 @@
             </div>
             <div>
                 <div style="font-size:22px;font-weight:700;color:#1e293b;">{{ $primary['domain'] }}</div>
-                <div style="font-size:14px;color:{{ $primary['available'] ? '#16a34a' : '#dc2626' }};font-weight:600;">
-                    {{ $primary['available'] ? __('client.domain_search.available') : __('client.domain_search.already_registered') }}
-                    @if($primary['whois_error'] ?? false)
-                    <span style="color:#94a3b8;font-weight:400;font-size:12px;">({{ __('client.domain_search.unconfirmed') }})</span>
+                @php $primaryChecked = $primary['checked'] ?? true; @endphp
+                <div style="font-size:14px;color:{{ ! $primaryChecked ? '#b45309' : ($primary['available'] ? '#16a34a' : '#dc2626') }};font-weight:600;">
+                    @if(! $primaryChecked)
+                        {{ __('client.domain_search.could_not_check') }}
+                    @else
+                        {{ $primary['available'] ? __('client.domain_search.available') : __('client.domain_search.already_registered') }}
                     @endif
                 </div>
             </div>
         </div>
         <div style="display:flex;align-items:center;gap:20px;">
-            @if($primary['available'])
+            @if($primary['available'] && ($primary['checked'] ?? true))
             <div style="text-align:right;">
                 <div style="font-size:24px;font-weight:800;color:#1a4d80;">{{ money_fmt($primary['price']) }}<span style="font-size:13px;font-weight:400;color:#94a3b8;">/yr</span></div>
                 <div style="font-size:11px;color:#94a3b8;">{{ __('client.domain_search.renews_at') }} {{ money_fmt($primary['renew_price']) }}/yr</div>
@@ -66,7 +68,7 @@
                 <input type="hidden" name="years" value="1">
                 <button type="submit" style="padding:12px 24px;background:#06d6a0;color:#0f172a;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">{{ __('common.actions.add_to_cart') }}</button>
             </form>
-            @else
+            @elseif($primary['checked'] ?? true)
             <form method="POST" action="{{ route('client.cart.add-domain') }}">
                 @csrf
                 <input type="hidden" name="domain" value="{{ $primary['domain'] }}">
@@ -87,8 +89,8 @@
             @if($alt)
             <div style="background:#fff;border:1px solid {{ $alt['available'] ? '#bbf7d0' : '#fecaca' }};border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:28px;height:28px;border-radius:50%;background:{{ $alt['available'] ? '#dcfce7' : '#fee2e2' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        @if($alt['available'])
+                    <div style="width:28px;height:28px;border-radius:50%;background:{{ ($alt['checked'] ?? true) ? ($alt['available'] ? '#dcfce7' : '#fee2e2') : '#fef3c7' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        @if($alt['available'] && ($alt['checked'] ?? true))
                         <svg width="14" height="14" fill="none" stroke="#16a34a" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                         @else
                         <svg width="14" height="14" fill="none" stroke="#dc2626" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -96,11 +98,11 @@
                     </div>
                     <div>
                         <div style="font-weight:600;color:#1e293b;font-size:15px;">{{ $alt['domain'] }}</div>
-                        <div style="font-size:12px;color:{{ $alt['available'] ? '#16a34a' : '#dc2626' }};font-weight:600;">{{ $alt['available'] ? __('client.domain_search.available_short') : __('client.domain_search.taken') }}</div>
+                        <div style="font-size:12px;color:{{ ! ($alt['checked'] ?? true) ? '#b45309' : ($alt['available'] ? '#16a34a' : '#dc2626') }};font-weight:600;">{{ ! ($alt['checked'] ?? true) ? __('client.domain_search.could_not_check_short') : ($alt['available'] ? __('client.domain_search.available_short') : __('client.domain_search.taken')) }}</div>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-                    @if($alt['available'])
+                    @if($alt['available'] && ($alt['checked'] ?? true))
                     <div style="font-size:15px;font-weight:700;color:#1a4d80;">{{ money_fmt($alt['price']) }}<span style="font-size:11px;font-weight:400;color:#94a3b8;">/yr</span></div>
                     <form method="POST" action="{{ route('client.cart.add-domain') }}">
                         @csrf
@@ -110,7 +112,7 @@
                         <button type="submit" style="padding:6px 14px;background:#1a4d80;color:#fff;font-size:12px;font-weight:600;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">{{ __('common.actions.add') }}</button>
                     </form>
                     @else
-                    <span style="font-size:13px;color:#94a3b8;">{{ __('client.domain_search.taken') }}</span>
+                    <span style="font-size:13px;color:#94a3b8;">{{ ($alt['checked'] ?? true) ? __('client.domain_search.taken') : __('client.domain_search.could_not_check_short') }}</span>
                     @endif
                 </div>
             </div>
