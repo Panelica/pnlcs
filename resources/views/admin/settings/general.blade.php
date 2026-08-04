@@ -35,6 +35,34 @@
         </div>
     </div>
 
+    {{-- Late fees. The command that charges them has always read these three
+         settings; there was nowhere to enter them, so it read "none" every
+         morning and stopped. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.late_fees') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.late_fee_type') }}</label>
+                    <select name="LateFeeType" class="form-control">
+                        <option value="none" {{ ($settings['LateFeeType'] ?? 'none') === 'none' ? 'selected' : '' }}>{{ __('admin.settings.late_fee_none') }}</option>
+                        <option value="flat" {{ ($settings['LateFeeType'] ?? '') === 'flat' ? 'selected' : '' }}>{{ __('admin.settings.late_fee_flat') }}</option>
+                        <option value="percent" {{ ($settings['LateFeeType'] ?? '') === 'percent' ? 'selected' : '' }}>{{ __('admin.settings.late_fee_percent') }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.late_fee_amount') }}</label>
+                    <input type="number" step="0.01" min="0" name="LateFeeAmount" value="{{ $settings['LateFeeAmount'] ?? '0' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.late_fee_min_days') }}</label>
+                    <input type="number" min="0" name="LateFeeMinDays" value="{{ $settings['LateFeeMinDays'] ?? '3' }}" class="form-control">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;">{{ __('admin.settings.late_fee_hint') }}</div>
+        </div>
+    </div>
+
     <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.system_settings') }}</strong></div>
         <div class="card-body">

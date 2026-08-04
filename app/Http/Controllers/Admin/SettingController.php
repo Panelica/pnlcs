@@ -35,6 +35,7 @@ class SettingController extends Controller
     private const GENERAL_KEYS = [
         'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
         'Country', 'DateFormat', 'DefaultLanguage', 'Domain', 'Email', 'EmailFromName',
+        'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
         'SystemEmailAddress', 'TaxID', 'Timezone',
