@@ -62,7 +62,10 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
     // 2FA verification (requires login but not 2FA yet)
     Route::middleware('auth')->withoutMiddleware([TwoFactorVerify::class])->group(function () {
         Route::get('2fa', [AuthController::class, 'show2faVerify'])->name('2fa.verify');
-        Route::post('2fa', [AuthController::class, 'verify2fa'])->name('2fa.verify.submit');
+        // Six digits, and the form that comes before it allows ten tries a
+        // minute. Unthrottled, the second factor is only as good as the
+        // patience of whoever already has the password.
+        Route::post('2fa', [AuthController::class, 'verify2fa'])->middleware('throttle:10,1')->name('2fa.verify.submit');
     });
 
     Route::middleware(['auth', '2fa'])->group(function () {
