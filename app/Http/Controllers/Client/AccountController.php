@@ -8,10 +8,12 @@ use App\Mail\LoginEmailChangedMail;
 use App\Models\Client;
 use App\Models\Contact;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -155,6 +157,16 @@ class AccountController extends Controller
         }
 
         $user->update(['password' => Hash::make($request->password)]);
+
+        // A "remember me" cookie signs its holder in on its own for as long as
+        // the token behind it stays put. Changing the password is how somebody
+        // ends a session they did not start, so the token goes with it and the
+        // cookie stops working - this one included, which is why the current
+        // session is re-remembered below.
+        $user->setRememberToken(Str::random(60));
+        $user->save();
+
+        Auth::guard('web')->login($user, true);
 
         return redirect()->route('client.account.password')
             ->with('success', __('messages.success.password_changed'));

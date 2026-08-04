@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Events\ClientCreated;
 use App\Enums\ClientStatus;
+use App\Events\ClientCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\AffiliateTracking;
 use App\Mail\PasswordResetMail;
@@ -315,6 +315,11 @@ class AuthController extends Controller
             return back()->withErrors(['email' => __('auth.user_not_found')]);
         }
         $user->password = Hash::make($request->password);
+
+        // Resetting a password is what somebody does when they think another
+        // person is in their account. Any "remember me" cookie already handed
+        // out has to stop working, or the reset changes nothing for them.
+        $user->setRememberToken(Str::random(60));
         $user->save();
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
