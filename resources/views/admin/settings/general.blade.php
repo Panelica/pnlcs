@@ -154,7 +154,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.settings.smtp_password') }}</label>
-                        <input type="password" name="SMTPPassword" value="{{ $settings['SMTPPassword'] ?? '' }}" class="form-control" placeholder="••••••••">
+                        {{-- Never sent back: the stored password used to sit in the page source of
+                             every settings page load. Left empty, it stays as it is. --}}
+                        <input type="password" name="SMTPPassword" value="" autocomplete="new-password" class="form-control" placeholder="{{ ($settings['SMTPPassword'] ?? '') !== '' ? __('admin.settings.smtp_password_keep') : '' }}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.settings.smtp_encryption') }}</label>

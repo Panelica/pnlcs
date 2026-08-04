@@ -1934,6 +1934,7 @@ return [
         'title' => 'Ayarlar',
         'white_label' => 'White-Etiket',
     ],
+    'settings.smtp_password_keep' => 'Kayitli - degistirmemek icin bos birakin',
     'settings.legal' => 'Sartlar ve Gizlilik',
     'settings.tos_url' => 'Hizmet Sartlari adresi',
     'settings.privacy_url' => 'Gizlilik Politikasi adresi',

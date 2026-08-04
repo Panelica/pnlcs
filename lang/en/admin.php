@@ -47,6 +47,7 @@ return [
     'addons.title' => 'Product Addons',
     'addons.visibility' => 'Visibility',
     'addons.visible' => 'Visible',
+    'settings.smtp_password_keep' => 'Set - leave empty to keep it',
     'settings.legal' => 'Terms and Privacy',
     'settings.tos_url' => 'Terms of Service address',
     'settings.privacy_url' => 'Privacy Policy address',

@@ -50,6 +50,13 @@ class SettingController extends Controller
             $data['MailEnabled'] = '0';
         }
 
+        // The form never carries the stored mail password back, so an empty
+        // field means the operator did not touch it - not that they want the
+        // mail account to stop working.
+        if (trim((string) ($data['SMTPPassword'] ?? '')) === '') {
+            unset($data['SMTPPassword']);
+        }
+
         foreach ($data as $key => $value) {
             Setting::set($key, $value, 'general');
         }
