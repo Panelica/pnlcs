@@ -27,7 +27,9 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.submit');
     Route::get('register', [AuthController::class, 'showRegister'])->name('register');
-    Route::post('register', [AuthController::class, 'register'])->name('register.submit');
+    // Signing up makes an account and sends mail; the contact form next to
+    // it has been counted all along.
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.submit');
 
     // Password Reset
     Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
@@ -52,7 +54,10 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
 
     // Domain Search (public — no auth required)
     Route::get('domain-search', [DomainSearchController::class, 'index'])->name('domain.search');
-    Route::post('domain-search', [DomainSearchController::class, 'check'])->name('domain.check');
+    // One search fans out into a WHOIS query for the name and one for every
+    // suggested ending - outbound connections the registries throttle
+    // themselves, made in the operator's name by anybody at all.
+    Route::post('domain-search', [DomainSearchController::class, 'check'])->middleware('throttle:20,1')->name('domain.check');
     Route::get('domain-pricing', [DomainSearchController::class, 'pricing'])->name('domain.pricing');
 
     // Store — public browsing
