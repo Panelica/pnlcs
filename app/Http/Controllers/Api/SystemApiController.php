@@ -165,17 +165,49 @@ class SystemApiController extends BaseApiController
 
     public function getConfigurationValue(Request $request)
     {
-        $value = Setting::get($request->setting);
+        $validated = $request->validate(['setting' => 'required|string']);
 
-        return $this->success(['setting' => $request->setting, 'value' => $value]);
+        if (self::isSecretSetting($validated['setting'])) {
+            return $this->error('That setting holds a credential and is not readable through the API.', 403);
+        }
+
+        return $this->success([
+            'setting' => $validated['setting'],
+            'value' => Setting::get($validated['setting']),
+        ]);
     }
 
     public function setConfigurationValue(Request $request)
     {
         $validated = $request->validate(['setting' => 'required|string', 'value' => 'required|string']);
-        Setting::set($validated['setting'], $validated['value']);
+
+        if (self::isSecretSetting($validated['setting'])) {
+            return $this->error('That setting holds a credential and is not writable through the API.', 403);
+        }
+
+        // Keep it where its screen looks for it. Setting::set() writes the
+        // group as well as the value and defaults to "general", so naming a
+        // setting belonging to another screen used to move it out from under
+        // that screen - the mistake the settings form was hardened against,
+        // left open at this door.
+        $group = Setting::where('setting', $validated['setting'])->value('group') ?? 'general';
+
+        Setting::set($validated['setting'], $validated['value'], $group);
 
         return $this->success();
+    }
+
+    /**
+     * Settings that hold a credential.
+     *
+     * The settings table keeps the mail password in plain text, put there by
+     * the settings screen. Reading it back needed nothing more than read
+     * access to the API, which is not the same thing as being trusted with the
+     * mail account.
+     */
+    private static function isSecretSetting(string $setting): bool
+    {
+        return (bool) preg_match('/(password|secret|token|api_?key|access_?hash|private_?key)/i', $setting);
     }
 
     public function getAnnouncements(Request $request)
