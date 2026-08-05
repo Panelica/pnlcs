@@ -67,11 +67,45 @@ class ApiPermissionMap
     ];
 
     /**
+     * Calls that answer for something other than their controller.
+     *
+     * SystemApiController is where the odds and ends live, and some of them
+     * are customer records rather than system information: the mail history
+     * and the activity log are what a customer was sent and what was done to
+     * their account. Read under "view system", a member of staff trusted with
+     * the version number could read every customer's mail.
+     *
+     * @var array<string, string>
+     */
+    private const ACTIONS = [
+        'getemails' => Permissions::LIST_CLIENTS,
+        'getactivitylog' => Permissions::VIEW_ACTIVITY_LOG,
+        'logactivity' => Permissions::VIEW_ACTIVITY_LOG,
+        'getadminusers' => Permissions::MANAGE_STAFF,
+        'getadmindetails' => Permissions::MANAGE_STAFF,
+        'getstaffonline' => Permissions::MANAGE_STAFF,
+        'getservers' => Permissions::MANAGE_SERVERS,
+        'getmodulequeue' => Permissions::LIST_SERVICES,
+        'getquotes' => Permissions::MANAGE_QUOTES,
+        'sendquote' => Permissions::MANAGE_QUOTES,
+        'acceptquote' => Permissions::MANAGE_QUOTES,
+        'getprojects' => Permissions::MANAGE_PROJECTS,
+        'addprojecttask' => Permissions::MANAGE_PROJECTS,
+        'addprojectmessage' => Permissions::MANAGE_PROJECTS,
+    ];
+
+    /**
      * The permission this call needs, or null when only a full administrator
      * will do.
      */
     public static function required(?string $controller, string $method, string $action): ?string
     {
+        $named = self::ACTIONS[strtolower($action)] ?? null;
+
+        if ($named !== null) {
+            return $named;
+        }
+
         $map = self::CONTROLLERS[class_basename((string) $controller)] ?? null;
 
         if ($map === null) {
