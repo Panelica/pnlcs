@@ -56,6 +56,12 @@
                 <span>{{ money_fmt($invoice->tax) }}</span>
             </div>
             @endif
+            @if(($invoice->tax2 ?? 0) > 0)
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
+                <span class="text-muted">{{ __('client.cart.tax').' 2' }}</span>
+                <span>{{ money_fmt($invoice->tax2) }}</span>
+            </div>
+            @endif
             <div style="display:flex;justify-content:space-between;padding:12px 0 4px;font-size:17px;font-weight:800;color:var(--primary)">
                 <span>{{ __('client.invoices.total_due') }}</span>
                 <span>{{ money_fmt($invoice->total) }}</span>

@@ -116,7 +116,13 @@
         <table>
             <tr><td>{{ __('pdf.subtotal') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->subtotal) }}</td></tr>
             @if((float)$invoice->tax > 0)
-            <tr><td>{{ __('pdf.tax') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->tax) }}</td></tr>
+            <tr><td>{{ __('pdf.tax') }}{{ $invoice->tax_rate ? ' ('.rtrim(rtrim(number_format((float)$invoice->tax_rate, 2), '0'), '.').'%)' : '' }}:</td><td class="text-right">{{ money_fmt((float)$invoice->tax) }}</td></tr>
+            @endif
+            {{-- The second tax. An invoice has carried two since the tax screen
+                 grew a level for each; this document showed only the first, so
+                 the lines did not add up to the total being asked for. --}}
+            @if((float)($invoice->tax2 ?? 0) > 0)
+            <tr><td>{{ __('pdf.tax') }} 2{{ $invoice->tax_rate2 ? ' ('.rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.').'%)' : '' }}:</td><td class="text-right">{{ money_fmt((float)$invoice->tax2) }}</td></tr>
             @endif
             @if((float)$invoice->credit > 0)
             <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ money_fmt((float)$invoice->credit) }}</td></tr>
