@@ -441,18 +441,24 @@ class SystemApiController extends BaseApiController
     }
 
     // ===== ENCRYPTION =====
+    /**
+     * These two ran the application key for whoever asked.
+     *
+     * Nothing in the application has ever called them, and decryptpassword
+     * cannot read what is stored here today - the secrets in the database are
+     * written with encryptString, which it does not understand. But it was a
+     * standing offer to decrypt anything arriving in the form it does
+     * understand, made to anybody holding an API credential, and the key it
+     * used is the same key the database is protected with.
+     */
     public function encryptPassword(Request $request)
     {
-        return $this->success(['password' => encrypt($request->password2 ?? '')]);
+        return $this->error('This installation no longer offers encryption through the API.', 501);
     }
 
     public function decryptPassword(Request $request)
     {
-        try {
-            return $this->success(['password' => decrypt($request->password2 ?? '')]);
-        } catch (\Exception $e) {
-            return $this->error('Decryption failed');
-        }
+        return $this->error('This installation no longer offers decryption through the API.', 501);
     }
 
     // ===== ADMIN NOTES =====
@@ -474,20 +480,24 @@ class SystemApiController extends BaseApiController
         return $this->success(['message' => 'Email queued']);
     }
 
+    /**
+     * Said a reset mail had been sent and sent nothing. The customer area
+     * sends them; there is no code here to do it.
+     */
     public function resetPassword(Request $request)
     {
-        return $this->success(['message' => 'Password reset email sent']);
+        return $this->error('Sending a password reset from the API is not implemented.', 501);
     }
 
     // ===== MODULE ACTIVATION =====
     public function activateModule(Request $request)
     {
-        return $this->success(['message' => 'Module activated']);
+        return $this->error('Activating a module from the API is not implemented.', 501);
     }
 
     public function deactivateModule(Request $request)
     {
-        return $this->success(['message' => 'Module deactivated']);
+        return $this->error('Deactivating a module from the API is not implemented.', 501);
     }
 
     // ===== QUOTES =====
