@@ -195,6 +195,57 @@ class InvoiceGenerationService
             ->all();
     }
 
+    /**
+     * The recurring promotion a renewal should carry, if any.
+     *
+     * The code lives on the order the service was sold under. It is only
+     * carried forward while the promotion says it recurs and while it still
+     * has cycles left - counted from the renewals that already carried it,
+     * which applyPromotion records in the invoice notes.
+     *
+     * @param  array<int, Service>  $services
+     */
+    private function recurringPromoFor(array $services): ?string
+    {
+        foreach ($services as $service) {
+            $service->loadMissing('order');
+
+            $code = trim((string) ($service->order->promo_code ?? ''));
+
+            if ($code === '') {
+                continue;
+            }
+
+            $promo = Promotion::whereRaw('LOWER(code) = ?', [strtolower($code)])->first();
+
+            if (! $promo || ! $promo->recurring) {
+                continue;
+            }
+
+            $cycles = (int) ($promo->cycles ?? 0);
+
+            if ($cycles > 0 && $this->timesPromoApplied($service, $code) >= $cycles) {
+                continue;
+            }
+
+            return $promo->code;
+        }
+
+        return null;
+    }
+
+    /**
+     * How many invoices for this service already carried the promotion.
+     */
+    private function timesPromoApplied(Service $service, string $code): int
+    {
+        return Invoice::whereHas('items', fn ($q) => $q
+            ->where('type', 'Hosting')
+            ->where('rel_id', $service->id))
+            ->where('notes', 'like', '%Promo applied: '.$code.'%')
+            ->count();
+    }
+
     public function applyPromotion(Invoice $invoice, string $promoCode): bool
     {
         $promo = Promotion::where('code', $promoCode)->first();
@@ -351,6 +402,17 @@ class InvoiceGenerationService
         ];
 
         $invoice = $this->invoiceService->createInvoice($client, $items, $options);
+
+        // A promotion the operator marked as recurring keeps its promise. The
+        // switch and the number of cycles have always been saved and never
+        // read, so a customer sold "20% off, recurring for three cycles" got it
+        // once and paid full price at every renewal after that.
+        $recurringPromo = $this->recurringPromoFor($services);
+
+        if ($recurringPromo !== null) {
+            $this->applyPromotion($invoice->fresh(), $recurringPromo);
+            $invoice = $invoice->fresh();
+        }
 
         // Which invoice each one-off charge went on. Without this the same
         // charge would be added to every invoice the client is ever sent.
