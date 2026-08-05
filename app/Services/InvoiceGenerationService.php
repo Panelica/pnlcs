@@ -170,15 +170,49 @@ class InvoiceGenerationService
      *
      * @return bool True if promotion was applied successfully.
      */
+    /**
+     * The products an invoice is for, so a promotion limited to some of them
+     * can tell whether this is one.
+     *
+     * @return array<int, int>
+     */
+    private function invoiceProductIds(Invoice $invoice): array
+    {
+        $serviceIds = $invoice->items
+            ->whereIn('type', ['Hosting', 'Service', 'hosting', 'service'])
+            ->pluck('rel_id')
+            ->filter()
+            ->all();
+
+        if ($serviceIds === []) {
+            return [];
+        }
+
+        return Service::whereIn('id', $serviceIds)
+            ->pluck('product_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     public function applyPromotion(Invoice $invoice, string $promoCode): bool
     {
         $promo = Promotion::where('code', $promoCode)->first();
 
-        if (! $promo || ! $promo->isValid()) {
+        if (! $promo) {
             return false;
         }
 
-        $invoice->loadMissing('items');
+        $invoice->loadMissing('items', 'client');
+
+        // The rules that go with the code - one per customer, new customers
+        // only, existing customers only, particular products - were checked in
+        // the cart and nowhere else. The order endpoint hands a code straight
+        // to this method, so a once-per-customer code could be spent again and
+        // again by the same customer.
+        if (! $promo->isValidFor($invoice->client, $this->invoiceProductIds($invoice))) {
+            return false;
+        }
 
         return DB::transaction(function () use ($invoice, $promo) {
             $subtotal = (float) $invoice->subtotal;
