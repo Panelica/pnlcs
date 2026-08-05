@@ -461,7 +461,11 @@ class OrderService
             'order_id' => $order->id,
             'product_id' => $item['product_id'] ?? null,
             'server_id' => $item['server_id'] ?? null,
-            'domain' => $item['domain'] ?? null,
+            // The same reading the shop gives it: the cart normalises what
+            // was typed, orders are built here, and the order endpoint hands
+            // this method the request verbatim - so a pasted URL used to be
+            // written onto the service and passed to the panel as the name.
+            'domain' => Domain::normalise($item['domain'] ?? null) ?: null,
             'payment_method' => $order->payment_method,
             'qty' => $item['qty'] ?? 1,
             'first_payment_amount' => $item['first_payment_amount'] ?? $item['amount'] ?? 0,
@@ -480,7 +484,7 @@ class OrderService
         return Domain::create([
             'client_id' => $client->id,
             'order_id' => $order->id,
-            'domain' => $item['domain'] ?? '',
+            'domain' => Domain::normalise($item['domain'] ?? ''),
             'type' => $item['domain_type'] ?? 'register',
             'registrar' => $item['registrar'] ?? 'Manual',
             'registration_date' => now()->toDateString(),
