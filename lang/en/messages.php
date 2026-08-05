@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'mail_body_not_kept' => 'This message contained a single-use link and is not kept here.',
     'email.test_body' => 'This is a test email sent from PNLCS to verify your mail configuration is working correctly.',
     'email.test_sent' => 'Test email sent successfully to :address.',
     'email.test_subject' => 'PNLCS Test Email',

@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Mail\PasswordResetMail;
 use App\Models\Client;
 use App\Models\Email;
 use Illuminate\Mail\Events\MessageSent;
@@ -31,19 +32,26 @@ class LogSentEmailListener
                 $body = '';
             }
 
+            // Some mail carries the thing it is protecting - a reset link is a
+            // working key for as long as it lives. The history still records
+            // that it was sent, and to whom, but not what was in it.
+            if ($message->getHeaders()->has(PasswordResetMail::SENSITIVE_HEADER)) {
+                $body = __('messages.mail_body_not_kept');
+            }
+
             Email::create([
                 'client_id' => $client?->id,
-                'subject'   => $message->getSubject() ?? '(no subject)',
-                'message'   => mb_substr((string) $body, 0, 60000),
-                'date'      => now(),
-                'to'        => mb_substr($to, 0, 255),
-                'cc'        => mb_substr(collect($message->getCc() ?? [])->map(fn ($a) => $a->getAddress())->implode(', '), 0, 255) ?: null,
-                'pending'   => false,
-                'failed'    => false,
+                'subject' => $message->getSubject() ?? '(no subject)',
+                'message' => mb_substr((string) $body, 0, 60000),
+                'date' => now(),
+                'to' => mb_substr($to, 0, 255),
+                'cc' => mb_substr(collect($message->getCc() ?? [])->map(fn ($a) => $a->getAddress())->implode(', '), 0, 255) ?: null,
+                'pending' => false,
+                'failed' => false,
             ]);
         } catch (\Throwable $e) {
             // Logging must never break mail delivery.
-            Log::warning('LogSentEmailListener failed: ' . $e->getMessage());
+            Log::warning('LogSentEmailListener failed: '.$e->getMessage());
         }
     }
 }
