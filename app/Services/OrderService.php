@@ -79,6 +79,17 @@ class OrderService
                 } else {
                     $product = Product::find($item['product_id'] ?? null);
 
+                    // A hidden plan is a draft nobody meant to sell and a
+                    // retired one is a plan the operator has stopped selling.
+                    // The cart refuses both; this is the other door, and the
+                    // order endpoint hands it product ids straight from the
+                    // request.
+                    if ($product && ($product->hidden || $product->retired)) {
+                        throw ValidationException::withMessages([
+                            'product_id' => __('client.cart.product_unavailable'),
+                        ]);
+                    }
+
                     // Guarded at the database, not in PHP: two customers can be
                     // buying the last one at the same moment.
                     if ($product && $product->stock_control) {
