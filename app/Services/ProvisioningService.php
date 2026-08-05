@@ -226,6 +226,33 @@ class ProvisioningService
      * Queue a failed module action for automatic retry (see pnlcs:module-queue).
      * Deduplicates on (service, action, pending) and notifies admins once.
      */
+    /**
+     * Whether a refusal is one no amount of trying will get past.
+     *
+     * A server that did not answer may answer later. A service the panel has
+     * no account for will not grow one because the queue asks again: those
+     * refusals are about the record, not the connection, and repeating them
+     * only fills the log - four services on this installation produced the
+     * same line every half hour for a fortnight.
+     */
+    private static function willNeverSucceed(string $error): bool
+    {
+        foreach ([
+            'not found in service notes',
+            'no account',
+            'account does not exist',
+            'no such account',
+            'username not set',
+            'no server module configured',
+        ] as $phrase) {
+            if (stripos($error, $phrase) !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function enqueueRetry(Service $service, string $action, string $error, array $payload = []): void
     {
         run_hook('ModuleActionFailed', ['service' => $service, 'action' => $action, 'error' => $error]);
@@ -240,15 +267,18 @@ class ProvisioningService
                 ->whereIn('status', ['pending', 'failed'])
                 ->first();
 
+            $permanent = self::willNeverSucceed($error);
+
             if ($existing) {
-                $reopened = $existing->status === 'failed';
+                $reopened = ! $permanent && $existing->status === 'failed';
 
                 $existing->update([
                     'last_error' => $error,
                     // Given up on before, but the work is still wanted: let it
                     // try again rather than leaving the row dead. A server that
-                    // was unreachable last night may answer tonight.
-                    'status' => 'pending',
+                    // was unreachable last night may answer tonight. Something
+                    // that cannot come right is left alone.
+                    'status' => $permanent ? 'failed' : 'pending',
                     'attempts' => $reopened ? 0 : $existing->attempts,
                     'next_attempt_at' => $reopened ? now()->addMinutes(5) : $existing->next_attempt_at,
                     'payload' => $payload ?: $existing->payload,
@@ -260,9 +290,9 @@ class ProvisioningService
             ModuleQueue::create([
                 'service_id' => $service->id,
                 'action' => $action,
-                'status' => 'pending',
+                'status' => $permanent ? 'failed' : 'pending',
                 'attempts' => 0,
-                'next_attempt_at' => now()->addMinutes(5),
+                'next_attempt_at' => $permanent ? null : now()->addMinutes(5),
                 'last_error' => $error,
                 'payload' => $payload ?: null,
             ]);
