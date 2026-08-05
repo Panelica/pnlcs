@@ -51,7 +51,6 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.tax.level') }}</label><select name="level" class="form-control"><option value="1">{{ __('admin.tax.tax1_primary') }}</option><option value="2">{{ __('admin.tax.tax2_secondary') }}</option></select></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.tax.country_hint') }} <small style="color:#999;">{{ __('admin.tax.blank_all') }}</small></label><input type="text" name="country" class="form-control" placeholder="GB"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.tax.state_hint') }} <small style="color:#999;">{{ __('admin.tax.blank_all') }}</small></label><input type="text" name="state" class="form-control"></div>
-                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="compound" value="1"> {{ __('admin.tax.compound_tax') }}</label></div>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -78,7 +77,6 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.tax.level') }}</label><select name="level" id="et-level" class="form-control"><option value="1">{{ __('admin.tax.tax1') }}</option><option value="2">{{ __('admin.tax.tax2') }}</option></select></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.tax.country') }}</label><input type="text" name="country" id="et-country" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.tax.state_hint') }}</label><input type="text" name="state" id="et-state" class="form-control"></div>
-                    <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="compound" value="1" id="et-compound"> {{ __('admin.tax.compound_tax') }}</label></div>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -97,7 +95,6 @@ function openEditTax(d) {
     document.getElementById('et-level').value = d.level;
     document.getElementById('et-country').value = d.country || '';
     document.getElementById('et-state').value = d.state || '';
-    document.getElementById('et-compound').checked = !!d.compound;
     document.getElementById('modal-edit-tax').style.display = 'flex';
 }
 </script>
