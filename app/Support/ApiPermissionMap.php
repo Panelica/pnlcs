@@ -79,6 +79,17 @@ class ApiPermissionMap
      */
     private const ACTIONS = [
         'getemails' => Permissions::LIST_CLIENTS,
+        // Writes that belong to something other than the settings screen: an
+        // address ban is a security decision, an announcement is a public
+        // statement in the operator's name, and the admin note on a customer
+        // is that customer's record.
+        'addbannedip' => Permissions::MANAGE_SECURITY,
+        'addannouncement' => Permissions::MANAGE_ANNOUNCEMENTS,
+        'updateannouncement' => Permissions::MANAGE_ANNOUNCEMENTS,
+        'deleteannouncement' => Permissions::MANAGE_ANNOUNCEMENTS,
+        'getannouncements' => Permissions::MANAGE_ANNOUNCEMENTS,
+        'updateadminnotes' => Permissions::EDIT_CLIENTS,
+        'getemailtemplates' => Permissions::MANAGE_EMAIL_TEMPLATES,
         'getactivitylog' => Permissions::VIEW_ACTIVITY_LOG,
         'logactivity' => Permissions::VIEW_ACTIVITY_LOG,
         'getadminusers' => Permissions::MANAGE_STAFF,

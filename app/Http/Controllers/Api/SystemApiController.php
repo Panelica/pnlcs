@@ -475,9 +475,14 @@ class SystemApiController extends BaseApiController
     }
 
     // ===== EMAIL =====
+    /**
+     * Said the mail had been queued and queued nothing. Mail is sent by the
+     * things that have something to say - an invoice, a ticket reply - and
+     * there is no code here to send one to order.
+     */
     public function sendEmail(Request $request)
     {
-        return $this->success(['message' => 'Email queued']);
+        return $this->error('Sending mail from the API is not implemented.', 501);
     }
 
     /**
