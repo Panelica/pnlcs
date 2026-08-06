@@ -20,7 +20,7 @@ class DailyPerformanceReport extends AbstractReport
         $end = date("Y-m-t", strtotime($start));
         $orders = DB::table("orders")->selectRaw("DAY(date) as day, COUNT(*) as cnt")->where("status", "active")->whereBetween("date", [$start, $end])->groupByRaw("DAY(date)")->pluck("cnt", "day");
         $invoicesNew = DB::table("invoices")->selectRaw("DAY(date) as day, COUNT(*) as cnt")->whereBetween("date", [$start, $end])->groupByRaw("DAY(date)")->pluck("cnt", "day");
-        $invoicesPaid = DB::table("invoices")->selectRaw("DAY(date_paid) as day, COUNT(*) as cnt")->where("status", "paid")->whereBetween("date_paid", [$start, $end])->groupByRaw("DAY(date_paid)")->pluck("cnt", "day");
+        $invoicesPaid = DB::table("invoices")->selectRaw("DAY(date_paid) as day, COUNT(*) as cnt")->where("status", "paid")->whereBetween("date_paid", [$start, $end." 23:59:59"])->groupByRaw("DAY(date_paid)")->pluck("cnt", "day");
         $tickets = DB::table("tickets")->selectRaw("DAY(created_at) as day, COUNT(*) as cnt")->whereBetween("created_at", [$start, $end." 23:59:59"])->groupByRaw("DAY(created_at)")->pluck("cnt", "day");
         $rows = [];
         for ($d = 1; $d <= (int)date("d", strtotime($end)); $d++) {
