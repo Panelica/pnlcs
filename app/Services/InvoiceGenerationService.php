@@ -283,25 +283,28 @@ class InvoiceGenerationService
                 return false;
             }
 
-            // Apply as credit on the invoice. The discount comes off the
-            // taxable amount as well: taxing the full price and then knocking
-            // the discount off the total charges tax on money the customer
-            // never pays, and it disagreed with the figure the cart quoted.
-            $newCredit = (float) $invoice->credit + $discount;
+            // r121-discount: a line of its own, the way the group discount is
+            // done. It used to go into the invoice's credit column, which is
+            // where account balance the customer actually paid in lives - two
+            // different things in one field. Cancelling an invoice hands the
+            // balance back and could not tell them apart, so a cancelled order
+            // handed the customer the discount as real money. It also read as
+            // "Credit applied" on the invoice rather than as the code they used.
+            //
+            // Taxed where the work is taxed, so the taxable amount falls by the
+            // discount: taxing the full price and taking the discount off the
+            // total charges tax on money the customer never pays.
+            $hasTaxable = (float) $invoice->items->where('taxed', true)->sum('amount') > 0;
 
-            $taxable = max(0, (float) $invoice->items->where('taxed', true)->sum('amount') - $discount);
-            $taxRate = (float) $invoice->tax_rate;
-            $taxRate2 = (float) $invoice->tax_rate2;
-            $newTax = $taxRate > 0 ? round($taxable * ($taxRate / 100), 2) : 0.0;
-            $newTax2 = $taxRate2 > 0 ? round($taxable * ($taxRate2 / 100), 2) : 0.0;
-
-            $newTotal = max(0, $subtotal + $newTax + $newTax2 - $newCredit);
+            $this->invoiceService->addLineItem($invoice, [
+                'type' => 'Discount',
+                'rel_id' => 0,
+                'description' => "Promo code {$promo->code}",
+                'amount' => -$discount,
+                'taxed' => $hasTaxable,
+            ]);
 
             $invoice->update([
-                'credit' => $newCredit,
-                'tax' => $newTax,
-                'tax2' => $newTax2,
-                'total' => $newTotal,
                 'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-".money_fmt($discount).')'),
             ]);
 

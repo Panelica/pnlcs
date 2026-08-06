@@ -3,6 +3,7 @@
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Promotion;
@@ -170,7 +171,9 @@ test('process order applies valid promotion code', function () {
 
     $invoice = Invoice::find($order->invoice_id);
 
-    expect((float) $invoice->credit)->toBe(10.00)
+    // The discount is a line of its own; credit is money the customer paid in.
+    expect((float) InvoiceItem::where('invoice_id', $invoice->id)->where('type', 'Discount')->sum('amount'))->toBe(-10.00)
+        ->and((float) $invoice->credit)->toBe(0.00)
         ->and((float) $invoice->total)->toBe(40.00);
 });
 

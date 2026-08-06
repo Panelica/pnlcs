@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductGroup;
@@ -56,13 +57,19 @@ function renewalFor(Service $service): ?Invoice
     return Invoice::where('client_id', $service->client_id)->latest('id')->first();
 }
 
+function promoDiscountOn(Invoice $invoice): float
+{
+    return round((float) InvoiceItem::where('invoice_id', $invoice->id)
+        ->where('type', 'Discount')->sum('amount'), 2);
+}
+
 it('keeps giving a recurring discount at renewal', function () {
     $service = serviceSoldWithPromo('KEEP20', recurring: true, cycles: 3);
 
     $invoice = renewalFor($service);
 
     expect($invoice)->not->toBeNull()
-        ->and(round((float) $invoice->credit, 2))->toBe(20.00)
+        ->and(promoDiscountOn($invoice))->toBe(-20.00)
         ->and(round((float) $invoice->total, 2))->toBe(80.00);
 });
 
@@ -72,7 +79,7 @@ it('does not give a one-off discount again at renewal', function () {
     $invoice = renewalFor($service);
 
     expect($invoice)->not->toBeNull()
-        ->and(round((float) $invoice->credit, 2))->toBe(0.00)
+        ->and(promoDiscountOn($invoice))->toBe(0.00)
         ->and(round((float) $invoice->total, 2))->toBe(100.00);
 });
 
@@ -81,7 +88,7 @@ it('stops once the promised cycles are done', function () {
 
     // The first renewal is the one cycle that was promised.
     $first = renewalFor($service);
-    expect(round((float) $first->credit, 2))->toBe(20.00);
+    expect(promoDiscountOn($first))->toBe(-20.00);
 
     $service->update(['next_due_date' => now()->addDays(3)]);
     $first->update(['status' => 'paid']);
@@ -89,5 +96,5 @@ it('stops once the promised cycles are done', function () {
     $second = renewalFor($service);
 
     expect($second->id)->not->toBe($first->id)
-        ->and(round((float) $second->credit, 2))->toBe(0.00);
+        ->and(promoDiscountOn($second))->toBe(0.00);
 });
