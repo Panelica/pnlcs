@@ -255,6 +255,20 @@ class ClientController extends Controller
         // clicked, not whichever happens to come first.
         session(['active_client_id' => $client->id]);
 
+        // r141-trail: leave a record of who was in the account.
+        //
+        // Nine ordinary events are written to the activity log with the
+        // customer's id on them and the customer's own Log tab reads them
+        // back; taking the account over wrote nothing at all. Staff could sign
+        // in as the customer, place an order, open a ticket, change the
+        // account, and there was no record that anyone had been there - so a
+        // customer saying "I never ordered that" could not be answered.
+        ActivityLog::log(
+            "Admin signed in as this client (account #{$client->id})",
+            session('impersonating_admin_name'),
+            $client->id
+        );
+
         return redirect()->route('client.home')->with('success', __('admin.messages.viewing_as', ['name' => $client->first_name.' '.$client->last_name]));
     }
 
@@ -275,6 +289,15 @@ class ClientController extends Controller
         $admin = Admin::find($adminId);
         if ($admin) {
             auth('admin')->login($admin);
+        }
+
+        // The other half of the record: when they stopped.
+        if ($clientId = session('active_client_id')) {
+            ActivityLog::log(
+                "Admin stopped signing in as this client (account #{$clientId})",
+                session('impersonating_admin_name'),
+                (int) $clientId
+            );
         }
 
         // Clear impersonation session
