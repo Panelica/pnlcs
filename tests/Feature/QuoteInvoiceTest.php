@@ -1,6 +1,8 @@
 <?php
 
 use App\Events\InvoiceCreated;
+use App\Models\Admin;
+use App\Models\AdminRole;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
@@ -8,6 +10,7 @@ use App\Models\InvoiceItem;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Models\User;
+use App\Services\InvoiceService;
 use App\Services\QuoteService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
@@ -94,4 +97,72 @@ test('an accepted quote is marked accepted and cannot be accepted twice', functi
     $this->actingAs($user)->post(route('client.quotes.accept', $fx['quote']))->assertRedirect();
 
     expect(Invoice::where('client_id', $fx['client']->id)->count())->toBe(1);
+});
+
+// ---------------------------------------------------------------------------
+// Converting the same quote twice
+// ---------------------------------------------------------------------------
+
+/**
+ * One quote, two invoices.
+ *
+ * Converting a quote raises an invoice and marks the quote accepted. The
+ * customer's own accept button refuses to do it twice - the quote has to be
+ * "Sent" - and the API returns early on an accepted quote. The admin button
+ * checks nothing at all.
+ *
+ * So a second click, or converting a quote the customer has already accepted
+ * themselves, raises a second invoice for the same piece of work, and the
+ * customer is chased for both.
+ */
+test('converting the same quote again gives back the invoice it already made', function () {
+    Mail::fake();
+    $fx = acceptedQuote(120.0);
+
+    $service = app(QuoteService::class);
+    $first = $service->convertToInvoice($fx['quote']);
+    $second = $service->convertToInvoice($fx['quote']->fresh());
+
+    expect($second->id)->toBe($first->id);
+    expect(InvoiceItem::where('type', 'Quote')->where('rel_id', $fx['quote']->id)->count())->toBe(1);
+});
+
+test('the admin convert button does not raise a second invoice', function () {
+    Mail::fake();
+    $fx = acceptedQuote(120.0);
+
+    $role = AdminRole::factory()->create(['is_full_admin' => false, 'permissions' => ['manage_quotes']]);
+    $admin = Admin::factory()->create(['role_id' => $role->id]);
+
+    test()->actingAs($admin, 'admin')->post(route('admin.quotes.convert', $fx['quote']))->assertRedirect();
+    test()->actingAs($admin, 'admin')->post(route('admin.quotes.convert', $fx['quote']->fresh()))->assertRedirect();
+
+    expect(Invoice::where('client_id', $fx['client']->id)->count())->toBe(1);
+});
+
+test('a quote whose invoice was cancelled can be raised again', function () {
+    Mail::fake();
+    $fx = acceptedQuote(120.0);
+
+    $service = app(QuoteService::class);
+    $first = $service->convertToInvoice($fx['quote']);
+
+    app(InvoiceService::class)->cancelInvoice($first);
+
+    $second = $service->convertToInvoice($fx['quote']->fresh());
+
+    expect($second->id)->not->toBe($first->id);
+});
+
+test('two different quotes still make two invoices', function () {
+    Mail::fake();
+    $a = acceptedQuote(120.0);
+    $b = acceptedQuote(80.0);
+
+    $service = app(QuoteService::class);
+
+    $first = $service->convertToInvoice($a['quote']);
+    $second = $service->convertToInvoice($b['quote']);
+
+    expect($second->id)->not->toBe($first->id);
 });

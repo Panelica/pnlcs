@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Quote;
@@ -133,6 +134,27 @@ class QuoteService
 
     public function convertToInvoice(Quote $quote): Invoice
     {
+        // r128-once: one quote, one invoice. The customer's accept button
+        // refuses to run twice - the quote has to be "Sent" - and the API
+        // returns early on an accepted quote. The admin button checked nothing,
+        // so a second click raised a second invoice for the same work and the
+        // customer was chased for both. An invoice that was cancelled is not
+        // standing any more, so that quote can be raised again.
+        $existing = Invoice::whereHas('items', fn ($q) => $q
+            ->where('type', 'Quote')
+            ->where('rel_id', $quote->id))
+            ->whereNotIn('status', [InvoiceStatus::Cancelled->value, InvoiceStatus::Refunded->value])
+            ->latest('id')
+            ->first();
+
+        if ($existing) {
+            if ($quote->status !== 'Accepted') {
+                $quote->update(['status' => 'Accepted']);
+            }
+
+            return $existing;
+        }
+
         $quote->load('items', 'client');
 
         $items = [];
