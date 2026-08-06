@@ -125,7 +125,11 @@ test('getHealthStatus returns full system info', function () {
     expect($health['status'])->toBeIn(['ok', 'degraded']);
     expect($health['php'])->toBeString()->not->toBeEmpty();
     expect($health['database'])->toBe('ok');
-    expect($health['disk']['used_percent'])->toBeFloat()->toBeGreaterThanOrEqual(0);
+    // Numeric, not float: the endpoint rounds to two places and JSON drops a
+    // trailing .0, so a disk that happens to sit on a whole percent comes back
+    // as an int and the assertion failed for reasons the code cannot control.
+    expect($health['disk']['used_percent'])->toBeNumeric();
+    expect((float) $health['disk']['used_percent'])->toBeGreaterThanOrEqual(0);
 });
 
 test('health endpoint at /api/health also works', function () {
