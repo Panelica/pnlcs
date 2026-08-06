@@ -8,6 +8,7 @@ use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductAddon;
 use App\Models\Promotion;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -222,16 +223,44 @@ class CartService
         $items = $data['items'] ?? [];
         $promoCode = $data['promo_code'] ?? null;
 
-        $subtotal = 0.0;
+        // r147-linebased: quote what the invoice will charge.
+        //
+        // This applied the tax rate to the whole subtotal and knew nothing
+        // about which lines carry tax, and it never mentioned the customer's
+        // group discount - which the invoice applies as a line of its own. So
+        // somebody buying a product marked not taxable was quoted tax that was
+        // never charged, and somebody in a discount group was quoted the full
+        // price and billed less. The order below is the invoice's order:
+        // lines, then the group discount, then the promotion, then tax on what
+        // is left of the taxable side.
+        $taxFlags = $this->taxFlagsFor($items);
+
+        $taxable = 0.0;
+        $untaxed = 0.0;
         $enrichedItems = [];
 
-        foreach ($items as $item) {
+        foreach ($items as $index => $item) {
             $price = (float) ($item['price'] ?? 0);
-            $addonTotal = array_sum(array_map(
-                fn ($a) => (float) ($a['price'] ?? 0),
-                $item['addons'] ?? []
-            ));
-            $subtotal += $price + $addonTotal;
+            $addons = $item['addons'] ?? [];
+
+            $addonTotal = array_sum(array_map(fn ($a) => (float) ($a['price'] ?? 0), $addons));
+
+            if ($taxFlags['items'][$index] ?? true) {
+                $taxable += $price;
+            } else {
+                $untaxed += $price;
+            }
+
+            foreach ($addons as $addonIndex => $addon) {
+                $addonPrice = (float) ($addon['price'] ?? 0);
+
+                if ($taxFlags['addons'][$index][$addonIndex] ?? true) {
+                    $taxable += $addonPrice;
+                } else {
+                    $untaxed += $addonPrice;
+                }
+            }
+
             $enrichedItems[] = array_merge($item, [
                 'price' => $price,
                 'addon_total' => round($addonTotal, 2),
@@ -239,33 +268,113 @@ class CartService
             ]);
         }
 
-        $discount = 0.0;
+        $subtotal = $taxable + $untaxed;
+
+        // The group discount comes off each side separately, exactly as the
+        // invoice writes it, so the taxable amount falls by the discount given
+        // on taxable work and no more.
+        $groupPercent = (float) ($this->cartClient($cart)?->group?->discount_percent ?? 0);
+        $groupDiscount = 0.0;
+
+        if ($groupPercent > 0) {
+            $onTaxable = round($taxable * ($groupPercent / 100), 2);
+            $onUntaxed = round($untaxed * ($groupPercent / 100), 2);
+
+            $taxable -= $onTaxable;
+            $untaxed -= $onUntaxed;
+            $groupDiscount = $onTaxable + $onUntaxed;
+        }
+
+        $promoDiscount = 0.0;
+
         if ($promoCode) {
             $promo = Promotion::where('code', $promoCode)->first();
+
             if ($promo && $promo->isValidFor($this->cartClient($cart), $this->cartProductIds($cart))) {
-                if ($promo->type === 'percentage') {
-                    $discount = round($subtotal * ((float) $promo->value / 100), 2);
+                $discountable = $taxable + $untaxed;
+
+                $promoDiscount = $promo->type === 'percentage'
+                    ? round($discountable * ((float) $promo->value / 100), 2)
+                    : min((float) $promo->value, $discountable);
+
+                // The invoice writes the promotion as one line, taxed when
+                // there is any taxable work on the order, so it comes off the
+                // taxable side first.
+                if ($taxable > 0) {
+                    $taxable -= $promoDiscount;
                 } else {
-                    $discount = min((float) $promo->value, $subtotal);
+                    $untaxed -= $promoDiscount;
                 }
             }
         }
 
-        $taxableAmount = max(0, $subtotal - $discount);
         // carts.user_id holds the client id, despite the column name.
         $taxRate = $this->getTaxRate($cart->user_id);
-        $taxAmount = round($taxableAmount * ($taxRate / 100), 2);
-        $total = round($taxableAmount + $taxAmount, 2);
+        $taxAmount = round($taxable * ($taxRate / 100), 2);
+        $total = round(max(0, $taxable + $untaxed) + $taxAmount, 2);
 
         return [
             'subtotal' => round($subtotal, 2),
-            'discount' => round($discount, 2),
+            'discount' => round($groupDiscount + $promoDiscount, 2),
+            'group_discount' => round($groupDiscount, 2),
+            'promo_discount' => round($promoDiscount, 2),
             'tax' => $taxAmount,
             'tax_rate' => $taxRate,
             'total' => $total,
             'items' => $enrichedItems,
             'promo_code' => $promoCode,
         ];
+    }
+
+    /**
+     * Which basket lines carry tax, read the same way the invoice reads them.
+     *
+     * A product line follows its product's flag; an addon follows its own; a
+     * domain always carries tax, because a domain has no flag of its own and
+     * the order writes it that way.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array{items: array<int, bool>, addons: array<int, array<int, bool>>}
+     */
+    private function taxFlagsFor(array $items): array
+    {
+        $productIds = [];
+        $addonIds = [];
+
+        foreach ($items as $item) {
+            if (($item['type'] ?? 'product') !== 'domain' && ! empty($item['product_id'])) {
+                $productIds[] = (int) $item['product_id'];
+            }
+
+            foreach ($item['addons'] ?? [] as $addon) {
+                if (! empty($addon['addon_id'])) {
+                    $addonIds[] = (int) $addon['addon_id'];
+                }
+            }
+        }
+
+        $productTax = $productIds
+            ? Product::whereIn('id', array_unique($productIds))->pluck('tax', 'id')->all()
+            : [];
+
+        $addonTax = $addonIds
+            ? ProductAddon::whereIn('id', array_unique($addonIds))->pluck('tax', 'id')->all()
+            : [];
+
+        $flags = ['items' => [], 'addons' => []];
+
+        foreach ($items as $index => $item) {
+            $flags['items'][$index] = ($item['type'] ?? 'product') === 'domain'
+                ? true
+                : (bool) ($productTax[(int) ($item['product_id'] ?? 0)] ?? true);
+
+            foreach ($item['addons'] ?? [] as $addonIndex => $addon) {
+                $flags['addons'][$index][$addonIndex] =
+                    (bool) ($addonTax[(int) ($addon['addon_id'] ?? 0)] ?? true);
+            }
+        }
+
+        return $flags;
     }
 
     /**
