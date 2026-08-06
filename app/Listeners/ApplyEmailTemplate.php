@@ -24,6 +24,22 @@ class ApplyEmailTemplate
         'PasswordResetMail',
     ];
 
+    /**
+     * r137-never-off: mailables a template switch must not be able to stop.
+     *
+     * The reset link is the only way back into an account. The two password
+     * templates are also named the wrong way round - the one called "Password
+     * Reset Confirmation" carries the link, while "Password Reset Validation"
+     * holds the after-the-fact note that nothing sends - so an operator
+     * switching off what sounds like a courtesy email switched off the way
+     * customers recover their accounts, and nothing said why.
+     *
+     * The rest of the template still applies: subject, from address, body.
+     */
+    private const NEVER_SUPPRESSED = [
+        'PasswordResetMail',
+    ];
+
     public function __construct(private EmailTemplateService $templates) {}
 
     /** Returns null to allow, false to cancel — the dispatch halts on anything else. */
@@ -42,12 +58,19 @@ class ApplyEmailTemplate
         }
 
         if ($template->disabled) {
-            Log::info('Outgoing mail suppressed: the template is switched off.', [
-                'template' => $template->name,
-                'subject' => $event->message->getSubject(),
-            ]);
+            if (in_array(class_basename($mailable), self::NEVER_SUPPRESSED, true)) {
+                Log::warning('A switched-off template cannot stop this email; it is the only way back into an account.', [
+                    'template' => $template->name,
+                    'mailable' => class_basename($mailable),
+                ]);
+            } else {
+                Log::info('Outgoing mail suppressed: the template is switched off.', [
+                    'template' => $template->name,
+                    'subject' => $event->message->getSubject(),
+                ]);
 
-            return false;
+                return false;
+            }
         }
 
         $vars = $this->templates->varsFor($event->data);

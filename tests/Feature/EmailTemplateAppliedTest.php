@@ -1,6 +1,7 @@
 <?php
 
 use App\Mail\InvoiceCreatedMail;
+use App\Mail\PasswordResetMail;
 use App\Models\Client;
 use App\Models\Contact;
 use App\Models\EmailTemplate;
@@ -241,4 +242,65 @@ test('a contact at their own address is still copied in', function () {
     $cc = ccAddressesFor($invoice, 'ayse@example.com');
 
     expect($cc)->toContain('accounts@example.com');
+});
+
+/**
+ * The switch that locks people out of their accounts.
+ *
+ * The two password templates are named the wrong way round: the one called
+ * "Password Reset Confirmation" holds the email carrying the reset link, and
+ * the one called "Password Reset Validation" holds the "your password has been
+ * reset" note - and nothing sends that one at all.
+ *
+ * So an operator who wants to stop the courtesy note opens the template that
+ * sounds like it, switches it off, and switches off the reset link itself.
+ * Customers can no longer recover their accounts and nothing says why. The
+ * link email is the only way back into an account; a template toggle is not a
+ * reason to withhold it.
+ */
+function resetTemplate(bool $disabled): EmailTemplate
+{
+    return EmailTemplate::updateOrCreate(
+        ['name' => 'Password Reset Confirmation'],
+        [
+            'type' => 'general',
+            'subject' => 'Reset your password - {CompanyName}',
+            'message' => 'Click here: {reset_url}',
+            'disabled' => $disabled,
+        ]
+    );
+}
+
+function sendResetMail(): void
+{
+    Mail::to('locked-out@example.com')
+        ->send(new PasswordResetMail('https://panel.test/reset/abc123', 'locked-out@example.com'));
+}
+
+test('a switched-off template does not stop the password reset link', function () {
+    resetTemplate(disabled: true);
+    $sent = capturedSends();
+
+    sendResetMail();
+
+    expect($sent->getArrayCopy())->toHaveCount(1);
+});
+
+test('the reset link email still takes the subject the operator wrote', function () {
+    resetTemplate(disabled: false);
+    $sent = capturedSends();
+
+    sendResetMail();
+
+    expect($sent->getArrayCopy())->toBe(['Reset your password - '.company_name()]);
+});
+
+test('an ordinary email is still stopped by its switch', function () {
+    invoiceTemplate(['disabled' => true]);
+    $sent = capturedSends();
+
+    Mail::to('ayse@example.com')
+        ->send(new InvoiceCreatedMail(templatedInvoice()));
+
+    expect($sent->getArrayCopy())->toBe([]);
 });
