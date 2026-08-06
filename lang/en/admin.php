@@ -1335,6 +1335,7 @@ return [
         'viewing_as' => 'Now viewing as :name',
     ],
     'messages.2fa_enabled' => '2FA enabled successfully. Save your backup codes: :codes',
+    'messages.notification_rule_needs_recipient' => 'An email rule needs an address to send to, or it will quietly send nothing.',
     'messages.account_updated' => 'Account updated successfully.',
     'messages.addon_created' => 'Product addon created.',
     'messages.addon_deleted' => 'Product addon deleted.',

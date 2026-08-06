@@ -1618,8 +1618,22 @@ class ConfigController extends Controller
             'event' => 'required|string|max:255',
             'provider_id' => 'required|exists:notification_providers,id',
             'conditions' => 'nullable|array',
+            'conditions.recipient_email' => 'nullable|email',
             'active' => 'boolean',
         ]);
+
+        // An email rule with nowhere to send is accepted, listed as active and
+        // then sends nothing: the dispatcher looks for a recipient, does not
+        // find one and returns. The operator sets up alerts for failed backups,
+        // sees the rule sitting in the list, and never hears a thing.
+        $provider = NotificationProvider::find($v['provider_id']);
+
+        if ($provider?->type === 'email' && trim((string) $request->input('conditions.recipient_email')) === '') {
+            return back()->withInput()->withErrors([
+                'conditions.recipient_email' => __('admin.messages.notification_rule_needs_recipient'),
+            ]);
+        }
+
         $v['active'] = $request->boolean('active');
         $v['conditions'] = $request->input('conditions', []);
         NotificationRule::create($v);
