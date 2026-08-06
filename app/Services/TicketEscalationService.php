@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\TicketReplied;
 use App\Models\Ticket;
 use App\Models\TicketEscalation;
 use Illuminate\Support\Facades\Log;
@@ -98,6 +99,16 @@ class TicketEscalationService
                         'email' => 'system@localhost',
                     ]);
                     $ticket->update(['last_reply' => now()]);
+
+                    // r123-autoreply: send it. The whole point of a reply on an
+                    // escalation rule is that a customer who has been waiting
+                    // long enough to trigger one hears something. This wrote it
+                    // into the ticket and raised nothing, so the message sat in
+                    // the panel and the customer heard nothing at all - every
+                    // other reply, from staff or from the API, goes out through
+                    // this event. The escalated_at stamp above is what keeps it
+                    // to one message per silence.
+                    event(new TicketReplied($ticket->fresh(), (string) $rule->add_reply, true));
                 }
 
                 $escalated++;
