@@ -9,6 +9,7 @@ use App\Enums\ServiceStatus;
 use App\Events\OrderPlaced;
 use App\Models\Client;
 use App\Models\Domain;
+use App\Models\DomainPricing;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Promotion;
@@ -567,6 +568,27 @@ class OrderService
         }
     }
 
+    /**
+     * The registrar the operator set up for this domain's extension.
+     *
+     * Read from the TLD pricing table, where the field lives.
+     */
+    private function registrarForTld(string $domain): ?string
+    {
+        $domain = Domain::normalise($domain);
+
+        if ($domain === '' || ! str_contains($domain, '.')) {
+            return null;
+        }
+
+        $tld = '.'.substr($domain, strpos($domain, '.') + 1);
+
+        $registrar = DomainPricing::whereRaw('LOWER(extension) = ?', [strtolower($tld)])
+            ->value('auto_registrar');
+
+        return filled($registrar) ? (string) $registrar : null;
+    }
+
     private function createDomainForOrder(Order $order, Client $client, array $item): Domain
     {
         return Domain::create([
@@ -574,7 +596,13 @@ class OrderService
             'order_id' => $order->id,
             'domain' => Domain::normalise($item['domain'] ?? ''),
             'type' => $item['domain_type'] ?? 'register',
-            'registrar' => $item['registrar'] ?? 'Manual',
+            // r148-autoregistrar: the TLD pricing screen has a registrar field
+            // for exactly this, and nothing read it - every domain ordered
+            // through the shop was created as Manual, so a TLD set up to
+            // register through eNom was marked active without any registry
+            // hearing about it. An order that names its own registrar still
+            // wins; a TLD with none set is still done by hand.
+            'registrar' => $item['registrar'] ?? $this->registrarForTld($item['domain'] ?? '') ?? 'Manual',
             'registration_date' => now()->toDateString(),
             'expiry_date' => now()->addYears(max(1, (int) ($item['registration_period'] ?? 1)))->toDateString(),
             'next_due_date' => now()->addYears(max(1, (int) ($item['registration_period'] ?? 1)))->toDateString(),
