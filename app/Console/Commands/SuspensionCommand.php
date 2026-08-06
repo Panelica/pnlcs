@@ -35,6 +35,14 @@ class SuspensionCommand extends Command
         $failed = 0;
 
         foreach ($services as $service) {
+            // The queue has already worked out that some of these cannot come
+            // right; asking again only writes the same refusal to the log.
+            if ($provisioning->hasGivenUp($service, 'suspend')) {
+                $failed++;
+
+                continue;
+            }
+
             if ($this->isExempt($service)) {
                 $exempt++;
 

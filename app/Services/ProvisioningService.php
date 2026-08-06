@@ -235,6 +235,25 @@ class ProvisioningService
      * only fills the log - four services on this installation produced the
      * same line every half hour for a fortnight.
      */
+    /**
+     * Whether the queue has already given up on this work for good.
+     *
+     * A failed entry whose reason cannot change - no account to act on, no
+     * module configured - is the queue's answer, and running the job again
+     * does not make it a different one. A failure that could come right is not
+     * counted here, so it keeps being retried.
+     */
+    public function hasGivenUp(Service $service, string $action): bool
+    {
+        $entry = ModuleQueue::where('service_id', $service->id)
+            ->where('action', $action)
+            ->where('status', 'failed')
+            ->latest('id')
+            ->first();
+
+        return $entry !== null && self::willNeverSucceed((string) $entry->last_error);
+    }
+
     public static function willNeverSucceed(string $error): bool
     {
         foreach ([

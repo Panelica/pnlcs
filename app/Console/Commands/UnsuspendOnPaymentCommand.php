@@ -6,7 +6,6 @@ use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatus;
 use App\Mail\ServiceUnsuspensionMail;
 use App\Models\Invoice;
-use App\Models\ModuleQueue;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
 use App\Services\ProvisioningService;
@@ -61,7 +60,7 @@ class UnsuspendOnPaymentCommand extends Command
             // right - a service the panel has no account for will not grow one
             // because this runs again. Asking every half hour wrote the same
             // refusal to the log about a hundred times a day.
-            if ($this->givenUpForGood($service)) {
+            if ($provisioning->hasGivenUp($service, 'unsuspend')) {
                 $skipped++;
 
                 continue;
@@ -113,25 +112,6 @@ class UnsuspendOnPaymentCommand extends Command
         $this->info("Unsuspended {$unsuspended} service(s), {$skipped} left alone as unfixable.");
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * Whether the queue has already given up on this one for good.
-     *
-     * A failed entry whose reason cannot change - no account to act on, no
-     * module configured - is the queue's answer, and running again does not
-     * make it a different one. A failure that could come right is left alone
-     * here so it keeps being retried.
-     */
-    private function givenUpForGood(Service $service): bool
-    {
-        $entry = ModuleQueue::where('service_id', $service->id)
-            ->where('action', 'unsuspend')
-            ->where('status', 'failed')
-            ->latest('id')
-            ->first();
-
-        return $entry !== null && ProvisioningService::willNeverSucceed((string) $entry->last_error);
     }
 
     /**

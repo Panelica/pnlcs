@@ -43,6 +43,12 @@ class ProcessCancellationsCommand extends Command
             // Through the provisioning service, which queues a retry when the
             // server cannot be reached and announces what happened. Calling the
             // module here meant a failed termination was logged and forgotten.
+            // Same as the other jobs: what the queue gave up on for good is
+            // not asked again.
+            if ($provisioning->hasGivenUp($service, 'terminate')) {
+                continue;
+            }
+
             if ($service->server_id && $provisioning->resolveModule($service)) {
                 $result = $provisioning->terminateAccount($service);
 
