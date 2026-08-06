@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 
 class ClientApiController extends BaseApiController
 {
+    /** The columns a caller may order the client list by. */
+    private const ORDERABLE = ['id', 'first_name', 'last_name', 'email', 'company_name', 'status', 'created_at'];
+
     public function getClients(Request $request)
     {
         $query = Client::query();
@@ -25,7 +28,15 @@ class ClientApiController extends BaseApiController
             $query->where('group_id', $request->group_id);
         }
 
-        return $this->paginated($query->orderBy($request->get('orderby', 'id'), $request->get('order', 'asc'))->paginate($this->getPerPage(), ['*'], 'page', $this->getPage()));
+        // Same rule as the screens: a caller cannot name a column that is not
+        // one, or a direction that is not a direction, and get an error page
+        // out of the database.
+        $orderBy = in_array($request->get('orderby'), self::ORDERABLE, true)
+            ? $request->get('orderby')
+            : 'id';
+        $order = strtolower((string) $request->get('order')) === 'desc' ? 'desc' : 'asc';
+
+        return $this->paginated($query->orderBy($orderBy, $order)->paginate($this->getPerPage(), ['*'], 'page', $this->getPage()));
     }
 
     public function getClientsDetails(Request $request)
