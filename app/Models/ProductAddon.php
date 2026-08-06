@@ -68,6 +68,41 @@ class ProductAddon extends Model
     }
 
     /** Price for one billing cycle, 0 when the operator never priced it. */
+    /**
+     * Whether this addon is sold on the given cycle at all.
+     *
+     * r145-withdrawn: -1 marks a cycle the addon is not offered on. priceFor
+     * reads that as zero, which does not withdraw the addon from the cycle -
+     * it puts it on sale there for nothing. The same was true of configurable
+     * options until they were made to refuse it; this is the addon beside them.
+     */
+    public function offeredOn(string $cycle): bool
+    {
+        return ($this->rawPriceFor($cycle) ?? 0.0) >= 0;
+    }
+
+    /** The stored figure for a cycle, or null when there is none. */
+    private function rawPriceFor(string $cycle): ?float
+    {
+        $column = BillingCycleHelper::pricingColumn($cycle);
+
+        if (! $column) {
+            return null;
+        }
+
+        $currencyId = Currency::getDefault()?->id;
+
+        $row = $this->relationLoaded('pricing')
+            ? $this->pricing->firstWhere('currency_id', $currencyId) ?? $this->pricing->first()
+            : $this->pricing()->where('currency_id', $currencyId)->first() ?? $this->pricing()->first();
+
+        if (! $row || $row->{$column} === null) {
+            return null;
+        }
+
+        return round((float) $row->{$column}, 2);
+    }
+
     public function priceFor(string $cycle): float
     {
         $column = BillingCycleHelper::pricingColumn($cycle);

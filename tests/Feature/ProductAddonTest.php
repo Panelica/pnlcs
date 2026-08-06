@@ -615,3 +615,72 @@ test('an addon cannot be bought for a service that has ended', function () {
     expect(ServiceAddon::count())->toBe(0)
         ->and(Invoice::count())->toBe(0);
 });
+
+// ---------------------------------------------------------------------------
+// A cycle the addon is not offered on
+// ---------------------------------------------------------------------------
+
+/**
+ * An addon the operator withdrew from a term.
+ *
+ * A price of -1 marks a cycle an addon is not sold on - the model says exactly
+ * that, and then reads it as zero, so the addon is not withdrawn from the term
+ * at all: it is put on sale there for nothing, in the basket and in the
+ * mid-term purchase alike.
+ *
+ * The same thing was fixed for configurable options; the addon beside them
+ * kept it.
+ */
+function priceAddon(ProductAddon $addon, array $prices): void
+{
+    Pricing::updateOrCreate(
+        ['type' => ProductAddon::PRICING_TYPE, 'rel_id' => $addon->id, 'currency_id' => Currency::where('is_default', true)->first()->id],
+        $prices
+    );
+}
+
+function withdrawnAddonShop(): array
+{
+    $fx = addonShop();
+    priceAddon($fx['addon'], ['monthly' => 5, 'annually' => -1]);
+
+    return $fx;
+}
+
+test('an addon withdrawn from a term cannot be put in the basket on it', function () {
+    $fx = withdrawnAddonShop();
+
+    expect(fn () => app(AddonService::class)->normalise($fx['product'], [$fx['addon']->id], 'annually'))
+        ->toThrow(ValidationException::class);
+});
+
+test('and cannot be bought mid-term on it either', function () {
+    $fx = withdrawnAddonShop();
+
+    $service = Service::factory()->create([
+        'client_id' => Client::factory()->create()->id,
+        'product_id' => $fx['product']->id,
+        'billing_cycle' => 'Annually',
+        'status' => 'active',
+    ]);
+
+    expect(fn () => app(AddonService::class)->purchaseForService($service, $fx['addon']))
+        ->toThrow(ValidationException::class);
+});
+
+test('the same addon still sells on the term it is priced for', function () {
+    $fx = withdrawnAddonShop();
+
+    $normalised = app(AddonService::class)->normalise($fx['product'], [$fx['addon']->id], 'monthly');
+
+    expect(app(AddonService::class)->priceOf($normalised))->toBe(5.0);
+});
+
+test('an addon given away is still free, not withdrawn', function () {
+    $fx = addonShop();
+    priceAddon($fx['addon'], ['monthly' => 0, 'annually' => 0]);
+
+    $normalised = app(AddonService::class)->normalise($fx['product'], [$fx['addon']->id], 'annually');
+
+    expect(app(AddonService::class)->priceOf($normalised))->toBe(0.0);
+});

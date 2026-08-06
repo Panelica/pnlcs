@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\InvoiceStatus;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
@@ -66,6 +67,14 @@ class AddonService
             if (! $addon) {
                 throw ValidationException::withMessages([
                     'addons' => __('client.cart.addon_invalid'),
+                ]);
+            }
+
+            // r145-refuse: an addon the operator withdrew from this term is
+            // not free on it. Selling it for nothing is not withdrawing it.
+            if (! $addon->offeredOn($cycle)) {
+                throw ValidationException::withMessages([
+                    'addons' => __('client.cart.addon_not_on_cycle', ['addon' => $addon->name]),
                 ]);
             }
 
@@ -153,6 +162,15 @@ class AddonService
         }
 
         $cycle = $cycle ?: ($service->billing_cycle ?: 'Monthly');
+
+        // The same rule as the basket: a term the addon was withdrawn from is
+        // not a term it is given away on.
+        if (! $addon->offeredOn($cycle)) {
+            throw ValidationException::withMessages([
+                'addon_id' => __('client.cart.addon_not_on_cycle', ['addon' => $addon->name]),
+            ]);
+        }
+
         $price = $addon->priceFor($cycle);
 
         $serviceAddon = ServiceAddon::create([
@@ -202,7 +220,7 @@ class AddonService
                 // An addon renews with the service it belongs to.
                 ->where('auto_renew', true))
             ->whereDoesntHave('client.invoices', fn ($q) => $q
-                ->whereNotIn('status', \App\Enums\InvoiceStatus::settled())
+                ->whereNotIn('status', InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Addon')->whereColumn('rel_id', 'service_addons.id')));
     }
 
