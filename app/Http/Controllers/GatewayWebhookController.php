@@ -105,7 +105,7 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => false, "message" => "Stripe module not available."]);
         }
 
-        $result = $module->capture($invoice, (float) $invoice->total, ["currency" => "usd"]);
+        $result = $module->capture($invoice, $invoice->amountDue(), ["currency" => "usd"]);
         return response()->json($result);
     }
 
@@ -159,10 +159,12 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => false, "message" => "Missing payment data."]);
         }
 
-        $result = $module->capture($invoice, (float) $invoice->total, ["opaque_data" => $opaqueData]);
+        $due = $invoice->amountDue();
+
+        $result = $module->capture($invoice, $due, ["opaque_data" => $opaqueData]);
 
         if ($result["success"] ?? false) {
-            $this->recordTransaction($invoice, "authorize", $result["transaction_id"], (float) $invoice->total);
+            $this->recordTransaction($invoice, "authorize", $result["transaction_id"], $due);
             $result["redirect_url"] = route("client.invoices.show", $invoice);
         }
 
@@ -258,7 +260,7 @@ class GatewayWebhookController extends Controller
 
         $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("mollie");
         if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
-        $result = $module->capture($invoice, (float)$invoice->total, [
+        $result = $module->capture($invoice, $invoice->amountDue(), [
             "redirect_url" => url("/client/invoices/{$invoice->id}?payment=success"),
             "webhook_url" => route("gateway.mollie.webhook"),
         ]);
@@ -317,7 +319,7 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => true, "redirect_url" => url("/client/invoices/{$invoice->id}?payment=success")]);
         }
         // Create order
-        $result = $module->capture($invoice, (float)$invoice->total);
+        $result = $module->capture($invoice, $invoice->amountDue());
         return response()->json($result);
     }
 }

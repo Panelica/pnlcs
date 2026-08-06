@@ -23,6 +23,19 @@ class Invoice extends Model {
     protected function casts(): array { return ['date' => 'date', 'due_date' => 'date', 'date_paid' => 'datetime', 'subtotal' => 'decimal:2', 'credit' => 'decimal:2', 'tax' => 'decimal:2', 'total' => 'decimal:2']; }
 
     public function client() { return $this->belongsTo(Client::class); }
+    /**
+     * What is still owed on this invoice.
+     *
+     * r131-due: the invoice page shows this to the customer as the remaining
+     * balance, and every pay-now path used to ask the gateway for the total
+     * instead - so somebody who had paid half by bank transfer was shown 60
+     * left and their card was charged 100.
+     */
+    public function amountDue(): float
+    {
+        return max(0.0, app(\App\Services\PaymentService::class)->balance($this));
+    }
+
     public function items() { return $this->hasMany(InvoiceItem::class); }
     public function transactions() { return $this->hasMany(Transaction::class); }
 

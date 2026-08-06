@@ -113,7 +113,7 @@ class MollieModule implements GatewayModuleInterface
 
     public function getPaymentForm(Invoice $invoice): string
     {
-        $amount = number_format((float) $invoice->total, 2, '.', '');
+        $amount = number_format($invoice->amountDue(), 2, '.', '');
         $display = money_fmt($invoice->total);
         $invoiceId = (int) $invoice->id;
         $captureUrl = url("/gateway/mollie/capture/{$invoiceId}");

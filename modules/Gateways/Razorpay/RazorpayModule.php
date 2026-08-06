@@ -110,10 +110,10 @@ class RazorpayModule implements GatewayModuleInterface
     public function getPaymentForm(Invoice $invoice): string
     {
         $keyId = htmlspecialchars($this->getSetting('key_id') ?? '', ENT_QUOTES, 'UTF-8');
-        $amount = (int) round((float) $invoice->total * 100);
+        $amount = (int) round($invoice->amountDue() * 100);
         $invoiceId = (int) $invoice->id;
         $invoiceNum = $invoice->invoice_num ?? $invoice->id;
-        $displayAmount = money_fmt($invoice->total);
+        $displayAmount = money_fmt($invoice->amountDue());
         $currency = shop_currency_code();
         $captureUrl = url("/gateway/razorpay/capture/{$invoiceId}");
         $companyName = htmlspecialchars(\App\Models\Setting::get('CompanyName', 'PNLCS'), ENT_QUOTES, 'UTF-8');

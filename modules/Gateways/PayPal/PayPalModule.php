@@ -168,7 +168,7 @@ class PayPalModule implements GatewayModuleInterface
     public function getPaymentForm(Invoice $invoice): string
     {
         $clientId  = $this->getSetting("client_id") ?? "";
-        $amount    = number_format((float) $invoice->total, 2, ".", "");
+        $amount    = number_format($invoice->amountDue(), 2, ".", "");
         $invoiceId = (int) $invoice->id;
         $currency  = shop_currency_code();
         $display   = money_fmt($invoice->total);

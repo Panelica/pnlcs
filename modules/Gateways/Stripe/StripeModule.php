@@ -114,7 +114,7 @@ class StripeModule implements GatewayModuleInterface
     public function getPaymentForm(Invoice $invoice): string
     {
         $publishableKey = $this->getSetting("publishable_key") ?? "";
-        $amount         = number_format((float) $invoice->total, 2, ".", "");
+        $amount         = number_format($invoice->amountDue(), 2, ".", "");
         $invoiceId      = (int) $invoice->id;
 
         if (!$publishableKey) {

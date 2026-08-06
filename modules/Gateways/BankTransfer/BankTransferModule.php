@@ -63,7 +63,7 @@ class BankTransferModule implements GatewayModuleInterface
         $swift         = $this->getSetting("swift") ?? "";
         $notes         = $this->getSetting("notes") ?? "";
         $invoiceNum    = htmlspecialchars($invoice->invoice_num ?? $invoice->id, ENT_QUOTES, "UTF-8");
-        $amount        = money_fmt($invoice->total);
+        $amount        = money_fmt($invoice->amountDue());
 
         $rows = "";
 
