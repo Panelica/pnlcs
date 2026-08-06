@@ -66,7 +66,7 @@
     <form method="POST" action="{{ route('admin.config.announcements.update', $ann) }}">
         @csrf @method('PUT')
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $ann->title }}" required class="form-control"></div>
-        <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required>{{ $ann->body }}</textarea></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required>{{ $ann->announcement }}</textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="hidden" name="published" value="0">
