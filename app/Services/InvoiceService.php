@@ -256,16 +256,17 @@ class InvoiceService
     public function generateInvoiceNumber(): string
     {
         $prefix = config('billing.invoice_prefix', 'INV-');
-        $latest = Invoice::where('invoice_num', 'like', $prefix.'%')
-            ->orderByDesc('id')
-            ->value('invoice_num');
 
-        if ($latest) {
-            $numeric = (int) ltrim(str_replace($prefix, '', $latest), '0');
-            $next = $numeric + 1;
-        } else {
-            $next = 1;
-        }
+        // r118-seq: the highest number in the series, not the newest row.
+        // Reading the newest meant one invoice numbered with something that is
+        // not a number - the add funds page used to mint eight random
+        // characters - was read as zero and started the series again from one.
+        // Eight numbers on this installation were issued three times over to
+        // different customers that way. Anything that is not prefix + digits
+        // casts to zero here and is ignored instead of resetting the count.
+        $next = 1 + (int) Invoice::where('invoice_num', 'like', $prefix.'%')
+            ->selectRaw('MAX(CAST(SUBSTRING(invoice_num, ?) AS UNSIGNED)) as seq', [strlen($prefix) + 1])
+            ->value('seq');
 
         return $prefix.str_pad($next, 6, '0', STR_PAD_LEFT);
     }

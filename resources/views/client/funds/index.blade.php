@@ -60,8 +60,7 @@
                         </option>
                         @endforeach
                     @else
-                        <option value="banktransfer">{{ __('client.funds.bank_transfer') }}</option>
-                        <option value="paypal">{{ __('client.funds.paypal') }}</option>
+                        <option value="" disabled>{{ __('client.invoices.no_payment_methods') }}</option>
                     @endif
                 </select>
             </div>

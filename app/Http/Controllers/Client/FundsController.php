@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Services\InvoiceService;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -16,11 +18,10 @@ class FundsController extends Controller
 
     public function index()
     {
-        $gateways = DB::table('gateway_settings')
-            ->select('gateway')
-            ->distinct()
-            ->orderBy('gateway')
-            ->pluck('gateway');
+        // r118-funds: the same question the checkout and the invoice page ask -
+        // switched on, and holding the keys it authenticates with. This page
+        // used to list every gateway that had ever had a setting saved.
+        $gateways = collect(app(ModuleRegistry::class)->usableGateways())->sort()->values();
 
         return view('client.funds.index', compact('gateways'));
     }
@@ -38,17 +39,18 @@ class FundsController extends Controller
             return back()->with('error', __('messages.error.no_client_account_found_please_contact_support'));
         }
 
-        // Check if gateway is configured
+        // A row in the settings table only means somebody opened the form once.
+        // Taking money through a gateway on that basis leaves the customer at a
+        // payment page that cannot charge them.
         $gateway = $validated['payment_method'];
-        $configured = DB::table('gateway_settings')->where('gateway', $gateway)->exists();
 
-        if (!$configured && !in_array($gateway, ['banktransfer'])) {
+        if (! in_array($gateway, app(ModuleRegistry::class)->usableGateways(), true)) {
             return back()->with('error', __('messages.error.gateway_not_configured', ['gateway' => ucfirst($gateway)]));
         }
 
         $invoice = Invoice::create([
             'client_id'      => $client->id,
-            'invoice_num'    => 'INV-' . strtoupper(Str::random(8)),
+            'invoice_num'    => app(InvoiceService::class)->generateInvoiceNumber(),
             'date'           => today(),
             'due_date'       => today(),
             'subtotal'       => $validated['amount'],
