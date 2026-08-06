@@ -23,8 +23,10 @@ class SslProvisioningService
             $product = $order->service?->product;
             if ($product && $product->ssl_module) {
                 $order->update(['module' => $product->ssl_module]);
+
                 return $this->registry->getSslModule($product->ssl_module);
             }
+
             return null;
         }
 
@@ -33,8 +35,20 @@ class SslProvisioningService
 
     public function submitConfiguration(SslOrder $order, array $config): array
     {
+        // r129-once: configuring submits the order to the certificate
+        // authority, which is a purchase. The form will not open once that has
+        // happened; the handler behind it checked nothing, so a resubmitted
+        // form, a double click or the API endpoint bought the certificate
+        // again - another one to pay for, a duplicate order at the authority,
+        // and the CSR and contact details of an issued certificate overwritten.
+        // A submission that failed leaves the order awaiting configuration, so
+        // a genuine retry still goes through.
+        if ($order->status !== 'Awaiting Configuration') {
+            return ['success' => false, 'message' => __('messages.error.this_certificate_has_already_been_configured')];
+        }
+
         $module = $this->getModuleForOrder($order);
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.ssl_module_not_found')];
         }
 
@@ -71,7 +85,7 @@ class SslProvisioningService
     public function pollCertificateStatus(SslOrder $order): array
     {
         $module = $this->getModuleForOrder($order);
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
@@ -90,7 +104,7 @@ class SslProvisioningService
     public function renewCertificate(SslOrder $order): array
     {
         $module = $this->getModuleForOrder($order);
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
@@ -100,7 +114,7 @@ class SslProvisioningService
     public function revokeCertificate(SslOrder $order, string $reason = ''): array
     {
         $module = $this->getModuleForOrder($order);
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
@@ -110,7 +124,7 @@ class SslProvisioningService
     public function reissueCertificate(SslOrder $order, string $newCsr): array
     {
         $module = $this->getModuleForOrder($order);
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
@@ -120,7 +134,7 @@ class SslProvisioningService
     public function resendValidation(SslOrder $order): array
     {
         $module = $this->getModuleForOrder($order);
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
@@ -130,7 +144,7 @@ class SslProvisioningService
     public function changeValidation(SslOrder $order, string $method): array
     {
         $module = $this->getModuleForOrder($order);
-        if (!$module) {
+        if (! $module) {
             return ['success' => false, 'message' => __('messages.error.ssl_module_not_found_short')];
         }
 
@@ -139,7 +153,7 @@ class SslProvisioningService
 
     public function downloadCertificate(SslOrder $order): array
     {
-        if (!$order->isCompleted()) {
+        if (! $order->isCompleted()) {
             return ['success' => false, 'message' => __('messages.error.certificate_not_yet_issued')];
         }
 
