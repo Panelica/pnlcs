@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Events\InvoiceCreated;
 use App\Events\InvoicePaid;
 use App\Models\Client;
+use App\Models\Credit;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\TaxRule;
@@ -103,6 +104,7 @@ class InvoiceService
             ]);
         }
     }
+
     public function addLineItem(Invoice $invoice, array $itemData): InvoiceItem
     {
         $item = InvoiceItem::create([
@@ -274,6 +276,39 @@ class InvoiceService
     /**
      * Cancel an invoice (only if not already paid).
      */
+    /**
+     * Hand back the account balance that was applied to this invoice.
+     *
+     * The invoice is restored to what it was billed for and carries no credit
+     * afterwards, so the same balance cannot be returned twice.
+     */
+    private function returnAppliedCredit(Invoice $invoice): void
+    {
+        $applied = round((float) $invoice->credit, 2);
+        $client = $invoice->client;
+
+        if ($applied <= 0.009 || ! $client) {
+            return;
+        }
+
+        DB::transaction(function () use ($invoice, $client, $applied) {
+            $client->increment('credit', $applied);
+
+            Credit::create([
+                'client_id' => $client->id,
+                'admin_id' => null,
+                'date' => now()->toDateString(),
+                'description' => "Invoice #{$invoice->invoice_num} cancelled — credit returned",
+                'amount' => $applied,
+            ]);
+
+            $invoice->update([
+                'credit' => 0,
+                'total' => round((float) $invoice->total + $applied, 2),
+            ]);
+        });
+    }
+
     public function cancelInvoice(Invoice $invoice): Invoice
     {
         $status = strtolower((string) $invoice->status);
@@ -288,6 +323,12 @@ class InvoiceService
             $invoice,
             "Invoice #{$invoice->invoice_num} cancelled — payment returned as credit"
         );
+
+        // r120-credit: balance spent on this invoice comes back too. Applying
+        // credit writes no transaction - no money moved - so returning the
+        // payments left it behind: the customer's balance was taken, the
+        // invoice it was taken for was voided, and nothing gave it back.
+        $this->returnAppliedCredit($invoice);
 
         $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
 
