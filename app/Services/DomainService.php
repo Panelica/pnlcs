@@ -92,11 +92,49 @@ class DomainService
         return $domain->fresh();
     }
 
-    public function updateNameservers(Domain $domain, array $nameservers): Domain
+    /**
+     * Point the domain at new nameservers.
+     *
+     * r132-push: this used to write the column and stop there. Every registrar
+     * module implements saveNameservers() and nothing called it, so a customer
+     * moving their site changed the nameservers, was told they were updated,
+     * and the registry went on pointing at the old ones. The panel showed a
+     * change that had not happened.
+     *
+     * The registry is told first and the column follows, so what the panel
+     * shows is what the domain actually has. A domain with no registrar module
+     * behind it - registered by hand elsewhere - is recorded as before.
+     *
+     * @return array{success: bool, message: ?string, domain: Domain}
+     */
+    public function updateNameservers(Domain $domain, array $nameservers): array
     {
+        $registrar = app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
+
+        if ($registrar) {
+            try {
+                $saved = $registrar->saveNameservers($domain, $nameservers);
+            } catch (\Throwable $e) {
+                Log::error("DomainService::updateNameservers - registrar threw for {$domain->domain}: ".$e->getMessage());
+                $saved = false;
+            }
+
+            if (! $saved) {
+                Log::warning('DomainService::updateNameservers - registrar refused; nothing changed', [
+                    'domain' => $domain->id, 'registrar' => $domain->registrar,
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => __('messages.error.nameservers_not_saved_at_registrar'),
+                    'domain' => $domain->fresh(),
+                ];
+            }
+        }
+
         $domain->update(['nameservers' => json_encode($nameservers)]);
 
-        return $domain->fresh();
+        return ['success' => true, 'message' => null, 'domain' => $domain->fresh()];
     }
 
     public function cancelDomain(Domain $domain): Domain

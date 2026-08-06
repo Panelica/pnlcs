@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Client;
 
 use App\Contracts\RegistrarModuleInterface;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
 use App\Models\Domain;
+use App\Services\DomainService;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -62,7 +63,14 @@ class DomainController extends Controller
             'ns5' => $request->ns5,
         ]);
 
-        $domain->update(['nameservers' => json_encode($nameservers)]);
+        // r132-client: through the service, which tells the registrar. Writing
+        // the column here reported success for a change the registry never saw.
+        $result = app(DomainService::class)->updateNameservers($domain, $nameservers);
+
+        if (! $result['success']) {
+            return redirect()->route('client.domains.show', $domain)
+                ->with('error', $result['message']);
+        }
 
         return redirect()->route('client.domains.show', $domain)
             ->with('success', __('messages.success.nameservers_updated'));

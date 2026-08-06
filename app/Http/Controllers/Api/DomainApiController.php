@@ -91,8 +91,14 @@ class DomainApiController extends BaseApiController
             return $this->error('Domain Not Found', 404);
         }
         $ns = array_values(array_filter([$request->ns1, $request->ns2, $request->ns3, $request->ns4, $request->ns5]));
-        $domain->nameservers = json_encode($ns);
-        $domain->save();
+
+        // r132-api: the same door the client area uses, so the registrar hears
+        // about it here too rather than only the database.
+        $result = app(\App\Services\DomainService::class)->updateNameservers($domain, $ns);
+
+        if (! $result['success']) {
+            return $this->error($result['message'] ?? 'The registrar did not accept the nameservers.', 502);
+        }
 
         return $this->success(['domainid' => $domain->id]);
     }
