@@ -180,3 +180,32 @@ if (! function_exists('branding_removed')) {
         }
     }
 }
+
+if (! function_exists('csv_cell')) {
+    /**
+     * A value as text, not as something a spreadsheet will run.
+     *
+     * A cell beginning with =, +, - or @ is a formula to Excel, Numbers and
+     * LibreOffice, and it runs when the file is opened. The fields in these
+     * exports are the ones customers fill in themselves, and the person who
+     * opens the file is the operator, so the leading character is quoted and
+     * the value stays readable.
+     */
+    function csv_cell(mixed $value): string
+    {
+        $value = (string) $value;
+
+        if ($value === '') {
+            return $value;
+        }
+
+        return str_starts_with($value, '=')
+            || str_starts_with($value, '+')
+            || str_starts_with($value, '-')
+            || str_starts_with($value, '@')
+            || str_starts_with($value, "\t")
+            || str_starts_with($value, "\r")
+                ? "'".$value
+                : $value;
+    }
+}

@@ -18,7 +18,7 @@ class ReportController extends Controller
         $selectedCategory = $request->input('category');
 
         if ($selectedCategory) {
-            $reports = $reports->filter(fn($items, $cat) => $cat === $selectedCategory);
+            $reports = $reports->filter(fn ($items, $cat) => $cat === $selectedCategory);
         }
 
         return view('admin.reports.index', compact('reports', 'categories', 'selectedCategory'));
@@ -28,14 +28,14 @@ class ReportController extends Controller
     {
         $report = $this->manager->find($slug);
 
-        if (!$report) {
+        if (! $report) {
             return back()->with('error', __('admin.messages.report_not_found'));
         }
 
         try {
             $data = $report->generate($request);
         } catch (\Throwable $e) {
-            $data = ['columns' => ['Error'], 'rows' => [(object)['error' => $e->getMessage()]]];
+            $data = ['columns' => ['Error'], 'rows' => [(object) ['error' => $e->getMessage()]]];
         }
 
         return view('admin.reports.show', [
@@ -58,7 +58,7 @@ class ReportController extends Controller
     {
         $report = $this->manager->find($slug);
 
-        if (!$report || !$report->canExport()) {
+        if (! $report || ! $report->canExport()) {
             abort(404);
         }
 
@@ -68,13 +68,13 @@ class ReportController extends Controller
 
         return response()->streamDownload(function () use ($columns, $rows) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, $columns);
+            fputcsv($handle, array_map('csv_cell', $columns));
             foreach ($rows as $row) {
                 $rowArray = is_object($row) ? (array) $row : $row;
-                fputcsv($handle, array_values($rowArray));
+                fputcsv($handle, array_map('csv_cell', array_values($rowArray)));
             }
             fclose($handle);
-        }, $slug . '-' . date('Y-m-d') . '.csv', [
+        }, $slug.'-'.date('Y-m-d').'.csv', [
             'Content-Type' => 'text/csv',
         ]);
     }
