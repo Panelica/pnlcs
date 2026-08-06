@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ConfigOption;
 use App\Models\ConfigOptionGroup;
+use App\Models\ConfigOptionSub;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceConfigOption;
@@ -72,6 +73,8 @@ class ConfigOptionService
                     }
 
                     $sub = $option->subs->first();
+                    $this->refuseIfWithdrawn($option, $sub, $cycle);
+
                     $selected[] = [
                         'option' => $option,
                         'sub_id' => $sub?->id,
@@ -87,6 +90,8 @@ class ConfigOptionService
                         continue;
                     }
                     $sub = $option->subs->first();
+                    $this->refuseIfWithdrawn($option, $sub, $cycle);
+
                     $selected[] = [
                         'option' => $option,
                         'sub_id' => $sub?->id,
@@ -114,6 +119,8 @@ class ConfigOptionService
                     ]);
                 }
 
+                $this->refuseIfWithdrawn($option, $sub, $cycle);
+
                 $selected[] = [
                     'option' => $option,
                     'sub_id' => $sub->id,
@@ -124,6 +131,26 @@ class ConfigOptionService
         }
 
         return $selected;
+    }
+
+    /**
+     * r125-refuse: an option the operator withdrew from this cycle.
+     *
+     * Selling it for nothing is not withdrawing it. The product itself has
+     * always been careful about this - a cycle it is not sold on is skipped
+     * rather than billed at zero - and its options were not.
+     *
+     * @throws ValidationException
+     */
+    private function refuseIfWithdrawn(ConfigOption $option, ?ConfigOptionSub $sub, string $cycle): void
+    {
+        if ($sub && ! $sub->offeredOn($cycle)) {
+            throw ValidationException::withMessages([
+                "config_options.{$option->id}" => __('client.cart.option_not_on_cycle', [
+                    'option' => $option->option_name,
+                ]),
+            ]);
+        }
     }
 
     /** What the chosen options add to the recurring price. */

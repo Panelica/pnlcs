@@ -252,3 +252,68 @@ test('an admin can link an option group to products', function () {
 
     expect(ConfigOptionLink::where('group_id', $group->id)->pluck('product_id')->all())->toBe([$other->id]);
 });
+
+// ---------------------------------------------------------------------------
+// A cycle the option is not offered on
+// ---------------------------------------------------------------------------
+
+/**
+ * An option the operator withdrew from a cycle.
+ *
+ * A price of -1 marks a cycle the option is not offered on - the model says so
+ * in as many words - and then reads it as zero. So the option is not withdrawn
+ * from that cycle at all: it is put on sale there for nothing. A customer
+ * buying the annual term picks the upgrade the operator meant to keep off the
+ * annual term, and is charged nothing for it, for as long as the service runs.
+ *
+ * The product itself has always been careful about this - a cycle it is not
+ * sold on is skipped rather than billed at zero - and its options were not.
+ */
+test('an option withdrawn from a cycle cannot be bought on that cycle', function () {
+    $fx = productWithOptions(20);
+    $ram4 = ConfigOptionSub::where('config_id', $fx['ram']->id)->where('option_name', '4 GB')->firstOrFail();
+
+    priceSub($ram4, ['monthly' => 5, 'annually' => -1]);
+
+    $svc = app(ConfigOptionService::class);
+
+    expect(fn () => $svc->normalise($fx['product'], [$fx['ram']->id => $ram4->id], 'annually'))
+        ->toThrow(ValidationException::class);
+});
+
+test('the same option is still sold on the cycle it is priced for', function () {
+    $fx = productWithOptions(20);
+    $ram4 = ConfigOptionSub::where('config_id', $fx['ram']->id)->where('option_name', '4 GB')->firstOrFail();
+
+    priceSub($ram4, ['monthly' => 5, 'annually' => -1]);
+
+    $svc = app(ConfigOptionService::class);
+    $normalised = $svc->normalise($fx['product'], [$fx['ram']->id => $ram4->id], 'monthly');
+
+    expect($svc->priceOf($normalised))->toBe(5.0);
+});
+
+test('an option the operator gives away is still free, not withdrawn', function () {
+    $fx = productWithOptions(20);
+    $ram2 = ConfigOptionSub::where('config_id', $fx['ram']->id)->where('option_name', '2 GB')->firstOrFail();
+
+    $svc = app(ConfigOptionService::class);
+    $normalised = $svc->normalise($fx['product'], [$fx['ram']->id => $ram2->id], 'annually');
+
+    expect($svc->priceOf($normalised))->toBe(0.0);
+});
+
+test('a quantity option withdrawn from a cycle is refused too', function () {
+    $fx = productWithOptions(20);
+    $ipUnit = ConfigOptionSub::where('config_id', $fx['ips']->id)->firstOrFail();
+
+    priceSub($ipUnit, ['monthly' => 2, 'annually' => -1]);
+
+    // The dropdown must be answered too, or the refusal proves only that.
+    $ram2 = ConfigOptionSub::where('config_id', $fx['ram']->id)->where('option_name', '2 GB')->firstOrFail();
+
+    $svc = app(ConfigOptionService::class);
+
+    expect(fn () => $svc->normalise($fx['product'], [$fx['ram']->id => $ram2->id, $fx['ips']->id => 2], 'annually'))
+        ->toThrow(ValidationException::class);
+});

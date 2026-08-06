@@ -147,6 +147,7 @@ return [
         'cycle_unavailable' => 'This product is not sold on that billing cycle.',
         'addon_invalid' => 'That addon is not available for this product.',
         'option_invalid' => 'The selection for :option is not available for this product.',
+        'option_not_on_cycle' => ':option is not available on the billing term you chose.',
         'option_quantity_invalid' => 'Choose between :min and :max for :option.',
         'option_required' => 'Please choose an option for :option.',
         'per_unit' => 'per unit',
