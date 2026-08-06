@@ -6,6 +6,7 @@ use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatus;
 use App\Mail\ServiceUnsuspensionMail;
 use App\Models\Invoice;
+use App\Models\ModuleQueue;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
 use App\Services\ProvisioningService;
@@ -24,6 +25,7 @@ class UnsuspendOnPaymentCommand extends Command
         // Find suspended services with recently paid invoices
         $services = Service::with('client')->where('status', ServiceStatus::Suspended->value)->get();
         $unsuspended = 0;
+        $skipped = 0;
         $registry = app(ModuleRegistry::class);
 
         foreach ($services as $service) {
@@ -54,6 +56,16 @@ class UnsuspendOnPaymentCommand extends Command
                     $q->where('rel_id', $service->id);
                 })
                 ->exists();
+
+            // The queue has already worked out that some of these cannot come
+            // right - a service the panel has no account for will not grow one
+            // because this runs again. Asking every half hour wrote the same
+            // refusal to the log about a hundred times a day.
+            if ($this->givenUpForGood($service)) {
+                $skipped++;
+
+                continue;
+            }
 
             if ($hasPaidInvoice && ! $hasOverdue) {
                 $serverModule = $service->server_id
@@ -98,9 +110,28 @@ class UnsuspendOnPaymentCommand extends Command
             }
         }
 
-        $this->info("Unsuspended {$unsuspended} service(s).");
+        $this->info("Unsuspended {$unsuspended} service(s), {$skipped} left alone as unfixable.");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Whether the queue has already given up on this one for good.
+     *
+     * A failed entry whose reason cannot change - no account to act on, no
+     * module configured - is the queue's answer, and running again does not
+     * make it a different one. A failure that could come right is left alone
+     * here so it keeps being retried.
+     */
+    private function givenUpForGood(Service $service): bool
+    {
+        $entry = ModuleQueue::where('service_id', $service->id)
+            ->where('action', 'unsuspend')
+            ->where('status', 'failed')
+            ->latest('id')
+            ->first();
+
+        return $entry !== null && ProvisioningService::willNeverSucceed((string) $entry->last_error);
     }
 
     /**

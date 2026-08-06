@@ -235,7 +235,7 @@ class ProvisioningService
      * only fills the log - four services on this installation produced the
      * same line every half hour for a fortnight.
      */
-    private static function willNeverSucceed(string $error): bool
+    public static function willNeverSucceed(string $error): bool
     {
         foreach ([
             'not found in service notes',
