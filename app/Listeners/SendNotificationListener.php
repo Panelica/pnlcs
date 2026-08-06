@@ -21,6 +21,7 @@ use App\Mail\ServiceWelcomeMail;
 use App\Mail\TicketOpenedMail;
 use App\Mail\TicketReplyMail;
 use App\Models\Setting;
+use App\Models\Ticket;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -120,10 +121,12 @@ class SendNotificationListener
             Log::error('SendNotification: TicketOpened email failed', ['error' => $e->getMessage()]);
         }
 
+        $reference = $this->ticketReference($event->ticket);
+
         $this->dispatchNotification('ticket.opened', [
             'event_type' => 'ticket.opened',
             'subject' => 'New Ticket Opened',
-            'message' => "Ticket #{$event->ticket->id}: {$event->ticket->subject}",
+            'message' => "Ticket #{$reference}: {$event->ticket->title}",
             'ticket_id' => $event->ticket->id,
         ]);
     }
@@ -145,10 +148,12 @@ class SendNotificationListener
             Log::error('SendNotification: TicketReplied email failed', ['error' => $e->getMessage()]);
         }
 
+        $reference = $this->ticketReference($event->ticket);
+
         $this->dispatchNotification('ticket.replied', [
             'event_type' => 'ticket.replied',
             'subject' => 'Ticket Reply',
-            'message' => "Ticket #{$event->ticket->id} received a ".($event->isStaffReply ? 'staff' : 'client').' reply',
+            'message' => "Ticket #{$reference} received a ".($event->isStaffReply ? 'staff' : 'client').' reply',
             'ticket_id' => $event->ticket->id,
         ]);
     }
@@ -208,6 +213,18 @@ class SendNotificationListener
             'message' => "Service #{$event->service->id} ({$event->service->domain}) terminated for {$event->service->client?->first_name} {$event->service->client?->last_name}",
             'service_id' => $event->service->id,
         ]);
+    }
+
+    /**
+     * The ticket number the operator will recognise.
+     *
+     * The mail subject, the mail body, the ticket list and the ticket page all
+     * refer to a ticket by its tid; only these alerts used the row id, handing
+     * whoever reads them a reference that matches nothing they can search for.
+     */
+    private function ticketReference(Ticket $ticket): string
+    {
+        return (string) ($ticket->tid ?: $ticket->id);
     }
 
     /**
