@@ -2,6 +2,7 @@
 
 namespace App\Widgets;
 
+use App\Constants\Permissions;
 use App\Contracts\WidgetModuleInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +12,7 @@ class OrdersWidget implements WidgetModuleInterface
     public function getDescription(): string { return 'Recent orders'; }
     public function getColumns(): int { return 1; }
     public function getWeight(): int { return 40; }
-    public function getPermission(): ?string { return null; }
+    public function getPermission(): ?string { return Permissions::LIST_ORDERS; }
     public function getCacheTtl(): int { return 120; }
 
     public function getData(): array

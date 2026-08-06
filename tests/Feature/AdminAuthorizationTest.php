@@ -13,16 +13,17 @@ use App\Models\Quote;
  * payouts, convert quotes to invoices, create billable items, etc. Each is now
  * wrapped in the matching permission group; full admins still bypass.
  */
-
 function limitedAdmin(array $permissions = ['list_tickets']): Admin
 {
     $role = AdminRole::factory()->create(['is_full_admin' => false, 'permissions' => $permissions]);
+
     return Admin::factory()->create(['role_id' => $role->id]);
 }
 
 function superAdmin(): Admin
 {
     $role = AdminRole::factory()->fullAdmin()->create();
+
     return Admin::factory()->create(['role_id' => $role->id]);
 }
 
@@ -44,7 +45,7 @@ function makeQuote(Client $client): Quote
 }
 
 it('forbids a limited admin from issuing an affiliate payout', function () {
-    $client    = Client::factory()->create();
+    $client = Client::factory()->create();
     $affiliate = makeAffiliate($client);
 
     $this->actingAs(limitedAdmin(), 'admin')
@@ -53,7 +54,7 @@ it('forbids a limited admin from issuing an affiliate payout', function () {
 });
 
 it('lets a full admin reach the affiliate payout route (not blocked by permissions)', function () {
-    $client    = Client::factory()->create();
+    $client = Client::factory()->create();
     $affiliate = makeAffiliate($client);
 
     $status = $this->actingAs(superAdmin(), 'admin')
@@ -65,7 +66,7 @@ it('lets a full admin reach the affiliate payout route (not blocked by permissio
 
 it('forbids a limited admin from converting a quote to an invoice', function () {
     $client = Client::factory()->create();
-    $quote  = makeQuote($client);
+    $quote = makeQuote($client);
 
     $this->actingAs(limitedAdmin(), 'admin')
         ->post("/admin/quotes/{$quote->id}/convert")
@@ -85,7 +86,7 @@ it('forbids a limited admin from viewing system phpinfo diagnostics', function (
 });
 
 it('allows a manage_affiliates admin through the affiliate payout gate', function () {
-    $client    = Client::factory()->create();
+    $client = Client::factory()->create();
     $affiliate = makeAffiliate($client);
 
     $status = $this->actingAs(limitedAdmin(['manage_affiliates']), 'admin')
@@ -93,4 +94,64 @@ it('allows a manage_affiliates admin through the affiliate payout gate', functio
         ->status();
 
     expect($status)->not->toBe(403);
+});
+
+// ---------------------------------------------------------------------------
+// Dashboard widgets
+// ---------------------------------------------------------------------------
+
+/**
+ * The dashboard hands out what the screens do not.
+ *
+ * Every widget declares the permission needed to see it - the interface has a
+ * getPermission() for exactly that - and the manager that renders them never
+ * asks. So a support-only member of staff, who is refused the clients list and
+ * the reports, opens the dashboard and is shown the month's income and the
+ * newest customers by name.
+ */
+function dashboardFor(Admin $admin): string
+{
+    return test()->actingAs($admin, 'admin')
+        ->get(route('admin.dashboard'))
+        ->assertOk()
+        ->getContent();
+}
+
+test('a support-only role is not shown the income on the dashboard', function () {
+    $html = dashboardFor(limitedAdmin(['list_tickets']));
+
+    expect($html)->not->toContain('Income overview');
+});
+
+test('a support-only role is not shown the newest customers', function () {
+    $html = dashboardFor(limitedAdmin(['list_tickets']));
+
+    expect($html)->not->toContain('Recent clients');
+});
+
+test('it still shows the support widget the role is allowed', function () {
+    $html = dashboardFor(limitedAdmin(['list_tickets']));
+
+    expect($html)->toContain('Ticket overview');
+});
+
+test('a full admin still sees the income', function () {
+    $html = dashboardFor(superAdmin());
+
+    expect($html)->toContain('Income overview');
+});
+
+test('a widget nobody needs a permission for is shown to everyone', function () {
+    // The staff to-do list: no customer data, no money, and its own screen is
+    // open to every member of staff. A four-column widget renders without the
+    // header that carries the description, so this reads a widget that has one.
+    $html = dashboardFor(limitedAdmin(['list_tickets']));
+
+    expect($html)->toContain('Admin tasks');
+});
+
+test('the permission that opens the reports also opens the income widget', function () {
+    $html = dashboardFor(limitedAdmin(['view_reports']));
+
+    expect($html)->toContain('Income overview');
 });

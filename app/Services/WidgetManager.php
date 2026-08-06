@@ -17,13 +17,36 @@ class WidgetManager
 
     public function all(): Collection
     {
-        return collect($this->widgets)->sortBy(fn(WidgetModuleInterface $w) => $w->getWeight());
+        return collect($this->widgets)->sortBy(fn (WidgetModuleInterface $w) => $w->getWeight());
+    }
+
+    /**
+     * Whether the member of staff looking at the dashboard may see a widget.
+     *
+     * r126-permission: every widget declares the permission needed to view it
+     * and nothing ever asked. A support-only role, refused the clients list and
+     * the reports on their own screens, was shown the month's income and the
+     * newest customers by name as soon as it opened the dashboard.
+     */
+    protected function visibleTo(WidgetModuleInterface $widget): bool
+    {
+        $permission = $widget->getPermission();
+
+        if ($permission === null || $permission === '') {
+            return true;
+        }
+
+        return (bool) auth('admin')->user()?->hasPermission($permission);
     }
 
     public function renderAll(): array
     {
         $output = [];
         foreach ($this->all() as $key => $widget) {
+            if (! $this->visibleTo($widget)) {
+                continue;
+            }
+
             $ttl = $widget->getCacheTtl();
             $cacheKey = "widget:{$key}";
 
@@ -55,6 +78,7 @@ class WidgetManager
 
             $output[$key] = ['widget' => $widget, 'html' => $html];
         }
+
         return $output;
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Widgets;
 
+use App\Constants\Permissions;
 use App\Contracts\WidgetModuleInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +12,7 @@ class SupportWidget implements WidgetModuleInterface
     public function getDescription(): string { return 'Ticket overview'; }
     public function getColumns(): int { return 2; }
     public function getWeight(): int { return 20; }
-    public function getPermission(): ?string { return null; }
+    public function getPermission(): ?string { return Permissions::LIST_TICKETS; }
     public function getCacheTtl(): int { return 0; }
 
     public function getData(): array

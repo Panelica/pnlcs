@@ -2,6 +2,7 @@
 
 namespace App\Widgets;
 
+use App\Constants\Permissions;
 use App\Contracts\WidgetModuleInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +12,7 @@ class AutomationWidget implements WidgetModuleInterface
     public function getDescription(): string { return 'Cron job status'; }
     public function getColumns(): int { return 1; }
     public function getWeight(): int { return 90; }
-    public function getPermission(): ?string { return null; }
+    public function getPermission(): ?string { return Permissions::VIEW_SYSTEM; }
     public function getCacheTtl(): int { return 300; }
 
     public function getData(): array
