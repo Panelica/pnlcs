@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\ServiceConfigOption;
@@ -61,7 +63,7 @@ class UpgradeService
      * API used to write product_id and nothing else, which left the customer
      * on a bigger plan at the old price with a server that had not been told.
      *
-     * @return array{success: bool, message: ?string, upgrade: ?Upgrade, invoice: ?\App\Models\Invoice, applied: bool}
+     * @return array{success: bool, message: ?string, upgrade: ?Upgrade, invoice: ?Invoice, applied: bool}
      */
     public function requestProductChange(Service $service, Product $newProduct): array
     {
@@ -80,6 +82,26 @@ class UpgradeService
 
         if ((int) $newProduct->id === (int) $service->product_id) {
             return $refuse(__('messages.error.already_on_this_product'));
+        }
+
+        // r119-pending: one move at a time. Nothing used to check, so a second
+        // click - or a reload of the confirmation - raised a second upgrade and
+        // a second prorated invoice for the same move. Both were payable, and
+        // paying the second charged again for something already bought.
+        $waiting = Upgrade::where('type', 'product')
+            ->where('rel_id', $service->id)
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($waiting as $pending) {
+            // r119-stale: a move whose invoice was cancelled is not waiting for
+            // anything, and must not lock the customer out of changing package
+            // for good. Only an invoice they can still pay counts.
+            if ($this->payableInvoiceFor($pending)) {
+                return $refuse(__('messages.error.upgrade_already_pending'));
+            }
+
+            $pending->update(['status' => 'cancelled']);
         }
 
         $calc = $this->calculateProration($service, $newProduct);
@@ -102,7 +124,7 @@ class UpgradeService
         ]);
 
         if ($calc['prorated_diff'] > 0.009) {
-            $invoice = app(\App\Services\InvoiceService::class)->createInvoice($service->client, [[
+            $invoice = app(InvoiceService::class)->createInvoice($service->client, [[
                 'type' => 'Upgrade',
                 'rel_id' => $upgrade->id,
                 'description' => "Upgrade: {$currentName} -> {$newProduct->name} ({$service->billing_cycle}) - prorated for {$calc['remaining_days']} days - {$service->domain}",
@@ -123,6 +145,17 @@ class UpgradeService
             'success' => true, 'message' => null,
             'upgrade' => $upgrade, 'invoice' => null, 'applied' => true,
         ];
+    }
+
+    /**
+     * Whether the customer still has an invoice they can pay for this move.
+     */
+    private function payableInvoiceFor(Upgrade $upgrade): bool
+    {
+        return InvoiceItem::where('type', 'Upgrade')
+            ->where('rel_id', $upgrade->id)
+            ->whereHas('invoice', fn ($q) => $q->whereIn('status', ['draft', 'unpaid', 'overdue']))
+            ->exists();
     }
 
     public function calculateProration(Service $service, Product $newProduct): array

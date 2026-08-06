@@ -314,6 +314,7 @@ return [
     'success.package_changed' => 'Your package has been changed.',
     'error.already_on_this_product' => 'This service is already on the selected product.',
     'error.upgrade_not_available_for_cycle' => 'The selected product is not available for this billing cycle.',
+    'error.upgrade_already_pending' => 'You already have a package change waiting to be paid for this service. Pay or cancel that invoice first.',
     'success.whitelabel_saved' => 'White-label settings saved.',
     'success.withdrawal_request_submitted' => 'Withdrawal request of $:amount submitted successfully.',
     'success.your_affiliate_account_has_been_activated' => 'Your affiliate account has been activated!',
