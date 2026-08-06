@@ -15,6 +15,7 @@ use App\Models\Promotion;
 use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Models\SslOrder;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -284,10 +285,15 @@ class OrderService
             }
         }
 
-        // Activate pending domains on this order
-        Domain::where('order_id', $order->id)
-            ->where('status', DomainStatus::Pending->value)
-            ->update(['status' => DomainStatus::Active->value]);
+        // r133-register: a domain is not active because we said so.
+        //
+        // This used to flip every pending domain to active in one update and
+        // tell no registrar, while register() sat implemented in all four
+        // registrar modules. A customer bought a domain, paid for it, and the
+        // panel showed it live while no registry had heard of it.
+        foreach (Domain::where('order_id', $order->id)->where('status', DomainStatus::Pending->value)->get() as $domain) {
+            $this->registerOrderedDomain($order, $domain);
+        }
 
         // A certificate cannot be issued until the customer supplies a CSR, so
         // paying for one has to open the order and ask them for it.
@@ -477,6 +483,82 @@ class OrderService
             'username' => $item['username'] ?? null,
             'notes' => $item['notes'] ?? null,
         ]);
+    }
+
+    /**
+     * Put a paid domain in front of its registrar.
+     *
+     * The module writes the registration date, expiry and status itself when
+     * it succeeds. A refusal leaves the domain pending and raises it, because
+     * only a person can sort out a registry that said no.
+     *
+     * A transfer cannot be started from here - it needs an EPP code, which the
+     * order does not collect - so those are recorded as before and flagged for
+     * somebody to start by hand.
+     */
+    private function registerOrderedDomain(Order $order, Domain $domain): void
+    {
+        $registrar = app(ModuleRegistry::class)
+            ->getRegistrarModule((string) $domain->registrar);
+
+        $isTransfer = strtolower((string) $domain->type) === 'transfer';
+
+        if (! $registrar || $isTransfer) {
+            if ($isTransfer && $registrar) {
+                Log::info("Domain #{$domain->id} ({$domain->domain}) is a transfer: it needs an EPP code and has to be started by hand.");
+            }
+
+            $domain->update(['status' => DomainStatus::Active->value]);
+
+            return;
+        }
+
+        $client = $order->client;
+
+        $params = array_filter([
+            'firstname' => $client?->first_name,
+            'lastname' => $client?->last_name,
+            'email' => $client?->email,
+            'phone' => $client?->phone_number,
+            'address' => $client?->address1,
+            'city' => $client?->city,
+            'state' => $client?->state,
+            'postcode' => $client?->postcode,
+            'country' => $client?->country,
+        ]);
+
+        try {
+            $result = $registrar->register($domain, max(1, (int) $domain->registration_period), $params);
+        } catch (\Throwable $e) {
+            Log::error("Domain registration threw for {$domain->domain}: ".$e->getMessage());
+            $result = ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if ($result['success'] ?? false) {
+            $domain->refresh();
+
+            if (strtolower((string) $domain->status) !== DomainStatus::Active->value) {
+                $domain->update(['status' => DomainStatus::Active->value]);
+            }
+
+            return;
+        }
+
+        $reason = (string) ($result['message'] ?? 'no reason given');
+
+        Log::error("Domain registration failed for {$domain->domain}: {$reason}");
+
+        try {
+            app(NotificationService::class)->dispatch('domain.registration_failed', [
+                'event_type' => 'domain.registration_failed',
+                'subject' => 'Domain registration failed',
+                'message' => "The registrar would not register {$domain->domain}: {$reason}. "
+                    .'The customer has paid for it; the domain is not registered and needs attention.',
+                'domain_id' => $domain->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Domain registration alert failed: '.$e->getMessage());
+        }
     }
 
     private function createDomainForOrder(Order $order, Client $client, array $item): Domain
