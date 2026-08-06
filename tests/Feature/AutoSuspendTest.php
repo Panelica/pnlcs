@@ -194,3 +194,47 @@ test('an overdue service that was never provisioned is not sent to somebody else
     expect($service->fresh()->server_id)->toBeNull()
         ->and(strtolower($service->fresh()->status))->toBe('suspended');
 });
+
+// ---------------------------------------------------------------------------
+// A hold with a date on it
+// ---------------------------------------------------------------------------
+
+/**
+ * "Do not suspend until" is a date, not a switch.
+ *
+ * The command reads override_auto_suspend_date with whereNull, so a service
+ * carrying any date at all is passed over - for ever. A hold put on until the
+ * end of the month goes on protecting the account next year, and the customer
+ * can stop paying without anything happening.
+ *
+ * The column is not on any screen today, so nothing sets it by hand; an import
+ * or a support script that does would get a permanent exemption out of what
+ * reads like a temporary one.
+ */
+test('a hold that has run out does not stop the suspension', function () {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
+    $service = overdueService(['override_auto_suspend_date' => now()->subDays(5)->toDateString()]);
+
+    $this->artisan('pnlcs:auto-suspend')->assertSuccessful();
+
+    expect($service->fresh()->status)->toBe('suspended');
+});
+
+test('a hold that is still running does stop it', function () {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
+    $service = overdueService(['override_auto_suspend_date' => now()->addDays(5)->toDateString()]);
+
+    $this->artisan('pnlcs:auto-suspend')->assertSuccessful();
+
+    expect($service->fresh()->status)->toBe('active');
+    Http::assertNothingSent();
+});
+
+test('a hold that ends today still holds', function () {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
+    $service = overdueService(['override_auto_suspend_date' => now()->toDateString()]);
+
+    $this->artisan('pnlcs:auto-suspend')->assertSuccessful();
+
+    expect($service->fresh()->status)->toBe('active');
+});

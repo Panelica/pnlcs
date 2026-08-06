@@ -22,7 +22,15 @@ class SuspensionCommand extends Command
     {
         $services = Service::with(['client.group', 'server', 'product'])
             ->where('status', ServiceStatus::Active->value)
-            ->whereNull('override_auto_suspend_date')
+            // r135-hold: "do not suspend until" is a date, not a switch. This
+            // used to pass over any service carrying a date at all, so a hold
+            // put on until the end of the month went on protecting the account
+            // for ever and the customer could stop paying with nothing
+            // happening. A hold that has run out no longer holds; one that ends
+            // today still does.
+            ->where(fn ($q) => $q
+                ->whereNull('override_auto_suspend_date')
+                ->orWhereDate('override_auto_suspend_date', '<', today()))
             ->whereHas('client', function ($q) {
                 $q->whereHas('invoices', fn ($iq) => $iq
                     ->where('status', InvoiceStatus::Overdue->value)
