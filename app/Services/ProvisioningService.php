@@ -316,10 +316,27 @@ class ProvisioningService
                 'payload' => $payload ?: null,
             ]);
 
-            app(NotificationService::class)->dispatch('module.failed', [
-                'event_type' => 'module.failed',
-                'subject' => 'Module action failed — queued for retry',
-                'message' => "Module '{$action}' failed for service #{$service->id} ({$service->domain}): {$error}. Queued for automatic retry.",
+            // r117-alert: say which of the two happened. A refusal that cannot
+            // change is recorded as failed and never picked up again, so the
+            // alert written for the retry case - "queued for automatic retry" -
+            // is the only word the operator ever gets, and it tells them to
+            // wait for something that is not coming.
+            $alert = $permanent
+                ? [
+                    'event' => 'module.failed_permanently',
+                    'subject' => 'Module action failed — will not be retried',
+                    'message' => "Module '{$action}' failed for service #{$service->id} ({$service->domain}): {$error}. This cannot be retried and needs attention.",
+                ]
+                : [
+                    'event' => 'module.failed',
+                    'subject' => 'Module action failed — queued for retry',
+                    'message' => "Module '{$action}' failed for service #{$service->id} ({$service->domain}): {$error}. Queued for automatic retry.",
+                ];
+
+            app(NotificationService::class)->dispatch($alert['event'], [
+                'event_type' => $alert['event'],
+                'subject' => $alert['subject'],
+                'message' => $alert['message'],
                 'service_id' => $service->id,
                 'action' => $action,
             ]);
