@@ -38,9 +38,9 @@ class ProjectManagementModule implements AddonModuleInterface
     public function sidebar(): array
     {
         return [
-            ['label' => 'Projects', 'icon' => 'briefcase', 'url' => '/admin/addons/project_management', 'children' => [
-                ['label' => 'All Projects', 'url' => '/admin/addons/project_management'],
-                ['label' => 'Create Project', 'url' => '/admin/addons/project_management?action=create'],
+            ['label' => 'Projects', 'icon' => 'briefcase', 'url' => '/admin/projects', 'children' => [
+                ['label' => 'All Projects', 'url' => '/admin/projects'],
+                ['label' => 'Create Project', 'url' => '/admin/projects/create'],
             ]],
         ];
     }
@@ -52,12 +52,6 @@ class ProjectManagementModule implements AddonModuleInterface
 
     public function output(Request $request): string
     {
-        $action = $request->input('action', 'list');
-
-        if ($action === 'create') {
-            return $this->renderCreateForm();
-        }
-
         $projects = DB::table('projects')
             ->leftJoin('clients', 'clients.id', '=', 'projects.client_id')
             ->where(function ($q) { $q->whereNull('clients.deleted_at')->orWhereNull('clients.id'); })
@@ -67,20 +61,32 @@ class ProjectManagementModule implements AddonModuleInterface
             ->limit(50)
             ->get();
 
+        // Projects are created and edited on the core screens at /admin/projects.
+        // This module used to render its own button and form pointing at
+        // /admin/addons/project_management, a path no route has ever answered:
+        // the button 404'd and the form the operator filled in was thrown away
+        // on submit.
         $html = '<div style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">';
         $html .= '<h5 style="margin:0;">All Projects (' . $projects->count() . ')</h5>';
-        $html .= '<a href="/admin/addons/project_management?action=create" class="btn btn-sm btn-primary">+ New Project</a></div>';
+        $html .= '<a href="/admin/projects/create" class="btn btn-sm btn-primary">+ New Project</a></div>';
 
         $html .= '<table class="table" style="width:100%;font-size:13px;">';
-        $html .= '<thead><tr><th>ID</th><th>Title</th><th>Client</th><th>Assigned</th><th>Status</th><th>Progress</th><th>Due</th></tr></thead><tbody>';
+        $html .= '<thead><tr><th>ID</th><th>Title</th><th>Client</th><th>Assigned</th><th>Status</th><th>Due</th></tr></thead><tbody>';
 
         foreach ($projects as $p) {
-            $statusColor = match($p->status) {
-                'active' => '#46a546', 'completed' => '#337ab7', 'on-hold' => '#f89406', default => '#999'
+            // The statuses a project can hold are the ones the core screens
+            // validate against; 'active' and 'on-hold' were never among them,
+            // so every project but a completed one came out grey.
+            $statusColor = match ($p->status) {
+                'in_progress' => '#337ab7',
+                'completed' => '#46a546',
+                'pending' => '#f89406',
+                'cancelled' => '#c9302c',
+                default => '#999'
             };
-            $html .= "<tr><td>" . e($p->id) . "</td><td><b>" . e($p->title) . "</b></td><td>" . e(($p->client_name ?: 'N/A')) . "</td><td>" . e(($p->admin_name ?: 'Unassigned')) . "</td>";
-            $html .= "<td><span style=\"color:" . e($statusColor) . ";font-weight:600;text-transform:capitalize;\">" . e($p->status) . "</span></td>";
-            $html .= "<td><div style=\"background:#e5e7eb;border-radius:4px;height:8px;width:80px;\"><div style=\"background:#46a546;border-radius:4px;height:8px;width:" . ($p->progress ?? 0) . "%;\"></div></div></td>";
+            $statusLabel = ucfirst(str_replace('_', ' ', (string) $p->status));
+            $html .= "<tr><td>" . e($p->id) . "</td><td><a href=\"/admin/projects/" . e($p->id) . "\"><b>" . e($p->title) . "</b></a></td><td>" . e(($p->client_name ?: 'N/A')) . "</td><td>" . e(($p->admin_name ?: 'Unassigned')) . "</td>";
+            $html .= "<td><span style=\"color:" . e($statusColor) . ";font-weight:600;\">" . e($statusLabel) . "</span></td>";
             $html .= "<td>" . e(($p->due_date ?: '-')) . "</td></tr>";
         }
 
@@ -88,28 +94,6 @@ class ProjectManagementModule implements AddonModuleInterface
         if ($projects->isEmpty()) {
             $html .= '<div style="text-align:center;padding:32px;color:var(--pn-muted);">No projects found. Create your first project!</div>';
         }
-        return $html;
-    }
-
-    private function renderCreateForm(): string
-    {
-        $clients = DB::table('clients')->whereNull('deleted_at')->select('id', 'first_name', 'last_name')->orderBy('first_name')->get();
-        $admins = DB::table('admins')->select('id', 'first_name', 'last_name')->get();
-
-        $html = '<h5>Create New Project</h5>';
-        $html .= '<form method="POST" action="/admin/addons/project_management/store">';
-        $html .= '<input type="hidden" name="_token" value="' . csrf_token() . '">';
-        $html .= '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
-        $html .= '<div><label>Title</label><input type="text" name="title" class="form-input" required></div>';
-        $html .= '<div><label>Client</label><select name="client_id" class="form-input"><option value="">Select client...</option>';
-        foreach ($clients as $c) { $html .= "<option value=\"" . e($c->id) . "\">" . e($c->first_name) . " " . e($c->last_name) . "</option>"; }
-        $html .= '</select></div>';
-        $html .= '<div><label>Assigned Admin</label><select name="admin_id" class="form-input"><option value="">Unassigned</option>';
-        foreach ($admins as $a) { $html .= "<option value=\"" . e($a->id) . "\">" . e($a->first_name) . " " . e($a->last_name) . "</option>"; }
-        $html .= '</select></div>';
-        $html .= '<div><label>Due Date</label><input type="date" name="due_date" class="form-input"></div>';
-        $html .= '<div style="grid-column:span 2;"><label>Description</label><textarea name="description" class="form-input" rows="3"></textarea></div>';
-        $html .= '</div><div style="margin-top:16px;"><button type="submit" class="btn btn-primary">Create Project</button> <a href="/admin/addons/project_management" class="btn btn-outline">Cancel</a></div></form>';
         return $html;
     }
 }
