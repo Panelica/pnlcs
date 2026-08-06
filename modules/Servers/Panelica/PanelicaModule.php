@@ -306,7 +306,15 @@ class PanelicaModule extends AbstractServerModule
             'panelica_domain_id' => $domainId,
         ]);
 
-        $service->update(['username' => $username, 'status' => 'active']);
+        // r134-credentials: keep the password the account was given.
+        //
+        // This wrote back only the username, so the password made up a few
+        // lines above existed nowhere afterwards - not on the service, not in
+        // the welcome email. The customer had an account they could not sign
+        // in to and nobody could tell them the password. cPanel, Plesk,
+        // DirectAdmin and HestiaCP all store it, and so does the provisioning
+        // service when the password is changed later.
+        $service->update(['username' => $username, 'password' => $password, 'status' => 'active']);
 
         $result = $this->buildResult(true, 'Account and domain created successfully.', [
             'panelica_user_id' => $userId,
