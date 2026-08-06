@@ -557,9 +557,10 @@ Always back up your database before pulling new migrations.
 
 PNLCS ships with modular **server**, **gateway**, **registrar**, and **SSL
 provider** integrations under the `modules/` directory. Add control-panel
-servers (cPanel, Plesk, DirectAdmin, Proxmox, Panelica), configure
-payment gateways (Stripe, PayPal, bank transfer), and connect domain
-registrars (Enom) without touching core code.
+servers (cPanel, Plesk, DirectAdmin, Proxmox, HestiaCP, Vultr, Panelica),
+configure payment gateways (Stripe, PayPal, Authorize.Net, Razorpay, Mollie,
+bank transfer), and connect domain registrars (Enom, Namecheap, ResellerClub)
+without touching core code.
 
 > 💡 **Choosing a panel to sell on?** The **[Panelica](https://panelica.com)**
 > server module is tested end-to-end and provisions instantly. Panelica is a
@@ -567,27 +568,36 @@ registrars (Enom) without touching core code.
 > CloudLinux) and universal migration from cPanel, Plesk, DirectAdmin, and
 > CyberPanel.
 
-| Module        | Type      | Status            |
-|---------------|-----------|-------------------|
-| Panelica      | Server    | ✅ Tested         |
-| cPanel        | Server    | ✅ Tested         |
-| Plesk         | Server    | ✅ Tested         |
-| DirectAdmin   | Server    | ⚠️ Needs testing  |
-| Proxmox       | Server    | ✅ Tested         |
-| Custom        | Server    | ⚠️ Needs testing  |
-| Stripe        | Gateway   | ✅ Tested         |
-| PayPal        | Gateway   | ⚠️ Needs testing  |
-| Authorize.Net | Gateway   | ⚠️ Needs testing  |
-| BankTransfer  | Gateway   | ⚠️ Needs testing  |
-| Enom          | Registrar | ⚠️ Needs testing  |
-| Manual        | Registrar | ✅ Works          |
-| GoGetSSL      | SSL       | ⚠️ Needs testing  |
-| Sectigo       | SSL       | ⚠️ Needs testing  |
-| Manual        | SSL       | ✅ Works          |
+This is every module in `modules/`, and whether the test suite exercises its
+own code. "Covered" means there are tests that drive the module and assert on
+what it sends and stores, with the provider's HTTP responses faked. It is not
+a statement that the integration has been run against a live provider account.
 
-If you run one of the "needs testing" integrations in production, please
-open an issue with what worked and what didn't. A short note is enough —
-we can iterate from there.
+| Module        | Type      | Automated tests |
+|---------------|-----------|-----------------|
+| Panelica      | Server    | Covered         |
+| cPanel        | Server    | Covered         |
+| Plesk         | Server    | Covered         |
+| DirectAdmin   | Server    | Covered         |
+| Proxmox       | Server    | Covered         |
+| HestiaCP      | Server    | Covered         |
+| Vultr         | Server    | Covered         |
+| Custom        | Server    | None yet        |
+| Stripe        | Gateway   | Covered         |
+| PayPal        | Gateway   | Covered         |
+| Authorize.Net | Gateway   | Covered         |
+| Razorpay      | Gateway   | Covered         |
+| Mollie        | Gateway   | Covered         |
+| BankTransfer  | Gateway   | Covered         |
+| Enom          | Registrar | Covered         |
+| Namecheap     | Registrar | Covered         |
+| ResellerClub  | Registrar | Covered         |
+| Manual        | Registrar | None yet        |
+| GoGetSSL      | SSL       | Covered         |
+
+If you run one of these against a real provider, please open an issue with
+what worked and what didn't — especially anything the faked responses could
+not have caught. A short note is enough; we can iterate from there.
 
 Adding a new module? Look at the existing ones as a reference; each module
 is a self-contained directory with a handler class and optional config view.
