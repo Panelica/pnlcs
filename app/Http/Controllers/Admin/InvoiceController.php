@@ -7,9 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
 use App\Models\Client;
 use App\Models\Invoice;
-use App\Models\PaymentMethod;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
+use App\Services\Module\ModuleRegistry;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,13 +60,21 @@ class InvoiceController extends Controller
     public function create(Request $request): View
     {
         $clients = Client::orderBy('first_name')->get();
-        $paymentMethods = PaymentMethod::orderBy('description')->get();
+        // r139-gateways: this box picks the gateway the invoice is paid
+        // through, and it was filled from the payment_methods table - every
+        // customer's stored method, unscoped, labelled with that customer's own
+        // description. An operator raising an invoice for one customer was
+        // shown what other customers had named their bank accounts, and the
+        // list was wrong besides: three customers with a bank account gave
+        // three identical options, and an installation where nobody had saved
+        // one offered no gateway at all.
+        $gateways = app(ModuleRegistry::class)->usableGateways();
 
         $selectedClient = $request->filled('client_id')
             ? Client::find($request->client_id)
             : null;
 
-        return view('admin.invoices.create', compact('clients', 'paymentMethods', 'selectedClient'));
+        return view('admin.invoices.create', compact('clients', 'gateways', 'selectedClient'));
     }
 
     /**

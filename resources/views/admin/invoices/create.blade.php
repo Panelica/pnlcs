@@ -112,10 +112,12 @@
                     <div class="form-group" style="margin:0;">
                         <select name="payment_method" class="form-control">
                             <option value="">— None —</option>
-                            @foreach($paymentMethods as $pm)
-                            <option value="{{ $pm->gateway_name }}" {{ old('payment_method') == $pm->gateway_name ? 'selected' : '' }}>{{ $pm->description }}</option>
+                            @foreach($gateways as $gw)
+                            <option value="{{ $gw }}" {{ old('payment_method') == $gw ? 'selected' : '' }}>{{ ucwords(str_replace('_', ' ', $gw)) }}</option>
                             @endforeach
+                            @unless(in_array('banktransfer', $gateways, true))
                             <option value="banktransfer" {{ old('payment_method') == 'banktransfer' ? 'selected' : '' }}>{{ __('admin.invoices.bank_transfer') }}</option>
+                            @endunless
                             <option value="manual" {{ old('payment_method') == 'manual' ? 'selected' : '' }}>{{ __('admin.invoices.manual') }}</option>
                         </select>
                     </div>
