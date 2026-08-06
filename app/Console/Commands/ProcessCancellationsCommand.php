@@ -67,8 +67,17 @@ class ProcessCancellationsCommand extends Command
                 'termination_date' => now(),
             ]);
 
-            // The request has been honoured; it is not asked again.
-            $service->cancellationRequest?->update(['processed_at' => now()]);
+            // r136-openrequest: close the request that is actually open.
+            //
+            // A service can carry more than one over its life - the form allows
+            // a new one once the previous has been acted on - and the relation
+            // is an unordered hasOne, so it handed back the oldest row. The job
+            // stamped that one a second time and left the open request open, so
+            // the moment the service was put back to work it was cancelled
+            // again: the exact thing closing the request was meant to prevent.
+            $service->cancellationRequest()
+                ->whereNull('processed_at')
+                ->update(['processed_at' => now()]);
 
             if ($service->client?->email) {
                 try {

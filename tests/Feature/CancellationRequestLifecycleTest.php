@@ -112,3 +112,57 @@ test('the api refuses a second open request', function () {
 
     expect(CancellationRequest::where('service_id', $service->id)->count())->toBe(1);
 });
+
+// ---------------------------------------------------------------------------
+// A service that has asked to leave twice
+// ---------------------------------------------------------------------------
+
+/**
+ * The second request is the one that counts.
+ *
+ * A service can carry more than one cancellation request over its life: the
+ * form allows a new one once the previous has been acted on, the API never
+ * checked at all, and one service on this installation already carries two.
+ *
+ * The relation is a plain hasOne with no ordering, so it hands back whichever
+ * row the database returns first - the oldest. The nightly job finds the
+ * service by its open request, cancels it, and then stamps the wrong row: the
+ * old one is marked processed a second time and the open one is left open. The
+ * moment the service is put back to work it is cancelled again, which is the
+ * exact thing closing the request was meant to prevent.
+ */
+test('the request that is still open is the one that gets closed', function () {
+    Mail::fake();
+    $service = leavingService();
+
+    $old = CancellationRequest::create([
+        'service_id' => $service->id,
+        'type' => 'end_of_billing',
+        'reason' => 'changed my mind later',
+        'processed_at' => now()->subMonths(2),
+    ]);
+
+    $open = CancellationRequest::create([
+        'service_id' => $service->id,
+        'type' => 'immediate',
+        'reason' => 'leaving for good',
+    ]);
+
+    $stamped = $old->processed_at;
+
+    $this->artisan('pnlcs:process-cancellations')->assertSuccessful();
+
+    expect($open->fresh()->processed_at)->not->toBeNull();
+    expect($old->fresh()->processed_at->toDateTimeString())->toBe($stamped->toDateTimeString());
+});
+
+test('a service with one request behaves as it always did', function () {
+    Mail::fake();
+    $service = leavingService();
+    $request = CancellationRequest::create(['service_id' => $service->id, 'type' => 'immediate', 'reason' => 'done']);
+
+    $this->artisan('pnlcs:process-cancellations')->assertSuccessful();
+
+    expect(strtolower($service->fresh()->status))->toBe('cancelled');
+    expect($request->fresh()->processed_at)->not->toBeNull();
+});
