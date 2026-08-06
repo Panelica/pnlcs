@@ -2,6 +2,7 @@
 
 use App\Mail\InvoiceCreatedMail;
 use App\Models\Client;
+use App\Models\Contact;
 use App\Models\EmailTemplate;
 use App\Models\Invoice;
 use Illuminate\Mail\Events\MessageSending;
@@ -171,4 +172,73 @@ test('one mail hook does not silently cancel the next', function () {
 
     expect($reachedLast)->toBeTrue()
         ->and($subject)->toBe('Chained INV-2026-77');
+});
+
+/**
+ * A contact who is also the customer.
+ *
+ * Contacts who asked for this kind of email are copied in. The listener means
+ * to skip anyone already on the message - it reads the existing recipients
+ * into $already first - but it reads the keys of that list, which are 0, 1, 2,
+ * not the addresses. So nobody is ever recognised, and a customer who added
+ * their own address as a billing contact gets every invoice twice: once to
+ * them, once copied to them.
+ */
+function ccAddressesFor(Invoice $invoice, string $to): array
+{
+    $cc = [];
+
+    Event::listen(
+        MessageSent::class,
+        function ($event) use (&$cc) {
+            foreach ($event->message->getCc() as $address) {
+                $cc[] = strtolower($address->getAddress());
+            }
+        }
+    );
+
+    Mail::to($to)->send(new InvoiceCreatedMail($invoice));
+
+    return $cc;
+}
+
+function contactOn(Invoice $invoice, string $email): Contact
+{
+    return Contact::create([
+        'client_id' => $invoice->client_id,
+        'first_name' => 'Copy',
+        'last_name' => 'Recipient',
+        'email' => $email,
+        'invoice_emails' => true,
+    ]);
+}
+
+test('a contact who is already the recipient is not copied in as well', function () {
+    invoiceTemplate();
+    $invoice = templatedInvoice();
+    contactOn($invoice, 'ayse@example.com');
+
+    $cc = ccAddressesFor($invoice, 'ayse@example.com');
+
+    expect($cc)->not->toContain('ayse@example.com');
+});
+
+test('the same address in a different case is still the same person', function () {
+    invoiceTemplate();
+    $invoice = templatedInvoice();
+    contactOn($invoice, 'AYSE@Example.Com');
+
+    $cc = ccAddressesFor($invoice, 'ayse@example.com');
+
+    expect($cc)->not->toContain('ayse@example.com');
+});
+
+test('a contact at their own address is still copied in', function () {
+    invoiceTemplate();
+    $invoice = templatedInvoice();
+    contactOn($invoice, 'accounts@example.com');
+
+    $cc = ccAddressesFor($invoice, 'ayse@example.com');
+
+    expect($cc)->toContain('accounts@example.com');
 });

@@ -103,7 +103,15 @@ class ApplyEmailTemplate
             return [];
         }
 
-        $already = array_map('strtolower', array_keys($event->message->getTo() ?? []));
+        // r124-already: the addresses, not the positions. This read the keys of
+        // the recipient list, which are 0, 1, 2 - so nobody was ever recognised
+        // as being on the message already, and a customer who had added their
+        // own address as a billing contact received every invoice twice: once
+        // to them, once copied to them.
+        $already = array_map(
+            fn ($address) => strtolower($address->getAddress()),
+            array_merge($event->message->getTo() ?: [], $event->message->getCc() ?: [])
+        );
         $addresses = [];
 
         try {
