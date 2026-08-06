@@ -134,7 +134,13 @@ class OrderService
                         'rel_id' => $service->id,
                         'description' => $this->buildServiceDescription($service, $item),
                         'amount' => (float) ($item['amount'] ?? $service->amount),
-                        'taxed' => true,
+                        // r146-taxflag: ask the product, as everything else
+                        // does. This said true whatever the product carried, so
+                        // one marked not taxable was taxed on the invoice the
+                        // customer pays at sign-up and never again on a
+                        // renewal - the generator, the upgrade charge and the
+                        // addon line have always read the product's own flag.
+                        'taxed' => (bool) ($product->tax ?? true),
                     ];
                 }
             }
