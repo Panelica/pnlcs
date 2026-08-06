@@ -47,7 +47,7 @@ class ProjectManagementModule implements AddonModuleInterface
 
     public function upgrade(string $fromVersion): array
     {
-        return ['success' => true, 'message' => "Upgraded from {$fromVersion}"];
+        return ['success' => true, 'message' => "Upgraded from " . e($fromVersion) . ""];
     }
 
     public function output(Request $request): string
@@ -78,10 +78,10 @@ class ProjectManagementModule implements AddonModuleInterface
             $statusColor = match($p->status) {
                 'active' => '#46a546', 'completed' => '#337ab7', 'on-hold' => '#f89406', default => '#999'
             };
-            $html .= "<tr><td>{$p->id}</td><td><b>{$p->title}</b></td><td>" . ($p->client_name ?: 'N/A') . "</td><td>" . ($p->admin_name ?: 'Unassigned') . "</td>";
-            $html .= "<td><span style=\"color:{$statusColor};font-weight:600;text-transform:capitalize;\">{$p->status}</span></td>";
+            $html .= "<tr><td>" . e($p->id) . "</td><td><b>" . e($p->title) . "</b></td><td>" . e(($p->client_name ?: 'N/A')) . "</td><td>" . e(($p->admin_name ?: 'Unassigned')) . "</td>";
+            $html .= "<td><span style=\"color:" . e($statusColor) . ";font-weight:600;text-transform:capitalize;\">" . e($p->status) . "</span></td>";
             $html .= "<td><div style=\"background:#e5e7eb;border-radius:4px;height:8px;width:80px;\"><div style=\"background:#46a546;border-radius:4px;height:8px;width:" . ($p->progress ?? 0) . "%;\"></div></div></td>";
-            $html .= "<td>" . ($p->due_date ?: '-') . "</td></tr>";
+            $html .= "<td>" . e(($p->due_date ?: '-')) . "</td></tr>";
         }
 
         $html .= '</tbody></table>';
@@ -102,10 +102,10 @@ class ProjectManagementModule implements AddonModuleInterface
         $html .= '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">';
         $html .= '<div><label>Title</label><input type="text" name="title" class="form-input" required></div>';
         $html .= '<div><label>Client</label><select name="client_id" class="form-input"><option value="">Select client...</option>';
-        foreach ($clients as $c) { $html .= "<option value=\"{$c->id}\">{$c->first_name} {$c->last_name}</option>"; }
+        foreach ($clients as $c) { $html .= "<option value=\"" . e($c->id) . "\">" . e($c->first_name) . " " . e($c->last_name) . "</option>"; }
         $html .= '</select></div>';
         $html .= '<div><label>Assigned Admin</label><select name="admin_id" class="form-input"><option value="">Unassigned</option>';
-        foreach ($admins as $a) { $html .= "<option value=\"{$a->id}\">{$a->first_name} {$a->last_name}</option>"; }
+        foreach ($admins as $a) { $html .= "<option value=\"" . e($a->id) . "\">" . e($a->first_name) . " " . e($a->last_name) . "</option>"; }
         $html .= '</select></div>';
         $html .= '<div><label>Due Date</label><input type="date" name="due_date" class="form-input"></div>';
         $html .= '<div style="grid-column:span 2;"><label>Description</label><textarea name="description" class="form-input" rows="3"></textarea></div>';

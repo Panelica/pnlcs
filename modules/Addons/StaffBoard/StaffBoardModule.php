@@ -42,7 +42,7 @@ class StaffBoardModule implements AddonModuleInterface
 
     public function upgrade(string $fromVersion): array
     {
-        return ['success' => true, 'message' => "Upgraded from {$fromVersion}"];
+        return ['success' => true, 'message' => "Upgraded from " . e($fromVersion) . ""];
     }
 
     public function output(Request $request): string
@@ -74,7 +74,7 @@ class StaffBoardModule implements AddonModuleInterface
             $html .= '<div class="card" style="margin-bottom:8px;">';
             $html .= '<div class="card-body" style="padding:12px 16px;">';
             $html .= '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">';
-            $html .= '<span style="font-weight:600;font-size:13px;">' . ($note->author ?: 'System') . $pinBadge . '</span>';
+            $html .= '<span style="font-weight:600;font-size:13px;">' . e(($note->author ?: 'System')) . e($pinBadge) . '</span>';
             $html .= '<span style="font-size:11px;color:var(--pn-muted);">' . \Carbon\Carbon::parse($note->created_at)->diffForHumans() . '</span>';
             $html .= '</div>';
             $html .= '<div style="font-size:13px;line-height:1.6;">' . nl2br(e($note->note ?? $note->message ?? '')) . '</div>';
