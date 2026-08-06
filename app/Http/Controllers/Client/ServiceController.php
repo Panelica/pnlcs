@@ -172,12 +172,39 @@ class ServiceController extends Controller
         abort_if($service->client_id !== $this->getClientId(), 403);
         $service->load('product');
 
+        // r127-cycle: the customer's own term decides both what is on offer and
+        // what it costs. The screen used to list every active package and work
+        // the price out in the view by taking the first cycle with a figure in
+        // it - monthly, almost always - so somebody on an annual service was
+        // shown monthly prices, and packages not sold annually at all were
+        // offered to them and refused after they had chosen one.
+        $cycle = $service->billing_cycle ?: 'Monthly';
+
+        $prices = [];
+
         $availableProducts = Product::active()
             ->where('id', '!=', $service->product_id)
             ->with('pricing')
-            ->get();
+            ->get()
+            ->filter(function (Product $product) use ($cycle, &$prices) {
+                $price = $product->priceFor($cycle);
 
-        return view('client.services.upgrade', ['service' => $service, 'upgrades' => $availableProducts]);
+                if ($price === null) {
+                    return false;
+                }
+
+                $prices[$product->id] = $price;
+
+                return true;
+            })
+            ->values();
+
+        return view('client.services.upgrade', [
+            'service' => $service,
+            'upgrades' => $availableProducts,
+            'upgradePrices' => $prices,
+            'upgradeCycle' => $cycle,
+        ]);
     }
 
     public function processUpgrade(Request $request, Service $service)

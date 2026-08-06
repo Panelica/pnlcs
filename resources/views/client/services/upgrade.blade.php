@@ -34,15 +34,10 @@
             <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
                 @foreach($upgrades as $product)
                 @php
-                    $pr = $product->pricing->first();
-                    $cycles = ['monthly','quarterly','semiannually','annually'];
-                    $price = null;
-                    $cycle = '';
-                    if ($pr) {
-                        foreach ($cycles as $c) {
-                            if (isset($pr->{$c}) && (float)$pr->{$c} > 0) { $price = $pr->{$c}; $cycle = $c; break; }
-                        }
-                    }
+                    // The price for the term this customer is on, worked out
+                    // where the customer is known rather than guessed at here.
+                    $price = $upgradePrices[$product->id] ?? null;
+                    $cycle = strtolower($upgradeCycle ?? '');
                 @endphp
                 <label style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
                     <input type="radio" name="new_product_id" value="{{ $product->id }}" required style="margin:0;">
