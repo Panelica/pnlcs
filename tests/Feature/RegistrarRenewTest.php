@@ -81,17 +81,21 @@ test('every registrar module moves the dates by exactly the years renewed', func
     expect($wrong)->toBe([]);
 });
 
-test('a failed registrar renewal still moves the billing dates on', function () {
-    // The customer has paid. If the registrar API is down, the dates cannot be
-    // left where they are or the generator bills them again tomorrow.
+test('a failed registrar renewal leaves the billing dates where they are', function () {
+    // This used to move the dates on, so that the generator would not bill the
+    // customer again tomorrow. The price of that was a panel showing a domain
+    // paid up until next year that the registry had expiring this month.
+    // Re-billing is now prevented by the generator itself, which skips a domain
+    // whose period is already paid for, so the dates can tell the truth.
     Http::fake(['*' => Http::response('', 500)]);
 
     $domain = domainOn('Namecheap');
+    $before = $domain->expiry_date->toDateString();
 
     app(DomainService::class)->renewDomain($domain, 1);
 
-    expect($domain->fresh()->expiry_date->toDateString())->toBe('2028-03-10')
-        ->and($domain->fresh()->next_due_date->toDateString())->toBe('2028-03-10');
+    expect($domain->fresh()->expiry_date->toDateString())->toBe($before)
+        ->and($domain->fresh()->next_due_date->toDateString())->toBe($before);
 });
 
 test('renewing a domain with no registrar set still moves the dates', function () {

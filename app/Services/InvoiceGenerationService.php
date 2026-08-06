@@ -69,6 +69,16 @@ class InvoiceGenerationService
             ->whereDoesntHave('client.invoices', fn ($q) => $q
                 ->whereNotIn('status', InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Domain')->whereColumn('rel_id', 'domains.id')))
+            // r122-rebill: this period is already paid for. A renewal the
+            // registrar refused leaves the dates where they were - which is
+            // honest, the domain really has not been renewed - so the domain
+            // stays due and would be billed again tomorrow for the year the
+            // customer has already paid for. Somebody has to renew it by hand;
+            // charging twice is not the answer.
+            ->whereDoesntHave('client.invoices', fn ($q) => $q
+                ->where('status', InvoiceStatus::Paid->value)
+                ->whereRaw('invoices.date >= DATE_SUB(domains.next_due_date, INTERVAL ? DAY)', [$daysAhead])
+                ->whereHas('items', fn ($i) => $i->where('type', 'Domain')->whereColumn('rel_id', 'domains.id')))
             ->get();
 
         // One-off charges an operator has added to an account. They have their
