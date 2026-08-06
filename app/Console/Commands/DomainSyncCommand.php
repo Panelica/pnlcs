@@ -2,10 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Enums\DomainStatus;
 use App\Models\Domain;
 use App\Models\DomainPricing;
+use App\Models\RegistrarSettings;
 use App\Services\Module\ModuleRegistry;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -30,6 +32,37 @@ class DomainSyncCommand extends Command
         {--dry-run : Report what would change without writing}';
 
     protected $description = 'Sync domain expiry, status and nameservers with the registrar';
+
+    /**
+     * The required settings a registrar module is missing.
+     *
+     * The module declares what it needs in getConfigFields(); this reads the
+     * same list rather than knowing anything about a particular registrar.
+     *
+     * @return array<int, string>
+     */
+    private function missingRegistrarSettings(RegistrarModuleInterface $module): array
+    {
+        $stored = RegistrarSettings::where('registrar', $module->getModuleName())
+            ->get()
+            ->filter(fn ($row) => trim((string) $row->value) !== '')
+            ->pluck('setting')
+            ->all();
+
+        $missing = [];
+
+        foreach ($module->getConfigFields() as $field) {
+            if (! ($field['required'] ?? false)) {
+                continue;
+            }
+
+            if (! in_array($field['name'], $stored, true)) {
+                $missing[] = $field['name'];
+            }
+        }
+
+        return $missing;
+    }
 
     public function handle(ModuleRegistry $registry): int
     {
@@ -64,6 +97,19 @@ class DomainSyncCommand extends Command
             }
 
             $checked++;
+
+            // A registrar nobody has given credentials to still gets called,
+            // refuses, and leaves "lookup failed" against every domain - which
+            // sends the operator looking for a network problem instead of the
+            // setting they never filled in.
+            $missing = $this->missingRegistrarSettings($module);
+
+            if ($missing !== []) {
+                $failed++;
+                Log::warning("Domain sync skipped for {$domain->domain}: {$module->getModuleName()} is not configured (missing ".implode(', ', $missing).').');
+
+                continue;
+            }
 
             try {
                 $result = $module->syncDomain($domain);
