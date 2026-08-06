@@ -77,3 +77,24 @@ test('a rule for a failed backup reaches the operator', function () {
 
     expect($recipients->getArrayCopy())->toContain('ops@example.test');
 });
+
+/**
+ * The two the domain work added.
+ *
+ * A registrar that refuses to renew, and a registry that refuses to register a
+ * domain the customer has paid for, both raise an alert - and neither event
+ * was on the list the screen offers, so no rule could be created for them and
+ * the alerts went nowhere. The same gap this file was written to close.
+ */
+test('the domain failures can be subscribed to as well', function () {
+    expect(NotificationService::eventTypes())
+        ->toContain('domain.renew_failed', 'domain.registration_failed');
+});
+
+test('the screen offers the domain failures', function () {
+    $this->actingAs(notificationsAdmin(), 'admin')
+        ->get(route('admin.config.notifications'))
+        ->assertOk()
+        ->assertSee('domain.renew_failed')
+        ->assertSee('domain.registration_failed');
+});

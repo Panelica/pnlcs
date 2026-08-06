@@ -37,6 +37,13 @@ class NotificationService
             'backup.failed',
             'module.failed',
             'module.failed_permanently',
+            // Raised when a registrar refuses. Both need somebody to act: a
+            // domain the customer has paid for is not registered, or one the
+            // panel bills for is not renewed. An event that is dispatched and
+            // not offered here cannot be subscribed to, so the alert goes
+            // nowhere.
+            'domain.registration_failed',
+            'domain.renew_failed',
         ],
     ];
 
@@ -48,25 +55,25 @@ class NotificationService
 
     public function dispatch(string $eventType, array $data = []): void
     {
-        $rules = NotificationRule::with("provider")
-            ->where("event", $eventType)
-            ->where("active", true)
+        $rules = NotificationRule::with('provider')
+            ->where('event', $eventType)
+            ->where('active', true)
             ->get();
 
         foreach ($rules as $rule) {
-            if (!$rule->provider || !$rule->provider->active) {
+            if (! $rule->provider || ! $rule->provider->active) {
                 continue;
             }
 
             try {
                 match ($rule->provider->type) {
-                    "email" => $this->sendEmail($rule, $data),
-                    "slack" => $this->sendSlack($rule->provider, $data),
-                    "webhook" => $this->sendWebhook($rule->provider, $data),
+                    'email' => $this->sendEmail($rule, $data),
+                    'slack' => $this->sendSlack($rule->provider, $data),
+                    'webhook' => $this->sendWebhook($rule->provider, $data),
                     default => Log::warning("Unknown notification provider type: {$rule->provider->type}"),
                 };
             } catch (\Throwable $e) {
-                Log::error("Notification dispatch failed [{$rule->provider->type}]: " . $e->getMessage());
+                Log::error("Notification dispatch failed [{$rule->provider->type}]: ".$e->getMessage());
             }
         }
     }
@@ -74,13 +81,13 @@ class NotificationService
     protected function sendEmail(NotificationRule $rule, array $data): void
     {
         $conditions = $rule->conditions ?? [];
-        $to = $conditions["recipient_email"] ?? $data["email"] ?? null;
-        if (!$to) {
+        $to = $conditions['recipient_email'] ?? $data['email'] ?? null;
+        if (! $to) {
             return;
         }
 
-        $subject = $data["subject"] ?? "Notification: {$rule->event}";
-        $body = $data["message"] ?? json_encode($data);
+        $subject = $data['subject'] ?? "Notification: {$rule->event}";
+        $body = $data['message'] ?? json_encode($data);
 
         Mail::raw($body, function ($mail) use ($to, $subject) {
             $mail->to($to)->subject($subject);
@@ -90,35 +97,35 @@ class NotificationService
     protected function sendSlack(NotificationProvider $provider, array $data): void
     {
         $settings = $provider->settings ?? [];
-        $webhookUrl = $settings["webhook_url"] ?? null;
-        if (!$webhookUrl) {
+        $webhookUrl = $settings['webhook_url'] ?? null;
+        if (! $webhookUrl) {
             return;
         }
 
         Http::post($webhookUrl, [
-            "text" => $data["message"] ?? json_encode($data),
-            "username" => $settings["username"] ?? "PNLCS",
-            "icon_emoji" => $settings["icon"] ?? ":bell:",
+            'text' => $data['message'] ?? json_encode($data),
+            'username' => $settings['username'] ?? 'PNLCS',
+            'icon_emoji' => $settings['icon'] ?? ':bell:',
         ]);
     }
 
     protected function sendWebhook(NotificationProvider $provider, array $data): void
     {
         $settings = $provider->settings ?? [];
-        $url = $settings["url"] ?? null;
-        if (!$url) {
+        $url = $settings['url'] ?? null;
+        if (! $url) {
             return;
         }
 
         $headers = [];
-        if (!empty($settings["secret"])) {
-            $headers["X-Webhook-Secret"] = $settings["secret"];
+        if (! empty($settings['secret'])) {
+            $headers['X-Webhook-Secret'] = $settings['secret'];
         }
 
         Http::withHeaders($headers)->post($url, [
-            "event" => $data["event_type"] ?? "notification",
-            "data" => $data,
-            "timestamp" => now()->toIso8601String(),
+            'event' => $data['event_type'] ?? 'notification',
+            'data' => $data,
+            'timestamp' => now()->toIso8601String(),
         ]);
     }
 }
