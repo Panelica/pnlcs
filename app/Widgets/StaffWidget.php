@@ -22,7 +22,7 @@ class StaffWidget implements WidgetModuleInterface
     public function render(array $data): string
     {
         $html = "";
-        foreach ($data as $a) { $ago = ($a["last_login"] ?? null) ? \Carbon\Carbon::parse($a["last_login"])->diffForHumans() : "Never"; $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;">'.$a["first_name"].' '.$a["last_name"].'<span style="float:right;font-size:11px;color:var(--pn-muted);">'.$ago.'</span></div>'; }
+        foreach ($data as $a) { $ago = ($a["last_login"] ?? null) ? \Carbon\Carbon::parse($a["last_login"])->diffForHumans() : "Never"; $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;">'.e($a["first_name"]).' '.e($a["last_name"]).'<span style="float:right;font-size:11px;color:var(--pn-muted);">'.e($ago).'</span></div>'; }
         return $html;
     }
 }

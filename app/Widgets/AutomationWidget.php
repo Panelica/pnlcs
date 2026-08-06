@@ -38,7 +38,7 @@ class AutomationWidget implements WidgetModuleInterface
             ["Last Cron", $data["last_cron"] === "Never" ? "Never" : \Carbon\Carbon::parse($data["last_cron"])->diffForHumans(), "#337ab7"],
         ];
         $html = "";
-        foreach ($items as [$label, $value, $color]) { $html .= '<div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><span>'.$label.'</span><span style="font-weight:600;color:'.$color.';">'.$value.'</span></div>'; }
+        foreach ($items as [$label, $value, $color]) { $html .= '<div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><span>'.e($label).'</span><span style="font-weight:600;color:'.e($color).';">'.e($value).'</span></div>'; }
         return $html;
     }
 }

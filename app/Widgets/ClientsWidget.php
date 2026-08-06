@@ -25,8 +25,8 @@ class ClientsWidget implements WidgetModuleInterface
 
     public function render(array $data): string
     {
-        $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);display:flex;justify-content:space-between;"><span style="font-size:13px;">Total: <b>'.$data["total"].'</b></span><span style="font-size:13px;color:#46a546;">Active: <b>'.$data["active"].'</b></span></div>';
-        foreach ($data["recent"] as $c) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><a href="/admin/clients/'.$c["id"].'" style="color:var(--pn-link);">'.$c["first_name"].' '.$c["last_name"].'</a><div style="font-size:11px;color:var(--pn-muted);">'.$c["email"].'</div></div>'; }
+        $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);display:flex;justify-content:space-between;"><span style="font-size:13px;">Total: <b>'.e($data["total"]).'</b></span><span style="font-size:13px;color:#46a546;">Active: <b>'.e($data["active"]).'</b></span></div>';
+        foreach ($data["recent"] as $c) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><a href="/admin/clients/'.e($c["id"]).'" style="color:var(--pn-link);">'.e($c["first_name"]).' '.e($c["last_name"]).'</a><div style="font-size:11px;color:var(--pn-muted);">'.e($c["email"]).'</div></div>'; }
         return $html;
     }
 }

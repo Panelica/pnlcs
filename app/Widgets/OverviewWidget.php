@@ -38,9 +38,9 @@ class OverviewWidget implements WidgetModuleInterface
         ];
         $html = '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;">';
         foreach ($stats as [$label, $value, $color, $link]) {
-            $html .= '<a href="/'.$link.'" style="text-decoration:none;color:inherit;text-align:center;padding:16px 8px;border-right:1px solid var(--pn-border);">
-                <div style="font-size:28px;font-weight:700;color:'.$color.';">'.$value.'</div>
-                <div style="font-size:11px;color:var(--pn-muted);margin-top:4px;">'.$label.'</div></a>';
+            $html .= '<a href="/'.e($link).'" style="text-decoration:none;color:inherit;text-align:center;padding:16px 8px;border-right:1px solid var(--pn-border);">
+                <div style="font-size:28px;font-weight:700;color:'.e($color).';">'.e($value).'</div>
+                <div style="font-size:11px;color:var(--pn-muted);margin-top:4px;">'.e($label).'</div></a>';
         }
         return $html . '</div>';
     }

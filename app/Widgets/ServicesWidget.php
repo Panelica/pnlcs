@@ -23,7 +23,7 @@ class ServicesWidget implements WidgetModuleInterface
     {
         $colors = ["active" => "#46a546", "suspended" => "#f89406", "terminated" => "#c43c35", "pending" => "#337ab7", "cancelled" => "#999"];
         $html = "";
-        foreach ($data as $status => $count) { $color = $colors[$status] ?? "#666"; $html .= '<div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><span style="text-transform:capitalize;">'.$status.'</span><span style="font-weight:700;color:'.$color.';">'.$count.'</span></div>'; }
+        foreach ($data as $status => $count) { $color = $colors[$status] ?? "#666"; $html .= '<div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><span style="text-transform:capitalize;">'.e($status).'</span><span style="font-weight:700;color:'.e($color).';">'.e($count).'</span></div>'; }
         return $html;
     }
 }
