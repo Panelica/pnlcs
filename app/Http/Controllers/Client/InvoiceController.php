@@ -36,13 +36,10 @@ class InvoiceController extends Controller
         // The value is encrypted at rest, so it is compared after it comes
         // back rather than in the query: a where() against the column can never
         // match, and this page quietly showed bank transfer only.
-        $gateways = GatewaySettings::where('setting', 'active')
-            ->get()
-            ->filter(fn ($row) => (string) $row->value === '1')
-            ->pluck('gateway')
-            ->unique()
-            ->values()
-            ->toArray();
+        // Switched on is not the same as ready: a gateway missing its keys is
+        // not offered, or the customer picks it and the payment fails at the
+        // last step.
+        $gateways = app(ModuleRegistry::class)->usableGateways();
 
         if (empty($gateways)) {
             $gateways = ['banktransfer'];

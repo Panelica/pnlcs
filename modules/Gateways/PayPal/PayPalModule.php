@@ -24,8 +24,8 @@ class PayPalModule implements GatewayModuleInterface
     {
         return [
             ["name" => "email",         "label" => "PayPal Email",   "type" => "text"],
-            ["name" => "client_id",     "label" => "Client ID",      "type" => "text"],
-            ["name" => "client_secret", "label" => "Client Secret",  "type" => "password"],
+            ["name" => "client_id",     "label" => "Client ID",      "type" => "text", "required" => true],
+            ["name" => "client_secret", "label" => "Client Secret",  "type" => "password", "required" => true],
             ["name" => "sandbox",       "label" => "Sandbox Mode",   "type" => "select", "options" => ["0" => "Live", "1" => "Sandbox"]],
         ];
     }

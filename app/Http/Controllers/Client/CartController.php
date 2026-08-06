@@ -224,11 +224,9 @@ class CartController extends Controller
     {
         $registry = app(ModuleRegistry::class);
 
-        $active = GatewaySettings::where('setting', 'active')
-            ->get()
-            ->filter(fn ($row) => (string) $row->value === '1')
-            ->pluck('gateway')
-            ->unique();
+        // Switched on is not the same as ready: a gateway missing the keys it
+        // authenticates with fails at the last step, after the order is placed.
+        $active = collect($registry->usableGateways());
 
         if ($active->isEmpty()) {
             return ['banktransfer' => __('messages.payment_method.bank_transfer')];

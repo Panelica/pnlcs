@@ -23,8 +23,8 @@ class StripeModule implements GatewayModuleInterface
     public function getConfigFields(): array
     {
         return [
-            ["name" => "publishable_key", "label" => "Publishable Key",         "type" => "text"],
-            ["name" => "secret_key",      "label" => "Secret Key",              "type" => "password"],
+            ["name" => "publishable_key", "label" => "Publishable Key",         "type" => "text", "required" => true],
+            ["name" => "secret_key",      "label" => "Secret Key",              "type" => "password", "required" => true],
             ["name" => "webhook_secret",  "label" => "Webhook Signing Secret",  "type" => "password"],
         ];
     }

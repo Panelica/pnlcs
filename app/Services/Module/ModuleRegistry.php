@@ -6,6 +6,7 @@ use App\Contracts\GatewayModuleInterface;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\ServerModuleInterface;
 use App\Contracts\SslModuleInterface;
+use App\Models\GatewaySettings;
 
 class ModuleRegistry
 {
@@ -95,6 +96,51 @@ class ModuleRegistry
         $class = $this->serverModules[self::key($name)] ?? null;
 
         return $class ? app($class) : null;
+    }
+
+    /**
+     * The gateways that are switched on and have what they need to work.
+     *
+     * Being ticked active is one setting; the keys a gateway authenticates
+     * with are others, and offering one without them means the customer picks
+     * it and the payment fails at the last step, after the order is placed.
+     * The modules already declare their required fields.
+     *
+     * @return array<int, string>
+     */
+    public function usableGateways(): array
+    {
+        $stored = GatewaySettings::all()->groupBy('gateway');
+
+        $usable = [];
+
+        foreach ($stored as $gateway => $rows) {
+            $values = $rows->filter(fn ($row) => trim((string) $row->value) !== '')
+                ->pluck('value', 'setting');
+
+            if ((string) ($values['active'] ?? '0') !== '1') {
+                continue;
+            }
+
+            $module = $this->getGatewayModule((string) $gateway);
+
+            if (! $module) {
+                continue;
+            }
+
+            $missing = collect($module->getConfigFields())
+                ->filter(fn ($field) => $field['required'] ?? false)
+                ->reject(fn ($field) => $values->has($field['name']))
+                ->isNotEmpty();
+
+            if ($missing) {
+                continue;
+            }
+
+            $usable[] = (string) $gateway;
+        }
+
+        return $usable;
     }
 
     public function getGatewayModule(string $name): ?GatewayModuleInterface

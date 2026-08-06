@@ -23,8 +23,8 @@ class AuthorizeNetModule implements GatewayModuleInterface
     public function getConfigFields(): array
     {
         return [
-            ["name" => "api_login_id",    "label" => "API Login ID",      "type" => "text"],
-            ["name" => "transaction_key", "label" => "Transaction Key",   "type" => "password"],
+            ["name" => "api_login_id",    "label" => "API Login ID",      "type" => "text", "required" => true],
+            ["name" => "transaction_key", "label" => "Transaction Key",   "type" => "password", "required" => true],
             ["name" => "client_key",      "label" => "Client Key (Accept.js)", "type" => "text"],
             ["name" => "sandbox",         "label" => "Test Mode",         "type" => "select", "options" => ["0" => "Live", "1" => "Sandbox"]],
         ];

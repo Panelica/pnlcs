@@ -48,12 +48,30 @@ function checkoutShopper(): User
     return $user;
 }
 
+/**
+ * Switched on and ready: being ticked active is one setting, and the keys a
+ * gateway authenticates with are others. A gateway missing those is not
+ * offered, so the fixture supplies them.
+ */
 function switchOn(string $gateway): void
 {
     GatewaySettings::updateOrCreate(
         ['gateway' => $gateway, 'setting' => 'active'],
         ['value' => '1']
     );
+
+    $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule($gateway);
+
+    foreach ($module?->getConfigFields() ?? [] as $field) {
+        if (! ($field['required'] ?? false)) {
+            continue;
+        }
+
+        GatewaySettings::updateOrCreate(
+            ['gateway' => $gateway, 'setting' => $field['name']],
+            ['value' => 'test-value']
+        );
+    }
 }
 
 test('a gateway that does not exist is refused', function () {
