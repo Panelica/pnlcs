@@ -28,7 +28,7 @@ class SslCertificateIssuedMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.ssl-certificate-issued',
+            markdown: 'emails.ssl-certificate-issued',
             with: [
                 'order' => $this->order,
                 'viewUrl' => route('client.ssl.show', $this->order),

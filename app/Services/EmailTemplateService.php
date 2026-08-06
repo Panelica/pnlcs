@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\Client;
 use App\Models\EmailTemplate;
-use App\Models\Setting;
+use App\Models\SslOrder;
 
 /**
  * The email templates screen edits 19 templates with merge fields, a disable
@@ -22,6 +22,9 @@ class EmailTemplateService
      *
      * Deliberately explicit: guessing from the class name would silently attach
      * the wrong template the first time somebody renames one.
+     *
+     * BulkMassMail is deliberately absent: it carries the subject and body the
+     * operator has just written, and a template would overwrite both.
      */
     private const MAP = [
         'AccountSignupMail' => 'Account Signup Email',
@@ -39,6 +42,12 @@ class EmailTemplateService
         'ServiceTerminationMail' => 'Service Termination',
         'ServiceUnsuspensionMail' => 'Service Unsuspension',
         'ServiceWelcomeMail' => 'Service Welcome Email',
+        'CreditCardExpiryMail' => 'Credit Card Expiry Notice',
+        'LoginEmailChangedMail' => 'Login Email Changed',
+        'PaymentNotificationRejectedMail' => 'Payment Notification Rejected',
+        'SslCertificateExpiringMail' => 'SSL Certificate Expiring',
+        'SslCertificateIssuedMail' => 'SSL Certificate Issued',
+        'SslConfigurationRequiredMail' => 'SSL Configuration Required',
         'TicketOpenedMail' => 'Support Ticket Opened',
         'TicketReplyMail' => 'Support Ticket Reply',
     ];
@@ -127,10 +136,18 @@ class EmailTemplateService
                     // The templates say {product_name}.
                     'product_name' => $model->product->name ?? '',
                 ],
-                'order' => $vars += [
-                    'order_num' => $model->order_num ?? $model->id,
-                    'order_total' => number_format((float) $model->amount, 2),
-                ],
+                // An SSL order is not a shop order: it has no order number and
+                // no total, and reading those off it would put "#" and "0.00"
+                // into the customer's subject line.
+                'order' => $vars += $model instanceof SslOrder
+                    ? [
+                        'ssl_domain' => $model->domain ?: 'Order #'.$model->id,
+                        'ssl_status' => (string) ($model->status ?? ''),
+                    ]
+                    : [
+                        'order_num' => $model->order_num ?? $model->id,
+                        'order_total' => number_format((float) $model->amount, 2),
+                    ],
                 'domain' => $vars += [
                     'domain_name' => $model->domain ?? '',
                     // The templates say {domain}, and every domain email went
@@ -169,9 +186,20 @@ class EmailTemplateService
             'resetUrl' => 'reset_url',
             'replyMessage' => 'ticket_reply',
             'reason' => 'suspend_reason',
+            // The address change warning is about two addresses and carries
+            // nothing else; the counts below are what their subjects are made
+            // of - "expiring in 14 days" reads as "expiring in {} days"
+            // without them.
+            'previousEmail' => 'previous_email',
+            'newEmail' => 'new_email',
+            'daysRemaining' => 'days_remaining',
+            'daysOverdue' => 'days_overdue',
+            'daysUntilExpiry' => 'days_until_expiry',
         ] as $property => $name) {
-            if (is_string($data[$property] ?? null) && $data[$property] !== '') {
-                $vars[$name] = $data[$property];
+            $value = $data[$property] ?? null;
+
+            if (is_scalar($value) && ! is_bool($value) && (string) $value !== '') {
+                $vars[$name] = (string) $value;
             }
         }
 

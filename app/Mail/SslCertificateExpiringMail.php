@@ -29,7 +29,7 @@ class SslCertificateExpiringMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.ssl-certificate-expiring',
+            markdown: 'emails.ssl-certificate-expiring',
             with: [
                 'order' => $this->order,
                 'daysRemaining' => $this->daysRemaining,

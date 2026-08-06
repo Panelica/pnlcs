@@ -76,7 +76,19 @@ class ApplyEmailTemplate
         $vars = $this->templates->varsFor($event->data);
 
         if (filled($template->subject)) {
-            $event->message->subject($this->templates->merge($template->subject, $vars));
+            $subject = $this->templates->merge($template->subject, $vars);
+
+            // A merge field this email carries nothing for would go out with
+            // the braces showing. The mailable's own subject is a complete
+            // sentence, so keep that instead and say why in the log.
+            if (preg_match('/\{[A-Za-z_][A-Za-z0-9_]*\}/', $subject, $unresolved)) {
+                Log::warning('Template subject left as the mailable wrote it: this email carries nothing for that merge field.', [
+                    'template' => $template->name,
+                    'field' => $unresolved[0],
+                ]);
+            } else {
+                $event->message->subject($subject);
+            }
         }
 
         if (filled($template->from_email)) {
@@ -106,7 +118,16 @@ class ApplyEmailTemplate
         if ($template->custom && filled($template->message)) {
             $body = $this->templates->merge((string) $template->message, $vars);
 
-            $event->message->html(nl2br(e($body), false));
+            // A template marked plaintext goes out as text only. The column has
+            // been on the table all along and nothing read it, so the setting
+            // meant nothing and the mail went out as HTML regardless; the html
+            // part the mailable built has to be cleared, not just skipped.
+            if ($template->plaintext) {
+                $event->message->html(null);
+            } else {
+                $event->message->html(nl2br(e($body), false));
+            }
+
             $event->message->text($body);
         }
 

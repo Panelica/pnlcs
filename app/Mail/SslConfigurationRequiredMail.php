@@ -28,7 +28,7 @@ class SslConfigurationRequiredMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.ssl-configuration-required',
+            markdown: 'emails.ssl-configuration-required',
             with: [
                 'order' => $this->order,
                 'configureUrl' => route('client.ssl.configure', $this->order),
