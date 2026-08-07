@@ -16,8 +16,8 @@ use Modules\Servers\AbstractServerModule;
  *  - POST   /domains                      create subscription (hosting_type=virtual,
  *                                         hosting_settings.ftp_login/ftp_password REQUIRED,
  *                                         owner_client assigns the customer)
- *  - POST   /clients/{id}/suspend        suspend account
- *  - POST   /clients/{id}/activate       reactivate account
+ *  - PUT    /clients/{id}/suspend        suspend account
+ *  - PUT    /clients/{id}/activate       reactivate account
  *  - DELETE /clients/{id}                 remove customer (cascades subscriptions)
  *  - PUT    /clients/{id}                 update (password, ...)
  *  - PUT    /domains/{id}                 update (plan change)
@@ -48,15 +48,118 @@ class PleskModule extends AbstractServerModule
         return "https://{$this->serverHost($server)}:{$port}/api/v2";
     }
 
+    /**
+     * Plesk authenticates with an API key or with an administrator login, and
+     * the server form asks for a username and a password while calling the key
+     * "Optional". Sending only the key meant an operator who filled the form in
+     * the ordinary way was never authenticated at all.
+     */
     private function http(Server $server)
     {
-        return Http::withoutVerifying()
+        $request = Http::withoutVerifying()
             ->withHeaders([
-                'X-API-Key' => $server->access_hash,
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])
             ->timeout(30);
+
+        $key = trim((string) $server->access_hash);
+
+        if ($key !== '') {
+            return $request->withHeaders(['X-API-Key' => $key]);
+        }
+
+        return $request->withBasicAuth(
+            (string) ($server->username ?: 'admin'),
+            (string) $server->password
+        );
+    }
+
+    /**
+     * A password Plesk will take.
+     *
+     * The API documents a client password as 5 to 14 characters; this module
+     * generated 21, which Plesk is entitled to refuse outright.
+     */
+    private function generatePassword(): string
+    {
+        $lower = 'abcdefghijkmnopqrstuvwxyz';
+        $upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        $digits = '23456789';
+        $alphabet = $lower.$upper.$digits;
+
+        $password = [
+            $lower[random_int(0, strlen($lower) - 1)],
+            $upper[random_int(0, strlen($upper) - 1)],
+            $digits[random_int(0, strlen($digits) - 1)],
+        ];
+
+        for ($i = 0; $i < 9; $i++) {
+            $password[] = $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+
+        shuffle($password);
+
+        return implode('', $password);
+    }
+
+    /**
+     * The service plans this Plesk server offers, for the product form.
+     *
+     * The REST API has no plans endpoint at all - the list comes from the XML
+     * API, which is where WHMCS reads it too.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        $key = trim((string) $server->access_hash);
+
+        $headers = $key !== ''
+            ? ['X-API-Key' => $key]
+            : [
+                'HTTP_AUTH_LOGIN' => (string) ($server->username ?: 'admin'),
+                'HTTP_AUTH_PASSWD' => (string) $server->password,
+            ];
+
+        try {
+            $port = (int) ($server->port ?: 8443);
+            $url = "https://{$this->serverHost($server)}:{$port}/enterprise/control/agent.php";
+
+            $response = Http::withoutVerifying()
+                ->withHeaders($headers)
+                ->timeout(30)
+                ->withBody('<packet><service-plan><get><filter/></get></service-plan></packet>', 'text/xml')
+                ->post($url);
+        } catch (\Throwable $e) {
+            Log::warning('Plesk listPackages failed', ['server' => $server->id, 'error' => $e->getMessage()]);
+
+            return [];
+        }
+
+        if (! $response->successful()) {
+            return [];
+        }
+
+        $xml = @simplexml_load_string($response->body());
+
+        if (! $xml) {
+            return [];
+        }
+
+        $plans = [];
+
+        foreach ($xml->xpath('//service-plan/get/result') ?: [] as $result) {
+            $name = trim((string) $result->name);
+
+            if ($name !== '') {
+                $plans[$name] = ['id' => $name, 'name' => $name];
+            }
+        }
+
+        ksort($plans);
+
+        return array_values($plans);
     }
 
     private function getClientId(Service $service): ?string
@@ -98,7 +201,7 @@ class PleskModule extends AbstractServerModule
         $login = preg_replace('/[^a-z0-9]/', '', strtolower(explode('.', $domain)[0]));
         $login = substr(ltrim($login, '0123456789') ?: 'u'.$service->id, 0, 16).$service->id;
 
-        $password = $service->password ?: bin2hex(random_bytes(9)).'aA1';
+        $password = $service->password ?: $this->generatePassword();
         $planName = $this->getRemotePackage($service);
 
         $base = $this->baseUrl($server);
@@ -171,7 +274,7 @@ class PleskModule extends AbstractServerModule
             return $this->buildResult(false, 'Missing server or Plesk client ID.');
         }
 
-        $resp = $this->http($server)->post("{$this->baseUrl($server)}/clients/{$clientId}/suspend");
+        $resp = $this->http($server)->put("{$this->baseUrl($server)}/clients/{$clientId}/suspend");
 
         $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account suspended.' : $this->errorMessage($resp));
         $this->logAction($service, 'suspend', $result);
@@ -188,7 +291,7 @@ class PleskModule extends AbstractServerModule
             return $this->buildResult(false, 'Missing server or Plesk client ID.');
         }
 
-        $resp = $this->http($server)->post("{$this->baseUrl($server)}/clients/{$clientId}/activate");
+        $resp = $this->http($server)->put("{$this->baseUrl($server)}/clients/{$clientId}/activate");
 
         $result = $this->buildResult($resp->successful(), $resp->successful() ? 'Account unsuspended.' : $this->errorMessage($resp));
         $this->logAction($service, 'unsuspend', $result);

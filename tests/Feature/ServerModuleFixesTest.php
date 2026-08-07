@@ -112,10 +112,10 @@ test('plesk suspend and unsuspend use the dedicated endpoints', function () {
     $module = new \Modules\Servers\Plesk\PleskModule();
 
     expect($module->suspend($service->fresh(['server']), 'nonpayment')['success'])->toBeTrue();
-    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/clients/42/suspend') && $r->method() === 'POST');
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/clients/42/suspend') && $r->method() === 'PUT');
 
     expect($module->unsuspend($service->fresh(['server']))['success'])->toBeTrue();
-    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/clients/42/activate') && $r->method() === 'POST');
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/clients/42/activate') && $r->method() === 'PUT');
 });
 
 test('plesk usage pulls client statistics and updates the service', function () {

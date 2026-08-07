@@ -34,12 +34,21 @@ class CPanelModule extends AbstractServerModule
         return "https://{$this->serverHost($server)}:{$port}/json-api/";
     }
 
+    /**
+     * WHM takes an API token or the account's own password, and the server form
+     * calls the token "Optional". Sending "whm root:" with an empty token
+     * failed every call for an operator who had filled in the password.
+     */
     private function authHeader(Server $server): string
     {
-        $user = $server->username ?: 'root';
-        $token = $server->access_hash ?? '';
+        $user = (string) ($server->username ?: 'root');
+        $token = trim((string) $server->access_hash);
 
-        return "whm {$user}:{$token}";
+        if ($token !== '') {
+            return "whm {$user}:{$token}";
+        }
+
+        return 'Basic '.base64_encode($user.':'.(string) $server->password);
     }
 
     private function call(Server $server, string $function, array $params = []): array
