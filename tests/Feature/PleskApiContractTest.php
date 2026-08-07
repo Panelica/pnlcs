@@ -213,3 +213,50 @@ it('falls back to the whm password when no token was given', function () {
 
     Http::assertSent(fn ($request) => $request->header('Authorization')[0] === 'Basic '.base64_encode('root:root-secret'));
 });
+
+it('changes the password the customer actually signs in with', function () {
+    Http::fake(['*' => Http::response(['status' => 'success'], 200)]);
+
+    $server = pleskServer();
+    $service = pleskService($server);
+
+    $result = (new PleskModule)->changePassword($service, 'Nw-Pass-42x');
+
+    expect($result['success'])->toBeTrue()
+        ->and($service->fresh()->password)->toBe('Nw-Pass-42x');
+
+    // The control panel login...
+    $client = requestTo('/api/v2/clients/c-1');
+    expect($client->method())->toBe('PUT')
+        ->and($client->data()['password'])->toBe('Nw-Pass-42x');
+
+    // ...and the FTP login of the subscription, which is the credential the
+    // customer is shown and the one they use to upload a site.
+    $subscription = requestTo('/api/v2/domains/d-1');
+    expect($subscription->method())->toBe('PUT')
+        ->and($subscription->data()['hosting_settings']['ftp_password'])->toBe('Nw-Pass-42x');
+});
+
+it('says so when plesk kept the old ftp password', function () {
+    Http::fake([
+        '*/api/v2/clients/*' => Http::response(['status' => 'success'], 200),
+        '*/api/v2/domains/*' => Http::response(['message' => 'password is too weak'], 400),
+    ]);
+
+    $server = pleskServer();
+    $service = pleskService($server);
+
+    $result = (new PleskModule)->changePassword($service, 'Nw-Pass-42x');
+
+    expect($result['success'])->toBeFalse()
+        ->and(strtolower($result['message']))->toContain('ftp');
+});
+
+it('changes the client password when the subscription id was never recorded', function () {
+    Http::fake(['*' => Http::response(['status' => 'success'], 200)]);
+
+    $server = pleskServer();
+    $service = pleskService($server, ['plesk_client_id' => 'c-1']);
+
+    expect((new PleskModule)->changePassword($service, 'Nw-Pass-42x')['success'])->toBeTrue();
+});

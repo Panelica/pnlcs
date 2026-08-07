@@ -330,11 +330,31 @@ class PleskModule extends AbstractServerModule
             'password' => $newPassword,
         ]);
 
-        if ($resp->successful()) {
-            $service->update(['password' => $newPassword]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->errorMessage($resp));
         }
 
-        return $this->buildResult($resp->successful(), $resp->successful() ? 'Password changed.' : $this->errorMessage($resp));
+        // The client password is the control panel login. The credential the
+        // customer is shown - and uses to upload their site - is the
+        // subscription's FTP login, which was left on the old password: the
+        // panel then displayed a password that no longer worked for FTP.
+        $domainId = $this->getDomainId($service);
+
+        if ($domainId) {
+            $ftp = $this->http($server)->put("{$this->baseUrl($server)}/domains/{$domainId}", [
+                'hosting_settings' => ['ftp_password' => $newPassword],
+            ]);
+
+            if (! $ftp->successful()) {
+                $service->update(['password' => $newPassword]);
+
+                return $this->buildResult(false, 'Control panel password changed, but Plesk kept the old FTP password: '.$this->errorMessage($ftp));
+            }
+        }
+
+        $service->update(['password' => $newPassword]);
+
+        return $this->buildResult(true, 'Password changed.');
     }
 
     public function changePackage(Service $service, array $newPackage): array
