@@ -225,17 +225,26 @@ HTML;
     public function processWebhook(array $data): array
     {
         $webhookSecret = $this->getSetting('webhook_secret');
+        $rawPayload = $data['_raw_payload'] ?? '';
+        $sigHeader = $data['_signature_header'] ?? '';
 
-        // Verify signature if webhook secret is set
-        if ($webhookSecret) {
-            $rawPayload = $data['_raw_payload'] ?? '';
-            $sigHeader = $data['_signature_header'] ?? '';
+        // r170-unsigned: prove who sent this before acting on it.
+        //
+        // Verification used to run only when a webhook secret happened to be
+        // configured. Without one, an unsigned POST to the public webhook URL
+        // naming an invoice id in its notes marked that invoice paid - and
+        // payment then does everything payment does: the order is accepted, the
+        // service provisioned, a suspended one switched back on. The
+        // Authorize.net module already refuses in exactly this case.
+        if (!$webhookSecret || !$rawPayload || !$sigHeader) {
+            Log::warning('Razorpay: webhook refused - no signature to check against');
+            return ['success' => false, 'message' => 'Unsigned webhook.'];
+        }
 
-            $expected = hash_hmac('sha256', $rawPayload, $webhookSecret);
-            if (!hash_equals($expected, $sigHeader)) {
-                Log::warning('Razorpay: webhook signature verification failed');
-                return ['success' => false, 'message' => 'Invalid webhook signature.'];
-            }
+        $expected = hash_hmac('sha256', $rawPayload, $webhookSecret);
+        if (!hash_equals($expected, $sigHeader)) {
+            Log::warning('Razorpay: webhook signature verification failed');
+            return ['success' => false, 'message' => 'Invalid webhook signature.'];
         }
 
         $event = $data['event'] ?? '';

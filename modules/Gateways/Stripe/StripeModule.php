@@ -257,8 +257,21 @@ HTML;
         $payload       = $data["_raw_payload"] ?? "";
         $sigHeader     = $data["_signature_header"] ?? "";
 
+        // r170-unsigned: prove who sent this before acting on it.
+        //
+        // The check used to run only when a secret, a signature header and a raw
+        // body all happened to be present. With any of them missing it fell
+        // through to the ordinary processing, so an unsigned POST to the public
+        // webhook URL naming an invoice id in its metadata marked that invoice
+        // paid - and payment then does everything payment does. The
+        // Authorize.net module already refuses in exactly this case.
+        if (!$webhookSecret || !$sigHeader || !$payload) {
+            Log::warning("Stripe: webhook refused - no signature to check against");
+            return ["success" => false, "message" => "Unsigned webhook."];
+        }
+
         // Verify Stripe webhook signature
-        if ($webhookSecret && $sigHeader && $payload) {
+        {
             $parts    = [];
             $elements = explode(",", $sigHeader);
             foreach ($elements as $element) {
