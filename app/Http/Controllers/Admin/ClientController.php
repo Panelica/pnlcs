@@ -123,9 +123,13 @@ class ClientController extends Controller
             'sticky' => 'boolean',
         ]);
 
+        // client_notes keeps its author as a plain name in `admin`; there is no
+        // admin_id column and the model does not accept one, so writing an id
+        // here left every note attributed to nobody in particular. The API door
+        // has always written the name.
         ClientNote::create([
             'client_id' => $client->id,
-            'admin_id' => auth('admin')->id(),
+            'admin' => auth('admin')->user()?->full_name ?: 'system',
             'note' => $validated['note'],
             'sticky' => $validated['sticky'] ?? false,
         ]);
