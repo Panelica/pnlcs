@@ -280,6 +280,15 @@ class HestiaCPModule extends AbstractServerModule
         return $out;
     }
 
+    /**
+     * Disk and bandwidth for the accounts this panel put on this server.
+     *
+     * HestiaCP names these the way its own bin/v-list-users writes them:
+     * DISK_QUOTA and BANDWIDTH are the limits, U_DISK and U_BANDWIDTH are what
+     * has been used. This read DISK_USED, which is not a field HestiaCP has, so
+     * no disk figure was ever recorded - and BANDWIDTH for usage, so every
+     * account was shown using its whole allowance from the day it was made.
+     */
     public function usageUpdate(Server $server): array
     {
         $result = $this->call($server, 'v-list-users', ['arg1' => 'json'], json: true);
@@ -288,35 +297,59 @@ class HestiaCPModule extends AbstractServerModule
             return ['updated' => 0, 'errors' => 1];
         }
 
-        $updated = 0;
-        foreach ($result['raw'] as $username => $userData) {
-            $service = Service::where('server_id', $server->id)
-                ->where('username', $username)
-                ->where('status', 'active')
-                ->first();
+        $accounts = [];
 
-            if (! $service) {
+        foreach ($result['raw'] as $username => $account) {
+            if (is_array($account)) {
+                $accounts[strtolower((string) $username)] = $account;
+            }
+        }
+
+        $services = Service::where('server_id', $server->id)
+            ->where('status', 'active')
+            ->get();
+
+        $updated = 0;
+        $errors = 0;
+
+        foreach ($services as $service) {
+            // The name on the server, not whatever the service was renamed to.
+            $username = strtolower((string) (
+                $this->getModuleData($service)['hestia_username'] ?? $service->username ?? ''
+            ));
+
+            $account = $username !== '' ? ($accounts[$username] ?? null) : null;
+
+            if (! $account) {
+                $errors++;
+
                 continue;
             }
 
             $updateData = [];
-            if (isset($userData['DISK_USED'])) {
-                $updateData['disk_usage'] = (int) $userData['DISK_USED'];
-            }
-            if (isset($userData['DISK_QUOTA'])) {
-                $updateData['disk_limit'] = (int) $userData['DISK_QUOTA'];
-            }
-            if (isset($userData['BANDWIDTH'])) {
-                $updateData['bw_usage'] = (int) $userData['BANDWIDTH'];
+
+            // "unlimited" is not a number, and writing it as 0 would read as an
+            // allowance of nothing.
+            foreach ([
+                'U_DISK' => 'disk_usage',
+                'U_BANDWIDTH' => 'bw_usage',
+                'DISK_QUOTA' => 'disk_limit',
+                'BANDWIDTH' => 'bw_limit',
+            ] as $field => $column) {
+                $value = $account[$field] ?? null;
+
+                if ($value !== null && is_numeric($value)) {
+                    $updateData[$column] = (int) $value;
+                }
             }
 
-            if (! empty($updateData)) {
+            if ($updateData !== []) {
                 $service->update($updateData);
                 $updated++;
             }
         }
 
-        return ['updated' => $updated, 'errors' => 0];
+        return ['updated' => $updated, 'errors' => $errors];
     }
 
     public function testConnection(Server $server): bool
