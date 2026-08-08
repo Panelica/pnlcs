@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
+use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
+use App\Services\TicketService;
 use App\Services\TicketSpamService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -45,17 +46,21 @@ class ContactController extends Controller
 
         $clientId = auth()->check() ? $this->currentClient()?->id : null;
 
-        Ticket::create([
-            'tid' => strtoupper(Str::random(6)),
+        // Through the one creator, which gives the ticket a six-digit reference
+        // and checks it is free. A reference made here out of
+        // strtoupper(Str::random(6)) is not one the mail import can match - it
+        // reads six digits from the subject - and this is the door where that
+        // matters most: whoever writes in gets the reference in their
+        // ticket-opened email, replies to it, and the reply opened a second
+        // ticket instead of joining the first.
+        app(TicketService::class)->createTicket([
             'department_id' => $validated['department_id'],
             'client_id' => $clientId,
             'name' => $validated['name'],
             'email' => $validated['email'],
             'title' => $validated['subject'],
             'message' => $validated['message'],
-            'status' => 'Open',
             'priority' => 'Medium',
-            'last_reply' => now(),
         ]);
 
         return back()->with('success', __('messages.success.your_message_has_been_sent_we_will_get_back_to_you'));

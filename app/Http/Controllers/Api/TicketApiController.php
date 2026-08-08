@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Api;
 use App\Models\Ticket;
+use App\Services\TicketService;
 use App\Models\TicketReply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,7 +25,9 @@ class TicketApiController extends BaseApiController
     public function openTicket(Request $request)
     {
         $v = $request->validate(['deptid'=>'required|exists:ticket_departments,id','subject'=>'required|string|max:255','message'=>'required|string','email'=>'required|email','priority'=>'nullable|in:low,medium,high,critical']);
-        $ticket = Ticket::create(['tid'=>strtoupper(Str::random(6)),'department_id'=>$v['deptid'],'client_id'=>$request->userid,'name'=>$request->name,'email'=>$v['email'],'title'=>$v['subject'],'message'=>$v['message'],'priority'=>$v['priority']??'medium','status'=>'open','last_reply'=>now()]);
+        // Through the one creator: six digits, checked to be free, which is
+        // what the mail import matches a reply against.
+        $ticket = app(TicketService::class)->createTicket(['department_id'=>$v['deptid'],'client_id'=>$request->userid,'name'=>$request->name,'email'=>$v['email'],'title'=>$v['subject'],'message'=>$v['message'],'priority'=>$v['priority']??'medium']);
         return $this->success(['tid'=>$ticket->tid,'ticketid'=>$ticket->id]);
     }
     public function addTicketReply(Request $request)

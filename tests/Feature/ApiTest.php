@@ -77,7 +77,10 @@ test('api openticket creates ticket', function () {
     $ticket = Ticket::where('tid', $response->json('tid'))->firstOrFail();
     expect($ticket->department_id)->toBe($department->id)
         ->and($ticket->title)->toBe('Test Ticket')
-        ->and($ticket->status)->toBe('open');
+        // 'Open' is what every other door writes, TicketService included; the
+        // api's lower-case 'open' was the odd one out and only survived
+        // because MySQL compares these two the same.
+        ->and($ticket->status)->toBe('Open');
 });
 
 test('api gettldpricing returns pricing', function () {
