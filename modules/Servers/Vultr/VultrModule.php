@@ -238,6 +238,16 @@ class VultrModule extends AbstractServerModule
         return $out;
     }
 
+    /**
+     * What Vultr says about the instances behind this server's services.
+     *
+     * The instance id is recorded with setModuleData(), which writes
+     * services.module_data - the column module data was moved to precisely
+     * because it used to share services.notes with the customer's own note.
+     * This still searched notes with a LIKE, so it matched nothing and a Vultr
+     * service was never updated; on a legacy row that did match, it wrote the
+     * module data back into notes over whatever an operator had typed.
+     */
     public function usageUpdate(Server $server): array
     {
         $result = $this->api($server, 'GET', 'instances', ['per_page' => 500]);
@@ -246,40 +256,49 @@ class VultrModule extends AbstractServerModule
             return ['updated' => 0, 'errors' => 1];
         }
 
-        $instances = $result['raw']['instances'] ?? [];
-        $updated = 0;
+        $instances = [];
 
-        foreach ($instances as $instance) {
-            $instanceId = $instance['id'] ?? null;
-            $service = Service::where('server_id', $server->id)
-                ->where('status', 'active')
-                ->whereRaw('notes LIKE ?', ["%{$instanceId}%"])
-                ->first();
+        foreach ($result['raw']['instances'] ?? [] as $instance) {
+            $id = $instance['id'] ?? null;
 
-            if (! $service) {
-                continue;
-            }
-
-            $updateData = [];
-            if (isset($instance['disk'])) {
-                $updateData['disk_limit'] = ((int) $instance['disk']) * 1024; // GB → MB
-            }
-            $updateData['notes'] = json_encode(array_merge(
-                $this->getModuleData($service),
-                [
-                    'vultr_ram' => $instance['ram'] ?? null,
-                    'vultr_vcpu' => $instance['vcpu_count'] ?? 0,
-                    'vultr_main_ip' => $instance['main_ip'] ?? '',
-                ]
-            ));
-
-            if (! empty($updateData)) {
-                $service->update($updateData);
-                $updated++;
+            if ($id !== null) {
+                $instances[(string) $id] = $instance;
             }
         }
 
-        return ['updated' => $updated, 'errors' => 0];
+        $services = Service::where('server_id', $server->id)
+            ->where('status', 'active')
+            ->get();
+
+        $updated = 0;
+        $errors = 0;
+
+        foreach ($services as $service) {
+            $instanceId = (string) ($this->getModuleData($service)['vultr_instance_id'] ?? '');
+            $instance = $instanceId !== '' ? ($instances[$instanceId] ?? null) : null;
+
+            if (! $instance) {
+                $errors++;
+
+                continue;
+            }
+
+            // The plan's disk, which is the limit; Vultr does not report used
+            // disk on the instance itself.
+            if (isset($instance['disk']) && is_numeric($instance['disk'])) {
+                $service->update(['disk_limit' => ((int) $instance['disk']) * 1024]);
+            }
+
+            $this->setModuleData($service, [
+                'vultr_ram' => $instance['ram'] ?? null,
+                'vultr_vcpu' => $instance['vcpu_count'] ?? 0,
+                'vultr_main_ip' => $instance['main_ip'] ?? '',
+            ]);
+
+            $updated++;
+        }
+
+        return ['updated' => $updated, 'errors' => $errors];
     }
 
     public function testConnection(Server $server): bool

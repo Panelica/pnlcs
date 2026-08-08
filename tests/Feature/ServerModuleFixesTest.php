@@ -229,7 +229,9 @@ test('vultr usage lists all instances without the broken tag filter and updates 
     $fresh = $service->fresh();
     expect($totals['updated'])->toBe(1)
         ->and($fresh->disk_limit)->toBe(25 * 1024)
-        ->and(json_decode($fresh->notes, true)['vultr_main_ip'])->toBe('203.0.113.5');
+        // Module data lives in module_data; a legacy row that still held it in
+        // notes is read once and then left in the column it belongs in.
+        ->and($fresh->module_data['vultr_main_ip'])->toBe('203.0.113.5');
 });
 
 // ---------------------------------------------------------------------------
