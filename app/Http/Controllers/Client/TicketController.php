@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
+use App\Services\TicketService;
 use App\Services\TicketSpamService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -71,8 +72,14 @@ class TicketController extends Controller
             return back()->with('error', __('messages.error.message_flagged_as_spam'));
         }
 
-        $ticket = Ticket::create([
-            'tid' => strtoupper(Str::random(6)),
+        // Through the one creator, which gives the ticket a six-digit reference
+        // and checks it is free. This used to make its own out of
+        // strtoupper(Str::random(6)): letters and digits, unchecked, and
+        // nothing the mail import can match - it recognises six digits in the
+        // subject. So a customer replying by email to a ticket they had opened
+        // in the panel did not join the thread, they opened a second ticket,
+        // and the staff answer they were replying to sat in the first one.
+        $ticket = app(TicketService::class)->createTicket([
             'department_id' => $validated['department_id'],
             'client_id' => $this->getClientId(),
             'email' => auth()->user()->email,
@@ -80,8 +87,6 @@ class TicketController extends Controller
             'title' => $validated['subject'],
             'message' => $validated['message'],
             'priority' => $validated['priority'] ?? 'medium',
-            'status' => 'Open',
-            'last_reply' => now(),
             'service' => ! empty($validated['related_service']) ? (string) $validated['related_service'] : null,
         ]);
 
