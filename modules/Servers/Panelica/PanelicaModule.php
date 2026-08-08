@@ -199,11 +199,28 @@ class PanelicaModule extends AbstractServerModule
             $planId = (string) ($resp->json('data.id') ?? $resp->json('id') ?? '') ?: null;
         } else {
             // Keep an existing managed plan in sync with the product config.
-            $this->patch($server, "/v1/plans/{$planId}", $spec['basic']);
+            // The answer used to be thrown away, so a refused update left the
+            // plan on its old limits and every account opened on it afterwards
+            // got resources the customer had not bought.
+            $sync = $this->patch($server, "/v1/plans/{$planId}", $spec['basic']);
+
+            if (! $sync->successful()) {
+                Log::error('PanelicaModule::ensureManagedPlan sync failed', ['plan' => $planId, 'body' => $sync->body()]);
+
+                return null;
+            }
         }
 
         if ($planId) {
-            $this->patch($server, "/v1/plans/{$planId}", $spec['advanced']);
+            // The cgroup limits - cpu, io, inodes, ssh level - are the whole
+            // point of a managed plan.
+            $limits = $this->patch($server, "/v1/plans/{$planId}", $spec['advanced']);
+
+            if (! $limits->successful()) {
+                Log::error('PanelicaModule::ensureManagedPlan limits failed', ['plan' => $planId, 'body' => $limits->body()]);
+
+                return null;
+            }
         }
 
         return $planId;
@@ -243,9 +260,16 @@ class PanelicaModule extends AbstractServerModule
         $spec = $this->managedPlanSpec($config);
         if ($spec) {
             $managed = $this->ensureManagedPlan($server, $service, $spec);
-            if ($managed) {
-                $planId = $managed;
+
+            // A managed product is sold on the resources in its plan. Opening
+            // the account on whatever plan the product happens to name - or on
+            // none at all - would hand the customer limits nobody chose, and
+            // report it as a success.
+            if (! $managed) {
+                return $this->buildResult(false, 'Managed plan could not be prepared on the panel; the account was not created.');
             }
+
+            $planId = $managed;
         }
 
         // Step 1: Create account

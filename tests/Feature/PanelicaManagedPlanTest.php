@@ -1,117 +1,149 @@
 <?php
 
 use App\Models\Client;
+use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductGroup;
 use App\Models\Server;
 use App\Models\Service;
 use Illuminate\Support\Facades\Http;
 use Modules\Servers\Panelica\PanelicaModule;
 
 /**
- * Full Panelica parity: a "managed" PNLCS product provisions by creating/syncing
- * a panel plan whose columns match the Panelica WHMCS module contract exactly
- * (POST /v1/plans basic + PATCH /v1/plans/{id} advanced), then creating the
- * account with that plan.
+ * An account opened on limits nobody checked.
+ *
+ * A managed product keeps a plan of its own on the panel, named after the
+ * product, and pushes the product's resource configuration into it: the basic
+ * columns with one call and the cgroup limits - cpu, io, inodes, ssh level -
+ * with another. The call that creates the plan is checked. Neither of the two
+ * that write the limits is.
+ *
+ * So when the panel refuses one of them - a validation error, a panel too old
+ * for those columns - the plan keeps whatever limits it had, the account is
+ * opened on it anyway, and the operator is told the account was created
+ * successfully. The customer pays for the resources on the product page and
+ * gets the ones the plan happened to be carrying.
  */
-
 function panelicaServer(): Server
 {
-    return Server::create([
-        'name' => 'Panel', 'hostname' => 'panel.test', 'ip_address' => '10.0.0.1',
-        'type' => 'panelica', 'username' => 'u', 'password' => 'pk_test_key',
-        'access_hash' => 'sk_test_secret', 'port' => 8443, 'active' => true,
+    return Server::factory()->create([
+        'type' => 'panelica',
+        'hostname' => 'panel.test',
+        'ip_address' => '',
+        'port' => 8443,
+        'username' => 'admin',
+        'password' => 'pk_live_key',
+        'access_hash' => 'sk_live_secret',
     ]);
 }
 
-it('sends the exact managed-plan resource payload to the panel and provisions with it', function () {
-    Http::fake(function ($request) {
-        $url = $request->url();
-        $method = $request->method();
-        if (str_contains($url, '/v1/plans/')) {
-            return Http::response(['data' => ['id' => 'plan-xyz']], 200);          // PATCH
-        }
-        if (str_contains($url, '/v1/plans')) {
-            return $method === 'GET'
-                ? Http::response(['data' => []], 200)                               // no existing plan
-                : Http::response(['data' => ['id' => 'plan-xyz']], 200);            // POST create
-        }
-        if (str_contains($url, '/v1/accounts')) {
-            return Http::response(['data' => ['id' => 'acct-1']], 200);
-        }
-        if (str_contains($url, '/v1/domains')) {
-            return Http::response(['data' => ['id' => 'dom-1']], 200);
-        }
-        return Http::response([], 200);
-    });
-
-    $server  = panelicaServer();
-    $client  = Client::factory()->create();
+function panelicaService(Server $server, array $config): Service
+{
+    $client = Client::factory()->create();
+    $group = ProductGroup::factory()->create();
     $product = Product::factory()->create([
+        'group_id' => $group->id,
         'server_type' => 'panelica',
-        'config_options' => json_encode([
-            'res_managed'     => 1,
-            'res_disk_mb'     => 2048,
-            'res_bandwidth_mb'=> 40000,
-            'res_max_domains' => 3,
-            'res_cpu_percent' => 200,
-            'res_memory_mb'   => 2048,
-            'res_inode_quota' => 250000,
-            'res_io_mbs'      => 50,
-            'res_iops'        => 1000,
-            'res_ssh_level'   => 'jailed',
-        ]),
-    ]);
-    $service = Service::factory()->create([
-        'client_id' => $client->id, 'product_id' => $product->id,
-        'server_id' => $server->id, 'domain' => 'buyer.example.com', 'status' => 'pending',
+        'config_options' => json_encode($config),
     ]);
 
-    $result = (new PanelicaModule())->create($service);
-    expect($result['success'] ?? false)->toBeTrue();
+    return Service::factory()->create([
+        'client_id' => $client->id,
+        'product_id' => $product->id,
+        'server_id' => $server->id,
+        'order_id' => Order::factory()->create(['client_id' => $client->id])->id,
+        'domain' => 'shop.test',
+        'status' => 'pending',
+    ]);
+}
 
-    // Basic columns via POST /v1/plans
-    Http::assertSent(fn ($r) => str_contains($r->url(), '/v1/plans')
-        && $r->method() === 'POST'
-        && ($r->data()['disk_quota_mb'] ?? null) === 2048
-        && ($r->data()['max_domains'] ?? null) === 3
-        && ($r->data()['ssh_access_enabled'] ?? null) === true);
+function managedConfig(array $extra = []): array
+{
+    return array_merge([
+        'res_managed' => 1,
+        'res_cpu_percent' => 200,
+        'res_ram_mb' => 2048,
+        'res_ssh_level' => 'jailed',
+    ], $extra);
+}
 
-    // Advanced columns via PATCH /v1/plans/{id} — cgroups/quota/iops parity
-    Http::assertSent(fn ($r) => str_contains($r->url(), '/v1/plans/')
-        && $r->method() === 'PATCH'
-        && ($r->data()['cpu_limit_percent'] ?? null) === 200
-        && ($r->data()['memory_limit_mb'] ?? null) === 2048
-        && ($r->data()['inode_quota'] ?? null) === 250000
-        && ($r->data()['iops_limit'] ?? null) === 1000
-        && ($r->data()['io_read_bps'] ?? null) === 50 * 1048576
-        && ($r->data()['ssh_access_level'] ?? null) === 'jailed');
+it('does not open an account on a plan whose limits the panel refused', function () {
+    $server = panelicaServer();
+    $service = panelicaService($server, managedConfig());
 
-    // Account created with the managed plan id
-    Http::assertSent(fn ($r) => str_contains($r->url(), '/v1/accounts')
-        && $r->method() === 'POST'
-        && ($r->data()['plan_id'] ?? null) === 'plan-xyz');
+    // The plan already exists, so both writes are PATCHes: the basic columns,
+    // then the limits - and the panel refuses the limits.
+    Http::fake([
+        '*/v1/plans/*' => Http::sequence()
+            ->push(['data' => ['id' => 'plan-1']], 200)
+            ->push(['message' => 'cpu_percent is not supported on this panel'], 400),
+        '*/v1/plans' => Http::response(['data' => [['id' => 'plan-1', 'name' => 'pnlcs-p'.$service->product_id]]], 200),
+        '*' => Http::response(['data' => ['id' => 'acct-1']], 201),
+    ]);
+
+    $result = (new PanelicaModule)->create($service);
+
+    expect($result['success'])->toBeFalse()
+        ->and(strtolower($result['message']))->toContain('plan');
+
+    Http::assertNotSent(fn ($request) => str_ends_with($request->url(), '/v1/accounts'));
 });
 
-it('falls back to panelica_plan_id when the product is not managed', function () {
+it('does not open an account when the panel would not make the plan at all', function () {
     Http::fake([
-        '*/v1/accounts' => Http::response(['data' => ['id' => 'a1']], 200),
-        '*/v1/domains'  => Http::response(['data' => ['id' => 'd1']], 200),
+        '*/v1/plans' => Http::sequence()
+            ->push(['data' => []], 200)                      // nothing named after this product yet
+            ->push(['message' => 'plan limit reached'], 500), // and it will not be created
+        '*' => Http::response(['data' => ['id' => 'acct-1']], 201),
     ]);
 
-    $server  = panelicaServer();
-    $client  = Client::factory()->create();
-    $product = Product::factory()->create([
-        'server_type' => 'panelica',
-        'config_options' => json_encode(['panelica_plan_id' => 'existing-plan-1']),
-    ]);
-    $service = Service::factory()->create([
-        'client_id' => $client->id, 'product_id' => $product->id,
-        'server_id' => $server->id, 'domain' => 'nomanage.example.com', 'status' => 'pending',
+    $server = panelicaServer();
+    $result = (new PanelicaModule)->create(panelicaService($server, managedConfig()));
+
+    expect($result['success'])->toBeFalse();
+
+    Http::assertNotSent(fn ($request) => str_ends_with($request->url(), '/v1/accounts'));
+});
+
+it('opens the account on the managed plan once the limits are in', function () {
+    $server = panelicaServer();
+    $service = panelicaService($server, managedConfig());
+
+    Http::fake([
+        '*/v1/plans/*' => Http::response(['data' => ['id' => 'plan-1']], 200),
+        '*/v1/plans' => Http::response(['data' => [['id' => 'plan-1', 'name' => 'pnlcs-p'.$service->product_id]]], 200),
+        '*/v1/accounts' => Http::response(['data' => ['id' => 'acct-1']], 201),
+        '*/v1/domains' => Http::response(['data' => ['id' => 'dom-1']], 201),
+        '*' => Http::response(['data' => []], 200),
     ]);
 
-    (new PanelicaModule())->create($service);
+    $result = (new PanelicaModule)->create($service);
 
-    Http::assertNotSent(fn ($r) => str_contains($r->url(), '/v1/plans'));  // no managed plan created
-    Http::assertSent(fn ($r) => str_contains($r->url(), '/v1/accounts')
-        && ($r->data()['plan_id'] ?? null) === 'existing-plan-1');
+    expect($result['success'])->toBeTrue();
+
+    $account = collect(Http::recorded())
+        ->first(fn ($pair) => str_ends_with($pair[0]->url(), '/v1/accounts'));
+
+    expect($account)->not->toBeNull()
+        ->and($account[0]->data()['plan_id'])->toBe('plan-1');
+});
+
+it('leaves a product that is not managed alone', function () {
+    $server = panelicaServer();
+    $service = panelicaService($server, ['package_name' => 'starter']);
+
+    Http::fake([
+        '*/v1/accounts' => Http::response(['data' => ['id' => 'acct-2']], 201),
+        '*/v1/domains' => Http::response(['data' => ['id' => 'dom-2']], 201),
+        '*' => Http::response(['data' => []], 200),
+    ]);
+
+    expect((new PanelicaModule)->create($service)['success'])->toBeTrue();
+
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '/v1/plans'));
+
+    $account = collect(Http::recorded())
+        ->first(fn ($pair) => str_ends_with($pair[0]->url(), '/v1/accounts'));
+
+    expect($account[0]->data()['plan_id'])->toBe('starter');
 });
