@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Client;
+use App\Enums\DomainStatus;
+use Illuminate\Validation\Rule;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Services\DomainService;
@@ -46,6 +48,18 @@ class DomainApiController extends BaseApiController
         if (! $domain) {
             return $this->error('Domain Not Found', 404);
         }
+        // The fields the renewal run reads back as facts. domains.status is not
+        // cast to the enum, so a typo was written as it stood and the domain
+        // dropped out of the billing run for good - it bills domains that are
+        // active or in grace - while the customer kept the name and the
+        // registry kept charging for it. The two date columns were taking any
+        // string at all, which reached Carbon and came back as a 500.
+        $request->validate([
+            'status' => ['sometimes', Rule::enum(DomainStatus::class)],
+            'expiry_date' => ['sometimes', 'date'],
+            'next_due_date' => ['sometimes', 'date'],
+        ]);
+
         $fields = ['status', 'expiry_date', 'next_due_date', 'notes', 'dns_management', 'email_forwarding', 'id_protection', 'payment_method'];
         foreach ($fields as $f) {
             if ($request->has($f)) {
