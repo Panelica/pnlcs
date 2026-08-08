@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ClientStatus;
+use Illuminate\Validation\Rule;
 use App\Models\Client;
 use App\Models\ClientGroup;
 use App\Models\ClientNote;
@@ -51,7 +53,11 @@ class ClientApiController extends BaseApiController
 
     public function addClient(Request $request)
     {
-        $validated = $request->validate(['firstname' => 'required|string|max:255', 'lastname' => 'required|string|max:255', 'email' => 'required|email|max:255']);
+        // The address a client is found by: signing in, resetting a password,
+        // matching an incoming support email. The admin form has always refused
+        // one that is taken, and clients.email carries an ordinary index, so
+        // nothing else would have stopped a second account on it.
+        $validated = $request->validate(['firstname' => 'required|string|max:255', 'lastname' => 'required|string|max:255', 'email' => 'required|email|max:255|unique:clients,email']);
         $client = Client::create(['first_name' => $validated['firstname'], 'last_name' => $validated['lastname'], 'email' => $validated['email'], 'company_name' => $request->companyname, 'address1' => $request->address1, 'city' => $request->city, 'state' => $request->state, 'postcode' => $request->postcode, 'country' => $request->country ?? 'US', 'phone_number' => $request->phonenumber]);
 
         return $this->success(['clientid' => $client->id]);
@@ -63,6 +69,17 @@ class ClientApiController extends BaseApiController
         if (! $client) {
             return $this->error('Client Not Found', 404);
         }
+
+        // What the account screens check before writing the same two fields: an
+        // address nobody else has, and one of the three statuses. These used to
+        // go straight onto the record, so the api could move a client onto an
+        // address already in use, or hand the enum cast a status it does not
+        // know and turn the call into a 500.
+        $request->validate([
+            'email' => ['sometimes', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)],
+            'status' => ['sometimes', Rule::enum(ClientStatus::class)],
+        ]);
+
         foreach (['first_name' => 'firstname', 'last_name' => 'lastname', 'email' => 'email', 'company_name' => 'companyname', 'address1' => 'address1', 'city' => 'city', 'state' => 'state', 'postcode' => 'postcode', 'country' => 'country', 'phone_number' => 'phonenumber', 'status' => 'status'] as $db => $api) {
             if ($request->has($api)) {
                 $client->$db = $request->$api;
