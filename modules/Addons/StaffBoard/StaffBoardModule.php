@@ -47,14 +47,14 @@ class StaffBoardModule implements AddonModuleInterface
 
     public function output(Request $request): string
     {
-        // Use notes table as internal message board
-        $notes = DB::table('notes')
-            ->leftJoin('admins', 'admins.id', '=', 'notes.admin_id')
-            ->select('notes.*', DB::raw("CONCAT(admins.first_name, ' ', admins.last_name) as author"))
-            ->where('notes.sticky', true)
-            ->orWhereNull('notes.client_id')
-            ->orderByDesc('notes.sticky')
-            ->orderByDesc('notes.created_at')
+        // Staff notes live in client_notes: the author is kept there as a plain
+        // `admin` name, there is no admin_id to join on, and client_id is NOT
+        // NULL. This used to query a `notes` table that does not exist in this
+        // application, so opening the board threw instead of listing anything.
+        $notes = DB::table('client_notes')
+            ->select('client_notes.*', 'client_notes.admin as author')
+            ->orderByDesc('client_notes.sticky')
+            ->orderByDesc('client_notes.created_at')
             ->limit(20)
             ->get();
 
@@ -74,10 +74,10 @@ class StaffBoardModule implements AddonModuleInterface
             $html .= '<div class="card" style="margin-bottom:8px;">';
             $html .= '<div class="card-body" style="padding:12px 16px;">';
             $html .= '<div style="display:flex;justify-content:space-between;margin-bottom:6px;">';
-            $html .= '<span style="font-weight:600;font-size:13px;">' . e(($note->author ?: 'System')) . e($pinBadge) . '</span>';
+            $html .= '<span style="font-weight:600;font-size:13px;">' . e(($note->author ?: 'System')) . $pinBadge . '</span>';
             $html .= '<span style="font-size:11px;color:var(--pn-muted);">' . \Carbon\Carbon::parse($note->created_at)->diffForHumans() . '</span>';
             $html .= '</div>';
-            $html .= '<div style="font-size:13px;line-height:1.6;">' . nl2br(e($note->note ?? $note->message ?? '')) . '</div>';
+            $html .= '<div style="font-size:13px;line-height:1.6;">' . nl2br(e($note->note ?? '')) . '</div>';
             $html .= '</div></div>';
         }
 
