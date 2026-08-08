@@ -206,7 +206,9 @@ class CPanelModule extends AbstractServerModule
             return $this->buildResult(false, 'cPanel username not found in service notes.');
         }
 
-        $result = $this->call($server, 'removeacct', ['user' => $username]);
+        // Say what happens to the DNS zone rather than leaving it to whatever
+        // the server's default is.
+        $result = $this->call($server, 'removeacct', ['user' => $username, 'keepdns' => 0]);
 
         if (! $result['success']) {
             return $this->buildResult(false, "Terminate failed: {$result['message']}");
@@ -233,7 +235,17 @@ class CPanelModule extends AbstractServerModule
             return $this->buildResult(false, 'cPanel username not found in service notes.');
         }
 
-        $result = $this->call($server, 'passwd', ['user' => $username, 'password' => $newPassword]);
+        // Published clients disagree on whether the field is pass or password;
+        // WHM ignores what it does not know, so send both and one of them is
+        // right on every version. db_pass_update carries the change through to
+        // the account's database users, which is what an operator means by
+        // "change the password".
+        $result = $this->call($server, 'passwd', [
+            'user' => $username,
+            'pass' => $newPassword,
+            'password' => $newPassword,
+            'db_pass_update' => 1,
+        ]);
 
         if (! $result['success']) {
             return $this->buildResult(false, "Password change failed: {$result['message']}");

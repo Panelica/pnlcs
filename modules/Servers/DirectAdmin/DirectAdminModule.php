@@ -76,7 +76,7 @@ class DirectAdminModule extends AbstractServerModule
         }
 
         $client = $service->client;
-        $username = $service->username ?: 'u'.$service->id;
+        $username = $this->accountUsername($service);
         $email = $client->email ?? '';
         $password = $service->password ?: Str::random(16);
         $domain = $service->domain ?: '';
@@ -207,13 +207,24 @@ class DirectAdminModule extends AbstractServerModule
     {
         $server = $this->getServer($service);
         $username = $this->getUsername($service);
-        $package = $newPackage['package_name'] ?? $newPackage['name'] ?? null;
+
+        $config = is_string($newPackage['config_options'] ?? null)
+            ? json_decode($newPackage['config_options'], true)
+            : ($newPackage['config_options'] ?? []);
+        $package = $config['directadmin_package']
+            ?? $config['package_name']
+            ?? $newPackage['package_name']
+            ?? $newPackage['name']
+            ?? null;
 
         if (! $server || ! $username || ! $package) {
             return $this->buildResult(false, 'Missing server, username, or package name.');
         }
 
+        // CMD_API_MODIFY_USER does nothing without an action. Without it the
+        // call came back clean and the account stayed on its old package.
         $resp = $this->http($server)->asForm()->post("{$this->baseUrl($server)}/CMD_API_MODIFY_USER", [
+            'action' => 'package',
             'user' => $username,
             'package' => $package,
         ]);
@@ -224,45 +235,146 @@ class DirectAdminModule extends AbstractServerModule
         return $this->buildResult($ok, $ok ? 'Package changed.' : ($data['text'] ?? $resp->body()));
     }
 
+    /**
+     * Disk and bandwidth for the accounts this panel put on this server.
+     *
+     * It used to walk the server's whole user list and hand back a list of
+     * rows, writing nothing: the callers and both sibling modules expect
+     * ['updated' => n, 'errors' => n] and the figures stored on the service.
+     * The listing was read with explode() on what DirectAdmin answers as
+     * list[]=..., which is an array, so in PHP 8 it raised a TypeError and the
+     * usage of a DirectAdmin account was never recorded at all.
+     */
     public function usageUpdate(Server $server): array
     {
-        $results = [];
+        $updated = 0;
+        $errors = 0;
 
-        try {
-            // Get all users first
-            $usersResp = $this->http($server)->get("{$this->baseUrl($server)}/CMD_API_SHOW_ALL_USERS");
-            if (! $usersResp->successful()) {
-                return [];
+        $services = Service::where('server_id', $server->id)
+            ->where('status', 'active')
+            ->get();
+
+        foreach ($services as $service) {
+            $username = $this->getUsername($service);
+
+            if (! $username) {
+                $errors++;
+
+                continue;
             }
 
-            $users = $this->parseDA($usersResp->body());
-            $list = isset($users['list']) ? explode(',', $users['list']) : [];
+            try {
+                $usage = $this->parseDA($this->http($server)->get(
+                    "{$this->baseUrl($server)}/CMD_API_SHOW_USER_USAGE",
+                    ['user' => $username]
+                )->body());
 
-            foreach ($list as $user) {
-                $user = trim($user);
-                if (empty($user)) {
+                if (($usage['error'] ?? '0') !== '0' || ! isset($usage['quota'], $usage['bandwidth'])) {
+                    $errors++;
+
                     continue;
                 }
 
-                $usageResp = $this->http($server)->get(
-                    "{$this->baseUrl($server)}/CMD_API_SHOW_USER_USAGE",
-                    ['user' => $user]
-                );
+                // DirectAdmin answers in megabytes, which is what the service
+                // stores.
+                $updateData = [
+                    'disk_usage' => (int) $usage['quota'],
+                    'bw_usage' => (int) $usage['bandwidth'],
+                ];
 
-                if ($usageResp->successful()) {
-                    $usage = $this->parseDA($usageResp->body());
-                    $results[] = [
-                        'username' => $user,
-                        'disk_usage' => $usage['quota'] ?? 0,
-                        'bw_usage' => $usage['bandwidth'] ?? 0,
-                    ];
+                $config = $this->parseDA($this->http($server)->get(
+                    "{$this->baseUrl($server)}/CMD_API_SHOW_USER_CONFIG",
+                    ['user' => $username]
+                )->body());
+
+                // "unlimited" is not a number; leaving the limit alone is the
+                // truth, writing 0 would read as a limit of nothing.
+                foreach (['quota' => 'disk_limit', 'bandwidth' => 'bw_limit'] as $key => $column) {
+                    $limit = $config[$key] ?? null;
+
+                    if ($limit !== null && is_numeric($limit)) {
+                        $updateData[$column] = (int) $limit;
+                    }
                 }
+
+                $service->update($updateData);
+                $updated++;
+            } catch (\Throwable $e) {
+                $errors++;
+                Log::error('DirectAdmin usageUpdate failed', ['service' => $service->id, 'error' => $e->getMessage()]);
             }
-        } catch (\Throwable $e) {
-            Log::error('DirectAdmin usageUpdate failed', ['server' => $server->id, 'error' => $e->getMessage()]);
         }
 
-        return $results;
+        return ['updated' => $updated, 'errors' => $errors];
+    }
+
+    /**
+     * The packages this DirectAdmin server offers, for the product form.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        try {
+            $resp = $this->http($server)->get("{$this->baseUrl($server)}/CMD_API_PACKAGES_USER");
+        } catch (\Throwable $e) {
+            Log::warning('DirectAdmin listPackages failed', ['server' => $server->id, 'error' => $e->getMessage()]);
+
+            return [];
+        }
+
+        if (! $resp->successful()) {
+            return [];
+        }
+
+        $data = $this->parseDA($resp->body());
+
+        if (($data['error'] ?? '0') !== '0') {
+            return [];
+        }
+
+        $names = $data['list'] ?? [];
+        $names = is_array($names) ? $names : explode(',', (string) $names);
+
+        $packages = [];
+
+        foreach ($names as $name) {
+            $name = trim((string) $name);
+
+            if ($name !== '') {
+                $packages[$name] = ['id' => $name, 'name' => $name];
+            }
+        }
+
+        ksort($packages);
+
+        return array_values($packages);
+    }
+
+    /**
+     * A username DirectAdmin will accept.
+     *
+     * Lower case letters and digits, starting with a letter, kept short. The
+     * module used to send whatever the service carried, or "u" and the row id -
+     * a customer-chosen name with a dot or a capital in it was refused by
+     * DirectAdmin and the order stopped there.
+     */
+    private function accountUsername(Service $service): string
+    {
+        $existing = preg_replace('/[^a-z0-9]/', '', strtolower((string) $service->username));
+
+        if ($existing !== '' && ! ctype_digit($existing[0])) {
+            return substr($existing, 0, 10);
+        }
+
+        $base = preg_replace('/[^a-z0-9]/', '', strtolower(explode('.', (string) $service->domain)[0]));
+        $base = ltrim($base, '0123456789');
+
+        if (strlen($base) < 4) {
+            $base = ($base ?: 'user').$service->id;
+        }
+
+        return substr($base, 0, 10);
     }
 
     public function testConnection(Server $server): bool
