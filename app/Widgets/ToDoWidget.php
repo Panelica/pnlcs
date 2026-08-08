@@ -19,11 +19,19 @@ class ToDoWidget implements WidgetModuleInterface
         return DB::table("todo_items")->select("id", "title", "status", "due_date")->where("status", "!=", "completed")->orderBy("due_date")->limit(8)->get()->map(fn($r) => (array) $r)->toArray();
     }
 
+    /**
+     * The title is written by a person, so it is escaped like every other widget
+     * escapes what it renders - the Support widget does exactly this with a
+     * ticket title in the same position. This one escaped the due date beside it
+     * and let the title through as markup, and the to-do list carries no
+     * permission by design, so any staff account could put a script into a page
+     * every other administrator opens.
+     */
     public function render(array $data): string
     {
         if (empty($data)) return '<div style="padding:24px;text-align:center;color:var(--pn-muted);font-size:13px;">All caught up!</div>';
         $html = "";
-        foreach ($data as $t) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:'.(($t["status"] ?? "")==="in-progress"?"#f89406":"#337ab7").'"></span>'.$t["title"].(($t["due_date"] ?? null) ? '<span style="margin-left:auto;font-size:11px;color:var(--pn-muted);">'.e($t["due_date"]).'</span>' : '').'</div>'; }
+        foreach ($data as $t) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:'.(($t["status"] ?? "")==="in-progress"?"#f89406":"#337ab7").'"></span>'.e($t["title"]).(($t["due_date"] ?? null) ? '<span style="margin-left:auto;font-size:11px;color:var(--pn-muted);">'.e($t["due_date"]).'</span>' : '').'</div>'; }
         return $html;
     }
 }
