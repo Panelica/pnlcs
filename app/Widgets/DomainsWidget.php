@@ -17,10 +17,23 @@ class DomainsWidget implements WidgetModuleInterface
 
     public function getData(): array
     {
+        // What can still be renewed, and is due to be. A domain in grace has
+        // already expired and is in the window where the registry still renews
+        // it at the ordinary price - the invoice generator bills active and
+        // grace together for exactly that reason - so it is the most urgent
+        // renewal there is. It used to appear nowhere: its status is not
+        // active, and its expiry date is in the past, so it failed both halves
+        // of the query and the widget titled "Upcoming renewals" showed
+        // everything except the domains about to be lost.
+        $renewable = fn ($q) => $q
+            ->whereIn("status", ["active", "grace"])
+            ->whereRaw("expiry_date <= DATE_ADD(NOW(), INTERVAL 30 DAY)")
+            ->whereRaw("(status = 'grace' OR expiry_date >= CURDATE())");
+
         return [
             "total" => DB::table("domains")->count(),
-            "expiring" => DB::table("domains")->where("status", "active")->whereRaw("expiry_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 30 DAY)")->count(),
-            "upcoming" => DB::table("domains")->select("domain", "expiry_date")->where("status", "active")->whereRaw("expiry_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 30 DAY)")->orderBy("expiry_date")->limit(5)->get()->map(fn($r) => (array) $r)->toArray(),
+            "expiring" => $renewable(DB::table("domains"))->count(),
+            "upcoming" => $renewable(DB::table("domains")->select("domain", "expiry_date"))->orderBy("expiry_date")->limit(5)->get()->map(fn($r) => (array) $r)->toArray(),
         ];
     }
 
