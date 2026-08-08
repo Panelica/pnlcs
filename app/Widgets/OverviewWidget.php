@@ -21,8 +21,16 @@ class OverviewWidget implements WidgetModuleInterface
             "services" => DB::table("services")->where("status", "active")->count(),
             "domains" => DB::table("domains")->where("status", "active")->count(),
             "orders_pending" => DB::table("orders")->where("status", "pending")->count(),
-            "tickets_open" => DB::table("tickets")->where("status", "open")->count(),
-            "invoices_unpaid" => DB::table("invoices")->where("status", "unpaid")->count(),
+            // A ticket the customer has answered is waiting on staff exactly as
+            // much as an open one, which is why the Support widget counts both
+            // under "Awaiting Reply". This tile counted only Open, so the front
+            // page showed a smaller queue than the ticket screen it links to.
+            "tickets_open" => DB::table("tickets")->whereIn("status", ["open", "customer-reply"])->count(),
+            // An unpaid invoice becomes overdue the day after it is due. Leaving
+            // those out meant the longer a customer failed to pay, the less the
+            // front page said was owed. Unpaid and overdue together is what the
+            // rest of the panel means by still outstanding.
+            "invoices_unpaid" => DB::table("invoices")->whereIn("status", ["unpaid", "overdue"])->count(),
         ];
     }
 
