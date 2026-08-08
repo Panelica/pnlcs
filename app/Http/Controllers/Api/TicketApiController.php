@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers\Api;
+use App\Events\TicketReplied;
 use App\Models\Ticket;
 use App\Services\TicketService;
 use App\Models\TicketReply;
@@ -35,8 +36,17 @@ class TicketApiController extends BaseApiController
         $ticket = Ticket::find($request->ticketid);
         if (!$ticket) return $this->error('Ticket Not Found', 404);
         $v = $request->validate(['message'=>'required|string']);
-        $reply = $ticket->replies()->create(['message'=>$v['message'],'admin'=>$request->adminusername,'client_id'=>$request->userid]);
-        $ticket->recordReply($request->adminusername ? 'answered' : 'customer-reply');
+        // Through the one place that adds a reply, which also picks the status
+        // the rest of the application writes - 'Answered' or 'Customer-Reply',
+        // not the lower-case pair this used to write.
+        $reply = app(TicketService::class)->addReply($ticket, ['message'=>$v['message'],'admin'=>$request->adminusername,'client_id'=>$request->userid]);
+
+        // And the event the other three doors raise. Without it the reply was
+        // written into the ticket and nobody was told: no answer emailed to the
+        // customer, no notification rule fired, and the panel showing the
+        // ticket as answered.
+        event(new TicketReplied($ticket->fresh(), $v['message'], (bool) $request->adminusername));
+
         return $this->success(['replyid'=>$reply->id]);
     }
     public function addTicketNote(Request $request)
