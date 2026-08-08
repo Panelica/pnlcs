@@ -467,13 +467,21 @@ class ProxmoxModule extends AbstractServerModule
             }
         }
 
-        // Disk resize (can only grow)
+        // Disk resize (can only grow). Proxmox refuses this for ordinary
+        // reasons - the storage is full, the disk cannot be shrunk, the VM is
+        // locked by a running backup - and the answer used to be thrown away,
+        // so the panel reported an upgrade the customer had paid for and not
+        // received. The password change above already checks its answer.
         if (($c['disk'] ?? 0) > 0) {
             $diskName = $ep === 'lxc' ? 'rootfs' : 'scsi0';
-            $this->http($server)->put("{$base}/nodes/{$node}/{$ep}/{$vmid}/resize", [
+            $resize = $this->http($server)->put("{$base}/nodes/{$node}/{$ep}/{$vmid}/resize", [
                 'disk' => $diskName,
                 'size' => $c['disk'].'G',
             ]);
+
+            if (! $resize->successful()) {
+                return $this->buildResult(false, 'Disk resize refused by Proxmox: '.$resize->body(), $params);
+            }
         }
 
         $out = $this->buildResult(true, "VM #{$vmid} resources updated.", $params);
@@ -495,15 +503,23 @@ class ProxmoxModule extends AbstractServerModule
 
         $vms = collect($resp->json('data') ?? []);
         $updated = 0;
+        $errors = 0;
 
         foreach (Service::where('server_id', $server->id)->where('status', 'active')->get() as $svc) {
             $vmid = $this->getModuleData($svc)['proxmox_vmid'] ?? null;
             if (! $vmid) {
+                $errors++;
+
                 continue;
             }
 
+            // A VM deleted by hand on the hypervisor used to be passed over in
+            // silence; every sibling module counts it, which is how the
+            // operator finds out.
             $vm = $vms->firstWhere('vmid', (int) $vmid);
             if (! $vm) {
+                $errors++;
+
                 continue;
             }
 
@@ -526,7 +542,7 @@ class ProxmoxModule extends AbstractServerModule
             }
         }
 
-        return ['updated' => $updated, 'errors' => 0];
+        return ['updated' => $updated, 'errors' => $errors];
     }
 
     public function testConnection(Server $server): bool
