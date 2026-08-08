@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Models\BillableItem;
 use App\Models\Client;
 use App\Models\Currency;
+use App\Enums\InvoiceStatus;
+use Illuminate\Validation\Rule;
 use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Services\InvoiceGenerationService;
@@ -129,6 +131,19 @@ class InvoiceApiController extends BaseApiController
         if (! $invoice) {
             return $this->error('Invoice Not Found', 404);
         }
+        // Collecting the money runs entirely off these two. The overdue run
+        // marks unpaid invoices, the late fee and the suspension act on overdue
+        // ones, the reminders go out for unpaid and overdue, and the client area
+        // lists what is owed - all by matching the status string, which is not
+        // cast to the enum. One outside the nine the panel knows left the
+        // invoice in none of those: the customer owed the money and was never
+        // asked for it again. The due date is the clock all of it runs on and
+        // was taking any string at all.
+        $request->validate([
+            'status' => ['sometimes', Rule::enum(InvoiceStatus::class)],
+            'due_date' => ['sometimes', 'date'],
+        ]);
+
         foreach (['status', 'due_date', 'payment_method', 'notes'] as $f) {
             if ($request->has($f)) {
                 $invoice->$f = $request->$f;
