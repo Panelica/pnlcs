@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatus;
 use App\Models\Service;
 use App\Services\ProvisioningService;
@@ -15,8 +14,14 @@ class SuspensionCommand extends Command
 
     protected $description = 'Auto-suspend services with overdue invoices';
 
-    /** Grace period, in days, after an invoice becomes overdue. */
-    private const GRACE_DAYS = 3;
+    /**
+     * Grace period, in days, after an invoice becomes overdue.
+     *
+     * Public because unsuspend-on-payment asks the same question with it: a
+     * service must not be switched back on over a debt that will suspend it
+     * again the next morning.
+     */
+    public const GRACE_DAYS = 3;
 
     public function handle(ProvisioningService $provisioning): int
     {
@@ -32,9 +37,7 @@ class SuspensionCommand extends Command
                 ->whereNull('override_auto_suspend_date')
                 ->orWhereDate('override_auto_suspend_date', '<', today()))
             ->whereHas('client', function ($q) {
-                $q->whereHas('invoices', fn ($iq) => $iq
-                    ->where('status', InvoiceStatus::Overdue->value)
-                    ->where('due_date', '<', now()->subDays(self::GRACE_DAYS)));
+                $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace(self::GRACE_DAYS));
             })
             ->get();
 

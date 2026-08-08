@@ -41,5 +41,21 @@ class Invoice extends Model {
 
     public function scopeUnpaid($q) { return $q->where('status', InvoiceStatus::Unpaid->value); }
     public function scopeOverdue($q) { return $q->where('status', InvoiceStatus::Overdue->value); }
+
+    /**
+     * The debts a client can be suspended over.
+     *
+     * One question, asked from one place: auto-suspend acts on these, and
+     * unsuspend-on-payment leaves a service alone while one of them stands.
+     * When the two asked it differently, a client behind on something that was
+     * not the service - a domain renewal, a one-off charge - had that service
+     * suspended each morning and switched back on half an hour later, with an
+     * email each way.
+     */
+    public function scopeOverduePastGrace($q, int $graceDays)
+    {
+        return $q->where('status', InvoiceStatus::Overdue->value)
+            ->where('due_date', '<', now()->subDays($graceDays));
+    }
     public function scopePaid($q) { return $q->where('status', InvoiceStatus::Paid->value); }
 }

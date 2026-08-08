@@ -25,6 +25,7 @@ class UnsuspendOnPaymentCommand extends Command
         $services = Service::with('client')->where('status', ServiceStatus::Suspended->value)->get();
         $unsuspended = 0;
         $skipped = 0;
+        $stillBehind = 0;
         $registry = app(ModuleRegistry::class);
 
         foreach ($services as $service) {
@@ -55,6 +56,19 @@ class UnsuspendOnPaymentCommand extends Command
                     $q->where('rel_id', $service->id);
                 })
                 ->exists();
+
+            // And the client is not carrying a debt that auto-suspend would act
+            // on tomorrow morning. Auto-suspend asks about the client, this
+            // asked only about the service, so a client behind on a domain
+            // renewal had their hosting switched off at 07:00 and back on by
+            // 07:30, day after day, with an email each way.
+            if (Invoice::where('client_id', $service->client_id)
+                ->overduePastGrace(SuspensionCommand::GRACE_DAYS)
+                ->exists()) {
+                $stillBehind++;
+
+                continue;
+            }
 
             // The queue has already worked out that some of these cannot come
             // right - a service the panel has no account for will not grow one
@@ -109,7 +123,7 @@ class UnsuspendOnPaymentCommand extends Command
             }
         }
 
-        $this->info("Unsuspended {$unsuspended} service(s), {$skipped} left alone as unfixable.");
+        $this->info("Unsuspended {$unsuspended} service(s), {$stillBehind} left suspended over a debt still outstanding, {$skipped} left alone as unfixable.");
 
         return Command::SUCCESS;
     }
