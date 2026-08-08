@@ -34,8 +34,15 @@ class PruneLogsCommand extends Command
             'gateway_logs'     => [90,  'retention_gateway_logs_days', null],
             'activity_logs'    => [365, 'retention_activity_logs_days', null],
             'module_queue'     => [30,  'retention_module_queue_days', function ($q) {
-                // Never prune work still waiting to run.
-                $q->whereIn('status', ['completed', 'failed', 'cancelled']);
+                // Work still waiting to run is never pruned - and neither is a
+                // failed entry. Those are the panel's record of an action that
+                // can never succeed: hasGivenUp() reads them, and auto-suspend,
+                // unsuspend-on-payment and the cancellation run all ask it
+                // before calling a module again. Deleting them after a month
+                // sent those jobs back to a panel that has no such account,
+                // queued the work afresh, and raised the same
+                // "will NOT be retried" alert every thirty days.
+                $q->whereIn('status', ['completed', 'cancelled']);
             }],
         ];
     }
