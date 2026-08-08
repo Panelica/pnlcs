@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Events\TicketOpened;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
@@ -53,7 +54,7 @@ class ContactController extends Controller
         // matters most: whoever writes in gets the reference in their
         // ticket-opened email, replies to it, and the reply opened a second
         // ticket instead of joining the first.
-        app(TicketService::class)->createTicket([
+        $ticket = app(TicketService::class)->createTicket([
             'department_id' => $validated['department_id'],
             'client_id' => $clientId,
             'name' => $validated['name'],
@@ -62,6 +63,12 @@ class ContactController extends Controller
             'message' => $validated['message'],
             'priority' => 'Medium',
         ]);
+
+        // The same event the client area raises when a customer opens a ticket:
+        // it acknowledges the message to whoever wrote in and alerts the support
+        // address. This door raised nothing, so an enquiry from somebody who is
+        // not a customer yet landed in the panel with nobody told about it.
+        event(new TicketOpened($ticket, false));
 
         return back()->with('success', __('messages.success.your_message_has_been_sent_we_will_get_back_to_you'));
     }

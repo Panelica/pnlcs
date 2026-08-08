@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers\Api;
+use App\Events\TicketOpened;
 use App\Events\TicketReplied;
 use App\Models\Ticket;
 use App\Services\TicketService;
@@ -29,6 +30,10 @@ class TicketApiController extends BaseApiController
         // Through the one creator: six digits, checked to be free, which is
         // what the mail import matches a reply against.
         $ticket = app(TicketService::class)->createTicket(['department_id'=>$v['deptid'],'client_id'=>$request->userid,'name'=>$request->name,'email'=>$v['email'],'title'=>$v['subject'],'message'=>$v['message'],'priority'=>$v['priority']??'medium']);
+        // The same event every other door raises: the acknowledgement to the
+        // customer and the alert to support.
+        event(new TicketOpened($ticket, (bool) $request->adminusername));
+
         return $this->success(['tid'=>$ticket->tid,'ticketid'=>$ticket->id]);
     }
     public function addTicketReply(Request $request)
