@@ -104,6 +104,14 @@ class ServiceController extends Controller
     {
         abort_if($service->client_id !== $this->getClientId(), 403);
 
+        // Cancelled, terminated, marked fraud: the customer may no longer act
+        // on this service. The cancellation form has always asked; this did
+        // not, and the button being hidden is no answer - the route answers
+        // whoever calls it, and a customer who kept the URL still has it.
+        if (! $this->isLive($service)) {
+            return back()->with('error', __('client.services.not_live_for_action'));
+        }
+
         // No server yet means there is no account to sign in to; asking the
         // module would pick a server and bind the service to it.
         if (! $service->server_id) {
