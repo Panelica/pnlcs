@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ServiceStatus;
+use Illuminate\Validation\Rule;
 use App\Models\CancellationRequest;
 use App\Models\Product;
 use App\Models\Service;
@@ -33,6 +35,20 @@ class ServiceApiController extends BaseApiController
         if (! $service) {
             return $this->error('Service Not Found', 404);
         }
+
+        // The three fields the rest of the panel reads back as facts. status
+        // decides whether the service is still billed, suspended or cancelled
+        // by the nightly runs, and it is not cast to the enum, so a typo was
+        // written as-is and the service quietly matched none of those queries
+        // again. The billing cycle is restricted at the checkout to the six the
+        // pricing tables carry, and the due date is a date column that was
+        // taking any string at all.
+        $request->validate([
+            'status' => ['sometimes', Rule::enum(ServiceStatus::class)],
+            'billing_cycle' => ['sometimes', 'in:onetime,monthly,quarterly,semiannually,annually,biennially,triennially'],
+            'next_due_date' => ['sometimes', 'date'],
+        ]);
+
         foreach (['status', 'domain', 'username', 'password', 'next_due_date', 'billing_cycle', 'notes'] as $f) {
             if ($request->has($f)) {
                 $service->$f = $request->$f;
