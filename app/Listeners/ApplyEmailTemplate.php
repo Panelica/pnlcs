@@ -118,6 +118,18 @@ class ApplyEmailTemplate
         if ($template->custom && filled($template->message)) {
             $body = $this->templates->merge((string) $template->message, $vars);
 
+            // The same question the subject is asked twenty lines up. A body
+            // still holding a merge field would go out with the braces showing,
+            // so keep the one the mailable built and say which field was empty.
+            if (preg_match('/\{[A-Za-z_][A-Za-z0-9_]*\}/', $body, $unfed)) {
+                Log::warning('Template body left as the mailable wrote it: this email carries nothing for that merge field.', [
+                    'template' => $template->name,
+                    'field' => $unfed[0],
+                ]);
+
+                return null;
+            }
+
             // A template marked plaintext goes out as text only. The column has
             // been on the table all along and nothing read it, so the setting
             // meant nothing and the mail went out as HTML regardless; the html

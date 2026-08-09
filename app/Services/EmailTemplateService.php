@@ -170,6 +170,17 @@ class EmailTemplateService
             $client ??= $model->client ?? ($property === 'client' ? $model : null);
         }
 
+        // Nothing the password reset carries is a model - it is a link and an
+        // address - so the customer asking for their account back was greeted
+        // as "{client_name}". The address it is going to identifies them.
+        if (! $client && is_string($data['email'] ?? null) && $data['email'] !== '') {
+            try {
+                $client = Client::where('email', $data['email'])->first();
+            } catch (\Throwable) {
+                $client = null;
+            }
+        }
+
         if ($client) {
             $vars['client_name'] = trim(($client->first_name ?? '').' '.($client->last_name ?? ''));
             $vars['client_email'] = $client->email ?? '';
