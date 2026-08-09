@@ -204,18 +204,31 @@ class AccountController extends Controller
             'phone_number' => 'nullable|string|max:50',
         ]);
 
-        Contact::create([
+        // Only the preferences the form actually asked about. The add form has
+        // no boxes for these - they are on the edit form below it - and a box
+        // that is not on the form is a box nobody unticked, so writing
+        // boolean() for all five made every new contact receive nothing. Left
+        // alone, the columns take their own defaults, which is every kind.
+        $kinds = ['general_emails', 'product_emails', 'domain_emails', 'invoice_emails', 'support_emails'];
+        $preferences = [];
+
+        // A form that asks is answered exactly as it was ticked, unticked boxes
+        // included - the same way the edit form below is handled. A form that
+        // does not ask at all is not an answer of "none": leave the columns to
+        // their own defaults, which is every kind.
+        if (array_filter($kinds, fn ($kind) => $request->has($kind))) {
+            foreach ($kinds as $kind) {
+                $preferences[$kind] = $request->boolean($kind);
+            }
+        }
+
+        Contact::create($preferences + [
             'client_id' => $client->id,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
             'email' => $request->email,
             'company_name' => $request->company_name,
             'phone_number' => $request->phone_number,
-            'general_emails' => $request->boolean('general_emails'),
-            'product_emails' => $request->boolean('product_emails'),
-            'domain_emails' => $request->boolean('domain_emails'),
-            'invoice_emails' => $request->boolean('invoice_emails'),
-            'support_emails' => $request->boolean('support_emails'),
         ]);
 
         return redirect()->route('client.account.contacts')
