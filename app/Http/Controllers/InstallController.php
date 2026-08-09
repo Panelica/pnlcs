@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\Permissions;
 use App\Models\Admin;
 use App\Models\AdminRole;
 use Illuminate\Http\Request;
@@ -196,10 +197,17 @@ class InstallController extends Controller
 
         $role = AdminRole::query()->orderBy('id')->first();
         if (! $role) {
+            // is_full_admin is what hasPermission() looks at first, and it is
+            // what both seeders set. Without it the role fell back to its
+            // permission list, and ['*'] is not a wildcard anything here
+            // expands - it is a string that matches no permission at all, so
+            // the only administrator on a fresh install could open nothing.
+            // 'slug' went with it: admin_roles has no such column.
             $role = AdminRole::create([
-                'name' => 'Super Administrator',
-                'slug' => 'super-admin',
-                'permissions' => ['*'],
+                'name' => 'Full Administrator',
+                'description' => 'Full access to all areas',
+                'is_full_admin' => true,
+                'permissions' => Permissions::all(),
             ]);
         }
 
