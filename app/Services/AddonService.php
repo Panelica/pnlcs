@@ -214,9 +214,14 @@ class AddonService
             ->whereHas('client')
             // A suspended service is still owed for — suspension is usually
             // non-payment and paying is what lifts it. A terminated or
-            // cancelled one is not.
+            // cancelled one is not, and neither is one still pending: an addon
+            // is marked active when the order is accepted even if the service
+            // failed to provision or is waiting on manual acceptance, so
+            // billing it charged the customer for an extra on an account that
+            // was never set up. The service query beside this one has always
+            // billed active services only.
             ->whereHas('service', fn ($q) => $q
-                ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+                ->whereNotIn('status', ['pending', 'terminated', 'cancelled', 'fraud'])
                 // An addon renews with the service it belongs to.
                 ->where('auto_renew', true))
             ->whereDoesntHave('client.invoices', fn ($q) => $q
