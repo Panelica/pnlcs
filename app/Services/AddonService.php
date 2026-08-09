@@ -223,7 +223,10 @@ class AddonService
             ->whereHas('service', fn ($q) => $q
                 ->whereNotIn('status', ['pending', 'terminated', 'cancelled', 'fraud'])
                 // An addon renews with the service it belongs to.
-                ->where('auto_renew', true))
+                ->where('auto_renew', true)
+                // And it stops with it: an extra on a service the customer has
+                // asked to end is part of what they asked to end.
+                ->whereDoesntHave('cancellationRequest', fn ($c) => $c->whereNull('processed_at')))
             ->whereDoesntHave('client.invoices', fn ($q) => $q
                 ->whereNotIn('status', InvoiceStatus::settled())
                 ->whereHas('items', fn ($i) => $i->where('type', 'Addon')->whereColumn('rel_id', 'service_addons.id')));

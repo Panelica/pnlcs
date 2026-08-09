@@ -40,6 +40,15 @@ class InvoiceGenerationService
             // The customer turned renewal off; billing them anyway is what got
             // the account suspended for an invoice they never wanted.
             ->where('auto_renew', true)
+            // A cancellation says the same thing more plainly. One asked for
+            // the end of the billing period leaves the service running until
+            // its due date, and renewals are raised a fortnight before that -
+            // so the invoice for the period they cancelled arrived anyway, and
+            // not paying it walked the account through overdue marking, late
+            // fees and the suspension chain before the cancellation job ended
+            // the service. A request that has been dealt with is closed, and
+            // billing resumes on its own if the service is put back to work.
+            ->whereDoesntHave('cancellationRequest', fn ($c) => $c->whereNull('processed_at'))
             ->whereNotNull('next_due_date')
             ->where('next_due_date', '<=', $cutoff)
             ->where('amount', '>', 0)
