@@ -65,6 +65,15 @@ class ServiceController extends Controller
     {
         $service->load('product');
 
+        // The box on the page asks for six characters, but that is the browser
+        // asking. Anything else reaching this route sent whatever it liked
+        // straight to the control panel, and an empty field arrives as null,
+        // which fell over on the way there. The API door for the same operation
+        // has always checked this.
+        if ($action === 'changepassword') {
+            $request->validate(['password' => ['required', 'string', 'min:6']]);
+        }
+
         $result = match ($action) {
             'create' => $this->provisioning->createAccount($service),
             'suspend' => $this->provisioning->suspendAccount($service, $request->get('reason', '')),
