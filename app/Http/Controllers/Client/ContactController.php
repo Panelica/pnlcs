@@ -11,6 +11,7 @@ use App\Services\TicketService;
 use App\Services\TicketSpamService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ContactController extends Controller
 {
@@ -34,7 +35,12 @@ class ContactController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|email|max:200',
-            'department_id' => 'required|exists:ticket_departments,id',
+            // The page lists departments that are not hidden and then took any
+            // id that existed, and anyone at all can post this form: a queue an
+            // operator had taken out of the customer-facing list still received
+            // tickets, and the sender was told the message was received. The
+            // logged-in ticket form has always asked this.
+            'department_id' => ['required', Rule::exists('ticket_departments', 'id')->where('hidden', false)],
             'subject' => 'required|string|max:200',
             'message' => 'required|string|max:5000',
         ]);
