@@ -188,7 +188,16 @@ class PaymentService
      */
     public function refundInvoice(Invoice $invoice, ?float $amount = null, array $options = []): array
     {
-        $paid = $this->amountPaid($invoice);
+        // Credit spent on an invoice writes no transaction - no money moved,
+        // the balance went down and the invoice's credit column went up - so
+        // counting transactions alone answered "nothing has been paid" for an
+        // invoice the customer had settled out of their own balance. Cancelling
+        // has always known better and hands that balance back; refunding could
+        // not, and cancelling refuses a paid invoice, so the money was stuck
+        // with each door pointing at the other.
+        $appliedCredit = round((float) $invoice->credit, 2);
+        $paid = round($this->amountPaid($invoice) + $appliedCredit, 2);
+
         if ($paid <= 0.009) {
             return ['success' => false, 'message' => 'Nothing has been paid on this invoice.'];
         }
@@ -201,6 +210,11 @@ class PaymentService
             return ['success' => false, 'message' => "Refund amount exceeds the paid amount ({$paid})."];
         }
 
+        // Balance first: it is the part that never left the building, and it
+        // goes back the way it came rather than through a gateway.
+        $fromCredit = min($amount, $appliedCredit);
+        $cash = round($amount - $fromCredit, 2);
+
         // Find the settling payment transaction to refund against.
         $payment = $this->invoicePayments($invoice)
             ->where('amount_in', '>', 0)
@@ -211,7 +225,7 @@ class PaymentService
         $gateway = $payment->gateway ?? $invoice->payment_method ?? 'manual';
         $refundRef = null;
         $offlineGateways = ['manual', 'banktransfer', 'credit', 'system'];
-        $useGateway = ($options['gateway_refund'] ?? true) && ! in_array($gateway, $offlineGateways, true);
+        $useGateway = $cash > 0.009 && ($options['gateway_refund'] ?? true) && ! in_array($gateway, $offlineGateways, true);
 
         if ($useGateway) {
             $module = app(ModuleRegistry::class)->getGatewayModule($gateway);
@@ -222,7 +236,7 @@ class PaymentService
                 return ['success' => false, 'message' => 'No gateway transaction reference found to refund against.'];
             }
 
-            $result = $module->refund($payment->transaction_id, $amount);
+            $result = $module->refund($payment->transaction_id, $cash);
             if (! ($result['success'] ?? false)) {
                 Log::error('PaymentService: gateway refund failed', ['invoice_id' => $invoice->id, 'gateway' => $gateway, 'message' => $result['message'] ?? '']);
 
@@ -231,30 +245,53 @@ class PaymentService
             $refundRef = $result['refund_id'] ?? null;
         }
 
-        DB::transaction(function () use ($invoice, $gateway, $amount, $refundRef, $options, $payment) {
-            Transaction::create([
-                'client_id' => $invoice->client_id,
-                'invoice_id' => $invoice->id,
-                'gateway' => $gateway,
-                'date' => now()->toDateString(),
-                'description' => 'Refund for Invoice #'.($invoice->invoice_num ?? $invoice->id)
-                    .(! empty($options['reason']) ? ' — '.$options['reason'] : ''),
-                'amount_in' => 0,
-                'fees' => 0,
-                'amount_out' => $amount,
-                'rate' => 1,
-                'transaction_id' => $refundRef,
-                'refund_id' => $payment?->id,
-            ]);
+        DB::transaction(function () use ($invoice, $gateway, $amount, $refundRef, $options, $payment, $fromCredit, $cash) {
+            $client = $invoice->client;
+
+            if ($fromCredit > 0.009 && $client) {
+                $client->increment('credit', $fromCredit);
+
+                Credit::create([
+                    'client_id' => $client->id,
+                    'admin_id' => null,
+                    'date' => now()->toDateString(),
+                    'description' => "Refund of invoice #{$invoice->invoice_num} — balance returned",
+                    'amount' => $fromCredit,
+                ]);
+
+                // Mirrors what cancelling does: the invoice stops counting that
+                // balance as settling it, and its total is what it was again.
+                $invoice->update([
+                    'credit' => max(0, round((float) $invoice->credit - $fromCredit, 2)),
+                    'total' => round((float) $invoice->total + $fromCredit, 2),
+                ]);
+            }
+
+            if ($cash > 0.009) {
+                Transaction::create([
+                    'client_id' => $invoice->client_id,
+                    'invoice_id' => $invoice->id,
+                    'gateway' => $gateway,
+                    'date' => now()->toDateString(),
+                    'description' => 'Refund for Invoice #'.($invoice->invoice_num ?? $invoice->id)
+                        .(! empty($options['reason']) ? ' — '.$options['reason'] : ''),
+                    'amount_in' => 0,
+                    'fees' => 0,
+                    'amount_out' => $cash,
+                    'rate' => 1,
+                    'transaction_id' => $refundRef,
+                    'refund_id' => $payment?->id,
+                ]);
+            }
 
             // Money paid into an Add Funds invoice became client credit when it
             // was settled. Handing the cash back has to take that balance with
-            // it, or the customer keeps the funds twice.
+            // it, or the customer keeps the funds twice. Only the cash: balance
+            // returned above was never turned into funds twice over.
             $addFunds = (float) $invoice->items()->where('type', 'AddFunds')->sum('amount');
-            $client = $invoice->client;
 
-            if ($addFunds > 0.009 && $client) {
-                $reclaim = min($amount, $addFunds, (float) $client->credit);
+            if ($cash > 0.009 && $addFunds > 0.009 && $client) {
+                $reclaim = min($cash, $addFunds, (float) $client->credit);
 
                 if ($reclaim > 0.009) {
                     $client->decrement('credit', $reclaim);
@@ -267,12 +304,12 @@ class PaymentService
                     ]);
                 }
 
-                if ($amount - $reclaim > 0.009) {
+                if ($cash - $reclaim > 0.009) {
                     // They had already spent some of it; the rest cannot be
                     // clawed back from a balance that is no longer there.
                     Log::warning('PaymentService: refunded more than the remaining credit', [
                         'invoice_id' => $invoice->id,
-                        'refunded' => $amount,
+                        'refunded' => $cash,
                         'reclaimed' => $reclaim,
                     ]);
                 }
@@ -286,7 +323,8 @@ class PaymentService
                 Log::warning('PaymentService: affiliate reversal failed for invoice #'.$invoice->id.': '.$e->getMessage());
             }
 
-            $stillPaid = $this->amountPaid($invoice->fresh());
+            $fresh = $invoice->fresh();
+            $stillPaid = round($this->amountPaid($fresh) + (float) $fresh->credit, 2);
             $invoice->update([
                 'status' => $stillPaid <= 0.009
                     ? InvoiceStatus::Refunded->value
