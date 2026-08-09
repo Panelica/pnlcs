@@ -256,7 +256,12 @@ class InvoiceGenerationService
             ->count();
     }
 
-    public function applyPromotion(Invoice $invoice, string $promoCode): bool
+    /**
+     * @param  bool  $continuation  A renewal carrying a recurring code the
+     *                              customer already claimed, rather than a
+     *                              fresh claim of it.
+     */
+    public function applyPromotion(Invoice $invoice, string $promoCode, bool $continuation = false): bool
     {
         $promo = Promotion::where('code', $promoCode)->first();
 
@@ -266,16 +271,33 @@ class InvoiceGenerationService
 
         $invoice->loadMissing('items', 'client');
 
-        // The rules that go with the code - one per customer, new customers
-        // only, existing customers only, particular products - were checked in
-        // the cart and nowhere else. The order endpoint hands a code straight
-        // to this method, so a once-per-customer code could be spent again and
-        // again by the same customer.
-        if (! $promo->isValidFor($invoice->client, $this->invoiceProductIds($invoice))) {
+        $productIds = $this->invoiceProductIds($invoice);
+
+        if ($continuation) {
+            // The rules above are about claiming a code: the quota, the dates
+            // it can be claimed between, one per customer, new customers only.
+            // A renewal is not a claim - it is the promise already made being
+            // kept - and how long that promise lasts is what `cycles` says,
+            // counted per service by the caller. Asking the claiming questions
+            // again meant a customer sold "20% off, recurring for three
+            // cycles" lost it at the first renewal as soon as the code had a
+            // quota, which is the very thing recurring promotions exist to
+            // stop. What still applies is the products the code covers.
+            $covered = $promo->coveredProductIds();
+
+            if ($covered !== [] && array_intersect($covered, array_map('intval', $productIds)) === []) {
+                return false;
+            }
+        } elseif (! $promo->isValidFor($invoice->client, $productIds)) {
+            // The rules that go with the code - one per customer, new customers
+            // only, existing customers only, particular products - were checked
+            // in the cart and nowhere else. The order endpoint hands a code
+            // straight to this method, so a once-per-customer code could be
+            // spent again and again by the same customer.
             return false;
         }
 
-        return DB::transaction(function () use ($invoice, $promo) {
+        return DB::transaction(function () use ($invoice, $promo, $continuation) {
             $subtotal = (float) $invoice->subtotal;
 
             if ($subtotal <= 0) {
@@ -318,8 +340,13 @@ class InvoiceGenerationService
                 'notes' => trim(($invoice->notes ?? '')."\nPromo applied: {$promo->code} (-".money_fmt($discount).')'),
             ]);
 
-            // Increment promo usage counter
-            $promo->increment('uses');
+            // The sign-up counter, measured against max_uses. A renewal spends
+            // no sign-up: it is the same claim being honoured again, and
+            // counting it burned the quota an operator set aside for new
+            // customers.
+            if (! $continuation) {
+                $promo->increment('uses');
+            }
 
             return true;
         });
@@ -423,7 +450,7 @@ class InvoiceGenerationService
         $recurringPromo = $this->recurringPromoFor($services);
 
         if ($recurringPromo !== null) {
-            $this->applyPromotion($invoice->fresh(), $recurringPromo);
+            $this->applyPromotion($invoice->fresh(), $recurringPromo, continuation: true);
             $invoice = $invoice->fresh();
         }
 
