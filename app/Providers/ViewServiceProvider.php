@@ -48,6 +48,9 @@ class ViewServiceProvider extends ServiceProvider
             'client.auth.register',
             'client.auth.forgot-password',
             'client.auth.reset-password',
+            'client.auth.two-factor',
+            'admin.auth.login',
+            'admin.auth.two-factor',
         ], LanguageComposer::class);
     }
 }

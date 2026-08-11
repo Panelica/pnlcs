@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Constants\Permissions;
 use App\Models\Admin;
 use App\Models\AdminRole;
+use App\Models\Language;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -249,7 +251,7 @@ class InstallController extends Controller
         $data = $request->validate([
             'app_url' => 'required|url|max:255',
             'app_name' => 'required|string|max:64',
-            'app_locale' => ['required', Rule::in(['en', 'tr', 'de', 'fr', 'es', 'it', 'ru', 'pt-br', 'nl', 'pl', 'cs', 'tr'])],
+            'app_locale' => ['required', Rule::in(['en', 'tr', 'de', 'fr', 'es', 'it', 'ru', 'pt-br', 'nl', 'pl', 'cs', 'zh'])],
         ]);
 
         $this->writeEnv([
@@ -259,6 +261,16 @@ class InstallController extends Controller
             'APP_DEBUG' => 'false',
             'APP_ENV' => 'production',
         ]);
+
+        Language::where('is_default', true)->update(['is_default' => false]);
+        Language::where('code', $data['app_locale'])->update([
+            'is_active' => true,
+            'is_default' => true,
+        ]);
+        Setting::set('DefaultLanguage', $data['app_locale'], 'language');
+        if ($adminId = $request->session()->get('install.admin_id')) {
+            Admin::whereKey($adminId)->update(['language' => $data['app_locale']]);
+        }
 
         Artisan::call('config:clear');
         Artisan::call('config:cache');

@@ -2132,6 +2132,7 @@ return [
         'maintenance_mode_label' => 'Maintenance Mode (client area offline)',
         'my_account' => 'My Account',
         'my_account_title' => 'My account title',
+        'language_unavailable' => 'Choose an active language.',
         'php_mail' => 'PHP Mail',
         'profile_information' => 'Profile information',
         'request_failed' => 'Request failed',

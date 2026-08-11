@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\HomepageContent;
 use App\Models\HomepageSection;
+use App\Models\Language;
 use App\Models\Setting;
 use App\Services\ThemeManager;
 use App\Services\ThemeService;
@@ -113,7 +114,9 @@ class SettingController extends Controller
     public function myAccount()
     {
         $admin = auth("admin")->user();
-        return view("admin.settings.my-account", compact("admin"));
+        $languages = Language::active()->orderBy('sort_order')->get();
+
+        return view("admin.settings.my-account", compact("admin", "languages"));
     }
 
     public function updateMyAccount(Request $request)
@@ -125,16 +128,23 @@ class SettingController extends Controller
             "last_name"    => "required|string|max:100",
             "email"        => "required|email|unique:admins,email," . $admin->id,
             "signature"    => "nullable|string|max:1000",
+            'language' => 'required|string|exists:languages,code',
             "new_password" => "nullable|min:8|confirmed",
         ]);
 
-        $data = $request->only(["first_name", "last_name", "email", "signature"]);
+        if (! Language::where('code', $request->language)->where('is_active', true)->exists()) {
+            return back()->withErrors(['language' => __('admin.settings.language_unavailable')])->withInput();
+        }
+
+        $data = $request->only(["first_name", "last_name", "email", "signature", "language"]);
 
         if ($request->filled("new_password")) {
             $data["password"] = bcrypt($request->new_password);
         }
 
         $admin->update($data);
+        $request->session()->put('locale', $data['language']);
+        cookie()->queue('pnlcs_locale', $data['language'], 43200);
 
         return back()->with("success", __("admin.messages.account_updated"));
     }
