@@ -30,6 +30,12 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind Panelica reverse proxy (Docker): trust the forwarded scheme
+        // and host so asset()/route()/Vite URLs match the domain the request
+        // actually arrived on, whatever it is. Without this a page served over
+        // https emits http asset URLs and the browser blocks them as mixed
+        // content. This is domain-agnostic: no per-domain APP_URL to maintain.
+        $middleware->trustProxies(at: '*');
         $middleware->prependToGroup('web', RedirectToInstaller::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', SetLocale::class);
