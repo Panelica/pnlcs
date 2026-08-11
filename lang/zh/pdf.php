@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'amount' => '金额',
+    'bill_to' => '账单接收方',
+    'credit' => '余额抵扣',
+    'date_paid' => '支付日期',
+    'description' => '描述',
+    'due_date' => '到期日期',
+    'invoice' => '发票',
+    'invoice_date' => '发票日期',
+    'invoice_details' => '发票详情',
+    'invoice_number' => '发票编号',
+    'invoice_to' => '开票对象',
+    'item' => '项目',
+    'no_items' => '暂无项目',
+    'notes' => '备注',
+    'payment_method' => '付款方式',
+    'payment_status' => '付款状态',
+    'subtotal' => '小计',
+    'tax' => '税费',
+    'tax_id' => '税号',
+    'taxed' => '计税',
+    'thank_you' => '感谢您的惠顾！',
+    'total' => '合计',
+];
