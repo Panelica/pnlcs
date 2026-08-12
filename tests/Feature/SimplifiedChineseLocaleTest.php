@@ -1,9 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\TranslationController;
+use App\Http\Middleware\RedirectToInstaller;
 use App\Models\Admin;
+use App\Models\DynamicTranslation;
 use App\Models\Language;
 use App\Models\Setting;
 use App\Translation\OfficialTranslationRepository;
+
+beforeEach(function () {
+    $this->withoutMiddleware(RedirectToInstaller::class);
+});
 
 function configuredLanguage(string $code, bool $active, bool $default = false): Language
 {
@@ -67,4 +74,29 @@ test('official files provide the translation-management baseline', function () {
     expect($chinese)->toHaveKeys(array_keys($english))
         ->and($repository->count('zh'))->toBe($repository->count('en'))
         ->and($chinese['auth']['login.title'])->toBe('登录');
+});
+
+test('export preserves existing database translations as overrides and additional keys', function () {
+    DynamicTranslation::create([
+        'language' => 'zh',
+        'group' => 'auth',
+        'key' => 'login.title',
+        'value' => '现有登录翻译',
+    ]);
+    DynamicTranslation::create([
+        'language' => 'zh',
+        'group' => 'custom',
+        'key' => 'database_only',
+        'value' => '现有自定义翻译',
+    ]);
+
+    $response = app(TranslationController::class)->export(
+        'zh',
+        app(OfficialTranslationRepository::class),
+    );
+    $translations = $response->getData(true);
+
+    expect($translations['auth']['login.title'])->toBe('现有登录翻译')
+        ->and($translations['custom']['database_only'])->toBe('现有自定义翻译')
+        ->and($translations['auth'])->toHaveKey('login.email');
 });
