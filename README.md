@@ -273,7 +273,7 @@ docker run -d --name pnlcs --network pnlcs-net -p 8090:80 \
   -e DB_HOST=pnlcs-db -e DB_DATABASE=pnlcs \
   -e DB_USERNAME=pnlcs -e DB_PASSWORD=changeme \
   -e APP_URL=http://localhost:8090 \
-  panelica/pnlcs-runtime:1.3
+  panelica/pnlcs-runtime:1.4
 ```
 
 Wait 3–5 minutes for the first start (composer install + npm build), then
@@ -422,6 +422,46 @@ autostart=true
 autorestart=true
 user=www-data
 ```
+
+---
+
+## Updating
+
+PNLCS updates in place — latest code, database migrations, and rebuilt frontend
+assets — without touching your data.
+
+### Docker
+
+One command pulls the latest release into a running container:
+
+```bash
+docker exec pnlcs /usr/local/bin/update.sh
+```
+
+It runs `git reset --hard origin/main` → `composer install` → `php artisan migrate`
+→ `npm run build` → cache rebuild → php-fpm reload. Your database and uploaded
+files live on the `pnlcs_app` volume and are left untouched.
+
+Set `AUTO_UPDATE=1` on the container to pull the latest code automatically on
+every restart.
+
+> The update resets the working tree to `origin/main`, so any manual edits made
+> **inside** the container are discarded — all code is served from this
+> repository. Keep customisations in your own fork or theme, not in the running
+> container.
+
+### Self-hosted
+
+```bash
+cd /path/to/pnlcs
+git pull origin main
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+npm ci && npm run build
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+```
+
+Then reload PHP-FPM (or restart your process manager).
 
 ---
 
