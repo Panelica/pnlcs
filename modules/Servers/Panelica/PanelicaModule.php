@@ -65,6 +65,33 @@ class PanelicaModule extends AbstractServerModule
         return Http::withHeaders($headers)->withoutVerifying()->get($this->baseUrl($server).$path);
     }
 
+    /**
+     * Whether a domain is already present on the server. Used as a pre-flight so
+     * account creation is never attempted for a domain that would fail. A check
+     * failure (network or scope) returns false and does not block - the create
+     * call still guards against a duplicate.
+     */
+    private function domainExistsOnServer(Server $server, string $domain): bool
+    {
+        try {
+            $resp = $this->get($server, '/v1/domains');
+            if (! $resp->successful()) {
+                return false;
+            }
+            $needle = strtolower(trim($domain));
+            foreach (($resp->json('data') ?? []) as $d) {
+                $name = strtolower((string) ($d['domain_name'] ?? $d['name'] ?? $d['domain'] ?? ''));
+                if ($name !== '' && $name === $needle) {
+                    return true;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PanelicaModule::domainExistsOnServer failed', ['error' => $e->getMessage()]);
+        }
+
+        return false;
+    }
+
     private function post(Server $server, string $path, array $payload): Response
     {
         $body = json_encode($payload);
@@ -237,6 +264,15 @@ class PanelicaModule extends AbstractServerModule
 
         if (! $client || ! $domain) {
             return $this->buildResult(false, 'Service is missing client or domain.');
+        }
+
+        // Pre-flight: refuse before creating anything if the domain already
+        // exists on the server. Otherwise the account gets created, the domain
+        // POST fails, and the account is rolled back - the operator only learns
+        // "domain already exists" after the fact. Checking first means no
+        // orphaned account and the reason is known up front.
+        if ($this->domainExistsOnServer($server, $domain)) {
+            return $this->buildResult(false, "The domain \"{$domain}\" already exists on this server. Use a different domain, or remove it from the panel first.");
         }
 
         // Derive username from domain (alphanumeric, max 16 chars)
