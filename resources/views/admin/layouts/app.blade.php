@@ -521,7 +521,7 @@
      ═══════════════════════════════════════════════ --}}
 <div class="footerbar clearfix" style="background-color:var(--theme-footer-bg, #1a4d80);">
     <div style="float:left;">
-        &copy; {{ date('Y') }} {{ company_name() }}@if(! branding_removed()) - {{ __('admin.footer.billing_support_system') }}@endif
+        &copy; {{ date('Y') }} {{ company_name() }}@if(! branding_removed()) - {{ __('admin.footer.billing_support_system') }} &middot; <a href="https://github.com/Panelica/pnlcs" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">GitHub</a>@endif
     </div>
     <div style="float:right;">
         <a href="{{ route('admin.dashboard') }}">{{ __('admin.footer.admin_home') }}</a> |

@@ -30,7 +30,7 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.default_language') }}</label>
                     <select name="DefaultLanguage" class="form-control">
                         @foreach($languages as $lang)
-                            <option value="{{ $lang->code }}" {{ ($settings['DefaultLanguage'] ?? '') === $lang->code ? 'selected' : '' }}>{{ $lang->name }} ({{ $lang->native_name }})</option>
+                            <option value="{{ $lang->code }}" {{ ($settings['DefaultLanguage'] ?? '') === $lang->code ? 'selected' : '' }}>{{ $lang->native_name ?: $lang->name }}</option>
                         @endforeach
                     </select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.default_country') }}</label>
