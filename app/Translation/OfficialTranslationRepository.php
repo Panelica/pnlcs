@@ -15,6 +15,10 @@ class OfficialTranslationRepository
      */
     public function forLocale(string $locale): array
     {
+        if (! preg_match('/^[a-z][a-z0-9_-]*$/i', $locale)) {
+            return [];
+        }
+
         $directory = lang_path($locale);
         if (! File::isDirectory($directory)) {
             return [];

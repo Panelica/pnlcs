@@ -1,5 +1,7 @@
 <?php
 
+use App\Translation\OfficialTranslationRepository;
+
 function compareChineseTranslationNode(array $english, array $chinese, string $path, array &$issues): void
 {
     if (array_keys($english) !== array_keys($chinese)) {
@@ -62,6 +64,14 @@ test('simplified Chinese mirrors every official English translation file', funct
     }
 
     expect($issues)->toBe([]);
+});
+
+test('official translation locales cannot traverse outside the language directory', function () {
+    $repository = app(OfficialTranslationRepository::class);
+
+    expect($repository->forLocale('..'))->toBe([])
+        ->and($repository->forLocale('../lang/en'))->toBe([])
+        ->and($repository->forLocale('zh/../en'))->toBe([]);
 });
 
 test('simplified Chinese contains representative product translations', function () {
