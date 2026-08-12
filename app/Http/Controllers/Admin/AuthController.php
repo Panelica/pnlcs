@@ -35,7 +35,11 @@ class AuthController extends Controller
             ]);
         }
 
-        if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
+        // Accept either the username or the email in the same field, so an
+        // administrator can sign in with whichever they remember.
+        $loginField = filter_var($credentials['username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $attemptCredentials = [$loginField => $credentials['username'], 'password' => $credentials['password']];
+        if (Auth::guard('admin')->attempt($attemptCredentials, $request->boolean('remember'))) {
             RateLimiter::clear($key);
             $admin = Auth::guard('admin')->user();
 
