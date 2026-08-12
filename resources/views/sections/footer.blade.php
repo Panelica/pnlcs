@@ -52,6 +52,9 @@
                 <a href="/client/contact" class="footer__link">{{ __('sections.footer.contact_us') }}</a>
                 <a href="{{ $bUrl }}" class="footer__link">{{ $bWebsite }}</a>
                 <a href="{{ $bUrl }}/blog" class="footer__link">{{ __('sections.footer.blog') }}</a>
+                @if(! branding_removed())
+                <a href="https://github.com/Panelica/pnlcs" class="footer__link" target="_blank" rel="noopener"><i class="ri-github-fill"></i> GitHub</a>
+                @endif
             </div>
         </div>
         <div class="footer__bottom">
