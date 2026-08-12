@@ -21,7 +21,7 @@ class LanguageSeeder extends Seeder
             ['code' => 'ru', 'name' => 'Russian', 'native_name' => 'Русский', 'flag_code' => 'ru', 'direction' => 'ltr', 'is_active' => false, 'sort_order' => 9],
             ['code' => 'ja', 'name' => 'Japanese', 'native_name' => '日本語', 'flag_code' => 'jp', 'direction' => 'ltr', 'is_active' => false, 'sort_order' => 10],
             ['code' => 'ko', 'name' => 'Korean', 'native_name' => '한국어', 'flag_code' => 'kr', 'direction' => 'ltr', 'is_active' => false, 'sort_order' => 11],
-            ['code' => 'zh', 'name' => 'Chinese', 'native_name' => '中文', 'flag_code' => 'cn', 'direction' => 'ltr', 'is_active' => false, 'sort_order' => 12],
+            ['code' => 'zh', 'name' => 'Simplified Chinese', 'native_name' => '简体中文', 'flag_code' => 'cn', 'direction' => 'ltr', 'is_active' => false, 'sort_order' => 12],
             ['code' => 'ar', 'name' => 'Arabic', 'native_name' => 'العربية', 'flag_code' => 'sa', 'direction' => 'rtl', 'is_active' => false, 'sort_order' => 13],
             ['code' => 'fa', 'name' => 'Persian', 'native_name' => 'فارسی', 'flag_code' => 'ir', 'direction' => 'rtl', 'is_active' => false, 'sort_order' => 14],
             ['code' => 'he', 'name' => 'Hebrew', 'native_name' => 'עברית', 'flag_code' => 'il', 'direction' => 'rtl', 'is_active' => false, 'sort_order' => 15],

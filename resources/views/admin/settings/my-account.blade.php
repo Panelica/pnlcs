@@ -38,6 +38,16 @@
                 <label class="form-label">{{ __('admin.settings.ticket_signature') }} <small style="color:#999;">{{ __('admin.settings.ticket_signature_hint') }}</small></label>
                 <textarea name="signature" class="form-control" rows="4" style="resize:vertical;">{{ old("signature", $admin->signature) }}</textarea>
             </div>
+            <div class="form-group">
+                <label class="form-label">{{ __('common.form.language') }}<span style="color:#c43c35;">*</span></label>
+                <select name="language" class="form-control" required>
+                    @foreach($languages as $language)
+                        <option value="{{ $language->code }}" {{ old('language', $admin->language) === $language->code ? 'selected' : '' }}>
+                            {{ $language->native_name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 

@@ -29,6 +29,7 @@
                 <option value="nl">Nederlands</option>
                 <option value="pl">Polski</option>
                 <option value="cs">Čeština</option>
+                <option value="zh" {{ $app_locale === 'zh' ? 'selected' : '' }}>简体中文</option>
             </select>
         </div>
 

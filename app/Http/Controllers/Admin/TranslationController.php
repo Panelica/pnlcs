@@ -6,26 +6,53 @@ use App\Http\Controllers\Controller;
 use App\Models\DynamicTranslation;
 use App\Models\Language;
 use App\Models\Setting;
+use App\Translation\OfficialTranslationRepository;
 use App\Translation\TranslationCacheManager;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class TranslationController extends Controller
 {
-    public function index()
+    public function index(OfficialTranslationRepository $officialTranslations)
     {
         $languages = Language::orderBy('sort_order')->get();
 
-        // Calculate progress for each language
-        $totalKeys = DynamicTranslation::where('language', 'en')->count();
+        $english = $officialTranslations->forLocale('en');
+        $totalKeys = array_sum(array_map('count', $english));
+        $englishKeys = [];
+        foreach ($english as $group => $keys) {
+            foreach ($keys as $key => $_value) {
+                $englishKeys[$group.'.'.$key] = true;
+            }
+        }
         foreach ($languages as $lang) {
             if ($lang->code === 'en') {
                 $lang->translation_progress = 100;
             } else {
-                $translated = DynamicTranslation::where('language', $lang->code)
+                $official = $officialTranslations->forLocale($lang->code);
+                $translatedKeys = [];
+                foreach ($english as $group => $keys) {
+                    foreach ($keys as $key => $_value) {
+                        if (trim($official[$group][$key] ?? '') !== '') {
+                            $translatedKeys[$group.'.'.$key] = true;
+                        }
+                    }
+                }
+
+                DynamicTranslation::where('language', $lang->code)
                     ->whereNotNull('value')
                     ->where('value', '!=', '')
-                    ->count();
-                $lang->translation_progress = $totalKeys > 0 ? round(($translated / $totalKeys) * 100, 1) : 0;
+                    ->get(['group', 'key'])
+                    ->each(function ($row) use (&$translatedKeys, $englishKeys) {
+                        $key = $row->group.'.'.$row->key;
+                        if (isset($englishKeys[$key])) {
+                            $translatedKeys[$key] = true;
+                        }
+                    });
+
+                $lang->translation_progress = $totalKeys > 0
+                    ? round((count($translatedKeys) / $totalKeys) * 100, 1)
+                    : 0;
             }
             $lang->save();
         }
@@ -38,8 +65,9 @@ class TranslationController extends Controller
         if ($language->is_default && $language->is_active) {
             return back()->with('error', __('messages.error.cannot_delete_default', ['item' => 'language']));
         }
-        $language->update(['is_active' => !$language->is_active]);
+        $language->update(['is_active' => ! $language->is_active]);
         TranslationCacheManager::flush();
+
         return back()->with('success', $language->is_active ? __('messages.success.enabled', ['item' => $language->name]) : __('messages.success.disabled', ['item' => $language->name]));
     }
 
@@ -50,37 +78,58 @@ class TranslationController extends Controller
         Language::where('code', $request->code)->update(['is_default' => true, 'is_active' => true]);
         Setting::set('DefaultLanguage', $request->code, 'language');
         TranslationCacheManager::flush();
+
         return back()->with('success', __('messages.success.settings_saved'));
     }
 
-    public function translations(string $locale)
+    public function translations(string $locale, OfficialTranslationRepository $officialTranslations)
     {
         $language = Language::where('code', $locale)->firstOrFail();
 
-        $query = DynamicTranslation::where('language', 'en');
-
-        if (request('group')) {
-            $query->where('group', request('group'));
-        }
-        if (request('search')) {
-            $search = request('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('key', 'like', "%{$search}%")
-                  ->orWhere('value', 'like', "%{$search}%");
-            });
+        $english = $officialTranslations->forLocale('en');
+        $rows = collect();
+        foreach ($english as $group => $keys) {
+            foreach ($keys as $key => $value) {
+                $rows->push((object) compact('group', 'key', 'value'));
+            }
         }
 
-        $englishKeys = $query->orderBy('group')->orderBy('key')->paginate(50);
+        if ($group = request('group')) {
+            $rows = $rows->where('group', $group);
+        }
+        if ($search = request('search')) {
+            $needle = mb_strtolower($search);
+            $rows = $rows->filter(fn ($row) => str_contains(mb_strtolower($row->key.' '.$row->value), $needle));
+        }
 
-        // Get target translations
+        $rows = $rows->sortBy(fn ($row) => $row->group."\0".$row->key)->values();
+        $page = max(1, (int) request('page', 1));
+        $englishKeys = new LengthAwarePaginator(
+            $rows->forPage($page, 50)->values(),
+            $rows->count(),
+            50,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $targetTranslations = [];
+        foreach ($officialTranslations->forLocale($locale) as $group => $keys) {
+            foreach ($keys as $key => $value) {
+                $targetTranslations[$group.'.'.$key] = $value;
+            }
+        }
+
+        // Database values are optional site-specific overrides.
         $targetTranslations = DynamicTranslation::where('language', $locale)
-            ->get(['group', 'key', 'value'])->mapWithKeys(fn($row) => [$row->group . '.' . $row->key => $row->value])
-            ->toArray();
+            ->whereNotNull('value')->where('value', '!=', '')
+            ->get(['group', 'key', 'value'])
+            ->reduce(function (array $values, $row) {
+                $values[$row->group.'.'.$row->key] = $row->value;
 
-        $groups = DynamicTranslation::where('language', 'en')
-            ->distinct()
-            ->pluck('group')
-            ->sort();
+                return $values;
+            }, $targetTranslations);
+
+        $groups = collect(array_keys($english))->sort()->values();
 
         $filter = request('filter', 'all');
 
@@ -107,6 +156,7 @@ class TranslationController extends Controller
         if ($request->ajax()) {
             return response()->json(['success' => true]);
         }
+
         return back()->with('success', __('messages.success.saved'));
     }
 
@@ -116,7 +166,9 @@ class TranslationController extends Controller
         $count = 0;
 
         foreach ($translations as $item) {
-            if (empty($item['group']) || empty($item['key'])) continue;
+            if (empty($item['group']) || empty($item['key'])) {
+                continue;
+            }
             DynamicTranslation::updateOrCreate(
                 ['language' => $locale, 'group' => $item['group'], 'key' => $item['key']],
                 ['value' => $item['value'] ?? '', 'is_auto_translated' => false, 'is_reviewed' => true]
@@ -125,32 +177,48 @@ class TranslationController extends Controller
         }
 
         TranslationCacheManager::flushLocale($locale);
+
         return back()->with('success', __('admin.messages.translations_saved', ['count' => $count]));
     }
 
-    public function aiTranslate(Request $request, string $locale)
+    public function aiTranslate(Request $request, string $locale, OfficialTranslationRepository $officialTranslations)
     {
         $apiKey = Setting::get('OpenAIApiKey');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return back()->with('error', __('admin.messages.openai_not_configured'));
         }
 
         $language = Language::where('code', $locale)->firstOrFail();
 
-        // Get untranslated keys
-        $englishKeys = DynamicTranslation::where('language', 'en')
-            ->whereNotNull('value')
-            ->where('value', '!=', '')
-            ->get();
+        // Official files are the baseline; AI only fills genuinely missing
+        // values and stores those additions as optional database overrides.
+        $englishKeys = collect();
+        foreach ($officialTranslations->forLocale('en') as $group => $keys) {
+            foreach ($keys as $key => $value) {
+                if ($value !== '') {
+                    $englishKeys->push((object) compact('group', 'key', 'value'));
+                }
+            }
+        }
 
-        $existingKeys = DynamicTranslation::where('language', $locale)
+        $existingKeys = [];
+        foreach ($officialTranslations->forLocale($locale) as $group => $keys) {
+            foreach ($keys as $key => $value) {
+                if ($value !== '') {
+                    $existingKeys[$group.'.'.$key] = true;
+                }
+            }
+        }
+        DynamicTranslation::where('language', $locale)
             ->whereNotNull('value')
             ->where('value', '!=', '')
-            ->get(['group', 'key'])->mapWithKeys(fn($row) => [$row->group . '.' . $row->key => $row->key])
-            ->toArray();
+            ->get(['group', 'key'])
+            ->each(function ($row) use (&$existingKeys) {
+                $existingKeys[$row->group.'.'.$row->key] = true;
+            });
 
         $toTranslate = $englishKeys->filter(function ($item) use ($existingKeys) {
-            return !isset($existingKeys[$item->group . '.' . $item->key]);
+            return ! isset($existingKeys[$item->group.'.'.$item->key]);
         });
 
         if ($toTranslate->isEmpty()) {
@@ -166,14 +234,16 @@ class TranslationController extends Controller
         foreach ($batches as $batch) {
             $items = [];
             foreach ($batch as $item) {
-                $items[$item->group . '.' . $item->key] = $item->value;
+                $items[$item->group.'.'.$item->key] = $item->value;
             }
 
             try {
                 $result = $this->callOpenAI($apiKey, $model, $language->native_name, $items);
                 foreach ($result as $fullKey => $translatedValue) {
                     $parts = explode('.', $fullKey, 2);
-                    if (count($parts) !== 2) continue;
+                    if (count($parts) !== 2) {
+                        continue;
+                    }
                     DynamicTranslation::updateOrCreate(
                         ['language' => $locale, 'group' => $parts[0], 'key' => $parts[1]],
                         ['value' => $translatedValue, 'is_auto_translated' => true, 'is_reviewed' => false]
@@ -182,7 +252,7 @@ class TranslationController extends Controller
                 }
             } catch (\Throwable $e) {
                 $failed += $batch->count();
-                \Log::error("AI Translation failed for {$locale}: " . $e->getMessage());
+                \Log::error("AI Translation failed for {$locale}: ".$e->getMessage());
             }
         }
 
@@ -211,7 +281,7 @@ class TranslationController extends Controller
             CURLOPT_POSTFIELDS => json_encode($payload),
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
+                'Authorization: Bearer '.$apiKey,
             ],
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 60,
@@ -229,21 +299,25 @@ class TranslationController extends Controller
         $content = $data['choices'][0]['message']['content'] ?? '';
         $result = json_decode($content, true);
 
-        if (!is_array($result)) {
-            throw new \RuntimeException("Invalid JSON response from OpenAI");
+        if (! is_array($result)) {
+            throw new \RuntimeException('Invalid JSON response from OpenAI');
         }
 
         return $result;
     }
 
-    public function export(string $locale)
+    public function export(string $locale, OfficialTranslationRepository $officialTranslations)
     {
-        $translations = DynamicTranslation::where('language', $locale)
+        $translations = $officialTranslations->forLocale($locale);
+        DynamicTranslation::where('language', $locale)
             ->orderBy('group')
             ->orderBy('key')
             ->get(['group', 'key', 'value'])
-            ->groupBy('group')
-            ->map(fn($items) => $items->pluck('value', 'key'));
+            ->each(function ($row) use (&$translations) {
+                if ($row->value !== null && $row->value !== '') {
+                    $translations[$row->group][$row->key] = $row->value;
+                }
+            });
 
         return response()->json($translations, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
             ->header('Content-Disposition', "attachment; filename=\"{$locale}.json\"");
@@ -256,13 +330,15 @@ class TranslationController extends Controller
         $content = file_get_contents($request->file('file')->getRealPath());
         $data = json_decode($content, true);
 
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             return back()->with('error', __('admin.messages.invalid_json'));
         }
 
         $count = 0;
         foreach ($data as $group => $keys) {
-            if (!is_array($keys)) continue;
+            if (! is_array($keys)) {
+                continue;
+            }
             foreach ($keys as $key => $value) {
                 DynamicTranslation::updateOrCreate(
                     ['language' => $locale, 'group' => $group, 'key' => $key],
@@ -273,12 +349,14 @@ class TranslationController extends Controller
         }
 
         TranslationCacheManager::flushLocale($locale);
+
         return back()->with('success', __('admin.messages.imported_translations', ['count' => $count]));
     }
 
     public function clearCache()
     {
         TranslationCacheManager::flush();
+
         return back()->with('success', __('admin.messages.cache_cleared'));
     }
 }
