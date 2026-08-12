@@ -32,14 +32,15 @@ class DashboardController extends Controller
     private function setupChecklist(): array
     {
         try {
-            $companyDone  = trim((string) Setting::get('whitelabel_company_name', '')) !== '';
+            $companyDone  = trim((string) Setting::get('whitelabel_company_name', '')) !== ''
+                && trim((string) Setting::get('custom_logo_path', '')) !== '';
             $emailDone    = config('mail.default') !== 'log' && config('mail.default') !== null;
             $gatewayDone  = GatewaySettings::query()->exists();
             $serverDone   = Server::query()->exists();
             $productDone  = Product::query()->exists();
 
             $items = [
-                ['key' => 'company',  'done' => $companyDone,  'route' => 'admin.settings.general'],
+                ['key' => 'company',  'done' => $companyDone,  'route' => 'admin.settings.appearance'],
                 ['key' => 'email',    'done' => $emailDone,    'route' => 'admin.settings.general'],
                 ['key' => 'gateway',  'done' => $gatewayDone,  'route' => 'admin.config.gateways'],
                 ['key' => 'server',   'done' => $serverDone,   'route' => 'admin.config.servers'],
