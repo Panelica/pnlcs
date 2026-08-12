@@ -450,18 +450,59 @@ every restart.
 > repository. Keep customisations in your own fork or theme, not in the running
 > container.
 
-### Self-hosted
+### Self-hosted (without Docker)
 
+If you installed PNLCS directly on a server (see **Self-Hosted Installation**
+below), you update it **in place** — new code, migrations and rebuilt assets,
+your data untouched. Run every command from your PNLCS directory
+(`cd /path/to/pnlcs`).
+
+**1. Back up and pause the app (recommended on production).**
 ```bash
-cd /path/to/pnlcs
-git pull origin main
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-npm ci && npm run build
-php artisan config:cache && php artisan route:cache && php artisan view:cache
+php artisan down            # shows a maintenance page to visitors
+mysqldump -u pnlcs -p pnlcs > backup-$(date +%F).sql   # database snapshot
 ```
 
-Then reload PHP-FPM (or restart your process manager).
+**2. Pull the latest code from this repository.**
+```bash
+git pull origin main
+```
+
+**3. Update PHP dependencies.**
+```bash
+composer install --no-dev --optimize-autoloader
+```
+
+**4. Apply any new database migrations.**
+```bash
+php artisan migrate --force
+```
+
+**5. Rebuild the frontend assets.**
+```bash
+npm ci && npm run build
+```
+
+**6. Refresh the cached config, routes and views.**
+```bash
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+**7. Reload PHP so the new code goes live.**
+```bash
+sudo systemctl reload php8.4-fpm    # or your process manager / FPM pool
+```
+
+**8. Bring the app back up.**
+```bash
+php artisan up
+```
+
+That's it — your installation now runs the latest code with all data intact.
+If you use a queue worker (step 13 of installation), restart it too:
+`php artisan queue:restart`.
 
 ---
 
