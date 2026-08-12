@@ -78,8 +78,8 @@
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.port') }}</label><input type="number" name="port" value="8443" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('common.form.username') }}</label><input type="text" name="username" class="form-control" placeholder="e.g. root"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.servers.password_api_token') }}</label><input type="password" name="password" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.servers.access_hash') }}</label><textarea name="access_hash" rows="2" class="form-control" placeholder="Optional"></textarea></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.servers.password_api_token') }}</label><input type="password" name="password" class="form-control" placeholder="Panelica: API Key (pk_live_...)"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.servers.access_hash') }}</label><textarea name="access_hash" rows="2" class="form-control" placeholder="Panelica: API Secret (sk_live_...)"></textarea></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.max_accounts') }}</label><input type="number" name="max_accounts" value="500" min="0" class="form-control"></div>
                 </div>
                 <div style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;">

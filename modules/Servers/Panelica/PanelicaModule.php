@@ -18,11 +18,9 @@ class PanelicaModule extends AbstractServerModule
 
     public function getConfigFields(): array
     {
-        return [
-            ['name' => 'api_key',    'label' => 'API Key (pk_live_...)',    'type' => 'text'],
-            ['name' => 'api_secret', 'label' => 'API Secret (sk_live_...)', 'type' => 'password'],
-            ['name' => 'api_port',   'label' => 'API Port',                 'type' => 'text', 'default' => '3002'],
-        ];
+        // Credentials are entered through the standard server fields:
+        //   Port -> 8443, Password -> API Key (pk_live_...), Access Hash -> API Secret (sk_live_...).
+        return [];
     }
 
     // -------------------------------------------------------------------------
