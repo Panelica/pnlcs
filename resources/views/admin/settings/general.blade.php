@@ -27,8 +27,19 @@
         <div class="card-header"><strong>{{ __('admin.settings.localization') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.default_language') }}</label><input type="text" name="DefaultLanguage" value="{{ $settings['DefaultLanguage'] ?? 'english' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.default_country') }}</label><input type="text" name="Country" value="{{ $settings['Country'] ?? '' }}" class="form-control" placeholder="US"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.default_language') }}</label>
+                    <select name="DefaultLanguage" class="form-control">
+                        @foreach($languages as $lang)
+                            <option value="{{ $lang->code }}" {{ ($settings['DefaultLanguage'] ?? '') === $lang->code ? 'selected' : '' }}>{{ $lang->name }} ({{ $lang->native_name }})</option>
+                        @endforeach
+                    </select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.default_country') }}</label>
+                    <select name="Country" class="form-control">
+                        <option value="">&mdash;</option>
+                        @foreach($countries as $code => $name)
+                            <option value="{{ $code }}" {{ ($settings['Country'] ?? '') === $code ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.date_format') }}</label><input type="text" name="DateFormat" value="{{ $settings['DateFormat'] ?? 'd/m/Y' }}" class="form-control" placeholder="d/m/Y"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.timezone') }}</label><input type="text" name="Timezone" value="{{ $settings['Timezone'] ?? 'UTC' }}" class="form-control"></div>
             </div>

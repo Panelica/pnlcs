@@ -52,7 +52,7 @@ class AccountController extends Controller
         $client = $this->currentClient();
         // The blade renders a country <select> from $countries; without it the
         // dropdown had nothing but its placeholder and no country could be set.
-        $countries = self::COUNTRIES;
+        $countries = \App\Support\Countries::all();
 
         // Most logins have one account and never see the switch.
         $accounts = $user->clients()->orderBy('id')->get();

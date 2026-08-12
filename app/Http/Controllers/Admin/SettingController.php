@@ -21,6 +21,8 @@ class SettingController extends Controller
         return view('admin.settings.general', [
             'settings' => $settings,
             'mailTransport' => (string) config('mail.default'),
+            'languages' => Language::active()->orderBy('sort_order')->get(),
+            'countries' => \App\Support\Countries::all(),
         ]);
     }
 
