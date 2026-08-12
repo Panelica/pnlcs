@@ -49,6 +49,20 @@
         .top-bar__item:hover { color: #fff; }
         .top-bar__item i { font-size: 14px; }
         .top-bar__divider { width: 1px; height: 14px; background: rgba(255,255,255,0.15); }
+        .top-bar__language { position: relative; }
+        .top-bar__language-toggle { list-style: none; }
+        .top-bar__language-toggle::-webkit-details-marker { display: none; }
+        .top-bar__language-menu {
+            position: absolute; right: 0; top: 100%; z-index: 50; min-width: 150px; padding: 6px;
+            color: var(--theme-text-color, #1e293b); background: var(--theme-card-bg, #fff);
+            border: 1px solid var(--theme-border-color, #e2e8f0); border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .top-bar__language-option { display: block; padding: 6px 9px; white-space: nowrap; }
+        .top-bar__language-option:hover, .top-bar__language-option--active {
+            color: var(--theme-primary, #405189); background: var(--theme-body-bg, #f7f9fc);
+        }
+        .top-bar__language-option--active { font-weight: 600; }
 
         /* ===== 3. MAIN NAVIGATION ===== */
         .main-nav {

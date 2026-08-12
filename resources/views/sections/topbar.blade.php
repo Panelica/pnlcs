@@ -17,13 +17,13 @@
                 <a href="{{ route('client.register') }}" class="top-bar__item"><i class="ri-user-add-line"></i> {{ __('sections.topbar.sign_up') }}</a>
                 <div class="top-bar__divider"></div>
                 @if(isset($activeLanguages) && $activeLanguages->count() > 1)
-                <details class="top-bar__language" style="position:relative;">
-                    <summary class="top-bar__item" style="cursor:pointer;list-style:none;">
+                <details class="top-bar__language">
+                    <summary class="top-bar__item top-bar__language-toggle">
                         <i class="ri-global-line"></i> {{ $currentLocaleName ?? __('client.topbar.language') }}
                     </summary>
-                    <div style="position:absolute;right:0;top:100%;z-index:50;min-width:150px;padding:6px;background:#fff;border:1px solid #ddd;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,.12);">
+                    <div class="top-bar__language-menu">
                         @foreach($activeLanguages as $language)
-                            <a href="{{ request()->fullUrlWithQuery(['lang' => $language->code]) }}" style="display:block;padding:6px 9px;color:#333;text-decoration:none;white-space:nowrap;{{ $language->code === ($currentLocale ?? app()->getLocale()) ? 'font-weight:600;background:#f3f4f6;' : '' }}">
+                            <a href="{{ request()->fullUrlWithQuery(['lang' => $language->code]) }}" class="top-bar__language-option {{ $language->code === ($currentLocale ?? app()->getLocale()) ? 'top-bar__language-option--active' : '' }}">
                                 {{ $language->native_name }}
                             </a>
                         @endforeach
