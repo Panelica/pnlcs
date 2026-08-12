@@ -1058,4 +1058,5 @@ return [
     'welcome.meta_description' => ':brand — reliable web hosting, VPS servers, domains, and SSL. Built on isolated infrastructure with Cgroups v2 and Nginx.',
     'welcome.meta_title_suffix' => 'Professional Web Hosting, Domains & Servers',
     'welcome_back' => 'Welcome back',
+    'nav.home_site' => 'Home',
 ];
