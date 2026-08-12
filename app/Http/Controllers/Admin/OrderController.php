@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Service;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -85,6 +86,31 @@ class OrderController extends Controller
     /**
      * Delete (soft-cancel) an order and all related items.
      */
+    /**
+     * Correct the domain on a service before it is provisioned. Once the panel
+     * holds an account for it (username set) or it is past pending, changing the
+     * domain here would desync the panel from the billing record, so it is only
+     * allowed while the service is still pending and unprovisioned.
+     */
+    public function updateServiceDomain(Request $request, Order $order, Service $service): RedirectResponse
+    {
+        if ($service->order_id !== $order->id) {
+            abort(404);
+        }
+
+        if (strtolower((string) $service->status) !== 'pending' || ! empty($service->username)) {
+            return back()->with('error', __('admin.orders.domain_edit_locked'));
+        }
+
+        $data = $request->validate([
+            'domain' => ['required', 'string', 'max:253', 'regex:/^(?=.{1,253}$)([a-z0-9](-?[a-z0-9])*\\.)+[a-z]{2,}$/i'],
+        ]);
+
+        $service->update(['domain' => strtolower(trim($data['domain']))]);
+
+        return back()->with('success', __('admin.orders.domain_updated'));
+    }
+
     public function delete(Order $order): RedirectResponse
     {
         $orderNum = $order->order_num;

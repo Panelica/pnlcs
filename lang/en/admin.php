@@ -2582,4 +2582,6 @@ return [
     'whois.tld_support' => 'Supports 50+ TLDs: .com, .net, .org, .io, .dev, .app, .ai, .me, country codes, and more.',
     'whois.whois_desc' => 'Enter any domain name above to see its WHOIS record — registrar, expiry date, nameservers, and more.',
     'whois.whois_domain_lookup' => 'WHOIS Domain Lookup',
+    'orders.domain_updated' => 'Domain updated.',
+    'orders.domain_edit_locked' => 'The domain can only be changed while the order is pending and not yet provisioned on the server.',
 ];

@@ -35,7 +35,17 @@
                 @foreach($order->services as $svc)
                 <tr>
                     <td><a href="{{ route('admin.services.show', $svc) }}" style="color:#337ab7;">{{ $svc->product?->name ?? 'N/A' }}</a></td>
-                    <td style="font-family:monospace;font-size:12px;">{{ $svc->domain ?? '&mdash;' }}</td>
+                    <td style="font-family:monospace;font-size:12px;">
+                        @if(strtolower($svc->status) === 'pending' && empty($svc->username))
+                        <form method="POST" action="{{ route('admin.orders.service-domain', [$order, $svc]) }}" style="display:flex;gap:4px;align-items:center;">
+                            @csrf @method('PUT')
+                            <input type="text" name="domain" value="{{ $svc->domain }}" class="form-control" style="height:26px;font-size:12px;padding:2px 6px;max-width:180px;" placeholder="domain.com">
+                            <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.save') }}</button>
+                        </form>
+                        @else
+                        {{ $svc->domain ?? '&mdash;' }}
+                        @endif
+                    </td>
                     <td>{{ $svc->billing_cycle }}</td>
                     <td style="text-align:right;font-family:monospace;">{{ money_fmt($svc->amount) }}</td>
                     <td><span class="badge-{{ strtolower($svc->status) }}">{{ ucfirst($svc->status) }}</span></td>
