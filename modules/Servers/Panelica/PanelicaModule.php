@@ -753,7 +753,160 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails', 'files', 'databases', 'ftp'];
+        return ['emails', 'files', 'databases', 'ftp', 'subdomains'];
+    }
+
+    // -------------------------------------------------------------------------
+    // Subdomains (Panelica-only). Per parent-domain; every subdomain is a real
+    // vhost the panel provisions (nginx/apache + document root + PHP-FPM + SSL +
+    // DNS). Fenced to the account's own domains; creation is gated by the plan's
+    // max_subdomains (enforced by the panel too).
+    // -------------------------------------------------------------------------
+
+    /**
+     * Subdomains across the account's own domains.
+     *
+     * @return list<array{id:string,name:string,full_name:string,domain:string,document_root:string,php_version:string,ssl:bool,status:string}>
+     */
+    public function subdomains(Service $service): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return [];
+        }
+        $out = [];
+        foreach ($this->accountDomains($service) as $domainId => $domainName) {
+            $resp = $this->get($server, "/v1/domains/{$domainId}/subdomains");
+            if (! $resp->successful()) {
+                continue;
+            }
+            foreach (($resp->json('data') ?? []) as $s) {
+                $out[] = [
+                    'id' => (string) ($s['id'] ?? ''),
+                    'name' => (string) ($s['subdomain_name'] ?? ''),
+                    'full_name' => (string) ($s['full_name'] ?? ''),
+                    'domain' => $domainName,
+                    'domain_id' => $domainId,
+                    'document_root' => (string) ($s['document_root'] ?? ''),
+                    'php_version' => (string) ($s['php_version'] ?? ''),
+                    'ssl' => (bool) ($s['ssl_enabled'] ?? false),
+                    'status' => (string) ($s['status'] ?? ''),
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Plan policy for subdomains: the cap, current usage across all the
+     * account's domains, and whether another may be created.
+     *
+     * @return array{max:int,used:int,can_create:bool}
+     */
+    public function subdomainPolicy(Service $service): array
+    {
+        $used = count($this->subdomains($service));
+        $policy = ['max' => 0, 'used' => $used, 'can_create' => false];
+        $planLimit = $this->planLimit($service, 'max_subdomains');
+        if ($planLimit === null) {
+            // Unknown plan → let the panel be the authority (allow, it enforces).
+            return ['max' => -1, 'used' => $used, 'can_create' => true];
+        }
+        $policy['max'] = $planLimit;
+        $policy['can_create'] = $planLimit < 0 || $used < $planLimit;
+
+        return $policy;
+    }
+
+    public function createSubdomain(Service $service, string $domainId, string $name, ?string $documentRoot = null, ?string $phpVersion = null, bool $ssl = true): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! isset($this->accountDomains($service)[$domainId])) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+        $name = strtolower(trim($name));
+        if ($name === '' || ! preg_match('/^[a-z0-9-]+$/', $name)) {
+            return $this->buildResult(false, 'Enter a valid subdomain name (letters, numbers, hyphens).');
+        }
+        if (! $this->subdomainPolicy($service)['can_create']) {
+            return $this->buildResult(false, 'You have reached your plan\'s subdomain limit.');
+        }
+
+        $payload = ['subdomain_name' => $name, 'ssl_enabled' => $ssl];
+        if ($documentRoot !== null && $documentRoot !== '') {
+            $payload['document_root'] = $documentRoot;
+        }
+        if ($phpVersion !== null && $phpVersion !== '') {
+            $payload['php_version'] = $phpVersion;
+        }
+
+        $resp = $this->post($server, "/v1/domains/{$domainId}/subdomains", $payload);
+        if ($resp->status() === 403) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Your plan does not allow this.'));
+        }
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the subdomain.'));
+        }
+
+        return $this->buildResult(true, 'Subdomain created.');
+    }
+
+    public function deleteSubdomain(Service $service, string $id): array
+    {
+        $server = $this->getServer($service);
+        if (! $server || ! $this->ownsSubdomain($service, $id)) {
+            return $this->buildResult(false, 'That subdomain does not belong to this service.');
+        }
+        $resp = $this->delete($server, "/v1/subdomains/{$id}");
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the subdomain.'));
+        }
+
+        return $this->buildResult(true, 'Subdomain deleted.');
+    }
+
+    /** A plan integer limit for the account, or null when it cannot be resolved. */
+    private function planLimit(Service $service, string $field): ?int
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return null;
+        }
+        $acc = $this->get($server, "/v1/accounts/{$accountId}");
+        $planId = $acc->successful() ? ($acc->json('data.plan_id') ?? null) : null;
+        if (! $planId) {
+            return null;
+        }
+        $plans = $this->get($server, '/v1/plans');
+        if (! $plans->successful()) {
+            return null;
+        }
+        foreach (($plans->json('data') ?? []) as $p) {
+            if ((string) ($p['id'] ?? '') === (string) $planId) {
+                return isset($p[$field]) ? (int) $p[$field] : null;
+            }
+        }
+
+        return null;
+    }
+
+    private function ownsSubdomain(Service $service, string $id): bool
+    {
+        if ($id === '') {
+            return false;
+        }
+        foreach ($this->subdomains($service) as $s) {
+            if ($s['id'] === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // -------------------------------------------------------------------------

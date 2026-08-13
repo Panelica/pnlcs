@@ -477,6 +477,61 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    // ----- Subdomains (Panelica-only) ----------------------------------------
+
+    public function subdomains(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'subdomains');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+        $subdomains = $module->subdomains($service);
+        $policy = $module->subdomainPolicy($service);
+        $domains = $module->accountDomains($service);
+
+        return view('client.services.hosting.subdomains', compact('service', 'subdomains', 'policy', 'domains'));
+    }
+
+    public function storeSubdomain(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'subdomains');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'domain_id' => ['required', 'string'],
+            'name' => ['required', 'string', 'max:63', 'regex:/^[a-zA-Z0-9-]+$/'],
+            'document_root' => ['nullable', 'string', 'max:255'],
+            'php_version' => ['nullable', 'string', 'max:10'],
+            'ssl' => ['nullable', 'boolean'],
+        ]);
+
+        $result = $module->createSubdomain(
+            $service,
+            $data['domain_id'],
+            $data['name'],
+            $data['document_root'] ?? null,
+            $data['php_version'] ?? null,
+            (bool) ($data['ssl'] ?? true)
+        );
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroySubdomain(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'subdomains');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->deleteSubdomain($service, (string) $request->input('subdomain_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
     // ----- FTP accounts (Panelica-only) --------------------------------------
 
     public function ftp(Service $service)
