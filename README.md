@@ -445,6 +445,32 @@ files live on the `pnlcs_app` volume and are left untouched.
 Set `AUTO_UPDATE=1` on the container to pull the latest code automatically on
 every restart.
 
+#### `fatal: detected dubious ownership in repository`
+
+If `update.sh` stops with:
+
+```
+fatal: detected dubious ownership in repository at '/var/www/pnlcs'
+```
+
+Git is refusing to run because the code directory is owned by a different user
+than the one running the update (a normal effect of the `pnlcs_app` volume).
+Mark the directory as trusted once — the exception is permanent, so later
+updates run cleanly:
+
+```bash
+docker exec pnlcs git config --global --add safe.directory /var/www/pnlcs
+docker exec pnlcs /usr/local/bin/update.sh
+```
+
+Already inside the container shell (`/var/www/pnlcs #`)? Run it without
+`docker exec`:
+
+```bash
+git config --global --add safe.directory /var/www/pnlcs
+/usr/local/bin/update.sh
+```
+
 > The update resets the working tree to `origin/main`, so any manual edits made
 > **inside** the container are discarded — all code is served from this
 > repository. Keep customisations in your own fork or theme, not in the running
