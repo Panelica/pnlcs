@@ -75,15 +75,31 @@
           +(limit>0?' / '+limit.toLocaleString():'')+' '+unit+(limit>0?' &mdash; <strong>'+pct+'%</strong>':'')+'</span></div>'
           +(limit>0?'<div class="pn-progress-wrap"><div class="pn-progress-fill" style="width:'+pct+'%;background:'+col+'"></div></div>':'')+'</div>';
     }
+    function gauge(label,pct,detail){
+        pct=Math.min(100,Math.max(0,Math.round(pct)));
+        var col=pct>=90?'var(--danger)':(pct>=75?'var(--warning)':'var(--primary)');
+        return '<div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">'
+          +'<span style="font-weight:600">'+label+'</span><span class="text-muted">'+detail+' &mdash; <strong>'+pct+'%</strong></span></div>'
+          +'<div class="pn-progress-wrap"><div class="pn-progress-fill" style="width:'+pct+'%;background:'+col+'"></div></div></div>';
+    }
+    function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
     fetch("{{ route('client.services.usage', $service) }}",{headers:{'X-Requested-With':'XMLHttpRequest'}})
       .then(function(r){return r.json();}).then(function(u){
         if(!u||!u.available){el.innerHTML='<span class="text-muted">Live usage is not available right now.</span>';return;}
         var html='';
+        if(u.cpu) html+=gauge("{{ __('client.hosting.dashboard.cpu') }}",u.cpu.percent||0,(u.cpu.percent||0).toFixed(2)+'%');
+        if(u.ram) html+=gauge("{{ __('client.hosting.dashboard.ram') }}",u.ram.percent||0,(u.ram.used_mb||0).toLocaleString()+' / '+(u.ram.limit_mb||0).toLocaleString()+' MB');
         if(u.disk) html+=bar("{{ __('client.services.disk_usage') }}",u.disk.used_mb||0,u.disk.quota_mb||0,'MB');
         if(u.bandwidth) html+=bar("{{ __('client.services.bandwidth_usage') }}",u.bandwidth.used_mb||0,0,'MB');
         if(u.counts){html+='<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:6px">';
           [['domains','Websites'],['databases','Databases'],['emails','Email'],['ftp','FTP']].forEach(function(p){
             html+='<span class="text-muted"><strong>'+(u.counts[p[0]]||0)+'</strong> '+p[1]+'</span>';});
+          html+='</div>';}
+        if(u.domains){html+='<div style="margin-top:18px"><div style="font-size:13px;font-weight:600;margin-bottom:8px"><i class="ri-global-line" style="margin-right:6px"></i>{{ __('client.hosting.dashboard.domains') }}</div>';
+          if(u.domains.length){html+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+            u.domains.forEach(function(d){html+='<span class="pn-code" style="font-size:12px;padding:3px 10px">'+esc(d)+'</span>';});
+            html+='</div>';}
+          else{html+='<span class="text-muted" style="font-size:13px">{{ __('client.hosting.dashboard.no_domains') }}</span>';}
           html+='</div>';}
         el.innerHTML=html||'<span class="text-muted">No usage data yet.</span>';
       }).catch(function(){el.innerHTML='<span class="text-muted">Live usage is not available right now.</span>';});

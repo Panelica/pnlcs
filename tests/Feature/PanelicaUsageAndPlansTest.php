@@ -52,6 +52,8 @@ it('shows the panel plan dropdown on the product edit page', function () {
 it('returns live disk/bandwidth/counts usage for the client service', function () {
     Http::fake([
         '*/v1/accounts/*/disk-usage' => Http::response(['data' => ['used_mb' => 1500, 'quota_mb' => 5120]], 200),
+        '*/v1/accounts/*/resource-usage' => Http::response(['data' => ['available' => false]], 200),
+        '*/v1/accounts/*/domains' => Http::response(['data' => []], 200),
         '*/v1/accounts/*/stats'      => Http::response(['data' => [
             'bandwidth_mb' => 3000, 'domain_count' => 2, 'email_count' => 4, 'ftp_count' => 1, 'database_count' => 3,
         ]], 200),

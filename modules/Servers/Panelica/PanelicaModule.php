@@ -644,7 +644,11 @@ class PanelicaModule extends AbstractServerModule
             return ['available' => false];
         }
 
-        $out = ['available' => true, 'disk' => null, 'bandwidth' => null, 'counts' => null];
+        $out = [
+            'available' => true,
+            'disk' => null, 'bandwidth' => null, 'counts' => null,
+            'cpu' => null, 'ram' => null, 'domains' => [],
+        ];
 
         $diskResp = $this->get($server, "/v1/accounts/{$userId}/disk-usage");
         if ($diskResp->successful()) {
@@ -663,6 +667,29 @@ class PanelicaModule extends AbstractServerModule
                 'databases' => (int) ($st['database_count'] ?? 0),
             ];
         }
+
+        // Live per-account CPU/RAM. The endpoint is newer than some panels, so a
+        // 404 (or any failure, or an idle account with no sample) simply leaves
+        // cpu/ram null and the dashboard omits those gauges - no hard dependency
+        // on the panel version. Server-level metrics are never used here: they
+        // describe the whole box and would leak other tenants' load.
+        $resResp = $this->get($server, "/v1/accounts/{$userId}/resource-usage");
+        if ($resResp->successful() && ($resResp->json('data.available') === true)) {
+            $r = $resResp->json('data');
+            $out['cpu'] = ['percent' => round((float) ($r['cpu_usage_percent'] ?? 0), 2)];
+            $usedMb = (int) ($r['memory_usage_mb'] ?? 0);
+            $limitMb = (int) ($r['memory_limit_mb'] ?? 0);
+            $out['ram'] = [
+                'used_mb' => $usedMb,
+                'limit_mb' => $limitMb,
+                'percent' => $limitMb > 0 ? round($usedMb / $limitMb * 100, 1) : 0,
+            ];
+            $out['recorded_at'] = $r['recorded_at'] ?? null;
+        }
+
+        // The account's own domains - the "domain list" a customer expects on a
+        // hosting overview. Scoped server-side to this account.
+        $out['domains'] = array_values($this->accountDomains($service));
 
         return $out;
     }
