@@ -34,8 +34,9 @@
     .ft-act:hover{border-color:var(--primary);color:var(--primary)}
     .ft-act.danger{width:32px;height:32px;justify-content:center;padding:0;color:var(--muted)}
     .ft-act.danger:hover{background:rgba(239,68,68,.1);color:#dc2626;border-color:transparent}
-    .ft-pop{position:absolute;right:0;z-index:20;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);min-width:250px;text-align:left}
+    .ft-pop{position:absolute;right:0;z-index:20;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);min-width:250px;box-sizing:border-box;text-align:left}
     .ft-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
+    .ft-pop,.ft-pop *{box-sizing:border-box}
 </style>
 
 <a href="{{ route('client.services.show', $service) }}" class="ft-back"><i class="ri-arrow-left-line"></i>{{ $service->product?->name ?? __('client.services.title') }}</a>
