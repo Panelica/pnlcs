@@ -489,8 +489,9 @@ class ServiceController extends Controller
         $accounts = $module->ftpAccounts($service);
         $policy = $module->ftpPolicy($service);
         $domains = $module->accountDomains($service);
+        $ftpHost = method_exists($module, 'ftpHost') ? $module->ftpHost($service) : null;
 
-        return view('client.services.hosting.ftp', compact('service', 'accounts', 'policy', 'domains'));
+        return view('client.services.hosting.ftp', compact('service', 'accounts', 'policy', 'domains', 'ftpHost'));
     }
 
     public function storeFtp(Request $request, Service $service)

@@ -918,6 +918,17 @@ class PanelicaModule extends AbstractServerModule
         return $this->buildResult(true, 'FTP password updated.');
     }
 
+    /** FTP connection host for the customer (the panel hostname). */
+    public function ftpHost(Service $service): ?string
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return null;
+        }
+
+        return trim((string) $server->hostname) ?: trim((string) $server->ip_address);
+    }
+
     private function ownsFtp(Service $service, string $id): bool
     {
         if ($id === '') {

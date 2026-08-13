@@ -46,6 +46,18 @@
     <span class="ft-cnt">{{ $policy['max'] < 0 ? $policy['used'].' / ∞' : $policy['used'].' / '.$policy['max'] }}</span>
 </div>
 
+@if(!empty($ftpHost))
+<div class="ft-card">
+    <div class="ft-ch"><i class="ri-plug-line"></i>{{ __('client.hosting.ftp.connection') }}</div>
+    <div style="padding:14px 18px;display:flex;gap:28px;flex-wrap:wrap">
+        <div><div class="ft-lbl">{{ __('client.hosting.ftp.host') }}</div><span class="ft-home" style="font-size:12.5px">{{ $ftpHost }}</span></div>
+        <div><div class="ft-lbl">{{ __('client.hosting.ftp.port') }}</div><span class="ft-home" style="font-size:12.5px">21</span></div>
+        <div><div class="ft-lbl">{{ __('client.hosting.ftp.protocol') }}</div><span class="ft-home" style="font-size:12.5px">FTP / FTPS (TLS)</span></div>
+    </div>
+    <div class="ft-note" style="border-top:1px solid var(--border)"><i class="ri-information-line"></i>{{ __('client.hosting.ftp.protocol_hint') }}</div>
+</div>
+@endif
+
 {{-- Create (only when the plan allows it) --}}
 <div class="ft-card">
     <div class="ft-ch"><i class="ri-user-add-line"></i>{{ __('client.hosting.ftp.create_title') }}</div>
