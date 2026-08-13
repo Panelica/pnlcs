@@ -374,4 +374,143 @@ class ServiceController extends Controller
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
+
+    // ----- File manager (Panelica-only) --------------------------------------
+
+    /** File browser tab. */
+    public function files(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+
+        $listing = $module->listFiles($service, $request->query('path'));
+
+        return view('client.services.hosting.files', compact('service', 'listing'));
+    }
+
+    /** Load a text file into the editor. */
+    public function filesEdit(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        $path = (string) $request->query('path');
+        if (! $module || $path === '') {
+            return redirect()->route('client.services.files', $service);
+        }
+
+        $result = $module->readFile($service, $path);
+        if (! ($result['success'] ?? false)) {
+            return redirect()
+                ->route('client.services.files', ['service' => $service, 'path' => dirname($path)])
+                ->with('error', $result['message']);
+        }
+
+        $content = $result['data']['content'] ?? '';
+
+        return view('client.services.hosting.file-edit', compact('service', 'path', 'content'));
+    }
+
+    public function filesWrite(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'path' => ['required', 'string'],
+            'content' => ['nullable', 'string'],
+        ]);
+
+        $result = $module->writeFile($service, $data['path'], (string) ($data['content'] ?? ''));
+
+        return redirect()
+            ->route('client.services.files', ['service' => $service, 'path' => dirname($data['path'])])
+            ->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function filesCreate(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'path' => ['required', 'string'],
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'in:file,folder'],
+        ]);
+
+        $result = $module->createEntry($service, $data['path'], $data['name'], $data['type']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function filesRename(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'path' => ['required', 'string'],
+            'new_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $result = $module->renameEntry($service, $data['path'], $data['new_name']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function filesDelete(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'paths' => ['required', 'array', 'min:1'],
+            'paths.*' => ['string'],
+        ]);
+
+        $result = $module->deleteEntries($service, $data['paths']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    /** Stream a file download through the panel API (authenticated proxy). */
+    public function filesDownload(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        $path = (string) $request->query('path');
+        if (! $module || $path === '') {
+            abort(404);
+        }
+
+        $resp = $module->downloadFile($service, $path);
+        if (! $resp) {
+            return back()->with('error', __('client.hosting.files.download_failed'));
+        }
+
+        $name = basename($path) ?: 'download';
+
+        return response($resp->body(), 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="'.str_replace('"', '', $name).'"',
+        ]);
+    }
 }

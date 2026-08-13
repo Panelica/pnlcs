@@ -97,6 +97,13 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('services/{service}/emails', [ServiceController::class, 'storeEmail'])->name('services.emails.store');
         Route::post('services/{service}/emails/delete', [ServiceController::class, 'destroyEmail'])->name('services.emails.destroy');
         Route::post('services/{service}/emails/password', [ServiceController::class, 'updateEmailPassword'])->name('services.emails.password');
+        Route::get('services/{service}/files', [ServiceController::class, 'files'])->name('services.files');
+        Route::get('services/{service}/files/download', [ServiceController::class, 'filesDownload'])->name('services.files.download');
+        Route::get('services/{service}/files/edit', [ServiceController::class, 'filesEdit'])->name('services.files.edit');
+        Route::post('services/{service}/files/save', [ServiceController::class, 'filesWrite'])->name('services.files.save');
+        Route::post('services/{service}/files/create', [ServiceController::class, 'filesCreate'])->name('services.files.create');
+        Route::post('services/{service}/files/rename', [ServiceController::class, 'filesRename'])->name('services.files.rename');
+        Route::post('services/{service}/files/delete', [ServiceController::class, 'filesDelete'])->name('services.files.delete');
 
         // Domains
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');

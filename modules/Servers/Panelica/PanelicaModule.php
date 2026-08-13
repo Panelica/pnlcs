@@ -753,7 +753,7 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails'];
+        return ['emails', 'files'];
     }
 
     /** The panel account id linked to this service, or null when unprovisioned. */
@@ -956,6 +956,211 @@ class PanelicaModule extends AbstractServerModule
         }
 
         return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Client file manager (Panelica-only)
+    //
+    // Scoped two ways for every operation: user_id is fixed to THIS service's
+    // own account (the customer never supplies it), and the panel fences every
+    // path to that account's home directory server-side - a path crafted to
+    // escape home is refused with 403. So a customer can only ever see and touch
+    // files under their own /home/<user>. Binary upload is deferred until the
+    // panel exposes a multipart endpoint; this covers browse/read/edit/create/
+    // rename/delete/download - the cPanel-essential core.
+    // -------------------------------------------------------------------------
+
+    /**
+     * GET with a signed query string. The external API signs METHOD+PATH+?QUERY
+     * +TS+BODY, and the query must be byte-identical to what goes on the wire.
+     * PHP_QUERY_RFC3986 encoding matches what Guzzle sends (verified live), so
+     * the signature holds for paths that contain slashes and spaces.
+     */
+    private function getWithQuery(Server $server, string $basePath, array $query): Response
+    {
+        $qs = http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        $fullPath = $basePath.($qs !== '' ? '?'.$qs : '');
+        $headers = $this->buildHeaders($server, 'GET', $fullPath, '');
+
+        return Http::withHeaders($headers)->withoutVerifying()->get($this->baseUrl($server).$fullPath);
+    }
+
+    private function put(Server $server, string $path, array $payload): Response
+    {
+        $body = json_encode($payload);
+        $headers = $this->buildHeaders($server, 'PUT', $path, $body);
+
+        return Http::withHeaders($headers)->withoutVerifying()->withBody($body, 'application/json')->put($this->baseUrl($server).$path);
+    }
+
+    /** DELETE carrying a JSON body. The panel excludes the DELETE body from the signature. */
+    private function deleteWithBody(Server $server, string $path, array $payload): Response
+    {
+        $body = json_encode($payload);
+        $headers = $this->buildHeaders($server, 'DELETE', $path, '');
+
+        return Http::withHeaders($headers)->withoutVerifying()->withBody($body, 'application/json')->delete($this->baseUrl($server).$path);
+    }
+
+    /** The account's home directory - the root of everything the file tab shows. */
+    private function filesHome(Service $service): string
+    {
+        return '/home/'.($service->username ?: 'user');
+    }
+
+    /**
+     * List a directory under the account's home.
+     *
+     * @return array{ok:bool,path:string,home:string,entries:array,message:string}
+     */
+    public function listFiles(Service $service, ?string $path = null): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        $home = $this->filesHome($service);
+        if (! $server || ! $accountId) {
+            return ['ok' => false, 'path' => $home, 'home' => $home, 'entries' => [], 'message' => 'No panel account is linked to this service.'];
+        }
+
+        $query = ['user_id' => $accountId];
+        if ($path !== null && $path !== '') {
+            $query['path'] = $path;
+        }
+        $resp = $this->getWithQuery($server, '/v1/files', $query);
+        if (! $resp->successful()) {
+            return ['ok' => false, 'path' => $home, 'home' => $home, 'entries' => [], 'message' => $this->apiMessage($resp, 'Could not open that folder.')];
+        }
+
+        $data = $resp->json('data') ?? [];
+
+        return [
+            'ok' => true,
+            'path' => (string) ($data['path'] ?? $home),
+            'home' => $home,
+            'entries' => is_array($data['files'] ?? null) ? $data['files'] : [],
+            'message' => '',
+        ];
+    }
+
+    /** Read a text file's content for the editor. */
+    public function readFile(Service $service, string $path): array
+    {
+        [$server, $accountId] = $this->fileContext($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+
+        $resp = $this->getWithQuery($server, '/v1/files/content', ['user_id' => $accountId, 'path' => $path]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not read that file.'));
+        }
+        $data = $resp->json('data');
+        $content = is_array($data) ? ($data['content'] ?? '') : ($resp->json('content') ?? '');
+
+        return $this->buildResult(true, 'ok', ['content' => (string) $content, 'path' => $path]);
+    }
+
+    public function writeFile(Service $service, string $path, string $content): array
+    {
+        [$server, $accountId] = $this->fileContext($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+
+        $resp = $this->put($server, '/v1/files/content', ['user_id' => $accountId, 'path' => $path, 'content' => $content]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not save the file.'));
+        }
+
+        return $this->buildResult(true, 'File saved.');
+    }
+
+    /** Create a folder ($type='folder') or an empty text file ($type='file') in $path. */
+    public function createEntry(Service $service, string $path, string $name, string $type, string $content = ''): array
+    {
+        [$server, $accountId] = $this->fileContext($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+        $name = trim($name);
+        if ($name === '' || str_contains($name, '/') || str_contains($name, "\0") || $name === '.' || $name === '..') {
+            return $this->buildResult(false, 'Enter a valid name.');
+        }
+        $type = $type === 'folder' ? 'folder' : 'file';
+
+        $resp = $this->post($server, '/v1/files', array_filter([
+            'user_id' => $accountId,
+            'path' => $path,
+            'name' => $name,
+            'type' => $type,
+            'content' => $content !== '' ? $content : null,
+        ], fn ($v) => $v !== null));
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create that item.'));
+        }
+
+        return $this->buildResult(true, $type === 'folder' ? 'Folder created.' : 'File created.');
+    }
+
+    public function renameEntry(Service $service, string $path, string $newName): array
+    {
+        [$server, $accountId] = $this->fileContext($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+        $newName = trim($newName);
+        if ($newName === '' || str_contains($newName, '/') || str_contains($newName, "\0") || $newName === '.' || $newName === '..') {
+            return $this->buildResult(false, 'Enter a valid name.');
+        }
+
+        $resp = $this->patch($server, '/v1/files/rename', ['user_id' => $accountId, 'path' => $path, 'new_name' => $newName]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not rename that item.'));
+        }
+
+        return $this->buildResult(true, 'Renamed.');
+    }
+
+    /** Move one or more paths to trash (or permanently). Paths are fenced to home by the panel. */
+    public function deleteEntries(Service $service, array $paths, bool $permanent = false): array
+    {
+        [$server, $accountId] = $this->fileContext($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+        $paths = array_values(array_filter(array_map('strval', $paths), fn ($p) => $p !== ''));
+        if ($paths === []) {
+            return $this->buildResult(false, 'Nothing to delete.');
+        }
+
+        $resp = $this->deleteWithBody($server, '/v1/files', ['user_id' => $accountId, 'paths' => $paths, 'permanent' => $permanent]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete.'));
+        }
+
+        return $this->buildResult(true, 'Deleted.');
+    }
+
+    /** Raw download response for the controller to stream. Null when unavailable. */
+    public function downloadFile(Service $service, string $path): ?Response
+    {
+        [$server, $accountId] = $this->fileContext($service);
+        if (! $server) {
+            return null;
+        }
+
+        $resp = $this->getWithQuery($server, '/v1/files/download', ['user_id' => $accountId, 'path' => $path]);
+
+        return $resp->successful() ? $resp : null;
+    }
+
+    /** [server, accountId] or [null, null] when the service has no linked account. */
+    private function fileContext(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+
+        return ($server && $accountId) ? [$server, $accountId] : [null, null];
     }
 
     public function testConnection(Server $server): bool

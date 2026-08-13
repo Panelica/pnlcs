@@ -82,7 +82,7 @@ function fakePanelEmailApi(array $emails): void
 it('offers the email feature only for a provisioned service', function () {
     $server = panelServerE();
     [$user, $service] = emailService($server);
-    expect((new PanelicaModule)->hostingFeatures($service))->toBe(['emails']);
+    expect((new PanelicaModule)->hostingFeatures($service))->toContain('emails');
 
     $blank = Service::factory()->create([
         'client_id' => $service->client_id, 'server_id' => $server->id,
