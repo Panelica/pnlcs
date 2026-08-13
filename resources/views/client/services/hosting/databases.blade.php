@@ -15,7 +15,7 @@
     .db-head h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-.5px;color:var(--text)}
     .db-head .sub{font-size:13px;color:var(--muted)}
     .db-cnt{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:6px 13px;border-radius:999px}
-    .db-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+    .db-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-bottom:18px}
     .db-ch{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
     .db-form{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:18px}
     .db-fld{flex:1;min-width:140px}
@@ -46,7 +46,12 @@
 <div class="db-head">
     <div class="db-head-ic"><i class="ri-database-2-line"></i></div>
     <div><h1>{{ __('client.hosting.databases.title') }}</h1><div class="sub">{{ __('client.hosting.databases.subtitle') }}</div></div>
-    <span class="db-cnt">{{ $totalDbs }} {{ __('client.hosting.databases.title') }}</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        @if(!empty($phpMyAdminUrl))
+        <a href="{{ $phpMyAdminUrl }}" target="_blank" rel="noopener" class="db-btn" style="text-decoration:none;background:#0ea5e9"><i class="ri-table-line"></i>{{ __('client.hosting.databases.phpmyadmin') }}<i class="ri-external-link-line" style="font-size:12px;opacity:.7"></i></a>
+        @endif
+        <span class="db-cnt">{{ $totalDbs }} {{ __('client.hosting.databases.title') }}</span>
+    </div>
 </div>
 
 @if($domains->isEmpty())
@@ -131,5 +136,29 @@
     @endif
 </div>
 @endif
+
+<script>
+// Anchor each dropdown to the viewport when it opens, so it is never clipped by
+// a card boundary or a scroll container regardless of where it sits in the table.
+(function(){
+    document.querySelectorAll('.db-card details').forEach(function(d){
+        var pop = d.querySelector('.db-pop');
+        var sum = d.querySelector('summary');
+        if(!pop || !sum) return;
+        d.addEventListener('toggle', function(){
+            if(!d.open){ pop.style.position=''; pop.style.top=''; pop.style.right=''; pop.style.marginTop=''; return; }
+            document.querySelectorAll('.db-card details[open]').forEach(function(o){ if(o!==d) o.removeAttribute('open'); });
+            var r = sum.getBoundingClientRect();
+            pop.style.position='fixed';
+            pop.style.top=(r.bottom+6)+'px';
+            pop.style.right=Math.max(12,(window.innerWidth - r.right))+'px';
+            pop.style.marginTop='0';
+        });
+    });
+    document.addEventListener('click', function(e){
+        document.querySelectorAll('.db-card details[open]').forEach(function(d){ if(!d.contains(e.target)) d.removeAttribute('open'); });
+    });
+})();
+</script>
 
 @endsection

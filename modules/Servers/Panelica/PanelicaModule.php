@@ -1406,6 +1406,21 @@ class PanelicaModule extends AbstractServerModule
         return 'https://'.$host.':'.$server->port.'/email/webmail';
     }
 
+    /**
+     * URL of the panel's phpMyAdmin (served at /databases/phpmyadmin on the panel
+     * HTTPS port). The customer signs in there with any of their database users.
+     */
+    public function phpMyAdminUrl(Service $service): ?string
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return null;
+        }
+        $host = trim((string) $server->hostname) ?: trim((string) $server->ip_address);
+
+        return 'https://'.$host.':'.$server->port.'/databases/phpmyadmin/';
+    }
+
     /** [server, accountId] or [null, null] when the service has no linked account. */
     private function fileContext(Service $service): array
     {

@@ -83,6 +83,11 @@ it('offers the databases feature for a provisioned service', function () {
     expect((new PanelicaModule)->hostingFeatures($s))->toContain('databases');
 });
 
+it('builds the panel phpMyAdmin URL', function () {
+    [$u, $s] = dbService(dbServer());
+    expect((new PanelicaModule)->phpMyAdminUrl($s))->toBe('https://panel.test:8443/databases/phpmyadmin/');
+});
+
 it('lists databases grouped by the account\'s own domains', function () {
     fakeDbApi();
     [$u, $s] = dbService(dbServer());

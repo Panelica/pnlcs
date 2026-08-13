@@ -388,8 +388,9 @@ class ServiceController extends Controller
         }
 
         $groups = $module->listDatabases($service);
+        $phpMyAdminUrl = method_exists($module, 'phpMyAdminUrl') ? $module->phpMyAdminUrl($service) : null;
 
-        return view('client.services.hosting.databases', compact('service', 'groups'));
+        return view('client.services.hosting.databases', compact('service', 'groups', 'phpMyAdminUrl'));
     }
 
     public function storeDatabase(Request $request, Service $service)
