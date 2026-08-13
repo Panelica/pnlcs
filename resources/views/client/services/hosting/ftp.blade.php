@@ -34,7 +34,7 @@
     .ft-act:hover{border-color:var(--primary);color:var(--primary)}
     .ft-act.danger{width:32px;height:32px;justify-content:center;padding:0;color:var(--muted)}
     .ft-act.danger:hover{background:rgba(239,68,68,.1);color:#dc2626;border-color:transparent}
-    .ft-pop{position:absolute;right:0;z-index:20;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);min-width:250px;box-sizing:border-box;text-align:left}
+    .ft-pop{position:absolute;right:0;z-index:20;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);width:264px;box-sizing:border-box;text-align:left}
     .ft-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
     .ft-pop,.ft-pop *{box-sizing:border-box}
 </style>
@@ -123,9 +123,9 @@
     document.querySelectorAll('.ft-card details').forEach(function(d){
         var pop=d.querySelector('.ft-pop'),sum=d.querySelector('summary'); if(!pop||!sum)return;
         d.addEventListener('toggle',function(){
-            if(!d.open){pop.style.position='';pop.style.top='';pop.style.right='';pop.style.marginTop='';return;}
+            if(!d.open){pop.style.position='';pop.style.top='';pop.style.left='';pop.style.right='';pop.style.marginTop='';return;}
             document.querySelectorAll('.ft-card details[open]').forEach(function(o){if(o!==d)o.removeAttribute('open');});
-            var r=sum.getBoundingClientRect();pop.style.position='fixed';pop.style.top=(r.bottom+6)+'px';pop.style.right=Math.max(12,(window.innerWidth-r.right))+'px';pop.style.marginTop='0';
+            var r=sum.getBoundingClientRect();var L=Math.min(r.right-264,window.innerWidth-264-12);if(L<12)L=12;pop.style.position='fixed';pop.style.top=(r.bottom+6)+'px';pop.style.left=L+'px';pop.style.right='auto';pop.style.marginTop='0';
         });
     });
     document.addEventListener('click',function(e){document.querySelectorAll('.ft-card details[open]').forEach(function(d){if(!d.contains(e.target))d.removeAttribute('open');});});

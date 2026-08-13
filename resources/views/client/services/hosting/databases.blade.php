@@ -37,7 +37,7 @@
     .db-act:hover{border-color:var(--primary);color:var(--primary)}
     .db-act.danger{color:var(--muted)}
     .db-act.danger:hover{background:rgba(239,68,68,.1);color:#dc2626;border-color:transparent}
-    .db-pop{position:absolute;right:0;z-index:20;margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);min-width:250px;box-sizing:border-box;text-align:left}
+    .db-pop{position:absolute;right:0;z-index:20;margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);width:264px;box-sizing:border-box;text-align:left}
     .db-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
     .db-pop,.db-pop *{box-sizing:border-box}
 </style>
