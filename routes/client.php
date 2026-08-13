@@ -97,6 +97,10 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('services/{service}/emails', [ServiceController::class, 'storeEmail'])->name('services.emails.store');
         Route::post('services/{service}/emails/delete', [ServiceController::class, 'destroyEmail'])->name('services.emails.destroy');
         Route::post('services/{service}/emails/password', [ServiceController::class, 'updateEmailPassword'])->name('services.emails.password');
+        Route::get('services/{service}/ftp', [ServiceController::class, 'ftp'])->name('services.ftp');
+        Route::post('services/{service}/ftp', [ServiceController::class, 'storeFtp'])->name('services.ftp.store');
+        Route::post('services/{service}/ftp/delete', [ServiceController::class, 'destroyFtp'])->name('services.ftp.destroy');
+        Route::post('services/{service}/ftp/password', [ServiceController::class, 'updateFtpPassword'])->name('services.ftp.password');
         Route::get('services/{service}/databases', [ServiceController::class, 'databases'])->name('services.databases');
         Route::post('services/{service}/databases', [ServiceController::class, 'storeDatabase'])->name('services.databases.store');
         Route::post('services/{service}/databases/delete', [ServiceController::class, 'destroyDatabase'])->name('services.databases.destroy');

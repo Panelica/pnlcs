@@ -477,6 +477,70 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    // ----- FTP accounts (Panelica-only) --------------------------------------
+
+    public function ftp(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'ftp');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+        $accounts = $module->ftpAccounts($service);
+        $policy = $module->ftpPolicy($service);
+        $domains = $module->accountDomains($service);
+
+        return view('client.services.hosting.ftp', compact('service', 'accounts', 'policy', 'domains'));
+    }
+
+    public function storeFtp(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'ftp');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'username' => ['required', 'string', 'max:32', 'regex:/^[a-z0-9._-]+$/i'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+            'domain_id' => ['nullable', 'string'],
+            'quota_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
+        ]);
+
+        $result = $module->createFtpAccount($service, $data['username'], $data['password'], $data['domain_id'] ?? null, (int) ($data['quota_mb'] ?? 0));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyFtp(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'ftp');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->deleteFtpAccount($service, (string) $request->input('ftp_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function updateFtpPassword(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'ftp');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'ftp_id' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+        ]);
+
+        $result = $module->changeFtpPassword($service, $data['ftp_id'], $data['password']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
     // ----- File manager (Panelica-only) --------------------------------------
 
     /** File browser tab. */

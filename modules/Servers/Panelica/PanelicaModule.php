@@ -753,7 +753,183 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails', 'files', 'databases'];
+        return ['emails', 'files', 'databases', 'ftp'];
+    }
+
+    // -------------------------------------------------------------------------
+    // FTP accounts (Panelica-only). Per-account (user_id), NOT per-domain.
+    //
+    // The customer sees only their own FTP accounts, can change a password and
+    // delete, and may create ONLY when the plan allows it (ftp_access_enabled)
+    // and the plan's max_ftp_accounts is not yet reached. The panel enforces all
+    // of this server-side (FTPService); PNLCS mirrors the policy so the UI shows
+    // the create form only when creation is actually permitted.
+    // -------------------------------------------------------------------------
+
+    /**
+     * The account's own FTP accounts.
+     *
+     * @return list<array{id:string,username:string,home:string,quota_mb:int,used_mb:int,status:string}>
+     */
+    public function ftpAccounts(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return [];
+        }
+        $resp = $this->get($server, '/v1/ftp-accounts');
+        if (! $resp->successful()) {
+            return [];
+        }
+        $out = [];
+        foreach (($resp->json('data') ?? []) as $f) {
+            if ((string) ($f['user_id'] ?? '') !== $accountId) {
+                continue; // fence: only this account's FTP users
+            }
+            $out[] = [
+                'id' => (string) ($f['id'] ?? ''),
+                'username' => (string) ($f['ftp_username'] ?? ''),
+                'home' => (string) ($f['home_directory'] ?? ''),
+                'quota_mb' => (int) ($f['quota_mb'] ?? 0),
+                'used_mb' => (int) ($f['used_mb'] ?? 0),
+                'status' => (string) ($f['status'] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * The account's FTP policy from its Panelica plan: whether FTP creation is
+     * allowed, the account cap, current usage, and whether another may be made.
+     *
+     * @return array{enabled:bool,max:int,used:int,can_create:bool}
+     */
+    public function ftpPolicy(Service $service): array
+    {
+        $used = count($this->ftpAccounts($service));
+        $policy = ['enabled' => false, 'max' => 0, 'used' => $used, 'can_create' => false];
+
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return $policy;
+        }
+
+        // account -> plan_id -> plan (max_ftp_accounts + ftp_access_enabled)
+        $acc = $this->get($server, "/v1/accounts/{$accountId}");
+        $planId = $acc->successful() ? ($acc->json('data.plan_id') ?? null) : null;
+        if (! $planId) {
+            return $policy;
+        }
+        $plansResp = $this->get($server, '/v1/plans');
+        if (! $plansResp->successful()) {
+            return $policy;
+        }
+        foreach (($plansResp->json('data') ?? []) as $p) {
+            if ((string) ($p['id'] ?? '') === (string) $planId) {
+                $policy['enabled'] = (bool) ($p['ftp_access_enabled'] ?? false);
+                $policy['max'] = (int) ($p['max_ftp_accounts'] ?? 0);
+                break;
+            }
+        }
+        // max = -1 means unlimited
+        $underLimit = $policy['max'] < 0 || $used < $policy['max'];
+        $policy['can_create'] = $policy['enabled'] && $underLimit;
+
+        return $policy;
+    }
+
+    /**
+     * Create an FTP account for the service's account. The panel enforces the
+     * plan (limit + ftp_access_enabled), hashes the password for ProFTPD, and
+     * fences the home directory to the account's own home; $domain (optional)
+     * scopes the home to that domain's folder, otherwise it is the account home.
+     */
+    public function createFtpAccount(Service $service, string $username, string $password, ?string $domain = null, int $quotaMb = 0): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+        if (! $this->ftpPolicy($service)['can_create']) {
+            return $this->buildResult(false, 'Your plan does not allow creating more FTP accounts.');
+        }
+        $username = strtolower(trim($username));
+        if ($username === '' || ! preg_match('/^[a-z0-9._-]+$/', $username)) {
+            return $this->buildResult(false, 'Enter a valid FTP username.');
+        }
+
+        $payload = [
+            'user_id' => $accountId,
+            'ftp_username' => $username,
+            'password' => $password,
+        ];
+        if ($quotaMb > 0) {
+            $payload['quota_mb'] = $quotaMb;
+        }
+        // A domain (passed as its id) scopes the home to /<domain>; the panel
+        // resolves it under the account home and refuses anything outside it.
+        if ($domain !== null && $domain !== '') {
+            $domains = $this->accountDomains($service);
+            if (isset($domains[$domain])) {
+                $payload['home_directory'] = '/'.$domains[$domain];
+            }
+        }
+
+        $resp = $this->post($server, '/v1/ftp-accounts', $payload);
+        if ($resp->status() === 403) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Your plan does not allow this.'));
+        }
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the FTP account.'));
+        }
+
+        return $this->buildResult(true, 'FTP account created.');
+    }
+
+    public function deleteFtpAccount(Service $service, string $id): array
+    {
+        $server = $this->getServer($service);
+        if (! $server || ! $this->ownsFtp($service, $id)) {
+            return $this->buildResult(false, 'That FTP account does not belong to this service.');
+        }
+        $resp = $this->delete($server, "/v1/ftp-accounts/{$id}");
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the FTP account.'));
+        }
+
+        return $this->buildResult(true, 'FTP account deleted.');
+    }
+
+    public function changeFtpPassword(Service $service, string $id, string $password): array
+    {
+        $server = $this->getServer($service);
+        if (! $server || ! $this->ownsFtp($service, $id)) {
+            return $this->buildResult(false, 'That FTP account does not belong to this service.');
+        }
+        $resp = $this->post($server, "/v1/ftp-accounts/{$id}/change-password", ['password' => $password]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the FTP password.'));
+        }
+
+        return $this->buildResult(true, 'FTP password updated.');
+    }
+
+    private function ownsFtp(Service $service, string $id): bool
+    {
+        if ($id === '') {
+            return false;
+        }
+        foreach ($this->ftpAccounts($service) as $f) {
+            if ($f['id'] === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // -------------------------------------------------------------------------

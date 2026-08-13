@@ -74,7 +74,7 @@
         ['k'=>'files','name'=>__('client.hosting.files.title'),'desc'=>__('client.hosting.files.subtitle'),'ic'=>'ri-folder-open-line','c'=>'#3b82f6','route'=>route('client.services.files',$service)],
         ['k'=>'emails','name'=>__('client.hosting.email.title'),'desc'=>__('client.hosting.email.subtitle'),'ic'=>'ri-mail-line','c'=>'#8b5cf6','route'=>route('client.services.emails',$service)],
         ['k'=>'databases','name'=>'Databases','desc'=>'MySQL databases & users','ic'=>'ri-database-2-line','c'=>'#0ea5e9','route'=>route('client.services.databases',$service)],
-        ['k'=>'ftp','name'=>'FTP Accounts','desc'=>'Manage FTP access','ic'=>'ri-folder-transfer-line','c'=>'#f59e0b','route'=>null],
+        ['k'=>'ftp','name'=>'FTP Accounts','desc'=>'Manage FTP access','ic'=>'ri-folder-transfer-line','c'=>'#f59e0b','route'=>route('client.services.ftp',$service)],
         ['k'=>'subdomains','name'=>'Subdomains','desc'=>'Create subdomains','ic'=>'ri-node-tree','c'=>'#10b981','route'=>null],
         ['k'=>'dns','name'=>'DNS Zone','desc'=>'Edit DNS records','ic'=>'ri-global-line','c'=>'#6366f1','route'=>null],
         ['k'=>'ssl','name'=>'SSL / TLS','desc'=>'Certificates','ic'=>'ri-shield-check-line','c'=>'#059669','route'=>null],
