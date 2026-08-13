@@ -45,7 +45,12 @@
         <div class="em-head-ic"><i class="ri-mail-line"></i></div>
         <div><h1>{{ __('client.hosting.email.title') }}</h1><div class="sub">{{ __('client.hosting.email.subtitle') }}</div></div>
     </div>
-    <span class="em-count">{{ count($emails) }} {{ __('client.hosting.email.mailboxes') }}</span>
+    <div style="display:flex;align-items:center;gap:10px">
+        @if(!empty($webmailUrl))
+        <a href="{{ $webmailUrl }}" target="_blank" rel="noopener" class="em-btn" style="text-decoration:none"><i class="ri-inbox-2-line"></i>{{ __('client.hosting.email.webmail') }}<i class="ri-external-link-line" style="font-size:12px;opacity:.7"></i></a>
+        @endif
+        <span class="em-count">{{ count($emails) }} {{ __('client.hosting.email.mailboxes') }}</span>
+    </div>
 </div>
 
 @if(empty($domains))

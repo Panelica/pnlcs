@@ -1141,6 +1141,49 @@ class PanelicaModule extends AbstractServerModule
         return $this->buildResult(true, 'Deleted.');
     }
 
+    /**
+     * Upload a file into a directory under the account's home. The panel excludes
+     * the multipart body from the HMAC signature (TLS protects it), so the
+     * signature is computed over an empty body. target_path is fenced to the
+     * account's home server-side. Returns a friendly result; a 404 means the
+     * panel has not shipped the upload endpoint yet (older server).
+     */
+    public function uploadFile(Service $service, string $targetPath, string $contents, string $filename): array
+    {
+        [$server, $accountId] = $this->fileContext($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No panel account is linked to this service.');
+        }
+
+        $path = '/v1/files/upload';
+        $timestamp = (string) time();
+        // multipart body is excluded from the signature (see server hmac_auth_service)
+        $signature = hash_hmac('sha256', 'POST'.$path.$timestamp.'', $this->apiSecret($server));
+
+        $resp = Http::withHeaders([
+            'X-API-Key' => $this->apiKey($server),
+            'X-Timestamp' => $timestamp,
+            'X-Signature' => $signature,
+            'Accept' => 'application/json',
+        ])->withoutVerifying()
+            ->attach('file', $contents, $filename)
+            ->post($this->baseUrl($server).$path, [
+                'user_id' => $accountId,
+                'target_path' => $targetPath,
+            ]);
+
+        if ($resp->status() === 404) {
+            return $this->buildResult(false, 'File upload is not available on this server yet.');
+        }
+        if (! $resp->successful()) {
+            Log::error('PanelicaModule::uploadFile failed', ['status' => $resp->status(), 'body' => $resp->body()]);
+
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not upload the file.'));
+        }
+
+        return $this->buildResult(true, 'File uploaded.');
+    }
+
     /** Raw download response for the controller to stream. Null when unavailable. */
     public function downloadFile(Service $service, string $path): ?Response
     {
@@ -1152,6 +1195,24 @@ class PanelicaModule extends AbstractServerModule
         $resp = $this->getWithQuery($server, '/v1/files/download', ['user_id' => $accountId, 'path' => $path]);
 
         return $resp->successful() ? $resp : null;
+    }
+
+    /**
+     * URL of the panel's Roundcube webmail (served at /email/webmail on the panel
+     * HTTPS port). The customer signs in there with their mailbox credentials.
+     */
+    public function webmailUrl(Service $service): ?string
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return null;
+        }
+
+        // Use the hostname the customer's browser will open (matches the panel's
+        // TLS certificate), not serverHost() which falls back to the raw IP.
+        $host = trim((string) $server->hostname) ?: trim((string) $server->ip_address);
+
+        return 'https://'.$host.':'.$server->port.'/email/webmail';
     }
 
     /** [server, accountId] or [null, null] when the service has no linked account. */

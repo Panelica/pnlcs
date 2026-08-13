@@ -311,8 +311,9 @@ class ServiceController extends Controller
 
         $emails = $module->listEmails($service);
         $domains = $module->accountDomains($service);
+        $webmailUrl = method_exists($module, 'webmailUrl') ? $module->webmailUrl($service) : null;
 
-        return view('client.services.hosting.email', compact('service', 'emails', 'domains'));
+        return view('client.services.hosting.email', compact('service', 'emails', 'domains', 'webmailUrl'));
     }
 
     public function storeEmail(Request $request, Service $service)
@@ -486,6 +487,30 @@ class ServiceController extends Controller
         ]);
 
         $result = $module->deleteEntries($service, $data['paths']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function filesUpload(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'files');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'path' => ['required', 'string'],
+            'file' => ['required', 'file', 'max:262144'], // 256 MB
+        ]);
+
+        $file = $data['file'];
+        $result = $module->uploadFile(
+            $service,
+            $data['path'],
+            file_get_contents($file->getRealPath()),
+            $file->getClientOriginalName()
+        );
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }

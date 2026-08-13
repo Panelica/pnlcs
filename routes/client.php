@@ -102,6 +102,7 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::get('services/{service}/files/edit', [ServiceController::class, 'filesEdit'])->name('services.files.edit');
         Route::post('services/{service}/files/save', [ServiceController::class, 'filesWrite'])->name('services.files.save');
         Route::post('services/{service}/files/create', [ServiceController::class, 'filesCreate'])->name('services.files.create');
+        Route::post('services/{service}/files/upload', [ServiceController::class, 'filesUpload'])->name('services.files.upload');
         Route::post('services/{service}/files/rename', [ServiceController::class, 'filesRename'])->name('services.files.rename');
         Route::post('services/{service}/files/delete', [ServiceController::class, 'filesDelete'])->name('services.files.delete');
 

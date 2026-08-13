@@ -141,6 +141,42 @@ it('reads a text file for the editor', function () {
         ->and($result['data']['content'])->toContain('line one');
 });
 
+it('uploads a file into the account directory', function () {
+    Http::fake(['*/v1/files/upload' => Http::response(['data' => ['success' => true]], 200)]);
+    [$user, $service] = filesService(filesServer());
+
+    $result = (new PanelicaModule)->uploadFile($service, '/home/sec123', 'file-bytes', 'photo.png');
+
+    expect($result['success'])->toBeTrue();
+    Http::assertSent(fn ($r) => $r->method() === 'POST' && str_contains($r->url(), '/v1/files/upload'));
+});
+
+it('reports a friendly message when the server has no upload endpoint yet', function () {
+    Http::fake(['*/v1/files/upload' => Http::response(['error' => 'not found'], 404)]);
+    [$user, $service] = filesService(filesServer());
+
+    $result = (new PanelicaModule)->uploadFile($service, '/home/sec123', 'x', 'x.txt');
+
+    expect($result['success'])->toBeFalse()
+        ->and(strtolower($result['message']))->toContain('not available');
+});
+
+it('builds the panel webmail URL for the email tab', function () {
+    [$user, $service] = filesService(filesServer());
+    expect((new PanelicaModule)->webmailUrl($service))->toBe('https://panel.test:8443/email/webmail');
+});
+
+it('forbids uploading to another client\'s service', function () {
+    fakeFilesApi();
+    [$owner, $service] = filesService(filesServer());
+    $intruder = User::factory()->create();
+    $intruder->clients()->attach(Client::factory()->create()->id);
+
+    $this->actingAs($intruder)
+        ->post(route('client.services.files.upload', $service), ['path' => '/home/sec123'])
+        ->assertForbidden();
+});
+
 it('deletes paths through the DELETE body channel', function () {
     fakeFilesApi();
     [$user, $service] = filesService(filesServer());
