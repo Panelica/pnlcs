@@ -40,6 +40,9 @@
     .db-pop{position:absolute;right:0;z-index:20;margin-top:6px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);width:264px;box-sizing:border-box;text-align:left}
     .db-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
     .db-pop,.db-pop *{box-sizing:border-box}
+    .db-pop form{display:flex;flex-direction:column;align-items:stretch}
+    .db-pop .db-btn{width:100%;justify-content:center}
+    .db-pop .db-inp{width:100%}
 </style>
 
 <a href="{{ route('client.services.show', $service) }}" class="db-back"><i class="ri-arrow-left-line"></i>{{ $service->product?->name ?? __('client.services.title') }}</a>

@@ -37,6 +37,9 @@
     .ft-pop{position:absolute;right:0;z-index:20;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;box-shadow:var(--shadow-md);width:264px;box-sizing:border-box;text-align:left}
     .ft-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
     .ft-pop,.ft-pop *{box-sizing:border-box}
+    .ft-pop form{display:flex;flex-direction:column;align-items:stretch}
+    .ft-pop .ft-btn{width:100%;justify-content:center}
+    .ft-pop .ft-inp{width:100%}
 </style>
 
 <a href="{{ route('client.services.show', $service) }}" class="ft-back"><i class="ri-arrow-left-line"></i>{{ $service->product?->name ?? __('client.services.title') }}</a>
