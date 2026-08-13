@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Contracts\ServerModuleInterface;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
 use App\Mail\CancellationConfirmMail;
@@ -44,7 +45,17 @@ class ServiceController extends Controller
                 ->values()
             : collect();
 
-        return view('client.services.show', compact('service', 'availableAddons'));
+        // Hosting self-service tabs this service offers (Panelica-only today).
+        // Resolved from the module so a different server type simply returns [].
+        $hostingFeatures = [];
+        if ($service->server_id && $this->isLive($service)) {
+            $module = app(ProvisioningService::class)->resolveModule($service);
+            if ($module && method_exists($module, 'hostingFeatures')) {
+                $hostingFeatures = $module->hostingFeatures($service);
+            }
+        }
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures'));
     }
 
     /** Order an addon for a running service; it starts once its invoice is paid. */
@@ -257,5 +268,110 @@ class ServiceController extends Controller
     private function isLive(Service $service): bool
     {
         return ! in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true);
+    }
+
+    // -------------------------------------------------------------------------
+    // Hosting management (Panelica-only, feature-gated)
+    //
+    // The whole hosting area is silent unless the resolved server module both
+    // lists the requested feature and is live. Only the Panelica module does
+    // today; cPanel/Plesk and the future Docker/Python/Node modules light up
+    // their own tabs by declaring their own features, with no change here.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Resolve the server module for a hosting feature, or null when the feature
+     * is not offered for this service (wrong module, no account, not live).
+     */
+    private function hostingModule(Service $service, string $feature): ?ServerModuleInterface
+    {
+        if (! $service->server_id || ! $this->isLive($service)) {
+            return null;
+        }
+        $module = app(ProvisioningService::class)->resolveModule($service);
+        if (! $module || ! method_exists($module, 'hostingFeatures')) {
+            return null;
+        }
+        if (! in_array($feature, $module->hostingFeatures($service), true)) {
+            return null;
+        }
+
+        return $module;
+    }
+
+    /** Email accounts tab. */
+    public function emails(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'emails');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+
+        $emails = $module->listEmails($service);
+        $domains = $module->accountDomains($service);
+
+        return view('client.services.hosting.email', compact('service', 'emails', 'domains'));
+    }
+
+    public function storeEmail(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'emails');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+
+        $data = $request->validate([
+            'domain_id' => ['required', 'string'],
+            'local_part' => ['required', 'string', 'max:64', 'regex:/^[a-zA-Z0-9._%+\-]+$/'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+            'quota_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
+        ]);
+
+        $result = $module->createEmail(
+            $service,
+            $data['domain_id'],
+            $data['local_part'],
+            $data['password'],
+            (int) ($data['quota_mb'] ?? 0)
+        );
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyEmail(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'emails');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+
+        $result = $module->deleteEmail($service, (string) $request->input('email_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function updateEmailPassword(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'emails');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+
+        $data = $request->validate([
+            'email_id' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+        ]);
+
+        $result = $module->changeEmailPassword($service, $data['email_id'], $data['password']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 }

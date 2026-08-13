@@ -696,6 +696,241 @@ class PanelicaModule extends AbstractServerModule
         return $this->buildResult(true, 'SSO URL issued.', ['url' => $url]);
     }
 
+    // -------------------------------------------------------------------------
+    // Client hosting management (Panelica-only)
+    //
+    // These power the cPanel-like self-service tabs a customer sees on their
+    // service page. They are declared through hostingFeatures() and resolved by
+    // method existence, so a feature only appears for a service whose module
+    // both lists it and implements it. Other server modules (cPanel, Plesk, and
+    // the future Docker/Python/Node modules) ship their own set - none of the
+    // methods below leak into them. Every operation is fenced to the account's
+    // own resources: the server API key is operator-scoped, so ownership is
+    // enforced here, in this module, not assumed from the panel.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Hosting-management features this service exposes to its owner. A feature
+     * key here has a matching client tab and a matching method on this module.
+     * Returns [] for a service with no provisioned panel account.
+     *
+     * Grows one phase at a time (emails first; dns/files/databases/ftp/ssl/
+     * subdomains/cron/wordpress to follow). Docker/Python/Node arrive as their
+     * own modules with their own feature keys, never here.
+     *
+     * @return string[]
+     */
+    public function hostingFeatures(Service $service): array
+    {
+        if (! $this->linkedAccountId($service)) {
+            return [];
+        }
+
+        return ['emails'];
+    }
+
+    /** The panel account id linked to this service, or null when unprovisioned. */
+    private function linkedAccountId(Service $service): ?string
+    {
+        $id = $this->getModuleData($service)['panelica_user_id'] ?? null;
+
+        return ($id !== null && $id !== '') ? (string) $id : null;
+    }
+
+    /**
+     * Best-effort text of an API error, for surfacing back to the customer.
+     */
+    private function apiMessage(Response $resp, string $fallback): string
+    {
+        $msg = $resp->json('details') ?? $resp->json('message') ?? $resp->json('error');
+
+        return (is_string($msg) && $msg !== '') ? $msg : $fallback;
+    }
+
+    /**
+     * The domains this account owns, as [id => name]. The panel scopes this
+     * endpoint to the account server-side (user_id = account), so it is the
+     * authority on what the customer may touch: every mailbox operation is
+     * fenced to a domain id that appears here. A failed call returns [] - no
+     * domain, no operation - never another account's list.
+     *
+     * @return array<string,string> domain id => domain name
+     */
+    public function accountDomains(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return [];
+        }
+
+        $resp = $this->get($server, "/v1/accounts/{$accountId}/domains");
+        if (! $resp->successful()) {
+            return [];
+        }
+
+        $out = [];
+        foreach (($resp->json('data') ?? []) as $d) {
+            $id = (string) ($d['id'] ?? '');
+            $name = (string) ($d['domain_name'] ?? $d['name'] ?? $d['domain'] ?? '');
+            if ($id !== '' && $name !== '') {
+                $out[$id] = $name;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Email accounts on this service, fenced to the account's own domains. The
+     * panel list endpoint answers with whatever the server API key may see (an
+     * operator key sees every account on the box), so the account's domain set,
+     * not the raw list, decides what the customer is shown. A mailbox on a
+     * domain the account does not own is dropped.
+     *
+     * @return list<array{id:string,email:string,domain_id:string,domain:string,quota_mb:int,used_mb:int,status:string}>
+     */
+    public function listEmails(Service $service): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return [];
+        }
+        $domains = $this->accountDomains($service);
+        if ($domains === []) {
+            return [];
+        }
+
+        $resp = $this->get($server, '/v1/email-accounts');
+        if (! $resp->successful()) {
+            return [];
+        }
+
+        $out = [];
+        foreach (($resp->json('data') ?? []) as $e) {
+            $domainId = (string) ($e['domain_id'] ?? '');
+            if (! isset($domains[$domainId])) {
+                continue; // not one of this account's domains
+            }
+            $out[] = [
+                'id' => (string) ($e['id'] ?? ''),
+                'email' => (string) ($e['email'] ?? ''),
+                'domain_id' => $domainId,
+                'domain' => $domains[$domainId],
+                'quota_mb' => (int) ($e['quota_mb'] ?? 0),
+                'used_mb' => (int) ($e['used_quota_mb'] ?? 0),
+                'status' => (string) ($e['status'] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Create a mailbox under one of this account's domains. The domain id is
+     * fenced against accountDomains() before anything is sent, so a forged id
+     * for another account's domain never reaches the panel. The panel enforces
+     * the plan's mailbox limit itself (403); that is surfaced as a clear
+     * message rather than a generic failure.
+     */
+    public function createEmail(Service $service, string $domainId, string $localPart, string $password, int $quotaMb = 0): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+
+        $domains = $this->accountDomains($service);
+        if (! isset($domains[$domainId])) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+
+        $localPart = strtolower(trim($localPart));
+        if ($localPart === '' || ! preg_match('/^[a-z0-9._%+\-]+$/', $localPart)) {
+            return $this->buildResult(false, 'Enter a valid mailbox name.');
+        }
+
+        $payload = [
+            'domain_id' => $domainId,
+            'username' => $localPart,
+            'password' => $password,
+        ];
+        if ($quotaMb > 0) {
+            $payload['quota_mb'] = $quotaMb;
+        }
+
+        $resp = $this->post($server, '/v1/email-accounts', $payload);
+        if ($resp->status() === 403) {
+            return $this->buildResult(false, 'Your plan\'s mailbox limit has been reached.');
+        }
+        if (! $resp->successful()) {
+            Log::error('PanelicaModule::createEmail failed', ['status' => $resp->status(), 'body' => $resp->body()]);
+
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the mailbox.'));
+        }
+
+        return $this->buildResult(true, 'Mailbox created.', ['email' => $localPart.'@'.$domains[$domainId]]);
+    }
+
+    /**
+     * Delete a mailbox. Fenced: the id must belong to one of this account's own
+     * mailboxes (listEmails is already domain-scoped), so a forged id for
+     * another account's mailbox is refused before any DELETE is sent.
+     */
+    public function deleteEmail(Service $service, string $emailId): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! $this->ownsEmail($service, $emailId)) {
+            return $this->buildResult(false, 'That mailbox does not belong to this service.');
+        }
+
+        $resp = $this->delete($server, "/v1/email-accounts/{$emailId}");
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the mailbox.'));
+        }
+
+        return $this->buildResult(true, 'Mailbox deleted.');
+    }
+
+    /**
+     * Change a mailbox password. Same ownership fence as deletion.
+     */
+    public function changeEmailPassword(Service $service, string $emailId, string $password): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! $this->ownsEmail($service, $emailId)) {
+            return $this->buildResult(false, 'That mailbox does not belong to this service.');
+        }
+
+        $resp = $this->post($server, "/v1/email-accounts/{$emailId}/change-password", ['password' => $password]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the mailbox password.'));
+        }
+
+        return $this->buildResult(true, 'Mailbox password updated.');
+    }
+
+    /** Whether emailId is one of this account's own mailboxes (domain-fenced). */
+    private function ownsEmail(Service $service, string $emailId): bool
+    {
+        if ($emailId === '') {
+            return false;
+        }
+        foreach ($this->listEmails($service) as $e) {
+            if ($e['id'] === $emailId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function testConnection(Server $server): bool
     {
         try {

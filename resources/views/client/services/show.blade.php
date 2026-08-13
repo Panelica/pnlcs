@@ -91,6 +91,22 @@
 </script>
 @endif
 
+@if(!empty($hostingFeatures) && strtolower($service->status) === 'active')
+<div class="pn-card mb-24">
+    <div class="pn-card-header"><span class="pn-card-title">{{ __('client.hosting.title') }}</span></div>
+    <div class="pn-card-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+            @if(in_array('emails', $hostingFeatures, true))
+            <a href="{{ route('client.services.emails', $service) }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:110px;height:96px;border:1px solid var(--border,#e5e7eb);border-radius:10px;text-decoration:none;color:inherit;transition:all .15s;background:var(--card-bg,#fff)" onmouseover="this.style.borderColor='var(--primary,#3b82f6)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border,#e5e7eb)';this.style.transform='none'">
+                <i class="ri-mail-line" style="font-size:26px;color:var(--primary,#3b82f6)"></i>
+                <span style="font-size:13px;font-weight:600;text-align:center">{{ __('client.hosting.email.title') }}</span>
+            </a>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
 @if(in_array(strtolower($service->status), ["active"]))
 <div class="pn-actions mb-24">
     @if((($service->server?->type ?? $service->product?->server_type ?? '') === 'panelica') && $service->status === 'active')

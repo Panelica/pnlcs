@@ -92,6 +92,12 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
 
+        // Hosting management (Panelica-only, feature-gated in the controller)
+        Route::get('services/{service}/emails', [ServiceController::class, 'emails'])->name('services.emails');
+        Route::post('services/{service}/emails', [ServiceController::class, 'storeEmail'])->name('services.emails.store');
+        Route::post('services/{service}/emails/delete', [ServiceController::class, 'destroyEmail'])->name('services.emails.destroy');
+        Route::post('services/{service}/emails/password', [ServiceController::class, 'updateEmailPassword'])->name('services.emails.password');
+
         // Domains
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
