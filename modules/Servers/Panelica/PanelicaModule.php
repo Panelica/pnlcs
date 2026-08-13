@@ -753,7 +753,198 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails', 'files'];
+        return ['emails', 'files', 'databases'];
+    }
+
+    // -------------------------------------------------------------------------
+    // Databases (Panelica-only) — MySQL databases + users, fenced to the account
+    //
+    // Scoped exactly like emails/files: every operation targets a domain that
+    // belongs to THIS service's account (fenced via accountDomains), and user
+    // operations are fenced to the account's own database users. The panel
+    // enforces the plan's database quota. Creating a database also creates its
+    // primary user; extra users can be added per database with a role.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Databases across the account's domains, grouped by domain. Each entry
+     * carries the domain and its database users (primary marked). Fenced: only
+     * the account's own domains are queried.
+     *
+     * @return list<array{domain_id:string,domain:string,users:array}>
+     */
+    public function listDatabases(Service $service): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return [];
+        }
+        $out = [];
+        foreach ($this->accountDomains($service) as $domainId => $domainName) {
+            $resp = $this->getWithQuery($server, '/v1/databases', ['domain_id' => $domainId]);
+            $users = $resp->successful() ? ($resp->json('data') ?? []) : [];
+            $out[] = [
+                'domain_id' => $domainId,
+                'domain' => $domainName,
+                'users' => array_map(fn ($u) => [
+                    'id' => (string) ($u['id'] ?? ''),
+                    'username' => (string) ($u['username'] ?? ''),
+                    'role' => (string) ($u['role'] ?? ''),
+                    'is_primary' => (bool) ($u['is_primary'] ?? false),
+                    'database_name' => (string) ($u['database_name'] ?? ''),
+                ], is_array($users) ? $users : []),
+            ];
+        }
+
+        return $out;
+    }
+
+    public function createDatabase(Service $service, string $domainId, string $dbName, string $dbUser, string $password): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! isset($this->accountDomains($service)[$domainId])) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+        if (! $this->validIdentifier($dbName) || ! $this->validIdentifier($dbUser)) {
+            return $this->buildResult(false, 'Database and user names may use letters, numbers and underscores only (max 32).');
+        }
+
+        $resp = $this->post($server, "/v1/domains/{$domainId}/databases", [
+            'database_name' => $dbName,
+            'database_user' => $dbUser,
+            'password' => $password,
+        ]);
+        if ($resp->status() === 404) {
+            return $this->buildResult(false, 'Database creation is not available on this server yet.');
+        }
+        if ($resp->status() === 403) {
+            return $this->buildResult(false, 'Your plan\'s database limit has been reached.');
+        }
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the database.'));
+        }
+
+        return $this->buildResult(true, 'Database created.');
+    }
+
+    public function deleteDatabase(Service $service, string $domainId, string $databaseName): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! isset($this->accountDomains($service)[$domainId])) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+        // Fence the name to a database that actually appears under this account.
+        if (! $this->ownsDatabase($service, $domainId, $databaseName)) {
+            return $this->buildResult(false, 'That database does not belong to this service.');
+        }
+
+        $qs = http_build_query(['database_name' => $databaseName], '', '&', PHP_QUERY_RFC3986);
+        $path = "/v1/domains/{$domainId}/databases?{$qs}";
+        $headers = $this->buildHeaders($server, 'DELETE', $path, '');
+        $resp = Http::withHeaders($headers)->withoutVerifying()->delete($this->baseUrl($server).$path);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the database.'));
+        }
+
+        return $this->buildResult(true, 'Database deleted.');
+    }
+
+    public function createDatabaseUser(Service $service, string $domainId, string $username, string $password, string $role): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! isset($this->accountDomains($service)[$domainId])) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+        if (! $this->validIdentifier($username)) {
+            return $this->buildResult(false, 'User name may use letters, numbers and underscores only (max 32).');
+        }
+        $role = in_array($role, ['read', 'readWrite', 'dbAdmin', 'dbOwner'], true) ? $role : 'readWrite';
+
+        $resp = $this->post($server, '/v1/databases', [
+            'username' => $username,
+            'password' => $password,
+            'domain_id' => $domainId,
+            'role' => $role,
+        ]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the database user.'));
+        }
+
+        return $this->buildResult(true, 'Database user created.');
+    }
+
+    public function deleteDatabaseUser(Service $service, string $userId): array
+    {
+        $server = $this->getServer($service);
+        if (! $server || ! $this->ownsDatabaseUser($service, $userId)) {
+            return $this->buildResult(false, 'That database user does not belong to this service.');
+        }
+        $resp = $this->delete($server, "/v1/mysql-users/{$userId}");
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the database user.'));
+        }
+
+        return $this->buildResult(true, 'Database user deleted.');
+    }
+
+    public function changeDatabaseUserPassword(Service $service, string $userId, string $password): array
+    {
+        $server = $this->getServer($service);
+        if (! $server || ! $this->ownsDatabaseUser($service, $userId)) {
+            return $this->buildResult(false, 'That database user does not belong to this service.');
+        }
+        $resp = $this->post($server, "/v1/mysql-users/{$userId}/change-password", ['password' => $password]);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the password.'));
+        }
+
+        return $this->buildResult(true, 'Password updated.');
+    }
+
+    private function validIdentifier(string $s): bool
+    {
+        return $s !== '' && strlen($s) <= 32 && preg_match('/^[A-Za-z0-9_]+$/', $s) === 1;
+    }
+
+    private function ownsDatabase(Service $service, string $domainId, string $databaseName): bool
+    {
+        foreach ($this->listDatabases($service) as $group) {
+            if ($group['domain_id'] !== $domainId) {
+                continue;
+            }
+            foreach ($group['users'] as $u) {
+                if ($u['database_name'] !== '' && $u['database_name'] === $databaseName) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private function ownsDatabaseUser(Service $service, string $userId): bool
+    {
+        if ($userId === '') {
+            return false;
+        }
+        foreach ($this->listDatabases($service) as $group) {
+            foreach ($group['users'] as $u) {
+                if ($u['id'] === $userId) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /** The panel account id linked to this service, or null when unprovisioned. */

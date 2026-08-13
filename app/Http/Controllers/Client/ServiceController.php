@@ -376,6 +376,106 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    // ----- Databases (Panelica-only) -----------------------------------------
+
+    public function databases(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'databases');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+
+        $groups = $module->listDatabases($service);
+
+        return view('client.services.hosting.databases', compact('service', 'groups'));
+    }
+
+    public function storeDatabase(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'databases');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'domain_id' => ['required', 'string'],
+            'database_name' => ['required', 'string', 'max:32', 'regex:/^[A-Za-z0-9_]+$/'],
+            'database_user' => ['required', 'string', 'max:32', 'regex:/^[A-Za-z0-9_]+$/'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+        ]);
+
+        $result = $module->createDatabase($service, $data['domain_id'], $data['database_name'], $data['database_user'], $data['password']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyDatabase(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'databases');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'domain_id' => ['required', 'string'],
+            'database_name' => ['required', 'string'],
+        ]);
+
+        $result = $module->deleteDatabase($service, $data['domain_id'], $data['database_name']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function storeDatabaseUser(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'databases');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'domain_id' => ['required', 'string'],
+            'username' => ['required', 'string', 'max:32', 'regex:/^[A-Za-z0-9_]+$/'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+            'role' => ['required', 'in:read,readWrite,dbAdmin,dbOwner'],
+        ]);
+
+        $result = $module->createDatabaseUser($service, $data['domain_id'], $data['username'], $data['password'], $data['role']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyDatabaseUser(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'databases');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->deleteDatabaseUser($service, (string) $request->input('user_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function updateDatabaseUserPassword(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'databases');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'user_id' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'max:128'],
+        ]);
+
+        $result = $module->changeDatabaseUserPassword($service, $data['user_id'], $data['password']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
     // ----- File manager (Panelica-only) --------------------------------------
 
     /** File browser tab. */

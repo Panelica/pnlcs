@@ -97,6 +97,12 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('services/{service}/emails', [ServiceController::class, 'storeEmail'])->name('services.emails.store');
         Route::post('services/{service}/emails/delete', [ServiceController::class, 'destroyEmail'])->name('services.emails.destroy');
         Route::post('services/{service}/emails/password', [ServiceController::class, 'updateEmailPassword'])->name('services.emails.password');
+        Route::get('services/{service}/databases', [ServiceController::class, 'databases'])->name('services.databases');
+        Route::post('services/{service}/databases', [ServiceController::class, 'storeDatabase'])->name('services.databases.store');
+        Route::post('services/{service}/databases/delete', [ServiceController::class, 'destroyDatabase'])->name('services.databases.destroy');
+        Route::post('services/{service}/databases/users', [ServiceController::class, 'storeDatabaseUser'])->name('services.databases.users.store');
+        Route::post('services/{service}/databases/users/delete', [ServiceController::class, 'destroyDatabaseUser'])->name('services.databases.users.destroy');
+        Route::post('services/{service}/databases/users/password', [ServiceController::class, 'updateDatabaseUserPassword'])->name('services.databases.users.password');
         Route::get('services/{service}/files', [ServiceController::class, 'files'])->name('services.files');
         Route::get('services/{service}/files/download', [ServiceController::class, 'filesDownload'])->name('services.files.download');
         Route::get('services/{service}/files/edit', [ServiceController::class, 'filesEdit'])->name('services.files.edit');
