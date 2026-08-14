@@ -77,10 +77,8 @@
         ['k'=>'ftp','name'=>'FTP Accounts','desc'=>'Manage FTP access','ic'=>'ri-folder-transfer-line','c'=>'#f59e0b','route'=>route('client.services.ftp',$service)],
         ['k'=>'subdomains','name'=>'Subdomains','desc'=>'Create subdomains','ic'=>'ri-node-tree','c'=>'#10b981','route'=>route('client.services.subdomains',$service)],
         ['k'=>'dns','name'=>__('client.hosting.dns.title'),'desc'=>__('client.hosting.dns.subtitle'),'ic'=>'ri-global-line','c'=>'#6366f1','route'=>route('client.services.dns',$service)],
-        ['k'=>'ssl','name'=>'SSL / TLS','desc'=>'Certificates','ic'=>'ri-shield-check-line','c'=>'#059669','route'=>null],
         ['k'=>'cron','name'=>__('client.hosting.cron.title'),'desc'=>__('client.hosting.cron.subtitle'),'ic'=>'ri-time-line','c'=>'#ec4899','route'=>route('client.services.cron',$service)],
         ['k'=>'backups','name'=>__('client.hosting.backups.title'),'desc'=>__('client.hosting.backups.subtitle'),'ic'=>'ri-archive-2-line','c'=>'#64748b','route'=>route('client.services.backups',$service)],
-        ['k'=>'wordpress','name'=>'WordPress','desc'=>'Manage installs','ic'=>'ri-wordpress-line','c'=>'#3858e9','route'=>null],
     ];
 @endphp
 
