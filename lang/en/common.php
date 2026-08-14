@@ -128,6 +128,7 @@ return [
         'username' => 'Username',
     ],
     'form.city' => 'City',
+    'form.company' => 'Company',
     'form.company_name' => 'Company Name',
     'form.confirm_password' => 'Confirm Password',
     'form.country' => 'Country',
