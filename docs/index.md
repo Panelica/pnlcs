@@ -29,8 +29,7 @@ language, with no prior WHMCS experience assumed.
 |---------|--------------|
 | **Getting Started** | The fastest path from a fresh install to your first paid, provisioned order |
 | **Concepts** | Plain-English explanations of the core ideas — clients, products, services, orders, invoices, servers, modules |
-| **Guides** | Task-by-task how-tos: email, payment gateways, connecting a server, selling domains, tax, migrating from WHMCS, and more |
-| **Troubleshooting** | Fixes for the most common "why isn't this working?" moments |
+| **Guides** | Task-by-task how-tos: email, payment gateways, connecting a server, selling domains, tax, custom client fields, migrating from WHMCS, and more |
 | **Reference** | Scheduled commands and the developer API/hooks |
 
 ## Before you begin
