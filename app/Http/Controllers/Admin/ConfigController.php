@@ -291,6 +291,10 @@ class ConfigController extends Controller
             'state' => 'nullable|string',
             'level' => 'nullable|integer|min:1|max:2',
         ]);
+        // The columns are NOT NULL with an empty-string default; a blank form
+        // field arrives as null and inserting that violates the constraint.
+        $v['country'] ??= '';
+        $v['state'] ??= '';
         TaxRule::create($v);
 
         return back()->with('success', __('messages.success.tax_rule_added'));
@@ -306,6 +310,8 @@ class ConfigController extends Controller
             'state' => 'nullable|string',
             'level' => 'nullable|integer|min:1|max:2',
         ]);
+        $v['country'] ??= '';
+        $v['state'] ??= '';
         $taxRule->update($v);
 
         return back()->with('success', __('messages.success.tax_updated'));
