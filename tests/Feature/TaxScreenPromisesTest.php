@@ -42,3 +42,40 @@ it('still creates a tax rule', function () {
 
     expect(TaxRule::where('name', 'VAT')->where('country', 'GB')->exists())->toBeTrue();
 });
+
+it('stores a blank state as an empty string, not null', function () {
+    // The add form always submits state and country inputs; left blank they
+    // arrive as empty strings. Laravel's `nullable` rule converts those to
+    // null, and a NOT NULL column rejects the insert even though the schema
+    // default is ''. The controller must normalise null back to ''.
+    $this->actingAs(taxAdmin(), 'admin')
+        ->post(route('admin.config.tax.store'), [
+            'level' => 1,
+            'name' => 'VAT',
+            'country' => '',
+            'state' => '',
+            'tax_rate' => 23,
+        ])->assertRedirect();
+
+    $rule = TaxRule::where('name', 'VAT')->where('tax_rate', 23)->first();
+    expect($rule)->not->toBeNull()
+        ->and($rule->country)->toBe('')
+        ->and($rule->state)->toBe('');
+});
+
+it('normalises blank state and country when updating a rule', function () {
+    $rule = TaxRule::factory()->create(['country' => 'US', 'state' => 'TX']);
+
+    $this->actingAs(taxAdmin(), 'admin')
+        ->put(route('admin.config.tax.update', $rule), [
+            'level' => 1,
+            'name' => 'VAT',
+            'country' => '',
+            'state' => '',
+            'tax_rate' => 19,
+        ])->assertRedirect();
+
+    $rule->refresh();
+    expect($rule->country)->toBe('')
+        ->and($rule->state)->toBe('');
+});
