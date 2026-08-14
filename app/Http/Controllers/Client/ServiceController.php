@@ -684,6 +684,33 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    public function updateDns(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'dns');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'record_id' => ['required', 'string'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'content' => ['required', 'string', 'max:1024'],
+            'ttl' => ['nullable', 'integer', 'min:60', 'max:604800'],
+            'priority' => ['nullable', 'integer', 'min:0', 'max:65535'],
+        ]);
+
+        $result = $module->updateDnsRecord(
+            $service,
+            $data['record_id'],
+            $data['name'] ?? '@',
+            $data['content'],
+            $data['ttl'] ?? null,
+            $data['priority'] ?? null
+        );
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
     public function destroyDns(Request $request, Service $service)
     {
         abort_if($service->client_id !== $this->getClientId(), 403);

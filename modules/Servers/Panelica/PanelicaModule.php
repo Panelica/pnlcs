@@ -876,6 +876,48 @@ class PanelicaModule extends AbstractServerModule
         return $this->buildResult(true, 'DNS record created.');
     }
 
+    /**
+     * Edit an existing record's name/value/TTL/priority. The record type is not
+     * editable (the panel endpoint does not change it either) — changing a type
+     * in place is how a zone silently ends up with an A record where a CNAME was.
+     */
+    public function updateDnsRecord(Service $service, string $id, string $name, string $content, ?int $ttl = null, ?int $priority = null): array
+    {
+        $record = $this->findOwnDnsRecord($service, $id);
+        if (! $record) {
+            return $this->buildResult(false, 'That DNS record does not belong to this service.');
+        }
+        if ($record['protected']) {
+            return $this->buildResult(false, 'That record is managed by the hosting platform and cannot be changed here.');
+        }
+        $name = trim($name) === '' ? '@' : trim($name);
+        $content = trim($content);
+        if ($content === '') {
+            return $this->buildResult(false, 'Record value is required.');
+        }
+        // The panel's update endpoint accepts a new name, so renaming an ordinary
+        // record INTO a managed one (blog A -> www A) would walk straight around
+        // the protection. Judge the destination, not just the source.
+        if ($this->isProtectedDnsRecord($record['type'], $name)) {
+            return $this->buildResult(false, 'That name is managed by the hosting platform and cannot be used here.');
+        }
+
+        $payload = ['name' => $name, 'content' => $content];
+        if ($ttl !== null && $ttl > 0) {
+            $payload['ttl'] = $ttl;
+        }
+        if ($record['type'] === 'MX' || $record['type'] === 'SRV') {
+            $payload['priority'] = $priority ?? ($record['priority'] ?? 10);
+        }
+
+        $resp = $this->patch($this->getServer($service), "/v1/dns/records/{$id}", $payload);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the DNS record.'));
+        }
+
+        return $this->buildResult(true, 'DNS record updated.');
+    }
+
     public function deleteDnsRecord(Service $service, string $id): array
     {
         $record = $this->findOwnDnsRecord($service, $id);

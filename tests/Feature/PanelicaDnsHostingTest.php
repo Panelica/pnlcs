@@ -163,6 +163,35 @@ it('orders records by type then name so the zone is readable', function () {
         ->and(array_slice($names, 0, 2))->toBe(['blog', 'shop']);
 });
 
+it('edits a record it owns, and never a managed one', function () use ($TXT, $APEX) {
+    fakeDnsApi([$TXT, $APEX]);
+    [$u, $s] = dzService(dzServer());
+    $mod = new PanelicaModule;
+
+    expect($mod->updateDnsRecord($s, 'r-txt', '_acme', 'newtoken', 300)['success'])->toBeTrue();
+    Http::assertSent(fn ($rq) => $rq->method() === 'PATCH' && str_contains($rq->url(), 'r-txt')
+        && ($rq->data()['content'] ?? null) === 'newtoken' && ($rq->data()['ttl'] ?? null) === 300);
+
+    expect($mod->updateDnsRecord($s, 'r-apex', '@', '1.2.3.4')['success'])->toBeFalse()       // managed
+        ->and($mod->updateDnsRecord($s, 'r-foreign', 'x', 'v')['success'])->toBeFalse();      // not ours
+    Http::assertNotSent(fn ($rq) => $rq->method() === 'PATCH' && str_contains($rq->url(), 'r-apex'));
+});
+
+it('blocks renaming an ordinary record INTO a managed name', function () {
+    // The panel's PATCH accepts a new name, so "blog A" renamed to "www A" would
+    // walk around the protection if only the source record were judged.
+    fakeDnsApi([['id' => 'r-blog', 'type' => 'A', 'name' => 'blog', 'content' => '10.0.0.7', 'ttl' => 3600]]);
+    [$u, $s] = dzService(dzServer());
+    $mod = new PanelicaModule;
+
+    expect($mod->updateDnsRecord($s, 'r-blog', 'www', '10.0.0.7')['success'])->toBeFalse()
+        ->and($mod->updateDnsRecord($s, 'r-blog', '@', '10.0.0.7')['success'])->toBeFalse();
+    Http::assertNotSent(fn ($rq) => $rq->method() === 'PATCH');
+
+    // A different ordinary name is fine.
+    expect($mod->updateDnsRecord($s, 'r-blog', 'news', '10.0.0.7')['success'])->toBeTrue();
+});
+
 it('shows the dns tab and forbids other clients', function () use ($TXT) {
     fakeDnsApi([$TXT]);
     [$owner, $s] = dzService(dzServer());

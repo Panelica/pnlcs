@@ -39,8 +39,16 @@
     .dz-name{font-weight:600;font-family:ui-monospace,Menlo,monospace;font-size:12.5px}
     .dz-val{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--muted);max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .dz-lock{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;gap:4px}
-    .dz-act{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid transparent;color:var(--muted);cursor:pointer;background:transparent}
-    .dz-act:hover{background:rgba(239,68,68,.1);color:#dc2626}
+    .dz-acts{display:inline-flex;gap:6px;justify-content:flex-end}
+    .dz-act{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);color:var(--muted);cursor:pointer;background:transparent}
+    .dz-act:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
+    .dz-act.danger:hover{background:rgba(239,68,68,.1);color:#dc2626;border-color:transparent}
+    .dz-zonebar{display:flex;align-items:center;gap:10px;padding:14px 18px;flex-wrap:wrap}
+    .dz-editrow td{background:var(--bg)}
+    .dz-editform{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+    .dz-editform .dz-type{align-self:center}
+    .dz-cancel{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:10px 15px;font-size:13px;font-weight:600;cursor:pointer}
+    .dz-cancel:hover{color:var(--text)}
     .dz-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
 </style>
 
@@ -55,16 +63,17 @@
 <div class="dz-card"><div class="dz-empty">{{ __('client.hosting.dns.no_domains') }}</div></div>
 @else
 
-@if(count($domains) > 1)
-<div class="dz-zones">
-    @foreach($domains as $id => $name)
-    <a href="{{ route('client.services.dns', [$service, 'domain' => $id]) }}" class="dz-zone {{ $id === $selected ? 'on' : '' }}">
-        <i class="ri-global-line" style="font-size:14px"></i>{{ $name }}
-        @if($id === $selected)<span class="dz-badge">{{ count($records) }}</span>@endif
-    </a>
-    @endforeach
+<div class="dz-card">
+    <div class="dz-zonebar">
+        <label class="dz-lbl" style="margin:0 4px 0 0">{{ __('client.hosting.dns.zone') }}</label>
+        <select class="dz-sel" style="max-width:320px" onchange="if(this.value) location.href=this.value">
+            @foreach($domains as $id => $name)
+            <option value="{{ route('client.services.dns', [$service, 'domain' => $id]) }}" {{ $id === $selected ? 'selected' : '' }}>{{ $name }}</option>
+            @endforeach
+        </select>
+        <span class="dz-badge">{{ count($records) }} {{ __('client.hosting.dns.records') }}</span>
+    </div>
 </div>
-@endif
 
 <div class="dz-card">
     <div class="dz-ch"><i class="ri-add-circle-line"></i>{{ __('client.hosting.dns.create_title') }}<span class="dz-of">{{ $selectedName }}</span></div>
@@ -110,7 +119,8 @@
         </tr></thead>
         <tbody>
             @foreach($records as $r)
-            <tr>
+            @php($rid = 'r'.substr(md5($r['id']), 0, 10))
+            <tr id="{{ $rid }}-view">
                 <td><span class="dz-type">{{ $r['type'] }}</span></td>
                 <td><span class="dz-name">{{ $r['name'] === '@' || $r['name'] === '' ? $r['domain'] : $r['name'].'.'.$r['domain'] }}</span></td>
                 <td><div class="dz-val" title="{{ $r['content'] }}">@if($r['priority'] !== null)<b>{{ $r['priority'] }}</b> @endif{{ $r['content'] }}</div></td>
@@ -119,13 +129,46 @@
                     @if($r['protected'])
                         <span class="dz-lock" title="{{ __('client.hosting.dns.protected_hint') }}"><i class="ri-lock-line" style="font-size:10px"></i>{{ __('client.hosting.dns.protected') }}</span>
                     @else
-                    <form method="POST" action="{{ route('client.services.dns.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.dns.delete_confirm') }}')">
-                        @csrf<input type="hidden" name="record_id" value="{{ $r['id'] }}">
-                        <button type="submit" class="dz-act" title="{{ __('client.hosting.dns.delete') }}"><i class="ri-delete-bin-line"></i></button>
-                    </form>
+                    <div class="dz-acts">
+                        <button type="button" class="dz-act" title="{{ __('client.hosting.dns.edit') }}" onclick="dzEdit('{{ $rid }}', true)"><i class="ri-pencil-line"></i></button>
+                        <form method="POST" action="{{ route('client.services.dns.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.dns.delete_confirm') }}')">
+                            @csrf<input type="hidden" name="record_id" value="{{ $r['id'] }}">
+                            <button type="submit" class="dz-act danger" title="{{ __('client.hosting.dns.delete') }}"><i class="ri-delete-bin-line"></i></button>
+                        </form>
+                    </div>
                     @endif
                 </td>
             </tr>
+            @if(! $r['protected'])
+            <tr id="{{ $rid }}-edit" class="dz-editrow" hidden>
+                <td colspan="5">
+                    <form method="POST" action="{{ route('client.services.dns.update', $service) }}" class="dz-editform">
+                        @csrf
+                        <input type="hidden" name="record_id" value="{{ $r['id'] }}">
+                        <span class="dz-type">{{ $r['type'] }}</span>
+                        <div class="dz-fld" style="max-width:190px"><label class="dz-lbl">{{ __('client.hosting.dns.name') }}</label>
+                            <div class="dz-suffix">
+                                <input type="text" name="name" value="{{ $r['name'] }}" maxlength="255" class="dz-inp">
+                                <span>.{{ $r['domain'] }}</span>
+                            </div>
+                        </div>
+                        <div class="dz-fld" style="min-width:210px"><label class="dz-lbl">{{ __('client.hosting.dns.value') }}</label>
+                            <input type="text" name="content" value="{{ $r['content'] }}" required maxlength="1024" class="dz-inp">
+                        </div>
+                        @if(in_array($r['type'], ['MX','SRV'], true))
+                        <div class="dz-fld" style="max-width:95px"><label class="dz-lbl">{{ __('client.hosting.dns.priority') }}</label>
+                            <input type="number" name="priority" value="{{ $r['priority'] ?? 10 }}" min="0" max="65535" class="dz-inp">
+                        </div>
+                        @endif
+                        <div class="dz-fld" style="max-width:100px"><label class="dz-lbl">{{ __('client.hosting.dns.ttl') }}</label>
+                            <input type="number" name="ttl" value="{{ $r['ttl'] ?? 3600 }}" min="60" max="604800" class="dz-inp">
+                        </div>
+                        <button type="submit" class="dz-btn"><i class="ri-check-line"></i>{{ __('client.hosting.dns.save') }}</button>
+                        <button type="button" class="dz-cancel" onclick="dzEdit('{{ $rid }}', false)">{{ __('client.hosting.dns.cancel') }}</button>
+                    </form>
+                </td>
+            </tr>
+            @endif
             @endforeach
         </tbody>
     </table>
@@ -145,6 +188,17 @@ function dzType(){
     if (c) c.placeholder = DZ_PH[t] || '';
 }
 document.addEventListener('DOMContentLoaded', dzType);
+// Inline edit: swap the row for its edit form. One row at a time, so a half
+// finished edit can never be confused with the record above it.
+function dzEdit(rid, on){
+    document.querySelectorAll('.dz-editrow').forEach(function(tr){ tr.hidden = true; });
+    document.querySelectorAll('tr[id$="-view"]').forEach(function(tr){ tr.hidden = false; });
+    if (on) {
+        var v = document.getElementById(rid + '-view');
+        var e = document.getElementById(rid + '-edit');
+        if (v && e) { v.hidden = true; e.hidden = false; e.querySelector('input[name="content"]').focus(); }
+    }
+}
 </script>
 
 @endsection
