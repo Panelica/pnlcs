@@ -753,7 +753,7 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails', 'files', 'databases', 'ftp', 'subdomains'];
+        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron'];
     }
 
     // -------------------------------------------------------------------------
@@ -911,6 +911,220 @@ class PanelicaModule extends AbstractServerModule
         }
 
         return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Cron jobs (Panelica-only). Per-domain user cron: each job runs AS the
+    // domain owner's unprivileged system user (pn-cron-exec, namespace + cgroup
+    // isolated) and is scheduled by the panel's cron-scheduler (Redis + next_run
+    // — the panel provisions all of that). Fenced to the account's own domains;
+    // creation is gated by the plan's cron_jobs_enabled + max_cron_jobs (the
+    // panel enforces both too). The panel's system cron (root maintenance jobs)
+    // is deliberately NOT exposed here.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Cron jobs across the account's own domains. The panel list endpoint
+     * answers with whatever the operator key can see (every job on the box), so
+     * the account's domain set — not the raw list — decides what is shown.
+     *
+     * @return list<array{id:string,task_name:string,command:string,schedule:string,minute:string,hour:string,day_of_month:string,month:string,day_of_week:string,enabled:bool,domain_id:string,domain:string,last_run:?string,next_run:?string}>
+     */
+    public function cronJobs(Service $service): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return [];
+        }
+        $domains = $this->accountDomains($service);
+        $resp = $this->get($server, '/v1/cron-jobs');
+        if (! $resp->successful()) {
+            return [];
+        }
+        $out = [];
+        foreach (($resp->json('data') ?? []) as $j) {
+            $domainId = (string) ($j['domain_id'] ?? '');
+            if (! isset($domains[$domainId])) {
+                continue; // fence: not one of the account's domains
+            }
+            $out[] = [
+                'id' => (string) ($j['id'] ?? ''),
+                'task_name' => (string) ($j['task_name'] ?? ''),
+                'command' => (string) ($j['command'] ?? ''),
+                'schedule' => trim(($j['minute'] ?? '*').' '.($j['hour'] ?? '*').' '.($j['day_of_month'] ?? '*').' '.($j['month'] ?? '*').' '.($j['day_of_week'] ?? '*')),
+                'minute' => (string) ($j['minute'] ?? '*'),
+                'hour' => (string) ($j['hour'] ?? '*'),
+                'day_of_month' => (string) ($j['day_of_month'] ?? '*'),
+                'month' => (string) ($j['month'] ?? '*'),
+                'day_of_week' => (string) ($j['day_of_week'] ?? '*'),
+                'enabled' => (bool) ($j['enabled'] ?? false),
+                'domain_id' => $domainId,
+                'domain' => $domains[$domainId],
+                'last_run' => $j['last_run'] ?? null,
+                'next_run' => $j['next_run'] ?? null,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Cron policy from the plan: whether cron is allowed at all, the cap,
+     * current usage, and whether another may be created.
+     *
+     * @return array{enabled:bool,max:int,used:int,can_create:bool}
+     */
+    public function cronPolicy(Service $service): array
+    {
+        $used = count($this->cronJobs($service));
+        $enabled = $this->planField($service, 'cron_jobs_enabled');
+        $max = $this->planField($service, 'max_cron_jobs');
+
+        // Unknown plan → let the panel be the authority (it enforces both).
+        $isEnabled = $enabled === null ? true : (bool) $enabled;
+        $maxInt = $max === null ? -1 : (int) $max;
+        if (! $isEnabled || $maxInt === 0) {
+            return ['enabled' => false, 'max' => $maxInt, 'used' => $used, 'can_create' => false];
+        }
+        $canCreate = $maxInt < 0 || $used < $maxInt;
+
+        return ['enabled' => true, 'max' => $maxInt, 'used' => $used, 'can_create' => $canCreate];
+    }
+
+    public function createCronJob(Service $service, string $domainId, string $taskName, string $command, array $schedule = [], int $timeoutSeconds = 0, bool $emailOnError = false, string $emailRecipient = ''): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! isset($this->accountDomains($service)[$domainId])) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+        $taskName = trim($taskName);
+        $command = trim($command);
+        if ($taskName === '' || $command === '') {
+            return $this->buildResult(false, 'Task name and command are required.');
+        }
+        $policy = $this->cronPolicy($service);
+        if (! $policy['enabled']) {
+            return $this->buildResult(false, 'Your plan does not include cron jobs.');
+        }
+        if (! $policy['can_create']) {
+            return $this->buildResult(false, 'You have reached your plan\'s cron job limit.');
+        }
+
+        $payload = [
+            'domain_id' => $domainId,
+            'task_name' => $taskName,
+            'command' => $command,
+            'minute' => $schedule['minute'] ?? '*',
+            'hour' => $schedule['hour'] ?? '*',
+            'day_of_month' => $schedule['day_of_month'] ?? '*',
+            'month' => $schedule['month'] ?? '*',
+            'day_of_week' => $schedule['day_of_week'] ?? '*',
+            'email_on_error' => $emailOnError,
+        ];
+        if ($timeoutSeconds > 0) {
+            $payload['timeout_seconds'] = $timeoutSeconds;
+        }
+        if ($emailRecipient !== '') {
+            $payload['email_recipient'] = $emailRecipient;
+        }
+
+        $resp = $this->post($server, '/v1/cron-jobs', $payload);
+        if ($resp->status() === 403) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Your plan does not allow this.'));
+        }
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the cron job.'));
+        }
+
+        return $this->buildResult(true, 'Cron job created.');
+    }
+
+    public function toggleCronJob(Service $service, string $id): array
+    {
+        if (! $this->ownsCronJob($service, $id)) {
+            return $this->buildResult(false, 'That cron job does not belong to this service.');
+        }
+        $resp = $this->post($this->getServer($service), "/v1/cron-jobs/{$id}/toggle", []);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not toggle the cron job.'));
+        }
+
+        return $this->buildResult(true, 'Cron job updated.');
+    }
+
+    public function runCronJob(Service $service, string $id): array
+    {
+        if (! $this->ownsCronJob($service, $id)) {
+            return $this->buildResult(false, 'That cron job does not belong to this service.');
+        }
+        $resp = $this->post($this->getServer($service), "/v1/cron-jobs/{$id}/run", []);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not run the cron job.'));
+        }
+
+        return $this->buildResult(true, 'Cron job executed.', ['output' => (string) ($resp->json('data.output') ?? '')]);
+    }
+
+    public function deleteCronJob(Service $service, string $id): array
+    {
+        if (! $this->ownsCronJob($service, $id)) {
+            return $this->buildResult(false, 'That cron job does not belong to this service.');
+        }
+        $resp = $this->delete($this->getServer($service), "/v1/cron-jobs/{$id}");
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the cron job.'));
+        }
+
+        return $this->buildResult(true, 'Cron job deleted.');
+    }
+
+    private function ownsCronJob(Service $service, string $id): bool
+    {
+        if ($id === '') {
+            return false;
+        }
+        foreach ($this->cronJobs($service) as $j) {
+            if ($j['id'] === $id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Raw value of a field on the account's plan (bool/int/string as stored),
+     * or null when the plan or field is unknown. planLimit() casts to int;
+     * this preserves the native type so boolean flags read correctly.
+     *
+     * @return mixed
+     */
+    private function planField(Service $service, string $field)
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return null;
+        }
+        $acc = $this->get($server, "/v1/accounts/{$accountId}");
+        $planId = $acc->successful() ? ($acc->json('data.plan_id') ?? null) : null;
+        if (! $planId) {
+            return null;
+        }
+        $plans = $this->get($server, '/v1/plans');
+        if (! $plans->successful()) {
+            return null;
+        }
+        foreach (($plans->json('data') ?? []) as $p) {
+            if ((string) ($p['id'] ?? '') === (string) $planId) {
+                return $p[$field] ?? null;
+            }
+        }
+
+        return null;
     }
 
     // -------------------------------------------------------------------------

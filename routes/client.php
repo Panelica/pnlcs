@@ -104,6 +104,11 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::get('services/{service}/subdomains', [ServiceController::class, 'subdomains'])->name('services.subdomains');
         Route::post('services/{service}/subdomains', [ServiceController::class, 'storeSubdomain'])->name('services.subdomains.store');
         Route::post('services/{service}/subdomains/delete', [ServiceController::class, 'destroySubdomain'])->name('services.subdomains.destroy');
+        Route::get('services/{service}/cron', [ServiceController::class, 'cron'])->name('services.cron');
+        Route::post('services/{service}/cron', [ServiceController::class, 'storeCron'])->name('services.cron.store');
+        Route::post('services/{service}/cron/toggle', [ServiceController::class, 'toggleCron'])->name('services.cron.toggle');
+        Route::post('services/{service}/cron/run', [ServiceController::class, 'runCron'])->name('services.cron.run');
+        Route::post('services/{service}/cron/delete', [ServiceController::class, 'destroyCron'])->name('services.cron.destroy');
         Route::get('services/{service}/databases', [ServiceController::class, 'databases'])->name('services.databases');
         Route::post('services/{service}/databases', [ServiceController::class, 'storeDatabase'])->name('services.databases.store');
         Route::post('services/{service}/databases/delete', [ServiceController::class, 'destroyDatabase'])->name('services.databases.destroy');

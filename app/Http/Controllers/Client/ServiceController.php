@@ -535,6 +535,120 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    public function cron(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'cron');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+        $cronJobs = $module->cronJobs($service);
+        $policy = $module->cronPolicy($service);
+        $domains = $module->accountDomains($service);
+
+        return view('client.services.hosting.cron', compact('service', 'cronJobs', 'policy', 'domains'));
+    }
+
+    public function storeCron(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'cron');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'domain_id' => ['required', 'string'],
+            'task_name' => ['required', 'string', 'max:255'],
+            'command' => ['required', 'string', 'max:4096'],
+            'schedule_type' => ['nullable', 'in:basic,advanced'],
+            'preset' => ['nullable', 'string', 'max:32'],
+            'minute' => ['nullable', 'string', 'max:100'],
+            'hour' => ['nullable', 'string', 'max:100'],
+            'day_of_month' => ['nullable', 'string', 'max:100'],
+            'month' => ['nullable', 'string', 'max:100'],
+            'day_of_week' => ['nullable', 'string', 'max:100'],
+            'email_on_error' => ['nullable', 'boolean'],
+            'email_recipient' => ['nullable', 'email', 'max:255'],
+        ]);
+
+        $schedule = ($data['schedule_type'] ?? 'basic') === 'advanced'
+            ? [
+                'minute' => $data['minute'] ?? '*',
+                'hour' => $data['hour'] ?? '*',
+                'day_of_month' => $data['day_of_month'] ?? '*',
+                'month' => $data['month'] ?? '*',
+                'day_of_week' => $data['day_of_week'] ?? '*',
+            ]
+            : $this->presetToSchedule($data['preset'] ?? 'daily');
+
+        $result = $module->createCronJob(
+            $service,
+            $data['domain_id'],
+            $data['task_name'],
+            $data['command'],
+            $schedule,
+            0,
+            $request->boolean('email_on_error'),
+            $data['email_recipient'] ?? ''
+        );
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function toggleCron(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'cron');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->toggleCronJob($service, (string) $request->input('cron_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function runCron(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'cron');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->runCronJob($service, (string) $request->input('cron_id'));
+        if ($result['success'] && ! empty($result['data']['output'])) {
+            return back()->with('success', $result['message'])->with('cron_output', $result['data']['output']);
+        }
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyCron(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'cron');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->deleteCronJob($service, (string) $request->input('cron_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    /** Map a friendly preset to the 5-field cron schedule (mirrors the panel). */
+    private function presetToSchedule(string $preset): array
+    {
+        return match ($preset) {
+            'everyMinute' => ['minute' => '*', 'hour' => '*', 'day_of_month' => '*', 'month' => '*', 'day_of_week' => '*'],
+            'every5Minutes' => ['minute' => '*/5', 'hour' => '*', 'day_of_month' => '*', 'month' => '*', 'day_of_week' => '*'],
+            'every15Minutes' => ['minute' => '*/15', 'hour' => '*', 'day_of_month' => '*', 'month' => '*', 'day_of_week' => '*'],
+            'every30Minutes' => ['minute' => '*/30', 'hour' => '*', 'day_of_month' => '*', 'month' => '*', 'day_of_week' => '*'],
+            'hourly' => ['minute' => '0', 'hour' => '*', 'day_of_month' => '*', 'month' => '*', 'day_of_week' => '*'],
+            'weekly' => ['minute' => '0', 'hour' => '0', 'day_of_month' => '*', 'month' => '*', 'day_of_week' => '0'],
+            'monthly' => ['minute' => '0', 'hour' => '0', 'day_of_month' => '1', 'month' => '*', 'day_of_week' => '*'],
+            default => ['minute' => '0', 'hour' => '0', 'day_of_month' => '*', 'month' => '*', 'day_of_week' => '*'], // daily
+        };
+    }
+
     // ----- FTP accounts (Panelica-only) --------------------------------------
 
     public function ftp(Service $service)

@@ -78,7 +78,7 @@
         ['k'=>'subdomains','name'=>'Subdomains','desc'=>'Create subdomains','ic'=>'ri-node-tree','c'=>'#10b981','route'=>route('client.services.subdomains',$service)],
         ['k'=>'dns','name'=>'DNS Zone','desc'=>'Edit DNS records','ic'=>'ri-global-line','c'=>'#6366f1','route'=>null],
         ['k'=>'ssl','name'=>'SSL / TLS','desc'=>'Certificates','ic'=>'ri-shield-check-line','c'=>'#059669','route'=>null],
-        ['k'=>'cron','name'=>'Cron Jobs','desc'=>'Scheduled tasks','ic'=>'ri-time-line','c'=>'#ec4899','route'=>null],
+        ['k'=>'cron','name'=>__('client.hosting.cron.title'),'desc'=>__('client.hosting.cron.subtitle'),'ic'=>'ri-time-line','c'=>'#ec4899','route'=>route('client.services.cron',$service)],
         ['k'=>'backups','name'=>'Backups','desc'=>'Restore points','ic'=>'ri-archive-2-line','c'=>'#64748b','route'=>null],
         ['k'=>'wordpress','name'=>'WordPress','desc'=>'Manage installs','ic'=>'ri-wordpress-line','c'=>'#3858e9','route'=>null],
     ];
