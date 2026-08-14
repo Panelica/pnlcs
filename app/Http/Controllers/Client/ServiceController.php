@@ -514,7 +514,10 @@ class ServiceController extends Controller
             $data['name'],
             $data['document_root'] ?? null,
             $data['php_version'] ?? null,
-            (bool) ($data['ssl'] ?? true)
+            // A hidden ssl=0 sits before the checkbox so an unchecked box is
+            // actually transmitted (a bare unchecked checkbox sends nothing,
+            // which would silently force SSL on). boolean() reads the real state.
+            $request->boolean('ssl')
         );
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);

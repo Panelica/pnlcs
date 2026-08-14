@@ -129,6 +129,25 @@ it('forwards the document root: value sent, empty means root, null omitted', fun
     Http::assertSent(fn ($rq) => $rq->method() === 'POST' && ! array_key_exists('document_root', $rq->data()));
 });
 
+it('transmits the SSL toggle honestly: unchecked → ssl_enabled false, checked → true', function () {
+    fakeSdApi(5, []);
+    [$owner, $s] = sdService(sdServer());
+
+    // Unchecked box → the hidden ssl=0 is what arrives.
+    $this->actingAs($owner)->post(route('client.services.subdomains.store', $s), [
+        'domain_id' => 'dom-own', 'name' => 'off', 'document_root' => 'public_html', 'ssl' => '0',
+    ]);
+    Http::assertSent(fn ($rq) => $rq->method() === 'POST' && str_contains($rq->url(), '/subdomains')
+        && ($rq->data()['ssl_enabled'] ?? null) === false);
+
+    // Checked box → ssl=1 (hidden 0 is overridden by the later checkbox value).
+    $this->actingAs($owner)->post(route('client.services.subdomains.store', $s), [
+        'domain_id' => 'dom-own', 'name' => 'on', 'document_root' => 'public_html', 'ssl' => '1',
+    ]);
+    Http::assertSent(fn ($rq) => $rq->method() === 'POST' && str_contains($rq->url(), '/subdomains')
+        && ($rq->data()['ssl_enabled'] ?? null) === true);
+});
+
 it('fences subdomain deletion to the account\'s own subdomains', function () use ($SUB) {
     fakeSdApi(5, [$SUB]);
     [$u, $s] = sdService(sdServer());
