@@ -12,7 +12,9 @@ use App\Models\ClientNote;
 use App\Models\Currency;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -52,7 +54,7 @@ class ClientController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:clients,email',
+            'email' => 'required|email|max:255|unique:clients,email|unique:users,email',
             'company_name' => 'nullable|string|max:255',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
@@ -63,8 +65,23 @@ class ClientController extends Controller
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
         $client = Client::create($validated);
+
+        // A client created by staff gets a login account too, otherwise there
+        // is no user to sign the client area in as (or to impersonate with).
+        if (! empty($validated['password'])) {
+            $user = User::create([
+                'first_name' => $client->first_name,
+                'last_name' => $client->last_name,
+                'email' => $client->email,
+                'password' => Hash::make($validated['password']),
+                'is_active' => true,
+            ]);
+            $client->users()->attach($user->id, ['owner' => true]);
+        }
+
         $this->saveCustomFieldValues($client, $request);
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_created'));

@@ -706,6 +706,7 @@ return [
     'clients.no_activity' => 'No activity log entries.',
     'clients.no_notes' => 'No notes yet.',
     'clients.other_info' => 'Other Info',
+    'clients.password_optional' => 'optional',
     'clients.overdue_invoices' => 'Overdue Invoices',
     'clients.paid_invoices' => 'Paid Invoices',
     'clients.phone' => 'Phone',

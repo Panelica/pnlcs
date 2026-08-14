@@ -710,6 +710,7 @@ return [
     'clients.no_activity' => 'Brak wpisów w dzienniku aktywności.',
     'clients.no_notes' => 'Brak notatek.',
     'clients.other_info' => 'Inne informacje',
+    'clients.password_optional' => 'opcjonalne',
     'clients.overdue_invoices' => 'Zaległe faktury',
     'clients.paid_invoices' => 'Opłacone faktury',
     'clients.phone' => 'Telefon',

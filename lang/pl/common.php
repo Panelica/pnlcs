@@ -139,6 +139,8 @@ return [
     'form.last_name' => 'Nazwisko',
     'form.message' => 'Wiadomość',
     'form.new_password' => 'Nowe hasło',
+    'form.password' => 'Hasło',
+    'form.password_confirm' => 'Potwierdź hasło',
     'form.phone' => 'Telefon',
     'form.phone_number' => 'Numer telefonu',
     'form.postcode' => 'Kod pocztowy',
