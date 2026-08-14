@@ -34,7 +34,9 @@
     .sd-act{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid transparent;color:var(--muted);cursor:pointer;background:transparent}
     .sd-act:hover{background:rgba(239,68,68,.1);color:#dc2626}
     .sd-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
-    .sd-check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);padding-bottom:9px}
+    .sd-check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text)}
+    .sd-hint{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted);margin-top:3px;padding-bottom:9px}
+    .sd-hint i{font-size:13px}
 </style>
 
 <a href="{{ route('client.services.show', $service) }}" class="sd-back"><i class="ri-arrow-left-line"></i>{{ $service->product?->name ?? __('client.services.title') }}</a>
@@ -61,8 +63,11 @@
             <select name="domain_id" required class="sd-inp">@foreach($domains as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach</select>
         </div>
         <div class="sd-fld"><label class="sd-lbl">{{ __('client.hosting.subdomains.document_root') }}</label><input type="text" name="document_root" maxlength="255" class="sd-inp" value="public_html" placeholder="public_html"></div>
-        <input type="hidden" name="ssl" value="0">
-        <label class="sd-check"><input type="checkbox" name="ssl" value="1" checked> {{ __('client.hosting.subdomains.ssl') }}</label>
+        <div>
+            <input type="hidden" name="ssl" value="0">
+            <label class="sd-check"><input type="checkbox" name="ssl" value="1" checked> {{ __('client.hosting.subdomains.ssl') }}</label>
+            <div class="sd-hint"><i class="ri-information-line"></i>{{ __('client.hosting.subdomains.ssl_hint') }}</div>
+        </div>
         <button type="submit" class="sd-btn"><i class="ri-add-line"></i>{{ __('client.hosting.subdomains.create') }}</button>
     </form>
     @endif
