@@ -168,6 +168,9 @@
                     @if($invoice->buyer('tax_id'))
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.tax_id') }}</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->buyer('tax_id') }}</td></tr>
                     @endif
+                    @foreach($invoice->buyerCustomFields() as $label => $value)
+                    <tr><td style="padding:4px 0;color:#777;">{{ $label }}</td><td style="padding:4px 0;">{{ $value }}</td></tr>
+                    @endforeach
                 </table>
             </div>
         </div>

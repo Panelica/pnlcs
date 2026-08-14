@@ -13,7 +13,8 @@ class Invoice extends Model {
         // was already frozen; these keep the document itself immutable.
         'buyer_first_name', 'buyer_last_name', 'buyer_company_name', 'buyer_email',
         'buyer_address1', 'buyer_address2', 'buyer_city', 'buyer_state',
-        'buyer_postcode', 'buyer_country', 'buyer_tax_id', 'buyer_tax_exempt'];
+        'buyer_postcode', 'buyer_country', 'buyer_tax_id', 'buyer_tax_exempt',
+        'buyer_custom_fields'];
 
     /**
      * Invoices the customer still owes money on.
@@ -25,7 +26,7 @@ class Invoice extends Model {
     {
         return $query->whereIn('status', ['unpaid', 'overdue', 'partially_paid']);
     }
-    protected function casts(): array { return ['date' => 'date', 'due_date' => 'date', 'date_paid' => 'datetime', 'subtotal' => 'decimal:2', 'credit' => 'decimal:2', 'tax' => 'decimal:2', 'total' => 'decimal:2']; }
+    protected function casts(): array { return ['date' => 'date', 'due_date' => 'date', 'date_paid' => 'datetime', 'subtotal' => 'decimal:2', 'credit' => 'decimal:2', 'tax' => 'decimal:2', 'total' => 'decimal:2', 'buyer_custom_fields' => 'array']; }
 
     public function client() { return $this->belongsTo(Client::class); }
     /**
@@ -84,6 +85,7 @@ class Invoice extends Model {
             'buyer_country' => $client->country,
             'buyer_tax_id' => $client->tax_id,
             'buyer_tax_exempt' => (bool) $client->tax_exempt,
+            'buyer_custom_fields' => CustomField::invoiceSnapshot($client),
         ];
     }
 
@@ -101,6 +103,25 @@ class Invoice extends Model {
         }
 
         return $this->client?->{$field};
+    }
+
+    /**
+     * The buyer's custom fields as shown on this invoice: the snapshot taken
+     * at issue time, lying flat in the same shape the snapshot builder returns
+     * (field name => value). Invoices issued before custom-field snapshots
+     * existed fall back to the live client's values, exactly like buyer() does.
+     *
+     * @return array<string, mixed>
+     */
+    public function buyerCustomFields(): array
+    {
+        $snapshot = $this->getAttribute('buyer_custom_fields');
+
+        if (is_array($snapshot) && $snapshot !== []) {
+            return $snapshot;
+        }
+
+        return CustomField::invoiceSnapshot($this->client);
     }
 
 }

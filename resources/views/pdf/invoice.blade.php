@@ -79,6 +79,12 @@
                 @if($invoice->buyer('city')){{ $invoice->buyer('city') }}, {{ $invoice->buyer('state') }} {{ $invoice->buyer('postcode') }}<br>@endif
                 @if($invoice->buyer('country')){{ $invoice->buyer('country') }}<br>@endif
                 @if($invoice->buyer('tax_id')){{ __('pdf.tax_id') ?? 'Tax ID' }}: {{ $invoice->buyer('tax_id') }}<br>@endif
+                {{-- Custom fields marked "show on invoice" (e.g. NIP), as frozen
+                     at issue time; invoices before snapshots fall back to the
+                     live client record. --}}
+                @foreach($invoice->buyerCustomFields() as $label => $value)
+                    {{ $label }}: {{ $value }}<br>
+                @endforeach
                 {{ $invoice->buyer('email') }}
             @endif
         </div>

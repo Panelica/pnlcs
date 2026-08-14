@@ -1,5 +1,6 @@
 <?php
 namespace App\Models;
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Model;
 
 class CustomField extends Model {
@@ -25,5 +26,35 @@ class CustomField extends Model {
     public function options(): array
     {
         return array_values(array_filter(array_map("trim", preg_split('/\r?\n/', (string) $this->field_options))));
+    }
+
+    /**
+     * The custom fields flagged "show on invoice", with the client's saved
+     * values — the data that gets frozen onto an issued invoice.
+     *
+     * @return array<string, mixed> Field name => value.
+     */
+    public static function invoiceSnapshot(?Client $client): array
+    {
+        if (! $client) {
+            return [];
+        }
+
+        $snapshot = [];
+
+        static::where('type', 'client')
+            ->where('show_on_invoice', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->each(function (self $field) use (&$snapshot, $client) {
+                $value = $field->valueFor($client->id);
+
+                if ($value !== null && $value !== '') {
+                    $snapshot[$field->field_name] = $value;
+                }
+            });
+
+        return $snapshot;
     }
 }
