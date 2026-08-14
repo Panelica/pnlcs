@@ -10,8 +10,10 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
         
-        // Force test database connection
-        config(['database.connections.mysql.database' => 'pnlcs_test']);
+        // Force test database connection. Uses DB_DATABASE from the environment
+        // (phpunit.xml / .env.testing) so the suite does not silently connect
+        // to a hard-coded database that may not exist on this install.
+        config(['database.connections.mysql.database' => env('DB_DATABASE', 'pnlcs_test')]);
         DB::purge('mysql');
         DB::reconnect('mysql');
         
