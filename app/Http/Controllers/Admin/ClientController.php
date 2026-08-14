@@ -10,6 +10,8 @@ use App\Models\Client;
 use App\Models\ClientGroup;
 use App\Models\ClientNote;
 use App\Models\Currency;
+use App\Models\CustomField;
+use App\Models\CustomFieldValue;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -40,8 +42,9 @@ class ClientController extends Controller
     {
         $groups = ClientGroup::all();
         $currencies = Currency::all();
+        $customFields = CustomField::clientFields()->get();
 
-        return view('admin.clients.create', compact('groups', 'currencies'));
+        return view('admin.clients.create', compact('groups', 'currencies', 'customFields'));
     }
 
     public function store(Request $request)
@@ -62,6 +65,7 @@ class ClientController extends Controller
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
         $client = Client::create($validated);
+        $this->saveCustomFieldValues($client, $request);
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_created'));
     }
@@ -73,6 +77,11 @@ class ClientController extends Controller
         $client->load('contacts', 'users');
 
         $data = ['client' => $client, 'tab' => $tab];
+
+        // Custom fields (shown in the summary tab)
+        $data['customFields'] = CustomField::clientFields()
+            ->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])
+            ->get();
 
         // Stats always needed (shown in all tabs)
         $data['serviceCount'] = $client->services()->count();
@@ -141,8 +150,9 @@ class ClientController extends Controller
     {
         $groups = ClientGroup::all();
         $currencies = Currency::all();
+        $customFields = CustomField::clientFields()->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])->get();
 
-        return view('admin.clients.edit', compact('client', 'groups', 'currencies'));
+        return view('admin.clients.edit', compact('client', 'groups', 'currencies', 'customFields'));
     }
 
     public function update(Request $request, Client $client)
@@ -166,6 +176,7 @@ class ClientController extends Controller
             'currency_id' => 'nullable|exists:currencies,id',
         ]);
         $client->update($validated);
+        $this->saveCustomFieldValues($client, $request);
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_updated'));
     }
@@ -308,5 +319,30 @@ class ClientController extends Controller
         session()->forget(['impersonating_admin_id', 'impersonating_admin_name', 'active_client_id']);
 
         return redirect()->route('admin.clients.index')->with('success', __('messages.success.impersonation_stopped'));
+    }
+
+    /**
+     * Persist the submitted custom field values for a client.
+     */
+    protected function saveCustomFieldValues(Client $client, Request $request)
+    {
+        $fields = CustomField::clientFields()->get()->keyBy('id');
+
+        foreach ($fields as $id => $field) {
+            $raw = $request->input("custom_fields.$id");
+
+            $value = is_array($raw) ? implode(', ', array_filter((array) $raw)) : (string) $raw;
+
+            if ($value === '') {
+                CustomFieldValue::where('field_id', $id)->where('rel_id', $client->id)->delete();
+
+                continue;
+            }
+
+            CustomFieldValue::updateOrCreate(
+                ['field_id' => $id, 'rel_id' => $client->id],
+                ['value' => $value]
+            );
+        }
     }
 }

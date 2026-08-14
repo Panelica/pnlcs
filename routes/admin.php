@@ -252,6 +252,13 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('currencies/{currency}/default', [ConfigController::class, 'setDefaultCurrency'])->name('currencies.default');
         });
 
+        Route::middleware('admin.permission:manage_settings')->group(function () {
+            Route::get('custom-fields', [ConfigController::class, 'customFields'])->name('custom-fields');
+            Route::post('custom-fields', [ConfigController::class, 'storeCustomField'])->name('custom-fields.store');
+            Route::put('custom-fields/{customField}', [ConfigController::class, 'updateCustomField'])->name('custom-fields.update');
+            Route::delete('custom-fields/{customField}', [ConfigController::class, 'destroyCustomField'])->name('custom-fields.destroy');
+        });
+
         Route::middleware('admin.permission:manage_tax')->group(function () {
             Route::get('tax', [ConfigController::class, 'tax'])->name('tax');
             Route::post('tax', [ConfigController::class, 'storeTax'])->name('tax.store');

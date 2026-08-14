@@ -80,6 +80,18 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 </table>
             </div>
         </div>
+        @if($customFields->isNotEmpty())
+        <div class="panel" style="margin-top:10px;">
+            <div class="panel-heading panel-primary">{{ __('admin.clients.custom_fields') }}</div>
+            <div class="panel-body">
+                <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                    @foreach($customFields as $field)
+                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ $field->field_name }}</td><td style="padding:5px 0;font-weight:600;">{{ $field->values->first()?->value ?: '-' }}</td></tr>
+                    @endforeach
+                </table>
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- Column 2 --}}

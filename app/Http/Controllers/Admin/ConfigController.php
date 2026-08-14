@@ -20,6 +20,8 @@ use App\Models\ConfigOptionGroup;
 use App\Models\ConfigOptionLink;
 use App\Models\ConfigOptionSub;
 use App\Models\Currency;
+use App\Models\CustomField;
+use App\Models\CustomFieldValue;
 use App\Models\DomainPricing;
 use App\Models\Download;
 use App\Models\DownloadCategory;
@@ -268,6 +270,88 @@ class ConfigController extends Controller
         $currency->update(['is_default' => true]);
 
         return back()->with('success', __('messages.success.currency_set_default'));
+    }
+
+    // ===== CUSTOM CLIENT FIELDS =====
+
+    public function customFields()
+    {
+        return view('admin.config.custom-fields', [
+            'customFields' => CustomField::where('type', 'client')->orderBy('sort_order')->orderBy('id')->get(),
+        ]);
+    }
+
+    public function storeCustomField(Request $request)
+    {
+        $v = $request->validate([
+            'field_name' => ['required', 'string', 'max:255'],
+            'field_type' => ['required', 'in:text,textarea,select,checkbox,number,date'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'field_options' => ['nullable', 'string', 'max:1000'],
+            'regex' => ['nullable', 'string', 'max:255'],
+            'required' => ['nullable', 'boolean'],
+            'admin_only' => ['nullable', 'boolean'],
+            'show_on_order' => ['nullable', 'boolean'],
+            'show_on_invoice' => ['nullable', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        CustomField::create([
+            'type' => 'client',
+            'rel_id' => 0,
+            'field_name' => $v['field_name'],
+            'field_type' => $v['field_type'],
+            'description' => $v['description'] ?? null,
+            // One option per line, colon splits label from value: "Sp. z o.o. :Sp. z o.o."
+            'field_options' => $v['field_options'] ?? null,
+            'regex' => $v['regex'] ?? null,
+            'required' => (bool) ($v['required'] ?? false),
+            'admin_only' => (bool) ($v['admin_only'] ?? false),
+            'show_on_order' => (bool) ($v['show_on_order'] ?? false),
+            'show_on_invoice' => (bool) ($v['show_on_invoice'] ?? false),
+            'sort_order' => (int) ($v['sort_order'] ?? 0),
+        ]);
+
+        return back()->with('success', __('messages.success.custom_field_added'));
+    }
+
+    public function updateCustomField(Request $request, CustomField $customField)
+    {
+        $v = $request->validate([
+            'field_name' => ['required', 'string', 'max:255'],
+            'field_type' => ['required', 'in:text,textarea,select,checkbox,number,date'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'field_options' => ['nullable', 'string', 'max:1000'],
+            'regex' => ['nullable', 'string', 'max:255'],
+            'required' => ['nullable', 'boolean'],
+            'admin_only' => ['nullable', 'boolean'],
+            'show_on_order' => ['nullable', 'boolean'],
+            'show_on_invoice' => ['nullable', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $customField->update([
+            'field_name' => $v['field_name'],
+            'field_type' => $v['field_type'],
+            'description' => $v['description'] ?? null,
+            'field_options' => $v['field_options'] ?? null,
+            'regex' => $v['regex'] ?? null,
+            'required' => (bool) ($v['required'] ?? false),
+            'admin_only' => (bool) ($v['admin_only'] ?? false),
+            'show_on_order' => (bool) ($v['show_on_order'] ?? false),
+            'show_on_invoice' => (bool) ($v['show_on_invoice'] ?? false),
+            'sort_order' => (int) ($v['sort_order'] ?? 0),
+        ]);
+
+        return back()->with('success', __('messages.success.custom_field_updated'));
+    }
+
+    public function destroyCustomField(CustomField $customField)
+    {
+        $customField->values()->delete();
+        $customField->delete();
+
+        return back()->with('success', __('messages.success.custom_field_deleted'));
     }
 
     // ===== TAX RULES =====
