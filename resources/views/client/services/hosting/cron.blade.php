@@ -30,6 +30,10 @@
     .cr-note{padding:16px 18px;display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted)}
     .cr-note i{font-size:18px;color:#f59e0b}
     .cr-hint{font-size:11.5px;color:var(--muted);margin-top:4px}
+    .cr-ex{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:9px}
+    .cr-ex-lbl{font-size:11.5px;font-weight:700;color:var(--muted)}
+    .cr-chip{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:999px;border:1px solid var(--border);background:var(--bg);color:var(--primary);cursor:pointer}
+    .cr-chip:hover{background:var(--primary-light);border-color:var(--primary)}
     .cr-check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text)}
     .cr-table{width:100%;border-collapse:collapse}
     .cr-table thead th{text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg)}
@@ -86,6 +90,14 @@
                 @php($cmdFirstDomain = ! empty($domains) ? reset($domains) : 'example.com')
                 <textarea name="command" id="cr-command" required maxlength="4096" class="cr-ta" rows="2" placeholder="{{ str_replace('{domain}', $cmdFirstDomain, __('client.hosting.cron.command_ph')) }}"></textarea>
                 <div class="cr-hint">{{ __('client.hosting.cron.command_hint') }}</div>
+                <div class="cr-ex">
+                    <span class="cr-ex-lbl">{{ __('client.hosting.cron.examples') }}</span>
+                    <button type="button" class="cr-chip" data-cmd="/usr/local/bin/php ~/{domain}/public_html/artisan schedule:run" onclick="crFill(this)">{{ __('client.hosting.cron.ex.laravel') }}</button>
+                    <button type="button" class="cr-chip" data-cmd="/usr/local/bin/php ~/{domain}/public_html/cron.php" onclick="crFill(this)">{{ __('client.hosting.cron.ex.php') }}</button>
+                    <button type="button" class="cr-chip" data-cmd="/usr/local/bin/php83 ~/{domain}/public_html/cron.php" onclick="crFill(this)">{{ __('client.hosting.cron.ex.phpver') }}</button>
+                    <button type="button" class="cr-chip" data-cmd="/usr/local/bin/wp --path=$HOME/{domain}/public_html cron event run --due-now" onclick="crFill(this)">{{ __('client.hosting.cron.ex.wp') }}</button>
+                    <button type="button" class="cr-chip" data-cmd="/usr/bin/curl -s https://{domain}/cron.php" onclick="crFill(this)">{{ __('client.hosting.cron.ex.url') }}</button>
+                </div>
             </div>
         </div>
         <div class="cr-row" style="align-items:flex-end">
@@ -177,6 +189,16 @@ function crCmd(){
     if(!sel || !cmd) return;
     var dom = (sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].text) || 'example.com';
     cmd.placeholder = CR_CMD_TPL.replace('{domain}', dom);
+}
+// Fill the command box from an example, using the currently selected domain so
+// the path is real for the account (cron runs as the account user; ~ = home).
+function crFill(el){
+    var sel = document.getElementById('cr-domain');
+    var cmd = document.getElementById('cr-command');
+    if(!sel || !cmd) return;
+    var dom = (sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].text) || 'example.com';
+    cmd.value = (el.getAttribute('data-cmd') || '').replace(/\{domain\}/g, dom);
+    cmd.focus();
 }
 document.addEventListener('DOMContentLoaded', crCmd);
 </script>
