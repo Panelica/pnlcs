@@ -57,7 +57,17 @@ class AccountController extends Controller
         // Most logins have one account and never see the switch.
         $accounts = $user->clients()->orderBy('id')->get();
 
-        return view('client.account.profile', compact('user', 'client', 'countries', 'accounts'));
+        // Custom fields the client is allowed to see and edit (admin-only ones
+        // stay out of the client area entirely), with the values already set.
+        $customFields = collect();
+        if ($client) {
+            $customFields = \App\Models\CustomField::clientFields()
+                ->where('admin_only', false)
+                ->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])
+                ->get();
+        }
+
+        return view('client.account.profile', compact('user', 'client', 'countries', 'accounts', 'customFields'));
     }
 
     public function updateProfile(Request $request)
@@ -78,15 +88,18 @@ class AccountController extends Controller
             // The column will not hold null, so asking is better than crashing.
             'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:50',
+            'new_password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
+            'new_password_confirmation' => 'required_with:new_password|string',
         ]);
 
         $previousEmail = (string) $user->email;
         $changingLogin = strcasecmp($previousEmail, (string) $request->email) !== 0;
+        $changingPassword = ! empty($request->new_password);
 
         // The sign-in address is where a password reset is delivered, so
         // changing it is as good as changing the password - and that asks for
-        // the current one.
-        if ($changingLogin) {
+        // the current one. Setting a new password also asks for it.
+        if ($changingLogin || $changingPassword) {
             $request->validate(['current_password' => 'required|string']);
 
             if (! Hash::check((string) $request->current_password, (string) $user->password)) {
@@ -101,6 +114,20 @@ class AccountController extends Controller
             'last_name' => $request->last_name,
             'email' => $request->email,
         ]);
+
+        if ($changingPassword) {
+            $user->update(['password' => Hash::make($request->new_password)]);
+
+            // A "remember me" cookie signs its holder in on its own for as long
+            // as the token behind it stays put. Changing the password is how
+            // somebody ends a session they did not start, so the token goes
+            // with it and the cookie stops working - this one included, which
+            // is why the current session is re-remembered below.
+            $user->setRememberToken(Str::random(60));
+            $user->save();
+
+            Auth::guard('web')->login($user, true);
+        }
 
         if ($changingLogin) {
             // The address losing the account hears about it; that is the one
@@ -131,6 +158,32 @@ class AccountController extends Controller
                 'country' => $request->country,
                 'phone_number' => $request->phone_number,
             ]);
+        }
+
+        // Custom field values editable from the client area (admin-only fields
+        // are never rendered, so only the visible ones are ever submitted).
+        if ($client) {
+            $visibleFields = \App\Models\CustomField::clientFields()
+                ->where('admin_only', false)
+                ->get()
+                ->keyBy('id');
+
+            foreach ($visibleFields as $id => $field) {
+                $raw = $request->input("custom_fields.$id");
+
+                $value = is_array($raw) ? implode(', ', array_filter((array) $raw)) : (string) $raw;
+
+                if ($value === '') {
+                    \App\Models\CustomFieldValue::where('field_id', $id)->where('rel_id', $client->id)->delete();
+
+                    continue;
+                }
+
+                \App\Models\CustomFieldValue::updateOrCreate(
+                    ['field_id' => $id, 'rel_id' => $client->id],
+                    ['value' => $value]
+                );
+            }
         }
 
         return redirect()->route('client.account.profile')

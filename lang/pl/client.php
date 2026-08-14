@@ -645,6 +645,7 @@ return [
     'profile.edit_profile' => 'Edytuj profil',
     'profile.edit_subtitle' => 'Zaktualizuj swoje dane osobowe i kontaktowe.',
     'profile.personal_info' => 'Dane osobowe',
+    'profile.custom_fields' => 'Pola niestandardowe',
     'register' => 'Rejestracja',
     'security' => [
         '2fa_desc' => 'Uwierzytelnianie dwuskładnikowe dodaje dodatkową warstwę zabezpieczeń Twojego konta, wymagając zarówno hasła, jak i kodu weryfikacyjnego z telefonu.',

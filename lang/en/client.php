@@ -645,6 +645,7 @@ return [
     'profile.edit_profile' => 'Edit Profile',
     'profile.edit_subtitle' => 'Update your personal and contact information.',
     'profile.personal_info' => 'Personal Information',
+    'profile.custom_fields' => 'Custom Fields',
     'register' => 'Register',
     'security' => [
         '2fa_desc' => 'Two-factor authentication adds an extra layer of security to your account by requiring both your password and a verification code from your phone.',
