@@ -92,7 +92,14 @@
                     <span class="bk-tag">{{ $b['type'] === 'incremental' ? __('client.hosting.backups.incremental') : __('client.hosting.backups.full') }}</span>
                     @if($b['encrypted'])<span class="bk-enc"><i class="ri-lock-line" style="font-size:10px"></i> {{ __('client.hosting.backups.encrypted') }}</span>@endif
                 </td>
-                <td>{{ $b['size_mb'] >= 1024 ? number_format($b['size_mb'] / 1024, 2).' GB' : number_format($b['size_mb'], 1).' MB' }}</td>
+                {{-- A small archive is not "0.0 MB"; show the unit that actually reads. --}}
+                <td>@php($mb = (float) $b['size_mb'])
+                    @if($mb >= 1024) {{ number_format($mb / 1024, 2) }} GB
+                    @elseif($mb >= 1) {{ number_format($mb, 1) }} MB
+                    @elseif($mb > 0) {{ number_format($mb * 1024, $mb * 1024 >= 100 ? 0 : 1) }} KB
+                    @else &mdash;
+                    @endif
+                </td>
                 <td style="text-align:right">
                     <form method="POST" action="{{ route('client.services.backups.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.backups.delete_confirm') }}')">
                         @csrf<input type="hidden" name="filename" value="{{ $b['filename'] }}">
