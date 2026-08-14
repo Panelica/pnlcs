@@ -79,7 +79,7 @@
         ['k'=>'dns','name'=>__('client.hosting.dns.title'),'desc'=>__('client.hosting.dns.subtitle'),'ic'=>'ri-global-line','c'=>'#6366f1','route'=>route('client.services.dns',$service)],
         ['k'=>'ssl','name'=>'SSL / TLS','desc'=>'Certificates','ic'=>'ri-shield-check-line','c'=>'#059669','route'=>null],
         ['k'=>'cron','name'=>__('client.hosting.cron.title'),'desc'=>__('client.hosting.cron.subtitle'),'ic'=>'ri-time-line','c'=>'#ec4899','route'=>route('client.services.cron',$service)],
-        ['k'=>'backups','name'=>'Backups','desc'=>'Restore points','ic'=>'ri-archive-2-line','c'=>'#64748b','route'=>null],
+        ['k'=>'backups','name'=>__('client.hosting.backups.title'),'desc'=>__('client.hosting.backups.subtitle'),'ic'=>'ri-archive-2-line','c'=>'#64748b','route'=>route('client.services.backups',$service)],
         ['k'=>'wordpress','name'=>'WordPress','desc'=>'Manage installs','ic'=>'ri-wordpress-line','c'=>'#3858e9','route'=>null],
     ];
 @endphp

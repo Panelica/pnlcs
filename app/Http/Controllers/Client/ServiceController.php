@@ -723,6 +723,48 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    public function backups(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'backups');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+        $backups = $module->backups($service);
+        $policy = $module->backupPolicy($service);
+        $domains = $module->accountDomains($service);
+
+        return view('client.services.hosting.backups', compact('service', 'backups', 'policy', 'domains'));
+    }
+
+    public function storeBackup(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'backups');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'domain_id' => ['nullable', 'string'],
+            'name' => ['nullable', 'string', 'max:100'],
+        ]);
+        $result = $module->createBackup($service, $data['domain_id'] ?? null, $data['name'] ?? '');
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyBackup(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'backups');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->deleteBackup($service, (string) $request->input('filename'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
     /** Map a friendly preset to the 5-field cron schedule (mirrors the panel). */
     private function presetToSchedule(string $preset): array
     {

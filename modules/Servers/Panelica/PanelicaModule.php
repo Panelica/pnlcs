@@ -753,7 +753,139 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns'];
+        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns', 'backups'];
+    }
+
+    // -------------------------------------------------------------------------
+    // Backups (Panelica-only). The panel takes per-domain archives; this exposes
+    // the account's own restore points and lets it take a fresh one when the plan
+    // allows. Restore is deliberately NOT offered here — rolling a site back from
+    // a billing panel silently discards everything written since, so it stays in
+    // the panel where the warnings and the file-level picker live.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Restore points covering the account's own domains.
+     *
+     * The panel's list endpoint answers with everything the API key may see, and
+     * the PNLCS key is ROOT-scoped — so the account's domain set, not the raw
+     * list, decides what the customer is shown.
+     *
+     * @return list<array{id:string,filename:string,name:string,size_mb:float,domains:list<string>,created_at:string,status:string,type:string,encrypted:bool}>
+     */
+    public function backups(Service $service): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return [];
+        }
+        $mine = array_map('strtolower', array_values($this->accountDomains($service)));
+        if ($mine === []) {
+            return [];
+        }
+        $resp = $this->get($server, '/v1/backups');
+        if (! $resp->successful()) {
+            return [];
+        }
+        $out = [];
+        foreach (($resp->json('data') ?? []) as $b) {
+            $domains = array_map('strtolower', (array) ($b['domain_names'] ?? []));
+            // Only archives made of this account's domains. An archive that also
+            // covers someone else's domain is not this customer's to see.
+            if ($domains === [] || array_diff($domains, $mine) !== []) {
+                continue;
+            }
+            $out[] = [
+                'id' => (string) ($b['backup_id'] ?? ''),
+                'filename' => (string) ($b['filename'] ?? ''),
+                'name' => (string) ($b['backup_name'] ?? $b['schedule_name'] ?? ''),
+                'size_mb' => (float) ($b['size_mb'] ?? 0),
+                'domains' => $domains,
+                'created_at' => (string) ($b['created_at'] ?? ''),
+                'status' => (string) ($b['status'] ?? ''),
+                'type' => (string) ($b['backup_type'] ?? 'full'),
+                'encrypted' => (bool) ($b['encrypted'] ?? false),
+            ];
+        }
+        usort($out, fn ($a, $b) => strcmp($b['created_at'], $a['created_at']));
+
+        return $out;
+    }
+
+    /**
+     * @return array{enabled:bool,count:int,can_create:bool}
+     */
+    public function backupPolicy(Service $service): array
+    {
+        $count = count($this->backups($service));
+        $enabled = $this->planField($service, 'backup_enabled');
+        // Unknown plan → let the panel be the authority (it enforces too).
+        $isEnabled = $enabled === null ? true : (bool) $enabled;
+
+        return ['enabled' => $isEnabled, 'count' => $count, 'can_create' => $isEnabled];
+    }
+
+    /**
+     * Take a fresh restore point. Without an explicit domain list the panel
+     * would back up everything the (ROOT) key can see, so the account's own
+     * domains are always passed explicitly.
+     */
+    public function createBackup(Service $service, ?string $domainId = null, string $name = ''): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! $this->backupPolicy($service)['enabled']) {
+            return $this->buildResult(false, 'Backups are not included in your current plan.');
+        }
+        $domains = $this->accountDomains($service);
+        if ($domains === []) {
+            return $this->buildResult(false, 'There are no domains to back up yet.');
+        }
+        if ($domainId !== null && $domainId !== '') {
+            if (! isset($domains[$domainId])) {
+                return $this->buildResult(false, 'That domain does not belong to this service.');
+            }
+            $ids = [$domainId];
+        } else {
+            $ids = array_keys($domains);
+        }
+
+        $payload = ['domain_ids' => array_values($ids)];
+        if (trim($name) !== '') {
+            $payload['backup_name'] = trim($name);
+        }
+        $resp = $this->post($server, '/v1/backups', $payload);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not start the backup.'));
+        }
+
+        return $this->buildResult(true, 'Backup created.');
+    }
+
+    public function deleteBackup(Service $service, string $filename): array
+    {
+        if ($filename === '' || ! $this->ownsBackup($service, $filename)) {
+            return $this->buildResult(false, 'That backup does not belong to this service.');
+        }
+        $resp = $this->delete($this->getServer($service), '/v1/backups/'.rawurlencode($filename));
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the backup.'));
+        }
+
+        return $this->buildResult(true, 'Backup deleted.');
+    }
+
+    private function ownsBackup(Service $service, string $filename): bool
+    {
+        foreach ($this->backups($service) as $b) {
+            if ($b['filename'] === $filename) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // -------------------------------------------------------------------------
