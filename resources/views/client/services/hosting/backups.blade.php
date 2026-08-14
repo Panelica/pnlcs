@@ -31,8 +31,10 @@
     .bk-doms{font-size:11.5px;color:var(--muted)}
     .bk-tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border);color:var(--muted)}
     .bk-enc{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(16,185,129,.12);color:#059669}
-    .bk-act{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);color:var(--muted);cursor:pointer;background:transparent}
-    .bk-act:hover{background:rgba(239,68,68,.1);color:#dc2626;border-color:transparent}
+    .bk-acts{display:inline-flex;gap:6px;justify-content:flex-end;align-items:center}
+    .bk-act{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);color:var(--muted);cursor:pointer;background:transparent;text-decoration:none}
+    .bk-act:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
+    .bk-act.danger:hover{background:rgba(239,68,68,.1);color:#dc2626;border-color:transparent}
     .bk-empty{padding:26px;text-align:center;color:var(--muted);font-size:13.5px}
 </style>
 
@@ -101,10 +103,16 @@
                     @endif
                 </td>
                 <td style="text-align:right">
-                    <form method="POST" action="{{ route('client.services.backups.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.backups.delete_confirm') }}')">
-                        @csrf<input type="hidden" name="filename" value="{{ $b['filename'] }}">
-                        <button type="submit" class="bk-act" title="{{ __('client.hosting.backups.delete') }}"><i class="ri-delete-bin-line"></i></button>
-                    </form>
+                    <div class="bk-acts">
+                        {{-- Archives run to gigabytes; the panel serves the file directly
+                             instead of streaming it through billing. SSO puts the customer
+                             one click away. --}}
+                        <a href="{{ route('client.services.login', $service) }}" target="_blank" rel="noopener" class="bk-act" title="{{ __('client.hosting.backups.download_hint') }}"><i class="ri-download-2-line"></i></a>
+                        <form method="POST" action="{{ route('client.services.backups.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.backups.delete_confirm') }}')">
+                            @csrf<input type="hidden" name="filename" value="{{ $b['filename'] }}">
+                            <button type="submit" class="bk-act danger" title="{{ __('client.hosting.backups.delete') }}"><i class="ri-delete-bin-line"></i></button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @endforeach
