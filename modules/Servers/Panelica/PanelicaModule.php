@@ -753,7 +753,151 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron'];
+        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns'];
+    }
+
+    // -------------------------------------------------------------------------
+    // DNS zone (Panelica-only). One authoritative BIND zone per domain; the panel
+    // rewrites the zone file and bumps the serial on every change. Fenced to the
+    // account's own domains. Records the hosting itself depends on (the zone's
+    // NS/SOA and the root/www A records pointing at the server) are surfaced as
+    // protected: editing them from a billing panel is how a customer silently
+    // takes their own site offline.
+    // -------------------------------------------------------------------------
+
+    /**
+     * DNS records across the account's own domains.
+     *
+     * @return list<array{id:string,domain:string,domain_id:string,type:string,name:string,content:string,ttl:?int,priority:?int,protected:bool}>
+     */
+    public function dnsRecords(Service $service): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return [];
+        }
+        $out = [];
+        foreach ($this->accountDomains($service) as $domainId => $domainName) {
+            $resp = $this->get($server, "/v1/dns/zones/{$domainId}/records");
+            if (! $resp->successful()) {
+                continue;
+            }
+            foreach (($resp->json('data') ?? []) as $r) {
+                $type = strtoupper((string) ($r['type'] ?? ''));
+                $name = (string) ($r['name'] ?? '');
+                $out[] = [
+                    'id' => (string) ($r['id'] ?? ''),
+                    'domain' => $domainName,
+                    'domain_id' => $domainId,
+                    'type' => $type,
+                    'name' => $name,
+                    'content' => (string) ($r['content'] ?? ''),
+                    'ttl' => isset($r['ttl']) ? (int) $r['ttl'] : null,
+                    'priority' => isset($r['priority']) ? (int) $r['priority'] : null,
+                    'protected' => $this->isProtectedDnsRecord($type, $name),
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Record types a customer may manage from billing. SOA/NS are deliberately
+     * absent — they are the zone's own delegation and the panel owns them.
+     *
+     * @return list<string>
+     */
+    public function dnsRecordTypes(): array
+    {
+        return ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'SRV', 'CAA'];
+    }
+
+    public function createDnsRecord(Service $service, string $domainId, string $type, string $name, string $content, ?int $ttl = null, ?int $priority = null): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! isset($this->accountDomains($service)[$domainId])) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+        $type = strtoupper(trim($type));
+        if (! in_array($type, $this->dnsRecordTypes(), true)) {
+            return $this->buildResult(false, 'Unsupported record type.');
+        }
+        $name = trim($name) === '' ? '@' : trim($name);
+        $content = trim($content);
+        if ($content === '') {
+            return $this->buildResult(false, 'Record value is required.');
+        }
+        if ($this->isProtectedDnsRecord($type, $name)) {
+            return $this->buildResult(false, 'That record is managed by the hosting platform and cannot be changed here.');
+        }
+
+        $payload = ['type' => $type, 'name' => $name, 'content' => $content];
+        if ($ttl !== null && $ttl > 0) {
+            $payload['ttl'] = $ttl;
+        }
+        if ($type === 'MX' || $type === 'SRV') {
+            $payload['priority'] = $priority ?? 10;
+        }
+
+        $resp = $this->post($server, "/v1/dns/zones/{$domainId}/records", $payload);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the DNS record.'));
+        }
+
+        return $this->buildResult(true, 'DNS record created.');
+    }
+
+    public function deleteDnsRecord(Service $service, string $id): array
+    {
+        $record = $this->findOwnDnsRecord($service, $id);
+        if (! $record) {
+            return $this->buildResult(false, 'That DNS record does not belong to this service.');
+        }
+        if ($record['protected']) {
+            return $this->buildResult(false, 'That record is managed by the hosting platform and cannot be deleted here.');
+        }
+        $resp = $this->delete($this->getServer($service), "/v1/dns/records/{$id}");
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the DNS record.'));
+        }
+
+        return $this->buildResult(true, 'DNS record deleted.');
+    }
+
+    /**
+     * Records the hosting depends on. The zone's own delegation (SOA/NS) and the
+     * apex/www A records point at the server that serves the customer's site —
+     * changing them from billing is a silent outage, so billing shows them
+     * read-only and the panel stays the place to override that deliberately.
+     */
+    private function isProtectedDnsRecord(string $type, string $name): bool
+    {
+        $type = strtoupper($type);
+        if ($type === 'SOA' || $type === 'NS') {
+            return true;
+        }
+        $name = strtolower(trim($name));
+
+        return $type === 'A' && ($name === '@' || $name === '' || $name === 'www');
+    }
+
+    /** @return array<string,mixed>|null */
+    private function findOwnDnsRecord(Service $service, string $id): ?array
+    {
+        if ($id === '') {
+            return null;
+        }
+        foreach ($this->dnsRecords($service) as $r) {
+            if ($r['id'] === $id) {
+                return $r;
+            }
+        }
+
+        return null;
     }
 
     // -------------------------------------------------------------------------

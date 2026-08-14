@@ -634,6 +634,61 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    public function dns(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'dns');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+        $records = $module->dnsRecords($service);
+        $domains = $module->accountDomains($service);
+        $types = $module->dnsRecordTypes();
+
+        return view('client.services.hosting.dns', compact('service', 'records', 'domains', 'types'));
+    }
+
+    public function storeDns(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'dns');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'domain_id' => ['required', 'string'],
+            'type' => ['required', 'string', 'max:10'],
+            'name' => ['nullable', 'string', 'max:255'],
+            'content' => ['required', 'string', 'max:1024'],
+            'ttl' => ['nullable', 'integer', 'min:60', 'max:604800'],
+            'priority' => ['nullable', 'integer', 'min:0', 'max:65535'],
+        ]);
+
+        $result = $module->createDnsRecord(
+            $service,
+            $data['domain_id'],
+            $data['type'],
+            $data['name'] ?? '@',
+            $data['content'],
+            $data['ttl'] ?? null,
+            $data['priority'] ?? null
+        );
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyDns(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'dns');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->deleteDnsRecord($service, (string) $request->input('record_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
     /** Map a friendly preset to the 5-field cron schedule (mirrors the panel). */
     private function presetToSchedule(string $preset): array
     {

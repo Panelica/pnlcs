@@ -109,6 +109,9 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('services/{service}/cron/toggle', [ServiceController::class, 'toggleCron'])->name('services.cron.toggle');
         Route::post('services/{service}/cron/run', [ServiceController::class, 'runCron'])->name('services.cron.run');
         Route::post('services/{service}/cron/delete', [ServiceController::class, 'destroyCron'])->name('services.cron.destroy');
+        Route::get('services/{service}/dns', [ServiceController::class, 'dns'])->name('services.dns');
+        Route::post('services/{service}/dns', [ServiceController::class, 'storeDns'])->name('services.dns.store');
+        Route::post('services/{service}/dns/delete', [ServiceController::class, 'destroyDns'])->name('services.dns.destroy');
         Route::get('services/{service}/databases', [ServiceController::class, 'databases'])->name('services.databases');
         Route::post('services/{service}/databases', [ServiceController::class, 'storeDatabase'])->name('services.databases.store');
         Route::post('services/{service}/databases/delete', [ServiceController::class, 'destroyDatabase'])->name('services.databases.destroy');
