@@ -711,6 +711,7 @@ return [
     'clients.no_notes' => 'Brak notatek.',
     'clients.other_info' => 'Inne informacje',
     'clients.password_optional' => 'opcjonalne',
+    'clients.password_optional_edit' => 'zostaw puste, aby zachować obecne',
     'clients.overdue_invoices' => 'Zaległe faktury',
     'clients.paid_invoices' => 'Opłacone faktury',
     'clients.phone' => 'Telefon',

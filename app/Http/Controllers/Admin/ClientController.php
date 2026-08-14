@@ -191,11 +191,46 @@ class ClientController extends Controller
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
+
+        // An optional new login password (blank leaves it unchanged).
+        if (! empty($validated['password'])) {
+            $this->setClientPassword($client, $validated['password']);
+        }
+
+        unset($validated['password'], $validated['password_confirmation']);
+
         $client->update($validated);
         $this->saveCustomFieldValues($client, $request);
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_updated'));
+    }
+
+    /**
+     * Set (or create) the linked login user's password for a client.
+     */
+    protected function setClientPassword(Client $client, string $password): void
+    {
+        $user = $client->users()->wherePivot('owner', true)->first()
+            ?? $client->users()->first();
+
+        if (! $user) {
+            $user = User::create([
+                'first_name' => $client->first_name,
+                'last_name' => $client->last_name,
+                'email' => $client->email,
+                'password' => Hash::make($password),
+                'is_active' => true,
+            ]);
+
+            $client->users()->attach($user->id, ['owner' => true]);
+
+            return;
+        }
+
+        $user->password = Hash::make($password);
+        $user->save();
     }
 
     public function destroy(Client $client)
