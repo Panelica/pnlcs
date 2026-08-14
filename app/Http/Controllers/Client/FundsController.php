@@ -50,6 +50,8 @@ class FundsController extends Controller
 
         $invoice = Invoice::create([
             'client_id'      => $client->id,
+            // Freeze the buyer alongside the money (issue #7)
+            ...Invoice::buyerSnapshotFrom($client),
             'invoice_num'    => app(InvoiceService::class)->generateInvoiceNumber(),
             'date'           => today(),
             'due_date'       => today(),

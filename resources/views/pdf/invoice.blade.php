@@ -68,12 +68,18 @@
         <div class="address-box">
             <h4>{{ __('pdf.bill_to') }}</h4>
             @if($invoice->client)
-                <strong>{{ $invoice->client->first_name }} {{ $invoice->client->last_name }}</strong><br>
-                @if($invoice->client->company_name){{ $invoice->client->company_name }}<br>@endif
-                @if($invoice->client->address1){{ $invoice->client->address1 }}<br>@endif
-                @if($invoice->client->city){{ $invoice->client->city }}, {{ $invoice->client->state }} {{ $invoice->client->postcode }}<br>@endif
-                @if($invoice->client->country){{ $invoice->client->country }}<br>@endif
-                {{ $invoice->client->email }}
+                {{-- Buyer as it stood when the invoice was issued (issue #7). For VAT
+                     the address and tax id on the document must be the ones that applied
+                     on the invoice date, so these read the snapshot; invoices issued
+                     before snapshots existed fall back to the live client record. --}}
+                <strong>{{ $invoice->buyer('first_name') }} {{ $invoice->buyer('last_name') }}</strong><br>
+                @if($invoice->buyer('company_name')){{ $invoice->buyer('company_name') }}<br>@endif
+                @if($invoice->buyer('address1')){{ $invoice->buyer('address1') }}<br>@endif
+                @if($invoice->buyer('address2')){{ $invoice->buyer('address2') }}<br>@endif
+                @if($invoice->buyer('city')){{ $invoice->buyer('city') }}, {{ $invoice->buyer('state') }} {{ $invoice->buyer('postcode') }}<br>@endif
+                @if($invoice->buyer('country')){{ $invoice->buyer('country') }}<br>@endif
+                @if($invoice->buyer('tax_id')){{ __('pdf.tax_id') ?? 'Tax ID' }}: {{ $invoice->buyer('tax_id') }}<br>@endif
+                {{ $invoice->buyer('email') }}
             @endif
         </div>
         <div class="address-box">

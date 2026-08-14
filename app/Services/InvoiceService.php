@@ -24,6 +24,8 @@ class InvoiceService
         $invoice = DB::transaction(function () use ($client, $items, $options) {
             $invoice = Invoice::create([
                 'client_id' => $client->id,
+                // Freeze the buyer alongside the money (issue #7)
+                ...Invoice::buyerSnapshotFrom($client),
                 'invoice_num' => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
                 'date' => $options['date'] ?? now()->toDateString(),
                 'due_date' => $options['due_date'] ?? now()->addDays(14)->toDateString(),

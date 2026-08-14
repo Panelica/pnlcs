@@ -161,12 +161,12 @@
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:4px 0;color:#777;width:40%;">{{ __('admin.invoices.name') }}</td><td style="padding:4px 0;"><a href="{{ $invoice->client ? route("admin.clients.show", $invoice->client) : "#" }}" style="color:#337ab7;font-weight:600;">{{ $invoice->client?->display_name ?? "Deleted Client" }}</a></td></tr>
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('common.form.email') }}</td><td style="padding:4px 0;">{{ $invoice->client?->email ?? "-" }}</td></tr>
-                    @if($invoice->client?->address1 ?? "")
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.name') }}</td><td style="padding:4px 0;">{{ $invoice->client?->address1 ?? "" }}<br>{{ $invoice->client?->city ?? "" }}, {{ $invoice->client?->state ?? "" }} {{ $invoice->client?->postcode ?? "" }}<br>{{ $invoice->client?->country ?? "" }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('common.form.email') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('email') ?? '-' }}</td></tr>
+                    @if($invoice->buyer('address1'))
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.name') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('address1') }}<br>{{ $invoice->buyer('city') }}, {{ $invoice->buyer('state') }} {{ $invoice->buyer('postcode') }}<br>{{ $invoice->buyer('country') }}</td></tr>
                     @endif
-                    @if($invoice->client?->tax_id ?? "")
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.tax_id') }}</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->client?->tax_id ?? "" }}</td></tr>
+                    @if($invoice->buyer('tax_id'))
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.tax_id') }}</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->buyer('tax_id') }}</td></tr>
                     @endif
                 </table>
             </div>

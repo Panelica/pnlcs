@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Invoice extends Model {
     use HasFactory;
 
-    protected $fillable = ['client_id', 'invoice_num', 'date', 'due_date', 'date_paid', 'subtotal', 'credit', 'tax', 'tax2', 'total', 'tax_rate', 'tax_rate2', 'status', 'reminder_stage', 'reminder_sent_at', 'payment_method', 'pay_method_id', 'notes'];
+    protected $fillable = ['client_id', 'invoice_num', 'date', 'due_date', 'date_paid', 'subtotal', 'credit', 'tax', 'tax2', 'total', 'tax_rate', 'tax_rate2', 'status', 'reminder_stage', 'reminder_sent_at', 'payment_method', 'pay_method_id', 'notes',
+        // Buyer as it stood when the invoice was issued (issue #7). The money
+        // was already frozen; these keep the document itself immutable.
+        'buyer_first_name', 'buyer_last_name', 'buyer_company_name', 'buyer_email',
+        'buyer_address1', 'buyer_address2', 'buyer_city', 'buyer_state',
+        'buyer_postcode', 'buyer_country', 'buyer_tax_id', 'buyer_tax_exempt'];
 
     /**
      * Invoices the customer still owes money on.
@@ -58,4 +63,44 @@ class Invoice extends Model {
             ->where('due_date', '<', now()->subDays($graceDays));
     }
     public function scopePaid($q) { return $q->where('status', InvoiceStatus::Paid->value); }
+
+    /**
+     * The buyer fields to copy off a client when an invoice is issued.
+     *
+     * @return array<string,mixed>
+     */
+    public static function buyerSnapshotFrom(Client $client): array
+    {
+        return [
+            'buyer_first_name' => $client->first_name,
+            'buyer_last_name' => $client->last_name,
+            'buyer_company_name' => $client->company_name,
+            'buyer_email' => $client->email,
+            'buyer_address1' => $client->address1,
+            'buyer_address2' => $client->address2,
+            'buyer_city' => $client->city,
+            'buyer_state' => $client->state,
+            'buyer_postcode' => $client->postcode,
+            'buyer_country' => $client->country,
+            'buyer_tax_id' => $client->tax_id,
+            'buyer_tax_exempt' => (bool) $client->tax_exempt,
+        ];
+    }
+
+    /**
+     * Buyer field as it should be shown on this invoice: the snapshot taken at
+     * issue time, falling back to the live client record for invoices issued
+     * before snapshots existed. Nothing was backfilled, so those keep rendering
+     * exactly as they do today.
+     */
+    public function buyer(string $field): mixed
+    {
+        $snapshot = $this->getAttribute('buyer_' . $field);
+        if ($snapshot !== null && $snapshot !== '') {
+            return $snapshot;
+        }
+
+        return $this->client?->{$field};
+    }
+
 }
