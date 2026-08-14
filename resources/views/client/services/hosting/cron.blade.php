@@ -78,12 +78,13 @@
         <div class="cr-row">
             <div class="cr-fld"><label class="cr-lbl">{{ __('client.hosting.cron.task_name') }}</label><input type="text" name="task_name" required maxlength="255" class="cr-inp" placeholder="{{ __('client.hosting.cron.task_name_ph') }}"></div>
             <div class="cr-fld"><label class="cr-lbl">{{ __('client.hosting.cron.domain') }}</label>
-                <select name="domain_id" required class="cr-sel">@foreach($domains as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach</select>
+                <select name="domain_id" id="cr-domain" required class="cr-sel" onchange="crCmd()">@foreach($domains as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach</select>
             </div>
         </div>
         <div class="cr-row">
             <div class="cr-fld"><label class="cr-lbl">{{ __('client.hosting.cron.command') }}</label>
-                <textarea name="command" required maxlength="4096" class="cr-ta" rows="2" placeholder="{{ __('client.hosting.cron.command_ph') }}"></textarea>
+                @php($cmdFirstDomain = ! empty($domains) ? reset($domains) : 'example.com')
+                <textarea name="command" id="cr-command" required maxlength="4096" class="cr-ta" rows="2" placeholder="{{ str_replace('{domain}', $cmdFirstDomain, __('client.hosting.cron.command_ph')) }}"></textarea>
                 <div class="cr-hint">{{ __('client.hosting.cron.command_hint') }}</div>
             </div>
         </div>
@@ -167,6 +168,17 @@ function crMode(el){
     document.getElementById('cr-basic').style.display = adv ? 'none' : '';
     document.getElementById('cr-adv').style.display = adv ? 'flex' : 'none';
 }
+// Keep the command example realistic for the selected domain: cron runs as the
+// account user, so ~ is the user's home and the path is one of their own domains.
+var CR_CMD_TPL = @json(__('client.hosting.cron.command_ph'));
+function crCmd(){
+    var sel = document.getElementById('cr-domain');
+    var cmd = document.getElementById('cr-command');
+    if(!sel || !cmd) return;
+    var dom = (sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].text) || 'example.com';
+    cmd.placeholder = CR_CMD_TPL.replace('{domain}', dom);
+}
+document.addEventListener('DOMContentLoaded', crCmd);
 </script>
 
 @endsection
