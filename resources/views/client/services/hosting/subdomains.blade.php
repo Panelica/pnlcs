@@ -60,7 +60,7 @@
         <div class="sd-fld"><label class="sd-lbl">{{ __('client.hosting.subdomains.domain') }}</label>
             <select name="domain_id" required class="sd-inp">@foreach($domains as $id => $name)<option value="{{ $id }}">{{ $name }}</option>@endforeach</select>
         </div>
-        <div class="sd-fld"><label class="sd-lbl">{{ __('client.hosting.subdomains.document_root') }}</label><input type="text" name="document_root" maxlength="255" class="sd-inp" placeholder="public_html"></div>
+        <div class="sd-fld"><label class="sd-lbl">{{ __('client.hosting.subdomains.document_root') }}</label><input type="text" name="document_root" maxlength="255" class="sd-inp" value="public_html" placeholder="public_html"></div>
         <label class="sd-check"><input type="checkbox" name="ssl" value="1" checked> {{ __('client.hosting.subdomains.ssl') }}</label>
         <button type="submit" class="sd-btn"><i class="ri-add-line"></i>{{ __('client.hosting.subdomains.create') }}</button>
     </form>

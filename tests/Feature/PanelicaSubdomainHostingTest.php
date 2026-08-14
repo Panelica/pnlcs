@@ -112,6 +112,23 @@ it('creates a subdomain on an owned domain when under the limit', function () {
     Http::assertSent(fn ($rq) => $rq->method() === 'POST' && str_contains($rq->url(), '/v1/domains/dom-own/subdomains'));
 });
 
+it('forwards the document root: value sent, empty means root, null omitted', function () {
+    // value → sent verbatim
+    fakeSdApi(5, []);
+    (new PanelicaModule)->createSubdomain(sdService(sdServer())[1], 'dom-own', 'a', 'public_html');
+    Http::assertSent(fn ($rq) => $rq->method() === 'POST' && ($rq->data()['document_root'] ?? null) === 'public_html');
+
+    // empty string → forwarded as '' so the panel serves from the subdomain root
+    fakeSdApi(5, []);
+    (new PanelicaModule)->createSubdomain(sdService(sdServer())[1], 'dom-own', 'b', '');
+    Http::assertSent(fn ($rq) => $rq->method() === 'POST' && ($rq->data()['document_root'] ?? 'MISSING') === '');
+
+    // null → omitted, panel defaults to public_html
+    fakeSdApi(5, []);
+    (new PanelicaModule)->createSubdomain(sdService(sdServer())[1], 'dom-own', 'c', null);
+    Http::assertSent(fn ($rq) => $rq->method() === 'POST' && ! array_key_exists('document_root', $rq->data()));
+});
+
 it('fences subdomain deletion to the account\'s own subdomains', function () use ($SUB) {
     fakeSdApi(5, [$SUB]);
     [$u, $s] = sdService(sdServer());

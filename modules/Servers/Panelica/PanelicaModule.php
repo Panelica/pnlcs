@@ -837,8 +837,12 @@ class PanelicaModule extends AbstractServerModule
         }
 
         $payload = ['subdomain_name' => $name, 'ssl_enabled' => $ssl];
-        if ($documentRoot !== null && $documentRoot !== '') {
-            $payload['document_root'] = $documentRoot;
+        // The form pre-fills "public_html". Forward it as-is; if the user
+        // deliberately clears the field ('') the panel serves from the
+        // subdomain root. Only omit (null) to let the panel default to
+        // public_html — that path is for callers that don't set it at all.
+        if ($documentRoot !== null) {
+            $payload['document_root'] = trim($documentRoot);
         }
         if ($phpVersion !== null && $phpVersion !== '') {
             $payload['php_version'] = $phpVersion;
