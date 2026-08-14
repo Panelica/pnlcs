@@ -770,14 +770,23 @@ class PanelicaModule extends AbstractServerModule
      *
      * @return list<array{id:string,domain:string,domain_id:string,type:string,name:string,content:string,ttl:?int,priority:?int,protected:bool}>
      */
-    public function dnsRecords(Service $service): array
+    public function dnsRecords(Service $service, ?string $onlyDomainId = null): array
     {
         $server = $this->getServer($service);
         if (! $server) {
             return [];
         }
+        $domains = $this->accountDomains($service);
+        // A zone editor edits ONE zone. Restricting the fetch to the selected
+        // domain also drops the request count from one-per-domain to one.
+        if ($onlyDomainId !== null) {
+            if (! isset($domains[$onlyDomainId])) {
+                return [];
+            }
+            $domains = [$onlyDomainId => $domains[$onlyDomainId]];
+        }
         $out = [];
-        foreach ($this->accountDomains($service) as $domainId => $domainName) {
+        foreach ($domains as $domainId => $domainName) {
             $resp = $this->get($server, "/v1/dns/zones/{$domainId}/records");
             if (! $resp->successful()) {
                 continue;
@@ -798,6 +807,22 @@ class PanelicaModule extends AbstractServerModule
                 ];
             }
         }
+
+        // Group by record type in the order an operator reads a zone, then by
+        // name — a zone listed in API order is unreadable.
+        $order = array_flip(['SOA', 'NS', 'A', 'AAAA', 'CNAME', 'MX', 'TXT', 'SRV', 'CAA']);
+        usort($out, function (array $a, array $b) use ($order) {
+            $ra = $order[$a['type']] ?? 99;
+            $rb = $order[$b['type']] ?? 99;
+            if ($ra !== $rb) {
+                return $ra <=> $rb;
+            }
+            if ($a['domain'] !== $b['domain']) {
+                return strcmp($a['domain'], $b['domain']);
+            }
+
+            return strcmp($a['name'], $b['name']);
+        });
 
         return $out;
     }

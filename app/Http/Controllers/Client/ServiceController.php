@@ -641,11 +641,18 @@ class ServiceController extends Controller
         if (! $module) {
             return redirect()->route('client.services.show', $service);
         }
-        $records = $module->dnsRecords($service);
         $domains = $module->accountDomains($service);
+        // A zone editor works on ONE zone at a time; ?domain= selects it and the
+        // first domain is the default. Anything else would list every domain's
+        // records in one flat table, which is unreadable and easy to misedit.
+        $selected = (string) request('domain', '');
+        if (! isset($domains[$selected])) {
+            $selected = (string) array_key_first($domains);
+        }
+        $records = $selected !== '' ? $module->dnsRecords($service, $selected) : [];
         $types = $module->dnsRecordTypes();
 
-        return view('client.services.hosting.dns', compact('service', 'records', 'domains', 'types'));
+        return view('client.services.hosting.dns', compact('service', 'records', 'domains', 'types', 'selected'));
     }
 
     public function storeDns(Request $request, Service $service)

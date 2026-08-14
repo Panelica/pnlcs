@@ -134,6 +134,35 @@ it('fences deletion to own records and never deletes a managed one', function ()
     Http::assertNotSent(fn ($rq) => $rq->method() === 'DELETE' && str_contains($rq->url(), 'r-apex'));
 });
 
+it('edits one zone at a time: only the selected domain is fetched', function () use ($TXT) {
+    fakeDnsApi([$TXT]);
+    [$u, $s] = dzService(dzServer());
+    $mod = new PanelicaModule;
+
+    // Selected domain → that zone only.
+    expect($mod->dnsRecords($s, 'dom-own'))->toHaveCount(1);
+    Http::assertSent(fn ($rq) => str_contains($rq->url(), '/dns/zones/dom-own/records'));
+
+    // A domain the account does not own resolves to nothing, and is never fetched.
+    expect($mod->dnsRecords($s, 'dom-foreign'))->toBe([]);
+    Http::assertNotSent(fn ($rq) => str_contains($rq->url(), '/dns/zones/dom-foreign/records'));
+});
+
+it('orders records by type then name so the zone is readable', function () {
+    fakeDnsApi([
+        ['id' => 'r1', 'type' => 'TXT', 'name' => 'b', 'content' => 'v'],
+        ['id' => 'r2', 'type' => 'A', 'name' => 'shop', 'content' => '10.0.0.9'],
+        ['id' => 'r3', 'type' => 'MX', 'name' => '@', 'content' => 'mail'],
+        ['id' => 'r4', 'type' => 'A', 'name' => 'blog', 'content' => '10.0.0.8'],
+    ]);
+    [$u, $s] = dzService(dzServer());
+    $types = array_column((new PanelicaModule)->dnsRecords($s, 'dom-own'), 'type');
+    $names = array_column((new PanelicaModule)->dnsRecords($s, 'dom-own'), 'name');
+
+    expect($types)->toBe(['A', 'A', 'MX', 'TXT'])
+        ->and(array_slice($names, 0, 2))->toBe(['blog', 'shop']);
+});
+
 it('shows the dns tab and forbids other clients', function () use ($TXT) {
     fakeDnsApi([$TXT]);
     [$owner, $s] = dzService(dzServer());
