@@ -6,7 +6,9 @@ use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Invoice;
+use App\Models\Product;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
@@ -74,7 +76,38 @@ class InvoiceController extends Controller
             ? Client::find($request->client_id)
             : null;
 
-        return view('admin.invoices.create', compact('clients', 'gateways', 'selectedClient'));
+        // Cheapest sold cycle stands in for the product's money value, so the
+        // builder can pre-fill the amount when a product is picked.
+        $products = Product::active()->with('pricing')->get()->map(function (Product $p) {
+            $cycles = $p->pricedCycles();
+
+            return [
+                'name' => $p->name,
+                'amount' => $cycles ? min($cycles) : null,
+                'cycle' => $cycles ? array_search(min($cycles), $cycles, true) : null,
+                'taxed' => (bool) $p->tax,
+            ];
+        })->values();
+
+        $defaultCurrency = Currency::getDefault();
+
+        // Per-client applicable tax rate (level 1 only, shown in the summary
+        // while building the invoice). Matches the engine: country+state.
+        $invoiceService = app(InvoiceService::class);
+        $clients = $clients->map(function (Client $client) use ($invoiceService) {
+            $rule = $invoiceService->taxRuleFor($client, 1);
+
+            return clone $client->setAttribute('billing_tax_rate', (float) ($rule?->tax_rate ?? 0))
+                ->setAttribute('billing_tax_label', $rule?->name ?? '');
+        });
+
+        return view('admin.invoices.create', compact(
+            'clients',
+            'gateways',
+            'selectedClient',
+            'products',
+            'defaultCurrency'
+        ));
     }
 
     /**

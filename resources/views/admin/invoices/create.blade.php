@@ -26,10 +26,10 @@
                 <div class="card-body">
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.invoices.select_client') }} <span style="color:#d9534f;">*</span></label>
-                        <select name="client_id" required class="form-control">
+                        <select name="client_id" required class="form-control" @change="setClient($event.target.value)">
                             <option value="">— Choose a client —</option>
                             @foreach($clients as $client)
-                            <option value="{{ $client->id }}" {{ old('client_id', $selectedClient?->id) == $client->id ? 'selected' : '' }}>
+                            <option value="{{ $client->id }}" data-rate="{{ $client->billing_tax_rate }}" data-label="{{ $client->billing_tax_label }}" {{ old('client_id', $selectedClient?->id) == $client->id ? 'selected' : '' }}>
                                 {{ $client->display_name }} ({{ $client->email }})
                             </option>
                             @endforeach
@@ -57,12 +57,35 @@
                             <template x-for="(item, index) in items" :key="index">
                                 <tr style="border-bottom:1px solid #f5f5f5;">
                                     <td style="padding:6px 8px;">
-                                        <input type="text" :name="`items[${index}][description]`" x-model="item.description"
+                                        <input type="text" :id="'desc-input-' + index" :name="`items[${index}][description]`" x-model="item.description"
+                                               @input="onTyping(index, item.description)" @keydown.arrow-down.prevent="move(index, 1)"
+                                               @keydown.arrow-up.prevent="move(index, -1)" @keydown.enter.prevent="pickActive(index)"
+                                               @keydown.escape="item.show = false" @blur="setTimeout(() => item.show = false, 150)"
                                                placeholder="{{ __('admin.invoices.description_placeholder') }}" required class="form-control" style="font-size:13px;">
+                                        <div x-show="item.show && matchesFor(item.description).length"
+                                             x-cloak :style="item.dd ? 'position:fixed;top:' + item.dd.bottom + 'px;left:' + item.dd.left + 'px;width:' + item.dd.width + 'px;z-index:9999;background:#fff;border:1px solid #ccc;border-radius:4px;box-shadow:0 4px 12px rgba(0,0,0,0.2);' : 'display:none;'">
+                                            <div style="overflow-y:auto;max-height:220px;">
+                                            <template x-for="(p, i) in pageList(item)" :key="p.name">
+                                                <div @mousedown.prevent="select(index, p)"
+                                                     @mouseenter="item.active = i"
+                                                     :style="'padding:7px 10px;cursor:pointer;font-size:13px;' + (i === item.active ? 'background:#f0f6ff;' : '')">
+                                                    <span x-text="p.name" style="font-weight:600;"></span>
+                                                    <span x-show="p.amount != null" style="color:#777;float:right;" x-text="p.amount != null ? currencyPrefix + Number(p.amount).toFixed(2) + currencySuffix : ''"></span>
+                                                </div>
+                                            </template>
+                                            </div>
+                                            <div x-show="totalPages(item) > 1" style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-top:1px solid #eee;font-size:12px;background:#fafafa;">
+                                                <button type="button" @click.prevent="prevPage(item)" :disabled="item.page <= 1"
+                                                        style="border:1px solid #ccc;background:#fff;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:12px;">&laquo;</button>
+                                                <span style="color:#666;" x-text="item.page + ' / ' + totalPages(item)"></span>
+                                                <button type="button" @click.prevent="nextPage(item)" :disabled="item.page >= totalPages(item)"
+                                                        style="border:1px solid #ccc;background:#fff;padding:2px 8px;border-radius:3px;cursor:pointer;font-size:12px;">&raquo;</button>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td style="padding:6px 8px;text-align:center;">
                                         <input type="hidden" :name="`items[${index}][taxed]`" value="0">
-                                        <input type="checkbox" :name="`items[${index}][taxed]`" :value="1" x-model="item.taxed">
+                                        <input type="checkbox" :name="`items[${index}][taxed]`" value="1" x-model="item.taxed" @change="recalculate()">
                                     </td>
                                     <td style="padding:6px 8px;">
                                         <input type="number" :name="`items[${index}][amount]`" x-model.number="item.amount"
@@ -128,8 +151,12 @@
                 <div class="card-header"><strong>{{ __('admin.invoices.summary') }}</strong></div>
                 <div class="card-body">
                     <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                        <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.subtotal') }}</td><td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="'$' + subtotal.toFixed(2)">$0.00</td></tr>
-                        <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td style="padding:6px 0;font-weight:700;">{{ __('admin.invoices.est_total') }}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-family:monospace;font-size:15px;" x-text="'$' + subtotal.toFixed(2)">$0.00</td></tr>
+                        <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.net') }}</td><td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + subtotal.toFixed(2) + currencySuffix">0.00</td></tr>
+                        <tr x-show="taxRate > 0">
+                            <td style="padding:4px 0;color:#777;" x-text="taxLabel"></td>
+                            <td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + taxAmount.toFixed(2) + currencySuffix">0.00</td>
+                        </tr>
+                        <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td style="padding:6px 0;font-weight:700;">{{ __('admin.invoices.gross') }}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-family:monospace;font-size:15px;" x-text="currencyPrefix + grandTotal.toFixed(2) + currencySuffix">0.00</td></tr>
                     </table>
                     <p style="font-size:11px;color:#999;margin-top:6px;">{{ __('admin.invoices.taxes_note') }}</p>
                 </div>
@@ -145,11 +172,90 @@
 <script>
 function invoiceBuilder() {
     return {
-        items: [{ description: '', amount: 0, taxed: true }],
+        items: [{ description: '', amount: 0, taxed: true, show: false, active: -1, dd: null, page: 1 }],
+        products: @json($products),
+        currencyPrefix: @json($defaultCurrency?->prefix ?? ''),
+        currencySuffix: @json($defaultCurrency?->suffix ?? ''),
+        taxRate: 0,
+        taxLabel: '',
+        perPage: 6,
         subtotal: 0,
-        addItem() { this.items.push({ description: '', amount: 0, taxed: true }); },
+        taxAmount: 0,
+        grandTotal: 0,
+        init() {
+            const sel = this.$el.querySelector('select[name="client_id"]');
+            const opt = sel ? sel.options[sel.selectedIndex] : null;
+            if (opt && opt.value) {
+                this.taxRate = parseFloat(opt.dataset.rate) || 0;
+                this.taxLabel = opt.dataset.label || '';
+            }
+            this.recalculate();
+        },
+        setClient(value) {
+            const opt = this.$el.querySelector('option[value="' + value + '"]');
+            this.taxRate = value && opt ? (parseFloat(opt.dataset.rate) || 0) : 0;
+            this.taxLabel = value && opt ? (opt.dataset.label || '') : '';
+            this.recalculate();
+        },
+        addItem() { this.items.push({ description: '', amount: 0, taxed: true, show: false, active: -1, dd: null, page: 1 }); },
         removeItem(index) { if (this.items.length > 1) { this.items.splice(index, 1); this.recalculate(); } },
-        recalculate() { this.subtotal = this.items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0); }
+        matchesFor(value) {
+            const q = (value || '').trim().toLowerCase();
+            return q ? this.products.filter(p => p.name.toLowerCase().includes(q)) : this.products;
+        },
+        totalPages(item) {
+            const n = this.matchesFor(item.description).length;
+            return Math.max(1, Math.ceil(n / this.perPage));
+        },
+        pageList(item) {
+            const list = this.matchesFor(item.description);
+            const start = (item.page - 1) * this.perPage;
+            return list.slice(start, start + this.perPage);
+        },
+        prevPage(item) { if (item.page > 1) { item.page--; item.active = -1; } },
+        nextPage(item) { if (item.page < this.totalPages(item)) { item.page++; item.active = -1; } },
+        onTyping(index, value) {
+            const item = this.items[index];
+            const el = document.getElementById('desc-input-' + index);
+            if (el) {
+                const r = el.getBoundingClientRect();
+                item.dd = { left: r.left, bottom: r.bottom + 4, width: r.width };
+            }
+            item.show = true;
+            item.active = -1;
+            item.page = 1;
+            if (!this.matchesFor(value).some(p => p.name === value)) {
+                this.recalculate();
+            }
+        },
+        move(index, dir) {
+            const item = this.items[index];
+            const list = this.pageList(item);
+            item.show = true;
+            if (list.length) {
+                item.active = (item.active + dir + list.length) % list.length;
+            }
+        },
+        pickActive(index) {
+            const item = this.items[index];
+            const list = this.pageList(item);
+            const target = item.active >= 0 ? list[item.active] : list[0];
+            if (target) { this.select(index, target); }
+        },
+        select(index, p) {
+            const item = this.items[index];
+            item.description = p.name;
+            item.amount = p.amount ?? 0;
+            item.taxed = p.taxed;
+            item.show = false;
+            this.recalculate();
+        },
+        recalculate() {
+            this.subtotal = this.items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
+            const taxable = this.items.reduce((s, i) => s + (i.taxed && parseFloat(i.amount) > 0 ? (parseFloat(i.amount) || 0) : 0), 0);
+            this.taxAmount = Math.round(taxable * (this.taxRate / 100) * 100) / 100;
+            this.grandTotal = Math.round((this.subtotal + this.taxAmount) * 100) / 100;
+        }
     };
 }
 </script>

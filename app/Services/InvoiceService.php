@@ -373,7 +373,20 @@ class InvoiceService
      */
     private function rateFor(Client $client, int $level): float
     {
-        $rule = TaxRule::where('country', $client->country)
+        $rule = $this->taxRuleFor($client, $level);
+
+        return $rule ? (float) $rule->tax_rate : 0.0;
+    }
+
+    /**
+     * The tax rule that applies to a customer at one tax level, or null.
+     *
+     * Kept separate from rateFor so callers can also read the rule's label
+     * (name) while building an invoice. Matching is identical.
+     */
+    public function taxRuleFor(Client $client, int $level): ?TaxRule
+    {
+        return TaxRule::where('country', $client->country)
             ->where(function ($q) use ($client) {
                 $q->where('state', $client->state)
                     ->orWhere('state', '')
@@ -382,7 +395,5 @@ class InvoiceService
             ->orderByRaw('CASE WHEN state = ? THEN 0 ELSE 1 END', [$client->state ?? ''])
             ->where('level', $level)
             ->first();
-
-        return $rule ? (float) $rule->tax_rate : 0.0;
     }
 }
