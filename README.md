@@ -270,9 +270,9 @@ Available on services provisioned through the **Panelica server module**
 
 | Tool | What the customer can do |
 |------|--------------------------|
-| **File Manager** | Browse, upload, edit, extract and download files in their account |
+| **File Manager** | Browse, upload, download, edit, rename, create folders and delete |
 | **Email Accounts** | Create and delete mailboxes, change passwords, open webmail |
-| **Databases** | Create MySQL databases and users, set privileges, open phpMyAdmin |
+| **Databases** | Create MySQL databases and users, reset user passwords, open phpMyAdmin |
 | **FTP Accounts** | Create accounts, change passwords, delete — with host/port shown |
 | **Subdomains** | Create and remove subdomains; the panel provisions the real vhost, document root, PHP-FPM pool, SSL and DNS |
 | **DNS Zone** | Add, edit and delete A / AAAA / CNAME / MX / TXT / SRV / CAA records |
