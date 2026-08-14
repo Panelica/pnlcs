@@ -103,7 +103,7 @@
                 @forelse($invoice->items as $item)
                 <tr>
                     <td><span style="font-size:11px;color:#999;text-transform:uppercase;margin-right:4px;">{{ $item->type }}</span>{{ $item->description }}</td>
-                    <td style="text-align:center;">{{ $item->taxed ? '&#10003;' : '&mdash;' }}</td>
+                    <td style="text-align:center;">{!! $item->taxed ? '&#10003;' : '&mdash;' !!}</td>
                     <td style="text-align:right;font-family:monospace;">{{ money_fmt($item->amount) }}</td>
                 </tr>
                 @empty
