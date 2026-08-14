@@ -2,7 +2,9 @@
 
 <p align="center">
   <b>Open-source, self-hosted hosting billing platform — a free WHMCS alternative.</b><br>
-  Client portal · invoicing · domain &amp; SSL management · support tickets · reseller hosting.
+  Client portal · invoicing · domain &amp; SSL management · support tickets · reseller hosting.<br>
+  <b>Customers manage their hosting from the billing portal itself</b> — files, mail,
+  databases, FTP, subdomains, DNS, cron and backups.
 </p>
 
 <p align="center">
@@ -111,7 +113,10 @@ hosting — a fresh alternative to cPanel, Plesk, and CyberPanel.
 
 PNLCS integrates natively with Panelica through the built-in **Panelica server
 module**: sell hosting plans and accounts are provisioned on your Panelica
-servers automatically.
+servers automatically — and the customer then manages that hosting (files,
+mailboxes, databases, FTP, subdomains, DNS, cron, backups) **from the billing
+portal itself**, with every action fenced to their own account. See
+[Hosting Management from Inside Billing](#hosting-management-from-inside-billing).
 
 **Not only Panelica.** PNLCS is control-panel agnostic — you can connect and
 provision on **cPanel, Plesk, DirectAdmin, HestiaCP, Proxmox, and Vultr** too,
@@ -149,6 +154,17 @@ Panelica is simply where PNLCS feels most at home.
 ![Homepage (Coral theme)](docs/screenshots/homepage-coral-theme.png)
 *Same site with a different built-in theme applied — one click to switch*
 
+### Client Portal — Hosting Management
+
+![Hosting management tools](docs/screenshots/client-hosting-tools.png)
+*A customer's hosting service: live resource usage from the server and eight
+working tools — files, mail, databases, FTP, subdomains, DNS, cron, backups.
+[Full detail below](#hosting-management-from-inside-billing)*
+
+![Backups](docs/screenshots/client-backups.png)
+*Restore points with size, contents and encryption state — fenced to the
+customer's own domains*
+
 ---
 
 ## Hosting Billing Features
@@ -169,6 +185,8 @@ Panelica is simply where PNLCS feels most at home.
 - **SSL certificates** — CSR generation, approver emails, auto-install
 - **Affiliate program** — referral tracking, commission payouts
 - **Account security** — 2FA (TOTP), login alerts, session history
+- **Hosting management** — files, mailboxes, databases, FTP, subdomains,
+  cron, DNS and backups, without leaving billing ([details below](#hosting-management-from-inside-billing))
 
 ### 🛡️ Admin Panel
 
@@ -237,6 +255,69 @@ Panelica is simply where PNLCS feels most at home.
 
 ---
 
+## Hosting Management from Inside Billing
+
+Most billing platforms stop at "here is your control panel password." PNLCS
+does the day-to-day hosting work **in the billing portal itself**, so a customer
+who wants to add a mailbox or a DNS record never has to learn a second interface.
+
+![Hosting management tools](docs/screenshots/client-hosting-tools.png)
+*A hosting service in the client portal — live CPU/memory/disk/bandwidth from the
+server, and eight working tools underneath*
+
+Available on services provisioned through the **Panelica server module**
+(the module tells the portal which tools that account may use):
+
+| Tool | What the customer can do |
+|------|--------------------------|
+| **File Manager** | Browse, upload, edit, extract and download files in their account |
+| **Email Accounts** | Create and delete mailboxes, change passwords, open webmail |
+| **Databases** | Create MySQL databases and users, set privileges, open phpMyAdmin |
+| **FTP Accounts** | Create accounts, change passwords, delete — with host/port shown |
+| **Subdomains** | Create and remove subdomains; the panel provisions the real vhost, document root, PHP-FPM pool, SSL and DNS |
+| **DNS Zone** | Add, edit and delete A / AAAA / CNAME / MX / TXT / SRV / CAA records |
+| **Cron Jobs** | Schedule commands, run one immediately and read its output, pause/resume, delete |
+| **Backups** | Take restore points, see size and contents, delete old ones |
+
+### Everything is fenced to the customer's own account
+
+The server API key a billing platform holds is operator-wide — it can see every
+account on the box. That is exactly the mistake this integration does not make:
+**every list is filtered against the domains that belong to the service being
+viewed**, and every write is checked the same way before it is sent.
+
+- A backup archive that also covers somebody else's domain is not shown, and
+  cannot be deleted.
+- A cron job, subdomain or DNS record on a foreign domain is rejected before a
+  request leaves the billing server.
+- Plan limits are read from the customer's hosting plan — `max_subdomains`,
+  `max_cron_jobs`, `cron_jobs_enabled`, `backup_enabled` — and the create form
+  is gated on them (the panel enforces them again, independently).
+
+### The records that keep a site online stay read-only
+
+![DNS zone editor](docs/screenshots/client-dns-zone.png)
+*One zone at a time, records ordered the way an operator reads them, and the
+delegation and apex records locked*
+
+A zone editor in a billing panel is a fast way for a customer to take their own
+site offline. So the records the hosting itself depends on — `SOA`, `NS`, and the
+apex/`www` `A` records pointing at the server — are shown as **Managed** and
+cannot be edited, renamed into, or deleted here. Renaming an ordinary record
+*into* one of those names is blocked too. The hosting panel remains the place to
+override that deliberately.
+
+The same restraint applies elsewhere: **restoring** a backup is not offered in
+billing (it silently discards everything written since the archive was taken),
+and cron commands run as the account's own unprivileged system user inside the
+panel's namespace and cgroup isolation — never as root.
+
+![Cron jobs](docs/screenshots/client-cron.png)
+*Common schedules or a full five-field expression, with example commands that
+fill in the customer's real domain path*
+
+---
+
 ## Requirements
 
 | Component | Minimum |
@@ -295,6 +376,54 @@ production deployment notes:**
 ---
 
 ## Self-Hosted Installation
+
+### 0. Prepare the server
+
+Skip this if PHP, MySQL, Node and Composer are already installed (a control
+panel such as Panelica gives you all of them).
+
+**Ubuntu 24.04 / Debian 13**
+
+```bash
+# PHP 8.3+ with the extensions PNLCS needs
+sudo apt update
+sudo apt install -y php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring \
+  php8.3-xml php8.3-curl php8.3-zip php8.3-gd php8.3-bcmath php8.3-intl php8.3-imap
+
+# Database
+sudo apt install -y mysql-server        # or: mariadb-server
+
+# Web server
+sudo apt install -y nginx
+
+# Node.js 20 LTS (for building the frontend assets)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Composer
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+```
+
+**RHEL family (AlmaLinux 9 / Rocky 9)**
+
+```bash
+sudo dnf install -y epel-release
+sudo dnf module reset php -y && sudo dnf module enable php:8.3 -y
+sudo dnf install -y php php-fpm php-mysqlnd php-mbstring php-xml php-gd \
+  php-bcmath php-intl php-imap mysql-server nginx
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo dnf install -y nodejs
+```
+
+Check what you have:
+
+```bash
+php -v          # 8.3 or newer
+mysql --version # 8.0 / MariaDB 10.6 or newer
+node -v         # 18 or newer
+composer -V     # 2.x
+```
 
 ### 1. Clone the repository
 
@@ -398,6 +527,43 @@ chown -R www-data:www-data storage bootstrap/cache
 
 Whatever you use — a control panel, raw Nginx, Apache, Caddy — make sure
 **the document root is the `public/` directory**, not the project root.
+Pointing it at the project root exposes `.env`, so this is the one step worth
+double-checking.
+
+**Nginx example** (`/etc/nginx/sites-available/pnlcs`):
+
+```nginx
+server {
+    listen 80;
+    server_name billing.example.com;
+    root /var/www/pnlcs/public;      # note: /public
+
+    index index.php;
+    charset utf-8;
+    client_max_body_size 64M;        # ticket + backup uploads
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* { deny all; }
+}
+```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/pnlcs /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Add HTTPS with Certbot (`sudo certbot --nginx -d billing.example.com`) before
+taking payments — the checkout and admin login should never run over plain HTTP.
 
 ### 12. Schedule the cron runner
 
