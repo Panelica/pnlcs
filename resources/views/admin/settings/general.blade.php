@@ -105,7 +105,7 @@
                 <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="MaintenanceMode" value="1" {{ !empty($settings['MaintenanceMode']) ? 'checked' : '' }}> {{ __('admin.settings.maintenance_mode_label') }}</label>
                 <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="OrderFormDisplayedOn" value="orderforms" {{ ($settings['OrderFormDisplayedOn'] ?? '') === 'orderforms' ? 'checked' : '' }}> {{ __('admin.settings.enable_order_form') }}</label>
             </div>
-        <div class="form-group" style="margin-top:12px;max-width:60%;">
+        <div class="form-group" style="margin-top:12px;max-width:50%;">
             <label class="form-label">{{ __('admin.settings.default_payment_method') }}</label>
             <select name="DefaultPaymentMethod" class="form-control">
                 @foreach($paymentMethods as $pm)
@@ -113,7 +113,7 @@
                 @endforeach
             </select>
         </div>
-        <div class="form-group" style="margin-top:10px;max-width:60%;">
+        <div class="form-group" style="margin-top:10px;max-width:50%;">
             <label class="form-label" for="invoice-number-format">{{ __('admin.settings.invoice_number_format') }}</label>
             <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">
         </div>
