@@ -108,7 +108,7 @@
         </div>
     </div>
 
-    <div class="card" style="margin-bottom:15px;">
+    <div class="card" style="margin-bottom:15px;max-width:50%;">
         <div class="card-header"><strong>{{ __('admin.settings.invoices_section') }}</strong></div>
         <div class="card-body">
             <div class="form-group">
