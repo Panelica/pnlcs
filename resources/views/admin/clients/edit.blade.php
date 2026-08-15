@@ -52,7 +52,7 @@
                     <select name="default_payment_method" class="form-control">
                         <option value="">{{ __('common.none') }}</option>
                         @foreach($paymentMethods as $pm)
-                        <option value="{{ $pm }}" {{ old('default_payment_method', $client->default_payment_method) == $pm ? 'selected' : '' }}>{{ \App\Support\payment_method_label($pm) }}</option>
+                        <option value="{{ $pm }}" {{ old('default_payment_method', $client->default_payment_method) == $pm ? 'selected' : '' }}>{{ \payment_method_label($pm) }}</option>
                         @endforeach
                     </select>
                 </div>
