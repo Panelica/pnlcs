@@ -7,10 +7,15 @@
         <h1 class="pn-page-title">{{ __('client.domains.page_title') }}</h1>
         <p class="pn-page-subtitle">{{ __('client.domains.page_subtitle') }}</p>
     </div>
-    <a href="#" class="btn btn-primary">
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        {{ __('client.domains.register_domain') }}
-    </a>
+    <div style="display:flex;gap:8px;">
+        <a href="{{ route('client.domain.search') }}" class="btn btn-primary">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            {{ __('client.domains.register_domain') }}
+        </a>
+        <a href="{{ route('client.domains.transfer') }}" class="btn btn-default">
+            {{ __('client.domains.transfer_domain') }}
+        </a>
+    </div>
 </div>
 
 <div class="pn-card">
@@ -53,7 +58,7 @@
                         <div class="pn-empty">
                             <div class="pn-empty-icon">&#127760;</div>
                             <p>{{ __('admin.domains.no_domains') }}</p>
-                            <a href="#" class="btn btn-primary">{{ __('client.domains.register_a_domain') }}</a>
+                            <a href="{{ route('client.domain.search') }}" class="btn btn-primary">{{ __('client.domains.register_a_domain') }}</a>
                         </div>
                     </td>
                 </tr>

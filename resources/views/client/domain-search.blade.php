@@ -68,14 +68,8 @@
                 <input type="hidden" name="years" value="1">
                 <button type="submit" style="padding:12px 24px;background:#06d6a0;color:#0f172a;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">{{ __('common.actions.add_to_cart') }}</button>
             </form>
-            @elseif($primary['checked'] ?? true)
-            <form method="POST" action="{{ route('client.cart.add-domain') }}">
-                @csrf
-                <input type="hidden" name="domain" value="{{ $primary['domain'] }}">
-                <input type="hidden" name="type" value="transfer">
-                <input type="hidden" name="years" value="1">
-                <button type="submit" style="padding:12px 24px;background:#64748b;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;">{{ __('client.domains.transfer_domain') }}</button>
-            </form>
+            @else
+            <a href="{{ route('client.domains.transfer', ['domain' => $primary['domain']]) }}" style="padding:12px 24px;background:#64748b;color:#fff;font-weight:700;font-size:15px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;text-decoration:none;">{{ __('client.domains.transfer_domain') }}</a>
             @endif
         </div>
     </div>

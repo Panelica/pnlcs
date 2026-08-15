@@ -511,11 +511,13 @@ class OrderService
 
         $isTransfer = strtolower((string) $domain->type) === 'transfer';
 
-        if (! $registrar || $isTransfer) {
-            if ($isTransfer && $registrar) {
-                Log::info("Domain #{$domain->id} ({$domain->domain}) is a transfer: it needs an EPP code and has to be started by hand.");
-            }
+        if ($isTransfer) {
+            $this->transferOrderedDomain($domain, $registrar);
 
+            return;
+        }
+
+        if (! $registrar) {
             $domain->update(['status' => DomainStatus::Active->value]);
 
             return;
@@ -570,6 +572,59 @@ class OrderService
     }
 
     /**
+     * Start a transfer the customer ordered, using the EPP/auth code they
+     * supplied. Without a registrar or a code there is nothing to hand to the
+     * registry, so the domain is left for a person to start by hand.
+     */
+    private function transferOrderedDomain(Domain $domain, $registrar): void
+    {
+        if (! $registrar) {
+            Log::info("Domain #{$domain->id} ({$domain->domain}) is a transfer but no registrar is configured: it has to be started by hand.");
+            $domain->update(['status' => DomainStatus::Active->value]);
+
+            return;
+        }
+
+        $eppCode = trim((string) ($domain->epp_code ?? ''));
+
+        if ($eppCode === '') {
+            Log::info("Domain #{$domain->id} ({$domain->domain}) is a transfer without an EPP code: it has to be started by hand.");
+            $domain->update(['status' => DomainStatus::Active->value]);
+
+            return;
+        }
+
+        try {
+            $result = $registrar->transfer($domain, $eppCode);
+        } catch (\Throwable $e) {
+            Log::error("Domain transfer threw for {$domain->domain}: ".$e->getMessage());
+            $result = ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if ($result['success'] ?? false) {
+            $domain->update(['status' => DomainStatus::Active->value]);
+
+            return;
+        }
+
+        $reason = (string) ($result['message'] ?? 'no reason given');
+
+        Log::error("Domain transfer failed for {$domain->domain}: {$reason}");
+
+        try {
+            app(NotificationService::class)->dispatch('domain.transfer_failed', [
+                'event_type' => 'domain.transfer_failed',
+                'subject' => 'Domain transfer failed',
+                'message' => "The registrar would not transfer {$domain->domain}: {$reason}. "
+                    .'The customer has paid for it; the transfer needs attention.',
+                'domain_id' => $domain->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Domain transfer alert failed: '.$e->getMessage());
+        }
+    }
+
+    /**
      * The registrar the operator set up for this domain's extension.
      *
      * Read from the TLD pricing table, where the field lives.
@@ -596,6 +651,7 @@ class OrderService
             'client_id' => $client->id,
             'order_id' => $order->id,
             'domain' => Domain::normalise($item['domain'] ?? ''),
+            'epp_code' => $item['epp_code'] ?? null,
             'type' => $item['domain_type'] ?? 'register',
             // r148-autoregistrar: the TLD pricing screen has a registrar field
             // for exactly this, and nothing read it - every domain ordered

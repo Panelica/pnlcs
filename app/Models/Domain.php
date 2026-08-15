@@ -9,7 +9,7 @@ class Domain extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['client_id', 'order_id', 'type', 'domain', 'registrar', 'registration_period', 'registration_date', 'expiry_date', 'next_due_date', 'status', 'dns_management', 'email_forwarding', 'id_protection', 'is_premium', 'payment_method', 'first_payment_amount', 'recurring_amount', 'nameservers', 'notes'];
+    protected $fillable = ['client_id', 'order_id', 'type', 'domain', 'epp_code', 'registrar', 'registration_period', 'registration_date', 'expiry_date', 'next_due_date', 'status', 'dns_management', 'email_forwarding', 'id_protection', 'is_premium', 'payment_method', 'first_payment_amount', 'recurring_amount', 'nameservers', 'notes'];
 
     protected function casts(): array
     {

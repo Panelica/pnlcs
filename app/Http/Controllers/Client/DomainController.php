@@ -22,6 +22,13 @@ class DomainController extends Controller
         return view('client.domains.index', compact('domains'));
     }
 
+    public function transfer(Request $request)
+    {
+        $domain = $request->query('domain', '');
+
+        return view('client.domains.transfer', compact('domain'));
+    }
+
     public function show(Domain $domain)
     {
         $this->authorizeClientDomain($domain);

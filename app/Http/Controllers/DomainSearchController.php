@@ -58,6 +58,7 @@ class DomainSearchController extends Controller
         "studio"    => "whois.donuts.co",
         "design"    => "whois.donuts.co",
         "email"     => "whois.donuts.co",
+        "pl"        => "whois.dns.pl",
     ];
 
     public function index(Request $request)

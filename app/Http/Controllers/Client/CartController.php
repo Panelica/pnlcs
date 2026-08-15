@@ -104,15 +104,17 @@ class CartController extends Controller
             'domain' => 'required|string|max:253',
             'type' => 'required|string|in:register,transfer',
             'years' => 'integer|min:1|max:10',
+            'epp_code' => 'required_if:type,transfer|nullable|string|max:255',
         ]);
 
         $domain = Domain::normalise($request->domain);
         $type = $request->type;
         $years = (int) ($request->years ?? 1);
+        $eppCode = $request->input('epp_code');
         $clientId = $this->getClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
 
-        $updatedCart = $this->cartService->addDomain($cart, $domain, $type, $years);
+        $updatedCart = $this->cartService->addDomain($cart, $domain, $type, $years, $eppCode);
 
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => __('messages.success.domain_added_to_cart', ['type' => ucfirst($type), 'domain' => $domain])]);
