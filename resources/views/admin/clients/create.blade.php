@@ -52,9 +52,8 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.currency') }}</label>
                     <select name="currency_id" class="form-control">@foreach($currencies as $c)<option value="{{ $c->id }}" {{ $c->is_default ? 'selected' : '' }}>{{ $c->code }} ({{ $c->prefix }})</option>@endforeach</select>
                 </div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.default_payment_method') }}</label>
+                <div class="form-group"><label class="form-label">{{ __('common.form.default_payment_method') }}<span style="color:#d9534f;">*</span></label>
                     <select name="default_payment_method" class="form-control">
-                        <option value="">{{ __('common.none') }}</option>
                         @foreach($paymentMethods as $pm)
                         <option value="{{ $pm }}" {{ old('default_payment_method') == $pm ? 'selected' : '' }}>{{ \payment_method_label($pm) }}</option>
                         @endforeach
