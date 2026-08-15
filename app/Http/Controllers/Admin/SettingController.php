@@ -62,7 +62,7 @@ class SettingController extends Controller
         'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
         'Email', 'EmailFromName',
-        'InvoiceNumberFormat',
+        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
@@ -76,6 +76,9 @@ class SettingController extends Controller
         // An unticked checkbox is absent from the request, not false.
         if (! isset($data['MailEnabled'])) {
             $data['MailEnabled'] = '0';
+        }
+        if (! isset($data['InvoiceNumberYearlyReset'])) {
+            $data['InvoiceNumberYearlyReset'] = '0';
         }
 
         // The form never carries the stored mail password back, so an empty

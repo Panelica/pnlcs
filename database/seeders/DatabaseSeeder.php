@@ -54,6 +54,7 @@ class DatabaseSeeder extends Seeder
             ['setting' => 'DefaultLanguage', 'value' => 'en', 'group' => 'general'],
             ['setting' => 'DefaultPaymentMethod', 'value' => 'banktransfer', 'group' => 'general'],
             ['setting' => 'InvoiceNumberFormat', 'value' => 'INV-{year}{month}-{num}', 'group' => 'general'],
+            ['setting' => 'InvoiceNumberYearlyReset', 'value' => '0', 'group' => 'general'],
             ['setting' => 'DateFormat', 'value' => 'd/m/Y', 'group' => 'general'],
             ['setting' => 'InvoicePayTerms', 'value' => '7', 'group' => 'billing'],
             ['setting' => 'EnableTax', 'value' => 'true', 'group' => 'billing'],

@@ -297,9 +297,16 @@ class InvoiceService
         // run of digits. The series only grows, so nothing is ever
         // issued twice.
         if (substr((string) $format, -5) === '{num}') {
-            return 1 + (int) Invoice::where('invoice_num', 'regexp', '[0-9]$')
-                ->selectRaw('MAX(CAST(REGEXP_REPLACE(invoice_num, "^.*[^0-9]", "") AS UNSIGNED)) as seq')
-                ->value('seq');
+            $query = Invoice::where('invoice_num', 'regexp', '[0-9]$')
+                ->selectRaw('MAX(CAST(REGEXP_REPLACE(invoice_num, "^.*[^0-9]", "") AS UNSIGNED)) as seq');
+
+            // Reset each year: only the numbers issued this year count,
+            // so January starts a fresh sequence again.
+            if (Setting::get('InvoiceNumberYearlyReset', '0') === '1') {
+                $query->whereYear('date', now()->year);
+            }
+
+            return 1 + (int) $query->value('seq');
         }
 
         // {num} in the middle: fall back to the static prefix before it,

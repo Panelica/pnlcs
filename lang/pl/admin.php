@@ -2141,6 +2141,7 @@ return [
         'invoice_number_format' => 'Schemat numeracji faktur',
         'invoice_number_last' => 'Ostatnia faktura',
         'invoice_number_preview' => 'Podgląd',
+        'invoice_number_reset_year' => 'Resetuj numerację co roku',
         'invoice_number_tokens' => 'Zmienne: {year} {yy} {month} {day} {num} — numer sekwencyjny wyliczany z ostatniej faktury w bazie.',
         'localization' => 'Lokalizacja',
         'logo' => 'Logo',

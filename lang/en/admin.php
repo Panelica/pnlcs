@@ -2137,6 +2137,7 @@ return [
         'invoice_number_format' => 'Invoice numbering scheme',
         'invoice_number_last' => 'Last invoice',
         'invoice_number_preview' => 'Preview',
+        'invoice_number_reset_year' => 'Reset numbering each year',
         'invoice_number_tokens' => 'Variables: {year} {yy} {month} {day} {num} — the sequence number comes from the last invoice in the database.',
         'localization' => 'Localization',
         'logo' => 'Logo',
