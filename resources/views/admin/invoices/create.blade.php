@@ -146,12 +146,12 @@
                         <select name="payment_method" class="form-control">
                             <option value="">— None —</option>
                             @foreach($gateways as $gw)
-                            <option value="{{ $gw }}" {{ old('payment_method') == $gw ? 'selected' : '' }}>{{ payment_method_label((string) $gw) }}</option>
+                            <option value="{{ $gw }}" {{ old('payment_method', $defaultPaymentMethod ?? '') == $gw ? 'selected' : '' }}>{{ payment_method_label((string) $gw) }}</option>
                             @endforeach
                             @unless(in_array('banktransfer', $gateways, true))
-                            <option value="banktransfer" {{ old('payment_method') == 'banktransfer' ? 'selected' : '' }}>{{ __('admin.invoices.bank_transfer') }}</option>
+                            <option value="banktransfer" {{ old('payment_method', $defaultPaymentMethod ?? '') == 'banktransfer' ? 'selected' : '' }}>{{ __('admin.invoices.bank_transfer') }}</option>
                             @endunless
-                            <option value="manual" {{ old('payment_method') == 'manual' ? 'selected' : '' }}>{{ __('admin.invoices.manual') }}</option>
+                            <option value="manual" {{ old('payment_method', $defaultPaymentMethod ?? '') == 'manual' ? 'selected' : '' }}>{{ __('admin.invoices.manual') }}</option>
                         </select>
                     </div>
                 </div>

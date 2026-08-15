@@ -76,6 +76,8 @@ class InvoiceController extends Controller
             ? Client::find($request->client_id)
             : null;
 
+        $defaultPaymentMethod = $selectedClient?->default_payment_method;
+
         // Cheapest sold cycle stands in for the product's money value, so the
         // builder can pre-fill the amount when a product is picked.
         $products = Product::active()->with('pricing')->get()->map(function (Product $p) {
@@ -106,7 +108,8 @@ class InvoiceController extends Controller
             'gateways',
             'selectedClient',
             'products',
-            'defaultCurrency'
+            'defaultCurrency',
+            'defaultPaymentMethod'
         ));
     }
 

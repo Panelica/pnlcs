@@ -48,6 +48,14 @@
                         <option value="closed" {{ $client->status->value == 'closed' ? 'selected' : '' }}>{{ __('common.status.closed') }}</option>
                     </select>
                 </div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.default_payment_method') }}</label>
+                    <select name="default_payment_method" class="form-control">
+                        <option value="">{{ __('common.none') }}</option>
+                        @foreach($paymentMethods as $pm)
+                        <option value="{{ $pm }}" {{ old('default_payment_method', $client->default_payment_method) == $pm ? 'selected' : '' }}>{{ \App\Support\payment_method_label($pm) }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
             <hr style="margin:18px 0;border:none;border-top:1px solid #e5e5e5;">
             <h4 style="margin:0 0 12px;font-size:14px;font-weight:600;">{{ __('common.form.password') }}</h4>

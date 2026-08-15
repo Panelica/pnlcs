@@ -32,6 +32,7 @@ class Client extends Model
         'status',
         'group_id',
         'currency_id',
+        'default_payment_method',
         'credit',
         'tax_exempt',
         'language',

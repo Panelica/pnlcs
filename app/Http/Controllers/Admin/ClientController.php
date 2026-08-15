@@ -13,6 +13,7 @@ use App\Models\Currency;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
 use App\Models\User;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -45,8 +46,9 @@ class ClientController extends Controller
         $groups = ClientGroup::all();
         $currencies = Currency::all();
         $customFields = CustomField::clientFields()->get();
+        $paymentMethods = $this->paymentMethods();
 
-        return view('admin.clients.create', compact('groups', 'currencies', 'customFields'));
+        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods'));
     }
 
     public function store(Request $request)
@@ -67,6 +69,7 @@ class ClientController extends Controller
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
+            'default_payment_method' => 'nullable|string|max:50',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
         $client = Client::create($validated);
@@ -170,8 +173,28 @@ class ClientController extends Controller
         $groups = ClientGroup::all();
         $currencies = Currency::all();
         $customFields = CustomField::clientFields()->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])->get();
+        $paymentMethods = $this->paymentMethods();
 
-        return view('admin.clients.edit', compact('client', 'groups', 'currencies', 'customFields'));
+        return view('admin.clients.edit', compact('client', 'groups', 'currencies', 'customFields', 'paymentMethods'));
+    }
+
+    /**
+     * Payment methods the client's default can be picked from: every usable
+     * gateway plus the offline options offered on the invoice form.
+     *
+     * @return array<int, string>
+     */
+    protected function paymentMethods(): array
+    {
+        $gateways = app(ModuleRegistry::class)->usableGateways();
+
+        if (! in_array('banktransfer', $gateways, true)) {
+            $gateways[] = 'banktransfer';
+        }
+
+        $gateways[] = 'manual';
+
+        return $gateways;
     }
 
     public function update(Request $request, Client $client)
@@ -195,6 +218,7 @@ class ClientController extends Controller
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
+            'default_payment_method' => 'nullable|string|max:50',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 

@@ -100,6 +100,7 @@ return [
         'country' => 'Country',
         'currency' => 'Currency',
         'current_password' => 'Current Password',
+        'default_payment_method' => 'Default Payment Method',
         'department' => 'Department',
         'description' => 'Description',
         'email' => 'Email',

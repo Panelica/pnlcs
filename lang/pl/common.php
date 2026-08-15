@@ -100,6 +100,7 @@ return [
         'country' => 'Kraj',
         'currency' => 'Waluta',
         'current_password' => 'Aktualne hasło',
+        'default_payment_method' => 'Domyślny sposób płatności',
         'department' => 'Dział',
         'description' => 'Opis',
         'email' => 'E-mail',
