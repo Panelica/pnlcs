@@ -137,6 +137,31 @@
 </div>
 @endif
 
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-header"><strong>{{ __('admin.services.manage_status') }}</strong></div>
+    <div class="card-body">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            @php $statusBtns = ['active', 'suspended', 'terminated', 'pending', 'cancelled']; @endphp
+            @foreach($statusBtns as $btn)
+            <form method="POST" action="{{ route('admin.services.status', $service) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.services.confirm_status', ['status' => ucfirst($btn)]) }}')">
+                @csrf @method('PUT')
+                <input type="hidden" name="status" value="{{ $btn }}">
+                @if($service->status === $btn)
+                <button type="submit" class="btn btn-default btn-sm" disabled>{{ __('admin.services.status_'.$btn) }}</button>
+                @else
+                <button type="submit" class="btn btn-{{ $btn === 'terminated' ? 'danger' : ($btn === 'suspended' ? 'warning' : ($btn === 'active' ? 'success' : 'default')) }} btn-sm">{{ __('admin.services.status_'.$btn) }}</button>
+                @endif
+            </form>
+            @endforeach
+            <span style="width:1px;height:22px;background:#ddd;display:inline-block;margin:0 6px;"></span>
+            <form method="POST" action="{{ route('admin.services.destroy', $service) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.services.confirm_delete') }}')">
+                @csrf @method('DELETE')
+                <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.services.delete') }}</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header"><strong>{{ __('admin.addons.title') }}</strong></div>
     <div class="card-body">
