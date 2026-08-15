@@ -70,7 +70,12 @@ return [
     'info.already_an_affiliate' => 'Jesteś już partnerem.',
     'info.contact_support_for_epp' => 'Skontaktuj się z pomocą techniczną, aby uzyskać kod EPP.',
     'invoice.add_funds_description' => 'Doładuj środki na konto',
-    'payment_method.bank_transfer' => 'Przelew bankowy',
+    'payment_method.banktransfer' => 'Przelew',
+    'payment_method.stripe' => 'Stripe',
+    'payment_method.paypal' => 'PayPal',
+    'payment_method.manual' => 'Manualnie',
+    'payment_method.credit' => 'Kredyt',
+    'payment_method.bank_transfer' => 'Przelew',
     'payment_method.credit_debit_card' => 'Karta kredytowa / debetowa',
     'payment_method.paypal' => 'PayPal',
     'info' => [

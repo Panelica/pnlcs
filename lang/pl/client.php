@@ -445,7 +445,7 @@ return [
     ],
     'funds.amount_range' => 'Minimum $5.00, maksimum $10 000.00',
     'funds.available_credit_desc' => 'Dostępne na faktury i zakupy.',
-    'funds.bank_transfer' => 'Przelew bankowy',
+    'funds.bank_transfer' => 'Przelew',
     'funds.current_credit' => 'Aktualne saldo',
     'funds.custom_amount' => 'Własna kwota',
     'funds.paypal' => 'PayPal',

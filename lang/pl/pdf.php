@@ -18,7 +18,7 @@ return [
     'payment_method' => 'Metoda Płatności',
     'payment_status' => 'Status Płatności',
     'subtotal' => 'Podsuma',
-    'tax' => 'Podatek',
+    'tax' => 'VAT',
     'tax_id' => 'NIP',
     'taxed' => 'Opodatkowana',
     'thank_you' => 'Dziękujemy za Twoje zamówienie!',
