@@ -24,14 +24,12 @@
                 @else
                 <button type="submit" class="btn btn-{{ $btn === 'terminated' ? 'danger' : ($btn === 'suspended' ? 'warning' : ($btn === 'active' ? 'success' : 'info')) }} btn-sm">{{ __('admin.services.status_'.$btn) }}</button>
                 @endif
-                <div style="font-size:10px;color:#777;margin-top:2px;max-width:90px;">{{ __('admin.services.status_hint_'.$btn) }}</div>
             </form>
             @endforeach
             <span style="width:1px;height:36px;background:#ddd;display:inline-block;margin:0 8px;"></span>
             <form method="POST" action="{{ route('admin.services.destroy', $service) }}" style="display:inline-block;text-align:center;" onsubmit="return confirm('{{ __('admin.services.confirm_delete') }}')">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.services.delete') }}</button>
-                <div style="font-size:10px;color:#777;margin-top:2px;max-width:90px;">{{ __('admin.services.delete_hint') }}</div>
             </form>
         </div>
     </div>
