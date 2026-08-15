@@ -134,7 +134,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.invoices.due_date') }} <span style="color:#d9534f;">*</span></label>
-                        <input type="date" name="due_date" required value="{{ old('due_date', now()->addDays(14)->toDateString()) }}" class="form-control">
+                        <input type="date" name="due_date" required value="{{ old('due_date', now()->addDays($dueDays ?? 14)->toDateString()) }}" class="form-control">
                     </div>
                 </div>
             </div>

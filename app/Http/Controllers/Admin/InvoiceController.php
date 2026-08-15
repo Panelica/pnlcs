@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\Product;
+use App\Models\Setting;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
@@ -78,6 +79,8 @@ class InvoiceController extends Controller
 
         $defaultPaymentMethod = $selectedClient?->default_payment_method;
 
+        $dueDays = (int) Setting::get('InvoiceDueDays', 14);
+
         // Cheapest sold cycle stands in for the product's money value, so the
         // builder can pre-fill the amount when a product is picked.
         $products = Product::active()->with('pricing')->get()->map(function (Product $p) {
@@ -109,7 +112,8 @@ class InvoiceController extends Controller
             'selectedClient',
             'products',
             'defaultCurrency',
-            'defaultPaymentMethod'
+            'defaultPaymentMethod',
+            'dueDays'
         ));
     }
 
