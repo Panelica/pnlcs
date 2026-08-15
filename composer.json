@@ -8,12 +8,19 @@
         "framework"
     ],
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://gitlab.com/consultingservice/hrd-api.git"
+        }
+    ],
     "require": {
         "php": "^8.3",
         "bacon/bacon-qr-code": "^3.0",
         "barryvdh/laravel-debugbar": "^4.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "blade-ui-kit/blade-heroicons": "^2.7",
+        "hrd/hrd-api": "*",
         "laravel/framework": "^13.0",
         "laravel/pint": "^1.29",
         "laravel/tinker": "^3.0",
