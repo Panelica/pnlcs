@@ -141,6 +141,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('services/{service}/module/{action}', [ServiceController::class, 'moduleAction'])->name('services.module-action');
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
+        Route::put('services/{service}/next-due', [ServiceController::class, 'updateNextDue'])->name('services.next-due');
     });
 
     // =============================================

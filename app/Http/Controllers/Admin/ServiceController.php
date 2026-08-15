@@ -61,6 +61,17 @@ class ServiceController extends Controller
         return back()->with('success', __('admin.messages.addon_updated'));
     }
 
+    public function updateNextDue(Request $request, Service $service)
+    {
+        $validated = $request->validate([
+            'next_due_date' => ['required', 'date'],
+        ]);
+
+        $service->update(['next_due_date' => $validated['next_due_date']]);
+
+        return back()->with('success', __('admin.messages.service_next_due_updated'));
+    }
+
     public function moduleAction(Request $request, Service $service, string $action)
     {
         $service->load('product');

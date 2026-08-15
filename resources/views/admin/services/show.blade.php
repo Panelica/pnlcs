@@ -53,7 +53,15 @@
                 <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.services.amount') }}</td><td style="padding:5px 0;font-weight:700;font-size:15px;">{{ money_fmt($service->amount) }}<span style="font-size:11px;font-weight:400;color:#999;">/{{ $service->billing_cycle }}</span></td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.first_payment') }}</td><td style="padding:5px 0;">{{ money_fmt($service->first_payment_amount) }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.registered') }}</td><td style="padding:5px 0;">{{ $service->registration_date?->format(date_fmt()) ?? '-' }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.next_due') }}</td><td style="padding:5px 0;{{ $service->next_due_date?->isPast() ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $service->next_due_date?->format(date_fmt()) ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.next_due') }}</td><td style="padding:5px 0;">
+                    <form method="POST" action="{{ route('admin.services.next-due', $service) }}" style="display:flex;gap:4px;align-items:center;">
+                        @csrf @method('PUT')
+                        <input type="date" name="next_due_date" value="{{ $service->next_due_date?->format('Y-m-d') ?? '' }}" class="form-control" style="width:145px;font-size:12px;padding:2px 6px;{{ $service->next_due_date?->isPast() ? 'border-color:#d9534f;' : '' }}" {{ $service->status === 'terminated' ? 'disabled' : '' }}>
+                        @if($service->status !== 'terminated')
+                        <button type="submit" class="btn btn-primary btn-xs">{{ __('admin.services.save') }}</button>
+                        @endif
+                    </form>
+                </td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.payment') }}</td><td style="padding:5px 0;">{{ $service->payment_method ? payment_method_label((string) $service->payment_method) : '-' }}</td></tr>
             </table>
         </div>
