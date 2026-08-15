@@ -61,6 +61,7 @@ class SettingController extends Controller
     private const GENERAL_KEYS = [
         'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
+        'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',

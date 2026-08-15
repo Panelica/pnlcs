@@ -2245,6 +2245,9 @@ return [
     'settings.system_email_address' => 'System Email Address',
     'settings.system_settings' => 'System Settings',
     'settings.default_payment_method' => 'Default Payment Method for New Clients',
+    'settings.domains_section' => 'Domains',
+    'settings.default_nameservers' => 'Default Nameservers',
+    'settings.default_nameservers_hint' => 'Used when registering or transferring domains when no other nameservers are supplied.',
     'settings.themes' => 'Themes',
     'settings.white_label' => 'White-Label',
     'sidebar' => [

@@ -207,6 +207,22 @@
         </div>
     </div>
 
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.domains_section') }}</strong></div>
+        <div class="card-body">
+            <label class="form-label">{{ __('admin.settings.default_nameservers') }}</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:8px;">
+                @for($i = 1; $i <= 5; $i++)
+                <div class="form-group">
+                    <label class="form-label" style="font-size:12px;">NS{{ $i }}</label>
+                    <input type="text" name="DefaultNameserver{{ $i }}" value="{{ $settings['DefaultNameserver'.$i] ?? '' }}" class="form-control" placeholder="ns{{ $i }}.yourdomain.com">
+                </div>
+                @endfor
+            </div>
+            <div style="font-size:12px;color:#777;">{{ __('admin.settings.default_nameservers_hint') }}</div>
+        </div>
+    </div>
+
     <div style="display:flex;gap:10px;align-items:center;">
         <button type="submit" class="btn btn-primary">{{ __('admin.settings.save_settings') }}</button>
         <button type="button" id="test-email-btn" class="btn btn-secondary" style="margin-left:5px;">{{ __('admin.settings.send_test_email') }}</button>

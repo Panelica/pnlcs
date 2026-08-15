@@ -2249,6 +2249,9 @@ return [
     'settings.system_email_address' => 'Systemowy adres e-mail',
     'settings.system_settings' => 'Ustawienia systemowe',
     'settings.default_payment_method' => 'Domyślny sposób płatności dla nowych klientów',
+    'settings.domains_section' => 'Domeny',
+    'settings.default_nameservers' => 'Domyślne serwery DNS',
+    'settings.default_nameservers_hint' => 'Używane przy rejestracji i transferze domen, gdy nie podano innych serwerów DNS.',
     'settings.themes' => 'Motywy',
     'settings.white_label' => 'White-Label',
     'sidebar' => [
