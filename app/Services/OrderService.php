@@ -618,15 +618,7 @@ class OrderService
 
     private function calculateNextDueDate(string $billingCycle): string
     {
-        return match (strtolower($billingCycle)) {
-            'monthly' => now()->addMonth()->toDateString(),
-            'quarterly' => now()->addMonths(3)->toDateString(),
-            'semi-annually' => now()->addMonths(6)->toDateString(),
-            'annually' => now()->addYear()->toDateString(),
-            'biennially' => now()->addYears(2)->toDateString(),
-            'triennially' => now()->addYears(3)->toDateString(),
-            default => now()->addMonth()->toDateString(),
-        };
+        return BillingCycleHelper::advance(now(), $billingCycle)->toDateString();
     }
 
     private function buildServiceDescription(Service $service, array $item): string
