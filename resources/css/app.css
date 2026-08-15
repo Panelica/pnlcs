@@ -27,7 +27,7 @@ h1, h2, h3, h4, h5, h6 { font-family: "Open Sans", "Helvetica Neue", Helvetica, 
 .navigation .nav-right-items { float: right; display: flex; align-items: center; height: 45px; }
 
 @media (min-width: 1275px) {
-    .navigation { height: 45px; padding: 5px 0 5px 5px; position: relative; }
+    .navigation { min-height: 45px; padding: 5px 0 5px 5px; position: relative; }
     .navigation::after { content: ""; display: table; clear: both; }
     .navigation .navbar-collapse { display: block !important; float: left; }
     .navigation .navbar-collapse > ul { display: flex; }
