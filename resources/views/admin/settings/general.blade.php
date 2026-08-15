@@ -108,10 +108,10 @@
         </div>
     </div>
 
-    <div class="card" style="margin-bottom:15px;max-width:50%;">
+    <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.invoices_section') }}</strong></div>
         <div class="card-body">
-            <div class="form-group">
+            <div class="form-group" style="max-width:50%;">
                 <label class="form-label">{{ __('admin.settings.default_payment_method') }}</label>
                 <select name="DefaultPaymentMethod" class="form-control">
                     @foreach($paymentMethods as $pm)
@@ -119,11 +119,11 @@
                     @endforeach
                 </select>
             </div>
-            <div class="form-group" style="margin-top:10px;">
+            <div class="form-group" style="margin-top:10px;max-width:50%;">
                 <label class="form-label">{{ __('admin.settings.invoice_due_days') }}</label>
                 <input type="number" name="InvoiceDueDays" value="{{ $settings['InvoiceDueDays'] ?? '14' }}" class="form-control" min="0">
             </div>
-            <div class="form-group" style="margin-top:10px;">
+            <div class="form-group" style="margin-top:10px;max-width:50%;">
                 <label class="form-label" for="invoice-number-format">{{ __('admin.settings.invoice_number_format') }}</label>
                 <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">
             </div>
