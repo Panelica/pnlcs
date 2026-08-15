@@ -18,8 +18,6 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.first_name') }}<span style="color:#d9534f;">*</span></label><input type="text" name="first_name" value="{{ old('first_name') }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.last_name') }}<span style="color:#d9534f;">*</span></label><input type="text" name="last_name" value="{{ old('last_name') }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.email') }}<span style="color:#d9534f;">*</span></label><input type="email" name="email" value="{{ old('email') }}" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.password') }}<small style="color:#999;font-weight:400;"> ({{ __('admin.clients.password_optional') }})</small></label><input type="password" name="password" class="form-control" autocomplete="new-password"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.password_confirm') }}</label><input type="password" name="password_confirmation" class="form-control" autocomplete="new-password"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.company') }}</label><input type="text" name="company_name" value="{{ old('company_name') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label><input type="text" name="tax_id" value="{{ old('tax_id') }}" maxlength="20" class="form-control"></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.address') }}</label><input type="text" name="address1" value="{{ old('address1') }}" class="form-control"></div>
@@ -58,6 +56,22 @@
                         <option value="{{ $pm }}" {{ old('default_payment_method', $defaultPaymentMethod ?? '') == $pm ? 'selected' : '' }}>{{ \payment_method_label($pm) }}</option>
                         @endforeach
                     </select>
+                </div>
+            </div>
+            <hr style="margin:18px 0;border:none;border-top:1px solid #e5e5e5;">
+            <h4 style="margin:0 0 12px;font-size:14px;font-weight:600;">{{ __('common.form.password') }}</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 15px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.form.new_password') }}<small style="color:#999;font-weight:400;"> ({{ __('admin.clients.password_optional') }})</small></label>
+                    <div style="display:flex;gap:6px;">
+                        <input type="password" name="password" id="pw-input" class="form-control" autocomplete="new-password" oninput="checkStrength(this.value)">
+                        <button type="button" onclick="generatePassword()" class="btn btn-default" style="white-space:nowrap;flex-shrink:0;" title="{{ __('admin.clients.generate_password') }}">&#x1F512; {{ __('admin.clients.generate_password') }}</button>
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.password_confirm') }}</label><input type="password" name="password_confirmation" id="pw-confirm" class="form-control" autocomplete="new-password"></div>
+                <div class="form-group" style="grid-column:span 2;">
+                    <div style="height:5px;border-radius:999px;background:#e5e5e5;overflow:hidden;margin-top:2px;"><div id="pwBar" style="height:100%;border-radius:999px;transition:width 0.3s,background 0.3s;width:0;background:#ef4444;"></div></div>
+                    <div id="pwHint" style="font-size:12px;color:#999;margin-top:4px;"></div>
                 </div>
             </div>
             @if($customFields->isNotEmpty())
@@ -112,5 +126,49 @@
     if (country) country.addEventListener('change', sync);
     if (country) sync();
 })();
+</script>
+<script>
+function generatePassword() {
+    var upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    var lower = "abcdefghijkmnopqrstuvwxyz";
+    var digits = "23456789";
+    var symbols = "!@#$%^&*_-+=?";
+    var all = upper + lower + digits + symbols;
+    var out = [];
+    out.push(upper[Math.floor(Math.random() * upper.length)]);
+    out.push(lower[Math.floor(Math.random() * lower.length)]);
+    out.push(digits[Math.floor(Math.random() * digits.length)]);
+    out.push(symbols[Math.floor(Math.random() * symbols.length)]);
+    for (var i = 0; i < 12; i++) {
+        out.push(all[Math.floor(Math.random() * all.length)]);
+    }
+    out.sort(function () { return Math.random() - 0.5; });
+    var pw = out.join("");
+    var input = document.getElementById("pw-input"), confirmInput = document.getElementById("pw-confirm");
+    if (input) { input.type = "text"; input.value = pw; input.focus(); }
+    if (confirmInput) { confirmInput.type = "text"; confirmInput.value = pw; }
+    checkStrength(pw);
+}
+function checkStrength(v) {
+    var bar = document.getElementById("pwBar"), hint = document.getElementById("pwHint");
+    if (!bar || !hint) return;
+    var score = 0;
+    if (v.length >= 8) score++;
+    if (v.length >= 12) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    var levels = [
+        {w:"0%",c:"#ef4444",t:"{{ __('client.password.too_short') }}"},
+        {w:"20%",c:"#ef4444",t:"{{ __('client.password.very_weak') }}"},
+        {w:"40%",c:"#f59e0b",t:"{{ __('client.password.weak') }}"},
+        {w:"60%",c:"#f59e0b",t:"{{ __('client.password.fair') }}"},
+        {w:"80%",c:"#06d6a0",t:"{{ __('client.password.strong') }}"},
+        {w:"100%",c:"#10b981",t:"{{ __('client.password.very_strong') }}"}
+    ];
+    var l = levels[Math.min(score, 5)];
+    bar.style.width = l.w; bar.style.background = l.c;
+    hint.textContent = l.t; hint.style.color = l.c;
+}
 </script>
 @endsection
