@@ -204,6 +204,12 @@
                     </div>
                 </div>
             </div>
+
+            <hr style="margin:14px 0;">
+            <div style="display:flex;gap:10px;align-items:center;">
+                <button type="button" id="test-email-btn" class="btn btn-secondary">{{ __('admin.settings.send_test_email') }}</button>
+                <span id="test-email-result" style="font-size:13px;"></span>
+            </div>
         </div>
     </div>
 
@@ -225,8 +231,6 @@
 
     <div style="display:flex;gap:10px;align-items:center;">
         <button type="submit" class="btn btn-primary">{{ __('admin.settings.save_settings') }}</button>
-        <button type="button" id="test-email-btn" class="btn btn-secondary" style="margin-left:5px;">{{ __('admin.settings.send_test_email') }}</button>
-        <span id="test-email-result" style="font-size:13px;"></span>
     </div>
 </form>
 
