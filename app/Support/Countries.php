@@ -84,4 +84,42 @@ class Countries
     {
         return self::ALL;
     }
+
+    /**
+     * ISO 3166-1 alpha-2 country codes to their international dialling
+     * prefixes (leading + included, e.g. 'PL' => '+48'). Kept intentionally
+     * incomplete: only codes present here get a prefix option in the client
+     * phone selector, everything else falls back to '+0'.
+     *
+     * @var array<string, string>
+     */
+    public const PHONE_PREFIXES = [
+        'AF' => '+93', 'AL' => '+355', 'DZ' => '+213', 'AR' => '+54',
+        'AU' => '+61', 'AT' => '+43', 'BY' => '+375', 'BE' => '+32',
+        'BA' => '+387', 'BR' => '+55', 'BG' => '+359', 'CA' => '+1',
+        'CL' => '+56', 'CN' => '+86', 'HR' => '+385', 'CZ' => '+420',
+        'DK' => '+45', 'EG' => '+20', 'EE' => '+372', 'FI' => '+358',
+        'FR' => '+33', 'DE' => '+49', 'GR' => '+30', 'HU' => '+36',
+        'IS' => '+354', 'IN' => '+91', 'ID' => '+62', 'IE' => '+353',
+        'IL' => '+972', 'IT' => '+39', 'JP' => '+81', 'KZ' => '+7',
+        'LV' => '+371', 'LT' => '+370', 'LU' => '+352', 'MY' => '+60',
+        'MX' => '+52', 'MD' => '+373', 'ME' => '+382', 'NL' => '+31',
+        'NZ' => '+64', 'NO' => '+47', 'PK' => '+92', 'PE' => '+51',
+        'PH' => '+63', 'PL' => '+48', 'PT' => '+351', 'RO' => '+40',
+        'RU' => '+7', 'RS' => '+381', 'SG' => '+65', 'SK' => '+421',
+        'SI' => '+386', 'ZA' => '+27', 'KR' => '+82', 'ES' => '+34',
+        'SE' => '+46', 'CH' => '+41', 'TW' => '+886', 'TH' => '+66',
+        'TR' => '+90', 'UA' => '+380', 'AE' => '+971', 'GB' => '+44',
+        'US' => '+1', 'VN' => '+84',
+    ];
+
+    /**
+     * The dialling prefix for a country code, or null when unknown.
+     */
+    public static function phonePrefix(?string $country): ?string
+    {
+        $country = strtoupper((string) $country);
+
+        return self::PHONE_PREFIXES[$country] ?? null;
+    }
 }

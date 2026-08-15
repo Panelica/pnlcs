@@ -26,6 +26,7 @@ class UpdateClientRequest extends FormRequest
             'postcode' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:2',
             'phone_number' => 'nullable|string|max:30',
+            'phone_prefix' => 'nullable|string|max:4',
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',

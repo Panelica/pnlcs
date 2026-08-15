@@ -26,8 +26,23 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="city" value="{{ old('city') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.state') }}</label><input type="text" name="state" value="{{ old('state') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.postcode') }}</label><input type="text" name="postcode" value="{{ old('postcode') }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.country') }}</label><input type="text" name="country" value="{{ old('country', 'US') }}" maxlength="2" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.phone') }}</label><input type="text" name="phone_number" value="{{ old('phone_number') }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.country') }}</label>
+                    <select name="country" id="country" class="form-control">
+                        @foreach(\App\Support\Countries::all() as $code => $name)
+                        <option value="{{ $code }}" {{ old('country', 'US') == $code ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.phone') }}</label>
+                    <div style="display:flex;gap:6px;">
+                        <select name="phone_prefix" id="phone_prefix" class="form-control" style="width:90px !important;flex-shrink:0;">
+                            @foreach(\App\Support\Countries::PHONE_PREFIXES as $code => $prefix)
+                            <option value="{{ $prefix }}" {{ old('phone_prefix') == $prefix ? 'selected' : '' }}>{{ $code }} {{ $prefix }}</option>
+                            @endforeach
+                        </select>
+                        <input type="text" name="phone_number" value="{{ old('phone_number') }}" class="form-control" style="flex:1;min-width:0;">
+                    </div>
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.status') }}</label>
                     <select name="status" class="form-control"><option value="active">{{ __('common.status.active') }}</option><option value="inactive">{{ __('common.status.inactive') }}</option><option value="closed">{{ __('common.status.closed') }}</option></select>
                 </div>
@@ -78,4 +93,17 @@
         </form>
     </div>
 </div>
+<script>
+(function () {
+    var map = {!! json_encode(\App\Support\Countries::PHONE_PREFIXES) !!};
+    var country = document.getElementById('country');
+    var prefix = document.getElementById('phone_prefix');
+    function sync() {
+        var code = (country.value || '').toUpperCase();
+        if (map[code] && prefix) prefix.value = map[code];
+    }
+    if (country) country.addEventListener('change', sync);
+    if (country) sync();
+})();
+</script>
 @endsection
