@@ -2121,6 +2121,12 @@ return [
     'services.confirm_status' => 'Zmienić status usługi na :status?',
     'services.delete' => 'Delete',
     'services.confirm_delete' => 'Usunąć tę usługę na stałe? Tej operacji nie można cofnąć.',
+    'services.status_hint_active' => 'Usługa działa i jest aktywna',
+    'services.status_hint_suspended' => 'Usługa wstrzymana',
+    'services.status_hint_terminated' => 'Usługa zakończona',
+    'services.status_hint_pending' => 'Usługa oczekuje na aktywację',
+    'services.status_hint_cancelled' => 'Usługa anulowana',
+    'services.delete_hint' => 'Odpięcie usługi od klienta i trwałe usunięcie',
     'settings' => [
         'admin_login_prefix' => 'Prefiks URL logowania administratora',
         'appearance' => 'Wygląd',

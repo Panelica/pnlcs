@@ -2117,6 +2117,12 @@ return [
     'services.confirm_status' => 'Change service status to :status?',
     'services.delete' => 'Delete',
     'services.confirm_delete' => 'Permanently delete this service? This cannot be undone.',
+    'services.status_hint_active' => 'Service is active and running',
+    'services.status_hint_suspended' => 'Service is suspended',
+    'services.status_hint_terminated' => 'Service is terminated',
+    'services.status_hint_pending' => 'Service is pending activation',
+    'services.status_hint_cancelled' => 'Service is cancelled',
+    'services.delete_hint' => 'Detach the service from the client and delete it permanently',
     'settings' => [
         'admin_login_prefix' => 'Admin Login URL Prefix',
         'appearance' => 'Appearance',
