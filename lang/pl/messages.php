@@ -73,7 +73,7 @@ return [
     'payment_method.banktransfer' => 'Przelew',
     'payment_method.stripe' => 'Stripe',
     'payment_method.paypal' => 'PayPal',
-    'payment_method.manual' => 'Manualnie',
+    'payment_method.manual' => 'Gotówka',
     'payment_method.credit' => 'Kredyt',
     'payment_method.bank_transfer' => 'Przelew',
     'payment_method.credit_debit_card' => 'Karta kredytowa / debetowa',
