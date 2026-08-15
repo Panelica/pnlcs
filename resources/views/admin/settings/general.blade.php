@@ -113,6 +113,19 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="form-group">
+                    <label class="form-label" for="invoice-number-format">{{ __('admin.settings.invoice_number_format') }}</label>
+                    <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:6px;">
+                {{ __('admin.settings.invoice_number_tokens') }}
+            </div>
+            <div style="font-size:13px;color:#555;margin-top:6px;">
+                <span>{{ __('admin.settings.invoice_number_last') }}:</span>
+                <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;">{{ $invoiceLast ?? '—' }}</code>
+                <span style="margin-left:14px;">{{ __('admin.settings.invoice_number_preview') }}:</span>
+                <code id="invoice-number-preview" style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $invoicePreview }}</code>
             </div>
         </div>
     </div>
@@ -199,6 +212,27 @@
 </form>
 
 <script>
+document.getElementById('invoice-number-format').addEventListener('input', renderInvoicePreview);
+document.addEventListener('DOMContentLoaded', renderInvoicePreview);
+
+function renderInvoicePreview() {
+    var fmt = document.getElementById('invoice-number-format').value || '';
+    var now = new Date();
+    var y = String(now.getFullYear());
+    var yy = y.slice(-2);
+    var m = ('0' + (now.getMonth() + 1)).slice(-2);
+    var d = ('0' + now.getDate()).slice(-2);
+    var seq = String({{ $invoiceNextSeq }});
+    while (seq.length < 6) { seq = '0' + seq; }
+    var out = fmt
+        .replace(/\{year\}/g, y)
+        .replace(/\{yy\}/g, yy)
+        .replace(/\{month\}/g, m)
+        .replace(/\{day\}/g, d)
+        .replace(/\{num\}/g, seq);
+    document.getElementById('invoice-number-preview').textContent = out;
+}
+
 document.getElementById('mail-type').addEventListener('change', function() {
     document.getElementById('smtp-fields').style.display = this.value === 'smtp' ? 'block' : 'none';
 });

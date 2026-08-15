@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Credit;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
@@ -259,24 +260,66 @@ class InvoiceService
     }
 
     /**
-     * Generate a unique sequential invoice number with prefix.
+     * Generate a unique sequential invoice number from the configurable
+     * format setting. The format accepts {year}, {yy}, {month}, {day} and
+     * {num} placeholders; {num} is the next number in the series derived
+     * from the last invoice stored in the database.
      */
     public function generateInvoiceNumber(): string
     {
-        $prefix = config('billing.invoice_prefix', 'INV-');
+        $format = (string) Setting::get('InvoiceNumberFormat', 'INV-{num}');
+        if (trim($format) === '') {
+            $format = 'INV-{num}';
+        }
 
-        // r118-seq: the highest number in the series, not the newest row.
-        // Reading the newest meant one invoice numbered with something that is
-        // not a number - the add funds page used to mint eight random
-        // characters - was read as zero and started the series again from one.
-        // Eight numbers on this installation were issued three times over to
-        // different customers that way. Anything that is not prefix + digits
-        // casts to zero here and is ignored instead of resetting the count.
-        $next = 1 + (int) Invoice::where('invoice_num', 'like', $prefix.'%')
+        return $this->renderInvoiceNumber($format, $this->nextInvoiceSequence($format));
+    }
+
+    /**
+     * The next sequence number for previews (the highest number already
+     * issued under the format's static prefix, plus one).
+     */
+    public function nextInvoiceSequence(?string $format = null): int
+    {
+        $format ??= (string) Setting::get('InvoiceNumberFormat', 'INV-{num}');
+
+        // Without {num} the number has nowhere to grow: fall back to the
+        // row id, which still keeps them unique.
+        $pos = strpos((string) $format, '{num}');
+        if ($pos === false) {
+            return 1 + (int) Invoice::max('id');
+        }
+
+        // Everything before {num} is a stable prefix on issued numbers.
+        // Reading the highest number with that prefix - not the newest row,
+        // which could be a non-numeric add-funds number that casts to zero
+        // and restarts the series - keeps the count growing.
+        $prefix = substr((string) $format, 0, $pos);
+        if ($prefix === '') {
+            return 1 + (int) Invoice::max('id');
+        }
+
+        $like = addcslashes($prefix, '%_').'%';
+
+        $next = 1 + (int) Invoice::where('invoice_num', 'like', $like)
             ->selectRaw('MAX(CAST(SUBSTRING(invoice_num, ?) AS UNSIGNED)) as seq', [strlen($prefix) + 1])
             ->value('seq');
 
-        return $prefix.str_pad($next, 6, '0', STR_PAD_LEFT);
+        return $next;
+    }
+
+    /**
+     * Render a format with the given sequence number.
+     */
+    public function renderInvoiceNumber(string $format, int $sequence): string
+    {
+        $now = now();
+
+        return str_replace(
+            ['{year}', '{yy}', '{month}', '{day}', '{num}'],
+            [$now->format('Y'), $now->format('y'), $now->format('m'), $now->format('d'), str_pad($sequence, 6, '0', STR_PAD_LEFT)],
+            $format
+        );
     }
 
     /**

@@ -24,6 +24,9 @@ class SettingController extends Controller
             'languages' => Language::active()->orderBy('sort_order')->get(),
             'countries' => \App\Support\Countries::all(),
             'paymentMethods' => $this->paymentMethods(),
+            'invoicePreview' => app(\App\Services\InvoiceService::class)->generateInvoiceNumber(),
+            'invoiceNextSeq' => app(\App\Services\InvoiceService::class)->nextInvoiceSequence(),
+            'invoiceLast' => \App\Models\Invoice::where('invoice_num', '!=', '')->orderBy('id', 'desc')->value('invoice_num'),
         ]);
     }
 
@@ -59,6 +62,7 @@ class SettingController extends Controller
         'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
         'Email', 'EmailFromName',
+        'InvoiceNumberFormat',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
