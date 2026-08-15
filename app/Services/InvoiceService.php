@@ -29,7 +29,7 @@ class InvoiceService
                 ...Invoice::buyerSnapshotFrom($client),
                 'invoice_num' => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
                 'date' => $options['date'] ?? now()->toDateString(),
-                'due_date' => $options['due_date'] ?? now()->addDays(14)->toDateString(),
+                'due_date' => $options['due_date'] ?? now()->addDays((int) Setting::get('InvoiceDueDays', 14))->toDateString(),
                 'status' => $options['status'] ?? InvoiceStatus::Unpaid->value,
                 'payment_method' => $options['payment_method'] ?? null,
                 'notes' => $options['notes'] ?? null,

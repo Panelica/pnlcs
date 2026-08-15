@@ -63,7 +63,7 @@ class SettingController extends Controller
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
-        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset',
+        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',

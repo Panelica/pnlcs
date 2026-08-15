@@ -2250,6 +2250,8 @@ return [
     'settings.system_settings' => 'Ustawienia systemowe',
     'settings.default_payment_method' => 'Domyślny sposób płatności dla nowych klientów',
     'settings.domains_section' => 'Domeny',
+    'settings.invoices_section' => 'Faktury',
+    'settings.invoice_due_days' => 'Domyślny termin zapłaty (dni)',
     'settings.default_nameservers' => 'Domyślne serwery DNS',
     'settings.default_nameservers_hint' => 'Używane przy rejestracji i transferze domen, gdy nie podano innych serwerów DNS.',
     'settings.themes' => 'Motywy',

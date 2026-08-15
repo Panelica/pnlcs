@@ -2246,6 +2246,8 @@ return [
     'settings.system_settings' => 'System Settings',
     'settings.default_payment_method' => 'Default Payment Method for New Clients',
     'settings.domains_section' => 'Domains',
+    'settings.invoices_section' => 'Invoices',
+    'settings.invoice_due_days' => 'Default payment due (days)',
     'settings.default_nameservers' => 'Default Nameservers',
     'settings.default_nameservers_hint' => 'Used when registering or transferring domains when no other nameservers are supplied.',
     'settings.themes' => 'Themes',

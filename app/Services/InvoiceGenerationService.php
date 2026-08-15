@@ -452,7 +452,7 @@ class InvoiceGenerationService
         }
 
         $options = [
-            'due_date' => now()->addDays((int) config('billing.invoice_due_days', 14))->toDateString(),
+            'due_date' => now()->addDays((int) \App\Models\Setting::get('InvoiceDueDays', 14))->toDateString(),
             'notes' => 'Auto-generated renewal invoice.',
         ];
 
