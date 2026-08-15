@@ -122,7 +122,7 @@ class InvoiceController extends Controller
             'client_id' => ['required', 'exists:clients,id'],
             'date' => ['required', 'date'],
             'due_date' => ['required', 'date'],
-            'payment_method' => ['nullable', 'string', 'max:100'],
+            'payment_method' => ['required', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],

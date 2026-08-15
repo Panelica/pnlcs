@@ -144,7 +144,6 @@
                 <div class="card-body">
                     <div class="form-group" style="margin:0;">
                         <select name="payment_method" class="form-control">
-                            <option value="">— None —</option>
                             @foreach($gateways as $gw)
                             <option value="{{ $gw }}" {{ old('payment_method', $defaultPaymentMethod ?? '') == $gw ? 'selected' : '' }}>{{ payment_method_label((string) $gw) }}</option>
                             @endforeach
