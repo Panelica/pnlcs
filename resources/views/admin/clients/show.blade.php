@@ -199,16 +199,19 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
     @else
     <table class="data-table">
         <thead><tr>
-            <th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('admin.clients.registered') }}</th><th>{{ __('admin.domains.expiry_date') }}</th><th>{{ __('common.table.status') }}</th>
+            <th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('admin.clients.registered') }}</th><th>{{ __('admin.domains.expiry_date') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th>
         </tr></thead>
         <tbody>
         @foreach($domains as $domain)
         <tr>
-            <td style="font-weight:600;">{{ $domain->domain }}</td>
+            <td style="font-weight:600;"><a href="{{ route('admin.domains.show', $domain) }}" style="text-decoration:none;color:inherit;">{{ $domain->domain }}</a></td>
             <td>{{ $domain->registrar ?? '-' }}</td>
             <td>{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td>
             <td>{{ $domain->expiry_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge-{{ strtolower($domain->status) }}">{{ ucfirst($domain->status) }}</span></td>
+            <td style="text-align:right;">
+                <a href="{{ route('admin.domains.show', $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
+            </td>
         </tr>
         @endforeach
         </tbody>
