@@ -68,7 +68,7 @@
                 <td>{{ $tx->date?->timezone(display_tz())->format(datetime_fmt()) ?? 'N/A' }}</td>
                 <td>{{ $tx->description }}</td>
                 <td>{{ money_fmt(abs($tx->amount)) }}</td>
-                <td>{{ $tx->gateway }}</td>
+                <td>{{ $tx->gateway ? payment_method_label((string) $tx->gateway) : '-' }}</td>
             </tr>
             @empty
             <tr><td colspan="4" style="text-align:center;color:#999;">{{ __('admin.affiliates.no_referrals') }}</td></tr>

@@ -565,7 +565,7 @@ class ConfigController extends Controller
 
                 return (object) [
                     'name' => $name,
-                    'label' => $module?->getModuleName() ?? ucfirst($name),
+                    'label' => payment_method_label($name) ?: ($module?->getModuleName() ?? ucfirst($name)),
                     'fields' => $module?->getConfigFields() ?? [],
                     'values' => $values->toArray(),
                     'active' => (string) ($values['active'] ?? '0') === '1',

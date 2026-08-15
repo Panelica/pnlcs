@@ -30,7 +30,7 @@
                     @endif
                 </td>
                 <td style="font-size:12px;">{{ $row->description ?? "-" }}</td>
-                <td style="font-size:12px;">{{ $row->gateway ?? "-" }}</td>
+                <td style="font-size:12px;">{{ $row->gateway ? payment_method_label((string) $row->gateway) : "-" }}</td>
                 <td style="color:#46a546;font-weight:600;">{{ $row->amount_in > 0 ? "$" . number_format($row->amount_in, 2) : "-" }}</td>
                 <td style="color:#c43c35;">{{ $row->amount_out > 0 ? "$" . number_format($row->amount_out, 2) : "-" }}</td>
                 <td style="font-family:monospace;font-size:11px;">{{ $row->transaction_id ?? "-" }}</td>

@@ -54,7 +54,7 @@ class InvoiceController extends Controller
                 if ($module) {
                     try {
                         $gatewayForms[$gw] = $module->getPaymentForm($invoice);
-                        $gatewayLabels[$gw] = $module->getModuleName();
+                        $gatewayLabels[$gw] = payment_method_label($gw);
                     } catch (\Throwable $e) {
                         $gatewayLabels[$gw] = ucfirst($gw);
                     }

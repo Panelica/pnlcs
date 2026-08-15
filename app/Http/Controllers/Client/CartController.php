@@ -233,7 +233,7 @@ class CartController extends Controller
         }
 
         return $active->mapWithKeys(fn (string $name) => [
-            $name => $registry->getGatewayModule($name)?->getModuleName() ?? ucfirst($name),
+            $name => payment_method_label($name),
         ])->all();
     }
 }
