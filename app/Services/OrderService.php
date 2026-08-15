@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class OrderService
 {
@@ -639,7 +640,15 @@ class OrderService
             ? app(ConfigOptionService::class)->summarise($item['config_options'])
             : '';
 
-        return "{$name} ({$cycle}){$domain}".($configured ? " ({$configured})" : '');
+        // The parenthesis shows the paid billing period, not the raw cycle
+        // name, matching the renewal invoices (2026/08/15 - 2026/09/15).
+        $dueDate = $service->next_due_date
+            ? Carbon::parse($service->next_due_date)
+            : Carbon::now()->addMonths(Service::monthsInCycle($cycle));
+        $periodStart = $dueDate->copy()->subMonths(Service::monthsInCycle($cycle));
+        $period = $periodStart->format('Y/m/d').' - '.$dueDate->format('Y/m/d');
+
+        return "{$name} ({$period}){$domain}".($configured ? " ({$configured})" : '');
     }
 
     private function generateOrderNumber(): string
