@@ -63,7 +63,11 @@ class InvoicePdfService
     public function download(Invoice $invoice): Response
     {
         $pdf = $this->generate($invoice);
-        $filename = 'invoice-'.($invoice->invoice_num ?? $invoice->id).'.pdf';
+
+        // The numbering scheme may put "/" or separators in the invoice
+        // number, which the file name cannot carry.
+        $num = str_replace(['/', '\\'], '-', (string) ($invoice->invoice_num ?? $invoice->id));
+        $filename = "invoice-{$num}.pdf";
 
         return $pdf->download($filename);
     }
