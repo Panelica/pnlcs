@@ -97,7 +97,7 @@
                 <tr><td class="meta-label">{{ __('pdf.date_paid') }}:</td><td>{{ $invoice->date_paid->format(date_fmt()) }}</td></tr>
                 @endif
                 @if($invoice->payment_method)
-                <tr><td class="meta-label">{{ __('pdf.payment_method') }}:</td><td>{{ ucfirst($invoice->payment_method) }}</td></tr>
+                <tr><td class="meta-label">{{ __('pdf.payment_method') }}:</td><td>{{ payment_method_label((string) $invoice->payment_method) }}</td></tr>
                 @endif
             </table>
         </div>
@@ -106,20 +106,24 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 60%;">{{ __('common.table.description') }}</th>
-                <th class="text-right" style="width: 20%;">{{ __('pdf.taxed') }}</th>
-                <th class="text-right" style="width: 20%;">{{ __('common.table.amount') }}</th>
+                <th style="width: 38%;">{{ __('common.table.description') }}</th>
+                <th class="text-right" style="width: 7%;">{{ __('common.table.qty') }}</th>
+                <th class="text-right" style="width: 14%;">{{ __('common.table.price') }}</th>
+                <th class="text-right" style="width: 13%;">{{ __('pdf.taxed') }}</th>
+                <th class="text-right" style="width: 28%;">{{ __('common.table.amount') }}</th>
             </tr>
         </thead>
         <tbody>
             @forelse($invoice->items as $item)
             <tr>
                 <td>{{ $item->description }}</td>
-                <td class="text-right">{{ $item->taxed ? __('common.status.yes') : __('common.status.no') }}</td>
+                <td class="text-right">{{ (int) $item->qty }}</td>
                 <td class="text-right">{{ money_fmt((float)$item->amount) }}</td>
+                <td class="text-right">{{ $item->taxed ? __('common.status.yes') : __('common.status.no') }}</td>
+                <td class="text-right">{{ money_fmt((float)$item->amount * (int)$item->qty) }}</td>
             </tr>
             @empty
-            <tr><td colspan="3" style="text-align:center; color:#999;">{{ __('pdf.no_items') }}</td></tr>
+            <tr><td colspan="5" style="text-align:center; color:#999;">{{ __('pdf.no_items') }}</td></tr>
             @endforelse
         </tbody>
     </table>

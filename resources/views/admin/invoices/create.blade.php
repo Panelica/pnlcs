@@ -48,8 +48,10 @@
                         <thead>
                             <tr style="border-bottom:1px solid #ddd;">
                                 <th style="padding:6px 8px;text-align:left;font-weight:600;color:#555;">{{ __('common.table.description') }}</th>
+                                <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:70px;">{{ __('common.table.qty') }}</th>
                                 <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">{{ __('common.table.tax') }}</th>
                                 <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:110px;">{{ __('common.table.amount') }}</th>
+                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:100px;">{{ __('common.table.total') }}</th>
                                 <th style="width:30px;"></th>
                             </tr>
                         </thead>
@@ -84,6 +86,11 @@
                                         </div>
                                     </td>
                                     <td style="padding:6px 8px;text-align:center;">
+                                        <input type="number" :name="`items[${index}][qty]`" x-model.number="item.qty"
+                                               @input="recalculate()" placeholder="1" step="1" min="1"
+                                               class="form-control" style="font-size:13px;text-align:center;width:64px;">
+                                    </td>
+                                    <td style="padding:6px 8px;text-align:center;">
                                         <input type="hidden" :name="`items[${index}][taxed]`" value="0">
                                         <input type="checkbox" :name="`items[${index}][taxed]`" value="1" x-model="item.taxed" @change="recalculate()">
                                     </td>
@@ -91,6 +98,9 @@
                                         <input type="number" :name="`items[${index}][amount]`" x-model.number="item.amount"
                                                @input="recalculate()" placeholder="0.00" step="0.01" min="0" required
                                                class="form-control" style="font-size:13px;text-align:right;">
+                                    </td>
+                                    <td style="padding:6px 8px;text-align:right;white-space:nowrap;color:#333;font-family:monospace;font-size:13px;">
+                                        <span x-text="currencyPrefix + lineTotal(item).toFixed(2) + currencySuffix">0.00</span>
                                     </td>
                                     <td style="padding:6px 4px;text-align:center;">
                                         <button type="button" @click="removeItem(index)" x-show="items.length > 1"
@@ -172,7 +182,7 @@
 <script>
 function invoiceBuilder() {
     return {
-        items: [{ description: '', amount: 0, taxed: true, show: false, active: -1, dd: null, page: 1 }],
+        items: [{ description: '', qty: 1, amount: 0, taxed: true, show: false, active: -1, dd: null, page: 1 }],
         products: @json($products),
         currencyPrefix: @json($defaultCurrency?->prefix ?? ''),
         currencySuffix: @json($defaultCurrency?->suffix ?? ''),
@@ -197,7 +207,7 @@ function invoiceBuilder() {
             this.taxLabel = value && opt ? (opt.dataset.label || '') : '';
             this.recalculate();
         },
-        addItem() { this.items.push({ description: '', amount: 0, taxed: true, show: false, active: -1, dd: null, page: 1 }); },
+        addItem() { this.items.push({ description: '', qty: 1, amount: 0, taxed: true, show: false, active: -1, dd: null, page: 1 }); },
         removeItem(index) { if (this.items.length > 1) { this.items.splice(index, 1); this.recalculate(); } },
         matchesFor(value) {
             const q = (value || '').trim().toLowerCase();
@@ -245,14 +255,16 @@ function invoiceBuilder() {
         select(index, p) {
             const item = this.items[index];
             item.description = p.name;
+            item.qty = 1;
             item.amount = p.amount ?? 0;
             item.taxed = p.taxed;
             item.show = false;
             this.recalculate();
         },
+        lineTotal(item) { return (parseFloat(item.amount) || 0) * (parseInt(item.qty, 10) || 1); },
         recalculate() {
-            this.subtotal = this.items.reduce((s, i) => s + (parseFloat(i.amount) || 0), 0);
-            const taxable = this.items.reduce((s, i) => s + (i.taxed && parseFloat(i.amount) > 0 ? (parseFloat(i.amount) || 0) : 0), 0);
+            this.subtotal = this.items.reduce((s, i) => s + this.lineTotal(i), 0);
+            const taxable = this.items.reduce((s, i) => s + (i.taxed && this.lineTotal(i) > 0 ? this.lineTotal(i) : 0), 0);
             this.taxAmount = Math.round(taxable * (this.taxRate / 100) * 100) / 100;
             this.grandTotal = Math.round((this.subtotal + this.taxAmount) * 100) / 100;
         }

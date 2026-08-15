@@ -267,6 +267,7 @@ return [
         'priority' => 'Priority',
         'product' => 'Product',
         'quantity' => 'Quantity',
+        'qty' => 'Qty',
         'rate' => 'Rate',
         'recurring' => 'Recurring',
         'registrar' => 'Registrar',

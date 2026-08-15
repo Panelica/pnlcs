@@ -123,6 +123,7 @@ class InvoiceController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
+            'items.*.qty' => ['nullable', 'integer', 'min:1', 'max:999999'],
             'items.*.amount' => ['required', 'numeric', 'min:0'],
             'items.*.taxed' => ['nullable', 'boolean'],
         ]);
@@ -132,6 +133,7 @@ class InvoiceController extends Controller
         $items = array_map(fn ($item) => [
             'type' => 'Other',
             'description' => $item['description'],
+            'qty' => (int) ($item['qty'] ?? 1),
             'amount' => (float) $item['amount'],
             // Absent means the box was unticked: a browser does not submit
             // a checkbox it was left off, and reading that as taxed billed the

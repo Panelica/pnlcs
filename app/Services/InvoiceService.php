@@ -115,6 +115,7 @@ class InvoiceService
             'type' => $itemData['type'] ?? 'Other',
             'rel_id' => $itemData['rel_id'] ?? 0,
             'description' => $itemData['description'] ?? '',
+            'qty' => $itemData['qty'] ?? 1,
             'amount' => $itemData['amount'] ?? 0,
             'taxed' => $itemData['taxed'] ?? true,
             'due_date' => $itemData['due_date'] ?? null,
@@ -132,11 +133,14 @@ class InvoiceService
     {
         $invoice->loadMissing('items', 'client');
 
-        $subtotal = $invoice->items->sum('amount');
+        // Each line carries a unit price (amount) and a quantity; the line's
+        // money value is the product of the two. Callers that predate the qty
+        // column pass amount only and get qty 1, so nothing changes for them.
+        $subtotal = $invoice->items->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
 
         $taxableAmount = $invoice->items
             ->where('taxed', true)
-            ->sum('amount');
+            ->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
 
         // Use stored tax rates if available, otherwise calculate from rules
         $taxRate = (float) $invoice->tax_rate;
