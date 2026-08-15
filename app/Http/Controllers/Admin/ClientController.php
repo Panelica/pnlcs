@@ -12,6 +12,7 @@ use App\Models\ClientNote;
 use App\Models\Currency;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
@@ -47,8 +48,9 @@ class ClientController extends Controller
         $currencies = Currency::all();
         $customFields = CustomField::clientFields()->get();
         $paymentMethods = $this->paymentMethods();
+        $defaultPaymentMethod = Setting::get('DefaultPaymentMethod', 'banktransfer');
 
-        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods'));
+        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods', 'defaultPaymentMethod'));
     }
 
     public function store(Request $request)

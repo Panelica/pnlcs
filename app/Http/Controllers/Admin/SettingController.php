@@ -23,7 +23,27 @@ class SettingController extends Controller
             'mailTransport' => (string) config('mail.default'),
             'languages' => Language::active()->orderBy('sort_order')->get(),
             'countries' => \App\Support\Countries::all(),
+            'paymentMethods' => $this->paymentMethods(),
         ]);
+    }
+
+    /**
+     * Payment methods the default can be picked from: every usable gateway
+     * plus the offline options offered on the invoice form.
+     *
+     * @return array<int, string>
+     */
+    protected function paymentMethods(): array
+    {
+        $gateways = app(\App\Services\Module\ModuleRegistry::class)->usableGateways();
+
+        if (! in_array('banktransfer', $gateways, true)) {
+            $gateways[] = 'banktransfer';
+        }
+
+        $gateways[] = 'manual';
+
+        return $gateways;
     }
 
     /**
@@ -37,7 +57,8 @@ class SettingController extends Controller
      */
     private const GENERAL_KEYS = [
         'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
-        'Country', 'DateFormat', 'DefaultLanguage', 'Domain', 'Email', 'EmailFromName',
+        'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
+        'Email', 'EmailFromName',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',

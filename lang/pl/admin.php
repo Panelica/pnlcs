@@ -2196,6 +2196,7 @@ return [
     'settings.smtp_configuration' => 'Konfiguracja SMTP',
     'settings.system_email_address' => 'Systemowy adres e-mail',
     'settings.system_settings' => 'Ustawienia systemowe',
+    'settings.default_payment_method' => 'Domyślny sposób płatności dla nowych klientów',
     'settings.themes' => 'Motywy',
     'settings.white_label' => 'White-Label',
     'sidebar' => [

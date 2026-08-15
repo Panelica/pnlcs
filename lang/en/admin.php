@@ -2192,6 +2192,7 @@ return [
     'settings.smtp_configuration' => 'SMTP Configuration',
     'settings.system_email_address' => 'System Email Address',
     'settings.system_settings' => 'System Settings',
+    'settings.default_payment_method' => 'Default Payment Method for New Clients',
     'settings.themes' => 'Themes',
     'settings.white_label' => 'White-Label',
     'sidebar' => [
