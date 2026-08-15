@@ -708,6 +708,7 @@ return [
     'clients.other_info' => 'Other Info',
     'clients.password_optional' => 'optional',
     'clients.password_optional_edit' => 'leave blank to keep current',
+    'clients.generate_password' => 'Generate Password',
     'clients.overdue_invoices' => 'Overdue Invoices',
     'clients.paid_invoices' => 'Paid Invoices',
     'clients.phone' => 'Phone',

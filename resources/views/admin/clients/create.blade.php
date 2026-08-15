@@ -21,6 +21,7 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.password') }}<small style="color:#999;font-weight:400;"> ({{ __('admin.clients.password_optional') }})</small></label><input type="password" name="password" class="form-control" autocomplete="new-password"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.password_confirm') }}</label><input type="password" name="password_confirmation" class="form-control" autocomplete="new-password"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.company') }}</label><input type="text" name="company_name" value="{{ old('company_name') }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label><input type="text" name="tax_id" value="{{ old('tax_id') }}" maxlength="20" class="form-control"></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.address') }}</label><input type="text" name="address1" value="{{ old('address1') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="city" value="{{ old('city') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.state') }}</label><input type="text" name="state" value="{{ old('state') }}" class="form-control"></div>

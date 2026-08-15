@@ -56,6 +56,7 @@ class ClientController extends Controller
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:clients,email|unique:users,email',
             'company_name' => 'nullable|string|max:255',
+            'tax_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
@@ -181,6 +182,7 @@ class ClientController extends Controller
             // address counted as taken and no change could be saved at all.
             'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)],
             'company_name' => 'nullable|string|max:255',
+            'tax_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
