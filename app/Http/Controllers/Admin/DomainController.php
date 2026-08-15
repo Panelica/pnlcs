@@ -94,7 +94,7 @@ class DomainController extends Controller
 
     public function updateRegistrar(Request $request, Domain $domain)
     {
-        $allowed = array_map('strtolower', array_keys($this->registrarOptions()));
+        $allowed = array_keys($this->registrarOptions());
 
         $request->validate([
             'registrar' => ['required', 'string', \Illuminate\Validation\Rule::in($allowed)],
