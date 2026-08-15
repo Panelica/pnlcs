@@ -28,6 +28,7 @@
                     <th>{{ __('client.domains.registration_date_col') }}</th>
                     <th>{{ __('common.table.expiry_date') }}</th>
                     <th>{{ __('client.domains.auto_renew_col') }}</th>
+                    <th style="text-align:right;">{{ __('common.table.actions') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -37,7 +38,7 @@
                     $expired = $d->expiry_date && $d->expiry_date->isPast();
                 @endphp
                 <tr>
-                    <td style="font-weight:600">{{ $d->domain }}</td>
+                    <td style="font-weight:600"><a href="{{ route('client.domains.show', $d) }}" style="text-decoration:none;color:inherit;">{{ $d->domain }}</a></td>
                     <td><span class="badge badge-{{ strtolower($d->status) }}">{{ ucfirst($d->status) }}</span></td>
                     <td class="text-muted text-sm">{{ $d->registration_date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="{{ $expired ? "color:var(--danger);font-weight:600" : ($expiringSoon ? "color:var(--warning);font-weight:600" : "") }}">
@@ -51,10 +52,13 @@
                             {{ $d->auto_renew ? __('client.domains.yes') : __('client.domains.no') }}
                         </span>
                     </td>
+                    <td style="text-align:right;">
+                        <a href="{{ route('client.domains.show', $d) }}" class="btn btn-outline btn-xs">{{ __('common.actions.view') }}</a>
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5">
+                    <td colspan="6">
                         <div class="pn-empty">
                             <div class="pn-empty-icon">&#127760;</div>
                             <p>{{ __('admin.domains.no_domains') }}</p>

@@ -45,12 +45,11 @@
     <div class="pn-card">
         <div class="pn-card-header">{{ __('client.domains.nameservers') }}</div>
         <div class="pn-card-body">
-            @if(isset($domain->ns1))
+            @php $ns = json_decode($domain->nameservers ?? '[]', true) ?: []; @endphp
+            @if(count($ns) > 0)
             <dl>
-                @foreach(['ns1', 'ns2', 'ns3', 'ns4', 'ns5'] as $ns)
-                @if(!empty($domain->{$ns}))
-                <div class="detail-row"><dt>{{ strtoupper($ns) }}</dt><dd style="font-family:monospace; font-size:12px;">{{ $domain->{$ns} }}</dd></div>
-                @endif
+                @foreach($ns as $i => $nameserver)
+                <div class="detail-row"><dt>NS{{ $i+1 }}</dt><dd style="font-family:monospace; font-size:12px;">{{ $nameserver }}</dd></div>
                 @endforeach
             </dl>
             @else
@@ -75,10 +74,7 @@
     <div class="pn-card-header">{{ __('client.domains.transfer_domain') }}</div>
     <div class="pn-card-body">
         <p style="font-size:13px; color:#555; margin-bottom:12px;">{{ __('client.domains.epp_desc') }}</p>
-        <form method="POST" action="{{ route('client.domains.epp', $domain) }}" style="display:inline;">
-            @csrf
-            <button type="submit" class="btn btn-outline btn-sm">{{ __('client.domains.get_epp_code') }}</button>
-        </form>
+        <a href="{{ route('client.domains.epp', $domain) }}" class="btn btn-outline btn-sm">{{ __('client.domains.get_epp_code') }}</a>
         @if(session('epp_code'))
         <div style="margin-top:12px; padding:10px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; font-size:13px; font-family:monospace;">
             {{ session('epp_code') }}
