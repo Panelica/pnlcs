@@ -277,7 +277,7 @@ class InvoiceService
 
     /**
      * The next sequence number for previews (the highest number already
-     * issued under the format's static prefix, plus one).
+     * issued plus one).
      */
     public function nextInvoiceSequence(?string $format = null): int
     {
@@ -290,10 +290,20 @@ class InvoiceService
             return 1 + (int) Invoice::max('id');
         }
 
-        // Everything before {num} is a stable prefix on issued numbers.
-        // Reading the highest number with that prefix - not the newest row,
-        // which could be a non-numeric add-funds number that casts to zero
-        // and restarts the series - keeps the count growing.
+        // {num} last: the series continues across format changes, reading
+        // the highest trailing number already issued wherever it hangs.
+        // Non-numeric rows (the add-funds numbers place random characters
+        // there) simply contribute nothing because they do not end in a
+        // run of digits. The series only grows, so nothing is ever
+        // issued twice.
+        if (substr((string) $format, -5) === '{num}') {
+            return 1 + (int) Invoice::where('invoice_num', 'regexp', '[0-9]$')
+                ->selectRaw('MAX(CAST(REGEXP_REPLACE(invoice_num, "^.*[^0-9]", "") AS UNSIGNED)) as seq')
+                ->value('seq');
+        }
+
+        // {num} in the middle: fall back to the static prefix before it,
+        // which is where the digits actually sit on issued numbers.
         $prefix = substr((string) $format, 0, $pos);
         if ($prefix === '') {
             return 1 + (int) Invoice::max('id');
@@ -301,11 +311,9 @@ class InvoiceService
 
         $like = addcslashes($prefix, '%_').'%';
 
-        $next = 1 + (int) Invoice::where('invoice_num', 'like', $like)
+        return 1 + (int) Invoice::where('invoice_num', 'like', $like)
             ->selectRaw('MAX(CAST(SUBSTRING(invoice_num, ?) AS UNSIGNED)) as seq', [strlen($prefix) + 1])
             ->value('seq');
-
-        return $next;
     }
 
     /**
