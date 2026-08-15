@@ -44,7 +44,7 @@ if (! function_exists('payment_method_label')) {
             return $method;
         }
 
-        $key = 'payment_method.'.$method;
+        $key = 'messages.payment_method.'.$method;
 
         if (Lang::has($key)) {
             return Lang::get($key);
