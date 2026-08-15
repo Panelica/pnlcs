@@ -154,6 +154,12 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:manage_domains')->group(function () {
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
+        Route::post('domains/{domain}/sync', [DomainController::class, 'sync'])->name('domains.sync');
+        Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
+        Route::post('domains/{domain}/nameservers', [DomainController::class, 'updateNameservers'])->name('domains.nameservers');
+        Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->name('domains.lock');
+        Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
+        Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');
     });
 
     // =============================================

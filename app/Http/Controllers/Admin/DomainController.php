@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Contracts\SyncsDomainData;
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
+use App\Services\DomainService;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 
 class DomainController extends Controller
@@ -49,6 +52,131 @@ class DomainController extends Controller
     {
         $domain->load('client', 'order');
 
-        return view('admin.domains.show', compact('domain'));
+        // The registrar holds the lock; the value is shown to the operator so
+        // the toggle button can reflect reality rather than a stale column.
+        $locked = null;
+        $module = app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
+
+        if ($module) {
+            try {
+                $locked = $module->getLockStatus($domain);
+            } catch (\Throwable) {
+                $locked = null;
+            }
+        }
+
+        return view('admin.domains.show', compact('domain', 'locked'));
+    }
+
+    /**
+     * Pull authoritative state (expiry, status, nameservers, lock) back from
+     * the registrar. Only registrars that implement SyncsDomainData can do it.
+     */
+    public function sync(Domain $domain)
+    {
+        $module = app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
+
+        if (! $module instanceof SyncsDomainData) {
+            return back()->with('error', __('admin.domains.sync_unavailable'));
+        }
+
+        try {
+            $result = $module->syncDomain($domain);
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        if (! ($result['success'] ?? false)) {
+            return back()->with('error', $result['message'] ?? __('admin.domains.sync_failed'));
+        }
+
+        $changes = [];
+        if (! empty($result['expiry_date'])) {
+            $changes['expiry_date'] = $result['expiry_date'];
+        }
+        if (! empty($result['status'])) {
+            $changes['status'] = $result['status'];
+        }
+        if (! empty($result['nameservers'])) {
+            $changes['nameservers'] = json_encode(array_values($result['nameservers']));
+        }
+
+        if ($changes) {
+            $domain->update($changes);
+        }
+
+        return back()->with('success', __('admin.domains.synced'));
+    }
+
+    public function renew(Request $request, Domain $domain)
+    {
+        $years = max(1, (int) $request->input('years', 1));
+
+        app(DomainService::class)->renewDomain($domain, $years);
+
+        return back()->with('success', __('admin.domains.renewed', ['domain' => $domain->domain]));
+    }
+
+    public function updateNameservers(Request $request, Domain $domain)
+    {
+        $request->validate([
+            'ns' => 'required|array|min:2',
+            'ns.*' => 'required|string|max:255',
+        ]);
+
+        $result = app(DomainService::class)->updateNameservers($domain, array_values($request->input('ns')));
+
+        if (! ($result['success'] ?? false)) {
+            return back()->with('error', $result['message'] ?? __('admin.domains.ns_update_failed'));
+        }
+
+        return back()->with('success', __('admin.domains.ns_updated'));
+    }
+
+    public function toggleLock(Domain $domain)
+    {
+        $module = app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
+
+        if (! $module) {
+            return back()->with('error', __('admin.domains.lock_unavailable'));
+        }
+
+        try {
+            $locked = $module->getLockStatus($domain);
+            $ok = $module->toggleLock($domain, ! $locked);
+        } catch (\Throwable) {
+            $ok = false;
+        }
+
+        if (! $ok) {
+            return back()->with('error', __('admin.domains.lock_failed'));
+        }
+
+        return back()->with('success', $locked ? __('admin.domains.unlocked') : __('admin.domains.locked'));
+    }
+
+    public function toggleAutoRenew(Domain $domain)
+    {
+        $payment = $domain->payment_method === 'none' ? 'banktransfer' : 'none';
+        $domain->update(['payment_method' => $payment]);
+
+        return back()->with('success', $payment !== 'none' ? __('admin.domains.autorenew_on') : __('admin.domains.autorenew_off'));
+    }
+
+    public function getEppCode(Domain $domain)
+    {
+        $module = app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
+
+        if (! $module) {
+            return back()->with('error', __('admin.domains.epp_unavailable'));
+        }
+
+        try {
+            $code = $module->getEPPCode($domain);
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('epp_code', $code);
     }
 }
