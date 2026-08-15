@@ -65,7 +65,44 @@ class DomainController extends Controller
             }
         }
 
-        return view('admin.domains.show', compact('domain', 'locked'));
+        $registrarOptions = $this->registrarOptions();
+
+        return view('admin.domains.show', compact('domain', 'locked', 'registrarOptions'));
+    }
+
+    /**
+     * The registrar modules this installation has, as select options. Value and
+     * label are both the module's display name so the stored value stays the
+     * same shape the modules themselves write.
+     *
+     * @return array<string, string>
+     */
+    private function registrarOptions(): array
+    {
+        $options = [];
+
+        foreach (app(ModuleRegistry::class)->getRegistrarModules() as $key) {
+            $module = app(ModuleRegistry::class)->getRegistrarModule($key);
+            $name = $module ? $module->getModuleName() : ucfirst($key);
+            $options[$name] = $name;
+        }
+
+        ksort($options);
+
+        return $options;
+    }
+
+    public function updateRegistrar(Request $request, Domain $domain)
+    {
+        $allowed = array_map('strtolower', array_keys($this->registrarOptions()));
+
+        $request->validate([
+            'registrar' => ['required', 'string', \Illuminate\Validation\Rule::in($allowed)],
+        ]);
+
+        $domain->update(['registrar' => $request->input('registrar')]);
+
+        return back()->with('success', __('admin.domains.registrar_updated'));
     }
 
     /**

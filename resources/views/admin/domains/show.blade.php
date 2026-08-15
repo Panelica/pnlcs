@@ -56,7 +56,18 @@
         <div class="panel-heading panel-primary">{{ __('admin.domains.registration') }}</div>
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.domains.registration_date') }}</td><td style="padding:5px 0;">{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.domains.registrar') }}</td><td style="padding:5px 0;">
+                    <form method="POST" action="{{ route('admin.domains.registrar', $domain) }}" style="display:flex;gap:6px;align-items:center;">
+                        @csrf
+                        <select name="registrar" class="form-control" style="max-width:220px;font-size:13px;padding:3px 6px;">
+                            @foreach($registrarOptions as $name)
+                            <option value="{{ $name }}" {{ strtolower((string) $domain->registrar) === strtolower($name) ? 'selected' : '' }}>{{ $name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-xs">{{ __('admin.domains.save') }}</button>
+                    </form>
+                </td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.registration_date') }}</td><td style="padding:5px 0;">{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.expiry_date') }}</td><td style="padding:5px 0;{{ $domain->expiry_date?->isPast() ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $domain->expiry_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.next_due_date') }}</td><td style="padding:5px 0;">{{ $domain->next_due_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.period') }}</td><td style="padding:5px 0;">{{ $domain->registration_period }} year(s)</td></tr>

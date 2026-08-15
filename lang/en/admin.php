@@ -1047,6 +1047,8 @@ return [
     'domains.get_epp_code' => 'EPP Code',
     'domains.epp_code' => 'EPP Code',
     'domains.epp_unavailable' => 'EPP code is unavailable for this registrar.',
+    'domains.save' => 'Save',
+    'domains.registrar_updated' => 'Registrar updated.',
     'downloads.add_category' => 'Add Category',
     'downloads.add_download' => 'Add Download',
     'downloads.category' => 'Category',

@@ -1051,6 +1051,8 @@ return [
     'domains.get_epp_code' => 'Kod EPP',
     'domains.epp_code' => 'Kod EPP',
     'domains.epp_unavailable' => 'Kod EPP jest niedostępny dla tego rejestratora.',
+    'domains.save' => 'Zapisz',
+    'domains.registrar_updated' => 'Rejestrator został zmieniony.',
     'downloads.add_category' => 'Dodaj kategorię',
     'downloads.add_download' => 'Dodaj plik',
     'downloads.category' => 'Kategoria',
