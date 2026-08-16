@@ -33,7 +33,8 @@ class ActivityLog extends Model
         if ($invoiceId !== null) {
             $old = static::where('invoice_id', $invoiceId)
                 ->orderBy('id', 'desc')
-                ->skip(50)
+                ->get(['id'])
+                ->slice(50)
                 ->pluck('id');
 
             if ($old->isNotEmpty()) {
