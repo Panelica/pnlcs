@@ -8,6 +8,7 @@ use App\Http\Traits\CsvExportable;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\InvoicePdfService;
@@ -55,6 +56,45 @@ class InvoiceController extends Controller
         $invoice->load('client', 'items', 'transactions');
 
         return view('admin.invoices.show', compact('invoice'));
+    }
+
+    /**
+     * Update a single line item and recalculate the invoice totals.
+     */
+    public function updateItem(Request $request, Invoice $invoice, InvoiceItem $item): RedirectResponse
+    {
+        abort_if($item->invoice_id !== $invoice->id, 404);
+
+        $validated = $request->validate([
+            'description' => ['required', 'string', 'max:255'],
+            'qty' => ['required', 'integer', 'min:1', 'max:999999'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $taxRate = isset($validated['tax_rate']) && $validated['tax_rate'] !== ''
+            ? (float) $validated['tax_rate']
+            : 0.0;
+
+        // Give every line an explicit rate so a legacy invoice edited once
+        // stays consistent: lines without a rate would otherwise stop being
+        // taxed the moment any other line carries its own rate.
+        $fallback = (float) $invoice->tax_rate;
+        $invoice->items()->whereNull('tax_rate')->get()->each(function (InvoiceItem $legacy) use ($fallback) {
+            $legacy->update(['tax_rate' => $legacy->taxed ? $fallback : 0.0]);
+        });
+
+        $item->update([
+            'description' => $validated['description'],
+            'qty' => (int) $validated['qty'],
+            'amount' => (float) $validated['amount'],
+            'tax_rate' => $taxRate,
+            'taxed' => $taxRate > 0,
+        ]);
+
+        $this->invoiceService->recalculateTotals($invoice);
+
+        return back()->with('success', __('admin.invoices.item_updated'));
     }
 
     /**

@@ -95,23 +95,37 @@
 
         <div class="card" style="margin-bottom:15px;">
             <div class="card-header"><strong>{{ __('admin.invoices.line_items') }}</strong></div>
+            @foreach($invoice->items as $item)
+            <form id="item-form-{{ $item->id }}" method="POST" action="{{ route('admin.invoices.items.update', [$invoice, $item]) }}" style="display:none;">
+                @csrf @method('PUT')
+            </form>
+            @endforeach
+            @php
+            $vatGroups = [];
+            foreach ($invoice->items as $it) {
+                $rate = $it->tax_rate !== null ? (float) $it->tax_rate : ($it->taxed ? (float) $invoice->tax_rate : 0.0);
+                if ($rate <= 0) { continue; }
+                $tax = (float) $it->amount * (int) $it->qty * $rate / 100;
+                $key = rtrim(rtrim(number_format($rate, 2), '0'), '.');
+                $vatGroups[$key] = ($vatGroups[$key] ?? 0) + $tax;
+            }
+            krsort($vatGroups);
+            @endphp
             <table class="data-table">
                 <thead><tr>
-                    <th>{{ __('common.table.description') }}</th><th style="width:60px;text-align:center;">{{ __('common.table.qty') }}</th><th style="text-align:right;width:90px;">{{ __('common.table.price') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.tax') }}</th><th style="text-align:right;width:100px;">{{ __('common.table.amount') }}</th>
+                    <th>{{ __('common.table.description') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.qty') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.price') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.tax') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.total') }}</th>
                 </tr></thead>
                 <tbody>
                 @forelse($invoice->items as $item)
+                @php $effectiveRate = $item->tax_rate !== null ? (float) $item->tax_rate : ($item->taxed ? (float) $invoice->tax_rate : 0.0); @endphp
                 <tr>
-                    <td><span style="font-size:11px;color:#999;text-transform:uppercase;margin-right:4px;">{{ $item->type }}</span>{{ $item->description }}</td>
-                    <td style="text-align:center;">{{ (int) $item->qty }}</td>
-                    <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount) }}</td>
-                    <td style="text-align:center;">
-                        @if($item->tax_rate !== null)
-                            {{ (float) $item->tax_rate > 0 ? rtrim(rtrim(number_format((float) $item->tax_rate, 2), '0'), '.') . '%' : '—' }}
-                        @else
-                            {{ $item->taxed ? rtrim(rtrim(number_format((float) $invoice->tax_rate, 2), '0'), '.') . '%' : '—' }}
-                        @endif
+                    <td>
+                        <div style="font-size:10px;color:#999;text-transform:uppercase;">{{ $item->type }}</div>
+                        <input type="text" form="item-form-{{ $item->id }}" name="description" value="{{ $item->description }}" class="inv-inline" data-enter-submit>
                     </td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="qty" value="{{ (int) $item->qty }}" min="1" step="1" class="inv-inline inv-num" data-enter-submit></td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="amount" value="{{ number_format((float) $item->amount, 2, '.', '') }}" step="0.01" min="0" class="inv-inline inv-num" data-enter-submit></td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="tax_rate" value="{{ $effectiveRate > 0 ? rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') : '' }}" step="0.01" min="0" max="100" placeholder="0" class="inv-inline inv-num" data-enter-submit></td>
                     <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
                 </tr>
                 @empty
@@ -120,9 +134,9 @@
                 </tbody>
                 <tfoot>
                     <tr><td colspan="2" style="text-align:right;padding:8px 12px;color:#555;">{{ __('admin.invoices.subtotal') }}</td><td style="text-align:right;padding:8px 12px;font-weight:600;font-family:monospace;white-space:nowrap;">{{ money_fmt($invoice->subtotal) }}</td></tr>
-                    @if($invoice->tax > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax') }}{{ $invoice->tax_rate > 0 ? " (" . rtrim(rtrim(number_format((float)$invoice->tax_rate, 2), '0'), '.') . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;white-space:nowrap;">{{ money_fmt($invoice->tax) }}</td></tr>
-                    @endif
+                    @foreach($vatGroups as $rate => $amount)
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax') }} {{ $rate }}%</td><td style="text-align:right;padding:4px 12px;font-family:monospace;white-space:nowrap;">{{ money_fmt($amount) }}</td></tr>
+                    @endforeach
                     @if($invoice->tax2 > 0)
                     <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax_2') }}{{ $invoice->tax_rate2 > 0 ? " (" . rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.') . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;white-space:nowrap;">{{ money_fmt($invoice->tax2) }}</td></tr>
                     @endif
@@ -214,5 +228,20 @@
         </div>
     </div>
 </div>
+
+<style>
+    .inv-inline { border: 1px solid transparent; background: transparent; width: 100%; font-size: 13px; font-family: inherit; padding: 2px 4px; border-radius: 3px; color: inherit; }
+    .inv-inline:hover, .inv-inline:focus { border-color: #ccc; background: #fff; outline: none; }
+    .inv-num { text-align: right; }
+</style>
+<script>
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.matches('[data-enter-submit]')) {
+        e.preventDefault();
+        var form = document.getElementById(e.target.getAttribute('form'));
+        if (form) { form.requestSubmit(); }
+    }
+});
+</script>
 
 @endsection
