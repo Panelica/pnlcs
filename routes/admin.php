@@ -548,6 +548,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     Route::middleware('admin.permission:manage_services')->group(function () {
         Route::post('bulk/service-update', [BulkActionController::class, 'bulkServiceUpdate'])->name('bulk.service-update');
     });
+    Route::middleware('admin.permission:manage_invoices')->group(function () {
+        Route::post('bulk/invoice-action', [BulkActionController::class, 'bulkInvoiceAction'])->name('bulk.invoice-action');
+    });
 
     // Calendar — no permission required
     Route::get('calendar', [CalendarController::class, 'index'])->name('calendar');
