@@ -26,6 +26,20 @@ class ActivityLog extends Model
             'user' => $user,
             'ip_address' => request()->ip(),
         ]);
+
+        // An invoice keeps only its 50 most recent entries; older ones are
+        // pruned so the trail stays small but a long-lived invoice keeps some
+        // history to scroll back through.
+        if ($invoiceId !== null) {
+            $old = static::where('invoice_id', $invoiceId)
+                ->orderBy('id', 'desc')
+                ->skip(50)
+                ->pluck('id');
+
+            if ($old->isNotEmpty()) {
+                static::whereIn('id', $old)->delete();
+            }
+        }
     }
 
     /**
