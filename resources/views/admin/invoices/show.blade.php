@@ -104,7 +104,13 @@
     <div style="grid-column:span 2;">
 
         <div class="card" style="margin-bottom:15px;">
-            <div class="card-header"><strong>{{ __('admin.invoices.line_items') }}</strong></div>
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <strong>{{ __('admin.invoices.line_items') }}</strong>
+                <form method="POST" action="{{ route('admin.invoices.items.store', $invoice) }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-xs">+ {{ __('admin.invoices.add_item') }}</button>
+                </form>
+            </div>
             @foreach($invoice->items as $item)
             <form id="item-form-{{ $item->id }}" method="POST" action="{{ route('admin.invoices.items.update', [$invoice, $item]) }}" style="display:none;">
                 @csrf @method('PUT')
@@ -123,7 +129,7 @@
             @endphp
             <table class="data-table">
                 <thead><tr>
-                    <th>{{ __('common.table.description') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.qty') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.price') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.tax') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.total') }}</th>
+                    <th>{{ __('common.table.description') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.qty') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.price') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.tax') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.total') }}</th><th style="width:30px;"></th>
                 </tr></thead>
                 <tbody>
                 @forelse($invoice->items as $item)
@@ -137,9 +143,15 @@
                     <td><input type="number" form="item-form-{{ $item->id }}" name="amount" value="{{ number_format((float) $item->amount, 2, '.', '') }}" step="0.01" min="0" class="inv-inline inv-num" data-enter-submit></td>
                     <td><input type="number" form="item-form-{{ $item->id }}" name="tax_rate" value="{{ $effectiveRate > 0 ? rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') : '' }}" step="0.01" min="0" max="100" placeholder="0" class="inv-inline inv-num" data-enter-submit></td>
                     <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
+                    <td style="text-align:center;">
+                        <form method="POST" action="{{ route('admin.invoices.items.destroy', [$invoice, $item]) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.invoices.confirm_delete_item') }}')">
+                            @csrf @method('DELETE')
+                            <button type="submit" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:16px;padding:0 2px;" title="{{ __('admin.invoices.delete_item') }}">&times;</button>
+                        </form>
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="5" style="text-align:center;color:#999;padding:20px;">{{ __('admin.invoices.no_line_items') }}</td></tr>
+                <tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">{{ __('admin.invoices.no_line_items') }}</td></tr>
                 @endforelse
                 </tbody>
                 <tfoot>

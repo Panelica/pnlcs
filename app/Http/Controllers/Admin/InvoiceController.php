@@ -111,6 +111,49 @@ class InvoiceController extends Controller
     }
 
     /**
+     * Add a blank line item to the invoice.
+     */
+    public function storeItem(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $this->invoiceService->addLineItem($invoice, [
+            'type' => 'Other',
+            'description' => (string) $request->input('description', ''),
+            'qty' => 1,
+            'amount' => 0,
+            'tax_rate' => 0,
+        ]);
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} line item added",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
+        return back()->with('success', __('admin.invoices.item_added'));
+    }
+
+    /**
+     * Remove a line item and recalculate the invoice totals.
+     */
+    public function destroyItem(Request $request, Invoice $invoice, InvoiceItem $item): RedirectResponse
+    {
+        abort_if($item->invoice_id !== $invoice->id, 404);
+
+        $item->delete();
+        $this->invoiceService->recalculateTotals($invoice);
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} line item removed",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
+        return back()->with('success', __('admin.invoices.item_removed'));
+    }
+
+    /**
      * Email the invoice to the client.
      */
     public function sendInvoice(Invoice $invoice): RedirectResponse
