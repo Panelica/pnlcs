@@ -110,6 +110,10 @@ class InvoiceService
 
     public function addLineItem(Invoice $invoice, array $itemData): InvoiceItem
     {
+        $taxRate = array_key_exists('tax_rate', $itemData) && $itemData['tax_rate'] !== null
+            ? (float) $itemData['tax_rate']
+            : null;
+
         $item = InvoiceItem::create([
             'invoice_id' => $invoice->id,
             'client_id' => $invoice->client_id,
@@ -118,7 +122,8 @@ class InvoiceService
             'description' => $itemData['description'] ?? '',
             'qty' => $itemData['qty'] ?? 1,
             'amount' => $itemData['amount'] ?? 0,
-            'taxed' => $itemData['taxed'] ?? true,
+            'taxed' => $itemData['taxed'] ?? ($taxRate === null ? true : $taxRate > 0),
+            'tax_rate' => $taxRate,
             'due_date' => $itemData['due_date'] ?? null,
         ]);
 
@@ -139,22 +144,37 @@ class InvoiceService
         // column pass amount only and get qty 1, so nothing changes for them.
         $subtotal = $invoice->items->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
 
-        $taxableAmount = $invoice->items
-            ->where('taxed', true)
-            ->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
+        // Per-item VAT: when a line carries its own rate (the admin invoice
+        // builder), tax is the sum of each line's amount × its own percentage.
+        // Legacy lines without a rate fall back to the invoice-level rate.
+        $perItem = $invoice->items->contains(fn ($item) => $item->tax_rate !== null);
 
-        // Use stored tax rates if available, otherwise calculate from rules
-        $taxRate = (float) $invoice->tax_rate;
-        $taxRate2 = (float) $invoice->tax_rate2;
+        if ($perItem) {
+            $taxAmount = round($invoice->items->sum(
+                fn ($item) => (float) $item->amount * (int) $item->qty * ((float) ($item->tax_rate ?? 0) / 100)
+            ), 2);
+            $taxAmount2 = 0.0;
 
-        if ($taxRate === 0.0 && $taxRate2 === 0.0 && ! $invoice->client->tax_exempt) {
-            $taxData = $this->calculateTax($taxableAmount, $invoice->client_id);
-            $taxRate = $taxData['tax_rate'];
-            $taxRate2 = $taxData['tax_rate2'];
+            $rates = $invoice->items->pluck('tax_rate')->filter(fn ($r) => $r !== null && (float) $r > 0)->unique()->values();
+            $taxRate = $rates->count() === 1 ? (float) $rates->first() : 0.0;
+            $taxRate2 = 0.0;
+        } else {
+            $taxableAmount = $invoice->items
+                ->where('taxed', true)
+                ->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
+
+            $taxRate = (float) $invoice->tax_rate;
+            $taxRate2 = (float) $invoice->tax_rate2;
+
+            if ($taxRate === 0.0 && $taxRate2 === 0.0 && ! $invoice->client->tax_exempt) {
+                $taxData = $this->calculateTax($taxableAmount, $invoice->client_id);
+                $taxRate = $taxData['tax_rate'];
+                $taxRate2 = $taxData['tax_rate2'];
+            }
+
+            $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
+            $taxAmount2 = $taxRate2 > 0 ? round($taxableAmount * ($taxRate2 / 100), 2) : 0;
         }
-
-        $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
-        $taxAmount2 = $taxRate2 > 0 ? round($taxableAmount * ($taxRate2 / 100), 2) : 0;
 
         $credit = (float) $invoice->credit;
         $total = max(0, $subtotal + $taxAmount + $taxAmount2 - $credit);

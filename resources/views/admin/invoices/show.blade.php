@@ -97,7 +97,7 @@
             <div class="card-header"><strong>{{ __('admin.invoices.line_items') }}</strong></div>
             <table class="data-table">
                 <thead><tr>
-                    <th>{{ __('common.table.description') }}</th><th style="width:60px;text-align:center;">{{ __('common.table.qty') }}</th><th style="text-align:right;width:90px;">{{ __('common.table.price') }}</th><th style="width:60px;text-align:center;">{{ __('admin.invoices.taxed') }}</th><th style="text-align:right;width:100px;">{{ __('common.table.amount') }}</th>
+                    <th>{{ __('common.table.description') }}</th><th style="width:60px;text-align:center;">{{ __('common.table.qty') }}</th><th style="text-align:right;width:90px;">{{ __('common.table.price') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.tax') }}</th><th style="text-align:right;width:100px;">{{ __('common.table.amount') }}</th>
                 </tr></thead>
                 <tbody>
                 @forelse($invoice->items as $item)
@@ -105,7 +105,13 @@
                     <td><span style="font-size:11px;color:#999;text-transform:uppercase;margin-right:4px;">{{ $item->type }}</span>{{ $item->description }}</td>
                     <td style="text-align:center;">{{ (int) $item->qty }}</td>
                     <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount) }}</td>
-                    <td style="text-align:center;">{!! $item->taxed ? '&#10003;' : '&mdash;' !!}</td>
+                    <td style="text-align:center;">
+                        @if($item->tax_rate !== null)
+                            {{ (float) $item->tax_rate > 0 ? rtrim(rtrim(number_format((float) $item->tax_rate, 2), '0'), '.') . '%' : '—' }}
+                        @else
+                            {{ $item->taxed ? rtrim(rtrim(number_format((float) $invoice->tax_rate, 2), '0'), '.') . '%' : '—' }}
+                        @endif
+                    </td>
                     <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
                 </tr>
                 @empty

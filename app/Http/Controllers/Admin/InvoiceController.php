@@ -132,7 +132,7 @@ class InvoiceController extends Controller
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.qty' => ['nullable', 'integer', 'min:1', 'max:999999'],
             'items.*.amount' => ['required', 'numeric', 'min:0'],
-            'items.*.taxed' => ['nullable', 'boolean'],
+            'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         $client = Client::findOrFail($validated['client_id']);
@@ -142,10 +142,8 @@ class InvoiceController extends Controller
             'description' => $item['description'],
             'qty' => (int) ($item['qty'] ?? 1),
             'amount' => (float) $item['amount'],
-            // Absent means the box was unticked: a browser does not submit
-            // a checkbox it was left off, and reading that as taxed billed the
-            // customer for lines the admin had excluded.
-            'taxed' => (bool) ($item['taxed'] ?? false),
+            // Per-item VAT percentage; an empty field means untaxed.
+            'tax_rate' => isset($item['tax_rate']) && $item['tax_rate'] !== '' ? (float) $item['tax_rate'] : 0.0,
         ], $validated['items']);
 
         $invoice = $this->invoiceService->createInvoice($client, $items, [
