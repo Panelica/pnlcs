@@ -18,6 +18,16 @@
             <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.cancel') }}</button>
         </form>
         @endif
+        <form method="POST" action="{{ route('admin.invoices.send', $invoice) }}" style="display:inline;">
+            @csrf
+            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.invoices.send') }}</button>
+        </form>
+        @if(in_array($st, ['unpaid', 'overdue', 'partially_paid', 'payment_pending']))
+        <form method="POST" action="{{ route('admin.invoices.remind', $invoice) }}" style="display:inline;">
+            @csrf
+            <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.invoices.remind') }}</button>
+        </form>
+        @endif
         <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="btn btn-info btn-sm">{{ __('admin.invoices.download_pdf_btn') }}</a>
         <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.invoices.back') }}</a>
     </div>

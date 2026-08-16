@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
+use App\Mail\InvoiceCreatedMail;
+use App\Mail\PaymentReminderMail;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
@@ -17,6 +19,7 @@ use App\Services\Module\ModuleRegistry;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -95,6 +98,35 @@ class InvoiceController extends Controller
         $this->invoiceService->recalculateTotals($invoice);
 
         return back()->with('success', __('admin.invoices.item_updated'));
+    }
+
+    /**
+     * Email the invoice to the client.
+     */
+    public function sendInvoice(Invoice $invoice): RedirectResponse
+    {
+        abort_if(! $invoice->client?->email, 422, 'Client has no email address.');
+
+        Mail::to($invoice->client->email)->queue(new InvoiceCreatedMail($invoice));
+
+        return back()->with('success', __('admin.invoices.email_sent'));
+    }
+
+    /**
+     * Send a payment reminder for this invoice (positive = due in N days,
+     * negative = N days overdue).
+     */
+    public function sendReminder(Invoice $invoice): RedirectResponse
+    {
+        abort_if(! $invoice->client?->email, 422, 'Client has no email address.');
+
+        $daysOffset = $invoice->due_date
+            ? (int) now()->startOfDay()->diffInDays($invoice->due_date->startOfDay(), false)
+            : 0;
+
+        Mail::to($invoice->client->email)->queue(new PaymentReminderMail($invoice, $daysOffset));
+
+        return back()->with('success', __('admin.invoices.reminder_sent'));
     }
 
     /**

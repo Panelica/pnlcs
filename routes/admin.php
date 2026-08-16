@@ -121,6 +121,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
         Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
         Route::post('invoices/{invoice}/refund', [InvoiceController::class, 'refund'])->name('invoices.refund');
+        Route::post('invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send');
+        Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])->name('invoices.remind');
 
         // Offline payment notifications (bank transfer review queue)
         Route::get('payment-notifications', [PaymentNotificationController::class, 'index'])->name('payment-notifications.index');
