@@ -27,7 +27,7 @@ class LogActivityListener
     public function handle(object $event): void
     {
         $className = class_basename($event);
-        [$details, $clientId] = $this->describe($event);
+        [$details, $clientId, $invoiceId] = $this->describe($event);
 
         Log::info("PNLCS Event: {$className} - {$details}");
 
@@ -35,25 +35,31 @@ class LogActivityListener
             return;
         }
 
-        ActivityLog::log($details, 'System', $clientId);
+        // Manual actions carry the admin; background jobs (console/queue) have
+        // no authenticated admin, so they fall back to "System".
+        $user = auth('admin')->check()
+            ? (auth('admin')->user()?->full_name ?: 'Admin')
+            : 'System';
+
+        ActivityLog::log($details, $user, $clientId, $invoiceId);
     }
 
     /**
-     * @return array{0: ?string, 1: ?int}
+     * @return array{0: ?string, 1: ?int, 2: ?int}
      */
     private function describe(object $event): array
     {
         return match (true) {
-            $event instanceof ClientCreated => ["Client #{$event->client->id} created", $event->client->id],
-            $event instanceof OrderPlaced => ["Order #{$event->order->id} placed", $event->order->client_id],
-            $event instanceof InvoiceCreated => ["Invoice #{$event->invoice->id} created", $event->invoice->client_id],
-            $event instanceof InvoicePaid => ["Invoice #{$event->invoice->id} paid", $event->invoice->client_id],
-            $event instanceof TicketOpened => ["Ticket #{$event->ticket->tid} opened", $event->ticket->client_id],
-            $event instanceof TicketReplied => ["Ticket #{$event->ticket->tid} replied", $event->ticket->client_id],
-            $event instanceof ServiceActivated => ["Service #{$event->service->id} activated", $event->service->client_id],
-            $event instanceof ServiceSuspended => ["Service #{$event->service->id} suspended", $event->service->client_id],
-            $event instanceof ServiceTerminated => ["Service #{$event->service->id} terminated", $event->service->client_id],
-            default => [null, null],
+            $event instanceof ClientCreated => ["Client #{$event->client->id} created", $event->client->id, null],
+            $event instanceof OrderPlaced => ["Order #{$event->order->id} placed", $event->order->client_id, null],
+            $event instanceof InvoiceCreated => ["Invoice #{$event->invoice->id} created", $event->invoice->client_id, $event->invoice->id],
+            $event instanceof InvoicePaid => ["Invoice #{$event->invoice->id} paid", $event->invoice->client_id, $event->invoice->id],
+            $event instanceof TicketOpened => ["Ticket #{$event->ticket->tid} opened", $event->ticket->client_id, null],
+            $event instanceof TicketReplied => ["Ticket #{$event->ticket->tid} replied", $event->ticket->client_id, null],
+            $event instanceof ServiceActivated => ["Service #{$event->service->id} activated", $event->service->client_id, null],
+            $event instanceof ServiceSuspended => ["Service #{$event->service->id} suspended", $event->service->client_id, null],
+            $event instanceof ServiceTerminated => ["Service #{$event->service->id} terminated", $event->service->client_id, null],
+            default => [null, null, null],
         };
     }
 }

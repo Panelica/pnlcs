@@ -9,22 +9,31 @@ class ActivityLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['date', 'client_id', 'description', 'user', 'ip_address'];
+    protected $fillable = ['date', 'client_id', 'invoice_id', 'description', 'user', 'ip_address'];
 
     protected function casts(): array
     {
         return ['date' => 'datetime'];
     }
 
-    public static function log(string $description, ?string $user = null, ?int $clientId = null): void
+    public static function log(string $description, ?string $user = null, ?int $clientId = null, ?int $invoiceId = null): void
     {
         static::create([
             'date' => now(),
             'client_id' => $clientId,
+            'invoice_id' => $invoiceId,
             'description' => $description,
             'user' => $user,
             'ip_address' => request()->ip(),
         ]);
+    }
+
+    /**
+     * Everything recorded about one invoice.
+     */
+    public function scopeForInvoice($query, $invoice)
+    {
+        return $query->where('invoice_id', $invoice->id)->orderBy('date', 'desc');
     }
 
     /**

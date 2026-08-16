@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
 use App\Mail\InvoiceCreatedMail;
 use App\Mail\PaymentReminderMail;
+use App\Models\ActivityLog;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
@@ -58,7 +59,9 @@ class InvoiceController extends Controller
     {
         $invoice->load('client', 'items', 'transactions');
 
-        return view('admin.invoices.show', compact('invoice'));
+        $activityLog = ActivityLog::forInvoice($invoice)->limit(50)->get();
+
+        return view('admin.invoices.show', compact('invoice', 'activityLog'));
     }
 
     /**
@@ -97,6 +100,13 @@ class InvoiceController extends Controller
 
         $this->invoiceService->recalculateTotals($invoice);
 
+        ActivityLog::log(
+            "Invoice #{$invoice->id} line item updated",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
         return back()->with('success', __('admin.invoices.item_updated'));
     }
 
@@ -108,6 +118,13 @@ class InvoiceController extends Controller
         abort_if(! $invoice->client?->email, 422, 'Client has no email address.');
 
         Mail::to($invoice->client->email)->queue(new InvoiceCreatedMail($invoice));
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} sent by email",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
 
         return back()->with('success', __('admin.invoices.email_sent'));
     }
@@ -126,7 +143,19 @@ class InvoiceController extends Controller
 
         Mail::to($invoice->client->email)->queue(new PaymentReminderMail($invoice, $daysOffset));
 
+        ActivityLog::log(
+            "Invoice #{$invoice->id} payment reminder sent",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
         return back()->with('success', __('admin.invoices.reminder_sent'));
+    }
+
+    private function adminName(): string
+    {
+        return auth('admin')->user()?->full_name ?? 'Admin';
     }
 
     /**

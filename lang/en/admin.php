@@ -1246,6 +1246,8 @@ return [
     'invoices.remind' => 'Remind',
     'invoices.email_sent' => 'Invoice sent by email.',
     'invoices.reminder_sent' => 'Payment reminder sent.',
+    'invoices.activity_log' => 'Activity Log',
+    'invoices.no_activity' => 'No activity.',
     'invoices.transaction_id' => 'Transaction ID (optional)',
     'knowledge_base' => 'Knowledge Base',
     'knowledge_base.add_article' => 'Add Article',

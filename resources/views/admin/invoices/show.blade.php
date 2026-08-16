@@ -236,6 +236,20 @@
                 @endif
             </div>
         </div>
+
+        <div class="panel">
+            <div class="panel-heading panel-primary">{{ __('admin.invoices.activity_log') }}</div>
+            <div class="panel-body" style="max-height:280px;overflow-y:auto;padding:0;">
+                @forelse($activityLog as $entry)
+                <div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">
+                    <div style="font-size:12px;color:#333;">{{ $entry->description }}</div>
+                    <div style="font-size:11px;color:#999;margin-top:2px;">{{ $entry->date->timezone(display_tz())->format(datetime_fmt()) }} &middot; {{ $entry->user ?: 'System' }}</div>
+                </div>
+                @empty
+                <div style="padding:10px 12px;color:#999;font-size:12px;">{{ __('admin.invoices.no_activity') }}</div>
+                @endforelse
+            </div>
+        </div>
     </div>
 </div>
 

@@ -1250,6 +1250,8 @@ return [
     'invoices.remind' => 'Przypomnij',
     'invoices.email_sent' => 'Faktura została wysłana e-mailem.',
     'invoices.reminder_sent' => 'Przypomnienie o zapłacie zostało wysłane.',
+    'invoices.activity_log' => 'Dziennik zdarzeń',
+    'invoices.no_activity' => 'Brak zdarzeń.',
     'invoices.transaction_id' => 'ID transakcji (opcjonalnie)',
     'knowledge_base' => 'Baza wiedzy',
     'knowledge_base.add_article' => 'Dodaj artykuł',
