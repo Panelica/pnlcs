@@ -2512,6 +2512,7 @@ return [
     'custom_fields.show_on_order' => 'Show on order',
     'custom_fields.sort_order' => 'Sort Order',
     'custom_fields.title' => 'Custom Client Fields',
+    'custom_fields.type_col' => 'Type',
     'custom_fields.type_checkbox' => 'Checkbox',
     'custom_fields.type_date' => 'Date',
     'custom_fields.type_number' => 'Number',

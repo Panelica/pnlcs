@@ -2516,6 +2516,7 @@ return [
     'custom_fields.show_on_order' => 'Pokaż na zamówieniu',
     'custom_fields.sort_order' => 'Kolejność sortowania',
     'custom_fields.title' => 'Pola niestandardowe klientów',
+    'custom_fields.type_col' => 'Typ',
     'custom_fields.type_checkbox' => 'Pole wyboru',
     'custom_fields.type_date' => 'Data',
     'custom_fields.type_number' => 'Liczba',
