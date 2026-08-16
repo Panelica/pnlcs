@@ -50,8 +50,8 @@
                                 <th style="padding:6px 8px;text-align:left;font-weight:600;color:#555;">{{ __('common.table.description') }}</th>
                                 <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:70px;">{{ __('common.table.qty') }}</th>
                                 <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:70px;">{{ __('common.table.tax') }}</th>
-                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:110px;">{{ __('common.table.amount') }}</th>
-                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:100px;">{{ __('common.table.total') }}</th>
+                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:110px;">{{ __('admin.invoices.price') }}</th>
+                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:100px;">{{ __('admin.invoices.total') }}</th>
                                 <th style="width:30px;"></th>
                             </tr>
                         </thead>
@@ -162,10 +162,12 @@
                 <div class="card-body">
                     <table style="width:100%;font-size:13px;border-collapse:collapse;">
                         <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.net') }}</td><td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + subtotal.toFixed(2) + currencySuffix">0.00</td></tr>
-                        <tr x-show="taxAmount > 0">
-                            <td style="padding:4px 0;color:#777;">{{ __('admin.invoices.tax') }}</td>
-                            <td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + taxAmount.toFixed(2) + currencySuffix">0.00</td>
-                        </tr>
+                        <template x-for="g in vatBreakdown" :key="g.rate">
+                            <tr>
+                                <td style="padding:4px 0;color:#777;" x-text="vatLabel + ' ' + fmtRate(g.rate) + '%'"></td>
+                                <td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + g.amount.toFixed(2) + currencySuffix">0.00</td>
+                            </tr>
+                        </template>
                         <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td style="padding:6px 0;font-weight:700;">{{ __('admin.invoices.gross') }}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-family:monospace;font-size:15px;" x-text="currencyPrefix + grandTotal.toFixed(2) + currencySuffix">0.00</td></tr>
                     </table>
                     <p style="font-size:11px;color:#999;margin-top:6px;">{{ __('admin.invoices.taxes_note') }}</p>
@@ -188,9 +190,11 @@ function invoiceBuilder() {
         currencySuffix: @json($defaultCurrency?->suffix ?? ''),
         taxRate: 0,
         taxLabel: '',
+        vatLabel: @json(__('admin.invoices.tax')),
         perPage: 6,
         subtotal: 0,
         taxAmount: 0,
+        vatBreakdown: [],
         grandTotal: 0,
         init() {
             const sel = this.$el.querySelector('select[name="client_id"]');
@@ -262,9 +266,22 @@ function invoiceBuilder() {
             this.recalculate();
         },
         lineTotal(item) { return (parseFloat(item.amount) || 0) * (parseInt(item.qty, 10) || 1); },
+        fmtRate(r) { return String(Math.round(r * 100) / 100); },
         recalculate() {
             this.subtotal = this.items.reduce((s, i) => s + this.lineTotal(i), 0);
-            this.taxAmount = Math.round(this.items.reduce((s, i) => s + (this.lineTotal(i) * (parseFloat(i.tax_rate) || 0) / 100), 0) * 100) / 100;
+            const groups = {};
+            this.items.forEach(i => {
+                const rate = parseFloat(i.tax_rate) || 0;
+                const tax = this.lineTotal(i) * rate / 100;
+                if (tax !== 0) {
+                    groups[rate] = (groups[rate] || 0) + tax;
+                }
+            });
+            this.vatBreakdown = Object.keys(groups).map(rate => ({
+                rate: parseFloat(rate),
+                amount: Math.round(groups[rate] * 100) / 100
+            })).sort((a, b) => b.rate - a.rate);
+            this.taxAmount = Math.round(this.vatBreakdown.reduce((s, g) => s + g.amount, 0) * 100) / 100;
             this.grandTotal = Math.round((this.subtotal + this.taxAmount) * 100) / 100;
         }
     };

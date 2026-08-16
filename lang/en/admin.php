@@ -1240,6 +1240,7 @@ return [
     'invoices.taxed' => 'Taxed',
     'invoices.taxes_note' => 'Taxes calculated on save based on client location.',
     'invoices.total' => 'Total',
+    'invoices.price' => 'Price',
     'invoices.transaction_id' => 'Transaction ID (optional)',
     'knowledge_base' => 'Knowledge Base',
     'knowledge_base.add_article' => 'Add Article',

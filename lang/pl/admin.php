@@ -1244,6 +1244,7 @@ return [
     'invoices.taxed' => 'Opodatkowane',
     'invoices.taxes_note' => 'Podatki obliczane przy zapisie na podstawie lokalizacji klienta.',
     'invoices.total' => 'Suma',
+    'invoices.price' => 'Cena',
     'invoices.transaction_id' => 'ID transakcji (opcjonalnie)',
     'knowledge_base' => 'Baza wiedzy',
     'knowledge_base.add_article' => 'Dodaj artykuł',
