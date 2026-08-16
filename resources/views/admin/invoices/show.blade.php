@@ -239,7 +239,7 @@
 
         <div class="panel">
             <div class="panel-heading panel-primary">{{ __('admin.invoices.activity_log') }}</div>
-            <div class="panel-body" style="max-height:280px;overflow-y:auto;padding:0;">
+            <div class="panel-body" style="max-height:190px;overflow-y:auto;padding:0;">
                 @forelse($activityLog as $entry)
                 <div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">
                     <div style="font-size:12px;color:#333;">{{ $entry->description }}</div>
