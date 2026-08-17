@@ -287,3 +287,105 @@ it('answers a slow install with a sentence, not a server error', function () use
     expect($r['success'])->toBeFalse()
         ->and($r['message'])->toContain('still running');
 });
+
+/*
+ * Serving an app on the customer's own domain.
+ *
+ * Installing was only half the job: an app nobody can reach on their own
+ * address is not what they bought. Both sides of the link are fenced here and
+ * again by the panel - our key is operator-scoped and could otherwise point
+ * anybody's domain at anybody's app.
+ */
+
+function fakeLinkApi(array $containers, array $domains, array $linked = [], bool $linkOk = true): void
+{
+    Http::fake(function ($request) use ($containers, $domains, $linked, $linkOk) {
+        $url = $request->url();
+        $m = $request->method();
+        if (str_contains($url, '/docker/domains/linked')) {
+            return Http::response(['data' => $linked], 200);
+        }
+        if (str_contains($url, '/docker/domains/link') && $m === 'POST') {
+            return $linkOk
+                ? Http::response(['data' => ['domain' => 'own.test']], 200)
+                : Http::response(['message' => 'apiErrors.docker.containerNotRunning'], 400);
+        }
+        if (str_contains($url, '/docker/domains/unlink')) {
+            return Http::response(['data' => []], 200);
+        }
+        if (str_contains($url, '/accounts/') && str_contains($url, '/domains')) {
+            return Http::response(['data' => $domains], 200);
+        }
+        if (str_contains($url, '/docker/containers') && $m === 'GET') {
+            return Http::response(['data' => ['containers' => $containers]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+}
+
+it('points one of the account\'s domains at one of its apps', function () use ($MINE) {
+    fakeLinkApi([$MINE], [['id' => 'dom-own', 'domain_name' => 'own.test']]);
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->linkContainerDomain($s, 'c-mine', 'dom-own')['success'])->toBeTrue();
+    Http::assertSent(fn ($rq) => str_contains($rq->url(), '/docker/domains/link')
+        && ($rq->data()['owner_user_id'] ?? null) === 'acct-1'
+        && ($rq->data()['container_id'] ?? null) === 'c-mine');
+});
+
+it('refuses to point a domain at somebody else\'s app', function () use ($MINE, $THEIRS) {
+    fakeLinkApi([$MINE, $THEIRS], [['id' => 'dom-own', 'domain_name' => 'own.test']]);
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->linkContainerDomain($s, 'c-theirs', 'dom-own')['success'])->toBeFalse();
+    Http::assertNotSent(fn ($rq) => str_contains($rq->url(), '/docker/domains/link') && $rq->method() === 'POST');
+});
+
+it('refuses to point somebody else\'s domain at an app', function () use ($MINE) {
+    fakeLinkApi([$MINE], [['id' => 'dom-own', 'domain_name' => 'own.test']]);
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->linkContainerDomain($s, 'c-mine', 'dom-someone-else')['success'])->toBeFalse();
+    Http::assertNotSent(fn ($rq) => str_contains($rq->url(), '/docker/domains/link') && $rq->method() === 'POST');
+});
+
+it('explains that an app has to be running before a domain can point at it', function () use ($MINE) {
+    fakeLinkApi([$MINE], [['id' => 'dom-own', 'domain_name' => 'own.test']], [], linkOk: false);
+    [$u, $s] = ctService(ctServer());
+
+    // The panel refuses this; the customer needs a sentence, not an error code.
+    expect((new PanelicaModule)->linkContainerDomain($s, 'c-mine', 'dom-own')['message'])
+        ->toContain('Start the app first');
+});
+
+it('lists only this account\'s domain links', function () use ($MINE) {
+    fakeLinkApi([$MINE], [['id' => 'dom-own', 'domain_name' => 'own.test']], [
+        ['domain_id' => 'dom-own', 'container_id' => 'c-mine', 'container_name' => 'acct1-wordpress'],
+        ['domain_id' => 'dom-someone-else', 'container_id' => 'c-theirs', 'container_name' => 'other'],
+    ]);
+    [$u, $s] = ctService(ctServer());
+
+    $links = (new PanelicaModule)->containerDomainLinks($s);
+    expect($links)->toHaveKey('dom-own')->not->toHaveKey('dom-someone-else');
+});
+
+it('offers the domain controls on the apps page', function () use ($MINE) {
+    fakeLinkApi([$MINE], [['id' => 'dom-own', 'domain_name' => 'own.test']]);
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()->assertSee('own.test');
+});
+
+it('keeps the domain routes away from other clients', function () use ($MINE) {
+    fakeLinkApi([$MINE], [['id' => 'dom-own', 'domain_name' => 'own.test']]);
+    [$owner, $s] = ctService(ctServer());
+
+    $intruder = User::factory()->create();
+    $intruder->clients()->attach(Client::factory()->create()->id);
+    $this->actingAs($intruder)->post(route('client.services.containers.link', $s), [
+        'container_id' => 'c-mine', 'domain_id' => 'dom-own',
+    ])->assertForbidden();
+    $this->actingAs($intruder)->post(route('client.services.containers.unlink', $s), ['domain_id' => 'dom-own'])->assertForbidden();
+});

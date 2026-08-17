@@ -776,8 +776,46 @@ class ServiceController extends Controller
         // Our own images, one query for the page. The panel's logo_url is not
         // used: most apps have none and half the rest are dead links.
         $logos = \App\Models\DockerApp::urlMap();
+        // Which domains this account has, and which are already serving an app -
+        // installing something is only half the job if it cannot be reached on
+        // the customer's own address.
+        $domains = method_exists($module, 'accountDomains') ? $module->accountDomains($service) : [];
+        $links = method_exists($module, 'containerDomainLinks') ? $module->containerDomainLinks($service) : [];
 
-        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos'));
+        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links'));
+    }
+
+    /** Point one of the account's domains at one of its apps. */
+    public function linkContainerDomain(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'containers');
+        if (! $module || ! method_exists($module, 'linkContainerDomain')) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'container_id' => ['required', 'string', 'max:100'],
+            'domain_id' => ['required', 'string', 'max:100'],
+        ]);
+
+        $r = $module->linkContainerDomain($service, $data['container_id'], $data['domain_id']);
+
+        return back()->with($r['success'] ? 'success' : 'error', $r['message']);
+    }
+
+    /** Give a domain back to normal hosting. */
+    public function unlinkContainerDomain(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'containers');
+        if (! $module || ! method_exists($module, 'unlinkContainerDomain')) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate(['domain_id' => ['required', 'string', 'max:100']]);
+
+        $r = $module->unlinkContainerDomain($service, $data['domain_id']);
+
+        return back()->with($r['success'] ? 'success' : 'error', $r['message']);
     }
 
     /**

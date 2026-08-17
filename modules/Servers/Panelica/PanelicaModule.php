@@ -1249,6 +1249,103 @@ class PanelicaModule extends AbstractServerModule
         return $this->buildResult(true, 'App installed.');
     }
 
+    /**
+     * Serve one of the account's own apps on one of its own domains.
+     *
+     * Both sides are checked here and again by the panel, which refuses to link
+     * across accounts when the caller names the account - our key is
+     * operator-scoped and would otherwise be allowed to point anybody's domain
+     * anywhere.
+     */
+    public function linkContainerDomain(Service $service, string $containerId, string $domainId): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! $this->ownsContainer($service, $containerId)) {
+            return $this->buildResult(false, 'That app does not belong to this service.');
+        }
+        if (! $this->ownsDomain($service, $domainId)) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+
+        $resp = $this->post($server, '/v1/docker/domains/link', [
+            'domain_id' => $domainId,
+            'container_id' => $containerId,
+            'owner_user_id' => $accountId,
+        ]);
+        if (! $resp->successful()) {
+            // The panel refuses to point a domain at an app that is not up,
+            // which is the most common reason this fails.
+            $msg = $this->apiMessage($resp, 'Could not point the domain at this app.');
+            if (str_contains(strtolower($resp->body()), 'notrunning')) {
+                $msg = 'Start the app first - a domain cannot be pointed at an app that is not running.';
+            }
+
+            return $this->buildResult(false, $msg);
+        }
+
+        return $this->buildResult(true, 'Domain is now serving this app.');
+    }
+
+    /** Stop serving an app on a domain and give the domain back to normal hosting. */
+    public function unlinkContainerDomain(Service $service, string $domainId): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        if (! $this->ownsDomain($service, $domainId)) {
+            return $this->buildResult(false, 'That domain does not belong to this service.');
+        }
+
+        $resp = $this->post($server, '/v1/docker/domains/unlink', [
+            'domain_id' => $domainId,
+            'owner_user_id' => $accountId,
+        ]);
+
+        return $resp->successful()
+            ? $this->buildResult(true, 'Domain no longer serves this app.')
+            : $this->buildResult(false, $this->apiMessage($resp, 'Could not unlink the domain.'));
+    }
+
+    /** Which of the account's domains are already serving an app. */
+    public function containerDomainLinks(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return [];
+        }
+        $resp = $this->get($server, '/v1/docker/domains/linked?owner_user_id='.urlencode($accountId));
+        if (! $resp->successful()) {
+            return [];
+        }
+        $own = array_keys($this->accountDomains($service));
+        $out = [];
+        foreach (($resp->json('data') ?? $resp->json('data.mappings') ?? []) as $m) {
+            $domainId = (string) ($m['domain_id'] ?? '');
+            if ($domainId === '' || ($own !== [] && ! in_array($domainId, $own, true))) {
+                continue;
+            }
+            $out[$domainId] = [
+                'container_id' => (string) ($m['container_id'] ?? ''),
+                'container_name' => (string) ($m['container_name'] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    private function ownsDomain(Service $service, string $domainId): bool
+    {
+        // accountDomains() is an id => name map, not a list of rows.
+        return $domainId !== '' && array_key_exists($domainId, $this->accountDomains($service));
+    }
+
     public function containerAction(Service $service, string $id, string $action): array
     {
         if (! in_array($action, ['start', 'stop', 'restart'], true)) {

@@ -85,6 +85,19 @@
     .ct-act{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);color:var(--muted);cursor:pointer;background:transparent}
     .ct-act:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
     .ct-act.danger:hover{background:rgba(239,68,68,.1);color:#dc2626;border-color:transparent}
+    .ct-spin{animation:ct-rot 1s linear infinite;display:inline-block}
+    @keyframes ct-rot{to{transform:rotate(360deg)}}
+    .ct-installnote{flex-basis:100%;font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.45}
+    .ct-warn{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(245,158,11,.14);color:#b45309}
+    .ct-hint{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.4;max-width:230px}
+    .ct-dom{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px}
+    .ct-dom a{color:var(--primary);text-decoration:none;font-weight:600}
+    .ct-dom a:hover{text-decoration:underline}
+    .ct-domsel{font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);max-width:150px}
+    .ct-domgo{font-size:11px;font-weight:700;padding:3px 9px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer}
+    .ct-domgo:hover{border-color:var(--primary);color:var(--primary)}
+    .ct-domx{background:none;border:0;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
+    .ct-domx:hover{color:#dc2626}
     .ct-port{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:1px 7px;border-radius:6px;margin-right:4px}
 </style>
 
@@ -106,7 +119,7 @@
     @if(empty($templates))
         <div class="ct-empty">{{ __('client.hosting.containers.no_apps') }}</div>
     @else
-    <form method="POST" action="{{ route('client.services.containers.store', $service) }}">
+    <form method="POST" action="{{ route('client.services.containers.store', $service) }}" id="ct-installform" onsubmit="return ctInstalling()">
         @csrf
         <input type="hidden" name="slug" id="ct-slug" value="">
 
@@ -193,8 +206,9 @@
                 <label class="ct-lbl">{{ __('client.hosting.containers.name') }}</label>
                 <input type="text" name="name" id="ct-name" maxlength="40" pattern="[a-zA-Z0-9-]*" class="ct-inp" placeholder="{{ __('client.hosting.containers.name_ph') }}">
             </div>
-            <button type="submit" class="ct-btn" id="ct-submit" disabled><i class="ri-download-2-line"></i>{{ __('client.hosting.containers.install') }}</button>
+            <button type="submit" class="ct-btn" id="ct-submit" disabled><i class="ri-download-2-line"></i><span id="ct-submit-t">{{ __('client.hosting.containers.install') }}</span></button>
             <button type="button" class="ct-cancel" onclick="ctCancel()">{{ __('client.hosting.containers.cancel') }}</button>
+            <div class="ct-installnote" id="ct-installnote" hidden>{{ __('client.hosting.containers.installing_note') }}</div>
         </div>
         @if($resources['memory_mb'] > 0 || $resources['cpu_percent'] > 0)
         <div class="ct-note info"><i class="ri-scales-3-line"></i>{{ __('client.hosting.containers.plan_ceiling', [
@@ -227,9 +241,52 @@
         <tbody>
             @foreach($containers as $c)
             <tr>
-                <td><div class="ct-name">{{ $c['name'] }}</div><div class="ct-img">{{ $c['image'] }}</div></td>
+                <td>
+                    <div class="ct-name">{{ $c['name'] }}</div>
+                    <div class="ct-img">{{ $c['image'] }}</div>
+                    @php
+                        // Installing an app is only half the job: it has to be
+                        // reachable on the customer's own address.
+                        // $domains is an id => name map from the panel.
+                        $linkedId = null;
+                        foreach ($links as $dId => $l) {
+                            if (($l['container_id'] ?? '') === $c['id'] && isset($domains[$dId])) { $linkedId = $dId; break; }
+                        }
+                        $freeDomains = array_diff_key($domains, $links);
+                    @endphp
+                    @if($linkedId)
+                        <div class="ct-dom">
+                            <i class="ri-global-line"></i>
+                            <a href="https://{{ $domains[$linkedId] }}" target="_blank" rel="noopener">{{ $domains[$linkedId] }}</a>
+                            <form method="POST" action="{{ route('client.services.containers.unlink', $service) }}" style="display:inline">@csrf
+                                <input type="hidden" name="domain_id" value="{{ $linkedId }}">
+                                <button type="submit" class="ct-domx" title="{{ __('client.hosting.containers.domain_unlink') }}">&times;</button>
+                            </form>
+                        </div>
+                    @elseif($c['state'] === 'running' && $freeDomains)
+                        <form method="POST" action="{{ route('client.services.containers.link', $service) }}" class="ct-dom">@csrf
+                            <input type="hidden" name="container_id" value="{{ $c['id'] }}">
+                            <select name="domain_id" class="ct-domsel">
+                                @foreach($freeDomains as $dId => $dName)
+                                <option value="{{ $dId }}">{{ $dName }}</option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="ct-domgo">{{ __('client.hosting.containers.domain_link') }}</button>
+                        </form>
+                    @elseif($c['state'] !== 'running')
+                        <div class="ct-hint">{{ __('client.hosting.containers.domain_needs_running') }}</div>
+                    @elseif(! $domains)
+                        <div class="ct-hint">{{ __('client.hosting.containers.domain_none') }}</div>
+                    @endif
+                </td>
                 <td>
                     @if($c['state'] === 'running')<span class="ct-run">{{ __('client.hosting.containers.running') }}</span>
+                    @elseif($c['state'] === 'restarting')
+                        {{-- Restarting on a loop means the app is failing to
+                             start. Saying "restarting" and nothing else leaves
+                             the customer watching a spinner that never ends. --}}
+                        <span class="ct-warn">{{ __('client.hosting.containers.crashing') }}</span>
+                        <div class="ct-hint">{{ __('client.hosting.containers.crashing_hint') }}</div>
                     @else<span class="ct-stop">{{ $c['state'] ?: __('client.hosting.containers.stopped') }}</span>@endif
                 </td>
                 <td>
@@ -295,6 +352,21 @@ function ctPick(el){
     el.insertAdjacentElement('afterend', form);
     form.hidden = false;
     document.getElementById('ct-name').focus({preventScroll: true});
+}
+
+// Installing pulls container images and can take minutes. Without this the
+// button simply sat there: the page looked frozen and people clicked again.
+function ctInstalling(){
+    var b = document.getElementById('ct-submit');
+    if (b.dataset.busy === '1') { return false; }
+    b.dataset.busy = '1';
+    b.disabled = true;
+    b.querySelector('i').className = 'ri-loader-4-line ct-spin';
+    document.getElementById('ct-submit-t').textContent = @json(__('client.hosting.containers.installing'));
+    var note = document.getElementById('ct-installnote');
+    if (note) { note.hidden = false; }
+
+    return true;
 }
 
 function ctCancel(){
