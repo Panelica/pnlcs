@@ -114,18 +114,57 @@
     .ct-installnote{flex-basis:100%;font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.45}
     .ct-warn{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(245,158,11,.14);color:#b45309}
     .ct-hint{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.4;max-width:230px}
-    .ct-acc{margin-top:7px;font-size:11.5px}
-    .ct-acc summary{cursor:pointer;color:var(--primary);font-weight:600;list-style:none}
+    /* One card per app. The table put the name, the address, the credentials and
+       the domain picker all in the first cell and left the other four columns
+       vertically centred against it - a row half a screen tall with its status
+       floating in the middle of the whitespace. */
+    .ct-list{padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+    .ct-item{border:1px solid var(--border);border-radius:12px;background:var(--card);overflow:hidden}
+    .ct-it-head{display:flex;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid var(--border)}
+    .ct-it-logo,.ct-it-mark{width:34px;height:34px;border-radius:9px;flex:0 0 auto;object-fit:contain}
+    .ct-it-mark{background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;
+        justify-content:center;font-weight:800;font-size:15px;color:var(--muted)}
+    .ct-it-id{min-width:0;flex:1 1 auto}
+    .ct-it-state{flex:0 0 auto}
+    .ct-it-hint{padding:0 15px;margin-top:10px}
+    .ct-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--border)}
+    .ct-fact{background:var(--card);padding:11px 15px;min-width:0}
+    .ct-fact > span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.4px;
+        text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .ct-fact > b{display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:12.5px;
+        font-weight:600;color:var(--text);min-height:26px}
+    .ct-fact a{color:var(--primary);text-decoration:none;word-break:break-all}
+    .ct-fact .ct-hint{margin:0;font-weight:500}
+    .ct-it-foot{display:flex;flex-direction:column;gap:9px;padding:13px 15px;border-top:1px solid var(--border);background:var(--bg)}
+    .ct-go{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;padding:8px 15px;
+        border-radius:9px;background:var(--primary);color:#fff;font-size:12.5px;font-weight:700;text-decoration:none}
+    .ct-go:hover{filter:brightness(1.07)}
+    .ct-acc{font-size:12px}
+    .ct-acc summary{cursor:pointer;color:var(--primary);font-weight:700;list-style:none;display:inline-flex;align-items:center;gap:5px}
     .ct-acc summary::-webkit-details-marker{display:none}
-    .ct-acc summary::before{content:'▸ ';font-size:9px}
-    .ct-acc[open] summary::before{content:'▾ '}
-    .ct-acc-b{margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);max-width:340px}
-    .ct-acc-r{display:flex;gap:8px;align-items:baseline;margin-bottom:5px;line-height:1.45}
-    .ct-acc-r span{color:var(--muted);min-width:74px;flex:0 0 auto}
-    .ct-acc-r code{font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;
-        background:var(--primary-light);padding:1px 5px;border-radius:4px}
-    .ct-acc-r a{color:var(--primary);word-break:break-all}
-    .ct-acc-n{margin:7px 0 0;color:var(--muted);font-size:10.5px;line-height:1.5}
+    .ct-acc summary::before{content:'\25b8';font-size:10px}
+    .ct-acc[open] summary::before{content:'\25be'}
+    /* Labels in their own column so the values line up instead of stepping in
+       and out with the length of each name. */
+    .ct-acc-b{margin-top:9px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+    .ct-acc-r{display:grid;grid-template-columns:minmax(120px,190px) minmax(0,1fr) auto;
+        gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)}
+    .ct-acc-r:last-of-type{border-bottom:0}
+    .ct-acc-r > span{color:var(--muted);font-size:11px;font-weight:600;word-break:break-word}
+    .ct-acc-r code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;word-break:break-all;
+        background:var(--bg);border-radius:5px;padding:3px 7px;color:var(--text)}
+    .ct-acc-r code.ct-secret{cursor:pointer;letter-spacing:1px}
+    .ct-acc-r a{color:var(--primary);word-break:break-all;font-size:11.5px}
+    .ct-cp{border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:6px;
+        width:26px;height:26px;cursor:pointer;flex:0 0 auto;font-size:12px}
+    .ct-cp:hover{color:var(--primary);border-color:var(--primary)}
+    .ct-cp.ok{color:#16a34a;border-color:#16a34a}
+    .ct-acc-n{margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
+    @media (max-width:820px){
+        .ct-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+        .ct-acc-r{grid-template-columns:1fr auto}
+        .ct-acc-r > span{grid-column:1 / -1;margin-bottom:-2px}
+    }
     .ct-dom{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px}
     .ct-dom a{color:var(--primary);text-decoration:none;font-weight:600}
     .ct-dom a:hover{text-decoration:underline}
@@ -271,67 +310,82 @@
     @if(empty($containers))
     <div class="ct-empty">{{ __('client.hosting.containers.empty') }}</div>
     @else
-    <div style="overflow-x:auto">
-    <table class="ct-table">
-        <thead><tr>
-            <th>{{ __('client.hosting.containers.app') }}</th>
-            <th>{{ __('common.table.status') }}</th>
-            <th>{{ __('client.hosting.containers.resources') }}</th>
-            <th>{{ __('client.hosting.containers.ports') }}</th>
-            <th style="text-align:right">{{ __('common.table.actions') }}</th>
-        </tr></thead>
-        <tbody>
-            @foreach($containers as $c)
-            <tr>
-                <td>
+    <div class="ct-list">
+        @foreach($containers as $c)
+        @php
+            // Installing an app is only half the job: it has to be reachable on
+            // the customer's own address. $domains is an id => name map.
+            $linkedId = null;
+            foreach ($links as $dId => $l) {
+                if (($l['container_id'] ?? '') === $c['id'] && isset($domains[$dId])) { $linkedId = $dId; break; }
+            }
+            $freeDomains = array_diff_key($domains, $links);
+            $acc = $access[$c['id']] ?? null;
+            $logo = $logos[$c['template']] ?? null;
+            $running = $c['state'] === 'running';
+        @endphp
+        <article class="ct-item">
+            <header class="ct-it-head">
+                @if($logo)
+                <img class="ct-it-logo" src="{{ $logo }}" alt="">
+                @else
+                <span class="ct-it-mark">{{ strtoupper(substr($c['template'] ?: $c['name'], 0, 1)) }}</span>
+                @endif
+                <div class="ct-it-id">
                     <div class="ct-name">{{ $c['name'] }}</div>
                     <div class="ct-img">{{ $c['image'] }}</div>
-                    @php
-                        // Installing an app is only half the job: it has to be
-                        // reachable on the customer's own address.
-                        // $domains is an id => name map from the panel.
-                        $linkedId = null;
-                        foreach ($links as $dId => $l) {
-                            if (($l['container_id'] ?? '') === $c['id'] && isset($domains[$dId])) { $linkedId = $dId; break; }
-                        }
-                        $freeDomains = array_diff_key($domains, $links);
-                    @endphp
-                    @php $acc = $access[$c['id']] ?? null; @endphp
-                    @if($acc && $acc->accessUrl())
-                    {{-- The address is the first thing anyone wants after
-                         installing, so it does not sit behind a disclosure. --}}
-                    <div class="ct-open"><i class="ri-external-link-line"></i><a href="{{ $acc->accessUrl() }}" target="_blank" rel="noopener">{{ __('client.hosting.containers.open_app') }}</a></div>
+                </div>
+                <div class="ct-it-state">
+                    @if($running)<span class="ct-run">{{ __('client.hosting.containers.running') }}</span>
+                    @elseif($c['state'] === 'restarting')
+                        {{-- Restarting on a loop means the app is failing to start.
+                             Saying "restarting" leaves the customer watching a
+                             spinner that never ends. --}}
+                        <span class="ct-warn">{{ __('client.hosting.containers.crashing') }}</span>
+                    @else<span class="ct-stop">{{ $c['state'] ?: __('client.hosting.containers.stopped') }}</span>@endif
+                </div>
+                <div class="ct-acts">
+                    @if($running)
+                    <form method="POST" action="{{ route('client.services.containers.action', $service) }}">@csrf
+                        <input type="hidden" name="container_id" value="{{ $c['id'] }}"><input type="hidden" name="action" value="restart">
+                        <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.restart') }}"><i class="ri-restart-line"></i></button>
+                    </form>
+                    <form method="POST" action="{{ route('client.services.containers.action', $service) }}">@csrf
+                        <input type="hidden" name="container_id" value="{{ $c['id'] }}"><input type="hidden" name="action" value="stop">
+                        <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.stop') }}"><i class="ri-stop-line"></i></button>
+                    </form>
+                    @else
+                    <form method="POST" action="{{ route('client.services.containers.action', $service) }}">@csrf
+                        <input type="hidden" name="container_id" value="{{ $c['id'] }}"><input type="hidden" name="action" value="start">
+                        <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.start') }}"><i class="ri-play-line"></i></button>
+                    </form>
                     @endif
-                    @if($acc && $acc->hasAnything())
-                    {{-- The panel reports the address and any generated login
-                         once, when the app is installed. Without showing it the
-                         customer has a running app and no way in. --}}
-                    <details class="ct-acc">
-                        <summary>{{ __('client.hosting.containers.access_title') }}</summary>
-                        <div class="ct-acc-b">
-                            @foreach($acc->items() as $label => $value)
-                            <div class="ct-acc-r"><span>{{ $label }}</span>
-                                @if(Str::startsWith($value, ['http://','https://']))
-                                    <a href="{{ $value }}" target="_blank" rel="noopener">{{ $value }}</a>
-                                @else
-                                    <code>{{ $value }}</code>
-                                @endif
-                            </div>
-                            @endforeach
-                            @if($acc->notes())<p class="ct-acc-n">{{ $acc->notes() }}</p>@endif
-                        </div>
-                    </details>
-                    @endif
+                    <form method="POST" action="{{ route('client.services.containers.destroy', $service) }}" onsubmit="return confirm('{{ __('client.hosting.containers.delete_confirm') }}')">@csrf
+                        <input type="hidden" name="container_id" value="{{ $c['id'] }}">
+                        <button type="submit" class="ct-act danger" title="{{ __('client.hosting.containers.delete') }}"><i class="ri-delete-bin-line"></i></button>
+                    </form>
+                </div>
+            </header>
+
+            @if($c['state'] === 'restarting')
+            <div class="ct-hint ct-it-hint">{{ __('client.hosting.containers.crashing_hint') }}</div>
+            @endif
+
+            <div class="ct-facts">
+                <div class="ct-fact"><span>CPU</span><b>{{ $running ? number_format($c['cpu_percent'], 1).'%' : '—' }}</b></div>
+                <div class="ct-fact"><span>RAM</span><b>{{ $running && $c['mem_usage'] >= 1048576 ? number_format($c['mem_usage']/1048576, 0).' MB' : '—' }}@if($running && $c['mem_limit'] > 0) / {{ number_format($c['mem_limit']/1048576, 0) }} MB @endif</b></div>
+                <div class="ct-fact"><span>{{ __('client.hosting.containers.ports') }}</span>
+                    <b>@forelse($c['ports'] as $p)<span class="ct-port">{{ $p }}</span>@empty <span>—</span> @endforelse</b>
+                </div>
+                <div class="ct-fact ct-fact-dom"><span>{{ __('client.hosting.containers.domain') }}</span>
+                    <b>
                     @if($linkedId)
-                        <div class="ct-dom">
-                            <i class="ri-global-line"></i>
-                            <a href="https://{{ $domains[$linkedId] }}" target="_blank" rel="noopener">{{ $domains[$linkedId] }}</a>
-                            <form method="POST" action="{{ route('client.services.containers.unlink', $service) }}" style="display:inline">@csrf
-                                <input type="hidden" name="domain_id" value="{{ $linkedId }}">
-                                <button type="submit" class="ct-domx" title="{{ __('client.hosting.containers.domain_unlink') }}">&times;</button>
-                            </form>
-                        </div>
-                    @elseif($c['state'] === 'running' && $freeDomains)
+                        <a href="https://{{ $domains[$linkedId] }}" target="_blank" rel="noopener">{{ $domains[$linkedId] }}</a>
+                        <form method="POST" action="{{ route('client.services.containers.unlink', $service) }}" style="display:inline">@csrf
+                            <input type="hidden" name="domain_id" value="{{ $linkedId }}">
+                            <button type="submit" class="ct-domx" title="{{ __('client.hosting.containers.domain_unlink') }}">&times;</button>
+                        </form>
+                    @elseif($running && $freeDomains)
                         <form method="POST" action="{{ route('client.services.containers.link', $service) }}" class="ct-dom">@csrf
                             <input type="hidden" name="container_id" value="{{ $c['id'] }}">
                             <select name="domain_id" class="ct-domsel">
@@ -341,60 +395,53 @@
                             </select>
                             <button type="submit" class="ct-domgo">{{ __('client.hosting.containers.domain_link') }}</button>
                         </form>
-                    @elseif($c['state'] !== 'running')
-                        <div class="ct-hint">{{ __('client.hosting.containers.domain_needs_running') }}</div>
-                    @elseif(! $domains)
-                        <div class="ct-hint">{{ __('client.hosting.containers.domain_none') }}</div>
-                    @endif
-                </td>
-                <td>
-                    @if($c['state'] === 'running')<span class="ct-run">{{ __('client.hosting.containers.running') }}</span>
-                    @elseif($c['state'] === 'restarting')
-                        {{-- Restarting on a loop means the app is failing to
-                             start. Saying "restarting" and nothing else leaves
-                             the customer watching a spinner that never ends. --}}
-                        <span class="ct-warn">{{ __('client.hosting.containers.crashing') }}</span>
-                        <div class="ct-hint">{{ __('client.hosting.containers.crashing_hint') }}</div>
-                    @else<span class="ct-stop">{{ $c['state'] ?: __('client.hosting.containers.stopped') }}</span>@endif
-                </td>
-                <td>
-                    @if($c['state'] === 'running')
-                        <div class="ct-meter">CPU {{ number_format($c['cpu_percent'], 1) }}%</div>
-                        @php($memPct = $c['mem_limit'] > 0 ? min(100, $c['mem_usage'] / $c['mem_limit'] * 100) : 0)
-                        <div class="ct-meter">RAM {{ $c['mem_usage'] >= 1048576 ? number_format($c['mem_usage']/1048576, 0).' MB' : '—' }}@if($c['mem_limit'] > 0) / {{ number_format($c['mem_limit']/1048576, 0) }} MB @endif</div>
-                        @if($c['mem_limit'] > 0)<div class="ct-bar"><span style="width:{{ $memPct }}%"></span></div>@endif
+                    @elseif(! $running)
+                        <span class="ct-hint">{{ __('client.hosting.containers.domain_needs_running') }}</span>
                     @else
-                        <span class="ct-meter">—</span>
+                        <span class="ct-hint">{{ __('client.hosting.containers.domain_none') }}</span>
                     @endif
-                </td>
-                <td>@forelse($c['ports'] as $p)<span class="ct-port">{{ $p }}</span>@empty<span class="ct-meter">—</span>@endforelse</td>
-                <td style="text-align:right">
-                    <div class="ct-acts">
-                        @if($c['state'] === 'running')
-                        <form method="POST" action="{{ route('client.services.containers.action', $service) }}">@csrf
-                            <input type="hidden" name="container_id" value="{{ $c['id'] }}"><input type="hidden" name="action" value="restart">
-                            <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.restart') }}"><i class="ri-restart-line"></i></button>
-                        </form>
-                        <form method="POST" action="{{ route('client.services.containers.action', $service) }}">@csrf
-                            <input type="hidden" name="container_id" value="{{ $c['id'] }}"><input type="hidden" name="action" value="stop">
-                            <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.stop') }}"><i class="ri-stop-line"></i></button>
-                        </form>
-                        @else
-                        <form method="POST" action="{{ route('client.services.containers.action', $service) }}">@csrf
-                            <input type="hidden" name="container_id" value="{{ $c['id'] }}"><input type="hidden" name="action" value="start">
-                            <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.start') }}"><i class="ri-play-line"></i></button>
-                        </form>
-                        @endif
-                        <form method="POST" action="{{ route('client.services.containers.destroy', $service) }}" onsubmit="return confirm('{{ __('client.hosting.containers.delete_confirm') }}')">@csrf
-                            <input type="hidden" name="container_id" value="{{ $c['id'] }}">
-                            <button type="submit" class="ct-act danger" title="{{ __('client.hosting.containers.delete') }}"><i class="ri-delete-bin-line"></i></button>
-                        </form>
+                    </b>
+                </div>
+            </div>
+
+            @if($acc && $acc->hasAnything())
+            <div class="ct-it-foot">
+                @if($acc->accessUrl())
+                {{-- The address is the first thing anyone wants after installing,
+                     so it is a button, not a line inside a disclosure. --}}
+                <a class="ct-go" href="{{ $acc->accessUrl() }}" target="_blank" rel="noopener">
+                    <i class="ri-external-link-line"></i>{{ __('client.hosting.containers.open_app') }}
+                </a>
+                @endif
+                @if($acc->items() || $acc->notes())
+                <details class="ct-acc">
+                    <summary>{{ __('client.hosting.containers.access_title') }}</summary>
+                    <div class="ct-acc-b">
+                        @foreach($acc->items() as $label => $value)
+                        @php
+                            // A generated password should not sit on screen in a
+                            // shared office; it is one click away instead.
+                            $secret = (bool) preg_match('/(password|passwd|secret|token|key)/i', $label);
+                            $isUrl = Str::startsWith($value, ['http://', 'https://']);
+                        @endphp
+                        <div class="ct-acc-r">
+                            <span>{{ $label }}</span>
+                            @if($isUrl)
+                                <a href="{{ $value }}" target="_blank" rel="noopener">{{ $value }}</a>
+                            @else
+                                <code @class(['ct-secret' => $secret]) data-value="{{ $value }}">{{ $secret ? str_repeat('•', 10) : $value }}</code>
+                            @endif
+                            <button type="button" class="ct-cp" data-value="{{ $value }}" title="{{ __('client.hosting.containers.copy') }}"><i class="ri-file-copy-line"></i></button>
+                        </div>
+                        @endforeach
+                        @if($acc->notes())<p class="ct-acc-n">{{ $acc->notes() }}</p>@endif
                     </div>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+                </details>
+                @endif
+            </div>
+            @endif
+        </article>
+        @endforeach
     </div>
     <div class="ct-note"><i class="ri-terminal-box-line"></i>{{ __('client.hosting.containers.panel_hint') }}</div>
     @endif
@@ -404,6 +451,39 @@
 @endif
 
 <script>
+// A generated password is masked until it is asked for, and every value can be
+// copied - reading a twenty-four character password off the screen and typing it
+// into a login form is nobody's idea of a good time.
+(function(){
+    document.querySelectorAll('code.ct-secret').forEach(function(el){
+        el.addEventListener('click', function(){
+            var v = el.getAttribute('data-value') || '';
+            if (el.dataset.shown === '1') { el.textContent = '\u2022'.repeat(10); el.dataset.shown = '0'; }
+            else { el.textContent = v; el.dataset.shown = '1'; }
+        });
+    });
+    document.querySelectorAll('.ct-cp').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            var v = btn.getAttribute('data-value') || '';
+            var done = function(){
+                btn.classList.add('ok');
+                setTimeout(function(){ btn.classList.remove('ok'); }, 1400);
+            };
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(v).then(done);
+                return;
+            }
+            // Plain http, which a freshly installed app is served over until a
+            // domain is pointed at it, has no clipboard API.
+            var t = document.createElement('textarea');
+            t.value = v; t.style.position = 'fixed'; t.style.opacity = '0';
+            document.body.appendChild(t); t.select();
+            try { document.execCommand('copy'); done(); } catch (e) {}
+            document.body.removeChild(t);
+        });
+    });
+})();
+
 // The catalogue folds. It carries ninety-eight apps, so it opens to a peek -
 // enough to show it is a grid of apps and that there is more - and the whole
 // header is the toggle. Built here rather than in the markup so the same
