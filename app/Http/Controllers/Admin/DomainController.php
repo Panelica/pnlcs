@@ -8,6 +8,7 @@ use App\Models\Domain;
 use App\Models\RegistrarSettings;
 use App\Services\DomainService;
 use App\Services\Module\ModuleRegistry;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class DomainController extends Controller
@@ -151,16 +152,40 @@ class DomainController extends Controller
         try {
             $result = $module->syncDomain($domain);
         } catch (\Throwable $e) {
+            $domain->update([
+                'last_sync_at' => now(),
+                'last_sync_status' => 'error',
+            ]);
+
             return back()->with('error', $e->getMessage());
         }
 
         if (! ($result['success'] ?? false)) {
+            $domain->update([
+                'last_sync_at' => now(),
+                'last_sync_status' => 'error',
+            ]);
+
             return back()->with('error', $result['message'] ?? __('admin.domains.sync_failed'));
         }
 
-        $changes = [];
+        $changes = [
+            'last_sync_at' => now(),
+            'last_sync_status' => 'ok',
+        ];
+
         if (! empty($result['expiry_date'])) {
             $changes['expiry_date'] = $result['expiry_date'];
+
+            // The renewal invoice is generated two weeks before the domain
+            // actually expires, so the client still has time to pay it.
+            try {
+                $changes['next_due_date'] = Carbon::parse($result['expiry_date'])
+                    ->subDays(14)
+                    ->toDateString();
+            } catch (\Throwable) {
+                // Keep the previous due date if the registrar's date is odd.
+            }
         }
         if (! empty($result['status'])) {
             $changes['status'] = $result['status'];
@@ -169,9 +194,7 @@ class DomainController extends Controller
             $changes['nameservers'] = json_encode(array_values($result['nameservers']));
         }
 
-        if ($changes) {
-            $domain->update($changes);
-        }
+        $domain->update($changes);
 
         return back()->with('success', __('admin.domains.synced'));
     }

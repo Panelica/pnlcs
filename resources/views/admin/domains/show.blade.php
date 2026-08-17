@@ -70,6 +70,18 @@
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.registration_date') }}</td><td style="padding:5px 0;">{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.expiry_date') }}</td><td style="padding:5px 0;{{ $domain->expiry_date?->isPast() ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $domain->expiry_date?->format(date_fmt()) ?? '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.next_due_date') }}</td><td style="padding:5px 0;">{{ $domain->next_due_date?->format(date_fmt()) ?? '-' }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.last_sync') }}</td><td style="padding:5px 0;">
+                    @if($domain->last_sync_at)
+                        {{ $domain->last_sync_at->format(datetime_fmt()) }}
+                        @if($domain->last_sync_status === 'ok')
+                        <span style="color:#2e7d32;font-weight:600;margin-left:6px;">{{ __('admin.domains.last_sync_ok') }}</span>
+                        @else
+                        <span style="color:#c62828;font-weight:600;margin-left:6px;">{{ __('admin.domains.last_sync_error') }}</span>
+                        @endif
+                    @else
+                        -
+                    @endif
+                </td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.period') }}</td><td style="padding:5px 0;">{{ $domain->registration_period }} year(s)</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.type') }}</td><td style="padding:5px 0;">{{ $domain->type }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.registrar_lock') }}</td><td style="padding:5px 0;">{{ $locked === null ? '-' : ($locked ? __('admin.domains.enabled') : __('admin.domains.disabled')) }}</td></tr>
