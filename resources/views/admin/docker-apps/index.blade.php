@@ -21,6 +21,8 @@
     .da-flags label{display:flex;align-items:center;gap:4px}
     .da-flags input[type=number]{font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:5px}
     .da-off{font-size:10px;font-weight:700;color:#b3261e;margin-left:4px}
+    .da-src{font-size:11.5px;color:#2a5db0;background:#eef4ff;border:1px solid #d6e4ff;border-radius:8px;
+        padding:8px 11px;margin-bottom:12px;line-height:1.55}
     .da-badge{font-size:11px;padding:2px 7px;border-radius:999px;background:#eef4ff;color:#2a5db0;font-weight:700}
 </style>
 
@@ -34,7 +36,10 @@
 
 <div class="card" style="margin-bottom:15px;">
     <div class="card-body">
-        <p style="font-size:12px;color:#666;margin:0 0 10px;">{{ __('admin.docker_apps.intro') }}</p>
+        <p style="font-size:12px;color:#666;margin:0 0 10px;line-height:1.6;">{{ __('admin.docker_apps.intro') }}</p>
+        {{-- Where this list comes from, said plainly: the panel decides what
+             exists and what is switched on, this page decides what is sold. --}}
+        <div class="da-src"><i class="fas fa-info-circle"></i> {{ __('admin.docker_apps.source_note') }}</div>
         <div class="da-tools">
             <form method="GET" action="{{ route('admin.docker-apps.index') }}" class="da-tools" style="margin:0;">
                 <input type="text" name="q" value="{{ $q }}" placeholder="{{ __('admin.docker_apps.search_ph') }}" style="font-size:12px;padding:5px 8px;border:1px solid #ddd;border-radius:6px;">
