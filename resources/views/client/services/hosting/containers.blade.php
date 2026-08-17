@@ -321,7 +321,7 @@
             }
             $freeDomains = array_diff_key($domains, $links);
             $acc = $access[$c['id']] ?? null;
-            $logo = $logos[$c['template']] ?? null;
+            $logo = \App\Models\DockerApp::forContainer($logos, $c['image'], $c['template']);
             $running = $c['state'] === 'running';
         @endphp
         <article class="ct-item">

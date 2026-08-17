@@ -566,3 +566,12 @@ it('keeps what the panel said at install time over what it says now', function (
         ->assertSee('written-at-install')
         ->assertDontSee('s3cret-db');
 });
+
+it('draws a helper container with its own logo, not the app it belongs to', function () {
+    $map = ['wordpress' => '/img/apps/wordpress.svg', 'mariadb' => '/img/apps/mariadb.svg'];
+
+    // Every container of a multi-container app carries the same template label.
+    expect(App\Models\DockerApp::forContainer($map, 'mariadb:11.8', 'wordpress'))->toBe('/img/apps/mariadb.svg')
+        ->and(App\Models\DockerApp::forContainer($map, 'panelica/openlitespeed-wordpress:latest', 'wordpress'))->toBe('/img/apps/wordpress.svg')
+        ->and(App\Models\DockerApp::forContainer($map, 'something/unknown:1', 'unknown'))->toBeNull();
+});

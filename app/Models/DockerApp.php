@@ -75,6 +75,31 @@ class DockerApp extends Model
      *
      * @return array<string, string>
      */
+    /**
+     * The logo for a running container, chosen by what it actually runs.
+     *
+     * A multi-container app labels every one of its containers with the template
+     * it came from, so a WordPress install marks its MariaDB and its Redis as
+     * "wordpress" as well - and all three drew the WordPress logo. The image is
+     * the honest answer for a helper: mariadb:11.8 is MariaDB whatever installed
+     * it. The template still answers for the app's own container, whose image is
+     * usually a build of ours and not in the icon set.
+     *
+     * @param  array<string, string>  $map  slug => url
+     */
+    public static function forContainer(array $map, string $image, string $template): ?string
+    {
+        $repo = strtolower((string) strtok($image, ':'));        // drop the tag
+        $repo = substr($repo, (int) strrpos('/'.$repo, '/'));    // drop registry and owner
+        foreach ([$repo, $template] as $key) {
+            if ($key !== '' && isset($map[$key])) {
+                return $map[$key];
+            }
+        }
+
+        return null;
+    }
+
     public static function urlMap(): array
     {
         $own = static::query()->whereNotNull('path')->get(['slug', 'path'])
