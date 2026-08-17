@@ -43,6 +43,19 @@
     .ct-req-i.light{font-weight:500}
     .ct-app.big{opacity:.72}
     .ct-over{margin-top:6px;font-size:10px;font-weight:700;color:#b3261e}
+    .ct-pick{margin-top:9px;width:100%;border:1px solid var(--border);background:var(--bg);color:var(--text);
+        border-radius:8px;padding:5px 8px;font-size:11px;font-weight:700;cursor:pointer;
+        display:inline-flex;align-items:center;justify-content:center;gap:4px;opacity:0;transition:opacity .14s}
+    .ct-app:hover .ct-pick,.ct-app.on .ct-pick,.ct-app:focus-within .ct-pick{opacity:1}
+    .ct-app.on .ct-pick{border-color:var(--primary);color:var(--primary)}
+    /* Sits in the grid as its own full-width row, directly under the chosen card. */
+    .ct-form{grid-column:1/-1}
+    .ct-apps .ct-form{margin:2px 0 6px;padding:12px 14px;border:1px solid var(--primary);border-radius:10px;
+        background:var(--primary-light);align-items:flex-end}
+    .ct-chosen{flex:0 0 auto;align-self:center;font-size:12.5px;color:var(--muted);padding-right:4px}
+    .ct-chosen-n{font-weight:800;color:var(--text)}
+    .ct-cancel{background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;padding:8px 4px}
+    .ct-cancel:hover{color:var(--text);text-decoration:underline}
     .ct-app .nm{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.25}
     .ct-app .ds{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .ct-form{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:0 18px 18px}
@@ -150,18 +163,24 @@
                         @endif
                     </div>
                     @if($ctTooBig)<div class="ct-over">{{ __('client.hosting.containers.over_plan') }}</div>@endif
+                    <button type="button" class="ct-pick" onclick="ctPick(this.closest('.ct-app'));event.stopPropagation()"><i class="ri-download-2-line"></i>{{ __('client.hosting.containers.install') }}</button>
                 </div>
                 @endforeach
             </div>
         </div>
         @endforeach
 
-        <div class="ct-form">
-            <div class="ct-fld" style="max-width:260px">
+        {{-- Moved next to whichever app is chosen, rather than living at the
+             bottom of a page with ninety-eight cards on it. Kept as one form so
+             there is a single name field and a single submit, not ninety-eight. --}}
+        <div class="ct-form" id="ct-form" hidden>
+            <div class="ct-chosen"><span class="ct-chosen-n" id="ct-chosen"></span></div>
+            <div class="ct-fld" style="max-width:240px">
                 <label class="ct-lbl">{{ __('client.hosting.containers.name') }}</label>
-                <input type="text" name="name" maxlength="40" pattern="[a-zA-Z0-9-]*" class="ct-inp" placeholder="{{ __('client.hosting.containers.name_ph') }}">
+                <input type="text" name="name" id="ct-name" maxlength="40" pattern="[a-zA-Z0-9-]*" class="ct-inp" placeholder="{{ __('client.hosting.containers.name_ph') }}">
             </div>
             <button type="submit" class="ct-btn" id="ct-submit" disabled><i class="ri-download-2-line"></i>{{ __('client.hosting.containers.install') }}</button>
+            <button type="button" class="ct-cancel" onclick="ctCancel()">{{ __('client.hosting.containers.cancel') }}</button>
         </div>
         @if($resources['memory_mb'] > 0 || $resources['cpu_percent'] > 0)
         <div class="ct-note info"><i class="ri-scales-3-line"></i>{{ __('client.hosting.containers.plan_ceiling', [
@@ -246,11 +265,31 @@
 <script>
 // Pick an app before the install button becomes usable — a deploy without a
 // chosen template is the one mistake this form can make.
+// The install box follows the chosen app instead of sitting at the bottom of
+// the page. It stays a single form - one name field, one submit - and is moved
+// in the DOM to just after the selected card, spanning the grid row so the
+// layout does not jump.
 function ctPick(el){
     document.querySelectorAll('.ct-app').forEach(function(a){ a.classList.remove('on'); });
     el.classList.add('on');
+
+    var form = document.getElementById('ct-form');
     document.getElementById('ct-slug').value = el.getAttribute('data-slug') || '';
+    document.getElementById('ct-chosen').textContent = (el.querySelector('.nm') || {}).textContent || '';
     document.getElementById('ct-submit').disabled = false;
+
+    el.insertAdjacentElement('afterend', form);
+    form.hidden = false;
+    document.getElementById('ct-name').focus({preventScroll: true});
+}
+
+function ctCancel(){
+    var form = document.getElementById('ct-form');
+    form.hidden = true;
+    document.getElementById('ct-slug').value = '';
+    document.getElementById('ct-name').value = '';
+    document.getElementById('ct-submit').disabled = true;
+    document.querySelectorAll('.ct-app').forEach(function(a){ a.classList.remove('on'); });
 }
 
 // Filtering runs here rather than on the server: the catalogue is already on
@@ -273,6 +312,11 @@ function ctFilter(){
         });
         g.hidden = vis === 0;
     });
+
+    // A filter that hides the chosen card would leave the install box floating
+    // next to nothing, so the choice goes with it.
+    var on = document.querySelector('.ct-app.on');
+    if (on && on.hidden) { ctCancel(); }
 
     document.getElementById('ct-noresult').hidden = shown !== 0;
     var c = document.getElementById('ct-count');

@@ -21,6 +21,7 @@ return new class extends Migration
             'hosting.containers.over_plan' => 'Needs more memory than your plan',
             'hosting.containers.plan_ceiling' => 'Every app runs inside your plan: up to :ram of memory and :cpu CPU, shared by all your apps.',
             'hosting.containers.unlimited' => 'no limit',
+            'hosting.containers.cancel' => 'Cancel',
 
             'hosting.containers.group_websites' => 'Websites & CMS',
             'hosting.containers.group_websites_hint' => 'Publish a site, blog or shop',
