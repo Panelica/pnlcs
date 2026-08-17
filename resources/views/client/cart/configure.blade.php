@@ -49,8 +49,9 @@
          products does not scale, so the choice is made here and the order
          installs it. --}}
     <div class="pn-card" style="margin-bottom:16px;">
-        <div class="pn-card-header">{{ __('client.cart.choose_app') }}</div>
+        <div class="pn-card-header">{{ __('client.cart.choose_app') }} <span class="ap-opt">{{ __('client.cart.app_optional') }}</span></div>
         <div class="pn-card-body">
+            <p class="ap-intro">{{ __('client.cart.app_intro') }}</p>
             <div class="ap-search">
                 <input type="text" id="ap-q" class="form-control" autocomplete="off"
                        placeholder="{{ __('client.cart.app_search_ph') }}" oninput="apFilter()"
@@ -86,6 +87,10 @@
                 @endforeach
             </div>
             <div class="ap-none" id="ap-none" hidden>{{ __('client.cart.app_search_none') }}</div>
+            <div class="ap-clearpick" id="ap-clearpick" hidden>
+                <span id="ap-picked"></span>
+                <button type="button" onclick="apClear()">{{ __('client.cart.app_clear') }}</button>
+            </div>
             @error('app_slug')<div class="text-danger" style="font-size:12px;margin-top:8px">{{ $message }}</div>@enderror
         </div>
     </div>
@@ -288,6 +293,17 @@ function apPick(el){
     document.querySelectorAll('.ap-app').forEach(function(a){ a.classList.remove('on'); });
     el.classList.add('on');
     document.getElementById('ap-slug').value = el.getAttribute('data-slug') || '';
+    var name = (el.querySelector('.ap-nm') || {}).textContent || '';
+    document.getElementById('ap-picked').textContent = name;
+    document.getElementById('ap-clearpick').hidden = false;
+}
+
+// Choosing an app is optional: the hosting is the product, so it has to be
+// possible to change your mind and order without one.
+function apClear(){
+    document.querySelectorAll('.ap-app').forEach(function(a){ a.classList.remove('on'); });
+    document.getElementById('ap-slug').value = '';
+    document.getElementById('ap-clearpick').hidden = true;
 }
 function apFilter(){
     var q = (document.getElementById('ap-q').value || '').toLowerCase().trim();
@@ -327,6 +343,11 @@ document.addEventListener('DOMContentLoaded', function(){
     .pn-res-note{font-size:11.5px;color:var(--muted);margin:12px 0 0;line-height:1.5}
     .ap-req{display:flex;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:6px}
     .ap-req span{font-size:10px;font-weight:600;color:var(--muted);background:rgba(127,127,127,.09);border-radius:5px;padding:2px 5px}
+    .ap-opt{font-size:11px;font-weight:600;color:var(--muted);margin-left:6px}
+    .ap-intro{font-size:12.5px;color:var(--muted);margin:0 0 12px;line-height:1.5}
+    .ap-clearpick{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:12.5px}
+    .ap-clearpick span{font-weight:700}
+    .ap-clearpick button{background:none;border:0;color:var(--muted);font-size:12px;cursor:pointer;text-decoration:underline;padding:0}
     .ap-none{padding:18px;text-align:center;color:var(--muted);font-size:13px}
 </style>
 @endsection

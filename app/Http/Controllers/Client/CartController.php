@@ -84,15 +84,22 @@ class CartController extends Controller
 
         $product = Product::findOrFail($request->product_id);
 
-        // A product that sells "pick your app" is not delivered without one, and
-        // the choice has to be an app we actually offer - the form is built from
-        // that list, but the request is not the form.
+        // What the customer buys is the hosting - memory, CPU, disk. Picking an
+        // app to start with is a convenience, not the product, so an order with
+        // no app is a perfectly good order: the account is opened and they
+        // install what they like from the Apps tab afterwards.
+        //
+        // If they did pick one, it has to be an app we actually offer: the form
+        // is built from that list, but the request is not the form.
         $appSlug = null;
         if ($this->productLetsCustomerPickApp($product)) {
-            $appSlug = trim((string) $request->input('app_slug'));
-            $offered = collect($this->sellableApps($product))->pluck('slug')->all();
-            if ($appSlug === '' || ($offered !== [] && ! in_array($appSlug, $offered, true))) {
-                throw ValidationException::withMessages(['app_slug' => __('client.cart.app_required')]);
+            $chosen = trim((string) $request->input('app_slug'));
+            if ($chosen !== '') {
+                $offered = collect($this->sellableApps($product))->pluck('slug')->all();
+                if ($offered !== [] && ! in_array($chosen, $offered, true)) {
+                    throw ValidationException::withMessages(['app_slug' => __('client.cart.app_not_available')]);
+                }
+                $appSlug = $chosen;
             }
         }
         $clientId = $this->getClientId();

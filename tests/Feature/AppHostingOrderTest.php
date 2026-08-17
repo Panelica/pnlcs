@@ -123,14 +123,50 @@ it('carries the chosen app into the cart', function () use ($CATALOGUE) {
     expect($data['items'][0]['app_slug'] ?? null)->toBe('wordpress');
 });
 
-it('refuses an order with no app chosen', function () use ($CATALOGUE) {
+it('takes an order with no app at all', function () use ($CATALOGUE) {
     appOrderServer();
     fakeAppCatalogue($CATALOGUE);
 
+    // The hosting is the product. Someone who has not decided what to run yet
+    // is still buying something, and installs from the panel afterwards.
     $this->actingAs(appOrderUser())->post(route('client.cart.add'), [
         'product_id' => appOrderProduct()->id,
         'billing_cycle' => 'monthly',
-    ])->assertSessionHasErrors('app_slug');
+    ])->assertRedirect(route('client.cart.index'))->assertSessionHasNoErrors();
+
+    $data = json_decode(App\Models\Cart::latest()->firstOrFail()->data, true) ?: [];
+    expect($data['items'][0])->toHaveKey('app_slug')
+        ->and($data['items'][0]['app_slug'])->toBeNull();
+});
+
+it('opens a plain hosting account when no app was chosen', function () {
+    $server = appOrderServer();
+    Http::fake(function ($request) {
+        $url = $request->url();
+        if (str_contains($url, '/v1/domains')) {
+            return Http::response(['data' => ['id' => 'dom-1']], 200);
+        }
+        if (str_contains($url, '/v1/accounts')) {
+            return Http::response(['data' => ['id' => 'acct-1']], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'panelica',
+        'config_options' => json_encode(['panelica_app_choose' => 1, 'res_max_containers' => 3]),
+    ]);
+    $service = App\Models\Service::factory()->create([
+        'client_id' => Client::factory()->create()->id,
+        'product_id' => $product->id, 'server_id' => $server->id,
+        'domain' => 'plain.test', 'status' => 'pending',
+    ]);
+
+    expect(app(Modules\Servers\Panelica\PanelicaModule::class)->create($service)['success'])->toBeTrue();
+    Http::assertNotSent(fn ($rq) => str_contains($rq->url(), '/deploy'));
+    expect($service->fresh()->status)->toBe('active');
 });
 
 it('refuses an app that is not on the shelf', function () use ($CATALOGUE) {
