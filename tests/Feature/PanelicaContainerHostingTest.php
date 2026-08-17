@@ -259,3 +259,31 @@ it('shows the containers tab and forbids other clients', function () use ($MINE,
     $this->actingAs($intruder)->post(route('client.services.containers.action', $s), ['container_id' => 'c-mine', 'action' => 'stop'])->assertForbidden();
     $this->actingAs($intruder)->post(route('client.services.containers.destroy', $s), ['container_id' => 'c-mine'])->assertForbidden();
 });
+
+it('answers a slow install with a sentence, not a server error', function () use ($CATALOGUE) {
+    Http::fake(function ($request) use ($CATALOGUE) {
+        $url = $request->url();
+        if (str_contains($url, '/deploy')) {
+            throw new Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out');
+        }
+        if (str_contains($url, '/docker/templates') && $request->method() === 'GET') {
+            return Http::response(['data' => ['templates' => $CATALOGUE]], 200);
+        }
+        if (preg_match('#/v1/accounts/[^/?]+$#', parse_url($url, PHP_URL_PATH) ?? '')) {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($url, '/v1/plans')) {
+            return Http::response(['data' => [['id' => 'plan-1', 'max_containers' => 5]]], 200);
+        }
+
+        return Http::response(['data' => ['containers' => []]], 200);
+    });
+    [$u, $s] = ctService(ctServer());
+
+    // A multi-container app pulls gigabytes of images. The request used to time
+    // out at thirty seconds and throw, so the customer got "Server Error" while
+    // the panel was still building their app.
+    $r = (new PanelicaModule)->deployContainer($s, 'wordpress');
+    expect($r['success'])->toBeFalse()
+        ->and($r['message'])->toContain('still running');
+});

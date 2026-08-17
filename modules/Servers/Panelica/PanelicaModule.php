@@ -11,6 +11,9 @@ use Modules\Servers\AbstractServerModule;
 
 class PanelicaModule extends AbstractServerModule
 {
+    /** Installing an app pulls images; a multi-container template takes minutes. */
+    private const DEPLOY_TIMEOUT = 300;
+
     public function getModuleName(): string
     {
         return 'panelica';
@@ -92,12 +95,16 @@ class PanelicaModule extends AbstractServerModule
         return false;
     }
 
-    private function post(Server $server, string $path, array $payload): Response
+    /**
+     * @param  int  $timeout  seconds; the default suits ordinary calls, but
+     *                        installing an app pulls images and can take minutes
+     */
+    private function post(Server $server, string $path, array $payload, int $timeout = 30): Response
     {
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'POST', $path, $body);
 
-        return Http::withHeaders($headers)->withoutVerifying()->withBody($body, 'application/json')->post($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withoutVerifying()->timeout($timeout)->withBody($body, 'application/json')->post($this->baseUrl($server).$path);
     }
 
     private function patch(Server $server, string $path, array $payload): Response
@@ -1151,7 +1158,7 @@ class PanelicaModule extends AbstractServerModule
         $deploy = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', [
             'owner_user_id' => $userId,
             'container_name' => $this->defaultContainerName($slug),
-        ]);
+        ], timeout: self::DEPLOY_TIMEOUT);
         if (! $deploy->successful()) {
             return ['success' => false, 'message' => $this->apiMessage($deploy, 'the app could not be installed'), 'container_id' => null];
         }
@@ -1224,7 +1231,14 @@ class PanelicaModule extends AbstractServerModule
             'container_name' => $name !== '' ? $name : $this->defaultContainerName($slug),
         ];
 
-        $resp = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', $payload);
+        // Installing pulls images - a multi-container app can take minutes, and
+        // the default 30 seconds turned a working install into a 500 page while
+        // the panel carried on building it.
+        try {
+            $resp = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', $payload, timeout: self::DEPLOY_TIMEOUT);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            return $this->buildResult(false, 'The install is taking longer than expected and is still running on the server. Check back in a few minutes.');
+        }
         if ($resp->status() === 403) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Your plan does not allow this.'));
         }
