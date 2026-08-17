@@ -596,7 +596,11 @@ class ConfigController extends Controller
                     'label' => $settings->get('name', $module?->getModuleName() ?? ucfirst($name)),
                     'fields' => $module?->getConfigFields() ?? [],
                     'values' => $settings->toArray(),
-                    'active' => ($settings->get('visible', '1') ?? '1') !== '0',
+                    // Manual works out of the box; every other registrar is
+                    // off until the operator switches it on.
+                    'active' => $name === 'manual'
+                        ? $settings->get('visible', '1') !== '0'
+                        : $settings->get('visible') === '1',
                 ];
             })
             ->sortBy(fn ($reg) => [$reg->active ? 0 : 1, $reg->label])
