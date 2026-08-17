@@ -417,6 +417,11 @@ class CartService
                 'notes' => $item['notes'] ?? null,
                 'config_options' => $item['config_options'] ?? [],
                 'addons' => $item['addons'] ?? [],
+                // The app the customer picked while ordering. Dropped here once,
+                // which meant the order was placed for "WordPress" and
+                // provisioned as an empty account: the cart knew, and nothing
+                // downstream was told.
+                'app_slug' => $item['app_slug'] ?? null,
             ];
         }
 

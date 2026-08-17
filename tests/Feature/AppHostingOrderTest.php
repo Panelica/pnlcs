@@ -237,3 +237,35 @@ it('shows the resources on the order form', function () use ($CATALOGUE) {
         ->assertSee('2 GB RAM')
         ->assertSee('2 apps');
 });
+
+it('carries the chosen app all the way from the cart to the service', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+    $product = appOrderProduct();
+    $user = appOrderUser();
+
+    $this->actingAs($user)->post(route('client.cart.add'), [
+        'product_id' => $product->id,
+        'billing_cycle' => 'monthly',
+        'app_slug' => 'wordpress',
+        'domain' => 'chainsite.test',
+        'domain_option' => 'own',
+    ])->assertRedirect();
+
+    $this->actingAs($user)->post(route('client.cart.checkout'), [
+        'payment_method' => 'banktransfer',
+        'terms' => '1',
+    ])->assertRedirect();
+
+    // The gap this closes: the cart recorded the choice and the service knew
+    // how to use it, but the step in between rebuilt the line item and left the
+    // app behind - so an order placed for WordPress provisioned an empty
+    // account, silently.
+    $service = App\Models\Service::latest('id')->firstOrFail();
+    $data = is_string($service->module_data)
+        ? (json_decode($service->module_data, true) ?: [])
+        : ((array) $service->module_data);
+
+    expect($service->domain)->toBe('chainsite.test')
+        ->and($data['panelica_app_template'] ?? null)->toBe('wordpress');
+});
