@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Client;
 use App\Models\CustomField;
+use App\Models\CustomFieldValue;
 
 /**
  * Resolve a registrar field from a client using a manually mapped field name
@@ -96,5 +97,33 @@ trait MapsClientFields
         $value = $field->valueFor($client->id);
 
         return ($value !== null && $value !== '') ? (string) $value : null;
+    }
+
+    /**
+     * Persist a value into the mapped (or auto-detected) client custom field
+     * so the next run can reuse it. Returns whether it found a field to store.
+     *
+     * @param  array<int, string>  $autoDetect
+     */
+    protected function storeClientField(Client $client, ?string $mappedField, string $value, array $autoDetect = []): bool
+    {
+        $candidates = array_values(array_filter(array_merge($mappedField ? [$mappedField] : [], $autoDetect)));
+
+        foreach ($candidates as $name) {
+            $field = CustomField::where('type', 'client')
+                ->whereRaw('LOWER(field_name) = ?', [strtolower($name)])
+                ->first();
+
+            if ($field) {
+                CustomFieldValue::updateOrCreate(
+                    ['field_id' => $field->id, 'rel_id' => $client->id],
+                    ['value' => $value],
+                );
+
+                return true;
+            }
+        }
+
+        return false;
     }
 }

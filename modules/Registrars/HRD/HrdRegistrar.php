@@ -284,7 +284,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ? (string) ($client->tax_id ?? '')
             : ($this->resolveClientField($client, $this->settings['pesel_field'] ?? null, ['pesel', 'tax_id']) ?? '');
 
-        return $this->api()->userCreate(
+        $userId = $this->api()->userCreate(
             $isCompany ? HRDApi::COMPANY : HRDApi::PERSON,
             $idNumber,
             (string) ($client->email ?? ''),
@@ -298,6 +298,11 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $this->normalizeCountry($params['country'] ?? $client->country),
             $isCompany ? $client->full_name : null,
         );
+
+        // Remember the CSA so the next domain reuses the same registrant.
+        $this->storeClientField($client, $this->settings['csa_field'] ?? null, (string) $userId, ['csa', 'hrd_user_id']);
+
+        return $userId;
     }
 
     /**
