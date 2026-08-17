@@ -14,6 +14,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,6 +45,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->useConfiguredDomainForConsoleLinks();
+
         // How many times the API will let someone try.
         //
         // The admin login form allows ten attempts a minute. The API accepts
@@ -106,5 +109,48 @@ class AppServiceProvider extends ServiceProvider
             'client.auth.register',
             'sections.*',
         ], ThemeComposer::class);
+    }
+
+    /**
+     * Address the links in mail sent from the queue or a cron.
+     *
+     * In a web request Laravel builds links from the request itself, which is
+     * right. With no request - a queue worker, a scheduled job - it falls back
+     * to the configured app URL, and in a container that URL comes from an
+     * environment variable that overrides .env. On our own install that is the
+     * host and port inside the network, so the "view your invoice" link in
+     * customer mail pointed somewhere nobody outside the box can reach.
+     *
+     * The operator already tells us the address in the general settings, so
+     * that is what console-generated links use. If it is not set, nothing
+     * changes.
+     */
+    private function useConfiguredDomainForConsoleLinks(): void
+    {
+        if (! $this->app->runningInConsole()) {
+            return;
+        }
+
+        try {
+            $domain = trim((string) Setting::get('Domain', ''));
+        } catch (\Throwable $e) {
+            // Install and migrate run before the table exists.
+            return;
+        }
+
+        if ($domain === '') {
+            return;
+        }
+        if (! preg_match('#^https?://#i', $domain)) {
+            $domain = 'https://'.$domain;
+        }
+        if (! filter_var($domain, FILTER_VALIDATE_URL)) {
+            return;
+        }
+
+        URL::forceRootUrl(rtrim($domain, '/'));
+        if (str_starts_with($domain, 'https://')) {
+            URL::forceScheme('https');
+        }
     }
 }
