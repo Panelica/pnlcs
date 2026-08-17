@@ -753,7 +753,7 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
-        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns', 'backups'];
+        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns', 'backups', 'containers'];
     }
 
     // -------------------------------------------------------------------------
@@ -875,6 +875,208 @@ class PanelicaModule extends AbstractServerModule
         }
 
         return $this->buildResult(true, 'Backup deleted.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Containers (Panelica-only). Docker apps the customer runs on their hosting.
+    // Each container is placed in the account's own cgroup slice (CPU/RAM come out
+    // of the plan), its volumes live under the account's home (disk quota), and the
+    // panel strips privileged/capabilities on the external path — so a container is
+    // just another thing the account owns, not a way out of it.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Containers belonging to this account.
+     *
+     * The panel list is scoped by the API key, and the PNLCS key is ROOT-scoped —
+     * it can see every container on the host. So the account's own id, taken from
+     * the container's ownership label, is what decides the list, never the raw
+     * response.
+     *
+     * @return list<array{id:string,name:string,image:string,state:string,status:string,cpu_percent:float,mem_usage:int,mem_limit:int,ports:list<string>,created:string,template:string}>
+     */
+    public function containers(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return [];
+        }
+        $resp = $this->get($server, '/v1/docker/containers');
+        if (! $resp->successful()) {
+            return [];
+        }
+
+        $out = [];
+        foreach (($resp->json('data.containers') ?? $resp->json('data') ?? []) as $c) {
+            $labels = (array) ($c['labels'] ?? []);
+            if ((string) ($labels['panelica.user_id'] ?? '') !== (string) $accountId) {
+                continue; // not this account's container
+            }
+            $ports = [];
+            foreach ((array) ($c['ports'] ?? []) as $p) {
+                $pub = $p['public_port'] ?? $p['PublicPort'] ?? null;
+                $priv = $p['private_port'] ?? $p['PrivatePort'] ?? null;
+                if ($pub) {
+                    $ports[] = $pub.' → '.$priv;
+                }
+            }
+            $out[] = [
+                'id' => (string) ($c['id'] ?? ''),
+                'name' => ltrim((string) ($c['name'] ?? ''), '/'),
+                'image' => (string) ($c['image'] ?? ''),
+                'state' => strtolower((string) ($c['state'] ?? '')),
+                'status' => (string) ($c['status'] ?? ''),
+                'cpu_percent' => (float) ($c['cpu_percent'] ?? 0),
+                'mem_usage' => (int) ($c['mem_usage'] ?? 0),
+                'mem_limit' => (int) ($c['mem_limit'] ?? 0),
+                'ports' => $ports,
+                'created' => (string) ($c['created'] ?? ''),
+                'template' => (string) ($labels['panelica.template'] ?? ''),
+            ];
+        }
+        usort($out, fn ($a, $b) => strcmp($a['name'], $b['name']));
+
+        return $out;
+    }
+
+    /**
+     * @return array{max:int,used:int,can_create:bool,enabled:bool}
+     */
+    public function containerPolicy(Service $service): array
+    {
+        $used = count($this->containers($service));
+        $max = $this->planLimit($service, 'max_containers');
+        // Unknown plan → let the panel be the authority (it enforces the limit and
+        // the catalogue on every deploy anyway).
+        if ($max === null) {
+            return ['max' => -1, 'used' => $used, 'can_create' => true, 'enabled' => true];
+        }
+        if ($max === 0) {
+            return ['max' => 0, 'used' => $used, 'can_create' => false, 'enabled' => false];
+        }
+
+        return ['max' => $max, 'used' => $used, 'can_create' => $max < 0 || $used < $max, 'enabled' => true];
+    }
+
+    /**
+     * The app catalogue this account may install from. The panel filters it by the
+     * account's plan, so a curated plan returns only its own apps and a plan with
+     * no containers returns nothing.
+     *
+     * @return list<array{slug:string,name:string,description:string,logo_url:string,categories:list<string>}>
+     */
+    public function containerTemplates(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return [];
+        }
+        $resp = $this->get($server, '/v1/docker/templates?owner_user_id='.urlencode($accountId));
+        if (! $resp->successful()) {
+            return [];
+        }
+        $out = [];
+        foreach (($resp->json('data.templates') ?? []) as $t) {
+            $out[] = [
+                'slug' => (string) ($t['slug'] ?? ''),
+                'name' => (string) ($t['name'] ?? ''),
+                'description' => (string) ($t['description'] ?? ''),
+                'logo_url' => (string) ($t['logo_url'] ?? ''),
+                'categories' => array_values((array) ($t['categories'] ?? [])),
+            ];
+        }
+
+        return $out;
+    }
+
+    public function deployContainer(Service $service, string $slug, string $name = ''): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return $this->buildResult(false, 'No Panelica server configured.');
+        }
+        $slug = trim($slug);
+        if ($slug === '' || ! preg_match('/^[a-z0-9][a-z0-9._-]*$/i', $slug)) {
+            return $this->buildResult(false, 'Choose an app to install.');
+        }
+        $policy = $this->containerPolicy($service);
+        if (! $policy['enabled']) {
+            return $this->buildResult(false, 'Containers are not included in your current plan.');
+        }
+        if (! $policy['can_create']) {
+            return $this->buildResult(false, 'You have reached your plan\'s container limit.');
+        }
+        // Only offer what the plan actually allows: the panel refuses anything else,
+        // and failing here gives the customer a sentence instead of a 500.
+        $allowed = array_column($this->containerTemplates($service), 'slug');
+        if ($allowed !== [] && ! in_array($slug, $allowed, true)) {
+            return $this->buildResult(false, 'That app is not available on your plan.');
+        }
+
+        $payload = ['owner_user_id' => $accountId];
+        $name = strtolower(trim($name));
+        if ($name !== '') {
+            if (! preg_match('/^[a-z0-9][a-z0-9-]{0,40}$/', $name)) {
+                return $this->buildResult(false, 'Use letters, numbers and hyphens for the name.');
+            }
+            $payload['container_name'] = $name;
+        }
+
+        $resp = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', $payload);
+        if ($resp->status() === 403) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Your plan does not allow this.'));
+        }
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not install the app.'));
+        }
+
+        return $this->buildResult(true, 'App installed.');
+    }
+
+    public function containerAction(Service $service, string $id, string $action): array
+    {
+        if (! in_array($action, ['start', 'stop', 'restart'], true)) {
+            return $this->buildResult(false, 'Unsupported action.');
+        }
+        if (! $this->ownsContainer($service, $id)) {
+            return $this->buildResult(false, 'That container does not belong to this service.');
+        }
+        $resp = $this->post($this->getServer($service), '/v1/docker/containers/'.rawurlencode($id).'/'.$action, []);
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not complete that action.'));
+        }
+
+        return $this->buildResult(true, 'Done.');
+    }
+
+    public function deleteContainer(Service $service, string $id): array
+    {
+        if (! $this->ownsContainer($service, $id)) {
+            return $this->buildResult(false, 'That container does not belong to this service.');
+        }
+        $resp = $this->delete($this->getServer($service), '/v1/docker/containers/'.rawurlencode($id).'?force=true&remove_volumes=true');
+        if (! $resp->successful()) {
+            return $this->buildResult(false, $this->apiMessage($resp, 'Could not remove the app.'));
+        }
+
+        return $this->buildResult(true, 'App removed.');
+    }
+
+    private function ownsContainer(Service $service, string $id): bool
+    {
+        if ($id === '') {
+            return false;
+        }
+        foreach ($this->containers($service) as $c) {
+            if ($c['id'] === $id || $c['name'] === $id) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function ownsBackup(Service $service, string $filename): bool

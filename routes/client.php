@@ -116,6 +116,10 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::get('services/{service}/backups', [ServiceController::class, 'backups'])->name('services.backups');
         Route::post('services/{service}/backups', [ServiceController::class, 'storeBackup'])->name('services.backups.store');
         Route::post('services/{service}/backups/delete', [ServiceController::class, 'destroyBackup'])->name('services.backups.destroy');
+        Route::get('services/{service}/containers', [ServiceController::class, 'containers'])->name('services.containers');
+        Route::post('services/{service}/containers', [ServiceController::class, 'storeContainer'])->name('services.containers.store');
+        Route::post('services/{service}/containers/action', [ServiceController::class, 'containerAction'])->name('services.containers.action');
+        Route::post('services/{service}/containers/delete', [ServiceController::class, 'destroyContainer'])->name('services.containers.destroy');
         Route::get('services/{service}/databases', [ServiceController::class, 'databases'])->name('services.databases');
         Route::post('services/{service}/databases', [ServiceController::class, 'storeDatabase'])->name('services.databases.store');
         Route::post('services/{service}/databases/delete', [ServiceController::class, 'destroyDatabase'])->name('services.databases.destroy');

@@ -79,6 +79,7 @@
         ['k'=>'dns','name'=>__('client.hosting.dns.title'),'desc'=>__('client.hosting.dns.subtitle'),'ic'=>'ri-global-line','c'=>'#6366f1','route'=>route('client.services.dns',$service)],
         ['k'=>'cron','name'=>__('client.hosting.cron.title'),'desc'=>__('client.hosting.cron.subtitle'),'ic'=>'ri-time-line','c'=>'#ec4899','route'=>route('client.services.cron',$service)],
         ['k'=>'backups','name'=>__('client.hosting.backups.title'),'desc'=>__('client.hosting.backups.subtitle'),'ic'=>'ri-archive-2-line','c'=>'#64748b','route'=>route('client.services.backups',$service)],
+        ['k'=>'containers','name'=>__('client.hosting.containers.title'),'desc'=>__('client.hosting.containers.subtitle'),'ic'=>'ri-apps-2-line','c'=>'#0ea5e9','route'=>route('client.services.containers',$service)],
     ];
 @endphp
 

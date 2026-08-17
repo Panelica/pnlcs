@@ -765,6 +765,66 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    public function containers(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'containers');
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+        $containers = $module->containers($service);
+        $policy = $module->containerPolicy($service);
+        // The catalogue is only needed when the customer can actually install
+        // something; skipping it otherwise saves a call on a locked plan.
+        $templates = $policy['can_create'] ? $module->containerTemplates($service) : [];
+
+        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates'));
+    }
+
+    public function storeContainer(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'containers');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'slug' => ['required', 'string', 'max:100'],
+            'name' => ['nullable', 'string', 'max:40'],
+        ]);
+        $result = $module->deployContainer($service, $data['slug'], $data['name'] ?? '');
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function containerAction(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'containers');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $data = $request->validate([
+            'container_id' => ['required', 'string'],
+            'action' => ['required', 'in:start,stop,restart'],
+        ]);
+        $result = $module->containerAction($service, $data['container_id'], $data['action']);
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    public function destroyContainer(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $module = $this->hostingModule($service, 'containers');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        $result = $module->deleteContainer($service, (string) $request->input('container_id'));
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
     /** Map a friendly preset to the 5-field cron schedule (mirrors the panel). */
     private function presetToSchedule(string $preset): array
     {
