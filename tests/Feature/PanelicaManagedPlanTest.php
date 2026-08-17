@@ -147,3 +147,37 @@ it('leaves a product that is not managed alone', function () {
 
     expect($account[0]->data()['plan_id'])->toBe('starter');
 });
+
+it('gives the panel a slug when creating a managed plan', function () {
+    $sent = null;
+    Illuminate\Support\Facades\Http::fake(function ($request) use (&$sent) {
+        $url = $request->url();
+        if (str_contains($url, '/v1/plans') && $request->method() === 'POST') {
+            $sent = $request->data();
+
+            return Illuminate\Support\Facades\Http::response(['data' => ['id' => 'plan-new']], 200);
+        }
+        if (str_contains($url, '/v1/plans')) {
+            return Illuminate\Support\Facades\Http::response(['data' => []], 200);
+        }
+        if (str_contains($url, '/v1/domains')) {
+            return Illuminate\Support\Facades\Http::response(['data' => ['id' => 'dom-1']], 200);
+        }
+        if (str_contains($url, '/v1/accounts')) {
+            return Illuminate\Support\Facades\Http::response(['data' => ['id' => 'acct-1']], 200);
+        }
+
+        return Illuminate\Support\Facades\Http::response(['data' => []], 200);
+    });
+
+    $server = panelicaServer();
+    $service = panelicaService($server, managedConfig());
+
+    app(Modules\Servers\Panelica\PanelicaModule::class)->create($service);
+
+    // The panel validates slug as required. Sending only a name failed, and the
+    // order died with "Managed plan could not be prepared on the panel" - every
+    // managed product, every time.
+    expect($sent['slug'] ?? null)->not->toBeNull()
+        ->and($sent['name'] ?? null)->not->toBeNull();
+});

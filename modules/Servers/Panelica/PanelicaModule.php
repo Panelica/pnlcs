@@ -215,7 +215,13 @@ class PanelicaModule extends AbstractServerModule
         $planId = $this->findPlanByName($server, $name);
 
         if (! $planId) {
-            $resp = $this->post($server, '/v1/plans', array_merge($spec['basic'], ['name' => $name]));
+            // The panel requires a slug of its own; sending only a name fails
+            // validation, which meant managed products never provisioned at all
+            // ("Managed plan could not be prepared on the panel").
+            $resp = $this->post($server, '/v1/plans', array_merge($spec['basic'], [
+                'name' => $name,
+                'slug' => $name,
+            ]));
             if (! $resp->successful()) {
                 Log::error('PanelicaModule::ensureManagedPlan create failed', ['body' => $resp->body()]);
 
