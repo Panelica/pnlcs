@@ -38,6 +38,11 @@
                     for ($i = 1; $i <= 5; $i++) {
                         if (!empty($configOptions["f{$i}"])) $specs[] = $configOptions["f{$i}"];
                     }
+                    // Same as the hosting cards: fall back to the limits the
+                    // product actually sells rather than an empty card.
+                    if (! $specs) {
+                        $specs = array_map(fn ($r) => $r['text'], $product->resourceSummary());
+                    }
                 @endphp
                 <div class="vps-card">
                     @if(!empty($badgeTexts[$idx]))
