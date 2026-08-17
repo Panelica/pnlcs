@@ -31,9 +31,15 @@
                 $monthlyPrice = $priced[$priceCycle] ?? null;
                 $annualPrice = $priced['annually'] ?? null;
                 $configOptions = is_string($product->config_options) ? json_decode($product->config_options, true) : ($product->config_options ?? []);
+                // Hand-written feature lines win when an operator has set them;
+                // otherwise the card states the plan's real limits, which cannot
+                // drift from what the panel enforces the way typed copy does.
                 $features = [];
                 for ($i = 1; $i <= 7; $i++) {
                     if (!empty($configOptions["f{$i}"])) $features[] = $configOptions["f{$i}"];
+                }
+                if (! $features) {
+                    $features = array_map(fn ($r) => $r['text'], $product->resourceSummary());
                 }
                 $isPopular = $idx === 1;
             @endphp
