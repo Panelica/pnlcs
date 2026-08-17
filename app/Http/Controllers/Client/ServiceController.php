@@ -112,7 +112,8 @@ class ServiceController extends Controller
      * control panel, so the caller names an intent and this decides the path.
      */
     private const PANEL_DESTINATIONS = [
-        'docker' => '/docker/manager',   // container list: terminal, logs, files
+        'docker' => '/docker/manager',     // container list: terminal, logs, files
+        'terminal' => '/docker/manager',   // ...opened on one container, see below
     ];
 
     public function loginToPanel(Service $service)
@@ -145,6 +146,18 @@ class ServiceController extends Controller
             // the parameter and open the dashboard, which is where the link went
             // before this existed - so a customer is never worse off.
             $to = self::PANEL_DESTINATIONS[(string) request()->query('to')] ?? null;
+            // A shell for one particular app. The container has to belong to
+            // this service: the billing key is operator-scoped, so a container
+            // id in a query string proves nothing on its own.
+            if ($to !== null && request()->query('to') === 'terminal') {
+                $container = (string) request()->query('container');
+                $shellUser = request()->query('user') === 'root' ? 'root' : '';
+                if ($container === '' || ! method_exists($module, 'ownsContainer')
+                    || ! $module->ownsContainer($service, $container)) {
+                    return back()->with('error', __('client.hosting.containers.not_your_app'));
+                }
+                $to .= '?terminal='.rawurlencode($container).($shellUser !== '' ? '&user=root' : '');
+            }
             if ($to !== null) {
                 $url .= (str_contains($url, '?') ? '&' : '?').'redirect='.rawurlencode($to);
             }

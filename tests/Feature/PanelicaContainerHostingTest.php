@@ -626,3 +626,81 @@ it('does not keep a password for an app that has been removed', function () {
     expect((new PanelicaModule)->deleteContainer($s, 'c-gone')['success'])->toBeTrue()
         ->and(App\Models\DockerAppCredential::where('container_id', 'c-gone')->count())->toBe(0);
 });
+
+/*
+ * A shell for one container.
+ *
+ * A plain OS template runs `sleep infinity` and ships no SSH server, so the only
+ * way into it is the panel's own terminal. The card links straight at it, as the
+ * image's user or as root, and the container id is checked against the account
+ * first - the billing key is operator-scoped, so an id in a query string proves
+ * nothing by itself.
+ */
+
+function fakeSsoApi(array $containers): void
+{
+    Http::fake(function ($request) use ($containers) {
+        $url = $request->url();
+        if (str_contains($url, 'sso-login')) {
+            return Http::response(['data' => ['url' => 'https://panel.test:8443/auto-login?token=abc']], 200);
+        }
+        if (preg_match('#/v1/accounts/[^/?]+$#', parse_url($url, PHP_URL_PATH) ?? '') && $request->method() === 'GET') {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($url, '/docker/containers') && $request->method() === 'GET') {
+            return Http::response(['data' => ['containers' => $containers]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+}
+
+$OWNED = ['id' => 'c-mine', 'name' => '/acct1-ubuntu', 'image' => 'ubuntu:24.04', 'state' => 'running',
+    'labels' => ['panelica.user_id' => 'acct-1', 'panelica.template' => 'ubuntu-2404']];
+
+it('opens the panel on that container as the image user', function () use ($OWNED) {
+    fakeSsoApi([$OWNED]);
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.login',
+        ['service' => $s, 'to' => 'terminal', 'container' => 'c-mine']))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=abc&redirect=%2Fdocker%2Fmanager%3Fterminal%3Dc-mine');
+});
+
+it('opens the same shell as root when asked', function () use ($OWNED) {
+    fakeSsoApi([$OWNED]);
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.login',
+        ['service' => $s, 'to' => 'terminal', 'container' => 'c-mine', 'user' => 'root']))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=abc&redirect=%2Fdocker%2Fmanager%3Fterminal%3Dc-mine%26user%3Droot');
+});
+
+it('refuses a shell into a container the account does not own', function () use ($OWNED) {
+    fakeSsoApi([$OWNED]);
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.login',
+        ['service' => $s, 'to' => 'terminal', 'container' => 'c-somebody-else']))
+        ->assertSessionHas('error');
+});
+
+it('does not carry a user of the caller choosing into the shell', function () use ($OWNED) {
+    fakeSsoApi([$OWNED]);
+    [$owner, $s] = ctService(ctServer());
+
+    // Anything that is not exactly "root" falls back to the image's own user.
+    $this->actingAs($owner)->get(route('client.services.login',
+        ['service' => $s, 'to' => 'terminal', 'container' => 'c-mine', 'user' => '0:0 && whoami']))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=abc&redirect=%2Fdocker%2Fmanager%3Fterminal%3Dc-mine');
+});
+
+it('offers a shell even for an app with no credentials to show', function () use ($OWNED) {
+    fakeSsoApi([$OWNED]);
+    [$owner, $s] = ctService(ctServer());
+
+    // A bare ubuntu has no address and no login - and is the one that needs the
+    // shell most.
+    $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()->assertSee('to=terminal', false);
+});

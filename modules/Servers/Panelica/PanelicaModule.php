@@ -1619,7 +1619,13 @@ class PanelicaModule extends AbstractServerModule
         return $this->buildResult(true, 'App removed.');
     }
 
-    private function ownsContainer(Service $service, string $id): bool
+    /**
+     * Whether this service's account owns that container.
+     *
+     * Public because the client controller needs the same answer before it
+     * sends a customer to a shell for one particular container.
+     */
+    public function ownsContainer(Service $service, string $id): bool
     {
         if ($id === '') {
             return false;

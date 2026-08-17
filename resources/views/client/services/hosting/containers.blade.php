@@ -152,6 +152,12 @@
         width:26px;height:26px;cursor:pointer;flex:0 0 auto;font-size:12px}
     .ct-cp:hover{color:var(--primary);border-color:var(--primary)}
     .ct-cp.ok{color:#16a34a;border-color:#16a34a}
+    .ct-term{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px}
+    .ct-term > span{color:var(--muted);font-weight:700}
+    .ct-term a{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;
+        border:1px solid var(--border);background:var(--card);color:var(--text);
+        text-decoration:none;font-weight:600}
+    .ct-term a:hover{border-color:var(--primary);color:var(--primary)}
     .ct-panel-link{display:inline-flex;align-items:center;gap:4px;margin-left:6px;color:var(--primary);
         font-weight:700;text-decoration:none;white-space:nowrap}
     .ct-panel-link:hover{text-decoration:underline}
@@ -400,16 +406,31 @@
                 </div>
             </div>
 
-            @if($acc && $acc->hasAnything())
+            {{-- The footer is not conditional on there being credentials: a plain
+                 OS container has none, and it is exactly the one that needs the
+                 shell button most. --}}
             <div class="ct-it-foot">
-                @if($acc->accessUrl())
+                @if($acc && $acc->accessUrl())
                 {{-- The address is the first thing anyone wants after installing,
                      so it is a button, not a line inside a disclosure. --}}
                 <a class="ct-go" href="{{ $acc->accessUrl() }}" target="_blank" rel="noopener">
                     <i class="ri-external-link-line"></i>{{ __('client.hosting.containers.open_app') }}
                 </a>
                 @endif
-                @if($acc->items() || $acc->notes())
+                {{-- A plain OS container runs `sleep infinity` and has no SSH in
+                     it, so the only way in is a shell through the panel. Root or
+                     the image's own user, because a hardened image drops to a
+                     non-root user and half the work needs the other one. --}}
+                <div class="ct-term">
+                    <span>{{ __('client.hosting.containers.terminal') }}</span>
+                    <a href="{{ route('client.services.login', ['service' => $service, 'to' => 'terminal', 'container' => $c['id']]) }}">
+                        <i class="ri-terminal-line"></i>{{ __('client.hosting.containers.terminal_default') }}
+                    </a>
+                    <a href="{{ route('client.services.login', ['service' => $service, 'to' => 'terminal', 'container' => $c['id'], 'user' => 'root']) }}">
+                        <i class="ri-shield-user-line"></i>{{ __('client.hosting.containers.terminal_root') }}
+                    </a>
+                </div>
+                @if($acc && ($acc->items() || $acc->notes()))
                 <details class="ct-acc">
                     <summary>{{ __('client.hosting.containers.access_title') }}</summary>
                     <div class="ct-acc-b">
@@ -435,7 +456,6 @@
                 </details>
                 @endif
             </div>
-            @endif
         </article>
         @endforeach
     </div>
