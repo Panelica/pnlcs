@@ -571,7 +571,7 @@ class ConfigController extends Controller
                     'active' => (string) ($values['active'] ?? '0') === '1',
                 ];
             })
-            ->sortBy('label')
+            ->sortBy(fn ($gw) => [$gw->active ? 0 : 1, $gw->label])
             ->values();
 
         return view('admin.config.gateways', ['gateways' => $gateways]);
