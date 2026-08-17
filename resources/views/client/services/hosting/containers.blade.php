@@ -430,7 +430,7 @@
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.innerHTML = '<i class="ri-add-line"></i><span>' + @json(__('client.hosting.containers.browse_all')) + '</span>';
-    btn.addEventListener('click', ctToggleCatalogue);
+    btn.addEventListener('click', function(){ ctToggleCatalogue(); });
     bar.appendChild(btn);
     side.appendChild(bar);
 
