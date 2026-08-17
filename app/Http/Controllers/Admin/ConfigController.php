@@ -596,7 +596,7 @@ class ConfigController extends Controller
                     'label' => $settings->get('name', $module?->getModuleName() ?? ucfirst($name)),
                     'fields' => $module?->getConfigFields() ?? [],
                     'values' => $settings->toArray(),
-                    'testable' => $module instanceof \App\Contracts\TestsConnection,
+                    'testable' => $name === 'hrd',
                     // Manual works out of the box; every other registrar is
                     // off until the operator switches it on.
                     'active' => $name === 'manual'
@@ -1378,9 +1378,13 @@ class ConfigController extends Controller
      */
     public function testRegistrar(Request $request, string $registrar)
     {
+        if ($registrar !== 'hrd') {
+            return back()->with('error', __('admin.registrars.test_unavailable'));
+        }
+
         $module = app(ModuleRegistry::class)->getRegistrarModule($registrar);
 
-        if (! $module instanceof \App\Contracts\TestsConnection) {
+        if (! $module || ! method_exists($module, 'testConnection')) {
             return back()->with('error', __('admin.registrars.test_unavailable'));
         }
 

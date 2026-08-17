@@ -4,7 +4,6 @@ namespace Modules\Registrars\HRD;
 
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
-use App\Contracts\TestsConnection;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
 use App\Support\MapsClientFields;
@@ -23,7 +22,7 @@ use Illuminate\Support\Facades\Log;
  * client's NIP (`tax_id`) when present. Domains are registered asynchronously:
  * domainCreate() returns an action id which can be followed with actionInfo().
  */
-class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData, TestsConnection
+class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
     use MapsClientFields;
 
