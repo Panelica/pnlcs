@@ -12,7 +12,13 @@
     .ct-cnt{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:6px 13px;border-radius:999px}
     .ct-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:18px;align-items:start}
     .ct-col-main{order:1;min-width:0}
-    .ct-col-side{order:2;min-width:0}
+    /* The catalogue is ninety-eight apps tall. Left to grow it made the page
+       15,000px long and pushed the footer out of reach, so it scrolls inside
+       itself and stays put while the customer works on their own apps. */
+    .ct-col-side{order:2;min-width:0;position:sticky;top:16px;max-height:calc(100vh - 32px);
+        display:flex;flex-direction:column;overflow:hidden}
+    .ct-col-side > form{overflow-y:auto;min-height:0}
+    .ct-col-side .ct-empty{overflow-y:auto}
     .ct-col-side .ct-apps{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;padding:14px}
     .ct-col-side .ct-app{padding:10px 6px}
     .ct-col-side .ct-app .ds{display:none}
