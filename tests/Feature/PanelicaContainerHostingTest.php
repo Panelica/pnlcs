@@ -575,3 +575,41 @@ it('draws a helper container with its own logo, not the app it belongs to', func
         ->and(App\Models\DockerApp::forContainer($map, 'panelica/openlitespeed-wordpress:latest', 'wordpress'))->toBe('/img/apps/wordpress.svg')
         ->and(App\Models\DockerApp::forContainer($map, 'something/unknown:1', 'unknown'))->toBeNull();
 });
+
+/*
+ * Getting to a shell.
+ *
+ * A container's terminal lives in the hosting panel - the panel has one per
+ * container and the hosting account is allowed to use it. The apps page sends
+ * the customer there, and names the screen it wants rather than a path, because
+ * a path from the query string would be an open redirect into a control panel.
+ */
+
+it('sends the customer to the panel screen that holds the terminal', function () {
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'sso-login')) {
+            return Http::response(['data' => ['url' => 'https://panel.test:8443/auto-login?token=abc']], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.login', ['service' => $s, 'to' => 'docker']))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=abc&redirect=%2Fdocker%2Fmanager');
+});
+
+it('refuses to forward the customer to an address of somebody else\'s choosing', function () {
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'sso-login')) {
+            return Http::response(['data' => ['url' => 'https://panel.test:8443/auto-login?token=abc']], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+    [$owner, $s] = ctService(ctServer());
+
+    // An unknown intent is dropped, not passed through.
+    $this->actingAs($owner)->get(route('client.services.login', ['service' => $s, 'to' => 'https://evil.example/steal']))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=abc');
+});

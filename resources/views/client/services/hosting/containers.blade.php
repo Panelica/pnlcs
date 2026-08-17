@@ -159,6 +159,9 @@
         width:26px;height:26px;cursor:pointer;flex:0 0 auto;font-size:12px}
     .ct-cp:hover{color:var(--primary);border-color:var(--primary)}
     .ct-cp.ok{color:#16a34a;border-color:#16a34a}
+    .ct-panel-link{display:inline-flex;align-items:center;gap:4px;margin-left:6px;color:var(--primary);
+        font-weight:700;text-decoration:none;white-space:nowrap}
+    .ct-panel-link:hover{text-decoration:underline}
     .ct-acc-n{margin:10px 0 0;color:var(--muted);font-size:11px;line-height:1.6}
     @media (max-width:820px){
         .ct-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -443,7 +446,18 @@
         </article>
         @endforeach
     </div>
-    <div class="ct-note"><i class="ri-terminal-box-line"></i>{{ __('client.hosting.containers.panel_hint') }}</div>
+    {{-- A shell inside a container is a real need - installing a plugin by hand,
+         reading a log, running a migration. The panel already has a terminal per
+         container and the hosting account may use it, so this points at it
+         instead of describing it and leaving the customer to find the door. --}}
+    <div class="ct-note info">
+        <i class="ri-terminal-box-line"></i>
+        <span>{{ __('client.hosting.containers.panel_hint') }}
+            <a class="ct-panel-link" href="{{ route('client.services.login', ['service' => $service, 'to' => 'docker']) }}">
+                {{ __('client.hosting.containers.open_panel') }} <i class="ri-arrow-right-line"></i>
+            </a>
+        </span>
+    </div>
     @endif
 </div>
 </div>

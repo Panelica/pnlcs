@@ -105,6 +105,16 @@ class ServiceController extends Controller
     /**
      * Single sign-on into the hosting control panel for this service.
      */
+    /**
+     * Where inside the panel a signed-in customer may be dropped.
+     *
+     * A path from the query string would be an open redirect into someone's
+     * control panel, so the caller names an intent and this decides the path.
+     */
+    private const PANEL_DESTINATIONS = [
+        'docker' => '/docker/manager',   // container list: terminal, logs, files
+    ];
+
     public function loginToPanel(Service $service)
     {
         abort_if($service->client_id !== $this->getClientId(), 403);
@@ -130,7 +140,16 @@ class ServiceController extends Controller
 
         $result = $module->ssoLogin($service);
         if (($result['success'] ?? false) && ! empty($result['data']['url'])) {
-            return redirect()->away($result['data']['url']);
+            $url = (string) $result['data']['url'];
+            // Ask the panel to land on a particular screen. Older panels ignore
+            // the parameter and open the dashboard, which is where the link went
+            // before this existed - so a customer is never worse off.
+            $to = self::PANEL_DESTINATIONS[(string) request()->query('to')] ?? null;
+            if ($to !== null) {
+                $url .= (str_contains($url, '?') ? '&' : '?').'redirect='.rawurlencode($to);
+            }
+
+            return redirect()->away($url);
         }
 
         return back()->with('error', $result['message'] ?? __('messages.error.panel_login_unavailable'));
