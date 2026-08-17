@@ -781,8 +781,12 @@ class ServiceController extends Controller
         // the customer's own address.
         $domains = method_exists($module, 'accountDomains') ? $module->accountDomains($service) : [];
         $links = method_exists($module, 'containerDomainLinks') ? $module->containerDomainLinks($service) : [];
-        // How to reach each app - the panel gives this once, at install time.
-        $access = method_exists($module, 'containerAccessDetails') ? $module->containerAccessDetails($service) : [];
+        // How to reach each app. Two sources: what the panel said at install time,
+        // and what it says about the running container now - the second is the only
+        // one that covers apps installed outside PNLCS.
+        $stored = method_exists($module, 'containerAccessDetails') ? $module->containerAccessDetails($service) : [];
+        $live = method_exists($module, 'liveContainerAccess') ? $module->liveContainerAccess($service, $containers) : [];
+        $access = \App\Models\DockerAppCredential::withLive($stored, $live, $containers);
 
         return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links', 'access'));
     }

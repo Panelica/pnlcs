@@ -996,6 +996,9 @@ class PanelicaModule extends AbstractServerModule
      *
      * @return list<array{id:string,name:string,image:string,state:string,status:string,cpu_percent:float,mem_usage:int,mem_limit:int,ports:list<string>,created:string,template:string}>
      */
+    /** How many containers to inspect for a single page render. */
+    private const LIVE_ACCESS_MAX = 12;
+
     public function containers(Service $service): array
     {
         $server = $this->getServer($service);
@@ -1014,12 +1017,19 @@ class PanelicaModule extends AbstractServerModule
             if ((string) ($labels['panelica.user_id'] ?? '') !== (string) $accountId) {
                 continue; // not this account's container
             }
+            // The panel names these host_port/container_port. Reading only Docker's
+            // own PublicPort/PrivatePort spelling meant this list came back empty
+            // every time and the customer saw no port at all.
             $ports = [];
             foreach ((array) ($c['ports'] ?? []) as $p) {
-                $pub = $p['public_port'] ?? $p['PublicPort'] ?? null;
-                $priv = $p['private_port'] ?? $p['PrivatePort'] ?? null;
-                if ($pub) {
-                    $ports[] = $pub.' → '.$priv;
+                $pub = $p['host_port'] ?? $p['public_port'] ?? $p['PublicPort'] ?? null;
+                $priv = $p['container_port'] ?? $p['private_port'] ?? $p['PrivatePort'] ?? null;
+                if ((string) $pub === '' || (string) $priv === '') {
+                    continue;   // not published outside the container
+                }
+                $label = $pub.' → '.$priv;
+                if (! in_array($label, $ports, true)) {
+                    $ports[] = $label;   // tcp and udp of one mapping read the same
                 }
             }
             $out[] = [
@@ -1435,6 +1445,142 @@ class PanelicaModule extends AbstractServerModule
     public function containerAccessDetails(Service $service): array
     {
         return \App\Models\DockerAppCredential::forService((int) $service->id);
+    }
+
+    /**
+     * What the panel can tell us about a running container right now.
+     *
+     * The deploy-time record only exists for apps installed through here. Anything
+     * installed from the panel itself, or before that record was kept, showed the
+     * customer nothing at all - while the same details sat in the panel the whole
+     * time. So ask: the published port gives the address, and the container's own
+     * environment holds the first login the image generated.
+     *
+     * Fenced to the account: only containers this service already owns are
+     * inspected, because the billing key is operator-scoped and would happily
+     * describe somebody else's container.
+     *
+     * @param  array<int, array<string, mixed>>  $containers  the fenced list
+     * @return array<string, array{access_url: ?string, credentials: array<string, string>, data_path: ?string}>
+     */
+    public function liveContainerAccess(Service $service, array $containers): array
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return [];
+        }
+        $host = trim((string) $server->hostname) ?: trim((string) $server->ip_address);
+
+        $out = [];
+        foreach (array_slice($containers, 0, self::LIVE_ACCESS_MAX) as $c) {
+            $id = (string) ($c['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+            try {
+                $resp = $this->get($server, '/v1/docker/containers/'.rawurlencode($id));
+            } catch (\Throwable $e) {
+                continue;   // one unreachable container must not empty the page
+            }
+            if (! $resp->successful()) {
+                continue;
+            }
+            $d = (array) ($resp->json('data') ?? []);
+            $out[$id] = [
+                'access_url' => $this->publishedAddress($host, (array) ($d['ports'] ?? [])),
+                'credentials' => $this->credentialsFromEnv((array) ($d['env'] ?? [])),
+                'data_path' => $this->dataPath((array) ($d['mounts'] ?? [])),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * The address a browser can open, from the container's published ports.
+     *
+     * Prefers a web port over whatever else happens to be published, so an app
+     * that exposes both 80 and 3306 is offered as a site, not as a database.
+     *
+     * @param  array<int, array<string, mixed>>  $ports
+     */
+    private function publishedAddress(string $host, array $ports): ?string
+    {
+        if ($host === '') {
+            return null;
+        }
+        $best = null;
+        $bestRank = PHP_INT_MAX;
+        foreach ($ports as $p) {
+            $pub = (string) ($p['host_port'] ?? '');
+            $priv = (string) ($p['container_port'] ?? '');
+            if ($pub === '' || $priv === '' || strtolower((string) ($p['protocol'] ?? 'tcp')) !== 'tcp') {
+                continue;
+            }
+            $rank = match ($priv) {
+                '80' => 0, '443' => 1, '8080' => 2, '3000' => 3, default => 10,
+            };
+            if ($rank < $bestRank) {
+                $bestRank = $rank;
+                $best = ($priv === '443' ? 'https://' : 'http://').$host.':'.$pub;
+            }
+        }
+
+        return $best;
+    }
+
+    /**
+     * The parts of a container's environment worth showing the customer.
+     *
+     * An image's environment is mostly plumbing - PATH, LANG, the image's own
+     * version stamp - with the generated admin password sitting in the middle of
+     * it. Keep what reads like a credential or a connection detail, drop the rest,
+     * and never show a value long enough to be a certificate or a key file.
+     *
+     * @param  array<int, string>  $env
+     * @return array<string, string>
+     */
+    private function credentialsFromEnv(array $env): array
+    {
+        $keep = '/(PASSWORD|PASSWD|SECRET|TOKEN|_KEY$|APIKEY|API_KEY|USER$|USERNAME|_USER$|ADMIN|EMAIL|DATABASE|^DB_|_DB$|_HOST$|LICENSE|LOGIN)/i';
+        $drop = '/(^PATH$|VERSION|^LANG|^LC_|DEBIAN_FRONTEND|^GOSU|^TERM$|^HOME$|^HOSTNAME$|_PATH$|^LS_FD$|^PHPINI)/i';
+
+        $out = [];
+        foreach ($env as $line) {
+            $line = (string) $line;
+            $at = strpos($line, '=');
+            if ($at === false || $at === 0) {
+                continue;
+            }
+            $key = substr($line, 0, $at);
+            $value = substr($line, $at + 1);
+            if ($value === '' || strlen($value) > 200) {
+                continue;
+            }
+            if (preg_match($drop, $key) || ! preg_match($keep, $key)) {
+                continue;
+            }
+            $out[$key] = $value;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Where the app keeps its data on the customer's account, if it binds a path.
+     *
+     * @param  array<int, array<string, mixed>>  $mounts
+     */
+    private function dataPath(array $mounts): ?string
+    {
+        foreach ($mounts as $m) {
+            $src = (string) ($m['source'] ?? '');
+            if ((string) ($m['type'] ?? '') === 'bind' && str_starts_with($src, '/home/')) {
+                return $src;
+            }
+        }
+
+        return null;
     }
 
     public function containerAction(Service $service, string $id, string $action): array

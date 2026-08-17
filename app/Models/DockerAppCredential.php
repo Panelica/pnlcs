@@ -60,6 +60,66 @@ class DockerAppCredential extends Model
         return $this->accessUrl() !== null || $this->items() !== [] || $this->notes() !== '';
     }
 
+    /**
+     * The stored record and what the panel says right now, as one list.
+     *
+     * Two sources, and neither is enough alone: the deploy-time record carries
+     * the panel's own notes and only exists for apps installed through here,
+     * while the live lookup describes every container but knows nothing about
+     * what was said at install time. Stored values win where they overlap -
+     * they were written for a person to read.
+     *
+     * The rows built here are never saved; they exist to draw the page.
+     *
+     * @param  array<string, static>  $stored  keyed by container id
+     * @param  array<string, array{access_url: ?string, credentials: array<string, string>, data_path: ?string}>  $live
+     * @param  array<int, array<string, mixed>>  $containers
+     * @return array<string, static>
+     */
+    public static function withLive(array $stored, array $live, array $containers): array
+    {
+        $out = [];
+        foreach ($containers as $c) {
+            $id = (string) ($c['id'] ?? '');
+            if ($id === '') {
+                continue;
+            }
+            $row = $stored[$id] ?? null;
+            $seen = $live[$id] ?? null;
+            if (! $row && ! $seen) {
+                continue;
+            }
+            if (! $row) {
+                $row = new static([
+                    'container_id' => $id,
+                    'container_name' => ltrim((string) ($c['name'] ?? ''), '/'),
+                    'slug' => (string) ($c['template'] ?? ''),
+                    'payload' => [],
+                ]);
+            }
+            if ($seen) {
+                $payload = (array) $row->payload;
+                if (($payload['access_url'] ?? null) === null && $seen['access_url'] !== null) {
+                    $payload['access_url'] = $seen['access_url'];
+                }
+                $creds = (array) ($payload['credentials'] ?? []);
+                foreach ($seen['credentials'] as $k => $v) {
+                    if (! array_key_exists($k, $creds)) {
+                        $creds[$k] = $v;
+                    }
+                }
+                if ($seen['data_path'] !== null && ! array_key_exists('Data directory', $creds)) {
+                    $creds['Data directory'] = $seen['data_path'];
+                }
+                $payload['credentials'] = $creds;
+                $row->payload = $payload;
+            }
+            $out[$id] = $row;
+        }
+
+        return $out;
+    }
+
     /** service_id + container_id => row, for drawing a whole list in one query. */
     public static function forService(int $serviceId): array
     {

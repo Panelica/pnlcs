@@ -464,3 +464,105 @@ it('shows the connection details on the apps page', function () use ($MINE) {
     $this->actingAs($owner)->get(route('client.services.containers', $s))
         ->assertOk()->assertSee('http://5.6.7.8:8080/wp-admin');
 });
+
+/*
+ * Reading what the panel already knows about a running container.
+ *
+ * Everything below was measured against a live panel first: the ports arrive as
+ * host_port/container_port, and the inspect response carries the environment the
+ * image was started with - which is where an app's generated admin password
+ * lives. PNLCS was reading neither, so a customer who installed WordPress saw an
+ * empty Ports column and no login anywhere.
+ */
+
+/** A fake that answers the container list and the per-container inspect apart. */
+function fakeInspectApi(array $listed, array $inspect): void
+{
+    Http::fake(function ($request) use ($listed, $inspect) {
+        $url = $request->url();
+        $path = parse_url($url, PHP_URL_PATH) ?? '';
+        if (preg_match('#/v1/accounts/[^/?]+$#', $path) && $request->method() === 'GET') {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($url, '/v1/plans')) {
+            return Http::response(['data' => [['id' => 'plan-1', 'max_containers' => 5]]], 200);
+        }
+        if (preg_match('#/v1/docker/containers/([^/?]+)$#', $path, $m) && $request->method() === 'GET') {
+            return Http::response(['data' => $inspect[$m[1]] ?? []], 200);
+        }
+        if (str_contains($url, '/docker/containers') && $request->method() === 'GET') {
+            return Http::response(['data' => ['containers' => $listed]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+}
+
+$WP = [
+    'id' => 'c-wp', 'name' => '/acct1-wp', 'image' => 'wordpress', 'state' => 'running',
+    'labels' => ['panelica.user_id' => 'acct-1', 'panelica.template' => 'wordpress'],
+    'ports' => [
+        ['host_port' => '8092', 'container_port' => '80', 'protocol' => 'tcp'],
+        ['host_port' => '8456', 'container_port' => '443', 'protocol' => 'tcp'],
+        ['host_port' => '8456', 'container_port' => '443', 'protocol' => 'udp'],
+        ['host_port' => '', 'container_port' => '7080', 'protocol' => 'tcp'],
+    ],
+];
+
+$WP_INSPECT = ['c-wp' => [
+    'ports' => $WP['ports'],
+    'env' => [
+        'WP_ADMIN_USER=admin', 'WP_ADMIN_PASSWORD=s3cret-admin', 'DB_PASSWORD=s3cret-db',
+        'DB_HOST=mysql', 'PATH=/usr/bin', 'MARIADB_VERSION=11.8', 'DEBIAN_FRONTEND=noninteractive',
+        'LS_FD=/usr/local/lsws',
+    ],
+    'mounts' => [['type' => 'bind', 'source' => '/home/acct1/docker/wp_html', 'destination' => '/var/www', 'rw' => true]],
+]];
+
+it('shows the published port the panel reports', function () use ($WP, $WP_INSPECT) {
+    fakeInspectApi([$WP], $WP_INSPECT);
+    [$owner, $s] = ctService(ctServer());
+
+    $rows = (new PanelicaModule)->containers($s);
+
+    // Both spellings of one mapping collapse to one line, and a port that is not
+    // published outside the container is not offered as if it were reachable.
+    expect($rows[0]['ports'])->toBe(['8092 → 80', '8456 → 443']);
+});
+
+it('reads the login out of a container it did not install', function () use ($WP, $WP_INSPECT) {
+    fakeInspectApi([$WP], $WP_INSPECT);
+    [$owner, $s] = ctService(ctServer());
+
+    $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()
+        ->assertSee('s3cret-admin')              // the password the image generated
+        ->assertSee('/home/acct1/docker/wp_html')  // where its data lives
+        ->assertDontSee('DEBIAN_FRONTEND')       // plumbing, not a credential
+        ->assertDontSee('MARIADB_VERSION');
+});
+
+it('offers the web port as the address, not whatever else is published', function () use ($WP, $WP_INSPECT) {
+    fakeInspectApi([$WP], $WP_INSPECT);
+    [$owner, $s] = ctService(ctServer());
+    $c = (new PanelicaModule)->containers($s);
+
+    $live = (new PanelicaModule)->liveContainerAccess($s, $c);
+
+    expect($live['c-wp']['access_url'])->toBe('http://panel.test:8092');
+});
+
+it('keeps what the panel said at install time over what it says now', function () use ($WP, $WP_INSPECT) {
+    fakeInspectApi([$WP], $WP_INSPECT);
+    [$owner, $s] = ctService(ctServer());
+    App\Models\DockerAppCredential::create([
+        'service_id' => $s->id, 'container_id' => 'c-wp', 'container_name' => 'acct1-wp', 'slug' => 'wordpress',
+        'payload' => ['access_url' => 'https://shop.example.com', 'credentials' => ['DB_PASSWORD' => 'written-at-install']],
+    ]);
+
+    $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()
+        ->assertSee('https://shop.example.com')
+        ->assertSee('written-at-install')
+        ->assertDontSee('s3cret-db');
+});
