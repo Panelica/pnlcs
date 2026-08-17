@@ -60,7 +60,7 @@ class CartService
         return $cart;
     }
 
-    public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null, array $addons = []): Cart
+    public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null, array $addons = [], ?string $appSlug = null): Cart
     {
         // The configure page refuses these and the listing leaves them out, but
         // the request that gets here only checked that the id exists — enough to
@@ -122,6 +122,9 @@ class CartService
             'domain' => $domain,
             'domain_option' => $domainOption,
             'config_options' => $options,
+            // The app this order installs, when the product lets the customer
+            // choose one rather than selling a fixed app.
+            'app_slug' => $appSlug,
             'price' => round($price, 2),
             'notes' => $notes,
         ];

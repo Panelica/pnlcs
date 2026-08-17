@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Server;
-use App\Services\DockerAppLogoImporter;
+use App\Services\DockerAppImporter;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Console\Command;
 
@@ -14,7 +14,7 @@ use Illuminate\Console\Command;
  * so a new install can be seeded in one go and so the run can be repeated from
  * a deploy step.
  */
-class ImportDockerAppLogosCommand extends Command
+class ImportDockerAppsCommand extends Command
 {
     protected $signature = 'docker-apps:import-logos
         {--overwrite : Replace images that are already stored}
@@ -22,7 +22,7 @@ class ImportDockerAppLogosCommand extends Command
 
     protected $description = 'Fetch catalogue images for the Docker app catalogue';
 
-    public function handle(DockerAppLogoImporter $importer): int
+    public function handle(DockerAppImporter $importer): int
     {
         $server = Server::where('type', 'panelica')->where('active', true)->first();
         if (! $server) {

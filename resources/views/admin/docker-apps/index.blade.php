@@ -16,12 +16,20 @@
     .da-row button:hover{background:#eee}
     .da-del{color:#b3261e;border-color:#f0c8c5 !important}
     .da-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .da-sell{margin-top:8px;padding-top:8px;border-top:1px dashed #e8e8e8}
+    .da-flags{display:flex;gap:9px;align-items:center;font-size:11px;color:#555;flex-wrap:wrap}
+    .da-flags label{display:flex;align-items:center;gap:4px}
+    .da-flags input[type=number]{font-size:11px;padding:2px 4px;border:1px solid #ddd;border-radius:5px}
+    .da-off{font-size:10px;font-weight:700;color:#b3261e;margin-left:4px}
     .da-badge{font-size:11px;padding:2px 7px;border-radius:999px;background:#eef4ff;color:#2a5db0;font-weight:700}
 </style>
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
     <h1>{{ __('admin.docker_apps.title') }}</h1>
-    <span class="da-badge">{{ __('admin.docker_apps.have_count', ['have' => $totalWithLogo, 'total' => count($templates)]) }}</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <span class="da-badge">{{ __('admin.docker_apps.have_count', ['have' => $totalWithLogo, 'total' => count($templates)]) }}</span>
+        <span class="da-badge" style="background:#eefaf0;color:#1d7a3c;">{{ __('admin.docker_apps.sellable_count', ['count' => $totalSellable]) }}</span>
+    </div>
 </div>
 
 <div class="card" style="margin-bottom:15px;">
@@ -75,7 +83,10 @@
                 <div class="da-mark" style="background:hsl({{ $hue }},62%,94%);color:hsl({{ $hue }},52%,34%);border-color:hsl({{ $hue }},45%,84%)">{{ $initial }}</div>
             @endif
             <div style="min-width:0">
-                <div class="da-nm">{{ $t['name'] }}</div>
+                <div class="da-nm">{{ $t['name'] }}
+                    @if($t['is_featured'])<span title="{{ __('admin.docker_apps.featured') }}" style="color:#f0a92b">&#9733;</span>@endif
+                    @if(($rows[$t['slug']] ?? null) && ! $rows[$t['slug']]->is_sellable)<span class="da-off">{{ __('admin.docker_apps.not_sold') }}</span>@endif
+                </div>
                 <div class="da-sl">{{ $t['slug'] }}</div>
             </div>
         </div>
@@ -102,6 +113,23 @@
             <button type="submit" class="da-del" style="flex:1">{{ __('admin.docker_apps.remove') }}</button>
         </form>
         @endif
+
+        {{-- Commercial side: whether we offer this app at all, whether it leads
+             the grid, and the one line it says on the card. --}}
+        @php $row = $rows[$t['slug']] ?? null; @endphp
+        <form method="POST" action="{{ route('admin.docker-apps.selling') }}" class="da-sell">
+            @csrf
+            <input type="hidden" name="slug" value="{{ $t['slug'] }}">
+            <div class="da-flags">
+                <label><input type="checkbox" name="is_sellable" value="1" {{ ! $row || $row->is_sellable ? 'checked' : '' }}> {{ __('admin.docker_apps.sellable') }}</label>
+                <label><input type="checkbox" name="is_featured" value="1" {{ $row?->is_featured ? 'checked' : '' }}> {{ __('admin.docker_apps.featured') }}</label>
+                <input type="number" name="sort_order" min="0" max="9999" value="{{ $row?->sort_order ?? 0 }}" title="{{ __('admin.docker_apps.sort_order') }}" style="width:58px">
+            </div>
+            <div class="da-row">
+                <input type="text" name="tagline" maxlength="160" value="{{ $row?->tagline }}" placeholder="{{ __('admin.docker_apps.tagline_ph') }}">
+                <button type="submit">{{ __('admin.docker_apps.save') }}</button>
+            </div>
+        </form>
     </div>
     @endforeach
 </div>

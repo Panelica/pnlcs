@@ -27,6 +27,47 @@
     @csrf
     <input type="hidden" name="product_id" value="{{ $product->id }}">
 
+    @if(! empty($apps))
+    {{-- One product, any app. Selling ninety-eight apps as ninety-eight
+         products does not scale, so the choice is made here and the order
+         installs it. --}}
+    <div class="pn-card" style="margin-bottom:16px;">
+        <div class="pn-card-header">{{ __('client.cart.choose_app') }}</div>
+        <div class="pn-card-body">
+            <div class="ap-search">
+                <input type="text" id="ap-q" class="form-control" autocomplete="off"
+                       placeholder="{{ __('client.cart.app_search_ph') }}" oninput="apFilter()"
+                       onkeydown="if(event.key==='Enter')event.preventDefault()">
+                <span class="ap-count" id="ap-count">{{ __('client.cart.app_count', ['count' => count($apps)]) }}</span>
+            </div>
+            <input type="hidden" name="app_slug" id="ap-slug" value="{{ old('app_slug') }}">
+            <div class="ap-grid">
+                @foreach($apps as $a)
+                @php
+                    $hue = crc32($a['slug']) % 360;
+                    $initial = mb_strtoupper(mb_substr(trim($a['name']) ?: $a['slug'], 0, 1));
+                    $line = $a['tagline'] ?: $a['description'];
+                @endphp
+                <div class="ap-app{{ old('app_slug') === $a['slug'] ? ' on' : '' }}" data-slug="{{ $a['slug'] }}"
+                     data-find="{{ mb_strtolower($a['name'].' '.$a['slug'].' '.$line.' '.implode(' ', $a['categories'] ?? [])) }}"
+                     onclick="apPick(this)" title="{{ $line }}">
+                    @if($a['is_featured'])<span class="ap-star" title="{{ __('client.cart.app_featured') }}">&#9733;</span>@endif
+                    @if($a['logo_url_local'])
+                        <img src="{{ $a['logo_url_local'] }}" alt="" loading="lazy" class="ap-logo">
+                    @else
+                        <div class="ap-mark" style="background:hsl({{ $hue }},62%,94%);color:hsl({{ $hue }},52%,34%);border-color:hsl({{ $hue }},45%,84%)">{{ $initial }}</div>
+                    @endif
+                    <div class="ap-nm">{{ $a['name'] }}</div>
+                    <div class="ap-ds">{{ $line }}</div>
+                </div>
+                @endforeach
+            </div>
+            <div class="ap-none" id="ap-none" hidden>{{ __('client.cart.app_search_none') }}</div>
+            @error('app_slug')<div class="text-danger" style="font-size:12px;margin-top:8px">{{ $message }}</div>@enderror
+        </div>
+    </div>
+    @endif
+
     <div class="config-layout">
         <div>
             {{-- Billing Cycle --}}
@@ -219,7 +260,46 @@ document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
 });
 var first = document.querySelector('input[name=billing_cycle]:checked');
 if (first) { first.dispatchEvent(new Event('change')); }
+
+function apPick(el){
+    document.querySelectorAll('.ap-app').forEach(function(a){ a.classList.remove('on'); });
+    el.classList.add('on');
+    document.getElementById('ap-slug').value = el.getAttribute('data-slug') || '';
+}
+function apFilter(){
+    var q = (document.getElementById('ap-q').value || '').toLowerCase().trim();
+    var terms = q ? q.split(/\s+/) : [];
+    var shown = 0;
+    document.querySelectorAll('.ap-app').forEach(function(a){
+        var hay = a.getAttribute('data-find') || '';
+        var ok = terms.every(function(t){ return hay.indexOf(t) !== -1; });
+        a.hidden = !ok;
+        if (ok) shown++;
+    });
+    document.getElementById('ap-none').hidden = shown !== 0;
+    var c = document.getElementById('ap-count');
+    c.textContent = c.getAttribute('data-tpl').replace(':count', shown);
+}
+document.addEventListener('DOMContentLoaded', function(){
+    var c = document.getElementById('ap-count');
+    if (c) c.setAttribute('data-tpl', @json(__('client.cart.app_count', ['count' => ':count'])));
+});
 </script>
+<style>
+    .ap-search{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .ap-count{font-size:11.5px;color:var(--muted);white-space:nowrap}
+    .ap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+    .ap-app{border:1px solid var(--border);border-radius:11px;padding:12px 10px;text-align:center;cursor:pointer;
+        background:var(--bg);transition:transform .14s,border-color .14s;position:relative}
+    .ap-app:hover{transform:translateY(-2px);border-color:var(--primary)}
+    .ap-app.on{border-color:var(--primary);background:var(--primary-light);box-shadow:0 0 0 1px var(--primary) inset}
+    .ap-logo,.ap-mark{width:38px;height:38px;margin:0 auto 8px;display:block;object-fit:contain}
+    .ap-mark{border-radius:10px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800}
+    .ap-nm{font-size:12.5px;font-weight:700;line-height:1.25;color:var(--text)}
+    .ap-ds{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ap-star{position:absolute;top:6px;right:7px;color:#f0a92b;font-size:11px;line-height:1}
+    .ap-none{padding:18px;text-align:center;color:var(--muted);font-size:13px}
+</style>
 @endsection
 
 @endsection

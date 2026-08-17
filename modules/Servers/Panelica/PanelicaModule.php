@@ -392,7 +392,11 @@ class PanelicaModule extends AbstractServerModule
         // it. Handing over an account without it would be reporting success on
         // a service the customer cannot use, so a failed install rolls the
         // account back the same way a failed domain does.
-        $appSlug = trim((string) ($config['panelica_app_template'] ?? ''));
+        // What the customer chose while ordering wins over the product's own
+        // fixed app: a "pick your app" product has no fixed one, and a customer
+        // who chose must get what they paid for.
+        $chosen = trim((string) ($this->getModuleData($service)['panelica_app_template'] ?? ''));
+        $appSlug = $chosen !== '' ? $chosen : trim((string) ($config['panelica_app_template'] ?? ''));
         if ($appSlug !== '') {
             $app = $this->installProductApp($server, $userId, $domainId, $appSlug);
             if (! $app['success']) {
@@ -1069,7 +1073,17 @@ class PanelicaModule extends AbstractServerModule
             if ($slug === '') {
                 continue;
             }
-            $out[] = ['slug' => $slug, 'name' => (string) ($t['name'] ?? $slug)];
+            $out[] = [
+                'slug' => $slug,
+                'name' => (string) ($t['name'] ?? $slug),
+                'description' => (string) ($t['description'] ?? ''),
+                'categories' => array_values((array) ($t['categories'] ?? [])),
+                'min_memory_mb' => (int) ($t['min_memory_mb'] ?? 0),
+                'min_cpu_percent' => (int) ($t['min_cpu_percent'] ?? 0),
+                // The panel's own link. Used only as a starting point when
+                // filling in images; the catalogue renders ours.
+                'logo_url' => (string) ($t['logo_url'] ?? ''),
+            ];
         }
         usort($out, fn ($a, $b) => strcasecmp($a['name'], $b['name']));
 

@@ -2,7 +2,7 @@
 
 use App\Models\Admin;
 use App\Models\AdminRole;
-use App\Models\DockerAppLogo;
+use App\Models\DockerApp;
 use App\Models\Server;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -55,7 +55,7 @@ beforeEach(function () {
 it('lists the panel catalogue with what has an image and what does not', function () {
     logoServer();
     fakeCatalogue([['slug' => 'wordpress', 'name' => 'WordPress'], ['slug' => 'n8n', 'name' => 'n8n']]);
-    DockerAppLogo::create(['slug' => 'wordpress', 'path' => 'docker-apps/wordpress-abc.png']);
+    DockerApp::create(['slug' => 'wordpress', 'path' => 'docker-apps/wordpress-abc.png']);
 
     $this->actingAs(logoAdmin(), 'admin')->get(route('admin.docker-apps.index'))
         ->assertOk()
@@ -66,7 +66,7 @@ it('lists the panel catalogue with what has an image and what does not', functio
 it('shows only the apps still missing an image when asked', function () {
     logoServer();
     fakeCatalogue([['slug' => 'wordpress', 'name' => 'WordPress'], ['slug' => 'n8n', 'name' => 'n8n']]);
-    DockerAppLogo::create(['slug' => 'wordpress', 'path' => 'docker-apps/wordpress-abc.png']);
+    DockerApp::create(['slug' => 'wordpress', 'path' => 'docker-apps/wordpress-abc.png']);
 
     $page = $this->actingAs(logoAdmin(), 'admin')->get(route('admin.docker-apps.index', ['missing' => 1]))->assertOk();
     expect(collect($page->viewData('templates'))->pluck('slug')->all())->toBe(['n8n']);
@@ -81,13 +81,13 @@ it('stores an uploaded image and serves it to the catalogue', function () {
         'logo' => UploadedFile::fake()->image('n8n.png', 40, 40),
     ])->assertRedirect();
 
-    $logo = DockerAppLogo::where('slug', 'n8n')->firstOrFail();
+    $logo = DockerApp::where('slug', 'n8n')->firstOrFail();
     Storage::disk('public')->assertExists($logo->path);
 
     // Relative, so it resolves against whatever host the panel is served from.
     // Building on the app URL broke here: a container environment variable
     // overrode it with an internal host:port and every image 404'd.
-    expect(DockerAppLogo::urlMap()['n8n'])->toStartWith('/storage/docker-apps/')
+    expect(DockerApp::urlMap()['n8n'])->toStartWith('/storage/docker-apps/')
         ->not->toContain('http');
 });
 
@@ -98,7 +98,7 @@ it('refuses a file that is not an image', function () {
         'logo' => UploadedFile::fake()->create('payload.php', 4, 'application/x-php'),
     ])->assertSessionHasErrors('logo');
 
-    expect(DockerAppLogo::count())->toBe(0);
+    expect(DockerApp::count())->toBe(0);
 });
 
 it('fetches an image from a URL', function () {
@@ -109,7 +109,7 @@ it('fetches an image from a URL', function () {
         'slug' => 'n8n', 'url' => 'https://logos.test/n8n.png',
     ])->assertRedirect()->assertSessionHas('success');
 
-    expect(DockerAppLogo::where('slug', 'n8n')->exists())->toBeTrue();
+    expect(DockerApp::where('slug', 'n8n')->exists())->toBeTrue();
 });
 
 it('stores nothing when the link is dead', function () {
@@ -122,7 +122,7 @@ it('stores nothing when the link is dead', function () {
 
     // Half the panel's links are dead; a failure must leave the app on its
     // letter tile rather than storing an error page as an image.
-    expect(DockerAppLogo::count())->toBe(0);
+    expect(DockerApp::count())->toBe(0);
 });
 
 it('fills in every missing image in one pass and reports what failed', function () {
@@ -136,7 +136,7 @@ it('fills in every missing image in one pass and reports what failed', function 
     $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.import'))
         ->assertRedirect()->assertSessionHas('success');
 
-    expect(DockerAppLogo::pluck('slug')->all())->toBe(['good']);
+    expect(DockerApp::pluck('slug')->all())->toBe(['good']);
     // An app the panel has no link for is still tried against the icon set, so
     // it is reported as a failure rather than as nothing to try.
     expect(session('success'))->toContain('Fetched 1')->toContain('Failed 2');
@@ -164,30 +164,32 @@ it('falls back to the icon set when the panel has no link or a dead one', functi
 
     // Three quarters of the catalogue has no panel link at all; without a
     // second source they would all stay on letter tiles.
-    expect(DockerAppLogo::pluck('slug')->sort()->values()->all())->toBe(['deadlink', 'nolink']);
+    expect(DockerApp::pluck('slug')->sort()->values()->all())->toBe(['deadlink', 'nolink']);
 });
 
 it('leaves images already set alone unless told to replace them', function () {
     logoServer();
     fakeCatalogue([['slug' => 'good', 'name' => 'Good', 'logo_url' => 'https://logos.test/a.png']]);
-    DockerAppLogo::create(['slug' => 'good', 'path' => 'docker-apps/good-old.png', 'source' => 'upload']);
+    DockerApp::create(['slug' => 'good', 'path' => 'docker-apps/good-old.png', 'source' => 'upload']);
 
     $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.import'))->assertRedirect();
-    expect(DockerAppLogo::where('slug', 'good')->value('path'))->toBe('docker-apps/good-old.png');
+    expect(DockerApp::where('slug', 'good')->value('path'))->toBe('docker-apps/good-old.png');
 
     $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.import'), ['overwrite' => 1])->assertRedirect();
-    expect(DockerAppLogo::where('slug', 'good')->value('path'))->not->toBe('docker-apps/good-old.png');
+    expect(DockerApp::where('slug', 'good')->value('path'))->not->toBe('docker-apps/good-old.png');
 });
 
 it('removes an image and its file', function () {
     logoServer();
     fakeCatalogue([['slug' => 'n8n', 'name' => 'n8n']]);
     Storage::disk('public')->put('docker-apps/n8n-x.png', 'DATA');
-    DockerAppLogo::create(['slug' => 'n8n', 'path' => 'docker-apps/n8n-x.png']);
+    DockerApp::create(['slug' => 'n8n', 'path' => 'docker-apps/n8n-x.png']);
 
     $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.destroy'), ['slug' => 'n8n'])->assertRedirect();
 
-    expect(DockerAppLogo::count())->toBe(0);
+    // The file goes; the row stays, because it also records whether we sell
+    // the app - see the selling test below.
+    expect(DockerApp::where('slug', 'n8n')->value('path'))->toBeNull();
     Storage::disk('public')->assertMissing('docker-apps/n8n-x.png');
 });
 
@@ -197,4 +199,79 @@ it('keeps the screen out of a client\'s hands', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('admin.docker-apps.index'))
         ->assertRedirect();
+});
+
+/*
+ * Selling the catalogue: 98 apps cannot be 98 products, so the operator says
+ * which apps are on offer and how they are presented, and a customer picks one
+ * while ordering a single product.
+ */
+
+it('lets the operator take an app off the shelf without deleting anything', function () {
+    logoServer();
+    fakeCatalogue([['slug' => 'gitlab', 'name' => 'GitLab'], ['slug' => 'n8n', 'name' => 'n8n']]);
+
+    $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.selling'), [
+        'slug' => 'gitlab', 'sort_order' => 0,
+    ])->assertRedirect();
+
+    $offered = DockerApp::decorate([
+        ['slug' => 'gitlab', 'name' => 'GitLab'],
+        ['slug' => 'n8n', 'name' => 'n8n'],
+    ], sellableOnly: true);
+
+    expect(collect($offered)->pluck('slug')->all())->toBe(['n8n']);
+});
+
+it('puts featured apps first, then the operator order, then the name', function () {
+    DockerApp::create(['slug' => 'b', 'is_sellable' => true, 'is_featured' => true]);
+    DockerApp::create(['slug' => 'c', 'is_sellable' => true, 'sort_order' => 50]);
+
+    $sorted = DockerApp::decorate([
+        ['slug' => 'a', 'name' => 'Alpha'],
+        ['slug' => 'b', 'name' => 'Bravo'],
+        ['slug' => 'c', 'name' => 'Charlie'],
+    ]);
+
+    // b is featured; c is ordered ahead of a; a falls back to alphabetical.
+    expect(collect($sorted)->pluck('slug')->all())->toBe(['b', 'c', 'a']);
+});
+
+it('keeps unknown apps in the catalogue rather than hiding them', function () {
+    // A fresh install has no rows at all; hiding everything until someone fills
+    // in ninety-eight of them would be a worse default than showing them.
+    $out = DockerApp::decorate([['slug' => 'brand-new', 'name' => 'Brand New']], sellableOnly: true);
+
+    expect($out)->toHaveCount(1)
+        ->and($out[0]['is_featured'])->toBeFalse()
+        ->and($out[0]['logo_url_local'])->toBeNull();
+});
+
+it('carries the operator selling line onto the app', function () {
+    logoServer();
+    fakeCatalogue([['slug' => 'n8n', 'name' => 'n8n']]);
+
+    $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.selling'), [
+        'slug' => 'n8n', 'is_sellable' => 1, 'is_featured' => 1, 'sort_order' => 10,
+        'tagline' => 'Automate anything, no code',
+    ])->assertRedirect();
+
+    $app = DockerApp::where('slug', 'n8n')->firstOrFail();
+    expect($app->tagline)->toBe('Automate anything, no code')
+        ->and($app->is_featured)->toBeTrue();
+});
+
+it('removing the image leaves the selling settings alone', function () {
+    logoServer();
+    fakeCatalogue([['slug' => 'n8n', 'name' => 'n8n']]);
+    Storage::disk('public')->put('docker-apps/n8n-x.png', 'DATA');
+    DockerApp::create(['slug' => 'n8n', 'path' => 'docker-apps/n8n-x.png', 'is_featured' => true, 'tagline' => 'keep me']);
+
+    $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.destroy'), ['slug' => 'n8n'])->assertRedirect();
+
+    $app = DockerApp::where('slug', 'n8n')->firstOrFail();
+    expect($app->path)->toBeNull()
+        ->and($app->is_featured)->toBeTrue()
+        ->and($app->tagline)->toBe('keep me');
+    Storage::disk('public')->assertMissing('docker-apps/n8n-x.png');
 });

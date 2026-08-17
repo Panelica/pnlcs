@@ -80,6 +80,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('docker-apps', [DockerAppController::class, 'index'])->name('docker-apps.index');
         Route::post('docker-apps/upload', [DockerAppController::class, 'upload'])->name('docker-apps.upload');
         Route::post('docker-apps/fetch', [DockerAppController::class, 'fetch'])->name('docker-apps.fetch');
+        Route::post('docker-apps/selling', [DockerAppController::class, 'updateSelling'])->name('docker-apps.selling');
         Route::post('docker-apps/delete', [DockerAppController::class, 'destroy'])->name('docker-apps.destroy');
         Route::post('docker-apps/import-all', [DockerAppController::class, 'importAll'])->name('docker-apps.import');
     });

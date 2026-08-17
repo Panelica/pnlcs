@@ -108,6 +108,17 @@ class OrderService
 
                     $service = $this->createServiceForOrder($order, $client, $item);
 
+                    // The app the customer chose while ordering. Recorded on the
+                    // service because that is what provisioning reads - the cart
+                    // is gone by the time the account is built.
+                    if (! empty($item['app_slug'])) {
+                        $data = is_string($service->module_data)
+                            ? (json_decode($service->module_data, true) ?: [])
+                            : ((array) $service->module_data);
+                        $data['panelica_app_template'] = (string) $item['app_slug'];
+                        $service->update(['module_data' => $data]);
+                    }
+
                     // Configurable options are already inside the service price;
                     // recording them is what lets the panel and the server
                     // module see what was ordered.

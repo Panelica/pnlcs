@@ -116,6 +116,12 @@ return [
         'type' => 'Iptallation Tur',
     ],
     'cart' => [
+        'choose_app' => 'Uygulamanızı seçin',
+        'app_search_ph' => 'Uygulama ara - wordpress, veritabanı, otomasyon...',
+        'app_search_none' => 'Bu aramaya uyan uygulama yok.',
+        'app_count' => ':count uygulama',
+        'app_featured' => 'Popüler seçim',
+        'app_required' => 'Kurulacak bir uygulama seçin.',
         'add_more_products' => 'Ekle Daha Fazla Uruns',
         'add_to_cart' => 'Ekle to Cart',
         'additional_notes' => 'Ekleitional Nots',

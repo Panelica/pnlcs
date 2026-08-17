@@ -775,7 +775,7 @@ class ServiceController extends Controller
         $groups = $this->groupTemplates($templates);
         // Our own images, one query for the page. The panel's logo_url is not
         // used: most apps have none and half the rest are dead links.
-        $logos = \App\Models\DockerAppLogo::urlMap();
+        $logos = \App\Models\DockerApp::urlMap();
 
         return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos'));
     }

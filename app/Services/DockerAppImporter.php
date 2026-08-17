@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\DockerAppLogo;
+use App\Models\DockerApp;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * Shared by the admin screen and the console command so both behave the same.
  */
-class DockerAppLogoImporter
+class DockerAppImporter
 {
     private const ACCEPTED = ['png', 'jpg', 'jpeg', 'svg', 'webp', 'gif'];
 
@@ -31,7 +31,7 @@ class DockerAppLogoImporter
      */
     public function importMany(array $templates, bool $overwrite = false, bool $useIconSet = true, ?callable $progress = null): array
     {
-        $have = DockerAppLogo::pluck('slug')->all();
+        $have = DockerApp::pluck('slug')->all();
         $r = ['done' => 0, 'failed' => 0, 'skipped' => 0, 'none' => 0];
 
         foreach ($templates as $t) {
@@ -116,7 +116,7 @@ class DockerAppLogoImporter
     /** Write the image and point the app at it, replacing whatever was there. */
     public function store(string $slug, string $bytes, string $ext, string $source): void
     {
-        $existing = DockerAppLogo::where('slug', $slug)->first();
+        $existing = DockerApp::where('slug', $slug)->first();
         if ($existing) {
             Storage::disk('public')->delete($existing->path);
         }
@@ -126,6 +126,6 @@ class DockerAppLogoImporter
         $path = 'docker-apps/'.$slug.'-'.substr(md5($bytes), 0, 8).'.'.$ext;
         Storage::disk('public')->put($path, $bytes);
 
-        DockerAppLogo::updateOrCreate(['slug' => $slug], ['path' => $path, 'source' => $source]);
+        DockerApp::updateOrCreate(['slug' => $slug], ['path' => $path, 'source' => $source]);
     }
 }

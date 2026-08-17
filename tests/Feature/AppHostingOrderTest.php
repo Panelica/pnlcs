@@ -1,0 +1,188 @@
+<?php
+
+use App\Models\Client;
+use App\Models\DockerApp;
+use App\Models\Product;
+use App\Models\ProductGroup;
+use App\Models\Server;
+use App\Models\User;
+use Illuminate\Support\Facades\Http;
+
+/*
+ * Ordering an app.
+ *
+ * Ninety-eight apps cannot be ninety-eight products, so one product asks the
+ * customer which app they want and the order installs it. These pin the whole
+ * chain: what the order form offers, what the request is allowed to claim, and
+ * that the choice survives all the way to provisioning.
+ */
+
+function appOrderServer(): Server
+{
+    return Server::create([
+        'name' => 'Panel', 'hostname' => 'panel.order.test', 'ip_address' => '10.0.0.14',
+        'type' => 'panelica', 'username' => 'u', 'password' => 'pk', 'access_hash' => 'sk',
+        'port' => 8443, 'active' => true,
+    ]);
+}
+
+function appOrderProduct(bool $choose = true): Product
+{
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'panelica',
+        'hidden' => false,
+        'retired' => false,
+        'config_options' => json_encode($choose ? ['panelica_app_choose' => 1, 'res_max_containers' => 1] : ['res_max_containers' => 1]),
+    ]);
+
+    // A product with no price cannot be added to a cart at all, which would
+    // fail these tests for a reason that has nothing to do with apps.
+    App\Models\Pricing::create([
+        'type' => 'product',
+        'currency_id' => App\Models\Currency::getDefault()?->id ?? App\Models\Currency::factory()->create()->id,
+        'rel_id' => $product->id,
+        'monthly' => 10,
+    ]);
+
+    return $product;
+}
+
+function appOrderUser(): User
+{
+    $user = User::factory()->create();
+    $user->clients()->attach(Client::factory()->create()->id);
+
+    return $user;
+}
+
+function fakeAppCatalogue(array $apps): void
+{
+    Http::fake(function ($request) use ($apps) {
+        if (str_contains($request->url(), '/v1/docker/templates')) {
+            return Http::response(['data' => ['templates' => $apps]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+}
+
+$CATALOGUE = [
+    ['slug' => 'wordpress', 'name' => 'WordPress', 'description' => 'Blog', 'logo_url' => '', 'categories' => ['cms']],
+    ['slug' => 'n8n', 'name' => 'n8n', 'description' => 'Automation', 'logo_url' => '', 'categories' => ['automation']],
+];
+
+it('shows the catalogue on the order form for a pick-your-app product', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+    $product = appOrderProduct();
+
+    $this->actingAs(appOrderUser())
+        ->get(route('client.store.configure', $product))
+        ->assertOk()
+        ->assertSee('WordPress')
+        ->assertSee('data-slug="n8n"', false);
+});
+
+it('leaves every other product alone', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+    $product = appOrderProduct(choose: false);
+
+    $page = $this->actingAs(appOrderUser())->get(route('client.store.configure', $product))->assertOk();
+
+    // No catalogue, and no call to fetch one: an ordinary hosting product pays
+    // nothing for this feature.
+    expect($page->viewData('apps'))->toBe([]);
+    Http::assertNotSent(fn ($rq) => str_contains($rq->url(), '/docker/templates'));
+});
+
+it('hides an app the operator took off the shelf', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+    DockerApp::create(['slug' => 'n8n', 'is_sellable' => false]);
+
+    $page = $this->actingAs(appOrderUser())->get(route('client.store.configure', appOrderProduct()))->assertOk();
+
+    expect(collect($page->viewData('apps'))->pluck('slug')->all())->toBe(['wordpress']);
+});
+
+it('carries the chosen app into the cart', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+    $product = appOrderProduct();
+
+    $this->actingAs(appOrderUser())->post(route('client.cart.add'), [
+        'product_id' => $product->id,
+        'billing_cycle' => 'monthly',
+        'app_slug' => 'wordpress',
+    ])->assertRedirect(route('client.cart.index'));
+
+    // The cart keeps its contents as a JSON string, not a cast array.
+    $data = json_decode(App\Models\Cart::latest()->firstOrFail()->data, true) ?: [];
+    expect($data['items'][0]['app_slug'] ?? null)->toBe('wordpress');
+});
+
+it('refuses an order with no app chosen', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+
+    $this->actingAs(appOrderUser())->post(route('client.cart.add'), [
+        'product_id' => appOrderProduct()->id,
+        'billing_cycle' => 'monthly',
+    ])->assertSessionHasErrors('app_slug');
+});
+
+it('refuses an app that is not on the shelf', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+    DockerApp::create(['slug' => 'n8n', 'is_sellable' => false]);
+
+    // The form is built from what we offer, but the request is not the form.
+    $this->actingAs(appOrderUser())->post(route('client.cart.add'), [
+        'product_id' => appOrderProduct()->id,
+        'billing_cycle' => 'monthly',
+        'app_slug' => 'n8n',
+    ])->assertSessionHasErrors('app_slug');
+});
+
+it('installs what the customer chose, not the product default', function () {
+    $server = appOrderServer();
+    Http::fake(function ($request) {
+        $url = $request->url();
+        if (str_contains($url, '/deploy')) {
+            return Http::response(['data' => ['container_id' => 'ctr-1']], 200);
+        }
+        if (str_contains($url, '/docker/domains/link')) {
+            return Http::response(['data' => []], 200);
+        }
+        if (str_contains($url, '/v1/domains')) {
+            return Http::response(['data' => ['id' => 'dom-1']], 200);
+        }
+        if (str_contains($url, '/v1/accounts')) {
+            return Http::response(['data' => ['id' => 'acct-1']], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+
+    // The product names a fixed app; the customer chose another while ordering.
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'panelica',
+        'config_options' => json_encode(['panelica_app_template' => 'wordpress', 'res_max_containers' => 1]),
+    ]);
+    $service = App\Models\Service::factory()->create([
+        'client_id' => Client::factory()->create()->id,
+        'product_id' => $product->id,
+        'server_id' => $server->id,
+        'domain' => 'chosen.test',
+        'status' => 'pending',
+        'module_data' => ['panelica_app_template' => 'n8n'],
+    ]);
+
+    expect(app(Modules\Servers\Panelica\PanelicaModule::class)->create($service)['success'])->toBeTrue();
+
+    Http::assertSent(fn ($rq) => str_contains($rq->url(), '/docker/templates/n8n/deploy'));
+    Http::assertNotSent(fn ($rq) => str_contains($rq->url(), '/docker/templates/wordpress/deploy'));
+});

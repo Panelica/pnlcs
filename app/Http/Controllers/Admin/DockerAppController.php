@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\DockerAppLogo;
+use App\Models\DockerApp;
 use App\Models\Server;
-use App\Services\DockerAppLogoImporter;
+use App\Services\DockerAppImporter;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,12 +21,14 @@ use Illuminate\Support\Facades\Storage;
  */
 class DockerAppController extends Controller
 {
-    public function __construct(private DockerAppLogoImporter $importer) {}
+    public function __construct(private DockerAppImporter $importer) {}
 
     public function index(Request $request)
     {
         [$templates, $error] = $this->catalogue();
-        $logos = DockerAppLogo::urlMap();
+        $templates = DockerApp::decorate($templates);
+        $logos = DockerApp::urlMap();
+        $rows = DockerApp::bySlug();
 
         $q = trim((string) $request->query('q', ''));
         if ($q !== '') {
@@ -43,8 +45,10 @@ class DockerAppController extends Controller
             'logos' => $logos,
             'error' => $error,
             'q' => $q,
+            'rows' => $rows,
             'missingOnly' => $request->query('missing') === '1',
             'totalWithLogo' => count($logos),
+            'totalSellable' => count($templates) - collect($rows)->where('is_sellable', false)->count(),
         ]);
     }
 
@@ -79,13 +83,40 @@ class DockerAppController extends Controller
             : back()->with('error', __('admin.docker_apps.fetch_failed', ['app' => $slug, 'reason' => $result]));
     }
 
+    /**
+     * How an app is sold: whether we offer it, where it sits, what it says.
+     *
+     * Commercial, not technical - the panel decides what an app is and which
+     * plans may install it; this decides whether we put it in front of anyone.
+     */
+    public function updateSelling(Request $request)
+    {
+        $data = $request->validate([
+            'slug' => ['required', 'string', 'max:100', 'regex:/^[a-z0-9][a-z0-9._-]*$/i'],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'tagline' => ['nullable', 'string', 'max:160'],
+        ]);
+
+        $slug = strtolower($data['slug']);
+        DockerApp::updateOrCreate(['slug' => $slug], [
+            'is_sellable' => $request->boolean('is_sellable'),
+            'is_featured' => $request->boolean('is_featured'),
+            'sort_order' => (int) ($data['sort_order'] ?? 0),
+            'tagline' => trim((string) ($data['tagline'] ?? '')) ?: null,
+        ]);
+
+        return back()->with('success', __('admin.docker_apps.selling_saved', ['app' => $slug]));
+    }
+
     public function destroy(Request $request)
     {
         $request->validate(['slug' => ['required', 'string', 'max:100']]);
-        $logo = DockerAppLogo::where('slug', strtolower($request->input('slug')))->first();
-        if ($logo) {
-            Storage::disk('public')->delete($logo->path);
-            $logo->delete();
+        $app = DockerApp::where('slug', strtolower($request->input('slug')))->first();
+        if ($app?->path) {
+            Storage::disk('public')->delete($app->path);
+            // Only the image goes: the row still carries whether we sell the
+            // app and what it says, which removing a picture should not undo.
+            $app->update(['path' => null]);
         }
 
         return back()->with('success', __('admin.docker_apps.removed'));

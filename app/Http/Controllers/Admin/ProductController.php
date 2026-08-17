@@ -271,6 +271,7 @@ class ProductController extends Controller
                 unset($config['panelica_app_template']);
             }
             $config['panelica_container_plan'] = $request->boolean('panelica_container_plan') ? 1 : 0;
+            $config['panelica_app_choose'] = $request->boolean('panelica_app_choose') ? 1 : 0;
             $planId = trim((string) $request->input('panelica_plan_id', ''));
             if ($planId !== '') {
                 $config['panelica_plan_id'] = $planId;

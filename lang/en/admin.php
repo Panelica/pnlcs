@@ -1733,6 +1733,14 @@ return [
     // The app catalogue lives on the panel; what we manage here is how it looks
     // to a customer, which today means the image on each card.
     'docker_apps' => [
+        'sellable_count' => ':count offered to customers',
+        'sellable' => 'Offered',
+        'featured' => 'Featured',
+        'not_sold' => 'not offered',
+        'sort_order' => 'Order within the grid (higher comes first)',
+        'tagline_ph' => 'One selling line, shown under the name',
+        'save' => 'Save',
+        'selling_saved' => 'Selling settings saved for :app.',
         'title' => 'App Catalogue Images',
         'intro' => "The catalogue itself is managed in the hosting panel. What is set here is the image customers see on each app; apps without one show a coloured letter tile instead.",
         'have_count' => ':have of :total apps have an image',

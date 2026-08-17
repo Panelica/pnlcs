@@ -129,6 +129,12 @@
                 @endif
                 <div style="font-size:11px;color:#888;margin-top:4px;">Needs Max Containers of at least 1 below. If the app cannot be installed the order fails and the account is rolled back.</div>
             </div>
+            {{-- Selling ninety-eight apps as ninety-eight products does not
+                 scale, so one product can let the customer pick instead. --}}
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;">
+                <input type="checkbox" name="panelica_app_choose" value="1" {{ !empty($cfg['panelica_app_choose']) ? 'checked' : '' }}>
+                <strong>Customer picks the app</strong> &mdash; the order form shows the app catalogue instead of installing a fixed one
+            </label>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;">
                 <input type="checkbox" name="panelica_container_plan" value="1" {{ !empty($cfg['panelica_container_plan']) ? 'checked' : '' }}>
                 <strong>Container plan</strong> &mdash; sells container resources, not a website: provisions without a domain and shows only the Apps tab

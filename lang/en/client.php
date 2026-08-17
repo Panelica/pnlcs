@@ -127,6 +127,12 @@ return [
         'type' => 'Cancellation Type',
     ],
     'cart' => [
+        'choose_app' => 'Choose your app',
+        'app_search_ph' => 'Search apps - wordpress, database, automation...',
+        'app_search_none' => 'No app matches that search.',
+        'app_count' => ':count apps',
+        'app_featured' => 'Popular choice',
+        'app_required' => 'Choose an app to install.',
         'add_more_products' => 'Add More Products',
         'add_to_cart' => 'Add to Cart',
         'additional_notes' => 'Additional Notes',

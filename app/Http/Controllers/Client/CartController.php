@@ -13,9 +13,12 @@ use App\Models\ProductGroup;
 use App\Services\AddonService;
 use App\Services\CartService;
 use App\Services\ConfigOptionService;
+use App\Models\DockerApp;
+use App\Models\Server;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CartController extends Controller
 {
@@ -48,7 +51,11 @@ class CartController extends Controller
         $optionGroups = app(ConfigOptionService::class)->groupsFor($product);
         $addons = app(AddonService::class)->availableFor($product);
 
-        return view('client.cart.configure', compact('product', 'cycles', 'currency', 'optionGroups', 'addons'));
+        // Products that sell "pick your app" show the catalogue on the order
+        // form; every other product is unaffected and pays for nothing.
+        $apps = $this->productLetsCustomerPickApp($product) ? $this->sellableApps($product) : [];
+
+        return view('client.cart.configure', compact('product', 'cycles', 'currency', 'optionGroups', 'addons', 'apps'));
     }
 
     public function index()
@@ -72,9 +79,22 @@ class CartController extends Controller
             'config_options' => 'nullable|array',
             'addons' => 'nullable|array',
             'addons.*' => 'integer',
+            'app_slug' => 'nullable|string|max:100',
         ]);
 
         $product = Product::findOrFail($request->product_id);
+
+        // A product that sells "pick your app" is not delivered without one, and
+        // the choice has to be an app we actually offer - the form is built from
+        // that list, but the request is not the form.
+        $appSlug = null;
+        if ($this->productLetsCustomerPickApp($product)) {
+            $appSlug = trim((string) $request->input('app_slug'));
+            $offered = collect($this->sellableApps($product))->pluck('slug')->all();
+            if ($appSlug === '' || ($offered !== [] && ! in_array($appSlug, $offered, true))) {
+                throw ValidationException::withMessages(['app_slug' => __('client.cart.app_required')]);
+            }
+        }
         $clientId = $this->getClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
 
@@ -88,7 +108,8 @@ class CartController extends Controller
             $request->input('config_options', []),
             $request->input('notes'),
             $request->input('domain_option'),
-            $request->input('addons', [])
+            $request->input('addons', []),
+            $appSlug
         );
 
         return redirect()->route('client.cart.index')
@@ -235,5 +256,43 @@ class CartController extends Controller
         return $active->mapWithKeys(fn (string $name) => [
             $name => $registry->getGatewayModule($name)?->getModuleName() ?? ucfirst($name),
         ])->all();
+    }
+
+    /** Whether this product asks the customer which app to install. */
+    private function productLetsCustomerPickApp(Product $product): bool
+    {
+        $config = is_string($product->config_options)
+            ? json_decode($product->config_options, true)
+            : ($product->config_options ?? []);
+
+        return ! empty($config['panelica_app_choose']);
+    }
+
+    /**
+     * The apps this product may be ordered with.
+     *
+     * The panel says what exists; we say what is on the shelf. Anything that
+     * goes wrong answers with an empty list, and the order form then says the
+     * catalogue is unavailable rather than offering a choice that cannot be
+     * delivered.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function sellableApps(Product $product): array
+    {
+        $server = Server::where('type', $product->server_type ?: 'panelica')->where('active', true)->first();
+        if (! $server) {
+            return [];
+        }
+        try {
+            $module = app(ModuleRegistry::class)->getServerModule($server->type);
+            if (! $module || ! method_exists($module, 'appTemplates')) {
+                return [];
+            }
+
+            return DockerApp::decorate($module->appTemplates($server), sellableOnly: true);
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 }
