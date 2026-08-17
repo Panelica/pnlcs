@@ -22,6 +22,9 @@
     .ct-app{border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;background:var(--bg);transition:transform .14s,border-color .14s}
     .ct-app:hover{transform:translateY(-3px);border-color:var(--primary)}
     .ct-app.on{border-color:var(--primary);background:var(--primary-light)}
+    /* Same footprint as the letter tile, so a card keeps its shape whether or
+       not an operator has set an image for that app. */
+    .ct-logo{width:42px;height:42px;margin:0 auto 9px;display:block;object-fit:contain}
     .ct-mark{width:42px;height:42px;margin:0 auto 9px;border-radius:11px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;letter-spacing:-.5px}
     .ct-search{position:relative;display:flex;align-items:center;gap:8px;padding:16px 18px 0}
     .ct-search > i{position:absolute;left:30px;color:var(--muted);font-size:15px;pointer-events:none}
@@ -148,7 +151,11 @@
                      data-find="{{ mb_strtolower($t['name'].' '.$t['slug'].' '.$t['description'].' '.implode(' ', $t['categories'])) }}"
                      onclick="ctPick(this)" title="{{ $t['description'] }}">
                     @if($t['is_popular'])<span class="ct-pop" title="{{ __('client.hosting.containers.popular') }}"><i class="ri-star-fill"></i></span>@endif
-                    <div class="ct-mark" style="background:hsl({{ $ctHue }},62%,94%);color:hsl({{ $ctHue }},52%,34%);border-color:hsl({{ $ctHue }},45%,84%)">{{ $ctInitial }}</div>
+                    @if(! empty($logos[$t['slug']]))
+                        <img src="{{ $logos[$t['slug']] }}" alt="" loading="lazy" class="ct-logo">
+                    @else
+                        <div class="ct-mark" style="background:hsl({{ $ctHue }},62%,94%);color:hsl({{ $ctHue }},52%,34%);border-color:hsl({{ $ctHue }},45%,84%)">{{ $ctInitial }}</div>
+                    @endif
                     <div class="nm">{{ $t['name'] }}</div>
                     <div class="ds">{{ $t['description'] }}</div>
                     <div class="ct-req">

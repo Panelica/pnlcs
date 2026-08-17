@@ -773,8 +773,11 @@ class ServiceController extends Controller
         $templates = $policy['can_create'] ? $module->containerTemplates($service) : [];
         $resources = method_exists($module, 'containerResources') ? $module->containerResources($service) : ['memory_mb' => 0, 'cpu_percent' => 0];
         $groups = $this->groupTemplates($templates);
+        // Our own images, one query for the page. The panel's logo_url is not
+        // used: most apps have none and half the rest are dead links.
+        $logos = \App\Models\DockerAppLogo::urlMap();
 
-        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups'));
+        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos'));
     }
 
     /**

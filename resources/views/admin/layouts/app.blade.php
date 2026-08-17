@@ -406,6 +406,7 @@
             <li><a href="{{ route('admin.products.index') }}" @if($routeName === 'admin.products.index') class="active" @endif>{{ __('admin.nav.products_services') }}</a></li>
             <li><a href="{{ route('admin.products.create') }}" @if($routeName === 'admin.products.create') class="active" @endif>{{ __('admin.sidebar.create_product') }}</a></li>
             <li><a href="{{ route('admin.products.groups.create') }}" @if($routeName === 'admin.products.groups.create') class="active" @endif>{{ __('admin.sidebar.product_groups') }}</a></li>
+            <li><a href="{{ route('admin.docker-apps.index') }}" @if($routeName === 'admin.docker-apps.index') class="active" @endif>{{ __('admin.nav.docker_apps') }}</a></li>
         </ul>
 
         <div class="sidebar-header"><i class="fas fa-server"></i> {{ __('admin.sidebar.servers_domains') }}</div>

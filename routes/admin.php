@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AddonController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\DockerAppController;
 use App\Http\Controllers\Admin\BulkActionController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\ClientController;
@@ -73,6 +74,16 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('products/packages', [ProductController::class, 'packages'])->name('products.packages');
         Route::get('products', [ProductController::class, 'index'])->name('products.index');
     });
+    // The app catalogue lives on the panel; what we own is how it looks to a
+    // customer, so this manages the images only.
+    Route::middleware('admin.permission:manage_products')->group(function () {
+        Route::get('docker-apps', [DockerAppController::class, 'index'])->name('docker-apps.index');
+        Route::post('docker-apps/upload', [DockerAppController::class, 'upload'])->name('docker-apps.upload');
+        Route::post('docker-apps/fetch', [DockerAppController::class, 'fetch'])->name('docker-apps.fetch');
+        Route::post('docker-apps/delete', [DockerAppController::class, 'destroy'])->name('docker-apps.destroy');
+        Route::post('docker-apps/import-all', [DockerAppController::class, 'importAll'])->name('docker-apps.import');
+    });
+
     Route::middleware('admin.permission:manage_products')->group(function () {
         Route::get('products/create', [ProductController::class, 'create'])->name('products.create');
         Route::post('products', [ProductController::class, 'store'])->name('products.store');
