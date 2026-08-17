@@ -94,17 +94,10 @@
     .ct-btn:disabled{opacity:.5;cursor:not-allowed}
 
     /* Running list */
-    .ct-table{width:100%;border-collapse:collapse}
-    .ct-table thead th{text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--bg)}
-    .ct-table tbody td{padding:12px 18px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)}
-    .ct-table tbody tr:last-child td{border-bottom:none}
     .ct-name{font-weight:700}
     .ct-img{font-size:11.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace}
     .ct-run{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(16,185,129,.12);color:#059669}
     .ct-stop{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--border);color:var(--muted)}
-    .ct-meter{font-size:11.5px;color:var(--muted);font-family:ui-monospace,Menlo,monospace}
-    .ct-bar{height:5px;border-radius:999px;background:var(--border);overflow:hidden;margin-top:4px;width:90px}
-    .ct-bar span{display:block;height:100%;background:var(--primary)}
     .ct-acts{display:inline-flex;gap:6px;justify-content:flex-end}
     .ct-act{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);color:var(--muted);cursor:pointer;background:transparent}
     .ct-act:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}

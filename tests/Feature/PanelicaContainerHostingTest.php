@@ -613,3 +613,16 @@ it('refuses to forward the customer to an address of somebody else\'s choosing',
     $this->actingAs($owner)->get(route('client.services.login', ['service' => $s, 'to' => 'https://evil.example/steal']))
         ->assertRedirect('https://panel.test:8443/auto-login?token=abc');
 });
+
+it('does not keep a password for an app that has been removed', function () {
+    fakeContainerApi(5, [['id' => 'c-gone', 'name' => '/acct1-x', 'image' => 'nginx', 'state' => 'running',
+        'labels' => ['panelica.user_id' => 'acct-1']]]);
+    [$owner, $s] = ctService(ctServer());
+    App\Models\DockerAppCredential::create([
+        'service_id' => $s->id, 'container_id' => 'c-gone', 'container_name' => 'acct1-x', 'slug' => 'nginx',
+        'payload' => ['credentials' => ['Password' => 'still-here']],
+    ]);
+
+    expect((new PanelicaModule)->deleteContainer($s, 'c-gone')['success'])->toBeTrue()
+        ->and(App\Models\DockerAppCredential::where('container_id', 'c-gone')->count())->toBe(0);
+});

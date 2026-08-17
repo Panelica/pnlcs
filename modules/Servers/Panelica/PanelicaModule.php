@@ -1609,6 +1609,13 @@ class PanelicaModule extends AbstractServerModule
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not remove the app.'));
         }
 
+        // The app is gone; its first-login password has no reason to outlive it.
+        // Measured after removing a container: the row stayed behind, so every
+        // install-and-remove left an encrypted credential for something that no
+        // longer exists.
+        \App\Models\DockerAppCredential::where('service_id', $service->id)
+            ->where('container_id', $id)->delete();
+
         return $this->buildResult(true, 'App removed.');
     }
 
