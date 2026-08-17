@@ -164,6 +164,8 @@ php artisan docker-apps:import-logos --no-icon-set  # only the panel's links
 It tries the panel's link first and a public icon set second, and reports what
 it could not fetch. It never touches the logos committed to the repository.
 
+![App catalogue as the customer sees it](../screenshots/client-apps.png)
+
 ## 5. Put it in the shop window
 
 **Configuration → Homepage** → enable the **One-Click Apps** section.
@@ -172,6 +174,8 @@ It shows what a visitor can install, ordered the same way the order form orders
 it — featured first, then your order, then how often each app has actually been
 installed. The heading, subheading, button, the three selling points and how
 many apps to show are all editable there.
+
+![The showcase on the front page](../screenshots/homepage-apps.png)
 
 The section ships **disabled**, and reading the catalogue only happens when it
 is switched on, so an install with no Panelica server attached does not

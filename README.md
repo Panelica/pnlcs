@@ -154,6 +154,11 @@ Panelica is simply where PNLCS feels most at home.
 ![Homepage (Coral theme)](docs/screenshots/homepage-coral-theme.png)
 *Same site with a different built-in theme applied — one click to switch*
 
+![One-click apps on the homepage](docs/screenshots/homepage-apps.png)
+*The app showcase: 98 applications a customer can install into their hosting,
+with the logos shipped in the repository. Heading, copy, button and how many
+apps to show are all editable from the admin Homepage screen*
+
 ### Client Portal — Hosting Management
 
 ![Hosting management tools](docs/screenshots/client-hosting-tools.png)
@@ -164,6 +169,12 @@ working tools — files, mail, databases, FTP, subdomains, DNS, cron, backups.
 ![Backups](docs/screenshots/client-backups.png)
 *Restore points with size, contents and encryption state — fenced to the
 customer's own domains*
+
+![App catalogue](docs/screenshots/client-apps.png)
+*Installing an app from the customer's own control panel: searchable, grouped
+the way people shop, and every card states the memory the app needs and how
+many containers it starts. An app that wants more than the plan allows is
+marked before it is chosen, not after it fails*
 
 ---
 
