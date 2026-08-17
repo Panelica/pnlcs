@@ -1132,10 +1132,25 @@ class PanelicaModule extends AbstractServerModule
      * reachable on the domain is not the product the customer bought, so a
      * failed link takes the container back down with it.
      */
+
+    /** A container name derived from the app slug, for when nobody supplied one. */
+    private function defaultContainerName(string $slug): string
+    {
+        $name = strtolower(preg_replace('/[^a-z0-9-]/i', '-', $slug));
+        $name = trim(preg_replace('/-+/', '-', $name), '-');
+
+        return substr($name ?: 'app', 0, 40);
+    }
+
     private function installProductApp(Server $server, string $userId, ?string $domainId, string $slug): array
     {
+        // The panel requires a name; without one the deploy fails validation and
+        // the whole order rolls back. The slug is the obvious default - the
+        // panel prefixes it with the account's username, so it stays unique
+        // across tenants.
         $deploy = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', [
             'owner_user_id' => $userId,
+            'container_name' => $this->defaultContainerName($slug),
         ]);
         if (! $deploy->successful()) {
             return ['success' => false, 'message' => $this->apiMessage($deploy, 'the app could not be installed'), 'container_id' => null];
@@ -1198,14 +1213,16 @@ class PanelicaModule extends AbstractServerModule
             return $this->buildResult(false, 'That app is not available on your plan.');
         }
 
-        $payload = ['owner_user_id' => $accountId];
         $name = strtolower(trim($name));
-        if ($name !== '') {
-            if (! preg_match('/^[a-z0-9][a-z0-9-]{0,40}$/', $name)) {
-                return $this->buildResult(false, 'Use letters, numbers and hyphens for the name.');
-            }
-            $payload['container_name'] = $name;
+        if ($name !== '' && ! preg_match('/^[a-z0-9][a-z0-9-]{0,40}$/', $name)) {
+            return $this->buildResult(false, 'Use letters, numbers and hyphens for the name.');
         }
+        // A name is required by the panel, so an empty box means "name it after
+        // the app" rather than a validation error the customer cannot act on.
+        $payload = [
+            'owner_user_id' => $accountId,
+            'container_name' => $name !== '' ? $name : $this->defaultContainerName($slug),
+        ];
 
         $resp = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', $payload);
         if ($resp->status() === 403) {

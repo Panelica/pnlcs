@@ -269,3 +269,42 @@ it('carries the chosen app all the way from the cart to the service', function (
     expect($service->domain)->toBe('chainsite.test')
         ->and($data['panelica_app_template'] ?? null)->toBe('wordpress');
 });
+
+it('names the container when nobody supplied one', function () use ($CATALOGUE) {
+    $server = appOrderServer();
+    Http::fake(function ($request) {
+        $url = $request->url();
+        if (str_contains($url, '/deploy')) {
+            return Http::response(['data' => ['container_id' => 'ctr-1']], 200);
+        }
+        if (str_contains($url, '/docker/domains/link')) {
+            return Http::response(['data' => []], 200);
+        }
+        if (str_contains($url, '/v1/domains')) {
+            return Http::response(['data' => ['id' => 'dom-1']], 200);
+        }
+        if (str_contains($url, '/v1/accounts')) {
+            return Http::response(['data' => ['id' => 'acct-1']], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'panelica',
+        'config_options' => json_encode(['panelica_app_template' => 'caddy', 'res_max_containers' => 1]),
+    ]);
+    $service = App\Models\Service::factory()->create([
+        'client_id' => Client::factory()->create()->id,
+        'product_id' => $product->id, 'server_id' => $server->id,
+        'domain' => 'named.test', 'status' => 'pending',
+    ]);
+
+    expect(app(Modules\Servers\Panelica\PanelicaModule::class)->create($service)['success'])->toBeTrue();
+
+    // The panel validates container_name as required; an order that did not
+    // send one failed and rolled the whole account back.
+    Http::assertSent(fn ($rq) => str_contains($rq->url(), '/templates/caddy/deploy')
+        && ($rq->data()['container_name'] ?? null) === 'caddy');
+});
