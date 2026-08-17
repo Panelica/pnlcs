@@ -90,6 +90,18 @@
     .ct-installnote{flex-basis:100%;font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.45}
     .ct-warn{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(245,158,11,.14);color:#b45309}
     .ct-hint{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.4;max-width:230px}
+    .ct-acc{margin-top:7px;font-size:11.5px}
+    .ct-acc summary{cursor:pointer;color:var(--primary);font-weight:600;list-style:none}
+    .ct-acc summary::-webkit-details-marker{display:none}
+    .ct-acc summary::before{content:'▸ ';font-size:9px}
+    .ct-acc[open] summary::before{content:'▾ '}
+    .ct-acc-b{margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);max-width:340px}
+    .ct-acc-r{display:flex;gap:8px;align-items:baseline;margin-bottom:5px;line-height:1.45}
+    .ct-acc-r span{color:var(--muted);min-width:74px;flex:0 0 auto}
+    .ct-acc-r code{font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;
+        background:var(--primary-light);padding:1px 5px;border-radius:4px}
+    .ct-acc-r a{color:var(--primary);word-break:break-all}
+    .ct-acc-n{margin:7px 0 0;color:var(--muted);font-size:10.5px;line-height:1.5}
     .ct-dom{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px}
     .ct-dom a{color:var(--primary);text-decoration:none;font-weight:600}
     .ct-dom a:hover{text-decoration:underline}
@@ -254,6 +266,31 @@
                         }
                         $freeDomains = array_diff_key($domains, $links);
                     @endphp
+                    @php $acc = $access[$c['id']] ?? null; @endphp
+                    @if($acc && $acc->hasAnything())
+                    {{-- The panel reports the address and any generated login
+                         once, when the app is installed. Without showing it the
+                         customer has a running app and no way in. --}}
+                    <details class="ct-acc">
+                        <summary>{{ __('client.hosting.containers.access_title') }}</summary>
+                        <div class="ct-acc-b">
+                            @if($acc->accessUrl())
+                            <div class="ct-acc-r"><span>{{ __('client.hosting.containers.access_url') }}</span>
+                                <a href="{{ $acc->accessUrl() }}" target="_blank" rel="noopener">{{ $acc->accessUrl() }}</a></div>
+                            @endif
+                            @foreach($acc->items() as $label => $value)
+                            <div class="ct-acc-r"><span>{{ $label }}</span>
+                                @if(Str::startsWith($value, ['http://','https://']))
+                                    <a href="{{ $value }}" target="_blank" rel="noopener">{{ $value }}</a>
+                                @else
+                                    <code>{{ $value }}</code>
+                                @endif
+                            </div>
+                            @endforeach
+                            @if($acc->notes())<p class="ct-acc-n">{{ $acc->notes() }}</p>@endif
+                        </div>
+                    </details>
+                    @endif
                     @if($linkedId)
                         <div class="ct-dom">
                             <i class="ri-global-line"></i>

@@ -781,8 +781,10 @@ class ServiceController extends Controller
         // the customer's own address.
         $domains = method_exists($module, 'accountDomains') ? $module->accountDomains($service) : [];
         $links = method_exists($module, 'containerDomainLinks') ? $module->containerDomainLinks($service) : [];
+        // How to reach each app - the panel gives this once, at install time.
+        $access = method_exists($module, 'containerAccessDetails') ? $module->containerAccessDetails($service) : [];
 
-        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links'));
+        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links', 'access'));
     }
 
     /** Point one of the account's domains at one of its apps. */

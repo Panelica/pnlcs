@@ -444,7 +444,7 @@ class PanelicaModule extends AbstractServerModule
         $chosen = trim((string) ($this->getModuleData($service)['panelica_app_template'] ?? ''));
         $appSlug = $chosen !== '' ? $chosen : trim((string) ($config['panelica_app_template'] ?? ''));
         if ($appSlug !== '') {
-            $app = $this->installProductApp($server, $userId, $domainId, $appSlug);
+            $app = $this->installProductApp($service, $server, $userId, $domainId, $appSlug);
             if (! $app['success']) {
                 $this->delete($server, "/v1/accounts/{$userId}");
                 Log::error('PanelicaModule::create app install failed (account rolled back)', ['user_id' => $userId, 'slug' => $appSlug, 'reason' => $app['message']]);
@@ -1182,7 +1182,7 @@ class PanelicaModule extends AbstractServerModule
         return substr($name ?: 'app', 0, 40);
     }
 
-    private function installProductApp(Server $server, string $userId, ?string $domainId, string $slug): array
+    private function installProductApp(Service $service, Server $server, string $userId, ?string $domainId, string $slug): array
     {
         // The panel requires a name; without one the deploy fails validation and
         // the whole order rolls back. The slug is the obvious default - the
@@ -1199,6 +1199,7 @@ class PanelicaModule extends AbstractServerModule
         if ($containerId === '') {
             return ['success' => false, 'message' => 'the panel did not report a container id', 'container_id' => null];
         }
+        $this->rememberAppAccess($service, $slug, $deploy->json('data') ?? []);
 
         if (! $domainId) {
             // Nothing to point at it; the app is still installed and usable.
@@ -1278,6 +1279,11 @@ class PanelicaModule extends AbstractServerModule
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not install the app.'));
         }
+
+        // The panel hands out the address and any generated login exactly once,
+        // in this response. Without keeping it the customer is left with a
+        // running app and no idea what to open or what password it made.
+        $this->rememberAppAccess($service, $slug, $resp->json('data') ?? []);
 
         return $this->buildResult(true, 'App installed.');
     }
@@ -1377,6 +1383,58 @@ class PanelicaModule extends AbstractServerModule
     {
         // accountDomains() is an id => name map, not a list of rows.
         return $domainId !== '' && array_key_exists($domainId, $this->accountDomains($service));
+    }
+
+
+    /**
+     * Keep what the panel said about reaching a freshly installed app.
+     *
+     * Best-effort on purpose: a failure to record this must never fail an
+     * install that otherwise worked. The customer would rather have the app
+     * running with a missing note than no app at all.
+     *
+     * @param  array<string, mixed>  $data  the panel's deploy response
+     */
+    private function rememberAppAccess(Service $service, string $slug, array $data): void
+    {
+        $containerId = (string) ($data['container_id'] ?? '');
+        if ($containerId === '') {
+            return;
+        }
+
+        $payload = array_filter([
+            'access_url' => (string) ($data['access_url'] ?? '') ?: null,
+            'credentials' => array_filter((array) ($data['credentials'] ?? [])),
+            'notes' => (string) ($data['post_install_notes'] ?? '') ?: null,
+        ]);
+        if ($payload === []) {
+            return;
+        }
+
+        try {
+            \App\Models\DockerAppCredential::updateOrCreate(
+                ['service_id' => $service->id, 'container_id' => $containerId],
+                [
+                    'container_name' => (string) ($data['container_name'] ?? $slug),
+                    'slug' => $slug,
+                    'payload' => $payload,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('PanelicaModule: could not record app access details', [
+                'service' => $service->id, 'slug' => $slug, 'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Access details for the apps on this service, keyed by container id.
+     *
+     * @return array<string, \App\Models\DockerAppCredential>
+     */
+    public function containerAccessDetails(Service $service): array
+    {
+        return \App\Models\DockerAppCredential::forService((int) $service->id);
     }
 
     public function containerAction(Service $service, string $id, string $action): array

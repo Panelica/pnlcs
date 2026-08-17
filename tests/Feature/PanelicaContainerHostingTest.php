@@ -389,3 +389,78 @@ it('keeps the domain routes away from other clients', function () use ($MINE) {
     ])->assertForbidden();
     $this->actingAs($intruder)->post(route('client.services.containers.unlink', $s), ['domain_id' => 'dom-own'])->assertForbidden();
 });
+
+/*
+ * How the customer reaches what they installed.
+ *
+ * The panel reports the address and any generated login exactly once, in the
+ * deploy response. Nothing asked for it again, so a customer ended up with a
+ * running app and no idea what to open or what password it had made.
+ */
+
+it('keeps the address and login the panel reports at install time', function () use ($CATALOGUE) {
+    Http::fake(function ($request) use ($CATALOGUE) {
+        $url = $request->url();
+        if (str_contains($url, '/deploy')) {
+            return Http::response(['data' => [
+                'container_id' => 'ctr-9', 'container_name' => 'acct1-n8n',
+                'access_url' => 'http://1.2.3.4:5678',
+                'credentials' => ['Site' => 'http://1.2.3.4:5678', 'Password' => 's3cret'],
+                'post_install_notes' => 'Open the address and create your owner account.',
+            ]], 200);
+        }
+        if (str_contains($url, '/docker/templates') && $request->method() === 'GET') {
+            return Http::response(['data' => ['templates' => $CATALOGUE]], 200);
+        }
+        if (preg_match('#/v1/accounts/[^/?]+$#', parse_url($url, PHP_URL_PATH) ?? '')) {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($url, '/v1/plans')) {
+            return Http::response(['data' => [['id' => 'plan-1', 'max_containers' => 5]]], 200);
+        }
+
+        return Http::response(['data' => ['containers' => []]], 200);
+    });
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->deployContainer($s, 'n8n')['success'])->toBeTrue();
+
+    $acc = App\Models\DockerAppCredential::where('service_id', $s->id)->firstOrFail();
+    expect($acc->accessUrl())->toBe('http://1.2.3.4:5678')
+        ->and($acc->items())->toMatchArray(['Password' => 's3cret'])
+        ->and($acc->notes())->toContain('owner account');
+});
+
+it('stores the details encrypted, not as readable columns', function () use ($CATALOGUE) {
+    App\Models\DockerAppCredential::create([
+        'service_id' => ctService(ctServer())[1]->id,
+        'container_id' => 'ctr-1', 'container_name' => 'x', 'slug' => 'n8n',
+        'payload' => ['credentials' => ['Password' => 'plaintext-secret']],
+    ]);
+
+    // A first-login password is a credential; it must not sit in the clear.
+    $raw = DB::table('docker_app_credentials')->value('payload');
+    expect($raw)->not->toContain('plaintext-secret');
+});
+
+it('does not fail an install when the details cannot be recorded', function () use ($CATALOGUE) {
+    fakeContainerApi(5, [], $CATALOGUE);
+    [$u, $s] = ctService(ctServer());
+
+    // fakeContainerApi returns no access fields at all; the install must still
+    // report success rather than dying over a missing note.
+    expect((new PanelicaModule)->deployContainer($s, 'wordpress')['success'])->toBeTrue();
+});
+
+it('shows the connection details on the apps page', function () use ($MINE) {
+    fakeContainerApi(5, [$MINE]);
+    [$owner, $s] = ctService(ctServer());
+    App\Models\DockerAppCredential::create([
+        'service_id' => $s->id, 'container_id' => 'c-mine', 'container_name' => 'acct1-wordpress',
+        'slug' => 'wordpress',
+        'payload' => ['access_url' => 'http://5.6.7.8:8080', 'credentials' => ['Admin login' => 'http://5.6.7.8:8080/wp-admin']],
+    ]);
+
+    $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()->assertSee('http://5.6.7.8:8080/wp-admin');
+});
