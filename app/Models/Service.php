@@ -120,4 +120,33 @@ class Service extends Model
     {
         return $q->where('status', ServiceStatus::Active->value);
     }
+
+    /** A service the customer can still act on (not terminated/cancelled/fraud). */
+    public function isLive(): bool
+    {
+        return ! in_array(strtolower((string) $this->status), ['terminated', 'cancelled', 'fraud'], true);
+    }
+
+    /**
+     * Hosting self-service tools this service offers, asked of its own module.
+     *
+     * Lives here rather than in the service page's controller because the
+     * dashboard and the service list link to these tools too, and all three
+     * have to agree on which ones exist. Reads only what is already loaded -
+     * module data and product config - so listing pages pay no API calls.
+     *
+     * @return string[]
+     */
+    public function hostingFeatureKeys(): array
+    {
+        if (! $this->server_id || ! $this->isLive()) {
+            return [];
+        }
+
+        $module = app(\App\Services\ProvisioningService::class)->resolveModule($this);
+
+        return $module && method_exists($module, 'hostingFeatures')
+            ? $module->hostingFeatures($this)
+            : [];
+    }
 }

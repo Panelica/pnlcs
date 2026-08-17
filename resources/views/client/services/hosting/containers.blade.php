@@ -22,7 +22,7 @@
     .ct-app{border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;cursor:pointer;background:var(--bg);transition:transform .14s,border-color .14s}
     .ct-app:hover{transform:translateY(-3px);border-color:var(--primary)}
     .ct-app.on{border-color:var(--primary);background:var(--primary-light)}
-    .ct-app img{width:38px;height:38px;object-fit:contain;margin-bottom:8px}
+    .ct-mark{width:42px;height:42px;margin:0 auto 9px;border-radius:11px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;letter-spacing:-.5px}
     .ct-app .nm{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.25}
     .ct-app .ds{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .ct-form{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:0 18px 18px}
@@ -75,8 +75,21 @@
         <input type="hidden" name="slug" id="ct-slug" value="">
         <div class="ct-apps">
             @foreach($templates as $t)
+            @php
+                // One mark per app, drawn here rather than fetched.
+                //
+                // The catalogue's logo_url points at other people's servers:
+                // most apps have none, and of the ones that do, roughly half
+                // are dead links that render as a broken image. That made the
+                // grid look half-finished and sent every customer's browser to
+                // github/jsdelivr on page load. A letter tile keyed off the
+                // slug is the same for every app, always loads, and leaks
+                // nothing.
+                $ctHue = crc32($t['slug']) % 360;
+                $ctInitial = mb_strtoupper(mb_substr(trim($t['name']) ?: $t['slug'], 0, 1));
+            @endphp
             <div class="ct-app" data-slug="{{ $t['slug'] }}" onclick="ctPick(this)" title="{{ $t['description'] }}">
-                @if($t['logo_url'])<img src="{{ $t['logo_url'] }}" alt="" loading="lazy">@else<div style="font-size:30px">📦</div>@endif
+                <div class="ct-mark" style="background:hsl({{ $ctHue }},62%,94%);color:hsl({{ $ctHue }},52%,34%);border-color:hsl({{ $ctHue }},45%,84%)">{{ $ctInitial }}</div>
                 <div class="nm">{{ $t['name'] }}</div>
                 <div class="ds">{{ $t['description'] }}</div>
             </div>

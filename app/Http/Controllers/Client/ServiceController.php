@@ -47,13 +47,7 @@ class ServiceController extends Controller
 
         // Hosting self-service tabs this service offers (Panelica-only today).
         // Resolved from the module so a different server type simply returns [].
-        $hostingFeatures = [];
-        if ($service->server_id && $this->isLive($service)) {
-            $module = app(ProvisioningService::class)->resolveModule($service);
-            if ($module && method_exists($module, 'hostingFeatures')) {
-                $hostingFeatures = $module->hostingFeatures($service);
-            }
-        }
+        $hostingFeatures = $service->hostingFeatureKeys();
 
         return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures'));
     }

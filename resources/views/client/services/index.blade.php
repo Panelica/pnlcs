@@ -32,6 +32,7 @@
                 <tr>
                     <td>
                         <a href="{{ route("client.services.show", $s) }}" style="font-weight:600">{{ $s->product?->name ?? "N/A" }}</a>
+                        @include('client.services.partials.tool-links', ['svc' => $s])
                     </td>
                     <td class="text-muted">{{ $s->domain ?? "-" }}</td>
                     <td class="text-muted" style="text-transform:capitalize">{{ $s->billing_cycle ?? "-" }}</td>

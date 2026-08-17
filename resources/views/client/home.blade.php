@@ -139,7 +139,13 @@
             <tbody>
                 @foreach($activeServices as $service)
                 <tr>
-                    <td><a href="{{ route("client.services.show", $service) }}">{{ $service->product?->name ?? __('client.dashboard.service_fallback', ['id' => $service->id]) }}</a></td>
+                    <td>
+                        <a href="{{ route("client.services.show", $service) }}">{{ $service->product?->name ?? __('client.dashboard.service_fallback', ['id' => $service->id]) }}</a>
+                        {{-- The tools live one page in, which is a page nobody
+                             thinks to open. Put the ones people actually reach
+                             for on the row itself. --}}
+                        @include('client.services.partials.tool-links', ['svc' => $service])
+                    </td>
                     <td class="text-muted">{{ $service->domain ?? "-" }}</td>
                     <td style="font-weight:600">{{ money_fmt($service->amount) }}<span class="text-muted text-sm">/{{ $service->billing_cycle }}</span></td>
                     <td class="text-muted text-sm">{{ $service->next_due_date?->format(date_fmt()) ?? "N/A" }}</td>
