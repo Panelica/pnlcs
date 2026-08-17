@@ -587,17 +587,20 @@ class ConfigController extends Controller
         $registrars = collect(app(ModuleRegistry::class)->getRegistrarModules())
             ->merge($stored->keys())
             ->unique()
-            ->sort()
             ->map(function ($name) use ($stored) {
+                $module = app(ModuleRegistry::class)->getRegistrarModule($name);
                 $settings = ($stored[$name] ?? collect())->pluck('value', 'setting');
 
                 return (object) [
                     'registrar_name' => $name,
-                    'description' => $settings->get('name', ucfirst($name)),
-                    'disabled' => $settings->get('visible', '1') === '0',
-                    'settings' => $settings->except(['name', 'visible'])->toArray(),
+                    'label' => $settings->get('name', $module?->getModuleName() ?? ucfirst($name)),
+                    'fields' => $module?->getConfigFields() ?? [],
+                    'values' => $settings->toArray(),
+                    'active' => ($settings->get('visible', '1') ?? '1') !== '0',
                 ];
-            })->values();
+            })
+            ->sortBy(fn ($reg) => [$reg->active ? 0 : 1, $reg->label])
+            ->values();
 
         return view('admin.config.registrars', ['registrars' => $registrars]);
     }
@@ -1350,6 +1353,11 @@ class ConfigController extends Controller
                 $settings = $decoded;
             }
         }
+
+        // An unticked checkbox posts nothing, so it has to be written as off
+        // rather than left as it was.
+        $settings['visible'] = $request->boolean('visible') ? '1' : '0';
+
         foreach ($settings as $key => $value) {
             RegistrarSettings::updateOrCreate(
                 ['registrar' => $registrar, 'setting' => $key],

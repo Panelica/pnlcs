@@ -2020,6 +2020,7 @@ return [
         'configure_prefix' => 'Konfiguruj prefiks',
     ],
     'registrars.config_json' => 'Konfiguracja (JSON)',
+    'registrars.enable_registrar' => 'Włącz rejestratora',
     'registrars.configure_title' => 'Konfiguracja: :name',
     'registrars.display_name' => 'Nazwa wyświetlana',
     'registrars.no_registrars' => 'Brak skonfigurowanych rejestratorów domen.',

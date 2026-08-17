@@ -2015,6 +2015,7 @@ return [
         'configure_prefix' => 'Configure prefix',
     ],
     'registrars.config_json' => 'Configuration (JSON)',
+    'registrars.enable_registrar' => 'Enable registrar',
     'registrars.configure_title' => 'Configure: :name',
     'registrars.display_name' => 'Display Name',
     'registrars.no_registrars' => 'No domain registrars configured.',
