@@ -68,6 +68,7 @@ nav:
       - Payment Gateways: guides/payment-gateways.md
       - Connect a Server: guides/connect-a-server.md
       - Sell Domains: guides/sell-domains.md
+      - Sell Docker Apps: guides/sell-docker-apps.md
       - Tax Rules: guides/tax-rules.md
       - Themes & Branding: guides/themes-and-branding.md
       - Staff & Roles: guides/staff-and-roles.md

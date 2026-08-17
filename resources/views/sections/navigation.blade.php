@@ -27,6 +27,12 @@
                             <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-wordpress-line"></i> {{ __('sections.nav.wordpress_hosting') }}</a>
                             <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-building-line"></i> {{ __('sections.nav.business_hosting') }}</a>
                             <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-group-line"></i> {{ __('sections.nav.reseller_hosting') }}</a>
+                            {{-- Only when the app section is actually being
+                                 shown: the menu should not point at a shop
+                                 window that is switched off. --}}
+                            @if(!empty($apps))
+                            <a href="#apps" class="main-nav__dropdown-link"><i class="ri-apps-2-line"></i> {{ __('sections.nav.docker_hosting') }}</a>
+                            @endif
                         </div>
                         <div class="main-nav__mega-promo">
                             <span class="main-nav__mega-promo-text"><i class="ri-gift-2-line"></i> {{ __('sections.nav.promo_text') }}</span>

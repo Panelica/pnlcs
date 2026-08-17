@@ -62,6 +62,7 @@ return [
     ],
     'infrastructure' => ['title' => '企业级基础设施'],
     'nav' => [
+        'docker_hosting' => 'Docker 应用',
         'business_hosting' => '企业主机', 'claim_now' => '立即领取', 'contact' => '联系我们',
         'dedicated_server' => '独立服务器', 'domain_search' => '域名搜索',
         'domain_transfer' => '域名转入', 'domains' => '域名', 'home' => '首页',

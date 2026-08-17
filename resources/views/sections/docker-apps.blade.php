@@ -13,7 +13,7 @@
     $total = count($apps ?? []);
 @endphp
 @if(count($shown))
-<section class="oca">
+<section class="oca" id="apps">
     <div class="container">
         <div class="oca__head">
             <h2 class="oca__title">{{ $val('title', __('sections.apps.title')) }}</h2>

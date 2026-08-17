@@ -24,7 +24,7 @@
 
     {{-- Fixed sections: topbar + navigation --}}
     @include('sections.topbar')
-    @include('sections.navigation')
+    @include('sections.navigation', ['apps' => $apps ?? []])
 
     {{-- Dynamic sections from DB --}}
     @foreach($sections as $section)

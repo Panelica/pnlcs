@@ -87,6 +87,7 @@ return [
         'title' => 'Enterprise Infrastructure',
     ],
     'nav' => [
+        'docker_hosting' => 'Docker Apps',
         'business_hosting' => 'Business Hosting',
         'claim_now' => 'Claim Now',
         'contact' => 'Contact',
