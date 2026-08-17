@@ -47,7 +47,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         $fieldOptions = ['' => '— Auto —'] + $clientFields;
 
         return [
-            ['name' => 'api_login', 'label' => 'API Login', 'type' => 'text', 'required' => true],
+            ['name' => 'api_login', 'label' => 'Login', 'type' => 'text', 'required' => true],
             ['name' => 'api_hash', 'label' => 'API Hash', 'type' => 'password', 'required' => true],
             ['name' => 'api_pass', 'label' => 'API Password', 'type' => 'password', 'required' => true],
             ['name' => 'default_ns_group', 'label' => 'Default NS Group ID', 'type' => 'text', 'required' => false],
