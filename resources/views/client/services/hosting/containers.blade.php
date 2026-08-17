@@ -168,6 +168,13 @@
                         @if($t['min_memory_mb'] <= 0 && $t['min_cpu_percent'] <= 0)
                         <span class="ct-req-i light">{{ __('client.hosting.containers.needs_light') }}</span>
                         @endif
+                        @if(($t['extra_services'] ?? 0) > 0)
+                        {{-- The floor above is the main container's. A template
+                             that also starts a database, a cache or an ML worker
+                             spends the same allowance on those, so saying "2 GB"
+                             on its own would not be true. --}}
+                        <span class="ct-req-i" title="{{ __('client.hosting.containers.services_hint') }}"><i class="ri-stack-line"></i>{{ trans_choice('client.hosting.containers.services', $t['extra_services'] + 1, ['count' => $t['extra_services'] + 1]) }}</span>
+                        @endif
                     </div>
                     @if($ctTooBig)<div class="ct-over">{{ __('client.hosting.containers.over_plan') }}</div>@endif
                     <button type="button" class="ct-pick" onclick="ctPick(this.closest('.ct-app'));event.stopPropagation()"><i class="ri-download-2-line"></i>{{ __('client.hosting.containers.install') }}</button>

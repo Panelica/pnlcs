@@ -1046,6 +1046,7 @@ class PanelicaModule extends AbstractServerModule
                 'min_memory_mb' => (int) ($t['min_memory_mb'] ?? 0),
                 'min_cpu_percent' => (int) ($t['min_cpu_percent'] ?? 0),
                 'is_popular' => (bool) ($t['is_popular'] ?? false),
+                'extra_services' => $this->linkedServiceCount($t),
                 'website_url' => (string) ($t['website_url'] ?? ''),
                 'documentation_url' => (string) ($t['documentation_url'] ?? ''),
             ];
@@ -1061,6 +1062,26 @@ class PanelicaModule extends AbstractServerModule
      * plan; an operator building a product has to be able to pick anything the
      * server offers, including apps no plan exposes yet.
      */
+
+    /**
+     * How many extra containers a template starts alongside the main one.
+     *
+     * It matters to the customer: the memory floor applies to the main
+     * container, but the helpers - a database, a cache, a machine-learning
+     * worker - run in the same account slice and draw on the same allowance.
+     * A card that says "2 GB" while quietly starting four containers is not
+     * telling the truth about what the app costs.
+     */
+    private function linkedServiceCount(array $t): int
+    {
+        $ls = $t['linked_services'] ?? null;
+        if (is_string($ls)) {
+            $ls = json_decode($ls, true);
+        }
+
+        return is_array($ls) ? count($ls) : 0;
+    }
+
     public function appTemplates(Server $server): array
     {
         $resp = $this->get($server, '/v1/docker/templates');
@@ -1085,6 +1106,7 @@ class PanelicaModule extends AbstractServerModule
                 // the panel's own popular flag.
                 'is_popular' => (bool) ($t['is_popular'] ?? false),
                 'deploy_count' => (int) ($t['deploy_count'] ?? 0),
+                'extra_services' => $this->linkedServiceCount($t),
                 // The panel's own link. Used only as a starting point when
                 // filling in images; the catalogue renders ours.
                 'logo_url' => (string) ($t['logo_url'] ?? ''),

@@ -59,6 +59,12 @@
                     @endif
                     <div class="ap-nm">{{ $a['name'] }}</div>
                     <div class="ap-ds">{{ $line }}</div>
+                    @if(($a['extra_services'] ?? 0) > 0 || ($a['min_memory_mb'] ?? 0) > 0)
+                    <div class="ap-req">
+                        @if(($a['min_memory_mb'] ?? 0) > 0)<span>{{ $a['min_memory_mb'] >= 1024 ? round($a['min_memory_mb']/1024, 1).' GB' : $a['min_memory_mb'].' MB' }}</span>@endif
+                        @if(($a['extra_services'] ?? 0) > 0)<span>{{ trans_choice('client.hosting.containers.services', $a['extra_services'] + 1, ['count' => $a['extra_services'] + 1]) }}</span>@endif
+                    </div>
+                    @endif
                 </div>
                 @endforeach
             </div>
@@ -298,6 +304,8 @@ document.addEventListener('DOMContentLoaded', function(){
     .ap-nm{font-size:12.5px;font-weight:700;line-height:1.25;color:var(--text)}
     .ap-ds{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .ap-star{position:absolute;top:6px;right:7px;color:#f0a92b;font-size:11px;line-height:1}
+    .ap-req{display:flex;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:6px}
+    .ap-req span{font-size:10px;font-weight:600;color:var(--muted);background:rgba(127,127,127,.09);border-radius:5px;padding:2px 5px}
     .ap-none{padding:18px;text-align:center;color:var(--muted);font-size:13px}
 </style>
 @endsection
