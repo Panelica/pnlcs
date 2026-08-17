@@ -186,3 +186,54 @@ it('installs what the customer chose, not the product default', function () {
     Http::assertSent(fn ($rq) => str_contains($rq->url(), '/docker/templates/n8n/deploy'));
     Http::assertNotSent(fn ($rq) => str_contains($rq->url(), '/docker/templates/wordpress/deploy'));
 });
+
+/*
+ * What a plan contains, on the card.
+ *
+ * The store used to show a name and a price and nothing else, so the customer
+ * was choosing between plans without being told what separated them. The
+ * figures are read from the product's own limits rather than typed into a
+ * feature list, so they cannot drift from what the panel enforces.
+ */
+
+it('states the plan resources in units a customer understands', function () {
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'panelica',
+        'config_options' => json_encode([
+            'res_memory_mb' => 4096, 'res_cpu_percent' => 200, 'res_disk_mb' => 51200,
+            'res_max_containers' => 3, 'res_max_domains' => 1,
+        ]),
+    ]);
+
+    $text = collect($product->resourceSummary())->pluck('text')->implode(' | ');
+
+    // Cores, not percentages: "200%" reads like an error to anyone who has not
+    // seen a cgroup.
+    expect($text)->toContain('4 GB RAM')->toContain('2 vCPU')
+        ->toContain('50 GB')->toContain('3 apps')->toContain('1 website');
+});
+
+it('says nothing rather than zeroes for a product with no limits set', function () {
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'config_options' => json_encode([]),
+    ]);
+
+    expect($product->resourceSummary())->toBe([]);
+});
+
+it('shows the resources on the order form', function () use ($CATALOGUE) {
+    appOrderServer();
+    fakeAppCatalogue($CATALOGUE);
+    $product = appOrderProduct();
+    $product->update(['config_options' => json_encode([
+        'panelica_app_choose' => 1, 'res_max_containers' => 2, 'res_memory_mb' => 2048,
+    ])]);
+
+    $this->actingAs(appOrderUser())
+        ->get(route('client.store.configure', $product))
+        ->assertOk()
+        ->assertSee('2 GB RAM')
+        ->assertSee('2 apps');
+});

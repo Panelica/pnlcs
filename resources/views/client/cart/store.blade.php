@@ -2,6 +2,13 @@
 @section("title", __("client.order_a_new_product"))
 @section("content")
 
+<style>
+    .pn-res{list-style:none;margin:0 0 16px;padding:0;flex:1;display:flex;flex-direction:column;gap:6px}
+    .pn-res li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text);line-height:1.4}
+    .pn-res i{font-size:14px;color:var(--primary);flex:0 0 auto}
+</style>
+
+
 <div class="pn-page-header">
     <div>
         <h1 class="pn-page-title">{{ __('client.store.title') }}</h1>
@@ -45,7 +52,18 @@
                     <div class="pn-product-price">{{ __('client.store.contact_us') }}</div>
                 @endif
                 @if($product->description)
-                    <div style="font-size:13px;color:var(--muted);line-height:1.65;margin:12px 0 16px;flex:1">{{ Str::limit(strip_tags($product->description), 120) }}</div>
+                    <div style="font-size:13px;color:var(--muted);line-height:1.65;margin:12px 0 10px">{{ Str::limit(strip_tags($product->description), 120) }}</div>
+                @endif
+                {{-- What the plan actually gives, read from the product's own
+                     limits rather than typed in by hand, so the card cannot
+                     drift away from what the panel will enforce. --}}
+                @php $res = $product->resourceSummary(); @endphp
+                @if($res)
+                    <ul class="pn-res">
+                        @foreach($res as $r)
+                        <li><i class="{{ $r['icon'] }}"></i>{{ $r['text'] }}</li>
+                        @endforeach
+                    </ul>
                 @else
                     <div style="flex:1;margin-bottom:16px"></div>
                 @endif

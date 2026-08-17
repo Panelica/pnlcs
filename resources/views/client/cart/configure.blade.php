@@ -27,6 +27,23 @@
     @csrf
     <input type="hidden" name="product_id" value="{{ $product->id }}">
 
+    @php $res = $product->resourceSummary(); @endphp
+    @if($res)
+    {{-- The limits the order actually buys, so the choice of app can be made
+         against them rather than after the fact. --}}
+    <div class="pn-card" style="margin-bottom:16px;">
+        <div class="pn-card-header">{{ __('client.store.included_resources') }}</div>
+        <div class="pn-card-body">
+            <ul class="pn-res-row">
+                @foreach($res as $r)
+                <li><i class="{{ $r['icon'] }}"></i>{{ $r['text'] }}</li>
+                @endforeach
+            </ul>
+            <p class="pn-res-note">{{ __('client.store.res_shared_note') }}</p>
+        </div>
+    </div>
+    @endif
+
     @if(! empty($apps))
     {{-- One product, any app. Selling ninety-eight apps as ninety-eight
          products does not scale, so the choice is made here and the order
@@ -304,6 +321,10 @@ document.addEventListener('DOMContentLoaded', function(){
     .ap-nm{font-size:12.5px;font-weight:700;line-height:1.25;color:var(--text)}
     .ap-ds{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .ap-star{position:absolute;top:6px;right:7px;color:#f0a92b;font-size:11px;line-height:1}
+    .pn-res-row{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px}
+    .pn-res-row li{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text)}
+    .pn-res-row i{font-size:15px;color:var(--primary)}
+    .pn-res-note{font-size:11.5px;color:var(--muted);margin:12px 0 0;line-height:1.5}
     .ap-req{display:flex;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:6px}
     .ap-req span{font-size:10px;font-weight:600;color:var(--muted);background:rgba(127,127,127,.09);border-radius:5px;padding:2px 5px}
     .ap-none{padding:18px;text-align:center;color:var(--muted);font-size:13px}
