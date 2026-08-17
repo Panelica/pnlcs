@@ -10,30 +10,30 @@
     .ct-head h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-.5px;color:var(--text)}
     .ct-head .sub{font-size:13px;color:var(--muted)}
     .ct-cnt{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:6px 13px;border-radius:999px}
-    .ct-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:18px;align-items:start}
+    /* One column, the customer's own apps first, the catalogue below as an
+       accordion. Ninety-eight apps left open ran the page to 15,000px; half
+       open shows there is more and that it folds away. */
+    .ct-split{display:flex;flex-direction:column}
     .ct-col-main{order:1;min-width:0}
-    /* The catalogue is ninety-eight apps tall. Left to grow it made the page
-       15,000px long and pushed the footer out of reach, so it scrolls inside
-       itself and stays put while the customer works on their own apps. */
-    .ct-col-side{order:2;min-width:0;position:sticky;top:16px;max-height:calc(100vh - 32px);
-        display:flex;flex-direction:column;overflow:hidden}
-    .ct-col-side > form{overflow-y:auto;min-height:0}
-    .ct-col-side .ct-empty{overflow-y:auto}
-    .ct-col-side .ct-apps{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;padding:14px}
-    .ct-col-side .ct-app{padding:10px 6px}
-    .ct-col-side .ct-app .ds{display:none}
-    .ct-col-side .ct-logo,.ct-col-side .ct-mark{width:30px;height:30px;margin-bottom:6px}
-    .ct-col-side .ct-app .nm{font-size:11px}
-    .ct-col-side .ct-req{gap:3px;margin-top:5px}
-    .ct-col-side .ct-gh{padding:12px 14px 0}
-    .ct-col-side .ct-search{padding:14px 14px 0}
-    .ct-col-side .ct-clear{right:24px}
-    .ct-col-side .ct-count{display:none}
-    .ct-col-side .ct-form{flex-direction:column;align-items:stretch}
+    .ct-col-side{order:2;min-width:0;position:relative;overflow:hidden;
+        max-height:var(--ct-peek,560px);transition:max-height .25s ease}
+    .ct-col-side.is-open{max-height:none}
+    .ct-col-side .ct-ch{cursor:pointer;user-select:none}
+    .ct-col-side .ct-ch .ct-chev{margin-left:auto;font-size:16px;color:var(--muted);
+        transition:transform .25s ease}
+    .ct-col-side.is-open .ct-ch .ct-chev{transform:rotate(180deg)}
+    .ct-fade{position:absolute;left:0;right:0;bottom:0;height:120px;pointer-events:none;
+        background:linear-gradient(to bottom,rgba(0,0,0,0),var(--card) 78%)}
+    .ct-col-side.is-open .ct-fade{display:none}
+    .ct-more{position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center}
+    .ct-more button{pointer-events:auto;border:1px solid var(--border);background:var(--card);
+        color:var(--primary);font-size:12.5px;font-weight:700;padding:8px 18px;border-radius:999px;
+        cursor:pointer;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:6px}
+    .ct-more button:hover{border-color:var(--primary)}
+    .ct-col-side.is-open .ct-more{position:static;margin:0 0 16px}
     .ct-open{margin-top:7px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700}
     .ct-open a{color:var(--primary);text-decoration:none}
     .ct-open a:hover{text-decoration:underline}
-    @media (max-width:1100px){ .ct-split{grid-template-columns:1fr} }
     .ct-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-bottom:18px}
     .ct-ch{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
     .ct-note{padding:16px 18px;display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted);line-height:1.5}
@@ -404,6 +404,54 @@
 @endif
 
 <script>
+// The catalogue folds. It carries ninety-eight apps, so it opens to a peek -
+// enough to show it is a grid of apps and that there is more - and the whole
+// header is the toggle. Built here rather than in the markup so the same
+// blocks keep serving the plain, unfolded page when scripting is off.
+(function(){
+    var side = document.querySelector('.ct-col-side');
+    if (!side || !side.querySelector('.ct-apps')) { return; }
+    var head = side.querySelector('.ct-ch');
+    if (head) {
+        var chev = document.createElement('i');
+        chev.className = 'ri-arrow-down-s-line ct-chev';
+        head.appendChild(chev);
+        head.addEventListener('click', function(e){
+            if (e.target.closest('input,button,a,select')) { return; }
+            ctToggleCatalogue();
+        });
+    }
+    var fade = document.createElement('div');
+    fade.className = 'ct-fade';
+    side.appendChild(fade);
+
+    var bar = document.createElement('div');
+    bar.className = 'ct-more';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.innerHTML = '<i class="ri-add-line"></i><span>' + @json(__('client.hosting.containers.browse_all')) + '</span>';
+    btn.addEventListener('click', ctToggleCatalogue);
+    bar.appendChild(btn);
+    side.appendChild(bar);
+
+    window.ctToggleCatalogue = function(open){
+        var want = (open === undefined) ? !side.classList.contains('is-open') : open;
+        side.classList.toggle('is-open', want);
+        btn.querySelector('span').textContent = want
+            ? @json(__('client.hosting.containers.collapse'))
+            : @json(__('client.hosting.containers.browse_all'));
+        btn.querySelector('i').className = want ? 'ri-arrow-up-s-line' : 'ri-add-line';
+        if (!want) { side.scrollIntoView({block: 'nearest'}); }
+    };
+
+    // Searching or picking an app is a request to see the whole catalogue.
+    var search = side.querySelector('.ct-search input');
+    if (search) { search.addEventListener('input', function(){ window.ctToggleCatalogue(true); }); }
+    side.addEventListener('click', function(e){
+        if (e.target.closest('.ct-app')) { window.ctToggleCatalogue(true); }
+    });
+})();
+
 // Pick an app before the install button becomes usable — a deploy without a
 // chosen template is the one mistake this form can make.
 // The install box follows the chosen app instead of sitting at the bottom of
