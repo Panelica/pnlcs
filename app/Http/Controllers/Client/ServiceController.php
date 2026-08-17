@@ -771,8 +771,68 @@ class ServiceController extends Controller
         // The catalogue is only needed when the customer can actually install
         // something; skipping it otherwise saves a call on a locked plan.
         $templates = $policy['can_create'] ? $module->containerTemplates($service) : [];
+        $resources = method_exists($module, 'containerResources') ? $module->containerResources($service) : ['memory_mb' => 0, 'cpu_percent' => 0];
+        $groups = $this->groupTemplates($templates);
 
-        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates'));
+        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups'));
+    }
+
+    /**
+     * The catalogue arranged into sections a customer can navigate.
+     *
+     * The panel tags apps with 51 different categories - "devtools", "nosql",
+     * "whmcs-alternative" - which is a useful index for us and a wall of jargon
+     * for the person choosing an app. These are the sections people actually
+     * shop by; anything tagged with something new lands in Other rather than
+     * disappearing, so the catalogue never hides an app we failed to map.
+     *
+     * @param  array<int, array<string, mixed>>  $templates
+     * @return array<int, array{key:string, apps:array<int, array<string, mixed>>}>
+     */
+    private function groupTemplates(array $templates): array
+    {
+        $sections = [
+            'websites' => ['web', 'cms', 'wordpress', 'blog', 'php', 'hosting', 'ecommerce'],
+            'databases' => ['database', 'nosql', 'cache', 'search'],
+            'ai' => ['ai', 'automation'],
+            'devtools' => ['devtools', 'git', 'ide', 'runtime', 'base', 'os'],
+            'monitoring' => ['monitoring', 'analytics', 'management'],
+            'network' => ['networking', 'proxy', 'vpn', 'security', 'remote-access'],
+            'desktops' => ['desktop', 'remote-desktop', 'browser'],
+            'files' => ['storage', 'media', 'streaming'],
+            'team' => ['collaboration', 'messaging', 'chat', 'email', 'wiki', 'notes',
+                'documentation', 'knowledge-base', 'communication', 'voip', 'support', 'rss'],
+        ];
+
+        $out = [];
+        $placed = [];
+        foreach ($sections as $key => $cats) {
+            $apps = [];
+            foreach ($templates as $i => $t) {
+                if (isset($placed[$i])) {
+                    continue;
+                }
+                if (array_intersect($cats, (array) ($t['categories'] ?? []))) {
+                    $apps[] = $t;
+                    $placed[$i] = true;
+                }
+            }
+            if ($apps) {
+                $out[] = ['key' => $key, 'apps' => $apps];
+            }
+        }
+
+        $rest = [];
+        foreach ($templates as $i => $t) {
+            if (! isset($placed[$i])) {
+                $rest[] = $t;
+            }
+        }
+        if ($rest) {
+            $out[] = ['key' => 'other', 'apps' => $rest];
+        }
+
+        return $out;
     }
 
     public function storeContainer(Request $request, Service $service)

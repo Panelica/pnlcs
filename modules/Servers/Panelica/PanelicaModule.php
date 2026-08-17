@@ -1036,6 +1036,14 @@ class PanelicaModule extends AbstractServerModule
                 'description' => (string) ($t['description'] ?? ''),
                 'logo_url' => (string) ($t['logo_url'] ?? ''),
                 'categories' => array_values((array) ($t['categories'] ?? [])),
+                // What the app needs to run. Carried through so the page can say
+                // whether the plan can actually hold it, instead of letting the
+                // customer install something that will be starved of memory.
+                'min_memory_mb' => (int) ($t['min_memory_mb'] ?? 0),
+                'min_cpu_percent' => (int) ($t['min_cpu_percent'] ?? 0),
+                'is_popular' => (bool) ($t['is_popular'] ?? false),
+                'website_url' => (string) ($t['website_url'] ?? ''),
+                'documentation_url' => (string) ($t['documentation_url'] ?? ''),
             ];
         }
 
@@ -1545,30 +1553,70 @@ class PanelicaModule extends AbstractServerModule
         return $this->buildResult(true, 'Subdomain deleted.');
     }
 
-    /** A plan integer limit for the account, or null when it cannot be resolved. */
-    private function planLimit(Service $service, string $field): ?int
+    /** @var array<string, array<string, mixed>|null> plan row per account, for this request */
+    private array $planRowCache = [];
+
+    /**
+     * The account's plan row, fetched once per request.
+     *
+     * Resolving it costs two calls (account, then plans). The apps page asks
+     * for the container limit and the CPU/RAM ceilings together, and doing that
+     * naively would make four calls to answer one page.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function planRow(Service $service): ?array
     {
         $server = $this->getServer($service);
         $accountId = $this->linkedAccountId($service);
         if (! $server || ! $accountId) {
             return null;
         }
+        if (array_key_exists($accountId, $this->planRowCache)) {
+            return $this->planRowCache[$accountId];
+        }
+
+        $row = null;
         $acc = $this->get($server, "/v1/accounts/{$accountId}");
         $planId = $acc->successful() ? ($acc->json('data.plan_id') ?? null) : null;
-        if (! $planId) {
-            return null;
-        }
-        $plans = $this->get($server, '/v1/plans');
-        if (! $plans->successful()) {
-            return null;
-        }
-        foreach (($plans->json('data') ?? []) as $p) {
-            if ((string) ($p['id'] ?? '') === (string) $planId) {
-                return isset($p[$field]) ? (int) $p[$field] : null;
+        if ($planId) {
+            $plans = $this->get($server, '/v1/plans');
+            if ($plans->successful()) {
+                foreach (($plans->json('data') ?? []) as $p) {
+                    if ((string) ($p['id'] ?? '') === (string) $planId) {
+                        $row = $p;
+                        break;
+                    }
+                }
             }
         }
 
-        return null;
+        return $this->planRowCache[$accountId] = $row;
+    }
+
+    /** A plan integer limit for the account, or null when it cannot be resolved. */
+    private function planLimit(Service $service, string $field): ?int
+    {
+        $row = $this->planRow($service);
+
+        return isset($row[$field]) ? (int) $row[$field] : null;
+    }
+
+    /**
+     * The CPU/RAM ceilings an app on this account runs under.
+     *
+     * The catalogue states what each app needs; without these the customer
+     * cannot tell whether their plan can actually run it. 0 means "not capped
+     * by the plan" and is shown as unlimited rather than as zero.
+     *
+     * @return array{memory_mb:int, cpu_percent:int}
+     */
+    public function containerResources(Service $service): array
+    {
+        return [
+            'memory_mb' => (int) ($this->planLimit($service, 'memory_limit_mb') ?? 0),
+            'cpu_percent' => (int) ($this->planLimit($service, 'cpu_limit_percent') ?? 0),
+        ];
     }
 
     private function ownsSubdomain(Service $service, string $id): bool

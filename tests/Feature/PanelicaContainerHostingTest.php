@@ -180,6 +180,73 @@ it('fences start/stop/remove to the account\'s own containers', function () use 
     Http::assertNotSent(fn ($rq) => str_contains($rq->url(), 'c-theirs'));
 });
 
+/*
+ * Choosing an app: 98 of them across nine sections, each with a cost the plan
+ * may or may not be able to pay.
+ */
+
+it('carries what an app needs so the page can price it against the plan', function () {
+    fakeContainerApi(5, [], [[
+        'slug' => 'gitlab', 'name' => 'GitLab', 'description' => 'Git', 'logo_url' => '',
+        'categories' => ['git'], 'min_memory_mb' => 4096, 'min_cpu_percent' => 200, 'is_popular' => true,
+    ]]);
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->containerTemplates($s)[0])
+        ->toMatchArray(['min_memory_mb' => 4096, 'min_cpu_percent' => 200, 'is_popular' => true]);
+});
+
+it('reports the plan ceilings an app will run under', function () {
+    Http::fake(function ($request) {
+        $url = $request->url();
+        if (preg_match('#/v1/accounts/[^/?]+$#', parse_url($url, PHP_URL_PATH) ?? '')) {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($url, '/v1/plans')) {
+            return Http::response(['data' => [['id' => 'plan-1', 'memory_limit_mb' => 2048, 'cpu_limit_percent' => 150]]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->containerResources($s))
+        ->toBe(['memory_mb' => 2048, 'cpu_percent' => 150]);
+});
+
+it('resolves the plan once however many limits the page asks for', function () use ($MINE) {
+    fakeContainerApi(5, [$MINE]);
+    [$u, $s] = ctService(ctServer());
+    $mod = new PanelicaModule;
+
+    $mod->containerPolicy($s);
+    $mod->containerResources($s);
+
+    // Two calls resolve a plan (account, then plans). Asking for the container
+    // limit and the CPU/RAM ceilings separately used to cost four.
+    Http::assertSentCount(collect(Http::recorded())->count());
+    expect(collect(Http::recorded())->filter(fn ($p) => str_contains($p[0]->url(), '/v1/plans'))->count())->toBe(1);
+});
+
+it('groups the catalogue into sections and never drops an app', function () {
+    fakeContainerApi(5, [], [
+        ['slug' => 'wordpress', 'name' => 'WordPress', 'description' => '', 'logo_url' => '', 'categories' => ['cms']],
+        ['slug' => 'redis', 'name' => 'Redis', 'description' => '', 'logo_url' => '', 'categories' => ['cache']],
+        ['slug' => 'oddity', 'name' => 'Oddity', 'description' => '', 'logo_url' => '', 'categories' => ['not-a-known-tag']],
+    ]);
+    [$owner, $s] = ctService(ctServer());
+
+    $groups = $this->actingAs($owner)->get(route('client.services.containers', $s))
+        ->assertOk()->viewData('groups');
+
+    $keys = array_column($groups, 'key');
+    expect($keys)->toContain('websites')->toContain('databases')
+        // An unmapped tag must not vanish from the catalogue.
+        ->toContain('other');
+    expect(collect($groups)->flatMap(fn ($g) => $g['apps'])->pluck('slug')->all())
+        ->toHaveCount(3)->toContain('oddity');
+});
+
 it('shows the containers tab and forbids other clients', function () use ($MINE, $CATALOGUE) {
     fakeContainerApi(5, [$MINE], $CATALOGUE);
     [$owner, $s] = ctService(ctServer());

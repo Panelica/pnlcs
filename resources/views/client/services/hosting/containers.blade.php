@@ -23,6 +23,26 @@
     .ct-app:hover{transform:translateY(-3px);border-color:var(--primary)}
     .ct-app.on{border-color:var(--primary);background:var(--primary-light)}
     .ct-mark{width:42px;height:42px;margin:0 auto 9px;border-radius:11px;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;letter-spacing:-.5px}
+    .ct-search{position:relative;display:flex;align-items:center;gap:8px;padding:16px 18px 0}
+    .ct-search > i{position:absolute;left:30px;color:var(--muted);font-size:15px;pointer-events:none}
+    .ct-search .ct-inp{flex:1;padding-left:34px}
+    .ct-clear{position:absolute;right:120px;background:none;border:0;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:4px}
+    .ct-clear:hover{color:var(--text)}
+    .ct-count{font-size:11.5px;color:var(--muted);white-space:nowrap;min-width:78px;text-align:right}
+    .ct-noresult{padding:22px 18px;text-align:center;color:var(--muted);font-size:13px}
+    .ct-group{padding-top:6px}
+    .ct-gh{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;padding:16px 18px 0}
+    .ct-gt{font-size:13px;font-weight:800;color:var(--text)}
+    .ct-gd{font-size:11.5px;color:var(--muted)}
+    .ct-app{position:relative}
+    .ct-pop{position:absolute;top:7px;right:8px;color:#f0a92b;font-size:11px;line-height:1}
+    .ct-req{display:flex;justify-content:center;flex-wrap:wrap;gap:5px;margin-top:7px}
+    .ct-req-i{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--muted);
+        background:var(--bg-alt,rgba(127,127,127,.09));border-radius:5px;padding:2px 5px;line-height:1.4}
+    .ct-req-i.over{color:#b3261e;background:rgba(179,38,30,.1)}
+    .ct-req-i.light{font-weight:500}
+    .ct-app.big{opacity:.72}
+    .ct-over{margin-top:6px;font-size:10px;font-weight:700;color:#b3261e}
     .ct-app .nm{font-size:12.5px;font-weight:700;color:var(--text);line-height:1.25}
     .ct-app .ds{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .ct-form{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:0 18px 18px}
@@ -73,28 +93,69 @@
     <form method="POST" action="{{ route('client.services.containers.store', $service) }}">
         @csrf
         <input type="hidden" name="slug" id="ct-slug" value="">
-        <div class="ct-apps">
-            @foreach($templates as $t)
-            @php
-                // One mark per app, drawn here rather than fetched.
-                //
-                // The catalogue's logo_url points at other people's servers:
-                // most apps have none, and of the ones that do, roughly half
-                // are dead links that render as a broken image. That made the
-                // grid look half-finished and sent every customer's browser to
-                // github/jsdelivr on page load. A letter tile keyed off the
-                // slug is the same for every app, always loads, and leaks
-                // nothing.
-                $ctHue = crc32($t['slug']) % 360;
-                $ctInitial = mb_strtoupper(mb_substr(trim($t['name']) ?: $t['slug'], 0, 1));
-            @endphp
-            <div class="ct-app" data-slug="{{ $t['slug'] }}" onclick="ctPick(this)" title="{{ $t['description'] }}">
-                <div class="ct-mark" style="background:hsl({{ $ctHue }},62%,94%);color:hsl({{ $ctHue }},52%,34%);border-color:hsl({{ $ctHue }},45%,84%)">{{ $ctInitial }}</div>
-                <div class="nm">{{ $t['name'] }}</div>
-                <div class="ds">{{ $t['description'] }}</div>
-            </div>
-            @endforeach
+
+        {{-- Search first: with 98 apps across nine sections, scrolling to find
+             one is the slow path. Filtering happens in the browser because the
+             whole catalogue is already on the page. --}}
+        <div class="ct-search">
+            <i class="ri-search-line"></i>
+            <input type="text" id="ct-q" autocomplete="off" class="ct-inp"
+                   placeholder="{{ __('client.hosting.containers.search_ph') }}"
+                   oninput="ctFilter()" onkeydown="if(event.key==='Enter')event.preventDefault()">
+            <button type="button" id="ct-clear" class="ct-clear" onclick="ctClear()" hidden aria-label="{{ __('client.hosting.containers.search_clear') }}"><i class="ri-close-line"></i></button>
+            <span class="ct-count" id="ct-count">{{ __('client.hosting.containers.showing', ['count' => count($templates)]) }}</span>
         </div>
+        <div class="ct-noresult" id="ct-noresult" hidden>{{ __('client.hosting.containers.search_none') }}</div>
+
+        @foreach($groups as $g)
+        <div class="ct-group" data-group="{{ $g['key'] }}">
+            <div class="ct-gh">
+                <span class="ct-gt">{{ __('client.hosting.containers.group_'.$g['key']) }}</span>
+                <span class="ct-gd">{{ __('client.hosting.containers.group_'.$g['key'].'_hint') }}</span>
+            </div>
+            <div class="ct-apps">
+                @foreach($g['apps'] as $t)
+                @php
+                    // One mark per app, drawn here rather than fetched.
+                    //
+                    // The catalogue's logo_url points at other people's servers:
+                    // most apps have none, and of the ones that do, roughly half
+                    // are dead links that render as a broken image. That made the
+                    // grid look half-finished and sent every customer's browser to
+                    // github/jsdelivr on page load. A letter tile keyed off the
+                    // slug is the same for every app, always loads, and leaks
+                    // nothing.
+                    $ctHue = crc32($t['slug']) % 360;
+                    $ctInitial = mb_strtoupper(mb_substr(trim($t['name']) ?: $t['slug'], 0, 1));
+                    // An app that asks for more than the plan allows would install
+                    // and then be starved, so say so before it is chosen.
+                    $ctTooBig = $resources['memory_mb'] > 0 && $t['min_memory_mb'] > $resources['memory_mb'];
+                @endphp
+                <div class="ct-app{{ $ctTooBig ? ' big' : '' }}" data-slug="{{ $t['slug'] }}"
+                     data-find="{{ mb_strtolower($t['name'].' '.$t['slug'].' '.$t['description'].' '.implode(' ', $t['categories'])) }}"
+                     onclick="ctPick(this)" title="{{ $t['description'] }}">
+                    @if($t['is_popular'])<span class="ct-pop" title="{{ __('client.hosting.containers.popular') }}"><i class="ri-star-fill"></i></span>@endif
+                    <div class="ct-mark" style="background:hsl({{ $ctHue }},62%,94%);color:hsl({{ $ctHue }},52%,34%);border-color:hsl({{ $ctHue }},45%,84%)">{{ $ctInitial }}</div>
+                    <div class="nm">{{ $t['name'] }}</div>
+                    <div class="ds">{{ $t['description'] }}</div>
+                    <div class="ct-req">
+                        @if($t['min_memory_mb'] > 0)
+                        <span class="ct-req-i{{ $ctTooBig ? ' over' : '' }}" title="{{ __('client.hosting.containers.needs_ram') }}"><i class="ri-ram-2-line"></i>{{ $t['min_memory_mb'] >= 1024 ? round($t['min_memory_mb']/1024, 1).' GB' : $t['min_memory_mb'].' MB' }}</span>
+                        @endif
+                        @if($t['min_cpu_percent'] > 0)
+                        <span class="ct-req-i" title="{{ __('client.hosting.containers.needs_cpu') }}"><i class="ri-cpu-line"></i>{{ $t['min_cpu_percent'] }}%</span>
+                        @endif
+                        @if($t['min_memory_mb'] <= 0 && $t['min_cpu_percent'] <= 0)
+                        <span class="ct-req-i light">{{ __('client.hosting.containers.needs_light') }}</span>
+                        @endif
+                    </div>
+                    @if($ctTooBig)<div class="ct-over">{{ __('client.hosting.containers.over_plan') }}</div>@endif
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endforeach
+
         <div class="ct-form">
             <div class="ct-fld" style="max-width:260px">
                 <label class="ct-lbl">{{ __('client.hosting.containers.name') }}</label>
@@ -102,6 +163,12 @@
             </div>
             <button type="submit" class="ct-btn" id="ct-submit" disabled><i class="ri-download-2-line"></i>{{ __('client.hosting.containers.install') }}</button>
         </div>
+        @if($resources['memory_mb'] > 0 || $resources['cpu_percent'] > 0)
+        <div class="ct-note info"><i class="ri-scales-3-line"></i>{{ __('client.hosting.containers.plan_ceiling', [
+            'ram' => $resources['memory_mb'] > 0 ? ($resources['memory_mb'] >= 1024 ? round($resources['memory_mb']/1024, 1).' GB' : $resources['memory_mb'].' MB') : __('client.hosting.containers.unlimited'),
+            'cpu' => $resources['cpu_percent'] > 0 ? $resources['cpu_percent'].'%' : __('client.hosting.containers.unlimited'),
+        ]) }}</div>
+        @endif
     </form>
     <div class="ct-note info"><i class="ri-information-line"></i>{{ __('client.hosting.containers.install_hint') }}</div>
     @endif
@@ -185,6 +252,41 @@ function ctPick(el){
     document.getElementById('ct-slug').value = el.getAttribute('data-slug') || '';
     document.getElementById('ct-submit').disabled = false;
 }
+
+// Filtering runs here rather than on the server: the catalogue is already on
+// the page, so typing should not cost a round trip. Every word must match, so
+// "wordpress php" narrows instead of widening. Sections with nothing left hide
+// themselves, and the counter says how much is showing.
+function ctFilter(){
+    var q = (document.getElementById('ct-q').value || '').toLowerCase().trim();
+    var terms = q ? q.split(/\s+/) : [];
+    document.getElementById('ct-clear').hidden = !q;
+
+    var shown = 0;
+    document.querySelectorAll('.ct-group').forEach(function(g){
+        var vis = 0;
+        g.querySelectorAll('.ct-app').forEach(function(a){
+            var hay = a.getAttribute('data-find') || '';
+            var ok = terms.every(function(t){ return hay.indexOf(t) !== -1; });
+            a.hidden = !ok;
+            if (ok) { vis++; shown++; }
+        });
+        g.hidden = vis === 0;
+    });
+
+    document.getElementById('ct-noresult').hidden = shown !== 0;
+    var c = document.getElementById('ct-count');
+    c.textContent = c.getAttribute('data-tpl').replace(':count', shown);
+}
+
+function ctClear(){
+    var i = document.getElementById('ct-q');
+    i.value = '';
+    ctFilter();
+    i.focus();
+}
+
+document.getElementById('ct-count').setAttribute('data-tpl', @json(__('client.hosting.containers.showing')));
 </script>
 
 @endsection
