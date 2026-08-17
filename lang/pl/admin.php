@@ -2021,6 +2021,8 @@ return [
     ],
     'registrars.config_json' => 'Konfiguracja (JSON)',
     'registrars.enable_registrar' => 'Włącz rejestratora',
+    'registrars.test' => 'Test',
+    'registrars.test_unavailable' => 'Ten rejestrator nie obsługuje testowania połączenia.',
     'registrars.configure_title' => 'Konfiguracja: :name',
     'registrars.display_name' => 'Nazwa wyświetlana',
     'registrars.no_registrars' => 'Brak skonfigurowanych rejestratorów domen.',

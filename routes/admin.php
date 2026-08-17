@@ -315,8 +315,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
 
         // Registrars — manage_registrars
         Route::middleware('admin.permission:manage_registrars')->group(function () {
-            Route::get('registrars', [ConfigController::class, 'registrars'])->name('registrars');
-            Route::post('registrars/{registrar}/settings', [ConfigController::class, 'updateRegistrarSettings'])->name('registrars.settings.update');
+    Route::get('registrars', [ConfigController::class, 'registrars'])->name('registrars');
+    Route::post('registrars/{registrar}/settings', [ConfigController::class, 'updateRegistrarSettings'])->name('registrars.settings.update');
+    Route::post('registrars/{registrar}/test', [ConfigController::class, 'testRegistrar'])->name('registrars.test');
         });
 
         // Support — manage_ticket_config

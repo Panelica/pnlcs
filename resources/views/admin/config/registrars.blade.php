@@ -62,6 +62,12 @@
 
                 <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">{{ __('admin.registrars.save_settings') }}</button>
             </form>
+            @if($reg->testable)
+            <form method="POST" action="{{ route('admin.config.registrars.test', $reg->registrar_name) }}" style="margin-top:6px;">
+                @csrf
+                <button type="submit" class="btn btn-default btn-sm">{{ __('admin.registrars.test') }}</button>
+            </form>
+            @endif
         </div>
     </details>
 @endforeach

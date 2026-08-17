@@ -4,6 +4,8 @@ namespace Modules\Registrars\HRD;
 
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
+use App\Models\Client;
+use App\Models\CustomField;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
 use Carbon\Carbon;
@@ -44,7 +46,27 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ['name' => 'api_hash', 'label' => 'API Hash', 'type' => 'password', 'required' => true],
             ['name' => 'api_pass', 'label' => 'API Password', 'type' => 'password', 'required' => true],
             ['name' => 'default_ns_group', 'label' => 'Default NS Group ID', 'type' => 'text', 'required' => false],
+            ['name' => 'pesel_field', 'label' => 'PESEL field', 'type' => 'text', 'required' => false],
+            ['name' => 'csa_field', 'label' => 'CSA field', 'type' => 'text', 'required' => false],
         ];
+    }
+
+    /**
+     * Verify the credentials and reach the HRD API. Used by the "Test"
+     * button on the registrars screen.
+     */
+    public function testConnection(): array
+    {
+        try {
+            $balance = $this->api()->partnerGetBalance();
+
+            return [
+                'success' => true,
+                'message' => 'Połączenie z HRD działa. Saldo: ' . ($balance['balance'] ?? 'n/d'),
+            ];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
     public function register(Domain $domain, int $years, array $params = []): array
@@ -226,9 +248,10 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     /**
      * Create (or reuse) the HRD user/registrant for this domain's client.
      *
-     * HRD keys registrants to a user id, so a domain cannot be registered
-     * without one. The panel does not store a PESEL, so a person registrant
-     * falls back to the client's NIP when present.
+     * HRD keys registrants to a user id (CSA), so a domain cannot be
+     * registered without one. A stored CSA is reused; otherwise a user is
+     * created. PESEL/NIP come from the mapped field (config) or auto-detected
+     * from the client's attributes and custom fields.
      */
     protected function createUser(Domain $domain, array $params = []): int
     {
@@ -238,6 +261,12 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             throw new \RuntimeException('Domain has no client — cannot create HRD registrant.');
         }
 
+        // Reuse an existing HRD user id when one is mapped and stored.
+        $csa = $this->resolveField($client, $this->settings['csa_field'] ?? null, ['csa', 'hrd_user_id']);
+        if ($csa !== null && ctype_digit(trim($csa))) {
+            return (int) trim($csa);
+        }
+
         $isCompany = filled($client->company_name);
         $name = $isCompany
             ? $client->company_name
@@ -245,9 +274,14 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $phone = $this->normalizePhone($params['phone'] ?? $client->full_phone);
 
+        // A person registrant needs a PESEL; a company needs its NIP.
+        $idNumber = $isCompany
+            ? (string) ($client->tax_id ?? '')
+            : ($this->resolveField($client, $this->settings['pesel_field'] ?? null, ['pesel', 'tax_id']) ?? '');
+
         return $this->api()->userCreate(
             $isCompany ? HRDApi::COMPANY : HRDApi::PERSON,
-            (string) ($client->tax_id ?? ''),
+            $idNumber,
             (string) ($client->email ?? ''),
             $phone,
             $phone,
@@ -259,6 +293,51 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $this->normalizeCountry($params['country'] ?? $client->country),
             $isCompany ? $client->full_name : null,
         );
+    }
+
+    /**
+     * Resolve a value for the client from the manually mapped field (config)
+     * or, failing that, from the given auto-detect candidates. Checks the
+     * client's own attributes first, then its custom fields.
+     *
+     * @param  array<int, string>  $autoDetect
+     */
+    protected function resolveField(Client $client, ?string $field, array $autoDetect = []): ?string
+    {
+        $candidates = array_values(array_filter(array_merge($field ? [$field] : [], $autoDetect)));
+
+        foreach ($candidates as $name) {
+            $value = $this->clientAttribute($client, $name)
+                ?? $this->clientCustomField($client, $name);
+
+            if ($value !== null && $value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    protected function clientAttribute(Client $client, string $name): ?string
+    {
+        $value = $client->getAttribute($name);
+
+        return ($value !== null && $value !== '') ? (string) $value : null;
+    }
+
+    protected function clientCustomField(Client $client, string $name): ?string
+    {
+        $field = CustomField::where('type', 'client')
+            ->whereRaw('LOWER(field_name) = ?', [strtolower($name)])
+            ->first();
+
+        if (! $field) {
+            return null;
+        }
+
+        $value = $field->valueFor($client->id);
+
+        return ($value !== null && $value !== '') ? (string) $value : null;
     }
 
     /**

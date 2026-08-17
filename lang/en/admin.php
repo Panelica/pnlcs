@@ -2016,6 +2016,8 @@ return [
     ],
     'registrars.config_json' => 'Configuration (JSON)',
     'registrars.enable_registrar' => 'Enable registrar',
+    'registrars.test' => 'Test',
+    'registrars.test_unavailable' => 'This registrar does not support connection testing.',
     'registrars.configure_title' => 'Configure: :name',
     'registrars.display_name' => 'Display Name',
     'registrars.no_registrars' => 'No domain registrars configured.',
