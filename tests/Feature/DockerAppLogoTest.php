@@ -132,7 +132,34 @@ it('fills in every missing image in one pass and reports what failed', function 
         ->assertRedirect()->assertSessionHas('success');
 
     expect(DockerAppLogo::pluck('slug')->all())->toBe(['good']);
-    expect(session('success'))->toContain('Fetched 1')->toContain('Failed 1')->toContain('no link to try 1');
+    // An app the panel has no link for is still tried against the icon set, so
+    // it is reported as a failure rather than as nothing to try.
+    expect(session('success'))->toContain('Fetched 1')->toContain('Failed 2');
+});
+
+it('falls back to the icon set when the panel has no link or a dead one', function () {
+    Http::fake(function ($request) {
+        $url = $request->url();
+        if (str_contains($url, '/v1/docker/templates')) {
+            return Http::response(['data' => ['templates' => [
+                ['slug' => 'nolink', 'name' => 'No Link'],
+                ['slug' => 'deadlink', 'name' => 'Dead Link', 'logo_url' => 'https://dead.test/x.png'],
+            ]]], 200);
+        }
+        // The icon set answers for both; the panel's own link does not.
+        if (str_contains($url, 'dashboard-icons')) {
+            return Http::response('PNGDATA', 200, ['Content-Type' => 'image/png']);
+        }
+
+        return Http::response('', 404);
+    });
+    logoServer();
+
+    $this->actingAs(logoAdmin(), 'admin')->post(route('admin.docker-apps.import'))->assertRedirect();
+
+    // Three quarters of the catalogue has no panel link at all; without a
+    // second source they would all stay on letter tiles.
+    expect(DockerAppLogo::pluck('slug')->sort()->values()->all())->toBe(['deadlink', 'nolink']);
 });
 
 it('leaves images already set alone unless told to replace them', function () {
