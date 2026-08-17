@@ -40,18 +40,48 @@ class DockerApp extends Model
     }
 
     /**
+     * Logos that ship with the product, keyed by slug.
+     *
+     * A fresh install should not open on a wall of letter tiles waiting for
+     * somebody to press "fetch logos", so a set is committed to the repository
+     * and served straight from public/. An operator's own upload still wins.
+     *
+     * @return array<string, string>
+     */
+    public static function bundledUrlMap(): array
+    {
+        static $bundled = null;
+        if ($bundled !== null) {
+            return $bundled;
+        }
+
+        $manifest = public_path('img/apps/manifest.json');
+        if (! is_file($manifest)) {
+            return $bundled = [];
+        }
+        $rows = json_decode((string) file_get_contents($manifest), true);
+
+        return $bundled = is_array($rows)
+            ? array_map(fn ($file) => '/img/apps/'.$file, $rows)
+            : [];
+    }
+
+    /**
      * slug => public URL, for pages that render the catalogue.
      *
      * One query for the whole page: the catalogue is ~100 apps and asking per
-     * card would be a hundred round trips to draw one grid.
+     * card would be a hundred round trips to draw one grid. Operator uploads
+     * are layered over the logos that ship with the product.
      *
      * @return array<string, string>
      */
     public static function urlMap(): array
     {
-        return static::query()->whereNotNull('path')->get(['slug', 'path'])
+        $own = static::query()->whereNotNull('path')->get(['slug', 'path'])
             ->mapWithKeys(fn (self $a) => [$a->slug => $a->url()])
             ->all();
+
+        return $own + static::bundledUrlMap();
     }
 
     /**
@@ -85,7 +115,7 @@ class DockerApp extends Model
             if ($sellableOnly && $row && ! $row->is_sellable) {
                 continue;
             }
-            $t['logo_url_local'] = $row?->url();
+            $t['logo_url_local'] = $row?->url() ?: (static::bundledUrlMap()[$t['slug']] ?? null);
             $t['is_featured'] = (bool) $row?->is_featured;
             $t['sort_order'] = (int) ($row?->sort_order ?? 0);
             $t['tagline'] = (string) ($row?->tagline ?? '');

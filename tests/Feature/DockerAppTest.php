@@ -52,24 +52,28 @@ beforeEach(function () {
     Storage::fake('public');
 });
 
-it('lists the panel catalogue with what has an image and what does not', function () {
+it('lists the panel catalogue with what has a logo and what does not', function () {
     logoServer();
     fakeCatalogue([['slug' => 'wordpress', 'name' => 'WordPress'], ['slug' => 'n8n', 'name' => 'n8n']]);
     DockerApp::create(['slug' => 'wordpress', 'path' => 'docker-apps/wordpress-abc.png']);
 
-    $this->actingAs(logoAdmin(), 'admin')->get(route('admin.docker-apps.index'))
-        ->assertOk()
-        ->assertSee('WordPress')->assertSee('n8n')
-        ->assertViewHas('totalWithLogo', 1);
+    $page = $this->actingAs(logoAdmin(), 'admin')->get(route('admin.docker-apps.index'))
+        ->assertOk()->assertSee('WordPress')->assertSee('n8n');
+
+    // Counts the logos that ship with the product as well as operator uploads -
+    // both are logos the customer sees.
+    expect($page->viewData('totalWithLogo'))->toBeGreaterThanOrEqual(count(DockerApp::bundledUrlMap()));
 });
 
-it('shows only the apps still missing an image when asked', function () {
+it('shows only the apps still missing a logo when asked', function () {
     logoServer();
-    fakeCatalogue([['slug' => 'wordpress', 'name' => 'WordPress'], ['slug' => 'n8n', 'name' => 'n8n']]);
-    DockerApp::create(['slug' => 'wordpress', 'path' => 'docker-apps/wordpress-abc.png']);
+    // Neither slug ships with the product, so the filter is about what the
+    // operator has supplied rather than about the bundled set.
+    fakeCatalogue([['slug' => 'brand-new-one', 'name' => 'Brand New One'], ['slug' => 'brand-new-two', 'name' => 'Brand New Two']]);
+    DockerApp::create(['slug' => 'brand-new-one', 'path' => 'docker-apps/one-abc.png']);
 
     $page = $this->actingAs(logoAdmin(), 'admin')->get(route('admin.docker-apps.index', ['missing' => 1]))->assertOk();
-    expect(collect($page->viewData('templates'))->pluck('slug')->all())->toBe(['n8n']);
+    expect(collect($page->viewData('templates'))->pluck('slug')->all())->toBe(['brand-new-two']);
 });
 
 it('stores an uploaded image and serves it to the catalogue', function () {
@@ -274,4 +278,41 @@ it('removing the image leaves the selling settings alone', function () {
         ->and($app->is_featured)->toBeTrue()
         ->and($app->tagline)->toBe('keep me');
     Storage::disk('public')->assertMissing('docker-apps/n8n-x.png');
+});
+
+/*
+ * Logos that ship with the product.
+ *
+ * A fresh install should not open on a wall of letter tiles waiting for
+ * somebody to press "fetch logos", so a set is committed to the repository.
+ */
+
+it('serves the bundled logos with no database rows at all', function () {
+    $map = DockerApp::bundledUrlMap();
+
+    expect($map)->not->toBeEmpty()
+        ->and($map['wordpress'] ?? null)->toStartWith('/img/apps/');
+    // Relative, like the uploaded ones: the configured app URL is not to be
+    // trusted here (a container env var overrides it).
+    expect($map['wordpress'])->not->toContain('http');
+});
+
+it('prefers an operator upload over the bundled logo', function () {
+    DockerApp::create(['slug' => 'wordpress', 'path' => 'docker-apps/wordpress-custom.png']);
+
+    expect(DockerApp::urlMap()['wordpress'])->toBe('/storage/docker-apps/wordpress-custom.png');
+});
+
+it('falls back to the bundled logo for apps the operator has not touched', function () {
+    DockerApp::create(['slug' => 'n8n', 'path' => 'docker-apps/n8n-custom.png']);
+
+    $map = DockerApp::urlMap();
+    expect($map['n8n'])->toBe('/storage/docker-apps/n8n-custom.png')
+        ->and($map['wordpress'] ?? null)->toStartWith('/img/apps/');
+});
+
+it('decorates catalogue entries with the bundled logo', function () {
+    $out = DockerApp::decorate([['slug' => 'wordpress', 'name' => 'WordPress']]);
+
+    expect($out[0]['logo_url_local'])->toStartWith('/img/apps/wordpress');
 });
