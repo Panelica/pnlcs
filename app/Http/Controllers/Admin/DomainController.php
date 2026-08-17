@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Contracts\SyncsDomainData;
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
+use App\Models\RegistrarSettings;
 use App\Services\DomainService;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
@@ -42,10 +43,40 @@ class DomainController extends Controller
 
         $domains = $query->orderBy($sortField, $sortDir)->paginate(25);
 
-        $registrars = Domain::distinct()->pluck('registrar')->filter()->sort()->values();
+        $active = $this->activeRegistrarKeys();
+        $registrars = Domain::distinct()->pluck('registrar')->filter()
+            ->filter(fn ($r) => in_array(strtolower((string) $r), $active, true))
+            ->sort()
+            ->values();
         $statuses = ['active', 'pending', 'grace', 'redemption', 'expired', 'cancelled', 'transferred_away'];
 
         return view('admin.domains.index', compact('domains', 'registrars', 'statuses'));
+    }
+
+    /**
+     * The registrar module keys that are switched on (Manual by default,
+     * every other registrar only once the operator enabled it).
+     *
+     * @return array<int, string>
+     */
+    private function activeRegistrarKeys(): array
+    {
+        $stored = RegistrarSettings::all()->groupBy('registrar');
+        $active = [];
+
+        foreach (app(ModuleRegistry::class)->getRegistrarModules() as $name) {
+            $settings = ($stored[$name] ?? collect())->pluck('value', 'setting');
+
+            $on = $name === 'manual'
+                ? $settings->get('visible', '1') !== '0'
+                : $settings->get('visible') === '1';
+
+            if ($on) {
+                $active[] = $name;
+            }
+        }
+
+        return $active;
     }
 
     public function show(Domain $domain)
