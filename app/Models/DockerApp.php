@@ -89,14 +89,17 @@ class DockerApp extends Model
             $t['is_featured'] = (bool) $row?->is_featured;
             $t['sort_order'] = (int) ($row?->sort_order ?? 0);
             $t['tagline'] = (string) ($row?->tagline ?? '');
+            $t['is_popular'] = (bool) ($t['is_popular'] ?? false);
             $out[] = $t;
         }
 
-        // Featured first, then the operator's order, then by name so the grid
-        // is stable rather than however the panel happened to return them.
+        // Featured first, then the operator's order, then whatever the panel
+        // calls popular, then by name. The last two matter: with nothing
+        // configured the grid would otherwise open on whatever is alphabetically
+        // first - Adminer, AlmaLinux, Alpine - instead of what people come for.
         usort($out, function ($a, $b) {
-            return [$b['is_featured'], -$a['sort_order'], mb_strtolower($a['name'])]
-               <=> [$a['is_featured'], -$b['sort_order'], mb_strtolower($b['name'])];
+            return [$b['is_featured'], -$a['sort_order'], $b['is_popular'], mb_strtolower($a['name'])]
+               <=> [$a['is_featured'], -$b['sort_order'], $a['is_popular'], mb_strtolower($b['name'])];
         });
 
         return $out;
