@@ -6,6 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Models\Setting;
 use App\Support\MapsClientFields;
 use Carbon\Carbon;
 use HRDBase\Api\HRDApi;
@@ -300,73 +301,56 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     }
 
     /**
-     * Resolve a value for the client from the manually mapped field (config)
-     * or, failing that, from the given auto-detect candidates. Checks the
-     * client's own attributes first, then its custom fields.
-     *
-     * @param  array<int, string>  $autoDetect
-     */
-    protected function resolveField(Client $client, ?string $field, array $autoDetect = []): ?string
-    {
-        $candidates = array_values(array_filter(array_merge($field ? [$field] : [], $autoDetect)));
-
-        foreach ($candidates as $name) {
-            $value = $this->clientAttribute($client, $name)
-                ?? $this->clientCustomField($client, $name);
-
-            if ($value !== null && $value !== '') {
-                return $value;
-            }
-        }
-
-        return null;
-    }
-
-    protected function clientAttribute(Client $client, string $name): ?string
-    {
-        $value = $client->getAttribute($name);
-
-        return ($value !== null && $value !== '') ? (string) $value : null;
-    }
-
-    protected function clientCustomField(Client $client, string $name): ?string
-    {
-        $field = CustomField::where('type', 'client')
-            ->whereRaw('LOWER(field_name) = ?', [strtolower($name)])
-            ->first();
-
-        if (! $field) {
-            return null;
-        }
-
-        $value = $field->valueFor($client->id);
-
-        return ($value !== null && $value !== '') ? (string) $value : null;
-    }
-
-    /**
-     * Build the `ns` argument for domainCreate. Returns null when there is
-     * nothing to send (no group configured and no explicit nameservers).
+     * Build the `ns` argument for domainCreate. The client's own nameservers
+     * win; otherwise the defaults from General Settings are used; otherwise a
+     * preconfigured HRD group. Returns null when nothing is available.
      *
      * @return array|string|null
      */
     protected function nameserversFor(Domain $domain, array $params): array|string|null
     {
+        $provided = array_values(array_filter([
+            $params['ns1'] ?? null,
+            $params['ns2'] ?? null,
+            $params['ns3'] ?? null,
+            $params['ns4'] ?? null,
+            $params['ns5'] ?? null,
+        ]));
+
+        if (count($provided) >= 2) {
+            return array_map(fn ($name) => ['name' => $name], $provided);
+        }
+
+        $defaults = $this->defaultNameservers();
+        if (count($defaults) >= 2) {
+            return array_map(fn ($name) => ['name' => $name], $defaults);
+        }
+
         $groupId = (int) ($this->settings['default_ns_group'] ?? 0);
         if ($groupId > 0) {
             return ['group' => $groupId];
         }
 
-        $ns = array_values(array_filter([
-            $params['ns1'] ?? null,
-            $params['ns2'] ?? null,
-        ]));
+        return null;
+    }
 
-        if (count($ns) < 2) {
-            return null;
+    /**
+     * The default nameservers from General Settings (the Domains section).
+     *
+     * @return array<int, string>
+     */
+    protected function defaultNameservers(): array
+    {
+        $ns = [];
+
+        for ($i = 1; $i <= 5; $i++) {
+            $value = trim((string) Setting::get('DefaultNameserver'.$i, ''));
+            if ($value !== '') {
+                $ns[] = $value;
+            }
         }
 
-        return array_map(fn ($name) => ['name' => $name], $ns);
+        return $ns;
     }
 
     protected function loadSettings(): array
