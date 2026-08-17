@@ -1,4 +1,4 @@
-?<?php
+<?php
 
 return [
     'actions' => 'Akcje',
@@ -86,6 +86,7 @@ return [
     'servers.auth_error' => 'Połączono z :host, ale sprawdzenie nie powiodło się: :error',
     'servers.api_key' => 'Klucz API / token',
     'servers.api_key_hint' => 'cPanel/WHM: root API token (WHM > Manage API Tokens). Plesk, Proxmox, Vultr i Panelica również logują się za pomocą klucza.',
+    'products.package' => 'Plan na serwerze',
     'products.package_default' => 'Użyj domyślnego planu serwera',
     'products.package_hint' => 'Plan jest zdefiniowany w panelu; produkt sprzedaje jeden z nich.',
     'products.package_loading' => 'Pytanie serwera...',
