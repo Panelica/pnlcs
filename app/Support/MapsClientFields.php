@@ -38,6 +38,26 @@ trait MapsClientFields
     }
 
     /**
+     * Client custom fields as select options (value = label = field name).
+     *
+     * @return array<string, string>
+     */
+    protected function clientCustomFieldOptions(): array
+    {
+        $options = [];
+
+        try {
+            foreach (CustomField::clientFields()->get(['field_name']) as $field) {
+                $options[$field->field_name] = $field->field_name;
+            }
+        } catch (\Throwable) {
+            // No custom fields yet (or broken DB) — never block the config page.
+        }
+
+        return $options;
+    }
+
+    /**
      * @param  array<int, string>  $autoDetect
      */
     protected function resolveClientField(Client $client, ?string $mappedField, array $autoDetect = []): ?string

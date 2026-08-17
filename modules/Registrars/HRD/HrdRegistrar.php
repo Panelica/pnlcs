@@ -42,12 +42,16 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     public function getConfigFields(): array
     {
+        $clientFields = $this->clientCustomFieldOptions();
+        $fieldOptions = ['' => '— Auto —'] + $clientFields;
+
         return [
             ['name' => 'api_login', 'label' => 'API Login', 'type' => 'text', 'required' => true],
             ['name' => 'api_hash', 'label' => 'API Hash', 'type' => 'password', 'required' => true],
             ['name' => 'api_pass', 'label' => 'API Password', 'type' => 'password', 'required' => true],
             ['name' => 'default_ns_group', 'label' => 'Default NS Group ID', 'type' => 'text', 'required' => false],
-            ['name' => 'field_map', 'label' => 'Field map (JSON)', 'type' => 'textarea', 'required' => false],
+            ['name' => 'pesel_field', 'label' => 'PESEL field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
+            ['name' => 'csa_field', 'label' => 'CSA field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
         ];
     }
 
@@ -262,9 +266,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
 
         // Reuse an existing HRD user id when one is mapped and stored.
-        $map = $this->fieldMap($this->settings['field_map'] ?? null);
-
-        $csa = $this->resolveClientField($client, $map['csa'] ?? null, ['csa', 'hrd_user_id']);
+        $csa = $this->resolveClientField($client, $this->settings['csa_field'] ?? null, ['csa', 'hrd_user_id']);
         if ($csa !== null && ctype_digit(trim($csa))) {
             return (int) trim($csa);
         }
@@ -278,8 +280,8 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         // A person registrant needs a PESEL; a company needs its NIP.
         $idNumber = $isCompany
-            ? ($this->resolveClientField($client, $map['nip'] ?? null, ['nip', 'tax_id']) ?? (string) ($client->tax_id ?? ''))
-            : ($this->resolveClientField($client, $map['pesel'] ?? null, ['pesel', 'tax_id']) ?? '');
+            ? (string) ($client->tax_id ?? '')
+            : ($this->resolveClientField($client, $this->settings['pesel_field'] ?? null, ['pesel', 'tax_id']) ?? '');
 
         return $this->api()->userCreate(
             $isCompany ? HRDApi::COMPANY : HRDApi::PERSON,
