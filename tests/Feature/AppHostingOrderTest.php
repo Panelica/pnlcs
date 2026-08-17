@@ -383,3 +383,14 @@ it('lets a customer buy a second plan', function () {
         && $rq->method() === 'POST'
         && ($rq->data()['email'] ?? '') === 'buyer+pnlcs'.$service->id.'@example.com');
 });
+
+it('states large bandwidth in terabytes', function () {
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'config_options' => json_encode(['res_bandwidth_mb' => 3145728, 'res_memory_mb' => 8192]),
+    ]);
+
+    // "3072 GB" reads as a mistake next to "8 GB RAM".
+    $text = collect($product->resourceSummary())->pluck('text')->implode(' ');
+    expect($text)->toContain('3 TB')->toContain('8 GB RAM');
+});

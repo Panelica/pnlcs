@@ -124,10 +124,16 @@ class Product extends Model
             return [];
         }
 
+        // 3072 GB of bandwidth reads as a mistake; say 3 TB.
         $mb = function ($v) {
             $v = (int) $v;
+            $trim = fn ($n) => rtrim(rtrim(number_format($n, 1, '.', ''), '0'), '.');
 
-            return $v >= 1024 ? rtrim(rtrim(number_format($v / 1024, 1, '.', ''), '0'), '.').' GB' : $v.' MB';
+            if ($v >= 1048576) {
+                return $trim($v / 1048576).' TB';
+            }
+
+            return $v >= 1024 ? $trim($v / 1024).' GB' : $v.' MB';
         };
 
         $out = [];

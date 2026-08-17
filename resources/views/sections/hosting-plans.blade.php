@@ -24,7 +24,10 @@
                 <a href="/client/store" class="hosting-plans__promo-btn">{{ $promoCta }} <i class="ri-arrow-right-line"></i></a>
             </div>
             {{-- Plan cards --}}
-            @foreach($hostingProducts->take(3) as $idx => $product)
+            {{-- values() so $idx is 0,1,2: the collection keeps its original keys after
+                 filtering, which put the "most popular" badge on whichever plan
+                 happened to be second in the unfiltered list. --}}
+            @foreach($hostingProducts->take(3)->values() as $idx => $product)
             @php
                 $priced = $product->pricedCycles($currency?->id ?? null);
                 $priceCycle = isset($priced['monthly']) ? 'monthly' : (string) array_key_first($priced);
