@@ -251,6 +251,19 @@ class PanelicaModule extends AbstractServerModule
         return $planId;
     }
 
+    /**
+     * The product's module config, however it happens to be stored.
+     *
+     * @return array<string, mixed>
+     */
+    private function productConfigFor(Service $service): array
+    {
+        $raw = $service->product?->config_options;
+        $config = is_string($raw) ? json_decode($raw, true) : $raw;
+
+        return is_array($config) ? $config : [];
+    }
+
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
@@ -262,7 +275,16 @@ class PanelicaModule extends AbstractServerModule
         $domain = $service->domain;
         $product = $service->product;
 
-        if (! $client || ! $domain) {
+        // Resolve plan ID from product config
+        $config = $this->productConfigFor($service);
+
+        // Container Plan: sold as a pool of container resources, not a website.
+        // Only these products may be provisioned without a domain - for every
+        // other product a missing domain is an order that would silently open
+        // an account nobody can use, which is worth refusing.
+        $isContainerPlan = ! empty($config['panelica_container_plan']);
+
+        if (! $client || (! $domain && ! $isContainerPlan)) {
             return $this->buildResult(false, 'Service is missing client or domain.');
         }
 
@@ -271,20 +293,20 @@ class PanelicaModule extends AbstractServerModule
         // POST fails, and the account is rolled back - the operator only learns
         // "domain already exists" after the fact. Checking first means no
         // orphaned account and the reason is known up front.
-        if ($this->domainExistsOnServer($server, $domain)) {
+        if ($domain && $this->domainExistsOnServer($server, $domain)) {
             return $this->buildResult(false, "The domain \"{$domain}\" already exists on this server. Use a different domain, or remove it from the panel first.");
         }
 
-        // Derive username from domain (alphanumeric, max 16 chars)
-        $username = preg_replace('/[^a-z0-9]/', '', strtolower(explode('.', $domain)[0]));
+        // Derive username from domain (alphanumeric, max 16 chars); a container
+        // plan has no domain to derive it from, so the client's name is used.
+        $usernameSeed = $domain
+            ? explode('.', $domain)[0]
+            : ($client->first_name.$client->last_name ?: (string) $client->email);
+        $username = preg_replace('/[^a-z0-9]/', '', strtolower($usernameSeed));
         $username = substr($username ?: 'user', 0, 16).rand(100, 999);
 
         $password = $service->password ?: bin2hex(random_bytes(8));
 
-        // Resolve plan ID from product config
-        $config = is_string($product?->config_options)
-            ? json_decode($product->config_options, true)
-            : ($product->config_options ?? []);
         // package_name is what every module reads now; the older key
         // still works for products configured before that.
         $planId = $config['package_name'] ?? $config['panelica_plan_id'] ?? null;
@@ -333,36 +355,58 @@ class PanelicaModule extends AbstractServerModule
             return $this->buildResult(false, 'Account created but user ID not found in response.');
         }
 
-        // Step 2: Create domain
-        $phpVersion = $config['php_version'] ?? '8.3';
-        $webServer = $config['web_server'] ?? 'nginx_only';
+        // Step 2: Create domain (a container plan has none)
+        $domainId = null;
+        if ($domain) {
+            $phpVersion = $config['php_version'] ?? '8.3';
+            $webServer = $config['web_server'] ?? 'nginx_only';
 
-        $domainPayload = [
-            'name' => $domain,
-            'user_id' => $userId,
-            'php_version' => $phpVersion,
-            'web_server' => $webServer,
-        ];
+            $domainPayload = [
+                'name' => $domain,
+                'user_id' => $userId,
+                'php_version' => $phpVersion,
+                'web_server' => $webServer,
+            ];
 
-        $domainResp = $this->post($server, '/v1/domains', $domainPayload);
+            $domainResp = $this->post($server, '/v1/domains', $domainPayload);
 
-        if (! $domainResp->successful()) {
-            // Rollback: delete the created account
-            $this->delete($server, "/v1/accounts/{$userId}");
-            $msg = $domainResp->json('message') ?? $domainResp->body();
-            Log::error('PanelicaModule::create domain failed (account rolled back)', ['user_id' => $userId, 'body' => $domainResp->body()]);
+            if (! $domainResp->successful()) {
+                // Rollback: delete the created account
+                $this->delete($server, "/v1/accounts/{$userId}");
+                $msg = $domainResp->json('message') ?? $domainResp->body();
+                Log::error('PanelicaModule::create domain failed (account rolled back)', ['user_id' => $userId, 'body' => $domainResp->body()]);
 
-            return $this->buildResult(false, "Domain creation failed (account rolled back): {$msg}");
+                return $this->buildResult(false, "Domain creation failed (account rolled back): {$msg}");
+            }
+
+            $domainData = $domainResp->json();
+            $domainId = $domainData['data']['id'] ?? $domainData['id'] ?? null;
         }
 
-        $domainData = $domainResp->json();
-        $domainId = $domainData['data']['id'] ?? $domainData['id'] ?? null;
-
-        // Persist module data
-        $this->setModuleData($service, [
+        $moduleData = [
             'panelica_user_id' => $userId,
             'panelica_domain_id' => $domainId,
-        ]);
+        ];
+
+        // App Hosting: the product sells one app, so the order has to deliver
+        // it. Handing over an account without it would be reporting success on
+        // a service the customer cannot use, so a failed install rolls the
+        // account back the same way a failed domain does.
+        $appSlug = trim((string) ($config['panelica_app_template'] ?? ''));
+        if ($appSlug !== '') {
+            $app = $this->installProductApp($server, $userId, $domainId, $appSlug);
+            if (! $app['success']) {
+                $this->delete($server, "/v1/accounts/{$userId}");
+                Log::error('PanelicaModule::create app install failed (account rolled back)', ['user_id' => $userId, 'slug' => $appSlug, 'reason' => $app['message']]);
+
+                return $this->buildResult(false, "App installation failed (account rolled back): {$app['message']}");
+            }
+            $moduleData['panelica_app_container_id'] = $app['container_id'];
+            $moduleData['panelica_app_template'] = $appSlug;
+        }
+
+        // Persist module data
+        $this->setModuleData($service, $moduleData);
 
         // r134-credentials: keep the password the account was given.
         //
@@ -374,10 +418,10 @@ class PanelicaModule extends AbstractServerModule
         // service when the password is changed later.
         $service->update(['username' => $username, 'password' => $password, 'status' => 'active']);
 
-        $result = $this->buildResult(true, 'Account and domain created successfully.', [
-            'panelica_user_id' => $userId,
-            'panelica_domain_id' => $domainId,
-        ]);
+        $created = array_filter([$domain ? 'domain' : null, $appSlug !== '' ? $appSlug : null]);
+        $result = $this->buildResult(true, $created === []
+            ? 'Account created successfully.'
+            : 'Account, '.implode(' and ', $created).' created successfully.', $moduleData);
         $this->logAction($service, 'create', $result);
 
         return $result;
@@ -753,6 +797,13 @@ class PanelicaModule extends AbstractServerModule
             return [];
         }
 
+        // A container plan has no website, so every domain-based tool would open
+        // on an empty list. Show the one thing the product actually sells.
+        $config = $this->productConfigFor($service);
+        if (! empty($config['panelica_container_plan'])) {
+            return ['containers'];
+        }
+
         return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns', 'backups', 'containers'];
     }
 
@@ -989,6 +1040,82 @@ class PanelicaModule extends AbstractServerModule
         }
 
         return $out;
+    }
+
+    /**
+     * The whole app catalogue on a server, for the admin product form.
+     *
+     * containerTemplates() is the customer's view and is filtered by their
+     * plan; an operator building a product has to be able to pick anything the
+     * server offers, including apps no plan exposes yet.
+     */
+    public function appTemplates(Server $server): array
+    {
+        $resp = $this->get($server, '/v1/docker/templates');
+        if (! $resp->successful()) {
+            return [];
+        }
+        $out = [];
+        foreach (($resp->json('data.templates') ?? []) as $t) {
+            $slug = (string) ($t['slug'] ?? '');
+            if ($slug === '') {
+                continue;
+            }
+            $out[] = ['slug' => $slug, 'name' => (string) ($t['name'] ?? $slug)];
+        }
+        usort($out, fn ($a, $b) => strcasecmp($a['name'], $b['name']));
+
+        return $out;
+    }
+
+    /**
+     * App Hosting: install the product's app and serve it on the customer's domain.
+     *
+     * Returns the container id on success. Deploy puts the container in the
+     * account's cgroup slice and under its plan limits; the link step writes the
+     * vhost that proxies the domain to it. A container that exists but is not
+     * reachable on the domain is not the product the customer bought, so a
+     * failed link takes the container back down with it.
+     */
+    private function installProductApp(Server $server, string $userId, ?string $domainId, string $slug): array
+    {
+        $deploy = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', [
+            'owner_user_id' => $userId,
+        ]);
+        if (! $deploy->successful()) {
+            return ['success' => false, 'message' => $this->apiMessage($deploy, 'the app could not be installed'), 'container_id' => null];
+        }
+        $containerId = (string) ($deploy->json('data.container_id') ?? $deploy->json('container_id') ?? '');
+        if ($containerId === '') {
+            return ['success' => false, 'message' => 'the panel did not report a container id', 'container_id' => null];
+        }
+
+        if (! $domainId) {
+            // Nothing to point at it; the app is still installed and usable.
+            return ['success' => true, 'message' => 'installed', 'container_id' => $containerId];
+        }
+
+        // A freshly created container needs a moment before it reports running,
+        // and the panel refuses to link one that is not. Give it that moment
+        // rather than failing an install that was actually fine.
+        $link = null;
+        foreach ([0, 2, 4] as $wait) {
+            if ($wait > 0) {
+                sleep($wait);
+            }
+            $link = $this->post($server, '/v1/docker/domains/link', [
+                'domain_id' => $domainId,
+                'container_id' => $containerId,
+                'owner_user_id' => $userId,
+            ]);
+            if ($link->successful()) {
+                return ['success' => true, 'message' => 'installed', 'container_id' => $containerId];
+            }
+        }
+
+        $this->delete($server, "/v1/docker/containers/{$containerId}?owner_user_id=".urlencode($userId));
+
+        return ['success' => false, 'message' => $this->apiMessage($link, 'the app could not be served on the domain'), 'container_id' => null];
     }
 
     public function deployContainer(Service $service, string $slug, string $name = ''): array

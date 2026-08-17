@@ -160,17 +160,32 @@ class ProductController extends Controller
         $currencies = Currency::all();
         $pricing = Pricing::where('type', 'product')->where('rel_id', $product->id)->get()->keyBy('currency_id');
 
-        // Best-effort: load panel plans for the Panelica plan dropdown.
+        // Best-effort: load panel plans for the Panelica plan dropdown, and the
+        // app catalogue for the App Hosting dropdown. Both fall back to a plain
+        // text field in the view when the panel cannot be reached.
         $panelicaPlans = [];
+        $panelicaTemplates = [];
         $server = Server::where('type', 'panelica')->where('active', true)->first();
         if ($server) {
+            $module = null;
             try {
                 $module = app(ModuleRegistry::class)->getServerModule('panelica');
-                if ($module && method_exists($module, 'listPlans')) {
-                    $panelicaPlans = $module->listPlans($server);
-                }
             } catch (\Throwable $e) {
-                $panelicaPlans = [];
+                $module = null;
+            }
+            if ($module && method_exists($module, 'listPlans')) {
+                try {
+                    $panelicaPlans = $module->listPlans($server);
+                } catch (\Throwable $e) {
+                    $panelicaPlans = [];
+                }
+            }
+            if ($module && method_exists($module, 'appTemplates')) {
+                try {
+                    $panelicaTemplates = $module->appTemplates($server);
+                } catch (\Throwable $e) {
+                    $panelicaTemplates = [];
+                }
             }
         }
 
@@ -180,6 +195,7 @@ class ProductController extends Controller
             'currencies' => $currencies,
             'pricing' => $pricing,
             'panelicaPlans' => $panelicaPlans,
+            'panelicaTemplates' => $panelicaTemplates,
             'serverModules' => app(ModuleRegistry::class)->serverModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => $this->packagesFor($product->server_type),
@@ -247,6 +263,14 @@ class ProductController extends Controller
             $config['res_modsec'] = $request->input('res_modsec', 'on');
             $config['res_backup'] = $request->input('res_backup', 'on');
             $config['res_managed'] = $request->boolean('res_managed') ? 1 : 0;
+            // App Hosting: the app the order installs. Empty means regular hosting.
+            $appTpl = strtolower(trim((string) $request->input('panelica_app_template', '')));
+            if ($appTpl !== '' && preg_match('/^[a-z0-9][a-z0-9._-]*$/', $appTpl)) {
+                $config['panelica_app_template'] = $appTpl;
+            } else {
+                unset($config['panelica_app_template']);
+            }
+            $config['panelica_container_plan'] = $request->boolean('panelica_container_plan') ? 1 : 0;
             $planId = trim((string) $request->input('panelica_plan_id', ''));
             if ($planId !== '') {
                 $config['panelica_plan_id'] = $planId;

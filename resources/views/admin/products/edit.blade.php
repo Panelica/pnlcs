@@ -115,6 +115,24 @@
                 <input type="text" name="panelica_plan_id" value="{{ $cfg['panelica_plan_id'] ?? '' }}" class="form-control" style="font-size:12px;" placeholder="d6875821-...">
                 @endif
             </div>
+            <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label" style="font-size:12px;">App Hosting &mdash; install this app on provisioning and serve it on the customer's domain</label>
+                @if(!empty($panelicaTemplates))
+                <select name="panelica_app_template" class="form-control" style="font-size:12px;">
+                    <option value="">&mdash; none (regular web hosting) &mdash;</option>
+                    @foreach($panelicaTemplates as $tpl)
+                    <option value="{{ $tpl['slug'] }}" {{ (string)($cfg['panelica_app_template'] ?? '') === $tpl['slug'] ? 'selected' : '' }}>{{ $tpl['name'] }}</option>
+                    @endforeach
+                </select>
+                @else
+                <input type="text" name="panelica_app_template" value="{{ $cfg['panelica_app_template'] ?? '' }}" class="form-control" style="font-size:12px;" placeholder="wordpress">
+                @endif
+                <div style="font-size:11px;color:#888;margin-top:4px;">Needs Max Containers of at least 1 below. If the app cannot be installed the order fails and the account is rolled back.</div>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;">
+                <input type="checkbox" name="panelica_container_plan" value="1" {{ !empty($cfg['panelica_container_plan']) ? 'checked' : '' }}>
+                <strong>Container plan</strong> &mdash; sells container resources, not a website: provisions without a domain and shows only the Apps tab
+            </label>
             @php $numFields = [
                 'res_cpu_percent'=>['CPU Limit (%) &mdash; 100 = 1 core',100],'res_memory_mb'=>['RAM (MB)',1024],
                 'res_inode_quota'=>['Inode Quota (-1 = unlimited)',-1],'res_iops'=>['IOPS (0 = unlimited)',0],
