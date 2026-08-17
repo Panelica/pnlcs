@@ -344,3 +344,42 @@ it('names the container when nobody supplied one', function () use ($CATALOGUE) 
     Http::assertSent(fn ($rq) => str_contains($rq->url(), '/templates/caddy/deploy')
         && ($rq->data()['container_name'] ?? null) === 'caddy');
 });
+
+it('lets a customer buy a second plan', function () {
+    $server = appOrderServer();
+    $calls = 0;
+    Http::fake(function ($request) use (&$calls) {
+        $url = $request->url();
+        if (str_contains($url, '/v1/accounts') && $request->method() === 'POST') {
+            $calls++;
+            // The panel keeps one account per address, as it does in production.
+            return $calls === 1
+                ? Http::response(['error' => 'apiErrors.external.account.createFailed', 'details' => 'apiErrors.users.emailAlreadyExists'], 400)
+                : Http::response(['data' => ['id' => 'acct-2']], 200);
+        }
+        if (str_contains($url, '/v1/domains')) {
+            return Http::response(['data' => ['id' => 'dom-2']], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+
+    $client = Client::factory()->create(['email' => 'buyer@example.com']);
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'panelica',
+        'config_options' => json_encode([]),
+    ]);
+    $service = App\Models\Service::factory()->create([
+        'client_id' => $client->id, 'product_id' => $product->id,
+        'server_id' => $server->id, 'domain' => 'second.test', 'status' => 'pending',
+    ]);
+
+    // Buying a second plan is ordinary. It used to fail the order outright with
+    // the panel's "emailAlreadyExists", which reads as a billing bug.
+    expect(app(Modules\Servers\Panelica\PanelicaModule::class)->create($service)['success'])->toBeTrue();
+
+    Http::assertSent(fn ($rq) => str_contains($rq->url(), '/v1/accounts')
+        && $rq->method() === 'POST'
+        && ($rq->data()['email'] ?? '') === 'buyer+pnlcs'.$service->id.'@example.com');
+});

@@ -277,6 +277,29 @@ class PanelicaModule extends AbstractServerModule
         return is_array($config) ? $config : [];
     }
 
+
+    /**
+     * A per-service address for a customer who already has an account here.
+     *
+     * The panel keeps one account per email. A customer on their second plan is
+     * a normal thing, so the address is tagged rather than the order refused;
+     * mail to user+pnlcs7@example.com arrives in user@example.com's inbox.
+     */
+    private function taggedEmail(string $email, int $serviceId): string
+    {
+        $at = strrpos($email, '@');
+        if ($at === false || $serviceId <= 0) {
+            return $email;
+        }
+        $local = substr($email, 0, $at);
+        // Do not stack tags if one is already there.
+        if (($plus = strpos($local, '+')) !== false) {
+            $local = substr($local, 0, $plus);
+        }
+
+        return $local.'+pnlcs'.$serviceId.substr($email, $at);
+    }
+
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
@@ -353,6 +376,16 @@ class PanelicaModule extends AbstractServerModule
         }
 
         $accountResp = $this->post($server, '/v1/accounts', $accountPayload);
+
+        // A customer buying a second plan hits the panel's unique-email rule and
+        // the order dies with "emailAlreadyExists" - which reads as a bug in our
+        // billing, not as a rule. Their first account keeps the plain address;
+        // later ones get a tagged one that still delivers to the same inbox.
+        if (! $accountResp->successful() && str_contains($accountResp->body(), 'emailAlreadyExists')) {
+            $accountPayload['email'] = $this->taggedEmail((string) $client->email, (int) $service->id);
+            Log::info('PanelicaModule::create retrying with a tagged address', ['service' => $service->id, 'email' => $accountPayload['email']]);
+            $accountResp = $this->post($server, '/v1/accounts', $accountPayload);
+        }
 
         if (! $accountResp->successful()) {
             $msg = $accountResp->json('message') ?? $accountResp->body();
