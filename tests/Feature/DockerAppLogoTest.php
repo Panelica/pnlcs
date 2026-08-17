@@ -83,7 +83,12 @@ it('stores an uploaded image and serves it to the catalogue', function () {
 
     $logo = DockerAppLogo::where('slug', 'n8n')->firstOrFail();
     Storage::disk('public')->assertExists($logo->path);
-    expect(DockerAppLogo::urlMap())->toHaveKey('n8n');
+
+    // Relative, so it resolves against whatever host the panel is served from.
+    // Building on the app URL broke here: a container environment variable
+    // overrode it with an internal host:port and every image 404'd.
+    expect(DockerAppLogo::urlMap()['n8n'])->toStartWith('/storage/docker-apps/')
+        ->not->toContain('http');
 });
 
 it('refuses a file that is not an image', function () {

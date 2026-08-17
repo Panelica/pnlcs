@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Our own image for a catalogue app, keyed by the panel's template slug.
@@ -14,10 +13,18 @@ class DockerAppLogo extends Model
 {
     protected $fillable = ['slug', 'path', 'source'];
 
-    /** Public URL of the stored image. */
+    /**
+     * Where the browser should ask for this image.
+     *
+     * Deliberately a relative path rather than Storage::url(). That builds on
+     * the configured app URL, which a container environment variable can
+     * override - on our own install it resolves to the internal host and port,
+     * so every image 404s from outside. A path relative to the site being
+     * viewed is right wherever the panel is served from.
+     */
     public function url(): string
     {
-        return Storage::disk('public')->url($this->path);
+        return '/storage/'.ltrim($this->path, '/');
     }
 
     /**
