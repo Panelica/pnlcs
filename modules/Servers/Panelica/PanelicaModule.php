@@ -1080,9 +1080,11 @@ class PanelicaModule extends AbstractServerModule
                 'categories' => array_values((array) ($t['categories'] ?? [])),
                 'min_memory_mb' => (int) ($t['min_memory_mb'] ?? 0),
                 'min_cpu_percent' => (int) ($t['min_cpu_percent'] ?? 0),
-                // The panel's own judgement of what is popular, used to order
-                // the catalogue sensibly before an operator has said anything.
+                // How the catalogue orders itself before an operator says
+                // anything: how often an app has actually been installed, then
+                // the panel's own popular flag.
                 'is_popular' => (bool) ($t['is_popular'] ?? false),
+                'deploy_count' => (int) ($t['deploy_count'] ?? 0),
                 // The panel's own link. Used only as a starting point when
                 // filling in images; the catalogue renders ours.
                 'logo_url' => (string) ($t['logo_url'] ?? ''),

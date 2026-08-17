@@ -90,16 +90,20 @@ class DockerApp extends Model
             $t['sort_order'] = (int) ($row?->sort_order ?? 0);
             $t['tagline'] = (string) ($row?->tagline ?? '');
             $t['is_popular'] = (bool) ($t['is_popular'] ?? false);
+            $t['deploy_count'] = (int) ($t['deploy_count'] ?? 0);
             $out[] = $t;
         }
 
-        // Featured first, then the operator's order, then whatever the panel
-        // calls popular, then by name. The last two matter: with nothing
-        // configured the grid would otherwise open on whatever is alphabetically
-        // first - Adminer, AlmaLinux, Alpine - instead of what people come for.
+        // Featured first, then the operator's order, then how often an app has
+        // actually been installed, then the panel's popular flag, then the name.
+        //
+        // The install count matters: the panel calls more than half its
+        // catalogue popular, so on that flag alone the shop window opened on
+        // AdGuard, Alpine and Apache - alphabetically first among fifty-three
+        // equals - rather than on what customers actually ask for.
         usort($out, function ($a, $b) {
-            return [$b['is_featured'], -$a['sort_order'], $b['is_popular'], mb_strtolower($a['name'])]
-               <=> [$a['is_featured'], -$b['sort_order'], $a['is_popular'], mb_strtolower($b['name'])];
+            return [$b['is_featured'], -$a['sort_order'], $b['deploy_count'], $b['is_popular'], mb_strtolower($a['name'])]
+               <=> [$a['is_featured'], -$b['sort_order'], $a['deploy_count'], $a['is_popular'], mb_strtolower($b['name'])];
         });
 
         return $out;
