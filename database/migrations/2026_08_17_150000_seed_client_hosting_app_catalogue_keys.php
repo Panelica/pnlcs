@@ -19,7 +19,7 @@ return new class extends Migration
             'hosting.containers.needs_cpu' => 'CPU this app needs',
             'hosting.containers.needs_light' => 'Light',
             'hosting.containers.over_plan' => 'Needs more memory than your plan',
-            'hosting.containers.plan_ceiling' => 'Each app runs within your plan: up to :ram of memory and :cpu of one CPU core.',
+            'hosting.containers.plan_ceiling' => 'Every app runs inside your plan: up to :ram of memory and :cpu CPU, shared by all your apps.',
             'hosting.containers.unlimited' => 'no limit',
 
             'hosting.containers.group_websites' => 'Websites & CMS',
