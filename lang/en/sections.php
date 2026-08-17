@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'apps' => [
+        'title' => 'One-click apps on your hosting',
+        'subtitle' => 'Install WordPress, n8n, databases and :count more with one click - each running inside your own account.',
+        'and_more' => 'and :count more',
+        'cta' => 'Browse hosting plans',
+        'point_isolation' => 'Real isolation: your apps, your resources',
+        'point_oneclick' => 'One click to install, running in seconds',
+        'point_included' => 'Included in your plan, no extra licence',
+    ],
+
     'cta' => [
         'button' => 'Get Started Now',
         'note' => 'No credit card required. 30-day money-back guarantee.',

@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'apps' => [
+        'title' => 'Hostinginizde tek tıkla uygulamalar',
+        'subtitle' => 'WordPress, n8n, veritabanları ve :count uygulama daha - hepsi kendi hesabınızın içinde çalışır.',
+        'and_more' => 've :count uygulama daha',
+        'cta' => 'Hosting paketlerine göz atın',
+        'point_isolation' => 'Gerçek izolasyon: sizin uygulamalarınız, sizin kaynaklarınız',
+        'point_oneclick' => 'Tek tıkla kurulum, saniyeler içinde hazır',
+        'point_included' => 'Paketinize dahil, ek lisans yok',
+    ],
+
     'cta' => [
         'button' => 'Baslat Sizin Journey',
         'note' => 'No credit card required. 30-day money-back guarantee.',

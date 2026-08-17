@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'apps' => [
+        'title' => '一键安装的应用',
+        'subtitle' => '一键安装 WordPress、n8n、数据库等 :count 款应用，每个都在您自己的账户内运行。',
+        'and_more' => '还有 :count 款',
+        'cta' => '查看主机套餐',
+        'point_isolation' => '真正的隔离：您的应用，您的资源',
+        'point_oneclick' => '一键安装，数秒内运行',
+        'point_included' => '套餐已包含，无需额外授权',
+    ],
+
     'cta' => [
         'button' => '立即开始',
         'note' => '无需信用卡，并享有 30 天退款保证。',

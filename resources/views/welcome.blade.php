@@ -34,6 +34,7 @@
                 'content' => $sectionContent[$section->slug] ?? collect(),
                 'products' => $products ?? collect(),
                 'domainPricing' => $domainPricing ?? collect(),
+                'apps' => $apps ?? [],
             ])
         @endif
     @endforeach
