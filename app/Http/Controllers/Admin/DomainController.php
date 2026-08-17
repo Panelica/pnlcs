@@ -46,7 +46,7 @@ class DomainController extends Controller
         $active = $this->activeRegistrarKeys();
         $registrars = Domain::distinct()->pluck('registrar')->filter()
             ->filter(fn ($r) => in_array(strtolower((string) $r), $active, true))
-            ->sort()
+            ->sortBy(fn ($r) => [strtolower((string) $r) === 'manual' ? 0 : 1, strtolower((string) $r)])
             ->values();
         $statuses = ['active', 'pending', 'grace', 'redemption', 'expired', 'cancelled', 'transferred_away'];
 
