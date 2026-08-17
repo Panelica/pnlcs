@@ -10,6 +10,24 @@
     .ct-head h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-.5px;color:var(--text)}
     .ct-head .sub{font-size:13px;color:var(--muted)}
     .ct-cnt{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);background:var(--bg);border:1px solid var(--border);padding:6px 13px;border-radius:999px}
+    .ct-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,370px);gap:18px;align-items:start}
+    .ct-col-main{order:1;min-width:0}
+    .ct-col-side{order:2;min-width:0}
+    .ct-col-side .ct-apps{grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;padding:14px}
+    .ct-col-side .ct-app{padding:10px 6px}
+    .ct-col-side .ct-app .ds{display:none}
+    .ct-col-side .ct-logo,.ct-col-side .ct-mark{width:30px;height:30px;margin-bottom:6px}
+    .ct-col-side .ct-app .nm{font-size:11px}
+    .ct-col-side .ct-req{gap:3px;margin-top:5px}
+    .ct-col-side .ct-gh{padding:12px 14px 0}
+    .ct-col-side .ct-search{padding:14px 14px 0}
+    .ct-col-side .ct-clear{right:24px}
+    .ct-col-side .ct-count{display:none}
+    .ct-col-side .ct-form{flex-direction:column;align-items:stretch}
+    .ct-open{margin-top:7px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700}
+    .ct-open a{color:var(--primary);text-decoration:none}
+    .ct-open a:hover{text-decoration:underline}
+    @media (max-width:1100px){ .ct-split{grid-template-columns:1fr} }
     .ct-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-bottom:18px}
     .ct-ch{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
     .ct-note{padding:16px 18px;display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted);line-height:1.5}
@@ -125,8 +143,14 @@
 <div class="ct-card"><div class="ct-note"><i class="ri-lock-line"></i>{{ __('client.hosting.containers.plan_disabled') }}</div></div>
 @else
 
+{{-- What a customer comes here to do most days is look at the apps they already
+     run - open one, restart it, read its connection details. That sat below a
+     catalogue of ninety-eight, so it may as well not have been there. CSS order
+     puts the running apps first; the markup order is untouched. --}}
+<div class="ct-split">
+
 @if($policy['can_create'])
-<div class="ct-card">
+<div class="ct-card ct-col-side">
     <div class="ct-ch"><i class="ri-add-circle-line"></i>{{ __('client.hosting.containers.install_title') }}</div>
     @if(empty($templates))
         <div class="ct-empty">{{ __('client.hosting.containers.no_apps') }}</div>
@@ -233,10 +257,10 @@
     @endif
 </div>
 @else
-<div class="ct-card"><div class="ct-note"><i class="ri-error-warning-line"></i>{{ __('client.hosting.containers.limit_reached') }} ({{ $policy['used'] }}/{{ $policy['max'] }})</div></div>
+<div class="ct-card ct-col-side"><div class="ct-note"><i class="ri-error-warning-line"></i>{{ __('client.hosting.containers.limit_reached') }} ({{ $policy['used'] }}/{{ $policy['max'] }})</div></div>
 @endif
 
-<div class="ct-card">
+<div class="ct-card ct-col-main">
     <div class="ct-ch"><i class="ri-apps-2-line"></i>{{ __('client.hosting.containers.running_title') }}</div>
     @if(empty($containers))
     <div class="ct-empty">{{ __('client.hosting.containers.empty') }}</div>
@@ -267,6 +291,11 @@
                         $freeDomains = array_diff_key($domains, $links);
                     @endphp
                     @php $acc = $access[$c['id']] ?? null; @endphp
+                    @if($acc && $acc->accessUrl())
+                    {{-- The address is the first thing anyone wants after
+                         installing, so it does not sit behind a disclosure. --}}
+                    <div class="ct-open"><i class="ri-external-link-line"></i><a href="{{ $acc->accessUrl() }}" target="_blank" rel="noopener">{{ __('client.hosting.containers.open_app') }}</a></div>
+                    @endif
                     @if($acc && $acc->hasAnything())
                     {{-- The panel reports the address and any generated login
                          once, when the app is installed. Without showing it the
@@ -274,10 +303,6 @@
                     <details class="ct-acc">
                         <summary>{{ __('client.hosting.containers.access_title') }}</summary>
                         <div class="ct-acc-b">
-                            @if($acc->accessUrl())
-                            <div class="ct-acc-r"><span>{{ __('client.hosting.containers.access_url') }}</span>
-                                <a href="{{ $acc->accessUrl() }}" target="_blank" rel="noopener">{{ $acc->accessUrl() }}</a></div>
-                            @endif
                             @foreach($acc->items() as $label => $value)
                             <div class="ct-acc-r"><span>{{ $label }}</span>
                                 @if(Str::startsWith($value, ['http://','https://']))
@@ -368,6 +393,8 @@
     <div class="ct-note"><i class="ri-terminal-box-line"></i>{{ __('client.hosting.containers.panel_hint') }}</div>
     @endif
 </div>
+</div>
+
 @endif
 
 <script>
