@@ -47,6 +47,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         $fieldOptions = ['' => '— Auto —'] + $clientFields;
 
         return [
+            ['name' => '_instructions', 'label' => '', 'type' => 'description', 'content' => __('admin.registrars.hrd_instructions')],
             ['name' => 'api_login', 'label' => 'Login', 'type' => 'text', 'required' => true],
             ['name' => 'api_hash', 'label' => 'API Hash', 'type' => 'password', 'required' => true],
             ['name' => 'api_pass', 'label' => 'API Password', 'type' => 'password', 'required' => true],
@@ -279,10 +280,11 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
         $phone = $this->normalizePhone($params['phone'] ?? $client->full_phone);
 
-        // A person registrant needs a PESEL; a company needs its NIP.
+        // A person registrant needs a PESEL; a company needs its NIP. The two
+        // are never interchangeable, so a person never falls back to tax_id.
         $idNumber = $isCompany
             ? (string) ($client->tax_id ?? '')
-            : ($this->resolveClientField($client, $this->settings['pesel_field'] ?? null, ['pesel', 'tax_id']) ?? '');
+            : ($this->resolveClientField($client, $this->settings['pesel_field'] ?? null, ['pesel']) ?? '');
 
         $userId = $this->api()->userCreate(
             $isCompany ? HRDApi::COMPANY : HRDApi::PERSON,

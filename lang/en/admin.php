@@ -2027,6 +2027,7 @@ return [
     'registrars.save_settings' => 'Save Settings',
     'registrars.settings_intro' => 'Enter settings for the :name registrar.',
     'registrars.title' => 'Domain Registrars',
+    'registrars.hrd_instructions' => '<strong>HRD configuration</strong><br>1. Fill in your HRD panel credentials: <strong>Login</strong>, <strong>API Hash</strong>, <strong>API Password</strong>. The <strong>Test</strong> button checks the connection and shows the balance.<br>2. Create the client custom fields (Settings → Custom Fields):<br>&nbsp;&nbsp;• <strong>PESEL</strong> (type: text) — the private client\'s PESEL number,<br>&nbsp;&nbsp;• <strong>CSA</strong> (type: text) — the HRD registrant id (filled automatically on first registration).<br>3. Select these fields in the <strong>PESEL field</strong> and <strong>CSA field</strong> options below.<br><br><strong>Private person or company?</strong><br>• A client with <strong>company_name</strong> filled in → registered as a <strong>COMPANY</strong>, using NIP (the <strong>tax_id</strong> field).<br>• A client without <strong>company_name</strong> → registered as a <strong>PRIVATE PERSON</strong>, using PESEL (the <strong>PESEL</strong> field).<br>Filling in <strong>company_name</strong> is key — it decides the registrant type.',
     'reports' => [
         'all' => 'All',
         'client_report' => 'Client Report',

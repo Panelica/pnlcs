@@ -32,6 +32,9 @@
                         $value = $reg->values[$key] ?? ($field['default'] ?? '');
                         $type = $field['type'] ?? 'text';
                     @endphp
+                    @if($type === 'description')
+                        <div style="font-size:13px;color:#444;background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:12px 14px;margin:4px 0 12px;line-height:1.55;">{!! $field['content'] ?? '' !!}</div>
+                    @else
                     <div class="form-group">
                         <label class="form-label">{{ $field['label'] ?? ucfirst(str_replace('_', ' ', $key)) }}</label>
                         @if($type === 'password')
@@ -53,6 +56,7 @@
                             <input type="text" name="settings[{{ $key }}]" value="{{ $value }}" class="form-control">
                         @endif
                     </div>
+                    @endif
                 @empty
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.registrars.config_json') }}</label>
