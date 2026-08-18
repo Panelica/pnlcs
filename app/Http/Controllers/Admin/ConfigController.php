@@ -596,6 +596,7 @@ class ConfigController extends Controller
                     'label' => $settings->get('name', $module?->getModuleName() ?? ucfirst($name)),
                     'fields' => $module?->getConfigFields() ?? [],
                     'values' => $settings->toArray(),
+                    'help' => ($module && method_exists($module, 'getConfigHelp')) ? $module->getConfigHelp() : null,
                     'testable' => $name === 'hrd',
                     // Manual works out of the box; every other registrar is
                     // off until the operator switches it on.

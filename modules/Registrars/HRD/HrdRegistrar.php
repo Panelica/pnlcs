@@ -47,7 +47,6 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         $fieldOptions = ['' => '— Auto —'] + $clientFields;
 
         return [
-            ['name' => '_instructions', 'label' => '', 'type' => 'description', 'content' => __('admin.registrars.hrd_instructions')],
             ['name' => 'api_login', 'label' => 'Login', 'type' => 'text', 'required' => true],
             ['name' => 'api_hash', 'label' => 'API Hash', 'type' => 'password', 'required' => true],
             ['name' => 'api_pass', 'label' => 'API Password', 'type' => 'password', 'required' => true],
@@ -55,6 +54,15 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ['name' => 'pesel_field', 'label' => 'PESEL field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
             ['name' => 'csa_field', 'label' => 'CSA field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
         ];
+    }
+
+    /**
+     * Optional setup guidance shown as a tooltip next to the module name on
+     * the registrars screen.
+     */
+    public function getConfigHelp(): ?string
+    {
+        return __('admin.registrars.hrd_instructions');
     }
 
     /**
