@@ -602,7 +602,11 @@ class OrderService
         }
 
         if ($result['success'] ?? false) {
-            $domain->update(['status' => DomainStatus::Active->value]);
+            $domain->update([
+                'status' => DomainStatus::Active->value,
+                // The code has been consumed; do not keep it lying around.
+                'epp_code' => null,
+            ]);
 
             return;
         }

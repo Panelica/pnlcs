@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\EncryptedValue;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,7 +14,7 @@ class Domain extends Model
 
     protected function casts(): array
     {
-        return ['registration_date' => 'date', 'expiry_date' => 'date', 'next_due_date' => 'date', 'last_sync_at' => 'datetime', 'dns_management' => 'boolean', 'email_forwarding' => 'boolean', 'id_protection' => 'boolean', 'is_premium' => 'boolean', 'first_payment_amount' => 'decimal:2', 'recurring_amount' => 'decimal:2'];
+        return ['registration_date' => 'date', 'expiry_date' => 'date', 'next_due_date' => 'date', 'last_sync_at' => 'datetime', 'epp_code' => EncryptedValue::class, 'dns_management' => 'boolean', 'email_forwarding' => 'boolean', 'id_protection' => 'boolean', 'is_premium' => 'boolean', 'first_payment_amount' => 'decimal:2', 'recurring_amount' => 'decimal:2'];
     }
 
     /**
