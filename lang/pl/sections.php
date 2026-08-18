@@ -1,6 +1,15 @@
 <?php
 
 return [
+    'apps' => [
+        'title' => 'Aplikacje jednym kliknięciem na Twoim hostingu',
+        'subtitle' => 'Zainstaluj WordPress, n8n, bazy danych i :count więcej jednym kliknięciem — każda działa we własnym koncie.',
+        'and_more' => 'i :count więcej',
+        'cta' => 'Przeglądaj plany hostingowe',
+        'point_isolation' => 'Prawdziwa izolacja: Twoje aplikacje, Twoje zasoby',
+        'point_oneclick' => 'Instalacja jednym kliknięciem, działa w kilka sekund',
+        'point_included' => 'W cenie planu, bez dodatkowej licencji',
+    ],
     'cta' => [
         'button' => 'Zacznij teraz',
         'note' => 'Bez karty kredytowej. 30-dniowa gwarancja zwrotu pieniędzy.',
@@ -81,6 +90,7 @@ return [
         'claim_now' => 'Skorzystaj teraz',
         'contact' => 'Kontakt',
         'dedicated_server' => 'Serwer Dedykowany',
+        'docker_hosting' => 'Aplikacje Docker',
         'domain_search' => 'Wyszukiwarka Domen',
         'domain_transfer' => 'Transfer Domeny',
         'domains' => 'Domeny',

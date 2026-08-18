@@ -127,6 +127,12 @@ return [
         'type' => 'Rodzaj anulowania',
     ],
     'cart' => [
+        'choose_app' => 'Wybierz swoją aplikację',
+        'app_search_ph' => 'Szukaj aplikacji — wordpress, bazy danych, automatyzacja...',
+        'app_search_none' => 'Żadna aplikacja nie pasuje do tego wyszukiwania.',
+        'app_count' => ':count aplikacji',
+        'app_featured' => 'Popularny wybór',
+        'app_required' => 'Wybierz aplikację do zainstalowania.',
         'add_more_products' => 'Dodaj więcej produktów',
         'add_to_cart' => 'Dodaj do koszyka',
         'additional_notes' => 'Dodatkowe uwagi',
