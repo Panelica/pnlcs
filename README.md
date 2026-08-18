@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="https://pnlcs.com/"><b>pnlcs.com</b></a>
+</p>
+
 <h1 align="center">PNLCS</h1>
 
 <p align="center">
@@ -20,6 +24,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pnlcs.com/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Website-pnlcs.com-4051A9?style=for-the-badge&logoColor=white" alt="Website — pnlcs.com"></a>
   <a href="https://hosting.panelica.com/"><img src="https://img.shields.io/badge/%F0%9F%9A%80%20Live%20Demo-hosting.panelica.com-22C55E?style=for-the-badge&logoColor=white" alt="Live Demo — hosting.panelica.com"></a>
 </p>
 
@@ -28,6 +33,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pnlcs.com/"><b>Website</b></a> ·
   <a href="https://hosting.panelica.com/"><b>Live Demo</b></a> ·
   <a href="https://panelica.github.io/pnlcs/">Documentation</a> ·
   <a href="#quick-start-with-docker">Docker</a> ·
