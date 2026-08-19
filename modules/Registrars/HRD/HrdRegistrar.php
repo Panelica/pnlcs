@@ -9,25 +9,25 @@ use App\Models\RegistrarSettings;
 use App\Models\Setting;
 use App\Support\MapsClientFields;
 use Carbon\Carbon;
-use HRDBase\Api\HRDApi;
 use Illuminate\Support\Facades\Log;
 
 /**
  * HRD (hrd.pl) domain registrar.
  *
- * HRD exposes a PHP SDK (hrd/hrd-api) that speaks to api.hrd.pl over a raw
- * socket. The SDK is pulled in through Composer as a VCS repository, so this
- * module only wires the SDK's HRDApi class to the registrar contract.
+ * Speaks to api.hrd.pl over a raw SSL socket using the self-contained
+ * HrdClient in this module — the XML protocol is implemented here, so there is
+ * no third-party SDK dependency.
  *
  * The panel does not store a PESEL, so a person registrant is created with the
- * client's NIP (`tax_id`) when present. Domains are registered asynchronously:
- * domainCreate() returns an action id which can be followed with actionInfo().
+ * client's PESEL (custom field) or NIP (`tax_id`) as appropriate. Domains are
+ * registered asynchronously: domainCreate() returns an action id which can be
+ * followed with actionInfo().
  */
 class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
     use MapsClientFields;
 
-    protected ?HRDApi $api = null;
+    protected ?HrdClient $client = null;
 
     protected array $settings = [];
 
@@ -72,7 +72,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     public function testConnection(): array
     {
         try {
-            $balance = $this->api()->partnerGetBalance();
+            $balance = $this->client()->partnerGetBalance();
 
             return [
                 'success' => true,
@@ -93,7 +93,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 return ['success' => false, 'message' => 'No nameservers supplied and no default NS group configured.'];
             }
 
-            $actionId = $this->api()->domainCreate($domain->domain, $userId, $ns, max(1, $years), false);
+            $actionId = $this->client()->domainCreate($domain->domain, $userId, $ns, max(1, $years), false);
 
             $domain->update([
                 'status' => 'pending',
@@ -115,7 +115,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     {
         try {
             $userId = $this->createUser($domain);
-            $actionId = $this->api()->domainTransfer($domain->domain, $userId, $eppCode, 0);
+            $actionId = $this->client()->domainTransfer($domain->domain, $userId, $eppCode, 0);
 
             $domain->update(['status' => 'pending_transfer', 'registrar' => 'hrd']);
 
@@ -131,7 +131,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     {
         try {
             $currentExpiry = ($domain->expiry_date ?? now())->format('Y-m-d');
-            $actionId = $this->api()->domainRenew($domain->domain, $currentExpiry, max(1, $years));
+            $actionId = $this->client()->domainRenew($domain->domain, $currentExpiry, max(1, $years));
 
             $newExpiry = ($domain->expiry_date ?? now())->addYears($years);
             $domain->update(['expiry_date' => $newExpiry, 'next_due_date' => $newExpiry]);
@@ -147,7 +147,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     public function getNameservers(Domain $domain): array
     {
         try {
-            $info = $this->api()->domainInfo($domain->domain);
+            $info = $this->client()->domainInfo($domain->domain);
             $ns = $info['ns'] ?? null;
 
             if (is_array($ns) && isset($ns['group'])) {
@@ -170,7 +170,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     {
         try {
             $ns = array_map(fn ($name) => ['name' => $name], array_filter($nameservers));
-            $this->api()->domainUpdate($domain->domain, $ns);
+            $this->client()->domainUpdate($domain->domain, $ns);
             $domain->update(['nameservers' => json_encode(array_values($nameservers))]);
 
             return true;
@@ -184,7 +184,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     public function getEPPCode(Domain $domain): string
     {
         try {
-            return $this->api()->domainTradeGetPw($domain->domain) ?: '(unavailable)';
+            return $this->client()->domainTradeGetPw($domain->domain) ?: '(unavailable)';
         } catch (\Throwable $e) {
             Log::warning("HRD getEPPCode failed for {$domain->domain}: {$e->getMessage()}");
 
@@ -208,7 +208,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     {
         try {
             $status = null;
-            foreach ($this->api()->domainCheck([$domain]) as $name => $state) {
+            foreach ($this->client()->domainCheck([$domain]) as $name => $state) {
                 $status = $state;
             }
 
@@ -227,7 +227,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     public function syncDomain(Domain $domain): array
     {
         try {
-            $info = $this->api()->domainInfo($domain->domain);
+            $info = $this->client()->domainInfo($domain->domain);
 
             return [
                 'success' => true,
@@ -242,21 +242,22 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     }
 
     /**
-     * Instantiate the HRD SDK once per request.
+     * Instantiate the HRD client once per request and authenticate it.
      */
-    protected function api(): HRDApi
+    protected function client(): HrdClient
     {
-        if ($this->api !== null) {
-            return $this->api;
+        if ($this->client !== null) {
+            return $this->client;
         }
 
-        $this->api = HRDApi::getInstance([
-            'apiHash' => (string) ($this->settings['api_hash'] ?? ''),
-            'apiLogin' => (string) ($this->settings['api_login'] ?? ''),
-            'apiPass' => (string) ($this->settings['api_pass'] ?? ''),
-        ]);
+        $this->client = new HrdClient(
+            (string) ($this->settings['api_login'] ?? ''),
+            (string) ($this->settings['api_pass'] ?? ''),
+            (string) ($this->settings['api_hash'] ?? ''),
+        );
+        $this->client->login();
 
-        return $this->api;
+        return $this->client;
     }
 
     /**
@@ -294,8 +295,8 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ? (string) ($client->tax_id ?? '')
             : ($this->resolveClientField($client, $this->settings['pesel_field'] ?? null, ['pesel']) ?? '');
 
-        $userId = $this->api()->userCreate(
-            $isCompany ? HRDApi::COMPANY : HRDApi::PERSON,
+        $userId = $this->client()->userCreate(
+            $isCompany ? HrdClient::COMPANY : HrdClient::PERSON,
             $idNumber,
             (string) ($client->email ?? ''),
             $phone,
