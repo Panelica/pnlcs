@@ -21,6 +21,7 @@ class StoreInvoiceRequest extends FormRequest
             'notes' => 'nullable|string|max:5000',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string|max:500',
+            'items.*.qty' => 'nullable|integer|min:1|max:999999',
             'items.*.amount' => 'required|numeric|min:0',
             'items.*.taxed' => 'boolean',
         ];

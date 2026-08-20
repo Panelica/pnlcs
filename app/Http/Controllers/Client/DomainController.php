@@ -22,6 +22,13 @@ class DomainController extends Controller
         return view('client.domains.index', compact('domains'));
     }
 
+    public function transfer(Request $request)
+    {
+        $domain = $request->query('domain', '');
+
+        return view('client.domains.transfer', compact('domain'));
+    }
+
     public function show(Domain $domain)
     {
         $this->authorizeClientDomain($domain);
@@ -138,9 +145,13 @@ class DomainController extends Controller
             }
         }
 
-        return response()->json([
-            'epp_code' => $eppCode ?? __('messages.info.contact_support_for_epp'),
-        ]);
+        if (! $eppCode) {
+            return redirect()->route('client.domains.show', $domain)
+                ->with('error', __('messages.info.contact_support_for_epp'));
+        }
+
+        return redirect()->route('client.domains.show', $domain)
+            ->with('epp_code', $eppCode);
     }
 
     private function registrarFor(Domain $domain): ?RegistrarModuleInterface

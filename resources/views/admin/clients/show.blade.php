@@ -72,14 +72,27 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.clients.name') }}</td><td style="padding:5px 0;font-weight:600;">{{ $client->full_name }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.company') }}</td><td style="padding:5px 0;">{{ $client->company_name ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.tax_id') }}</td><td style="padding:5px 0;">{{ $client->tax_id ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->phone_number ?: '-' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->full_phone ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.address') }}</td><td style="padding:5px 0;">{{ $client->address1 ?: '-' }}@if($client->city)<br>{{ $client->city }}{{ $client->state ? ', '.$client->state : '' }} {{ $client->postcode }}@endif</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                 </table>
             </div>
         </div>
+        @if($customFields->isNotEmpty())
+        <div class="panel" style="margin-top:10px;">
+            <div class="panel-heading panel-primary">{{ __('admin.clients.custom_fields') }}</div>
+            <div class="panel-body">
+                <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                    @foreach($customFields as $field)
+                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ $field->field_name }}</td><td style="padding:5px 0;font-weight:600;">{{ $field->values->first()?->value ?: '-' }}</td></tr>
+                    @endforeach
+                </table>
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- Column 2 --}}
@@ -186,16 +199,19 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
     @else
     <table class="data-table">
         <thead><tr>
-            <th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('admin.clients.registered') }}</th><th>{{ __('admin.domains.expiry_date') }}</th><th>{{ __('common.table.status') }}</th>
+            <th>{{ __('common.table.domain') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('admin.clients.registered') }}</th><th>{{ __('admin.domains.expiry_date') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th>
         </tr></thead>
         <tbody>
         @foreach($domains as $domain)
         <tr>
-            <td style="font-weight:600;">{{ $domain->domain }}</td>
+            <td style="font-weight:600;"><a href="{{ route('admin.domains.show', $domain) }}" style="text-decoration:none;color:inherit;">{{ $domain->domain }}</a></td>
             <td>{{ $domain->registrar ?? '-' }}</td>
             <td>{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td>
             <td>{{ $domain->expiry_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge-{{ strtolower($domain->status) }}">{{ ucfirst($domain->status) }}</span></td>
+            <td style="text-align:right;">
+                <a href="{{ route('admin.domains.show', $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
+            </td>
         </tr>
         @endforeach
         </tbody>

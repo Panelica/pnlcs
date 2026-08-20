@@ -135,7 +135,7 @@ class CartService
     /**
      * Add a domain registration/transfer to the cart.
      */
-    public function addDomain(Cart $cart, string $domain, string $type = 'register', int $years = 1): Cart
+    public function addDomain(Cart $cart, string $domain, string $type = 'register', int $years = 1, ?string $eppCode = null): Cart
     {
         $tld = '.'.implode('.', array_slice(explode('.', $domain), 1));
         $pricing = DomainPricing::where('extension', $tld)->where('enabled', true)->first();
@@ -178,6 +178,7 @@ class CartService
             'tld' => $tld,
             'action' => $type, // register | transfer
             'years' => $years,
+            'epp_code' => $type === 'transfer' ? ($eppCode ?: null) : null,
             'price' => $price,
             'renewal_amount' => $renewal,
         ];
@@ -401,6 +402,7 @@ class CartService
                     'domain' => $item['domain'],
                     'domain_type' => ($item['action'] ?? 'register') === 'transfer' ? 'Transfer' : 'Register',
                     'registration_period' => (int) ($item['years'] ?? 1),
+                    'epp_code' => $item['epp_code'] ?? null,
                     'amount' => (float) ($item['price'] ?? 0),
                     'renewal_amount' => (float) ($item['renewal_amount'] ?? $item['price'] ?? 0),
                 ];

@@ -17,7 +17,7 @@
                     <tr><td style="padding:5px 0;color:#777;width:35%;">{{ __('admin.orders.order_number') }}</td><td style="padding:5px 0;font-family:monospace;font-weight:600;">{{ $order->order_num }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.date') }}</td><td style="padding:5px 0;">{{ $order->date?->format(date_fmt()) }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.amount') }}</td><td style="padding:5px 0;font-weight:700;font-size:15px;">{{ money_fmt($order->amount) }}</td></tr>
-                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.payment_method_label') }}</td><td style="padding:5px 0;text-transform:capitalize;">{{ $order->payment_method ?? '&mdash;' }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.payment_method_label') }}</td><td style="padding:5px 0;">{{ $order->payment_method ? payment_method_label((string) $order->payment_method) : '&mdash;' }}</td></tr>
                     @if($order->promo_code)
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.orders.promo_code_label') }}</td><td style="padding:5px 0;"><span style="background:#fcf8e3;color:#8a6d3b;padding:2px 6px;border-radius:3px;font-family:monospace;font-size:12px;">{{ $order->promo_code }}</span></td></tr>
                     @endif

@@ -20,6 +20,8 @@ use App\Models\ConfigOptionGroup;
 use App\Models\ConfigOptionLink;
 use App\Models\ConfigOptionSub;
 use App\Models\Currency;
+use App\Models\CustomField;
+use App\Models\CustomFieldValue;
 use App\Models\DomainPricing;
 use App\Models\Download;
 use App\Models\DownloadCategory;
@@ -270,6 +272,88 @@ class ConfigController extends Controller
         return back()->with('success', __('messages.success.currency_set_default'));
     }
 
+    // ===== CUSTOM CLIENT FIELDS =====
+
+    public function customFields()
+    {
+        return view('admin.config.custom-fields', [
+            'customFields' => CustomField::where('type', 'client')->orderBy('sort_order')->orderBy('id')->get(),
+        ]);
+    }
+
+    public function storeCustomField(Request $request)
+    {
+        $v = $request->validate([
+            'field_name' => ['required', 'string', 'max:255'],
+            'field_type' => ['required', 'in:text,textarea,select,checkbox,number,date'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'field_options' => ['nullable', 'string', 'max:1000'],
+            'regex' => ['nullable', 'string', 'max:255'],
+            'required' => ['nullable', 'boolean'],
+            'admin_only' => ['nullable', 'boolean'],
+            'show_on_order' => ['nullable', 'boolean'],
+            'show_on_invoice' => ['nullable', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        CustomField::create([
+            'type' => 'client',
+            'rel_id' => 0,
+            'field_name' => $v['field_name'],
+            'field_type' => $v['field_type'],
+            'description' => $v['description'] ?? null,
+            // One option per line, colon splits label from value: "Sp. z o.o. :Sp. z o.o."
+            'field_options' => $v['field_options'] ?? null,
+            'regex' => $v['regex'] ?? null,
+            'required' => (bool) ($v['required'] ?? false),
+            'admin_only' => (bool) ($v['admin_only'] ?? false),
+            'show_on_order' => (bool) ($v['show_on_order'] ?? false),
+            'show_on_invoice' => (bool) ($v['show_on_invoice'] ?? false),
+            'sort_order' => (int) ($v['sort_order'] ?? 0),
+        ]);
+
+        return back()->with('success', __('messages.success.custom_field_added'));
+    }
+
+    public function updateCustomField(Request $request, CustomField $customField)
+    {
+        $v = $request->validate([
+            'field_name' => ['required', 'string', 'max:255'],
+            'field_type' => ['required', 'in:text,textarea,select,checkbox,number,date'],
+            'description' => ['nullable', 'string', 'max:255'],
+            'field_options' => ['nullable', 'string', 'max:1000'],
+            'regex' => ['nullable', 'string', 'max:255'],
+            'required' => ['nullable', 'boolean'],
+            'admin_only' => ['nullable', 'boolean'],
+            'show_on_order' => ['nullable', 'boolean'],
+            'show_on_invoice' => ['nullable', 'boolean'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $customField->update([
+            'field_name' => $v['field_name'],
+            'field_type' => $v['field_type'],
+            'description' => $v['description'] ?? null,
+            'field_options' => $v['field_options'] ?? null,
+            'regex' => $v['regex'] ?? null,
+            'required' => (bool) ($v['required'] ?? false),
+            'admin_only' => (bool) ($v['admin_only'] ?? false),
+            'show_on_order' => (bool) ($v['show_on_order'] ?? false),
+            'show_on_invoice' => (bool) ($v['show_on_invoice'] ?? false),
+            'sort_order' => (int) ($v['sort_order'] ?? 0),
+        ]);
+
+        return back()->with('success', __('messages.success.custom_field_updated'));
+    }
+
+    public function destroyCustomField(CustomField $customField)
+    {
+        $customField->values()->delete();
+        $customField->delete();
+
+        return back()->with('success', __('messages.success.custom_field_deleted'));
+    }
+
     // ===== TAX RULES =====
 
     public function tax()
@@ -481,13 +565,13 @@ class ConfigController extends Controller
 
                 return (object) [
                     'name' => $name,
-                    'label' => $module?->getModuleName() ?? ucfirst($name),
+                    'label' => payment_method_label($name) ?: ($module?->getModuleName() ?? ucfirst($name)),
                     'fields' => $module?->getConfigFields() ?? [],
                     'values' => $values->toArray(),
                     'active' => (string) ($values['active'] ?? '0') === '1',
                 ];
             })
-            ->sortBy('label')
+            ->sortBy(fn ($gw) => [$gw->active ? 0 : 1, $gw->label])
             ->values();
 
         return view('admin.config.gateways', ['gateways' => $gateways]);
@@ -503,17 +587,26 @@ class ConfigController extends Controller
         $registrars = collect(app(ModuleRegistry::class)->getRegistrarModules())
             ->merge($stored->keys())
             ->unique()
-            ->sort()
             ->map(function ($name) use ($stored) {
+                $module = app(ModuleRegistry::class)->getRegistrarModule($name);
                 $settings = ($stored[$name] ?? collect())->pluck('value', 'setting');
 
                 return (object) [
                     'registrar_name' => $name,
-                    'description' => $settings->get('name', ucfirst($name)),
-                    'disabled' => $settings->get('visible', '1') === '0',
-                    'settings' => $settings->except(['name', 'visible'])->toArray(),
+                    'label' => $settings->get('name', $module?->getModuleName() ?? ucfirst($name)),
+                    'fields' => $module?->getConfigFields() ?? [],
+                    'values' => $settings->toArray(),
+                    'help' => ($module && method_exists($module, 'getConfigHelp')) ? $module->getConfigHelp() : null,
+                    'testable' => $name === 'hrd',
+                    // Manual works out of the box; every other registrar is
+                    // off until the operator switches it on.
+                    'active' => $name === 'manual'
+                        ? $settings->get('visible', '1') !== '0'
+                        : $settings->get('visible') === '1',
                 ];
-            })->values();
+            })
+            ->sortBy(fn ($reg) => [$reg->active ? 0 : 1, $reg->label])
+            ->values();
 
         return view('admin.config.registrars', ['registrars' => $registrars]);
     }
@@ -1266,6 +1359,11 @@ class ConfigController extends Controller
                 $settings = $decoded;
             }
         }
+
+        // An unticked checkbox posts nothing, so it has to be written as off
+        // rather than left as it was.
+        $settings['visible'] = $request->boolean('visible') ? '1' : '0';
+
         foreach ($settings as $key => $value) {
             RegistrarSettings::updateOrCreate(
                 ['registrar' => $registrar, 'setting' => $key],
@@ -1274,6 +1372,26 @@ class ConfigController extends Controller
         }
 
         return back()->with('success', __('messages.success.registrar_updated'));
+    }
+
+    /**
+     * Run the registrar's own connection test (only modules that offer one).
+     */
+    public function testRegistrar(Request $request, string $registrar)
+    {
+        if ($registrar !== 'hrd') {
+            return back()->with('error', __('admin.registrars.test_unavailable'));
+        }
+
+        $module = app(ModuleRegistry::class)->getRegistrarModule($registrar);
+
+        if (! $module || ! method_exists($module, 'testConnection')) {
+            return back()->with('error', __('admin.registrars.test_unavailable'));
+        }
+
+        $result = $module->testConnection();
+
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     // ===== AUTOMATION =====

@@ -109,6 +109,41 @@
     </div>
 
     <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.invoices_section') }}</strong></div>
+        <div class="card-body">
+            <div class="form-group" style="max-width:50%;">
+                <label class="form-label">{{ __('admin.settings.default_payment_method') }}</label>
+                <select name="DefaultPaymentMethod" class="form-control">
+                    @foreach($paymentMethods as $pm)
+                    <option value="{{ $pm }}" {{ ($settings['DefaultPaymentMethod'] ?? '') === $pm ? 'selected' : '' }}>{{ \payment_method_label($pm) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group" style="margin-top:10px;max-width:50%;">
+                <label class="form-label">{{ __('admin.settings.invoice_due_days') }}</label>
+                <input type="number" name="InvoiceDueDays" value="{{ $settings['InvoiceDueDays'] ?? '14' }}" class="form-control" min="0">
+            </div>
+            <div class="form-group" style="margin-top:10px;max-width:50%;">
+                <label class="form-label" for="invoice-number-format">{{ __('admin.settings.invoice_number_format') }}</label>
+                <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">
+            </div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:6px;">
+                <input type="checkbox" name="InvoiceNumberYearlyReset" value="1" {{ !empty($settings['InvoiceNumberYearlyReset']) && $settings['InvoiceNumberYearlyReset'] == '1' ? 'checked' : '' }}>
+                {{ __('admin.settings.invoice_number_reset_year') }}
+            </label>
+            <div style="font-size:12px;color:#777;margin-top:6px;">
+                {{ __('admin.settings.invoice_number_tokens') }}
+            </div>
+            <div style="font-size:13px;color:#555;margin-top:6px;">
+                <span>{{ __('admin.settings.invoice_number_last') }}:</span>
+                <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;">{{ $invoiceLast ?? '—' }}</code>
+                <span style="margin-left:14px;">{{ __('admin.settings.invoice_number_preview') }}:</span>
+                <code id="invoice-number-preview" style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $invoicePreview }}</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.mail_configuration') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:10px;">
@@ -179,17 +214,58 @@
                     </div>
                 </div>
             </div>
+
+            <hr style="margin:14px 0;">
+            <div style="display:flex;gap:10px;align-items:center;">
+                <button type="button" id="test-email-btn" class="btn btn-secondary">{{ __('admin.settings.send_test_email') }}</button>
+                <span id="test-email-result" style="font-size:13px;"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.domains_section') }}</strong></div>
+        <div class="card-body">
+            <label class="form-label">{{ __('admin.settings.default_nameservers') }}</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:8px;">
+                @for($i = 1; $i <= 5; $i++)
+                <div class="form-group">
+                    <label class="form-label" style="font-size:12px;">NS{{ $i }}</label>
+                    <input type="text" name="DefaultNameserver{{ $i }}" value="{{ $settings['DefaultNameserver'.$i] ?? '' }}" class="form-control" placeholder="ns{{ $i }}.yourdomain.com">
+                </div>
+                @endfor
+            </div>
+            <div style="font-size:12px;color:#777;">{{ __('admin.settings.default_nameservers_hint') }}</div>
         </div>
     </div>
 
     <div style="display:flex;gap:10px;align-items:center;">
         <button type="submit" class="btn btn-primary">{{ __('admin.settings.save_settings') }}</button>
-        <button type="button" id="test-email-btn" class="btn btn-secondary" style="margin-left:5px;">{{ __('admin.settings.send_test_email') }}</button>
-        <span id="test-email-result" style="font-size:13px;"></span>
     </div>
 </form>
 
 <script>
+document.getElementById('invoice-number-format').addEventListener('input', renderInvoicePreview);
+document.addEventListener('DOMContentLoaded', renderInvoicePreview);
+
+function renderInvoicePreview() {
+    var fmt = document.getElementById('invoice-number-format').value || '';
+    var now = new Date();
+    var y = String(now.getFullYear());
+    var yy = y.slice(-2);
+    var m = ('0' + (now.getMonth() + 1)).slice(-2);
+    var d = ('0' + now.getDate()).slice(-2);
+    var seq = String({{ $invoiceNextSeq }});
+    while (seq.length < 6) { seq = '0' + seq; }
+    var out = fmt
+        .replace(/\{year\}/g, y)
+        .replace(/\{yy\}/g, yy)
+        .replace(/\{month\}/g, m)
+        .replace(/\{day\}/g, d)
+        .replace(/\{num\}/g, seq);
+    document.getElementById('invoice-number-preview').textContent = out;
+}
+
 document.getElementById('mail-type').addEventListener('change', function() {
     document.getElementById('smtp-fields').style.display = this.value === 'smtp' ? 'block' : 'none';
 });

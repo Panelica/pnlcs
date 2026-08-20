@@ -68,34 +68,40 @@ class BankTransferModule implements GatewayModuleInterface
         $rows = "";
 
         if ($bankName) {
-            $rows .= "<tr><th scope=\"row\">Bank Name</th><td>" . htmlspecialchars($bankName, ENT_QUOTES, "UTF-8") . "</td></tr>";
+            $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.bank_name') . "</th><td>" . htmlspecialchars($bankName, ENT_QUOTES, "UTF-8") . "</td></tr>";
         }
         if ($accountName) {
-            $rows .= "<tr><th scope=\"row\">Account Name</th><td>" . htmlspecialchars($accountName, ENT_QUOTES, "UTF-8") . "</td></tr>";
+            $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.account_name') . "</th><td>" . htmlspecialchars($accountName, ENT_QUOTES, "UTF-8") . "</td></tr>";
         }
         if ($accountNumber) {
-            $rows .= "<tr><th scope=\"row\">Account Number</th><td><code>" . htmlspecialchars($accountNumber, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
+            $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.account_number') . "</th><td><code>" . htmlspecialchars($accountNumber, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
         }
         if ($sortCode) {
-            $rows .= "<tr><th scope=\"row\">Sort Code / Routing</th><td><code>" . htmlspecialchars($sortCode, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
+            $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.sort_code') . "</th><td><code>" . htmlspecialchars($sortCode, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
         }
         if ($iban) {
-            $rows .= "<tr><th scope=\"row\">IBAN</th><td><code>" . htmlspecialchars($iban, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
+            $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.iban') . "</th><td><code>" . htmlspecialchars($iban, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
         }
         if ($swift) {
-            $rows .= "<tr><th scope=\"row\">SWIFT/BIC</th><td><code>" . htmlspecialchars($swift, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
+            $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.swift') . "</th><td><code>" . htmlspecialchars($swift, ENT_QUOTES, "UTF-8") . "</code></td></tr>";
         }
-        $rows .= "<tr><th scope=\"row\">Reference</th><td><strong>Invoice #{$invoiceNum}</strong></td></tr>";
-        $rows .= "<tr><th scope=\"row\">Amount</th><td><strong>{$amount}</strong></td></tr>";
+        $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.reference') . "</th><td><strong>" . __('client.invoices.invoice_prefix', ['id' => $invoiceNum]) . "</strong></td></tr>";
+        $rows .= "<tr><th scope=\"row\">" . __('messages.banktransfer.amount') . "</th><td><strong>{$amount}</strong></td></tr>";
 
         $notesHtml = $notes
-            ? "<div class=\"alert alert-info mt-3\"><strong>Instructions:</strong><br>" . nl2br(htmlspecialchars($notes, ENT_QUOTES, "UTF-8")) . "</div>"
+            ? "<div class=\"alert alert-info mt-3\"><strong>" . __('messages.banktransfer.instructions') . "</strong><br>" . nl2br(htmlspecialchars($notes, ENT_QUOTES, "UTF-8")) . "</div>"
             : "";
+
+        $detailsTitle = __('messages.banktransfer.details_title');
+        $noteLabel    = __('messages.banktransfer.note');
+        $refHint      = __('messages.banktransfer.use_invoice_reference');
+        $invoiceLabel = __('client.invoices.invoice_prefix', ['id' => $invoiceNum]);
+        $pendingHint  = __('messages.banktransfer.transfer_pending');
 
         return <<<HTML
 <div class="card my-3">
     <div class="card-header bg-light">
-        <h6 class="mb-0"><i class="ri-bank-line me-1"></i> Bank Transfer Details</h6>
+        <h6 class="mb-0"><i class="ri-bank-line me-1"></i> {$detailsTitle}</h6>
     </div>
     <div class="card-body p-0">
         <table class="table table-bordered mb-0">
@@ -108,8 +114,8 @@ class BankTransferModule implements GatewayModuleInterface
 {$notesHtml}
 <div class="alert alert-warning mt-3">
     <i class="ri-information-line me-1"></i>
-    <strong>Note:</strong> Please use <strong>Invoice #{$invoiceNum}</strong> as your payment reference.
-    Your invoice will be marked as paid once the transfer is confirmed by an administrator.
+    <strong>{$noteLabel}</strong> {$refHint} <strong>{$invoiceLabel}</strong>.
+    {$pendingHint}
 </div>
 HTML;
     }

@@ -18,6 +18,16 @@
             <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.cancel') }}</button>
         </form>
         @endif
+        <form method="POST" action="{{ route('admin.invoices.send', $invoice) }}" style="display:inline;">
+            @csrf
+            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.invoices.send') }}</button>
+        </form>
+        @if(in_array($st, ['unpaid', 'overdue', 'partially_paid', 'payment_pending']))
+        <form method="POST" action="{{ route('admin.invoices.remind', $invoice) }}" style="display:inline;">
+            @csrf
+            <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.invoices.remind') }}</button>
+        </form>
+        @endif
         <a href="{{ route('admin.invoices.pdf', $invoice) }}" class="btn btn-info btn-sm">{{ __('admin.invoices.download_pdf_btn') }}</a>
         <a href="{{ route('admin.invoices.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.invoices.back') }}</a>
     </div>
@@ -94,34 +104,68 @@
     <div style="grid-column:span 2;">
 
         <div class="card" style="margin-bottom:15px;">
-            <div class="card-header"><strong>{{ __('admin.invoices.line_items') }}</strong></div>
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <strong>{{ __('admin.invoices.line_items') }}</strong>
+                <form method="POST" action="{{ route('admin.invoices.items.store', $invoice) }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-xs">+ {{ __('admin.invoices.add_item') }}</button>
+                </form>
+            </div>
+            @foreach($invoice->items as $item)
+            <form id="item-form-{{ $item->id }}" method="POST" action="{{ route('admin.invoices.items.update', [$invoice, $item]) }}" style="display:none;">
+                @csrf @method('PUT')
+            </form>
+            @endforeach
+            @php
+            $vatGroups = [];
+            foreach ($invoice->items as $it) {
+                $rate = $it->tax_rate !== null ? (float) $it->tax_rate : ($it->taxed ? (float) $invoice->tax_rate : 0.0);
+                if ($rate <= 0) { continue; }
+                $tax = (float) $it->amount * (int) $it->qty * $rate / 100;
+                $key = rtrim(rtrim(number_format($rate, 2), '0'), '.');
+                $vatGroups[$key] = ($vatGroups[$key] ?? 0) + $tax;
+            }
+            krsort($vatGroups);
+            @endphp
             <table class="data-table">
                 <thead><tr>
-                    <th>{{ __('common.table.description') }}</th><th style="width:60px;text-align:center;">{{ __('admin.invoices.taxed') }}</th><th style="text-align:right;width:100px;">{{ __('common.table.amount') }}</th>
+                    <th>{{ __('common.table.description') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.qty') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.price') }}</th><th style="width:70px;text-align:center;">{{ __('common.table.tax') }}</th><th style="text-align:right;width:100px;">{{ __('admin.invoices.total') }}</th><th style="width:30px;"></th>
                 </tr></thead>
                 <tbody>
                 @forelse($invoice->items as $item)
+                @php $effectiveRate = $item->tax_rate !== null ? (float) $item->tax_rate : ($item->taxed ? (float) $invoice->tax_rate : 0.0); @endphp
                 <tr>
-                    <td><span style="font-size:11px;color:#999;text-transform:uppercase;margin-right:4px;">{{ $item->type }}</span>{{ $item->description }}</td>
-                    <td style="text-align:center;">{!! $item->taxed ? '&#10003;' : '&mdash;' !!}</td>
-                    <td style="text-align:right;font-family:monospace;">{{ money_fmt($item->amount) }}</td>
+                    <td>
+                        <div style="font-size:10px;color:#999;text-transform:uppercase;">{{ $item->type }}</div>
+                        <input type="text" form="item-form-{{ $item->id }}" name="description" value="{{ $item->description }}" class="inv-inline" data-enter-submit>
+                    </td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="qty" value="{{ (int) $item->qty }}" min="1" step="1" class="inv-inline inv-num" data-enter-submit></td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="amount" value="{{ number_format((float) $item->amount, 2, '.', '') }}" step="0.01" min="0" class="inv-inline inv-num" data-enter-submit></td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="tax_rate" value="{{ $effectiveRate > 0 ? rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') : '' }}" step="0.01" min="0" max="100" placeholder="0" class="inv-inline inv-num" data-enter-submit></td>
+                    <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
+                    <td style="text-align:center;">
+                        <form method="POST" action="{{ route('admin.invoices.items.destroy', [$invoice, $item]) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.invoices.confirm_delete_item') }}')">
+                            @csrf @method('DELETE')
+                            <button type="submit" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:16px;padding:0 2px;" title="{{ __('admin.invoices.delete_item') }}">&times;</button>
+                        </form>
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="3" style="text-align:center;color:#999;padding:20px;">{{ __('admin.invoices.no_line_items') }}</td></tr>
+                <tr><td colspan="6" style="text-align:center;color:#999;padding:20px;">{{ __('admin.invoices.no_line_items') }}</td></tr>
                 @endforelse
                 </tbody>
                 <tfoot>
-                    <tr><td colspan="2" style="text-align:right;padding:8px 12px;color:#555;">{{ __('admin.invoices.subtotal') }}</td><td style="text-align:right;padding:8px 12px;font-weight:600;font-family:monospace;">{{ money_fmt($invoice->subtotal) }}</td></tr>
-                    @if($invoice->tax > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax') }}{{ $invoice->tax_rate > 0 ? " (" . $invoice->tax_rate . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">{{ money_fmt($invoice->tax) }}</td></tr>
-                    @endif
+                    <tr><td colspan="2" style="text-align:right;padding:8px 12px;color:#555;">{{ __('admin.invoices.subtotal') }}</td><td style="text-align:right;padding:8px 12px;font-weight:600;font-family:monospace;white-space:nowrap;">{{ money_fmt($invoice->subtotal) }}</td></tr>
+                    @foreach($vatGroups as $rate => $amount)
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax') }} {{ $rate }}%</td><td style="text-align:right;padding:4px 12px;font-family:monospace;white-space:nowrap;">{{ money_fmt($amount) }}</td></tr>
+                    @endforeach
                     @if($invoice->tax2 > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax_2') }}{{ $invoice->tax_rate2 > 0 ? " (" . $invoice->tax_rate2 . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;">{{ money_fmt($invoice->tax2) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#555;">{{ __('admin.invoices.tax_2') }}{{ $invoice->tax_rate2 > 0 ? " (" . rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.') . "%)" : "" }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;white-space:nowrap;">{{ money_fmt($invoice->tax2) }}</td></tr>
                     @endif
                     @if($invoice->credit > 0)
-                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#5cb85c;">{{ __('admin.invoices.credit_applied') }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;color:#5cb85c;">-{{ money_fmt($invoice->credit) }}</td></tr>
+                    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#5cb85c;">{{ __('admin.invoices.credit_applied') }}</td><td style="text-align:right;padding:4px 12px;font-family:monospace;color:#5cb85c;white-space:nowrap;">-{{ money_fmt($invoice->credit) }}</td></tr>
                     @endif
-                    <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td colspan="2" style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;">{{ __('admin.invoices.total') }}</td><td style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;font-family:monospace;">{{ money_fmt($invoice->total) }}</td></tr>
+                    <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td colspan="2" style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;">{{ __('admin.invoices.total') }}</td><td style="text-align:right;padding:8px 12px;font-weight:700;font-size:14px;font-family:monospace;white-space:nowrap;">{{ money_fmt($invoice->total) }}</td></tr>
                 </tfoot>
             </table>
         </div>
@@ -135,7 +179,7 @@
                 @foreach($invoice->transactions as $tx)
                 <tr>
                     <td>{{ $tx->date?->format(date_fmt()) }}</td>
-                    <td style="text-transform:capitalize;">{{ $tx->gateway }}</td>
+                    <td>{{ payment_method_label((string) $tx->gateway) }}</td>
                     <td style="font-family:monospace;font-size:12px;">{{ $tx->transaction_id ?? '&mdash;' }}</td>
                     <td style="text-align:right;color:#5cb85c;font-weight:600;">+{{ money_fmt($tx->amount_in) }}</td>
                 </tr>
@@ -168,6 +212,9 @@
                     @if($invoice->buyer('tax_id'))
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.tax_id') }}</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->buyer('tax_id') }}</td></tr>
                     @endif
+                    @foreach($invoice->buyerCustomFields() as $label => $value)
+                    <tr><td style="padding:4px 0;color:#777;">{{ $label }}</td><td style="padding:4px 0;">{{ $value }}</td></tr>
+                    @endforeach
                 </table>
             </div>
         </div>
@@ -181,7 +228,7 @@
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.date') }}</td><td style="padding:4px 0;">{{ $invoice->date?->format(date_fmt()) }}</td></tr>
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.due_date') }}</td><td style="padding:4px 0;{{ ($invoice->due_date?->isPast() && $st !== 'paid') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $invoice->due_date?->format(date_fmt()) }}</td></tr>
                     @if($invoice->payment_method)
-                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.payment') }}</td><td style="padding:4px 0;text-transform:capitalize;">{{ $invoice->payment_method }}</td></tr>
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.payment') }}</td><td style="padding:4px 0;">{{ payment_method_label((string) $invoice->payment_method) }}</td></tr>
                     @endif
                     @if($st === 'paid' && $invoice->date_paid)
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.paid_on') }}</td><td style="padding:4px 0;color:#5cb85c;font-weight:600;">{{ $invoice->date_paid->timezone(display_tz())->format(datetime_fmt()) }}</td></tr>
@@ -201,7 +248,36 @@
                 @endif
             </div>
         </div>
+
+        <div class="panel">
+            <div class="panel-heading panel-primary">{{ __('admin.invoices.activity_log') }}</div>
+            <div class="panel-body" style="max-height:190px;overflow-y:auto;padding:0;">
+                @forelse($activityLog as $entry)
+                <div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;">
+                    <div style="font-size:12px;color:#333;">{{ $entry->description }}</div>
+                    <div style="font-size:11px;color:#999;margin-top:2px;">{{ $entry->date->timezone(display_tz())->format(datetime_fmt()) }} &middot; {{ $entry->user ?: 'System' }}</div>
+                </div>
+                @empty
+                <div style="padding:10px 12px;color:#999;font-size:12px;">{{ __('admin.invoices.no_activity') }}</div>
+                @endforelse
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .inv-inline { border: 1px solid transparent; background: transparent; width: 100%; font-size: 13px; font-family: inherit; padding: 2px 4px; border-radius: 3px; color: inherit; }
+    .inv-inline:hover, .inv-inline:focus { border-color: #ccc; background: #fff; outline: none; }
+    .inv-num { text-align: right; }
+</style>
+<script>
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.matches('[data-enter-submit]')) {
+        e.preventDefault();
+        var form = document.getElementById(e.target.getAttribute('form'));
+        if (form) { form.requestSubmit(); }
+    }
+});
+</script>
 
 @endsection

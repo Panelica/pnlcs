@@ -56,7 +56,7 @@
                     @if(isset($gateways) && $gateways->isNotEmpty())
                         @foreach($gateways as $gateway)
                         <option value="{{ $gateway }}" {{ old("payment_method") === $gateway ? "selected" : "" }}>
-                            {{ ucwords(str_replace("_", " ", $gateway)) }}
+                            {{ payment_method_label((string) $gateway) }}
                         </option>
                         @endforeach
                     @else

@@ -402,10 +402,16 @@ class InvoiceGenerationService
                 ? $service->next_due_date
                 : Carbon::parse($service->next_due_date);
 
+            // The period the invoice covers runs from one day after the last
+            // billing date up to the next due date, so the customer can see
+            // exactly what they are paying for (2026/08/15 - 2026/09/15).
+            $periodStart = $dueDate->copy()->subMonths(Service::monthsInCycle($billingCycle));
+            $period = $periodStart->format('Y/m/d').' - '.$dueDate->format('Y/m/d');
+
             $items[] = [
                 'type' => 'Hosting',
                 'rel_id' => $service->id,
-                'description' => "{$productName} ({$billingCycle}) — {$service->domain} — Due: {$dueDate->format(date_fmt())}",
+                'description' => "{$productName} ({$billingCycle}) — {$service->domain} — {$period}",
                 'amount' => (float) $service->amount,
                 'taxed' => $service->product->tax ?? true,
                 'due_date' => $dueDate->toDateString(),
@@ -446,7 +452,7 @@ class InvoiceGenerationService
         }
 
         $options = [
-            'due_date' => now()->addDays((int) config('billing.invoice_due_days', 14))->toDateString(),
+            'due_date' => now()->addDays((int) \App\Models\Setting::get('InvoiceDueDays', 14))->toDateString(),
             'notes' => 'Auto-generated renewal invoice.',
         ];
 

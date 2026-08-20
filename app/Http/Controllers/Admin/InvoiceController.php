@@ -5,14 +5,22 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\CsvExportable;
+use App\Mail\InvoiceCreatedMail;
+use App\Mail\PaymentReminderMail;
+use App\Models\ActivityLog;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
+use App\Models\Product;
+use App\Models\Setting;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -51,7 +59,146 @@ class InvoiceController extends Controller
     {
         $invoice->load('client', 'items', 'transactions');
 
-        return view('admin.invoices.show', compact('invoice'));
+        $activityLog = ActivityLog::forInvoice($invoice)->limit(50)->get();
+
+        return view('admin.invoices.show', compact('invoice', 'activityLog'));
+    }
+
+    /**
+     * Update a single line item and recalculate the invoice totals.
+     */
+    public function updateItem(Request $request, Invoice $invoice, InvoiceItem $item): RedirectResponse
+    {
+        abort_if($item->invoice_id !== $invoice->id, 404);
+
+        $validated = $request->validate([
+            'description' => ['required', 'string', 'max:255'],
+            'qty' => ['required', 'integer', 'min:1', 'max:999999'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $taxRate = isset($validated['tax_rate']) && $validated['tax_rate'] !== ''
+            ? (float) $validated['tax_rate']
+            : 0.0;
+
+        // Give every line an explicit rate so a legacy invoice edited once
+        // stays consistent: lines without a rate would otherwise stop being
+        // taxed the moment any other line carries its own rate.
+        $fallback = (float) $invoice->tax_rate;
+        $invoice->items()->whereNull('tax_rate')->get()->each(function (InvoiceItem $legacy) use ($fallback) {
+            $legacy->update(['tax_rate' => $legacy->taxed ? $fallback : 0.0]);
+        });
+
+        $item->update([
+            'description' => $validated['description'],
+            'qty' => (int) $validated['qty'],
+            'amount' => (float) $validated['amount'],
+            'tax_rate' => $taxRate,
+            'taxed' => $taxRate > 0,
+        ]);
+
+        $this->invoiceService->recalculateTotals($invoice);
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} line item updated",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
+        return back()->with('success', __('admin.invoices.item_updated'));
+    }
+
+    /**
+     * Add a blank line item to the invoice.
+     */
+    public function storeItem(Request $request, Invoice $invoice): RedirectResponse
+    {
+        $this->invoiceService->addLineItem($invoice, [
+            'type' => 'Other',
+            'description' => (string) $request->input('description', ''),
+            'qty' => 1,
+            'amount' => 0,
+            'tax_rate' => 0,
+        ]);
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} line item added",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
+        return back()->with('success', __('admin.invoices.item_added'));
+    }
+
+    /**
+     * Remove a line item and recalculate the invoice totals.
+     */
+    public function destroyItem(Request $request, Invoice $invoice, InvoiceItem $item): RedirectResponse
+    {
+        abort_if($item->invoice_id !== $invoice->id, 404);
+
+        $item->delete();
+        $this->invoiceService->recalculateTotals($invoice);
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} line item removed",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
+        return back()->with('success', __('admin.invoices.item_removed'));
+    }
+
+    /**
+     * Email the invoice to the client.
+     */
+    public function sendInvoice(Invoice $invoice): RedirectResponse
+    {
+        abort_if(! $invoice->client?->email, 422, 'Client has no email address.');
+
+        Mail::to($invoice->client->email)->queue(new InvoiceCreatedMail($invoice));
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} sent by email",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
+        return back()->with('success', __('admin.invoices.email_sent'));
+    }
+
+    /**
+     * Send a payment reminder for this invoice (positive = due in N days,
+     * negative = N days overdue).
+     */
+    public function sendReminder(Invoice $invoice): RedirectResponse
+    {
+        abort_if(! $invoice->client?->email, 422, 'Client has no email address.');
+
+        $daysOffset = $invoice->due_date
+            ? (int) now()->startOfDay()->diffInDays($invoice->due_date->startOfDay(), false)
+            : 0;
+
+        Mail::to($invoice->client->email)->queue(new PaymentReminderMail($invoice, $daysOffset));
+
+        ActivityLog::log(
+            "Invoice #{$invoice->id} payment reminder sent",
+            $this->adminName(),
+            $invoice->client_id,
+            $invoice->id
+        );
+
+        return back()->with('success', __('admin.invoices.reminder_sent'));
+    }
+
+    private function adminName(): string
+    {
+        return auth('admin')->user()?->full_name ?? 'Admin';
     }
 
     /**
@@ -74,7 +221,44 @@ class InvoiceController extends Controller
             ? Client::find($request->client_id)
             : null;
 
-        return view('admin.invoices.create', compact('clients', 'gateways', 'selectedClient'));
+        $defaultPaymentMethod = $selectedClient?->default_payment_method;
+
+        $dueDays = (int) Setting::get('InvoiceDueDays', 14);
+
+        // Cheapest sold cycle stands in for the product's money value, so the
+        // builder can pre-fill the amount when a product is picked.
+        $products = Product::active()->with('pricing')->get()->map(function (Product $p) {
+            $cycles = $p->pricedCycles();
+
+            return [
+                'name' => $p->name,
+                'amount' => $cycles ? min($cycles) : null,
+                'cycle' => $cycles ? array_search(min($cycles), $cycles, true) : null,
+                'taxed' => (bool) $p->tax,
+            ];
+        })->values();
+
+        $defaultCurrency = Currency::getDefault();
+
+        // Per-client applicable tax rate (level 1 only, shown in the summary
+        // while building the invoice). Matches the engine: country+state.
+        $invoiceService = app(InvoiceService::class);
+        $clients = $clients->map(function (Client $client) use ($invoiceService) {
+            $rule = $invoiceService->taxRuleFor($client, 1);
+
+            return clone $client->setAttribute('billing_tax_rate', (float) ($rule?->tax_rate ?? 0))
+                ->setAttribute('billing_tax_label', $rule?->name ?? '');
+        });
+
+        return view('admin.invoices.create', compact(
+            'clients',
+            'gateways',
+            'selectedClient',
+            'products',
+            'defaultCurrency',
+            'defaultPaymentMethod',
+            'dueDays'
+        ));
     }
 
     /**
@@ -86,12 +270,13 @@ class InvoiceController extends Controller
             'client_id' => ['required', 'exists:clients,id'],
             'date' => ['required', 'date'],
             'due_date' => ['required', 'date'],
-            'payment_method' => ['nullable', 'string', 'max:100'],
+            'payment_method' => ['required', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:2000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:255'],
+            'items.*.qty' => ['nullable', 'integer', 'min:1', 'max:999999'],
             'items.*.amount' => ['required', 'numeric', 'min:0'],
-            'items.*.taxed' => ['nullable', 'boolean'],
+            'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
 
         $client = Client::findOrFail($validated['client_id']);
@@ -99,11 +284,10 @@ class InvoiceController extends Controller
         $items = array_map(fn ($item) => [
             'type' => 'Other',
             'description' => $item['description'],
+            'qty' => (int) ($item['qty'] ?? 1),
             'amount' => (float) $item['amount'],
-            // Absent means the box was unticked: a browser does not submit
-            // a checkbox it was left off, and reading that as taxed billed the
-            // customer for lines the admin had excluded.
-            'taxed' => (bool) ($item['taxed'] ?? false),
+            // Per-item VAT percentage; an empty field means untaxed.
+            'tax_rate' => isset($item['tax_rate']) && $item['tax_rate'] !== '' ? (float) $item['tax_rate'] : 0.0,
         ], $validated['items']);
 
         $invoice = $this->invoiceService->createInvoice($client, $items, [

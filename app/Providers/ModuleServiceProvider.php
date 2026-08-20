@@ -55,6 +55,8 @@ class ModuleServiceProvider extends ServiceProvider
             $registry->registerRegistrar("enom", \Modules\Registrars\Enom\EnomRegistrar::class);
             // Manual Registrar
             $registry->registerRegistrar("manual", \Modules\Registrars\Manual\ManualRegistrar::class);
+            // HRD Registrar (hrd.pl)
+            $registry->registerRegistrar("hrd", \Modules\Registrars\HRD\HrdRegistrar::class);
 
             // Mollie (EU)
             $registry->registerGateway("mollie", \Modules\Gateways\Mollie\MollieModule::class);

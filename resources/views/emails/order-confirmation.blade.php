@@ -10,7 +10,7 @@
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.order_confirmation.order_id') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">#{{ $order->id }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.date_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $order->created_at?->format(date_fmt()) ?? now()->format(date_fmt()) }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.order_confirmation.payment_method') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $order->payment_method ?? 'N/A' }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.order_confirmation.payment_method') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $order->payment_method ? payment_method_label((string) $order->payment_method) : 'N/A' }}</td></tr>
 </table>
 
 @if($order->items && count($order->items) > 0)

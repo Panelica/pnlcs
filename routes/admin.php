@@ -132,6 +132,11 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
         Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
         Route::post('invoices/{invoice}/refund', [InvoiceController::class, 'refund'])->name('invoices.refund');
+        Route::post('invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send');
+        Route::post('invoices/{invoice}/remind', [InvoiceController::class, 'sendReminder'])->name('invoices.remind');
+        Route::put('invoices/{invoice}/items/{item}', [InvoiceController::class, 'updateItem'])->name('invoices.items.update');
+        Route::post('invoices/{invoice}/items', [InvoiceController::class, 'storeItem'])->name('invoices.items.store');
+        Route::delete('invoices/{invoice}/items/{item}', [InvoiceController::class, 'destroyItem'])->name('invoices.items.destroy');
 
         // Offline payment notifications (bank transfer review queue)
         Route::get('payment-notifications', [PaymentNotificationController::class, 'index'])->name('payment-notifications.index');
@@ -153,6 +158,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('services/{service}/module/{action}', [ServiceController::class, 'moduleAction'])->name('services.module-action');
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
+        Route::put('services/{service}/next-due', [ServiceController::class, 'updateNextDue'])->name('services.next-due');
+        Route::put('services/{service}/status', [ServiceController::class, 'updateStatus'])->name('services.status');
+        Route::delete('services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
     });
 
     // =============================================
@@ -163,6 +171,13 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:manage_domains')->group(function () {
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
+        Route::post('domains/{domain}/sync', [DomainController::class, 'sync'])->name('domains.sync');
+        Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
+        Route::post('domains/{domain}/nameservers', [DomainController::class, 'updateNameservers'])->name('domains.nameservers');
+        Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->name('domains.lock');
+        Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
+        Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');
+        Route::post('domains/{domain}/registrar', [DomainController::class, 'updateRegistrar'])->name('domains.registrar');
     });
 
     // =============================================
@@ -264,6 +279,13 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('currencies/{currency}/default', [ConfigController::class, 'setDefaultCurrency'])->name('currencies.default');
         });
 
+        Route::middleware('admin.permission:manage_settings')->group(function () {
+            Route::get('custom-fields', [ConfigController::class, 'customFields'])->name('custom-fields');
+            Route::post('custom-fields', [ConfigController::class, 'storeCustomField'])->name('custom-fields.store');
+            Route::put('custom-fields/{customField}', [ConfigController::class, 'updateCustomField'])->name('custom-fields.update');
+            Route::delete('custom-fields/{customField}', [ConfigController::class, 'destroyCustomField'])->name('custom-fields.destroy');
+        });
+
         Route::middleware('admin.permission:manage_tax')->group(function () {
             Route::get('tax', [ConfigController::class, 'tax'])->name('tax');
             Route::post('tax', [ConfigController::class, 'storeTax'])->name('tax.store');
@@ -305,8 +327,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
 
         // Registrars — manage_registrars
         Route::middleware('admin.permission:manage_registrars')->group(function () {
-            Route::get('registrars', [ConfigController::class, 'registrars'])->name('registrars');
-            Route::post('registrars/{registrar}/settings', [ConfigController::class, 'updateRegistrarSettings'])->name('registrars.settings.update');
+    Route::get('registrars', [ConfigController::class, 'registrars'])->name('registrars');
+    Route::post('registrars/{registrar}/settings', [ConfigController::class, 'updateRegistrarSettings'])->name('registrars.settings.update');
+    Route::post('registrars/{registrar}/test', [ConfigController::class, 'testRegistrar'])->name('registrars.test');
         });
 
         // Support — manage_ticket_config
@@ -537,6 +560,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:manage_services')->group(function () {
         Route::post('bulk/service-update', [BulkActionController::class, 'bulkServiceUpdate'])->name('bulk.service-update');
+    });
+    Route::middleware('admin.permission:manage_invoices')->group(function () {
+        Route::post('bulk/invoice-action', [BulkActionController::class, 'bulkInvoiceAction'])->name('bulk.invoice-action');
     });
 
     // Calendar — no permission required

@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'amount' => 'Kwota',
+    'bill_to' => 'Odbiorca Faktury',
+    'credit' => 'Kredyt',
+    'date_paid' => 'Data Opłacenia',
+    'description' => 'Opis',
+    'due_date' => 'Termin Płatności',
+    'invoice' => 'FAKTURA',
+    'invoice_date' => 'Data Wystawienia',
+    'invoice_details' => 'Szczegóły Faktury',
+    'invoice_number' => 'Numer Faktury',
+    'invoice_to' => 'Nabywca',
+    'item' => 'Pozycja',
+    'no_items' => 'Brak pozycji',
+    'notes' => 'Uwagi',
+    'payment_method' => 'Metoda Płatności',
+    'payment_status' => 'Status Płatności',
+    'subtotal' => 'Podsuma',
+    'tax' => 'VAT',
+    'tax_id' => 'NIP',
+    'taxed' => 'Opodatkowana',
+    'thank_you' => 'Dziękujemy za Twoje zamówienie!',
+    'total' => 'Razem',
+];

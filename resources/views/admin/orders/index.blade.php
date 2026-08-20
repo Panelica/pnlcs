@@ -51,7 +51,7 @@
                 </td>
                 <td style="color:#666;">{{ $order->date?->format(date_fmt()) ?? "-" }}</td>
                 <td style="text-align:right;font-weight:500;">{{ money_fmt($order->amount) }}</td>
-                <td style="color:#666;">{{ $order->payment_method ?? "-" }}</td>
+                <td style="color:#666;">{{ $order->payment_method ? payment_method_label((string) $order->payment_method) : "-" }}</td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($order->status ?? "") }}</span></td>
                 <td>
                     <a href="{{ route("admin.orders.show", $order) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>

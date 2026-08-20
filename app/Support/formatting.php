@@ -30,6 +30,29 @@ if (! function_exists('money_fmt')) {
             : '$'.$value;
     }
 }
+if (! function_exists('payment_method_label')) {
+    /**
+     * A payment method key as the customer-facing label.
+     *
+     * The panel stores keys like 'banktransfer' or 'stripe' and a couple of
+     * views printed ucfirst($method), which showed "Banktransfer" whatever
+     * language the customer was in. The label comes from the translations now.
+     */
+    function payment_method_label(string $method): string
+    {
+        if ($method === '' || $method === 'none') {
+            return $method;
+        }
+
+        $key = 'messages.payment_method.'.$method;
+
+        if (Lang::has($key)) {
+            return Lang::get($key);
+        }
+
+        return ucwords(str_replace('_', ' ', $method));
+    }
+}
 if (! function_exists('currency_symbol')) {
     /**
      * The sign in front of an amount in the currency the shop sells in.

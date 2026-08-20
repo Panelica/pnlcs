@@ -209,6 +209,7 @@
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.currencies') }}">{{ __('admin.nav.currencies') }}</a></li>
                     <li><a href="{{ route('admin.config.tax') }}">{{ __('admin.nav.tax_rules') }}</a></li>
+                    <li><a href="{{ route('admin.config.custom-fields') }}">{{ __('admin.nav.custom_fields') }}</a></li>
                     <li><a href="{{ route('admin.config.promotions') }}">{{ __('admin.nav.promotions') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.ticket-departments') }}">{{ __('admin.nav.ticket_departments') }}</a></li>
@@ -398,6 +399,7 @@
             <li><a href="{{ route('admin.config.gateways') }}" @if($routeName === 'admin.config.gateways') class="active" @endif>{{ __('admin.nav.payment_gateways') }}</a></li>
             <li><a href="{{ route('admin.config.currencies') }}" @if($routeName === 'admin.config.currencies') class="active" @endif>{{ __('admin.nav.currencies') }}</a></li>
             <li><a href="{{ route('admin.config.tax') }}" @if($routeName === 'admin.config.tax') class="active" @endif>{{ __('admin.nav.tax_rules') }}</a></li>
+            <li><a href="{{ route('admin.config.custom-fields') }}" @if($routeName === 'admin.config.custom-fields') class="active" @endif>{{ __('admin.nav.custom_fields') }}</a></li>
             <li><a href="{{ route('admin.config.promotions') }}" @if($routeName === 'admin.config.promotions') class="active" @endif>{{ __('admin.nav.promotions') }}</a></li>
         </ul>
 

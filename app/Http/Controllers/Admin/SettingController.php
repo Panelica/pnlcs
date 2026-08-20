@@ -23,7 +23,30 @@ class SettingController extends Controller
             'mailTransport' => (string) config('mail.default'),
             'languages' => Language::active()->orderBy('sort_order')->get(),
             'countries' => \App\Support\Countries::all(),
+            'paymentMethods' => $this->paymentMethods(),
+            'invoicePreview' => app(\App\Services\InvoiceService::class)->generateInvoiceNumber(),
+            'invoiceNextSeq' => app(\App\Services\InvoiceService::class)->nextInvoiceSequence(),
+            'invoiceLast' => \App\Models\Invoice::where('invoice_num', '!=', '')->orderBy('id', 'desc')->value('invoice_num'),
         ]);
+    }
+
+    /**
+     * Payment methods the default can be picked from: every usable gateway
+     * plus the offline options offered on the invoice form.
+     *
+     * @return array<int, string>
+     */
+    protected function paymentMethods(): array
+    {
+        $gateways = app(\App\Services\Module\ModuleRegistry::class)->usableGateways();
+
+        if (! in_array('banktransfer', $gateways, true)) {
+            $gateways[] = 'banktransfer';
+        }
+
+        $gateways[] = 'manual';
+
+        return $gateways;
     }
 
     /**
@@ -37,7 +60,10 @@ class SettingController extends Controller
      */
     private const GENERAL_KEYS = [
         'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
-        'Country', 'DateFormat', 'DefaultLanguage', 'Domain', 'Email', 'EmailFromName',
+        'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
+        'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
+        'Email', 'EmailFromName',
+        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
@@ -51,6 +77,9 @@ class SettingController extends Controller
         // An unticked checkbox is absent from the request, not false.
         if (! isset($data['MailEnabled'])) {
             $data['MailEnabled'] = '0';
+        }
+        if (! isset($data['InvoiceNumberYearlyReset'])) {
+            $data['InvoiceNumberYearlyReset'] = '0';
         }
 
         // The form never carries the stored mail password back, so an empty

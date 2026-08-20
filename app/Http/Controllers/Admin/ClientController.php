@@ -10,7 +10,13 @@ use App\Models\Client;
 use App\Models\ClientGroup;
 use App\Models\ClientNote;
 use App\Models\Currency;
+use App\Models\CustomField;
+use App\Models\CustomFieldValue;
+use App\Models\Setting;
+use App\Models\User;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -40,8 +46,11 @@ class ClientController extends Controller
     {
         $groups = ClientGroup::all();
         $currencies = Currency::all();
+        $customFields = CustomField::clientFields()->get();
+        $paymentMethods = $this->paymentMethods();
+        $defaultPaymentMethod = Setting::get('DefaultPaymentMethod', 'banktransfer');
 
-        return view('admin.clients.create', compact('groups', 'currencies'));
+        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods', 'defaultPaymentMethod'));
     }
 
     public function store(Request $request)
@@ -49,19 +58,38 @@ class ClientController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:clients,email',
+            'email' => 'required|email|max:255|unique:clients,email|unique:users,email',
             'company_name' => 'nullable|string|max:255',
+            'tax_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
             'postcode' => 'nullable|string|max:20',
             'country' => 'nullable|string|max:2',
             'phone_number' => 'nullable|string|max:30',
+            'phone_prefix' => 'nullable|string|max:4',
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
+            'default_payment_method' => 'required|string|max:50',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
         $client = Client::create($validated);
+
+        // A client created by staff gets a login account too, otherwise there
+        // is no user to sign the client area in as (or to impersonate with).
+        if (! empty($validated['password'])) {
+            $user = User::create([
+                'first_name' => $client->first_name,
+                'last_name' => $client->last_name,
+                'email' => $client->email,
+                'password' => Hash::make($validated['password']),
+                'is_active' => true,
+            ]);
+            $client->users()->attach($user->id, ['owner' => true]);
+        }
+
+        $this->saveCustomFieldValues($client, $request);
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_created'));
     }
@@ -73,6 +101,11 @@ class ClientController extends Controller
         $client->load('contacts', 'users');
 
         $data = ['client' => $client, 'tab' => $tab];
+
+        // Custom fields (shown in the summary tab)
+        $data['customFields'] = CustomField::clientFields()
+            ->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])
+            ->get();
 
         // Stats always needed (shown in all tabs)
         $data['serviceCount'] = $client->services()->count();
@@ -141,8 +174,29 @@ class ClientController extends Controller
     {
         $groups = ClientGroup::all();
         $currencies = Currency::all();
+        $customFields = CustomField::clientFields()->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])->get();
+        $paymentMethods = $this->paymentMethods();
 
-        return view('admin.clients.edit', compact('client', 'groups', 'currencies'));
+        return view('admin.clients.edit', compact('client', 'groups', 'currencies', 'customFields', 'paymentMethods'));
+    }
+
+    /**
+     * Payment methods the client's default can be picked from: every usable
+     * gateway plus the offline options offered on the invoice form.
+     *
+     * @return array<int, string>
+     */
+    protected function paymentMethods(): array
+    {
+        $gateways = app(ModuleRegistry::class)->usableGateways();
+
+        if (! in_array('banktransfer', $gateways, true)) {
+            $gateways[] = 'banktransfer';
+        }
+
+        $gateways[] = 'manual';
+
+        return $gateways;
     }
 
     public function update(Request $request, Client $client)
@@ -154,6 +208,7 @@ class ClientController extends Controller
             // address counted as taken and no change could be saved at all.
             'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)],
             'company_name' => 'nullable|string|max:255',
+            'tax_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
@@ -161,13 +216,51 @@ class ClientController extends Controller
             // The column will not hold a null, so asking beats a 500.
             'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:30',
+            'phone_prefix' => 'nullable|string|max:4',
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
+            'default_payment_method' => 'required|string|max:50',
+            'password' => 'nullable|string|min:8|confirmed',
         ]);
+
+        // An optional new login password (blank leaves it unchanged).
+        if (! empty($validated['password'])) {
+            $this->setClientPassword($client, $validated['password']);
+        }
+
+        unset($validated['password'], $validated['password_confirmation']);
+
         $client->update($validated);
+        $this->saveCustomFieldValues($client, $request);
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_updated'));
+    }
+
+    /**
+     * Set (or create) the linked login user's password for a client.
+     */
+    protected function setClientPassword(Client $client, string $password): void
+    {
+        $user = $client->users()->wherePivot('owner', true)->first()
+            ?? $client->users()->first();
+
+        if (! $user) {
+            $user = User::create([
+                'first_name' => $client->first_name,
+                'last_name' => $client->last_name,
+                'email' => $client->email,
+                'password' => Hash::make($password),
+                'is_active' => true,
+            ]);
+
+            $client->users()->attach($user->id, ['owner' => true]);
+
+            return;
+        }
+
+        $user->password = Hash::make($password);
+        $user->save();
     }
 
     public function destroy(Client $client)
@@ -308,5 +401,30 @@ class ClientController extends Controller
         session()->forget(['impersonating_admin_id', 'impersonating_admin_name', 'active_client_id']);
 
         return redirect()->route('admin.clients.index')->with('success', __('messages.success.impersonation_stopped'));
+    }
+
+    /**
+     * Persist the submitted custom field values for a client.
+     */
+    protected function saveCustomFieldValues(Client $client, Request $request)
+    {
+        $fields = CustomField::clientFields()->get()->keyBy('id');
+
+        foreach ($fields as $id => $field) {
+            $raw = $request->input("custom_fields.$id");
+
+            $value = is_array($raw) ? implode(', ', array_filter((array) $raw)) : (string) $raw;
+
+            if ($value === '') {
+                CustomFieldValue::where('field_id', $id)->where('rel_id', $client->id)->delete();
+
+                continue;
+            }
+
+            CustomFieldValue::updateOrCreate(
+                ['field_id' => $id, 'rel_id' => $client->id],
+                ['value' => $value]
+            );
+        }
     }
 }

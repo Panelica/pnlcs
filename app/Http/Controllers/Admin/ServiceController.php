@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Enums\ServiceStatus;
 use App\Models\ProductAddon;
 use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Services\AddonService;
 use App\Services\ProvisioningService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ServiceController extends Controller
 {
@@ -61,6 +63,17 @@ class ServiceController extends Controller
         return back()->with('success', __('admin.messages.addon_updated'));
     }
 
+    public function updateNextDue(Request $request, Service $service)
+    {
+        $validated = $request->validate([
+            'next_due_date' => ['required', 'date'],
+        ]);
+
+        $service->update(['next_due_date' => $validated['next_due_date']]);
+
+        return back()->with('success', __('admin.messages.service_next_due_updated'));
+    }
+
     public function moduleAction(Request $request, Service $service, string $action)
     {
         $service->load('product');
@@ -88,5 +101,42 @@ class ServiceController extends Controller
         }
 
         return back()->with('error', $result['message'] ?? __('admin.messages.module_action_failed'));
+    }
+
+    /**
+     * Manually change the billing/status state of a service. This only flips the
+     * status flag (and the relevant date) on the record; it does not talk to the
+     * server module. Use the module actions for that.
+     */
+    public function updateStatus(Request $request, Service $service)
+    {
+        $validated = $request->validate([
+            'status' => ['required', Rule::in(array_column(ServiceStatus::cases(), 'value'))],
+        ]);
+
+        $status = $validated['status'];
+
+        $data = ['status' => $status];
+
+        if ($status === ServiceStatus::Suspended->value) {
+            $data['suspension_date'] = now();
+        } elseif ($status === ServiceStatus::Terminated->value) {
+            $data['termination_date'] = now();
+            $data['suspension_date'] = null;
+        } elseif (in_array($status, [ServiceStatus::Active->value, ServiceStatus::Pending->value], true)) {
+            $data['suspension_date'] = null;
+            $data['termination_date'] = null;
+        }
+
+        $service->update($data);
+
+        return back()->with('success', __('admin.messages.service_status_updated', ['status' => $status]));
+    }
+
+    public function destroy(Request $request, Service $service)
+    {
+        $service->delete();
+
+        return redirect()->route('admin.services.index')->with('success', __('admin.messages.service_deleted'));
     }
 }

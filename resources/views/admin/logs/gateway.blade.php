@@ -16,7 +16,7 @@
             <div><label class="form-label">{{ __('admin.logs.gateway') }}</label>
                 <select name="gateway" onchange="this.form.submit()" class="form-control" style="width:160px;">
                     <option value="">{{ __('admin.logs.all_gateways') }}</option>
-                    @foreach($gateways as $gw)<option value="{{ $gw }}" {{ request('gateway')===$gw?'selected':'' }}>{{ ucfirst($gw) }}</option>@endforeach
+                    @foreach($gateways as $gw)<option value="{{ $gw }}" {{ request('gateway')===$gw?'selected':'' }}>{{ payment_method_label((string) $gw) }}</option>@endforeach
                 </select>
             </div>
             <div><label class="form-label">{{ __('common.form.date') }}</label><input type="date" name="date" value="{{ request('date') }}" class="form-control"></div>
@@ -35,7 +35,7 @@
             @forelse($logs as $log)
             <tr>
                 <td style="font-size:12px;white-space:nowrap;color:#777;">{{ $log->date ? \Carbon\Carbon::parse($log->date)->format('Y-m-d H:i:s') : '-' }}</td>
-                <td style="font-weight:600;text-transform:capitalize;">{{ ucfirst($log->gateway ?? '-') }}</td>
+                <td style="font-weight:600;">{{ $log->gateway ? payment_method_label((string) $log->gateway) : '-' }}</td>
                 <td style="font-family:monospace;font-size:12px;color:#777;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $log->data ? Str::limit($log->data, 120) : '-' }}</td>
                 <td>
                     @if($log->result==='success')<span class="badge-active">{{ __('common.status.success') }}</span>

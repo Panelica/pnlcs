@@ -22,61 +22,92 @@
 </div>
 
 <!-- Table -->
-<div class="card">
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>{{ __('common.table.invoice_num') }}</th>
-                <th>{{ __('common.table.client') }}</th>
-                <th>{{ __('common.table.date') }}</th>
-                <th>{{ __('common.table.due_date') }}</th>
-                <th style="text-align:right;">{{ __('common.table.total') }}</th>
-                <th>{{ __('common.table.status') }}</th>
-                <th>{{ __('common.table.actions') }}</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($invoices as $invoice)
-            @php
-            $badgeClass = match(strtolower($invoice->status ?? "")) {
-                "active", "paid"     => "badge-paid",
-                "pending"            => "badge-pending",
-                "unpaid"             => "badge-unpaid",
-                "overdue"            => "badge-overdue",
-                "suspended"          => "badge-suspended",
-                "terminated"         => "badge-terminated",
-                "cancelled"          => "badge-cancelled",
-                "fraud"              => "badge-fraud",
-                "draft"              => "badge-draft",
-                "refunded"           => "badge-refunded",
-                default              => "badge-cancelled",
-            };
-            @endphp
-            <tr>
-                <td><a href="{{ route("admin.invoices.show", $invoice) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $invoice->id }}</a></td>
-                <td>
-                    @if($invoice->client)
-                    <a href="{{ route("admin.clients.show", $invoice->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $invoice->client->full_name }}</a>
-                    @else N/A @endif
-                </td>
-                <td style="color:#666;">{{ $invoice->date?->format(date_fmt()) ?? "-" }}</td>
-                <td style="color:#666;">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
-                <td style="text-align:right;font-weight:500;">{{ money_fmt($invoice->total) }}</td>
-                <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
-                <td>
-                    <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="7" style="text-align:center;padding:32px;color:#999;">{{ __('admin.invoices.no_invoices') }}</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-    <div style="padding:10px 16px;border-top:1px solid #e5e7eb;">
-        {{ $invoices->withQueryString()->links() }}
+<form id="bulk-form" method="POST" action="{{ route("admin.bulk.invoice-action") }}">
+    @csrf
+    <input type="hidden" name="action" id="bulk-action" value="">
+
+    <div class="card">
+        <div style="padding:10px 16px;border-bottom:1px solid #e5e7eb;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <strong style="font-size:12px;color:#777;margin-right:6px;">{{ __('admin.invoices.bulk_actions') }}:</strong>
+            <button type="submit" class="btn btn-success btn-sm" data-action="paid">{{ __('admin.invoices.mark_paid_btn') }}</button>
+            <button type="submit" class="btn btn-danger btn-sm" data-action="cancel">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-default btn-sm" data-action="send">{{ __('admin.invoices.send') }}</button>
+            <button type="submit" class="btn btn-warning btn-sm" data-action="remind">{{ __('admin.invoices.remind') }}</button>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width:30px;"><input type="checkbox" id="select-all"></th>
+                    <th>{{ __('common.table.invoice_num') }}</th>
+                    <th>{{ __('common.table.client') }}</th>
+                    <th>{{ __('common.table.date') }}</th>
+                    <th>{{ __('common.table.due_date') }}</th>
+                    <th style="text-align:right;">{{ __('common.table.total') }}</th>
+                    <th>{{ __('common.table.status') }}</th>
+                    <th>{{ __('common.table.actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($invoices as $invoice)
+                @php
+                $badgeClass = match(strtolower($invoice->status ?? "")) {
+                    "active", "paid"     => "badge-paid",
+                    "pending"            => "badge-pending",
+                    "unpaid"             => "badge-unpaid",
+                    "overdue"            => "badge-overdue",
+                    "suspended"          => "badge-suspended",
+                    "terminated"         => "badge-terminated",
+                    "cancelled"          => "badge-cancelled",
+                    "fraud"              => "badge-fraud",
+                    "draft"              => "badge-draft",
+                    "refunded"           => "badge-refunded",
+                    default              => "badge-cancelled",
+                };
+                @endphp
+                <tr>
+                    <td><input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}" class="row-checkbox"></td>
+                    <td><a href="{{ route("admin.invoices.show", $invoice) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $invoice->id }}</a></td>
+                    <td>
+                        @if($invoice->client)
+                        <a href="{{ route("admin.clients.show", $invoice->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $invoice->client->full_name }}</a>
+                        @else N/A @endif
+                    </td>
+                    <td style="color:#666;">{{ $invoice->date?->format(date_fmt()) ?? "-" }}</td>
+                    <td style="color:#666;">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
+                    <td style="text-align:right;font-weight:500;">{{ money_fmt($invoice->total) }}</td>
+                    <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
+                    <td>
+                        <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="8" style="text-align:center;padding:32px;color:#999;">{{ __('admin.invoices.no_invoices') }}</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+        <div style="padding:10px 16px;border-top:1px solid #e5e7eb;">
+            {{ $invoices->withQueryString()->links() }}
+        </div>
     </div>
-</div>
+</form>
+
+<script>
+document.getElementById('select-all').addEventListener('change', function () {
+    document.querySelectorAll('.row-checkbox').forEach(function (cb) { cb.checked = this.checked; }, this);
+});
+document.querySelectorAll('#bulk-form button[data-action]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+        var selected = document.querySelectorAll('.row-checkbox:checked');
+        if (selected.length === 0) {
+            e.preventDefault();
+            alert("{{ __('admin.invoices.select_none') }}");
+            return;
+        }
+        document.getElementById('bulk-action').value = this.getAttribute('data-action');
+    });
+});
+</script>
 
 @endsection

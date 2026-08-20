@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class InvoiceItem extends Model {
     use HasFactory;
 
-    protected $fillable = ["invoice_id", "client_id", "type", "rel_id", "description", "amount", "taxed", "due_date"];
-    protected function casts(): array { return ["amount" => "decimal:2", "taxed" => "boolean", "due_date" => "date"]; }
+    protected $fillable = ["invoice_id", "client_id", "type", "rel_id", "description", "qty", "amount", "taxed", "tax_rate", "due_date"];
+    protected function casts(): array { return ["qty" => "integer", "amount" => "decimal:2", "taxed" => "boolean", "tax_rate" => "decimal:2", "due_date" => "date"]; }
 
     public function invoice() { return $this->belongsTo(Invoice::class); }
 }

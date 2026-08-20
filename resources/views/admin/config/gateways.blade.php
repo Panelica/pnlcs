@@ -12,14 +12,15 @@
      be written out here by hand, with field names that did not match, so
      PayPal was asked for an email address it never reads and Authorize.net for
      an api_login it does not know. --}}
-<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:15px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:15px;align-items:start;">
 @foreach($gateways as $gw)
-    <div class="card">
-        <div class="card-header" style="display:flex;align-items:center;gap:10px;">
+    <details class="card gw-card" style="overflow:hidden;">
+        <summary style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;list-style:none;">
+            <span class="gw-chevron" style="display:inline-block;transition:transform .2s;color:#999;">&#9656;</span>
             <span style="flex:1;font-weight:600;">{{ $gw->label }}</span>
             <span class="badge {{ $gw->active ? 'badge-active' : 'badge-cancelled' }}">{{ $gw->active ? __('common.status.active') : __('common.status.inactive') }}</span>
-        </div>
-        <div class="card-body">
+        </summary>
+        <div style="padding:0 16px 16px;border-top:1px solid #e5e7eb;">
             <form method="POST" action="{{ route('admin.config.gateways.settings.update', $gw->name) }}">
                 @csrf
                 <div class="form-group">
@@ -65,7 +66,12 @@
                 <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">{{ __('admin.gateways.save_settings') }}</button>
             </form>
         </div>
-    </div>
+    </details>
 @endforeach
 </div>
+
+<style>
+    .gw-card summary::-webkit-details-marker { display: none; }
+    .gw-card[open] .gw-chevron { transform: rotate(90deg); }
+</style>
 @endsection

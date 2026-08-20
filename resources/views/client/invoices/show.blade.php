@@ -21,7 +21,7 @@
         <span class="pn-card-title">{{ __('client.invoices.invoice_details') }}</span>
         <div style="font-size:13px;color:var(--muted)">
             {{ __('client.invoices.due') }}: <strong>{{ $invoice->due_date?->format(date_fmt()) ?? "N/A" }}</strong>
-            @if($invoice->payment_method) &nbsp;·&nbsp; {{ __('client.invoices.paid_via') }} {{ ucwords(str_replace("_", " ", $invoice->payment_method)) }} @endif
+            @if($invoice->payment_method) &nbsp;·&nbsp; {{ __('client.invoices.paid_via') }} {{ payment_method_label((string) $invoice->payment_method) }} @endif
         </div>
     </div>
     <div class="pn-card-body-flush">
@@ -29,14 +29,18 @@
             <thead>
                 <tr>
                     <th>{{ __('common.table.description') }}</th>
-                    <th style="text-align:right;width:140px">{{ __('common.table.amount') }}</th>
+                    <th style="text-align:right;width:70px">{{ __('common.table.qty') }}</th>
+                    <th style="text-align:right;width:110px">{{ __('common.table.price') }}</th>
+                    <th style="text-align:right;width:120px">{{ __('common.table.amount') }}</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($invoice->items as $item)
                 <tr>
                     <td>{{ $item->description }}</td>
-                    <td style="text-align:right;font-weight:600">{{ money_fmt($item->amount) }}</td>
+                    <td style="text-align:right">{{ (int) $item->qty }}</td>
+                    <td style="text-align:right">{{ money_fmt($item->amount) }}</td>
+                    <td style="text-align:right;font-weight:600">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
                 </tr>
                 @endforeach
             </tbody>

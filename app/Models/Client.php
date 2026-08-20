@@ -27,10 +27,12 @@ class Client extends Model
         'postcode',
         'country',
         'phone_number',
+        'phone_prefix',
         'tax_id',
         'status',
         'group_id',
         'currency_id',
+        'default_payment_method',
         'credit',
         'tax_exempt',
         'language',
@@ -117,6 +119,18 @@ class Client extends Model
     public function getDisplayNameAttribute(): string
     {
         return $this->company_name ?: $this->full_name;
+    }
+
+    /** Phone with its international prefix, e.g. "+48 123 456 789". */
+    public function getFullPhoneAttribute(): ?string
+    {
+        if (empty($this->phone_number)) {
+            return null;
+        }
+
+        $prefix = $this->phone_prefix ?: \App\Support\Countries::phonePrefix($this->country);
+
+        return $prefix ? trim($prefix.' '.$this->phone_number) : $this->phone_number;
     }
 
     public function users(): BelongsToMany

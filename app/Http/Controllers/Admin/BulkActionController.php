@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\BulkMassMail;
+use App\Mail\InvoiceCreatedMail;
+use App\Mail\PaymentReminderMail;
 use App\Models\Client;
+use App\Models\Invoice;
 use App\Models\Service;
 use App\Services\InvoiceService;
+use App\Services\PaymentService;
 use App\Services\ProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -60,7 +64,6 @@ class BulkActionController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'due_date' => 'required|date|after:today',
         ]);
-
         $created = 0;
 
         foreach ($validated['client_ids'] as $clientId) {
@@ -79,6 +82,96 @@ class BulkActionController extends Controller
         }
 
         return back()->with('success', __('admin.messages.invoices_created', ['count' => $created]));
+    }
+
+    /**
+     * Run one action across the selected invoices: mark paid, cancel, email
+     * or send a payment reminder.
+     */
+    public function bulkInvoiceAction(Request $request, InvoiceService $invoiceService)
+    {
+        $validated = $request->validate([
+            'invoice_ids' => 'required|array|min:1',
+            'invoice_ids.*' => 'exists:invoices,id',
+            'action' => 'required|in:paid,cancel,send,remind',
+        ]);
+
+        $invoices = Invoice::with('client')->whereIn('id', $validated['invoice_ids'])->get();
+        $action = $validated['action'];
+        $processed = 0;
+
+        foreach ($invoices as $invoice) {
+            if ($this->applyInvoiceAction($invoice, $action, $invoiceService)) {
+                $processed++;
+            }
+        }
+
+        return back()->with('success', __('admin.messages.bulk_invoice_action', ['count' => $processed]));
+    }
+
+    private function applyInvoiceAction(Invoice $invoice, string $action, InvoiceService $invoiceService): bool
+    {
+        try {
+            return match ($action) {
+                'paid' => $this->bulkPaid($invoice),
+                'cancel' => $this->bulkCancel($invoice, $invoiceService),
+                'send' => $this->bulkSend($invoice),
+                'remind' => $this->bulkRemind($invoice),
+                default => false,
+            };
+        } catch (\Throwable $e) {
+            Log::error("Bulk invoice {$action} failed for #{$invoice->id}: {$e->getMessage()}");
+
+            return false;
+        }
+    }
+
+    private function bulkPaid(Invoice $invoice): bool
+    {
+        if (strtolower((string) $invoice->status) === 'paid') {
+            return false;
+        }
+
+        app(PaymentService::class)->applyPayment($invoice, 'manual', null, null);
+
+        return true;
+    }
+
+    private function bulkCancel(Invoice $invoice, InvoiceService $invoiceService): bool
+    {
+        if (strtolower((string) $invoice->status) === 'paid') {
+            return false;
+        }
+
+        $invoiceService->cancelInvoice($invoice);
+
+        return true;
+    }
+
+    private function bulkSend(Invoice $invoice): bool
+    {
+        if (! $invoice->client?->email) {
+            return false;
+        }
+
+        Mail::to($invoice->client->email)->queue(new InvoiceCreatedMail($invoice));
+
+        return true;
+    }
+
+    private function bulkRemind(Invoice $invoice): bool
+    {
+        if (! $invoice->client?->email) {
+            return false;
+        }
+
+        $daysOffset = $invoice->due_date
+            ? (int) now()->startOfDay()->diffInDays($invoice->due_date->startOfDay(), false)
+            : 0;
+
+        Mail::to($invoice->client->email)->queue(new PaymentReminderMail($invoice, $daysOffset));
+
+        return true;
     }
 
     public function bulkServiceUpdate(Request $request, ProvisioningService $provisioning)

@@ -9,6 +9,7 @@ use App\Models\Client;
 use App\Models\Credit;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class InvoiceService
                 ...Invoice::buyerSnapshotFrom($client),
                 'invoice_num' => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
                 'date' => $options['date'] ?? now()->toDateString(),
-                'due_date' => $options['due_date'] ?? now()->addDays(14)->toDateString(),
+                'due_date' => $options['due_date'] ?? now()->addDays((int) Setting::get('InvoiceDueDays', 14))->toDateString(),
                 'status' => $options['status'] ?? InvoiceStatus::Unpaid->value,
                 'payment_method' => $options['payment_method'] ?? null,
                 'notes' => $options['notes'] ?? null,
@@ -109,14 +110,20 @@ class InvoiceService
 
     public function addLineItem(Invoice $invoice, array $itemData): InvoiceItem
     {
+        $taxRate = array_key_exists('tax_rate', $itemData) && $itemData['tax_rate'] !== null
+            ? (float) $itemData['tax_rate']
+            : null;
+
         $item = InvoiceItem::create([
             'invoice_id' => $invoice->id,
             'client_id' => $invoice->client_id,
             'type' => $itemData['type'] ?? 'Other',
             'rel_id' => $itemData['rel_id'] ?? 0,
             'description' => $itemData['description'] ?? '',
+            'qty' => $itemData['qty'] ?? 1,
             'amount' => $itemData['amount'] ?? 0,
-            'taxed' => $itemData['taxed'] ?? true,
+            'taxed' => $itemData['taxed'] ?? ($taxRate === null ? true : $taxRate > 0),
+            'tax_rate' => $taxRate,
             'due_date' => $itemData['due_date'] ?? null,
         ]);
 
@@ -132,24 +139,42 @@ class InvoiceService
     {
         $invoice->loadMissing('items', 'client');
 
-        $subtotal = $invoice->items->sum('amount');
+        // Each line carries a unit price (amount) and a quantity; the line's
+        // money value is the product of the two. Callers that predate the qty
+        // column pass amount only and get qty 1, so nothing changes for them.
+        $subtotal = $invoice->items->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
 
-        $taxableAmount = $invoice->items
-            ->where('taxed', true)
-            ->sum('amount');
+        // Per-item VAT: when a line carries its own rate (the admin invoice
+        // builder), tax is the sum of each line's amount × its own percentage.
+        // Legacy lines without a rate fall back to the invoice-level rate.
+        $perItem = $invoice->items->contains(fn ($item) => $item->tax_rate !== null);
 
-        // Use stored tax rates if available, otherwise calculate from rules
-        $taxRate = (float) $invoice->tax_rate;
-        $taxRate2 = (float) $invoice->tax_rate2;
+        if ($perItem) {
+            $taxAmount = round($invoice->items->sum(
+                fn ($item) => (float) $item->amount * (int) $item->qty * ((float) ($item->tax_rate ?? 0) / 100)
+            ), 2);
+            $taxAmount2 = 0.0;
 
-        if ($taxRate === 0.0 && $taxRate2 === 0.0 && ! $invoice->client->tax_exempt) {
-            $taxData = $this->calculateTax($taxableAmount, $invoice->client_id);
-            $taxRate = $taxData['tax_rate'];
-            $taxRate2 = $taxData['tax_rate2'];
+            $rates = $invoice->items->pluck('tax_rate')->filter(fn ($r) => $r !== null && (float) $r > 0)->unique()->values();
+            $taxRate = $rates->count() === 1 ? (float) $rates->first() : 0.0;
+            $taxRate2 = 0.0;
+        } else {
+            $taxableAmount = $invoice->items
+                ->where('taxed', true)
+                ->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
+
+            $taxRate = (float) $invoice->tax_rate;
+            $taxRate2 = (float) $invoice->tax_rate2;
+
+            if ($taxRate === 0.0 && $taxRate2 === 0.0 && ! $invoice->client->tax_exempt) {
+                $taxData = $this->calculateTax($taxableAmount, $invoice->client_id);
+                $taxRate = $taxData['tax_rate'];
+                $taxRate2 = $taxData['tax_rate2'];
+            }
+
+            $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
+            $taxAmount2 = $taxRate2 > 0 ? round($taxableAmount * ($taxRate2 / 100), 2) : 0;
         }
-
-        $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
-        $taxAmount2 = $taxRate2 > 0 ? round($taxableAmount * ($taxRate2 / 100), 2) : 0;
 
         $credit = (float) $invoice->credit;
         $total = max(0, $subtotal + $taxAmount + $taxAmount2 - $credit);
@@ -255,24 +280,81 @@ class InvoiceService
     }
 
     /**
-     * Generate a unique sequential invoice number with prefix.
+     * Generate a unique sequential invoice number from the configurable
+     * format setting. The format accepts {year}, {yy}, {month}, {day} and
+     * {num} placeholders; {num} is the next number in the series derived
+     * from the last invoice stored in the database.
      */
     public function generateInvoiceNumber(): string
     {
-        $prefix = config('billing.invoice_prefix', 'INV-');
+        $format = (string) Setting::get('InvoiceNumberFormat', 'INV-{num}');
+        if (trim($format) === '') {
+            $format = 'INV-{num}';
+        }
 
-        // r118-seq: the highest number in the series, not the newest row.
-        // Reading the newest meant one invoice numbered with something that is
-        // not a number - the add funds page used to mint eight random
-        // characters - was read as zero and started the series again from one.
-        // Eight numbers on this installation were issued three times over to
-        // different customers that way. Anything that is not prefix + digits
-        // casts to zero here and is ignored instead of resetting the count.
-        $next = 1 + (int) Invoice::where('invoice_num', 'like', $prefix.'%')
+        return $this->renderInvoiceNumber($format, $this->nextInvoiceSequence($format));
+    }
+
+    /**
+     * The next sequence number for previews (the highest number already
+     * issued plus one).
+     */
+    public function nextInvoiceSequence(?string $format = null): int
+    {
+        $format ??= (string) Setting::get('InvoiceNumberFormat', 'INV-{num}');
+
+        // Without {num} the number has nowhere to grow: fall back to the
+        // row id, which still keeps them unique.
+        $pos = strpos((string) $format, '{num}');
+        if ($pos === false) {
+            return 1 + (int) Invoice::max('id');
+        }
+
+        // {num} last: the series continues across format changes, reading
+        // the highest trailing number already issued wherever it hangs.
+        // Non-numeric rows (the add-funds numbers place random characters
+        // there) simply contribute nothing because they do not end in a
+        // run of digits. The series only grows, so nothing is ever
+        // issued twice.
+        if (substr((string) $format, -5) === '{num}') {
+            $query = Invoice::where('invoice_num', 'regexp', '[0-9]$')
+                ->selectRaw('MAX(CAST(REGEXP_REPLACE(invoice_num, "^.*[^0-9]", "") AS UNSIGNED)) as seq');
+
+            // Reset each year: only the numbers issued this year count,
+            // so January starts a fresh sequence again.
+            if (Setting::get('InvoiceNumberYearlyReset', '0') === '1') {
+                $query->whereYear('date', now()->year);
+            }
+
+            return 1 + (int) $query->value('seq');
+        }
+
+        // {num} in the middle: fall back to the static prefix before it,
+        // which is where the digits actually sit on issued numbers.
+        $prefix = substr((string) $format, 0, $pos);
+        if ($prefix === '') {
+            return 1 + (int) Invoice::max('id');
+        }
+
+        $like = addcslashes($prefix, '%_').'%';
+
+        return 1 + (int) Invoice::where('invoice_num', 'like', $like)
             ->selectRaw('MAX(CAST(SUBSTRING(invoice_num, ?) AS UNSIGNED)) as seq', [strlen($prefix) + 1])
             ->value('seq');
+    }
 
-        return $prefix.str_pad($next, 6, '0', STR_PAD_LEFT);
+    /**
+     * Render a format with the given sequence number.
+     */
+    public function renderInvoiceNumber(string $format, int $sequence): string
+    {
+        $now = now();
+
+        return str_replace(
+            ['{year}', '{yy}', '{month}', '{day}', '{num}'],
+            [$now->format('Y'), $now->format('y'), $now->format('m'), $now->format('d'), str_pad($sequence, 6, '0', STR_PAD_LEFT)],
+            $format
+        );
     }
 
     /**
@@ -373,7 +455,20 @@ class InvoiceService
      */
     private function rateFor(Client $client, int $level): float
     {
-        $rule = TaxRule::where('country', $client->country)
+        $rule = $this->taxRuleFor($client, $level);
+
+        return $rule ? (float) $rule->tax_rate : 0.0;
+    }
+
+    /**
+     * The tax rule that applies to a customer at one tax level, or null.
+     *
+     * Kept separate from rateFor so callers can also read the rule's label
+     * (name) while building an invoice. Matching is identical.
+     */
+    public function taxRuleFor(Client $client, int $level): ?TaxRule
+    {
+        return TaxRule::where('country', $client->country)
             ->where(function ($q) use ($client) {
                 $q->where('state', $client->state)
                     ->orWhere('state', '')
@@ -382,7 +477,5 @@ class InvoiceService
             ->orderByRaw('CASE WHEN state = ? THEN 0 ELSE 1 END', [$client->state ?? ''])
             ->where('level', $level)
             ->first();
-
-        return $rule ? (float) $rule->tax_rate : 0.0;
     }
 }
