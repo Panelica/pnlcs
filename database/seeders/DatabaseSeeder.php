@@ -55,10 +55,11 @@ class DatabaseSeeder extends Seeder
             ['setting' => 'DefaultPaymentMethod', 'value' => 'banktransfer', 'group' => 'general'],
             ['setting' => 'InvoiceNumberFormat', 'value' => 'INV-{year}{month}-{num}', 'group' => 'general'],
             ['setting' => 'InvoiceNumberYearlyReset', 'value' => '0', 'group' => 'general'],
+            // InvoicePayTerms, EnableTax and TaxType used to be seeded here and
+            // were never read anywhere: due dates come from InvoiceDueDays and
+            // tax is decided per line. Seeding them invited editing a knob
+            // that is connected to nothing.
             ['setting' => 'DateFormat', 'value' => 'd/m/Y', 'group' => 'general'],
-            ['setting' => 'InvoicePayTerms', 'value' => '7', 'group' => 'billing'],
-            ['setting' => 'EnableTax', 'value' => 'true', 'group' => 'billing'],
-            ['setting' => 'TaxType', 'value' => 'inclusive', 'group' => 'billing'],
         ];
         foreach ($settings as $s) {
             Setting::firstOrCreate(['setting' => $s['setting']], $s);

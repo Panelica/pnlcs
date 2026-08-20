@@ -24,12 +24,18 @@ class InvoicePdfService
         return [
             'name' => company_name(),
             'domain' => Setting::get('Domain', ''),
-            'address' => $this->firstFilled(['Address', 'CompanyAddress']),
-            'city' => $this->firstFilled(['CompanyCity', 'City']),
-            'country' => $this->firstFilled(['Country', 'CompanyCountry']),
-            'phone' => $this->firstFilled(['PhoneNumber', 'CompanyPhone']),
-            'email' => $this->firstFilled(['Email', 'CompanyEmail']),
-            'tax_id' => $this->firstFilled(['TaxID']),
+            // One key per field - the ones the general settings screen writes.
+            // Each of these used to consult a second name (CompanyAddress,
+            // CompanyEmail, ...) that nothing has ever written: not a screen,
+            // not the installer, not a seeder. Reading them implied a
+            // flexibility that did not exist, and an audit of every settings
+            // key against its writers is what found this file's dead logo.
+            'address' => trim((string) Setting::get('Address', '')),
+            'city' => trim((string) Setting::get('CompanyCity', '')),
+            'country' => trim((string) Setting::get('Country', '')),
+            'phone' => trim((string) Setting::get('PhoneNumber', '')),
+            'email' => trim((string) Setting::get('Email', '')),
+            'tax_id' => trim((string) Setting::get('TaxID', '')),
             'logo' => $this->logoFile(),
         ];
     }
@@ -61,19 +67,6 @@ class InvoicePdfService
         return '';
     }
 
-    /** @param array<int, string> $keys */
-    private function firstFilled(array $keys): string
-    {
-        foreach ($keys as $key) {
-            $value = trim((string) Setting::get($key, ''));
-
-            if ($value !== '') {
-                return $value;
-            }
-        }
-
-        return '';
-    }
 
     public function generate(Invoice $invoice): \Barryvdh\DomPDF\PDF
     {

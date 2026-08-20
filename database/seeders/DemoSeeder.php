@@ -84,9 +84,6 @@ class DemoSeeder extends Seeder
             ['setting' => 'Logo', 'value' => '', 'group' => 'general'],
             ['setting' => 'DefaultLanguage', 'value' => 'en', 'group' => 'general'],
             ['setting' => 'DateFormat', 'value' => 'd/m/Y', 'group' => 'general'],
-            ['setting' => 'InvoicePayTerms', 'value' => '7', 'group' => 'billing'],
-            ['setting' => 'EnableTax', 'value' => 'true', 'group' => 'billing'],
-            ['setting' => 'TaxType', 'value' => 'inclusive', 'group' => 'billing'],
         ];
         foreach ($settings as $s) {
             Setting::firstOrCreate(['setting' => $s['setting']], $s);
