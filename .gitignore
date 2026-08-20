@@ -16,9 +16,17 @@
 /public/build
 /public/hot
 /public/storage
-/storage/*.key
-/storage/installed.lock
-/storage/pail
+# Nothing from storage/ ships in the repository. The subdirectories carry their
+# own ignore files, but storage/ itself did not, which is how an
+# installed.lock - the "this system is already set up" marker - was committed
+# and then cloned into every new deployment, closing the install wizard on
+# machines nobody had installed. Tracked files stay tracked; this stops new
+# runtime artefacts from being added by accident.
+/storage/*
+!/storage/app/
+!/storage/debugbar/
+!/storage/framework/
+!/storage/logs/
 /vendor
 Homestead.json
 Homestead.yaml

@@ -1,0 +1,56 @@
+name: Repository hygiene
+
+# Runtime artefacts must never be committed. The container entrypoint clones
+# this repository on first start, so anything that lands here lands in every
+# new deployment. A committed storage/installed.lock once told every fresh
+# install it was already installed, which closed the setup wizard for a week
+# before anyone noticed - the site itself came up fine.
+#
+# This runs on every push and pull request. It needs no database, no PHP
+# extensions and no dependencies, so there is no excuse for it to be slow or
+# flaky, and no reason to skip it.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  no-runtime-artefacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: No installed lock
+        run: |
+          if git ls-files --error-unmatch storage/installed.lock >/dev/null 2>&1; then
+            echo "::error file=storage/installed.lock::A committed installed.lock tells every fresh clone it is already installed, and the install wizard answers 404. Remove it: git rm --cached storage/installed.lock"
+            exit 1
+          fi
+
+      - name: No environment files, keys or build output
+        run: |
+          forbidden=$(git ls-files \
+            '.env' '.env.*' \
+            'storage/*.key' \
+            'storage/logs/*.log' \
+            'database/*.sqlite' \
+            'public/build/*' \
+            | grep -v '\.example$' || true)
+          if [ -n "$forbidden" ]; then
+            echo "::error::These are produced at runtime or hold secrets, and must not be in the repository:"
+            echo "$forbidden"
+            exit 1
+          fi
+
+      - name: storage/ stays ignored
+        run: |
+          for rule in '/storage/\*' 'installed.lock'; do
+            grep -q "$rule" .gitignore || {
+              echo "::error file=.gitignore::The rule matching '$rule' was removed. It is what stops a runtime artefact from being committed again."
+              exit 1
+            }
+          done
