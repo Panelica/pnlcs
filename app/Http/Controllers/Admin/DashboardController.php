@@ -62,7 +62,11 @@ class DashboardController extends Controller
             $productDone  = Product::query()->exists();
 
             $items = [
-                ['key' => 'company',  'done' => $companyDone,  'route' => 'admin.settings.appearance', 'missing' => $companyMissing],
+                // Straight at the field that is still missing. The appearance
+                // screen opens on its first tab, and the company name lives on
+                // another one, so a bare link lands the operator somewhere the
+                // step cannot be finished.
+                ['key' => 'company',  'done' => $companyDone,  'route' => 'admin.settings.appearance', 'missing' => $companyMissing, 'fragment' => $companyName ? '' : 'themes'],
                 ['key' => 'email',    'done' => $emailDone,    'route' => 'admin.settings.general'],
                 ['key' => 'gateway',  'done' => $gatewayDone,  'route' => 'admin.config.gateways'],
                 ['key' => 'server',   'done' => $serverDone,   'route' => 'admin.config.servers'],

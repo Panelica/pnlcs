@@ -504,15 +504,36 @@ class SettingController extends Controller
             'remove_branding' => 'sometimes|boolean',
         ]);
 
-        Setting::set('whitelabel_company_name', $request->input('company_name', ''), 'whitelabel');
-        Setting::set('whitelabel_company_url', $request->input('company_url', ''), 'whitelabel');
-        Setting::set('whitelabel_support_email', $request->input('support_email', ''), 'whitelabel');
-        Setting::set('whitelabel_copyright', $request->input('copyright', ''), 'whitelabel');
-        Setting::set('whitelabel_remove_branding', $request->input('remove_branding', '0'), 'whitelabel');
+        // Only what was submitted. Reading every field with a default of '' meant
+        // a form carrying one input silently blanked the other four, so the
+        // company name could not be offered anywhere except inside this one
+        // form - and it is the field people look for first.
+        $fields = [
+            'company_name'    => 'whitelabel_company_name',
+            'company_url'     => 'whitelabel_company_url',
+            'support_email'   => 'whitelabel_support_email',
+            'copyright'       => 'whitelabel_copyright',
+        ];
+
+        foreach ($fields as $input => $setting) {
+            if ($request->has($input)) {
+                Setting::set($setting, (string) $request->input($input, ''), 'whitelabel');
+            }
+        }
+
+        // An unticked checkbox sends nothing, so this one is decided by whether
+        // its own form was the one submitted rather than by presence.
+        if ($request->has('whitelabel_full_form')) {
+            Setting::set('whitelabel_remove_branding', $request->input('remove_branding', '0'), 'whitelabel');
+        }
 
         ThemeService::clearCache();
 
-        return back()->with('success', __('messages.success.whitelabel_saved'));
+        // Back to the tab the form lives on, not to whichever one the page opens
+        // with: saving and being returned to a different screen reads as nothing
+        // having happened.
+        return back()->with('success', __('messages.success.whitelabel_saved'))
+            ->with('appearance_tab', $request->input('return_tab', 'whitelabel'));
     }
 
     // ═══════════════════════════════════════════════════════
