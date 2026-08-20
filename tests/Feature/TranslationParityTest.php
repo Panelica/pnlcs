@@ -42,7 +42,7 @@ function localeKeys(string $locale): array
 const TRANSLATION_GAP_BUDGET = [
     'pl' => 0,
     'zh' => 0,
-    'tr' => 456,
+    'tr' => 0,
     // The twenty-six that were generated together and left behind.
     'ar' => 984, 'az' => 984, 'ca' => 984, 'cs' => 984, 'da' => 984, 'de' => 984,
     'el' => 984, 'es' => 984, 'et' => 984, 'fa' => 984, 'fi' => 984, 'fr' => 984,
@@ -77,7 +77,7 @@ test('every shipped language is accounted for', function () {
 
 test('the complete languages stay complete', function () {
     // Cheap to keep at parity, expensive to regain once they drift.
-    foreach (['pl', 'zh'] as $locale) {
+    foreach (['pl', 'zh', 'tr'] as $locale) {
         expect(count(array_diff_key(localeKeys('en'), localeKeys($locale))))->toBe(0);
     }
 });

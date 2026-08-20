@@ -10,7 +10,6 @@ return [
         'point_oneclick' => 'Tek tıkla kurulum, saniyeler içinde hazır',
         'point_included' => 'Paketinize dahil, ek lisans yok',
     ],
-
     'cta' => [
         'button' => 'Baslat Sizin Journey',
         'note' => 'No credit card required. 30-day money-back guarantee.',

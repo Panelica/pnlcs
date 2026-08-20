@@ -15,6 +15,7 @@ return [
     ],
     'admin_login' => 'Yonetim Alani',
     'disabled' => 'Sizin account  devre disi birakildi.',
+    'account_closed' => 'Bu hesap kapatılmıştır. Lütfen destekle iletişime geçin.',
     'failed' => 'se credentials do not match our records.',
     'forgot' => [
         'back_to_login' => 'Geri to login',
@@ -76,6 +77,7 @@ return [
     'sign_in' => 'Giris Yap',
     'signing_in' => 'Giris yapiliyor...',
     'throttle' => 'Cok fazla giris denemesi. Lutfen :seconds saniye sonra tekrar deneyin.',
+    'email_not_accepted' => 'Bu e-posta adresi kayıt için kullanılamaz.',
     'user_not_found' => 'User not found.',
     'username' => 'Kullanici Adi',
     'username_placeholder' => 'Kullanici adinizi girin',

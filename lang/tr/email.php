@@ -46,6 +46,13 @@ return [
         'update_payment' => 'To avoid any service interruptions, lutfen update sizin payment method in sizin account a.',
     ],
     'common' => [
+        'view_invoice' => 'Faturayı Görüntüle',
+        'pay_invoice' => 'Faturayı Öde',
+        'view_ticket' => 'Destek Biletini Görüntüle',
+        'view_service' => 'Hizmeti Görüntüle',
+        'view_domain' => 'Alan Adını Görüntüle',
+        'update_payment_method' => 'Ödeme Yöntemini Güncelle',
+        'go_to_account' => 'Hesabınıza Git',
         'amount_label' => 'Tutar',
         'client' => 'Musteri',
         'customer' => 'Musteri',
@@ -144,6 +151,7 @@ return [
     'payment_reminder' => [
         'due_in' => 'Bu is a friendly reminder that Fatura #:number is due in :days day(s).',
         'overdue' => 'Fatura #:number is now :days day(s) overdue.',
+        'to_pay_intro' => 'Bu faturayı hesabınızdan ödeyebilirsiniz:',
         'to_pay' => 'to make a payment.',
     ],
     'service' => [
