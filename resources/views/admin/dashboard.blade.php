@@ -17,9 +17,26 @@
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px 18px;">
             @foreach($setup['items'] as $item)
-            <a href="{{ route($item['route']) }}" style="display:flex;align-items:center;gap:7px;font-size:13.5px;text-decoration:none;color:{{ $item['done'] ? 'var(--pn-muted,#9ca3af)' : 'var(--pn-text,#374151)' }};">
-                <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:11px;{{ $item['done'] ? 'background:#16a34a;color:#fff;' : 'border:1.5px solid var(--pn-border,#d1d5db);color:transparent;' }}">&#10003;</span>
-                <span style="{{ $item['done'] ? 'text-decoration:line-through;' : '' }}">{{ __('admin.setup.step_' . $item['key']) }}</span>
+            @php
+                // The tick is only in the markup when the step is actually done.
+                // It used to be printed for every step and hidden with
+                // color:transparent, so copied text and screen readers reported
+                // five completed steps next to a counter reading "0 of 5".
+                $stepState   = $item['done'] ? __('client.status.completed') : __('admin.pending');
+                $stepMissing = ! $item['done'] && ! empty($item['missing'])
+                    ? implode(', ', $item['missing'])
+                    : null;
+            @endphp
+            <a href="{{ route($item['route']) }}" title="{{ $stepState }}{{ $stepMissing ? ': '.$stepMissing : '' }}" style="display:flex;align-items:center;gap:7px;font-size:13.5px;text-decoration:none;color:{{ $item['done'] ? 'var(--pn-muted,#9ca3af)' : 'var(--pn-text,#374151)' }};">
+                <span aria-hidden="true" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:11px;{{ $item['done'] ? 'background:#16a34a;color:#fff;' : 'border:1.5px solid var(--pn-border,#d1d5db);' }}">{!! $item['done'] ? '&#10003;' : '' !!}</span>
+                <span style="{{ $item['done'] ? 'text-decoration:line-through;' : '' }}">
+                    {{ __('admin.setup.step_' . $item['key']) }}
+                    @if($stepMissing)
+                        {{-- Which half is still outstanding, rather than leaving
+                             the operator to guess why nothing moved. --}}
+                        <span style="color:var(--pn-muted,#9ca3af);">({{ $stepMissing }})</span>
+                    @endif
+                </span>
             </a>
             @endforeach
         </div>
