@@ -35,7 +35,10 @@
             --radius:12px;
             --radius-sm:8px;
         }
-        body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+        /* The page is a column the full height of the window, and the content
+           stretches to fill it - so on a short page the footer sits at the
+           bottom of the screen instead of floating mid-page under the form. */
+        body{font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:14px;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
 
         /* ─── NAVBAR ─── */
         .pn-navbar{background:var(--card);border-bottom:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.06);position:sticky;top:0;z-index:1000}
@@ -67,8 +70,8 @@
         @media(max-width:960px){.pn-nav{display:none}.pn-hamburger{display:flex}.pn-mobile-menu.open{display:block}}
 
         /* ─── LAYOUT ─── */
-        .pn-main{max-width:1440px;margin:0 auto;padding:36px 40px}
-        .pn-footer{background:var(--card);border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-size:12.5px;color:var(--muted);margin-top:48px}
+        .pn-main{max-width:1440px;margin:0 auto;padding:36px 40px;width:100%;flex:1}
+        .pn-footer{background:var(--card);border-top:1px solid var(--border);padding:20px 24px;text-align:center;font-size:12.5px;color:var(--muted);margin-top:auto}
         .pn-footer a{color:var(--primary);text-decoration:none}
         .pn-footer a:hover{text-decoration:underline}
 
@@ -276,22 +279,22 @@
             --text:#e2e8f0; --muted:#94a3b8;
         }
         :root[data-theme="dark"] body { background:var(--bg) !important; color:var(--text) !important; }
-        :root[data-theme="dark"] .pn-navbar { background:#1e293b !important; border-color:var(--text) !important; }
-        :root[data-theme="dark"] .pn-card { background:#1e293b !important; border-color:var(--text) !important; }
+        :root[data-theme="dark"] .pn-navbar { background:#1e293b !important; border-color:var(--border) !important; }
+        :root[data-theme="dark"] .pn-card { background:#1e293b !important; border-color:var(--border) !important; }
         :root[data-theme="dark"] .pn-table th { background:#1e293b !important; }
-        :root[data-theme="dark"] .pn-table td { border-color:var(--text) !important; }
+        :root[data-theme="dark"] .pn-table td { border-color:var(--border) !important; }
         :root[data-theme="dark"] .pn-table tbody tr:hover td { background:#334155 !important; }
         :root[data-theme="dark"] .form-control { background:#1e293b !important; border-color:#475569 !important; color:#e2e8f0 !important; }
-        :root[data-theme="dark"] .pn-footer { background:#1e293b !important; border-color:var(--text) !important; color:var(--muted) !important; }
-        :root[data-theme="dark"] .pn-dropdown { background:#1e293b !important; border-color:var(--text) !important; }
+        :root[data-theme="dark"] .pn-footer { background:#1e293b !important; border-color:var(--border) !important; color:var(--muted) !important; }
+        :root[data-theme="dark"] .pn-dropdown { background:#1e293b !important; border-color:var(--border) !important; }
         :root[data-theme="dark"] .pn-dropdown a { color:#e2e8f0 !important; }
         :root[data-theme="dark"] .pn-dropdown a:hover { background:#334155 !important; }
         :root[data-theme="dark"] .pn-card-title { color:#e2e8f0 !important; }
         :root[data-theme="dark"] .pn-page-title { color:#e2e8f0 !important; }
         :root[data-theme="dark"] .pn-stat-val { color:#e2e8f0 !important; }
         :root[data-theme="dark"] .pn-detail-list .val { color:#e2e8f0 !important; }
-        :root[data-theme="dark"] .pn-detail-list li { border-color:var(--text) !important; }
-        :root[data-theme="dark"] .pn-msg { background:#1e293b !important; border-color:var(--text) !important; }
+        :root[data-theme="dark"] .pn-detail-list li { border-color:var(--border) !important; }
+        :root[data-theme="dark"] .pn-msg { background:#1e293b !important; border-color:var(--border) !important; }
         :root[data-theme="dark"] .pn-msg-head { background:#0f172a !important; }
         :root[data-theme="dark"] .pn-msg-body { color:#cbd5e1 !important; }
         :root[data-theme="dark"] .pn-alert-info { background:#1e3a5f !important; border-color:#2563eb !important; }

@@ -69,3 +69,24 @@ test('the server renders the theme the cookie asks for', function () {
     $response->assertOk();
     expect($response->getContent())->toContain('data-theme="dark"');
 });
+
+test('the footer is pinned to the bottom of short pages', function () {
+    $layout = (string) file_get_contents(resource_path('views/client/layouts/app.blade.php'));
+
+    // A short page - the transfer form, an empty list - left the footer
+    // floating mid-screen under the content. The body is a full-height column,
+    // the main area stretches, the footer takes the rest.
+    expect($layout)->toContain('min-height:100vh;display:flex;flex-direction:column')
+        ->and($layout)->toContain('width:100%;flex:1')
+        ->and($layout)->toContain('margin-top:auto');
+});
+
+test('the dark theme borders its panels with the border token, not the text one', function () {
+    $layout = (string) file_get_contents(resource_path('views/client/layouts/app.blade.php'));
+
+    // A colour sweep once turned border-color:#334155 into
+    // border-color:var(--text) - which in the dark is the light text colour,
+    // drawing bright lines around every card. The border token is the border.
+    expect($layout)->not->toContain('border-color:var(--text)')
+        ->and(substr_count($layout, 'border-color:var(--border) !important'))->toBeGreaterThanOrEqual(7);
+});
