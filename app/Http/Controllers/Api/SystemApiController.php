@@ -116,7 +116,11 @@ class SystemApiController extends BaseApiController
         return $this->success([
             'pnlcs' => [
                 'version' => '1.0.0',
-                'company_name' => Setting::get('CompanyName', 'PNLCS'),
+                // The same resolver the panel, the invoices and the emails
+                // use: white-label override first, then the general setting.
+                // Reading the raw key made the API report a different company
+                // name from every screen whenever the override was set.
+                'company_name' => company_name(),
             ],
         ]);
     }
