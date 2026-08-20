@@ -873,7 +873,7 @@ return [
         'title' => 'PNLCS kurulumunu tamamla',
         'progress' => ':total adımdan :done tamamlandı',
         'open_guide' => 'Kurulum kılavuzunu aç',
-        'step_company' => 'Şirket adı ve logonu ayarla',
+        'step_company' => 'Logonu yükle',
         'step_email' => 'E-posta gönderimini ayarla',
         'step_gateway' => 'Ödeme sağlayıcı ekle',
         'step_server' => 'Sunucu bağla',

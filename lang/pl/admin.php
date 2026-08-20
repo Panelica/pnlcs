@@ -878,7 +878,7 @@ return [
         'title' => 'Zakończ konfigurację PNLCS',
         'progress' => ':done z :total zrobione',
         'open_guide' => 'Otwórz przewodnik konfiguracji',
-        'step_company' => 'Ustaw nazwę firmy i logo',
+        'step_company' => 'Prześlij swoje logo',
         'step_email' => 'Skonfiguruj dostarczanie e-maili',
         'step_gateway' => 'Dodaj bramkę płatności',
         'step_server' => 'Podłącz serwer',

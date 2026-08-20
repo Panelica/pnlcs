@@ -873,7 +873,7 @@ return [
         'title' => '完成 PNLCS 设置',
         'progress' => '已完成 :done 项，共 :total 项',
         'open_guide' => '打开设置指南',
-        'step_company' => '设置公司名称和徽标',
+        'step_company' => '上传您的徽标',
         'step_email' => '配置邮件发送',
         'step_gateway' => '添加支付网关',
         'step_server' => '连接服务器',

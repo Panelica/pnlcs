@@ -32,28 +32,13 @@ class DashboardController extends Controller
     private function setupChecklist(): array
     {
         try {
-            // The panel already decides what it is called in one place:
-            // company_name() in support/formatting.php reads the white-label
-            // override first and falls back to the general CompanyName. The
-            // checklist looked only at the override, so an operator who filled
-            // the field on the general settings screen - the obvious place, and
-            // the one the rest of the product treats as the business identity -
-            // still saw nothing move. Both count, exactly as they do everywhere
-            // else. The config fallback is deliberately not consulted: it always
-            // has a value, and "PNLCS" is not an answer to what your company is
-            // called.
-            $companyName = trim((string) Setting::get('whitelabel_company_name', '')) !== ''
-                || trim((string) Setting::get('CompanyName', '')) !== '';
-            $companyLogo = trim((string) Setting::get('custom_logo_path', '')) !== '';
-            $companyDone = $companyName && $companyLogo;
-
-            $companyMissing = [];
-            if (! $companyName) {
-                $companyMissing[] = __('admin.settings.company_name');
-            }
-            if (! $companyLogo) {
-                $companyMissing[] = __('admin.settings.logo');
-            }
+            // The logo, and only the logo. This step used to demand the
+            // company name too, but the seeder gives every installation a
+            // CompanyName and the install wizard asks for the application name
+            // besides - so the name half was always already satisfied and only
+            // ever confused: what actually blocks a new installation from
+            // looking finished is the logo.
+            $companyDone = trim((string) Setting::get('custom_logo_path', '')) !== '';
             // "Not the log driver" was too generous: the array driver discards
             // mail just as completely, and an smtp mailer with no host set is a
             // transport in name only. MailConfigProvider has already applied
@@ -69,17 +54,7 @@ class DashboardController extends Controller
             $productDone  = Product::query()->exists();
 
             $items = [
-                // Straight at the field that is still missing, and the two
-                // halves live on different screens: the name belongs to the
-                // general settings, the logo to appearance. Sending the operator
-                // to one page for both is what made this step feel impossible.
-                [
-                    'key'      => 'company',
-                    'done'     => $companyDone,
-                    'route'    => $companyName ? 'admin.settings.appearance' : 'admin.settings.general',
-                    'missing'  => $companyMissing,
-                    'fragment' => '',
-                ],
+                ['key' => 'company',  'done' => $companyDone,  'route' => 'admin.settings.appearance'],
                 ['key' => 'email',    'done' => $emailDone,    'route' => 'admin.settings.general'],
                 ['key' => 'gateway',  'done' => $gatewayDone,  'route' => 'admin.config.gateways'],
                 ['key' => 'server',   'done' => $serverDone,   'route' => 'admin.config.servers'],

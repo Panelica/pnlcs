@@ -43,43 +43,30 @@ test('a fresh installation has nothing ticked', function () {
         ->and($setup['complete'])->toBeFalse();
 });
 
-test('a logo on its own does not finish the branding step', function () {
+test('a logo is all the branding step asks for', function () {
     Setting::set('whitelabel_company_name', '', 'whitelabel');
     Setting::set('CompanyName', '', 'general');
     Setting::set('custom_logo_path', '/branding/logo_123.png', 'appearance');
 
+    // This step once demanded the company name too, but the seeder gives every
+    // installation a CompanyName and the install wizard asks for a name
+    // besides - the name half was always satisfied, so it only ever confused.
     $setup = dashboardChecklist();
     $company = collect($setup['items'])->firstWhere('key', 'company');
 
-    // This is the case that was reported. The step stays open, and it says the
-    // name is what is missing rather than leaving the operator to guess.
-    expect($company['done'])->toBeFalse()
-        ->and($company['missing'])->toBe([__('admin.settings.company_name')])
-        ->and($setup['done'])->toBe(0);
+    expect($company['done'])->toBeTrue()
+        ->and($setup['done'])->toBe(1);
 });
 
-test('a name on its own does not finish it either, and says so', function () {
+test('no logo means the step stays open, whatever the name says', function () {
     Setting::set('whitelabel_company_name', 'MyHosting', 'whitelabel');
-    Setting::set('CompanyName', '', 'general');
+    Setting::set('CompanyName', 'MyHosting Ltd', 'general');
     Setting::set('custom_logo_path', '', 'appearance');
 
     $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
 
     expect($company['done'])->toBeFalse()
-        ->and($company['missing'])->toBe([__('admin.settings.logo')]);
-});
-
-test('both together finish the branding step', function () {
-    Setting::set('whitelabel_company_name', 'MyHosting', 'whitelabel');
-    Setting::set('CompanyName', '', 'general');
-    Setting::set('custom_logo_path', '/branding/logo_123.png', 'appearance');
-
-    $setup = dashboardChecklist();
-    $company = collect($setup['items'])->firstWhere('key', 'company');
-
-    expect($company['done'])->toBeTrue()
-        ->and($company['missing'])->toBe([])
-        ->and($setup['done'])->toBe(1);
+        ->and($company['route'])->toBe('admin.settings.appearance');
 });
 
 test('an unfinished step carries no tick in the markup', function () {
@@ -105,35 +92,7 @@ test('every step points at a page that exists', function () {
     }
 });
 
-test('the name on the general settings screen counts too', function () {
-    // company_name() reads the white-label override first and falls back to the
-    // general CompanyName, so both are the company's name as far as the rest of
-    // the product is concerned. The checklist used to accept only the override,
-    // which meant filling in the obvious field changed nothing on the dashboard.
-    Setting::set('whitelabel_company_name', '', 'whitelabel');
-    Setting::set('CompanyName', 'MyHosting', 'general');
-    Setting::set('custom_logo_path', '/branding/logo_123.png', 'appearance');
 
-    $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
-
-    expect($company['done'])->toBeTrue()
-        ->and($company['missing'])->toBe([]);
-});
-
-test('the step links at the screen that owns the missing half', function () {
-    Setting::set('whitelabel_company_name', '', 'whitelabel');
-    Setting::set('CompanyName', '', 'general');
-    Setting::set('custom_logo_path', '', 'appearance');
-
-    // No name yet: the name lives in the general settings.
-    $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
-    expect($company['route'])->toBe('admin.settings.general');
-
-    // Name set, logo missing: the logo lives in appearance.
-    Setting::set('CompanyName', 'MyHosting', 'general');
-    $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
-    expect($company['route'])->toBe('admin.settings.appearance');
-});
 
 test('the company name is not duplicated onto a third screen', function () {
     // There are two settings and one resolver already. Adding another field

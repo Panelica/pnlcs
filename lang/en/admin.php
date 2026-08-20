@@ -873,7 +873,7 @@ return [
         'title' => 'Finish setting up PNLCS',
         'progress' => ':done of :total done',
         'open_guide' => 'Open the setup guide',
-        'step_company' => 'Set your company name & logo',
+        'step_company' => 'Upload your logo',
         'step_email' => 'Configure email delivery',
         'step_gateway' => 'Add a payment gateway',
         'step_server' => 'Connect a server',
