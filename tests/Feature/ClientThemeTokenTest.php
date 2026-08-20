@@ -57,3 +57,15 @@ test('dark mode restates the badges', function () {
         ->and($layout)->toContain('[data-theme="dark"] .badge-pending')
         ->and($layout)->toContain('[data-theme="dark"] .badge-overdue');
 });
+
+test('the server renders the theme the cookie asks for', function () {
+    // The toggle writes a raw JavaScript cookie. With cookie encryption on,
+    // the server could never read it: every page was born light and flashed
+    // dark after a script ran. The cookie is excepted from encryption, so the
+    // page arrives dark.
+    $response = $this->withUnencryptedCookie('pnlcs_theme', 'dark')
+        ->get(route('client.login'));
+
+    $response->assertOk();
+    expect($response->getContent())->toContain('data-theme="dark"');
+});

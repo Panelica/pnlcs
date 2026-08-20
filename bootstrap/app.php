@@ -30,6 +30,13 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The dark-mode toggle writes this cookie from JavaScript, raw. Cookie
+        // encryption made the server unable to read it, so every page was born
+        // light and flashed dark after a script ran - and the theme attribute
+        // the server renders was a lie. Unencrypted: it holds "dark" or
+        // "light", nothing worth protecting.
+        $middleware->encryptCookies(except: ['pnlcs_theme']);
+
         // Behind Panelica reverse proxy (Docker): trust the forwarded scheme
         // and host so asset()/route()/Vite URLs match the domain the request
         // actually arrived on, whatever it is. Without this a page served over
