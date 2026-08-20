@@ -63,11 +63,12 @@ test('the invoice reads only keys an operator can actually set', function () {
     preg_match_all("/Setting::get\('([A-Za-z_0-9]+)'/", $source, $found);
 
     // GENERAL_KEYS via the settings screen, the appearance uploads, and the
-    // one deliberate exception: 'Logo', honoured for anyone who set it by
-    // hand before the appearance upload reached the PDF.
+    // hand-set legacy names the invoice deliberately honours - a tested
+    // decision (CompanyDetailsTest), the same stance the logo takes.
     $writable = [
         'Address', 'CompanyCity', 'Country', 'PhoneNumber', 'Email', 'TaxID', 'Domain',
         'custom_logo_path', 'Logo',
+        'CompanyAddress', 'City', 'CompanyCountry', 'CompanyPhone', 'CompanyEmail',
     ];
 
     expect(array_values(array_diff($found[1], $writable)))->toBe([]);
