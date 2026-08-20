@@ -40,6 +40,11 @@
 <div class="container">
     <div class="header">
         <div class="header-left">
+            @if(!empty($company['logo']))
+                {{-- A filesystem path, resolved and checked by the service: the
+                     PDF renderer does not fetch URLs. --}}
+                <img src="{{ $company['logo'] }}" style="max-height:50px; max-width:200px; margin-bottom:8px;" alt="">
+            @endif
             <div class="company-name">{{ $company['name'] }}</div>
             @if($company['address'])<div>{{ $company['address'] }}</div>@endif
             @if($company['city'])<div>{{ $company['city'] }} {{ $company['country'] }}</div>@endif

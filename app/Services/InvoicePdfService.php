@@ -30,8 +30,35 @@ class InvoicePdfService
             'phone' => $this->firstFilled(['PhoneNumber', 'CompanyPhone']),
             'email' => $this->firstFilled(['Email', 'CompanyEmail']),
             'tax_id' => $this->firstFilled(['TaxID']),
-            'logo' => Setting::get('Logo', ''),
+            'logo' => $this->logoFile(),
         ];
+    }
+
+    /**
+     * The logo as a file on disk, or nothing.
+     *
+     * The 'Logo' key was read here for as long as this service existed, and no
+     * screen has ever written it - the appearance screen writes
+     * custom_logo_path - so no invoice ever carried a logo. Both are honoured
+     * now, and the answer is a filesystem path because the PDF renderer does
+     * not fetch URLs: a web path that looks right would render a broken image.
+     * A recorded logo whose file has since gone renders as no logo, not as a
+     * broken invoice.
+     */
+    private function logoFile(): string
+    {
+        foreach (['Logo', 'custom_logo_path'] as $key) {
+            $web = trim((string) Setting::get($key, ''));
+            if ($web === '' || str_contains($web, '..')) {
+                continue;
+            }
+            $file = public_path(ltrim($web, '/'));
+            if (is_file($file)) {
+                return $file;
+            }
+        }
+
+        return '';
     }
 
     /** @param array<int, string> $keys */
