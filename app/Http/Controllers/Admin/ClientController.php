@@ -71,7 +71,7 @@ class ClientController extends Controller
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
-            'default_payment_method' => 'required|string|max:50',
+            'default_payment_method' => 'nullable|string|max:50',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
         $client = Client::create($validated);
@@ -220,7 +220,7 @@ class ClientController extends Controller
             'status' => 'required|in:active,inactive,closed',
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
-            'default_payment_method' => 'required|string|max:50',
+            'default_payment_method' => 'nullable|string|max:50',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 

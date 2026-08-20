@@ -65,7 +65,7 @@ test('the EPP code comes from the registrar, not from a hash of the domain name'
     Http::fake(['*' => Http::response('<?xml version="1.0"?><ApiResponse Status="OK"></ApiResponse>', 200)]);
     $fx = customerDomain();
 
-    $response = $this->actingAs($fx['user'])->get(route('client.domains.epp', $fx['domain']));
+    $response = $this->actingAs($fx['user'])->getJson(route('client.domains.epp', $fx['domain']));
 
     $response->assertOk();
 
@@ -77,7 +77,7 @@ test('the EPP code comes from the registrar, not from a hash of the domain name'
 test('a domain with no registrar module says so instead of inventing a code', function () {
     $fx = customerDomain('Manual');
 
-    $response = $this->actingAs($fx['user'])->get(route('client.domains.epp', $fx['domain']));
+    $response = $this->actingAs($fx['user'])->getJson(route('client.domains.epp', $fx['domain']));
 
     $response->assertOk();
 

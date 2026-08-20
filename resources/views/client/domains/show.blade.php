@@ -48,7 +48,7 @@
             @php $ns = json_decode($domain->nameservers ?? '[]', true) ?: []; @endphp
             @if(count($ns) > 0)
             <dl>
-                @foreach($ns as $i => $nameserver)
+                @foreach(array_values($ns) as $i => $nameserver)
                 <div class="detail-row"><dt>NS{{ $i+1 }}</dt><dd style="font-family:monospace; font-size:12px;">{{ $nameserver }}</dd></div>
                 @endforeach
             </dl>

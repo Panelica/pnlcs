@@ -118,7 +118,7 @@ test('user can toggle auto-renew', function () {
 test('epp code endpoint returns json for own domain', function () {
     [$user, $client, $domain] = makeDomainClient();
 
-    $response = $this->actingAs($user)->get(route('client.domains.epp', $domain));
+    $response = $this->actingAs($user)->getJson(route('client.domains.epp', $domain));
     $response->assertStatus(200);
     $response->assertJsonStructure(['epp_code']);
 });
@@ -129,7 +129,7 @@ test('epp code endpoint is forbidden for other clients domain', function () {
     $otherClient = Client::factory()->create();
     $otherDomain = Domain::factory()->create(['client_id' => $otherClient->id]);
 
-    $response = $this->actingAs($user)->get(route('client.domains.epp', $otherDomain));
+    $response = $this->actingAs($user)->getJson(route('client.domains.epp', $otherDomain));
     $response->assertStatus(403);
 });
 
@@ -143,4 +143,14 @@ test('domains list only shows client owned domains', function () {
     $response->assertStatus(200);
     $response->assertSee($domain->domain);
     $response->assertDontSee($otherDomain->domain);
+});
+
+test('the browser is sent back to the domain page instead of a bare json body', function () {
+    [$user, $client, $domain] = makeDomainClient();
+
+    // The endpoint serves two callers: the panel's fetch() wants JSON, a plain
+    // link click wants the page it came from. Both are load-bearing.
+    $this->actingAs($user)
+        ->get(route('client.domains.epp', $domain))
+        ->assertRedirect();
 });

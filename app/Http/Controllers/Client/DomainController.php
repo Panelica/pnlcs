@@ -128,7 +128,7 @@ class DomainController extends Controller
             ->with('success', __('messages.success.auto_renew_toggled', ['state' => $state]));
     }
 
-    public function getEppCode(Domain $domain)
+    public function getEppCode(Request $request, Domain $domain)
     {
         $this->authorizeClientDomain($domain);
 
@@ -143,6 +143,15 @@ class DomainController extends Controller
             } catch (\Throwable $e) {
                 Log::error("EPP code lookup failed for {$domain->domain}: {$e->getMessage()}");
             }
+        }
+
+        // The page uses a plain link, so a browser gets the code back on the
+        // domain page. A caller that asks for JSON still gets JSON: the endpoint
+        // answered that way before and there is no reason to take it away.
+        if ($request->wantsJson()) {
+            return response()->json([
+                'epp_code' => $eppCode ?? __('messages.info.contact_support_for_epp'),
+            ]);
         }
 
         if (! $eppCode) {

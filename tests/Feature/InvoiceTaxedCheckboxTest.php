@@ -64,7 +64,8 @@ test('a line the admin did tick is taxed', function () {
             'date' => now()->toDateString(),
             'due_date' => now()->addDays(14)->toDateString(),
             'items' => [
-                ['description' => 'Hosting', 'amount' => 100, 'taxed' => '1'],
+                // The checkbox became a per-line rate; the guarantee is the same.
+                ['description' => 'Hosting', 'amount' => 100, 'tax_rate' => 20],
             ],
         ])->assertRedirect();
 
@@ -75,9 +76,12 @@ test('a line the admin did tick is taxed', function () {
         ->and((float) $invoice->total)->toBe(120.0);
 });
 
-test('the form always says which way the box was left', function () {
+test('every line carries its own rate field, so the server is never left guessing', function () {
     $markup = file_get_contents(resource_path('views/admin/invoices/create.blade.php'));
 
-    // A checkbox alone tells the server nothing when it is unticked.
-    expect($markup)->toContain('<input type="hidden" :name="`items[${index}][taxed]`" value="0">');
+    // The taxed checkbox was replaced by a per-line rate. A checkbox alone told
+    // the server nothing when it was unticked, which is the bug this file was
+    // written for; a rate field always posts a value, so the same guarantee
+    // holds by construction.
+    expect($markup)->toContain('items[${index}][tax_rate]');
 });
