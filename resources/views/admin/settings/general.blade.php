@@ -178,7 +178,10 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ __('admin.settings.email_from_name') }}</label>
-                    <input type="text" name="EmailFromName" value="{{ $settings['EmailFromName'] ?? '' }}" class="form-control" placeholder="Your Company Name">
+                    {{-- Not "Your Company Name": that placeholder made this look like a
+                         fourth place to type the company name. It is the sender line
+                         on outgoing mail, nothing more. --}}
+                    <input type="text" name="EmailFromName" value="{{ $settings['EmailFromName'] ?? '' }}" class="form-control" placeholder="e.g. MyHosting Billing">
                 </div>
             </div>
 
