@@ -7,11 +7,13 @@ use App\Models\Setting;
 /*
  * Where the company name is, and what happens when it is saved.
  *
- * Reported 2026-08-20: "I uploaded the logo, where is the company name?" It was
- * on the same screen but behind the White-label tab, which is not where anyone
- * looks for what their company is called - the appearance screen opens on
- * Themes, and that is where the logo upload is. The name now sits next to the
- * logo, and the tab is addressable so a link can point straight at it.
+ * Reported 2026-08-20: "I uploaded the logo, where is the company name?" The
+ * answer turned out to be two answers - there is a CompanyName on the general
+ * settings screen and a white-label override here - and company_name() already
+ * decides between them. So nothing new was added: the checklist was taught the
+ * same precedence and now links at whichever screen owns the missing half. What
+ * this screen needed was the tab being addressable, and saving returning to the
+ * tab the form was on.
  */
 
 function appearanceAdmin(): Admin
@@ -21,16 +23,17 @@ function appearanceAdmin(): Admin
     ]);
 }
 
-test('the company name can be set from the same place as the logo', function () {
+test('the white-label tab holds the override, and nothing else duplicates it', function () {
     $html = $this->actingAs(appearanceAdmin(), 'admin')
         ->get(route('admin.settings.appearance'))
         ->assertOk()
         ->getContent();
 
-    // The first tab is the one that opens; the field has to be reachable there.
-    $firstTab = substr($html, 0, (int) strpos($html, 'id="tab-colors"') ?: strlen($html));
-
-    expect($firstTab)->toContain('name="company_name"');
+    // One field on this screen: the white-label override. The company's name
+    // itself belongs to the general settings, and company_name() already reads
+    // the override first and falls back to it. A second field here would be a
+    // third value for one idea.
+    expect(substr_count($html, 'name="company_name"'))->toBe(1);
 });
 
 test('saving just the name leaves the rest of the white-label settings alone', function () {

@@ -32,13 +32,20 @@ class DashboardController extends Controller
     private function setupChecklist(): array
     {
         try {
-            // Two settings behind one line. An operator who uploads a logo and
-            // watches the counter stay at zero has no way of knowing the name
-            // is the half that is missing - it is saved by a different form on
-            // the same screen - so the item reports what is still outstanding.
-            $companyName  = trim((string) Setting::get('whitelabel_company_name', '')) !== '';
-            $companyLogo  = trim((string) Setting::get('custom_logo_path', '')) !== '';
-            $companyDone  = $companyName && $companyLogo;
+            // The panel already decides what it is called in one place:
+            // company_name() in support/formatting.php reads the white-label
+            // override first and falls back to the general CompanyName. The
+            // checklist looked only at the override, so an operator who filled
+            // the field on the general settings screen - the obvious place, and
+            // the one the rest of the product treats as the business identity -
+            // still saw nothing move. Both count, exactly as they do everywhere
+            // else. The config fallback is deliberately not consulted: it always
+            // has a value, and "PNLCS" is not an answer to what your company is
+            // called.
+            $companyName = trim((string) Setting::get('whitelabel_company_name', '')) !== ''
+                || trim((string) Setting::get('CompanyName', '')) !== '';
+            $companyLogo = trim((string) Setting::get('custom_logo_path', '')) !== '';
+            $companyDone = $companyName && $companyLogo;
 
             $companyMissing = [];
             if (! $companyName) {
@@ -62,11 +69,17 @@ class DashboardController extends Controller
             $productDone  = Product::query()->exists();
 
             $items = [
-                // Straight at the field that is still missing. The appearance
-                // screen opens on its first tab, and the company name lives on
-                // another one, so a bare link lands the operator somewhere the
-                // step cannot be finished.
-                ['key' => 'company',  'done' => $companyDone,  'route' => 'admin.settings.appearance', 'missing' => $companyMissing, 'fragment' => $companyName ? '' : 'themes'],
+                // Straight at the field that is still missing, and the two
+                // halves live on different screens: the name belongs to the
+                // general settings, the logo to appearance. Sending the operator
+                // to one page for both is what made this step feel impossible.
+                [
+                    'key'      => 'company',
+                    'done'     => $companyDone,
+                    'route'    => $companyName ? 'admin.settings.appearance' : 'admin.settings.general',
+                    'missing'  => $companyMissing,
+                    'fragment' => '',
+                ],
                 ['key' => 'email',    'done' => $emailDone,    'route' => 'admin.settings.general'],
                 ['key' => 'gateway',  'done' => $gatewayDone,  'route' => 'admin.config.gateways'],
                 ['key' => 'server',   'done' => $serverDone,   'route' => 'admin.config.servers'],

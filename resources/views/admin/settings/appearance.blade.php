@@ -55,27 +55,6 @@
     {{-- LOGO & FAVICON --}}
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
         <div class="card">
-            <div class="card-header">{{ __('common.form.company_name') }}</div>
-            <div class="card-body">
-                {{-- The name used to live only under the White-label tab, which
-                     nobody opens looking for "what is my company called". People
-                     upload a logo here, so the name belongs here too. It posts to
-                     the same place; the handler now writes only what it is sent. --}}
-                <form action="{{ route('admin.settings.appearance.whitelabel') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="return_tab" value="themes">
-                    <div style="display:flex; gap:8px; align-items:flex-start;">
-                        <div style="flex:1;">
-                            <input type="text" name="company_name" value="{{ $whitelabel['company_name'] }}" class="form-control" placeholder="e.g. MyHosting">
-                            <span style="font-size:11px; color:#999;">{{ __('admin.appearance.replaces_hint') }}</span>
-                        </div>
-                        <button type="submit" class="btn btn-sm btn-primary">{{ __('admin.save') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
             <div class="card-header">{{ __('admin.appearance.logo') }}</div>
             <div class="card-body">
                 @if($logoPath)

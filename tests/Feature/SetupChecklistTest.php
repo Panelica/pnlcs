@@ -33,6 +33,7 @@ function dashboardChecklist(): array
 
 test('a fresh installation has nothing ticked', function () {
     Setting::set('whitelabel_company_name', '', 'whitelabel');
+    Setting::set('CompanyName', '', 'general');
     Setting::set('custom_logo_path', '', 'appearance');
 
     $setup = dashboardChecklist();
@@ -44,6 +45,7 @@ test('a fresh installation has nothing ticked', function () {
 
 test('a logo on its own does not finish the branding step', function () {
     Setting::set('whitelabel_company_name', '', 'whitelabel');
+    Setting::set('CompanyName', '', 'general');
     Setting::set('custom_logo_path', '/branding/logo_123.png', 'appearance');
 
     $setup = dashboardChecklist();
@@ -58,6 +60,7 @@ test('a logo on its own does not finish the branding step', function () {
 
 test('a name on its own does not finish it either, and says so', function () {
     Setting::set('whitelabel_company_name', 'MyHosting', 'whitelabel');
+    Setting::set('CompanyName', '', 'general');
     Setting::set('custom_logo_path', '', 'appearance');
 
     $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
@@ -68,6 +71,7 @@ test('a name on its own does not finish it either, and says so', function () {
 
 test('both together finish the branding step', function () {
     Setting::set('whitelabel_company_name', 'MyHosting', 'whitelabel');
+    Setting::set('CompanyName', '', 'general');
     Setting::set('custom_logo_path', '/branding/logo_123.png', 'appearance');
 
     $setup = dashboardChecklist();
@@ -80,6 +84,7 @@ test('both together finish the branding step', function () {
 
 test('an unfinished step carries no tick in the markup', function () {
     Setting::set('whitelabel_company_name', '', 'whitelabel');
+    Setting::set('CompanyName', '', 'general');
     Setting::set('custom_logo_path', '', 'appearance');
 
     $html = $this->actingAs(checklistAdmin(), 'admin')
@@ -98,4 +103,42 @@ test('every step points at a page that exists', function () {
         // A checklist that links nowhere is worse than no checklist.
         expect(fn () => route($item['route']))->not->toThrow(Exception::class);
     }
+});
+
+test('the name on the general settings screen counts too', function () {
+    // company_name() reads the white-label override first and falls back to the
+    // general CompanyName, so both are the company's name as far as the rest of
+    // the product is concerned. The checklist used to accept only the override,
+    // which meant filling in the obvious field changed nothing on the dashboard.
+    Setting::set('whitelabel_company_name', '', 'whitelabel');
+    Setting::set('CompanyName', 'MyHosting', 'general');
+    Setting::set('custom_logo_path', '/branding/logo_123.png', 'appearance');
+
+    $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
+
+    expect($company['done'])->toBeTrue()
+        ->and($company['missing'])->toBe([]);
+});
+
+test('the step links at the screen that owns the missing half', function () {
+    Setting::set('whitelabel_company_name', '', 'whitelabel');
+    Setting::set('CompanyName', '', 'general');
+    Setting::set('custom_logo_path', '', 'appearance');
+
+    // No name yet: the name lives in the general settings.
+    $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
+    expect($company['route'])->toBe('admin.settings.general');
+
+    // Name set, logo missing: the logo lives in appearance.
+    Setting::set('CompanyName', 'MyHosting', 'general');
+    $company = collect(dashboardChecklist()['items'])->firstWhere('key', 'company');
+    expect($company['route'])->toBe('admin.settings.appearance');
+});
+
+test('the company name is not duplicated onto a third screen', function () {
+    // There are two settings and one resolver already. Adding another field
+    // that writes a third value would be one more place for them to disagree.
+    $appearance = file_get_contents(resource_path('views/admin/settings/appearance.blade.php'));
+
+    expect(substr_count($appearance, 'name="company_name"'))->toBe(1);
 });
