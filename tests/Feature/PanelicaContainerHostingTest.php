@@ -704,3 +704,107 @@ it('offers a shell even for an app with no credentials to show', function () use
     $this->actingAs($owner)->get(route('client.services.containers', $s))
         ->assertOk()->assertSee('to=terminal', false);
 });
+
+/*
+ * What the apps page does when the panel is only half there.
+ *
+ * These are the quiet paths: a cap that stops asking after twelve apps, a
+ * container the panel cannot answer for, and a volume that is not a folder the
+ * customer can open. None of them announce themselves, which is exactly why
+ * they are worth pinning - the failure mode is a page that looks fine and is
+ * missing something.
+ */
+
+function ctContainer(string $id, array $overrides = []): array
+{
+    return array_merge([
+        'id' => $id,
+        'name' => '/acct1-'.$id,
+        'image' => 'wordpress',
+        'state' => 'running',
+        'labels' => ['panelica.user_id' => 'acct-1', 'panelica.template' => 'wordpress'],
+        'ports' => [['host_port' => '8092', 'container_port' => '80', 'protocol' => 'tcp']],
+    ], $overrides);
+}
+
+it('stops asking the panel for details after twelve apps', function () {
+    $listed = [];
+    $inspect = [];
+    for ($i = 1; $i <= 15; $i++) {
+        $id = 'c-'.$i;
+        $listed[] = ctContainer($id);
+        $inspect[$id] = [
+            'ports' => [['host_port' => (string) (9000 + $i), 'container_port' => '80', 'protocol' => 'tcp']],
+            'env' => [], 'mounts' => [],
+        ];
+    }
+    fakeInspectApi($listed, $inspect);
+    [$owner, $s] = ctService(ctServer());
+    $rows = (new PanelicaModule)->containers($s);
+
+    $live = (new PanelicaModule)->liveContainerAccess($s, $rows);
+
+    // Fifteen apps, twelve answers: the page does not make fifteen round trips
+    // to the panel to draw one screen, and the twelve it does ask about are the
+    // first twelve it lists - not an arbitrary dozen.
+    $firstTwelve = array_column(array_slice($rows, 0, 12), 'id');
+
+    expect($live)->toHaveCount(12)
+        ->and(array_keys($live))->toBe($firstTwelve);
+});
+
+it('draws the rest of the page when one container cannot be reached', function () {
+    $listed = [ctContainer('c-ok'), ctContainer('c-broken')];
+    Http::fake(function ($request) use ($listed) {
+        $path = parse_url($request->url(), PHP_URL_PATH) ?? '';
+        if (preg_match('#/v1/accounts/[^/?]+$#', $path) && $request->method() === 'GET') {
+            return Http::response(['data' => ['id' => 'acct-1', 'plan_id' => 'plan-1']], 200);
+        }
+        if (str_contains($request->url(), '/v1/plans')) {
+            return Http::response(['data' => [['id' => 'plan-1', 'max_containers' => 5]]], 200);
+        }
+        if (str_contains($path, '/v1/docker/containers/c-broken')) {
+            return Http::response(['message' => 'container is gone'], 500);
+        }
+        if (str_contains($path, '/v1/docker/containers/c-ok')) {
+            return Http::response(['data' => [
+                'ports' => [['host_port' => '8092', 'container_port' => '80', 'protocol' => 'tcp']],
+                'env' => [], 'mounts' => [],
+            ]], 200);
+        }
+        if (str_contains($request->url(), '/docker/containers')) {
+            return Http::response(['data' => ['containers' => $listed]], 200);
+        }
+
+        return Http::response(['data' => []], 200);
+    });
+    [$owner, $s] = ctService(ctServer());
+    $rows = (new PanelicaModule)->containers($s);
+
+    $live = (new PanelicaModule)->liveContainerAccess($s, $rows);
+
+    // The healthy app keeps its address; the broken one is simply absent rather
+    // than taking the whole page down with it.
+    expect($live)->toHaveKey('c-ok')
+        ->and($live['c-ok']['access_url'])->toBe('http://panel.test:8092')
+        ->and($live)->not->toHaveKey('c-broken');
+});
+
+it('offers a data folder only when there is one the customer can open', function () {
+    $listed = [ctContainer('c-vol')];
+    fakeInspectApi($listed, ['c-vol' => [
+        'ports' => [], 'env' => [],
+        'mounts' => [
+            // A docker-managed volume is real storage, but it is not a path in
+            // the customer's account, so pointing them at it would be a lie.
+            ['type' => 'volume', 'source' => 'wp_data'],
+            ['type' => 'bind', 'source' => '/var/run/docker.sock'],
+        ],
+    ]]);
+    [$owner, $s] = ctService(ctServer());
+    $rows = (new PanelicaModule)->containers($s);
+
+    $live = (new PanelicaModule)->liveContainerAccess($s, $rows);
+
+    expect($live['c-vol']['data_path'])->toBeNull();
+});
