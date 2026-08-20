@@ -486,13 +486,18 @@ test('panelica module returns correct name', function () {
     expect($module->getModuleName())->toBe('panelica');
 });
 
-test('panelica module has config fields', function () {
+test('panelica module asks for no extra config fields', function () {
     if (!class_exists(\Modules\Servers\Panelica\PanelicaModule::class)) {
         $this->markTestSkipped('PanelicaModule not yet available.');
     }
     $module = new \Modules\Servers\Panelica\PanelicaModule();
-    $fields = $module->getConfigFields();
-    expect($fields)->toBeArray()->not->toBeEmpty();
+
+    // Unlike cPanel or Plesk, this module carries its credentials in the
+    // standard server fields - port 8443, the API key in Password and the API
+    // secret in Access Hash - so it deliberately declares none of its own.
+    // Adding one here without adding it to the server form would show the
+    // operator a field that is never saved.
+    expect($module->getConfigFields())->toBeArray()->toBeEmpty();
 });
 
 test('panelica test connection with mocked API', function () {

@@ -3,7 +3,8 @@
 return [
     'accepted' => '必须接受 :attribute。',
     'active_url' => ':attribute 不是有效的网址。',
-    'attributes' => [],
+    'attributes' => [
+    ],
     'confirmed' => '两次输入的 :attribute 不一致。',
     'email' => '请输入有效的电子邮箱地址。',
     'max' => [

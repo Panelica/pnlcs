@@ -122,7 +122,12 @@ class DomainController extends Controller
         $payment = $domain->payment_method === 'none' ? 'banktransfer' : 'none';
         $domain->update(['payment_method' => $payment]);
 
-        $state = $payment !== 'none' ? 'enabled' : 'disabled';
+        // A translated word, not the raw English one: this sentence is shown to
+        // the customer in their own language, and ':state' was being filled with
+        // "enabled" regardless of locale.
+        $state = $payment !== 'none'
+            ? __('client.status.enabled')
+            : __('client.status.disabled');
 
         return redirect()->route('client.domains.show', $domain)
             ->with('success', __('messages.success.auto_renew_toggled', ['state' => $state]));

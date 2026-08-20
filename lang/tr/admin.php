@@ -1116,7 +1116,7 @@ return [
         'addon_created' => 'Urun addon olusturuldu.',
         'addon_deleted' => 'Urun addon silindi.',
         'addon_updated' => 'Urun addon guncellendi.',
-        'ai_translated' => 'AI translated :translated keys. Basarisiz: :basarisiz oldu.',
+        'ai_translated' => 'AI translated :translated keys. Başarısız: :failed.',
         'all_keys_translated' => 'Tumu keys already translated!',
         'bundle_created' => 'Urun bundle olusturuldu.',
         'bundle_deleted' => 'Urun bundle silindi.',

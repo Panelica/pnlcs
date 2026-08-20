@@ -23,6 +23,13 @@ function alpineAdmin(): Admin
 }
 
 test('the javascript bundle actually carries alpine', function () {
+    // A checkout without built assets is not a broken product. Fail here only
+    // where the assets exist - a deployment, or CI after npm run build - so the
+    // guard keeps meaning instead of being red on every fresh clone.
+    if (! file_exists(public_path('build/manifest.json'))) {
+        $this->markTestSkipped('Front-end assets are not built here: run npm ci && npm run build.');
+    }
+
     $manifest = json_decode(file_get_contents(public_path('build/manifest.json')), true);
     $entry = $manifest['resources/js/app.js']['file'] ?? null;
 

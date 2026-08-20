@@ -77,18 +77,18 @@ test('official files provide the translation-management baseline', function () {
 });
 
 test('export preserves existing database translations as overrides and additional keys', function () {
-    DynamicTranslation::create([
-        'language' => 'zh',
-        'group' => 'auth',
-        'key' => 'login.title',
-        'value' => '现有登录翻译',
-    ]);
-    DynamicTranslation::create([
-        'language' => 'zh',
-        'group' => 'custom',
-        'key' => 'database_only',
-        'value' => '现有自定义翻译',
-    ]);
+    // updateOrCreate, not create: a migration copies every shipped zh string
+    // into this table, so on a migrated database the row already exists. What
+    // is being tested is that a database value wins over the official file -
+    // not whether the row happened to be there first.
+    DynamicTranslation::updateOrCreate(
+        ['language' => 'zh', 'group' => 'auth', 'key' => 'login.title'],
+        ['value' => '现有登录翻译'],
+    );
+    DynamicTranslation::updateOrCreate(
+        ['language' => 'zh', 'group' => 'custom', 'key' => 'database_only'],
+        ['value' => '现有自定义翻译'],
+    );
 
     $response = app(TranslationController::class)->export(
         'zh',

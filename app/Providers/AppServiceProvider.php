@@ -149,8 +149,11 @@ class AppServiceProvider extends ServiceProvider
         }
 
         URL::forceRootUrl(rtrim($domain, '/'));
-        if (str_starts_with($domain, 'https://')) {
-            URL::forceScheme('https');
-        }
+
+        // The scheme has to be forced too, not just the root. Laravel takes the
+        // scheme from the request, and the console request is built from APP_URL,
+        // so an operator who configures http:// still had https:// links written
+        // into customer mail.
+        URL::forceScheme(str_starts_with(strtolower($domain), 'https://') ? 'https' : 'http');
     }
 }
