@@ -24,7 +24,7 @@
     .sv-status .d{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.3)}
     .sv-hact{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
     .sv-b{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:11px;font-size:13.5px;font-weight:700;cursor:pointer;transition:all .15s;border:1px solid transparent}
-    .sv-b-solid{background:#fff;color:var(--primary)}
+    .sv-b-solid{background:var(--card);color:var(--primary)}
     .sv-b-solid:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.2)}
     .sv-b-glass{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.25)}
     .sv-b-glass:hover{background:rgba(255,255,255,.24)}
@@ -131,7 +131,7 @@
         <div class="sv-mbar" style="visibility:hidden"><div class="sv-mfill"></div></div>
     </div>
     <div class="sv-metric" id="m-sites">
-        <div class="sv-mtop"><span class="sv-mic" style="background:rgba(100,116,139,.14);color:#64748b"><i class="ri-global-line"></i></span><span class="sv-mlabel">{{ __('client.hosting.dashboard.domains') }}</span></div>
+        <div class="sv-mtop"><span class="sv-mic" style="background:rgba(100,116,139,.14);color:var(--muted)"><i class="ri-global-line"></i></span><span class="sv-mlabel">{{ __('client.hosting.dashboard.domains') }}</span></div>
         <div class="sv-mval"><span data-v>&hellip;</span></div>
         <div class="sv-mbar" style="visibility:hidden"><div class="sv-mfill"></div></div>
     </div>

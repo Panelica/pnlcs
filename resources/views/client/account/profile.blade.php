@@ -56,13 +56,13 @@
                 <div class="form-group">
                     <label class="form-label" for="current_password">{{ __('client.account.current_password') }}</label>
                     <input type="password" id="current_password" name="current_password" autocomplete="current-password" class="form-control">
-                    <div style="color:#777;font-size:12px;margin-top:4px;">{{ __('client.account.email_change_needs_password') }}</div>
+                    <div style="color:var(--muted);font-size:12px;margin-top:4px;">{{ __('client.account.email_change_needs_password') }}</div>
                     @error('current_password')<div style="color:#c00;font-size:12px;margin-top:4px;">{{ $message }}</div>@enderror
                 </div>
             </div>
             <div style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border,#e5e5e5);">
                 <div style="font-size:13px;font-weight:600;margin-bottom:2px;">{{ __('client.password.update_password') }}</div>
-                <div style="color:#777;font-size:12px;margin-bottom:12px;">{{ __('client.password.page_subtitle') }}</div>
+                <div style="color:var(--muted);font-size:12px;margin-bottom:12px;">{{ __('client.password.page_subtitle') }}</div>
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label class="form-label" for="new_password">{{ __('common.form.new_password') }}</label>
@@ -73,7 +73,7 @@
                         <input type="password" id="new_password_confirmation" name="new_password_confirmation" autocomplete="new-password" class="form-control">
                     </div>
                 </div>
-                <div style="color:#777;font-size:12px;">{{ __('client.password.min_chars') }}</div>
+                <div style="color:var(--muted);font-size:12px;">{{ __('client.password.min_chars') }}</div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>

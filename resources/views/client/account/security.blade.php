@@ -22,8 +22,8 @@
             </form>
         </div>
         @else
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; margin-bottom:14px;">
-            <span style="font-size:13px; color:#777;">{{ __('client.security.2fa_not_enabled') }}</span>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--bg); border:1px solid #e0e0e0; border-radius:4px; margin-bottom:14px;">
+            <span style="font-size:13px; color:var(--muted);">{{ __('client.security.2fa_not_enabled') }}</span>
             <a href="{{ route('client.2fa.enable') }}" class="btn btn-success btn-sm">{{ __('client.auth.enable_2fa_btn') }}</a>
         </div>
         @endif
@@ -47,9 +47,9 @@
                 <tr>
                     <td>
                         <div style="font-weight:500; font-size:13px;">{{ $session->ip_address }}</div>
-                        <div style="font-size:12px; color:#777;">{{ $session->user_agent ? Str::limit($session->user_agent, 60) : '-' }}</div>
+                        <div style="font-size:12px; color:var(--muted);">{{ $session->user_agent ? Str::limit($session->user_agent, 60) : '-' }}</div>
                     </td>
-                    <td style="color:#777; font-size:12px;">{{ $session->last_activity ? \Carbon\Carbon::createFromTimestamp($session->last_activity)->diffForHumans() : '-' }}</td>
+                    <td style="color:var(--muted); font-size:12px;">{{ $session->last_activity ? \Carbon\Carbon::createFromTimestamp($session->last_activity)->diffForHumans() : '-' }}</td>
                     <td>
                         @if($session->id !== session()->getId())
                         <form method="POST" action="{{ route('client.account.security.logout_session', $session->id) }}" style="margin:0;">
@@ -63,7 +63,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="3" style="text-align:center; padding:24px; color:#999;">{{ __('client.security.no_sessions') }}</td>
+                    <td colspan="3" style="text-align:center; padding:24px; color:var(--muted);">{{ __('client.security.no_sessions') }}</td>
                 </tr>
                 @endforelse
             </tbody>

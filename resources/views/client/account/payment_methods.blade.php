@@ -5,15 +5,15 @@
     <h2 style='margin-bottom:24px'>{{ __('client.payment_methods.title') }}</h2>
     @if(isset($paymentMethods) && count($paymentMethods) > 0)
         @foreach($paymentMethods as $pm)
-        <div style='border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center'>
+        <div style='border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center'>
             <div>
                 <strong>{{ $pm->type ?? 'Card' }}</strong>
-                <span style='color:#64748b;margin-left:8px'>ending {{ $pm->last_four ?? '****' }}</span>
+                <span style='color:var(--muted);margin-left:8px'>ending {{ $pm->last_four ?? '****' }}</span>
             </div>
         </div>
         @endforeach
     @else
-        <div style='text-align:center;padding:60px 20px;color:#94a3b8'>
+        <div style='text-align:center;padding:60px 20px;color:var(--muted)'>
             <p style='font-size:48px;margin-bottom:16px'>💳</p>
             <h3>{{ __('client.payment_methods.no_methods') }}</h3>
             <p>{{ __('client.payment_methods.will_appear') }}</p>

@@ -34,7 +34,7 @@
     <div class="pn-card-body">
         <p class="text-muted text-sm mb-16">{{ __('client.affiliates.referral_share_desc') }}</p>
         <div style="display:flex;gap:8px;max-width:520px">
-            <input type="text" id="refLink" class="form-control" value="{{ $referralLink }}" readonly style="background:#f8fafc;font-size:13px">
+            <input type="text" id="refLink" class="form-control" value="{{ $referralLink }}" readonly style="background:var(--bg);font-size:13px">
             <button type="button" class="btn btn-primary" id="copyBtn" onclick="copyLink()" style="flex-shrink:0">{{ __('client.affiliates.copy_link') }}</button>
         </div>
     </div>

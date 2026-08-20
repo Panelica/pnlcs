@@ -47,13 +47,13 @@
     <div class="pn-card-body" style="border-top:1px solid var(--border)">
         <div style="max-width:280px;margin-left:auto">
             @if((float) $quote->subtotal !== (float) $quote->total)
-            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border)">
                 <span class="text-muted">{{ __('client.cart.subtotal') }}</span>
                 <span>{{ money_fmt((float) $quote->subtotal) }}</span>
             </div>
             @endif
             @if((float) $quote->tax > 0)
-            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border)">
                 <span class="text-muted">{{ __('client.cart.tax') }}</span>
                 <span>{{ money_fmt((float) $quote->tax) }}</span>
             </div>

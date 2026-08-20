@@ -54,7 +54,7 @@
                 </div>
             </div>
 
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px;background:#f8fafc;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm)">
                 <input type="checkbox" name="terms" id="terms" value="1" required style="margin-top:2px;flex-shrink:0;accent-color:var(--primary)">
                 <span style="font-size:13px;color:var(--muted)">
                     {{ __('client.auth.i_agree_to') }} <a href="#" class="link">{{ __('client.auth.terms_of_service') }}</a> {{ __('client.auth.and') }} <a href="#" class="link">{{ __('client.auth.privacy_policy') }}</a>.

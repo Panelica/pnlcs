@@ -19,7 +19,7 @@
 
 <div class="pn-card">
     <div class="pn-card-body">
-        <iframe sandbox="" srcdoc="{{ $email->message }}" style="width:100%;min-height:560px;border:0;background:#fff;border-radius:8px"></iframe>
+        <iframe sandbox="" srcdoc="{{ $email->message }}" style="width:100%;min-height:560px;border:0;background:var(--card);border-radius:8px"></iframe>
     </div>
 </div>
 

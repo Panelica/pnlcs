@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="pn-card-body">
-        <div style="font-size:14px;line-height:1.85;color:#334155">
+        <div style="font-size:14px;line-height:1.85;color:var(--text)">
             {!! nl2br(e($announcement->announcement)) !!}
         </div>
     </div>

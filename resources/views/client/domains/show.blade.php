@@ -53,7 +53,7 @@
                 @endforeach
             </dl>
             @else
-            <p style="font-size:13px; color:#999; margin:0;">{{ __('client.domains.ns_not_available') }}</p>
+            <p style="font-size:13px; color:var(--muted); margin:0;">{{ __('client.domains.ns_not_available') }}</p>
             @endif
         </div>
     </div>
@@ -76,7 +76,7 @@
         <p style="font-size:13px; color:#555; margin-bottom:12px;">{{ __('client.domains.epp_desc') }}</p>
         <a href="{{ route('client.domains.epp', $domain) }}" class="btn btn-outline btn-sm">{{ __('client.domains.get_epp_code') }}</a>
         @if(session('epp_code'))
-        <div style="margin-top:12px; padding:10px 14px; background:#f5f5f5; border:1px solid #e0e0e0; border-radius:4px; font-size:13px; font-family:monospace;">
+        <div style="margin-top:12px; padding:10px 14px; background:var(--bg); border:1px solid #e0e0e0; border-radius:4px; font-size:13px; font-family:monospace;">
             {{ session('epp_code') }}
         </div>
         @endif

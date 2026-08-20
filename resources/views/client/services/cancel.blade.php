@@ -28,18 +28,18 @@
             <div class="form-group">
                 <label class="form-label">{{ __('client.services.cancellation_type') }} <span style="color:#c43c35;">*</span></label>
                 <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
-                    <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
+                    <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--border); border-radius:4px; cursor:pointer;">
                         <input type="radio" name="type" value="Immediate" {{ old('type') === 'Immediate' ? 'checked' : '' }} required style="margin-top:2px;">
                         <div>
                             <div style="font-weight:500; font-size:13px;">{{ __('client.services.immediate') }}</div>
-                            <div style="font-size:12px; color:#777; margin-top:2px;">{{ __('client.services.immediate_desc') }}</div>
+                            <div style="font-size:12px; color:var(--muted); margin-top:2px;">{{ __('client.services.immediate_desc') }}</div>
                         </div>
                     </label>
-                    <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid #ddd; border-radius:4px; cursor:pointer;">
+                    <label style="display:flex; align-items:flex-start; gap:10px; padding:12px; border:1px solid var(--border); border-radius:4px; cursor:pointer;">
                         <input type="radio" name="type" value="End of Billing Period" {{ old('type') === 'End of Billing Period' ? 'checked' : '' }} style="margin-top:2px;">
                         <div>
                             <div style="font-weight:500; font-size:13px;">{{ __('client.services.end_of_period') }}</div>
-                            <div style="font-size:12px; color:#777; margin-top:2px;">{{ __('client.services.end_of_period_desc') }} {{ $service->next_due_date?->format(date_fmt()) ?? __('client.services.end_of_period_fallback') }}.</div>
+                            <div style="font-size:12px; color:var(--muted); margin-top:2px;">{{ __('client.services.end_of_period_desc') }} {{ $service->next_due_date?->format(date_fmt()) ?? __('client.services.end_of_period_fallback') }}.</div>
                         </div>
                     </label>
                 </div>

@@ -55,8 +55,8 @@
                 <tr>
                     <td style="font-weight:500;">{{ $contact->first_name }} {{ $contact->last_name }}</td>
                     <td style="color:#555;">{{ $contact->email }}</td>
-                    <td style="color:#777;">{{ $contact->phone_number ?: '-' }}</td>
-                    <td style="font-size:12px; color:#777;">
+                    <td style="color:var(--muted);">{{ $contact->phone_number ?: '-' }}</td>
+                    <td style="font-size:12px; color:var(--muted);">
                         @php
                             $kinds = collect([
                                 'general_emails' => __('client.contacts.kind_general'),
@@ -79,7 +79,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" style="text-align:center; padding:32px; color:#999;">{{ __('client.contacts.no_contacts') }}</td>
+                    <td colspan="5" style="text-align:center; padding:32px; color:var(--muted);">{{ __('client.contacts.no_contacts') }}</td>
                 </tr>
                 @endforelse
             </tbody>

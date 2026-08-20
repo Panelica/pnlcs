@@ -74,11 +74,11 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="phone_number">{{ __('client.form.phone') }} <span style="color:#999; font-weight:400;">({{ __('client.form.optional') }})</span></label>
+                        <label class="form-label" for="phone_number">{{ __('client.form.phone') }} <span style="color:var(--muted); font-weight:400;">({{ __('client.form.optional') }})</span></label>
                         <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" class="form-control">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="company_name">{{ __('client.form.company') }} <span style="color:#999; font-weight:400;">({{ __('client.form.optional') }})</span></label>
+                        <label class="form-label" for="company_name">{{ __('client.form.company') }} <span style="color:var(--muted); font-weight:400;">({{ __('client.form.optional') }})</span></label>
                         <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" class="form-control">
                     </div>
                 </div>

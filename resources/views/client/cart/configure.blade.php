@@ -116,7 +116,7 @@
                                 </label>
                             @endforeach
                         @else
-                            <div style="color:#999; font-size:13px; grid-column:1/-1;">{{ __('client.cart.no_pricing') }}</div>
+                            <div style="color:var(--muted); font-size:13px; grid-column:1/-1;">{{ __('client.cart.no_pricing') }}</div>
                         @endif
                     </div>
                 </div>
@@ -146,7 +146,7 @@
                                            value="{{ $previous ?? $option->qty_minimum ?? 0 }}"
                                            min="{{ $option->qty_minimum ?? 0 }}"
                                            @if($option->qty_maximum) max="{{ $option->qty_maximum }}" @endif>
-                                    <small style="color:#777;">
+                                    <small style="color:var(--muted);">
                                         {{ $currency?->prefix }}{{ number_format($unit?->priceFor($selectedCycle) ?? 0, 2) }}
                                         {{ __('client.cart.per_unit') }}
                                     </small>
@@ -208,10 +208,10 @@
                             <span>
                                 <strong>{{ $addon->name }}</strong>
                                 @if($addonPrice > 0)
-                                    <span style="color:#777;">(+{{ $currency?->prefix }}{{ number_format($addonPrice, 2) }})</span>
+                                    <span style="color:var(--muted);">(+{{ $currency?->prefix }}{{ number_format($addonPrice, 2) }})</span>
                                 @endif
                                 @if($addon->description)
-                                    <br><small style="color:#777;">{{ $addon->description }}</small>
+                                    <br><small style="color:var(--muted);">{{ $addon->description }}</small>
                                 @endif
                             </span>
                         </label>
@@ -244,7 +244,7 @@
 
             {{-- Additional Notes --}}
             <div class="pn-card">
-                <div class="pn-card-header">{{ __('client.cart.additional_notes') }} <span style="font-weight:400; color:#999;">({{ __('client.form.optional') }})</span></div>
+                <div class="pn-card-header">{{ __('client.cart.additional_notes') }} <span style="font-weight:400; color:var(--muted);">({{ __('client.form.optional') }})</span></div>
                 <div class="pn-card-body">
                     <textarea name="notes" rows="3" class="form-control" placeholder="{{ __('client.cart.special_requirements') }}">{{ old('notes') }}</textarea>
                 </div>
@@ -257,11 +257,11 @@
                 <div class="pn-card-header">{{ __('client.cart.order_summary') }}</div>
                 <div class="pn-card-body">
                     <div class="summary-row">
-                        <span style="color:#777;">{{ __('client.cart.product') }}</span>
+                        <span style="color:var(--muted);">{{ __('client.cart.product') }}</span>
                         <span style="font-weight:500;">{{ $product->name }}</span>
                     </div>
                     <div class="summary-row">
-                        <span style="color:#777;">{{ __('client.cart.billing_cycle') }}</span>
+                        <span style="color:var(--muted);">{{ __('client.cart.billing_cycle') }}</span>
                         <span id="summaryBilling">&mdash;</span>
                     </div>
                     <div class="summary-row">
