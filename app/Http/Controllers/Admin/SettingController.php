@@ -68,6 +68,10 @@ class SettingController extends Controller
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
         'PrivacyUrl', 'SystemEmailAddress', 'TaxID', 'Timezone', 'TOSUrl',
+        // Saved from the languages screen, which posts to this same endpoint.
+        // Its form used to name these settings[OpenAIApiKey] - a shape this
+        // handler never reads - so pressing save wrote nothing and said nothing.
+        'OpenAIApiKey', 'OpenAIModel',
     ];
 
     public function updateGeneral(Request $request)
@@ -87,6 +91,12 @@ class SettingController extends Controller
         // mail account to stop working.
         if (trim((string) ($data['SMTPPassword'] ?? '')) === '') {
             unset($data['SMTPPassword']);
+        }
+
+        // Same contract as the mail password: a secret field left blank means
+        // "keep what I have", not "delete my key".
+        if (trim((string) ($data['OpenAIApiKey'] ?? '')) === '') {
+            unset($data['OpenAIApiKey']);
         }
 
         foreach ($data as $key => $value) {

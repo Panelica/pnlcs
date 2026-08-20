@@ -114,12 +114,16 @@
             @csrf
             <div class="form-group">
                 <label class="form-label">{{ __('admin.config.languages.openai_api_key') }}</label>
-                <input type="password" name="settings[OpenAIApiKey]" class="form-control" style="max-width:400px;"
-                    value="{{ \App\Models\Setting::get('OpenAIApiKey', '') }}" placeholder="sk-...">
+                {{-- Flat field names: the general-settings handler reads only
+                     top-level keys, so the old settings[...] shape was dropped
+                     without a word. The stored key is not echoed back either -
+                     blank means keep, exactly like the SMTP password. --}}
+                <input type="password" name="OpenAIApiKey" autocomplete="new-password" class="form-control" style="max-width:400px;"
+                    placeholder="{{ \App\Models\Setting::get('OpenAIApiKey', '') !== '' ? __('admin.settings.smtp_password_keep') : 'sk-...' }}">
             </div>
             <div class="form-group">
                 <label class="form-label">{{ __('admin.config.languages.openai_model') }}</label>
-                <select name="settings[OpenAIModel]" class="form-control" style="max-width:300px;">
+                <select name="OpenAIModel" class="form-control" style="max-width:300px;">
                     @php $currentModel = \App\Models\Setting::get('OpenAIModel', 'gpt-4o-mini'); @endphp
                     <option value="gpt-4o-mini" {{ $currentModel === 'gpt-4o-mini' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt4o_mini') }}</option>
                     <option value="gpt-4o" {{ $currentModel === 'gpt-4o' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt4o') }}</option>
