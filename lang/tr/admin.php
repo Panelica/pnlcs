@@ -1846,6 +1846,7 @@ return [
         'title' => 'Ürüns / Hizmets',
         'type_reseller_label' => 'Tip bayii etiketi',
         'welcome_email' => 'Hos Geldiniz E-posta',
+        'container_plan_needs_containers' => 'Bu ürün konteyner uygulaması satıyor ama Max Containers 0 - her sipariş başarısız olup geri alınır. Max Containers\'ı en az 1 yapın ya da konteyner planı seçeneklerinin işaretini kaldırın.',
     ],
     'products.auto_setup' => 'Auto Ayarlaup',
     'products.create_first_group' => 'Oluştur İlk Grup',

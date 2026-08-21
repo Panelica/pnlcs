@@ -272,6 +272,20 @@ class ProductController extends Controller
             }
             $config['panelica_container_plan'] = $request->boolean('panelica_container_plan') ? 1 : 0;
             $config['panelica_app_choose'] = $request->boolean('panelica_app_choose') ? 1 : 0;
+
+            // A product that sells container apps while its plan forbids
+            // containers is not a configuration, it is a trap: the customer
+            // pays, the panel refuses the app, the account is rolled back, and
+            // the error surfaces as a cryptic log line three screens away.
+            // The form warns about this in grey text; a warning nobody has to
+            // read is not a gate. Saved with 0, exactly that happened live.
+            $sellsApps = $config['panelica_container_plan'] || $config['panelica_app_choose']
+                || ($config['panelica_app_template'] ?? '') !== '';
+            $maxContainers = (int) ($config['res_max_containers'] ?? 0);
+            if ($sellsApps && $maxContainers === 0) {
+                return back()->withInput()
+                    ->with('error', __('admin.products.container_plan_needs_containers'));
+            }
             $planId = trim((string) $request->input('panelica_plan_id', ''));
             if ($planId !== '') {
                 $config['panelica_plan_id'] = $planId;

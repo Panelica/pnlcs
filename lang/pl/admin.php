@@ -1857,6 +1857,7 @@ return [
         'title' => 'Produkty/Usługi',
         'type_reseller_label' => 'Etykieta typu reseller',
         'welcome_email' => 'E-mail powitalny',
+        'container_plan_needs_containers' => 'Ten produkt sprzedaje aplikacje kontenerowe, ale Max Containers wynosi 0 - każde zamówienie zakończy się błędem i zostanie wycofane. Ustaw Max Containers na co najmniej 1 albo odznacz opcje planu kontenerowego.',
     ],
     'products.auto_setup' => 'Automatyczna konfiguracja',
     'products.create_first_group' => 'Utwórz pierwszą grupę',

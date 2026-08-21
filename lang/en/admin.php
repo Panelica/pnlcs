@@ -1853,6 +1853,7 @@ return [
         'title' => 'Products/Services',
         'type_reseller_label' => 'Type reseller label',
         'welcome_email' => 'Welcome Email',
+        'container_plan_needs_containers' => 'This product sells container apps, but Max Containers is 0 - every order would fail and be rolled back. Set Max Containers to at least 1, or untick the container plan options.',
     ],
     'products.auto_setup' => 'Auto Setup',
     'products.create_first_group' => 'Create First Group',

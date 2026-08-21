@@ -1846,6 +1846,7 @@ return [
         'title' => '产品与服务',
         'type_reseller_label' => '代理商主机',
         'welcome_email' => '欢迎邮件',
+        'container_plan_needs_containers' => '该产品销售容器应用，但 Max Containers 为 0——每个订单都会失败并被回滚。请将 Max Containers 至少设为 1，或取消勾选容器套餐选项。',
     ],
     'products.auto_setup' => '自动开通',
     'products.create_first_group' => '创建第一个产品组',

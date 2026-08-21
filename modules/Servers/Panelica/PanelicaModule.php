@@ -324,6 +324,20 @@ class PanelicaModule extends AbstractServerModule
             return $this->buildResult(false, 'Service is missing client or domain.');
         }
 
+        // Pre-flight: a product that will install an app while its own plan
+        // grants zero containers cannot succeed - the panel refuses the app
+        // after the account exists, the account is rolled back, and the reason
+        // surfaces as a log line three screens away. Live, this ran three
+        // times and left orphaned home directories behind. Refuse here, in
+        // words the operator can act on, before anything is created.
+        $willInstallApp = ! empty($config['panelica_app_template'])
+            || trim((string) ($this->getModuleData($service)['panelica_app_template'] ?? '')) !== '';
+        if (($isContainerPlan || $willInstallApp)
+            && ! empty($config['res_managed'])
+            && (int) ($config['res_max_containers'] ?? 0) === 0) {
+            return $this->buildResult(false, __('admin.products.container_plan_needs_containers'));
+        }
+
         // Pre-flight: refuse before creating anything if the domain already
         // exists on the server. Otherwise the account gets created, the domain
         // POST fails, and the account is rolled back - the operator only learns
@@ -449,7 +463,13 @@ class PanelicaModule extends AbstractServerModule
                 $this->delete($server, "/v1/accounts/{$userId}");
                 Log::error('PanelicaModule::create app install failed (account rolled back)', ['user_id' => $userId, 'slug' => $appSlug, 'reason' => $app['message']]);
 
-                return $this->buildResult(false, "App installation failed (account rolled back): {$app['message']}");
+                // The panel's refusal code is for machines. When it says the
+                // plan forbids Docker, say what to change instead.
+                $reason = str_contains((string) $app['message'], 'disabledInPlan')
+                    ? __('admin.products.container_plan_needs_containers')
+                    : $app['message'];
+
+                return $this->buildResult(false, "App installation failed (account rolled back): {$reason}");
             }
             $moduleData['panelica_app_container_id'] = $app['container_id'];
             $moduleData['panelica_app_template'] = $appSlug;
