@@ -128,11 +128,15 @@
 
         /* ─── FORMS ─── */
         .form-group{margin-bottom:20px}
-        .form-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+        .form-label,.pn-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
         .form-label .req{color:var(--danger)}
-        .form-control{width:100%;padding:9px 13px;font-size:13.5px;color:var(--text);background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:border-color 0.15s,box-shadow 0.15s;outline:none;font-family:inherit}
-        .form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,77,128,0.1)}
-        textarea.form-control{resize:vertical;min-height:120px;line-height:1.6}
+        /* .pn-input and .pn-label ride the same definitions: four screens - the
+           bank-transfer notification, payment methods, two-factor setup, quotes -
+           used them while nothing defined them, so their inputs rendered with no
+           border and no background: invisible fields on a white card. */
+        .form-control,.pn-input{width:100%;padding:9px 13px;font-size:13.5px;color:var(--text);background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:border-color 0.15s,box-shadow 0.15s;outline:none;font-family:inherit}
+        .form-control:focus,.pn-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,77,128,0.1)}
+        textarea.form-control,textarea.pn-input{resize:vertical;min-height:120px;line-height:1.6}
         select.form-control{cursor:pointer}
         .form-hint{font-size:12px;color:var(--muted);margin-top:4px}
         .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -284,7 +288,7 @@
         :root[data-theme="dark"] .pn-table th { background:#1e293b !important; }
         :root[data-theme="dark"] .pn-table td { border-color:var(--border) !important; }
         :root[data-theme="dark"] .pn-table tbody tr:hover td { background:#334155 !important; }
-        :root[data-theme="dark"] .form-control { background:#1e293b !important; border-color:#475569 !important; color:#e2e8f0 !important; }
+        :root[data-theme="dark"] .form-control, :root[data-theme="dark"] .pn-input { background:#1e293b !important; border-color:#475569 !important; color:#e2e8f0 !important; }
         :root[data-theme="dark"] .pn-footer { background:#1e293b !important; border-color:var(--border) !important; color:var(--muted) !important; }
         :root[data-theme="dark"] .pn-dropdown { background:#1e293b !important; border-color:var(--border) !important; }
         :root[data-theme="dark"] .pn-dropdown a { color:#e2e8f0 !important; }

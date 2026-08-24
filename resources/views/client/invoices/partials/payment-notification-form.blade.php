@@ -1,6 +1,9 @@
-<div class="pn-card" style="margin-top:16px;border:1.5px solid var(--border);">
-    <div class="pn-card-header">
-        <span class="pn-card-title">{{ __('client.invoices.payment_notification_title') }}</span>
+{{-- The one card on this page that asks the customer to DO something,
+     so it does not dress like the read-only ones around it: the primary
+     colour takes the border and a tinted header. --}}
+<div class="pn-card" style="margin-top:16px;border:1.5px solid var(--primary);box-shadow:0 0 0 3px var(--primary-light);">
+    <div class="pn-card-header" style="background:var(--primary-light);border-bottom:1.5px solid var(--primary);">
+        <span class="pn-card-title" style="color:var(--primary);">{{ __('client.invoices.payment_notification_title') }}</span>
     </div>
     <div class="pn-card-body">
         <p class="text-muted text-sm mb-16">{{ __('client.invoices.payment_notification_intro') }}</p>

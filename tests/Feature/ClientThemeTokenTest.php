@@ -43,7 +43,7 @@ test('the classes the client pages lean on are actually defined', function () {
 
     // .btn-default was used by five pages and defined by none; the Cancel
     // button rendered as bare text. Same for .text-danger on error messages.
-    foreach (['.btn-default', '.text-danger', '.form-group', '.form-label', '.form-control'] as $class) {
+    foreach (['.btn-default', '.text-danger', '.form-group', '.form-label', '.form-control', '.pn-input', '.pn-label'] as $class) {
         expect($layout)->toContain($class);
     }
 });
