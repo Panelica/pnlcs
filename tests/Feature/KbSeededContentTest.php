@@ -14,12 +14,13 @@ use App\Models\KbCategory;
 
 test('every customer-facing area of the panel has a category with articles', function () {
     $expected = [
-        'Getting Started' => 3,
-        'Hosting & Websites' => 4,
-        'Apps & Docker' => 6,
-        'Domains' => 4,
-        'Billing' => 4,
-        'Support' => 2,
+        'Getting Started' => 5,
+        'Hosting & Websites' => 12,
+        'Apps & Docker' => 7,
+        'Domains' => 5,
+        'Billing' => 6,
+        'SSL Certificates' => 2,
+        'Support' => 3,
     ];
 
     foreach ($expected as $name => $minArticles) {
