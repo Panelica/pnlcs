@@ -64,6 +64,20 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
     Route::get('store', [CartController::class, 'store'])->name('store');
     Route::get('store/configure/{product:slug}', [CartController::class, 'configure'])->name('store.configure');
 
+    // Cart and checkout are open to visitors: the account is opened AT
+    // checkout, not before it. The old shape - configure a product, press
+    // "add to cart", hit a login wall, lose the configuration, start over -
+    // was the most expensive moment in the funnel to put a wall in. The
+    // checkout POST creates the account in-line for guests; CartService has
+    // always keyed guest carts by session, only the routes forbade them.
+    Route::get('cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('cart/add', [CartController::class, 'addToCart'])->name('cart.add');
+    Route::post('cart/add-domain', [CartController::class, 'addDomainToCart'])->name('cart.add-domain');
+    Route::delete('cart/remove/{index}', [CartController::class, 'removeItem'])->name('cart.remove');
+    Route::post('cart/promo', [CartController::class, 'applyPromo'])->name('cart.promo');
+    Route::get('cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+    Route::post('cart/checkout', [CartController::class, 'processCheckout'])->middleware('throttle:10,1')->name('cart.process');
+
     // 2FA verification (requires login but not 2FA yet)
     Route::middleware('auth')->withoutMiddleware([TwoFactorVerify::class])->group(function () {
         Route::get('2fa', [AuthController::class, 'show2faVerify'])->name('2fa.verify');
@@ -192,13 +206,6 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('affiliates/withdraw', [AffiliateController::class, 'withdraw'])->name('affiliates.withdraw');
 
         // Cart & Checkout
-        Route::get('cart', [CartController::class, 'index'])->name('cart.index');
-        Route::post('cart/add', [CartController::class, 'addToCart'])->name('cart.add');
-        Route::post('cart/add-domain', [CartController::class, 'addDomainToCart'])->name('cart.add-domain');
-        Route::delete('cart/remove/{index}', [CartController::class, 'removeItem'])->name('cart.remove');
-        Route::post('cart/promo', [CartController::class, 'applyPromo'])->name('cart.promo');
-        Route::get('cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-        Route::post('cart/checkout', [CartController::class, 'processCheckout'])->name('cart.process');
 
         // Account Management
         Route::get('account', [AccountController::class, 'profile'])->name('account.profile');

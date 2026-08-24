@@ -15,10 +15,16 @@ use Illuminate\Validation\ValidationException;
 
 class CartService
 {
+    /**
+     * The account's cart, or the visitor's.
+     *
+     * A guest cart is remembered IN the session data, not keyed by the session
+     * id: Laravel rotates the id on login and carries the data across, so a
+     * cart tied to the id evaporated at the exact moment its owner appeared.
+     * Tied to the data, it survives the rotation and simply changes hands.
+     */
     public function getOrCreateCart(?int $clientId = null): Cart
     {
-        $sessionId = session()->getId();
-
         if ($clientId) {
             $cart = Cart::where('user_id', $clientId)->first();
             if ($cart) {
@@ -26,20 +32,36 @@ class CartService
             }
         }
 
-        $cart = Cart::where('session_id', $sessionId)->first();
-        if ($cart) {
-            if ($clientId && ! $cart->user_id) {
-                $cart->update(['user_id' => $clientId]);
-            }
+        $guestCartId = session('guest_cart_id');
+        if ($guestCartId) {
+            // Only a cart that still belongs to nobody, or to this very
+            // account: a stale id pointing at someone else's cart - a shared
+            // machine, an old session - must not hand their basket over.
+            $cart = Cart::whereKey($guestCartId)
+                ->where(fn ($q) => $q->whereNull('user_id')->when($clientId, fn ($q2) => $q2->orWhere('user_id', $clientId)))
+                ->first();
+            if ($cart) {
+                if ($clientId && ! $cart->user_id) {
+                    $cart->update(['user_id' => $clientId]);
+                    session()->forget('guest_cart_id');
+                }
 
-            return $cart;
+                return $cart;
+            }
+            session()->forget('guest_cart_id');
         }
 
-        return Cart::create([
+        $cart = Cart::create([
             'user_id' => $clientId,
-            'session_id' => $sessionId,
+            'session_id' => session()->getId(),
             'data' => json_encode(['items' => [], 'promo_code' => null, 'currency_id' => null]),
         ]);
+
+        if (! $clientId) {
+            session(['guest_cart_id' => $cart->id]);
+        }
+
+        return $cart;
     }
 
     private function getData(Cart $cart): array

@@ -26,6 +26,20 @@ class CartController extends Controller
 
     public function __construct(private CartService $cartService) {}
 
+
+    /**
+     * The client when there is one, null for a visitor. The cart has always
+     * been able to belong to a bare session; these pages now let it.
+     */
+    private function optionalClientId(): ?int
+    {
+        if (! auth()->check()) {
+            return null;
+        }
+
+        return $this->getClientId() ?: null;
+    }
+
     public function store()
     {
         $groups = ProductGroup::where('hidden', false)
@@ -60,7 +74,7 @@ class CartController extends Controller
 
     public function index()
     {
-        $clientId = $this->getClientId();
+        $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
         $totals = $this->cartService->calculateTotal($cart);
         $currency = Currency::getDefault();
@@ -102,7 +116,7 @@ class CartController extends Controller
                 $appSlug = $chosen;
             }
         }
-        $clientId = $this->getClientId();
+        $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
 
         $this->cartService->addProduct(
@@ -139,7 +153,7 @@ class CartController extends Controller
         $type = $request->type;
         $years = (int) ($request->years ?? 1);
         $eppCode = $request->input('epp_code');
-        $clientId = $this->getClientId();
+        $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
 
         $updatedCart = $this->cartService->addDomain($cart, $domain, $type, $years, $eppCode);
@@ -154,7 +168,7 @@ class CartController extends Controller
 
     public function removeItem(Request $request, int $index)
     {
-        $clientId = $this->getClientId();
+        $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
         $this->cartService->removeItem($cart, $index);
 
@@ -166,7 +180,7 @@ class CartController extends Controller
     {
         $request->validate(['code' => 'required|string|max:50']);
 
-        $clientId = $this->getClientId();
+        $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
         $result = $this->cartService->applyPromoCode($cart, $request->code);
 
@@ -181,13 +195,21 @@ class CartController extends Controller
 
     public function checkout()
     {
-        $clientId = $this->getClientId();
+        $clientId = $this->optionalClientId();
         $client = $this->currentClient();
 
         // Closing or suspending an account should stop new business; the
-        // status was set on the admin screen and read by nothing.
-        if (! $client || $client->status !== ClientStatus::Active) {
+        // status was set on the admin screen and read by nothing. A visitor
+        // has no account yet - they open one on this very page.
+        if ($clientId && (! $client || $client->status !== ClientStatus::Active)) {
             return back()->withErrors(['payment_method' => __('client.cart.account_not_active')]);
+        }
+
+        if (! $clientId) {
+            // A guest who chooses "sign in" instead of the inline form should
+            // land back here, cart intact - not on the dashboard wondering
+            // where their order went.
+            redirect()->setIntendedUrl(route('client.cart.checkout'));
         }
 
         $cart = $this->cartService->getOrCreateCart($clientId);
@@ -214,14 +236,42 @@ class CartController extends Controller
             'terms' => 'accepted',
         ]);
 
-        $clientId = $this->getClientId();
+        $clientId = $this->optionalClientId();
 
         if (! $clientId) {
-            return redirect()->route('client.login')
-                ->with('error', __('messages.error.login_required'));
-        }
+            // The account is opened here, on the payment step - the one moment
+            // the visitor is committed. Same rules as the register page, same
+            // service creating the same records; the cart is remembered BEFORE
+            // login rotates the session id it is keyed by, or it would
+            // evaporate at the exact moment it was being paid for.
+            $account = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
 
-        $client = $this->currentClient();
+            if (\App\Models\BannedEmail::blocks($account['email'])) {
+                return back()->withErrors(['email' => __('auth.email_not_accepted')])->withInput();
+            }
+
+            $guestCart = $this->cartService->getOrCreateCart(null);
+
+            [$user, $newClient] = app(\App\Services\ClientRegistrationService::class)
+                ->register($account, $request);
+
+            $guestCart->update(['user_id' => $newClient->id]);
+
+            auth()->login($user);
+            $request->session()->regenerate();
+            session()->forget('guest_cart_id');
+            session(['active_client_id' => $newClient->id]);
+
+            $clientId = $newClient->id;
+            $client = $newClient;
+        } else {
+            $client = $this->currentClient();
+        }
 
         // Closing or suspending an account should stop new business; the
         // status was set on the admin screen and read by nothing.

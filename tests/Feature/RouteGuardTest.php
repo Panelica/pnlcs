@@ -54,6 +54,17 @@ const GUARD_PUBLIC_CLIENT = [
     'client.network-status',
     'client.domain.pricing', 'client.domain.search', 'client.domain.check',
     'client.store', 'client.store.configure',
+
+    // The cart and checkout are open on purpose: the account is opened AT the
+    // payment step (GuestCheckoutTest), because the login wall used to stand
+    // at the most expensive moment in the funnel and cost the configuration.
+    'client.cart.index',
+    'client.cart.add',
+    'client.cart.add-domain',
+    'client.cart.remove',
+    'client.cart.promo',
+    'client.cart.checkout',
+    'client.cart.process',
 ];
 
 /** @return array<int, array{name: string, middleware: string}> */

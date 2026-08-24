@@ -20,6 +20,7 @@
     @csrf
     <div class="pn-checkout-grid">
         <div>
+            @auth
             <div class="pn-card mb-16">
                 <div class="pn-card-header"><span class="pn-card-title">{{ __('client.checkout.contact_details') }}</span></div>
                 <div class="pn-card-body">
@@ -39,6 +40,50 @@
                     </div>
                 </div>
             </div>
+            @else
+            {{-- The visitor opens their account right here, mid-payment - not
+                 on a register page three screens back with the cart lost on
+                 the way. Same fields the register page asks for. --}}
+            <div class="pn-card mb-16">
+                <div class="pn-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span class="pn-card-title">{{ __('client.auth.create_your_account') }}</span>
+                    <span style="font-size:12.5px;color:var(--muted)">
+                        {{ __('client.auth.already_have_account') }}
+                        <a class="link" href="{{ route('client.login') }}">{{ __('client.auth.sign_in') }}</a>
+                    </span>
+                </div>
+                <div class="pn-card-body">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">{{ __('common.form.first_name') }}<span class="req">*</span></label>
+                            <input type="text" name="first_name" class="form-control" value="{{ old('first_name') }}" required>
+                            @error('first_name')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ __('common.form.last_name') }}<span class="req">*</span></label>
+                            <input type="text" name="last_name" class="form-control" value="{{ old('last_name') }}" required>
+                            @error('last_name')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{{ __('common.form.email_address') }}<span class="req">*</span></label>
+                        <input type="email" name="email" class="form-control" value="{{ old('email') }}" required autocomplete="email">
+                        @error('email')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">{{ __('common.form.password') }}<span class="req">*</span></label>
+                            <input type="password" name="password" class="form-control" required autocomplete="new-password">
+                            @error('password')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">{{ __('common.form.password_confirm') }}<span class="req">*</span></label>
+                            <input type="password" name="password_confirmation" class="form-control" required autocomplete="new-password">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endauth
 
             <div class="pn-card mb-16">
                 <div class="pn-card-header"><span class="pn-card-title">{{ __('client.checkout.payment_method') }}</span></div>
