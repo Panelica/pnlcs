@@ -389,3 +389,64 @@ select.form-control { height: 34px !important; }
 .sidebar select.form-control {
     height: auto !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPAT UTILITIES — classes the views already speak.
+   The SSL module screens (admin and client) were written in Bootstrap
+   vocabulary - d-flex, fw-bold, table-striped, form-select, btn-secondary,
+   card-footer - and no Bootstrap has ever been shipped: flex layouts
+   collapsed into stacked blocks, tables and selects rendered bare. The same
+   audit found the pn-btn family and a handful of one-offs (panel-primary,
+   card-body-flush, form-control-sm) used and defined nowhere. Defined once
+   here, in the house tokens, loaded by both layouts. Tailwind covers the
+   spacing names (mb-3, gap-2, w-100); these are the ones it never will.
+   ═══════════════════════════════════════════════════════════════ */
+.d-flex { display: flex; }
+.d-grid { display: grid; }
+.d-inline { display: inline; }
+.justify-content-between { justify-content: space-between; }
+.align-items-center { align-items: center; }
+.align-items-start { align-items: flex-start; }
+.h-100 { height: 100%; }
+.fw-bold { font-weight: 700; }
+.font-monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.list-unstyled { list-style: none; margin: 0; padding: 0; }
+.text-end { text-align: right; }
+.bg-transparent { background: transparent !important; }
+.g-3 { gap: 1rem; }
+.h3 { font-size: 20px; font-weight: 700; }
+
+.form-select { display: block; width: 100%; padding: 8px 12px; font-size: 13px; color: #333; background: #fff; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-family: inherit; }
+.form-input { display: block; width: 100%; padding: 8px 12px; font-size: 13px; color: #333; background: #fff; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+.form-control-sm { padding: 5px 9px; font-size: 12.5px; }
+.form-check { display: flex; align-items: center; gap: 8px; }
+.form-check-input { margin: 0; accent-color: var(--theme-primary, #1a4d80); }
+.form-check-label { font-size: 13px; cursor: pointer; }
+
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: 8px 10px; font-size: 12px; font-weight: 600; border-bottom: 2px solid #e5e7eb; background: #f9fafb; }
+.table td { padding: 8px 10px; font-size: 13px; border-bottom: 1px solid #ebebeb; }
+.table-striped tbody tr:nth-child(even) td { background: #f9f9f9; }
+.table-hover tbody tr:hover td { background: #eff2f9; }
+.table-responsive { overflow-x: auto; }
+
+.btn-secondary { background: #fff; color: #333; border: 1px solid #ccc; }
+.btn-secondary:hover { background: #f5f5f5; color: #333; }
+.btn-outline-primary { background: transparent; color: var(--theme-primary, #1a4d80); border: 1px solid var(--theme-primary, #1a4d80); }
+.btn-outline-primary:hover { background: var(--theme-primary, #1a4d80); color: #fff; }
+
+.card-title { font-weight: 700; font-size: 14px; }
+.card-footer { padding: 10px 15px; border-top: 1px solid #e5e7eb; background: #f9fafb; }
+.card-body-flush { padding: 0; }
+
+.panel-primary { border-color: var(--theme-primary, #1a4d80); }
+.panel-primary > .panel-heading { background: var(--theme-primary, #1a4d80); color: #fff; border-color: var(--theme-primary, #1a4d80); }
+
+/* The client 2FA and service screens button family. */
+.pn-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 18px; font-size: 13.5px; font-weight: 600; border-radius: 8px; border: 1.5px solid var(--border, #e2e8f0); background: var(--card, #fff); color: var(--text, #1e293b); cursor: pointer; text-decoration: none; line-height: 1.3; }
+.pn-btn:hover { border-color: var(--muted, #64748b); text-decoration: none; }
+.pn-btn-primary { background: var(--primary, #1a4d80); border-color: var(--primary, #1a4d80); color: #fff; }
+.pn-btn-primary:hover { background: var(--primary-dark, #143d66); color: #fff; }
+.pn-btn-danger { background: var(--danger, #ef4444); border-color: var(--danger, #ef4444); color: #fff; }
+.pn-btn-danger:hover { background: #dc2626; color: #fff; }
+.pn-btn-sm { padding: 6px 12px; font-size: 12.5px; }

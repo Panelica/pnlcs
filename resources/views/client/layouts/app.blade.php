@@ -146,6 +146,7 @@
         .pn-alert{padding:12px 16px;border-radius:var(--radius-sm);font-size:13.5px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;border:1px solid transparent}
         .pn-alert-success{background:#f0fdf4;border-color:#bbf7d0;color:#15803d}
         .pn-alert-error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+        .pn-alert-danger{background:#fef2f2;border-color:#fecaca;color:#b91c1c}
         .pn-alert-info{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
         .pn-alert-warning{background:#fffbeb;border-color:#fde68a;color:#92400e}
         .pn-alert ul{padding-left:16px;margin:4px 0 0}
@@ -304,7 +305,7 @@
         :root[data-theme="dark"] .pn-alert-info { background:#1e3a5f !important; border-color:#2563eb !important; }
         :root[data-theme="dark"] .pn-alert-success { background:#14532d !important; border-color:#16a34a !important; }
         :root[data-theme="dark"] .pn-alert-warning { background:#451a03 !important; border-color:#d97706 !important; }
-        :root[data-theme="dark"] .pn-alert-error { background:#450a0a !important; border-color:#dc2626 !important; }
+        :root[data-theme="dark"] .pn-alert-error, :root[data-theme="dark"] .pn-alert-danger { background:#450a0a !important; border-color:#dc2626 !important; }
         /* Badges carry fixed light pastels; in the dark they turned into pale
            chips with unreadable text. Deep tones, same meaning. */
         :root[data-theme="dark"] .badge-active, :root[data-theme="dark"] .badge-paid { background:#14532d !important; color:#86efac !important; }

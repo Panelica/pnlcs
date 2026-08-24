@@ -90,3 +90,27 @@ test('the dark theme borders its panels with the border token, not the text one'
     expect($layout)->not->toContain('border-color:var(--text)')
         ->and(substr_count($layout, 'border-color:var(--border) !important'))->toBeGreaterThanOrEqual(7);
 });
+
+test('the vocabulary the SSL screens speak is actually defined', function () {
+    // The SSL module was written in Bootstrap vocabulary and no Bootstrap has
+    // ever shipped: d-flex collapsed to stacked blocks, tables and selects
+    // rendered bare. The compat layer in app.css is what makes those words
+    // mean something; this holds it there.
+    $css = (string) file_get_contents(resource_path('css/app.css'));
+
+    foreach ([
+        '.d-flex', '.justify-content-between', '.align-items-center', '.fw-bold',
+        '.form-select', '.form-check', '.form-control-sm',
+        '.table-striped', '.table-hover', '.table-responsive',
+        '.btn-secondary', '.btn-outline-primary',
+        '.card-title', '.card-footer', '.card-body-flush',
+        '.panel-primary', '.pn-btn', '.pn-btn-primary', '.pn-btn-danger',
+    ] as $class) {
+        expect($css)->toContain($class.' ');
+    }
+
+    // And the client theme's alert family includes the danger spelling the
+    // two-factor screen uses.
+    $layout = (string) file_get_contents(resource_path('views/client/layouts/app.blade.php'));
+    expect($layout)->toContain('.pn-alert-danger{');
+});
