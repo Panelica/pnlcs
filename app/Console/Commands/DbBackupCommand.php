@@ -12,7 +12,8 @@ class DbBackupCommand extends Command
 {
     protected $signature = 'pnlcs:db-backup
         {--dir= : Target directory (default: storage/app/backups/db)}
-        {--retention= : Number of backups to keep (default: setting db_backup_retention or 7)}';
+        {--retention= : Number of backups to keep (default: setting db_backup_retention or 7)}
+        {--php : Dump over the PHP connection even when a dump binary exists}';
 
     protected $description = 'Dump the database to a gzip file with rotation';
 
@@ -35,10 +36,33 @@ class DbBackupCommand extends Command
         $cnf = $this->writeCredentialFile($db);
 
         try {
-            $dumpBin = $this->findMysqldump();
+            $dumpBin = $this->option('php') ? null : $this->findMysqldump();
             if (!$dumpBin) {
-                $this->error('mysqldump binary not found.');
-                return self::FAILURE;
+                // The billing container ships without a client toolset, so this
+                // command failed silently every night since the install - the
+                // knowledge base written by hand died with the database and
+                // there was not one backup to restore it from. No binary means
+                // PHP dumps the database itself over the connection it already
+                // has: slower, but a backup that exists.
+                $this->warn('mysqldump not found - falling back to a PHP dump over the DB connection.');
+
+                if (! $this->phpDump($file)) {
+                    Log::error('DB backup failed', ['error' => 'php fallback dump failed']);
+                    app(NotificationService::class)->dispatch('backup.failed', [
+                        'event_type' => 'backup.failed',
+                        'subject'    => 'Database backup FAILED',
+                        'message'    => 'Database backup failed: php fallback dump failed',
+                    ]);
+                    $this->error('Backup failed: php fallback dump failed.');
+                    return self::FAILURE;
+                }
+
+                $removed = $this->rotate($dir, (int) ($this->option('retention') ?: Setting::get('db_backup_retention', '7')));
+                run_hook('AfterDatabaseBackup', ['file' => $file, 'size' => filesize($file)]);
+                Log::info('DB backup completed', ['file' => $file, 'size' => filesize($file), 'rotated' => $removed, 'method' => 'php']);
+                $this->info(sprintf('Backup written (php dump): %s (%s KB)', $file, (int) (filesize($file) / 1024)));
+
+                return self::SUCCESS;
             }
 
             $cmd = sprintf(
@@ -81,6 +105,59 @@ class DbBackupCommand extends Command
         $this->info(sprintf('Backup written: %s (%s KB)%s', $file, (int) (filesize($file) / 1024), $removed ? ", rotated out {$removed} old file(s)" : ''));
 
         return self::SUCCESS;
+    }
+
+
+    /**
+     * A dump produced by PHP itself: schema and rows, INSERTs in batches,
+     * gzip-compressed - restorable by piping into the standard client. Used
+     * when no dump binary exists on this machine.
+     */
+    private function phpDump(string $file): bool
+    {
+        $gz = gzopen($file, 'wb6');
+        if ($gz === false) {
+            return false;
+        }
+
+        try {
+            $pdo = \Illuminate\Support\Facades\DB::connection()->getPdo();
+            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=0;\nSET NAMES utf8mb4;\n\n");
+
+            $tables = array_map('current', $pdo->query('SHOW TABLES')->fetchAll(\PDO::FETCH_NUM));
+            foreach ($tables as $table) {
+                $qt = '`'.str_replace('`', '``', $table).'`';
+                $create = $pdo->query("SHOW CREATE TABLE {$qt}")->fetch(\PDO::FETCH_NUM)[1];
+                gzwrite($gz, "DROP TABLE IF EXISTS {$qt};\n{$create};\n\n");
+
+                $stmt = $pdo->query("SELECT * FROM {$qt}");
+                $batch = [];
+                while ($row = $stmt->fetch(\PDO::FETCH_NUM)) {
+                    $vals = array_map(fn ($v) => $v === null ? 'NULL' : $pdo->quote((string) $v), $row);
+                    $batch[] = '('.implode(',', $vals).')';
+                    if (count($batch) >= 200) {
+                        gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
+                        $batch = [];
+                    }
+                }
+                if ($batch) {
+                    gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
+                }
+                gzwrite($gz, "\n");
+            }
+
+            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=1;\n");
+        } catch (\Throwable $e) {
+            gzclose($gz);
+            @unlink($file);
+            \Illuminate\Support\Facades\Log::error('PHP dump failed', ['error' => $e->getMessage()]);
+
+            return false;
+        }
+
+        gzclose($gz);
+
+        return is_file($file) && filesize($file) > 512;
     }
 
     private function findMysqldump(): ?string
