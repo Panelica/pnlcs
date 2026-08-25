@@ -51,6 +51,7 @@ class ModuleServiceProvider extends ServiceProvider
             $registry->registerRegistrar("namecheap", \Modules\Registrars\Namecheap\NamecheapRegistrar::class);
             // ResellerClub / LogicBoxes Registrar
             $registry->registerRegistrar("resellerclub", \Modules\Registrars\ResellerClub\ResellerClubRegistrar::class);
+            $registry->registerRegistrar("openprovider", \Modules\Registrars\OpenProvider\OpenProviderRegistrar::class);
             // eNom Registrar
             $registry->registerRegistrar("enom", \Modules\Registrars\Enom\EnomRegistrar::class);
             // Manual Registrar
