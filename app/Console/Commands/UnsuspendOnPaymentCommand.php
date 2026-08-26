@@ -63,7 +63,7 @@ class UnsuspendOnPaymentCommand extends Command
             // renewal had their hosting switched off at 07:00 and back on by
             // 07:30, day after day, with an email each way.
             if (Invoice::where('client_id', $service->client_id)
-                ->overduePastGrace(SuspensionCommand::GRACE_DAYS)
+                ->overduePastGrace(SuspensionCommand::graceDays())
                 ->exists()) {
                 $stillBehind++;
 

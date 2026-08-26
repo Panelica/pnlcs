@@ -11,6 +11,8 @@ Schedule::command('queue:work --stop-when-empty --max-time=55 --sleep=3 --tries=
 Schedule::command('pnlcs:generate-invoices')->daily()->at('06:00');
 Schedule::command('pnlcs:mark-overdue')->daily()->at('06:30');
 Schedule::command('pnlcs:auto-suspend')->daily()->at('07:00');
+// No-op until AutoTerminationEnabled is switched on in Settings -> Automation.
+Schedule::command('pnlcs:auto-terminate')->daily()->at('08:00');
 Schedule::command('pnlcs:domain-sync')->daily()->at('03:00');
 Schedule::command('pnlcs:payment-reminders')->daily()->at('08:00');
 Schedule::command('pnlcs:apply-late-fees')->daily()->at('07:30');

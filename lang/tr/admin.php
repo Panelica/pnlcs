@@ -2734,4 +2734,9 @@ return [
     'whois.whois_domain_lookup' => 'WHOIS Alan Adı Lookup',
     'orders.domain_updated' => 'Alan adı güncellendi.',
     'orders.domain_edit_locked' => 'Domain yalnızca sipariş beklemede iken ve sunucuda henüz sağlanmamışsa değiştirilebilir.',
+    'settings.automation' => 'Otomasyon',
+    'settings.auto_suspension_days' => 'Şu kadar gün gecikmede askıya al',
+    'settings.auto_termination_days' => 'Askıda şu kadar gün kalınca sonlandır',
+    'settings.auto_termination_label' => 'Ödenmeyen fatura nedeniyle askıda kalan hizmetleri otomatik sonlandır',
+    'settings.automation_hint' => 'Askıya alma, fatura belirtilen gün sayısı kadar geciktiğinde hizmeti duraklatır. Sonlandırma hesabı ve verilerini kalıcı olarak siler; varsayılan olarak kapalıdır ve yalnızca hâlâ ödenmemiş bir fatura yüzünden askıya alınmış hizmetlere dokunur. Listeyi önizlemek için: php artisan pnlcs:auto-terminate --dry-run',
 ];

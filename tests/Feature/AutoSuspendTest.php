@@ -238,3 +238,16 @@ test('a hold that ends today still holds', function () {
 
     expect($service->fresh()->status)->toBe('active');
 });
+
+test('the grace period comes from the AutoSuspensionDays setting', function () {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
+    // Invoice in overdueService() is 10 days overdue; a 15-day grace must
+    // protect it where the default 3 would not.
+    \App\Models\Setting::set('AutoSuspensionDays', '15');
+    $service = overdueService();
+
+    $this->artisan('pnlcs:auto-suspend')->assertSuccessful();
+
+    expect($service->fresh()->status)->toBe('active');
+    Http::assertNothingSent();
+});

@@ -66,6 +66,31 @@
         </div>
     </div>
 
+    {{-- Automation. Suspension used to run on a grace period hard-coded at 3
+         days; termination did not exist at all. Termination deletes data, so
+         it ships OFF and only ever touches services suspended over an unpaid
+         invoice (see TerminationCommand for the exact rules). --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.automation') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.auto_suspension_days') }}</label>
+                    <input type="number" min="0" name="AutoSuspensionDays" value="{{ $settings['AutoSuspensionDays'] ?? '3' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.auto_termination_days') }}</label>
+                    <input type="number" min="1" name="AutoTerminationDays" value="{{ $settings['AutoTerminationDays'] ?? '30' }}" class="form-control">
+                </div>
+            </div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:5px;">
+                <input type="checkbox" name="AutoTerminationEnabled" value="1" {{ !empty($settings['AutoTerminationEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.auto_termination_label') }}
+            </label>
+            <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.automation_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Late fees. The command that charges them has always read these three
          settings; there was nowhere to enter them, so it read "none" every
          morning and stopped. --}}

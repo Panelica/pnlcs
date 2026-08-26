@@ -64,6 +64,7 @@ class SettingController extends Controller
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays',
+        'AutoSuspensionDays', 'AutoTerminationDays', 'AutoTerminationEnabled',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
@@ -84,6 +85,9 @@ class SettingController extends Controller
         }
         if (! isset($data['InvoiceNumberYearlyReset'])) {
             $data['InvoiceNumberYearlyReset'] = '0';
+        }
+        if (! isset($data['AutoTerminationEnabled'])) {
+            $data['AutoTerminationEnabled'] = '0';
         }
 
         // The form never carries the stored mail password back, so an empty

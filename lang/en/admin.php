@@ -2741,4 +2741,9 @@ return [
     'whois.whois_domain_lookup' => 'WHOIS Domain Lookup',
     'orders.domain_updated' => 'Domain updated.',
     'orders.domain_edit_locked' => 'The domain can only be changed while the order is pending and not yet provisioned on the server.',
+    'settings.automation' => 'Automation',
+    'settings.auto_suspension_days' => 'Suspend after (days overdue)',
+    'settings.auto_termination_days' => 'Terminate after (days suspended)',
+    'settings.auto_termination_label' => 'Automatically terminate services suspended for non-payment',
+    'settings.automation_hint' => 'Suspension pauses a service once an invoice has been overdue for the given number of days. Termination permanently deletes the account and its data; it is off by default and only ever touches services suspended over an invoice that is still unpaid. Preview the list any time with: php artisan pnlcs:auto-terminate --dry-run',
 ];

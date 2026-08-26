@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\ServiceStatus;
 use App\Models\Service;
+use App\Models\Setting;
 use App\Services\ProvisioningService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +22,10 @@ class SuspensionCommand extends Command
      * service must not be switched back on over a debt that will suspend it
      * again the next morning.
      */
-    public const GRACE_DAYS = 3;
+    public static function graceDays(): int
+    {
+        return max(0, (int) Setting::get('AutoSuspensionDays', 3));
+    }
 
     public function handle(ProvisioningService $provisioning): int
     {
@@ -37,7 +41,7 @@ class SuspensionCommand extends Command
                 ->whereNull('override_auto_suspend_date')
                 ->orWhereDate('override_auto_suspend_date', '<', today()))
             ->whereHas('client', function ($q) {
-                $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace(self::GRACE_DAYS));
+                $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace(self::graceDays()));
             })
             ->get();
 
