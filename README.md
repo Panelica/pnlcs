@@ -339,7 +339,7 @@ fill in the customer's real domain path*
 
 | Component | Minimum |
 |-----------|---------|
-| PHP       | 8.3 or 8.4 |
+| PHP       | **8.4** (the locked Symfony 8 dependencies require it — 8.3 installs, then answers every request with a 500) |
 | MySQL     | 8.0 (or MariaDB 10.6) |
 | Node.js   | 18+ |
 | Composer  | 2.x |
@@ -402,10 +402,13 @@ panel such as Panelica gives you all of them).
 **Ubuntu 24.04 / Debian 13**
 
 ```bash
-# PHP 8.3+ with the extensions PNLCS needs
+# PHP 8.4 with the extensions PNLCS needs.
+# Ubuntu 24.04 ships 8.3 in its own repos, which is not enough - add the
+# ondrej PPA first. Debian 13 carries 8.4 natively; skip the PPA line there.
+sudo add-apt-repository -y ppa:ondrej/php   # Ubuntu only
 sudo apt update
-sudo apt install -y php8.3-fpm php8.3-cli php8.3-mysql php8.3-mbstring \
-  php8.3-xml php8.3-curl php8.3-zip php8.3-gd php8.3-bcmath php8.3-intl php8.3-imap
+sudo apt install -y php8.4-fpm php8.4-cli php8.4-mysql php8.4-mbstring \
+  php8.4-xml php8.4-curl php8.4-zip php8.4-gd php8.4-bcmath php8.4-intl php8.4-imap
 
 # Database
 sudo apt install -y mysql-server        # or: mariadb-server
@@ -425,8 +428,8 @@ sudo mv composer.phar /usr/local/bin/composer
 **RHEL family (AlmaLinux 9 / Rocky 9)**
 
 ```bash
-sudo dnf install -y epel-release
-sudo dnf module reset php -y && sudo dnf module enable php:8.3 -y
+sudo dnf install -y epel-release https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+sudo dnf module reset php -y && sudo dnf module enable php:remi-8.4 -y
 sudo dnf install -y php php-fpm php-mysqlnd php-mbstring php-xml php-gd \
   php-bcmath php-intl php-imap mysql-server nginx
 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
@@ -436,7 +439,7 @@ sudo dnf install -y nodejs
 Check what you have:
 
 ```bash
-php -v          # 8.3 or newer
+php -v          # 8.4 or newer — 8.3 will 500 at runtime
 mysql --version # 8.0 / MariaDB 10.6 or newer
 node -v         # 18 or newer
 composer -V     # 2.x
@@ -495,22 +498,27 @@ unless you know what you're doing (some migrations use MySQL-specific SQL).
 php artisan key:generate
 ```
 
-### 6. Run migrations and seed default data
+### 6. Run migrations
 
 ```bash
 php artisan migrate --force
-php artisan db:seed --force
 ```
 
-The seeder creates:
+**Do not run `php artisan db:seed` here.** The install wizard you will open
+in step 12 runs the seeder itself and renames the seeded administrator to the
+username and password *you* choose. Seeding by hand creates an administrator
+first - and the wizard, seeing one, locks itself before you ever reach it,
+leaving you with a default `admin` / `admin123` account you never chose.
 
-- A default admin account: **`admin` / `admin123`** (change this immediately
-  after your first login)
-- Four starter currencies (USD, EUR, GBP, TRY)
-- Ticket departments, statuses, email templates
-- 30 language entries (English active by default)
-- 2,232 English translation keys
-- Default homepage sections and domain pricing rows
+The wizard's seeding provides everything an installation starts with: four
+starter currencies (USD, EUR, GBP, TRY), ticket departments and statuses,
+25 email templates, 30 languages, the full translation set, the knowledge
+base, and default homepage sections.
+
+*Headless installs only:* if you are scripting an installation with no
+browser step at all, `php artisan db:seed --force` is how you seed - the
+default administrator is then `admin` / `admin123`, the wizard stays closed
+by design, and changing that password is your first job.
 
 ### 7. Build frontend assets
 
@@ -564,7 +572,7 @@ server {
     }
 
     location ~ \.php$ {
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
@@ -582,7 +590,15 @@ sudo nginx -t && sudo systemctl reload nginx
 Add HTTPS with Certbot (`sudo certbot --nginx -d billing.example.com`) before
 taking payments — the checkout and admin login should never run over plain HTTP.
 
-### 12. Schedule the cron runner
+### 12. Open the install wizard
+
+Visit **https://billing.example.com/install** in your browser. The wizard
+checks requirements, seeds the database, asks for your administrator
+username and password, and takes the application name and URL - then locks
+itself permanently. This is where your admin account is created; there is no
+default password to change afterwards.
+
+### 13. Schedule the cron runner
 
 Add a single line to the web user's crontab (`crontab -e`):
 
@@ -593,10 +609,14 @@ Add a single line to the web user's crontab (`crontab -e`):
 This drives invoice generation, payment reminders, automatic suspensions,
 SSL polling, and other background tasks.
 
-### 13. Run a queue worker (optional but recommended)
+### 14. Queue: sync by default, worker only if you switch
 
-Email delivery and background jobs run through the queue. A simple
-`supervisor` entry:
+`.env.example` ships `QUEUE_CONNECTION=sync`: mail and background jobs run
+inline and always happen, which is the right shape for a single-server
+install. Switch to `database` only **together with** a running worker - the
+database driver without a worker puts every queued email into the jobs table
+forever, and nothing sends while everything looks fine. A simple `supervisor`
+entry for that setup:
 
 ```ini
 [program:pnlcs-worker]
@@ -605,6 +625,34 @@ autostart=true
 autorestart=true
 user=www-data
 ```
+
+
+### Installing inside a hosting-panel account (Panelica, cPanel, …)
+
+If the server runs a control panel, you do not need root or any of step 0 -
+the panel already carries PHP, MySQL and (on Panelica) Node. This is the
+exact shape our own production installs use:
+
+1. Create the hosting account and its domain in the panel, and set the
+   domain's **PHP version to 8.4** - this is the step that bites: if the
+   site's PHP-FPM stays at 8.3 while you ran composer with a 8.4 CLI, every
+   request answers `500 - Composer detected issues in your platform`.
+2. Create the MySQL database and user from the panel. Panels prefix names
+   (`account_pnlcs`) - put the prefixed name in `.env`.
+3. As the account user, clone into the site directory - **next to** the
+   webroot, not inside it:
+   `cd ~/example.com && git clone https://github.com/Panelica/pnlcs.git pnlcs`
+4. `composer install`, `.env`, `key:generate`, `migrate --force` as in steps
+   2-6, using the panel's PHP 8.4 binary (on Panelica: `php84`). If MySQL
+   listens on a socket, add `DB_SOCKET=` with the panel's socket path.
+5. Build the assets with the panel's Node (on Panelica, install one under
+   Node.js Versions and use its `npm`).
+6. Point the webroot at `pnlcs/public` with a same-owner symlink:
+   `mv public_html public_html.default && ln -s pnlcs/public public_html`.
+   A symlink owned by the same account passes the panel's
+   `disable_symlinks if_not_owner` protection.
+7. Add the cron line from step 13 as a panel cron job for the account.
+8. Open `https://example.com/install` and finish the wizard.
 
 ---
 
@@ -627,6 +675,14 @@ files live on the `pnlcs_app` volume and are left untouched.
 
 Set `AUTO_UPDATE=1` on the container to pull the latest code automatically on
 every restart.
+
+#### `500 — Composer detected issues in your platform: PHP >= 8.4.0`
+
+The web server's PHP-FPM is older than the PHP that ran `composer install`.
+The dependencies are locked against PHP 8.4, so the page dies before Laravel
+even boots - and because it dies that early, `storage/logs` stays empty.
+Point the site (or pool) at PHP 8.4: on a panel, change the domain's PHP
+version; on raw nginx, fix the `fastcgi_pass` socket.
 
 #### `fatal: detected dubious ownership in repository`
 
@@ -725,13 +781,14 @@ If you use a queue worker (step 13 of installation), restart it too:
 
 Once the site loads and you can reach `/admin/login`, do these in order:
 
-### 1. Sign in and change the admin password
+### 1. Sign in
 
 - URL: `https://billing.your-domain.com/admin/login`
-- Username: **`admin`**
-- Password: **`admin123`**
-- Immediately open **My Account → Change Password** and set a strong password.
-- (Recommended) Enable **Two-Factor Authentication** from the same screen.
+- Use the administrator username and password you chose in the install
+  wizard. (Only a headless install that seeded by hand has the default
+  `admin` / `admin123` - if that is you, changing it is the first job.)
+- (Recommended) Enable **Two-Factor Authentication** under
+  **My Account → Security**.
 
 ### 2. Configure General Settings
 

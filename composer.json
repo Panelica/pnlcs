@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "bacon/bacon-qr-code": "^3.0",
         "barryvdh/laravel-debugbar": "^4.2",
         "barryvdh/laravel-dompdf": "^3.1",
