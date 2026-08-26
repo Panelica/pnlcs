@@ -43,7 +43,18 @@ class ClientApiController extends BaseApiController
 
     public function getClientsDetails(Request $request)
     {
-        $client = Client::with('contacts')->find($request->clientid);
+        // The docs (and WHMCS) have always promised "clientid or email"; only
+        // clientid was ever read, so integrators following the docs got
+        // "Client Not Found" for perfectly good requests.
+        if (! $request->filled('clientid') && ! $request->filled('email')) {
+            return $this->error('Client ID or Email Required', 400);
+        }
+
+        $client = Client::with('contacts')
+            ->when($request->filled('clientid'),
+                fn ($q) => $q->whereKey($request->clientid),
+                fn ($q) => $q->where('email', (string) $request->email))
+            ->first();
         if (! $client) {
             return $this->error('Client Not Found', 404);
         }
@@ -58,6 +69,36 @@ class ClientApiController extends BaseApiController
         // one that is taken, and clients.email carries an ordinary index, so
         // nothing else would have stopped a second account on it.
         $validated = $request->validate(['firstname' => 'required|string|max:255', 'lastname' => 'required|string|max:255', 'email' => 'required|email|max:255|unique:clients,email']);
+
+        // The docs (and WHMCS) promise that a password2 opens a portal login.
+        // This method used to swallow the parameter silently, leaving an
+        // account nobody could sign in to. Portal logins live on User, so the
+        // registration service does it - one copy, or the two paths drift.
+        $password = $request->input('password2', $request->input('password'));
+        if ($password !== null && $password !== '') {
+            $request->validate([
+                'password2' => 'sometimes|string|min:8',
+                'password' => 'sometimes|string|min:8',
+                'email' => 'unique:users,email',
+            ]);
+            [, $client] = app(\App\Services\ClientRegistrationService::class)->register([
+                'first_name' => $validated['firstname'],
+                'last_name' => $validated['lastname'],
+                'email' => $validated['email'],
+                'password' => $password,
+                'company_name' => $request->companyname,
+                'address1' => $request->address1,
+                'city' => $request->city,
+                'country' => $request->country ?? 'US',
+                'phone_number' => $request->phonenumber,
+            ], $request);
+            // The service carries the fields the register form has; the API
+            // has always accepted these two on top.
+            $client->update(['state' => $request->state, 'postcode' => $request->postcode]);
+
+            return $this->success(['clientid' => $client->id]);
+        }
+
         $client = Client::create(['first_name' => $validated['firstname'], 'last_name' => $validated['lastname'], 'email' => $validated['email'], 'company_name' => $request->companyname, 'address1' => $request->address1, 'city' => $request->city, 'state' => $request->state, 'postcode' => $request->postcode, 'country' => $request->country ?? 'US', 'phone_number' => $request->phonenumber]);
 
         return $this->success(['clientid' => $client->id]);

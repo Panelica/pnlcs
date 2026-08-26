@@ -1429,9 +1429,53 @@ class ConfigController extends Controller
 
     // ===== API DOCS =====
 
+    /**
+     * The endpoint tables are read from the live route table, not written by
+     * hand. The hand-written version documented 26 endpoints that did not
+     * exist and left 91 real ones out; a list that is generated cannot drift,
+     * and ApiDocsTest holds the rendered page to exactly the routed set.
+     */
+    private const API_DOC_SECTIONS = [
+        \App\Http\Controllers\Api\SystemApiController::class => 'system',
+        \App\Http\Controllers\Api\ClientApiController::class => 'clients',
+        \App\Http\Controllers\Api\InvoiceApiController::class => 'invoices',
+        \App\Http\Controllers\Api\OrderApiController::class => 'orders',
+        \App\Http\Controllers\Api\TicketApiController::class => 'tickets',
+        \App\Http\Controllers\Api\DomainApiController::class => 'domains',
+        \App\Http\Controllers\Api\ServiceApiController::class => 'services',
+    ];
+
     public function apiDocs()
     {
-        return view('admin.api-docs');
+        $params = config('api_docs', []);
+        $sections = [];
+
+        foreach (app('router')->getRoutes() as $route) {
+            if (! str_starts_with($route->uri(), 'api/v1/')) {
+                continue;
+            }
+            [$controller, $method] = [$route->getControllerClass(), $route->getActionMethod()];
+            $section = self::API_DOC_SECTIONS[$controller] ?? 'system';
+            $slug = basename($route->uri());
+            $descKey = 'admin.api_docs.desc_'.$slug;
+
+            $sections[$section][$slug] = [
+                'method' => in_array('POST', $route->methods(), true) ? 'POST' : 'GET',
+                // A curated description where one was written; the method name
+                // spelled out otherwise - true but plain beats absent.
+                'desc' => \Illuminate\Support\Facades\Lang::has($descKey)
+                    ? __($descKey)
+                    : ucfirst(strtolower(preg_replace('/(?<!^)[A-Z]/', ' $0', $method))),
+                'params' => $params[$slug] ?? '',
+            ];
+        }
+
+        $sections = array_replace(array_fill_keys(array_values(self::API_DOC_SECTIONS), []), $sections);
+        foreach ($sections as &$rows) {
+            ksort($rows);
+        }
+
+        return view('admin.api-docs', ['sections' => $sections]);
     }
 
     // ===== SSL MODULES =====
