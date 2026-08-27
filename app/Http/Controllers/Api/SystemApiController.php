@@ -211,7 +211,11 @@ class SystemApiController extends BaseApiController
      */
     private static function isSecretSetting(string $setting): bool
     {
-        return (bool) preg_match('/(password|secret|token|api_?key|access_?hash|private_?key)/i', $setting);
+        // "key" on its own, not only "api_key": the credential settings are
+        // named MaxMindLicenseKey and the like, which the narrower pattern let
+        // through in the clear. A Twilio *service* SID and account SID identify
+        // an account well enough to pair with a leaked token, so SID counts too.
+        return (bool) preg_match('/(password|secret|token|key|access_?hash|credential|sid)/i', $setting);
     }
 
     public function getAnnouncements(Request $request)
