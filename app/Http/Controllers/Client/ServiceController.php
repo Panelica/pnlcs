@@ -1005,12 +1005,23 @@ class ServiceController extends Controller
         }
 
         $client = $service->client;
-        Mail::to($client->email)->send(new \App\Mail\ContainerAccessDetailsMail(
-            (string) ($container['template'] ?: $container['name']),
-            $access->items(),
-            $access->notes(),
-            $access->accessUrl(),
-        ));
+        try {
+            Mail::to($client->email)->send(new \App\Mail\ContainerAccessDetailsMail(
+                (string) ($container['template'] ?: $container['name']),
+                $access->items(),
+                $access->notes(),
+                $access->accessUrl(),
+            ));
+        } catch (\Throwable $e) {
+            // A transport that cannot deliver - sendmail behind a disabled
+            // proc_open, an SMTP host that will not verify - is the operator's
+            // problem to hear about, not a server-error page for the customer.
+            \Illuminate\Support\Facades\Log::error('Connection-details email failed to send', [
+                'service_id' => $service->id, 'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', __('client.hosting.containers.email_failed'));
+        }
 
         return back()->with('success', __('client.hosting.containers.email_sent', ['email' => $client->email]));
     }

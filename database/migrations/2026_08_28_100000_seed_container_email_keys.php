@@ -21,6 +21,7 @@ return new class extends Migration
                 'hosting.containers.email_footer' => 'You can view these details any time from your client area.',
                 'hosting.containers.email_sent' => 'The connection details were sent to :email.',
                 'hosting.containers.email_not_found' => 'There are no stored connection details for that app.',
+                'hosting.containers.email_failed' => 'The email could not be sent. Please try again later or contact support.',
             ],
             'tr' => [
                 'hosting.containers.notes_title' => 'Bilmekte fayda var',
@@ -31,6 +32,7 @@ return new class extends Migration
                 'hosting.containers.email_footer' => 'Bu bilgilere müşteri panelinizden istediğiniz zaman ulaşabilirsiniz.',
                 'hosting.containers.email_sent' => 'Bağlantı bilgileri :email adresine gönderildi.',
                 'hosting.containers.email_not_found' => 'Bu uygulama için kayıtlı bağlantı bilgisi yok.',
+                'hosting.containers.email_failed' => 'E-posta gönderilemedi. Lütfen daha sonra tekrar deneyin veya destek ile iletişime geçin.',
             ],
         ];
     }
