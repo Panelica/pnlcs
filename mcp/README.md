@@ -172,7 +172,7 @@ not setting the flag.
 
 | Symptom | Cause |
 |---|---|
-| `Set PNLCS_URL, PNLCS_IDENTIFIER and PNLCS_SECRET.` on stderr | One of the three variables is missing from the client config |
+| Every tool answers `Set PNLCS_URL, PNLCS_IDENTIFIER and PNLCS_SECRET.` | One of the three variables is missing from the client config |
 | Every tool answers `Invalid API secret` | Identifier/secret pair is wrong, or the credential was deactivated |
 | `PNLCS did not answer within 30 seconds` | The install is unreachable from this machine — check the URL and any firewall |
 | Tools missing in the client | Restart the client after editing its config; check its MCP log for the stderr line above |

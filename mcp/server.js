@@ -10,15 +10,18 @@ import { createInterface } from 'node:readline';
 import { config, callAction } from './lib/api.js';
 import { descriptors, findTool } from './lib/tools.js';
 
-const VERSION = '1.0.3';
+const VERSION = '1.0.4';
 
-let cfg;
-try {
-  cfg = config();
-} catch (e) {
-  console.error(`pnlcs-mcp: ${e.message}`);
-  process.exit(1);
+// Configuration is read lazily, at the first tool call. Registries and
+// directories (Glama among them) start the server with no environment at all
+// to introspect it - a server that dies on startup scores as broken, and a
+// human who runs it bare still deserves the tool list plus a readable error
+// on use, not a refusal to boot.
+let cfg = null;
+function getCfg() {
+  return (cfg ??= config());
 }
+const allowWrites = () => process.env.PNLCS_ALLOW_WRITES === '1';
 
 function reply(id, result) {
   process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id, result }) + '\n');
@@ -52,15 +55,15 @@ async function handle(msg) {
       return reply(id, {});
 
     case 'tools/list':
-      return reply(id, { tools: descriptors(cfg.allowWrites) });
+      return reply(id, { tools: descriptors(allowWrites()) });
 
     case 'tools/call': {
-      const tool = findTool(cfg.allowWrites, params?.name);
+      const tool = findTool(allowWrites(), params?.name);
       if (!tool) {
         return replyError(id, -32602, `Unknown tool: ${params?.name}`);
       }
       try {
-        const body = await callAction(cfg, tool.action, params?.arguments ?? {}, tool.method ?? 'GET');
+        const body = await callAction(getCfg(), tool.action, params?.arguments ?? {}, tool.method ?? 'GET');
         return reply(id, { content: [{ type: 'text', text: JSON.stringify(body, null, 2) }] });
       } catch (e) {
         // Tool-level failures are results, not protocol errors - the model

@@ -283,3 +283,25 @@ test('a PNLCS that never answers becomes a readable timeout, not a hang', async 
     silent.close();
   }
 });
+
+test('with no environment at all, introspection works and a tool call explains itself', async () => {
+  const child = spawn(process.execPath, [serverPath], {
+    env: { PATH: process.env.PATH },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  child.stdin.end(
+    JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-06-18' } }) + '\n'
+    + JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/list' }) + '\n'
+    + JSON.stringify({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'get_stats', arguments: {} } }) + '\n'
+  );
+  let out = '';
+  child.stdout.on('data', (c) => { out += c; });
+  const [code] = await once(child, 'exit');
+  assert.equal(code, 0);
+  const answers = out.trim().split('\n').map((l) => JSON.parse(l));
+  assert.equal(answers.find((a) => a.id === 1).result.serverInfo.name, 'pnlcs-mcp');
+  assert.equal(answers.find((a) => a.id === 2).result.tools.length, toolset(false).length);
+  const call = answers.find((a) => a.id === 3);
+  assert.equal(call.result.isError, true);
+  assert.match(call.result.content[0].text, /PNLCS_URL/);
+});
