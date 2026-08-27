@@ -383,6 +383,10 @@ class OrderService
         return DB::transaction(function () use ($order) {
             $order->update(['status' => OrderStatus::Cancelled->value]);
 
+            // Before the services flip: stock was taken when this order was
+            // placed and a sale that is not happening hands the unit back.
+            $this->restockOrder($order);
+
             Service::where('order_id', $order->id)
                 ->whereNotIn('status', [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value])
                 ->update([
@@ -414,6 +418,12 @@ class OrderService
      */
     public function markFraud(Order $order, string $module = 'manual', ?string $output = null): Order
     {
+        // Once. Running the verdict again used to re-suspend and would now
+        // hand stock back a second time.
+        if ($order->status === OrderStatus::Fraud->value) {
+            return $order;
+        }
+
         run_hook('FraudOrder', ['order' => $order]);
 
         $services = DB::transaction(function () use ($order, $module, $output) {
@@ -425,6 +435,11 @@ class OrderService
                 'fraud_module' => $module,
                 'fraud_output' => $output ?? 'Manually marked as fraud by admin on '.now()->toDateTimeString(),
             ]);
+
+            // A held order is not a sale; the unit goes back on the shelf. A
+            // junk-order run used to empty a limited product for good without
+            // paying for anything.
+            $this->restockOrder($order);
 
             $services = Service::where('order_id', $order->id)
                 ->where('status', ServiceStatus::Active->value)
@@ -472,6 +487,54 @@ class OrderService
     /**
      * Soft-delete (cancel) the order and all related items.
      */
+    /**
+     * Put a cancelled or fraud-held order back to pending - the false-alarm
+     * path. The unit the verdict handed back is taken again, so clearing an
+     * alarm does not mint stock; an emptied shelf does not block the reopen,
+     * it just cannot go below zero.
+     */
+    public function reopenOrder(Order $order): Order
+    {
+        if (! in_array($order->status, [OrderStatus::Cancelled->value, OrderStatus::Fraud->value], true)) {
+            return $order;
+        }
+
+        return DB::transaction(function () use ($order) {
+            foreach ($this->stockControlledProductIds($order) as $productId) {
+                Product::whereKey($productId)->where('stock_qty', '>', 0)->decrement('stock_qty');
+            }
+
+            $order->update(['status' => OrderStatus::Pending->value]);
+
+            return $order->fresh();
+        });
+    }
+
+    /** Hand back one unit per stock-controlled service on this order. */
+    private function restockOrder(Order $order): void
+    {
+        foreach ($this->stockControlledProductIds($order) as $productId) {
+            Product::whereKey($productId)->increment('stock_qty');
+        }
+    }
+
+    /**
+     * One entry per service on the order whose product counts stock. Services
+     * already cancelled or terminated gave their unit back when they were, so
+     * they do not count again.
+     *
+     * @return array<int, int>
+     */
+    private function stockControlledProductIds(Order $order): array
+    {
+        return Service::where('order_id', $order->id)
+            ->whereNotIn('status', [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value])
+            ->whereHas('product', fn ($q) => $q->where('stock_control', true))
+            ->pluck('product_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     public function deleteOrder(Order $order): void
     {
         DB::transaction(function () use ($order) {

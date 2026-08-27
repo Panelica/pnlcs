@@ -143,13 +143,20 @@ class OrderApiController extends BaseApiController
      * Putting an order back on hold is a bookkeeping change: there is nothing
      * to undo on a server, so this one stays a status write.
      */
-    public function pendingOrder(Request $request)
+    public function pendingOrder(Request $request, OrderService $orders)
     {
         $order = Order::find($request->orderid);
         if (! $order) {
             return $this->error('Order Not Found', 404);
         }
-        $order->update(['status' => 'pending']);
+
+        // Through the service: clearing a fraud alarm or a cancellation must
+        // take the stock unit the verdict handed back, or the pair of moves
+        // mints stock. A bare status write did neither.
+        $order = $orders->reopenOrder($order);
+        if ($order->status !== 'pending') {
+            $order->update(['status' => 'pending']);
+        }
 
         return $this->success(['orderid' => $order->id]);
     }
