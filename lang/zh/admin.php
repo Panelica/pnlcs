@@ -2746,4 +2746,10 @@ return [
     'settings.fraudlabs_enabled' => '使用 FraudLabs Pro 筛查订单',
     'settings.fraudlabs_api_key' => 'FraudLabs Pro API 密钥',
     'settings.fraud_screening_hint' => '外部筛查是内置规则的补充:综合风险分取所见的最差信号,得分达到 60 或以上的订单将被作为欺诈搁置以供审核。密钥缺失或服务商故障绝不会阻止订单。留空的密钥字段将保留已保存的值。',
+    'settings.sms_verification' => '短信验证',
+    'settings.twilio_enabled' => '允许客户通过 Twilio 短信验证码验证手机号码',
+    'settings.twilio_account_sid' => 'Twilio 账户 SID',
+    'settings.twilio_auth_token' => 'Twilio 认证令牌',
+    'settings.twilio_verify_service_sid' => 'Twilio Verify 服务 SID',
+    'settings.sms_verification_hint' => '客户会在其安全页面看到验证手机按钮。验证码、尝试次数和十分钟有效期完全由 Twilio 保管;面板只记录验证通过的时刻。留空的密钥字段将保留已保存的值。',
 ];

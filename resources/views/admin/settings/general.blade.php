@@ -124,6 +124,33 @@
         </div>
     </div>
 
+    {{-- Twilio Verify. State (codes, attempts, expiry) lives at Twilio; the
+         panel only records the moment a check comes back approved. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.sms_verification') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" name="TwilioVerifyEnabled" value="1" {{ !empty($settings['TwilioVerifyEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.twilio_enabled') }}
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.twilio_account_sid') }}</label>
+                    <input type="text" name="TwilioAccountSid" value="{{ $settings['TwilioAccountSid'] ?? '' }}" class="form-control" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.twilio_auth_token') }}</label>
+                    <input type="password" name="TwilioAuthToken" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['TwilioAuthToken']) ? '••••••••' : '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.twilio_verify_service_sid') }}</label>
+                    <input type="text" name="TwilioVerifyServiceSid" value="{{ $settings['TwilioVerifyServiceSid'] ?? '' }}" class="form-control" autocomplete="off">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.sms_verification_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Late fees. The command that charges them has always read these three
          settings; there was nowhere to enter them, so it read "none" every
          morning and stopped. --}}

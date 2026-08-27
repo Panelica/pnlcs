@@ -30,6 +30,38 @@
     </div>
 </div>
 
+@if($phoneVerifyAvailable ?? false)
+<div class="pn-card" style="margin-bottom:20px;">
+    <div class="pn-card-header">{{ __('client.phone_verify.title') }}</div>
+    <div class="pn-card-body">
+        @if($client?->phone_verified_at)
+        <div style="padding:12px 14px; background:#dff0d8; border:1px solid #d6e9c6; border-radius:4px;">
+            <span style="font-size:13px; color:#3c763d; font-weight:500;">&#10003; {{ __('client.phone_verify.verified_label') }} ({{ $client->full_phone }})</span>
+        </div>
+        @elseif(! $client?->full_phone)
+        <p style="font-size:13px; color:var(--muted); margin:0;">{{ __('client.phone_verify.no_phone') }}</p>
+        @elseif(session('phone_code_sent'))
+        <p style="font-size:13px; color:#555; margin-bottom:12px;">{{ __('client.phone_verify.enter_code_hint') }}</p>
+        <form method="POST" action="{{ route('client.account.phone.verify_check') }}" style="display:flex; gap:8px; align-items:center; margin:0;">
+            @csrf
+            <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" placeholder="{{ __('client.phone_verify.code_placeholder') }}" class="form-control form-control-sm" style="width:140px;" required>
+            <button type="submit" class="btn btn-success btn-sm">{{ __('client.phone_verify.confirm_btn') }}</button>
+        </form>
+        @error('code')<p style="font-size:12px;color:#a94442;margin:8px 0 0;">{{ $message }}</p>@enderror
+        @else
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <span style="font-size:13px; color:var(--muted);">{{ __('client.phone_verify.unverified_label') }} ({{ $client->full_phone }})</span>
+            <form method="POST" action="{{ route('client.account.phone.verify') }}" style="margin:0;">
+                @csrf
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('client.phone_verify.send_btn') }}</button>
+            </form>
+        </div>
+        @error('phone')<p style="font-size:12px;color:#a94442;margin:8px 0 0;">{{ $message }}</p>@enderror
+        @endif
+    </div>
+</div>
+@endif
+
 @if($sessionsSupported ?? false)
 <div class="pn-card">
     <div class="pn-card-header">{{ __('client.security.active_sessions') }}</div>

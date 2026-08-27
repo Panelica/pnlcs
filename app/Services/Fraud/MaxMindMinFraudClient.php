@@ -52,7 +52,9 @@ class MaxMindMinFraudClient
             $billing = array_filter([
                 'first_name' => $client->first_name,
                 'last_name' => $client->last_name,
-                'country' => $client->country,
+                // The spec takes only a two-character ISO 3166-1 code here; a
+                // spelled-out country name would fail the whole request.
+                'country' => strlen((string) $client->country) === 2 ? strtoupper($client->country) : null,
             ]);
             if ($billing !== []) {
                 $body['billing'] = $billing;

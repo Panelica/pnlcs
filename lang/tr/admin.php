@@ -2746,4 +2746,10 @@ return [
     'settings.fraudlabs_enabled' => 'Siparişleri FraudLabs Pro ile tara',
     'settings.fraudlabs_api_key' => 'FraudLabs Pro API anahtarı',
     'settings.fraud_screening_hint' => 'Dış tarama yerleşik kurallara eklenir: birleşik risk puanı görülen en kötü sinyaldir ve 60 veya üzeri puan alan sipariş inceleme için dolandırıcılık olarak bekletilir. Eksik anahtar veya sağlayıcı kesintisi hiçbir siparişi engellemez. Boş bırakılan gizli alanlar kayıtlı değerini korur.',
+    'settings.sms_verification' => 'SMS Doğrulama',
+    'settings.twilio_enabled' => 'Müşteriler telefon numaralarını Twilio SMS koduyla doğrulayabilsin',
+    'settings.twilio_account_sid' => 'Twilio hesap SID',
+    'settings.twilio_auth_token' => 'Twilio auth token',
+    'settings.twilio_verify_service_sid' => 'Twilio Verify servis SID',
+    'settings.sms_verification_hint' => 'Müşteriler Güvenlik sayfasında Telefonu Doğrula düğmesi görür. Kod, deneme hakları ve on dakikalık süre tamamen Twilio tarafında tutulur; panel yalnızca doğrulamanın onaylandığı anı kaydeder. Boş bırakılan gizli alan kayıtlı değerini korur.',
 ];

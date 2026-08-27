@@ -2753,4 +2753,10 @@ return [
     'settings.fraudlabs_enabled' => 'Screen orders with FraudLabs Pro',
     'settings.fraudlabs_api_key' => 'FraudLabs Pro API key',
     'settings.fraud_screening_hint' => 'External screening adds to the built-in rules: the combined risk score is the worst signal seen, and an order scoring 60 or higher is held as fraud for review. A missing key or a provider outage never blocks an order. Secret fields left blank keep their stored value.',
+    'settings.sms_verification' => 'SMS Verification',
+    'settings.twilio_enabled' => 'Let clients verify their phone number with a Twilio SMS code',
+    'settings.twilio_account_sid' => 'Twilio account SID',
+    'settings.twilio_auth_token' => 'Twilio auth token',
+    'settings.twilio_verify_service_sid' => 'Twilio Verify service SID',
+    'settings.sms_verification_hint' => 'Clients get a Verify Phone button on their Security page. The code, its attempts and its ten-minute expiry all live at Twilio; the panel only records the moment a check comes back approved. A secret field left blank keeps its stored value.',
 ];

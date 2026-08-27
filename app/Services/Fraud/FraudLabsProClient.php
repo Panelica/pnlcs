@@ -53,7 +53,8 @@ class FraudLabsProClient
         }
 
         try {
-            $response = Http::asForm()->timeout(10)->post(self::ENDPOINT, $body);
+            // The published v2 example posts JSON, not a form.
+            $response = Http::asJson()->timeout(10)->post(self::ENDPOINT, $body);
 
             if (! $response->successful()) {
                 Log::warning('FraudLabs screening failed for order #'.$order->id, [

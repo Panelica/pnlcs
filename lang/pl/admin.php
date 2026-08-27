@@ -2757,4 +2757,10 @@ return [
     'settings.fraudlabs_enabled' => 'Sprawdzaj zamówienia przez FraudLabs Pro',
     'settings.fraudlabs_api_key' => 'Klucz API FraudLabs Pro',
     'settings.fraud_screening_hint' => 'Zewnętrzne sprawdzanie uzupełnia wbudowane reguły: łączny wynik ryzyka to najgorszy z sygnałów, a zamówienie z wynikiem 60 lub wyższym jest wstrzymywane jako oszustwo do przeglądu. Brak klucza lub awaria dostawcy nigdy nie blokuje zamówienia. Puste pola tajne zachowują zapisaną wartość.',
+    'settings.sms_verification' => 'Weryfikacja SMS',
+    'settings.twilio_enabled' => 'Pozwól klientom weryfikować numer telefonu kodem SMS Twilio',
+    'settings.twilio_account_sid' => 'SID konta Twilio',
+    'settings.twilio_auth_token' => 'Token uwierzytelniania Twilio',
+    'settings.twilio_verify_service_sid' => 'SID usługi Twilio Verify',
+    'settings.sms_verification_hint' => 'Klienci widzą przycisk weryfikacji telefonu na stronie Bezpieczeństwo. Kod, liczba prób i dziesięciominutowy termin są w całości po stronie Twilio; panel zapisuje jedynie moment zatwierdzenia weryfikacji. Puste pole tajne zachowuje zapisaną wartość.',
 ];

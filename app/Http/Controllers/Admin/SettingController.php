@@ -67,6 +67,7 @@ class SettingController extends Controller
         'AutoSuspensionDays', 'AutoTerminationDays', 'AutoTerminationEnabled',
         'FraudLabsApiKey', 'FraudLabsEnabled',
         'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',
+        'TwilioAccountSid', 'TwilioAuthToken', 'TwilioVerifyEnabled', 'TwilioVerifyServiceSid',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
@@ -97,6 +98,9 @@ class SettingController extends Controller
         if (! isset($data['FraudLabsEnabled'])) {
             $data['FraudLabsEnabled'] = '0';
         }
+        if (! isset($data['TwilioVerifyEnabled'])) {
+            $data['TwilioVerifyEnabled'] = '0';
+        }
 
         // The form never carries the stored mail password back, so an empty
         // field means the operator did not touch it - not that they want the
@@ -115,6 +119,9 @@ class SettingController extends Controller
         }
         if (trim((string) ($data['FraudLabsApiKey'] ?? '')) === '') {
             unset($data['FraudLabsApiKey']);
+        }
+        if (trim((string) ($data['TwilioAuthToken'] ?? '')) === '') {
+            unset($data['TwilioAuthToken']);
         }
 
         foreach ($data as $key => $value) {

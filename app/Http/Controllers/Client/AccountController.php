@@ -347,7 +347,10 @@ class AccountController extends Controller
                 ->get()
             : collect();
 
-        return view('client.account.security', compact('user', 'twoFactorEnabled', 'sessions', 'sessionsSupported'));
+        $client = $this->currentClient();
+        $phoneVerifyAvailable = app(\App\Services\Sms\TwilioVerifyClient::class)->enabled();
+
+        return view('client.account.security', compact('user', 'twoFactorEnabled', 'sessions', 'sessionsSupported', 'client', 'phoneVerifyAvailable'));
     }
 
     public function logoutSession(string $sessionId)
