@@ -34,6 +34,7 @@ class EmailTemplateSeeder extends Seeder
             ["type" => "product", "name" => "SSL Certificate Expiring", "subject" => "SSL Certificate Expiring in {days_remaining} Days - {ssl_domain}", "message" => "Dear {client_name},\n\nThe certificate for {ssl_domain} expires in {days_remaining} days. Renew it at {whmcs_url} to avoid a browser warning on your site.\n\n{CompanyName}"],
             ["type" => "product", "name" => "SSL Configuration Required", "subject" => "SSL Certificate Configuration Required - {ssl_domain}", "message" => "Dear {client_name},\n\nYour certificate order for {ssl_domain} is waiting for details from you. Complete it at {whmcs_url}\n\n{CompanyName}"],
             ["type" => "affiliate", "name" => "Affiliate Welcome Email", "subject" => "Affiliate Program - {CompanyName}", "message" => "Dear {client_name},\n\nWelcome to our affiliate program!\n\nYour referral link: {affiliate_link}\n\n{CompanyName}"],
+            ["type" => "product", "name" => "App Connection Details", "subject" => "Your {app_name} connection details", "message" => "Dear {client_name},\n\nHere are the connection details of the app you installed. Keep this message safe - it contains generated passwords.\n\n{app_details}\n\n{CompanyName}"],
         ];
 
         foreach ($templates as $t) {

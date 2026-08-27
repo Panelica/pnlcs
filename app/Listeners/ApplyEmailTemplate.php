@@ -22,6 +22,9 @@ class ApplyEmailTemplate
     /** Mailables that must never be copied to a second address. */
     private const NEVER_COPIED = [
         'PasswordResetMail',
+        // Carries an app's generated passwords in the clear, on the account
+        // owner's own request - for their eyes only.
+        'ContainerAccessDetailsMail',
     ];
 
     /**

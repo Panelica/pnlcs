@@ -808,3 +808,95 @@ it('offers a data folder only when there is one the customer can open', function
 
     expect($live['c-vol']['data_path'])->toBeNull();
 });
+
+// -----------------------------------------------------------------------------
+// Stacked apps: one template deploys the app plus its helpers (mysql, redis)
+// under a shared panelica.stack label. These pin: the stack/role fields, the
+// stack-wide delete and action, the refusal to delete a helper on its own, and
+// the mail-me-the-details route.
+// -----------------------------------------------------------------------------
+
+$STACK_APP = [
+    'id' => 'c-app', 'name' => '/acct1-wp', 'image' => 'panelica/olw:latest',
+    'state' => 'running', 'labels' => [
+        'panelica.user_id' => 'acct-1', 'panelica.template' => 'openlitespeed-wordpress',
+        'panelica.stack' => 'acct1-wp',
+    ],
+];
+$STACK_DB = [
+    'id' => 'c-db', 'name' => '/acct1-wp-mysql', 'image' => 'mariadb:11',
+    'state' => 'running', 'labels' => [
+        'panelica.user_id' => 'acct-1', 'panelica.template' => 'openlitespeed-wordpress',
+        'panelica.stack' => 'acct1-wp', 'panelica.template.role' => 'mysql',
+    ],
+];
+$STACK_REDIS = [
+    'id' => 'c-redis', 'name' => '/acct1-wp-redis', 'image' => 'redis:alpine',
+    'state' => 'running', 'labels' => [
+        'panelica.user_id' => 'acct-1', 'panelica.template' => 'openlitespeed-wordpress',
+        'panelica.stack' => 'acct1-wp', 'panelica.template.role' => 'redis',
+    ],
+];
+
+it('reports each container\'s stack and role', function () use ($STACK_APP, $STACK_DB) {
+    fakeContainerApi(5, [$STACK_APP, $STACK_DB]);
+    [$u, $s] = ctService(ctServer());
+    $list = collect((new PanelicaModule)->containers($s))->keyBy('id');
+
+    expect($list['c-app']['stack'])->toBe('acct1-wp')
+        ->and($list['c-app']['role'])->toBe('')
+        ->and($list['c-db']['role'])->toBe('mysql');
+});
+
+it('deletes the whole stack when the app is deleted, app first', function () use ($STACK_APP, $STACK_DB, $STACK_REDIS) {
+    fakeContainerApi(5, [$STACK_APP, $STACK_DB, $STACK_REDIS]);
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->deleteContainer($s, 'c-app')['success'])->toBeTrue();
+    foreach (['c-app', 'c-db', 'c-redis'] as $id) {
+        Http::assertSent(fn ($rq) => $rq->method() === 'DELETE' && str_contains($rq->url(), '/docker/containers/'.$id));
+    }
+});
+
+it('refuses to delete a helper on its own — no request sent', function () use ($STACK_APP, $STACK_DB) {
+    fakeContainerApi(5, [$STACK_APP, $STACK_DB]);
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->deleteContainer($s, 'c-db')['success'])->toBeFalse();
+    Http::assertNotSent(fn ($rq) => $rq->method() === 'DELETE');
+});
+
+it('applies an action to every member of the stack', function () use ($STACK_APP, $STACK_DB, $STACK_REDIS) {
+    fakeContainerApi(5, [$STACK_APP, $STACK_DB, $STACK_REDIS]);
+    [$u, $s] = ctService(ctServer());
+
+    expect((new PanelicaModule)->containerAction($s, 'c-app', 'stop')['success'])->toBeTrue();
+    foreach (['c-app', 'c-db', 'c-redis'] as $id) {
+        Http::assertSent(fn ($rq) => $rq->method() === 'POST' && str_contains($rq->url(), '/docker/containers/'.$id.'/stop'));
+    }
+});
+
+it('mails the connection details to the owning client, and only to them', function () use ($STACK_APP) {
+    \Illuminate\Support\Facades\Mail::fake();
+    fakeContainerApi(5, [$STACK_APP]);
+    [$owner, $s] = ctService(ctServer());
+    \App\Models\DockerAppCredential::create([
+        'service_id' => $s->id, 'container_id' => 'c-app', 'container_name' => 'acct1-wp',
+        'slug' => 'openlitespeed-wordpress',
+        'payload' => ['access_url' => 'http://10.0.0.7:8092', 'credentials' => ['WP_ADMIN_PASSWORD' => 's3cret'], 'notes' => 'ready'],
+    ]);
+
+    $this->actingAs($owner)
+        ->post(route('client.services.containers.email', $s), ['container_id' => 'c-app'])
+        ->assertRedirect()->assertSessionHas('success');
+    \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\ContainerAccessDetailsMail::class, function ($mail) use ($s) {
+        return $mail->hasTo($s->client->email) && $mail->items['WP_ADMIN_PASSWORD'] === 's3cret';
+    });
+
+    // Somebody else's session must not be able to mail themselves the secrets.
+    [$intruder] = ctService(ctServer());
+    $this->actingAs($intruder)
+        ->post(route('client.services.containers.email', $s), ['container_id' => 'c-app'])
+        ->assertForbidden();
+    \Illuminate\Support\Facades\Mail::assertSentCount(1);
+});

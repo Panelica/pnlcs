@@ -973,6 +973,48 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    /**
+     * Mail an app's connection details to the account's own address.
+     *
+     * Reading a generated password off the screen and retyping it somewhere
+     * safe is how it gets lost; this puts the same details - passwords in the
+     * clear, that is the point - in the client's inbox on their own request.
+     * Only ever addressed to the client the service belongs to.
+     */
+    public function emailContainerDetails(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $request->validate(['container_id' => 'required|string|max:128']);
+        $module = $this->hostingModule($service, 'containers');
+        if (! $module) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+
+        $containers = $module->containers($service);
+        $id = (string) $request->input('container_id');
+        $container = collect($containers)->firstWhere('id', $id);
+        if (! $container) {
+            return back()->with('error', __('client.hosting.containers.email_not_found'));
+        }
+
+        $stored = method_exists($module, 'containerAccessDetails') ? $module->containerAccessDetails($service) : [];
+        $live = method_exists($module, 'liveContainerAccess') ? $module->liveContainerAccess($service, $containers) : [];
+        $access = \App\Models\DockerAppCredential::withLive($stored, $live, $containers)[$id] ?? null;
+        if (! $access || ($access->items() === [] && $access->notes() === '')) {
+            return back()->with('error', __('client.hosting.containers.email_not_found'));
+        }
+
+        $client = $service->client;
+        Mail::to($client->email)->send(new \App\Mail\ContainerAccessDetailsMail(
+            (string) ($container['template'] ?: $container['name']),
+            $access->items(),
+            $access->notes(),
+            $access->accessUrl(),
+        ));
+
+        return back()->with('success', __('client.hosting.containers.email_sent', ['email' => $client->email]));
+    }
+
     public function destroyContainer(Request $request, Service $service)
     {
         abort_if($service->client_id !== $this->getClientId(), 403);

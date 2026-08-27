@@ -134,6 +134,7 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('services/{service}/containers', [ServiceController::class, 'storeContainer'])->name('services.containers.store');
         Route::post('services/{service}/containers/action', [ServiceController::class, 'containerAction'])->name('services.containers.action');
         Route::post('services/{service}/containers/delete', [ServiceController::class, 'destroyContainer'])->name('services.containers.destroy');
+        Route::post('services/{service}/containers/email-details', [ServiceController::class, 'emailContainerDetails'])->name('services.containers.email');
         // Serving an app on the customer's own domain
         Route::post('services/{service}/containers/link-domain', [ServiceController::class, 'linkContainerDomain'])->name('services.containers.link');
         Route::post('services/{service}/containers/unlink-domain', [ServiceController::class, 'unlinkContainerDomain'])->name('services.containers.unlink');

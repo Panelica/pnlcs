@@ -47,6 +47,7 @@ class EmailTemplateService
         'PaymentNotificationRejectedMail' => 'Payment Notification Rejected',
         'SslCertificateExpiringMail' => 'SSL Certificate Expiring',
         'SslCertificateIssuedMail' => 'SSL Certificate Issued',
+        'ContainerAccessDetailsMail' => 'App Connection Details',
         'SslConfigurationRequiredMail' => 'SSL Configuration Required',
         'TicketOpenedMail' => 'Support Ticket Opened',
         'TicketReplyMail' => 'Support Ticket Reply',
@@ -114,6 +115,25 @@ class EmailTemplateService
     public function varsFor(array $data): array
     {
         $vars = ['CompanyName' => $this->companyName()];
+
+        // The connection-details email carries no model at all: an app name,
+        // a link, and label => value pairs. Flattened here so a template can
+        // say {app_name}, {app_url} and {app_details}.
+        if (isset($data['appName']) && is_string($data['appName'])) {
+            $vars['app_name'] = $data['appName'];
+        }
+        if (! empty($data['accessUrl']) && is_string($data['accessUrl'])) {
+            $vars['app_url'] = $data['accessUrl'];
+        }
+        if (isset($data['items']) && is_array($data['items']) && $data['items'] !== []) {
+            $lines = [];
+            foreach ($data['items'] as $label => $value) {
+                if (is_scalar($value)) {
+                    $lines[] = $label.': '.$value;
+                }
+            }
+            $vars['app_details'] = implode("\n", $lines);
+        }
 
         $client = null;
 
