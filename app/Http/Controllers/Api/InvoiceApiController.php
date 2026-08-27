@@ -166,6 +166,43 @@ class InvoiceApiController extends BaseApiController
      * one place that does all of it, and every other way of taking money
      * already goes through it.
      */
+    /**
+     * Apply existing client credit to an invoice. This used to be an alias of
+     * addcredit - an operation that moves money in the OPPOSITE direction -
+     * so a call shaped like the reference screen described (clientid,
+     * invoiceid, amount) increased the client's balance and left the invoice
+     * unpaid.
+     */
+    public function applyCredit(Request $request, InvoiceService $invoices)
+    {
+        $invoice = Invoice::find($request->invoiceid);
+        if (! $invoice) {
+            return $this->error('Invoice Not Found', 404);
+        }
+
+        $validated = $request->validate(['amount' => 'required|numeric|min:0.01']);
+
+        // clientid is optional, but when given it must be the invoice's owner
+        // - silently spending some OTHER client's balance is how books stop
+        // adding up.
+        if ($request->filled('clientid') && (int) $request->clientid !== (int) $invoice->client_id) {
+            return $this->error('Client ID does not match the invoice', 400);
+        }
+
+        $amount = (float) $validated['amount'];
+        if ($amount > (float) $invoice->client->credit) {
+            return $this->error('Amount exceeds the client credit balance', 400);
+        }
+
+        $invoice = $invoices->applyCredit($invoice, $amount);
+
+        return $this->success([
+            'invoiceid' => $invoice->id,
+            'amount' => $amount,
+            'remaining_credit' => (float) $invoice->client->fresh()->credit,
+        ]);
+    }
+
     public function addInvoicePayment(Request $request, PaymentService $payments)
     {
         $invoice = Invoice::find($request->invoiceid);

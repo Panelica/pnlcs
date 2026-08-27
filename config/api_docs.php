@@ -24,7 +24,7 @@ return [
     'addprojecttask' => 'projectid, title (required)',
     'addticketreply' => 'ticketid, message (required), adminid or clientid',
     'addtransaction' => 'clientid, invoiceid, description, amountin, amountout, gateway, date (required)',
-    'applycredit' => 'clientid, invoiceid, amount (required)',
+    'applycredit' => 'invoiceid, amount (required), clientid (optional, must own the invoice)',
     'cancelorder' => 'orderid (required)',
     'createinvoice' => 'userid, date, duedate, itemdescription[], itemamount[], paymentmethod',
     'createproject' => 'title, adminid, clientid, status (required)',

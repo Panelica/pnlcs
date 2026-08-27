@@ -71,7 +71,7 @@ Route::prefix('v1')->group(function () {
     Route::get('getclientgroups', [ClientApiController::class, 'getClientGroups']);
     Route::get('getcredits', [ClientApiController::class, 'getCredits']);
     Route::post('addcredit', [ClientApiController::class, 'addCredit']);
-    Route::post('applycredit', [ClientApiController::class, 'addCredit']); // alias
+    Route::post('applycredit', [InvoiceApiController::class, 'applyCredit']);
     Route::get('getusers', [ClientApiController::class, 'getUsers']);
     Route::post('adduser', [ClientApiController::class, 'addUser']);
     Route::post('updateuser', [ClientApiController::class, 'updateUser']);
