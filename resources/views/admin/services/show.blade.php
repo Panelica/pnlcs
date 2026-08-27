@@ -132,9 +132,14 @@
         <p style="font-size:13px;color:#999;">{{ __('admin.services.no_module') }}</p>
         @else
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+            {{-- Only while there is something to create. An active service with
+                 an account already provisioned made this button a trap: pressing
+                 it again just produced "domain already exists" errors. --}}
+            @unless(strtolower((string) $service->status) === 'active' && (string) $service->username !== '')
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'create']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_create') }}')">
                 @csrf <button type="submit" class="btn btn-success btn-sm">{{ __('admin.services.create_account') }}</button>
             </form>
+            @endunless
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'suspend']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_suspend') }}')">
                 @csrf <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.services.suspend') }}</button>
             </form>

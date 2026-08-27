@@ -34,15 +34,27 @@ test('service detail shows billing info', function () {
 
 test('service detail shows module actions when server_type set', function () {
     $product = Product::factory()->create(['server_type' => 'custom']);
-    $service = Service::factory()->active()->create(['product_id' => $product->id]);
+    // Provisioned and running: everything except Create Account, which would
+    // only reprovision an account that already exists.
+    $service = Service::factory()->active()->create(['product_id' => $product->id, 'username' => 'alreadythere']);
+
+    $response = $this->get(route('admin.services.show', $service));
+
+    $response->assertStatus(200);
+    $response->assertDontSee('Create Account');
+    $response->assertSee('Suspend');
+    $response->assertSee('Unsuspend');
+    $response->assertSee('Terminate');
+});
+
+test('service detail offers Create Account while there is something to create', function () {
+    $product = Product::factory()->create(['server_type' => 'custom']);
+    $service = Service::factory()->pending()->create(['product_id' => $product->id, 'username' => null]);
 
     $response = $this->get(route('admin.services.show', $service));
 
     $response->assertStatus(200);
     $response->assertSee('Create Account');
-    $response->assertSee('Suspend');
-    $response->assertSee('Unsuspend');
-    $response->assertSee('Terminate');
 });
 
 test('service detail hides module actions when no server_type', function () {
