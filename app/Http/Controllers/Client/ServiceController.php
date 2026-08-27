@@ -820,7 +820,34 @@ class ServiceController extends Controller
         $live = method_exists($module, 'liveContainerAccess') ? $module->liveContainerAccess($service, $containers) : [];
         $access = \App\Models\DockerAppCredential::withLive($stored, $live, $containers);
 
-        return view('client.services.hosting.containers', compact('service', 'containers', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links', 'access'));
+        // One card per APP, not per container. A template deploys the app plus
+        // its helpers (mysql, redis) under a shared stack label; showing the
+        // raw list put three containers on screen for one WordPress and let
+        // the customer delete its database on its own.
+        $stacked = [];
+        foreach ($containers as $c) {
+            if (($c['stack'] ?? '') !== '' && ($c['role'] ?? '') !== '') {
+                $stacked[$c['stack']][] = $c;
+            }
+        }
+        $grouped = [];
+        foreach ($containers as $c) {
+            if (($c['stack'] ?? '') !== '' && ($c['role'] ?? '') !== '') {
+                continue; // helper - drawn inside its app's card
+            }
+            $grouped[] = ['main' => $c, 'components' => $stacked[$c['stack'] ?? ''] ?? []];
+        }
+        // A helper whose app is gone still has to be visible somewhere.
+        $mains = array_column(array_column($grouped, 'main'), 'stack');
+        foreach ($stacked as $stack => $members) {
+            if (! in_array($stack, $mains, true)) {
+                foreach ($members as $m) {
+                    $grouped[] = ['main' => $m, 'components' => []];
+                }
+            }
+        }
+
+        return view('client.services.hosting.containers', compact('service', 'containers', 'grouped', 'policy', 'templates', 'resources', 'groups', 'logos', 'domains', 'links', 'access'));
     }
 
     /** Point one of the account's domains at one of its apps. */

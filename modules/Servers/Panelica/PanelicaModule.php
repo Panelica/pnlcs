@@ -1064,11 +1064,36 @@ class PanelicaModule extends AbstractServerModule
                 'ports' => $ports,
                 'created' => (string) ($c['created'] ?? ''),
                 'template' => (string) ($labels['panelica.template'] ?? ''),
+                // A template can deploy several containers as one app - the
+                // panel marks them with a shared stack label and gives the
+                // helpers (mysql, redis) a role. The app itself has no role.
+                // Without these two fields the customer was shown three raw
+                // containers for one WordPress and could delete its database
+                // on its own.
+                'stack' => (string) ($labels['panelica.stack'] ?? ''),
+                'role' => (string) ($labels['panelica.template.role'] ?? ''),
             ];
         }
         usort($out, fn ($a, $b) => strcmp($a['name'], $b['name']));
 
         return $out;
+    }
+
+    /**
+     * The other members of a container's stack, main app first.
+     *
+     * @param  list<array<string,mixed>>  $all  output of containers()
+     * @return list<array<string,mixed>>
+     */
+    private function stackMembers(array $all, string $stack): array
+    {
+        if ($stack === '') {
+            return [];
+        }
+        $members = array_values(array_filter($all, fn ($c) => ($c['stack'] ?? '') === $stack));
+        usort($members, fn ($a, $b) => strcmp((string) ($a['role'] ?? ''), (string) ($b['role'] ?? '')));
+
+        return $members; // role '' (the app) sorts first
     }
 
     /**
@@ -1608,12 +1633,27 @@ class PanelicaModule extends AbstractServerModule
         if (! in_array($action, ['start', 'stop', 'restart'], true)) {
             return $this->buildResult(false, 'Unsupported action.');
         }
-        if (! $this->ownsContainer($service, $id)) {
+        $all = $this->containers($service);
+        $target = collect($all)->firstWhere('id', $id);
+        if (! $target) {
             return $this->buildResult(false, 'That container does not belong to this service.');
         }
-        $resp = $this->post($this->getServer($service), '/v1/docker/containers/'.rawurlencode($id).'/'.$action, []);
-        if (! $resp->successful()) {
-            return $this->buildResult(false, $this->apiMessage($resp, 'Could not complete that action.'));
+
+        // A stacked app is one thing to the customer: starting or stopping it
+        // means the whole stack. Helpers come up before the app (it needs its
+        // database) and go down after it.
+        $members = $this->stackMembers($all, (string) ($target['stack'] ?? ''));
+        $ordered = $members !== [] ? $members : [$target];
+        if ($action === 'start') {
+            $ordered = array_reverse($ordered); // helpers first, app last
+        }
+
+        $server = $this->getServer($service);
+        foreach ($ordered as $member) {
+            $resp = $this->post($server, '/v1/docker/containers/'.rawurlencode((string) $member['id']).'/'.$action, []);
+            if (! $resp->successful()) {
+                return $this->buildResult(false, $this->apiMessage($resp, 'Could not complete that action.'));
+            }
         }
 
         return $this->buildResult(true, 'Done.');
@@ -1621,12 +1661,39 @@ class PanelicaModule extends AbstractServerModule
 
     public function deleteContainer(Service $service, string $id): array
     {
-        if (! $this->ownsContainer($service, $id)) {
+        $all = $this->containers($service);
+        $target = collect($all)->firstWhere('id', $id);
+        if (! $target) {
             return $this->buildResult(false, 'That container does not belong to this service.');
         }
-        $resp = $this->delete($this->getServer($service), '/v1/docker/containers/'.rawurlencode($id).'?force=true&remove_volumes=true');
-        if (! $resp->successful()) {
-            return $this->buildResult(false, $this->apiMessage($resp, 'Could not remove the app.'));
+
+        // A helper (mysql, redis) is part of an app, not a thing of its own.
+        // Deleting one on its own left the app running against a database that
+        // no longer existed - so it is refused, the app is what gets deleted.
+        if ((string) ($target['role'] ?? '') !== '') {
+            return $this->buildResult(false, __('client.hosting.containers.component_delete_refused'));
+        }
+
+        // The app goes first (nothing should be writing to the helpers while
+        // they are removed), then its helpers. The panel keeps data shared
+        // with anything else alive on its side, so a failed helper removal is
+        // reported but does not undo the app removal.
+        $members = $this->stackMembers($all, (string) ($target['stack'] ?? ''));
+        $ordered = $members !== [] ? $members : [$target];
+
+        $server = $this->getServer($service);
+        $removed = [];
+        foreach ($ordered as $member) {
+            $mid = (string) $member['id'];
+            $resp = $this->delete($server, '/v1/docker/containers/'.rawurlencode($mid).'?force=true&remove_volumes=true');
+            if (! $resp->successful()) {
+                if ($removed === []) {
+                    return $this->buildResult(false, $this->apiMessage($resp, 'Could not remove the app.'));
+                }
+
+                return $this->buildResult(false, $this->apiMessage($resp, 'The app was removed but one of its components was not: '.$member['name']));
+            }
+            $removed[] = $mid;
         }
 
         // The app is gone; its first-login password has no reason to outlive it.
@@ -1634,7 +1701,7 @@ class PanelicaModule extends AbstractServerModule
         // install-and-remove left an encrypted credential for something that no
         // longer exists.
         \App\Models\DockerAppCredential::where('service_id', $service->id)
-            ->where('container_id', $id)->delete();
+            ->whereIn('container_id', $removed)->delete();
 
         return $this->buildResult(true, 'App removed.');
     }

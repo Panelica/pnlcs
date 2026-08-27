@@ -120,6 +120,15 @@
     .ct-it-id{min-width:0;flex:1 1 auto}
     .ct-it-state{flex:0 0 auto}
     .ct-it-hint{padding:0 15px;margin-top:10px}
+    .ct-components{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 15px;
+        border-top:1px dashed var(--border)}
+    .ct-comp-title{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+        color:var(--muted)}
+    .ct-comp{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;
+        padding:3px 9px;border-radius:99px;border:1px solid var(--border);color:var(--text)}
+    .ct-comp i{font-size:13px}
+    .ct-comp.ok i{color:#16a34a}
+    .ct-comp.down i{color:#d97706}
     .ct-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--border)}
     .ct-fact{background:var(--card);padding:11px 15px;min-width:0}
     .ct-fact > span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.4px;
@@ -313,7 +322,11 @@
     <div class="ct-empty">{{ __('client.hosting.containers.empty') }}</div>
     @else
     <div class="ct-list">
-        @foreach($containers as $c)
+        @foreach($grouped as $g)
+        @php
+            $c = $g['main'];
+            $components = $g['components'];
+        @endphp
         @php
             // Installing an app is only half the job: it has to be reachable on
             // the customer's own address. $domains is an id => name map.
@@ -362,7 +375,7 @@
                         <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.start') }}"><i class="ri-play-line"></i></button>
                     </form>
                     @endif
-                    <form method="POST" action="{{ route('client.services.containers.destroy', $service) }}" onsubmit="return confirm('{{ __('client.hosting.containers.delete_confirm') }}')">@csrf
+                    <form method="POST" action="{{ route('client.services.containers.destroy', $service) }}" onsubmit="return confirm('{{ $components ? __('client.hosting.containers.delete_confirm_stack', ['count' => count($components)]) : __('client.hosting.containers.delete_confirm') }}')">@csrf
                         <input type="hidden" name="container_id" value="{{ $c['id'] }}">
                         <button type="submit" class="ct-act danger" title="{{ __('client.hosting.containers.delete') }}"><i class="ri-delete-bin-line"></i></button>
                     </form>
@@ -371,6 +384,23 @@
 
             @if($c['state'] === 'restarting')
             <div class="ct-hint ct-it-hint">{{ __('client.hosting.containers.crashing_hint') }}</div>
+            @endif
+
+            @if($components)
+            {{-- The app's helpers (database, cache). Drawn inside the app's
+                 card, without their own action buttons: start, stop and delete
+                 act on the whole app, and a database cannot be removed from
+                 under a running site. --}}
+            <div class="ct-components">
+                <span class="ct-comp-title">{{ __('client.hosting.containers.components') }}</span>
+                @foreach($components as $comp)
+                <span class="ct-comp {{ $comp['state'] === 'running' ? 'ok' : 'down' }}"
+                      title="{{ $comp['name'] }} · {{ $comp['image'] }}{{ $comp['state'] === 'running' && $comp['mem_usage'] >= 1048576 ? ' · '.number_format($comp['mem_usage']/1048576, 0).' MB' : '' }}">
+                    <i class="{{ $comp['state'] === 'running' ? 'ri-checkbox-circle-fill' : 'ri-error-warning-fill' }}"></i>
+                    {{ ucfirst($comp['role'] ?: $comp['name']) }}
+                </span>
+                @endforeach
+            </div>
             @endif
 
             <div class="ct-facts">
