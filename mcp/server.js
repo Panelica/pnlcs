@@ -10,7 +10,7 @@ import { createInterface } from 'node:readline';
 import { config, callAction } from './lib/api.js';
 import { descriptors, findTool } from './lib/tools.js';
 
-const VERSION = '1.0.1';
+const VERSION = '1.0.2';
 
 let cfg;
 try {
@@ -36,12 +36,17 @@ async function handle(msg) {
   if (id === undefined || id === null) return;
 
   switch (method) {
-    case 'initialize':
+    case 'initialize': {
+      // Version negotiation per the spec: answer with the client's version
+      // when we support it, and with our latest when we do not.
+      const KNOWN = ['2024-11-05', '2025-03-26', '2025-06-18'];
+      const asked = params?.protocolVersion;
       return reply(id, {
-        protocolVersion: params?.protocolVersion || '2025-06-18',
+        protocolVersion: KNOWN.includes(asked) ? asked : '2025-06-18',
         capabilities: { tools: { listChanged: false } },
         serverInfo: { name: 'pnlcs-mcp', version: VERSION },
       });
+    }
 
     case 'ping':
       return reply(id, {});
@@ -87,15 +92,20 @@ rl.on('line', (line) => {
   } catch {
     return replyError(null, -32700, 'Parse error');
   }
-  pending++;
-  handle(msg)
-    .catch((e) => {
-      if (msg.id !== undefined && msg.id !== null) replyError(msg.id, -32603, e.message);
-    })
-    .finally(() => {
-      pending--;
-      maybeExit();
-    });
+  // Protocol revisions before 2025-06-18 allow JSON-RPC batches; a batch
+  // silently swallowed would strand an older client mid-handshake.
+  const batch = Array.isArray(msg) ? msg : [msg];
+  for (const one of batch) {
+    pending++;
+    handle(one)
+      .catch((e) => {
+        if (one?.id !== undefined && one?.id !== null) replyError(one.id, -32603, e.message);
+      })
+      .finally(() => {
+        pending--;
+        maybeExit();
+      });
+  }
 });
 rl.on('close', () => {
   closed = true;

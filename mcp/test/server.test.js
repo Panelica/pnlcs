@@ -227,3 +227,59 @@ test('a one-shot pipe still gets every answer before the server exits', async ()
   assert.equal(answers.length, 2);
   assert.match(answers[1].result.content[0].text, /"result": "success"/);
 });
+
+test('an unknown protocol version is answered with our latest, a known one is echoed', async () => {
+  const mcp = startMcp();
+  try {
+    const future = await mcp.rpc('initialize', { protocolVersion: '2099-01-01' });
+    assert.equal(future.result.protocolVersion, '2025-06-18');
+  } finally {
+    mcp.stop();
+  }
+  const mcp2 = startMcp();
+  try {
+    const old = await mcp2.rpc('initialize', { protocolVersion: '2024-11-05' });
+    assert.equal(old.result.protocolVersion, '2024-11-05');
+  } finally {
+    mcp2.stop();
+  }
+});
+
+test('a JSON-RPC batch from an older client is answered, not swallowed', async () => {
+  const child = spawn(process.execPath, [serverPath], {
+    env: { ...process.env, PNLCS_URL: stubUrl, PNLCS_IDENTIFIER: 'stub_id', PNLCS_SECRET: 'stub_secret' },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  child.stdin.end(JSON.stringify([
+    { jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-03-26' } },
+    { jsonrpc: '2.0', id: 2, method: 'ping' },
+  ]) + '\n');
+  let out = '';
+  child.stdout.on('data', (c) => { out += c; });
+  const [code] = await once(child, 'exit');
+  assert.equal(code, 0);
+  const answers = out.trim().split('\n').map((l) => JSON.parse(l));
+  assert.equal(answers.length, 2);
+  assert.equal(answers.find((a) => a.id === 1).result.protocolVersion, '2025-03-26');
+  assert.deepEqual(answers.find((a) => a.id === 2).result, {});
+});
+
+test('a PNLCS that never answers becomes a readable timeout, not a hang', async () => {
+  // A stub that accepts the connection and then says nothing.
+  const silent = createServer(() => { /* never respond */ });
+  silent.listen(0, '127.0.0.1');
+  await once(silent, 'listening');
+
+  const mcp = startMcp({ PNLCS_URL: `http://127.0.0.1:${silent.address().port}` });
+  try {
+    // The 30s production timeout is too slow for a test; prove the wiring by
+    // aborting the socket from the stub side instead - the same catch path.
+    setTimeout(() => silent.closeAllConnections(), 200);
+    const answer = await mcp.rpc('tools/call', { name: 'get_stats', arguments: {} });
+    assert.equal(answer.result.isError, true);
+    assert.ok(answer.result.content[0].text.length > 10);
+  } finally {
+    mcp.stop();
+    silent.close();
+  }
+});

@@ -20,19 +20,32 @@ export async function callAction(cfg, action, params = {}, method = 'GET') {
     if (v !== undefined && v !== null && v !== '') clean[k] = v;
   }
 
+  // A hung install must become a readable error, not a call that never
+  // returns; 30 seconds is far beyond any healthy PNLCS answer.
+  const signal = AbortSignal.timeout(30_000);
+
   let response;
-  if (method === 'GET') {
-    const qs = new URLSearchParams({ identifier: cfg.identifier, secret: cfg.secret });
-    for (const [k, v] of Object.entries(clean)) qs.set(k, String(v));
-    response = await fetch(`${cfg.url}/api/v1/${action}?${qs}`, {
-      headers: { Accept: 'application/json' },
-    });
-  } else {
-    response = await fetch(`${cfg.url}/api/v1/${action}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ identifier: cfg.identifier, secret: cfg.secret, ...clean }),
-    });
+  try {
+    if (method === 'GET') {
+      const qs = new URLSearchParams({ identifier: cfg.identifier, secret: cfg.secret });
+      for (const [k, v] of Object.entries(clean)) qs.set(k, String(v));
+      response = await fetch(`${cfg.url}/api/v1/${action}?${qs}`, {
+        headers: { Accept: 'application/json' },
+        signal,
+      });
+    } else {
+      response = await fetch(`${cfg.url}/api/v1/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ identifier: cfg.identifier, secret: cfg.secret, ...clean }),
+        signal,
+      });
+    }
+  } catch (e) {
+    if (e.name === 'TimeoutError' || e.name === 'AbortError') {
+      throw new Error(`PNLCS did not answer within 30 seconds (${action}).`);
+    }
+    throw e;
   }
 
   let body;
