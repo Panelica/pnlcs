@@ -302,14 +302,12 @@ class InstallController extends Controller
         }
         $content = file_get_contents($path);
 
-        foreach ($values as $key => $val) {
-            $line = "{$key}={$val}";
-            if (preg_match("/^{$key}=.*/m", $content)) {
-                $content = preg_replace("/^{$key}=.*/m", $line, $content);
-            } else {
-                $content .= "\n".$line;
-            }
-        }
+        // Values are quoted and written literally: an unquoted secret with a
+        // '#' or a space was cut short by the parser and finished the install
+        // with the wrong password, and a value carrying $1 was mangled by
+        // preg_replace's back-references. See EnvWriter.
+        $content = \App\Support\EnvWriter::apply($content, $values);
+
         file_put_contents($path, $content);
     }
 }
