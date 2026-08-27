@@ -47,18 +47,23 @@ class BillingCycleHelper
         };
     }
 
-    /** Advance a date by exactly one billing cycle (non-mutating). */
+    /** Advance a date by exactly one billing cycle (non-mutating).
+     *
+     * NoOverflow throughout: plain addMonth turns 31 January into 3 March, so
+     * a customer billed on a month-end had February skipped and their
+     * anniversary crept forward for good. Clamping to the last day of the
+     * target month keeps the anniversary where it was sold. */
     public static function advance(Carbon $from, string $cycle): Carbon
     {
         $d = $from->copy();
         return match (self::key($cycle)) {
-            'monthly'      => $d->addMonth(),
-            'quarterly'    => $d->addMonths(3),
-            'semiannually' => $d->addMonths(6),
-            'annually'     => $d->addYear(),
-            'biennially'   => $d->addYears(2),
-            'triennially'  => $d->addYears(3),
-            default        => $d->addMonth(),
+            'monthly'      => $d->addMonthsNoOverflow(1),
+            'quarterly'    => $d->addMonthsNoOverflow(3),
+            'semiannually' => $d->addMonthsNoOverflow(6),
+            'annually'     => $d->addYearsNoOverflow(1),
+            'biennially'   => $d->addYearsNoOverflow(2),
+            'triennially'  => $d->addYearsNoOverflow(3),
+            default        => $d->addMonthsNoOverflow(1),
         };
     }
 }
