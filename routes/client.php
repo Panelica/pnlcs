@@ -135,6 +135,9 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('services/{service}/containers/action', [ServiceController::class, 'containerAction'])->name('services.containers.action');
         Route::post('services/{service}/containers/delete', [ServiceController::class, 'destroyContainer'])->name('services.containers.destroy');
         Route::post('services/{service}/containers/email-details', [ServiceController::class, 'emailContainerDetails'])->name('services.containers.email');
+        // Opened by hand (a pasted address, a refresh after the redirect) this
+        // was a 405 dressed up as a server error. There is nothing to GET here.
+        Route::get('services/{service}/containers/email-details', fn (\App\Models\Service $service) => redirect()->route('client.services.containers', $service));
         // Serving an app on the customer's own domain
         Route::post('services/{service}/containers/link-domain', [ServiceController::class, 'linkContainerDomain'])->name('services.containers.link');
         Route::post('services/{service}/containers/unlink-domain', [ServiceController::class, 'unlinkContainerDomain'])->name('services.containers.unlink');
