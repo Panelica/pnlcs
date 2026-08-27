@@ -348,6 +348,14 @@ class ClientController extends Controller
         // Login as the client's user
         auth()->login($user);
 
+        // The customer's second factor must not stand in the way of an admin
+        // taking the account over: the admin has already authenticated as an
+        // admin, carries the edit_clients permission, and cannot hold the
+        // customer's TOTP. Without this the client area's 2fa middleware
+        // bounced the admin to the customer's 2FA screen with no way through,
+        // so a 2FA-enabled client could not be impersonated at all.
+        session(['2fa_verified' => true]);
+
         // The user may belong to more than one account: open the one that was
         // clicked, not whichever happens to come first.
         session(['active_client_id' => $client->id]);
@@ -397,8 +405,10 @@ class ClientController extends Controller
             );
         }
 
-        // Clear impersonation session
-        session()->forget(['impersonating_admin_id', 'impersonating_admin_name', 'active_client_id']);
+        // Clear impersonation session, including the 2FA pass impersonation
+        // granted itself: leaving it set would let the next real client login
+        // in this browser skip its own second factor.
+        session()->forget(['impersonating_admin_id', 'impersonating_admin_name', 'active_client_id', '2fa_verified']);
 
         return redirect()->route('admin.clients.index')->with('success', __('messages.success.impersonation_stopped'));
     }

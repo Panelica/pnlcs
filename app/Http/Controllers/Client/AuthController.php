@@ -86,6 +86,11 @@ class AuthController extends Controller
 
             // Check 2FA
             if ($user->second_factor_type && $user->second_factor_secret) {
+                // Start from unverified every time: 2fa_verified is a plain
+                // session key that regenerate() carries across a fresh login,
+                // and impersonation sets it deliberately. A stale one here
+                // would wave a real 2FA login straight through.
+                session()->forget('2fa_verified');
                 session(['2fa_pending' => true]);
 
                 return redirect()->route('client.2fa.verify');
