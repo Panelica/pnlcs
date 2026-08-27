@@ -84,7 +84,11 @@ class Promotion extends Model
         if ($this->max_uses > 0 && $this->uses >= $this->max_uses) {
             return false;
         }
-        if ($this->expiration_date && $this->expiration_date->isPast()) {
+        // Inclusive, like every other end date here: a quote is actionable
+        // through its valid_until day and a suspension hold that ends today
+        // still holds. The date cast put this at midnight, refusing the code
+        // for the whole of its own last day.
+        if ($this->expiration_date && $this->expiration_date->endOfDay()->isPast()) {
             return false;
         }
         if ($this->start_date && $this->start_date->isFuture()) {
