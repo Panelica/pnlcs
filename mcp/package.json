@@ -1,0 +1,34 @@
+{
+  "name": "pnlcs-mcp",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for PNLCS - query clients, invoices, orders and tickets from Claude Desktop, Cursor and friends.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "pnlcs-mcp": "server.js"
+  },
+  "files": [
+    "server.js",
+    "lib/",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test test/server.test.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Panelica/pnlcs.git",
+    "directory": "mcp"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "pnlcs",
+    "billing",
+    "hosting",
+    "whmcs-alternative"
+  ]
+}
