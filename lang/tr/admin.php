@@ -2739,4 +2739,11 @@ return [
     'settings.auto_termination_days' => 'Askıda şu kadar gün kalınca sonlandır',
     'settings.auto_termination_label' => 'Ödenmeyen fatura nedeniyle askıda kalan hizmetleri otomatik sonlandır',
     'settings.automation_hint' => 'Askıya alma, fatura belirtilen gün sayısı kadar geciktiğinde hizmeti duraklatır. Sonlandırma hesabı ve verilerini kalıcı olarak siler; varsayılan olarak kapalıdır ve yalnızca hâlâ ödenmemiş bir fatura yüzünden askıya alınmış hizmetlere dokunur. Listeyi önizlemek için: php artisan pnlcs:auto-terminate --dry-run',
+    'settings.fraud_screening' => 'Dolandırıcılık Taraması',
+    'settings.maxmind_enabled' => 'Siparişleri MaxMind minFraud ile tara',
+    'settings.maxmind_account_id' => 'MaxMind hesap kimliği',
+    'settings.maxmind_license_key' => 'MaxMind lisans anahtarı',
+    'settings.fraudlabs_enabled' => 'Siparişleri FraudLabs Pro ile tara',
+    'settings.fraudlabs_api_key' => 'FraudLabs Pro API anahtarı',
+    'settings.fraud_screening_hint' => 'Dış tarama yerleşik kurallara eklenir: birleşik risk puanı görülen en kötü sinyaldir ve 60 veya üzeri puan alan sipariş inceleme için dolandırıcılık olarak bekletilir. Eksik anahtar veya sağlayıcı kesintisi hiçbir siparişi engellemez. Boş bırakılan gizli alanlar kayıtlı değerini korur.',
 ];

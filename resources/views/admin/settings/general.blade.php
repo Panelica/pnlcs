@@ -91,6 +91,39 @@
         </div>
     </div>
 
+    {{-- External fraud screening. Advisory like the built-in rules: a missing
+         key or an outage never blocks an order (see FraudDetectionService).
+         The secret fields keep their stored value when left blank, the same
+         contract as the mail password. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.fraud_screening') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" name="MaxMindEnabled" value="1" {{ !empty($settings['MaxMindEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.maxmind_enabled') }}
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.maxmind_account_id') }}</label>
+                    <input type="text" name="MaxMindAccountId" value="{{ $settings['MaxMindAccountId'] ?? '' }}" class="form-control" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.maxmind_license_key') }}</label>
+                    <input type="password" name="MaxMindLicenseKey" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['MaxMindLicenseKey']) ? '••••••••' : '' }}">
+                </div>
+            </div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:10px;">
+                <input type="checkbox" name="FraudLabsEnabled" value="1" {{ !empty($settings['FraudLabsEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.fraudlabs_enabled') }}
+            </label>
+            <div class="form-group" style="margin-top:8px;max-width:calc(50% - 8px);">
+                <label class="form-label">{{ __('admin.settings.fraudlabs_api_key') }}</label>
+                <input type="password" name="FraudLabsApiKey" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['FraudLabsApiKey']) ? '••••••••' : '' }}">
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.fraud_screening_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Late fees. The command that charges them has always read these three
          settings; there was nowhere to enter them, so it read "none" every
          morning and stopped. --}}

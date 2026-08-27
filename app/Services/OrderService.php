@@ -186,7 +186,11 @@ class OrderService
 
             if (($fraud['score'] ?? 0) >= 60) {
                 Log::warning('Order #'.$order->order_num.' held as fraud', ['reasons' => $fraud['reasons'] ?? []]);
-                $order = $this->markFraud($order);
+                $order = $this->markFraud(
+                    $order,
+                    $fraud['module'] ?? 'internal',
+                    'Held by fraud screening (score '.$fraud['score'].'): '.implode('; ', $fraud['reasons'] ?? [])
+                );
 
                 return $order->fresh();
             }
@@ -408,15 +412,18 @@ class OrderService
     /**
      * Mark an order as fraud and suspend all related services.
      */
-    public function markFraud(Order $order): Order
+    public function markFraud(Order $order, string $module = 'manual', ?string $output = null): Order
     {
         run_hook('FraudOrder', ['order' => $order]);
 
-        $services = DB::transaction(function () use ($order) {
+        $services = DB::transaction(function () use ($order, $module, $output) {
             $order->update([
                 'status' => OrderStatus::Fraud->value,
-                'fraud_module' => 'manual',
-                'fraud_output' => 'Manually marked as fraud by admin on '.now()->toDateTimeString(),
+                // The screen that shows this used to claim every held order was
+                // "manually marked by admin", including the ones the automatic
+                // screening held.
+                'fraud_module' => $module,
+                'fraud_output' => $output ?? 'Manually marked as fraud by admin on '.now()->toDateTimeString(),
             ]);
 
             $services = Service::where('order_id', $order->id)

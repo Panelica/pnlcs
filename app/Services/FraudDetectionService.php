@@ -80,6 +80,42 @@ class FraudDetectionService
             }
         }
 
+        // External screening, when the operator has configured it. Both
+        // services are advisory the same way the local rules are: an outage or
+        // a missing key never blocks an order, it just leaves the local score
+        // standing alone. The combined score is the worst signal seen, not a
+        // sum - two mild worries must not add up to a rejection.
+        $module = 'internal';
+
+        $minFraud = app(Fraud\MaxMindMinFraudClient::class)->score($order);
+        if ($minFraud !== null) {
+            // minFraud's risk_score shares our 0-100 scale (0.01-99).
+            if ($minFraud['score'] > $score) {
+                $score = $minFraud['score'];
+                $module = 'maxmind';
+            }
+            $reasons[] = 'MaxMind minFraud risk score '.$minFraud['score']
+                .($minFraud['action'] ? ' ('.$minFraud['action'].')' : '');
+        }
+
+        $fraudLabs = app(Fraud\FraudLabsProClient::class)->score($order);
+        if ($fraudLabs !== null) {
+            // The verdict outranks the number: FraudLabs may say REJECT on a
+            // pattern its score understates, and a REVIEW should reach the
+            // hold threshold rather than slip through at 59.
+            $external = match ($fraudLabs['status']) {
+                'REJECT' => max($fraudLabs['score'], 90),
+                'REVIEW' => max($fraudLabs['score'], 60),
+                default => $fraudLabs['score'],
+            };
+            if ($external > $score) {
+                $score = $external;
+                $module = 'fraudlabs';
+            }
+            $reasons[] = 'FraudLabs Pro score '.$fraudLabs['score']
+                .($fraudLabs['status'] ? ' ('.$fraudLabs['status'].')' : '');
+        }
+
         // Cap at 100
         $score = min($score, 100);
 
@@ -99,6 +135,9 @@ class FraudDetectionService
             'score' => $score,
             'reasons' => $reasons,
             'risk_level' => $riskLevel,
+            // Which signal the final score came from - written onto a held
+            // order so the admin screen names the right screener.
+            'module' => $module,
         ];
     }
 }

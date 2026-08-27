@@ -2739,4 +2739,11 @@ return [
     'settings.auto_termination_days' => '暂停天数后终止',
     'settings.auto_termination_label' => '自动终止因欠费被暂停的服务',
     'settings.automation_hint' => '当发票逾期达到设定天数时,暂停会停用服务。终止会永久删除账户及其数据;默认关闭,且仅作用于因仍未支付的发票而被暂停的服务。可随时预览：php artisan pnlcs:auto-terminate --dry-run',
+    'settings.fraud_screening' => '欺诈筛查',
+    'settings.maxmind_enabled' => '使用 MaxMind minFraud 筛查订单',
+    'settings.maxmind_account_id' => 'MaxMind 账户 ID',
+    'settings.maxmind_license_key' => 'MaxMind 许可密钥',
+    'settings.fraudlabs_enabled' => '使用 FraudLabs Pro 筛查订单',
+    'settings.fraudlabs_api_key' => 'FraudLabs Pro API 密钥',
+    'settings.fraud_screening_hint' => '外部筛查是内置规则的补充:综合风险分取所见的最差信号,得分达到 60 或以上的订单将被作为欺诈搁置以供审核。密钥缺失或服务商故障绝不会阻止订单。留空的密钥字段将保留已保存的值。',
 ];

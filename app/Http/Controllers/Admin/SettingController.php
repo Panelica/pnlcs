@@ -65,6 +65,8 @@ class SettingController extends Controller
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays',
         'AutoSuspensionDays', 'AutoTerminationDays', 'AutoTerminationEnabled',
+        'FraudLabsApiKey', 'FraudLabsEnabled',
+        'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
@@ -89,6 +91,12 @@ class SettingController extends Controller
         if (! isset($data['AutoTerminationEnabled'])) {
             $data['AutoTerminationEnabled'] = '0';
         }
+        if (! isset($data['MaxMindEnabled'])) {
+            $data['MaxMindEnabled'] = '0';
+        }
+        if (! isset($data['FraudLabsEnabled'])) {
+            $data['FraudLabsEnabled'] = '0';
+        }
 
         // The form never carries the stored mail password back, so an empty
         // field means the operator did not touch it - not that they want the
@@ -101,6 +109,12 @@ class SettingController extends Controller
         // "keep what I have", not "delete my key".
         if (trim((string) ($data['OpenAIApiKey'] ?? '')) === '') {
             unset($data['OpenAIApiKey']);
+        }
+        if (trim((string) ($data['MaxMindLicenseKey'] ?? '')) === '') {
+            unset($data['MaxMindLicenseKey']);
+        }
+        if (trim((string) ($data['FraudLabsApiKey'] ?? '')) === '') {
+            unset($data['FraudLabsApiKey']);
         }
 
         foreach ($data as $key => $value) {

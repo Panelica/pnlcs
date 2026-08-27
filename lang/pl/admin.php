@@ -2750,4 +2750,11 @@ return [
     'settings.auto_termination_days' => 'Zakończ po (dniach zawieszenia)',
     'settings.auto_termination_label' => 'Automatycznie kończ usługi zawieszone za brak płatności',
     'settings.automation_hint' => 'Zawieszenie wstrzymuje usługę, gdy faktura jest przeterminowana o podaną liczbę dni. Zakończenie trwale usuwa konto i jego dane; domyślnie jest wyłączone i dotyczy wyłącznie usług zawieszonych z powodu wciąż nieopłaconej faktury. Podgląd: php artisan pnlcs:auto-terminate --dry-run',
+    'settings.fraud_screening' => 'Wykrywanie oszustw',
+    'settings.maxmind_enabled' => 'Sprawdzaj zamówienia przez MaxMind minFraud',
+    'settings.maxmind_account_id' => 'Identyfikator konta MaxMind',
+    'settings.maxmind_license_key' => 'Klucz licencyjny MaxMind',
+    'settings.fraudlabs_enabled' => 'Sprawdzaj zamówienia przez FraudLabs Pro',
+    'settings.fraudlabs_api_key' => 'Klucz API FraudLabs Pro',
+    'settings.fraud_screening_hint' => 'Zewnętrzne sprawdzanie uzupełnia wbudowane reguły: łączny wynik ryzyka to najgorszy z sygnałów, a zamówienie z wynikiem 60 lub wyższym jest wstrzymywane jako oszustwo do przeglądu. Brak klucza lub awaria dostawcy nigdy nie blokuje zamówienia. Puste pola tajne zachowują zapisaną wartość.',
 ];

@@ -2746,4 +2746,11 @@ return [
     'settings.auto_termination_days' => 'Terminate after (days suspended)',
     'settings.auto_termination_label' => 'Automatically terminate services suspended for non-payment',
     'settings.automation_hint' => 'Suspension pauses a service once an invoice has been overdue for the given number of days. Termination permanently deletes the account and its data; it is off by default and only ever touches services suspended over an invoice that is still unpaid. Preview the list any time with: php artisan pnlcs:auto-terminate --dry-run',
+    'settings.fraud_screening' => 'Fraud Screening',
+    'settings.maxmind_enabled' => 'Screen orders with MaxMind minFraud',
+    'settings.maxmind_account_id' => 'MaxMind account ID',
+    'settings.maxmind_license_key' => 'MaxMind license key',
+    'settings.fraudlabs_enabled' => 'Screen orders with FraudLabs Pro',
+    'settings.fraudlabs_api_key' => 'FraudLabs Pro API key',
+    'settings.fraud_screening_hint' => 'External screening adds to the built-in rules: the combined risk score is the worst signal seen, and an order scoring 60 or higher is held as fraud for review. A missing key or a provider outage never blocks an order. Secret fields left blank keep their stored value.',
 ];
