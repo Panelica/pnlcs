@@ -129,6 +129,14 @@
     .ct-comp i{font-size:13px}
     .ct-comp.ok i{color:#16a34a}
     .ct-comp.down i{color:#d97706}
+    .ct-acc-notes{margin-top:10px}
+    .ct-acc-notes summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+    .ct-acc-notes .ct-acc-n{margin-top:6px}
+    .ct-acc-mail{margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)}
+    .ct-mailbtn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+        padding:7px 13px;border-radius:var(--radius-sm,6px);border:1px solid var(--border);
+        background:var(--card);color:var(--text);cursor:pointer}
+    .ct-mailbtn:hover{border-color:var(--accent,#2563eb);color:var(--accent,#2563eb)}
     .ct-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--border)}
     .ct-fact{background:var(--card);padding:11px 15px;min-width:0}
     .ct-fact > span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.4px;
@@ -461,10 +469,35 @@
                     </a>
                 </div>
                 @if($acc && ($acc->items() || $acc->notes()))
+                @php
+                    // The raw list mixed URLs, logins and infrastructure in
+                    // whatever order they were stored. Read top to bottom it
+                    // should answer "where do I go, who am I, what's the
+                    // password" - so: addresses, then usernames, then secrets,
+                    // then the plumbing.
+                    $accWeight = function (string $label, string $value): int {
+                        if (\Illuminate\Support\Str::startsWith($value, ['http://', 'https://'])) return 0;
+                        if (preg_match('/(user|login|email)/i', $label) && ! preg_match('/(password|passwd|secret|token)/i', $label)) return 1;
+                        if (preg_match('/(password|passwd|secret|token|key)/i', $label)) return 2;
+                        if (preg_match('/(dir|path|directory)/i', $label)) return 4;
+                        return 3;
+                    };
+                    $accItems = collect($acc->items())
+                        ->sortBy(fn ($v, $k) => $accWeight((string) $k, (string) $v))
+                        ->all();
+                    // ENV_STYLE_LABELS read like configuration, not like a page.
+                    $accLabel = function (string $label): string {
+                        if (! preg_match('/^[A-Z0-9_]+$/', $label)) return $label;
+                        $t = ucwords(strtolower(str_replace('_', ' ', $label)));
+                        return str_ireplace(['Db ', 'Wp ', 'Url', 'Ftp ', 'Ssh '], ['DB ', 'WP ', 'URL', 'FTP ', 'SSH '], $t);
+                    };
+                @endphp
                 <details class="ct-acc">
-                    <summary>{{ __('client.hosting.containers.access_title') }}</summary>
+                    <summary>
+                        {{ __('client.hosting.containers.access_title') }}
+                    </summary>
                     <div class="ct-acc-b">
-                        @foreach($acc->items() as $label => $value)
+                        @foreach($accItems as $label => $value)
                         @php
                             // A generated password should not sit on screen in a
                             // shared office; it is one click away instead.
@@ -472,7 +505,7 @@
                             $isUrl = Str::startsWith($value, ['http://', 'https://']);
                         @endphp
                         <div class="ct-acc-r">
-                            <span>{{ $label }}</span>
+                            <span>{{ $accLabel($label) }}</span>
                             @if($isUrl)
                                 <a href="{{ $value }}" target="_blank" rel="noopener">{{ $value }}</a>
                             @else
@@ -481,7 +514,18 @@
                             <button type="button" class="ct-cp" data-value="{{ $value }}" title="{{ __('client.hosting.containers.copy') }}"><i class="ri-file-copy-line"></i></button>
                         </div>
                         @endforeach
-                        @if($acc->notes())<p class="ct-acc-n">{{ $acc->notes() }}</p>@endif
+                        @if($acc->notes())
+                        <details class="ct-acc-notes">
+                            <summary>{{ __('client.hosting.containers.notes_title') }}</summary>
+                            <p class="ct-acc-n">{{ $acc->notes() }}</p>
+                        </details>
+                        @endif
+                        {{-- On the customer's own request the same details land in
+                             their inbox - passwords included, that is the point. --}}
+                        <form method="POST" action="{{ route('client.services.containers.email', $service) }}" class="ct-acc-mail">@csrf
+                            <input type="hidden" name="container_id" value="{{ $c['id'] }}">
+                            <button type="submit" class="ct-mailbtn"><i class="ri-mail-send-line"></i>{{ __('client.hosting.containers.email_details') }}</button>
+                        </form>
                     </div>
                 </details>
                 @endif
