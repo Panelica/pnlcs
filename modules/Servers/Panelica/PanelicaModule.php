@@ -458,7 +458,7 @@ class PanelicaModule extends AbstractServerModule
         $chosen = trim((string) ($this->getModuleData($service)['panelica_app_template'] ?? ''));
         $appSlug = $chosen !== '' ? $chosen : trim((string) ($config['panelica_app_template'] ?? ''));
         if ($appSlug !== '') {
-            $app = $this->installProductApp($service, $server, $userId, $domainId, $appSlug);
+            $app = $this->installProductApp($service, $server, $userId, $domainId, $appSlug, $username, $password);
             if (! $app['success']) {
                 $this->delete($server, "/v1/accounts/{$userId}");
                 Log::error('PanelicaModule::create app install failed (account rolled back)', ['user_id' => $userId, 'slug' => $appSlug, 'reason' => $app['message']]);
@@ -1237,16 +1237,65 @@ class PanelicaModule extends AbstractServerModule
         return substr($name ?: 'app', 0, 40);
     }
 
-    private function installProductApp(Service $service, Server $server, string $userId, ?string $domainId, string $slug): array
+    /**
+     * Values for the template's REQUIRED env vars, taken from the account.
+     *
+     * The order form never asks for env vars, so a template that requires a
+     * sign-in of its own (the cloud desktop's VNC_USER/VNC_PASSWORD) failed
+     * validation and rolled the whole order back. Nothing is invented here:
+     * the account's own username and password are reused - the welcome email
+     * already carries them and the Apps page shows them, so the customer has
+     * one sign-in. Templates without such fields get an empty map and deploy
+     * exactly as before.
+     *
+     * @return array<string, string>
+     */
+    private function requiredEnvFor(Server $server, string $slug, string $username, string $password): array
+    {
+        $resp = $this->get($server, '/v1/docker/templates/'.rawurlencode($slug));
+        if (! $resp->successful()) {
+            return [];
+        }
+        $tpl = $resp->json('data.template') ?? $resp->json('data') ?? [];
+        $vars = $tpl['env_vars'] ?? [];
+        if (is_string($vars)) {
+            $vars = json_decode($vars, true) ?: [];
+        }
+
+        $env = [];
+        foreach ((array) $vars as $var) {
+            if (! is_array($var) || empty($var['required'])) {
+                continue;
+            }
+            $key = (string) ($var['key'] ?? '');
+            if ($key === '' || (string) ($var['default'] ?? '') !== '') {
+                continue;
+            }
+            if ($username !== '' && preg_match('/USER(NAME)?$/i', $key)) {
+                $env[$key] = $username;
+            } elseif ($password !== '' && (! empty($var['secret']) || preg_match('/(PASS(WORD)?|SECRET)$/i', $key))) {
+                $env[$key] = $password;
+            }
+        }
+
+        return $env;
+    }
+
+    private function installProductApp(Service $service, Server $server, string $userId, ?string $domainId, string $slug, string $appUser = '', string $appPass = ''): array
     {
         // The panel requires a name; without one the deploy fails validation and
         // the whole order rolls back. The slug is the obvious default - the
         // panel prefixes it with the account's username, so it stays unique
         // across tenants.
-        $deploy = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', [
+        $generatedEnv = $this->requiredEnvFor($server, $slug, $appUser, $appPass);
+        $deployPayload = [
             'owner_user_id' => $userId,
             'container_name' => $this->defaultContainerName($slug),
-        ], timeout: self::DEPLOY_TIMEOUT);
+        ];
+        if ($generatedEnv !== []) {
+            $deployPayload['env'] = $generatedEnv;
+        }
+        $deploy = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', $deployPayload, timeout: self::DEPLOY_TIMEOUT);
         if (! $deploy->successful()) {
             return ['success' => false, 'message' => $this->apiMessage($deploy, 'the app could not be installed'), 'container_id' => null];
         }
@@ -1254,7 +1303,14 @@ class PanelicaModule extends AbstractServerModule
         if ($containerId === '') {
             return ['success' => false, 'message' => 'the panel did not report a container id', 'container_id' => null];
         }
-        $this->rememberAppAccess($service, $slug, $deploy->json('data') ?? []);
+        // The sign-in values were invented here, not by the panel - if they are
+        // not written down with the rest, the customer has an app they cannot
+        // open and nobody can tell them the password.
+        $accessData = $deploy->json('data') ?? [];
+        if ($generatedEnv !== []) {
+            $accessData['credentials'] = array_merge($generatedEnv, (array) ($accessData['credentials'] ?? []));
+        }
+        $this->rememberAppAccess($service, $slug, $accessData);
 
         if (! $domainId) {
             // Nothing to point at it; the app is still installed and usable.
