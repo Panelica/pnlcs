@@ -468,12 +468,22 @@ class InvoiceService
      */
     public function taxRuleFor(Client $client, int $level): ?TaxRule
     {
-        return TaxRule::where('country', $client->country)
+        // A blank country is the catch-all the form promises ("leave blank
+        // for all countries") - it used to be matched literally, so a
+        // catch-all VAT rule applied to nobody and invoices went out untaxed.
+        // Specific beats blank, on country first and then on state, the same
+        // way the state side always worked.
+        return TaxRule::where(function ($q) use ($client) {
+            $q->where('country', $client->country)
+                ->orWhere('country', '')
+                ->orWhereNull('country');
+        })
             ->where(function ($q) use ($client) {
                 $q->where('state', $client->state)
                     ->orWhere('state', '')
                     ->orWhereNull('state');
             })
+            ->orderByRaw('CASE WHEN country = ? THEN 0 ELSE 1 END', [$client->country ?? ''])
             ->orderByRaw('CASE WHEN state = ? THEN 0 ELSE 1 END', [$client->state ?? ''])
             ->where('level', $level)
             ->first();
