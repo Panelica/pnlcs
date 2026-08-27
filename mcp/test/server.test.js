@@ -209,3 +209,21 @@ test('an unknown method gets a JSON-RPC error', async () => {
     mcp.stop();
   }
 });
+
+test('a one-shot pipe still gets every answer before the server exits', async () => {
+  const child = spawn(process.execPath, [serverPath], {
+    env: { ...process.env, PNLCS_URL: stubUrl, PNLCS_IDENTIFIER: 'stub_id', PNLCS_SECRET: 'stub_secret' },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  child.stdin.end(
+    JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }) + '\n'
+    + JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get_stats', arguments: {} } }) + '\n'
+  );
+  let out = '';
+  child.stdout.on('data', (c) => { out += c; });
+  const [code] = await once(child, 'exit');
+  assert.equal(code, 0);
+  const answers = out.trim().split('\n').map((l) => JSON.parse(l));
+  assert.equal(answers.length, 2);
+  assert.match(answers[1].result.content[0].text, /"result": "success"/);
+});

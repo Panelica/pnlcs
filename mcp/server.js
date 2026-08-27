@@ -10,7 +10,7 @@ import { createInterface } from 'node:readline';
 import { config, callAction } from './lib/api.js';
 import { descriptors, findTool } from './lib/tools.js';
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 let cfg;
 try {
@@ -69,6 +69,15 @@ async function handle(msg) {
   }
 }
 
+// Exit when stdin closes - but only after every request already read has
+// been answered. A one-shot pipe (printf ... | pnlcs-mcp) closes stdin the
+// moment it has written, while the answers are still in flight.
+let pending = 0;
+let closed = false;
+const maybeExit = () => {
+  if (closed && pending === 0) process.exit(0);
+};
+
 const rl = createInterface({ input: process.stdin, terminal: false });
 rl.on('line', (line) => {
   if (!line.trim()) return;
@@ -78,8 +87,17 @@ rl.on('line', (line) => {
   } catch {
     return replyError(null, -32700, 'Parse error');
   }
-  handle(msg).catch((e) => {
-    if (msg.id !== undefined && msg.id !== null) replyError(msg.id, -32603, e.message);
-  });
+  pending++;
+  handle(msg)
+    .catch((e) => {
+      if (msg.id !== undefined && msg.id !== null) replyError(msg.id, -32603, e.message);
+    })
+    .finally(() => {
+      pending--;
+      maybeExit();
+    });
 });
-rl.on('close', () => process.exit(0));
+rl.on('close', () => {
+  closed = true;
+  maybeExit();
+});
