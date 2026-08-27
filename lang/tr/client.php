@@ -147,6 +147,8 @@ return [
         'domain_tld_unsupported' => 'Şu anda :tld alan adlarını satmıyoruz.',
         'domain_years_unsupported' => ':tld alan adları :min ile :max yıl arasında satılmaktadır.',
         'out_of_stock' => 'Stokta yok',
+        'free_limit_reached' => 'Ücretsiz plan müşteri başına 1 adet ile sınırlıdır.',
+        'domain_required' => 'Bu hosting\'in yayınlayacağı alan adını girin.',
         'product_unavailable' => 'Bu ürün sipariş için mevcut değil.',
         'account_not_active' => 'Hesabınız yeni sipariş veremez. Lütfen destekle iletişime geçin.',
         'cycle_unavailable' => 'Bu ürün o faturalama döngüsünde satılmamaktadır.',

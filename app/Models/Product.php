@@ -68,7 +68,15 @@ class Product extends Model
 
         $price = round((float) $row->{$column}, 2);
 
-        return $price > 0 ? $price : null;
+        if ($price > 0) {
+            return $price;
+        }
+
+        // A free product's zero is a real price: the checkout accepts it and
+        // the zero-total invoice settles itself as paid (OrderService). Without
+        // this the product had no billing cycle at all and could not be
+        // ordered. A negative value still means "not sold on this cycle".
+        return $this->pay_type === 'free' && $price >= 0 ? 0.0 : null;
     }
 
     /**

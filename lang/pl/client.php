@@ -148,6 +148,8 @@ return [
         'domain_tld_unsupported' => 'Obecnie nie sprzedajemy domen :tld.',
         'domain_years_unsupported' => 'Domeny :tld sprzedawane są na okres od :min do :max lat.',
         'out_of_stock' => 'Brak na stanie',
+        'free_limit_reached' => 'Ten darmowy plan jest ograniczony do jednego na klienta.',
+        'domain_required' => 'Podaj domenę, którą będzie obsługiwał ten hosting.',
         'product_unavailable' => 'Ten produkt nie jest dostępny do zamówienia.',
         'account_not_active' => 'Twoje konto nie może składać nowych zamówień. Skontaktuj się z pomocą techniczną.',
         'cycle_unavailable' => 'Ten produkt nie jest sprzedawany w wybranym cyklu rozliczeniowym.',

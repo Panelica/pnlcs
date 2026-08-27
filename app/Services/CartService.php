@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\Promotion;
+use App\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -100,12 +101,45 @@ class CartService
             ]);
         }
 
+        // A hosting account has to serve something: an order without a domain
+        // provisioned as an account with no site, and the admin could only
+        // cancel it. The form always asks for one; the request is not the form.
+        if ($product->type === 'hosting' && $product->show_domain_options && trim((string) $domain) === '') {
+            throw ValidationException::withMessages([
+                'domain' => __('client.cart.domain_required'),
+            ]);
+        }
+
+        // A free product is one per customer. There is no per-client purchase
+        // limit anywhere in the product schema, so it is enforced here: a
+        // second copy in the same cart, or an order from a client that already
+        // holds a live service of it, is refused.
+        if ($product->pay_type === 'free') {
+            foreach (($this->getData($cart)['items'] ?? []) as $existing) {
+                if (($existing['type'] ?? 'product') !== 'domain'
+                    && (int) ($existing['product_id'] ?? 0) === (int) $product->id) {
+                    throw ValidationException::withMessages([
+                        'product_id' => __('client.cart.free_limit_reached'),
+                    ]);
+                }
+            }
+            if ($cart->user_id && Service::where('client_id', $cart->user_id)
+                    ->where('product_id', $product->id)
+                    ->whereNotIn('status', ['terminated', 'cancelled'])
+                    ->exists()) {
+                throw ValidationException::withMessages([
+                    'product_id' => __('client.cart.free_limit_reached'),
+                ]);
+            }
+        }
+
         $price = $this->getProductPrice($product, $billingCycle);
 
         // The order form only offers cycles the product is priced for, but the
         // request accepted any cycle in the enum, so posting an unpriced one
-        // bought the product for nothing.
-        if ($price <= 0) {
+        // bought the product for nothing. A free product's zero is a real
+        // price, but only on the cycles it is actually offered on.
+        if ($product->priceFor($billingCycle) === null || ($price <= 0 && $product->pay_type !== 'free')) {
             throw ValidationException::withMessages([
                 'billing_cycle' => __('client.cart.cycle_unavailable'),
             ]);
@@ -447,6 +481,25 @@ class CartService
                 // downstream was told.
                 'app_slug' => $item['app_slug'] ?? null,
             ];
+        }
+
+        // The cart-time check cannot see a guest's history - their account is
+        // only created at checkout - so the one-per-customer rule for free
+        // products is enforced once more here, where the client is known.
+        foreach ($items as $checkItem) {
+            if (($checkItem['type'] ?? '') !== 'service') {
+                continue;
+            }
+            $checkProduct = Product::find($checkItem['product_id']);
+            if ($checkProduct && $checkProduct->pay_type === 'free'
+                && Service::where('client_id', $clientId)
+                    ->where('product_id', $checkProduct->id)
+                    ->whereNotIn('status', ['terminated', 'cancelled'])
+                    ->exists()) {
+                throw ValidationException::withMessages([
+                    'product_id' => __('client.cart.free_limit_reached'),
+                ]);
+            }
         }
 
         $order = app(OrderService::class)->processOrder(

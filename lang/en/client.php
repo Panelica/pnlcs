@@ -148,6 +148,8 @@ return [
         'domain_tld_unsupported' => 'We do not currently sell :tld domains.',
         'domain_years_unsupported' => ':tld domains are sold for between :min and :max years.',
         'out_of_stock' => 'Out of stock',
+        'free_limit_reached' => 'This free plan is limited to one per customer.',
+        'domain_required' => 'Enter the domain this hosting will serve.',
         'product_unavailable' => 'That product is not available to order.',
         'account_not_active' => 'Your account cannot place new orders. Please contact support.',
         'cycle_unavailable' => 'This product is not sold on that billing cycle.',

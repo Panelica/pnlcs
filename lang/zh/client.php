@@ -147,6 +147,8 @@ return [
         'domain_tld_unsupported' => '我们目前不销售 :tld 域名。',
         'domain_years_unsupported' => ':tld 域名的可注册年限为 :min 至 :max 年。',
         'out_of_stock' => '已售罄',
+        'free_limit_reached' => '此免费套餐每位客户仅限一份。',
+        'domain_required' => '请输入此主机将服务的域名。',
         'product_unavailable' => '此产品当前无法订购。',
         'account_not_active' => '您的账户无法提交新订单，请联系技术支持。',
         'cycle_unavailable' => '此产品不提供所选计费周期。',
