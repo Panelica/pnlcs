@@ -195,6 +195,29 @@ class InvoiceGenerationService
      *
      * @return array<int, int>
      */
+    /**
+     * The part of the invoice a promotion may discount: the whole subtotal
+     * for an unrestricted code, only the lines whose product the code covers
+     * for a restricted one.
+     */
+    private function coveredAmount(Invoice $invoice, Promotion $promo): float
+    {
+        $covered = $promo->coveredProductIds();
+
+        if ($covered === []) {
+            return (float) $invoice->subtotal;
+        }
+
+        $serviceItems = $invoice->items->whereIn('type', ['Hosting', 'Service', 'hosting', 'service']);
+
+        $productByService = Service::whereIn('id', $serviceItems->pluck('rel_id')->filter())
+            ->pluck('product_id', 'id');
+
+        return (float) $serviceItems
+            ->filter(fn ($item) => in_array((int) ($productByService[$item->rel_id] ?? 0), $covered, true))
+            ->sum('amount');
+    }
+
     private function invoiceProductIds(Invoice $invoice): array
     {
         $serviceIds = $invoice->items
@@ -313,10 +336,21 @@ class InvoiceGenerationService
                 return false;
             }
 
+            // The base the discount is computed on. applies_to used to be a
+            // door only: once any covered product was on the invoice, the
+            // percentage was taken off the WHOLE subtotal - a "50% off
+            // product A" code on a mixed invoice discounted everything else
+            // in the cart too.
+            $base = min($this->coveredAmount($invoice, $promo), $subtotal);
+
+            if ($base <= 0) {
+                return false;
+            }
+
             // Calculate discount amount
             $discount = match ($promo->type) {
-                'percentage' => round($subtotal * ($promo->value / 100), 2),
-                'fixed' => min((float) $promo->value, $subtotal),
+                'percentage' => round($base * ($promo->value / 100), 2),
+                'fixed' => min((float) $promo->value, $base),
                 default => 0.0,
             };
 
