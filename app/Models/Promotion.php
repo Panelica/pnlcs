@@ -35,9 +35,12 @@ class Promotion extends Model
         }
 
         if (! $client) {
-            // No customer to judge the remaining rules against; the code is
-            // only as good as its own validity.
-            return ! $this->apply_once && ! $this->new_signups_only && ! $this->existing_client;
+            // A guest in the cart. This check is provisional - the order
+            // re-validates against the real client at placement - so only the
+            // rule a guest can never satisfy refuses here. Refusing
+            // new_signups_only turned the code away from exactly the people
+            // it exists for, before they had any way to sign up.
+            return ! $this->existing_client;
         }
 
         $hasOrdered = Order::where('client_id', $client->id)->exists();
