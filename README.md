@@ -951,6 +951,31 @@ is a self-contained directory with a handler class and optional config view.
 
 ---
 
+## AI Assistants — MCP Server
+
+PNLCS ships a first-party [Model Context Protocol](https://modelcontextprotocol.io)
+server, [`pnlcs-mcp` on npm](https://www.npmjs.com/package/pnlcs-mcp). Connect
+Claude Code, Claude Desktop, Cursor or VS Code to your install and ask it
+things in plain English — *which invoices are overdue*, *any orders held as
+fraud*, *open a ticket for this client*. Fifteen read tools are always
+available; the seven write tools exist only when you opt in with
+`PNLCS_ALLOW_WRITES=1`. Zero dependencies, nothing to install on the PNLCS
+side — it speaks to the same admin API your screens use, with an API
+credential you create under **Configuration → API Credentials**.
+
+Setup for every client lives in [`mcp/README.md`](mcp/README.md). Claude Code
+users need one command:
+
+```bash
+claude mcp add pnlcs \
+  --env PNLCS_URL=https://billing.example.com \
+  --env PNLCS_IDENTIFIER=your_identifier \
+  --env PNLCS_SECRET=your_secret \
+  -- npx -y pnlcs-mcp
+```
+
+---
+
 ## Internationalization
 
 All UI strings live in the database (`dynamic_translations` table) and

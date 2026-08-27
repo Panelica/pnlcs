@@ -10,7 +10,7 @@ import { createInterface } from 'node:readline';
 import { config, callAction } from './lib/api.js';
 import { descriptors, findTool } from './lib/tools.js';
 
-const VERSION = '1.0.2';
+const VERSION = '1.0.3';
 
 let cfg;
 try {
