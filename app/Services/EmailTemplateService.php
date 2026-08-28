@@ -152,6 +152,12 @@ class EmailTemplateService
                 ],
                 'service' => $vars += [
                     'service_domain' => $model->domain ?? '',
+                    // The credentials the module wrote onto the service when the
+                    // account was built. cPanel and Plesk welcome mail carries
+                    // them too; a welcome mail without them tells the customer a
+                    // service exists that they cannot open.
+                    'service_username' => $model->username ?? '',
+                    'service_password' => (string) ($model->password ?? ''),
                     'service_product' => $model->product->name ?? '',
                     // The templates say {product_name}.
                     'product_name' => $model->product->name ?? '',
