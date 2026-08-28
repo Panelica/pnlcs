@@ -80,6 +80,9 @@
         ['k'=>'cron','name'=>__('client.hosting.cron.title'),'desc'=>__('client.hosting.cron.subtitle'),'ic'=>'ri-time-line','c'=>'#ec4899','route'=>route('client.services.cron',$service)],
         ['k'=>'backups','name'=>__('client.hosting.backups.title'),'desc'=>__('client.hosting.backups.subtitle'),'ic'=>'ri-archive-2-line','c'=>'#64748b','route'=>route('client.services.backups',$service)],
         ['k'=>'containers','name'=>__('client.hosting.containers.title'),'desc'=>__('client.hosting.containers.subtitle'),'ic'=>'ri-apps-2-line','c'=>'#0ea5e9','route'=>route('client.services.containers',$service)],
+        ['k'=>'laravel','name'=>__('client.hosting.laravel.title'),'desc'=>__('client.hosting.laravel.subtitle'),'ic'=>'ri-fire-line','c'=>'#ef4444','route'=>route('client.services.laravel',$service)],
+        ['k'=>'nodejs','name'=>__('client.hosting.nodejs.title'),'desc'=>__('client.hosting.nodejs.subtitle'),'ic'=>'ri-nodejs-line','c'=>'#22c55e','route'=>route('client.services.nodejs',$service)],
+        ['k'=>'python','name'=>__('client.hosting.python.title'),'desc'=>__('client.hosting.python.subtitle'),'ic'=>'ri-terminal-box-line','c'=>'#3b82f6','route'=>route('client.services.python',$service)],
     ];
 @endphp
 

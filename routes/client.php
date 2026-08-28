@@ -130,6 +130,10 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::get('services/{service}/backups', [ServiceController::class, 'backups'])->name('services.backups');
         Route::post('services/{service}/backups', [ServiceController::class, 'storeBackup'])->name('services.backups.store');
         Route::post('services/{service}/backups/delete', [ServiceController::class, 'destroyBackup'])->name('services.backups.destroy');
+        // Runtime applications (Laravel / Node.js / Python) — read-only lists.
+        Route::get('services/{service}/laravel', [ServiceController::class, 'laravelApps'])->name('services.laravel');
+        Route::get('services/{service}/nodejs', [ServiceController::class, 'nodejsApps'])->name('services.nodejs');
+        Route::get('services/{service}/python', [ServiceController::class, 'pythonApps'])->name('services.python');
         Route::get('services/{service}/containers', [ServiceController::class, 'containers'])->name('services.containers');
         Route::post('services/{service}/containers', [ServiceController::class, 'storeContainer'])->name('services.containers.store');
         Route::post('services/{service}/containers/action', [ServiceController::class, 'containerAction'])->name('services.containers.action');

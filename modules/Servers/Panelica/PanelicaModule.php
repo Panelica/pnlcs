@@ -874,7 +874,80 @@ class PanelicaModule extends AbstractServerModule
             return ['containers'];
         }
 
-        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns', 'backups', 'containers'];
+        return ['emails', 'files', 'databases', 'ftp', 'subdomains', 'cron', 'dns', 'backups', 'containers', 'laravel', 'nodejs', 'python'];
+    }
+
+    /**
+     * The account's own runtime applications (Laravel / Node.js / Python).
+     *
+     * The panel hosts these natively, separate from Docker containers, and
+     * PNLCS never showed them - a customer who bought a Laravel/Node/Python
+     * account saw only their Docker apps under "My Services". The panel's
+     * list endpoint answers with everything the API key may see and the PNLCS
+     * key is ROOT-scoped, so the app's owner_user_id (which the module records
+     * as the account's panelica_user_id) is what decides what the customer is
+     * shown - exactly how containers() filters on panelica.user_id.
+     *
+     * Read-only on purpose: creating and deploying apps stays in the control
+     * panel, where the git/upload/deploy flow and its warnings live.
+     *
+     * @return list<array{id:string,name:string,domain:string,status:string,url:string,version:string,framework:string}>
+     */
+    private function runtimeApps(Service $service, string $type): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+        if (! $server || ! $accountId) {
+            return [];
+        }
+
+        $resp = $this->get($server, "/v1/{$type}/apps");
+        if (! $resp->successful()) {
+            return [];
+        }
+
+        $out = [];
+        foreach (($resp->json('data') ?? []) as $a) {
+            if (! is_array($a)) {
+                continue;
+            }
+            // Not this account's app. The PNLCS key sees every app on the
+            // server; the owner is the only thing that makes one the
+            // customer's own.
+            if ((string) ($a['owner_user_id'] ?? '') !== (string) $accountId) {
+                continue;
+            }
+            $out[] = [
+                'id' => (string) ($a['id'] ?? ''),
+                'name' => (string) ($a['name'] ?? ''),
+                'domain' => (string) ($a['domain'] ?? ''),
+                'status' => strtolower((string) ($a['status'] ?? '')),
+                'url' => (string) ($a['app_url'] ?? $a['url'] ?? ''),
+                // One "version" column whatever the runtime calls it.
+                'version' => (string) ($a['php_version'] ?? $a['node_version'] ?? $a['python_version'] ?? ''),
+                'framework' => (string) ($a['framework'] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    /** @return list<array<string,string>> */
+    public function laravelApps(Service $service): array
+    {
+        return $this->runtimeApps($service, 'laravel');
+    }
+
+    /** @return list<array<string,string>> */
+    public function nodejsApps(Service $service): array
+    {
+        return $this->runtimeApps($service, 'nodejs');
+    }
+
+    /** @return list<array<string,string>> */
+    public function pythonApps(Service $service): array
+    {
+        return $this->runtimeApps($service, 'python');
     }
 
     // -------------------------------------------------------------------------

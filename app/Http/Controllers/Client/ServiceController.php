@@ -791,6 +791,46 @@ class ServiceController extends Controller
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
+    /**
+     * Runtime application tabs (Laravel / Node.js / Python). Read-only: the
+     * account's own apps are listed here; creating and deploying them stays in
+     * the control panel. Each maps to the module's matching {runtime}Apps()
+     * method, which filters the server's apps down to this account's owner.
+     */
+    public function laravelApps(Service $service)
+    {
+        return $this->runtimeAppsPage($service, 'laravel');
+    }
+
+    public function nodejsApps(Service $service)
+    {
+        return $this->runtimeAppsPage($service, 'nodejs');
+    }
+
+    public function pythonApps(Service $service)
+    {
+        return $this->runtimeAppsPage($service, 'python');
+    }
+
+    private function runtimeAppsPage(Service $service, string $runtime)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, $runtime);
+        if (! $module) {
+            return redirect()->route('client.services.show', $service);
+        }
+
+        $method = $runtime.'Apps';
+        $apps = method_exists($module, $method) ? $module->{$method}($service) : [];
+
+        return view('client.services.hosting.runtime-apps', [
+            'service' => $service,
+            'runtime' => $runtime,
+            'apps' => $apps,
+        ]);
+    }
+
     public function containers(Service $service)
     {
         abort_if($service->client_id !== $this->getClientId(), 403);
