@@ -331,6 +331,14 @@
 </div>
 @endif
 
+{{-- Tek merkez menü: misafir HER sayfada ana sayfanın menüsünü görür;
+     panel menüsü (pn-navbar) yalnız oturum açmış müşteriye aittir. --}}
+@guest
+<div x-data="{ mobileMenu: false }">
+    @include('sections.navigation', ['apps' => []])
+</div>
+@endguest
+@auth
 <nav class="pn-navbar">
     <div class="pn-navbar-inner">
         <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="Logo" style="max-height:32px;">@else {{ company_name() }} <span class="pn-brand-dot"></span>@endif</a>
@@ -541,6 +549,7 @@
     </div>
 </nav>
 
+@endauth
 <div class="pn-main">
     @if(session("success"))
         <div class="pn-alert pn-alert-success">
