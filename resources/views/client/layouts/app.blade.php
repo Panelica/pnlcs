@@ -354,6 +354,20 @@
                     </a>
                 </div>
             </div>
+            {{-- A guest's menu mirrors the storefront: one link per product
+                 group, straight from the catalogue - the same source the
+                 marketing pages read, so the menus cannot drift apart. --}}
+            @guest
+            @php $navGroups = \App\Models\ProductGroup::where('hidden', 0)->orderBy('sort_order')->get(); @endphp
+            @foreach($navGroups as $navGroup)
+            <div class="pn-nav-item">
+                <a href="{{ route("client.store") }}?kategori={{ $navGroup->slug }}"
+                   class="pn-nav-link {{ request()->routeIs("client.store*") && request("kategori") === $navGroup->slug ? "active" : "" }}">
+                    {{ $navGroup->name }}
+                </a>
+            </div>
+            @endforeach
+            @endguest
             <div class="pn-nav-item">
                 <button type="button" class="pn-nav-link {{ request()->routeIs("client.domains.*") ? "active" : "" }}">{{ __('client.nav.domains') }}
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
