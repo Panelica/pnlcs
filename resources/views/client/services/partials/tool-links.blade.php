@@ -13,6 +13,9 @@
         'files' => ['client.services.files', 'ri-folder-line', __('client.hosting.tools.files')],
         'emails' => ['client.services.emails', 'ri-mail-line', __('client.hosting.tools.emails')],
         'databases' => ['client.services.databases', 'ri-database-2-line', __('client.hosting.tools.databases')],
+        'laravel' => ['client.services.laravel', 'ri-fire-line', __('client.hosting.tools.laravel')],
+        'nodejs' => ['client.services.nodejs', 'ri-nodejs-line', __('client.hosting.tools.nodejs')],
+        'python' => ['client.services.python', 'ri-terminal-box-line', __('client.hosting.tools.python')],
     ];
     $svcShown = array_filter($svcShortcuts, fn ($v, $k) => in_array($k, $svcTools, true), ARRAY_FILTER_USE_BOTH);
 @endphp

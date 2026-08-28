@@ -115,6 +115,18 @@ it('shows a clean empty state when a runtime has no apps', function () {
         ->assertSee(__('client.hosting.runtime.empty_title'));
 });
 
+it('links the runtime shortcuts on the service listing row', function () {
+    fakeRuntimeApi();
+    [$user, $client, $service] = raService(raServer());
+
+    $this->actingAs($user)->withSession(['active_client_id' => $client->id])
+        ->get(route('client.services.index'))
+        ->assertOk()
+        ->assertSee(route('client.services.laravel', $service))
+        ->assertSee(route('client.services.nodejs', $service))
+        ->assertSee(route('client.services.python', $service));
+});
+
 it('refuses a service that is not the caller\'s', function () {
     fakeRuntimeApi();
     [, , $service] = raService(raServer());
