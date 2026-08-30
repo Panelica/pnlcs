@@ -55,7 +55,10 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="current_password">{{ __('client.account.current_password') }}</label>
-                    <input type="password" id="current_password" name="current_password" autocomplete="current-password" class="form-control">
+                    <div style="display:flex;gap:6px;">
+                        <input type="password" id="current_password" name="current_password" autocomplete="current-password" class="form-control">
+                        <button type="button" onclick="togglePw('current_password')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.toggle') }}">&#128065;</button>
+                    </div>
                     <div style="color:var(--muted);font-size:12px;margin-top:4px;">{{ __('client.account.email_change_needs_password') }}</div>
                     @error('current_password')<div style="color:#c00;font-size:12px;margin-top:4px;">{{ $message }}</div>@enderror
                 </div>
@@ -66,11 +69,19 @@
                 <div class="form-grid-2">
                     <div class="form-group">
                         <label class="form-label" for="new_password">{{ __('common.form.new_password') }}</label>
-                        <input type="password" id="new_password" name="new_password" autocomplete="new-password" class="form-control">
+                        <div style="display:flex;gap:6px;">
+                            <input type="password" id="new_password" name="new_password" autocomplete="new-password" class="form-control">
+                            <button type="button" onclick="generatePw()" class="btn btn-default" style="white-space:nowrap;flex-shrink:0;" title="{{ __('admin.clients.generate_password') }}">&#128273;</button>
+                            <button type="button" onclick="copyPw('new_password', this)" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.copy') }}">&#128203;</button>
+                            <button type="button" onclick="togglePw('new_password')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.toggle') }}">&#128065;</button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="new_password_confirmation">{{ __('client.password.confirm_new') }}</label>
-                        <input type="password" id="new_password_confirmation" name="new_password_confirmation" autocomplete="new-password" class="form-control">
+                        <div style="display:flex;gap:6px;">
+                            <input type="password" id="new_password_confirmation" name="new_password_confirmation" autocomplete="new-password" class="form-control">
+                            <button type="button" onclick="togglePw('new_password_confirmation')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.toggle') }}">&#128065;</button>
+                        </div>
                     </div>
                 </div>
                 <div style="color:var(--muted);font-size:12px;">{{ __('client.password.min_chars') }}</div>
@@ -156,5 +167,52 @@
     </div>
 </div>
 
+@section("scripts")
+<script>
+function generatePw() {
+    var upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    var lower = "abcdefghijkmnopqrstuvwxyz";
+    var digits = "23456789";
+    var symbols = "!@#$%^&*_-+=?";
+    var all = upper + lower + digits + symbols;
+    var out = [
+        upper[Math.floor(Math.random() * upper.length)],
+        lower[Math.floor(Math.random() * lower.length)],
+        digits[Math.floor(Math.random() * digits.length)],
+        symbols[Math.floor(Math.random() * symbols.length)],
+    ];
+    for (var i = 0; i < 12; i++) out.push(all[Math.floor(Math.random() * all.length)]);
+    out.sort(function () { return Math.random() - 0.5; });
+    var pw = out.join("");
+    var a = document.getElementById("new_password");
+    var b = document.getElementById("new_password_confirmation");
+    if (a) { a.value = pw; a.type = "text"; }
+    if (b) { b.value = pw; b.type = "text"; }
+}
+
+function togglePw(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.type = el.type === "password" ? "text" : "password";
+}
+
+function copyPw(id, btn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var prev = el.type;
+    el.type = "text";
+    el.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    el.type = prev;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).catch(function () {});
+    }
+    if (btn) {
+        var orig = btn.innerHTML;
+        btn.innerHTML = "&#10003;";
+        setTimeout(function () { btn.innerHTML = orig; }, 1200);
+    }
+}
+</script>
 @endsection
 
