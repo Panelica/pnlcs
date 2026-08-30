@@ -34,48 +34,45 @@ it('does not offer a compound switch that changes nothing', function () {
 it('still creates a tax rule', function () {
     $this->actingAs(taxAdmin(), 'admin')
         ->post(route('admin.config.tax.store'), [
-            'level' => 1,
-            'name' => 'VAT',
             'country' => 'GB',
-            'tax_rate' => 20,
+            'rates' => [
+                ['name' => 'VAT', 'tax_rate' => 20],
+            ],
         ])->assertRedirect();
 
     expect(TaxRule::where('name', 'VAT')->where('country', 'GB')->exists())->toBeTrue();
 });
 
 it('stores a blank state as an empty string, not null', function () {
-    // The add form always submits state and country inputs; left blank they
-    // arrive as empty strings. Laravel's `nullable` rule converts those to
-    // null, and a NOT NULL column rejects the insert even though the schema
-    // default is ''. The controller must normalise null back to ''.
+    // The state input is optional; left blank it arrives as null and the
+    // controller must normalise it back to '' for the NOT NULL column.
     $this->actingAs(taxAdmin(), 'admin')
         ->post(route('admin.config.tax.store'), [
-            'level' => 1,
-            'name' => 'VAT',
-            'country' => '',
-            'state' => '',
-            'tax_rate' => 23,
+            'country' => 'GB',
+            'rates' => [
+                ['name' => 'VAT', 'tax_rate' => 23],
+            ],
         ])->assertRedirect();
 
     $rule = TaxRule::where('name', 'VAT')->where('tax_rate', 23)->first();
     expect($rule)->not->toBeNull()
-        ->and($rule->country)->toBe('')
+        ->and($rule->country)->toBe('GB')
         ->and($rule->state)->toBe('');
 });
 
-it('normalises blank state and country when updating a rule', function () {
-    $rule = TaxRule::factory()->create(['country' => 'US', 'state' => 'TX']);
+it('normalises blank state when updating a rule', function () {
+    TaxRule::factory()->create(['country' => 'US', 'state' => 'TX', 'name' => 'Old', 'tax_rate' => 5]);
 
     $this->actingAs(taxAdmin(), 'admin')
-        ->put(route('admin.config.tax.update', $rule), [
-            'level' => 1,
-            'name' => 'VAT',
-            'country' => '',
-            'state' => '',
-            'tax_rate' => 19,
+        ->put(route('admin.config.tax.update', ['country' => 'US', 'state' => 'TX']), [
+            'country' => 'US',
+            'rates' => [
+                ['name' => 'VAT', 'tax_rate' => 19],
+            ],
         ])->assertRedirect();
 
-    $rule->refresh();
-    expect($rule->country)->toBe('')
+    $rule = TaxRule::where('name', 'VAT')->where('tax_rate', 19)->first();
+    expect($rule)->not->toBeNull()
+        ->and($rule->country)->toBe('US')
         ->and($rule->state)->toBe('');
 });

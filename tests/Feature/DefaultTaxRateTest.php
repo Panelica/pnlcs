@@ -73,6 +73,25 @@ test('an invoice charges the default rate when nothing matches', function () {
         ->and((float) $invoice->total)->toEqual(123.0);
 });
 
+test('within a country the default rate wins over its other rates', function () {
+    TaxRule::create(['name' => 'VAT 8%', 'country' => 'PL', 'state' => '', 'tax_rate' => 8]);
+    TaxRule::create(['name' => 'VAT 23%', 'country' => 'PL', 'state' => '', 'tax_rate' => 23, 'is_default' => true]);
+
+    $tax = app(InvoiceService::class)->calculateTax(100, clientWithCountry('PL')->id);
+
+    expect($tax['tax_rate'])->toEqual(23.0);
+});
+
+test('a state-specific rate wins over the country default', function () {
+    TaxRule::create(['name' => 'TX Sales Tax', 'country' => 'US', 'state' => 'TX', 'tax_rate' => 8.25]);
+    TaxRule::create(['name' => 'US Default', 'country' => 'US', 'state' => '', 'tax_rate' => 7, 'is_default' => true]);
+
+    $client = Client::factory()->create(['country' => 'US', 'state' => 'TX', 'tax_exempt' => false]);
+    $tax = app(InvoiceService::class)->calculateTax(100, $client->id);
+
+    expect($tax['tax_rate'])->toEqual(8.25);
+});
+
 test('the tax screen shows the rate that was entered', function () {
     TaxRule::create(['name' => 'VAT', 'country' => 'GB', 'state' => '', 'tax_rate' => 17.5]);
 
