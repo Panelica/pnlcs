@@ -35,7 +35,7 @@
                 <div class="pn-amount-grid">
                     @foreach([10, 25, 50, 100, 250, 500] as $preset)
                     <button type="button" class="pn-amount-btn" onclick="setAmount({{ $preset }}, this)">
-                        ${{ $preset }}
+                        {{ $currencyPrefix }}{{ $preset }}
                     </button>
                     @endforeach
                 </div>
@@ -43,12 +43,29 @@
             <div class="form-group">
                 <label class="form-label" for="amount">{{ __('client.funds.custom_amount') }}</label>
                 <div style="position:relative">
-                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;font-weight:600">$</span>
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;font-weight:600">{{ $currencyPrefix }}</span>
                     <input type="number" id="amount" name="amount" value="{{ old("amount") }}" min="5" max="10000" step="0.01" required
                         class="form-control" style="padding-left:26px" placeholder="0.00">
                 </div>
-                <div class="form-hint">{{ __('client.funds.amount_range') }}</div>
+                <div class="form-hint">{{ __('client.funds.amount_range', ['min' => money_fmt(5), 'max' => money_fmt(10000)]) }}</div>
             </div>
+
+            @if($taxRate > 0)
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;">
+                    <span class="text-muted">{{ __('admin.invoices.net') }}</span>
+                    <span id="funds-net">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;">
+                    <span class="text-muted">{{ __('admin.invoices.tax') }} ({{ rtrim(rtrim(number_format($taxRate, 2), '0'), '.') }}%)</span>
+                    <span id="funds-vat">—</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:5px 0 0;font-size:15px;font-weight:700;border-top:1px solid var(--border);margin-top:4px;">
+                    <span>{{ __('admin.invoices.gross') }}</span>
+                    <span id="funds-total">—</span>
+                </div>
+            </div>
+            @endif
             <div class="form-group">
                 <label class="form-label" for="payment_method">{{ __('client.checkout.payment_method') }} <span class="req">*</span></label>
                 <select id="payment_method" name="payment_method" required class="form-control">
@@ -73,11 +90,33 @@
 
 @section("scripts")
 <script>
+const FUNDS_TAX_RATE = {{ $taxRate }};
+const FUNDS_PREFIX = @json($currencyPrefix);
+const FUNDS_SUFFIX = @json($currencySuffix);
+
+function fundsFmt(n) {
+    return FUNDS_PREFIX + Number(n).toFixed(2) + FUNDS_SUFFIX;
+}
+
+function fundsUpdate() {
+    var total = document.getElementById("funds-total");
+    if (!total) return;
+    var amount = parseFloat(document.getElementById("amount").value) || 0;
+    var vat = amount * FUNDS_TAX_RATE / 100;
+    document.getElementById("funds-net").textContent = fundsFmt(amount);
+    document.getElementById("funds-vat").textContent = fundsFmt(vat);
+    total.textContent = fundsFmt(amount + vat);
+}
+
 function setAmount(v, btn) {
     document.getElementById("amount").value = v;
     document.querySelectorAll(".pn-amount-btn").forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
+    fundsUpdate();
 }
+
+document.getElementById("amount").addEventListener("input", fundsUpdate);
+fundsUpdate();
 </script>
 @endsection
 

@@ -4,13 +4,9 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
-use App\Models\Invoice;
-use App\Models\InvoiceItem;
 use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class FundsController extends Controller
 {
@@ -23,7 +19,18 @@ class FundsController extends Controller
         // used to list every gateway that had ever had a setting saved.
         $gateways = collect(app(ModuleRegistry::class)->usableGateways())->sort()->values();
 
-        return view('client.funds.index', compact('gateways'));
+        $client = $this->currentClient();
+        $taxData = $client ? app(InvoiceService::class)->calculateTax(1, $client->id) : ['tax_rate' => 0.0];
+        $taxRate = (float) ($taxData['tax_rate'] ?? 0.0);
+
+        $currency = \App\Models\Currency::getDefault();
+
+        return view('client.funds.index', [
+            'gateways'       => $gateways,
+            'taxRate'        => $taxRate,
+            'currencyPrefix' => $currency->prefix ?? '',
+            'currencySuffix' => $currency->suffix ?? '',
+        ]);
     }
 
     public function store(Request $request)
@@ -48,31 +55,19 @@ class FundsController extends Controller
             return back()->with('error', __('messages.error.gateway_not_configured', ['gateway' => ucfirst($gateway)]));
         }
 
-        $invoice = Invoice::create([
-            'client_id'      => $client->id,
-            // Freeze the buyer alongside the money (issue #7)
-            ...Invoice::buyerSnapshotFrom($client),
-            'invoice_num'    => app(InvoiceService::class)->generateInvoiceNumber(),
+        // The Add Funds line is taxable: the customer pays amount + VAT, while
+        // their balance is credited with the net amount once the invoice is paid.
+        $invoice = app(InvoiceService::class)->createInvoice($client, [
+            [
+                'type'        => 'AddFunds',
+                'description' => __('messages.invoice.add_funds_description'),
+                'amount'      => $validated['amount'],
+                'taxed'       => true,
+            ],
+        ], [
             'date'           => today(),
             'due_date'       => today(),
-            'subtotal'       => $validated['amount'],
-            'credit'         => 0,
-            'tax'            => 0,
-            'tax2'           => 0,
-            'total'          => $validated['amount'],
-            'tax_rate'       => 0,
-            'tax_rate2'      => 0,
-            'status'         => 'unpaid',
             'payment_method' => $gateway,
-        ]);
-
-        InvoiceItem::create([
-            'invoice_id'  => $invoice->id,
-            'client_id'   => $client->id,
-            'type'        => 'AddFunds',
-            'description' => __('messages.invoice.add_funds_description'),
-            'amount'      => $validated['amount'],
-            'taxed'       => false,
         ]);
 
         return redirect()->route('client.invoices.show', $invoice)

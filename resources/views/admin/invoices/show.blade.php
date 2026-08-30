@@ -44,19 +44,21 @@
                     <div class="form-group" style="margin:0;flex:1;min-width:140px;">
                         <label class="form-label">{{ __('admin.invoices.refund_amount') }}</label>
                         <input type="number" name="amount" step="0.01" min="0.01" value="{{ number_format((float) $invoice->total, 2, '.', '') }}" class="form-control">
-                        <small class="text-muted">{{ __('admin.invoices.refund_amount_hint') }}</small>
                     </div>
                     <div class="form-group" style="margin:0;flex:2;min-width:200px;">
                         <label class="form-label">{{ __('admin.invoices.refund_reason') }}</label>
                         <input type="text" name="reason" maxlength="500" class="form-control">
                     </div>
-                    <div class="form-group" style="margin:0;min-width:180px;">
-                        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;padding:7px 0;margin-bottom:0;">
                             <input type="checkbox" name="gateway_refund" value="1" checked> {{ __('admin.invoices.refund_via_gateway') }}
                         </label>
-                        <small class="text-muted">{{ __('admin.invoices.refund_via_gateway_hint') }}</small>
                     </div>
                     <button type="submit" class="btn btn-warning btn-sm" style="margin-bottom:0;">{{ __('admin.invoices.confirm_refund_btn') }}</button>
+                </div>
+                <div style="font-size:12px;color:#888;margin-top:8px;">
+                    <div>{{ __('admin.invoices.refund_amount_hint') }}</div>
+                    <div>{{ __('admin.invoices.refund_via_gateway_hint') }}</div>
                 </div>
             </form>
         </div>

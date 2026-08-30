@@ -464,7 +464,7 @@ return [
         'subtitle' => 'Doładuj saldo swojego konta.',
         'title' => 'Dodaj środki',
     ],
-    'funds.amount_range' => 'Minimum $5.00, maksimum $10 000.00',
+    'funds.amount_range' => 'Minimum :min, maksimum :max',
     'funds.available_credit_desc' => 'Dostępne na faktury i zakupy.',
     'funds.bank_transfer' => 'Przelew bankowy',
     'funds.current_credit' => 'Aktualne saldo',

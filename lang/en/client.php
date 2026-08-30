@@ -464,7 +464,7 @@ return [
         'subtitle' => 'Top up your account credit balance.',
         'title' => 'Add Funds',
     ],
-    'funds.amount_range' => 'Minimum $5.00, maximum $10,000.00',
+    'funds.amount_range' => 'Minimum :min, maximum :max',
     'funds.available_credit_desc' => 'Available for invoices and purchases.',
     'funds.bank_transfer' => 'Bank Transfer',
     'funds.current_credit' => 'Current Credit Balance',
