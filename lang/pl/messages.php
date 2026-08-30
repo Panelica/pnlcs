@@ -77,6 +77,7 @@ return [
     'payment_method.credit' => 'Kredyt',
     'payment_method.bank_transfer' => 'Przelew',
     'payment_method.credit_debit_card' => 'Karta kredytowa / debetowa',
+    'payment_method.tpay' => 'Tpay',
     'payment_method.paypal' => 'PayPal',
     'banktransfer.account_name' => 'Nazwa konta',
     'banktransfer.account_number' => 'Numer konta',

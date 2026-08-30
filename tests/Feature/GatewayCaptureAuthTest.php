@@ -7,7 +7,7 @@ use App\Models\User;
 /**
  * Who may start a payment against an invoice.
  *
- * The six browser-facing capture endpoints sat in a route group commented
+ * The seven browser-facing capture endpoints sat in a route group commented
  * "authenticated, CSRF-protected" that carried no auth middleware, and not one
  * of them checked whose invoice it was. Invoice ids are sequential, so anyone
  * could POST /gateway/stripe/intent/{id} for somebody else's invoice and be
@@ -45,6 +45,7 @@ $endpoints = [
     'gateway.authorize.capture',
     'gateway.mollie.capture',
     'gateway.razorpay.capture',
+    'gateway.tpay.capture',
 ];
 
 test('a stranger cannot start a payment on an invoice', function () use ($endpoints) {
