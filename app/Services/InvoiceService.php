@@ -125,6 +125,7 @@ class InvoiceService
             'taxed' => $itemData['taxed'] ?? ($taxRate === null ? true : $taxRate > 0),
             'tax_rate' => $taxRate,
             'tax_label' => $itemData['tax_label'] ?? null,
+            'unit' => $itemData['unit'] ?? null,
             'due_date' => $itemData['due_date'] ?? null,
         ]);
 
