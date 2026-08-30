@@ -36,7 +36,7 @@ function cartVsInvoice(bool $taxable, float $groupDiscount = 0.0): array
         $client->update(['group_id' => $group->id]);
     }
 
-    TaxRule::create(['level' => 1, 'name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 10]);
+    TaxRule::create(['name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 10]);
 
     $product = Product::factory()->create([
         'group_id' => ProductGroup::factory()->create()->id,

@@ -276,6 +276,7 @@ return [
         'tax_created' => 'Tax rule created.',
         'tax_deleted' => 'Tax rule deleted.',
         'tax_rule_added' => 'Tax rule added.',
+        'tax_set_default' => 'Default tax rate set.',
         'tax_updated' => 'Tax rule updated.',
         'template_updated' => 'Email template updated.',
         'test_email_sent' => 'Test email sent.',

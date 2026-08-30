@@ -21,7 +21,7 @@ test('a promotion with tax charges what the cart quoted', function () {
         ?? Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1, 'is_default' => true]);
 
     $client = Client::factory()->create(['tax_exempt' => false]);
-    TaxRule::create(['level' => 1, 'name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 10]);
+    TaxRule::create(['name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 10]);
 
     $product = Product::factory()->create([
         'group_id' => ProductGroup::factory()->create()->id,
@@ -60,7 +60,7 @@ test('a tax-exempt customer is not quoted tax either', function () {
         ?? Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1, 'is_default' => true]);
 
     $client = Client::factory()->create(['tax_exempt' => true]);
-    TaxRule::create(['level' => 1, 'name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 20]);
+    TaxRule::create(['name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 20]);
 
     $product = Product::factory()->create(['group_id' => ProductGroup::factory()->create()->id, 'tax' => true]);
     Pricing::updateOrCreate(
@@ -86,7 +86,7 @@ test('a rule for another country is not applied', function () {
         ?? Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1, 'is_default' => true]);
 
     $client = Client::factory()->create(['tax_exempt' => false, 'country' => 'TR']);
-    TaxRule::create(['level' => 1, 'name' => 'Elsewhere', 'country' => 'DE', 'state' => '', 'tax_rate' => 19]);
+    TaxRule::create(['name' => 'Elsewhere', 'country' => 'DE', 'state' => '', 'tax_rate' => 19]);
 
     $product = Product::factory()->create(['group_id' => ProductGroup::factory()->create()->id, 'tax' => true]);
     Pricing::updateOrCreate(

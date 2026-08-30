@@ -9,11 +9,11 @@ class TaxRuleFactory extends Factory
     public function definition(): array
     {
         return [
-            'level' => 1,
             'name' => fake()->randomElement(['VAT', 'GST', 'Sales Tax', 'KDV']),
             'state' => '',
             'country' => fake()->countryCode(),
             'tax_rate' => fake()->randomFloat(2, 5, 25),
+            'is_default' => false,
         ];
     }
 
@@ -22,8 +22,8 @@ class TaxRuleFactory extends Factory
         return $this->state(fn () => ['name' => 'VAT', 'tax_rate' => 20.00]);
     }
 
-    public function level2(): static
+    public function default(): static
     {
-        return $this->state(fn () => ['level' => 2]);
+        return $this->state(fn () => ['is_default' => true]);
     }
 }

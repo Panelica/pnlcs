@@ -90,14 +90,26 @@ class DemoSeeder extends Seeder
         }
 
         // 5. Tax rules
+        TaxRule::firstOrCreate(['name' => 'VAT 23%', 'country' => 'PL'], [
+            'tax_rate' => 23.00, 'state' => '', 'is_default' => true,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT 8%', 'country' => 'PL'], [
+            'tax_rate' => 8.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT 5%', 'country' => 'PL'], [
+            'tax_rate' => 5.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT 0%', 'country' => 'PL'], [
+            'tax_rate' => 0.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT ZW', 'country' => 'PL'], [
+            'tax_rate' => 0.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT NP', 'country' => 'PL'], [
+            'tax_rate' => 0.00, 'state' => '', 'is_default' => false,
+        ]);
         TaxRule::firstOrCreate(['name' => 'US Sales Tax', 'country' => 'US'], [
-            'tax_rate' => 10.00, 'level' => 1, 'state' => '',
-        ]);
-        TaxRule::firstOrCreate(['name' => 'EU VAT (Germany)', 'country' => 'DE'], [
-            'tax_rate' => 19.00, 'level' => 1, 'state' => '',
-        ]);
-        TaxRule::firstOrCreate(['name' => 'UK VAT', 'country' => 'GB'], [
-            'tax_rate' => 20.00, 'level' => 1, 'state' => '',
+            'tax_rate' => 10.00, 'state' => '', 'is_default' => false,
         ]);
 
         // 6. Ticket departments

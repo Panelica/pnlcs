@@ -276,6 +276,7 @@ return [
         'tax_created' => 'Reguła podatkowa utworzona.',
         'tax_deleted' => 'Reguła podatkowa usunięta.',
         'tax_rule_added' => 'Reguła podatkowa dodana.',
+        'tax_set_default' => 'Ustawiono domyślną stawkę podatku.',
         'tax_updated' => 'Reguła podatkowa zaktualizowana.',
         'template_updated' => 'Szablon e-mail zaktualizowany.',
         'test_email_sent' => 'Testowa wiadomość e-mail wysłana.',
