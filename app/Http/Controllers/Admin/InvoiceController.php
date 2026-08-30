@@ -39,8 +39,13 @@ class InvoiceController extends Controller
     {
         $query = Invoice::with('client');
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        // The list opens on the Unpaid view (which includes overdue invoices).
+        $status = (string) $request->input('status', 'unpaid');
+
+        if ($status === 'unpaid') {
+            $query->whereIn('status', ['unpaid', 'overdue']);
+        } elseif ($status !== '') {
+            $query->where('status', $status);
         }
 
         if ($request->filled('search')) {
@@ -414,7 +419,13 @@ class InvoiceController extends Controller
         $query = Invoice::with('client');
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $status = (string) $request->status;
+
+            if ($status === 'unpaid') {
+                $query->whereIn('status', ['unpaid', 'overdue']);
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         $invoices = $query->orderBy('id', 'asc')->get();

@@ -211,6 +211,8 @@ return [
         'open' => 'Open',
         'overdue' => 'Overdue',
         'paid' => 'Paid',
+        'partially_paid' => 'Partially Paid',
+        'payment_pending' => 'Payment Pending',
         'pending' => 'Pending',
         'refunded' => 'Refunded',
         'resolved' => 'Resolved',

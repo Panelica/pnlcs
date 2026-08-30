@@ -213,6 +213,7 @@ return [
         'paid' => 'Opłacona',
         'partially_paid' => 'Częściowo opłacona',
         'payment_pending' => 'Oczekuje na płatność',
+        'payment_pending' => 'Oczekuje na płatność',
         'pending' => 'Oczekujące',
         'refunded' => 'Zwrócono',
         'resolved' => 'Rozwiązany',

@@ -70,6 +70,15 @@
                     "refunded"           => "badge-refunded",
                     default              => "badge-cancelled",
                 };
+                $statusKey = strtolower($invoice->status ?? "");
+                $statusLabel = $statusKey === "overdue"
+                    ? __('common.status.unpaid') . '/' . __('common.status.overdue')
+                    : (__('common.status.' . $statusKey) !== 'common.status.' . $statusKey
+                        ? __('common.status.' . $statusKey)
+                        : ucfirst($invoice->status ?? ""));
+                $badgeStyle = $statusKey === "overdue"
+                    ? "background:#fff3cd !important;color:#856404 !important;"
+                    : "";
                 @endphp
                 <tr>
                     <td><input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}" class="row-checkbox"></td>
@@ -82,7 +91,7 @@
                     <td style="color:#666;">{{ $invoice->date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="color:#666;">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="text-align:right;font-weight:500;">{{ money_fmt($invoice->total) }}</td>
-                    <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
+                    <td><span class="badge {{ $badgeClass }}" style="{{ $badgeStyle }}">{{ $statusLabel }}</span></td>
                     <td>
                         <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                     </td>
