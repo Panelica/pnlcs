@@ -112,6 +112,7 @@ return [
         'admin_updated' => 'Konto administratora zaktualizowane.',
         'admin_updated_successfully' => 'Administrator zaktualizowany pomyślnie.',
         'affiliate_activated' => 'Konto partnerskie aktywowane.',
+        'affiliate_credited' => 'Prowizja dodana do salda konta.',
         'affiliate_updated' => 'Partner zaktualizowany.',
         'announcement_created' => 'Ogłoszenie utworzone.',
         'announcement_deleted' => 'Ogłoszenie usunięte.',

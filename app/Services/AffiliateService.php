@@ -72,6 +72,39 @@ class AffiliateService
     }
 
     /**
+     * Move money out of the affiliate balance and into the client's account
+     * credit. The affiliate keeps what they earned — it is just held as store
+     * credit instead of being paid out in cash.
+     */
+    public function convertToCredit(Affiliate $affiliate, float $amount): bool
+    {
+        if ($amount <= 0 || $affiliate->balance < $amount) {
+            return false;
+        }
+
+        $client = $affiliate->client;
+        if (! $client) {
+            return false;
+        }
+
+        $affiliate->decrement('balance', $amount);
+        $affiliate->increment('withdrawn', $amount);
+        $client->increment('credit', $amount);
+
+        Transaction::create([
+            'client_id' => $affiliate->client_id,
+            'gateway' => 'affiliate_payout',
+            'transaction_id' => 'AFFCR-'.strtoupper(uniqid()),
+            'amount_in' => 0,
+            'amount_out' => $amount,
+            'description' => 'Affiliate balance added to account credit - '.money_fmt($amount),
+            'date' => now(),
+        ]);
+
+        return true;
+    }
+
+    /**
      * Process affiliate commission when an invoice is paid.
      * Call this from the invoice payment handler.
      */

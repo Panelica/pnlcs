@@ -112,6 +112,7 @@ return [
         'admin_updated' => 'Admin account updated.',
         'admin_updated_successfully' => 'Admin updated successfully.',
         'affiliate_activated' => 'Affiliate account activated.',
+        'affiliate_credited' => 'Commission added to your account balance.',
         'affiliate_updated' => 'Affiliate updated.',
         'announcement_created' => 'Announcement created.',
         'announcement_deleted' => 'Announcement deleted.',

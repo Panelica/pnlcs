@@ -56,6 +56,20 @@
             </div>
             <button type="submit" class="btn btn-primary" style="flex-shrink:0">{{ __('client.affiliates.withdraw') }}</button>
         </form>
+
+        <hr style="margin:16px 0;">
+
+        <p class="text-muted text-sm mb-16">
+            {{ __('client.affiliates.add_to_balance_desc') }}
+        </p>
+        <form method="POST" action="{{ route('client.affiliates.toBalance') }}" style="display:flex;gap:8px;max-width:520px;align-items:flex-start">
+            @csrf
+            <div style="flex:1">
+                <input type="number" name="amount" step="0.01" min="0.01" max="{{ $affiliate->balance }}"
+                       value="{{ old('amount') }}" class="form-control" placeholder="0.00">
+            </div>
+            <button type="submit" class="btn btn-primary" style="flex-shrink:0">{{ __('client.affiliates.add_to_balance') }}</button>
+        </form>
     </div>
 </div>
 @endif
@@ -88,11 +102,11 @@
             <tbody>
                 @forelse($commissions ?? [] as $comm)
                 <tr>
-                    <td class="text-muted text-sm">{{ $comm->created_at?->format(date_fmt()) }}</td>
-                    <td>{{ $comm->referredClient->email ?? "-" }}</td>
-                    <td style="text-transform:capitalize">{{ $comm->type ?? "signup" }}</td>
-                    <td style="font-weight:700;color:var(--success)">{{ money_fmt($comm->amount) }}</td>
-                    <td><span class="badge badge-{{ strtolower($comm->status ?? "pending") }}">{{ ucfirst($comm->status ?? "pending") }}</span></td>
+                    <td class="text-muted text-sm">{{ $comm->date?->format(date_fmt()) ?? "-" }}</td>
+                    <td>{{ $comm->invoice?->client?->full_name ?? "-" }}</td>
+                    <td style="text-transform:capitalize">{{ __('client.affiliates.commission') }}</td>
+                    <td style="font-weight:700;color:var(--success)">{{ money_fmt(($comm->amount_in ?? 0) > 0 ? $comm->amount_in : $comm->amount_out) }}</td>
+                    <td><span class="badge badge-success">{{ __('client.affiliates.credited') }}</span></td>
                 </tr>
                 @empty
                 <tr>

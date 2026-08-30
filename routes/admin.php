@@ -449,11 +449,6 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::put('todo/{todo}', [ConfigController::class, 'updateTodo'])->name('todo.update');
         Route::delete('todo/{todo}', [ConfigController::class, 'destroyTodo'])->name('todo.destroy');
 
-        // Same data as admin.affiliates.index, which requires this.
-        Route::middleware('admin.permission:manage_affiliates')->group(function () {
-            Route::get('affiliates', [ConfigController::class, 'affiliates'])->name('affiliates');
-        });
-
         // Same data as admin.quotes.index, which requires this.
         Route::middleware('admin.permission:list_quotes|manage_quotes')->group(function () {
             Route::get('quotes', [ConfigController::class, 'quotes'])->name('quotes');
@@ -544,9 +539,11 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // Affiliates
     Route::middleware('admin.permission:manage_affiliates')->group(function () {
         Route::get('affiliates', [AffiliateController::class, 'index'])->name('affiliates.index');
+        Route::post('affiliates', [AffiliateController::class, 'store'])->name('affiliates.store');
         Route::get('affiliates/{affiliate}', [AffiliateController::class, 'show'])->name('affiliates.show');
         Route::put('affiliates/{affiliate}', [AffiliateController::class, 'update'])->name('affiliates.update');
         Route::post('affiliates/{affiliate}/payout', [AffiliateController::class, 'payout'])->name('affiliates.payout');
+        Route::post('affiliates/{affiliate}/credit', [AffiliateController::class, 'credit'])->name('affiliates.credit');
     });
 
     // WHOIS Lookup — no permission required
