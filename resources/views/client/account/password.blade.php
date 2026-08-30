@@ -31,17 +31,28 @@
             @method("PUT")
             <div class="form-group">
                 <label class="form-label" for="current_password">{{ __('common.form.current_password') }}<span class="req">*</span></label>
-                <input type="password" id="current_password" name="current_password" required class="form-control">
+                <div style="display:flex;gap:6px;">
+                    <input type="password" id="current_password" name="current_password" required class="form-control">
+                    <button type="button" onclick="togglePw('current_password')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.toggle') }}">&#128065;</button>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="password">{{ __('common.form.new_password') }}<span class="req">*</span></label>
-                <input type="password" id="password" name="password" required class="form-control" oninput="checkStrength(this.value)" placeholder="{{ __('client.password.min_chars') }}">
+                <div style="display:flex;gap:6px;">
+                    <input type="password" id="password" name="password" required class="form-control" oninput="checkStrength(this.value)" placeholder="{{ __('client.password.min_chars') }}">
+                    <button type="button" onclick="generatePw()" class="btn btn-default" style="white-space:nowrap;flex-shrink:0;" title="{{ __('admin.clients.generate_password') }}">&#128273;</button>
+                    <button type="button" onclick="copyPw('password', this)" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.copy') }}">&#128203;</button>
+                    <button type="button" onclick="togglePw('password')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.toggle') }}">&#128065;</button>
+                </div>
                 <div class="pw-strength"><div class="pw-strength-bar" id="pwBar"></div></div>
                 <div class="pw-hint text-muted" id="pwHint">{{ __("client.password.enter_new") }}</div>
             </div>
             <div class="form-group">
                 <label class="form-label" for="password_confirmation">{{ __('client.password.confirm_new') }} <span class="req">*</span></label>
-                <input type="password" id="password_confirmation" name="password_confirmation" required class="form-control">
+                <div style="display:flex;gap:6px;">
+                    <input type="password" id="password_confirmation" name="password_confirmation" required class="form-control">
+                    <button type="button" onclick="togglePw('password_confirmation')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.toggle') }}">&#128065;</button>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">{{ __('client.password.update_btn') }}</button>
         </form>
@@ -72,6 +83,51 @@
 </div>
 @section("scripts")
 <script>
+function generatePw() {
+    var upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    var lower = "abcdefghijkmnopqrstuvwxyz";
+    var digits = "23456789";
+    var symbols = "!@#$%^&*_-+=?";
+    var all = upper + lower + digits + symbols;
+    var out = [
+        upper[Math.floor(Math.random() * upper.length)],
+        lower[Math.floor(Math.random() * lower.length)],
+        digits[Math.floor(Math.random() * digits.length)],
+        symbols[Math.floor(Math.random() * symbols.length)],
+    ];
+    for (var i = 0; i < 12; i++) out.push(all[Math.floor(Math.random() * all.length)]);
+    out.sort(function () { return Math.random() - 0.5; });
+    var pw = out.join("");
+    var a = document.getElementById("password");
+    var b = document.getElementById("password_confirmation");
+    if (a) { a.value = pw; a.type = "text"; checkStrength(pw); }
+    if (b) { b.value = pw; b.type = "text"; }
+}
+
+function togglePw(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.type = el.type === "password" ? "text" : "password";
+}
+
+function copyPw(id, btn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var prev = el.type;
+    el.type = "text";
+    el.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    el.type = prev;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).catch(function () {});
+    }
+    if (btn) {
+        var orig = btn.innerHTML;
+        btn.innerHTML = "&#10003;";
+        setTimeout(function () { btn.innerHTML = orig; }, 1200);
+    }
+}
+
 function checkStrength(v) {
     var bar = document.getElementById("pwBar"), hint = document.getElementById("pwHint");
     var score = 0;

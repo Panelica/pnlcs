@@ -29,7 +29,7 @@
                         <select name="client_id" required class="form-control" @change="setClient($event.target.value)">
                             <option value="">— Choose a client —</option>
                             @foreach($clients as $client)
-                            <option value="{{ $client->id }}" data-rate="{{ $client->billing_tax_rate }}" data-label="{{ $client->billing_tax_label }}" {{ old('client_id', $selectedClient?->id) == $client->id ? 'selected' : '' }}>
+                            <option value="{{ $client->id }}" data-rate="{{ $client->billing_tax_rate }}" data-label="{{ $client->billing_tax_label }}" data-rates="{{ $client->billing_tax_rates->toJson() }}" {{ old('client_id', $selectedClient?->id) == $client->id ? 'selected' : '' }}>
                                 {{ $client->display_name }} ({{ $client->email }})
                             </option>
                             @endforeach
@@ -51,7 +51,7 @@
                                 <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:70px;">{{ __('common.table.qty') }}</th>
                                 <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:70px;">{{ __('common.table.tax') }}</th>
                                 <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:110px;">{{ __('admin.invoices.price') }}</th>
-                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:100px;">{{ __('admin.invoices.total') }}</th>
+                                <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:100px;">{{ __('common.table.total') }}</th>
                                 <th style="width:30px;"></th>
                             </tr>
                         </thead>
@@ -91,9 +91,15 @@
                                                class="form-control" style="font-size:13px;text-align:center;width:64px;">
                                     </td>
                                     <td style="padding:6px 8px;text-align:center;">
-                                        <input type="number" :name="`items[${index}][tax_rate]`" x-model.number="item.tax_rate"
-                                               @input="recalculate()" placeholder="0" step="0.01" min="0" max="100"
-                                               class="form-control" style="font-size:13px;text-align:center;width:64px;">
+                                        <select :name="`items[${index}][tax_label]`" x-model="item.tax_label"
+                                                @change="syncItemTax(index)" class="form-control"
+                                                style="font-size:13px;text-align:center;min-width:120px;">
+                                            <option value="">0%</option>
+                                            <template x-for="(r, i) in clientRates" :key="i">
+                                                <option :value="r.name" x-text="r.name"></option>
+                                            </template>
+                                        </select>
+                                        <input type="hidden" :name="`items[${index}][tax_rate]`" :value="item.tax_rate">
                                     </td>
                                     <td style="padding:6px 8px;">
                                         <input type="number" :name="`items[${index}][amount]`" x-model.number="item.amount"
@@ -161,16 +167,24 @@
                 <div class="card-header"><strong>{{ __('admin.invoices.summary') }}</strong></div>
                 <div class="card-body">
                     <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                        <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.net') }}</td><td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + subtotal.toFixed(2) + currencySuffix">0.00</td></tr>
-                        <template x-for="g in vatBreakdown" :key="g.rate">
+                        <tr>
+                            <td style="padding:4px 0;color:#777;">{{ __('admin.invoices.net') }}</td>
+                            <td style="padding:4px 0;"></td>
+                            <td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + subtotal.toFixed(2) + currencySuffix">0.00</td>
+                        </tr>
+                        <template x-for="g in vatBreakdown" :key="g.label">
                             <tr>
-                                <td style="padding:4px 0;color:#777;" x-text="vatLabel + ' ' + fmtRate(g.rate) + '%'"></td>
+                                <td style="padding:4px 0;color:#777;" x-text="g.label"></td>
                                 <td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + g.amount.toFixed(2) + currencySuffix">0.00</td>
+                                <td style="padding:4px 0;text-align:right;font-family:monospace;" x-text="currencyPrefix + g.net.toFixed(2) + currencySuffix">0.00</td>
                             </tr>
                         </template>
-                        <tr style="border-top:2px solid #aaa;background:#f5f5f5;"><td style="padding:6px 0;font-weight:700;">{{ __('admin.invoices.gross') }}</td><td style="padding:6px 0;text-align:right;font-weight:700;font-family:monospace;font-size:15px;" x-text="currencyPrefix + grandTotal.toFixed(2) + currencySuffix">0.00</td></tr>
+                        <tr style="border-top:2px solid #aaa;background:#f5f5f5;">
+                            <td style="padding:6px 0;font-weight:700;">{{ __('admin.invoices.gross') }}</td>
+                            <td style="padding:6px 0;"></td>
+                            <td style="padding:6px 0;text-align:right;font-weight:700;font-family:monospace;font-size:15px;" x-text="currencyPrefix + grandTotal.toFixed(2) + currencySuffix">0.00</td>
+                        </tr>
                     </table>
-                    <p style="font-size:11px;color:#999;margin-top:6px;">{{ __('admin.invoices.taxes_note') }}</p>
                 </div>
             </div>
 
@@ -184,12 +198,13 @@
 <script>
 function invoiceBuilder() {
     return {
-        items: [{ description: '', qty: 1, amount: 0, tax_rate: 0, show: false, active: -1, dd: null, page: 1 }],
+        items: [{ description: '', qty: 1, amount: 0, tax_rate: 0, tax_label: '', show: false, active: -1, dd: null, page: 1 }],
         products: @json($products),
         currencyPrefix: @json($defaultCurrency?->prefix ?? ''),
         currencySuffix: @json($defaultCurrency?->suffix ?? ''),
         taxRate: 0,
         taxLabel: '',
+        clientRates: [],
         vatLabel: @json(__('admin.invoices.tax')),
         perPage: 6,
         subtotal: 0,
@@ -200,18 +215,36 @@ function invoiceBuilder() {
             const sel = this.$el.querySelector('select[name="client_id"]');
             const opt = sel ? sel.options[sel.selectedIndex] : null;
             if (opt && opt.value) {
-                this.taxRate = parseFloat(opt.dataset.rate) || 0;
+                this.clientRates = this.parseRates(opt);
                 this.taxLabel = opt.dataset.label || '';
+                this.taxRate = this.defaultRate();
             }
+            this.items[0].tax_rate = this.taxRate;
+            this.items[0].tax_label = this.taxLabel;
             this.recalculate();
         },
         setClient(value) {
             const opt = this.$el.querySelector('option[value="' + value + '"]');
-            this.taxRate = value && opt ? (parseFloat(opt.dataset.rate) || 0) : 0;
+            this.clientRates = value && opt ? this.parseRates(opt) : [];
             this.taxLabel = value && opt ? (opt.dataset.label || '') : '';
+            this.taxRate = this.defaultRate();
+            this.items.forEach(i => { i.tax_rate = this.taxRate; i.tax_label = this.taxLabel; });
             this.recalculate();
         },
-        addItem() { this.items.push({ description: '', qty: 1, amount: 0, tax_rate: this.taxRate, show: false, active: -1, dd: null, page: 1 }); },
+        defaultRate() {
+            const d = this.clientRates.find(r => r.is_default);
+            return d ? d.rate : (this.clientRates.length ? this.clientRates[0].rate : 0);
+        },
+        syncItemTax(index) {
+            const item = this.items[index];
+            const r = this.clientRates.find(r => r.name === item.tax_label);
+            item.tax_rate = r ? r.rate : 0;
+            this.recalculate();
+        },
+        parseRates(opt) {
+            try { return JSON.parse(opt.dataset.rates || '[]'); } catch (e) { return []; }
+        },
+        addItem() { this.items.push({ description: '', qty: 1, amount: 0, tax_rate: this.taxRate, tax_label: this.taxLabel, show: false, active: -1, dd: null, page: 1 }); },
         removeItem(index) { if (this.items.length > 1) { this.items.splice(index, 1); this.recalculate(); } },
         matchesFor(value) {
             const q = (value || '').trim().toLowerCase();
@@ -262,6 +295,7 @@ function invoiceBuilder() {
             item.qty = 1;
             item.amount = p.amount ?? 0;
             item.tax_rate = p.taxed ? this.taxRate : 0;
+            item.tax_label = p.taxed ? this.taxLabel : '';
             item.show = false;
             this.recalculate();
         },
@@ -272,14 +306,18 @@ function invoiceBuilder() {
             const groups = {};
             this.items.forEach(i => {
                 const rate = parseFloat(i.tax_rate) || 0;
-                const tax = this.lineTotal(i) * rate / 100;
-                if (tax !== 0) {
-                    groups[rate] = (groups[rate] || 0) + tax;
-                }
+                const label = (i.tax_label || '').trim();
+                if (!label && rate <= 0) { return; }
+                const key = label || (rate + '%');
+                groups[key] = groups[key] || { label: key, rate: rate, amount: 0, net: 0 };
+                groups[key].amount += this.lineTotal(i) * rate / 100;
+                groups[key].net += this.lineTotal(i);
             });
-            this.vatBreakdown = Object.keys(groups).map(rate => ({
-                rate: parseFloat(rate),
-                amount: Math.round(groups[rate] * 100) / 100
+            this.vatBreakdown = Object.values(groups).map(g => ({
+                label: g.label,
+                rate: g.rate,
+                amount: Math.round(g.amount * 100) / 100,
+                net: Math.round(g.net * 100) / 100
             })).sort((a, b) => b.rate - a.rate);
             this.taxAmount = Math.round(this.vatBreakdown.reduce((s, g) => s + g.amount, 0) * 100) / 100;
             this.grandTotal = Math.round((this.subtotal + this.taxAmount) * 100) / 100;

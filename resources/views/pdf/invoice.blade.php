@@ -115,7 +115,7 @@
                 <th class="text-right" style="width: 7%;">{{ __('common.table.qty') }}</th>
                 <th class="text-right" style="width: 14%;">{{ __('common.table.price') }}</th>
                 <th class="text-right" style="width: 13%;">{{ __('common.table.tax') }}</th>
-                <th class="text-right" style="width: 28%;">{{ __('admin.invoices.total') }}</th>
+                <th class="text-right" style="width: 28%;">{{ __('common.table.total') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -138,30 +138,33 @@
     $vatGroups = [];
     foreach ($invoice->items as $it) {
         $r = $it->tax_rate !== null ? (float) $it->tax_rate : ($it->taxed ? (float) $invoice->tax_rate : 0.0);
-        if ($r <= 0) { continue; }
+        $label = $it->tax_label ?: ($r > 0 ? rtrim(rtrim(number_format($r, 2), '0'), '.').'%' : null);
+        if ($label === null) { continue; }
         $tx = (float) $it->amount * (int) $it->qty * $r / 100;
-        $key = rtrim(rtrim(number_format($r, 2), '0'), '.');
-        $vatGroups[$key] = ($vatGroups[$key] ?? 0) + $tx;
+        $net = (float) $it->amount * (int) $it->qty;
+        if (! isset($vatGroups[$label])) { $vatGroups[$label] = ['amount' => 0.0, 'rate' => $r, 'net' => 0.0]; }
+        $vatGroups[$label]['amount'] += $tx;
+        $vatGroups[$label]['net'] += $net;
     }
-    krsort($vatGroups);
+    uasort($vatGroups, fn ($a, $b) => $b['rate'] <=> $a['rate']);
     @endphp
 
     <div class="totals">
         <table>
-            <tr><td>{{ __('admin.invoices.net') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->subtotal) }}</td></tr>
-            @foreach($vatGroups as $rateKey => $amount)
-            <tr><td>{{ __('pdf.tax') }} {{ $rateKey }}%:</td><td class="text-right">{{ money_fmt($amount) }}</td></tr>
+            <tr><td>{{ __('admin.invoices.net') }}:</td><td class="text-right"></td><td class="text-right">{{ money_fmt((float)$invoice->subtotal) }}</td></tr>
+            @foreach($vatGroups as $label => $g)
+            <tr><td>{{ $label }}:</td><td class="text-right">{{ money_fmt($g['amount']) }}</td><td class="text-right">{{ money_fmt($g['net']) }}</td></tr>
             @endforeach
             {{-- The second tax. An invoice has carried two since the tax screen
                  grew a level for each; this document showed only the first, so
                  the lines did not add up to the total being asked for. --}}
             @if((float)($invoice->tax2 ?? 0) > 0)
-            <tr><td>{{ __('pdf.tax') }} 2{{ $invoice->tax_rate2 ? ' ('.rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.').'%)' : '' }}:</td><td class="text-right">{{ money_fmt((float)$invoice->tax2) }}</td></tr>
+            <tr><td>{{ __('pdf.tax') }} 2{{ $invoice->tax_rate2 ? ' ('.rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.').'%)' : '' }}:</td><td class="text-right">{{ money_fmt((float)$invoice->tax2) }}</td><td class="text-right"></td></tr>
             @endif
             @if((float)$invoice->credit > 0)
-            <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ money_fmt((float)$invoice->credit) }}</td></tr>
+            <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ money_fmt((float)$invoice->credit) }}</td><td class="text-right"></td></tr>
             @endif
-            <tr class="total-row"><td>{{ __('admin.invoices.gross') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->total) }}</td></tr>
+            <tr class="total-row"><td>{{ __('admin.invoices.gross') }}:</td><td class="text-right"></td><td class="text-right">{{ money_fmt((float)$invoice->total) }}</td></tr>
         </table>
     </div>
 

@@ -124,6 +124,7 @@ class InvoiceService
             'amount' => $itemData['amount'] ?? 0,
             'taxed' => $itemData['taxed'] ?? ($taxRate === null ? true : $taxRate > 0),
             'tax_rate' => $taxRate,
+            'tax_label' => $itemData['tax_label'] ?? null,
             'due_date' => $itemData['due_date'] ?? null,
         ]);
 
@@ -484,5 +485,46 @@ class InvoiceService
             ->where('state', '')
             ->where('is_default', true)
             ->first();
+    }
+
+    /**
+     * Every rate configured for a customer's country/state group.
+     *
+     * Mirrors taxRuleFor() but returns the whole group so the invoice builder
+     * can offer the operator a choice of the rates the customer is eligible
+     * for, with the default first.
+     *
+     * @return \Illuminate\Support\Collection<int, TaxRule>
+     */
+    public function taxRatesFor(Client $client): \Illuminate\Support\Collection
+    {
+        $country = (string) $client->country;
+        $state = (string) $client->state;
+
+        $rates = TaxRule::where('country', $country)
+            ->where('state', $state)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
+
+        if ($rates->isNotEmpty()) {
+            return $rates;
+        }
+
+        $rates = TaxRule::where('country', $country)
+            ->where('state', '')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
+
+        if ($rates->isNotEmpty()) {
+            return $rates;
+        }
+
+        return TaxRule::where('country', '')
+            ->where('state', '')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
     }
 }
