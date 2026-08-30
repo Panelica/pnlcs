@@ -75,13 +75,15 @@
                 </div>
                 <div style="color:var(--muted);font-size:12px;">{{ __('client.password.min_chars') }}</div>
             </div>
-            <div class="form-group">
-                <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>
-                <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="tax_id">{{ __('common.form.tax_id') }}</label>
-                <input type="text" id="tax_id" name="tax_id" value="{{ old("tax_id", $client?->tax_id) }}" maxlength="20" class="form-control">
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>
+                    <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="tax_id">{{ __('common.form.tax_id') }}</label>
+                    <input type="text" id="tax_id" name="tax_id" value="{{ old("tax_id", $client?->tax_id) }}" maxlength="20" class="form-control">
+                </div>
             </div>
             <div class="form-grid-2">
                 <div class="form-group">
