@@ -13,12 +13,12 @@
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
     @foreach([
-        "" => __('common.all'),
-        "unpaid" => __('common.status.unpaid'),
-        "paid" => __('common.status.paid'),
-        "overdue" => __('common.status.overdue'),
-        "cancelled" => __('common.status.cancelled'),
-        "draft" => __('common.status.draft'),
+        "" => __('common.form.all'),
+        "unpaid" => __('admin.invoices.filter_unpaid'),
+        "paid" => __('admin.invoices.filter_paid'),
+        "overdue" => __('admin.invoices.filter_overdue'),
+        "cancelled" => __('admin.invoices.filter_cancelled'),
+        "draft" => __('admin.invoices.filter_draft'),
     ] as $val => $label)
     @php $isActive = (request("status","unpaid") == $val); @endphp
     <a href="{{ route("admin.invoices.index", ["status" => $val]) }}"

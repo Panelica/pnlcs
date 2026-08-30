@@ -236,7 +236,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <td>{{ $inv->date?->format(date_fmt()) ?? '-' }}</td>
             <td>{{ $inv->due_date?->format(date_fmt()) ?? '-' }}</td>
             <td style="font-weight:600;">{{ money_fmt($inv->total) }}</td>
-            <td><span class="badge-{{ strtolower($inv->status) }}">{{ ucfirst($inv->status) }}</span></td>
+            <td><span class="badge-{{ strtolower($inv->status) }}">{{ invoice_status_label($inv->status) }}</span></td>
         </tr>
         @endforeach
         </tbody>

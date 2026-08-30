@@ -91,7 +91,7 @@
                         <td><a href="{{ route("client.invoices.show", $invoice) }}">#{{ $invoice->invoice_num ?? $invoice->id }}</a></td>
                         <td class="text-muted text-sm">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
                         <td style="font-weight:600">{{ money_fmt($invoice->total) }}</td>
-                        <td><span class="badge badge-{{ strtolower($invoice->status) }}">{{ __('client.status.' . strtolower($invoice->status)) }}</span></td>
+                        <td><span class="badge badge-{{ strtolower($invoice->status) }}">{{ invoice_status_label($invoice->status) }}</span></td>
                     </tr>
                     @endforeach
                 </tbody>
