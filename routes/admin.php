@@ -93,6 +93,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
         Route::get('products/groups/create', [ProductController::class, 'createGroup'])->name('products.groups.create');
         Route::post('products/groups', [ProductController::class, 'storeGroup'])->name('products.groups.store');
+        Route::post('products/catalog', [ProductController::class, 'storeInvoiceProduct'])->name('products.catalog.store');
+        Route::put('products/catalog/{invoiceProduct}', [ProductController::class, 'updateInvoiceProduct'])->name('products.catalog.update');
+        Route::delete('products/catalog/{invoiceProduct}', [ProductController::class, 'destroyInvoiceProduct'])->name('products.catalog.destroy');
     });
 
     // =============================================

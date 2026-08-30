@@ -49,6 +49,7 @@
                             <tr style="border-bottom:1px solid #ddd;">
                                 <th style="padding:6px 8px;text-align:left;font-weight:600;color:#555;">{{ __('common.table.description') }}</th>
                                 <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:70px;">{{ __('common.table.qty') }}</th>
+                                <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:60px;">{{ __('admin.invoices.unit') }}</th>
                                 <th style="padding:6px 8px;text-align:center;font-weight:600;color:#555;width:70px;">{{ __('common.table.tax') }}</th>
                                 <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:110px;">{{ __('admin.invoices.price') }}</th>
                                 <th style="padding:6px 8px;text-align:right;font-weight:600;color:#555;width:100px;">{{ __('common.table.total') }}</th>
@@ -72,6 +73,7 @@
                                                      @mouseenter="item.active = i"
                                                      :style="'padding:7px 10px;cursor:pointer;font-size:13px;' + (i === item.active ? 'background:#f0f6ff;' : '')">
                                                     <span x-text="p.name" style="font-weight:600;"></span>
+                                                    <span x-show="p.unit" style="color:#999;margin-left:6px;" x-text="p.unit"></span>
                                                     <span x-show="p.amount != null" style="color:#777;float:right;" x-text="p.amount != null ? currencyPrefix + Number(p.amount).toFixed(2) + currencySuffix : ''"></span>
                                                 </div>
                                             </template>
@@ -89,6 +91,10 @@
                                         <input type="number" :name="`items[${index}][qty]`" x-model.number="item.qty"
                                                @input="recalculate()" placeholder="1" step="1" min="1"
                                                class="form-control" style="font-size:13px;text-align:center;width:64px;">
+                                    </td>
+                                    <td style="padding:6px 8px;text-align:center;">
+                                        <input type="text" :name="`items[${index}][unit]`" x-model="item.unit"
+                                               placeholder="jed." class="form-control" style="font-size:13px;text-align:center;width:64px;">
                                     </td>
                                     <td style="padding:6px 8px;text-align:center;">
                                         <select :name="`items[${index}][tax_label]`" x-model="item.tax_label"
@@ -198,7 +204,7 @@
 <script>
 function invoiceBuilder() {
     return {
-        items: [{ description: '', qty: 1, amount: 0, tax_rate: 0, tax_label: '', show: false, active: -1, dd: null, page: 1 }],
+        items: [{ description: '', qty: 1, amount: 0, unit: '', tax_rate: 0, tax_label: '', show: false, active: -1, dd: null, page: 1 }],
         products: @json($products),
         currencyPrefix: @json($defaultCurrency?->prefix ?? ''),
         currencySuffix: @json($defaultCurrency?->suffix ?? ''),
@@ -244,7 +250,7 @@ function invoiceBuilder() {
         parseRates(opt) {
             try { return JSON.parse(opt.dataset.rates || '[]'); } catch (e) { return []; }
         },
-        addItem() { this.items.push({ description: '', qty: 1, amount: 0, tax_rate: this.taxRate, tax_label: this.taxLabel, show: false, active: -1, dd: null, page: 1 }); },
+        addItem() { this.items.push({ description: '', qty: 1, amount: 0, unit: '', tax_rate: this.taxRate, tax_label: this.taxLabel, show: false, active: -1, dd: null, page: 1 }); },
         removeItem(index) { if (this.items.length > 1) { this.items.splice(index, 1); this.recalculate(); } },
         matchesFor(value) {
             const q = (value || '').trim().toLowerCase();
@@ -294,8 +300,14 @@ function invoiceBuilder() {
             item.description = p.name;
             item.qty = 1;
             item.amount = p.amount ?? 0;
-            item.tax_rate = p.taxed ? this.taxRate : 0;
-            item.tax_label = p.taxed ? this.taxLabel : '';
+            item.unit = p.unit || '';
+            if (p.tax_rate !== undefined && p.tax_rate !== null) {
+                item.tax_rate = p.tax_rate;
+                item.tax_label = p.tax_label || '';
+            } else {
+                item.tax_rate = p.taxed ? this.taxRate : 0;
+                item.tax_label = p.taxed ? this.taxLabel : '';
+            }
             item.show = false;
             this.recalculate();
         },

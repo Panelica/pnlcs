@@ -12,6 +12,7 @@ use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\InvoiceProduct;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Models\TaxRule;
@@ -239,6 +240,18 @@ class InvoiceController extends Controller
             ];
         })->values();
 
+        // Catalog products/services (goods) are offered in the same box. They
+        // carry their own price, unit and VAT rate.
+        $catalogProducts = InvoiceProduct::orderBy('name')->get()->map(fn (InvoiceProduct $p) => [
+            'name' => $p->name,
+            'amount' => (float) $p->price,
+            'unit' => $p->unit,
+            'tax_rate' => (float) $p->tax_rate,
+            'tax_label' => $p->tax_label,
+        ])->values();
+
+        $products = $products->merge($catalogProducts)->values();
+
         $defaultCurrency = Currency::getDefault();
 
         // Per-client applicable tax rate (shown in the summary while building
@@ -289,6 +302,7 @@ class InvoiceController extends Controller
             'items.*.amount' => ['required', 'numeric', 'min:0'],
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'items.*.tax_label' => ['nullable', 'string', 'max:255'],
+            'items.*.unit' => ['nullable', 'string', 'max:50'],
         ]);
 
         $client = Client::findOrFail($validated['client_id']);
@@ -301,6 +315,7 @@ class InvoiceController extends Controller
             // Per-item VAT percentage; an empty field means untaxed.
             'tax_rate' => isset($item['tax_rate']) && $item['tax_rate'] !== '' ? (float) $item['tax_rate'] : 0.0,
             'tax_label' => $item['tax_label'] ?? null,
+            'unit' => $item['unit'] ?? null,
         ], $validated['items']);
 
         $invoice = $this->invoiceService->createInvoice($client, $items, [
