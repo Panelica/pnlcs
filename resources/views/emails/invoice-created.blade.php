@@ -11,7 +11,7 @@
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.invoice_number_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $invoice->invoice_num ?? $invoice->id }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_created.amount') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ money_fmt($invoice->total) }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.due_date_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $invoice->due_date?->format(date_fmt()) ?? 'N/A' }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.status_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ ucfirst($invoice->status) }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.status_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ invoice_status_label($invoice->status) }}</td></tr>
 </table>
 
 <p>{{ __('email.common.login_link') }}</p>

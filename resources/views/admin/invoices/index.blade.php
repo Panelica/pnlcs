@@ -12,8 +12,15 @@
 
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
-    @foreach(["" => "All", "unpaid" => "Unpaid", "paid" => "Paid", "overdue" => "Overdue", "cancelled" => "Cancelled", "draft" => "Draft"] as $val => $label)
-    @php $isActive = (request("status","") == $val); @endphp
+    @foreach([
+        "" => __('common.form.all'),
+        "unpaid" => __('admin.invoices.filter_unpaid'),
+        "paid" => __('admin.invoices.filter_paid'),
+        "overdue" => __('admin.invoices.filter_overdue'),
+        "cancelled" => __('admin.invoices.filter_cancelled'),
+        "draft" => __('admin.invoices.filter_draft'),
+    ] as $val => $label)
+    @php $isActive = (request("status","unpaid") == $val); @endphp
     <a href="{{ route("admin.invoices.index", ["status" => $val]) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
         {{ $label }}

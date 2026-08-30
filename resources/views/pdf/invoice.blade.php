@@ -64,7 +64,7 @@
                         default => 'status-unpaid',
                     };
                 @endphp
-                <span class="status-badge {{ $statusClass }}">{{ $invoice->status }}</span>
+                <span class="status-badge {{ $statusClass }}">{{ invoice_status_label($invoice->status) }}</span>
             </div>
         </div>
     </div>
