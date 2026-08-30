@@ -153,14 +153,14 @@
         .pn-alert ul li{margin-bottom:2px}
 
         /* ─── STAT CARDS ─── */
-        .pn-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-bottom:24px}
-        @media(max-width:800px){.pn-stat-grid{grid-template-columns:repeat(2,1fr)}}
-        @media(max-width:480px){.pn-stat-grid{grid-template-columns:1fr 1fr}}
+ .pn-stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:24px}
+ @media(max-width:1000px){.pn-stat-grid{grid-template-columns:repeat(3,1fr)}}
+ @media(max-width:640px){.pn-stat-grid{grid-template-columns:repeat(2,1fr)}}
         .pn-stat{display:flex;flex-direction:column;padding:20px 24px;cursor:pointer;text-decoration:none;color:inherit;transition:box-shadow 0.15s}
         .pn-stat:hover{box-shadow:var(--shadow-md)}
         .pn-stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;flex-shrink:0}
         .pn-stat-icon svg{width:22px;height:22px}
-        .pn-stat-val{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-0.5px;line-height:1}
+        .pn-stat-val{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-0.5px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .pn-stat-lbl{font-size:12.5px;font-weight:500;color:var(--muted);margin-top:5px}
         .pn-stat-icon-blue{background:#dbeafe;color:#1d4ed8}
         .pn-stat-icon-green{background:#dcfce7;color:#15803d}
