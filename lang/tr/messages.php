@@ -275,6 +275,7 @@ return [
         'tax_created' => 'Vergi rule olusturuldu.',
         'tax_deleted' => 'Vergi rule silindi.',
         'tax_rule_added' => 'Vergi rule added.',
+        'tax_set_default' => 'Varsayılan vergi oranı ayarlandı.',
         'tax_updated' => 'Vergi rule guncellendi.',
         'template_updated' => 'E-posta template guncellendi.',
         'test_email_sent' => 'Test email sent.',

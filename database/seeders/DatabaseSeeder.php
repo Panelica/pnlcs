@@ -6,6 +6,7 @@ use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Currency;
 use App\Models\Setting;
+use App\Models\TaxRule;
 use App\Models\TicketDepartment;
 use App\Models\TicketStatus;
 use Illuminate\Database\Seeder;
@@ -45,6 +46,14 @@ class DatabaseSeeder extends Seeder
         Currency::firstOrCreate(['code' => 'EUR'], ['prefix' => '€', 'suffix' => ' EUR', 'rate' => 0.92000]);
         Currency::firstOrCreate(['code' => 'GBP'], ['prefix' => '£', 'suffix' => ' GBP', 'rate' => 0.79000]);
         Currency::firstOrCreate(['code' => 'TRY'], ['prefix' => '₺', 'suffix' => ' TRY', 'rate' => 32.50000]);
+
+        // Default Polish VAT rates; the 23% standard rate is the fallback.
+        TaxRule::firstOrCreate(['name' => 'VAT 23%'], ['tax_rate' => 23.00, 'country' => '', 'state' => '', 'is_default' => true]);
+        TaxRule::firstOrCreate(['name' => 'VAT 8%'], ['tax_rate' => 8.00, 'country' => '', 'state' => '', 'is_default' => false]);
+        TaxRule::firstOrCreate(['name' => 'VAT 5%'], ['tax_rate' => 5.00, 'country' => '', 'state' => '', 'is_default' => false]);
+        TaxRule::firstOrCreate(['name' => 'VAT 0%'], ['tax_rate' => 0.00, 'country' => '', 'state' => '', 'is_default' => false]);
+        TaxRule::firstOrCreate(['name' => 'VAT ZW'], ['tax_rate' => 0.00, 'country' => '', 'state' => '', 'is_default' => false]);
+        TaxRule::firstOrCreate(['name' => 'VAT NP'], ['tax_rate' => 0.00, 'country' => '', 'state' => '', 'is_default' => false]);
 
         // Default settings
         $settings = [

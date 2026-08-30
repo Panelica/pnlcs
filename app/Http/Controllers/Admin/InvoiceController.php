@@ -244,7 +244,7 @@ class InvoiceController extends Controller
         // while building the invoice). Matches the engine: country+state.
         $invoiceService = app(InvoiceService::class);
         $clients = $clients->map(function (Client $client) use ($invoiceService) {
-            $rule = $invoiceService->taxRuleFor($client, 1);
+            $rule = $invoiceService->taxRuleFor($client);
 
             return clone $client->setAttribute('billing_tax_rate', (float) ($rule?->tax_rate ?? 0))
                 ->setAttribute('billing_tax_label', $rule?->name ?? '');

@@ -107,7 +107,6 @@ test('recalculate totals applies tax for taxable items', function () {
         'country'  => 'US',
         'state'    => 'CA',
         'tax_rate' => 10.00000,
-        'level'    => 1,
     ]);
 
     $service = app(InvoiceService::class);
@@ -129,7 +128,7 @@ test('recalculate totals skips tax for non-taxed items', function () {
         'state'      => 'TX',
     ]);
 
-    TaxRule::factory()->create(['country' => 'US', 'state' => 'TX', 'tax_rate' => 8.00000, 'level' => 1]);
+    TaxRule::factory()->create(['country' => 'US', 'state' => 'TX', 'tax_rate' => 8.00000]);
 
     $service = app(InvoiceService::class);
     $invoice = Invoice::factory()->create(['client_id' => $client->id, 'subtotal' => 0, 'total' => 0, 'tax_rate' => 0]);

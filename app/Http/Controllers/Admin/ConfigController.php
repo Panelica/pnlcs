@@ -358,10 +358,8 @@ class ConfigController extends Controller
 
     public function tax()
     {
-        // The screen reads $taxes; passing 'rules' meant it always showed
-        // the empty state, however many rules were configured.
         return view('admin.config.tax', [
-            'taxes' => TaxRule::orderBy('level')->orderBy('country')->get(),
+            'taxes' => TaxRule::orderByDesc('is_default')->orderBy('name')->get(),
         ]);
     }
 
@@ -373,13 +371,18 @@ class ConfigController extends Controller
             'tax_rate' => 'required|numeric|min:0|max:100',
             'country' => 'nullable|string|max:2',
             'state' => 'nullable|string',
-            'level' => 'nullable|integer|min:1|max:2',
         ]);
         // The columns are NOT NULL with an empty-string default; a blank form
         // field arrives as null and inserting that violates the constraint.
         $v['country'] ??= '';
         $v['state'] ??= '';
-        TaxRule::create($v);
+        $rule = TaxRule::create($v);
+
+        // The first rule is the default; a later one is only default when the
+        // operator asks for it.
+        if ($request->boolean('is_default') || TaxRule::count() === 1) {
+            $this->makeDefaultTaxRule($rule);
+        }
 
         return back()->with('success', __('messages.success.tax_rule_added'));
     }
@@ -392,20 +395,45 @@ class ConfigController extends Controller
             'tax_rate' => 'required|numeric|min:0|max:100',
             'country' => 'nullable|string|max:2',
             'state' => 'nullable|string',
-            'level' => 'nullable|integer|min:1|max:2',
         ]);
         $v['country'] ??= '';
         $v['state'] ??= '';
         $taxRule->update($v);
 
+        if ($request->boolean('is_default')) {
+            $this->makeDefaultTaxRule($taxRule);
+        }
+
         return back()->with('success', __('messages.success.tax_updated'));
+    }
+
+    public function setDefaultTax(TaxRule $taxRule)
+    {
+        $this->makeDefaultTaxRule($taxRule);
+
+        return back()->with('success', __('messages.success.tax_set_default'));
     }
 
     public function destroyTax(TaxRule $taxRule)
     {
+        $wasDefault = (bool) $taxRule->is_default;
         $taxRule->delete();
 
+        // Keep a default so there is always a fallback rate to charge.
+        if ($wasDefault) {
+            TaxRule::orderBy('id')->first()?->update(['is_default' => true]);
+        }
+
         return back()->with('success', __('messages.success.tax_deleted'));
+    }
+
+    /**
+     * A single rule is the fallback; making one the default clears the rest.
+     */
+    private function makeDefaultTaxRule(TaxRule $taxRule): void
+    {
+        TaxRule::where('is_default', true)->whereKeyNot($taxRule->id)->update(['is_default' => false]);
+        $taxRule->update(['is_default' => true]);
     }
 
     // ===== PROMOTIONS =====

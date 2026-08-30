@@ -30,7 +30,7 @@ function untaxedProductOrder(bool $taxable): array
         ?? Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'rate' => 1, 'is_default' => true]);
 
     $client = Client::factory()->create(['tax_exempt' => false]);
-    TaxRule::create(['level' => 1, 'name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 10]);
+    TaxRule::create(['name' => 'VAT', 'country' => $client->country, 'state' => '', 'tax_rate' => 10]);
 
     $product = Product::factory()->create([
         'group_id' => ProductGroup::factory()->create()->id,

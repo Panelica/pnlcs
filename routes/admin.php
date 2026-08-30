@@ -290,6 +290,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::get('tax', [ConfigController::class, 'tax'])->name('tax');
             Route::post('tax', [ConfigController::class, 'storeTax'])->name('tax.store');
             Route::put('tax/{taxRule}', [ConfigController::class, 'updateTax'])->name('tax.update');
+            Route::post('tax/{taxRule}/default', [ConfigController::class, 'setDefaultTax'])->name('tax.default');
             Route::delete('tax/{taxRule}', [ConfigController::class, 'destroyTax'])->name('tax.destroy');
         });
 
