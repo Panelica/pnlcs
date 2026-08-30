@@ -450,31 +450,39 @@ class InvoiceService
     /**
      * The tax rule that applies to a customer, or null.
      *
-     * Matched on country and state, most specific first; when nothing matches
-     * the configured default rule is the fallback. Kept separate from rateFor
-     * so callers can also read the rule's label (name) while building an
-     * invoice.
+     * Rates are grouped by country and state: an exact country+state match
+     * wins, then the country's default (empty state), then the global default
+     * (empty country). Kept separate from rateFor so callers can also read the
+     * rule's label (name) while building an invoice.
      */
     public function taxRuleFor(Client $client): ?TaxRule
     {
-        // A blank country is the catch-all the form promises ("leave blank
-        // for all countries") - it used to be matched literally, so a
-        // catch-all VAT rule applied to nobody and invoices went out untaxed.
-        // Specific beats blank, on country first and then on state.
-        $rule = TaxRule::where(function ($q) use ($client) {
-            $q->where('country', $client->country)
-                ->orWhere('country', '')
-                ->orWhereNull('country');
-        })
-            ->where(function ($q) use ($client) {
-                $q->where('state', $client->state)
-                    ->orWhere('state', '')
-                    ->orWhereNull('state');
-            })
-            ->orderByRaw('CASE WHEN country = ? THEN 0 ELSE 1 END', [$client->country ?? ''])
-            ->orderByRaw('CASE WHEN state = ? THEN 0 ELSE 1 END', [$client->state ?? ''])
+        $country = (string) $client->country;
+        $state = (string) $client->state;
+
+        $rule = TaxRule::where('country', $country)
+            ->where('state', $state)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
             ->first();
 
-        return $rule ?? TaxRule::where('is_default', true)->first();
+        if ($rule) {
+            return $rule;
+        }
+
+        $rule = TaxRule::where('country', $country)
+            ->where('state', '')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->first();
+
+        if ($rule) {
+            return $rule;
+        }
+
+        return TaxRule::where('country', '')
+            ->where('state', '')
+            ->where('is_default', true)
+            ->first();
     }
 }

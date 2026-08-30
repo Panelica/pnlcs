@@ -134,10 +134,10 @@ test('admin can create a tax rule', function () {
     $admin = makeBillingAdmin();
 
     $response = $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), [
-        'name' => 'VAT',
-        'tax_rate' => 20.0,
         'country' => 'GB',
-        'level' => 1,
+        'rates' => [
+            ['name' => 'VAT', 'tax_rate' => 20.0],
+        ],
     ]);
 
     $response->assertRedirect()->assertSessionHas('success');
@@ -146,44 +146,45 @@ test('admin can create a tax rule', function () {
 
 test('create tax rule requires name and rate', function () {
     $admin = makeBillingAdmin();
-    $response = $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), []);
-    $response->assertSessionHasErrors(['name', 'tax_rate']);
+    $response = $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), [
+        'country' => 'GB',
+        'rates' => [['name' => '', 'tax_rate' => '']],
+    ]);
+    $response->assertSessionHasErrors(['rates.0.name', 'rates.0.tax_rate']);
 });
 
 test('tax rate must be between 0 and 100', function () {
     $admin = makeBillingAdmin();
 
     $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), [
-        'name' => 'Bad Tax',
-        'tax_rate' => 150,
-    ])->assertSessionHasErrors('tax_rate');
+        'country' => 'GB',
+        'rates' => [['name' => 'Bad Tax', 'tax_rate' => 150]],
+    ])->assertSessionHasErrors('rates.0.tax_rate');
 
     $this->actingAs($admin, 'admin')->post(route('admin.config.tax.store'), [
-        'name' => 'Bad Tax',
-        'tax_rate' => -5,
-    ])->assertSessionHasErrors('tax_rate');
+        'country' => 'GB',
+        'rates' => [['name' => 'Bad Tax', 'tax_rate' => -5]],
+    ])->assertSessionHasErrors('rates.0.tax_rate');
 });
 
 test('admin can update a tax rule', function () {
     $admin = makeBillingAdmin();
-    $rule = TaxRule::factory()->create(['name' => 'Old Tax', 'tax_rate' => 5.0]);
+    TaxRule::factory()->create(['name' => 'Old Tax', 'tax_rate' => 5.0, 'country' => 'GB']);
 
-    $response = $this->actingAs($admin, 'admin')->put(route('admin.config.tax.update', $rule), [
-        'name' => 'New Tax',
-        'tax_rate' => 10.0,
-    ]);
+    $response = $this->actingAs($admin, 'admin')->put(
+        route('admin.config.tax.update', ['country' => 'GB']),
+        ['country' => 'GB', 'rates' => [['name' => 'New Tax', 'tax_rate' => 10.0]]]
+    );
 
     $response->assertRedirect()->assertSessionHas('success');
-    $rule->refresh();
-    expect($rule->name)->toBe('New Tax');
-    expect((float) $rule->tax_rate)->toBe(10.0);
+    expect(TaxRule::where('country', 'GB')->where('name', 'New Tax')->exists())->toBeTrue();
 });
 
 test('admin can delete a tax rule', function () {
     $admin = makeBillingAdmin();
-    $rule = TaxRule::factory()->create();
+    $rule = TaxRule::factory()->create(['country' => 'GB']);
 
-    $response = $this->actingAs($admin, 'admin')->delete(route('admin.config.tax.destroy', $rule));
+    $response = $this->actingAs($admin, 'admin')->delete(route('admin.config.tax.destroy', ['country' => 'GB']));
 
     $response->assertRedirect()->assertSessionHas('success');
     $this->assertDatabaseMissing('tax_rules', ['id' => $rule->id]);

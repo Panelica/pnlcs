@@ -289,9 +289,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::middleware('admin.permission:manage_tax')->group(function () {
             Route::get('tax', [ConfigController::class, 'tax'])->name('tax');
             Route::post('tax', [ConfigController::class, 'storeTax'])->name('tax.store');
-            Route::put('tax/{taxRule}', [ConfigController::class, 'updateTax'])->name('tax.update');
-            Route::post('tax/{taxRule}/default', [ConfigController::class, 'setDefaultTax'])->name('tax.default');
-            Route::delete('tax/{taxRule}', [ConfigController::class, 'destroyTax'])->name('tax.destroy');
+            Route::put('tax/{country}/{state?}', [ConfigController::class, 'updateTax'])->name('tax.update');
+            Route::delete('tax/{country}/{state?}', [ConfigController::class, 'destroyTax'])->name('tax.destroy');
         });
 
         Route::middleware('admin.permission:manage_promotions')->group(function () {

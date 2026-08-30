@@ -76,21 +76,21 @@ test('DELETE currencies deletes', function () {
 // === TAX CRUD ===
 test('POST tax creates', function () {
     $this->actingAs($this->admin, 'admin')
-        ->post('/admin/config/tax', ['name' => 'TestTax', 'tax_rate' => 15, 'country' => 'US'])
+        ->post('/admin/config/tax', ['country' => 'US', 'rates' => [['name' => 'TestTax', 'tax_rate' => 15]]])
         ->assertRedirect();
     $this->assertDatabaseHas('tax_rules', ['name' => 'TestTax']);
 });
 
 test('PUT tax updates', function () {
-    $t = TaxRule::factory()->create();
+    $t = TaxRule::factory()->create(['country' => 'US']);
     $this->actingAs($this->admin, 'admin')
-        ->put("/admin/config/tax/{$t->id}", ['name' => 'Updated', 'tax_rate' => 20, 'country' => 'DE'])
+        ->put("/admin/config/tax/{$t->country}", ['country' => 'DE', 'rates' => [['name' => 'Updated', 'tax_rate' => 20]]])
         ->assertRedirect();
 });
 
 test('DELETE tax deletes', function () {
     $t = TaxRule::factory()->create();
-    $this->actingAs($this->admin, 'admin')->delete("/admin/config/tax/{$t->id}")->assertRedirect();
+    $this->actingAs($this->admin, 'admin')->delete("/admin/config/tax/{$t->country}")->assertRedirect();
 });
 
 // === PROMOTIONS CRUD ===

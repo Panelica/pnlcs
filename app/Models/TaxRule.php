@@ -10,10 +10,15 @@ class TaxRule extends Model {
     protected function casts(): array { return ["tax_rate" => "decimal:5", "is_default" => "boolean"]; }
 
     /**
-     * The rate that applies when no country/state-specific rule matches.
+     * The global default rate (empty country), falling back to any default.
      */
     public static function defaultRate(): float
     {
-        return (float) (static::where('is_default', true)->value('tax_rate') ?? 0);
+        $rule = static::where('is_default', true)
+            ->orderByRaw("CASE WHEN country = '' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->first();
+
+        return $rule ? (float) $rule->tax_rate : 0.0;
     }
 }
