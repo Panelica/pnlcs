@@ -77,6 +77,7 @@ return [
     'payment_method.credit' => 'Credit',
     'payment_method.bank_transfer' => 'Bank Transfer',
     'payment_method.credit_debit_card' => 'Credit / Debit Card',
+    'payment_method.tpay' => 'Tpay',
     'payment_method.paypal' => 'PayPal',
     'banktransfer.account_name' => 'Account Name',
     'banktransfer.account_number' => 'Account Number',
