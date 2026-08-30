@@ -167,6 +167,8 @@
     </div>
 </div>
 
+@endsection
+
 @section("scripts")
 <script>
 function generatePw() {
