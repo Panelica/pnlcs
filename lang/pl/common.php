@@ -211,6 +211,8 @@ return [
         'open' => 'Otwarty',
         'overdue' => 'Zaległy',
         'paid' => 'Opłacone',
+        'partially_paid' => 'Częściowo opłacone',
+        'payment_pending' => 'Oczekuje na płatność',
         'pending' => 'Oczekujące',
         'refunded' => 'Zwrócono',
         'resolved' => 'Rozwiązany',

@@ -12,8 +12,15 @@
 
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
-    @foreach(["" => "All", "unpaid" => "Unpaid", "paid" => "Paid", "overdue" => "Overdue", "cancelled" => "Cancelled", "draft" => "Draft"] as $val => $label)
-    @php $isActive = (request("status","") == $val); @endphp
+    @foreach([
+        "" => __('common.all'),
+        "unpaid" => __('common.status.unpaid'),
+        "paid" => __('common.status.paid'),
+        "overdue" => __('common.status.overdue'),
+        "cancelled" => __('common.status.cancelled'),
+        "draft" => __('common.status.draft'),
+    ] as $val => $label)
+    @php $isActive = (request("status","unpaid") == $val); @endphp
     <a href="{{ route("admin.invoices.index", ["status" => $val]) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
         {{ $label }}
@@ -63,6 +70,15 @@
                     "refunded"           => "badge-refunded",
                     default              => "badge-cancelled",
                 };
+                $statusKey = strtolower($invoice->status ?? "");
+                $statusLabel = $statusKey === "overdue"
+                    ? __('common.status.unpaid') . '/' . __('common.status.overdue')
+                    : (__('common.status.' . $statusKey) !== 'common.status.' . $statusKey
+                        ? __('common.status.' . $statusKey)
+                        : ucfirst($invoice->status ?? ""));
+                $badgeStyle = $statusKey === "overdue"
+                    ? "background:#fff3cd !important;color:#856404 !important;"
+                    : "";
                 @endphp
                 <tr>
                     <td><input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}" class="row-checkbox"></td>
@@ -75,7 +91,7 @@
                     <td style="color:#666;">{{ $invoice->date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="color:#666;">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="text-align:right;font-weight:500;">{{ money_fmt($invoice->total) }}</td>
-                    <td><span class="badge {{ $badgeClass }}">{{ ucfirst($invoice->status ?? "") }}</span></td>
+                    <td><span class="badge {{ $badgeClass }}" style="{{ $badgeStyle }}">{{ $statusLabel }}</span></td>
                     <td>
                         <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                     </td>
