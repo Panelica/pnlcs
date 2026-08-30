@@ -50,7 +50,7 @@
         <div style="max-width:280px;margin-left:auto">
             @if($invoice->subtotal && $invoice->subtotal != $invoice->total)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border)">
-                <span class="text-muted">{{ __('client.cart.subtotal') }}</span>
+                    <span class="text-muted">{{ __('admin.invoices.net') }}</span>
                 <span>{{ money_fmt($invoice->subtotal) }}</span>
             </div>
             @endif
@@ -67,7 +67,7 @@
             </div>
             @endif
             <div style="display:flex;justify-content:space-between;padding:12px 0 4px;font-size:17px;font-weight:800;color:var(--primary)">
-                <span>{{ __('client.invoices.total_due') }}</span>
+                <span>{{ __('admin.invoices.gross') }}</span>
                 <span>{{ money_fmt($invoice->total) }}</span>
             </div>
             @if(isset($balance) && $balance > 0 && $balance < (float) $invoice->total)

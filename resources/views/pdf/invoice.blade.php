@@ -148,7 +148,7 @@
 
     <div class="totals">
         <table>
-            <tr><td>{{ __('pdf.subtotal') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->subtotal) }}</td></tr>
+            <tr><td>{{ __('admin.invoices.net') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->subtotal) }}</td></tr>
             @foreach($vatGroups as $rateKey => $amount)
             <tr><td>{{ __('pdf.tax') }} {{ $rateKey }}%:</td><td class="text-right">{{ money_fmt($amount) }}</td></tr>
             @endforeach
@@ -161,7 +161,7 @@
             @if((float)$invoice->credit > 0)
             <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ money_fmt((float)$invoice->credit) }}</td></tr>
             @endif
-            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->total) }}</td></tr>
+            <tr class="total-row"><td>{{ __('admin.invoices.gross') }}:</td><td class="text-right">{{ money_fmt((float)$invoice->total) }}</td></tr>
         </table>
     </div>
 
