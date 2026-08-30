@@ -150,7 +150,7 @@ test('config activity log is accessible', function () {
 
 test('config affiliates is accessible', function () {
     $admin = Admin::factory()->create();
-    $this->actingAs($admin, 'admin')->get(route('admin.config.affiliates'))->assertStatus(200);
+    $this->actingAs($admin, 'admin')->get(route('admin.affiliates.index'))->assertStatus(200);
 });
 
 test('config quotes is accessible', function () {

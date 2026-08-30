@@ -141,7 +141,7 @@ test('activity log is read-only (no store route)', function () {
 test('admin can view affiliates page', function () {
     $admin = makeMiscAdmin();
     $this->actingAs($admin, 'admin')
-         ->get(route('admin.config.affiliates'))
+         ->get(route('admin.affiliates.index'))
          ->assertStatus(200);
 });
 

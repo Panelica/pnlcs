@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Admin;
 use App\Models\AdminRole;
-use App\Models\Affiliate;
 use App\Models\Announcement;
 use App\Models\ApiCredential;
 use App\Models\BannedEmail;
@@ -786,15 +785,6 @@ class ConfigController extends Controller
     {
         return view('admin.config.network-issues', [
             'networkIssues' => NetworkIssue::orderBy('id', 'desc')->get(),
-        ]);
-    }
-
-    // ===== AFFILIATES =====
-
-    public function affiliates()
-    {
-        return view('admin.config.affiliates', [
-            'affiliates' => Affiliate::with('client')->get(),
         ]);
     }
 

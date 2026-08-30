@@ -10,7 +10,7 @@
     <div class="card">
         <div class="card-header"><strong>{{ __('admin.affiliates.affiliate_details') }}</strong></div>
         <div class="card-body">
-            <table class="table mb-0">
+            <table class="table mb-0" style="width:100%;">
                 <tr><td style="width:140px;"><strong>{{ __('admin.affiliates.client_label') }}</strong></td><td>{{ $affiliate->client?->first_name }} {{ $affiliate->client?->last_name }} ({{ $affiliate->client?->email }})</td></tr>
                 <tr><td><strong>{{ __('admin.affiliates.visitors_label') }}</strong></td><td>{{ number_format($affiliate->visitors) }}</td></tr>
                 <tr><td><strong>{{ __('admin.affiliates.balance_label') }}</strong></td><td><strong>{{ money_fmt($affiliate->balance) }}</strong></td></tr>
@@ -43,15 +43,25 @@
             </form>
 
             @if($affiliate->balance > 0)
-            <hr>
-            <form method="POST" action="{{ route('admin.affiliates.payout', $affiliate) }}" style="display:flex;gap:8px;align-items:flex-end;">
-                @csrf
-                <div>
-                    <label class="form-label">{{ __('admin.affiliates.payout_amount') }}</label>
-                    <input type="number" name="amount" step="0.01" max="{{ $affiliate->balance }}" class="form-control" style="width:150px;" value="{{ $affiliate->balance }}">
-                </div>
-                <button class="btn btn-success btn-sm" type="submit">{{ __('admin.affiliates.process_payout') }}</button>
-            </form>
+            <hr style="margin:16px 0;">
+            <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
+                <form method="POST" action="{{ route('admin.affiliates.payout', $affiliate) }}" style="display:flex;gap:8px;align-items:flex-end;">
+                    @csrf
+                    <div>
+                        <label class="form-label">{{ __('admin.affiliates.payout_amount') }}</label>
+                        <input type="number" name="amount" step="0.01" max="{{ $affiliate->balance }}" class="form-control" style="width:150px;" value="{{ $affiliate->balance }}">
+                    </div>
+                    <button class="btn btn-success btn-sm" type="submit">{{ __('admin.affiliates.process_payout') }}</button>
+                </form>
+                <form method="POST" action="{{ route('admin.affiliates.credit', $affiliate) }}" style="display:flex;gap:8px;align-items:flex-end;">
+                    @csrf
+                    <div>
+                        <label class="form-label">{{ __('admin.affiliates.credit_amount') }}</label>
+                        <input type="number" name="amount" step="0.01" max="{{ $affiliate->balance }}" class="form-control" style="width:150px;" value="{{ $affiliate->balance }}">
+                    </div>
+                    <button class="btn btn-primary btn-sm" type="submit">{{ __('admin.affiliates.add_to_balance') }}</button>
+                </form>
+            </div>
             @endif
         </div>
     </div>
@@ -60,14 +70,14 @@
 <div class="card">
     <div class="card-header"><strong>{{ __('admin.affiliates.referral_history') }}</strong></div>
     <div class="card-body-flush">
-        <table class="table table-striped mb-0">
+        <table class="data-table">
             <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.description') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('admin.affiliates.gateway') }}</th></tr></thead>
             <tbody>
             @forelse($transactions as $tx)
             <tr>
                 <td>{{ $tx->date?->timezone(display_tz())->format(datetime_fmt()) ?? 'N/A' }}</td>
                 <td>{{ $tx->description }}</td>
-                <td>{{ money_fmt(abs($tx->amount)) }}</td>
+                <td>{{ money_fmt(($tx->amount_in ?? 0) > 0 ? $tx->amount_in : $tx->amount_out) }}</td>
                 <td>{{ $tx->gateway ? payment_method_label((string) $tx->gateway) : '-' }}</td>
             </tr>
             @empty
