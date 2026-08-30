@@ -5,6 +5,7 @@ namespace Modules\Registrars\HRD;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
+use App\Models\ModuleLog;
 use App\Models\RegistrarSettings;
 use App\Models\Setting;
 use App\Support\MapsClientFields;
@@ -74,11 +75,15 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         try {
             $balance = $this->client()->partnerGetBalance();
 
+            $this->logAction('test', [], ['success' => true, 'balance' => $balance['balance'] ?? null]);
+
             return [
                 'success' => true,
                 'message' => 'Połączenie z HRD działa. Saldo: ' . ($balance['balance'] ?? 'n/d'),
             ];
         } catch (\Throwable $e) {
+            $this->logAction('test', [], ['success' => false, 'error' => $e->getMessage()]);
+
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
@@ -103,9 +108,13 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 'next_due_date' => now()->addYears($years)->toDateString(),
             ]);
 
+            $this->logAction('register', ['domain' => $domain->domain, 'years' => $years], ['success' => true, 'action_id' => $actionId]);
+
             return ['success' => true, 'message' => "Domain registered via HRD (action #{$actionId})."];
         } catch (\Throwable $e) {
             Log::error("HRD register failed for {$domain->domain}: {$e->getMessage()}");
+
+            $this->logAction('register', ['domain' => $domain->domain, 'years' => $years], ['success' => false, 'error' => $e->getMessage()]);
 
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -119,9 +128,13 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
             $domain->update(['status' => 'pending_transfer', 'registrar' => 'hrd']);
 
+            $this->logAction('transfer', ['domain' => $domain->domain], ['success' => true, 'action_id' => $actionId]);
+
             return ['success' => true, 'message' => "Transfer initiated via HRD (action #{$actionId})."];
         } catch (\Throwable $e) {
             Log::error("HRD transfer failed for {$domain->domain}: {$e->getMessage()}");
+
+            $this->logAction('transfer', ['domain' => $domain->domain], ['success' => false, 'error' => $e->getMessage()]);
 
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -136,9 +149,13 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $newExpiry = ($domain->expiry_date ?? now())->addYears($years);
             $domain->update(['expiry_date' => $newExpiry, 'next_due_date' => $newExpiry]);
 
+            $this->logAction('renew', ['domain' => $domain->domain, 'years' => $years], ['success' => true, 'action_id' => $actionId]);
+
             return ['success' => true, 'message' => "Domain renewed for {$years} year(s) (action #{$actionId})."];
         } catch (\Throwable $e) {
             Log::error("HRD renew failed for {$domain->domain}: {$e->getMessage()}");
+
+            $this->logAction('renew', ['domain' => $domain->domain, 'years' => $years], ['success' => false, 'error' => $e->getMessage()]);
 
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -173,9 +190,13 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $this->client()->domainUpdate($domain->domain, $ns);
             $domain->update(['nameservers' => json_encode(array_values($nameservers))]);
 
+            $this->logAction('updateNameservers', ['domain' => $domain->domain, 'nameservers' => array_values(array_filter($nameservers))], ['success' => true]);
+
             return true;
         } catch (\Throwable $e) {
             Log::error("HRD saveNameservers failed for {$domain->domain}: {$e->getMessage()}");
+
+            $this->logAction('updateNameservers', ['domain' => $domain->domain], ['success' => false, 'error' => $e->getMessage()]);
 
             return false;
         }
@@ -184,9 +205,15 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
     public function getEPPCode(Domain $domain): string
     {
         try {
-            return $this->client()->domainTradeGetPw($domain->domain) ?: '(unavailable)';
+            $code = $this->client()->domainTradeGetPw($domain->domain) ?: '(unavailable)';
+
+            $this->logAction('getEPPCode', ['domain' => $domain->domain], ['success' => $code !== '(unavailable)']);
+
+            return $code;
         } catch (\Throwable $e) {
             Log::warning("HRD getEPPCode failed for {$domain->domain}: {$e->getMessage()}");
+
+            $this->logAction('getEPPCode', ['domain' => $domain->domain], ['success' => false, 'error' => $e->getMessage()]);
 
             return '(unavailable)';
         }
@@ -212,13 +239,19 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 $status = $state;
             }
 
-            return [
+            $result = [
                 'available' => $status === 'available' || $status === 'createOnly',
                 'domain' => $domain,
                 'method' => 'hrd_api',
             ];
+
+            $this->logAction('checkAvailability', ['domain' => $domain], ['available' => $result['available'], 'state' => $status]);
+
+            return $result;
         } catch (\Throwable $e) {
             Log::warning("HRD checkAvailability failed for {$domain}: {$e->getMessage()}");
+
+            $this->logAction('checkAvailability', ['domain' => $domain], ['success' => false, 'error' => $e->getMessage()]);
 
             return ['available' => false, 'domain' => $domain, 'method' => 'hrd_api', 'error' => $e->getMessage()];
         }
@@ -229,15 +262,39 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         try {
             $info = $this->client()->domainInfo($domain->domain);
 
-            return [
+            $result = [
                 'success' => true,
                 'expiry_date' => $this->parseDate($info['exDate'] ?? null),
                 'status' => $this->mapStatus($info['status'] ?? null),
                 'locked' => true,
                 'nameservers' => array_map(fn ($entry) => (string) ($entry['name'] ?? ''), (array) ($info['ns'] ?? [])),
             ];
+
+            $this->logAction('sync', ['domain' => $domain->domain], ['success' => true, 'expiry_date' => $result['expiry_date'], 'status' => $result['status']]);
+
+            return $result;
         } catch (\Throwable $e) {
+            $this->logAction('sync', ['domain' => $domain->domain], ['success' => false, 'error' => $e->getMessage()]);
+
             return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Record an HRD action in the System Logs → Module viewer. Sensitive data
+     * (EPP/auth codes) is never written here.
+     */
+    protected function logAction(string $action, array $request = [], array|string|null $response = null): void
+    {
+        try {
+            ModuleLog::create([
+                'module' => 'HRD',
+                'action' => $action,
+                'request' => json_encode($request, JSON_UNESCAPED_SLASHES),
+                'response' => is_string($response) ? $response : json_encode($response, JSON_UNESCAPED_SLASHES),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning("HRD module log failed: {$e->getMessage()}");
         }
     }
 
