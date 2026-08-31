@@ -27,7 +27,7 @@ class TpayModule implements GatewayModuleInterface
         return [
             ['name' => 'client_id',         'label' => 'Open API Client ID',       'type' => 'text', 'required' => true],
             ['name' => 'client_secret',     'label' => 'Open API Client Secret',   'type' => 'password', 'required' => true],
-            ['name' => 'confirmation_code', 'label' => 'Security Code (kod bezpieczeństwa)', 'type' => 'password'],
+            ['name' => 'confirmation_code', 'label' => 'Security Code (kod bezpieczeństwa)', 'type' => 'password', 'required' => true],
             ['name' => 'sandbox',           'label' => 'Sandbox Mode',             'type' => 'select', 'options' => ['0' => 'Live', '1' => 'Sandbox']],
         ];
     }
