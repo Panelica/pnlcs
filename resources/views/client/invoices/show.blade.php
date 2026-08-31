@@ -11,6 +11,9 @@
     <div>
         <h1 class="pn-page-title">{{ __('client.invoices.invoice_prefix', ['id' => $invoice->invoice_num ?? $invoice->id]) }}</h1>
         <p class="pn-page-subtitle">{{ __('client.invoices.issued') }} {{ $invoice->date?->format(date_fmt()) ?? "N/A" }}</p>
+        @if($invoice->sourceInvoice)
+        <p class="pn-page-subtitle" style="color:var(--muted);">{{ __('admin.invoices.source_proforma') }}: <strong>{{ $invoice->sourceInvoice->invoice_num }}</strong></p>
+        @endif
     </div>
     <a href="{{ route('client.invoices.pdf', $invoice) }}" class="pn-btn" style="background:var(--primary);color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:13px;margin-right:8px;">{{ __('client.invoices.download_pdf') }}</a>
     <span class="badge badge-{{ strtolower($invoice->status) }}" style="font-size:13px;padding:5px 14px">{{ invoice_status_label($invoice->status) }}</span>

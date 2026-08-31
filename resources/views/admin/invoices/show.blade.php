@@ -228,6 +228,9 @@
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:4px 0;color:#777;width:45%;">{{ __('admin.invoices.invoice_hash') }}</td><td style="padding:4px 0;font-family:monospace;font-weight:600;">{{ $invoice->invoice_num }}</td></tr>
+                    @if($invoice->sourceInvoice)
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.source_proforma') }}</td><td style="padding:4px 0;"><a href="{{ route('admin.invoices.show', $invoice->sourceInvoice) }}" style="color:#337ab7;font-family:monospace;">{{ $invoice->sourceInvoice->invoice_num }}</a></td></tr>
+                    @endif
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.date') }}</td><td style="padding:4px 0;">{{ $invoice->date?->format(date_fmt()) }}</td></tr>
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.due_date') }}</td><td style="padding:4px 0;{{ ($invoice->due_date?->isPast() && $st !== 'paid') ? 'color:#d9534f;font-weight:600;' : '' }}">{{ $invoice->due_date?->format(date_fmt()) }}</td></tr>
                     @if($invoice->payment_method)

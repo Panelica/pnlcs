@@ -1228,6 +1228,7 @@ return [
     'invoices.gateway' => 'Bramka',
     'invoices.invoice_cancelled' => 'Faktura anulowana',
     'invoices.invoice_date' => 'Data faktury',
+    'invoices.source_proforma' => 'Dotyczy proformy',
     'invoices.invoice_details' => 'Szczegóły faktury',
     'invoices.invoice_hash' => 'Faktura #',
     'invoices.line_items' => 'Pozycje',
