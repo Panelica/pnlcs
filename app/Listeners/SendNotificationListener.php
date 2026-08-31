@@ -69,7 +69,7 @@ class SendNotificationListener
     public function handleInvoiceCreated(InvoiceCreated $event): void
     {
         try {
-            $email = $event->invoice->client?->email;
+            $email = $event->invoice->client?->billingEmail();
             if ($email) {
                 Mail::to($email)->queue(new InvoiceCreatedMail($event->invoice));
             }
@@ -88,7 +88,7 @@ class SendNotificationListener
     public function handleInvoicePaid(InvoicePaid $event): void
     {
         try {
-            $email = $event->invoice->client?->email;
+            $email = $event->invoice->client?->billingEmail();
             if ($email) {
                 Mail::to($email)->queue(new InvoicePaidMail($event->invoice, $event->transactionId));
             }

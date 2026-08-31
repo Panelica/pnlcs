@@ -79,6 +79,11 @@
                 <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>
                 <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
             </div>
+            <div class="form-group">
+                <label class="form-label" for="billing_email">{{ __('common.form.billing_email') }}</label>
+                <input type="email" id="billing_email" name="billing_email" value="{{ old("billing_email", $client?->billing_email) }}" class="form-control">
+                <div style="color:var(--muted);font-size:12px;margin-top:4px;">{{ __('client.account.billing_email_hint') }}</div>
+            </div>
             <div class="form-grid-2">
                 <div class="form-group">
                     <label class="form-label" for="phone_number">{{ __('common.form.phone_number') }}</label>

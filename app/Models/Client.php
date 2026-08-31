@@ -20,6 +20,7 @@ class Client extends Model
         'last_name',
         'company_name',
         'email',
+        'billing_email',
         'address1',
         'address2',
         'city',
@@ -128,6 +129,18 @@ class Client extends Model
     public function getDisplayNameAttribute(): string
     {
         return $this->company_name ?: $this->full_name;
+    }
+
+    /**
+     * The address invoices and other billing mail goes to.
+     *
+     * The sign-in address belongs to the account owner and is often a
+     * personal mailbox; billing is frequently someone else. When a billing
+     * address is set it wins, otherwise the account address is used.
+     */
+    public function billingEmail(): string
+    {
+        return $this->billing_email ?: $this->email;
     }
 
     /** Phone with its international prefix, e.g. "+48 123 456 789". */

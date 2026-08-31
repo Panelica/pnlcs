@@ -54,14 +54,14 @@ class PaymentReminderCommand extends Command
                 continue;
             }
 
-            if (! $invoice->client?->email) {
+            if (! $invoice->client?->billingEmail()) {
                 continue;
             }
 
             $days = $stage['before'] ? $stage['days'] : -$stage['days'];
 
             try {
-                Mail::to($invoice->client->email)->queue(new PaymentReminderMail($invoice, $days));
+                Mail::to($invoice->client->billingEmail())->queue(new PaymentReminderMail($invoice, $days));
                 $invoice->update(['reminder_stage' => $stage['key'], 'reminder_sent_at' => now()]);
                 $sent++;
             } catch (\Throwable $e) {

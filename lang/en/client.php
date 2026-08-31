@@ -3,6 +3,7 @@
 return [
     'account' => [
         'email_change_needs_password' => 'Changing this address requires your account password.',
+        'billing_email_hint' => 'Optional email address for invoices (e.g. an accounting department). When empty, the sign-in address is used.',
         'current_password' => 'Current password',
         'account_switched' => 'You are now viewing :name.',
         'accounts' => 'Your accounts',
