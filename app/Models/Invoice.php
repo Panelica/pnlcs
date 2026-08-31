@@ -29,10 +29,14 @@ class Invoice extends Model {
 
     /**
      * Hide proformas that have been settled: once paid, a proforma is replaced
-     * by its VAT invoice and should no longer show in the invoice lists.
+     * by its VAT invoice. Gated on the "hide paid proformas" setting.
      */
     public function scopeExcludeSettledProformas($query)
     {
+        if (Setting::get('HidePaidProformas', '1') !== '1') {
+            return $query;
+        }
+
         return $query->whereNot(function ($q) {
             $q->where('type', 'proforma')->where('status', InvoiceStatus::Paid->value);
         });

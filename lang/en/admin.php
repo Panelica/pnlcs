@@ -2253,6 +2253,7 @@ return [
         'invoice_number_format' => 'Invoice numbering scheme',
         'proforma_enabled' => 'Enable Proforma scheme',
         'proforma_number_format' => 'Proforma numbering scheme',
+        'hide_paid_proformas' => 'Hide paid proformas',
         'invoice_number_last' => 'Last invoice',
         'invoice_number_preview' => 'Preview',
         'invoice_number_reset_year' => 'Reset numbering each year',

@@ -240,6 +240,10 @@
                         <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $proformaPreview }}</code>
                     </div>
                 </div>
+                <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:10px;">
+                    <input type="checkbox" name="HidePaidProformas" value="1" {{ ($settings['HidePaidProformas'] ?? '1') == '1' ? 'checked' : '' }}>
+                    {{ __('admin.settings.hide_paid_proformas') }}
+                </label>
             </div>
         </div>
     </div>

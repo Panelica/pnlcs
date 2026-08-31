@@ -22,7 +22,7 @@ class HomeController extends Controller
             'domainCount' => Domain::whereIn('client_id', $clientIds)->where('status', DomainStatus::Active->value)->count(),
             'unpaidInvoices' => Invoice::whereIn('client_id', $clientIds)->outstanding()->count(),
             'openTickets' => Ticket::whereIn('client_id', $clientIds)->stillOpen()->count(),
-            'recentInvoices' => Invoice::whereIn('client_id', $clientIds)->orderBy('id', 'desc')->limit(5)->get(),
+            'recentInvoices' => Invoice::whereIn('client_id', $clientIds)->excludeSettledProformas()->orderBy('id', 'desc')->limit(5)->get(),
             'recentTickets' => Ticket::whereIn('client_id', $clientIds)->orderBy('id', 'desc')->limit(5)->get(),
             'activeServices' => Service::whereIn('client_id', $clientIds)->where('status', ServiceStatus::Active->value)->with('product')->limit(5)->get(),
         ];

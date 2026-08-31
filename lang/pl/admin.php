@@ -2257,6 +2257,7 @@ return [
         'invoice_number_format' => 'Schemat numeracji faktur',
         'proforma_enabled' => 'Włącz schemat proform',
         'proforma_number_format' => 'Schemat numeracji proform',
+        'hide_paid_proformas' => 'Nie pokazuj opłaconych proform',
         'invoice_number_last' => 'Ostatnia faktura',
         'invoice_number_preview' => 'Podgląd',
         'invoice_number_reset_year' => 'Resetuj numerację co roku',

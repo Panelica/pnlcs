@@ -80,7 +80,7 @@ class SettingController extends Controller
         'FraudLabsApiKey', 'FraudLabsEnabled',
         'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',
         'TwilioAccountSid', 'TwilioAuthToken', 'TwilioVerifyEnabled', 'TwilioVerifyServiceSid',
-        'ProformaEnabled', 'ProformaNumberFormat',
+        'ProformaEnabled', 'ProformaNumberFormat', 'HidePaidProformas',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
         'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
@@ -116,6 +116,9 @@ class SettingController extends Controller
         }
         if (! isset($data['ProformaEnabled'])) {
             $data['ProformaEnabled'] = '0';
+        }
+        if (! isset($data['HidePaidProformas'])) {
+            $data['HidePaidProformas'] = '0';
         }
 
         // The form never carries the stored mail password back, so an empty
