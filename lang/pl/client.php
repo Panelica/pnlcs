@@ -3,6 +3,7 @@
 return [
     'account' => [
         'email_change_needs_password' => 'Zmiana tego adresu wymaga hasła do Twojego konta.',
+        'billing_email_hint' => 'Opcjonalny adres e-mail do faktur (np. działu księgowości). Gdy pusty, używany jest adres logowania.',
         'current_password' => 'Aktualne hasło',
         'account_switched' => 'Obecnie przeglądasz :name.',
         'accounts' => 'Twoje konta',

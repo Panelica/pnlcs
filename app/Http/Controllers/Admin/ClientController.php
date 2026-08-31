@@ -59,6 +59,7 @@ class ClientController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:clients,email|unique:users,email',
+            'billing_email' => 'nullable|email|max:255',
             'company_name' => 'nullable|string|max:255',
             'tax_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',
@@ -209,6 +210,7 @@ class ClientController extends Controller
             // The email must also not collide with another user's login email
             // (the client's own linked login is allowed).
             'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id), Rule::unique('users', 'email')->ignore($client->owner()?->id)],
+            'billing_email' => 'nullable|email|max:255',
             'company_name' => 'nullable|string|max:255',
             'tax_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',

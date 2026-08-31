@@ -165,9 +165,9 @@ class InvoiceController extends Controller
      */
     public function sendInvoice(Invoice $invoice): RedirectResponse
     {
-        abort_if(! $invoice->client?->email, 422, 'Client has no email address.');
+        abort_if(! $invoice->client?->billingEmail(), 422, 'Client has no email address.');
 
-        Mail::to($invoice->client->email)->queue(new InvoiceCreatedMail($invoice));
+        Mail::to($invoice->client->billingEmail())->queue(new InvoiceCreatedMail($invoice));
 
         ActivityLog::log(
             "Invoice #{$invoice->id} sent by email",
@@ -185,13 +185,13 @@ class InvoiceController extends Controller
      */
     public function sendReminder(Invoice $invoice): RedirectResponse
     {
-        abort_if(! $invoice->client?->email, 422, 'Client has no email address.');
+        abort_if(! $invoice->client?->billingEmail(), 422, 'Client has no email address.');
 
         $daysOffset = $invoice->due_date
             ? (int) now()->startOfDay()->diffInDays($invoice->due_date->startOfDay(), false)
             : 0;
 
-        Mail::to($invoice->client->email)->queue(new PaymentReminderMail($invoice, $daysOffset));
+        Mail::to($invoice->client->billingEmail())->queue(new PaymentReminderMail($invoice, $daysOffset));
 
         ActivityLog::log(
             "Invoice #{$invoice->id} payment reminder sent",

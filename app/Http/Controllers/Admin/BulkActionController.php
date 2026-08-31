@@ -150,18 +150,18 @@ class BulkActionController extends Controller
 
     private function bulkSend(Invoice $invoice): bool
     {
-        if (! $invoice->client?->email) {
+        if (! $invoice->client?->billingEmail()) {
             return false;
         }
 
-        Mail::to($invoice->client->email)->queue(new InvoiceCreatedMail($invoice));
+        Mail::to($invoice->client->billingEmail())->queue(new InvoiceCreatedMail($invoice));
 
         return true;
     }
 
     private function bulkRemind(Invoice $invoice): bool
     {
-        if (! $invoice->client?->email) {
+        if (! $invoice->client?->billingEmail()) {
             return false;
         }
 
@@ -169,7 +169,7 @@ class BulkActionController extends Controller
             ? (int) now()->startOfDay()->diffInDays($invoice->due_date->startOfDay(), false)
             : 0;
 
-        Mail::to($invoice->client->email)->queue(new PaymentReminderMail($invoice, $daysOffset));
+        Mail::to($invoice->client->billingEmail())->queue(new PaymentReminderMail($invoice, $daysOffset));
 
         return true;
     }
