@@ -110,7 +110,7 @@ class ClientController extends Controller
         // Stats always needed (shown in all tabs)
         $data['serviceCount'] = $client->services()->count();
         $data['domainCount'] = $client->domains()->count();
-        $data['invoiceCount'] = $client->invoices()->count();
+        $data['invoiceCount'] = $client->invoices()->excludeSettledProformas()->count();
         $data['ticketCount'] = $client->tickets()->count();
         $data['unpaidInvoices'] = $client->invoices()->where('status', 'unpaid')->sum('total');
 
@@ -122,7 +122,7 @@ class ClientController extends Controller
                 $data['domains'] = $client->domains()->orderBy('id', 'desc')->paginate(15);
                 break;
             case 'invoices':
-                $data['invoices'] = $client->invoices()->orderBy('id', 'desc')->paginate(15);
+                $data['invoices'] = $client->invoices()->excludeSettledProformas()->orderBy('id', 'desc')->paginate(15);
                 break;
             case 'tickets':
                 $data['tickets'] = $client->tickets()->with('department')->orderBy('id', 'desc')->paginate(15);
@@ -137,10 +137,10 @@ class ClientController extends Controller
             default: // summary
                 $data['serviceCount'] = $client->services()->count();
                 $data['domainCount'] = $client->domains()->count();
-                $data['invoiceCount'] = $client->invoices()->count();
+                $data['invoiceCount'] = $client->invoices()->excludeSettledProformas()->count();
                 $data['ticketCount'] = $client->tickets()->count();
                 $data['unpaidInvoices'] = $client->invoices()->where('status', 'unpaid')->sum('total');
-                $data['recentInvoices'] = $client->invoices()->orderBy('id', 'desc')->limit(5)->get();
+                $data['recentInvoices'] = $client->invoices()->excludeSettledProformas()->orderBy('id', 'desc')->limit(5)->get();
                 $data['recentTickets'] = $client->tickets()->with('department')->orderBy('id', 'desc')->limit(5)->get();
                 $data['recentServices'] = $client->services()->with('product')->orderBy('id', 'desc')->limit(5)->get();
                 break;
