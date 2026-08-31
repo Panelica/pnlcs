@@ -105,7 +105,7 @@ return [
         'description' => 'Opis',
         'email' => 'E-mail',
         'email_address' => 'Adres e-mail',
-        'billing_email' => 'E-mail do faktur (księgowość)',
+        'billing_email' => 'E-mail księgowość',
         'first_name' => 'Imię',
         'group' => 'Grupa',
         'language' => 'Język',
