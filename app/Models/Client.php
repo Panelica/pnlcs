@@ -79,6 +79,15 @@ class Client extends Model
             $client->orders()->delete();
             Affiliate::where('client_id', $client->id)->delete();
             ClientNote::where('client_id', $client->id)->delete();
+
+            // Delete the login accounts that belong only to this client so
+            // they cannot sign back in. An account shared with another client
+            // is only detached from this one.
+            $client->users()->get()->each(function (User $user) use ($client) {
+                if ($user->clients()->where('clients.id', '!=', $client->id)->doesntExist()) {
+                    $user->delete();
+                }
+            });
             $client->users()->detach(); // Remove pivot entries
         });
     }
