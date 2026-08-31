@@ -78,30 +78,37 @@ class AffiliateService
      */
     public function convertToCredit(Affiliate $affiliate, float $amount): bool
     {
-        if ($amount <= 0 || $affiliate->balance < $amount) {
+        if ($amount <= 0) {
             return false;
         }
 
-        $client = $affiliate->client;
-        if (! $client) {
-            return false;
-        }
+        return DB::transaction(function () use ($affiliate, $amount) {
+            $affiliate = Affiliate::whereKey($affiliate->id)->lockForUpdate()->first();
+            if (! $affiliate || $affiliate->balance < $amount) {
+                return false;
+            }
 
-        $affiliate->decrement('balance', $amount);
-        $affiliate->increment('withdrawn', $amount);
-        $client->increment('credit', $amount);
+            $client = $affiliate->client;
+            if (! $client) {
+                return false;
+            }
 
-        Transaction::create([
-            'client_id' => $affiliate->client_id,
-            'gateway' => 'affiliate_payout',
-            'transaction_id' => 'AFFCR-'.strtoupper(uniqid()),
-            'amount_in' => 0,
-            'amount_out' => $amount,
-            'description' => 'Affiliate balance added to account credit - '.money_fmt($amount),
-            'date' => now(),
-        ]);
+            $affiliate->decrement('balance', $amount);
+            $affiliate->increment('withdrawn', $amount);
+            $client->increment('credit', $amount);
 
-        return true;
+            Transaction::create([
+                'client_id' => $affiliate->client_id,
+                'gateway' => 'affiliate_payout',
+                'transaction_id' => 'AFFCR-'.strtoupper(uniqid()),
+                'amount_in' => 0,
+                'amount_out' => $amount,
+                'description' => 'Affiliate balance added to account credit - '.money_fmt($amount),
+                'date' => now(),
+            ]);
+
+            return true;
+        });
     }
 
     /**
