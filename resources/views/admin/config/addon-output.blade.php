@@ -19,4 +19,40 @@
     </div>
 </div>
 
+@if(!empty($config))
+<div class="card" style="margin-top:16px;">
+    <div class="card-header"><span style="font-weight:600;">{{ __('admin.addon_modules.settings') }}</span></div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.config.addons.modules.settings', $name) }}">
+            @csrf
+            @foreach($config as $field)
+                @php($key = $field['name'])
+                @php($type = $field['type'] ?? 'text')
+                <div class="mb-3">
+                    <label class="form-label">{{ $field['label'] }}</label>
+                    @if($type === 'checkbox')
+                        <div class="form-check">
+                            <input type="hidden" name="{{ $key }}" value="0">
+                            <input type="checkbox" name="{{ $key }}" value="1" class="form-check-input"
+                                {{ ($settings[$key] ?? $field['default'] ?? '0') == '1' ? 'checked' : '' }}>
+                        </div>
+                    @elseif($type === 'textarea')
+                        <textarea name="{{ $key }}" class="form-control" rows="3">{{ $settings[$key] ?? $field['default'] ?? '' }}</textarea>
+                    @elseif($type === 'password')
+                        <input type="password" name="{{ $key }}" class="form-control" autocomplete="new-password"
+                            placeholder="{{ ($settings[$key] ?? '') ? __('admin.addon_modules.key_is_set') : '' }}">
+                    @else
+                        <input type="text" name="{{ $key }}" class="form-control" value="{{ $settings[$key] ?? $field['default'] ?? '' }}">
+                    @endif
+                    @if(!empty($field['hint']))
+                        <div style="font-size:12px;color:var(--pn-muted);margin-top:4px;">{{ $field['hint'] }}</div>
+                    @endif
+                </div>
+            @endforeach
+            <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
+        </form>
+    </div>
+</div>
+@endif
+
 @endsection

@@ -20,7 +20,12 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.email') }}<span style="color:#d9534f;">*</span></label><input type="email" name="email" value="{{ old('email') }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.billing_email') }}</label><input type="email" name="billing_email" value="{{ old('billing_email') }}" class="form-control"><div style="color:var(--muted);font-size:12px;margin-top:4px;">{{ __('admin.clients.billing_email_hint') }}</div></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.company') }}</label><input type="text" name="company_name" value="{{ old('company_name') }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label><input type="text" name="tax_id" value="{{ old('tax_id') }}" maxlength="20" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label>
+                    <div style="display:flex;gap:6px;">
+                        <input type="text" name="tax_id" value="{{ old('tax_id') }}" maxlength="20" class="form-control" style="flex:1;min-width:0;">
+                        <x-company-lookup />
+                    </div>
+                </div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.address') }}</label><input type="text" name="address1" value="{{ old('address1') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="city" value="{{ old('city') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.state') }}</label><input type="text" name="state" value="{{ old('state') }}" class="form-control"></div>

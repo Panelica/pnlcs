@@ -205,6 +205,7 @@
                     <li><a href="{{ route('admin.config.gateways') }}">{{ __('admin.nav.payment_gateways') }}</a></li>
                     <li><a href="{{ route('admin.config.registrars') }}">{{ __('admin.nav.domain_registrars') }}</a></li>
                     <li><a href="{{ route('admin.config.sslModules') }}">{{ __('admin.nav.ssl_modules') }}</a></li>
+                    <li><a href="{{ route('admin.config.addons.modules') }}"><i class="fas fa-puzzle-piece"></i> {{ __('admin.nav.addon_modules') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.languages.index') }}"><i class="fas fa-language"></i> {{ __('admin.nav.languages') }}</a></li>
                     <li class="divider"></li>
@@ -399,6 +400,9 @@
         <div class="sidebar-header"><i class="fas fa-credit-card"></i> {{ __('admin.sidebar.payments') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.config.gateways') }}" @if($routeName === 'admin.config.gateways') class="active" @endif>{{ __('admin.nav.payment_gateways') }}</a></li>
+            <li><a href="{{ route('admin.config.registrars') }}" @if($routeName === 'admin.config.registrars') class="active" @endif>{{ __('admin.nav.domain_registrars') }}</a></li>
+            <li><a href="{{ route('admin.config.sslModules') }}" @if($routeName === 'admin.config.sslModules') class="active" @endif>{{ __('admin.nav.ssl_modules') }}</a></li>
+            <li><a href="{{ route('admin.config.addons.modules') }}" @if($routeName === 'admin.config.addons.modules' || $routeName === 'admin.config.addons.modules.show') class="active" @endif><i class="fas fa-puzzle-piece"></i> {{ __('admin.nav.addon_modules') }}</a></li>
             <li><a href="{{ route('admin.config.currencies') }}" @if($routeName === 'admin.config.currencies') class="active" @endif>{{ __('admin.nav.currencies') }}</a></li>
             <li><a href="{{ route('admin.config.tax') }}" @if($routeName === 'admin.config.tax') class="active" @endif>{{ __('admin.nav.tax_rules') }}</a></li>
             <li><a href="{{ route('admin.config.custom-fields') }}" @if($routeName === 'admin.config.custom-fields') class="active" @endif>{{ __('admin.nav.custom_fields') }}</a></li>
@@ -438,7 +442,6 @@
             <li><a href="{{ route('admin.config.notifications') }}" @if($routeName === 'admin.config.notifications') class="active" @endif>{{ __('admin.nav.notification_channels') }}</a></li>
             <li><a href="{{ route('admin.config.ticket-spam') }}" @if($routeName === 'admin.config.ticket-spam') class="active" @endif>{{ __('admin.nav.ticket_spam_filter') }}</a></li>
             <li><a href="{{ route('admin.config.addons') }}" @if($routeName === 'admin.config.addons') class="active" @endif>{{ __('admin.nav.product_addons') }}</a></li>
-                    <li><a href="/admin/config/addons/modules">{{ __('admin.nav.addon_modules') }}</a></li>
             <li><a href="{{ route('admin.config.bundles') }}" @if($routeName === 'admin.config.bundles') class="active" @endif>{{ __('admin.nav.product_bundles') }}</a></li>
         </ul>
 
