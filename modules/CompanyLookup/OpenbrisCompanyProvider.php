@@ -66,6 +66,39 @@ final class OpenbrisCompanyProvider implements CompanyDataProviderInterface
     }
 
     /**
+     * Verify the OpenBRIS credentials and reach the API.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function testConnection(): array
+    {
+        if ($this->apiKey === null || trim($this->apiKey) === '') {
+            return ['success' => false, 'message' => __('messages.company_lookup.test_no_key')];
+        }
+
+        $url = rtrim($this->endpoint, '/').'/v1/countries';
+
+        try {
+            $response = Http::timeout($this->requestTimeout)
+                ->connectTimeout($this->connectTimeout)
+                ->withHeaders(['api-key' => $this->apiKey])
+                ->get($url);
+        } catch (ConnectionException $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if ($response->successful()) {
+            return ['success' => true, 'message' => __('messages.company_lookup.test_ok')];
+        }
+
+        if (in_array($response->status(), [401, 403], true)) {
+            return ['success' => false, 'message' => __('messages.company_lookup.test_auth_failed')];
+        }
+
+        return ['success' => false, 'message' => 'HTTP '.$response->status()];
+    }
+
+    /**
      * @param  array<string, mixed>  $company
      */
     private function map(array $company): CompanyData

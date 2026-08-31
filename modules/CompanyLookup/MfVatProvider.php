@@ -68,6 +68,31 @@ final class MfVatProvider implements CompanyDataProviderInterface
     }
 
     /**
+     * Verify the MF endpoint is reachable (no key required).
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function testConnection(): array
+    {
+        $url = rtrim($this->endpoint, '/').'/search/nip/5261040828';
+
+        try {
+            $response = Http::timeout($this->requestTimeout)
+                ->connectTimeout($this->connectTimeout)
+                ->get($url, ['date' => now()->format('Y-m-d')]);
+        } catch (ConnectionException $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        // 200 (found), 400/404 (reachable but unknown) all prove the API works.
+        if ($response->successful() || in_array($response->status(), [400, 404], true)) {
+            return ['success' => true, 'message' => __('messages.company_lookup.test_ok')];
+        }
+
+        return ['success' => false, 'message' => 'HTTP '.$response->status()];
+    }
+
+    /**
      * @param  array<string, mixed>  $subject
      */
     private function map(array $subject): CompanyData

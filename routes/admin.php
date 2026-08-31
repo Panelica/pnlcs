@@ -428,6 +428,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::get('addons/modules/{name}', [AddonController::class, 'show'])->name('addons.modules.show');
             Route::post('addons/modules/{name}/toggle', [AddonController::class, 'toggle'])->name('addons.modules.toggle');
             Route::post('addons/modules/{name}/settings', [AddonController::class, 'saveSettings'])->name('addons.modules.settings');
+            Route::post('addons/modules/company-lookup/test/{provider}', [\Modules\CompanyLookup\Http\Admin\CompanyLookupTestController::class, 'test'])->name('addons.modules.company-lookup.test');
 
             Route::get('bundles', [ConfigController::class, 'bundles'])->name('bundles');
             Route::post('bundles', [ConfigController::class, 'storeBundle'])->name('bundles.store');

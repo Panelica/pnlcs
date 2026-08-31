@@ -73,6 +73,39 @@ final class CeidgCompanyProvider implements CompanyDataProviderInterface
     }
 
     /**
+     * Verify the CEIDG credentials and reach the API.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function testConnection(): array
+    {
+        if ($this->apiKey === null || trim($this->apiKey) === '') {
+            return ['success' => false, 'message' => __('messages.company_lookup.test_no_key')];
+        }
+
+        $url = rtrim($this->endpoint, '/').'/firmy';
+
+        try {
+            $response = Http::timeout($this->requestTimeout)
+                ->connectTimeout($this->connectTimeout)
+                ->withHeaders(['Authorization' => 'Bearer '.$this->apiKey])
+                ->get($url, ['nip' => '["5261040828"]']);
+        } catch (ConnectionException $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if (in_array($response->status(), [200, 204], true)) {
+            return ['success' => true, 'message' => __('messages.company_lookup.test_ok')];
+        }
+
+        if (in_array($response->status(), [401, 403], true)) {
+            return ['success' => false, 'message' => __('messages.company_lookup.test_auth_failed')];
+        }
+
+        return ['success' => false, 'message' => 'HTTP '.$response->status()];
+    }
+
+    /**
      * @param  array<string, mixed>  $f
      */
     private function map(array $f): CompanyData

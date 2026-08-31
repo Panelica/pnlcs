@@ -35,7 +35,7 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
     public function findByNip(string $nip): ?CompanyData
     {
         if ($this->apiKey === null || trim($this->apiKey) === '') {
-            throw new ProviderException('GUS: no API key configured', ProviderException::GUS_ERROR);
+            throw new ProviderException('GUS: no API key configured', ProviderException::NOT_CONFIGURED);
         }
 
         $sid = $this->login();
@@ -46,6 +46,27 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
             return $this->parse($raw);
         } finally {
             $this->logout($sid);
+        }
+    }
+
+    /**
+     * Verify the credentials and reach the GUS BIR endpoint.
+     *
+     * @return array{success: bool, message: string}
+     */
+    public function testConnection(): array
+    {
+        if ($this->apiKey === null || trim($this->apiKey) === '') {
+            return ['success' => false, 'message' => __('messages.company_lookup.test_no_key')];
+        }
+
+        try {
+            $sid = $this->login();
+            $this->logout($sid);
+
+            return ['success' => true, 'message' => __('messages.company_lookup.test_ok')];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
