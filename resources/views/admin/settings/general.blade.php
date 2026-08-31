@@ -225,6 +225,22 @@
                 <span style="margin-left:14px;">{{ __('admin.settings.invoice_number_preview') }}:</span>
                 <code id="invoice-number-preview" style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $invoicePreview }}</code>
             </div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:14px;font-weight:600;">
+                <input type="checkbox" id="proforma-enabled" name="ProformaEnabled" value="1" onchange="document.getElementById('proforma-scheme').style.display = this.checked ? '' : 'none';" {{ $proformaEnabled ? 'checked' : '' }}>
+                {{ __('admin.settings.proforma_enabled') }}
+            </label>
+            <div id="proforma-scheme" style="{{ $proformaEnabled ? '' : 'display:none;' }}">
+                <div class="form-group" style="margin-top:10px;max-width:50%;">
+                    <label class="form-label" for="proforma-number-format">{{ __('admin.settings.proforma_number_format') }}</label>
+                    <input type="text" id="proforma-number-format" name="ProformaNumberFormat" value="{{ $proformaFormat }}" class="form-control" placeholder="PRO-{year}/{month}-{num}">
+                    <div style="font-size:13px;color:#555;margin-top:6px;">
+                        <span>{{ __('admin.settings.invoice_number_last') }}:</span>
+                        <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;">{{ $proformaLast ?? '—' }}</code>
+                        <span style="margin-left:14px;">{{ __('admin.settings.invoice_number_preview') }}:</span>
+                        <code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $proformaPreview }}</code>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

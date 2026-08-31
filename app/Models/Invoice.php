@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Invoice extends Model {
     use HasFactory;
 
-    protected $fillable = ['client_id', 'invoice_num', 'date', 'due_date', 'date_paid', 'subtotal', 'credit', 'tax', 'tax2', 'total', 'tax_rate', 'tax_rate2', 'status', 'reminder_stage', 'reminder_sent_at', 'payment_method', 'pay_method_id', 'notes',
+    protected $fillable = ['client_id', 'invoice_num', 'date', 'due_date', 'date_paid', 'subtotal', 'credit', 'tax', 'tax2', 'total', 'tax_rate', 'tax_rate2', 'status', 'type', 'source_invoice_id', 'reminder_stage', 'reminder_sent_at', 'payment_method', 'pay_method_id', 'notes',
         // Buyer as it stood when the invoice was issued (issue #7). The money
         // was already frozen; these keep the document itself immutable.
         'buyer_first_name', 'buyer_last_name', 'buyer_company_name', 'buyer_email',
@@ -25,6 +25,17 @@ class Invoice extends Model {
     public function scopeOutstanding($query)
     {
         return $query->whereIn('status', ['unpaid', 'overdue', 'partially_paid']);
+    }
+
+    /**
+     * Hide proformas that have been settled: once paid, a proforma is replaced
+     * by its VAT invoice and should no longer show in the invoice lists.
+     */
+    public function scopeExcludeSettledProformas($query)
+    {
+        return $query->whereNot(function ($q) {
+            $q->where('type', 'proforma')->where('status', InvoiceStatus::Paid->value);
+        });
     }
     protected function casts(): array { return ['date' => 'date', 'due_date' => 'date', 'date_paid' => 'datetime', 'subtotal' => 'decimal:2', 'credit' => 'decimal:2', 'tax' => 'decimal:2', 'total' => 'decimal:2', 'buyer_custom_fields' => 'array']; }
 
@@ -44,6 +55,9 @@ class Invoice extends Model {
 
     public function items() { return $this->hasMany(InvoiceItem::class); }
     public function transactions() { return $this->hasMany(Transaction::class); }
+
+    /** The proforma this VAT invoice was issued from. */
+    public function sourceInvoice() { return $this->belongsTo(self::class, 'source_invoice_id'); }
 
     public function scopeUnpaid($q) { return $q->where('status', InvoiceStatus::Unpaid->value); }
     public function scopeOverdue($q) { return $q->where('status', InvoiceStatus::Overdue->value); }

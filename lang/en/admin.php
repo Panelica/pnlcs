@@ -2250,6 +2250,8 @@ return [
         'general_settings' => 'General Settings',
         'homepage_builder' => 'Homepage Builder',
         'invoice_number_format' => 'Invoice numbering scheme',
+        'proforma_enabled' => 'Enable Proforma scheme',
+        'proforma_number_format' => 'Proforma numbering scheme',
         'invoice_number_last' => 'Last invoice',
         'invoice_number_preview' => 'Preview',
         'invoice_number_reset_year' => 'Reset numbering each year',

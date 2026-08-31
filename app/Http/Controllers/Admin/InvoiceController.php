@@ -37,7 +37,7 @@ class InvoiceController extends Controller
 
     public function index(Request $request): View
     {
-        $query = Invoice::with('client');
+        $query = Invoice::with('client')->excludeSettledProformas();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -411,7 +411,7 @@ class InvoiceController extends Controller
      */
     public function exportCsv(Request $request): StreamedResponse
     {
-        $query = Invoice::with('client');
+        $query = Invoice::with('client')->excludeSettledProformas();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
