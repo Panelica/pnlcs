@@ -450,7 +450,6 @@ return [
     'form.optional' => 'opcjonalnie',
     'funds' => [
         'add_amount' => 'Kwota doładowania',
-        'amount_range' => 'Minimum $5.00 · Maksimum $10 000.00',
         'available_credit_desc' => 'Dostępne do wykorzystania na fakturach i zamówieniach',
         'current_balance' => 'Aktualne saldo',
         'current_credit' => 'Aktualne saldo konta',

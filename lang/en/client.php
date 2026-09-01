@@ -450,7 +450,6 @@ return [
     'form.optional' => 'optional',
     'funds' => [
         'add_amount' => 'Amount to Add',
-        'amount_range' => 'Minimum $5.00 · Maximum $10,000.00',
         'available_credit_desc' => 'Available to use on invoices and orders',
         'current_balance' => 'Current Balance',
         'current_credit' => 'Current Account Credit',

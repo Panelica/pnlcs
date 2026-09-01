@@ -449,7 +449,6 @@ return [
     'form.optional' => 'optional',
     'funds' => [
         'add_amount' => 'Tutar to Ekle',
-        'amount_range' => 'Minimum $5.00, maximum $10,000.00',
         'available_credit_desc' => 'Available for invoices and purchases.',
         'current_balance' => 'Mevcut Bakiye',
         'current_credit' => 'Current Credit Balance',
@@ -463,7 +462,7 @@ return [
         'subtitle' => 'Add credit to your account for future purchases.',
         'title' => 'Add Funds',
     ],
-    'funds.amount_range' => 'Minimum $5.00, maximum $10,000.00',
+    'funds.amount_range' => 'Minimum :min, maksimum :max',
     'funds.available_credit_desc' => 'Available for invoices and purchases.',
     'funds.bank_transfer' => 'Bank Transfer',
     'funds.current_credit' => 'Current Credit Balance',
