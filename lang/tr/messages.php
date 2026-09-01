@@ -95,6 +95,7 @@ return [
         'payment_notification_already_pending' => 'Bu fatura için zaten incelenmekte olan bir ödeme bildiriminiz var.',
     ],
     'success' => [
+        'tax_set_default' => 'Varsayılan vergi oranı ayarlandı.',
         'payment_notification_submitted' => 'Teşekkürler! Ödeme bildiriminiz alındı, en kısa sürede incelenecek.',
         '2fa_disabled' => 'Two-factor auntication devre disi birakildi.',
         '2fa_enabled' => 'Two-factor auntication etkinlestirildi.',
