@@ -66,7 +66,7 @@
                 @endphp
                 <tr>
                     <td><input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}" class="row-checkbox"></td>
-                    <td><a href="{{ route("admin.invoices.show", $invoice) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $invoice->id }}</a></td>
+                    <td><a href="{{ route("admin.invoices.show", $invoice) }}" style="color:#337ab7;text-decoration:none;font-family:monospace;">#{{ $invoice->invoice_num ?? $invoice->id }}</a></td>
                     <td>
                         @if($invoice->client)
                         <a href="{{ route("admin.clients.show", $invoice->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $invoice->client->full_name }}</a>
