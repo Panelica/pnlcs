@@ -2752,4 +2752,8 @@ return [
     'settings.twilio_auth_token' => 'Twilio 认证令牌',
     'settings.twilio_verify_service_sid' => 'Twilio Verify 服务 SID',
     'settings.sms_verification_hint' => '客户会在其安全页面看到验证手机按钮。验证码、尝试次数和十分钟有效期完全由 Twilio 保管;面板只记录验证通过的时刻。留空的密钥字段将保留已保存的值。',
+
+    // Added by localization sync
+    'addon_modules.settings' => '设置',
+    'addon_modules.key_is_set' => '已设置（留空以保留）',
 ];

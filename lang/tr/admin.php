@@ -2752,4 +2752,8 @@ return [
     'settings.twilio_auth_token' => 'Twilio auth token',
     'settings.twilio_verify_service_sid' => 'Twilio Verify servis SID',
     'settings.sms_verification_hint' => 'Müşteriler Güvenlik sayfasında Telefonu Doğrula düğmesi görür. Kod, deneme hakları ve on dakikalık süre tamamen Twilio tarafında tutulur; panel yalnızca doğrulamanın onaylandığı anı kaydeder. Boş bırakılan gizli alan kayıtlı değerini korur.',
+
+    // Added by localization sync
+    'addon_modules.settings' => 'Ayarlar',
+    'addon_modules.key_is_set' => 'Değer ayarlandı (korumak için boş bırakın)',
 ];
