@@ -906,7 +906,7 @@ PNLCS ships with modular **server**, **gateway**, **registrar**, and **SSL
 provider** integrations under the `modules/` directory. Add control-panel
 servers (cPanel, Plesk, DirectAdmin, Proxmox, HestiaCP, Vultr, Panelica),
 configure payment gateways (Stripe, PayPal, Authorize.Net, Razorpay, Mollie,
-bank transfer), and connect domain registrars (Enom, Namecheap, ResellerClub)
+Tpay, bank transfer), and connect domain registrars (Enom, Namecheap, ResellerClub)
 without touching core code.
 
 > 💡 **Choosing a panel to sell on?** The **[Panelica](https://panelica.com)**
@@ -935,6 +935,7 @@ a statement that the integration has been run against a live provider account.
 | Authorize.Net | Gateway   | Covered         |
 | Razorpay      | Gateway   | Covered         |
 | Mollie        | Gateway   | Covered         |
+| Tpay          | Gateway   | None yet        |
 | BankTransfer  | Gateway   | Covered         |
 | Enom          | Registrar | Covered         |
 | Namecheap     | Registrar | Covered         |

@@ -2,6 +2,51 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09 — Tax model, extensible addons, Tpay & Polish-market billing
+
+A round of billing and extensibility work, largely from community
+contributions (thanks to [@hedon77](https://github.com/hedon77)), merged after
+review. The features below are live; the wider Polish-localization series
+(company lookup, KSeF e-invoicing, proforma flow) is still in review.
+
+### Billing & tax
+
+- **Redesigned tax model** (#14, `9cc5999`). VAT is matched by country and
+  state with exactly one rate marked as the default — an exact country+state
+  match wins, then the country default, then the global default. Invoice items
+  carry their own VAT rate and label (per-line VAT), and a new invoicing
+  **product catalog** (goods/services with a unit and rate) can seed invoice
+  lines. The long-broken secondary tax (`tax2`), which was configurable but
+  never actually charged, is removed; multi-rate jurisdictions use per-line
+  rates instead. The migration promotes any existing catch-all rule to the
+  default so taxation keeps applying after upgrade.
+
+### Payments
+
+- **Tpay (Poland) payment gateway** (#13, `f02f450`). Redirect-based Tpay Open
+  API integration (BLIK, quick transfers, cards) with OAuth2 tokens, refunds,
+  and webhook verification that requires both the JWS signature (RFC 7515, x5u
+  certificate validated against the Tpay CA) and the md5 checksum.
+
+### Extensibility
+
+- **Generic addon settings framework** (#22, `3a06717`). Addons declare their
+  own config fields and persist them in a per-addon settings store that is
+  encrypted at rest, the same treatment gateway and registrar secrets get, and
+  is managed from an addon settings screen.
+
+### Security
+
+- **Deleting a client removes its orphaned login accounts** (#16, `5c705ba`).
+  A soft-deleted client previously left its `User` login able to sign in;
+  logins that belong only to the deleted client are now removed, while accounts
+  shared with another client are only detached.
+
+### Admin experience
+
+- **Formatted invoice number** shown in the admin invoice list (#24,
+  `9be9e61`).
+
 ## 2026-07 — Security hardening, billing completeness & full Panelica integration
 
 A large body of work focused on making PNLCS an enterprise-grade, self-hosted
