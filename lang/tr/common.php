@@ -90,6 +90,7 @@ return [
         'no_results' => 'Sonuc bulunamadi.',
     ],
     'form' => [
+        'billing_email' => 'Fatura E-postası (Muhasebe)',
         'address' => 'Ekleress',
         'address1' => 'Ekleress Line 1',
         'address2' => 'Ekleress Line 2',

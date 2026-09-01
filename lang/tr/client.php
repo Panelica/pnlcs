@@ -2,6 +2,7 @@
 
 return [
     'account' => [
+        'billing_email_hint' => 'Faturalar için isteğe bağlı e-posta (örn. muhasebe departmanı). Boşsa giriş adresi kullanılır.',
         'email_change_needs_password' => 'Bu adresi değiştirmek için hesap şifrenizi girmeniz gerekmektedir.',
         'current_password' => 'Mevcut şifre',
         'account_switched' => 'Artık :name\'i görüntülüyorsunuz.',

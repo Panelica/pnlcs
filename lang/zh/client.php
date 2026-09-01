@@ -2,6 +2,7 @@
 
 return [
     'account' => [
+        'billing_email_hint' => '发票的可选邮箱（例如财务部门）。为空时使用登录地址。',
         'email_change_needs_password' => '更改此地址需要输入账户密码。',
         'current_password' => '当前密码',
         'account_switched' => '您当前正在查看 :name。',

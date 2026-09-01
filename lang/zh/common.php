@@ -90,6 +90,7 @@ return [
         'no_results' => '未找到结果。',
     ],
     'form' => [
+        'billing_email' => '账单邮箱（财务）',
         'address' => '地址',
         'address1' => '地址行 1',
         'address2' => '地址行 2',

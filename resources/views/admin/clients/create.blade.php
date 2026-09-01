@@ -67,8 +67,8 @@
                     <div style="display:flex;gap:6px;">
                         <input type="password" name="password" id="pw-input" class="form-control" autocomplete="new-password" oninput="checkStrength(this.value)">
                         <button type="button" onclick="generatePassword()" class="btn btn-default" style="white-space:nowrap;flex-shrink:0;" title="{{ __('admin.clients.generate_password') }}">&#x1F512; {{ __('admin.clients.generate_password') }}</button>
-                        <button type="button" onclick="copyPw('pw-input', this)" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.copy') }}">&#128203;</button>
-                        <button type="button" onclick="togglePw('pw-input')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.toggle') }}">&#128065;</button>
+                        <button type="button" onclick="copyPw('pw-input', this)" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.actions.copy') }}">&#128203;</button>
+                        <button type="button" onclick="togglePw('pw-input')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.actions.toggle') }}">&#128065;</button>
                     </div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.password_confirm') }}</label><input type="password" name="password_confirmation" id="pw-confirm" class="form-control" autocomplete="new-password"></div>

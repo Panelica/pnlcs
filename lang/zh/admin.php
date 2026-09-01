@@ -2769,4 +2769,5 @@ return [
     'invoices.filter_overdue' => '逾期',
     'invoices.filter_paid' => '已付款',
     'invoices.filter_unpaid' => '未付款',
+    'clients.billing_email_hint' => '发票和付款提醒的可选地址。为空时使用账户邮箱。',
 ];

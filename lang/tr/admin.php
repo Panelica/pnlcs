@@ -2769,4 +2769,5 @@ return [
     'invoices.filter_overdue' => 'Gecikmiş',
     'invoices.filter_paid' => 'Ödendi',
     'invoices.filter_unpaid' => 'Ödenmemiş',
+    'clients.billing_email_hint' => 'Faturalar ve ödeme hatırlatmaları için isteğe bağlı adres. Boşsa hesap e-postası kullanılır.',
 ];
