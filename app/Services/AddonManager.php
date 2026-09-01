@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\AddonModuleInterface;
+use App\Models\AddonSetting;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -122,5 +123,27 @@ class AddonManager
             }
         }
         return $items;
+    }
+
+    /**
+     * The stored settings for an addon, keyed by field name.
+     *
+     * @return array<string, mixed>
+     */
+    public function settings(string $name): array
+    {
+        return AddonSetting::getForAddon($name);
+    }
+
+    /**
+     * Persist an addon's settings (one entry per declared config field).
+     *
+     * @param  array<string, mixed>  $settings
+     */
+    public function saveSettings(string $name, array $settings): void
+    {
+        foreach ($settings as $key => $value) {
+            AddonSetting::setSetting($name, $key, $value);
+        }
     }
 }
