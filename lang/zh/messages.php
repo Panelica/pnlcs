@@ -355,4 +355,7 @@ return [
     'whois.connect_error' => '错误：无法连接 :server（errno=:errno：:errstr）',
     'whois.invalid_domain' => '域名无效。',
     'whois.no_server_known' => '没有可用于 .:tld 的 WHOIS 服务器，请尝试手动查询 whois.iana.org。',
+
+    // Added by localization sync
+    'payment_method.tpay' => 'Tpay',
 ];

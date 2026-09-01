@@ -355,4 +355,7 @@ return [
     'whois.connect_error' => 'Error: Could not connect to :server (errno=:errno: :errstr)',
     'whois.invalid_domain' => 'Invalid domain name.',
     'whois.no_server_known' => 'No WHOIS server known for .:tld. Try querying whois.iana.org manually.',
+
+    // Added by localization sync
+    'payment_method.tpay' => 'Tpay',
 ];

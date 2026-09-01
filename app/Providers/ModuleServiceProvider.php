@@ -63,6 +63,8 @@ class ModuleServiceProvider extends ServiceProvider
             $registry->registerGateway("mollie", \Modules\Gateways\Mollie\MollieModule::class);
             // Razorpay (India/Asia)
             $registry->registerGateway("razorpay", \Modules\Gateways\Razorpay\RazorpayModule::class);
+            // Tpay (Poland)
+            $registry->registerGateway("tpay", \Modules\Gateways\Tpay\TpayModule::class);
 
             // SSL Modules
             $registry->registerSsl('gogetssl', \Modules\Ssl\GoGetSSL\GoGetSslModule::class);
