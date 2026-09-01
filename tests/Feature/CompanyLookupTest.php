@@ -94,28 +94,28 @@ function fakeGusSoap(array $fields): callable
         $body = (string) $request->body();
 
         if (str_contains($body, 'Zaloguj')) {
-            $out = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body>'
-                .'<ZalogujResponse xmlns="http://CIS/BIR/PUBL/2014/7"><ZalogujResult>SESSION123</ZalogujResult></ZalogujResponse>'
+            $out = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body>'
+                .'<ZalogujResponse xmlns="http://CIS/BIR/PUBL/2014/07"><ZalogujResult>SESSION123</ZalogujResult></ZalogujResponse>'
                 .'</soap:Body></soap:Envelope>';
 
-            return Http::response($out, 200, ['Content-Type' => 'text/xml']);
+            return Http::response($out, 200, ['Content-Type' => 'application/xop+xml']);
         }
 
         if (str_contains($body, 'Wyloguj')) {
-            $out = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body>'
-                .'<WylogujResponse xmlns="http://CIS/BIR/PUBL/2014/7"><WylogujResult>true</WylogujResult></WylogujResponse>'
+            $out = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body>'
+                .'<WylogujResponse xmlns="http://CIS/BIR/PUBL/2014/07"><WylogujResult>true</WylogujResult></WylogujResponse>'
                 .'</soap:Body></soap:Envelope>';
 
-            return Http::response($out, 200, ['Content-Type' => 'text/xml']);
+            return Http::response($out, 200, ['Content-Type' => 'application/xop+xml']);
         }
 
-        $out = '<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body>'
-            .'<DaneSzukajPodmiotyResponse xmlns="http://CIS/BIR/PUBL/2014/7"><DaneSzukajPodmiotyResult>'
-            .base64_encode($xml)
+        $out = '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope"><soap:Body>'
+            .'<DaneSzukajPodmiotyResponse xmlns="http://CIS/BIR/PUBL/2014/07"><DaneSzukajPodmiotyResult>'
+            .htmlspecialchars($xml, ENT_XML1, 'UTF-8')
             .'</DaneSzukajPodmiotyResult></DaneSzukajPodmiotyResponse>'
             .'</soap:Body></soap:Envelope>';
 
-        return Http::response($out, 200, ['Content-Type' => 'text/xml']);
+        return Http::response($out, 200, ['Content-Type' => 'application/xop+xml']);
     };
 }
 

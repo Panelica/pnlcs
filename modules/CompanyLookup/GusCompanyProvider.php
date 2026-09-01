@@ -8,21 +8,21 @@ use Modules\CompanyLookup\Contracts\CompanyDataProviderInterface;
 use Modules\CompanyLookup\Exceptions\ProviderException;
 
 /**
- * GUS Baza Internetowa REGON (BIR) — SOAP.
+ * GUS Baza Internetowa REGON (BIR 1.1) — SOAP 1.2 + WS-Addressing.
  *
  * The primary identification source: name, NIP, REGON, address, legal form,
  * PKD. The service is stateful: Zaloguj opens a session, DaneSzukajPodmioty
- * runs the search, Wyloguj closes it. The API key must never leave the
- * backend.
- *
- * The protocol follows the published BIR1 (2014/7) contract. The response is
- * parsed defensively — field names are matched by local name, so namespace
- * and structure changes in the register degrade to fewer fields rather than
- * to a crash.
+ * runs the search, Wyloguj closes it. The session id returned by Zaloguj is
+ * sent as the `sid` HTTP header on subsequent calls. The API key must never
+ * leave the backend.
  */
 final class GusCompanyProvider implements CompanyDataProviderInterface
 {
-    private const NS = 'http://CIS/BIR/PUBL/2014/7';
+    private const NS = 'http://CIS/BIR/PUBL/2014/07';
+    private const DAT = 'http://CIS/BIR/PUBL/2014/07/DataContract';
+    private const WSA = 'http://www.w3.org/2005/08/addressing';
+
+    private ?string $sid = null;
 
     public function __construct(
         private readonly string $endpoint,
@@ -38,14 +38,14 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
             throw new ProviderException('GUS: no API key configured', ProviderException::NOT_CONFIGURED);
         }
 
-        $sid = $this->login();
+        $this->sid = $this->login();
 
         try {
-            $raw = $this->search($sid, $nip);
+            $raw = $this->search($nip);
 
             return $this->parse($raw);
         } finally {
-            $this->logout($sid);
+            $this->logout();
         }
     }
 
@@ -61,8 +61,8 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
         }
 
         try {
-            $sid = $this->login();
-            $this->logout($sid);
+            $this->sid = $this->login();
+            $this->logout();
 
             return ['success' => true, 'message' => __('messages.company_lookup.test_ok')];
         } catch (\Throwable $e) {
@@ -72,7 +72,7 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
 
     private function login(): string
     {
-        $body = $this->envelope('Zaloguj', '<pKluczUzytkownika>'.htmlspecialchars($this->apiKey, ENT_XML1).'</pKluczUzytkownika>');
+        $body = $this->envelope('Zaloguj', '<ns:pKluczUzytkownika>'.htmlspecialchars($this->apiKey, ENT_XML1).'</ns:pKluczUzytkownika>');
         $xml = $this->call('Zaloguj', $body);
 
         if (! preg_match('#<ZalogujResult[^>]*>(.*?)</ZalogujResult>#s', $xml, $m) || trim($m[1]) === '') {
@@ -82,25 +82,23 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
         return trim($m[1]);
     }
 
-    private function search(string $sid, string $nip): string
+    private function search(string $nip): string
     {
-        $params = '<root><dane><pParametryWyszukiwania><ParametryWyszukiwania>'
-            .'<Nip>'.$nip.'</Nip>'
-            .'</ParametryWyszukiwania></pParametryWyszukiwania></dane></root>';
+        $inner = '<ns:pParametryWyszukiwania>'
+            .'<dat:Nip>'.htmlspecialchars($nip, ENT_XML1).'</dat:Nip>'
+            .'</ns:pParametryWyszukiwania>';
 
-        $body = $this->envelope(
-            'DaneSzukajPodmioty',
-            '<pIdentyfikatorSesji>'.htmlspecialchars($sid, ENT_XML1).'</pIdentyfikatorSesji>'
-            .'<pParametryWyszukiwania>'.htmlspecialchars($params, ENT_XML1).'</pParametryWyszukiwania>'
-        );
-
-        return $this->call('DaneSzukajPodmioty', $body);
+        return $this->call('DaneSzukajPodmioty', $this->envelope('DaneSzukajPodmioty', $inner));
     }
 
-    private function logout(string $sid): void
+    private function logout(): void
     {
+        if ($this->sid === null) {
+            return;
+        }
+
         try {
-            $body = $this->envelope('Wyloguj', '<pIdentyfikatorSesji>'.htmlspecialchars($sid, ENT_XML1).'</pIdentyfikatorSesji>');
+            $body = $this->envelope('Wyloguj', '<ns:pIdentyfikatorSesji>'.htmlspecialchars($this->sid, ENT_XML1).'</ns:pIdentyfikatorSesji>');
             $this->call('Wyloguj', $body);
         } catch (ProviderException) {
             // A failed logout must not mask the lookup result.
@@ -109,24 +107,31 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
 
     private function envelope(string $operation, string $inner): string
     {
+        $action = self::NS.'/IUslugaBIRzewnPubl/'.$operation;
+
         return '<?xml version="1.0" encoding="UTF-8"?>'
-            .'<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:bir="'.self::NS.'">'
-            .'<soapenv:Header/>'
-            .'<soapenv:Body><bir:'.$operation.'>'.$inner.'</bir:'.$operation.'></soapenv:Body>'
-            .'</soapenv:Envelope>';
+            .'<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:ns="'.self::NS.'" xmlns:dat="'.self::DAT.'">'
+            .'<soap:Header xmlns:wsa="'.self::WSA.'"><wsa:To>'.$this->endpoint.'</wsa:To><wsa:Action>'.$action.'</wsa:Action></soap:Header>'
+            .'<soap:Body><ns:'.$operation.'>'.$inner.'</ns:'.$operation.'></soap:Body>'
+            .'</soap:Envelope>';
     }
 
     private function call(string $operation, string $body): string
     {
+        $action = self::NS.'/IUslugaBIRzewnPubl/'.$operation;
+
         try {
-            $response = Http::timeout($this->requestTimeout)
+            $http = Http::timeout($this->requestTimeout)
                 ->connectTimeout($this->connectTimeout)
                 ->withHeaders([
-                    'Content-Type' => 'text/xml; charset=utf-8',
-                    'SOAPAction' => '"'.self::NS.'/IUslugaBIR/'.$operation.'"',
-                ])
-                ->withBody($body, 'text/xml')
-                ->send('POST', $this->endpoint);
+                    'Content-Type' => 'application/soap+xml; charset=utf-8; action="'.$action.'"',
+                ]);
+
+            if ($this->sid !== null) {
+                $http = $http->withHeaders(['sid' => $this->sid]);
+            }
+
+            $response = $http->withBody($body, 'application/soap+xml')->send('POST', $this->endpoint);
         } catch (ConnectionException $e) {
             throw new ProviderException('GUS: connection failed — '.$e->getMessage(), ProviderException::API_TIMEOUT);
         }
@@ -153,24 +158,28 @@ final class GusCompanyProvider implements CompanyDataProviderInterface
             return trim($m[1]);
         }
 
+        if (preg_match('#<[^>]*Text[^>]*>(.*?)</[^>]*Text>#s', $xml, $m)) {
+            return trim($m[1]);
+        }
+
         return 'unknown';
     }
 
     private function parse(string $xml): ?CompanyData
     {
-        // DaneSzukajPodmiotyResult is base64-encoded XML (BIR1); a change in
-        // the register may also hand it over raw. Decode when it looks encoded.
+        // DaneSzukajPodmiotyResult carries the <root><dane>… document as an
+        // HTML-escaped string; decode it before parsing.
         if (preg_match('#<DaneSzukajPodmiotyResult[^>]*>(.*?)</DaneSzukajPodmiotyResult>#s', $xml, $m)) {
             $payload = trim($m[1]);
-            if ($payload !== '' && ! str_starts_with($payload, '<')) {
-                $decoded = base64_decode($payload, true);
-                if ($decoded !== false) {
-                    $payload = $decoded;
-                }
-            }
         } else {
             $payload = $xml;
         }
+
+        if ($payload === '') {
+            return null;
+        }
+
+        $payload = html_entity_decode($payload, ENT_QUOTES | ENT_XML1, 'UTF-8');
 
         // An empty search result means "nothing found".
         if (trim(strip_tags($payload)) === '' || ! str_contains($payload, '<dane>')) {

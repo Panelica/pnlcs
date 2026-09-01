@@ -14,7 +14,7 @@ return [
 
     'gus' => [
         'key' => null,
-        'endpoint' => 'https://wyszukiwarkaregon.stat.gov.pl/wsBIR/UslugaBIR1.asmx',
+        'endpoint' => 'https://wyszukiwarkaregon.stat.gov.pl/wsBIR/UslugaBIRzewnPubl.svc',
     ],
 
     'mf' => [
