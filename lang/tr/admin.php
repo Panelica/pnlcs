@@ -2207,7 +2207,9 @@ return [
     'services.status_hint_cancelled' => 'Hizmet iptal edildi',
     'services.delete_hint' => 'Hizmeti müşteriden ayır ve kalıcı olarak sil',
     'settings' => [
-        'admin_login_prefix' => 'Yönetici Günlükin URL Prefix',
+        'proforma_number_format' => 'Proforma numaralandırma düzeni',
+        'proforma_enabled' => 'Proforma düzeni etkinleştir',
+        'admin_login_prefix' => 'Yonetici Gunlukin URL Prefix',
         'appearance' => 'Appearance',
         'appearance_settings' => 'Appearance Ayarlatings',
         'change_password' => 'Şifreyi değiştir',
