@@ -30,6 +30,10 @@ return [
     'actions.warning' => '警告',
     'add_funds' => '充值',
     'affiliates' => [
+        'credited' => '已入账',
+        'commission' => '佣金',
+        'add_to_balance_desc' => '将推广收益转入账户余额以支付服务。',
+        'add_to_balance' => '添加到余额',
         'join_title' => '加入联盟推广计划',
         'join_desc' => '您推荐的客户消费后，您可获得相应佣金。',
         'join_button' => '加入计划',

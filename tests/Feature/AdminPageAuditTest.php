@@ -153,7 +153,7 @@ $configPages = [
     'servers', 'server-groups', 'domain-pricing', 'gateways', 'registrars',
     'ticket-departments', 'ticket-statuses', 'email-templates', 'announcements',
     'knowledge-base', 'downloads', 'network-issues', 'banned-ips', 'banned-emails',
-    'todo', 'activity-log', 'affiliates', 'quotes', 'billable-items', 'transactions',
+    'todo', 'activity-log', 'quotes', 'billable-items', 'transactions',
     'system-database', 'system-phpinfo', 'automation', 'client-groups',
 ];
 

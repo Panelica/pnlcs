@@ -2789,4 +2789,9 @@ return [
     'clients.link_none' => '— 无（仅计费）—',
     'clients.link_existing_hint' => '这些是所选服务器上已存在的账户——在 Panelica 中即面板“用户”列表下的客户账户。选择此服务所属的账户，以便 PNLCS 可以管理它（暂停、终止、密码）。账户列表适用于 Panelica 服务器；仅记录计费时请留空。',
     'clients.service_linked' => '服务已添加并关联到现有服务器账户。',
+    'affiliates.add_to_balance' => '添加到余额',
+    'affiliates.credit_amount' => '添加金额',
+    'affiliates.add_affiliate' => '添加推广员',
+    'affiliates.select_client' => '选择客户',
+    'messages.affiliate_credited' => '已向客户账户余额添加 :amount。',
 ];
