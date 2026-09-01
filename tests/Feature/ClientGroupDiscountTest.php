@@ -56,7 +56,7 @@ test('the discount is on the invoice, not hidden in the total', function () {
 test('tax is worked out on what the customer actually pays', function () {
     Mail::fake();
 
-    TaxRule::create(['level' => 1, 'name' => 'VAT', 'country' => 'GB', 'state' => '', 'tax_rate' => 20]);
+    TaxRule::create(['name' => 'VAT', 'country' => 'GB', 'state' => '', 'tax_rate' => 20]);
 
     $client = groupedClient(15, false);
     $client->update(['country' => 'GB', 'state' => '']);

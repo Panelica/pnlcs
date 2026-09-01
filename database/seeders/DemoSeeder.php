@@ -90,15 +90,47 @@ class DemoSeeder extends Seeder
         }
 
         // 5. Tax rules
+        TaxRule::firstOrCreate(['name' => 'VAT 23%', 'country' => 'PL'], [
+            'tax_rate' => 23.00, 'state' => '', 'is_default' => true,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT 8%', 'country' => 'PL'], [
+            'tax_rate' => 8.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT 5%', 'country' => 'PL'], [
+            'tax_rate' => 5.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT 0%', 'country' => 'PL'], [
+            'tax_rate' => 0.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT ZW', 'country' => 'PL'], [
+            'tax_rate' => 0.00, 'state' => '', 'is_default' => false,
+        ]);
+        TaxRule::firstOrCreate(['name' => 'VAT NP', 'country' => 'PL'], [
+            'tax_rate' => 0.00, 'state' => '', 'is_default' => false,
+        ]);
         TaxRule::firstOrCreate(['name' => 'US Sales Tax', 'country' => 'US'], [
-            'tax_rate' => 10.00, 'level' => 1, 'state' => '',
+            'tax_rate' => 10.00, 'state' => '', 'is_default' => false,
         ]);
-        TaxRule::firstOrCreate(['name' => 'EU VAT (Germany)', 'country' => 'DE'], [
-            'tax_rate' => 19.00, 'level' => 1, 'state' => '',
-        ]);
-        TaxRule::firstOrCreate(['name' => 'UK VAT', 'country' => 'GB'], [
-            'tax_rate' => 20.00, 'level' => 1, 'state' => '',
-        ]);
+
+        // Standard VAT rate for every other European country (and Turkey).
+        $europeanVat = [
+            'AT' => 20, 'BE' => 21, 'BG' => 20, 'HR' => 25, 'CY' => 19, 'CZ' => 21,
+            'DK' => 25, 'EE' => 22, 'FI' => 25.5, 'FR' => 20, 'DE' => 19, 'GR' => 24,
+            'HU' => 27, 'IE' => 23, 'IT' => 22, 'LV' => 21, 'LT' => 21, 'LU' => 17,
+            'MT' => 18, 'NL' => 21, 'PT' => 23, 'RO' => 19, 'SK' => 23,
+            'SI' => 22, 'ES' => 21, 'SE' => 25,
+            'GB' => 20, 'CH' => 8.1, 'NO' => 25, 'IS' => 24, 'LI' => 8.1, 'TR' => 20,
+            'AL' => 20, 'AD' => 4.5, 'BY' => 20, 'BA' => 17, 'GE' => 18, 'MD' => 20,
+            'MK' => 18, 'ME' => 21, 'RS' => 20, 'UA' => 20, 'MC' => 20, 'SM' => 22,
+            'AM' => 20, 'AZ' => 18, 'XK' => 18,
+        ];
+
+        foreach ($europeanVat as $code => $rate) {
+            TaxRule::firstOrCreate(
+                ['country' => $code, 'state' => ''],
+                ['name' => "VAT {$rate}%", 'tax_rate' => $rate, 'is_default' => true]
+            );
+        }
 
         // 6. Ticket departments
         $deptGeneral = TicketDepartment::firstOrCreate(['name' => 'General'], [

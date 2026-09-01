@@ -124,6 +124,8 @@ class InvoiceService
             'amount' => $itemData['amount'] ?? 0,
             'taxed' => $itemData['taxed'] ?? ($taxRate === null ? true : $taxRate > 0),
             'tax_rate' => $taxRate,
+            'tax_label' => $itemData['tax_label'] ?? null,
+            'unit' => $itemData['unit'] ?? null,
             'due_date' => $itemData['due_date'] ?? null,
         ]);
 
@@ -153,38 +155,32 @@ class InvoiceService
             $taxAmount = round($invoice->items->sum(
                 fn ($item) => (float) $item->amount * (int) $item->qty * ((float) ($item->tax_rate ?? 0) / 100)
             ), 2);
-            $taxAmount2 = 0.0;
 
             $rates = $invoice->items->pluck('tax_rate')->filter(fn ($r) => $r !== null && (float) $r > 0)->unique()->values();
             $taxRate = $rates->count() === 1 ? (float) $rates->first() : 0.0;
-            $taxRate2 = 0.0;
         } else {
             $taxableAmount = $invoice->items
                 ->where('taxed', true)
                 ->sum(fn ($item) => (float) $item->amount * (int) $item->qty);
 
             $taxRate = (float) $invoice->tax_rate;
-            $taxRate2 = (float) $invoice->tax_rate2;
 
-            if ($taxRate === 0.0 && $taxRate2 === 0.0 && ! $invoice->client->tax_exempt) {
-                $taxData = $this->calculateTax($taxableAmount, $invoice->client_id);
-                $taxRate = $taxData['tax_rate'];
-                $taxRate2 = $taxData['tax_rate2'];
+            if ($taxRate === 0.0 && ! $invoice->client->tax_exempt) {
+                $taxRate = $this->calculateTax($taxableAmount, $invoice->client_id)['tax_rate'];
             }
 
             $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
-            $taxAmount2 = $taxRate2 > 0 ? round($taxableAmount * ($taxRate2 / 100), 2) : 0;
         }
 
         $credit = (float) $invoice->credit;
-        $total = max(0, $subtotal + $taxAmount + $taxAmount2 - $credit);
+        $total = max(0, $subtotal + $taxAmount - $credit);
 
         $invoice->update([
             'subtotal' => $subtotal,
             'tax' => $taxAmount,
-            'tax2' => $taxAmount2,
+            'tax2' => 0,
             'tax_rate' => $taxRate,
-            'tax_rate2' => $taxRate2,
+            'tax_rate2' => 0,
             'total' => $total,
         ]);
 
@@ -435,57 +431,101 @@ class InvoiceService
             return ['tax' => 0.0, 'tax_rate' => 0.0];
         }
 
-        $rate = $this->rateFor($client, 1);
-        $rate2 = $this->rateFor($client, 2);
+        $rate = $this->rateFor($client);
 
         return [
             'tax' => round($amount * ($rate / 100), 2),
             'tax_rate' => $rate,
-            'tax2' => round($amount * ($rate2 / 100), 2),
-            'tax_rate2' => $rate2,
         ];
     }
 
     /**
-     * The rate that applies to a customer at one tax level.
-     *
-     * Matched on country and state, most specific first. Level 2 is the second
-     * tax an operator can configure — a provincial one on top of a federal
-     * one — and until now nothing asked for it.
+     * The rate that applies to a customer, falling back to the default rule.
      */
-    private function rateFor(Client $client, int $level): float
+    private function rateFor(Client $client): float
     {
-        $rule = $this->taxRuleFor($client, $level);
+        $rule = $this->taxRuleFor($client);
 
         return $rule ? (float) $rule->tax_rate : 0.0;
     }
 
     /**
-     * The tax rule that applies to a customer at one tax level, or null.
+     * The tax rule that applies to a customer, or null.
      *
-     * Kept separate from rateFor so callers can also read the rule's label
-     * (name) while building an invoice. Matching is identical.
+     * Rates are grouped by country and state: an exact country+state match
+     * wins, then the country's default (empty state), then the global default
+     * (empty country). Kept separate from rateFor so callers can also read the
+     * rule's label (name) while building an invoice.
      */
-    public function taxRuleFor(Client $client, int $level): ?TaxRule
+    public function taxRuleFor(Client $client): ?TaxRule
     {
-        // A blank country is the catch-all the form promises ("leave blank
-        // for all countries") - it used to be matched literally, so a
-        // catch-all VAT rule applied to nobody and invoices went out untaxed.
-        // Specific beats blank, on country first and then on state, the same
-        // way the state side always worked.
-        return TaxRule::where(function ($q) use ($client) {
-            $q->where('country', $client->country)
-                ->orWhere('country', '')
-                ->orWhereNull('country');
-        })
-            ->where(function ($q) use ($client) {
-                $q->where('state', $client->state)
-                    ->orWhere('state', '')
-                    ->orWhereNull('state');
-            })
-            ->orderByRaw('CASE WHEN country = ? THEN 0 ELSE 1 END', [$client->country ?? ''])
-            ->orderByRaw('CASE WHEN state = ? THEN 0 ELSE 1 END', [$client->state ?? ''])
-            ->where('level', $level)
+        $country = (string) $client->country;
+        $state = (string) $client->state;
+
+        $rule = TaxRule::where('country', $country)
+            ->where('state', $state)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
             ->first();
+
+        if ($rule) {
+            return $rule;
+        }
+
+        $rule = TaxRule::where('country', $country)
+            ->where('state', '')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->first();
+
+        if ($rule) {
+            return $rule;
+        }
+
+        return TaxRule::where('country', '')
+            ->where('state', '')
+            ->where('is_default', true)
+            ->first();
+    }
+
+    /**
+     * Every rate configured for a customer's country/state group.
+     *
+     * Mirrors taxRuleFor() but returns the whole group so the invoice builder
+     * can offer the operator a choice of the rates the customer is eligible
+     * for, with the default first.
+     *
+     * @return \Illuminate\Support\Collection<int, TaxRule>
+     */
+    public function taxRatesFor(Client $client): \Illuminate\Support\Collection
+    {
+        $country = (string) $client->country;
+        $state = (string) $client->state;
+
+        $rates = TaxRule::where('country', $country)
+            ->where('state', $state)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
+
+        if ($rates->isNotEmpty()) {
+            return $rates;
+        }
+
+        $rates = TaxRule::where('country', $country)
+            ->where('state', '')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
+
+        if ($rates->isNotEmpty()) {
+            return $rates;
+        }
+
+        return TaxRule::where('country', '')
+            ->where('state', '')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
     }
 }

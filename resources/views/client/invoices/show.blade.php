@@ -13,7 +13,7 @@
         <p class="pn-page-subtitle">{{ __('client.invoices.issued') }} {{ $invoice->date?->format(date_fmt()) ?? "N/A" }}</p>
     </div>
     <a href="{{ route('client.invoices.pdf', $invoice) }}" class="pn-btn" style="background:var(--primary);color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:13px;margin-right:8px;">{{ __('client.invoices.download_pdf') }}</a>
-    <span class="badge badge-{{ strtolower($invoice->status) }}" style="font-size:13px;padding:5px 14px">{{ __('client.status.' . strtolower($invoice->status)) }}</span>
+    <span class="badge badge-{{ strtolower($invoice->status) }}" style="font-size:13px;padding:5px 14px">{{ invoice_status_label($invoice->status) }}</span>
 </div>
 
 <div class="pn-card mb-24">
@@ -48,20 +48,37 @@
     </div>
     <div class="pn-card-body" style="border-top:1px solid var(--border)">
         <div style="max-width:280px;margin-left:auto">
+            @php
+            $vatGroups = [];
+            foreach ($invoice->items as $it) {
+                $r = $it->tax_rate !== null ? (float) $it->tax_rate : ($it->taxed ? (float) $invoice->tax_rate : 0.0);
+                $label = $it->tax_label ?: ($r > 0 ? rtrim(rtrim(number_format($r, 2), '0'), '.').'%' : null);
+                if ($label === null) { continue; }
+                $tx = (float) $it->amount * (int) $it->qty * $r / 100;
+                $net = (float) $it->amount * (int) $it->qty;
+                if (! isset($vatGroups[$label])) { $vatGroups[$label] = ['amount' => 0.0, 'rate' => $r, 'net' => 0.0]; }
+                $vatGroups[$label]['amount'] += $tx;
+                $vatGroups[$label]['net'] += $net;
+            }
+            uasort($vatGroups, fn ($a, $b) => $b['rate'] <=> $a['rate']);
+            @endphp
             @if($invoice->subtotal && $invoice->subtotal != $invoice->total)
-            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.subtotal') }}</span>
                 <span>{{ money_fmt($invoice->subtotal) }}</span>
             </div>
             @endif
-            @if($invoice->tax ?? false)
-            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border)">
-                <span class="text-muted">{{ __('client.cart.tax') }}{{ $invoice->tax_rate > 0 ? " (" . rtrim(rtrim(number_format((float) $invoice->tax_rate, 2), '0'), '.') . "%)" : '' }}</span>
-                <span>{{ money_fmt($invoice->tax) }}</span>
+            @foreach($vatGroups as $label => $g)
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
+                <span class="text-muted">{{ $label }}</span>
+                <span style="display:flex;gap:24px">
+                    <span>{{ money_fmt($g['amount']) }}</span>
+                    <span>{{ money_fmt($g['net']) }}</span>
+                </span>
             </div>
-            @endif
+            @endforeach
             @if(($invoice->tax2 ?? 0) > 0)
-            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.tax').' 2' }}{{ $invoice->tax_rate2 > 0 ? " (" . rtrim(rtrim(number_format((float) $invoice->tax_rate2, 2), '0'), '.') . "%)" : '' }}</span>
                 <span>{{ money_fmt($invoice->tax2) }}</span>
             </div>
@@ -71,7 +88,7 @@
                 <span>{{ money_fmt($invoice->total) }}</span>
             </div>
             @if(isset($balance) && $balance > 0 && $balance < (float) $invoice->total)
-            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-top:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-top:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.invoices.amount_paid') }}</span>
                 <span>{{ money_fmt((float) $invoice->total - $balance) }}</span>
             </div>
@@ -122,7 +139,7 @@
             @elseif($gw === "stripe")
                 <div class="gw-form-box">
                     <p class="text-muted text-sm mb-16">{{ __('client.invoices.stripe_desc') }}</p>
-                    <div id="stripe-card-element" style="border:1.5px solid var(--border);padding:12px;border-radius:var(--radius-sm);background:var(--card);margin-bottom:16px">
+                    <div id="stripe-card-element" style="border:1.5px solid var(--border);padding:12px;border-radius:var(--radius-sm);background:#fff;margin-bottom:16px">
                         <em style="color:var(--muted);font-size:13px">{{ __('client.invoices.stripe_placeholder') }}</em>
                     </div>
                     <button type="button" onclick="stripePayNow({{ $invoice->id }})" class="btn btn-primary">

@@ -11,7 +11,7 @@ use App\Services\InvoiceService;
  * quietly went out untaxed.
  */
 it('applies a blank-country rule to every client, as the form promises', function () {
-    TaxRule::create(['name' => 'VAT', 'tax_rate' => 20, 'country' => '', 'state' => '', 'level' => 1]);
+    TaxRule::create(['name' => 'VAT', 'tax_rate' => 20, 'country' => '', 'state' => '', 'is_default' => true]);
     $client = Client::factory()->create(['country' => 'TR', 'tax_exempt' => false]);
 
     $tax = app(InvoiceService::class)->calculateTax(100, $client->id);
@@ -20,15 +20,15 @@ it('applies a blank-country rule to every client, as the form promises', functio
 });
 
 it('lets a country-specific rule outrank the catch-all', function () {
-    TaxRule::create(['name' => 'VAT', 'tax_rate' => 20, 'country' => '', 'state' => '', 'level' => 1]);
-    TaxRule::create(['name' => 'KDV', 'tax_rate' => 10, 'country' => 'TR', 'state' => '', 'level' => 1]);
+    TaxRule::create(['name' => 'VAT', 'tax_rate' => 20, 'country' => '', 'state' => '', 'is_default' => true]);
+    TaxRule::create(['name' => 'KDV', 'tax_rate' => 10, 'country' => 'TR', 'state' => '']);
     $client = Client::factory()->create(['country' => 'TR', 'tax_exempt' => false]);
 
     expect(app(InvoiceService::class)->calculateTax(100, $client->id)['tax_rate'])->toBe(10.0);
 });
 
 it('still matches an exact-country rule as before', function () {
-    TaxRule::create(['name' => 'KDV', 'tax_rate' => 18, 'country' => 'TR', 'state' => '', 'level' => 1]);
+    TaxRule::create(['name' => 'KDV', 'tax_rate' => 18, 'country' => 'TR', 'state' => '']);
     $client = Client::factory()->create(['country' => 'TR', 'tax_exempt' => false]);
     $other = Client::factory()->create(['country' => 'DE', 'tax_exempt' => false]);
 

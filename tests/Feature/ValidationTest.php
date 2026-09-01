@@ -81,10 +81,10 @@ test('tax rate must be numeric', function () {
     $admin = Admin::factory()->create();
     $this->actingAs($admin, 'admin')
         ->post(route('admin.config.tax.store'), [
-            'name' => 'VAT',
-            'tax_rate' => 'not-a-number',
+            'country' => 'PL',
+            'rates' => [['name' => 'VAT', 'tax_rate' => 'not-a-number']],
         ])
-        ->assertSessionHasErrors('tax_rate');
+        ->assertSessionHasErrors('rates.0.tax_rate');
 });
 
 test('promotion code must be unique', function () {

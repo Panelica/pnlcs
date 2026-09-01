@@ -24,7 +24,6 @@ function taxingAdmin(): Admin
 function taxedClient(): Client
 {
     TaxRule::create([
-        'level' => 1,
         'name' => 'VAT',
         'country' => 'TR',
         'state' => '',

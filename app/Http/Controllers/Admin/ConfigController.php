@@ -358,54 +358,94 @@ class ConfigController extends Controller
 
     public function tax()
     {
-        // The screen reads $taxes; passing 'rules' meant it always showed
-        // the empty state, however many rules were configured.
-        return view('admin.config.tax', [
-            'taxes' => TaxRule::orderBy('level')->orderBy('country')->get(),
-        ]);
+        $groups = TaxRule::orderBy('country')->orderBy('state')->orderByDesc('is_default')->orderBy('id')->get()
+            ->groupBy(fn ($r) => $r->country."\x1F".$r->state)
+            ->map(fn ($rules) => (object) [
+                'country' => $rules->first()->country,
+                'state' => $rules->first()->state,
+                'rules' => $rules,
+                'default' => $rules->firstWhere('is_default', true) ?? $rules->first(),
+            ])
+            ->values();
+
+        return view('admin.config.tax', ['groups' => $groups]);
     }
 
     public function storeTax(Request $request)
     {
-        $request->merge(['tax_rate' => $request->tax_rate ?? $request->rate]);
-        $v = $request->validate([
-            'name' => 'required',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'country' => 'nullable|string|max:2',
-            'state' => 'nullable|string',
-            'level' => 'nullable|integer|min:1|max:2',
-        ]);
-        // The columns are NOT NULL with an empty-string default; a blank form
-        // field arrives as null and inserting that violates the constraint.
-        $v['country'] ??= '';
-        $v['state'] ??= '';
-        TaxRule::create($v);
+        $data = $this->validateTaxGroup($request);
+        $this->saveGroupRates($data['country'], $data['state'], $data['rates'], $data['default_index']);
 
         return back()->with('success', __('messages.success.tax_rule_added'));
     }
 
-    public function updateTax(Request $request, TaxRule $taxRule)
+    public function updateTax(Request $request, string $country, ?string $state = '')
     {
-        $request->merge(['tax_rate' => $request->tax_rate ?? $request->rate]);
-        $v = $request->validate([
-            'name' => 'required',
-            'tax_rate' => 'required|numeric|min:0|max:100',
-            'country' => 'nullable|string|max:2',
-            'state' => 'nullable|string',
-            'level' => 'nullable|integer|min:1|max:2',
-        ]);
-        $v['country'] ??= '';
-        $v['state'] ??= '';
-        $taxRule->update($v);
+        $country = $this->normaliseTaxCountry($country);
+        $data = $this->validateTaxGroup($request);
+
+        // The group is keyed by country+state; moving it drops the old group.
+        if ($data['country'] !== $country || $data['state'] !== ($state ?? '')) {
+            TaxRule::where('country', $country)->where('state', $state ?? '')->delete();
+        }
+
+        $this->saveGroupRates($data['country'], $data['state'], $data['rates'], $data['default_index']);
 
         return back()->with('success', __('messages.success.tax_updated'));
     }
 
-    public function destroyTax(TaxRule $taxRule)
+    public function destroyTax(string $country, ?string $state = '')
     {
-        $taxRule->delete();
+        $country = $this->normaliseTaxCountry($country);
+        TaxRule::where('country', $country)->where('state', $state ?? '')->delete();
 
         return back()->with('success', __('messages.success.tax_deleted'));
+    }
+
+    /**
+     * The empty-country (global) group is addressed as "@global" in URLs.
+     */
+    private function normaliseTaxCountry(string $country): string
+    {
+        return $country === '@global' ? '' : $country;
+    }
+
+    /**
+     * @return array{country: string, state: string, rates: array, default_index: int}
+     */
+    private function validateTaxGroup(Request $request): array
+    {
+        $v = $request->validate([
+            'country' => 'required|string|max:2',
+            'state' => 'nullable|string|max:255',
+            'rates' => 'required|array|min:1',
+            'rates.*.name' => 'required|string|max:255',
+            'rates.*.tax_rate' => 'required|numeric|min:0|max:100',
+            'default_index' => 'nullable|integer|min:0',
+        ]);
+
+        $v['state'] ??= '';
+        $v['default_index'] = (int) ($v['default_index'] ?? 0);
+
+        return $v;
+    }
+
+    /**
+     * Replace a group's rates; exactly one of them is its default.
+     */
+    private function saveGroupRates(string $country, string $state, array $rates, int $defaultIndex): void
+    {
+        TaxRule::where('country', $country)->where('state', $state)->delete();
+
+        foreach ($rates as $i => $row) {
+            TaxRule::create([
+                'name' => $row['name'],
+                'tax_rate' => $row['tax_rate'],
+                'country' => $country,
+                'state' => $state,
+                'is_default' => $i === $defaultIndex,
+            ]);
+        }
     }
 
     // ===== PROMOTIONS =====

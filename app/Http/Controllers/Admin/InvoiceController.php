@@ -12,8 +12,10 @@ use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\InvoiceProduct;
 use App\Models\Product;
 use App\Models\Setting;
+use App\Models\TaxRule;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
@@ -238,16 +240,38 @@ class InvoiceController extends Controller
             ];
         })->values();
 
+        // Catalog products/services (goods) are offered in the same box. They
+        // carry their own price, unit and VAT rate.
+        $catalogProducts = InvoiceProduct::orderBy('name')->get()->map(fn (InvoiceProduct $p) => [
+            'name' => $p->name,
+            'amount' => (float) $p->price,
+            'unit' => $p->unit,
+            'tax_rate' => (float) $p->tax_rate,
+            'tax_label' => $p->tax_label,
+        ])->values();
+
+        $products = $products->merge($catalogProducts)->values();
+
         $defaultCurrency = Currency::getDefault();
 
-        // Per-client applicable tax rate (level 1 only, shown in the summary
-        // while building the invoice). Matches the engine: country+state.
+        // Per-client applicable tax rate (shown in the summary while building
+        // the invoice) plus every rate configured for the client's country so
+        // the operator can pick one per line. Matches the engine: country+state.
         $invoiceService = app(InvoiceService::class);
         $clients = $clients->map(function (Client $client) use ($invoiceService) {
-            $rule = $invoiceService->taxRuleFor($client, 1);
+            $rule = $invoiceService->taxRuleFor($client);
+            $rates = $invoiceService->taxRatesFor($client)
+                ->map(fn (TaxRule $r) => [
+                    'name' => $r->name,
+                    'rate' => (float) $r->tax_rate,
+                    'is_default' => (bool) $r->is_default,
+                ])
+                ->values();
 
-            return clone $client->setAttribute('billing_tax_rate', (float) ($rule?->tax_rate ?? 0))
-                ->setAttribute('billing_tax_label', $rule?->name ?? '');
+            return clone $client
+                ->setAttribute('billing_tax_rate', (float) ($rule?->tax_rate ?? 0))
+                ->setAttribute('billing_tax_label', $rule?->name ?? '')
+                ->setAttribute('billing_tax_rates', $rates);
         });
 
         return view('admin.invoices.create', compact(
@@ -277,6 +301,8 @@ class InvoiceController extends Controller
             'items.*.qty' => ['nullable', 'integer', 'min:1', 'max:999999'],
             'items.*.amount' => ['required', 'numeric', 'min:0'],
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'items.*.tax_label' => ['nullable', 'string', 'max:255'],
+            'items.*.unit' => ['nullable', 'string', 'max:50'],
         ]);
 
         $client = Client::findOrFail($validated['client_id']);
@@ -288,6 +314,8 @@ class InvoiceController extends Controller
             'amount' => (float) $item['amount'],
             // Per-item VAT percentage; an empty field means untaxed.
             'tax_rate' => isset($item['tax_rate']) && $item['tax_rate'] !== '' ? (float) $item['tax_rate'] : 0.0,
+            'tax_label' => $item['tax_label'] ?? null,
+            'unit' => $item['unit'] ?? null,
         ], $validated['items']);
 
         $invoice = $this->invoiceService->createInvoice($client, $items, [

@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Quote;
 use App\Models\QuoteItem;
+use App\Models\TaxRule;
 
 class QuoteService
 {
@@ -62,7 +63,7 @@ class QuoteService
 
         $subtotal = 0;
         $taxTotal = 0;
-        $taxRate = (float) config('billing.default_tax_rate', 0);
+        $taxRate = TaxRule::defaultRate();
 
         foreach ($quote->items as $item) {
             $lineTotal = ($item->quantity * $item->unit_price) - $item->discount;

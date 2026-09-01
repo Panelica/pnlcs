@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Currency;
+use App\Models\InvoiceProduct;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Server;
 use App\Models\ServerGroup;
+use App\Models\Setting;
+use App\Models\TaxRule;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,7 +23,34 @@ class ProductController extends Controller
     {
         $groups = ProductGroup::with('products')->orderBy('sort_order')->get();
 
-        return view('admin.products.index', compact('groups'));
+        $invoiceProducts = InvoiceProduct::orderBy('name')->get();
+        $taxRateOptions = $this->taxRateOptions();
+        $defaultTaxLabel = $taxRateOptions->first()?->name ?? '';
+
+        return view('admin.products.index', compact('groups', 'invoiceProducts', 'taxRateOptions', 'defaultTaxLabel'));
+    }
+
+    /**
+     * The rates offered when pricing a catalog product, narrowed to the
+     * company's own country.
+     *
+     * @return \Illuminate\Support\Collection<int, TaxRule>
+     */
+    private function taxRateOptions()
+    {
+        $country = (string) Setting::get('Country', '');
+
+        $options = TaxRule::where('country', $country)
+            ->where('state', '')
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get();
+
+        if ($options->isEmpty()) {
+            $options = TaxRule::orderBy('name')->get();
+        }
+
+        return $options->unique('name')->values();
     }
 
     public function createGroup()
@@ -322,5 +352,57 @@ class ProductController extends Controller
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_deleted'));
+    }
+
+    /**
+     * Store a catalog product/service (goods or services for invoicing).
+     */
+    public function storeInvoiceProduct(Request $request)
+    {
+        $data = $this->validateInvoiceProduct($request);
+        InvoiceProduct::create($data);
+
+        return back()->with('success', __('messages.success.product_service_added'));
+    }
+
+    public function updateInvoiceProduct(Request $request, InvoiceProduct $invoiceProduct)
+    {
+        $data = $this->validateInvoiceProduct($request);
+        $invoiceProduct->update($data);
+
+        return back()->with('success', __('messages.success.product_service_updated'));
+    }
+
+    public function destroyInvoiceProduct(InvoiceProduct $invoiceProduct)
+    {
+        $invoiceProduct->delete();
+
+        return back()->with('success', __('messages.success.product_service_deleted'));
+    }
+
+    /**
+     * @return array{name: string, price: string, unit: ?string, tax_rate: float, tax_label: ?string}
+     */
+    private function validateInvoiceProduct(Request $request): array
+    {
+        $v = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'unit' => 'nullable|string|max:50',
+            'tax_label' => 'nullable|string|max:255',
+        ]);
+
+        $taxLabel = $v['tax_label'] ?: null;
+        $taxRate = $taxLabel
+            ? (float) (TaxRule::where('name', $taxLabel)->value('tax_rate') ?? 0)
+            : 0.0;
+
+        return [
+            'name' => $v['name'],
+            'price' => $v['price'],
+            'unit' => $v['unit'] ?? null,
+            'tax_rate' => $taxRate,
+            'tax_label' => $taxLabel,
+        ];
     }
 }
