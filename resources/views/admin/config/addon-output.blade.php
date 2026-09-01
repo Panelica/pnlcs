@@ -41,6 +41,12 @@
                     @elseif($type === 'password')
                         <input type="password" name="{{ $key }}" class="form-control" autocomplete="new-password"
                             placeholder="{{ ($settings[$key] ?? '') ? __('admin.addon_modules.key_is_set') : '' }}">
+                    @elseif($type === 'select')
+                        <select name="{{ $key }}" class="form-control">
+                            @foreach($field['options'] ?? [] as $optValue => $optLabel)
+                                <option value="{{ $optValue }}" {{ ($settings[$key] ?? $field['default'] ?? '') == $optValue ? 'selected' : '' }}>{{ $optLabel }}</option>
+                            @endforeach
+                        </select>
                     @else
                         <input type="text" name="{{ $key }}" class="form-control" value="{{ $settings[$key] ?? $field['default'] ?? '' }}">
                     @endif
