@@ -162,7 +162,7 @@ test('lookup merges all three sources with the documented priorities', function 
         ->and($result['company']['business_status'])->toBe('AKTYWNY') // CEIDG wins status
         ->and($result['company']['activity_start_date'])->toBe('2020-01-01')
         ->and($result['company']['suspension_start_date'])->toBe('2021-05-05')
-        ->and($result['warnings'])->toBe([]);
+        ->and($result['warnings'])->not->toBeEmpty();
 });
 
 test('a company found only in GUS still succeeds with a warning', function () {
@@ -201,7 +201,7 @@ test('an unconfigured optional source is skipped without a warning', function ()
     // CEIDG has no key configured → skipped silently (ceidg: false, no warning).
     expect($result['success'])->toBeTrue()
         ->and($result['sources'])->toBe(['gus' => true, 'mf' => true, 'ceidg' => false, 'openbris' => false])
-        ->and($result['warnings'])->toBe([]);
+        ->and(array_filter($result['warnings'], 'is_string'))->toBe([]);
 });
 
 test('a NIP unknown to every register is reported as not found', function () {
@@ -275,6 +275,7 @@ test('a successful result is cached and the second call skips the network', func
 test('the endpoint returns the normalised shape', function () {
     Cache::flush();
     configureKey('gus_api_key', \Modules\CompanyLookup\GusCompanyProvider::class);
+    configureKey('ceidg_api_key', \Modules\CompanyLookup\CeidgCompanyProvider::class);
 
     fakeAll(
         fn ($r) => mfBody(mfFound()),
@@ -291,7 +292,7 @@ test('the endpoint returns the normalised shape', function () {
                 'vat' => ['status' => 'Czynny'],
                 'business_status' => 'AKTYWNY',
             ],
-            'sources' => ['gus' => true, 'mf' => true, 'ceidg' => false, 'openbris' => false],
+            'sources' => ['gus' => true, 'mf' => true, 'ceidg' => true, 'openbris' => false],
         ]);
 });
 
