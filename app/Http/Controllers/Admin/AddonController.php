@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Services\AddonManager;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
 
 class AddonController extends Controller
 {
@@ -77,10 +76,6 @@ class AddonController extends Controller
         }
 
         $this->manager->saveSettings($name, $settings);
-
-        // Addon settings feed behaviour; drop derived caches so a change takes
-        // effect immediately rather than after the TTL lapses.
-        Cache::flush();
 
         return back()->with('success', __('messages.success.settings_updated'));
     }
