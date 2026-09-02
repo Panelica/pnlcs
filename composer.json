@@ -17,6 +17,7 @@
         "laravel/framework": "^13.0",
         "laravel/pint": "^1.29",
         "laravel/tinker": "^3.0",
+        "phpseclib/phpseclib": "^3.0",
         "pragmarx/google2fa-laravel": "^3.0"
     },
     "require-dev": {
