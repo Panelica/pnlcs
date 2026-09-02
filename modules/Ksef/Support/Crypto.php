@@ -2,13 +2,17 @@
 
 namespace Modules\Ksef\Support;
 
+use phpseclib3\Crypt\PublicKeyLoader;
+use phpseclib3\Crypt\RSA;
+use phpseclib3\Exception\UnableToDecodeException;
+
 /**
  * Cryptographic primitives for KSeF 2.0.
  *
- * PHP's openssl extension performs RSA-OAEP with SHA-1, but KSeF requires
- * RSA-OAEP with SHA-256 (and MGF1 SHA-256). That is delegated to the openssl
- * CLI (pkeyutl), which is present on the server; the sensitive input travels
- * through temp files, never the command line.
+ * KSeF requires RSA-OAEP with SHA-256 (and MGF1 SHA-256), which PHP's
+ * openssl extension cannot produce natively (it is fixed to SHA-1). OAEP
+ * SHA-256 is therefore done in pure PHP via phpseclib, with no shelling out
+ * to the openssl CLI and no temp files.
  */
 class Crypto
 {
@@ -26,50 +30,27 @@ class Crypto
             $pem = "-----BEGIN CERTIFICATE-----\n".chunk_split($pem, 64, "\n")."-----END CERTIFICATE-----\n";
         }
 
-        $key = openssl_pkey_get_public($pem);
-        if ($key === false) {
-            throw new \RuntimeException(__('messages.ksef.encrypt_failed').' (public key parse: '.openssl_error_string().')');
-        }
-        $details = openssl_pkey_get_details($key);
-        $pubPem = (string) ($details['key'] ?? '');
-
-        if ($pubPem === '') {
-            throw new \RuntimeException(__('messages.ksef.encrypt_failed').' (empty public key PEM)');
+        try {
+            $rsa = PublicKeyLoader::load($pem);
+        } catch (UnableToDecodeException $e) {
+            throw new \RuntimeException(__('messages.ksef.encrypt_failed')." (public key parse: {$e->getMessage()})");
         }
 
-        $dir = storage_path('app/ksef');
-        if (! is_dir($dir)) {
-            mkdir($dir, 0700, true);
+        if (! $rsa instanceof RSA) {
+            throw new \RuntimeException(__('messages.ksef.encrypt_failed').' (key is not RSA)');
         }
 
-        $pub = $dir.'/rsa_pub.pem';
-        $in = tempnam($dir, 'in');
-        $out = tempnam($dir, 'out');
+        $encrypted = $rsa
+            ->withPadding(RSA::ENCRYPTION_OAEP)
+            ->withHash('sha256')
+            ->withMGFHash('sha256')
+            ->encrypt($data);
 
-        file_put_contents($pub, $pubPem);
-        file_put_contents($in, $data);
-        @chmod($in, 0600);
-
-        $cmd = sprintf(
-            'openssl pkeyutl -encrypt -pubin -inkey %s -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256 -in %s -out %s 2>&1',
-            escapeshellarg($pub),
-            escapeshellarg($in),
-            escapeshellarg($out),
-        );
-
-        exec($cmd, $output, $code);
-
-        $result = ($code === 0 && is_file($out)) ? (string) file_get_contents($out) : '';
-        $error = implode("\n", $output);
-
-        @unlink($in);
-        @unlink($out);
-
-        if ($code !== 0 || $result === '') {
-            throw new \RuntimeException(__('messages.ksef.encrypt_failed').($error !== '' ? ' ('.$error.')' : ''));
+        if ($encrypted === '') {
+            throw new \RuntimeException(__('messages.ksef.encrypt_failed').' (empty ciphertext)');
         }
 
-        return $result;
+        return $encrypted;
     }
 
     /**
