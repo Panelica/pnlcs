@@ -2764,4 +2764,9 @@ return [
     // Added by localization sync
     'addon_modules.settings' => '设置',
     'addon_modules.key_is_set' => '已设置（留空以保留）',
+    'invoices.filter_cancelled' => '已取消',
+    'invoices.filter_draft' => '草稿',
+    'invoices.filter_overdue' => '逾期',
+    'invoices.filter_paid' => '已付款',
+    'invoices.filter_unpaid' => '未付款',
 ];

@@ -189,6 +189,8 @@ return [
         'urgent' => 'Urgent',
     ],
     'status' => [
+        'payment_pending' => 'Ödeme Bekliyor',
+        'partially_paid' => 'Kısmen Ödendi',
         'accepted' => 'Accepted',
         'active' => 'Active',
         'answered' => 'Answered',

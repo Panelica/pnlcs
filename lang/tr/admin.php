@@ -2764,4 +2764,9 @@ return [
     // Added by localization sync
     'addon_modules.settings' => 'Ayarlar',
     'addon_modules.key_is_set' => 'Değer ayarlandı (korumak için boş bırakın)',
+    'invoices.filter_cancelled' => 'İptal edildi',
+    'invoices.filter_draft' => 'Taslaklar',
+    'invoices.filter_overdue' => 'Gecikmiş',
+    'invoices.filter_paid' => 'Ödendi',
+    'invoices.filter_unpaid' => 'Ödenmemiş',
 ];

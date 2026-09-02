@@ -53,6 +53,32 @@ if (! function_exists('payment_method_label')) {
         return ucwords(str_replace('_', ' ', $method));
     }
 }
+if (! function_exists('invoice_status_label')) {
+    /**
+     * An invoice status key as the customer-facing label.
+     *
+     * The panel stores keys like 'unpaid' or 'overdue' and several views
+     * printed ucfirst($status), which showed English whatever the language the
+     * customer was in. The label comes from the common.status.* translations
+     * now, so every screen agrees on the same word.
+     */
+    function invoice_status_label(?string $status): string
+    {
+        $status = strtolower((string) $status);
+
+        if ($status === '') {
+            return '';
+        }
+
+        $key = 'common.status.'.$status;
+
+        if (Lang::has($key)) {
+            return Lang::get($key);
+        }
+
+        return ucfirst(str_replace('_', ' ', $status));
+    }
+}
 if (! function_exists('currency_symbol')) {
     /**
      * The sign in front of an amount in the currency the shop sells in.

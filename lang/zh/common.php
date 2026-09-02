@@ -189,6 +189,8 @@ return [
         'urgent' => '紧急',
     ],
     'status' => [
+        'payment_pending' => '待付款',
+        'partially_paid' => '部分付款',
         'accepted' => '已接受',
         'active' => '已启用',
         'answered' => '已回复',
