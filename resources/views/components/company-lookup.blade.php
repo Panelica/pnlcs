@@ -2,6 +2,7 @@
     'nipSelector' => 'input[name="tax_id"]',
 ])
 
+@if(app(\App\Services\AddonManager::class)->isActive('company_lookup'))
 <div data-company-lookup
      data-endpoint="{{ route('company.lookup') }}"
      data-csrf="{{ csrf_token() }}"
@@ -189,3 +190,4 @@
 })();
 </script>
 @endonce
+@endif
