@@ -142,7 +142,7 @@
             @elseif($gw === "stripe")
                 <div class="gw-form-box">
                     <p class="text-muted text-sm mb-16">{{ __('client.invoices.stripe_desc') }}</p>
-                    <div id="stripe-card-element" style="border:1.5px solid var(--border);padding:12px;border-radius:var(--radius-sm);background:#fff;margin-bottom:16px">
+                    <div id="stripe-card-element" style="border:1.5px solid var(--border);padding:12px;border-radius:var(--radius-sm);background:var(--bg);margin-bottom:16px">
                         <em style="color:var(--muted);font-size:13px">{{ __('client.invoices.stripe_placeholder') }}</em>
                     </div>
                     <button type="button" onclick="stripePayNow({{ $invoice->id }})" class="btn btn-primary">
