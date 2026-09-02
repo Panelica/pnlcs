@@ -27,10 +27,12 @@ class InvoiceService
                 'client_id' => $client->id,
                 // Freeze the buyer alongside the money (issue #7)
                 ...Invoice::buyerSnapshotFrom($client),
-                'invoice_num' => $options['invoice_num'] ?? $this->generateInvoiceNumber(),
+                'invoice_num' => $options['invoice_num'] ?? $this->generateInvoiceNumber($options['type'] ?? $this->defaultType()),
                 'date' => $options['date'] ?? now()->toDateString(),
                 'due_date' => $options['due_date'] ?? now()->addDays((int) Setting::get('InvoiceDueDays', 14))->toDateString(),
                 'status' => $options['status'] ?? InvoiceStatus::Unpaid->value,
+                'type' => $options['type'] ?? $this->defaultType(),
+                'source_invoice_id' => $options['source_invoice_id'] ?? null,
                 'payment_method' => $options['payment_method'] ?? null,
                 'notes' => $options['notes'] ?? null,
                 'subtotal' => 0,
@@ -281,29 +283,53 @@ class InvoiceService
      * {num} placeholders; {num} is the next number in the series derived
      * from the last invoice stored in the database.
      */
-    public function generateInvoiceNumber(): string
+    public function generateInvoiceNumber(?string $type = null): string
     {
-        $format = (string) Setting::get('InvoiceNumberFormat', 'INV-{num}');
-        if (trim($format) === '') {
-            $format = 'INV-{num}';
+        $type = $type ?: $this->defaultType();
+        $format = $this->numberFormatFor($type);
+
+        return $this->renderInvoiceNumber($format, $this->nextInvoiceSequence($format, $type));
+    }
+
+    /**
+     * The default invoice type for new invoices: proforma when the proforma
+     * scheme is enabled, otherwise VAT.
+     */
+    public function defaultType(): string
+    {
+        return Setting::get('ProformaEnabled', '0') === '1' ? 'proforma' : 'vat';
+    }
+
+    /**
+     * The numbering format for a given invoice type.
+     */
+    public function numberFormatFor(?string $type = null): string
+    {
+        if ($type === 'proforma') {
+            $format = (string) Setting::get('ProformaNumberFormat', 'PRO-{year}/{month}-{num}');
+
+            return trim($format) !== '' ? $format : 'PRO-{year}/{month}-{num}';
         }
 
-        return $this->renderInvoiceNumber($format, $this->nextInvoiceSequence($format));
+        $format = (string) Setting::get('InvoiceNumberFormat', 'INV-{num}');
+
+        return trim($format) !== '' ? $format : 'INV-{num}';
     }
 
     /**
      * The next sequence number for previews (the highest number already
      * issued plus one).
      */
-    public function nextInvoiceSequence(?string $format = null): int
+    public function nextInvoiceSequence(?string $format = null, ?string $type = null): int
     {
-        $format ??= (string) Setting::get('InvoiceNumberFormat', 'INV-{num}');
+        $type = $type ?: $this->defaultType();
+        $format ??= $this->numberFormatFor($type);
 
         // Without {num} the number has nowhere to grow: fall back to the
         // row id, which still keeps them unique.
         $pos = strpos((string) $format, '{num}');
         if ($pos === false) {
-            return 1 + (int) Invoice::max('id');
+            return 1 + (int) Invoice::where('type', $type)->max('id');
         }
 
         // {num} last: the series continues across format changes, reading
@@ -313,7 +339,8 @@ class InvoiceService
         // run of digits. The series only grows, so nothing is ever
         // issued twice.
         if (substr((string) $format, -5) === '{num}') {
-            $query = Invoice::where('invoice_num', 'regexp', '[0-9]$')
+            $query = Invoice::where('type', $type)
+                ->where('invoice_num', 'regexp', '[0-9]$')
                 ->selectRaw('MAX(CAST(REGEXP_REPLACE(invoice_num, "^.*[^0-9]", "") AS UNSIGNED)) as seq');
 
             // Reset each year: only the numbers issued this year count,
@@ -329,12 +356,13 @@ class InvoiceService
         // which is where the digits actually sit on issued numbers.
         $prefix = substr((string) $format, 0, $pos);
         if ($prefix === '') {
-            return 1 + (int) Invoice::max('id');
+            return 1 + (int) Invoice::where('type', $type)->max('id');
         }
 
         $like = addcslashes($prefix, '%_').'%';
 
-        return 1 + (int) Invoice::where('invoice_num', 'like', $like)
+        return 1 + (int) Invoice::where('type', $type)
+            ->where('invoice_num', 'like', $like)
             ->selectRaw('MAX(CAST(SUBSTRING(invoice_num, ?) AS UNSIGNED)) as seq', [strlen($prefix) + 1])
             ->value('seq');
     }

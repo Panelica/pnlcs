@@ -55,6 +55,9 @@
         <div class="header-right">
             <div class="invoice-title">{{ __('pdf.invoice') }}</div>
             <div class="invoice-number">#{{ $invoice->invoice_num ?? $invoice->id }}</div>
+            @if($invoice->sourceInvoice)
+            <div style="font-size:11px;color:#777;margin-top:4px;">{{ __('admin.invoices.source_proforma') }}: {{ $invoice->sourceInvoice->invoice_num }}</div>
+            @endif
             <div style="margin-top: 10px;">
                 @php
                     $statusClass = match(strtolower($invoice->status)) {

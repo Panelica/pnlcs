@@ -2207,6 +2207,8 @@ return [
     'services.status_hint_cancelled' => '服务已取消',
     'services.delete_hint' => '将服务与客户解除关联并永久删除',
     'settings' => [
+        'proforma_number_format' => '形式发票编号方案',
+        'proforma_enabled' => '启用形式发票方案',
         'admin_login_prefix' => '管理员登录 URL 前缀',
         'appearance' => '外观',
         'appearance_settings' => '外观设置',

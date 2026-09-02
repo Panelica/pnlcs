@@ -21,6 +21,7 @@ class InvoiceController extends Controller
     public function index()
     {
         $invoices = Invoice::with('items')
+            ->excludeSettledProformas()
             ->where('client_id', $this->getClientId())
             ->orderBy('id', 'desc')
             ->paginate(25);

@@ -17,7 +17,7 @@ class SalesTaxLiabilityReport extends AbstractReport
         [$from, $to] = $this->getDateRange($request);
         $rows = DB::table("invoices")
             ->selectRaw("DATE_FORMAT(date_paid, '%Y-%m') as month, SUM(subtotal) as subtotal, SUM(tax) as tax, SUM(tax2) as tax2, SUM(total) as total")
-            ->where("status", "paid")->whereBetween("date_paid", [$from, $to.' 23:59:59'])
+            ->where("status", "paid")->where("type", "!=", "proforma")->whereBetween("date_paid", [$from, $to.' 23:59:59'])
             ->groupBy("month")->orderBy("month", "desc")->get();
         return ["columns" => ["Month", "Subtotal", "Tax", "Tax 2", "Total"], "rows" => $rows->toArray(), "totals" => ["Total", $rows->sum("subtotal"), $rows->sum("tax"), $rows->sum("tax2"), $rows->sum("total")]];
     }
