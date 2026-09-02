@@ -466,4 +466,3 @@ return [
     'company_lookup.key_configured' => '已配置',
     'company_lookup.key_missing' => '未配置',
 ];
-];
