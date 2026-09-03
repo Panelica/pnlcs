@@ -12,13 +12,13 @@
 </p>
 
 <p align="center">
-  Built with <b>Laravel 13</b> · <b>PHP 8.3+</b> · <b>MySQL 8</b> · <b>Alpine.js</b> · <b>Tailwind CSS 4</b>
+  Built with <b>Laravel 13</b> · <b>PHP 8.4+</b> · <b>MySQL 8</b> · <b>Alpine.js</b> · <b>Tailwind CSS 4</b>
 </p>
 
 <p align="center">
   <a href="https://github.com/Panelica/pnlcs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Panelica/pnlcs?color=blue" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel" alt="Laravel 13">
-  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.4+">
   <img src="https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.0+">
   <a href="https://github.com/Panelica/pnlcs/stargazers"><img src="https://img.shields.io/github/stars/Panelica/pnlcs?style=social" alt="Stars"></a>
 </p>
@@ -344,6 +344,8 @@ fill in the customer's real domain path*
 | Node.js   | 18+ |
 | Composer  | 2.x |
 | Web server | Nginx or Apache with PHP-FPM |
+| Disk | **~130 MB** for the app itself (code + PHP dependencies + built assets); the Docker image is ~410 MB. Allow **at least 2 GB free** for the database, ticket/backup uploads and logs as they grow. `node_modules` (~100 MB) is only needed while building and can be removed afterwards. |
+| RAM | 1 GB works for a small install; 2 GB is comfortable with the database on the same box |
 | PHP extensions | `bcmath`, `curl`, `dom`, `fileinfo`, `gd`, `mbstring`, `mysqli`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip`, `imap` |
 
 **Optional but recommended:** Redis (session/cache), SMTP server or relay
@@ -768,6 +770,28 @@ php artisan up
 That's it — your installation now runs the latest code with all data intact.
 If you use a queue worker (step 13 of installation), restart it too:
 `php artisan queue:restart`.
+
+### Inside a hosting-panel account (Panelica, cPanel, …)
+
+The same in-place update, but with the account's own tools instead of root —
+no `sudo`, no `systemctl`. Run everything from the project directory with the
+panel's PHP binary (on Panelica that is `php84`):
+
+```bash
+cd ~/example.com/pnlcs
+php84 artisan down                                        # maintenance page
+git pull origin main
+php84 /usr/local/bin/composer install --no-dev --optimize-autoloader
+php84 artisan migrate --force                             # applies new migrations
+npm ci && npm run build                                   # the account's Node
+php84 artisan optimize                                    # rebuild cached config/routes/views
+php84 artisan up
+```
+
+There is no PHP-reload step you run yourself: FPM picks the new code up on the
+next request, or you restart PHP for the domain from the panel. If MySQL is on
+a socket, the `DB_SOCKET` line from installation stays in `.env` and needs
+nothing here. Your data, uploads and settings are untouched.
 
 ---
 
