@@ -2789,6 +2789,6 @@ return [
     'clients.service_provision_failed' => 'Servis eklendi ama oluşturma başarısız: :error',
     'clients.link_existing' => 'Mevcut bir hesaba bağla',
     'clients.link_none' => '— yok (yalnız faturalama) —',
-    'clients.link_existing_hint' => 'Göç ederken, sunucuda hâlihazırda var olan hesabı seçin ki PNLCS onu yönetebilsin (askıya alma, sonlandırma, şifre). Yalnızca faturalamayı kaydetmek için boş bırakın.',
+    'clients.link_existing_hint' => 'Bunlar seçili sunucuda hâlihazırda var olan hesaplardır — Panelica\'da panelin Kullanıcılar listesindeki müşteri hesapları. Bu servisin ait olduğu hesabı seçin ki PNLCS onu yönetebilsin (askıya alma, sonlandırma, şifre). Hesap listeleme Panelica sunucuları için çalışır; yalnızca faturalama kaydı için boş bırakın.',
     'clients.service_linked' => 'Servis eklendi ve mevcut sunucu hesabına bağlandı.',
 ];

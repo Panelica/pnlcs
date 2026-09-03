@@ -2794,6 +2794,6 @@ return [
     'clients.service_provision_failed' => 'Service added, but provisioning failed: :error',
     'clients.link_existing' => 'Link to an existing account',
     'clients.link_none' => '— none (billing only) —',
-    'clients.link_existing_hint' => 'When migrating, pick the account that already exists on the server so PNLCS can manage it (suspend, terminate, password). Leave empty to only record the billing.',
+    'clients.link_existing_hint' => 'These are the accounts that already exist on the selected server — in Panelica, the customer accounts under the panel\'s Users list. Pick the one this service belongs to so PNLCS can manage it (suspend, terminate, password). Account listing works for Panelica servers; leave empty for a billing-only record.',
     'clients.service_linked' => 'Service added and linked to the existing server account.',
 ];

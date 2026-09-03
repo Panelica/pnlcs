@@ -2787,6 +2787,6 @@ return [
     'clients.service_provision_failed' => '服务已添加，但开通失败：:error',
     'clients.link_existing' => '关联到现有账户',
     'clients.link_none' => '— 无（仅计费）—',
-    'clients.link_existing_hint' => '迁移时，选择服务器上已存在的账户，以便 PNLCS 可以管理它（暂停、终止、密码）。留空则仅记录计费。',
+    'clients.link_existing_hint' => '这些是所选服务器上已存在的账户——在 Panelica 中即面板“用户”列表下的客户账户。选择此服务所属的账户，以便 PNLCS 可以管理它（暂停、终止、密码）。账户列表适用于 Panelica 服务器；仅记录计费时请留空。',
     'clients.service_linked' => '服务已添加并关联到现有服务器账户。',
 ];

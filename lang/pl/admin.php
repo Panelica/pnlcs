@@ -2798,6 +2798,6 @@ return [
     'clients.service_provision_failed' => 'Usługa dodana, ale utworzenie nie powiodło się: :error',
     'clients.link_existing' => 'Powiąż z istniejącym kontem',
     'clients.link_none' => '— brak (tylko rozliczenia) —',
-    'clients.link_existing_hint' => 'Przy migracji wybierz konto, które już istnieje na serwerze, aby PNLCS mógł nim zarządzać (zawieszanie, usuwanie, hasło). Pozostaw puste, aby tylko zapisać rozliczenie.',
+    'clients.link_existing_hint' => 'To konta, które już istnieją na wybranym serwerze — w Panelice są to konta klientów na liście Użytkownicy panelu. Wybierz to, do którego należy ta usługa, aby PNLCS mógł nim zarządzać (zawieszanie, usuwanie, hasło). Lista kont działa dla serwerów Panelica; pozostaw puste, aby zapisać tylko rozliczenie.',
     'clients.service_linked' => 'Usługa dodana i powiązana z istniejącym kontem na serwerze.',
 ];
