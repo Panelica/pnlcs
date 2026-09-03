@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Setting;
+use App\Mail\Concerns\LocalizesToRecipient;
 use App\Models\Ticket;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -14,11 +15,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class TicketOpenedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use LocalizesToRecipient;
 
     public function __construct(
         public Ticket $ticket,
         public bool $isAdmin = false
-    ) {}
+    ) {
+        $this->localizeTo($this->ticket);
+    }
 
     public function envelope(): Envelope
     {

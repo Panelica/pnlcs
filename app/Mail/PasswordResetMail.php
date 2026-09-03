@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use Illuminate\Mail\Mailable;
+use App\Mail\Concerns\LocalizesToRecipient;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Mail\Mailables\Headers;
@@ -16,11 +17,14 @@ use Illuminate\Queue\SerializesModels;
 class PasswordResetMail extends Mailable
 {
     use SerializesModels;
+    use LocalizesToRecipient;
 
     public function __construct(
         public string $resetUrl,
         public string $email,
-    ) {}
+    ) {
+        $this->localizeTo($this->email);
+    }
 
     /**
      * The header that tells the mail log not to keep this body.

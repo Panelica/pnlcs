@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Domain;
+use App\Mail\Concerns\LocalizesToRecipient;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -14,10 +15,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class DomainRegistrationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use LocalizesToRecipient;
 
     public function __construct(
         public Domain $domain
-    ) {}
+    ) {
+        $this->localizeTo($this->domain);
+    }
 
     public function envelope(): Envelope
     {

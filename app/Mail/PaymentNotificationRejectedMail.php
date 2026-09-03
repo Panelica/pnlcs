@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\PaymentNotification;
+use App\Mail\Concerns\LocalizesToRecipient;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,8 +15,11 @@ use Illuminate\Queue\SerializesModels;
 class PaymentNotificationRejectedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use LocalizesToRecipient;
 
-    public function __construct(public PaymentNotification $notification) {}
+    public function __construct(public PaymentNotification $notification) {
+        $this->localizeTo($this->notification);
+    }
 
     public function envelope(): Envelope
     {
