@@ -1028,6 +1028,71 @@ than opening a public GitHub issue.
 
 ---
 
+## Backups
+
+PNLCS backs up its database automatically. The scheduled task
+`pnlcs:db-backup` runs **daily at 04:30** (through the cron runner from
+installation step 13), dumps the database to a gzip file and rotates old ones.
+
+- **Where:** `storage/app/backups/db/pnlcs-YYYYMMDD-His.sql.gz`
+- **Retention:** the last **7** backups are kept (setting `db_backup_retention`)
+- **On/off:** controlled by the `db_backup_enabled` setting (on by default)
+
+**Run one by hand:**
+```bash
+php artisan pnlcs:db-backup                 # uses the defaults above
+php artisan pnlcs:db-backup --dir=/mnt/backups --retention=30
+php artisan pnlcs:db-backup --php           # pure-PHP dump if mysqldump is missing
+```
+
+It uses `mysqldump` when present and falls back to a PHP dump with `--php`.
+
+**Restore a backup:**
+```bash
+gunzip < storage/app/backups/db/pnlcs-20260101-043000.sql.gz | mysql -u pnlcs -p pnlcs
+```
+
+> The scheduled job covers the **database**. Uploaded files (ticket
+> attachments, invoice PDFs, branding) live under `storage/` — include that
+> directory in your server-level backup, and copy the `.sql.gz` files off the
+> box (or point `--dir` at mounted/off-site storage) so a lost disk is not a
+> lost backup.
+
+---
+
+## Payment Gateways
+
+Configure gateways under **Configuration → Gateways**. Open a gateway, fill in
+its keys, save, enable it, then **test with a small order before going live**.
+Checkout must run over **HTTPS**.
+
+| Gateway | What you enter |
+|---------|----------------|
+| **Stripe** | Publishable Key, Secret Key, Webhook Signing Secret |
+| **PayPal** | PayPal Email, Client ID, Client Secret, Sandbox on/off |
+| **Mollie** | Mollie API Key, Test Mode on/off |
+| **Razorpay** | Key ID, Key Secret |
+| **Authorize.Net** | API Login ID, Transaction Key |
+| **Tpay** (Poland) | Open API Client ID + Secret, security code |
+| **Bank Transfer** | Your bank/account details — shown to the client, confirmed by hand |
+
+### Webhooks
+
+Card gateways confirm a payment by calling back, so set the webhook URL in the
+provider's dashboard to:
+
+```
+https://your-domain.com/gateway/<gateway>/webhook
+```
+
+for example `…/gateway/stripe/webhook` or `…/gateway/paypal/webhook` (also
+`paypal`, `authorize`, `mollie`, `razorpay`, `tpay`). For Stripe, copy the
+signing secret the dashboard shows for that endpoint into the gateway's
+**Webhook Signing Secret** field — without it, incoming webhooks are rejected.
+Bank Transfer has no webhook; you mark those invoices paid yourself.
+
+---
+
 ## Troubleshooting & FAQ
 
 ### Common install & update errors
