@@ -466,4 +466,7 @@ return [
     'company_lookup.deactivated' => 'Firma Sorgulama devre dışı bırakıldı.',
     'company_lookup.key_configured' => 'Yapılandırıldı',
     'company_lookup.key_missing' => 'Yapılandırılmadı',
+    'success.product_service_added' => 'Ürün/hizmet eklendi.',
+    'success.product_service_deleted' => 'Ürün/hizmet silindi.',
+    'success.product_service_updated' => 'Ürün/hizmet güncellendi.',
 ];

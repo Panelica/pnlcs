@@ -465,4 +465,7 @@ return [
     'company_lookup.deactivated' => '公司查询已停用。',
     'company_lookup.key_configured' => '已配置',
     'company_lookup.key_missing' => '未配置',
+    'success.product_service_added' => '产品/服务已添加。',
+    'success.product_service_deleted' => '产品/服务已删除。',
+    'success.product_service_updated' => '产品/服务已更新。',
 ];
