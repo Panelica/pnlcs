@@ -2796,4 +2796,8 @@ return [
     'clients.provision_now_hint' => 'Po zaznaczeniu moduł wybranego serwera uruchamia polecenie Create i zakłada prawdziwe konto. Pozostaw niezaznaczone, aby tylko zapisać istniejącą usługę (migracja).',
     'clients.service_provisioned' => 'Usługa dodana i utworzona na serwerze.',
     'clients.service_provision_failed' => 'Usługa dodana, ale utworzenie nie powiodło się: :error',
+    'clients.link_existing' => 'Powiąż z istniejącym kontem',
+    'clients.link_none' => '— brak (tylko rozliczenia) —',
+    'clients.link_existing_hint' => 'Przy migracji wybierz konto, które już istnieje na serwerze, aby PNLCS mógł nim zarządzać (zawieszanie, usuwanie, hasło). Pozostaw puste, aby tylko zapisać rozliczenie.',
+    'clients.service_linked' => 'Usługa dodana i powiązana z istniejącym kontem na serwerze.',
 ];

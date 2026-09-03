@@ -69,6 +69,44 @@ class PanelicaModule extends AbstractServerModule
     }
 
     /**
+     * The accounts that already exist on the panel, so an operator migrating a
+     * customer in can link a billing service to the real account instead of
+     * creating a new one. Each entry carries the panel's user id (what suspend/
+     * terminate address) plus a human label. A failure returns an empty list.
+     *
+     * @return array<int, array{id: string, username: string, email: string, status: string}>
+     */
+    public function listAccounts(Server $server): array
+    {
+        try {
+            $resp = $this->get($server, '/v1/accounts');
+            if (! $resp->successful()) {
+                return [];
+            }
+
+            $out = [];
+            foreach (($resp->json('data') ?? []) as $a) {
+                $id = (string) ($a['id'] ?? '');
+                if ($id === '' || strtoupper((string) ($a['role'] ?? 'USER')) !== 'USER') {
+                    continue;
+                }
+                $out[] = [
+                    'id' => $id,
+                    'username' => (string) ($a['username'] ?? ''),
+                    'email' => (string) ($a['email'] ?? ''),
+                    'status' => (string) ($a['status'] ?? ''),
+                ];
+            }
+
+            usort($out, fn ($x, $y) => strcasecmp($x['username'], $y['username']));
+
+            return $out;
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
      * Whether a domain is already present on the server. Used as a pre-flight so
      * account creation is never attempted for a domain that would fail. A check
      * failure (network or scope) returns false and does not block - the create

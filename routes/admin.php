@@ -60,6 +60,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::patch('clients/{client}', [ClientController::class, 'update']);
         Route::post('clients/{client}/notes', [ClientController::class, 'storeNote'])->name('clients.notes.store');
         Route::post('clients/{client}/services', [ClientController::class, 'storeService'])->name('clients.services.store');
+        Route::get('servers/{server}/accounts', [ClientController::class, 'serverAccounts'])->name('clients.server-accounts');
         Route::post('clients/{client}/impersonate', [ClientController::class, 'impersonate'])->name('clients.impersonate');
         Route::get('impersonation/stop', [ClientController::class, 'stopImpersonation'])->name('clients.stop-impersonation');
     });

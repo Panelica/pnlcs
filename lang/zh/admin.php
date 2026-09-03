@@ -2785,4 +2785,8 @@ return [
     'clients.provision_now_hint' => '勾选后，所选服务器模块将运行其创建命令并开通真实账户。仅记录现有服务（迁移）时请不要勾选。',
     'clients.service_provisioned' => '服务已添加并在服务器上开通。',
     'clients.service_provision_failed' => '服务已添加，但开通失败：:error',
+    'clients.link_existing' => '关联到现有账户',
+    'clients.link_none' => '— 无（仅计费）—',
+    'clients.link_existing_hint' => '迁移时，选择服务器上已存在的账户，以便 PNLCS 可以管理它（暂停、终止、密码）。留空则仅记录计费。',
+    'clients.service_linked' => '服务已添加并关联到现有服务器账户。',
 ];

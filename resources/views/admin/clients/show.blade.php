@@ -195,7 +195,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ __('admin.clients.service_server') }}</label>
-                    <select name="server_id" class="form-control">
+                    <select name="server_id" id="svc-server" class="form-control">
                         <option value="">{{ __('admin.clients.service_no_server') }}</option>
                         @foreach($servers as $s)
                         <option value="{{ $s->id }}" @selected(old('server_id')==$s->id)>{{ $s->name }}</option>
@@ -233,12 +233,49 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     </select>
                 </div>
             </div>
+            <div class="form-group" id="link-account-row" style="margin-top:12px;display:none;">
+                <label class="form-label">{{ __('admin.clients.link_existing') }}</label>
+                <select name="link_user_id" id="link-user-id" class="form-control">
+                    <option value="">{{ __('admin.clients.link_none') }}</option>
+                </select>
+                <div class="text-muted" style="font-size:12px;margin-top:4px;">{{ __('admin.clients.link_existing_hint') }}</div>
+            </div>
             <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;font-size:13px;cursor:pointer;">
-                <input type="checkbox" name="provision" value="1" {{ old('provision') ? 'checked' : '' }} style="margin-top:3px;">
+                <input type="checkbox" name="provision" value="1" id="svc-provision" {{ old('provision') ? 'checked' : '' }} style="margin-top:3px;">
                 <span><strong>{{ __('admin.clients.provision_now') }}</strong><br><span class="text-muted" style="font-size:12px;">{{ __('admin.clients.provision_now_hint') }}</span></span>
             </label>
             <button type="submit" class="btn btn-primary btn-sm" style="margin-top:12px;">{{ __('admin.clients.add_service') }}</button>
         </form>
+        <script>
+        (function () {
+            var srv = document.getElementById('svc-server'),
+                link = document.getElementById('link-user-id'),
+                row = document.getElementById('link-account-row'),
+                prov = document.getElementById('svc-provision');
+            if (!srv || !link || !row) return;
+            var base = "{{ url('admin/servers') }}";
+            function toggleRow() { row.style.display = (prov && prov.checked) ? 'none' : (srv.value ? 'block' : 'none'); }
+            function loadAccounts() {
+                link.innerHTML = '<option value="">{{ __('admin.clients.link_none') }}</option>';
+                if (!srv.value) { toggleRow(); return; }
+                fetch(base + '/' + srv.value + '/accounts', {headers: {'X-Requested-With': 'XMLHttpRequest'}})
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) {
+                        (d.accounts || []).forEach(function (a) {
+                            var o = document.createElement('option');
+                            o.value = a.id;
+                            o.textContent = a.username + (a.email ? ' (' + a.email + ')' : '') + (a.status && a.status !== 'active' ? ' — ' + a.status : '');
+                            link.appendChild(o);
+                        });
+                    })
+                    .catch(function () {});
+                toggleRow();
+            }
+            srv.addEventListener('change', loadAccounts);
+            if (prov) prov.addEventListener('change', toggleRow);
+            if (srv.value) loadAccounts();
+        })();
+        </script>
     </div>
 </div>
 

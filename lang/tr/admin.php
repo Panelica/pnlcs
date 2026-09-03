@@ -2787,4 +2787,8 @@ return [
     'clients.provision_now_hint' => 'İşaretlenirse seçili sunucu modülü Create komutunu çalıştırıp gerçek bir hesap açar. Yalnızca mevcut bir servisi kaydetmek (göç) için işaretlemeyin.',
     'clients.service_provisioned' => 'Servis eklendi ve sunucuda oluşturuldu.',
     'clients.service_provision_failed' => 'Servis eklendi ama oluşturma başarısız: :error',
+    'clients.link_existing' => 'Mevcut bir hesaba bağla',
+    'clients.link_none' => '— yok (yalnız faturalama) —',
+    'clients.link_existing_hint' => 'Göç ederken, sunucuda hâlihazırda var olan hesabı seçin ki PNLCS onu yönetebilsin (askıya alma, sonlandırma, şifre). Yalnızca faturalamayı kaydetmek için boş bırakın.',
+    'clients.service_linked' => 'Servis eklendi ve mevcut sunucu hesabına bağlandı.',
 ];

@@ -8,6 +8,7 @@ use App\Models\ProductGroup;
 use App\Models\Server;
 use App\Models\Service;
 use App\Services\ProvisioningService;
+use Illuminate\Support\Facades\Http;
 
 /*
  * Attaching an existing service to a client by hand — the migration path.
@@ -150,4 +151,47 @@ it('needs a server before it can provision', function () {
         ->assertSessionHasErrors('server_id');
 
     expect(Service::where('client_id', $client->id)->count())->toBe(0);
+});
+
+it('links a migrated service to an existing server account', function () {
+    Http::fake(['*' => Http::response(['data' => []], 200)]);
+
+    $client = Client::factory()->create();
+    $product = addServiceProduct();
+    $server = Server::factory()->create(['type' => 'panelica']);
+
+    $this->actingAs(addServiceAdmin(), 'admin')
+        ->post(route('admin.clients.services.store', $client), [
+            'product_id' => $product->id,
+            'server_id' => $server->id,
+            'billing_cycle' => 'Monthly',
+            'amount' => '10',
+            'status' => 'active',
+            'link_user_id' => 'panel-user-abc-123',
+        ])
+        ->assertRedirect();
+
+    $service = Service::where('client_id', $client->id)->first();
+
+    expect($service->module_data['panelica_user_id'] ?? null)->toBe('panel-user-abc-123')
+        ->and($service->order_id)->toBeNull();
+});
+
+it('serves the existing-account picker for a server', function () {
+    Http::fake([
+        '*/v1/accounts' => Http::response(['data' => [
+            ['id' => 'u1', 'username' => 'alice', 'email' => 'alice@example.com', 'role' => 'USER', 'status' => 'active'],
+            ['id' => 'admin1', 'username' => 'root', 'role' => 'ADMIN', 'status' => 'active'],
+        ]], 200),
+    ]);
+
+    $server = Server::factory()->create(['type' => 'panelica']);
+
+    $res = $this->actingAs(addServiceAdmin(), 'admin')
+        ->get(route('admin.clients.server-accounts', $server))
+        ->assertOk()
+        ->assertJsonStructure(['accounts' => [['id', 'username', 'email', 'status']]]);
+
+    $accounts = $res->json('accounts');
+    expect($accounts)->toHaveCount(1)->and($accounts[0]['username'])->toBe('alice');
 });

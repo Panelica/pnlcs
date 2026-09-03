@@ -2792,4 +2792,8 @@ return [
     'clients.provision_now_hint' => 'When checked, the selected server module runs its Create command and provisions a real account. Leave unchecked to only record an existing service (migration).',
     'clients.service_provisioned' => 'Service added and provisioned on the server.',
     'clients.service_provision_failed' => 'Service added, but provisioning failed: :error',
+    'clients.link_existing' => 'Link to an existing account',
+    'clients.link_none' => '— none (billing only) —',
+    'clients.link_existing_hint' => 'When migrating, pick the account that already exists on the server so PNLCS can manage it (suspend, terminate, password). Leave empty to only record the billing.',
+    'clients.service_linked' => 'Service added and linked to the existing server account.',
 ];

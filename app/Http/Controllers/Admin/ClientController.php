@@ -204,6 +204,8 @@ class ClientController extends Controller
             'next_due_date' => ['nullable', 'date'],
             'status' => ['required', Rule::in(array_column(ServiceStatus::cases(), 'value'))],
             'provision' => ['boolean'],
+            // Link an already-existing server account (migration): the panel user id.
+            'link_user_id' => ['nullable', 'string', 'max:100'],
         ]);
 
         // Two modes, the way WHMCS lets you choose a module command on a manual
@@ -236,6 +238,27 @@ class ClientController extends Controller
             $client->id,
         );
 
+        // Migration: link this billing record to an account that already exists
+        // on the server so PNLCS can manage it. suspend()/terminate() address the
+        // panel user id stored in module_data; we also copy the username for show.
+        $linked = false;
+        if (! $provision && ($linkUserId = trim((string) $request->input('link_user_id'))) !== '') {
+            if ($service->server) {
+                $module = app(ModuleRegistry::class)->getServerModule($service->server->type);
+                if ($module && method_exists($module, 'listAccounts')) {
+                    foreach ($module->listAccounts($service->server) as $a) {
+                        if (($a['id'] ?? '') === $linkUserId) {
+                            $service->username = $a['username'] ?? $service->username;
+                            break;
+                        }
+                    }
+                }
+            }
+            $service->module_data = ['panelica_user_id' => $linkUserId];
+            $service->save();
+            $linked = true;
+        }
+
         $redirect = redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services']);
 
         if ($provision) {
@@ -246,7 +269,23 @@ class ClientController extends Controller
                 : $redirect->with('error', __('admin.clients.service_provision_failed', ['error' => $result['message'] ?? '']));
         }
 
-        return $redirect->with('success', __('admin.clients.service_added'));
+        return $redirect->with('success', __($linked ? 'admin.clients.service_linked' : 'admin.clients.service_added'));
+    }
+
+    /**
+     * The accounts that already exist on a server, for the "link existing
+     * account" picker when adding a service by hand. Returns an empty list for
+     * modules that cannot enumerate accounts, so the picker just stays empty.
+     */
+    public function serverAccounts(Server $server)
+    {
+        $module = app(ModuleRegistry::class)->getServerModule($server->type);
+
+        $accounts = ($module && method_exists($module, 'listAccounts'))
+            ? $module->listAccounts($server)
+            : [];
+
+        return response()->json(['accounts' => $accounts]);
     }
 
     public function edit(Client $client)
