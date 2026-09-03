@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Setting;
+use App\Models\EmailTemplate;
+use App\Models\Language;
+use App\Observers\EmailTemplateObserver;
+use App\Observers\LanguageObserver;
 use App\Services\Module\ModuleRegistry;
 use App\Services\ThemeManager;
 use App\Services\ReportManager;
@@ -109,6 +113,9 @@ class AppServiceProvider extends ServiceProvider
             'client.auth.register',
             'sections.*',
         ], ThemeComposer::class);
+
+        EmailTemplate::observe(EmailTemplateObserver::class);
+        Language::observe(LanguageObserver::class);
     }
 
     /**

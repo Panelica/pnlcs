@@ -56,8 +56,12 @@ class EmailTemplateService
     /**
      * The mailable arrives as a class name: Laravel puts the string, not the
      * instance, into the event data under __laravel_mailable.
+     *
+     * Templates are stored per language; the copy for the recipient's language
+     * is preferred, falling back to English (the canonical set) when a language
+     * has no row or no translation yet.
      */
-    public function forMailable(object|string $mailable): ?EmailTemplate
+    public function forMailable(object|string $mailable, ?string $locale = null): ?EmailTemplate
     {
         $short = class_basename($mailable);
 
@@ -65,8 +69,21 @@ class EmailTemplateService
             return null;
         }
 
+        $name = self::MAP[$short];
+
         try {
-            return EmailTemplate::where('name', self::MAP[$short])->first();
+            $query = EmailTemplate::where('name', $name);
+
+            if ($locale !== null && $locale !== '' && $locale !== 'en') {
+                $template = (clone $query)->where('language', $locale)->first();
+                if (! $template) {
+                    $template = (clone $query)->where('language', 'en')->first();
+                }
+
+                return $template;
+            }
+
+            return $query->where('language', 'en')->first();
         } catch (\Throwable) {
             // Templates unreadable (installer, broken database) — never let this
             // stand between a customer and their email.

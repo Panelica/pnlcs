@@ -1092,6 +1092,7 @@ return [
     'email_templates.template' => '模板',
     'email_templates.template_name' => '模板名称',
     'email_templates.title' => '邮件模板',
+    'email_templates.translate' => '翻译',
     'email_templates.type' => '类型',
     'email_templates.type_domain' => '域名',
     'email_templates.type_general' => '常规',

@@ -54,7 +54,17 @@ class ApplyEmailTemplate
             return null;
         }
 
-        $template = $this->templates->forMailable($mailable);
+        $client = $this->templates->clientFrom($event->data);
+        $locale = $client->language ?? null;
+
+        // The email is written in the recipient's language, so render its
+        // subject/body (and any __() inside) in that locale, not the locale of
+        // whichever request happened to trigger the send.
+        if ($locale && $locale !== '' && $locale !== app()->getLocale()) {
+            app()->setLocale($locale);
+        }
+
+        $template = $this->templates->forMailable($mailable, $locale);
 
         if (! $template) {
             return null;

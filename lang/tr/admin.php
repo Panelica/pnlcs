@@ -1089,6 +1089,7 @@ return [
     'email_templates.template' => 'Şablon',
     'email_templates.template_name' => 'Template Name',
     'email_templates.title' => 'E-posta Şablons',
+    'email_templates.translate' => 'Çevir',
     'email_templates.type' => 'Type',
     'email_templates.type_domain' => 'Domain',
     'email_templates.type_general' => 'General',
