@@ -77,6 +77,7 @@ return [
     'payment_method.credit' => '余额',
     'payment_method.bank_transfer' => '银行转账',
     'payment_method.credit_debit_card' => '信用卡/借记卡',
+    'payment_method.tpay' => 'Tpay',
     'banktransfer.account_name' => '账户名称',
     'banktransfer.account_number' => '账号',
     'banktransfer.amount' => '金额',
@@ -95,7 +96,6 @@ return [
         'payment_notification_already_pending' => '您已就此发票提交了付款通知，目前正在审核。',
     ],
     'success' => [
-        'tax_set_default' => '默认税率已设置。',
         'payment_notification_submitted' => '感谢您！付款通知已提交，我们会尽快审核。',
         '2fa_disabled' => '双因素认证已禁用。',
         '2fa_enabled' => '双因素认证已启用。',
@@ -219,6 +219,9 @@ return [
         'product_created' => '产品已成功创建。',
         'product_deleted' => '产品已删除。',
         'product_updated' => '产品已更新。',
+        'product_service_added' => '产品/服务已添加。',
+        'product_service_deleted' => '产品/服务已删除。',
+        'product_service_updated' => '产品/服务已更新。',
         'profile_updated' => '个人资料已更新。',
         'project_created' => '项目已成功创建。',
         'project_deleted' => '项目已删除。',
@@ -276,6 +279,7 @@ return [
         'tax_created' => '税务规则已创建。',
         'tax_deleted' => '税务规则已删除。',
         'tax_rule_added' => '税务规则已添加。',
+        'tax_set_default' => '默认税率已设置。',
         'tax_updated' => '税务规则已更新。',
         'template_updated' => '邮件模板已更新。',
         'test_email_sent' => '测试邮件已发送。',
@@ -356,9 +360,6 @@ return [
     'whois.connect_error' => '错误：无法连接 :server（errno=:errno：:errstr）',
     'whois.invalid_domain' => '域名无效。',
     'whois.no_server_known' => '没有可用于 .:tld 的 WHOIS 服务器，请尝试手动查询 whois.iana.org。',
-
-    // Added by localization sync
-    'payment_method.tpay' => 'Tpay',
     'ksef.settings_title' => 'KSeF（电子发票）',
     'ksef.sidebar' => 'KSeF',
     'ksef.addon_description' => '将已付款发票提交至波兰国家电子发票系统（KSeF），并显示其状态、重试和更正选项。',
@@ -465,7 +466,4 @@ return [
     'company_lookup.deactivated' => '公司查询已停用。',
     'company_lookup.key_configured' => '已配置',
     'company_lookup.key_missing' => '未配置',
-    'success.product_service_added' => '产品/服务已添加。',
-    'success.product_service_deleted' => '产品/服务已删除。',
-    'success.product_service_updated' => '产品/服务已更新。',
 ];

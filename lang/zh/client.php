@@ -2,8 +2,8 @@
 
 return [
     'account' => [
-        'billing_email_hint' => '发票的可选邮箱（例如财务部门）。为空时使用登录地址。',
         'email_change_needs_password' => '更改此地址需要输入账户密码。',
+        'billing_email_hint' => '发票的可选邮箱（例如财务部门）。为空时使用登录地址。',
         'current_password' => '当前密码',
         'account_switched' => '您当前正在查看 :name。',
         'accounts' => '您的账户',
@@ -463,7 +463,7 @@ return [
         'subtitle' => '为账户余额充值。',
         'title' => '充值',
     ],
-    'funds.amount_range' => '最低 :min · 最高 :max',
+    'funds.amount_range' => '最低 $5.00，最高 $10,000.00',
     'funds.available_credit_desc' => '可用于支付发票和订单。',
     'funds.bank_transfer' => '银行转账',
     'funds.current_credit' => '当前账户余额',
