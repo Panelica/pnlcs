@@ -2787,4 +2787,9 @@ return [
     'settings.twilio_auth_token' => 'Token uwierzytelniania Twilio',
     'settings.twilio_verify_service_sid' => 'SID usługi Twilio Verify',
     'settings.sms_verification_hint' => 'Klienci widzą przycisk weryfikacji telefonu na stronie Bezpieczeństwo. Kod, liczba prób i dziesięciominutowy termin są w całości po stronie Twilio; panel zapisuje jedynie moment zatwierdzenia weryfikacji. Puste pole tajne zachowuje zapisaną wartość.',
+    'clients.add_service' => 'Dodaj usługę',
+    'clients.add_service_hint' => 'Zarejestruj istniejącą usługę, którą klient już posiada (np. przeniesioną z innego panelu), aby PNLCS rozliczał jej odnowienia. Tworzy to tylko wpis rozliczeniowy — nie zakłada konta na serwerze.',
+    'clients.service_server' => 'Serwer',
+    'clients.service_no_server' => 'Bez serwera (tylko rozliczenia)',
+    'clients.service_added' => 'Usługa dodana do klienta.',
 ];

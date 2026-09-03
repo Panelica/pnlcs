@@ -168,6 +168,76 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 </div>
 
 @elseif($tab === 'services')
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-weight:600;">{{ __('admin.clients.tab_services') }}</div>
+    <button type="button" class="btn btn-primary btn-sm" onclick="var f=document.getElementById('add-service-form');f.style.display=f.style.display==='none'?'block':'none';">{{ __('admin.clients.add_service') }}</button>
+</div>
+
+<div class="card" id="add-service-form" style="display:none;margin-bottom:16px;">
+    <div class="card-header"><strong>{{ __('admin.clients.add_service') }}</strong></div>
+    <div class="card-body">
+        <p class="text-muted" style="font-size:12px;margin-bottom:14px;">{{ __('admin.clients.add_service_hint') }}</p>
+        @if($errors->any())
+        <div class="alert alert-danger" style="font-size:13px;">{{ $errors->first() }}</div>
+        @endif
+        <form method="POST" action="{{ route('admin.clients.services.store', $client) }}">
+            @csrf
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.table.product') }} <span style="color:#d9534f;">*</span></label>
+                    <select name="product_id" class="form-control" required>
+                        <option value="">—</option>
+                        @foreach($products as $p)
+                        <option value="{{ $p->id }}" @selected(old('product_id')==$p->id)>{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.clients.service_server') }}</label>
+                    <select name="server_id" class="form-control">
+                        <option value="">{{ __('admin.clients.service_no_server') }}</option>
+                        @foreach($servers as $s)
+                        <option value="{{ $s->id }}" @selected(old('server_id')==$s->id)>{{ $s->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.table.domain') }}</label>
+                    <input type="text" name="domain" value="{{ old('domain') }}" class="form-control" placeholder="example.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.table.billing_cycle') }} <span style="color:#d9534f;">*</span></label>
+                    <select name="billing_cycle" class="form-control" required>
+                        @foreach(['Monthly','Quarterly','Semi-Annually','Annually','Biennially','Triennially','One-Time'] as $c)
+                        <option value="{{ $c }}" @selected(old('billing_cycle')==$c)>{{ $c }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.table.amount') }} <span style="color:#d9534f;">*</span></label>
+                    <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount', '0.00') }}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.clients.next_due') }}</label>
+                    <input type="date" name="next_due_date" value="{{ old('next_due_date') }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.table.status') }} <span style="color:#d9534f;">*</span></label>
+                    <select name="status" class="form-control" required>
+                        <option value="active" @selected(old('status','active')=='active')>Active</option>
+                        <option value="pending" @selected(old('status')=='pending')>Pending</option>
+                        <option value="suspended" @selected(old('status')=='suspended')>Suspended</option>
+                        <option value="cancelled" @selected(old('status')=='cancelled')>Cancelled</option>
+                        <option value="terminated" @selected(old('status')=='terminated')>Terminated</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:6px;">{{ __('admin.clients.add_service') }}</button>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     @if($services->isEmpty())
     <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.services.no_services') }}</div>

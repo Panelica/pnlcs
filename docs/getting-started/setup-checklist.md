@@ -83,10 +83,13 @@ permissions and invite team members.
 
 ➡️ Full guide: [Staff & Roles](../guides/staff-and-roles.md)
 
-## 9. Require email verification *(recommended)*
+## 9. Account security *(recommended)*
 
-**Settings → General → Security** — turn on **Require email verification** so
-new signups confirm their address before ordering.
+Clients can turn on **two-factor authentication** from their own **Security**
+page, and you can require 2FA per staff role under **Configuration → Staff
+Roles**. A built-in *require email verification* toggle for new signups is on
+the roadmap; until it ships, review new sign-ups before their first order if
+you want a manual check.
 
 ## 10. The cron runner *(required for automation)*
 

@@ -12,8 +12,12 @@ use App\Models\ClientNote;
 use App\Models\Currency;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
+use App\Models\Product;
+use App\Models\Server;
+use App\Models\Service;
 use App\Models\Setting;
 use App\Models\User;
+use App\Enums\ServiceStatus;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -118,6 +122,11 @@ class ClientController extends Controller
         switch ($tab) {
             case 'services':
                 $data['services'] = $client->services()->with('product')->orderBy('id', 'desc')->paginate(15);
+                // For the "add existing service" form (used when migrating a
+                // customer in by hand): only real, sellable products and the
+                // servers an operator can place them on.
+                $data['products'] = Product::where('retired', false)->orderBy('name')->get(['id', 'name', 'server_type']);
+                $data['servers'] = Server::where('active', true)->orderBy('name')->get(['id', 'name', 'type']);
                 break;
             case 'domains':
                 $data['domains'] = $client->domains()->orderBy('id', 'desc')->paginate(15);
@@ -169,6 +178,55 @@ class ClientController extends Controller
         ]);
 
         return back()->with('success', __('messages.success.note_added'));
+    }
+
+    /**
+     * Attach an existing service to a client by hand.
+     *
+     * This is the migration path the docs describe: a customer already runs on
+     * a server (from cPanel/WHMCS/manual setup) and the operator records that
+     * service in PNLCS so renewals bill from here. It deliberately does NOT
+     * provision anything on the panel — the account already exists — it only
+     * writes the billing record, so there is no order and no module call.
+     */
+    public function storeService(Request $request, Client $client)
+    {
+        $cycles = ['Monthly', 'Quarterly', 'Semi-Annually', 'Annually', 'Biennially', 'Triennially', 'One-Time'];
+
+        $validated = $request->validate([
+            'product_id' => ['required', Rule::exists('products', 'id')],
+            'server_id' => ['nullable', Rule::exists('servers', 'id')],
+            'domain' => ['nullable', 'string', 'max:255'],
+            'billing_cycle' => ['required', Rule::in($cycles)],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'next_due_date' => ['nullable', 'date'],
+            'status' => ['required', Rule::in(array_column(ServiceStatus::cases(), 'value'))],
+        ]);
+
+        $service = Service::create([
+            'client_id' => $client->id,
+            'product_id' => $validated['product_id'],
+            'server_id' => $validated['server_id'] ?? null,
+            'domain' => $validated['domain'] ?? null,
+            'qty' => 1,
+            'first_payment_amount' => $validated['amount'],
+            'amount' => $validated['amount'],
+            'billing_cycle' => $validated['billing_cycle'],
+            'next_due_date' => $validated['next_due_date'] ?? null,
+            'registration_date' => now()->toDateString(),
+            'status' => $validated['status'],
+            'auto_renew' => true,
+        ]);
+
+        ActivityLog::log(
+            "Existing service #{$service->id} added to client #{$client->id} (manual migration)",
+            auth('admin')->user()?->full_name ?: 'admin',
+            $client->id,
+        );
+
+        return redirect()
+            ->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
+            ->with('success', __('admin.clients.service_added'));
     }
 
     public function edit(Client $client)
