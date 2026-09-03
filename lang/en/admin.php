@@ -1093,7 +1093,6 @@ return [
     'email_templates.template' => 'Template',
     'email_templates.template_name' => 'Template Name',
     'email_templates.title' => 'Email Templates',
-    'email_templates.translate' => 'Translate',
     'email_templates.type' => 'Type',
     'email_templates.type_domain' => 'Domain',
     'email_templates.type_general' => 'General',

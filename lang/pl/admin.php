@@ -1098,7 +1098,6 @@ return [
     'email_templates.template' => 'Szablon',
     'email_templates.template_name' => 'Nazwa szablonu',
     'email_templates.title' => 'Szablony e-maili',
-    'email_templates.translate' => 'Przetłumacz',
     'email_templates.type' => 'Typ',
     'email_templates.type_domain' => 'Domena',
     'email_templates.type_general' => 'Ogólne',

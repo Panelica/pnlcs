@@ -102,6 +102,16 @@
                         @endif
                     </select>
                 </div>
+                @if(isset($languages) && $languages->isNotEmpty())
+                <div class="form-group">
+                    <label class="form-label" for="language">{{ __('common.form.language') }}</label>
+                    <select id="language" name="language" class="form-control">
+                        @foreach($languages as $lang)
+                        <option value="{{ $lang->code }}" {{ old("language", $client?->language) == $lang->code ? "selected" : "" }}>{{ $lang->native_name ?? $lang->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
             </div>
             <div class="form-group">
                 <label class="form-label" for="address1">{{ __('common.form.street_address') }}</label>
