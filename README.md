@@ -1028,6 +1028,78 @@ than opening a public GitHub issue.
 
 ---
 
+## Troubleshooting & FAQ
+
+### Common install & update errors
+
+**`500 — Composer detected issues in your platform: PHP >= 8.4.0`**
+The site's PHP-FPM is older than the PHP that ran `composer install`. Because
+the dependencies are locked against PHP 8.4 the page dies before Laravel even
+boots, so `storage/logs` stays empty. Point the site (or FPM pool) at **PHP
+8.4** — on a control panel, change the domain's PHP version; on raw nginx, fix
+the `fastcgi_pass` socket.
+
+**`Application encryption key has not been specified` / `MissingAppKeyException`**
+You skipped the key step. Run `php artisan key:generate` (it writes `APP_KEY`
+into `.env`), then reload.
+
+**`SQLSTATE… Base table or view not found`**
+Migrations have not run, or `.env` points at the wrong database. Check the
+`DB_*` values, make sure the database exists, then run
+`php artisan migrate --force`.
+
+**Composer stops with `… does not exist and could not be created` (writing to `vendor/`)**
+Something under `vendor/` is owned by another user (usually a past
+`sudo composer`), so the site user cannot write there. Fix ownership and retry:
+`chown -R <site-user>:<site-user> vendor && composer install --no-dev`.
+
+**`fatal: detected dubious ownership in repository`**
+Git refuses a repo owned by a different user. Mark it safe:
+`git config --global --add safe.directory /path/to/pnlcs`.
+
+**Blank or unstyled page, or the old UI after an update**
+The compiled assets or cached views are stale. Run `npm run build`, then
+`php artisan optimize` (or `php artisan view:clear`).
+
+**`.env` is reachable in the browser**
+The web root points at the project folder instead of `public/`. Point the
+document root at `pnlcs/public` — nothing above it should be web-served.
+
+**Invoices/emails never send, but nothing errors**
+`QUEUE_CONNECTION=database` is set without a running worker, so jobs pile up in
+the `jobs` table forever. Either keep `QUEUE_CONNECTION=sync` (the default), or
+run a worker (`php artisan queue:work`).
+
+**The `/install` wizard is already locked, or you never got to choose a password**
+You ran `php artisan db:seed` by hand before opening the wizard; seeing an
+administrator, it locks itself. Sign in with `admin` / `admin123` and change
+the password from your profile, or reinstall without seeding by hand.
+
+### Frequently asked
+
+**How do I offer a free (zero-cost) plan?**
+Create the product and set **Payment Type → Free** (the dropdown offers
+Recurring / One-time / Free). Do *not* put `0` in the price — that leaves the
+product with no sellable price.
+
+**How do I bring an existing customer/account into PNLCS?**
+Open the client → **Services** tab → **Add Service**. Leave the options empty
+for a billing-only record; use **"Link to an existing account"** to attach the
+account that already runs on the server (PNLCS then bills *and* manages it); or
+tick **"Create the account on the server now"** to provision a brand-new one.
+
+**How does PNLCS know which server account belongs to which service?**
+It stores the panel's internal **account ID** on the service (in `module_data`)
+and every action — suspend, terminate, password — uses that ID. It does *not*
+rely on usernames matching, so names can differ freely.
+
+**How do I update to the latest version?**
+Docker: `docker exec pnlcs /usr/local/bin/update.sh`. Self-hosted or inside a
+panel account: see [Updating](#updating). Your data is left untouched either
+way.
+
+---
+
 ## Contributing
 
 Issues and pull requests are welcome.
