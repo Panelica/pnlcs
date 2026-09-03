@@ -18,6 +18,7 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.first_name') }}<span style="color:#d9534f;">*</span></label><input type="text" name="first_name" value="{{ old('first_name') }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.last_name') }}<span style="color:#d9534f;">*</span></label><input type="text" name="last_name" value="{{ old('last_name') }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.email') }}<span style="color:#d9534f;">*</span></label><input type="email" name="email" value="{{ old('email') }}" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.billing_email') }}</label><input type="email" name="billing_email" value="{{ old('billing_email') }}" class="form-control"><div style="color:var(--muted);font-size:12px;margin-top:4px;">{{ __('admin.clients.billing_email_hint') }}</div></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.company') }}</label><input type="text" name="company_name" value="{{ old('company_name') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label>
                     <div style="display:flex;gap:6px;">
@@ -71,6 +72,8 @@
                     <div style="display:flex;gap:6px;">
                         <input type="password" name="password" id="pw-input" class="form-control" autocomplete="new-password" oninput="checkStrength(this.value)">
                         <button type="button" onclick="generatePassword()" class="btn btn-default" style="white-space:nowrap;flex-shrink:0;" title="{{ __('admin.clients.generate_password') }}">&#x1F512; {{ __('admin.clients.generate_password') }}</button>
+                        <button type="button" onclick="copyPw('pw-input', this)" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.actions.copy') }}">&#128203;</button>
+                        <button type="button" onclick="togglePw('pw-input')" class="btn btn-default" style="flex-shrink:0;" title="{{ __('common.actions.toggle') }}">&#128065;</button>
                     </div>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.password_confirm') }}</label><input type="password" name="password_confirmation" id="pw-confirm" class="form-control" autocomplete="new-password"></div>
@@ -153,6 +156,28 @@ function generatePassword() {
     if (input) { input.type = "text"; input.value = pw; input.focus(); }
     if (confirmInput) { confirmInput.type = "text"; confirmInput.value = pw; }
     checkStrength(pw);
+}
+function togglePw(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.type = el.type === "password" ? "text" : "password";
+}
+function copyPw(id, btn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var prev = el.type;
+    el.type = "text";
+    el.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    el.type = prev;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(el.value).catch(function () {});
+    }
+    if (btn) {
+        var orig = btn.innerHTML;
+        btn.innerHTML = "&#10003;";
+        setTimeout(function () { btn.innerHTML = orig; }, 1200);
+    }
 }
 function checkStrength(v) {
     var bar = document.getElementById("pwBar"), hint = document.getElementById("pwHint");

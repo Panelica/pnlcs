@@ -105,6 +105,7 @@ return [
         'description' => 'Description',
         'email' => 'Email',
         'email_address' => 'Email Address',
+        'billing_email' => 'Billing Email (Accounting)',
         'first_name' => 'First Name',
         'group' => 'Group',
         'language' => 'Language',

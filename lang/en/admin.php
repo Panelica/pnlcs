@@ -711,6 +711,7 @@ return [
     'clients.password_optional' => 'optional',
     'clients.password_optional_edit' => 'leave blank to keep current',
     'clients.generate_password' => 'Generate Password',
+    'clients.billing_email_hint' => 'Optional address for invoices and payment reminders. When empty, the account email is used.',
     'clients.overdue_invoices' => 'Overdue Invoices',
     'clients.paid_invoices' => 'Paid Invoices',
     'clients.phone' => 'Phone',

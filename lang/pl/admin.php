@@ -716,6 +716,7 @@ return [
     'clients.password_optional' => 'opcjonalne',
     'clients.password_optional_edit' => 'zostaw puste, aby zachować obecne',
     'clients.generate_password' => 'Generuj hasło',
+    'clients.billing_email_hint' => 'Opcjonalny adres do wysyłki faktur i przypomnień o płatności. Gdy pusty, używany jest adres e-mail konta.',
     'clients.overdue_invoices' => 'Zaległe faktury',
     'clients.paid_invoices' => 'Opłacone faktury',
     'clients.phone' => 'Telefon',
