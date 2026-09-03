@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Server;
 use App\Models\Service;
+use App\Services\ProvisioningService;
 
 /*
  * Attaching an existing service to a client by hand — the migration path.
@@ -86,6 +87,67 @@ it('requires a product', function () {
             'status' => 'active',
         ])
         ->assertSessionHasErrors('product_id');
+
+    expect(Service::where('client_id', $client->id)->count())->toBe(0);
+});
+
+it('provisions on the server only when the operator asks', function () {
+    $client = Client::factory()->create();
+    $product = addServiceProduct();
+    $server = Server::factory()->create();
+
+    $mock = Mockery::mock(ProvisioningService::class);
+    $mock->shouldReceive('createAccount')->once()->andReturn(['success' => true]);
+    app()->instance(ProvisioningService::class, $mock);
+
+    $this->actingAs(addServiceAdmin(), 'admin')
+        ->post(route('admin.clients.services.store', $client), [
+            'product_id' => $product->id,
+            'server_id' => $server->id,
+            'billing_cycle' => 'Monthly',
+            'amount' => '10',
+            'status' => 'active',
+            'provision' => '1',
+        ])
+        ->assertRedirect();
+
+    // The record starts pending; createAccount() (mocked here) is what activates it.
+    expect(Service::where('client_id', $client->id)->value('status'))->toBe('pending');
+});
+
+it('does not touch the server when provisioning is off', function () {
+    $client = Client::factory()->create();
+    $product = addServiceProduct();
+
+    $mock = Mockery::mock(ProvisioningService::class);
+    $mock->shouldReceive('createAccount')->never();
+    app()->instance(ProvisioningService::class, $mock);
+
+    $this->actingAs(addServiceAdmin(), 'admin')
+        ->post(route('admin.clients.services.store', $client), [
+            'product_id' => $product->id,
+            'billing_cycle' => 'Monthly',
+            'amount' => '10',
+            'status' => 'active',
+        ])
+        ->assertRedirect();
+
+    expect(Service::where('client_id', $client->id)->value('status'))->toBe('active');
+});
+
+it('needs a server before it can provision', function () {
+    $client = Client::factory()->create();
+    $product = addServiceProduct();
+
+    $this->actingAs(addServiceAdmin(), 'admin')
+        ->post(route('admin.clients.services.store', $client), [
+            'product_id' => $product->id,
+            'billing_cycle' => 'Monthly',
+            'amount' => '10',
+            'status' => 'active',
+            'provision' => '1',
+        ])
+        ->assertSessionHasErrors('server_id');
 
     expect(Service::where('client_id', $client->id)->count())->toBe(0);
 });

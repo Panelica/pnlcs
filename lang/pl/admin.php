@@ -2792,4 +2792,8 @@ return [
     'clients.service_server' => 'Serwer',
     'clients.service_no_server' => 'Bez serwera (tylko rozliczenia)',
     'clients.service_added' => 'Usługa dodana do klienta.',
+    'clients.provision_now' => 'Utwórz konto na serwerze teraz',
+    'clients.provision_now_hint' => 'Po zaznaczeniu moduł wybranego serwera uruchamia polecenie Create i zakłada prawdziwe konto. Pozostaw niezaznaczone, aby tylko zapisać istniejącą usługę (migracja).',
+    'clients.service_provisioned' => 'Usługa dodana i utworzona na serwerze.',
+    'clients.service_provision_failed' => 'Usługa dodana, ale utworzenie nie powiodło się: :error',
 ];

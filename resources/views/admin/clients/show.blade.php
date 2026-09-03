@@ -233,7 +233,11 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     </select>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:6px;">{{ __('admin.clients.add_service') }}</button>
+            <label style="display:flex;align-items:flex-start;gap:8px;margin-top:12px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" name="provision" value="1" {{ old('provision') ? 'checked' : '' }} style="margin-top:3px;">
+                <span><strong>{{ __('admin.clients.provision_now') }}</strong><br><span class="text-muted" style="font-size:12px;">{{ __('admin.clients.provision_now_hint') }}</span></span>
+            </label>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:12px;">{{ __('admin.clients.add_service') }}</button>
         </form>
     </div>
 </div>

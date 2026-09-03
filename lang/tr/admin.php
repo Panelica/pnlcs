@@ -2783,4 +2783,8 @@ return [
     'products.products_services' => 'Ürünler/Hizmetler',
     'products.unit' => 'Birim',
     'settings.hide_paid_proformas' => 'Ödenmiş proformaları gizle',
+    'clients.provision_now' => 'Hesabı sunucuda şimdi oluştur',
+    'clients.provision_now_hint' => 'İşaretlenirse seçili sunucu modülü Create komutunu çalıştırıp gerçek bir hesap açar. Yalnızca mevcut bir servisi kaydetmek (göç) için işaretlemeyin.',
+    'clients.service_provisioned' => 'Servis eklendi ve sunucuda oluşturuldu.',
+    'clients.service_provision_failed' => 'Servis eklendi ama oluşturma başarısız: :error',
 ];

@@ -19,6 +19,7 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Enums\ServiceStatus;
 use App\Services\Module\ModuleRegistry;
+use App\Services\ProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -189,19 +190,28 @@ class ClientController extends Controller
      * provision anything on the panel — the account already exists — it only
      * writes the billing record, so there is no order and no module call.
      */
-    public function storeService(Request $request, Client $client)
+    public function storeService(Request $request, Client $client, ProvisioningService $provisioning)
     {
         $cycles = ['Monthly', 'Quarterly', 'Semi-Annually', 'Annually', 'Biennially', 'Triennially', 'One-Time'];
 
         $validated = $request->validate([
             'product_id' => ['required', Rule::exists('products', 'id')],
-            'server_id' => ['nullable', Rule::exists('servers', 'id')],
+            // A server is required when we are going to provision on it.
+            'server_id' => [Rule::requiredIf($request->boolean('provision')), 'nullable', Rule::exists('servers', 'id')],
             'domain' => ['nullable', 'string', 'max:255'],
             'billing_cycle' => ['required', Rule::in($cycles)],
             'amount' => ['required', 'numeric', 'min:0'],
             'next_due_date' => ['nullable', 'date'],
             'status' => ['required', Rule::in(array_column(ServiceStatus::cases(), 'value'))],
+            'provision' => ['boolean'],
         ]);
+
+        // Two modes, the way WHMCS lets you choose a module command on a manual
+        // add: provision on, and we run the server module's Create to build a
+        // real account; provision off, and we only write the billing record for
+        // a service that already exists (migration). Provisioning starts the
+        // service pending; createAccount() activates it when the module says ok.
+        $provision = $request->boolean('provision');
 
         $service = Service::create([
             'client_id' => $client->id,
@@ -214,19 +224,29 @@ class ClientController extends Controller
             'billing_cycle' => $validated['billing_cycle'],
             'next_due_date' => $validated['next_due_date'] ?? null,
             'registration_date' => now()->toDateString(),
-            'status' => $validated['status'],
+            'status' => $provision ? ServiceStatus::Pending->value : $validated['status'],
             'auto_renew' => true,
         ]);
 
         ActivityLog::log(
-            "Existing service #{$service->id} added to client #{$client->id} (manual migration)",
+            $provision
+                ? "Service #{$service->id} added to client #{$client->id} and provisioned on the server"
+                : "Existing service #{$service->id} added to client #{$client->id} (manual migration)",
             auth('admin')->user()?->full_name ?: 'admin',
             $client->id,
         );
 
-        return redirect()
-            ->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
-            ->with('success', __('admin.clients.service_added'));
+        $redirect = redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services']);
+
+        if ($provision) {
+            $result = $provisioning->createAccount($service);
+
+            return ($result['success'] ?? false)
+                ? $redirect->with('success', __('admin.clients.service_provisioned'))
+                : $redirect->with('error', __('admin.clients.service_provision_failed', ['error' => $result['message'] ?? '']));
+        }
+
+        return $redirect->with('success', __('admin.clients.service_added'));
     }
 
     public function edit(Client $client)

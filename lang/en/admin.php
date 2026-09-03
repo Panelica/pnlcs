@@ -2788,4 +2788,8 @@ return [
     'clients.service_server' => 'Server',
     'clients.service_no_server' => 'No server (billing only)',
     'clients.service_added' => 'Service added to the client.',
+    'clients.provision_now' => 'Create the account on the server now',
+    'clients.provision_now_hint' => 'When checked, the selected server module runs its Create command and provisions a real account. Leave unchecked to only record an existing service (migration).',
+    'clients.service_provisioned' => 'Service added and provisioned on the server.',
+    'clients.service_provision_failed' => 'Service added, but provisioning failed: :error',
 ];

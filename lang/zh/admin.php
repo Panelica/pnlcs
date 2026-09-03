@@ -2781,4 +2781,8 @@ return [
     'clients.service_server' => '服务器',
     'clients.service_no_server' => '无服务器（仅计费）',
     'clients.service_added' => '服务已添加到客户。',
+    'clients.provision_now' => '立即在服务器上创建账户',
+    'clients.provision_now_hint' => '勾选后，所选服务器模块将运行其创建命令并开通真实账户。仅记录现有服务（迁移）时请不要勾选。',
+    'clients.service_provisioned' => '服务已添加并在服务器上开通。',
+    'clients.service_provision_failed' => '服务已添加，但开通失败：:error',
 ];
