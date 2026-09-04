@@ -163,7 +163,9 @@ class AccountController extends Controller
                 'postcode' => $request->postcode,
                 'country' => $request->country,
                 'phone_number' => $request->phone_number,
-                'language' => $request->language,
+                // clients.language is NOT NULL; a profile update that does not
+                // carry the field must keep the current value, not null it.
+                'language' => $request->input('language') ?: $client->language,
             ]);
         }
 
