@@ -17,18 +17,18 @@ class EmailTemplateObserver
 {
     public function created(EmailTemplate $template): void
     {
-        if ($template->language === null || $template->language === '' || $template->language === 'en') {
-            $template->update(['language' => $template->language ?: 'en']);
+        // The column defaults to 'en' in the schema, but a freshly inserted
+        // model does not read that default back, so treat a missing value as
+        // English here without an extra UPDATE round-trip.
+        $language = $template->language;
 
-            if ($template->language === 'en') {
-                $this->propagate($template);
-            }
-
-            return;
+        if ($language === null || $language === '') {
+            $language = 'en';
         }
 
-        // A template created directly in another language stands on its own;
-        // nothing to propagate from it.
+        if ($language === 'en') {
+            $this->propagate($template);
+        }
     }
 
     private function propagate(EmailTemplate $en): void
