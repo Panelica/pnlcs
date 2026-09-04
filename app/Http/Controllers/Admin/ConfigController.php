@@ -652,10 +652,22 @@ class ConfigController extends Controller
 
     // ===== EMAIL TEMPLATES =====
 
-    public function emailTemplates()
+    public function emailTemplates(Request $request)
     {
+        $languages = \App\Models\Language::orderBy('sort_order')->get();
+
+        $lang = (string) $request->query('lang', '');
+        if ($lang === '' || ! $languages->contains('code', $lang)) {
+            $default = \App\Models\Language::getDefault();
+            $lang = $default->code ?? 'en';
+        }
+
+        $templates = EmailTemplate::where('language', $lang)->orderBy('type')->get();
+
         return view('admin.config.email-templates', [
-            'templates' => EmailTemplate::orderBy('type')->get(),
+            'templates' => $templates,
+            'languages' => $languages,
+            'selectedLang' => $lang,
         ]);
     }
 

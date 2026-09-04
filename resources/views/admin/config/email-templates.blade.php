@@ -5,6 +5,22 @@
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>{{ __('admin.email_templates.title') }}</h1>
 </div>
+
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-body">
+        <form method="GET" action="{{ route('admin.config.email-templates') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div>
+                <label class="form-label">{{ __('admin.email_templates.language') }}</label>
+                <select name="lang" class="form-control" onchange="this.form.submit()" style="width:220px;">
+                    @foreach($languages ?? [] as $lang)
+                    <option value="{{ $lang->code }}" @selected($lang->code === ($selectedLang ?? 'en'))>{{ $lang->native_name ?? $lang->name }} ({{ $lang->code }})</option>
+                    @endforeach
+                </select>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     @if(($templates ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.email_templates.no_templates') }}</div>

@@ -50,6 +50,13 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.status') }}</label>
                     <select name="status" class="form-control"><option value="active">{{ __('common.status.active') }}</option><option value="inactive">{{ __('common.status.inactive') }}</option><option value="closed">{{ __('common.status.closed') }}</option></select>
                 </div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.language') }}</label>
+                    <select name="language" class="form-control">
+                        @foreach($languages ?? [] as $lang)
+                        <option value="{{ $lang->code }}">{{ $lang->native_name ?? $lang->name }} ({{ $lang->code }})</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.group') }}</label>
                     <select name="group_id" class="form-control"><option value="">{{ __('common.none') }}</option>@foreach($groups as $g)<option value="{{ $g->id }}">{{ $g->name }}</option>@endforeach</select>
                 </div>

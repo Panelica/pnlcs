@@ -54,6 +54,13 @@
                         <option value="closed" {{ $client->status->value == 'closed' ? 'selected' : '' }}>{{ __('common.status.closed') }}</option>
                     </select>
                 </div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.language') }}</label>
+                    <select name="language" class="form-control">
+                        @foreach($languages ?? [] as $lang)
+                        <option value="{{ $lang->code }}" @selected(old('language', $client->language) === $lang->code)>{{ $lang->native_name ?? $lang->name }} ({{ $lang->code }})</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.default_payment_method') }}<span style="color:#d9534f;">*</span></label>
                     <select name="default_payment_method" class="form-control">
                         @foreach($paymentMethods as $pm)

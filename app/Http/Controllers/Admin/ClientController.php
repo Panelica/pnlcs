@@ -54,8 +54,9 @@ class ClientController extends Controller
         $customFields = CustomField::clientFields()->get();
         $paymentMethods = $this->paymentMethods();
         $defaultPaymentMethod = Setting::get('DefaultPaymentMethod', 'banktransfer');
+        $languages = \App\Models\Language::getActiveLanguages();
 
-        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods', 'defaultPaymentMethod'));
+        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods', 'defaultPaymentMethod', 'languages'));
     }
 
     public function store(Request $request)
@@ -78,6 +79,7 @@ class ClientController extends Controller
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
             'default_payment_method' => 'nullable|string|max:50',
+            'language' => 'nullable|string|max:10',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
         $client = Client::create($validated);
@@ -294,8 +296,9 @@ class ClientController extends Controller
         $currencies = Currency::all();
         $customFields = CustomField::clientFields()->with(['values' => fn ($q) => $q->where('rel_id', $client->id)])->get();
         $paymentMethods = $this->paymentMethods();
+        $languages = \App\Models\Language::getActiveLanguages();
 
-        return view('admin.clients.edit', compact('client', 'groups', 'currencies', 'customFields', 'paymentMethods'));
+        return view('admin.clients.edit', compact('client', 'groups', 'currencies', 'customFields', 'paymentMethods', 'languages'));
     }
 
     /**
@@ -340,6 +343,7 @@ class ClientController extends Controller
             'group_id' => 'nullable|exists:client_groups,id',
             'currency_id' => 'nullable|exists:currencies,id',
             'default_payment_method' => 'nullable|string|max:50',
+            'language' => 'nullable|string|max:10',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 

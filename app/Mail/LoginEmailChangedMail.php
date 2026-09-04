@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use App\Mail\Concerns\LocalizesToRecipient;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -19,11 +20,14 @@ use Illuminate\Queue\SerializesModels;
 class LoginEmailChangedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use LocalizesToRecipient;
 
     public function __construct(
         public string $previousEmail,
         public string $newEmail
-    ) {}
+    ) {
+        $this->localizeTo($this->newEmail);
+    }
 
     public function envelope(): Envelope
     {

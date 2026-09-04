@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Invoice;
+use App\Mail\Concerns\LocalizesToRecipient;
 use App\Services\InvoicePdfService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -15,10 +16,13 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class InvoiceCreatedMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use LocalizesToRecipient;
 
     public function __construct(
         public Invoice $invoice
-    ) {}
+    ) {
+        $this->localizeTo($this->invoice);
+    }
 
     public function envelope(): Envelope
     {

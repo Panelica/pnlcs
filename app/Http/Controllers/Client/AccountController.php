@@ -54,6 +54,9 @@ class AccountController extends Controller
         // dropdown had nothing but its placeholder and no country could be set.
         $countries = \App\Support\Countries::all();
 
+        // Active languages the client may set as their preferred email/UI language.
+        $languages = \App\Models\Language::getActiveLanguages();
+
         // Most logins have one account and never see the switch.
         $accounts = $user->clients()->orderBy('id')->get();
 
@@ -67,7 +70,7 @@ class AccountController extends Controller
                 ->get();
         }
 
-        return view('client.account.profile', compact('user', 'client', 'countries', 'accounts', 'customFields'));
+        return view('client.account.profile', compact('user', 'client', 'countries', 'accounts', 'customFields', 'languages'));
     }
 
     public function updateProfile(Request $request)
@@ -89,6 +92,7 @@ class AccountController extends Controller
             // The column will not hold null, so asking is better than crashing.
             'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:50',
+            'language' => 'nullable|string|max:10',
             'new_password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'new_password_confirmation' => 'required_with:new_password|string',
         ]);
@@ -159,6 +163,9 @@ class AccountController extends Controller
                 'postcode' => $request->postcode,
                 'country' => $request->country,
                 'phone_number' => $request->phone_number,
+                // clients.language is NOT NULL; a profile update that does not
+                // carry the field must keep the current value, not null it.
+                'language' => $request->input('language') ?: $client->language,
             ]);
         }
 

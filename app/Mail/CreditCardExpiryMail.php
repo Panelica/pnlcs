@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Client;
+use App\Mail\Concerns\LocalizesToRecipient;
 use App\Models\PaymentMethod;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
@@ -15,11 +16,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class CreditCardExpiryMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
+    use LocalizesToRecipient;
 
     public function __construct(
         public Client $client,
         public PaymentMethod $paymentMethod
-    ) {}
+    ) {
+        $this->localizeTo($this->client);
+    }
 
     public function envelope(): Envelope
     {
