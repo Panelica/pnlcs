@@ -96,7 +96,6 @@ return [
         'payment_notification_already_pending' => '您已就此发票提交了付款通知，目前正在审核。',
     ],
     'success' => [
-        'affiliate_credited' => '佣金已添加到您的账户余额。',
         'payment_notification_submitted' => '感谢您！付款通知已提交，我们会尽快审核。',
         '2fa_disabled' => '双因素认证已禁用。',
         '2fa_enabled' => '双因素认证已启用。',
@@ -112,6 +111,7 @@ return [
         'admin_updated' => '管理员账户已更新。',
         'admin_updated_successfully' => '管理员已成功更新。',
         'affiliate_activated' => '联盟推广账户已激活。',
+        'affiliate_credited' => '佣金已添加到您的账户余额。',
         'affiliate_updated' => '联盟推广账户已更新。',
         'announcement_created' => '公告已创建。',
         'announcement_deleted' => '公告已删除。',
