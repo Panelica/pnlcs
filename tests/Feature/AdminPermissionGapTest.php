@@ -41,7 +41,7 @@ test('a support agent cannot read the payment ledger', function () {
 
 test('a support agent cannot read the affiliate list', function () {
     $this->actingAs(supportOnlyAdmin(), 'admin')
-        ->get(route('admin.config.affiliates'))
+        ->get(route('admin.affiliates.index'))
         ->assertForbidden();
 });
 
@@ -70,7 +70,7 @@ test('an admin with the right permissions still gets in', function () {
 
     foreach ([
         'transactions' => route('admin.config.transactions'),
-        'affiliates' => route('admin.config.affiliates'),
+        'affiliates' => route('admin.affiliates.index'),
         'quotes' => route('admin.config.quotes'),
         'automation' => route('admin.config.automation'),
     ] as $label => $url) {

@@ -135,7 +135,7 @@ test('all config pages are accessible', function () {
         'admin.config.knowledge-base', 'admin.config.downloads',
         'admin.config.network-issues', 'admin.config.banned-ips',
         'admin.config.banned-emails', 'admin.config.todo',
-        'admin.config.activity-log', 'admin.config.affiliates',
+        'admin.config.activity-log', 'admin.affiliates.index',
         'admin.config.quotes', 'admin.config.billable-items',
         'admin.config.transactions', 'admin.config.system-database',
         'admin.config.system-phpinfo', 'admin.config.gateways',

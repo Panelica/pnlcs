@@ -3,7 +3,28 @@
 @section('content')
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
     <h1>{{ __('admin.affiliates.title') }}</h1>
+    <button type="button" class="btn btn-primary" onclick="document.getElementById('add-affiliate-form').style.display = document.getElementById('add-affiliate-form').style.display === 'none' ? 'block' : 'none';">{{ __('admin.affiliates.add_affiliate') }}</button>
 </div>
+
+@if(!($availableClients ?? collect())->isEmpty())
+<div class="card" id="add-affiliate-form" style="display:none;margin-bottom:20px;">
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.affiliates.store') }}" style="display:flex;gap:8px;align-items:flex-end;">
+            @csrf
+            <div style="flex:1;">
+                <label class="form-label">{{ __('admin.affiliates.select_client') }}</label>
+                <select name="client_id" class="form-control" required>
+                    <option value="">{{ __('admin.affiliates.select_client') }}</option>
+                    @foreach($availableClients as $client)
+                    <option value="{{ $client->id }}">{{ $client->first_name }} {{ $client->last_name }} ({{ $client->email }})</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ __('admin.affiliates.add_affiliate') }}</button>
+        </form>
+    </div>
+</div>
+@endif
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
     <div class="card"><div class="card-body"><div style="font-size:24px;font-weight:600;">{{ $totalAffiliates }}</div><div style="color:#888;font-size:13px;">{{ __('admin.affiliates.total_affiliates') }}</div></div></div>
@@ -21,7 +42,7 @@
         </form>
     </div>
     <div class="card-body-flush">
-        <table class="table table-striped mb-0">
+        <table class="data-table">
             <thead><tr><th>{{ __('common.table.client') }}</th><th>{{ __('admin.affiliates.visitors') }}</th><th>{{ __('common.table.type') }}</th><th>{{ __('common.table.rate') }}</th><th>{{ __('admin.affiliates.balance') }}</th><th>{{ __('admin.affiliates.withdrawn') }}</th><th>{{ __('common.table.actions') }}</th></tr></thead>
             <tbody>
             @forelse($affiliates as $aff)

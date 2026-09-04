@@ -37,6 +37,7 @@ class AffiliateController extends Controller
         if ($affiliate) {
             $commissions = Transaction::where('client_id', $client->id)
                 ->where('gateway', 'affiliate_commission')
+                ->with('invoice.client')
                 ->orderBy('date', 'desc')
                 ->limit(50)
                 ->get();
@@ -102,5 +103,33 @@ class AffiliateController extends Controller
         }
 
         return back()->with('success', __('messages.success.withdrawal_request_submitted', ['amount' => number_format($amount, 2)]));
+    }
+
+    public function toBalance(Request $request)
+    {
+        $client = $this->currentClient();
+        $affiliate = $client ? Affiliate::where('client_id', $client->id)->first() : null;
+
+        if (! $affiliate) {
+            return back()->with('error', __('messages.error.no_affiliate_account_found'));
+        }
+
+        if ($affiliate->balance <= 0) {
+            return back()->with('error', __('messages.error.you_have_no_balance_to_withdraw'));
+        }
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01|max:'.$affiliate->balance,
+        ], [], ['amount' => __('client.affiliates.amount')]);
+
+        $amount = (float) $request->amount;
+
+        if (! app(AffiliateService::class)->convertToCredit($affiliate, $amount)) {
+            return back()->withErrors([
+                'amount' => __('messages.error.withdrawal_not_possible', ['minimum' => '0.01']),
+            ]);
+        }
+
+        return back()->with('success', __('messages.success.affiliate_credited', ['amount' => number_format($amount, 2)]));
     }
 }
