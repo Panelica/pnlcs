@@ -28,7 +28,6 @@
         .totals td { padding: 6px 12px; }
         .totals .total-row { font-size: 16px; font-weight: bold; color: #111; border-top: 2px solid #1a1a1a; }
         .status-badge { display: inline-block; padding: 4px 12px; border: 1px solid #999; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #333; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #777; border-top: 1px solid #ccc; padding-top: 15px; }
         .notes { margin-top: 20px; padding: 12px; background: #f4f4f5; border-radius: 4px; font-size: 11px; }
         .ksef-block { margin-top: 24px; padding: 12px; border: 1px solid #777; display: table; width: 100%; }
         .ksef-cell { display: table-cell; vertical-align: middle; }
