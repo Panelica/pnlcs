@@ -176,10 +176,6 @@
     </div>
     @endif
 
-    <div class="footer">
-        {{ $company['name'] }}
-    </div>
-
     @if(!empty($ksef) && $ksef['qr'] !== '')
     <div class="ksef-block">
         <div class="ksef-cell" style="width:80px;">
