@@ -4,36 +4,34 @@
     <meta charset="utf-8">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #333; line-height: 1.5; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1a1a1a; line-height: 1.5; }
         .container { padding: 40px; }
         .header { display: table; width: 100%; margin-bottom: 30px; }
         .header-left { display: table-cell; width: 50%; vertical-align: top; }
         .header-right { display: table-cell; width: 50%; vertical-align: top; text-align: right; }
-        .company-name { font-size: 22px; font-weight: bold; color: #405189; margin-bottom: 5px; }
-        .invoice-title { font-size: 28px; font-weight: bold; color: #405189; }
-        .invoice-number { font-size: 14px; color: #666; margin-top: 5px; }
+        .company-name { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 5px; }
+        .invoice-title { font-size: 26px; font-weight: bold; color: #111; letter-spacing: 1px; }
+        .invoice-number { font-size: 14px; color: #444; margin-top: 5px; }
         .meta-table { width: 100%; margin-bottom: 25px; }
         .meta-table td { padding: 3px 0; }
-        .meta-label { font-weight: bold; color: #555; width: 120px; }
+        .meta-label { font-weight: bold; color: #333; width: 120px; }
         .addresses { display: table; width: 100%; margin-bottom: 30px; }
         .address-box { display: table-cell; width: 50%; vertical-align: top; }
-        .address-box h4 { font-size: 11px; text-transform: uppercase; color: #888; margin-bottom: 8px; letter-spacing: 1px; }
+        .address-box h4 { font-size: 11px; text-transform: uppercase; color: #555; margin-bottom: 8px; letter-spacing: 1px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
         .items-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-        .items-table thead th { background: #405189; color: #fff; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; }
-        .items-table tbody td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; }
-        .items-table tbody tr:last-child td { border-bottom: 2px solid #405189; }
+        .items-table thead th { background: #1a1a1a; color: #fff; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; }
+        .items-table tbody td { padding: 10px 12px; border-bottom: 1px solid #ddd; }
+        .items-table tbody tr:last-child td { border-bottom: 2px solid #1a1a1a; }
         .text-right { text-align: right; }
         .totals { width: 300px; margin-left: auto; }
         .totals table { width: 100%; }
         .totals td { padding: 6px 12px; }
-        .totals .total-row { font-size: 16px; font-weight: bold; color: #405189; border-top: 2px solid #405189; }
-        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
-        .status-paid { background: #dcfce7; color: #166534; }
-        .status-unpaid { background: #fef3c7; color: #92400e; }
-        .status-overdue { background: #fee2e2; color: #991b1b; }
-        .status-cancelled { background: #f3f4f6; color: #6b7280; }
-        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #e5e7eb; padding-top: 15px; }
-        .notes { margin-top: 20px; padding: 12px; background: #f9fafb; border-radius: 4px; font-size: 11px; }
+        .totals .total-row { font-size: 16px; font-weight: bold; color: #111; border-top: 2px solid #1a1a1a; }
+        .status-badge { display: inline-block; padding: 4px 12px; border: 1px solid #999; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #333; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #777; border-top: 1px solid #ccc; padding-top: 15px; }
+        .notes { margin-top: 20px; padding: 12px; background: #f4f4f5; border-radius: 4px; font-size: 11px; }
+        .ksef-block { margin-top: 24px; padding: 12px; border: 1px solid #777; display: table; width: 100%; }
+        .ksef-cell { display: table-cell; vertical-align: middle; }
     </style>
 </head>
 <body>
@@ -178,22 +176,21 @@
     </div>
     @endif
 
+    <div class="footer">
+        {{ $company['name'] }}
+    </div>
+
     @if(!empty($ksef) && $ksef['qr'] !== '')
-    <div style="margin-top:25px;padding:12px;border:1px solid #e5e7eb;border-radius:4px;display:table;width:100%;">
-        <div style="display:table-cell;width:90px;vertical-align:middle;">
-            <img src="{{ $ksef['qr'] }}" style="width:80px;height:80px;" alt="KSeF">
+    <div class="ksef-block">
+        <div class="ksef-cell" style="width:80px;">
+            <img src="{{ $ksef['qr'] }}" style="width:76px;height:76px;" alt="KSeF">
         </div>
-        <div style="display:table-cell;vertical-align:middle;padding-left:12px;">
-            <div style="font-size:10px;text-transform:uppercase;color:#888;letter-spacing:1px;margin-bottom:4px;">KSeF</div>
-            <div style="font-size:11px;color:#555;">{{ __('pdf.ksef_number') }}</div>
-            <div style="font-size:14px;font-weight:bold;color:#333;">{{ $ksef['number'] }}</div>
+        <div class="ksef-cell" style="padding-left:12px;">
+            <div style="font-size:10px;text-transform:uppercase;color:#555;letter-spacing:1px;margin-bottom:2px;">{{ __('pdf.ksef_number') }}</div>
+            <div style="font-size:14px;font-weight:bold;color:#111;">{{ $ksef['number'] }}</div>
         </div>
     </div>
     @endif
-
-    <div class="footer">
-        {{ $company['name'] }} @if($company['domain'])&mdash; {{ $company['domain'] }}@endif
-    </div>
 </div>
 </body>
 </html>
