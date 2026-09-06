@@ -26,7 +26,7 @@ class OrdersWidget implements WidgetModuleInterface
     public function render(array $data): string
     {
         $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;">Pending: <b style="color:#f89406;">'.e($data["pending"]).'</b></div>';
-        foreach ($data["recent"] as $o) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><a href="/admin/orders/'.e($o["id"]).'" style="color:var(--pn-link);">#'.e($o["order_num"]).'</a> — '.e($o["client"]).'<span style="float:right;">$'.number_format($o["amount"],2).'</span></div>'; }
+        foreach ($data["recent"] as $o) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><a href="/admin/orders/'.e($o["id"]).'" style="color:var(--pn-link);">#'.e($o["order_num"]).'</a> — '.e($o["client"]).'<span style="float:right;">'.e(money_fmt($o["amount"])).'</span></div>'; }
         return $html;
     }
 }
