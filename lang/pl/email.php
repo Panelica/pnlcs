@@ -264,4 +264,9 @@ return [
         'ticket_id' => 'Identyfikator zgłoszenia',
         'view_conversation' => 'Zaloguj się do swojego konta, aby zobaczyć całą rozmowę i odpowiedzieć.',
     ],
+    'ksef_issued' => [
+        'subject' => 'e-Faktura (KSeF) - #:number',
+        'body' => 'Twoja faktura #:number została wystawiona w KSeF.',
+        'ksef_number' => 'Numer KSeF',
+    ],
 ];

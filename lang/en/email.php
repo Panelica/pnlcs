@@ -264,4 +264,9 @@ return [
         'ticket_id' => 'Ticket ID',
         'view_conversation' => 'Log in to your account to view the full conversation and respond.',
     ],
+    'ksef_issued' => [
+        'subject' => 'e-Invoice (KSeF) - #:number',
+        'body' => 'Your invoice #:number has been issued in KSeF.',
+        'ksef_number' => 'KSeF Number',
+    ],
 ];
