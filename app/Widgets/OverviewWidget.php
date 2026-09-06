@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class OverviewWidget implements WidgetModuleInterface
 {
-    public function getTitle(): string { return 'Overview'; }
-    public function getDescription(): string { return 'Quick stats'; }
+    public function getTitle(): string { return __('admin.dashboard.w_overview'); }
+    public function getDescription(): string { return __('admin.dashboard.w_overview_desc'); }
     public function getColumns(): int { return 4; }
     public function getWeight(): int { return 5; }
     public function getPermission(): ?string { return null; }
@@ -37,12 +37,12 @@ class OverviewWidget implements WidgetModuleInterface
     public function render(array $data): string
     {
         $stats = [
-            ["Clients", $data["clients"], "#337ab7", "admin/clients"],
-            ["Active Services", $data["services"], "#46a546", "admin/services"],
-            ["Active Domains", $data["domains"], "#008b8b", "admin/domains"],
-            ["Pending Orders", $data["orders_pending"], "#f89406", "admin/orders"],
-            ["Open Tickets", $data["tickets_open"], "#c43c35", "admin/tickets"],
-            ["Unpaid Invoices", $data["invoices_unpaid"], "#d68100", "admin/invoices"],
+            [__('admin.dashboard.w_clients'), $data["clients"], "#337ab7", "admin/clients"],
+            [__('admin.dashboard.active_services'), $data["services"], "#46a546", "admin/services"],
+            [__('admin.dashboard.active_domains'), $data["domains"], "#008b8b", "admin/domains"],
+            [__('admin.dashboard.pending_orders'), $data["orders_pending"], "#f89406", "admin/orders"],
+            [__('admin.dashboard.open_tickets'), $data["tickets_open"], "#c43c35", "admin/tickets"],
+            [__('admin.dashboard.unpaid_invoices'), $data["invoices_unpaid"], "#d68100", "admin/invoices"],
         ];
         $html = '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;">';
         foreach ($stats as [$label, $value, $color, $link]) {

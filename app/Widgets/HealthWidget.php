@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class HealthWidget implements WidgetModuleInterface
 {
-    public function getTitle(): string { return 'System Health'; }
-    public function getDescription(): string { return 'Server & application status'; }
+    public function getTitle(): string { return __('admin.dashboard.w_health'); }
+    public function getDescription(): string { return __('admin.dashboard.w_health_desc'); }
     public function getColumns(): int { return 1; }
     public function getWeight(): int { return 80; }
     public function getPermission(): ?string { return Permissions::VIEW_SYSTEM; }
@@ -28,7 +28,7 @@ class HealthWidget implements WidgetModuleInterface
             $diskFree = round(disk_free_space('/') / 1024 / 1024 / 1024, 1);
         } catch (\Throwable $e) {}
 
-        $uptime = 'N/A';
+        $uptime = null;
         try {
             if (is_readable('/proc/uptime')) {
                 $secs = (int) explode(' ', file_get_contents('/proc/uptime'))[0];
@@ -50,11 +50,11 @@ class HealthWidget implements WidgetModuleInterface
     public function render(array $data): string
     {
         $items = [
-            ['PHP', $data['php_version'] ?? PHP_VERSION, '#337ab7'],
-            ['Laravel', $data['laravel_version'] ?? '-', '#c43c35'],
-            ['DB Size', ($data['db_size_mb'] ?? 0) . ' MB', '#46a546'],
-            ['Disk Free', ($data['disk_free_gb'] ?? 0) . ' GB', '#f89406'],
-            ['Uptime', $data['uptime_str'] ?? 'N/A', '#008b8b'],
+            [__('admin.dashboard.php'), $data['php_version'] ?? PHP_VERSION, '#337ab7'],
+            [__('admin.dashboard.laravel'), $data['laravel_version'] ?? '-', '#c43c35'],
+            [__('admin.dashboard.db_size'), ($data['db_size_mb'] ?? 0) . ' MB', '#46a546'],
+            [__('admin.dashboard.disk_free'), ($data['disk_free_gb'] ?? 0) . ' GB', '#f89406'],
+            [__('admin.dashboard.uptime'), $data['uptime_str'] ?? __('admin.dashboard.na'), '#008b8b'],
         ];
         $html = '';
         foreach ($items as $item) {

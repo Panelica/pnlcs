@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class ClientsWidget implements WidgetModuleInterface
 {
-    public function getTitle(): string { return 'Clients'; }
-    public function getDescription(): string { return 'Recent clients'; }
+    public function getTitle(): string { return __('admin.dashboard.w_clients'); }
+    public function getDescription(): string { return __('admin.dashboard.w_clients_desc'); }
     public function getColumns(): int { return 1; }
     public function getWeight(): int { return 30; }
     public function getPermission(): ?string { return Permissions::LIST_CLIENTS; }
@@ -26,7 +26,7 @@ class ClientsWidget implements WidgetModuleInterface
 
     public function render(array $data): string
     {
-        $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);display:flex;justify-content:space-between;"><span style="font-size:13px;">Total: <b>'.e($data["total"]).'</b></span><span style="font-size:13px;color:#46a546;">Active: <b>'.e($data["active"]).'</b></span></div>';
+        $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);display:flex;justify-content:space-between;"><span style="font-size:13px;">'.__('admin.dashboard.total_label').': <b>'.e($data["total"]).'</b></span><span style="font-size:13px;color:#46a546;">'.__('admin.dashboard.active_label').': <b>'.e($data["active"]).'</b></span></div>';
         foreach ($data["recent"] as $c) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><a href="/admin/clients/'.e($c["id"]).'" style="color:var(--pn-link);">'.e($c["first_name"]).' '.e($c["last_name"]).'</a><div style="font-size:11px;color:var(--pn-muted);">'.e($c["email"]).'</div></div>'; }
         return $html;
     }
