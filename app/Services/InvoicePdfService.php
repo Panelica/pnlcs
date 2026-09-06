@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\Setting;
+use App\Services\AddonManager;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -82,14 +83,77 @@ class InvoicePdfService
 
     public function generate(Invoice $invoice): \Barryvdh\DomPDF\PDF
     {
-        $invoice->load('client', 'items');
+        $invoice->load('client', 'items', 'ksefInvoice');
 
         $company = $this->companyDetails();
 
         return Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,
             'company' => $company,
+            'ksef' => $this->ksefInfo($invoice),
         ])->setPaper('a4');
+    }
+
+    /**
+     * The KSeF number and verification QR for an invoice, or null when the
+     * KSeF addon is not active or the invoice has not been accepted yet.
+     *
+     * KSeF is a Polish-only scheme; on installations where the addon is turned
+     * off nothing is printed, so invoices still render cleanly everywhere.
+     *
+     * @return array{number: string, qr: string}|null
+     */
+    public function ksefInfo(Invoice $invoice): ?array
+    {
+        if (! app(AddonManager::class)->isActive('ksef')) {
+            return null;
+        }
+
+        $ksef = $invoice->ksefInvoice;
+
+        if (! $ksef || ! filled($ksef->ksef_number)) {
+            return null;
+        }
+
+        $number = (string) $ksef->ksef_number;
+        $url = $this->ksefVerifyUrl($number);
+
+        return [
+            'number' => $number,
+            'qr' => $this->qrDataUri($url),
+        ];
+    }
+
+    /**
+     * The official KSeF verification URL encoded into the QR. Test
+     * environments point at ksef-test so a scanned code is not mistaken for a
+     * production invoice.
+     */
+    private function ksefVerifyUrl(string $number): string
+    {
+        $env = (string) config('ksef.environment', 'prod');
+        $base = in_array($env, ['integration', 'demo'], true)
+            ? 'https://ksef-test.mf.gov.pl/web/verify'
+            : 'https://ksef.mf.gov.pl/web/verify';
+
+        return $base.'?nr='.rawurlencode($number);
+    }
+
+    /**
+     * The QR code as an inline PNG data URI, ready for the PDF renderer (which
+     * does not fetch remote URLs). Empty string when generation fails, so an
+     * invoice never breaks on a missing image extension.
+     */
+    private function qrDataUri(string $content): string
+    {
+        try {
+            $renderer = new \BaconQrCode\Renderer\GDLibRenderer(200, 2);
+            $png = (new \BaconQrCode\Writer($renderer))->writeString($content);
+
+            return 'data:image/png;base64,'.base64_encode($png);
+        } catch (\Throwable) {
+            return '';
+        }
     }
 
     public function download(Invoice $invoice): Response

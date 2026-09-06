@@ -63,6 +63,9 @@ class Invoice extends Model {
     /** The proforma this VAT invoice was issued from. */
     public function sourceInvoice() { return $this->belongsTo(self::class, 'source_invoice_id'); }
 
+    /** The KSeF submission this invoice has, once it has been handed over. */
+    public function ksefInvoice() { return $this->hasOne(KsefInvoice::class); }
+
     public function scopeUnpaid($q) { return $q->where('status', InvoiceStatus::Unpaid->value); }
     public function scopeOverdue($q) { return $q->where('status', InvoiceStatus::Overdue->value); }
 

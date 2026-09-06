@@ -178,6 +178,19 @@
     </div>
     @endif
 
+    @if(!empty($ksef) && $ksef['qr'] !== '')
+    <div style="margin-top:25px;padding:12px;border:1px solid #e5e7eb;border-radius:4px;display:table;width:100%;">
+        <div style="display:table-cell;width:90px;vertical-align:middle;">
+            <img src="{{ $ksef['qr'] }}" style="width:80px;height:80px;" alt="KSeF">
+        </div>
+        <div style="display:table-cell;vertical-align:middle;padding-left:12px;">
+            <div style="font-size:10px;text-transform:uppercase;color:#888;letter-spacing:1px;margin-bottom:4px;">KSeF</div>
+            <div style="font-size:11px;color:#555;">{{ __('pdf.ksef_number') }}</div>
+            <div style="font-size:14px;font-weight:bold;color:#333;">{{ $ksef['number'] }}</div>
+        </div>
+    </div>
+    @endif
+
     <div class="footer">
         {{ $company['name'] }} @if($company['domain'])&mdash; {{ $company['domain'] }}@endif
     </div>
