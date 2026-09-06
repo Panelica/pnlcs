@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class AutomationWidget implements WidgetModuleInterface
 {
-    public function getTitle(): string { return 'Automation'; }
-    public function getDescription(): string { return 'Cron job status'; }
+    public function getTitle(): string { return __('admin.dashboard.w_automation'); }
+    public function getDescription(): string { return __('admin.dashboard.w_automation_desc'); }
     public function getColumns(): int { return 1; }
     public function getWeight(): int { return 90; }
     public function getPermission(): ?string { return Permissions::VIEW_SYSTEM; }
@@ -33,10 +33,10 @@ class AutomationWidget implements WidgetModuleInterface
     public function render(array $data): string
     {
         $items = [
-            ["Active Services", $data["active_services"], "#46a546"],
-            ["Overdue Invoices", $data["overdue_invoices"], "#c43c35"],
-            ["Suspended", $data["suspended_services"], "#f89406"],
-            ["Last Cron", $data["last_cron"] === "Never" ? "Never" : \Carbon\Carbon::parse($data["last_cron"])->diffForHumans(), "#337ab7"],
+            [__('admin.dashboard.active_services'), $data["active_services"], "#46a546"],
+            [__('admin.dashboard.overdue_invoices'), $data["overdue_invoices"], "#c43c35"],
+            [__('admin.dashboard.suspended_label'), $data["suspended_services"], "#f89406"],
+            [__('admin.dashboard.last_cron'), $data["last_cron"] === "Never" ? __('admin.dashboard.never') : \Carbon\Carbon::parse($data["last_cron"])->diffForHumans(), "#337ab7"],
         ];
         $html = "";
         foreach ($items as [$label, $value, $color]) { $html .= '<div style="display:flex;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;"><span>'.e($label).'</span><span style="font-weight:600;color:'.e($color).';">'.e($value).'</span></div>'; }

@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class ToDoWidget implements WidgetModuleInterface
 {
-    public function getTitle(): string { return 'To-Do List'; }
-    public function getDescription(): string { return 'Admin tasks'; }
+    public function getTitle(): string { return __('admin.dashboard.w_todo'); }
+    public function getDescription(): string { return __('admin.dashboard.w_todo_desc'); }
     public function getColumns(): int { return 1; }
     public function getWeight(): int { return 70; }
     public function getPermission(): ?string { return null; }
@@ -29,7 +29,7 @@ class ToDoWidget implements WidgetModuleInterface
      */
     public function render(array $data): string
     {
-        if (empty($data)) return '<div style="padding:24px;text-align:center;color:var(--pn-muted);font-size:13px;">All caught up!</div>';
+        if (empty($data)) return '<div style="padding:24px;text-align:center;color:var(--pn-muted);font-size:13px;">'.__('admin.dashboard.all_caught_up').'</div>';
         $html = "";
         foreach ($data as $t) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:'.(($t["status"] ?? "")==="in-progress"?"#f89406":"#337ab7").'"></span>'.e($t["title"]).(($t["due_date"] ?? null) ? '<span style="margin-left:auto;font-size:11px;color:var(--pn-muted);">'.e($t["due_date"]).'</span>' : '').'</div>'; }
         return $html;
