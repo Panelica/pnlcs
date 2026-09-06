@@ -609,11 +609,6 @@ return [
     'client_groups.no_groups' => 'Brak skonfigurowanych grup klientów.',
     'client_groups.notes' => 'Notatki',
     'client_groups.title' => 'Grupy klientów',
-
-'client_groups.name_placeholder' => 'np. VIP, Reseller, Enterprise',
-    'client_groups.no_groups' => 'Brak skonfigurowanych grup klientów.',
-    'client_groups.notes' => 'Notatki',
-    'client_groups.title' => 'Grupy klientów',
     'clients' => [
         'action' => 'Akcja',
         'active' => 'Aktywny',
@@ -984,7 +979,6 @@ return [
     'dashboard.no_tickets' => 'Brak zgłoszeń.',
     'dashboard.php' => 'PHP',
     'dashboard.pnlcs_version' => 'Wersja PNLCS',
-    'dashboard.quick_actions' => 'Szybkie akcje',
     'dashboard.recent_clients' => 'Ostatni klienci',
     'dashboard.server' => 'Serwer',
     'dashboard.system_information' => 'Informacje o systemie',
@@ -1208,7 +1202,7 @@ return [
         'credit_applied' => 'Zastosowane środki',
         'date' => 'Data',
         'description_placeholder' => 'Miejsce na opis',
-'download_pdf' => 'Pobierz PDF',
+        'download_pdf' => 'Pobierz PDF',
         'download_pdf_btn' => 'Pobierz PDF',
         'due_date' => 'Termin płatności',
         'gateway' => 'Bramka',
@@ -1531,9 +1525,6 @@ return [
     'messages.translations_saved' => 'Zapisano :count tłumaczeń.',
     'messages.unknown_action' => 'Nieznana akcja: :action',
     'messages.viewing_as' => 'Teraz przeglądasz jako :name',
-    // Referenced as admin.payment_notifications.* — must stay top-level
-    // (it was previously nested inside 'nav', which made every key resolve
-    // to the raw key string on the payment-notifications page).
     'payment_notifications' => [
         'already_reviewed' => 'To powiadomienie zostało już sprawdzone.',
         'approve' => 'Zatwierdź',
@@ -1719,7 +1710,7 @@ return [
     'nav.utilities' => 'Narzędzia',
     'nav.view_search_clients' => 'Podgląd/wyszukiwanie klientów',
     'nav.whois_lookup' => 'Zapytanie WHOIS',
-'network_issues.active' => 'Aktywny',
+    'network_issues.active' => 'Aktywny',
     'network_issues.affected' => 'Dotyczy',
     'network_issues.affected_services' => 'Dotyczy usług',
     'network_issues.confirm_delete' => 'Usunąć to zgłoszenie?',
@@ -1851,8 +1842,6 @@ return [
     'phpinfo.upload_max_filesize' => 'Maks. rozmiar przesyłanego pliku',
     'product_addons' => 'Dodatki produktów',
     'product_bundles' => 'Pakiety produktów',
-    // Katalog aplikacji mieszka w panelu; tutaj zarządzamy tym, jak wygląda
-    // dla klienta, czyli dziś głównie obrazem na karcie.
     'docker_apps' => [
         'source_note' => 'Lista jest odczytywana na żywo z panelu i pokazuje tylko aplikacje, które są tam włączone. Aby dodać aplikację, usunąć ją lub zmienić to, co instaluje, zrób to w panelu hostingowym — pojawi się tutaj przy kolejnym odświeżeniu strony.',
         'sellable_count' => ':count oferowanych klientom',
@@ -2246,7 +2235,7 @@ return [
     'services.module' => 'Moduł',
     'services.module_actions' => 'Akcje modułu',
     'services.new_password' => 'Nowe hasło',
-'services.next_due' => 'Następny termin',
+    'services.next_due' => 'Następny termin',
     'services.no_module' => 'Brak skonfigurowanego modułu serwera dla tego produktu.',
     'services.none_assigned' => 'Nie przypisano',
     'services.notes' => 'Notatki',
@@ -2849,4 +2838,12 @@ return [
     'clients.link_none' => '— brak (tylko rozliczenia) —',
     'clients.link_existing_hint' => 'To konta, które już istnieją na wybranym serwerze — w Panelice są to konta klientów na liście Użytkownicy panelu. Wybierz to, do którego należy ta usługa, aby PNLCS mógł nim zarządzać (zawieszanie, usuwanie, hasło). Lista kont działa dla serwerów Panelica; pozostaw puste, aby zapisać tylko rozliczenie.',
     'clients.service_linked' => 'Usługa dodana i powiązana z istniejącym kontem na serwerze.',
+    'clients.add_domain' => 'Dodaj domenę',
+    'clients.add_domain_hint' => 'Zarejestruj domenę, którą klient ma już zarejestrowaną gdzie indziej (np. przeniesioną z innego systemu), aby PNLCS rozliczał jej odnowienia. Tworzy to wyłącznie rekord rozliczeniowy — u rejestratora nie jest wykonywana żadna rejestracja ani transfer.',
+    'clients.domain_registrar' => 'Rejestrator',
+    'clients.domain_registrar_placeholder' => 'np. GoDaddy, Namecheap',
+    'clients.domain_recurring' => 'Cena odnowienia',
+    'clients.domain_first_payment' => 'Kwota pierwszej płatności',
+    'clients.add_domain_renewal_note' => 'Faktura za odnowienie jest wystawiana automatycznie na podstawie następnego terminu płatności i ceny odnowienia, o ile cena odnowienia jest większa od zera.',
+    'clients.domain_added' => 'Domena została dodana do klienta.',
 ];

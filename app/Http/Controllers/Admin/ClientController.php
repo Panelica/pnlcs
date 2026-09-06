@@ -12,11 +12,13 @@ use App\Models\ClientNote;
 use App\Models\Currency;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
+use App\Models\Domain;
 use App\Models\Product;
 use App\Models\Server;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Models\User;
+use App\Enums\DomainStatus;
 use App\Enums\ServiceStatus;
 use App\Services\Module\ModuleRegistry;
 use App\Services\ProvisioningService;
@@ -288,6 +290,53 @@ class ClientController extends Controller
             : [];
 
         return response()->json(['accounts' => $accounts]);
+    }
+
+    /**
+     * Record a domain the client already has registered elsewhere as a
+     * billing-only entry (migration), the same way storeService links an
+     * existing service. No registrar API call is made — this only writes the
+     * billing record so PNLCS renews it from next_due_date + recurring_amount.
+     */
+    public function storeDomainForClient(Request $request, Client $client)
+    {
+        $validated = $request->validate([
+            'domain' => ['required', 'string', 'max:255'],
+            'registrar' => ['nullable', 'string', 'max:100'],
+            'registration_date' => ['nullable', 'date'],
+            'expiry_date' => ['nullable', 'date'],
+            'next_due_date' => ['nullable', 'date'],
+            // Renewal only fires when recurring_amount > 0, so it is required —
+            // migrating a domain the operator wants billed with a zero price
+            // would silently never raise a renewal invoice.
+            'recurring_amount' => ['required', 'numeric', 'min:0'],
+            'first_payment_amount' => ['nullable', 'numeric', 'min:0'],
+            'payment_method' => ['nullable', 'string', 'max:50'],
+            'status' => ['required', Rule::in(array_column(DomainStatus::cases(), 'value'))],
+        ]);
+
+        $domain = Domain::create([
+            'client_id' => $client->id,
+            'type' => 'register',
+            'domain' => Domain::normalise($validated['domain']),
+            'registrar' => $validated['registrar'] ?? null,
+            'registration_date' => $validated['registration_date'] ?? null,
+            'expiry_date' => $validated['expiry_date'] ?? null,
+            'next_due_date' => $validated['next_due_date'] ?? null,
+            'recurring_amount' => $validated['recurring_amount'],
+            'first_payment_amount' => $validated['first_payment_amount'] ?? $validated['recurring_amount'],
+            'payment_method' => ($validated['payment_method'] ?? null) ?: null,
+            'status' => $validated['status'],
+        ]);
+
+        ActivityLog::log(
+            "Existing domain #{$domain->id} ({$domain->domain}) added to client #{$client->id} (manual migration)",
+            auth('admin')->user()?->full_name ?: 'admin',
+            $client->id,
+        );
+
+        return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'domains'])
+            ->with('success', __('admin.clients.domain_added'));
     }
 
     public function edit(Client $client)

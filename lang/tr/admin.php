@@ -2836,4 +2836,12 @@ return [
     'affiliates.add_affiliate' => 'Ortak Ekle',
     'affiliates.select_client' => 'Müşteri Seç',
     'messages.affiliate_credited' => 'Müşteri hesap bakiyesine :amount eklendi.',
+    'clients.add_domain' => 'Alan Adı Ekle',
+    'clients.add_domain_hint' => 'Müşterinin başka bir yerde zaten kayıtlı olan bir alan adını (örneğin başka bir sistemden taşınan) PNLCS\'in yenilemelerini faturalaması için kaydedin. Bu yalnızca faturalama kaydı oluşturur — registrar\'da kayıt veya transfer yapılmaz.',
+    'clients.domain_registrar' => 'Kayıt Kuruluşu',
+    'clients.domain_registrar_placeholder' => 'ör. GoDaddy, Namecheap',
+    'clients.domain_recurring' => 'Yenileme fiyatı',
+    'clients.domain_first_payment' => 'İlk ödeme tutarı',
+    'clients.add_domain_renewal_note' => 'Yenileme faturası, yenileme fiyatı sıfırdan büyük olduğu sürece, sonraki ödeme tarihi ve yenileme fiyatından otomatik olarak oluşturulur.',
+    'clients.domain_added' => 'Alan adı müşteriye eklendi.',
 ];

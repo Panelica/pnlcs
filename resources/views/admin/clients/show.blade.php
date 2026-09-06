@@ -305,6 +305,67 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 </div>
 
 @elseif($tab === 'domains')
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-weight:600;">{{ __('admin.clients.tab_domains') }}</div>
+    <button type="button" class="btn btn-primary btn-sm" onclick="var f=document.getElementById('add-domain-form');f.style.display=f.style.display==='none'?'block':'none';">{{ __('admin.clients.add_domain') }}</button>
+</div>
+
+<div class="card" id="add-domain-form" style="display:none;margin-bottom:16px;">
+    <div class="card-header"><strong>{{ __('admin.clients.add_domain') }}</strong></div>
+    <div class="card-body">
+        <p class="text-muted" style="font-size:12px;margin-bottom:14px;">{{ __('admin.clients.add_domain_hint') }}</p>
+        @if($errors->any())
+        <div class="alert alert-danger" style="font-size:13px;">{{ $errors->first() }}</div>
+        @endif
+        <form method="POST" action="{{ route('admin.clients.domains.store', $client) }}">
+            @csrf
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.table.domain') }} <span style="color:#d9534f;">*</span></label>
+                    <input type="text" name="domain" value="{{ old('domain') }}" class="form-control" placeholder="example.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.clients.domain_registrar') }}</label>
+                    <input type="text" name="registrar" value="{{ old('registrar') }}" class="form-control" placeholder="{{ __('admin.clients.domain_registrar_placeholder') }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.clients.registered') }}</label>
+                    <input type="date" name="registration_date" value="{{ old('registration_date') }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.domains.expiry_date') }}</label>
+                    <input type="date" name="expiry_date" value="{{ old('expiry_date') }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.clients.next_due') }}</label>
+                    <input type="date" name="next_due_date" value="{{ old('next_due_date') }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.clients.domain_recurring') }} <span style="color:#d9534f;">*</span></label>
+                    <input type="number" step="0.01" min="0" name="recurring_amount" value="{{ old('recurring_amount', '0.00') }}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.clients.domain_first_payment') }}</label>
+                    <input type="number" step="0.01" min="0" name="first_payment_amount" value="{{ old('first_payment_amount') }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.table.status') }} <span style="color:#d9534f;">*</span></label>
+                    <select name="status" class="form-control" required>
+                        <option value="active" @selected(old('status','active')=='active')>Active</option>
+                        <option value="grace" @selected(old('status')=='grace')>Grace</option>
+                        <option value="pending" @selected(old('status')=='pending')>Pending</option>
+                        <option value="expired" @selected(old('status')=='expired')>Expired</option>
+                        <option value="cancelled" @selected(old('status')=='cancelled')>Cancelled</option>
+                    </select>
+                </div>
+            </div>
+            <p class="text-muted" style="font-size:12px;margin-top:10px;">{{ __('admin.clients.add_domain_renewal_note') }}</p>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:6px;">{{ __('admin.clients.add_domain') }}</button>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     @if($domains->isEmpty())
     <div class="card-body" style="text-align:center;color:#999;padding:40px;">{{ __('admin.domains.no_domains') }}</div>

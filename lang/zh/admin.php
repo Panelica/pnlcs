@@ -2838,4 +2838,12 @@ return [
     'clients.link_none' => '— 无（仅计费）—',
     'clients.link_existing_hint' => '这些是所选服务器上已存在的账户——在 Panelica 中即面板“用户”列表下的客户账户。选择此服务所属的账户，以便 PNLCS 可以管理它（暂停、终止、密码）。账户列表适用于 Panelica 服务器；仅记录计费时请留空。',
     'clients.service_linked' => '服务已添加并关联到现有服务器账户。',
+    'clients.add_domain' => '添加域名',
+    'clients.add_domain_hint' => '登记客户已在别处注册的域名（例如从其他系统迁移而来），以便 PNLCS 为其续费开具账单。此操作仅创建账单记录——不会在注册商处进行任何注册或转移。',
+    'clients.domain_registrar' => '注册商',
+    'clients.domain_registrar_placeholder' => '例如 GoDaddy、Namecheap',
+    'clients.domain_recurring' => '续费价格',
+    'clients.domain_first_payment' => '首次付款金额',
+    'clients.add_domain_renewal_note' => '只要续费价格大于零，续费账单将根据下次到期日和续费价格自动生成。',
+    'clients.domain_added' => '域名已添加到该客户。',
 ];

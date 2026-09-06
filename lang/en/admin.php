@@ -979,7 +979,6 @@ return [
     'dashboard.no_tickets' => 'No tickets yet.',
     'dashboard.php' => 'PHP',
     'dashboard.pnlcs_version' => 'PNLCS Version',
-    'dashboard.quick_actions' => 'Quick Actions',
     'dashboard.recent_clients' => 'Recent Clients',
     'dashboard.server' => 'Server',
     'dashboard.system_information' => 'System Information',
@@ -1526,9 +1525,6 @@ return [
     'messages.translations_saved' => 'Saved :count translations.',
     'messages.unknown_action' => 'Unknown action: :action',
     'messages.viewing_as' => 'Now viewing as :name',
-    // Referenced as admin.payment_notifications.* — must stay top-level
-    // (it was previously nested inside 'nav', which made every key resolve
-    // to the raw key string on the payment-notifications page).
     'payment_notifications' => [
         'already_reviewed' => 'This notification has already been reviewed.',
         'approve' => 'Approve',
@@ -1846,10 +1842,8 @@ return [
     'phpinfo.upload_max_filesize' => 'Upload Max Filesize',
     'product_addons' => 'Product Addons',
     'product_bundles' => 'Product Bundles',
-    // The app catalogue lives on the panel; what we manage here is how it looks
-    // to a customer, which today means the image on each card.
     'docker_apps' => [
-        'source_note' => "This list is read live from the panel and shows only apps that are switched on there. To add an app, remove one, or change what it installs, do that in the hosting panel - it will appear here on the next page load.",
+        'source_note' => 'This list is read live from the panel and shows only apps that are switched on there. To add an app, remove one, or change what it installs, do that in the hosting panel - it will appear here on the next page load.',
         'sellable_count' => ':count offered to customers',
         'sellable' => 'Offered',
         'featured' => 'Featured',
@@ -1859,7 +1853,7 @@ return [
         'save' => 'Save',
         'selling_saved' => 'Selling settings saved for :app.',
         'title' => 'App Catalogue',
-        'intro' => "These are the apps your Panelica server currently offers - an app switched off in the panel does not appear here and cannot be ordered. What you set on this page is commercial: whether you sell an app, where it sits, what it says, and the logo customers see on its card. Nothing here touches the app itself or its container image.",
+        'intro' => 'These are the apps your Panelica server currently offers - an app switched off in the panel does not appear here and cannot be ordered. What you set on this page is commercial: whether you sell an app, where it sits, what it says, and the logo customers see on its card. Nothing here touches the app itself or its container image.',
         'have_count' => ':have of :total apps have a logo',
         'search_ph' => 'Search apps...',
         'only_missing' => 'Only apps without a logo',
@@ -1883,7 +1877,6 @@ return [
         'catalogue_empty' => 'The panel returned no apps.',
         'none_match' => 'No app matches this filter.',
     ],
-
     'products' => [
         'active' => 'Active',
         'add_new' => 'Add New Product',
@@ -2845,4 +2838,12 @@ return [
     'clients.link_none' => '— none (billing only) —',
     'clients.link_existing_hint' => 'These are the accounts that already exist on the selected server — in Panelica, the customer accounts under the panel\'s Users list. Pick the one this service belongs to so PNLCS can manage it (suspend, terminate, password). Account listing works for Panelica servers; leave empty for a billing-only record.',
     'clients.service_linked' => 'Service added and linked to the existing server account.',
+    'clients.add_domain' => 'Add Domain',
+    'clients.add_domain_hint' => 'Record a domain the customer already has registered elsewhere (for example one migrated in from another system) so PNLCS bills its renewals. This only creates the billing record — no registration or transfer is made at the registrar.',
+    'clients.domain_registrar' => 'Registrar',
+    'clients.domain_registrar_placeholder' => 'e.g. GoDaddy, Namecheap',
+    'clients.domain_recurring' => 'Renewal price',
+    'clients.domain_first_payment' => 'First payment amount',
+    'clients.add_domain_renewal_note' => 'A renewal invoice is raised automatically from the next due date and the renewal price, as long as the renewal price is above zero.',
+    'clients.domain_added' => 'Domain added to the client.',
 ];
