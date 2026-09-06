@@ -17,6 +17,7 @@ return [
     'notes' => 'Notes',
     'payment_method' => 'Payment Method',
     'payment_status' => 'Payment Status',
+    'ksef_number' => 'KSeF number',
     'subtotal' => 'Subtotal',
     'tax' => 'Tax',
     'tax_id' => 'Tax ID',

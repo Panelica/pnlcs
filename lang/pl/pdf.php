@@ -17,6 +17,7 @@ return [
     'notes' => 'Uwagi',
     'payment_method' => 'Metoda Płatności',
     'payment_status' => 'Status Płatności',
+    'ksef_number' => 'Numer KSeF',
     'subtotal' => 'Podsuma',
     'tax' => 'VAT',
     'tax_id' => 'NIP',

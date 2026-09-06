@@ -7,6 +7,8 @@ use App\Models\KsefInvoice;
 use App\Models\ModuleLog;
 use App\Services\AddonManager;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\KsefInvoiceIssuedMail;
 use Modules\Ksef\Jobs\SubmitInvoiceJob;
 
 /**
@@ -93,6 +95,10 @@ class KsefService
 
                 $this->logAction('submit', ['invoice_id' => $record->invoice_id], ['success' => true, 'status' => $result['status'] ?? 'sent', 'ksef_number' => $result['ksef_number'] ?? null, 'error' => $result['error_message'] ?? null]);
 
+                if (filled($result['ksef_number'] ?? null)) {
+                    $this->notifyClient($record, (string) $result['ksef_number']);
+                }
+
                 return ['success' => true, 'message' => $result['message'] ?? 'Sent'];
             }
 
@@ -120,6 +126,31 @@ class KsefService
             $this->logAction('submit', ['invoice_id' => $record->invoice_id], ['success' => false, 'error' => $e->getMessage()]);
 
             return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Email the definitive (KSeF-numbered) PDF to the invoice's recipient.
+     *
+     * Fired only once a number has been issued; a failure here must never be
+     * mistaken for a KSeF submission failure, so it is caught and logged.
+     */
+    private function notifyClient(KsefInvoice $record, string $ksefNumber): void
+    {
+        try {
+            $invoice = $record->invoice;
+            $client = $invoice?->client;
+
+            $to = $client?->billing_email ?: $client?->email;
+
+            if ($invoice && $to) {
+                Mail::to($to)->queue(new KsefInvoiceIssuedMail($invoice, $ksefNumber));
+            }
+        } catch (\Throwable $e) {
+            Log::error('KSeF: could not email issued invoice', [
+                'invoice_id' => $record->invoice_id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 
