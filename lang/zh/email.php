@@ -263,4 +263,9 @@ return [
         'ticket_id' => '工单编号',
         'view_conversation' => '请登录客户中心查看完整对话并回复。',
     ],
+    'ksef_issued' => [
+        'subject' => '电子发票 (KSeF) - #:number',
+        'body' => '您的发票 #:number 已在 KSeF 中开具。',
+        'ksef_number' => 'KSeF 编号',
+    ],
 ];

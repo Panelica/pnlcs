@@ -263,4 +263,9 @@ return [
         'ticket_id' => 'Destek Talebi ID',
         'view_conversation' => 'Gunluk in to sizin account to view  full conversation and respond.',
     ],
+    'ksef_issued' => [
+        'subject' => 'e-Fatura (KSeF) - #:number',
+        'body' => ':number numaralı faturanız KSeF\'te düzenlendi.',
+        'ksef_number' => 'KSeF Numarası',
+    ],
 ];

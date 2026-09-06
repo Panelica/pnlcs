@@ -69,6 +69,13 @@ it('binds every customer email an operator is offered to a template', function (
             continue;
         }
 
+        // KSeF issues the final e-invoice on its own fixed layout (with the
+        // PDF attached and a verification QR); it is a Polish-scheme system
+        // notification, not one the operator edits from the templates screen.
+        if ($name === 'KsefInvoiceIssuedMail') {
+            continue;
+        }
+
         if (! $service->forMailable('App\\Mail\\'.$name)) {
             $unbound[] = $name;
         }

@@ -17,6 +17,7 @@ return [
     'notes' => '备注',
     'payment_method' => '付款方式',
     'payment_status' => '付款状态',
+    'ksef_number' => 'KSeF 编号',
     'subtotal' => '小计',
     'tax' => '税费',
     'tax_id' => '税号',

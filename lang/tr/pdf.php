@@ -23,4 +23,5 @@ return [
     'taxed' => 'Vergied',
     'thank_you' => 'Thank you for sizin business!',
     'total' => 'Toplam',
+    'ksef_number' => 'KSeF numarası',
 ];
