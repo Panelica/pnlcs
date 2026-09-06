@@ -177,10 +177,6 @@
         {{ $invoice->notes }}
     </div>
     @endif
-
-    <div class="footer">
-        {{ $company['name'] }} @if($company['domain'])&mdash; {{ $company['domain'] }}@endif
-    </div>
 </div>
 </body>
 </html>
