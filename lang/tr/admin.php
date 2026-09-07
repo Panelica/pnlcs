@@ -1612,6 +1612,7 @@ return [
         'utilities' => 'Utilities',
         'view_search_clients' => 'Görüntüle/Ara Müşteris',
         'whois_lookup' => 'WHOIS Sorgulama',
+        'ksef_status' => 'KSeF Durumu',
     ],
     'nav.active' => 'Aktif',
     'nav.activity_log' => 'Activity Günlük',
@@ -2844,4 +2845,7 @@ return [
     'clients.domain_first_payment' => 'İlk ödeme tutarı',
     'clients.add_domain_renewal_note' => 'Yenileme faturası, yenileme fiyatı sıfırdan büyük olduğu sürece, sonraki ödeme tarihi ve yenileme fiyatından otomatik olarak oluşturulur.',
     'clients.domain_added' => 'Alan adı müşteriye eklendi.',
+    'addon_modules' => [
+        'changelog' => 'Değişiklik Günlüğü',
+    ],
 ];

@@ -357,8 +357,6 @@ return [
     'whois.connect_error' => 'Error: Could not connect to :server (errno=:errno: :errstr)',
     'whois.invalid_domain' => 'Invalid domain name.',
     'whois.no_server_known' => 'No WHOIS server known for .:tld. Try querying whois.iana.org manually.',
-
-    // Added by localization sync
     'payment_method.tpay' => 'Tpay',
     'ksef.settings_title' => 'KSeF (E-Fatura)',
     'ksef.sidebar' => 'KSeF',
@@ -469,4 +467,10 @@ return [
     'success.product_service_added' => 'Ürün/hizmet eklendi.',
     'success.product_service_deleted' => 'Ürün/hizmet silindi.',
     'success.product_service_updated' => 'Ürün/hizmet güncellendi.',
+    'ksef' => [
+        'addon_moved_hint' => 'KSeF gönderim durumu artık Faturalama → KSeF durumu altında gösteriliyor.',
+    ],
+    'company_lookup' => [
+        'settings_title' => 'Şirket Sorgulama (PL)',
+    ],
 ];
