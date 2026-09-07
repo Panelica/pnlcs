@@ -16,6 +16,18 @@ class KsefController extends Controller
     ) {}
 
     /**
+     * The submission status list, shown under Billing → KSeF status.
+     */
+    public function index()
+    {
+        $records = KsefInvoice::with(['invoice.client', 'correction'])
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        return view('admin.ksef.index', ['records' => $records]);
+    }
+
+    /**
      * Test the connection to the KSeF API.
      */
     public function test()

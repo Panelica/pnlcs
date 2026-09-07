@@ -418,6 +418,7 @@ return [
     'ksef.test_ok' => 'Connection to the KSeF API works.',
     'ksef.auth_failed' => 'KSeF authentication failed — check the NIP and key.',
     'ksef.addon_output_hint' => 'Paid invoices are handed to KSeF automatically. Below is the submission status.',
+    'ksef.addon_moved_hint' => 'The KSeF submission status is now shown under Billing → KSeF status.',
     'ksef.queued' => 'The invoice has been queued for KSeF submission.',
     'company_lookup.gus_unavailable' => 'Could not fetch data from the GUS register.',
     'company_lookup.mf_unavailable' => 'Could not fetch data from the VAT white list (MF).',

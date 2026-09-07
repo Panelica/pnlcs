@@ -418,6 +418,7 @@ return [
     'ksef.test_ok' => 'Połączenie z API KSeF działa.',
     'ksef.auth_failed' => 'Uwierzytelnienie w KSeF nie powiodło się — sprawdź NIP i klucz.',
     'ksef.addon_output_hint' => 'Opłacone faktury są automatycznie przekazywane do KSeF. Poniżej status wysyłek.',
+    'ksef.addon_moved_hint' => 'Status wysyłek do KSeF jest teraz dostępny pod Rozliczenia → KSeF status.',
     'ksef.queued' => 'Faktura została zakolejkowana do wysyłki do KSeF.',
     'company_lookup.gus_unavailable' => 'Nie udało się pobrać danych z rejestru GUS.',
     'company_lookup.mf_unavailable' => 'Nie udało się pobrać danych z Białej Listy VAT (MF).',

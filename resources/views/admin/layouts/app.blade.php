@@ -103,6 +103,7 @@
                     <li><a href="{{ route('admin.payment-notifications.index') }}">{{ __('admin.nav.payment_notifications') }} @if(($sidebarCounts->pending_payment_notifications ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->pending_payment_notifications }}</span>@endif</a></li>
                     <li><a href="{{ route('admin.config.transactions') }}">{{ __('admin.nav.transactions') }}</a></li>
                     <li><a href="{{ route('admin.config.billable-items') }}">{{ __('admin.nav.billable_items') }}</a></li>
+                    @if($ksefActive ?? false)<li><a href="{{ route('admin.ksef.index') }}">{{ __('admin.nav.ksef_status') }}</a></li>@endif
                     <li><a href="{{ route('admin.affiliates.index') }}">{{ __('admin.sidebar.affiliates') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.quotes.index') }}">{{ __('admin.nav.quotes') }}</a></li>
@@ -312,7 +313,7 @@
         </ul>
 
     {{-- ── Invoices / Billing Sidebar ── --}}
-    @elseif($segment === 'invoices' || $segment === 'quotes' || $segment === 'affiliates' || $routeName === 'admin.config.transactions' || $routeName === 'admin.config.billable-items')
+    @elseif($segment === 'invoices' || $segment === 'quotes' || $segment === 'affiliates' || $segment === 'ksef' || $routeName === 'admin.config.transactions' || $routeName === 'admin.config.billable-items')
         <div class="sidebar-header"><i class="fas fa-money-bill-wave"></i> {{ __('admin.nav.billing') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.invoices.index') }}" @if($routeName === 'admin.invoices.index' && !request()->has('status')) class="active" @endif>{{ __('admin.sidebar.all_invoices') }}</a></li>
@@ -326,6 +327,7 @@
         <ul class="menu">
             <li><a href="{{ route('admin.config.transactions') }}" @if($routeName === 'admin.config.transactions') class="active" @endif>{{ __('admin.nav.transactions') }}</a></li>
             <li><a href="{{ route('admin.config.billable-items') }}" @if($routeName === 'admin.config.billable-items') class="active" @endif>{{ __('admin.nav.billable_items') }}</a></li>
+            @if($ksefActive ?? false)<li><a href="{{ route('admin.ksef.index') }}" @if($routeName === 'admin.ksef.index') class="active" @endif>{{ __('admin.nav.ksef_status') }}</a></li>@endif
             <li><a href="{{ route('admin.affiliates.index') }}" @if($routeName === 'admin.affiliates.index') class="active" @endif>{{ __('admin.sidebar.affiliates') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-file-signature"></i> {{ __('admin.nav.quotes') }}</div>
