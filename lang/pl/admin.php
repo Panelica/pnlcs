@@ -10,6 +10,7 @@ return [
     'add_new' => 'Dodaj nowy',
     'addon_modules.activate' => 'Aktywuj',
     'addon_modules.author' => 'Autor',
+    'addon_modules.changelog' => 'Dziennik zmian',
     'addon_modules.deactivate' => 'Dezaktywuj',
     'addon_modules.description' => 'Rozszerz PNLCS o rozszerzenia. Aktywuj, konfiguruj i zarządzaj.',
     'addon_modules.no_modules' => 'Nie znaleziono rozszerzeń w katalogu modules/Addons/.',

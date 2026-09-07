@@ -21,9 +21,36 @@ class KsefModule implements AddonModuleInterface
 
     public function getDescription(): string { return __('messages.ksef.addon_description'); }
 
-    public function getVersion(): string { return '1.0.0'; }
+    public function getVersion(): string { return '1.1.0'; }
 
     public function getAuthor(): string { return 'PNLCS'; }
+
+    /**
+     * Version history shown on the module page, newest first.
+     *
+     * @return array<int, array{version:string, date:string, changes:list<string>}>
+     */
+    public function changelog(): array
+    {
+        return [
+            [
+                'version' => '1.1.0',
+                'date' => '2026-09-07',
+                'changes' => [
+                    'Submission status moved to a dedicated screen under Billing → KSeF status.',
+                    'Final e-invoice PDF (with KSeF number + verification QR) emailed once issued.',
+                    'Connection test button on the module page.',
+                ],
+            ],
+            [
+                'version' => '1.0.0',
+                'date' => '2026-09-03',
+                'changes' => [
+                    'Initial release. Hands paid invoices to KSeF with retry and correction actions.',
+                ],
+            ],
+        ];
+    }
 
     public function activate(): array
     {
@@ -52,9 +79,14 @@ class KsefModule implements AddonModuleInterface
 
     public function output(Request $request): string
     {
-        return '<p style="font-size:13px;color:var(--pn-muted);margin:0;">'.__('messages.ksef.addon_moved_hint').'</p>'
-            .'<p style="margin-top:12px;">'
-            .'<a href="'.route('admin.ksef.index').'" class="btn btn-primary btn-sm" style="font-size:13px;">'.__('admin.nav.ksef_status').'</a>'
-            .'</p>';
+        $test = '<form method="POST" action="'.route('admin.ksef.test').'" style="display:inline;margin:0;">'
+            .'<input type="hidden" name="_token" value="'.csrf_token().'">'
+            .'<button type="submit" class="btn btn-success btn-sm" style="font-size:13px;padding:6px 14px;font-weight:600;">'.__('messages.ksef.test').'</button>'
+            .'</form>';
+
+        $link = '<a href="'.route('admin.ksef.index').'" class="btn btn-primary btn-sm" style="font-size:13px;">'.__('admin.nav.ksef_status').'</a>';
+
+        return '<p style="display:flex;gap:8px;align-items:center;margin:0;">'.$test.' '.$link.'</p>'
+            .'<p style="font-size:13px;color:var(--pn-muted);margin:10px 0 0;">'.__('messages.ksef.addon_moved_hint').'</p>';
     }
 }

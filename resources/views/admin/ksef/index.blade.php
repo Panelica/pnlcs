@@ -66,8 +66,12 @@
                 @endif
                 @endforeach
             </table>
+            @if($records->hasPages())
+            <div style="padding:10px 16px;border-top:1px solid #e5e7eb;">
+                {{ $records->withQueryString()->links() }}
+            </div>
+            @endif
         </div>
     </div>
-    {{ $records->links() }}
 @endif
 @endsection

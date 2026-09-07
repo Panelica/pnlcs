@@ -10,6 +10,7 @@ return [
     'add_new' => 'Add New',
     'addon_modules.activate' => 'Activate',
     'addon_modules.author' => 'Author',
+    'addon_modules.changelog' => 'Changelog',
     'addon_modules.deactivate' => 'Deactivate',
     'addon_modules.description' => 'Extend PNLCS with extensions. Activate, configure, and manage.',
     'addon_modules.no_modules' => 'No extensions found in modules/Addons/ directory.',
