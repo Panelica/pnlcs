@@ -58,7 +58,11 @@ class ClientController extends Controller
         $defaultPaymentMethod = Setting::get('DefaultPaymentMethod', 'banktransfer');
         $languages = \App\Models\Language::getActiveLanguages();
 
-        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods', 'defaultPaymentMethod', 'languages'));
+        $defaultCountry = Setting::get('Country', 'PL');
+        $defaultLanguage = Setting::get('DefaultLanguage', config('app.locale', 'en'));
+        $defaultPhonePrefix = \App\Support\Countries::phonePrefix($defaultCountry);
+
+        return view('admin.clients.create', compact('groups', 'currencies', 'customFields', 'paymentMethods', 'defaultPaymentMethod', 'languages', 'defaultCountry', 'defaultLanguage', 'defaultPhonePrefix'));
     }
 
     public function store(Request $request)

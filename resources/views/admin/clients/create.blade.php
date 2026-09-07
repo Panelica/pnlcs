@@ -33,7 +33,7 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.country') }}</label>
                     <select name="country" id="country" class="form-control">
                         @foreach(\App\Support\Countries::all() as $code => $name)
-                        <option value="{{ $code }}" {{ old('country', 'US') == $code ? 'selected' : '' }}>{{ $name }}</option>
+                            <option value="{{ $code }}" {{ old('country', $defaultCountry ?? '') == $code ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -41,7 +41,7 @@
                     <div style="display:flex;gap:6px;">
                         <select name="phone_prefix" id="phone_prefix" class="form-control" style="width:90px !important;flex-shrink:0;">
                             @foreach(\App\Support\Countries::PHONE_PREFIXES as $code => $prefix)
-                            <option value="{{ $prefix }}" {{ old('phone_prefix') == $prefix ? 'selected' : '' }}>{{ $code }} {{ $prefix }}</option>
+                            <option value="{{ $prefix }}" {{ old('phone_prefix', $defaultPhonePrefix ?? '') == $prefix ? 'selected' : '' }}>{{ $code }} {{ $prefix }}</option>
                             @endforeach
                         </select>
                         <input type="text" name="phone_number" value="{{ old('phone_number') }}" class="form-control" style="flex:1;min-width:0;">
@@ -53,7 +53,7 @@
                 <div class="form-group"><label class="form-label">{{ __('common.form.language') }}</label>
                     <select name="language" class="form-control">
                         @foreach($languages ?? [] as $lang)
-                        <option value="{{ $lang->code }}">{{ $lang->native_name ?? $lang->name }} ({{ $lang->code }})</option>
+                            <option value="{{ $lang->code }}" {{ old('language', $defaultLanguage ?? '') == $lang->code ? 'selected' : '' }}>{{ $lang->native_name ?? $lang->name }} ({{ $lang->code }})</option>
                         @endforeach
                     </select>
                 </div>
