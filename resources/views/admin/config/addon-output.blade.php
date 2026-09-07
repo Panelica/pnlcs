@@ -61,4 +61,28 @@
 </div>
 @endif
 
+@php($changelog = method_exists($addon, 'changelog') ? $addon->changelog() : [])
+@if(!empty($changelog))
+<div class="card" style="margin-top:16px;">
+    <div class="card-header"><span style="font-weight:600;">{{ __('admin.addon_modules.changelog') }}</span></div>
+    <div class="card-body" style="padding:16px;">
+        @foreach($changelog as $entry)
+        <div style="margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <strong style="font-size:14px;">v{{ $entry['version'] ?? '' }}</strong>
+                @if(!empty($entry['date']))<span style="font-size:12px;color:var(--pn-muted);">{{ $entry['date'] }}</span>@endif
+            </div>
+            @if(!empty($entry['changes']))
+            <ul style="margin:0 0 0 20px;padding:0;font-size:13px;color:var(--pn-muted);">
+                @foreach($entry['changes'] as $change)
+                <li style="margin:2px 0;">{{ $change }}</li>
+                @endforeach
+            </ul>
+            @endif
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
+
 @endsection

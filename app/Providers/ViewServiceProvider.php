@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\TicketDepartment;
+use App\Services\AddonManager;
 use App\View\Composers\LanguageComposer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
@@ -38,6 +39,9 @@ class ViewServiceProvider extends ServiceProvider
             // The sidebar ticket-search form needs the department list; it used
             // to render an empty select posting a parameter nothing read.
             $view->with('sidebarDepartments', TicketDepartment::orderBy('name')->get(['id', 'name']));
+
+            // Whether the KSeF addon is enabled — gates the billing-menu entry.
+            $view->with('ksefActive', app(AddonManager::class)->isActive('ksef'));
         });
 
         View::composer([
