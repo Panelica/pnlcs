@@ -22,9 +22,35 @@ class CompanyLookupModule implements AddonModuleInterface
 
     public function getDescription(): string { return __('messages.company_lookup.addon_description'); }
 
-    public function getVersion(): string { return '1.0.0'; }
+    public function getVersion(): string { return '1.1.0'; }
 
     public function getAuthor(): string { return 'PNLCS'; }
+
+    /**
+     * Version history shown on the module page, newest first.
+     *
+     * @return array<int, array{version:string, date:string, changes:list<string>}>
+     */
+    public function changelog(): array
+    {
+        return [
+            [
+                'version' => '1.1.0',
+                'date' => '2026-09-05',
+                'changes' => [
+                    'GUS provider migrated to the BIR1.1 API (new endpoint, SOAP 1.2 + WS-Addressing).',
+                    'Result parsing fixed via html_entity_decode.',
+                ],
+            ],
+            [
+                'version' => '1.0.0',
+                'date' => '2026-09-01',
+                'changes' => [
+                    'Initial release. NIP lookups against GUS, MF (VAT white list), CEIDG and OpenBRIS.',
+                ],
+            ],
+        ];
+    }
 
     public function activate(): array
     {

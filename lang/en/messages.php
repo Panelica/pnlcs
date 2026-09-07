@@ -436,7 +436,7 @@ return [
     'company_lookup.bank_accounts' => 'Bank accounts',
     'company_lookup.pkd' => 'PKD',
     'company_lookup.error' => 'The lookup failed. Please try again.',
-    'company_lookup.settings_title' => 'Company Lookup (NIP)',
+    'company_lookup.settings_title' => 'Company Lookup (PL)',
     'company_lookup.settings_saved' => 'Company lookup settings saved.',
     'company_lookup.settings_hint' => 'Registry credentials for the GUS/MF company lookup. The GUS API key is stored encrypted and never leaves the backend.',
     'company_lookup.gus_api_key' => 'GUS BIR API key',
