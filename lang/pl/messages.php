@@ -435,7 +435,7 @@ return [
     'company_lookup.bank_accounts' => 'Rachunki bankowe',
     'company_lookup.pkd' => 'PKD',
     'company_lookup.error' => 'Wyszukiwanie nie powiodło się. Spróbuj ponownie.',
-    'company_lookup.settings_title' => 'Wyszukiwanie firmy (NIP)',
+    'company_lookup.settings_title' => 'Wyszukiwanie firmy PL',
     'company_lookup.settings_saved' => 'Ustawienia wyszukiwania firmy zapisane.',
     'company_lookup.settings_hint' => 'Poświadczenia rejestrów GUS/MF dla wyszukiwania firmy po NIP. Klucz API GUS jest przechowywany szyfrowanie i nigdy nie opuszcza backendu.',
     'company_lookup.gus_api_key' => 'Klucz API GUS BIR',
