@@ -22,6 +22,7 @@ use App\Mail\TicketOpenedMail;
 use App\Mail\TicketReplyMail;
 use App\Models\Setting;
 use App\Models\Ticket;
+use App\Services\AddonManager;
 use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -68,13 +69,22 @@ class SendNotificationListener
 
     public function handleInvoiceCreated(InvoiceCreated $event): void
     {
-        try {
-            $email = $event->invoice->client?->billingEmail();
-            if ($email) {
-                Mail::to($email)->queue(new InvoiceCreatedMail($event->invoice));
+        // When KSeF is active, a VAT invoice is emailed once its KSeF number
+        // is assigned (KsefInvoiceIssuedMail, with the QR-verified PDF). The
+        // un-numbered PDF sent here would be a duplicate, so skip it.
+        // Proformas are never submitted to KSeF and keep the normal email.
+        $ksefActive = app(AddonManager::class)->isActive('ksef');
+        $isVat = ($event->invoice->type ?? 'vat') === 'vat';
+
+        if (! ($isVat && $ksefActive)) {
+            try {
+                $email = $event->invoice->client?->billingEmail();
+                if ($email) {
+                    Mail::to($email)->queue(new InvoiceCreatedMail($event->invoice));
+                }
+            } catch (\Throwable $e) {
+                Log::error('SendNotification: InvoiceCreated email failed', ['error' => $e->getMessage()]);
             }
-        } catch (\Throwable $e) {
-            Log::error('SendNotification: InvoiceCreated email failed', ['error' => $e->getMessage()]);
         }
 
         $this->dispatchNotification('invoice.created', [
