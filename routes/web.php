@@ -35,6 +35,20 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestF
     Route::post('gateway/tpay/webhook', [GatewayWebhookController::class, 'tpay'])->name('gateway.tpay.webhook');
 });
 
+// ===== Legal documents and corporate pages =====
+// Public and readable without an account on purpose: a visitor has to be able
+// to read the terms before opening one, and a crawler has to be able to index
+// them - iyzico, PayTR and Stripe all check for reachable terms, privacy and
+// refund pages before approving a merchant account.
+Route::get('legal', [App\Http\Controllers\LegalController::class, 'index'])->name('legal.index');
+Route::get('legal/{document}', [App\Http\Controllers\LegalController::class, 'show'])->name('legal.show');
+Route::get('about', [App\Http\Controllers\PageController::class, 'about'])->name('pages.about');
+Route::get('ssl', [App\Http\Controllers\PageController::class, 'ssl'])->name('pages.ssl');
+// The mail client settings. The most common support request, so it needs no
+// sign-in: a customer should be able to read it before logging in, and so
+// should whoever arrives from a search engine.
+Route::get('guides/mail-setup', [App\Http\Controllers\PageController::class, 'mailSetup'])->name('pages.mail-setup');
+
 // ===== iyzico payment return =====
 // POSTed from iyzico's own page, so it is cross-site: SameSite=Lax means the
 // customer's session cookie is NOT sent on this request. Without StartSession

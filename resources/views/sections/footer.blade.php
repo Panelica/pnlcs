@@ -42,6 +42,7 @@
                 <a href="/client/store" class="footer__link">{{ __('sections.footer.shared_hosting') }}</a>
                 <a href="/client/store" class="footer__link">{{ __('sections.footer.wordpress_hosting') }}</a>
                 <a href="/client/store" class="footer__link">{{ __('sections.footer.business_hosting') }}</a>
+                <a href="{{ route('pages.mail-setup') }}" class="footer__link">{{ __('sections.footer.mail_setup') }}</a>
                 <a href="/client/store" class="footer__link">{{ __('sections.footer.reseller_hosting') }}</a>
                 <a href="/client/store" class="footer__link">{{ __('sections.footer.vps_server') }}</a>
             </div>

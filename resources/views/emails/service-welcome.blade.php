@@ -45,6 +45,20 @@
 @endif
 @endif
 
+@if($mailHost ?? null)
+<h3 style="color:#405189;margin:24px 0 6px;">{{ __('email.service_welcome.mail_heading') }}</h3>
+<p style="font-size:13px;color:#555;margin:0 0 10px;">{{ __('email.service_welcome.mail_intro') }}</p>
+
+<table style="width:100%;border-collapse:collapse;margin:0 0 12px;">
+<tr><td style="padding:8px;border-bottom:1px solid #eee;width:40%;"><strong>{{ __('email.service_welcome.mail_server_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $mailHost }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.service_welcome.mail_incoming_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">IMAP 993 &middot; SSL/TLS</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.service_welcome.mail_outgoing_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">SMTP 465 &middot; SSL/TLS</td></tr>
+</table>
+
+<p style="font-size:12px;color:#888;margin:0 0 12px;">{{ __('email.service_welcome.mail_username_note') }}</p>
+<p style="margin:0 0 20px;"><a href="{{ route('pages.mail-setup') }}" style="color:#405189;">{{ __('email.service_welcome.mail_guide_link') }}</a></p>
+@endif
+
 <p>{{ __('email.service_welcome.manage_service') }}</p>
 
 @include('emails.partials.action', ['url' => route('client.services.show', $service->id), 'label' => __('email.common.view_service')])

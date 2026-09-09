@@ -38,6 +38,9 @@ class NotificationService
             'service.activated',
             'service.suspended',
             'service.terminated',
+            // The customer paid and the server module refused to build the
+            // service. It sits in "pending" until somebody notices.
+            'service.provision_failed',
         ],
         'system' => [
             'backup.failed',
@@ -50,6 +53,12 @@ class NotificationService
             // nowhere.
             'domain.registration_failed',
             'domain.renew_failed',
+            // A paid domain whose extension has no registrar module: the Manual
+            // registrar marked it active and nobody contacted a registry.
+            'domain.manual_registration_required',
+            // The registrar prepayment is at the floor; renewals start being
+            // refused one at a time from here.
+            'registrar.balance_low',
         ],
     ];
 

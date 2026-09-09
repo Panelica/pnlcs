@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'registrar_balance' => [
+        'low_subject' => 'Registrar balance is low - :amount :currency left',
+        'low_body' => 'The balance on your domain registrar account (:registrar) has fallen to :amount :currency.
+
+Warning floor: :threshold :currency
+
+Once it runs out, new registrations and automatic renewals are refused one at a time while the panel keeps taking orders. Top it up.',
+        'unreadable_subject' => 'Registrar balance could not be read',
+        'unreadable_body' => 'The balance on the domain registrar account (:registrar) could not be read.
+
+Error: :error
+
+API access may be broken. While the balance cannot be read, no low-balance warning can be raised either.',
+    ],
     'iyzico' => [
         'page_title' => 'Secure payment',
         'cancel' => 'Cancel and go back to the invoice',

@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'registrar_balance' => [
+        'low_subject' => '注册商余额不足 - 仅剩 :amount :currency',
+        'low_body' => '您的域名注册商账户（:registrar）余额已降至 :amount :currency。
+
+警戒线：:threshold :currency
+
+余额用尽后，新注册和自动续费将被逐一拒绝，而面板仍在接单。请及时充值。',
+        'unreadable_subject' => '无法读取注册商余额',
+        'unreadable_body' => '无法读取域名注册商账户（:registrar）的余额。
+
+错误：:error
+
+API 访问可能已中断。在无法读取余额期间，也无法发出余额不足警告。',
+    ],
     'iyzico' => [
         'page_title' => '安全支付',
         'cancel' => '取消并返回账单',

@@ -15,6 +15,10 @@ Schedule::command('pnlcs:auto-suspend')->daily()->at('07:00');
 Schedule::command('pnlcs:auto-terminate')->daily()->at('08:00');
 Schedule::command('pnlcs:domain-sync')->daily()->at('03:00');
 Schedule::command('pnlcs:payment-reminders')->daily()->at('08:00');
+Schedule::command('pnlcs:domain-renewal-reminders')->daily()->at('09:15');
+// The registrar float, twice a day. An account that runs dry refuses renewals
+// one customer at a time without ever raising an error.
+Schedule::command('pnlcs:registrar-balance')->twiceDaily(8, 20);
 Schedule::command('pnlcs:apply-late-fees')->daily()->at('07:30');
 Schedule::command('pnlcs:process-cancellations')->daily()->at('02:00');
 Schedule::command('pnlcs:unsuspend-on-payment')->everyThirtyMinutes();

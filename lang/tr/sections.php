@@ -30,6 +30,7 @@ return [
         'about' => 'About',
         'announcements' => 'Duyurular',
         'blog' => 'Blog',
+        'mail_setup' => 'E-posta Kurulumu',
         'business_hosting' => 'Business Sunucuing',
         'col_domains' => 'Alan Adlari',
         'col_hosting' => 'Sunucuing',

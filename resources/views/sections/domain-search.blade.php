@@ -19,7 +19,7 @@
                 @foreach($domainPricing as $tld)
                 <a href="/client/domain-search" class="domain-search__ext">
                     <div class="domain-search__ext-name">.{{ ltrim($tld->extension, '.') }}</div>
-                    <div class="domain-search__ext-price">{{ money_fmt($tld->register_price) }}/yr</div>
+                    <div class="domain-search__ext-price">{{ domain_money_fmt($tld->register_price) }}/{{ __('client.domain_search.per_year') }}</div>
                     <span class="domain-search__ext-link">{{ __('common.actions.register') }}</span>
                 </a>
                 @endforeach
@@ -28,7 +28,7 @@
                 @foreach([['com', '9.99'], ['net', '11.99'], ['org', '8.99'], ['io', '29.99'], ['dev', '12.99'], ['co', '11.99'], ['biz', '14.99'], ['info', '4.99']] as $tld)
                 <div class="domain-search__ext">
                     <div class="domain-search__ext-name">.{{ $tld[0] }}</div>
-                    <div class="domain-search__ext-price">${{ $tld[1] }}/yr</div>
+                    <div class="domain-search__ext-price">${{ $tld[1] }}/{{ __('client.domain_search.per_year') }}</div>
                     <span class="domain-search__ext-link">{{ __('common.actions.register') }}</span>
                 </div>
                 @endforeach

@@ -55,6 +55,53 @@
     </div>
 
     <div>
+        {{-- Who the customer is dealing with. E-commerce law in most places
+             wants the seller's trading name, address, telephone and tax
+             details reachable on the site itself, not only inside the
+             contracts. Read from the settings the invoice and the legal
+             documents also read, so the three can never disagree. --}}
+        @php
+            $sellerLines = array_values(array_filter([
+                trim((string) \App\Models\Setting::get('CompanyLegalName', '')),
+                trim((string) \App\Models\Setting::get('Address', '')),
+                trim(implode(' ', array_filter([
+                    trim((string) \App\Models\Setting::get('Postcode', '')),
+                    trim((string) \App\Models\Setting::get('CompanyCity', '')),
+                ]))),
+                trim((string) \App\Models\Setting::get('Country', '')),
+            ]));
+            $sellerPhone = trim((string) \App\Models\Setting::get('PhoneNumber', ''));
+            $sellerEmail = trim((string) \App\Models\Setting::get('Email', ''));
+            $sellerTaxOffice = trim((string) \App\Models\Setting::get('TaxOffice', ''));
+            $sellerTaxId = trim((string) \App\Models\Setting::get('TaxID', ''));
+            $sellerRegistry = trim((string) (\App\Models\Setting::get('MersisNo', '') ?: \App\Models\Setting::get('TradeRegistryNo', '')));
+        @endphp
+        @if($sellerLines || $sellerPhone || $sellerEmail)
+        <div class="pn-card mb-16">
+            <div class="pn-card-body">
+                <div style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:14px">{{ __('client.contact.company_details') }}</div>
+                <div class="text-muted text-sm" style="line-height:1.75">
+                    @foreach($sellerLines as $line)
+                        <div>{{ $line }}</div>
+                    @endforeach
+                    @if($sellerPhone)<div style="margin-top:8px"><a href="tel:{{ preg_replace('/[^0-9+]/', '', $sellerPhone) }}">{{ $sellerPhone }}</a></div>@endif
+                    @if($sellerEmail)<div><a href="mailto:{{ $sellerEmail }}">{{ $sellerEmail }}</a></div>@endif
+                    @if($sellerTaxOffice || $sellerTaxId)
+                        <div style="margin-top:8px">
+                            @if($sellerTaxOffice){{ __('client.contact.tax_office') }}: {{ $sellerTaxOffice }}@endif
+                            @if($sellerTaxOffice && $sellerTaxId) &middot; @endif
+                            @if($sellerTaxId){{ __('common.form.tax_id') }}: {{ $sellerTaxId }}@endif
+                        </div>
+                    @endif
+                    @if($sellerRegistry)<div>{{ __('client.contact.registry_no') }}: {{ $sellerRegistry }}</div>@endif
+                    <div style="margin-top:10px">
+                        <a href="{{ route('legal.index') }}">{{ __('client.contact.legal_documents') }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="pn-card mb-16">
             <div class="pn-card-body">
                 <div style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:14px">{{ __('client.contact.prefer_tickets') }}</div>

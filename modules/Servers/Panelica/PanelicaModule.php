@@ -338,6 +338,26 @@ class PanelicaModule extends AbstractServerModule
         return $local.'+pnlcs'.$serviceId.substr($email, $at);
     }
 
+    /**
+     * Is this a name we can actually host?
+     *
+     * "noyantedarik" - no dot, no TLD - was accepted, sailed past the
+     * already-exists check because it is not "noyantedarik.com", and opened a
+     * second account for a customer who already had one.
+     */
+    private function looksLikeDomain(string $domain): bool
+    {
+        $domain = strtolower(trim($domain));
+        if ($domain === '' || strlen($domain) > 253 || ! str_contains($domain, '.')) {
+            return false;
+        }
+        if (str_starts_with($domain, '.') || str_ends_with($domain, '.') || str_contains($domain, '..')) {
+            return false;
+        }
+
+        return (bool) preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/', $domain);
+    }
+
     public function create(Service $service): array
     {
         $server = $this->getServer($service);
@@ -381,6 +401,13 @@ class PanelicaModule extends AbstractServerModule
         // POST fails, and the account is rolled back - the operator only learns
         // "domain already exists" after the fact. Checking first means no
         // orphaned account and the reason is known up front.
+        // A name with no dot is not a domain. "noyantedarik" was accepted
+        // once, did not match the existing "noyantedarik.com", and so opened a
+        // second account for a customer who already had one.
+        if ($domain && ! $this->looksLikeDomain((string) $domain)) {
+            return $this->buildResult(false, "\"{$domain}\" is not a valid domain name. It needs a name and an extension, like example.com.");
+        }
+
         if ($domain && $this->domainExistsOnServer($server, $domain)) {
             return $this->buildResult(false, "The domain \"{$domain}\" already exists on this server. Use a different domain, or remove it from the panel first.");
         }
@@ -3361,6 +3388,33 @@ class PanelicaModule extends AbstractServerModule
         $host = trim((string) $server->hostname) ?: trim((string) $server->ip_address);
 
         return 'https://'.$host.':'.$server->port.'/email/webmail';
+    }
+
+    /**
+     * Hostname the customer's mail client connects to (IMAP/POP3/SMTP).
+     *
+     * The mailbox lives on the same machine as the panel, but clients must not
+     * be told the panel's own hostname: the mail certificate is issued for
+     * mail.<domain>, so any other name shows up as a certificate warning in
+     * Outlook and iOS. Derived from the server hostname by replacing its first
+     * label, which is how the panel names its mail endpoint.
+     */
+    public function mailHostname(Service $service): ?string
+    {
+        $server = $this->getServer($service);
+        if (! $server) {
+            return null;
+        }
+
+        $host = trim((string) $server->hostname);
+        if ($host === '' || filter_var($host, FILTER_VALIDATE_IP)) {
+            return null;
+        }
+
+        $labels = explode('.', $host);
+        $domain = count($labels) >= 3 ? implode('.', array_slice($labels, 1)) : $host;
+
+        return 'mail.'.$domain;
     }
 
     /**

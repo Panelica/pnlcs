@@ -179,6 +179,13 @@ return [
         'reactivated' => 'Sizin service  reaktiflestirildi.',
     ],
     'service_welcome' => [
+        'mail_heading' => 'E-posta Kurulumu',
+        'mail_intro' => 'Alan adınız için oluşturduğunuz posta kutularını bu ayarlarla telefonunuzda ve Outlook gibi programlarda kullanabilirsiniz.',
+        'mail_server_label' => 'Posta sunucusu',
+        'mail_incoming_label' => 'Gelen posta',
+        'mail_outgoing_label' => 'Giden posta',
+        'mail_username_note' => 'Kullanıcı adı e-posta adresinizin tamamı, parola ise kutuyu oluştururken belirlediğiniz paroladır. Giden posta için kimlik doğrulama gerekir.',
+        'mail_guide_link' => 'Adım adım kurulum rehberi (Outlook, iPhone, Android)',
         'access_heading' => 'Erişim Bilgileriniz',
         'credentials_intro' => 'Aşağıdaki bilgilerle giriş yapın ve bunları güvenli bir yerde saklayın.',
         'control_panel' => 'Kontrol Paneli',

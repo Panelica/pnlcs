@@ -574,6 +574,9 @@ class ConfigController extends Controller
             'register_price' => 'required|numeric|min:0',
             'transfer_price' => 'required|numeric|min:0',
             'renew_price' => 'required|numeric|min:0',
+            'restore_price' => 'nullable|numeric|min:0',
+            'category' => 'nullable|in:generic,local,country,new',
+            'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',
             'min_years' => 'nullable|integer|min:1',
             'max_years' => 'nullable|integer|min:1',
@@ -582,6 +585,7 @@ class ConfigController extends Controller
             'enabled' => 'boolean',
         ]);
         $v['enabled'] = $request->boolean('enabled');
+        $v['is_popular'] = $request->boolean('is_popular');
         DomainPricing::create($v);
 
         return back()->with('success', __('messages.success.tld_created'));
@@ -1342,6 +1346,9 @@ class ConfigController extends Controller
             'register_price' => 'nullable|numeric|min:0',
             'transfer_price' => 'nullable|numeric|min:0',
             'renew_price' => 'nullable|numeric|min:0',
+            'restore_price' => 'nullable|numeric|min:0',
+            'category' => 'nullable|in:generic,local,country,new',
+            'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',
             'min_years' => 'nullable|integer|min:1',
             'max_years' => 'nullable|integer|min:1',
@@ -1350,6 +1357,7 @@ class ConfigController extends Controller
             'enabled' => 'boolean',
         ]);
         $v['enabled'] = $request->boolean('enabled');
+        $v['is_popular'] = $request->boolean('is_popular');
         $domainPricing->update($v);
 
         return back()->with('success', __('messages.success.tld_updated'));

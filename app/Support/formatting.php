@@ -258,3 +258,73 @@ if (! function_exists('csv_cell')) {
                 : $value;
     }
 }
+
+if (! function_exists('domain_money_fmt')) {
+    /**
+     * A domain price shown in US dollars.
+     *
+     * Domains are bought from the registrar in USD, so the store lists them in
+     * USD even when the shop bills in its own currency. The stored amount is in
+     * the shop currency; this converts it back at the current rate. Nothing
+     * about what the customer is charged changes - only what is printed.
+     */
+    function domain_money_fmt(float|int|string|null $amount): string
+    {
+        static $usdRate = null;
+
+        if ($usdRate === null) {
+            try {
+                $default = Currency::getDefault();
+                if ($default && strtoupper($default->code) === 'USD') {
+                    $usdRate = 1.0;
+                } else {
+                    $usd = Currency::where('code', 'USD')->first();
+                    $usdRate = $usd && (float) $usd->rate > 0 ? (float) $usd->rate : 0.0;
+                }
+            } catch (Throwable) {
+                $usdRate = 0.0;
+            }
+        }
+
+        // No USD currency configured: fall back to the shop currency rather
+        // than printing a dollar sign over an amount that is not dollars.
+        if ($usdRate <= 0) {
+            return money_fmt($amount);
+        }
+
+        return '$'.number_format((float) $amount * $usdRate, 2);
+    }
+}
+
+if (! function_exists('currency_code_default')) {
+    /** The code of the currency the shop prices in. */
+    function currency_code_default(): string
+    {
+        try {
+            return strtoupper(Currency::getDefault()->code ?? 'USD');
+        } catch (Throwable) {
+            return 'USD';
+        }
+    }
+}
+
+if (! function_exists('kb_enabled')) {
+    /**
+     * Whether the knowledge base is shown to customers.
+     *
+     * The menu entry appears in nine places - top menu, footer, client panel,
+     * mobile menu, contact page. Commenting nine out and later finding nine
+     * to put back is how one of them gets missed; they all read this switch.
+     *
+     * On by default: an installation that never wrote the setting keeps
+     * showing its knowledge base.
+     */
+    function kb_enabled(): bool
+    {
+        try {
+            return (string) Setting::get('KnowledgeBaseEnabled', '1') !== '0';
+        } catch (\Throwable) {
+            return true;
+        }
+    }
+}

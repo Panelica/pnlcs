@@ -112,6 +112,8 @@ class AppServiceProvider extends ServiceProvider
             'client.auth.login',
             'client.auth.register',
             'sections.*',
+            'legal.*',
+            'pages.*',
         ], ThemeComposer::class);
 
         EmailTemplate::observe(EmailTemplateObserver::class);

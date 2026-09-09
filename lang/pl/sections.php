@@ -30,6 +30,7 @@ return [
         'about' => 'O nas',
         'announcements' => 'Ogłoszenia',
         'blog' => 'Blog',
+        'mail_setup' => 'Konfiguracja poczty',
         'business_hosting' => 'Hosting Biznesowy',
         'col_domains' => 'Domeny',
         'col_hosting' => 'Hosting',

@@ -15,10 +15,12 @@ use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Service;
 use App\Models\ServiceAddon;
+use App\Models\Setting;
 use App\Models\SslOrder;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
@@ -41,6 +43,32 @@ class OrderService
      * @param  array  $items  Each item: ['type' => 'service'|'domain', 'product_id' => ..., 'domain' => ..., 'billing_cycle' => ..., 'amount' => ...]
      * @return Order The created order with invoice attached.
      */
+    /**
+     * What the customer accepted, captured at the moment they accepted it.
+     *
+     * Only recorded for an order placed through a request that actually
+     * carried the tick-box; an order an administrator raises by hand has
+     * nothing to record, and inventing a consent for it would be worse than
+     * leaving the columns empty.
+     */
+    private function termsAcceptance(): array
+    {
+        $request = request();
+
+        if (! $request || ! $request->boolean('terms')) {
+            return [];
+        }
+
+        return [
+            'terms_accepted_at' => now(),
+            'terms_version' => \App\Http\Controllers\LegalController::REVISED,
+            'terms_ip' => $request->ip(),
+            // Named rather than linked: the customer is entitled to the text
+            // they agreed to, and these documents get revised.
+            'terms_documents' => array_keys(\App\Http\Controllers\LegalController::DOCUMENTS),
+        ];
+    }
+
     public function processOrder(Client $client, array $items, string $paymentMethod, ?string $promoCode = null): Order
     {
         $order = DB::transaction(function () use ($client, $items, $paymentMethod, $promoCode) {
@@ -56,7 +84,7 @@ class OrderService
                 'status' => OrderStatus::Pending->value,
                 'ip_address' => request()->ip() ?? '0.0.0.0',
                 'promo_code' => $promoCode,
-            ]);
+            ] + $this->termsAcceptance());
 
             $invoiceItems = [];
 
@@ -210,7 +238,98 @@ class OrderService
             $this->invoiceService->markPaid($invoice, null, 'system');
         }
 
+        // Test accounts: an order from an address on the AutoApproveOrderEmails
+        // list is settled here without waiting for money. markPaid triggers
+        // the ordinary payment -> acceptance -> provisioning chain, so a test
+        // exercises the real path rather than a side door. With the setting
+        // empty (the default) this block does nothing.
+        if ($invoice && (float) $invoice->total > 0.009 && $this->isAutoApproveClient($client)) {
+            Log::warning('Order #'.$order->order_num.' auto-approved without payment (test account)', [
+                'client_id' => $client->id,
+                'email' => $client->email,
+                'invoice_id' => $invoice->id,
+                'amount' => $invoice->total,
+            ]);
+            $this->invoiceService->markPaid($invoice, null, 'system');
+        }
+
         return $order->fresh();
+    }
+
+    /**
+     * Test accounts whose orders are accepted without payment.
+     *
+     * AutoApproveOrderEmails holds a comma-separated list of addresses. With
+     * it empty nobody matches; clearing it when the test is over switches the
+     * behaviour off entirely, no code change needed.
+     */
+    private function isAutoApproveClient(Client $client): bool
+    {
+        $raw = trim((string) Setting::get('AutoApproveOrderEmails', ''));
+        if ($raw === '') {
+            return false;
+        }
+
+        $allowed = array_filter(array_map(
+            static fn ($e) => mb_strtolower(trim($e)),
+            explode(',', $raw)
+        ));
+
+        return in_array(mb_strtolower(trim((string) $client->email)), $allowed, true);
+    }
+
+    /**
+     * Tell the operator that a paid service could not be set up.
+     *
+     * The customer paid and nothing was provisioned. That used to reach the
+     * log file only, where nobody was looking, while the customer kept
+     * waiting for the service they had paid for - and with card payment the
+     * money is gone the moment the order is placed, so provisioning is the
+     * only step left that can go wrong.
+     *
+     * Announced through the notification rules first (Telegram, Slack, email,
+     * whatever the operator subscribed), with a plain email to the system
+     * address as the fallback when no rule is listening. Never allowed to
+     * break the order flow: we are already handling a failure.
+     */
+    private function notifyProvisioningFailed(Service $svc, string $reason): void
+    {
+        $lines = [
+            'Payment received but the service could not be provisioned. It is waiting in "pending".',
+            '',
+            'Service : #'.$svc->id,
+            'Product : '.($svc->product?->name ?? '-'),
+            'Domain  : '.($svc->domain ?: '-'),
+            'Client  : '.($svc->client_id ?? '-'),
+            'Reason  : '.$reason,
+            'When    : '.now()->format('Y-m-d H:i'),
+        ];
+
+        $subject = 'PROVISIONING FAILED - service #'.$svc->id.' ('.($svc->domain ?: 'no domain').')';
+
+        try {
+            app(\App\Services\NotificationService::class)->dispatch('service.provision_failed', [
+                'event_type' => 'service.provision_failed',
+                'subject' => $subject,
+                'message' => implode("\n", $lines),
+                'service_id' => $svc->id,
+                'client_id' => $svc->client_id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Provisioning failure could not be announced', ['service_id' => $svc->id, 'error' => $e->getMessage()]);
+        }
+
+        try {
+            $adminEmail = Setting::get('Email', null);
+
+            if ($adminEmail) {
+                Mail::raw(implode("\n", $lines), function ($m) use ($adminEmail, $subject) {
+                    $m->to($adminEmail)->subject($subject);
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::error('Provisioning failure email could not be sent', ['service_id' => $svc->id, 'error' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -286,6 +405,8 @@ class OrderService
                     Log::info('Auto-provisioned service #'.$svc->id.' on order accept');
                 } else {
                     Log::error('Auto-provision failed for service #'.$svc->id.': '.($result['message'] ?? 'unknown'));
+
+                    $this->notifyProvisioningFailed($svc, (string) ($result['message'] ?? 'unknown'));
                 }
             } else {
                 // No server module involved — plain activation. Legitimate for
@@ -727,7 +848,15 @@ class OrderService
         $registrar = DomainPricing::whereRaw('LOWER(extension) = ?', [strtolower($tld)])
             ->value('auto_registrar');
 
-        return filled($registrar) ? (string) $registrar : null;
+        if (filled($registrar)) {
+            return (string) $registrar;
+        }
+
+        // A TLD added without a registrar would otherwise fall through to the
+        // Manual module, which marks the domain active without registering it.
+        $default = (string) \App\Models\Setting::get('default_registrar', '');
+
+        return $default !== '' && strtolower($default) !== 'manual' ? $default : null;
     }
 
     private function createDomainForOrder(Order $order, Client $client, array $item): Domain

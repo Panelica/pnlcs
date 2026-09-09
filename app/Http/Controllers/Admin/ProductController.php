@@ -161,7 +161,7 @@ class ProductController extends Controller
 
         // The plan lives on the panel; the product records which one it sells.
         if ($request->filled('package_name')) {
-            $validated['config_options'] = json_encode(['package_name' => $request->input('package_name')]);
+            $validated['config_options'] = ['package_name' => $request->input('package_name')];
         }
 
         $product = Product::create($validated);
@@ -268,7 +268,7 @@ class ProductController extends Controller
         if ($request->has('package_name')) {
             $config = $this->productConfig($product->fresh());
             $config['package_name'] = (string) $request->input('package_name');
-            $product->update(['config_options' => json_encode($config)]);
+            $product->update(['config_options' => $config]);
         }
 
         // Panelica managed resources -> merged into config_options (preserves
@@ -322,7 +322,7 @@ class ProductController extends Controller
             } else {
                 unset($config['panelica_plan_id']);
             }
-            $product->update(['config_options' => json_encode($config)]);
+            $product->update(['config_options' => $config]);
         }
 
         // Update pricing

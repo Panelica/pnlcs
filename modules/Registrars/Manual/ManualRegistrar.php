@@ -37,6 +37,25 @@ class ManualRegistrar implements RegistrarModuleInterface
             "next_due_date"       => now()->addYears($years),
         ]);
 
+        // Nothing was sent to a registry: this module exists for operators who
+        // register by hand. Saying so out loud matters - a paid order that
+        // quietly reports success is a customer holding a domain nobody owns.
+        \Illuminate\Support\Facades\Log::warning(
+            "Domain {$domain->domain} was marked active by the Manual registrar - no registry was contacted. Register it by hand."
+        );
+
+        try {
+            app(\App\Services\NotificationService::class)->dispatch('domain.manual_registration_required', [
+                'event_type' => 'domain.manual_registration_required',
+                'subject'    => 'Domain needs registering by hand',
+                'message'    => "{$domain->domain} was ordered and paid for, but its extension has no registrar module "
+                    ."configured, so nothing was sent to a registry. Register it by hand or assign a registrar to the TLD.",
+                'domain_id'  => $domain->id,
+            ]);
+        } catch (\Throwable) {
+            // The log line above is the fallback delivery path.
+        }
+
         return [
             "success" => true,
             "message" => "Domain registered manually.",

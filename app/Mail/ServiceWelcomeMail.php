@@ -5,6 +5,7 @@ namespace App\Mail;
 use App\Models\Service;
 use App\Mail\Concerns\LocalizesToRecipient;
 use App\Models\Setting;
+use App\Services\ProvisioningService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -59,7 +60,34 @@ class ServiceWelcomeMail extends Mailable implements ShouldQueue
                     $server?->nameserver1, $server?->nameserver2,
                     $server?->nameserver3, $server?->nameserver4,
                 ])),
+                // Mail client settings, only for a service that actually has
+                // mailboxes. This is the first thing customers open a ticket
+                // about after buying, so it goes in the welcome mail rather
+                // than waiting to be asked for.
+                'mailHost' => $this->mailHost(),
             ],
         );
+    }
+
+    /**
+     * Hostname the customer's mail client connects to, or null when this
+     * service has no mailboxes (a domain-only or unprovisioned service).
+     */
+    private function mailHost(): ?string
+    {
+        try {
+            $module = app(ProvisioningService::class)->resolveModule($this->service);
+        } catch (\Throwable $e) {
+            return null;
+        }
+
+        if (! $module || ! method_exists($module, 'hostingFeatures') || ! method_exists($module, 'mailHostname')) {
+            return null;
+        }
+        if (! in_array('emails', $module->hostingFeatures($this->service), true)) {
+            return null;
+        }
+
+        return $module->mailHostname($this->service);
     }
 }

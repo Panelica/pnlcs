@@ -146,6 +146,45 @@ class DomainSearchController extends Controller
         ];
     }
 
+    /**
+     * Ask the configured registrar module whether a domain is free.
+     *
+     * Returns null when there is no module, it cannot answer, or the call
+     * fails - the caller then falls back to WHOIS. A null is "we do not know",
+     * never "it is available".
+     */
+    protected function checkWithRegistrar(string $domain): ?array
+    {
+        $name = (string) \App\Models\Setting::get('default_registrar', 'domainnameapi');
+        if ($name === '' || $name === 'manual') {
+            return null;
+        }
+
+        try {
+            $module = app(\App\Services\Module\ModuleRegistry::class)->getRegistrarModule($name);
+            if (! $module) {
+                return null;
+            }
+
+            $result = $module->checkAvailability($domain);
+            if (! empty($result['error'])) {
+                return null;
+            }
+
+            return [
+                'available' => (bool) ($result['available'] ?? false),
+                'checked'   => true,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Registrar availability check failed; falling back to WHOIS', [
+                'domain'  => $domain,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
     protected function checkSingleDomain(string $sld, string $tld, $allTlds): ?array
     {
         $fullDomain = $sld . $tld;
@@ -161,8 +200,18 @@ class DomainSearchController extends Controller
         // it used to be read as "available", so a registry being unreachable
         // put a price and an add-to-cart button next to a name nobody had
         // checked - and the customer paid for a registration that then failed.
-        $whoisResult = app(\App\Services\WhoisLookup::class)
-            ->check($fullDomain, $this->whoisServers[$tldKey] ?? null);
+        // The registrar answers from the registry itself, so it covers TLDs
+        // that run no port-43 WHOIS at all (.dev and .app among them) and the
+        // .tr family, whose availability WHOIS reports unreliably. WHOIS stays
+        // as the fallback for when no registrar module is configured or the
+        // API is unreachable - an unanswered lookup must still not read as
+        // "available".
+        $whoisResult = $this->checkWithRegistrar($fullDomain);
+
+        if ($whoisResult === null) {
+            $whoisResult = app(\App\Services\WhoisLookup::class)
+                ->check($fullDomain, $this->whoisServers[$tldKey] ?? null);
+        }
 
         return [
             "domain"      => $fullDomain,
@@ -174,6 +223,8 @@ class DomainSearchController extends Controller
             "price"       => $pricing->register_price,
             "renew_price" => $pricing->renew_price,
             "transfer_price" => $pricing->transfer_price,
+            "restore_price" => $pricing->restore_price,
+            "grace_period" => $pricing->grace_period,
         ];
     }
 

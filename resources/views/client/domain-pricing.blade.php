@@ -16,10 +16,19 @@
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;" id="category-tabs">
         <button onclick="filterTLDs('all')" id="tab-all" style="padding:8px 18px;background:#1a4d80;color:#fff;border:none;border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.all') }}</button>
         <button onclick="filterTLDs('popular')" id="tab-popular" style="padding:8px 18px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.popular') }}</button>
+        <button onclick="filterTLDs('generic')" id="tab-generic" style="padding:8px 18px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.generic') }}</button>
+        <button onclick="filterTLDs('local')" id="tab-local" style="padding:8px 18px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.local_tlds') }}</button>
         <button onclick="filterTLDs('country')" id="tab-country" style="padding:8px 18px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.country_tab') }}</button>
         <button onclick="filterTLDs('new')" id="tab-new" style="padding:8px 18px;background:var(--card);color:var(--muted);border:1px solid var(--border);border-radius:20px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;">{{ __('client.domain_pricing.new_tlds') }}</button>
         <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
             <input type="text" id="tld-filter" placeholder="{{ __('client.domain_pricing.filter') }}" oninput="applyFilters()" style="border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;outline:none;font-family:inherit;width:160px;">
+        </div>
+    </div>
+
+    <div id="local-warning" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #b91c1c;border-radius:8px;padding:14px 18px;margin-bottom:16px;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+            <div style="color:#b91c1c;font-size:13px;font-weight:600;line-height:1.6;">{{ __("client.domain_search.local_warning") }}</div>
         </div>
     </div>
 
@@ -31,32 +40,24 @@
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('common.actions.register') }}</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_search.transfer') }}</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_search.renew') }}</th>
+                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_search.grace') }}</th>
+                    <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_search.restore') }}</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.domain_pricing.min_years') }}</th>
                     <th style="padding:12px 20px;text-align:center;color:#fff;font-size:13px;font-weight:600;">{{ __('client.security.action') }}</th>
                 </tr>
             </thead>
             <tbody>
-                @php
-                $popularTlds = ['.com','.net','.org','.io','.dev','.app','.co','.ai','.me','.tv','.cc','.biz','.info','.us'];
-                $countryTlds = ['.de','.uk','.fr','.nl','.eu','.tr','.ru','.in','.ca','.au','.us'];
-                $newTlds     = ['.xyz','.online','.site','.store','.tech','.space','.cloud','.host','.pro','.agency','.digital','.email','.solutions','.systems','.network','.studio','.design','.shop','.live','.world','.today','.media','.zone','.club','.life','.center'];
-                @endphp
-                @foreach($popular as $tld)
-                @php
-                $cats = [];
-                if(in_array($tld->extension, $popularTlds)) $cats[] = 'popular';
-                if(in_array($tld->extension, $countryTlds)) $cats[] = 'country';
-                if(in_array($tld->extension, $newTlds)) $cats[] = 'new';
-                if(empty($cats)) $cats[] = 'popular';
-                @endphp
-                <tr class="tld-row" data-cats="{{ implode(',', $cats) }}" data-ext="{{ $tld->extension }}" style="border-top:1px solid var(--border);">
+                                @foreach($popular as $tld)
+                                <tr class="tld-row" data-cats="{{ $tld->category }}{{ $tld->is_popular ? ',popular' : '' }}" data-ext="{{ $tld->extension }}" style="border-top:1px solid var(--border);">
                     <td style="padding:12px 20px;">
                         <span style="font-family:monospace;font-size:15px;font-weight:700;color:#1a4d80;">{{ $tld->extension }}</span>
                         @if($tld->dns_management)<span style="margin-left:6px;font-size:10px;background:#eff6ff;color:#2563eb;padding:2px 6px;border-radius:4px;font-weight:600;">DNS</span>@endif
                     </td>
-                    <td style="padding:12px 20px;text-align:center;font-weight:700;color:var(--text);font-size:15px;">{{ money_fmt($tld->register_price) }}<span style="font-size:11px;color:var(--muted);font-weight:400;">/yr</span></td>
-                    <td style="padding:12px 20px;text-align:center;color:var(--muted);">{{ money_fmt($tld->transfer_price) }}</td>
-                    <td style="padding:12px 20px;text-align:center;color:var(--muted);">{{ money_fmt($tld->renew_price) }}</td>
+                    <td style="padding:12px 20px;text-align:center;font-weight:700;color:var(--text);font-size:15px;">{{ domain_money_fmt($tld->register_price) }}<span style="font-size:11px;color:var(--muted);font-weight:400;">/{{ __('client.domain_search.per_year') }}</span></td>
+                    <td style="padding:12px 20px;text-align:center;color:var(--muted);">{{ domain_money_fmt($tld->transfer_price) }}</td>
+                    <td style="padding:12px 20px;text-align:center;color:var(--muted);">{{ domain_money_fmt($tld->renew_price) }}</td>
+                    <td style="padding:12px 20px;text-align:center;color:var(--muted);font-size:13px;">{{ $tld->grace_period > 0 ? $tld->grace_period . ' ' . __('client.domain_search.days') : '-' }}</td>
+                    <td style="padding:12px 20px;text-align:center;color:var(--muted);">@if($tld->restore_price > 0){{ domain_money_fmt($tld->restore_price) }}@else<span title="{{ __("client.domain_search.no_restore_title") }}" style="display:inline-block;padding:2px 8px;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;font-size:11px;font-weight:700;white-space:nowrap;">{{ __("client.domain_search.no_restore") }}</span>@endif</td>
                     <td style="padding:12px 20px;text-align:center;color:var(--muted);font-size:13px;">{{ $tld->min_years }}</td>
                     <td style="padding:12px 20px;text-align:center;">
                         <a href="{{ route('client.domain.search') }}?tld={{ $tld->extension }}" style="padding:6px 14px;background:#06d6a0;color:var(--text);font-size:12px;font-weight:700;border-radius:6px;text-decoration:none;display:inline-block;">{{ __('common.actions.register') }}</a>
@@ -73,6 +74,18 @@
     </div>
 </div>
 
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-top:20px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;">{{ __("client.domain_search.legend_title") }}</div>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.7;">
+            <li>{{ __("client.domain_search.legend_grace") }}</li>
+            <li>{{ __("client.domain_search.legend_restore") }}</li>
+            <li style="color:var(--text);"><strong>{{ __("client.domain_search.legend_local") }}</strong></li>
+            <li style="color:var(--text);"><strong>{{ __("client.domain_search.legend_data") }}</strong></li>
+            <li>{{ __("client.domain_search.legend_notice") }}</li>
+        </ul>
+    </div>
+
+
 <script>
 var currentFilter = 'all';
 function filterTLDs(cat) {
@@ -82,6 +95,8 @@ function filterTLDs(cat) {
     });
     var ab = document.getElementById('tab-' + cat);
     if(ab) { ab.style.background = '#1a4d80'; ab.style.color = '#fff'; ab.style.border = '1px solid #1a4d80'; }
+    var w = document.getElementById('local-warning');
+    if (w) w.style.display = (cat === 'local') ? 'block' : 'none';
     applyFilters();
 }
 function applyFilters() {

@@ -31,6 +31,7 @@ return [
         'about' => 'About',
         'announcements' => 'Announcements',
         'blog' => 'Blog',
+        'mail_setup' => 'Email Setup',
         'business_hosting' => 'Business Hosting',
         'col_domains' => 'Domains',
         'col_hosting' => 'Hosting',

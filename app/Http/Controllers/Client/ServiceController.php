@@ -338,8 +338,11 @@ class ServiceController extends Controller
         $emails = $module->listEmails($service);
         $domains = $module->accountDomains($service);
         $webmailUrl = method_exists($module, 'webmailUrl') ? $module->webmailUrl($service) : null;
+        // Shown on the page so the customer does not have to open a ticket to
+        // learn where their mail client should connect.
+        $mailHost = method_exists($module, 'mailHostname') ? $module->mailHostname($service) : null;
 
-        return view('client.services.hosting.email', compact('service', 'emails', 'domains', 'webmailUrl'));
+        return view('client.services.hosting.email', compact('service', 'emails', 'domains', 'webmailUrl', 'mailHost'));
     }
 
     public function storeEmail(Request $request, Service $service)

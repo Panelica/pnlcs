@@ -179,6 +179,13 @@ return [
         'reactivated' => '您的服务已重新激活。',
     ],
     'service_welcome' => [
+        'mail_heading' => '邮件设置',
+        'mail_intro' => '您可以使用这些设置在手机和 Outlook 等程序中使用为域名创建的邮箱。',
+        'mail_server_label' => '邮件服务器',
+        'mail_incoming_label' => '收件',
+        'mail_outgoing_label' => '发件',
+        'mail_username_note' => '用户名是您的完整邮箱地址，密码是创建邮箱时设置的密码。发送邮件需要身份验证。',
+        'mail_guide_link' => '分步设置指南（Outlook、iPhone、Android）',
         'access_heading' => '您的访问信息',
         'credentials_intro' => '请使用以下信息登录,并妥善保管。',
         'control_panel' => '控制面板',

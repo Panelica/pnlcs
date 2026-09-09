@@ -180,6 +180,13 @@ return [
         'reactivated' => 'Twoja usługa została ponownie aktywowana.',
     ],
     'service_welcome' => [
+        'mail_heading' => 'Konfiguracja poczty',
+        'mail_intro' => 'Skrzynki utworzone dla Twojej domeny możesz używać w telefonie i w programach takich jak Outlook z tymi ustawieniami.',
+        'mail_server_label' => 'Serwer poczty',
+        'mail_incoming_label' => 'Poczta przychodząca',
+        'mail_outgoing_label' => 'Poczta wychodząca',
+        'mail_username_note' => 'Nazwa użytkownika to pełny adres e-mail, a hasło to hasło ustawione przy tworzeniu skrzynki. Poczta wychodząca wymaga uwierzytelnienia.',
+        'mail_guide_link' => 'Instrukcja krok po kroku (Outlook, iPhone, Android)',
         'access_heading' => 'Twoje dane dostępowe',
         'credentials_intro' => 'Zaloguj się przy użyciu poniższych danych i przechowuj je w bezpiecznym miejscu.',
         'control_panel' => 'Panel sterowania',

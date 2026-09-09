@@ -180,6 +180,13 @@ return [
         'reactivated' => 'Your service has been reactivated.',
     ],
     'service_welcome' => [
+        'mail_heading' => 'Email Setup',
+        'mail_intro' => 'You can use the mailboxes you create for your domain on your phone and in programs such as Outlook with these settings.',
+        'mail_server_label' => 'Mail server',
+        'mail_incoming_label' => 'Incoming mail',
+        'mail_outgoing_label' => 'Outgoing mail',
+        'mail_username_note' => 'The username is your full email address and the password is the one you set when creating the mailbox. Outgoing mail requires authentication.',
+        'mail_guide_link' => 'Step-by-step setup guide (Outlook, iPhone, Android)',
         'access_heading' => 'Your Access Details',
         'credentials_intro' => 'Sign in with the details below and keep them somewhere safe.',
         'control_panel' => 'Control Panel',

@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'registrar_balance' => [
+        'low_subject' => 'Niskie saldo rejestratora - pozostało :amount :currency',
+        'low_body' => 'Saldo konta rejestratora domen (:registrar) spadło do :amount :currency.
+
+Próg ostrzeżenia: :threshold :currency
+
+Gdy się wyczerpie, nowe rejestracje i automatyczne odnowienia będą odrzucane po kolei, a panel nadal będzie przyjmował zamówienia. Doładuj konto.',
+        'unreadable_subject' => 'Nie udało się odczytać salda rejestratora',
+        'unreadable_body' => 'Nie udało się odczytać salda konta rejestratora domen (:registrar).
+
+Błąd: :error
+
+Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżenie o niskim saldzie nie może zostać wysłane.',
+    ],
     'iyzico' => [
         'page_title' => 'Bezpieczna płatność',
         'cancel' => 'Anuluj i wróć do faktury',

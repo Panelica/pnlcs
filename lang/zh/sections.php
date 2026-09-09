@@ -30,6 +30,7 @@ return [
         'about' => '关于我们',
         'announcements' => '公告',
         'blog' => '博客',
+        'mail_setup' => '邮件设置',
         'business_hosting' => '企业主机',
         'col_domains' => '域名',
         'col_hosting' => '主机服务',

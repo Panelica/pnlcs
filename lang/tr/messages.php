@@ -1,6 +1,20 @@
 <?php
 
 return [
+    'registrar_balance' => [
+        'low_subject' => 'Registrar bakiyesi düşük - :amount :currency kaldı',
+        'low_body' => 'Alan adı registrar hesabınızın (:registrar) bakiyesi :amount :currency seviyesine düştü.
+
+Uyarı eşiği: :threshold :currency
+
+Bakiye bittiğinde yeni tesciller ve otomatik yenilemeler tek tek reddedilir, panel ise sipariş almaya devam eder. Bakiyeyi yükleyin.',
+        'unreadable_subject' => 'Registrar bakiyesi okunamadı',
+        'unreadable_body' => 'Alan adı registrar hesabının (:registrar) bakiyesi okunamadı.
+
+Hata: :error
+
+API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye uyarısı da verilemez.',
+    ],
     'iyzico' => [
         'page_title' => 'Güvenli ödeme',
         'cancel' => 'Vazgeç ve faturaya dön',

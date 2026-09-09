@@ -20,7 +20,7 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.domain_pricing.no_pricing') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>{{ __('admin.domain_pricing.extension') }}</th><th>{{ __('common.actions.register') }}</th><th>{{ __('admin.domain_pricing.transfer') }}</th><th>{{ __('admin.domain_pricing.renew') }}</th><th>{{ __('admin.domain_pricing.grace') }}</th><th>{{ __('admin.domain_pricing.min_max_years') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('admin.domain_pricing.extension') }}</th><th>{{ __('common.actions.register') }}</th><th>{{ __('admin.domain_pricing.transfer') }}</th><th>{{ __("admin.domain_pricing.renew") }}</th><th>{{ __("admin.domain_pricing.restore") }}</th><th>{{ __("admin.domain_pricing.grace") }}</th><th>{{ __('admin.domain_pricing.min_max_years') }}</th><th>{{ __('common.table.registrar') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($tlds as $tld)
         <tr>
@@ -28,6 +28,7 @@
             <td>{{ money_fmt($tld->register_price) }}</td>
             <td>{{ money_fmt($tld->transfer_price) }}</td>
             <td>{{ money_fmt($tld->renew_price) }}</td>
+            <td>{{ $tld->restore_price > 0 ? money_fmt($tld->restore_price) : "-" }}</td>
             <td>{{ $tld->grace_period }}d</td>
             <td>{{ $tld->min_years }}-{{ $tld->max_years }}</td>
             <td>{{ $tld->auto_registrar ?: __('admin.domain_pricing.manual') }}</td>
@@ -62,7 +63,10 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.register_price') }}</label><input type="number" name="register_price" id="tld-reg" step="0.01" required class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.transfer_price') }}</label><input type="number" name="transfer_price" id="tld-trans" step="0.01" required class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.renew_price') }}</label><input type="number" name="renew_price" id="tld-ren" step="0.01" required class="form-control"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.grace_period') }}</label><input type="number" name="grace_period" id="tld-grace" value="0" min="0" class="form-control"></div>
+                    <div class="form-group"><label class="form-label"><input type="checkbox" name="is_popular" id="tld-popular" value="1"> {{ __('admin.domain_pricing.is_popular') }}</label></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.category') }}</label><select name="category" id="tld-cat" class="form-control"><option value="generic">{{ __('client.domain_pricing.generic') }}</option><option value="local">{{ __('client.domain_pricing.local_tlds') }}</option><option value="country">{{ __('client.domain_pricing.country_tab') }}</option><option value="new" selected>{{ __('client.domain_pricing.new_tlds') }}</option></select></div>
+                    <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.restore_price") }}</label><input type="number" name="restore_price" id="tld-restore" step="0.01" min="0" value="0" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.grace_period") }}</label><input type="number" name="grace_period" id="tld-grace" value="0" min="0" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.min_years') }}</label><input type="number" name="min_years" id="tld-min" value="1" min="1" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.max_years') }}</label><input type="number" name="max_years" id="tld-max" value="10" min="1" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.auto_registrar') }}</label><input type="text" name="auto_registrar" id="tld-reg2" class="form-control" placeholder="none"></div>
@@ -87,6 +91,9 @@ function openAddTLD() {
     document.getElementById('tld-reg').value = '';
     document.getElementById('tld-trans').value = '';
     document.getElementById('tld-ren').value = '';
+    document.getElementById('tld-restore').value = 0;
+    document.getElementById('tld-cat').value = 'new';
+    document.getElementById('tld-popular').checked = false;
     document.getElementById('tld-grace').value = 0;
     document.getElementById('tld-min').value = 1;
     document.getElementById('tld-max').value = 10;
@@ -103,6 +110,9 @@ function openEditTLD(d) {
     document.getElementById('tld-reg').value = d.register_price;
     document.getElementById('tld-trans').value = d.transfer_price;
     document.getElementById('tld-ren').value = d.renew_price;
+    document.getElementById('tld-restore').value = d.restore_price || 0;
+    document.getElementById('tld-cat').value = d.category || 'new';
+    document.getElementById('tld-popular').checked = !!d.is_popular;
     document.getElementById('tld-grace').value = d.grace_period || 0;
     document.getElementById('tld-min').value = d.min_years || 1;
     document.getElementById('tld-max').value = d.max_years || 10;

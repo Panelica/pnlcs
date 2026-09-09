@@ -10,11 +10,11 @@ class Domain extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['client_id', 'order_id', 'type', 'domain', 'epp_code', 'registrar', 'registration_period', 'registration_date', 'expiry_date', 'next_due_date', 'status', 'dns_management', 'email_forwarding', 'id_protection', 'is_premium', 'payment_method', 'first_payment_amount', 'recurring_amount', 'nameservers', 'notes', 'last_sync_at', 'last_sync_status'];
+    protected $fillable = ['client_id', 'order_id', 'type', 'domain', 'epp_code', 'registrar', 'registration_period', 'registration_date', 'expiry_date', 'next_due_date', 'status', 'dns_management', 'email_forwarding', 'id_protection', 'is_premium', 'payment_method', 'first_payment_amount', 'recurring_amount', 'nameservers', 'notes', 'last_sync_at', 'last_sync_status', 'renewal_reminder_stage', 'renewal_reminder_sent_at'];
 
     protected function casts(): array
     {
-        return ['registration_date' => 'date', 'expiry_date' => 'date', 'next_due_date' => 'date', 'last_sync_at' => 'datetime', 'epp_code' => EncryptedValue::class, 'dns_management' => 'boolean', 'email_forwarding' => 'boolean', 'id_protection' => 'boolean', 'is_premium' => 'boolean', 'first_payment_amount' => 'decimal:2', 'recurring_amount' => 'decimal:2'];
+        return ['registration_date' => 'date', 'expiry_date' => 'date', 'next_due_date' => 'date', 'last_sync_at' => 'datetime', 'renewal_reminder_sent_at' => 'datetime', 'epp_code' => EncryptedValue::class, 'dns_management' => 'boolean', 'email_forwarding' => 'boolean', 'id_protection' => 'boolean', 'is_premium' => 'boolean', 'first_payment_amount' => 'decimal:2', 'recurring_amount' => 'decimal:2'];
     }
 
     /**

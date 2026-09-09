@@ -53,6 +53,11 @@ class ViewServiceProvider extends ServiceProvider
             'client.auth.forgot-password',
             'client.auth.reset-password',
             'client.auth.two-factor',
+            'legal.index',
+            'legal.document',
+            'pages.about',
+            'pages.ssl',
+            'pages.mail-setup',
             'admin.auth.login',
             'admin.auth.two-factor',
         ], LanguageComposer::class);

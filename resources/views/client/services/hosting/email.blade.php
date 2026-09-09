@@ -40,6 +40,20 @@
     .em-pop form{display:flex;flex-direction:column;align-items:stretch}
     .em-pop .em-btn{width:100%;justify-content:center}
     .em-pop .em-inp{width:100%}
+    .em-set{padding:0 18px 18px}
+    .em-set-note{font-size:12.5px;color:var(--muted);padding:14px 18px 12px;line-height:1.6}
+    .em-set-table{width:100%;border-collapse:collapse}
+    .em-set-table thead th{text-align:left;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:9px 12px;border-bottom:1px solid var(--border)}
+    .em-set-table tbody td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13.5px;color:var(--text);vertical-align:middle}
+    .em-set-table tbody tr:last-child td{border-bottom:none}
+    .em-set-proto{font-weight:700}
+    .em-set-proto small{display:block;font-weight:500;color:var(--muted);font-size:11.5px;margin-top:2px}
+    .em-copy{display:inline-flex;align-items:center;gap:6px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:5px 9px;cursor:pointer;color:var(--text)}
+    .em-copy:hover{border-color:var(--primary);color:var(--primary)}
+    .em-copy i{font-size:13px;opacity:.6}
+    .em-set-foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:14px 18px 0;font-size:12.5px;color:var(--muted)}
+    .em-set-foot a{color:var(--primary);font-weight:600;text-decoration:none}
+    .em-set-foot a:hover{text-decoration:underline}
 </style>
 
 <a href="{{ route('client.services.show', $service) }}" class="em-back"><i class="ri-arrow-left-line"></i>{{ $service->product?->name ?? __('client.services.title') }}</a>
@@ -120,6 +134,47 @@
     @endif
 </div>
 
+@if(!empty($mailHost))
+{{-- Mail client settings. This was the most common support request: the
+     customer created the mailbox and then did not know what to type into
+     Outlook. --}}
+<div class="em-card">
+    <div class="em-card-h">{{ __('client.hosting.email.settings_title') }}</div>
+    <div class="em-set-note">{{ __('client.hosting.email.settings_note') }}</div>
+    <div style="overflow-x:auto" class="em-set">
+        <table class="em-set-table">
+            <thead>
+                <tr>
+                    <th>{{ __('client.hosting.email.settings_purpose') }}</th>
+                    <th>{{ __('client.hosting.email.settings_server') }}</th>
+                    <th>{{ __('client.hosting.email.settings_port') }}</th>
+                    <th>{{ __('client.hosting.email.settings_security') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach([
+                    ['IMAP', __('client.hosting.email.settings_incoming_recommended'), '993', 'SSL/TLS'],
+                    ['POP3', __('client.hosting.email.settings_incoming_alt'), '995', 'SSL/TLS'],
+                    ['SMTP', __('client.hosting.email.settings_outgoing'), '465', 'SSL/TLS'],
+                    ['SMTP', __('client.hosting.email.settings_outgoing_alt'), '587', 'STARTTLS'],
+                ] as [$proto, $label, $port, $sec])
+                <tr>
+                    <td class="em-set-proto">{{ $proto }}<small>{{ $label }}</small></td>
+                    <td><button type="button" class="em-copy" data-copy="{{ $mailHost }}"><i class="ri-file-copy-line"></i>{{ $mailHost }}</button></td>
+                    <td><button type="button" class="em-copy" data-copy="{{ $port }}"><i class="ri-file-copy-line"></i>{{ $port }}</button></td>
+                    <td style="color:var(--muted)">{{ $sec }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    <div class="em-set-foot" style="padding-bottom:18px">
+        <span>{{ __('client.hosting.email.settings_username') }}</span>
+        <a href="{{ route('pages.mail-setup') }}" target="_blank" rel="noopener">{{ __('client.hosting.email.settings_guide') }} <i class="ri-external-link-line" style="font-size:11px"></i></a>
+    </div>
+</div>
+@endif
+
 <script>
 (function(){
     document.querySelectorAll('.em-card details').forEach(function(d){
@@ -132,6 +187,15 @@
         });
     });
     document.addEventListener('click',function(e){document.querySelectorAll('.em-card details[open]').forEach(function(d){if(!d.contains(e.target))d.removeAttribute('open');});});
+    document.querySelectorAll('.em-copy').forEach(function(b){
+        b.addEventListener('click',function(){
+            var v=b.dataset.copy,ic=b.querySelector('i');
+            var done=function(){if(!ic)return;ic.className='ri-check-line';setTimeout(function(){ic.className='ri-file-copy-line';},1400);};
+            if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(v).then(done).catch(function(){});return;}
+            var t=document.createElement('textarea');t.value=v;t.style.position='fixed';t.style.opacity='0';
+            document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(err){}document.body.removeChild(t);
+        });
+    });
 })();
 </script>
 
