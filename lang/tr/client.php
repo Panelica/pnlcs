@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'password.recently_used' => 'Bu parolayı yakın zamanda kullandınız. Son :count parolanızdan farklı bir parola seçin.',
     'email_verify.title' => 'E-posta adresinizi onaylayın',
     'email_verify.subtitle' => 'Tek tıkla hesabınız sipariş vermeye hazır olur.',
     'email_verify.sent_to' => ':email adresine bir onay bağlantısı gönderdik.',

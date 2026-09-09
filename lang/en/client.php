@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'password.recently_used' => 'You have used this password recently. Choose one different from your last :count passwords.',
     'email_verify.title' => 'Confirm your email address',
     'email_verify.subtitle' => 'One click and your account is ready to order.',
     'email_verify.sent_to' => 'We sent a confirmation link to :email.',

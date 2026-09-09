@@ -95,14 +95,39 @@ class SetLocale
             return $locale;
         }
 
-        // 6. Accept-Language header
-        $browserLocale = $request->getPreferredLanguage();
-        if ($browserLocale && strlen($browserLocale) >= 2) {
-            return substr($browserLocale, 0, 2);
+        // 6. Ziyaretcinin ulkesi ve tarayici dili.
+        //
+        // Eskiden burada yalniz Accept-Language okunuyordu ve donen deger
+        // etkin diller arasinda olmasa bile kabul ediliyordu; 'fr' isteyen bir
+        // tarayici sistemi olmayan bir dile dusuruyordu. GeoLocale once
+        // tarayicinin istedigi dile, o tutmazsa ulkeye bakiyor ve yalnizca
+        // gercekten yayinda olan bir dil donduruyor.
+        $activeLocales = $this->activeLocales();
+        $geo = \App\Support\GeoLocale::locale($request, $activeLocales);
+
+        if ($geo !== null) {
+            return $geo;
         }
 
         // 7. Default from settings
         return $this->getDefaultLocale();
+    }
+
+    /**
+     * The languages actually switched on, lowercase.
+     *
+     * @return array<int, string>
+     */
+    protected function activeLocales(): array
+    {
+        try {
+            return \App\Models\Language::where('is_active', 1)
+                ->pluck('code')
+                ->map(fn ($c) => strtolower((string) $c))
+                ->all();
+        } catch (\Throwable) {
+            return [config('app.locale', 'en')];
+        }
     }
 
     protected function getDefaultLocale(): string

@@ -14,12 +14,14 @@ use App\Events\TicketReplied;
 use App\Listeners\ApplyEmailTemplate;
 use App\Listeners\ApplyUpgradeListener;
 use App\Listeners\AutoAcceptOrderListener;
+use App\Listeners\AddPlainTextPart;
 use App\Listeners\LogActivityListener;
 use App\Listeners\LogSentEmailListener;
 use App\Listeners\RecordCronHeartbeat;
 use App\Listeners\RenewOnPaymentListener;
 use App\Listeners\SendNotificationListener;
 use App\Listeners\SuppressMailWhenDisabled;
+use Illuminate\Console\Events\ScheduledTaskFailed;
 use Illuminate\Console\Events\ScheduledTaskFinished;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Mail\Events\MessageSending;
@@ -37,6 +39,10 @@ class EventServiceProvider extends ServiceProvider
         MessageSending::class => [
             SuppressMailWhenDisabled::class,
             ApplyEmailTemplate::class,
+            // AFTER the template: the text part is made from the final HTML.
+            // Made from the body before the template rewrote it, the customer
+            // would get one message in HTML and a different one in text.
+            AddPlainTextPart::class,
         ],
         ClientCreated::class => [
             [SendNotificationListener::class, 'handleClientCreated'],
@@ -81,7 +87,12 @@ class EventServiceProvider extends ServiceProvider
             LogSentEmailListener::class,
         ],
         ScheduledTaskFinished::class => [
-            RecordCronHeartbeat::class,
+            [RecordCronHeartbeat::class, 'handleFinished'],
+        ],
+        // A task that throws never reaches the finished event, and a screen
+        // that only records successes shows a failing job as merely stale.
+        ScheduledTaskFailed::class => [
+            [RecordCronHeartbeat::class, 'handleFailed'],
         ],
     ];
 

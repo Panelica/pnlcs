@@ -85,6 +85,24 @@ class DbBackupCommand extends Command
             if (!$ok) {
                 @unlink($file);
                 $error = trim($process->getErrorOutput()) ?: 'unknown error';
+
+                // A mysqldump that is installed but cannot talk to this server
+                // - a client a major version away from the daemon, an auth
+                // plugin it does not know - is the same situation as no
+                // mysqldump at all, and gets the same answer: the PHP dump.
+                // Only when that fails too is the night reported as lost.
+                $this->warn('mysqldump failed ('.$error.') - falling back to a PHP dump over the DB connection.');
+
+                if ($this->phpDump($file)) {
+                    $removed = $this->rotate($dir, (int) ($this->option('retention') ?: Setting::get('db_backup_retention', '7')));
+                    run_hook('AfterDatabaseBackup', ['file' => $file, 'size' => filesize($file)]);
+                    Log::warning('DB backup completed by PHP dump after mysqldump failed', ['file' => $file, 'size' => filesize($file), 'rotated' => $removed, 'mysqldump_error' => $error]);
+                    $this->info(sprintf('Backup written (php dump): %s (%s KB)', $file, (int) (filesize($file) / 1024)));
+
+                    return self::SUCCESS;
+                }
+
+                @unlink($file);
                 Log::error('DB backup failed', ['error' => $error]);
                 app(NotificationService::class)->dispatch('backup.failed', [
                     'event_type' => 'backup.failed',
@@ -146,7 +164,10 @@ class DbBackupCommand extends Command
                 gzwrite($gz, "\n");
             }
 
-            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=1;\n");
+            // The same trailer mysqldump writes. A dump cut off by a full disk
+            // or a killed process is otherwise indistinguishable from a whole
+            // one, and this line is what a restore checks for first.
+            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=1;\n\n-- Dump completed on ".now()->format('Y-m-d H:i:s')."\n");
         } catch (\Throwable $e) {
             gzclose($gz);
             @unlink($file);
@@ -177,7 +198,16 @@ class DbBackupCommand extends Command
      */
     private function writeCredentialFile(array $db): string
     {
-        $cnf = tempnam(sys_get_temp_dir(), 'pnlcs-dump-');
+        // Not tempnam(sys_get_temp_dir()): under cron the open_basedir in force
+        // makes it fall back to the system temp directory with a warning, and
+        // Laravel turns that warning into an exception - the dump had already
+        // been written, so a good backup was reported as a failed command every
+        // night. Our own storage directory is both writable and private.
+        $dir = storage_path('app/backups/tmp');
+        if (! is_dir($dir)) {
+            mkdir($dir, 0700, true);
+        }
+        $cnf = $dir.'/pnlcs-dump-'.bin2hex(random_bytes(8)).'.cnf';
         $lines = "[client]\nuser=\"{$db['username']}\"\npassword=\"{$db['password']}\"\n";
         if (!empty($db['unix_socket'])) {
             $lines .= "socket=\"{$db['unix_socket']}\"\n";

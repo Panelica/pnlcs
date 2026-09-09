@@ -322,6 +322,16 @@ class AuthController extends Controller
         if (! $user) {
             return back()->withErrors(['email' => __('auth.user_not_found')]);
         }
+
+        // The reset link is the third door onto a password, and the same rule
+        // stands at all three.
+        if (\App\Support\PasswordHistory::isReused($user, $request->password)) {
+            return back()->withErrors([
+                'password' => __('client.password.recently_used', ['count' => \App\Support\PasswordHistory::KEEP]),
+            ]);
+        }
+
+        $previousHash = (string) $user->password;
         $user->password = Hash::make($request->password);
 
         // Resetting a password is what somebody does when they think another
@@ -329,6 +339,7 @@ class AuthController extends Controller
         // out has to stop working, or the reset changes nothing for them.
         $user->setRememberToken(Str::random(60));
         $user->save();
+        \App\Support\PasswordHistory::remember($user, $previousHash);
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         return redirect()->route('client.login')->with('success', __('messages.success.password_reset_successfully_please_log_in'));

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'password.recently_used' => 'To hasło było niedawno używane. Wybierz inne niż ostatnie :count hasła.',
     'email_verify.title' => 'Potwierdź swój adres e-mail',
     'email_verify.subtitle' => 'Jedno kliknięcie i konto jest gotowe do zamówień.',
     'email_verify.sent_to' => 'Wysłaliśmy link potwierdzający na adres :email.',

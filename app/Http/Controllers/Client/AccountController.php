@@ -122,7 +122,15 @@ class AccountController extends Controller
         ]);
 
         if ($changingPassword) {
+            if (\App\Support\PasswordHistory::isReused($user, $request->new_password)) {
+                return back()->withErrors([
+                    'new_password' => __('client.password.recently_used', ['count' => \App\Support\PasswordHistory::KEEP]),
+                ]);
+            }
+
+            $previousHash = (string) $user->password;
             $user->update(['password' => Hash::make($request->new_password)]);
+            \App\Support\PasswordHistory::remember($user, $previousHash);
 
             // A "remember me" cookie signs its holder in on its own for as long
             // as the token behind it stays put. Changing the password is how
@@ -220,7 +228,15 @@ class AccountController extends Controller
             return back()->withErrors(['current_password' => __('messages.error.current_password_incorrect')]);
         }
 
+        if (\App\Support\PasswordHistory::isReused($user, $request->password)) {
+            return back()->withErrors([
+                'password' => __('client.password.recently_used', ['count' => \App\Support\PasswordHistory::KEEP]),
+            ]);
+        }
+
+        $previousHash = (string) $user->password;
         $user->update(['password' => Hash::make($request->password)]);
+        \App\Support\PasswordHistory::remember($user, $previousHash);
 
         // A "remember me" cookie signs its holder in on its own for as long as
         // the token behind it stays put. Changing the password is how somebody

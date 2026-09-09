@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'password.recently_used' => '您最近使用过此密码。请选择与最近 :count 个密码不同的密码。',
     'email_verify.title' => '确认您的电子邮件地址',
     'email_verify.subtitle' => '点击一次，您的账户即可下单。',
     'email_verify.sent_to' => '我们已向 :email 发送了确认链接。',
