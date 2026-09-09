@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\GatewaySettings;
+use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\Server;
 use App\Models\Setting;
+use App\Models\Ticket;
 use App\Services\WidgetManager;
 
 class DashboardController extends Controller
@@ -20,7 +23,55 @@ class DashboardController extends Controller
         return view('admin.dashboard', [
             'widgetOutput' => $widgetOutput,
             'setup'        => $this->setupChecklist(),
+            'waiting'      => $this->waitingOnYou(),
         ]);
+    }
+
+    /**
+     * The three numbers an operator opens the panel to check.
+     *
+     * Quick actions were a row of doors with nothing written on them: an
+     * operator still had to walk into orders, invoices and tickets to find out
+     * whether any of them needed them today. Each count is a single indexed
+     * COUNT, and one that comes back zero is not shown at all - a row of
+     * zeroes is noise, and noise is what stops people reading a dashboard.
+     *
+     * Only what this admin is allowed to open: a support agent has no business
+     * being told how many invoices are unpaid.
+     *
+     * @return array<string, int>
+     */
+    private function waitingOnYou(): array
+    {
+        $me = auth('admin')->user();
+
+        if (! $me) {
+            return [];
+        }
+
+        $counts = [];
+
+        try {
+            if ($me->hasPermission('manage_orders')) {
+                $counts['orders'] = Order::where('status', \App\Enums\OrderStatus::Pending->value)->count();
+            }
+
+            if ($me->hasPermission('manage_invoices')) {
+                $counts['invoices'] = Invoice::unpaid()->count();
+            }
+
+            if ($me->hasPermission('list_tickets')) {
+                $counts['tickets'] = Ticket::open()->count();
+            }
+        } catch (\Throwable $e) {
+            // A dashboard that cannot count is still a dashboard. Never let a
+            // slow or half-migrated table take the whole page down.
+            \Illuminate\Support\Facades\Log::warning('Dashboard counts unavailable: '.$e->getMessage());
+
+            return [];
+        }
+
+        return array_filter($counts);
     }
 
     /**

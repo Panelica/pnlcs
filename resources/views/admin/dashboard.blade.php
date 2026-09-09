@@ -61,8 +61,53 @@
             @if($me && $me->hasPermission('create_invoices'))
                 <a href="{{ route('admin.invoices.create') }}" class="btn btn-default btn-sm">+ {{ __('admin.dashboard.new_invoice') }}</a>
             @endif
+
+            {{-- Second half: the screens an operator opens over and over.
+                 Creating things was one click away and reaching the screens
+                 that manage them was three, through a sidebar tree. --}}
+            @php
+                $jumps = array_values(array_filter([
+                    $me?->hasPermission('manage_gateways') ? ['admin.config.gateways', __('admin.dashboard.payments')] : null,
+                    $me?->hasPermission('manage_products') ? ['admin.products.index', __('admin.dashboard.products')] : null,
+                    $me?->hasPermission('manage_servers') ? ['admin.config.servers', __('admin.dashboard.servers')] : null,
+                    $me?->hasPermission('manage_domains') ? ['admin.config.domain-pricing', __('admin.dashboard.domains')] : null,
+                ]));
+            @endphp
+
+            @if($jumps)
+                {{-- The rule is drawn only when there is something on both
+                     sides of it. --}}
+                <span aria-hidden="true" style="width:1px;align-self:stretch;background:var(--pn-border,#e5e7eb);margin:0 2px;"></span>
+                @foreach($jumps as [$route, $label])
+                    <a href="{{ route($route) }}" class="btn btn-default btn-sm">{{ $label }}</a>
+                @endforeach
+            @endif
         </div>
     </div>
+
+    {{-- What is actually waiting. A count that is zero is left out entirely:
+         an operator should be able to tell at a glance that there is nothing
+         to do, and a row of zeroes does not say that, it just adds reading. --}}
+    @if(!empty($waiting))
+    <div class="card-body" style="padding:10px 18px;border-top:1px solid var(--pn-border,#e5e7eb);display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;">
+        <strong style="font-size:13px;color:var(--pn-muted,#6b7280);">{{ __('admin.dashboard.needs_attention') }}</strong>
+        @if(!empty($waiting['orders']))
+            <a href="{{ route('admin.orders.index') }}?status=pending" style="font-size:13px;text-decoration:none;">
+                <strong>{{ $waiting['orders'] }}</strong> {{ __('admin.dashboard.pending_orders') }}
+            </a>
+        @endif
+        @if(!empty($waiting['invoices']))
+            <a href="{{ route('admin.invoices.index') }}?status=unpaid" style="font-size:13px;text-decoration:none;">
+                <strong>{{ $waiting['invoices'] }}</strong> {{ __('admin.dashboard.unpaid_invoices') }}
+            </a>
+        @endif
+        @if(!empty($waiting['tickets']))
+            <a href="{{ route('admin.tickets.index') }}?status=open" style="font-size:13px;text-decoration:none;">
+                <strong>{{ $waiting['tickets'] }}</strong> {{ __('admin.dashboard.open_tickets') }}
+            </a>
+        @endif
+    </div>
+    @endif
 </div>
 
 <div style="display:flex;flex-direction:column;gap:16px;">
