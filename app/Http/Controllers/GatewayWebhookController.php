@@ -81,6 +81,7 @@ class GatewayWebhookController extends Controller
         $verified = $module->verifyCapture($captureId);
         if (!($verified["success"] ?? false)) {
             Log::warning("PayPal capture rejected", ["invoice" => $invoice->id, "reason" => $verified["message"] ?? "unknown"]);
+            $this->notifyPaymentFailed($invoice, "paypal", (string) ($verified["message"] ?? "unknown"));
             return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
         }
 
@@ -131,6 +132,7 @@ class GatewayWebhookController extends Controller
         $verified = $module->verifyPaymentIntent($paymentIntentId, (int) $invoice->id);
         if (!($verified["success"] ?? false)) {
             Log::warning("Stripe confirm rejected", ["invoice" => $invoice->id, "reason" => $verified["message"] ?? "unknown"]);
+            $this->notifyPaymentFailed($invoice, "stripe", (string) ($verified["message"] ?? "unknown"));
             return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
         }
 
@@ -225,6 +227,43 @@ class GatewayWebhookController extends Controller
      * PaymentService handles idempotency, partial payments, overpayment credit,
      * and fires InvoicePaid → auto-accept order → provisioning.
      */
+    /**
+     * Tell somebody that a payment did not go through.
+     *
+     * A successful payment raises InvoicePaid and reaches whoever subscribed
+     * to it. A refused one only ever reached the log file - the customer sat
+     * looking at "payment could not be verified" and nobody at this end knew
+     * to call them back. The invoice stays unpaid either way; the difference
+     * is whether anyone finds out today or at the end of the month.
+     *
+     * Never allowed to break the payment return: an exception here would
+     * leave the customer on a blank page after their card was charged.
+     */
+    private function notifyPaymentFailed(Invoice $invoice, string $gateway, string $reason): void
+    {
+        try {
+            $client = $invoice->client;
+            $who = $client
+                ? trim(($client->first_name ?? '').' '.($client->last_name ?? '')).' <'.($client->email ?? '-').'>'
+                : '-';
+
+            app(\App\Services\NotificationService::class)->dispatch('payment.failed', [
+                'event_type' => 'payment.failed',
+                'subject' => 'Payment failed',
+                'message' => "Invoice: ".($invoice->invoice_num ?: $invoice->id)."\n"
+                    ."Customer: ".$who."\n"
+                    ."Gateway: ".$gateway."\n"
+                    ."Reason: ".$reason,
+                'invoice_id' => $invoice->id,
+                'client_id' => $invoice->client_id,
+                'gateway' => $gateway,
+                'reason' => $reason,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Payment failure notification could not be sent: ".$e->getMessage());
+        }
+    }
+
     private function recordTransaction(Invoice $invoice, string $gateway, string $transactionId, float $amount): void
     {
         $result = $this->payments->applyPayment($invoice, $gateway, $transactionId, $amount > 0 ? $amount : null);
@@ -373,6 +412,7 @@ class GatewayWebhookController extends Controller
             $verified = $module->verifyPayment($orderId, $paymentId, $signature, (int) $invoice->id);
             if (!($verified["success"] ?? false)) {
                 Log::warning("Razorpay confirm rejected", ["invoice" => $invoice->id, "reason" => $verified["message"] ?? "unknown"]);
+                $this->notifyPaymentFailed($invoice, "razorpay", (string) ($verified["message"] ?? "unknown"));
                 return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
             }
 

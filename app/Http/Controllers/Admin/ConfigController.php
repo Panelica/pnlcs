@@ -1786,7 +1786,7 @@ class ConfigController extends Controller
     {
         $v = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:email,slack,webhook',
+            'type' => 'required|in:email,slack,webhook,telegram',
             'settings' => 'nullable|array',
             'active' => 'boolean',
         ]);
@@ -1802,15 +1802,66 @@ class ConfigController extends Controller
         $provider = NotificationProvider::findOrFail($id);
         $v = $request->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:email,slack,webhook',
+            'type' => 'required|in:email,slack,webhook,telegram',
             'settings' => 'nullable|array',
             'active' => 'boolean',
         ]);
         $v['active'] = $request->boolean('active');
-        $v['settings'] = $request->input('settings', []);
+        $v['settings'] = $this->keepSecrets($request->input('settings', []), $provider->settings ?? []);
         $provider->update($v);
 
         return back()->with('success', __('admin.messages.notification_provider_updated'));
+    }
+
+    /**
+     * Carry stored secrets through an edit that left their field blank.
+     *
+     * The edit form cannot pre-fill a bot token - printing it into the page
+     * would hand it to anyone who can view source, or read a screen over a
+     * shoulder. So the field opens empty, and an operator who only wanted to
+     * rename the provider would otherwise save that emptiness over a working
+     * token and silence every alert without being told.
+     *
+     * @param  array<string, mixed>  $incoming
+     * @param  array<string, mixed>  $stored
+     * @return array<string, mixed>
+     */
+    private function keepSecrets(array $incoming, array $stored): array
+    {
+        foreach (['bot_token', 'secret'] as $key) {
+            if (trim((string) ($incoming[$key] ?? '')) === '' && ! empty($stored[$key])) {
+                $incoming[$key] = $stored[$key];
+            }
+        }
+
+        return $incoming;
+    }
+
+    /**
+     * Send a test message through a provider.
+     *
+     * A channel that is configured but never proved is worse than no channel:
+     * the operator believes they will be told about the next order. This runs
+     * the exact path a real alert takes and reports what Telegram said back.
+     */
+    public function testNotificationProvider($id)
+    {
+        $provider = NotificationProvider::findOrFail($id);
+
+        if ($provider->type !== 'telegram') {
+            return back()->with('error', __('admin.notifications.test_unsupported'));
+        }
+
+        $settings = $provider->settings ?? [];
+        $result = app(NotificationService::class)->pushToTelegram(
+            trim((string) ($settings['bot_token'] ?? '')),
+            trim((string) ($settings['chat_id'] ?? '')),
+            '<b>'.e(config('app.name')).'</b>'."\n".e(__('admin.notifications.test_message'))
+        );
+
+        return $result['ok']
+            ? back()->with('success', __('admin.notifications.test_sent'))
+            : back()->with('error', __('admin.notifications.test_failed', ['error' => $result['error']]));
     }
 
     public function destroyNotificationProvider($id)

@@ -417,6 +417,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('notification-providers', [ConfigController::class, 'storeNotificationProvider'])->name('notification-providers.store');
             Route::put('notification-providers/{id}', [ConfigController::class, 'updateNotificationProvider'])->name('notification-providers.update');
             Route::delete('notification-providers/{id}', [ConfigController::class, 'destroyNotificationProvider'])->name('notification-providers.destroy');
+            Route::post('notification-providers/{id}/test', [ConfigController::class, 'testNotificationProvider'])->name('notification-providers.test');
             Route::post('notification-rules', [ConfigController::class, 'storeNotificationRule'])->name('notification-rules.store');
             Route::delete('notification-rules/{id}', [ConfigController::class, 'destroyNotificationRule'])->name('notification-rules.destroy');
         });

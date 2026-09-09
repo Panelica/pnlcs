@@ -32,6 +32,8 @@
                     <span class="badge badge-active"><i class="fas fa-envelope"></i> Email</span>
                 @elseif($provider->type === 'slack')
                     <span class="badge badge-pending"><i class="fab fa-slack"></i> Slack</span>
+                @elseif($provider->type === 'telegram')
+                    <span class="badge badge-paid"><i class="fab fa-telegram"></i> Telegram</span>
                 @else
                     <span class="badge badge-open"><i class="fas fa-globe"></i> Webhook</span>
                 @endif
@@ -45,7 +47,16 @@
             </td>
             <td>{{ $provider->rules->count() }} {{ __('admin.notifications.rules_count') }}</td>
             <td style="text-align:right;">
-                <button type="button" class="btn btn-default btn-xs" onclick="editProvider({{ $provider->id }}, {{ json_encode($provider) }})">{{ __('common.actions.edit') }}</button>
+                @if($provider->type === 'telegram')
+                <form method="POST" action="{{ route('admin.config.notification-providers.test', $provider->id) }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-xs">{{ __('admin.notifications.send_test') }}</button>
+                </form>
+                @endif
+                {{-- Redacted on purpose: the full row carries the bot token and
+                     the webhook secret, and this attribute is readable by
+                     anyone who can view the page source. --}}
+                <button type="button" class="btn btn-default btn-xs" onclick="editProvider({{ $provider->id }}, {{ json_encode($provider->editorPayload()) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.notification-providers.destroy', $provider->id) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.notifications.confirm_delete_provider') }}')">
                     @csrf @method("DELETE")
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
@@ -123,6 +134,7 @@
                         <option value="email">Email</option>
                         <option value="slack">Slack</option>
                         <option value="webhook">Webhook</option>
+                        <option value="telegram">Telegram</option>
                     </select>
                 </div>
                 <div id="add-slack-fields" style="display:none;">
@@ -132,6 +144,14 @@
                 <div id="add-webhook-fields" style="display:none;">
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.webhook_url') }}</label><input type="url" name="settings[url]" class="form-control" placeholder="https://example.com/webhook"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.secret_optional') }}</label><input type="text" name="settings[secret]" class="form-control" placeholder="Shared secret for verification"></div>
+                </div>
+                <div id="add-telegram-fields" style="display:none;">
+                    <div class="form-group"><label class="form-label">{{ __('admin.notifications.telegram_token') }}</label>
+                        <input type="text" name="settings[bot_token]" class="form-control" autocomplete="off" placeholder="123456789:AA...">
+                        <small class="text-muted">{{ __('admin.notifications.telegram_token_hint') }}</small></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.notifications.telegram_chat') }}</label>
+                        <input type="text" name="settings[chat_id]" class="form-control" autocomplete="off" placeholder="-1001234567890">
+                        <small class="text-muted">{{ __('admin.notifications.telegram_chat_hint') }}</small></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label"><input type="checkbox" name="active" value="1" checked> {{ __('admin.notifications.active') }}</label>
@@ -162,6 +182,7 @@
                         <option value="email">Email</option>
                         <option value="slack">Slack</option>
                         <option value="webhook">Webhook</option>
+                        <option value="telegram">Telegram</option>
                     </select>
                 </div>
                 <div id="edit-slack-fields" style="display:none;">
@@ -171,6 +192,13 @@
                 <div id="edit-webhook-fields" style="display:none;">
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.webhook_url') }}</label><input type="url" name="settings[url]" id="edit-wh-url" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.secret') }}</label><input type="text" name="settings[secret]" id="edit-wh-secret" class="form-control"></div>
+                </div>
+                <div id="edit-telegram-fields" style="display:none;">
+                    <div class="form-group"><label class="form-label">{{ __('admin.notifications.telegram_token') }}</label>
+                        <input type="text" name="settings[bot_token]" id="edit-tg-token" class="form-control" autocomplete="off" placeholder="{{ __('admin.notifications.secret_unchanged') }}">
+                        <small class="text-muted">{{ __('admin.notifications.secret_unchanged') }}</small></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.notifications.telegram_chat') }}</label>
+                        <input type="text" name="settings[chat_id]" id="edit-tg-chat" class="form-control" autocomplete="off"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label"><input type="checkbox" name="active" value="1" id="edit-prov-active"> {{ __('admin.notifications.active') }}</label>
@@ -229,6 +257,7 @@
 function toggleProviderFields(type, prefix) {
     document.getElementById(prefix + '-slack-fields').style.display = type === 'slack' ? 'block' : 'none';
     document.getElementById(prefix + '-webhook-fields').style.display = type === 'webhook' ? 'block' : 'none';
+    document.getElementById(prefix + '-telegram-fields').style.display = type === 'telegram' ? 'block' : 'none';
 }
 function editProvider(id, data) {
     document.getElementById('edit-provider-form').action = '/admin/config/notification-providers/' + id;
@@ -240,6 +269,9 @@ function editProvider(id, data) {
     document.getElementById('edit-slack-user').value = s.username || 'PNLCS';
     document.getElementById('edit-wh-url').value = s.url || '';
     document.getElementById('edit-wh-secret').value = s.secret || '';
+    // The token is never sent to the page; an empty field means "keep it".
+    document.getElementById('edit-tg-token').value = '';
+    document.getElementById('edit-tg-chat').value = s.chat_id || '';
     toggleProviderFields(data.type, 'edit');
     document.getElementById('modal-edit-provider').style.display = 'flex';
 }
