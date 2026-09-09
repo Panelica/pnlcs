@@ -55,6 +55,10 @@ const GUARD_PUBLIC_CLIENT = [
     'client.domain.pricing', 'client.domain.search', 'client.domain.check',
     'client.store', 'client.store.configure',
 
+    // Signing in with Google: open by definition, and both legs answer 404
+    // unless an operator has configured an OAuth client (GoogleLoginTest).
+    'client.social.google.redirect', 'client.social.google.callback',
+
     // The cart and checkout are open on purpose: the account is opened AT the
     // payment step (GuestCheckoutTest), because the login wall used to stand
     // at the most expensive moment in the funnel and cost the configuration.

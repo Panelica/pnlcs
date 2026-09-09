@@ -89,6 +89,7 @@ class SettingController extends Controller
         // Its form used to name these settings[OpenAIApiKey] - a shape this
         // handler never reads - so pressing save wrote nothing and said nothing.
         'OpenAIApiKey', 'OpenAIModel',
+        'GoogleLoginEnabled', 'GoogleClientId', 'GoogleClientSecret',
     ];
 
     public function updateGeneral(Request $request)
@@ -110,6 +111,9 @@ class SettingController extends Controller
         }
         if (! isset($data['FraudLabsEnabled'])) {
             $data['FraudLabsEnabled'] = '0';
+        }
+        if (! isset($data['GoogleLoginEnabled'])) {
+            $data['GoogleLoginEnabled'] = '0';
         }
         if (! isset($data['TwilioVerifyEnabled'])) {
             $data['TwilioVerifyEnabled'] = '0';
@@ -141,6 +145,9 @@ class SettingController extends Controller
         }
         if (trim((string) ($data['TwilioAuthToken'] ?? '')) === '') {
             unset($data['TwilioAuthToken']);
+        }
+        if (trim((string) ($data['GoogleClientSecret'] ?? '')) === '') {
+            unset($data['GoogleClientSecret']);
         }
 
         foreach ($data as $key => $value) {

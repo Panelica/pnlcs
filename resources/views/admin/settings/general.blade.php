@@ -151,6 +151,33 @@
         </div>
     </div>
 
+    {{-- Signing in with Google. Off until an operator creates their own
+         OAuth client, so nothing is exposed by default and no credential of
+         ours is ever shipped in a release. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.social_login') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" name="GoogleLoginEnabled" value="1" {{ !empty($settings['GoogleLoginEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.google_login_enabled') }}
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.google_client_id') }}</label>
+                    <input type="text" name="GoogleClientId" value="{{ $settings['GoogleClientId'] ?? '' }}" class="form-control" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.google_client_secret') }}</label>
+                    <input type="password" name="GoogleClientSecret" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['GoogleClientSecret']) ? '••••••••' : '' }}">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:8px;">
+                {{ __('admin.settings.google_login_hint') }}
+                <code>{{ route('client.social.google.callback') }}</code>
+            </div>
+        </div>
+    </div>
+
     {{-- Late fees. The command that charges them has always read these three
          settings; there was nowhere to enter them, so it read "none" every
          morning and stopped. --}}

@@ -14,6 +14,7 @@ class User extends Authenticatable
         "first_name",
         "last_name",
         "email",
+        "google_id",
         "password",
         "second_factor_type",
         "second_factor_secret",

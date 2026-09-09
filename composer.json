@@ -16,6 +16,7 @@
         "blade-ui-kit/blade-heroicons": "^2.7",
         "laravel/framework": "^13.0",
         "laravel/pint": "^1.29",
+        "laravel/socialite": "^5.30",
         "laravel/tinker": "^3.0",
         "phpseclib/phpseclib": "^3.0",
         "pragmarx/google2fa-laravel": "^3.0"

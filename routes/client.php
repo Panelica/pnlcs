@@ -31,6 +31,13 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
     // it has been counted all along.
     Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.submit');
 
+    // Signing in with Google. Both legs 404 unless an operator has turned it
+    // on and supplied their own OAuth client.
+    Route::get('auth/google', [\App\Http\Controllers\Client\SocialLoginController::class, 'redirect'])
+        ->middleware('throttle:20,1')->name('social.google.redirect');
+    Route::get('auth/google/callback', [\App\Http\Controllers\Client\SocialLoginController::class, 'callback'])
+        ->middleware('throttle:20,1')->name('social.google.callback');
+
     // Password Reset
     Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
     // Unthrottled, this is a mail bomb aimed at any address the attacker likes.

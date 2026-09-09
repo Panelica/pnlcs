@@ -69,6 +69,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary">{{ __('client.auth.sign_in') }}</button>
             </form>
+            @include('client.partials.google-button')
         </div>
     </div>
     <div class="register-link">
