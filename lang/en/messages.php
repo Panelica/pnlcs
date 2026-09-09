@@ -1,6 +1,22 @@
 <?php
 
 return [
+    'iyzico' => [
+        'page_title' => 'Secure payment',
+        'cancel' => 'Cancel and go back to the invoice',
+        'continue' => 'Continue',
+        'pay_button' => 'Pay :amount by card',
+        'secure_note' => 'The card form is served by iyzico. Your card details never reach our servers.',
+        'not_configured' => 'Card payment is not configured. Please try another payment method.',
+        'nothing_due' => 'There is nothing left to pay on this invoice.',
+        'nothing_to_refund' => 'There is no amount left to refund.',
+        'init_failed' => 'The payment form could not be opened. Please try again.',
+        'unreachable' => 'iyzico could not be reached.',
+        'refused' => 'iyzico refused the request.',
+        'no_token' => 'iyzico did not return a form token.',
+        'not_completed' => 'The payment was not completed.',
+        'no_refund_line' => 'iyzico returned no transaction line to refund.',
+    ],
     'mail_body_not_kept' => 'This message contained a single-use link and is not kept here.',
     'email.test_body' => 'This is a test email sent from PNLCS to verify your mail configuration is working correctly.',
     'email.test_sent' => 'Test email sent successfully to :address.',

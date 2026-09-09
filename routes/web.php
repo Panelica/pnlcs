@@ -35,6 +35,25 @@ Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestF
     Route::post('gateway/tpay/webhook', [GatewayWebhookController::class, 'tpay'])->name('gateway.tpay.webhook');
 });
 
+// ===== iyzico payment return =====
+// POSTed from iyzico's own page, so it is cross-site: SameSite=Lax means the
+// customer's session cookie is NOT sent on this request. Without StartSession
+// left out, Laravel would open an empty session and put a fresh session cookie
+// on the response, writing over the one the customer is signed in with - they
+// would pay and be signed out on the way back to the invoice. Nothing here
+// touches the session; the outcome travels in the query string and the invoice
+// page prints it from its own session.
+// The security comes from the signature: the token is handed back to iyzico
+// over a request signed with our own keys.
+Route::post('gateway/iyzico/callback', [GatewayWebhookController::class, 'iyzicoCallback'])
+    ->name('gateway.iyzico.callback')
+    ->withoutMiddleware([
+        \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \App\Http\Middleware\SetLocale::class,
+    ]);
+
 // ===== Gateway JS-SDK Capture Endpoints (authenticated, CSRF-protected) =====
 // The comment was true of CSRF only: the group had no auth middleware, so
 // these ran for anyone who knew an invoice id.
@@ -46,4 +65,5 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('gateway/mollie/capture/{invoice}', [GatewayWebhookController::class, 'mollieCapture'])->name('gateway.mollie.capture');
     Route::post('gateway/razorpay/capture/{invoice}', [GatewayWebhookController::class, 'razorpayCapture'])->name('gateway.razorpay.capture');
     Route::post('gateway/tpay/capture/{invoice}', [GatewayWebhookController::class, 'tpayCapture'])->name('gateway.tpay.capture');
+    Route::post('gateway/iyzico/init/{invoice}', [GatewayWebhookController::class, 'iyzicoInit'])->name('gateway.iyzico.init');
 });

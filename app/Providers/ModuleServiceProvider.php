@@ -66,6 +66,9 @@ class ModuleServiceProvider extends ServiceProvider
             // Tpay (Poland)
             $registry->registerGateway("tpay", \Modules\Gateways\Tpay\TpayModule::class);
 
+            // iyzico (Turkey) - cards, 3D Secure, instalments
+            $registry->registerGateway("iyzico", \Modules\Gateways\Iyzico\IyzicoModule::class);
+
             // SSL Modules
             $registry->registerSsl('gogetssl', \Modules\Ssl\GoGetSSL\GoGetSslModule::class);
 

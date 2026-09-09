@@ -1,6 +1,22 @@
 <?php
 
 return [
+    'iyzico' => [
+        'page_title' => '安全支付',
+        'cancel' => '取消并返回账单',
+        'continue' => '继续',
+        'pay_button' => '使用银行卡支付 :amount',
+        'secure_note' => '银行卡表单由 iyzico 提供，您的卡片信息不会到达我们的服务器。',
+        'not_configured' => '尚未配置银行卡支付。请选择其他支付方式。',
+        'nothing_due' => '此账单已无待付金额。',
+        'nothing_to_refund' => '没有可退款的金额。',
+        'init_failed' => '无法打开支付表单，请重试。',
+        'unreachable' => '无法连接 iyzico。',
+        'refused' => 'iyzico 拒绝了该请求。',
+        'no_token' => 'iyzico 未返回表单令牌。',
+        'not_completed' => '支付未完成。',
+        'no_refund_line' => 'iyzico 未返回可退款的交易明细。',
+    ],
     'mail_body_not_kept' => '此消息包含一次性链接，因此不会保存在这里。',
     'email.test_body' => '这是 PNLCS 发送的测试邮件，用于验证邮件配置是否正常。',
     'email.test_sent' => '测试邮件已成功发送至 :address。',

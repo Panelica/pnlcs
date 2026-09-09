@@ -303,8 +303,58 @@ class CartController extends Controller
 
         $order = $this->cartService->checkout($cart, $clientId, $request->payment_method);
 
+        // A customer who chose to pay by card landed on the invoice and had to
+        // press "pay by card" there as well. They already made that choice, so
+        // they go straight to the payment screen. If anything goes wrong they
+        // land on the invoice and can pay from there - the order is never lost.
+        if ($payScreen = $this->cardPaymentScreen($order, (string) $request->payment_method)) {
+            return $payScreen;
+        }
+
         return redirect()->route('client.invoices.show', $order->invoice_id)
             ->with('success', __('messages.success.order_placed', ['num' => $order->order_num]));
+    }
+
+    /**
+     * The redirect that opens a card gateway's own payment screen.
+     *
+     * Only for gateways whose capture() is known to return a payment page.
+     * Calling capture() blindly is not safe: some gateways open a record at
+     * the other end the moment they are called, so the ones that belong here
+     * are written out rather than guessed. A new one joins with a line.
+     *
+     * Returns null when no screen can be opened, and the caller falls back to
+     * the invoice page.
+     */
+    private function cardPaymentScreen($order, string $method): ?\Illuminate\Http\RedirectResponse
+    {
+        if (strtolower(trim($method)) !== 'iyzico' || empty($order->invoice_id)) {
+            return null;
+        }
+
+        $invoice = \App\Models\Invoice::find($order->invoice_id);
+        if (! $invoice || $invoice->amountDue() <= 0) {
+            return null;
+        }
+
+        $module = app(ModuleRegistry::class)->getGatewayModule('iyzico');
+        if (! $module) {
+            return null;
+        }
+
+        $result = $module->capture($invoice, $invoice->amountDue());
+
+        if (! ($result['success'] ?? false) || empty($result['payment_page_url'])) {
+            \Illuminate\Support\Facades\Log::warning('Card screen could not be opened after the order; sent to the invoice instead', [
+                'order' => $order->order_num,
+                'invoice' => $invoice->id,
+                'reason' => $result['message'] ?? 'no payment page address returned',
+            ]);
+
+            return null;
+        }
+
+        return redirect()->away($result['payment_page_url']);
     }
 
     /**

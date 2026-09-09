@@ -239,10 +239,10 @@ class GatewayWebhookController extends Controller
      * Never allowed to break the payment return: an exception here would
      * leave the customer on a blank page after their card was charged.
      */
-    private function notifyPaymentFailed(Invoice $invoice, string $gateway, string $reason): void
+    private function notifyPaymentFailed(?Invoice $invoice, string $gateway, string $reason): void
     {
         try {
-            $client = $invoice->client;
+            $client = $invoice?->client;
             $who = $client
                 ? trim(($client->first_name ?? '').' '.($client->last_name ?? '')).' <'.($client->email ?? '-').'>'
                 : '-';
@@ -250,12 +250,12 @@ class GatewayWebhookController extends Controller
             app(\App\Services\NotificationService::class)->dispatch('payment.failed', [
                 'event_type' => 'payment.failed',
                 'subject' => 'Payment failed',
-                'message' => "Invoice: ".($invoice->invoice_num ?: $invoice->id)."\n"
+                'message' => "Invoice: ".($invoice ? ($invoice->invoice_num ?: $invoice->id) : '-')."\n"
                     ."Customer: ".$who."\n"
                     ."Gateway: ".$gateway."\n"
                     ."Reason: ".$reason,
-                'invoice_id' => $invoice->id,
-                'client_id' => $invoice->client_id,
+                'invoice_id' => $invoice?->id,
+                'client_id' => $invoice?->client_id,
                 'gateway' => $gateway,
                 'reason' => $reason,
             ]);
@@ -422,5 +422,248 @@ class GatewayWebhookController extends Controller
         // Create order
         $result = $module->capture($invoice, $invoice->amountDue());
         return response()->json($result);
+    }
+    // ========== iyzico ==========
+
+    /**
+     * iyzico: open the payment form (POST /gateway/iyzico/init/{invoice}).
+     *
+     * Full page, not JSON: what iyzico returns is a script, and a script
+     * written into the page with innerHTML never runs.
+     */
+    public function iyzicoInit(Request $request, Invoice $invoice)
+    {
+        $this->authoriseInvoice($invoice);
+
+        $module = $this->registry->getGatewayModule("iyzico");
+        if (! $module) {
+            return redirect()->route("client.invoices.show", $invoice)
+                ->with("error", __("messages.iyzico.not_configured"));
+        }
+
+        $due = $invoice->amountDue();
+        if ($due <= 0) {
+            return redirect()->route("client.invoices.show", $invoice)
+                ->with("error", __("messages.iyzico.nothing_due"));
+        }
+
+        $result = $module->capture($invoice, $due);
+
+        if (! ($result["success"] ?? false)) {
+            Log::warning("iyzico: form could not be started", [
+                "invoice" => $invoice->id,
+                "reason" => $result["message"] ?? "unknown",
+            ]);
+
+            return redirect()->route("client.invoices.show", $invoice)
+                ->with("error", $result["message"] ?? __("messages.iyzico.init_failed"));
+        }
+
+        // Some accounts also get a ready-made payment page address back. Using
+        // it is both less code and means the form opens on iyzico's own
+        // domain rather than inside a page of ours.
+        if (! empty($result["payment_page_url"])) {
+            return redirect()->away($result["payment_page_url"]);
+        }
+
+        return response($this->iyzicoFormPage($invoice, (string) $result["checkout_form_content"]));
+    }
+
+    /**
+     * The interstitial page that carries iyzico's form.
+     */
+    private function iyzicoFormPage(Invoice $invoice, string $formContent): string
+    {
+        $back = htmlspecialchars(route("client.invoices.show", $invoice), ENT_QUOTES, "UTF-8");
+        $title = htmlspecialchars(__("messages.iyzico.page_title"), ENT_QUOTES, "UTF-8");
+        $cancel = htmlspecialchars(__("messages.iyzico.cancel"), ENT_QUOTES, "UTF-8");
+        $locale = htmlspecialchars(app()->getLocale(), ENT_QUOTES, "UTF-8");
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="{$locale}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>{$title}</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:#f5f6f8; margin:0; padding:24px; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 16px; color:#222; }
+  .back { display:inline-block; margin-top:20px; font-size:13px; color:#555; text-decoration:none; }
+  .back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>{$title}</h1>
+  <div id="iyzipay-checkout-form" class="responsive"></div>
+  <a class="back" href="{$back}">&larr; {$cancel}</a>
+</div>
+{$formContent}
+</body>
+</html>
+HTML;
+    }
+
+    /**
+     * iyzico: the payment return (POST /gateway/iyzico/callback).
+     *
+     * No session cookie arrives - the POST comes from iyzico's page, so
+     * SameSite drops it - which is why there is no auth here. The security
+     * comes from the signature instead: the token is handed back to iyzico
+     * over a request signed with our own keys, and the amount is read from
+     * that answer. Nothing the browser sent is trusted.
+     */
+    public function iyzicoCallback(Request $request)
+    {
+        $token = (string) $request->input("token", "");
+        $module = $this->registry->getGatewayModule("iyzico");
+
+        if (! $module || ! method_exists($module, "retrieveCheckoutForm")) {
+            return $this->iyzicoReturn(null, "notconfigured");
+        }
+
+        // The initialisation record: which invoice, how much lira, at what
+        // rate. What to credit comes from here, because the callback itself
+        // carries no amount.
+        $log = \App\Models\GatewayLog::where("gateway", "iyzico")
+            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '\$.token')) = ?", [$token])
+            ->latest("id")
+            ->first();
+
+        $started = $log ? (json_decode((string) $log->data, true) ?: []) : [];
+
+        $verified = $module->retrieveCheckoutForm($token);
+
+        if (! ($verified["success"] ?? false)) {
+            Log::warning("iyzico: payment could not be verified", [
+                "invoice" => $started["invoice_id"] ?? null,
+                "reason" => $verified["message"] ?? "unknown",
+            ]);
+
+            if ($log) {
+                $log->update(["result" => "failed: ".mb_substr((string) ($verified["message"] ?? ""), 0, 200)]);
+            }
+
+            $invoice = isset($started["invoice_id"]) ? Invoice::find($started["invoice_id"]) : null;
+
+            $this->notifyPaymentFailed($invoice, "iyzico", (string) ($verified["message"] ?? "unknown"));
+
+            return $this->iyzicoReturn($invoice, "failed");
+        }
+
+        $invoiceId = (int) ($started["invoice_id"] ?? $verified["conversation_id"] ?? 0);
+        $invoice = Invoice::find($invoiceId);
+
+        if (! $invoice) {
+            Log::error("iyzico: payment taken but no invoice found", [
+                "payment_id" => $verified["payment_id"] ?? null,
+                "invoice_id" => $invoiceId,
+            ]);
+
+            $this->notifyPaymentFailed(null, "iyzico", "Payment taken but no invoice found"
+                ." (iyzico payment id: ".($verified["payment_id"] ?? "-").", looked for invoice: ".$invoiceId.")");
+
+            return $this->iyzicoReturn(null, "orphan");
+        }
+
+        // Does the lira taken match the lira quoted at initialisation? If it
+        // does, the shop-currency figure worked out then is what goes on the
+        // invoice, so no rounding drift appears. If it does not - an
+        // instalment fee, a partial payment - what iyzico actually took is
+        // converted back at the same rate. Either way the record is the money.
+        $taken = (float) ($verified["paid_price"] ?? 0);
+        $rate = (float) ($started["rate"] ?? 0);
+        $expected = (float) ($started["try_amount"] ?? 0);
+
+        if ($expected > 0 && abs($taken - $expected) < 0.01) {
+            $amount = (float) ($started["due_amount"] ?? 0);
+        } elseif ($rate > 0) {
+            $amount = round($taken / $rate, 2);
+            Log::info("iyzico: amount taken differs from the amount quoted", [
+                "invoice" => $invoice->id, "expected" => $expected, "taken" => $taken,
+            ]);
+        } else {
+            $amount = $taken;
+        }
+
+        $this->recordTransaction($invoice, "iyzico", (string) $verified["payment_id"], $amount);
+
+        if ($log) {
+            $log->update(["result" => "paid: ".$verified["payment_id"]." / ".$taken." TRY"]);
+        }
+
+        $this->rememberIyzicoCard($invoice, $verified);
+
+        return $this->iyzicoReturn($invoice, null);
+    }
+
+    /**
+     * Keep the keys iyzico gives back when the customer stores their card.
+     *
+     * The card number never reaches us; what is kept is iyzico's handle for
+     * it, which is what saves asking for the card again on a renewal.
+     */
+    private function rememberIyzicoCard(Invoice $invoice, array $verified): void
+    {
+        $cardUserKey = $verified["card_user_key"] ?? null;
+        $cardToken = $verified["card_token"] ?? null;
+
+        if (! $cardUserKey || ! $cardToken) {
+            return;
+        }
+
+        try {
+            \App\Models\PaymentMethod::updateOrCreate(
+                [
+                    "client_id" => $invoice->client_id,
+                    "gateway_name" => "iyzico",
+                    "last_four" => $verified["last_four"] ?? null,
+                ],
+                [
+                    "description" => trim("iyzico ".($verified["card_association"] ?? "")),
+                    "payment_type" => "card",
+                    "remote_token" => json_encode([
+                        "cardUserKey" => $cardUserKey,
+                        "cardToken" => $cardToken,
+                    ]),
+                ]
+            );
+        } catch (\Throwable $e) {
+            // A card that cannot be stored does not make the payment any less
+            // valid; it only means the customer types their card again next
+            // time.
+            Log::warning("iyzico: card key could not be stored: ".$e->getMessage());
+        }
+    }
+
+    /**
+     * Send the customer back to their invoice.
+     *
+     * Two things at once. The redirect targets the top window, because the
+     * form may have opened in an iframe and a plain redirect would trap the
+     * customer inside it. And the outcome goes in the address bar rather than
+     * the session - there is no session on this request (see the route) - so
+     * the invoice page prints the message from its own session.
+     */
+    private function iyzicoReturn(?Invoice $invoice, ?string $status): \Illuminate\Http\Response
+    {
+        $url = $invoice
+            ? route("client.invoices.show", $invoice)."?payment=".($status ?: "success")
+            : route("client.invoices.index")."?payment=".($status ?: "success");
+
+        $safe = htmlspecialchars($url, ENT_QUOTES, "UTF-8");
+        $continue = htmlspecialchars(__("messages.iyzico.continue"), ENT_QUOTES, "UTF-8");
+
+        return response(<<<HTML
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>{$continue}</title></head>
+<body><script>
+(function(){ var u = "{$safe}"; if (window.top !== window.self) { window.top.location.href = u; } else { window.location.href = u; } })();
+</script>
+<noscript><a href="{$safe}">{$continue}</a></noscript>
+</body></html>
+HTML);
     }
 }

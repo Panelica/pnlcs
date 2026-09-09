@@ -1,6 +1,22 @@
 <?php
 
 return [
+    'iyzico' => [
+        'page_title' => 'Güvenli ödeme',
+        'cancel' => 'Vazgeç ve faturaya dön',
+        'continue' => 'Devam',
+        'pay_button' => 'Kartla :amount öde',
+        'secure_note' => 'Kart formu iyzico tarafından sunulur. Kart bilgileriniz sunucularımıza hiç ulaşmaz.',
+        'not_configured' => 'Kartla ödeme yapılandırılmamış. Lütfen başka bir ödeme yöntemi seçin.',
+        'nothing_due' => 'Bu faturada ödenecek tutar kalmadı.',
+        'nothing_to_refund' => 'İade edilecek tutar yok.',
+        'init_failed' => 'Ödeme formu açılamadı. Lütfen tekrar deneyin.',
+        'unreachable' => 'iyzico servisine ulaşılamadı.',
+        'refused' => 'iyzico isteği reddetti.',
+        'no_token' => 'iyzico form belirteci döndürmedi.',
+        'not_completed' => 'Ödeme tamamlanmadı.',
+        'no_refund_line' => 'iyzico iade için işlem kalemi döndürmedi.',
+    ],
     'mail_body_not_kept' => 'Bu mesaj tek kullanimlik bir bag icerdigi icin burada saklanmaz.',
     'email.test_body' => 'This is a test email sent from PNLCS to verify your mail configuration is working correctly.',
     'email.test_sent' => 'Test email sent successfully to :address.',

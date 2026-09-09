@@ -1,6 +1,22 @@
 <?php
 
 return [
+    'iyzico' => [
+        'page_title' => 'Bezpieczna płatność',
+        'cancel' => 'Anuluj i wróć do faktury',
+        'continue' => 'Kontynuuj',
+        'pay_button' => 'Zapłać kartą :amount',
+        'secure_note' => 'Formularz karty obsługuje iyzico. Dane karty nigdy nie trafiają na nasze serwery.',
+        'not_configured' => 'Płatność kartą nie jest skonfigurowana. Wybierz inną metodę płatności.',
+        'nothing_due' => 'Na tej fakturze nie pozostało nic do zapłaty.',
+        'nothing_to_refund' => 'Brak kwoty do zwrotu.',
+        'init_failed' => 'Nie udało się otworzyć formularza płatności. Spróbuj ponownie.',
+        'unreachable' => 'Nie można połączyć się z iyzico.',
+        'refused' => 'iyzico odrzuciło żądanie.',
+        'no_token' => 'iyzico nie zwróciło tokenu formularza.',
+        'not_completed' => 'Płatność nie została zakończona.',
+        'no_refund_line' => 'iyzico nie zwróciło pozycji transakcji do zwrotu.',
+    ],
     'mail_body_not_kept' => 'Ta wiadomość zawierała link jednorazowy i nie jest tutaj przechowywana.',
     'email.test_body' => 'To jest testowa wiadomość e-mail wysłana z PNLCS w celu weryfikacji poprawności konfiguracji poczty.',
     'email.test_sent' => 'Testowa wiadomość e-mail została wysłana pomyślnie na adres :address.',
