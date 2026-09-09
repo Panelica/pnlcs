@@ -1541,6 +1541,7 @@ return [
     'messages.order_pending_error' => 'Only pending orders can be accepted. Mevcut status: :status.',
     'messages.payout_processed' => ':amount tutarinda ödeme islendi.',
     'messages.product_created' => 'Ürün created.',
+    'messages.product_in_use' => 'Bu ürünü hâlâ :count müşteri hizmeti kullanıyor. Silmek yerine satıştan kaldırın; üzerindeki tüm hizmetler bittiğinde silinebilir.',
     'messages.product_deleted' => 'Ürün deleted.',
     'messages.product_group_created' => 'Ürün group created.',
     'messages.product_updated' => 'Ürün updated.',

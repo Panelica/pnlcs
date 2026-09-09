@@ -17,10 +17,39 @@ use Illuminate\Support\Facades\DB;
 class InvoiceService
 {
     /**
+     * The named database lock that serialises invoice numbering. The next
+     * number is "the highest issued, plus one", read and written in two
+     * steps; two invoices raised at the same moment could read the same
+     * highest number and both issue it. The lock is held from the read to
+     * the insert, across every process on the same database.
+     */
+    public const NUMBER_LOCK = 'pnlcs:invoice-number';
+
+    /** How long to wait for the numbering lock; tests shorten it. */
+    public static int $numberLockSeconds = 15;
+
+    /**
      * Create a new invoice for a client with line items.
      * Calculates totals with tax automatically.
      */
     public function createInvoice(Client $client, array $items, array $options = []): Invoice
+    {
+        $got = DB::selectOne('SELECT GET_LOCK(?, ?) AS got', [self::NUMBER_LOCK, self::$numberLockSeconds]);
+
+        if ((int) ($got->got ?? 0) !== 1) {
+            throw new \RuntimeException('Could not obtain the invoice numbering lock.');
+        }
+
+        try {
+            $invoice = $this->createInvoiceLocked($client, $items, $options);
+        } finally {
+            DB::selectOne('SELECT RELEASE_LOCK(?) AS released', [self::NUMBER_LOCK]);
+        }
+
+        return $invoice;
+    }
+
+    private function createInvoiceLocked(Client $client, array $items, array $options): Invoice
     {
         $invoice = DB::transaction(function () use ($client, $items, $options) {
             $invoice = Invoice::create([

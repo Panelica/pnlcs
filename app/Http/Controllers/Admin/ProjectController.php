@@ -116,6 +116,10 @@ class ProjectController extends Controller
 
     public function updateTask(Request $request, Project $project, ProjectTask $task)
     {
+        // The task has to be this project's: the URL carried both ids and
+        // nothing checked they belonged together.
+        abort_if($task->project_id !== $project->id, 404);
+
         $validated = $request->validate([
             'task'      => 'nullable|string|max:500',
             'notes'     => 'nullable|string',
@@ -135,6 +139,8 @@ class ProjectController extends Controller
 
     public function deleteTask(Project $project, ProjectTask $task)
     {
+        abort_if($task->project_id !== $project->id, 404);
+
         $task->delete();
 
         return redirect()->route('admin.projects.show', $project)

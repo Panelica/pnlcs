@@ -57,7 +57,9 @@ class DashboardController extends Controller
             }
 
             if ($me->hasPermission('manage_invoices')) {
-                $counts['invoices'] = Invoice::unpaid()->count();
+                // Every invoice still owed, not only the ones literally marked
+                // unpaid: the overdue ones are the ones waiting hardest.
+                $counts['invoices'] = Invoice::whereIn('status', ['unpaid', 'overdue', 'partially_paid', 'payment_pending'])->count();
             }
 
             if ($me->hasPermission('list_tickets')) {

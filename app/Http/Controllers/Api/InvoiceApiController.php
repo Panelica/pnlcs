@@ -144,12 +144,30 @@ class InvoiceApiController extends BaseApiController
             'due_date' => ['sometimes', 'date'],
         ]);
 
-        foreach (['status', 'due_date', 'payment_method', 'notes'] as $f) {
+        foreach (['due_date', 'payment_method', 'notes'] as $f) {
             if ($request->has($f)) {
                 $invoice->$f = $request->$f;
             }
         }
         $invoice->save();
+
+        // A status is a state the rest of the system acts on, not a label.
+        // Writing "paid" onto the row skipped the payment chain - no
+        // transaction, no InvoicePaid, nothing provisioned - and "cancelled"
+        // skipped handing back what had been paid. Both go through the same
+        // doors the panel uses; the remaining statuses are plain bookkeeping.
+        if ($request->has('status')) {
+            $status = strtolower((string) $request->status);
+            $service = app(InvoiceService::class);
+
+            if ($status === InvoiceStatus::Paid->value) {
+                $service->markPaid($invoice, $request->input('transid'), (string) ($request->input('gateway') ?: 'manual'));
+            } elseif ($status === InvoiceStatus::Cancelled->value) {
+                $service->cancelInvoice($invoice);
+            } else {
+                $invoice->update(['status' => $status]);
+            }
+        }
 
         return $this->success(['invoiceid' => $invoice->id]);
     }
@@ -267,10 +285,15 @@ class InvoiceApiController extends BaseApiController
         if (! $tx) {
             return $this->error('Transaction Not Found', 404);
         }
-        foreach (['description', 'amount'] as $f) {
-            if ($request->has($f)) {
-                $tx->$f = $request->$f;
-            }
+        $request->validate(['amount' => 'nullable|numeric|min:0']);
+        if ($request->has('description')) {
+            $tx->description = $request->description;
+        }
+        // The row keeps money in and money out; "amount" is the WHMCS name
+        // for what came in. Assigning a column that does not exist answered
+        // with a database error.
+        if ($request->has('amount')) {
+            $tx->amount_in = (float) $request->amount;
         }
         $tx->save();
 

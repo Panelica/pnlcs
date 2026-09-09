@@ -7,6 +7,7 @@ use App\Models\Currency;
 use App\Models\InvoiceProduct;
 use App\Models\Pricing;
 use App\Models\Product;
+use App\Models\Service;
 use App\Models\ProductGroup;
 use App\Models\Server;
 use App\Models\ServerGroup;
@@ -359,6 +360,18 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // services.product_id is a plain column: deleting a product customers
+        // still hold leaves their services pointing at nothing - no name on
+        // the renewal line, no server module to suspend or terminate with.
+        // Retire it instead; delete once every service on it has ended.
+        $held = Service::where('product_id', $product->id)
+            ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+            ->count();
+
+        if ($held > 0) {
+            return back()->with('error', __('admin.messages.product_in_use', ['count' => $held]));
+        }
+
         $product->delete();
 
         return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_deleted'));

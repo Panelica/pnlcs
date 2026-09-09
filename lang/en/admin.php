@@ -1560,6 +1560,7 @@ return [
     'messages.affiliate_credited' => 'Added :amount to the client account balance.',
     'messages.payout_processed' => 'Payout of $:amount processed.',
     'messages.product_created' => 'Product created.',
+    'messages.product_in_use' => ':count customer service(s) still use this product. Retire it instead; it can be deleted once every service on it has ended.',
     'messages.product_deleted' => 'Product deleted.',
     'messages.product_group_created' => 'Product group created.',
     'messages.product_updated' => 'Product updated.',

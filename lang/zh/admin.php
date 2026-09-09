@@ -1560,6 +1560,7 @@ return [
     'messages.affiliate_credited' => '已向客户账户余额添加 :amount。',
     'messages.payout_processed' => '金额为 $:amount 的打款已处理。',
     'messages.product_created' => '产品创建成功。',
+    'messages.product_in_use' => '仍有 :count 项客户服务使用此产品。请改为下架；待其上所有服务结束后方可删除。',
     'messages.product_deleted' => '产品已删除。',
     'messages.product_group_created' => '产品组创建成功。',
     'messages.product_updated' => '产品更新成功。',
