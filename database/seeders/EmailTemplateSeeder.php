@@ -10,6 +10,7 @@ class EmailTemplateSeeder extends Seeder
     {
         $templates = [
             ["type" => "general", "name" => "Account Signup Email", "subject" => "Welcome to {CompanyName}", "message" => "Dear {client_name},\n\nThank you for registering with {CompanyName}.\n\nYour account has been created and you can login at {whmcs_url}\n\n{CompanyName}"],
+            ["type" => "general", "name" => "Email Verification", "subject" => "Confirm your email address - {CompanyName}", "message" => "Dear {client_name},\n\nPlease confirm this email address so we can send you invoices and account notices.\n\nConfirm here: {verify_url}\n\nThe link is valid for 24 hours.\n\n{CompanyName}"],
             ["type" => "general", "name" => "Password Reset Confirmation", "subject" => "Password Reset - {CompanyName}", "message" => "Dear {client_name},\n\nA password reset has been requested for your account.\n\nClick here to reset: {reset_url}\n\n{CompanyName}"],
             ["type" => "general", "name" => "Password Reset Validation", "subject" => "Password Reset Validation - {CompanyName}", "message" => "Dear {client_name},\n\nYour password has been successfully reset.\n\n{CompanyName}"],
             ["type" => "invoice", "name" => "Invoice Created", "subject" => "New Invoice #{invoice_num} - {CompanyName}", "message" => "Dear {client_name},\n\nA new invoice #{invoice_num} has been generated for your account.\n\nAmount Due: {invoice_total}\nDue Date: {invoice_due_date}\n\n{CompanyName}"],

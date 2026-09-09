@@ -22,6 +22,8 @@ class ApplyEmailTemplate
     /** Mailables that must never be copied to a second address. */
     private const NEVER_COPIED = [
         'PasswordResetMail',
+        // Its link both verifies an address and signs the holder in.
+        'EmailVerificationMail',
         // Carries an app's generated passwords in the clear, on the account
         // owner's own request - for their eyes only.
         'ContainerAccessDetailsMail',
@@ -41,6 +43,10 @@ class ApplyEmailTemplate
      */
     private const NEVER_SUPPRESSED = [
         'PasswordResetMail',
+        // While verification is required, switching this template off would
+        // leave every new customer holding a "check your inbox" page for a
+        // mail that is never sent, and unable to order.
+        'EmailVerificationMail',
     ];
 
     public function __construct(private EmailTemplateService $templates) {}

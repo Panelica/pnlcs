@@ -59,6 +59,11 @@ const GUARD_PUBLIC_CLIENT = [
     // unless an operator has configured an OAuth client (GoogleLoginTest).
     'client.social.google.redirect', 'client.social.google.callback',
 
+    // The confirmation link arrives by email and is opened on whichever
+    // device that mail landed on, often with no session at all. Its signature
+    // is the guard (EmailVerificationTest).
+    'client.verification.verify',
+
     // The cart and checkout are open on purpose: the account is opened AT the
     // payment step (GuestCheckoutTest), because the login wall used to stand
     // at the most expensive moment in the funnel and cost the configuration.

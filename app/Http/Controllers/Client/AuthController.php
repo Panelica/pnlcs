@@ -244,9 +244,17 @@ class AuthController extends Controller
         // Checkout opens accounts too now; one implementation for both doors.
         [$user] = app(\App\Services\ClientRegistrationService::class)->register($validated, $request);
 
+        // Whoever typed this address has to prove it is theirs before we send
+        // them an invoice, a password reset or a suspension notice.
+        \App\Http\Controllers\Client\EmailVerificationController::send($user);
+
         Auth::login($user);
 
-        return redirect()->route('client.home');
+        return redirect()->route(
+            \App\Http\Controllers\Client\EmailVerificationController::required()
+                ? 'client.verification.notice'
+                : 'client.home'
+        );
     }
 
     public function logout(Request $request)

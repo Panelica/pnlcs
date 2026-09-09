@@ -1,6 +1,25 @@
 <?php
 
 return [
+    'email_verify.title' => 'E-posta adresinizi onaylayın',
+    'email_verify.subtitle' => 'Tek tıkla hesabınız sipariş vermeye hazır olur.',
+    'email_verify.sent_to' => ':email adresine bir onay bağlantısı gönderdik.',
+    'email_verify.hint' => 'Bağlantı 24 saat geçerlidir. Birkaç dakika içinde gelmediyse istenmeyen (spam) klasörünü kontrol edin.',
+    'email_verify.resend' => 'Tekrar gönder',
+    'email_verify.change_email' => 'Adres yanlış mı? Değiştirin',
+    'email_verify.sent' => 'Onay bağlantısı :email adresine gönderildi.',
+    'email_verify.send_failed' => 'Onay e-postası gönderilemedi. Lütfen birazdan tekrar deneyin.',
+    'email_verify.verified' => 'E-posta adresiniz onaylandı.',
+    'email_verify.link_invalid' => 'Bu onay bağlantısı geçersiz ya da süresi dolmuş. Giriş yapıp yenisini isteyin.',
+    'email_verify.needed_for_order' => 'Sipariş vermeden önce lütfen e-posta adresinizi onaylayın.',
+    'email_verify.banner' => 'E-posta adresiniz (:email) henüz onaylanmadı.',
+    'email_verify.banner_link' => 'Şimdi onaylayın',
+    'email_verify.mail_subject' => 'E-posta adresinizi onaylayın - :company',
+    'email_verify.mail_greeting' => 'Merhaba :name,',
+    'email_verify.mail_intro' => 'Faturalarınızı ve hesap bildirimlerinizi gönderebilmemiz için :email adresinin size ait olduğunu onaylayın.',
+    'email_verify.mail_button' => 'E-posta adresimi onayla',
+    'email_verify.mail_fallback' => 'Düğme çalışmazsa bu adresi tarayıcınıza kopyalayıp yapıştırın:',
+    'email_verify.mail_ignore' => 'Bizde hesap açmadıysanız bu e-postayı yok sayabilirsiniz.',
     'account' => [
         'billing_email_hint' => 'Faturalar için isteğe bağlı e-posta (örn. muhasebe departmanı). Boşsa giriş adresi kullanılır.',
         'email_change_needs_password' => 'Bu adresi değiştirmek için hesap şifrenizi girmeniz gerekmektedir.',

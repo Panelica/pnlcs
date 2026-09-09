@@ -93,6 +93,10 @@ test('a customer goes from signup to termination through the real endpoints', fu
     $user = User::where('email', 'ayse@example.com')->firstOrFail();
     $client = $user->clients()->firstOrFail();
 
+    // Confirming the address is part of the journey now: an unconfirmed one is
+    // stopped at the checkout, so the customer clicks their link first.
+    $user->markEmailAsVerified();
+
     // ── 2. Browse and configure ───────────────────────────────────────────
     $this->actingAs($user)->get(route('client.store'))->assertOk()->assertSee('Business Hosting');
     $this->actingAs($user)->get(route('client.store.configure', $fx['product']))

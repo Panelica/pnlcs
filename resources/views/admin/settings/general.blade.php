@@ -151,6 +151,20 @@
         </div>
     </div>
 
+    {{-- Proving the address on a new account. On unless an operator turns it
+         off: the safer behaviour is the one you get without reading a
+         settings screen. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.email_verification') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" name="EmailVerificationRequired" value="1" {{ ($settings['EmailVerificationRequired'] ?? '1') === '1' ? 'checked' : '' }}>
+                {{ __('admin.settings.email_verification_required') }}
+            </label>
+            <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.email_verification_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Signing in with Google. Off until an operator creates their own
          OAuth client, so nothing is exposed by default and no credential of
          ours is ever shipped in a release. --}}

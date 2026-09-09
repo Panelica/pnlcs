@@ -31,6 +31,7 @@ class EmailTemplateService
         'AffiliateWelcomeMail' => 'Affiliate Welcome Email',
         'CancellationConfirmMail' => 'Cancellation Confirmation',
         'DomainRegistrationMail' => 'Domain Registration Confirmation',
+        'EmailVerificationMail' => 'Email Verification',
         'DomainRenewalReminderMail' => 'Domain Renewal Reminder',
         'InvoiceCreatedMail' => 'Invoice Created',
         'InvoiceOverdueMail' => 'Invoice Overdue',
@@ -238,6 +239,7 @@ class EmailTemplateService
 
         foreach ([
             'resetUrl' => 'reset_url',
+            'verifyUrl' => 'verify_url',
             'replyMessage' => 'ticket_reply',
             'reason' => 'suspend_reason',
             // The address change warning is about two addresses and carries

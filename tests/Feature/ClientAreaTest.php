@@ -23,7 +23,8 @@ test('client can register', function () {
         'address1' => '1 Test Street', 'city' => 'Istanbul', 'postcode' => '34000', 'country' => 'TR',
         'tos' => '1',
     ]);
-    $response->assertRedirect(route('client.home'));
+    // Signed in, but sent to confirm the address first: verification ships on.
+    $response->assertRedirect(route('client.verification.notice'));
     $this->assertAuthenticated();
     expect(User::where('email', 'newclient@example.com')->exists())->toBeTrue();
     expect(Client::where('email', 'newclient@example.com')->exists())->toBeTrue();

@@ -266,6 +266,11 @@ class CartController extends Controller
             [$user, $newClient] = app(\App\Services\ClientRegistrationService::class)
                 ->register($account + $billing, $request);
 
+            // The other door into an account, and it needs the same proof:
+            // without this the visitor is stopped at the gate below holding a
+            // verification page for a mail nobody sent.
+            \App\Http\Controllers\Client\EmailVerificationController::send($user);
+
             $guestCart->update(['user_id' => $newClient->id]);
 
             auth()->login($user);
@@ -291,6 +296,19 @@ class CartController extends Controller
         // status was set on the admin screen and read by nothing.
         if (! $client || $client->status !== ClientStatus::Active) {
             return back()->withErrors(['payment_method' => __('client.cart.account_not_active')]);
+        }
+
+        // An unverified address is where the money stops. Signing in and
+        // looking around is harmless; selling a service to an address that
+        // was never proved means the invoice, the password reset and the
+        // suspension notice all go to somebody who will never see them.
+        // The marker sends them back here the moment they verify.
+        if ($request->user() && \App\Http\Controllers\Client\EmailVerificationController::required()
+            && ! $request->user()->hasVerifiedEmail()) {
+            $request->session()->put('checkout_after_verification', true);
+
+            return redirect()->route('client.verification.notice')
+                ->with('warning', __('client.email_verify.needed_for_order'));
         }
 
         $cart = $this->cartService->getOrCreateCart($clientId);

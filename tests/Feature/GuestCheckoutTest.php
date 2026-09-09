@@ -66,7 +66,7 @@ test('checkout shows the visitor an account form, not a login wall', function ()
         ->and($html)->toContain(__('client.auth.already_have_account'));
 });
 
-test('paying opens the account and places the order in one stroke', function () {
+test('paying opens the account, and the order follows once the address is confirmed', function () {
     $product = guestProduct();
     $this->post(route('client.cart.add'), ['product_id' => $product->id, 'billing_cycle' => 'monthly']);
 
@@ -85,19 +85,37 @@ test('paying opens the account and places the order in one stroke', function () 
         'terms' => '1',
     ]);
 
-    $response->assertRedirect()->assertSessionMissing('errors');
+    // The account is opened and the visitor is signed in, but the order waits:
+    // a service is not sold to an address nobody has proved yet.
+    $response->assertRedirect(route('client.verification.notice'))->assertSessionMissing('errors');
 
     $client = Client::where('email', 'guest.buyer@example.test')->first();
+    $user = User::where('email', 'guest.buyer@example.test')->first();
+
     expect($client)->not->toBeNull()
-        ->and(User::where('email', 'guest.buyer@example.test')->exists())->toBeTrue()
+        ->and($user)->not->toBeNull()
         ->and(auth()->check())->toBeTrue()                       // logged in, not bounced
-        ->and(Order::where('client_id', $client->id)->count())->toBe(1)
+        ->and(Order::where('client_id', $client->id)->count())->toBe(0)
         // Stored, not dropped on the floor: the tax rate and the invoice PDF
         // both read these back.
         ->and($client->address1)->toBe('12 Market Street')
         ->and($client->city)->toBe('Istanbul')
         ->and($client->postcode)->toBe('34000')
         ->and($client->country)->toBe('TR');
+
+    // They confirm, come back to the checkout their cart is still on, and the
+    // order goes through.
+    $user->markEmailAsVerified();
+
+    // The guard is holding the user object it signed in a moment ago; the
+    // next request in a real browser reads the row again.
+    $this->actingAs($user->fresh());
+
+    $this->post(route('client.cart.process'), [
+        'payment_method' => 'banktransfer', 'terms' => '1',
+    ])->assertSessionHasNoErrors();
+
+    expect(Order::where('client_id', $client->id)->count())->toBe(1);
 });
 
 test('the guest cart survives logging in instead', function () {

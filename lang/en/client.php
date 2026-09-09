@@ -1,6 +1,25 @@
 <?php
 
 return [
+    'email_verify.title' => 'Confirm your email address',
+    'email_verify.subtitle' => 'One click and your account is ready to order.',
+    'email_verify.sent_to' => 'We sent a confirmation link to :email.',
+    'email_verify.hint' => 'The link is valid for 24 hours. If it has not arrived in a few minutes, check your spam folder.',
+    'email_verify.resend' => 'Send it again',
+    'email_verify.change_email' => 'Wrong address? Change it',
+    'email_verify.sent' => 'Confirmation link sent to :email.',
+    'email_verify.send_failed' => 'The confirmation email could not be sent. Please try again shortly.',
+    'email_verify.verified' => 'Your email address is confirmed.',
+    'email_verify.link_invalid' => 'That confirmation link is invalid or has expired. Sign in and ask for a new one.',
+    'email_verify.needed_for_order' => 'Please confirm your email address before placing an order.',
+    'email_verify.banner' => 'Your email address (:email) is not confirmed yet.',
+    'email_verify.banner_link' => 'Confirm it now',
+    'email_verify.mail_subject' => 'Confirm your email address - :company',
+    'email_verify.mail_greeting' => 'Hello :name,',
+    'email_verify.mail_intro' => 'Please confirm that :email is your address, so we can send you invoices and account notices.',
+    'email_verify.mail_button' => 'Confirm my email address',
+    'email_verify.mail_fallback' => 'If the button does not work, copy and paste this address into your browser:',
+    'email_verify.mail_ignore' => 'If you did not open an account with us, you can ignore this email.',
     'account' => [
         'email_change_needs_password' => 'Changing this address requires your account password.',
         'billing_email_hint' => 'Optional email address for invoices (e.g. an accounting department). When empty, the sign-in address is used.',

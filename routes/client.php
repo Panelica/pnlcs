@@ -31,6 +31,12 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
     // it has been counted all along.
     Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.submit');
 
+    // Proving the address on an account. The link itself carries no session -
+    // a customer opens it on whatever device their mail is on - so it sits
+    // outside the signed-in group and relies on its signature instead.
+    Route::get('email/verify/{id}/{hash}', [\App\Http\Controllers\Client\EmailVerificationController::class, 'verify'])
+        ->middleware('throttle:20,1')->name('verification.verify');
+
     // Signing in with Google. Both legs 404 unless an operator has turned it
     // on and supplied their own OAuth client.
     Route::get('auth/google', [\App\Http\Controllers\Client\SocialLoginController::class, 'redirect'])
@@ -96,6 +102,13 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
 
     Route::middleware(['auth', '2fa'])->group(function () {
         Route::get('/', [HomeController::class, 'index'])->name('home');
+
+        // The waiting page and its "send it again" button. Three a minute:
+        // enough for a customer whose mail is slow, not enough to point at
+        // somebody else's inbox.
+        Route::get('email/verify', [\App\Http\Controllers\Client\EmailVerificationController::class, 'notice'])->name('verification.notice');
+        Route::post('email/verification-notification', [\App\Http\Controllers\Client\EmailVerificationController::class, 'resend'])
+            ->middleware('throttle:3,1')->name('verification.send');
         // Signing out must stay reachable while the code is outstanding.
         Route::post('logout', [AuthController::class, 'logout'])
             ->withoutMiddleware([TwoFactorVerify::class])->name('logout');

@@ -90,6 +90,7 @@ class SettingController extends Controller
         // handler never reads - so pressing save wrote nothing and said nothing.
         'OpenAIApiKey', 'OpenAIModel',
         'GoogleLoginEnabled', 'GoogleClientId', 'GoogleClientSecret',
+        'EmailVerificationRequired',
     ];
 
     public function updateGeneral(Request $request)
@@ -114,6 +115,9 @@ class SettingController extends Controller
         }
         if (! isset($data['GoogleLoginEnabled'])) {
             $data['GoogleLoginEnabled'] = '0';
+        }
+        if (! isset($data['EmailVerificationRequired'])) {
+            $data['EmailVerificationRequired'] = '0';
         }
         if (! isset($data['TwilioVerifyEnabled'])) {
             $data['TwilioVerifyEnabled'] = '0';

@@ -1,6 +1,25 @@
 <?php
 
 return [
+    'email_verify.title' => '确认您的电子邮件地址',
+    'email_verify.subtitle' => '点击一次，您的账户即可下单。',
+    'email_verify.sent_to' => '我们已向 :email 发送了确认链接。',
+    'email_verify.hint' => '链接 24 小时内有效。若几分钟后仍未收到，请检查垃圾邮件文件夹。',
+    'email_verify.resend' => '重新发送',
+    'email_verify.change_email' => '地址有误？前往修改',
+    'email_verify.sent' => '确认链接已发送至 :email。',
+    'email_verify.send_failed' => '确认邮件发送失败，请稍后再试。',
+    'email_verify.verified' => '您的电子邮件地址已确认。',
+    'email_verify.link_invalid' => '该确认链接无效或已过期。请登录后重新获取。',
+    'email_verify.needed_for_order' => '下单前请先确认您的电子邮件地址。',
+    'email_verify.banner' => '您的电子邮件地址（:email）尚未确认。',
+    'email_verify.banner_link' => '立即确认',
+    'email_verify.mail_subject' => '确认您的电子邮件地址 - :company',
+    'email_verify.mail_greeting' => '您好 :name，',
+    'email_verify.mail_intro' => '请确认 :email 是您的地址，以便我们向您发送发票和账户通知。',
+    'email_verify.mail_button' => '确认我的邮箱地址',
+    'email_verify.mail_fallback' => '如果按钮无法使用，请将此地址复制到浏览器：',
+    'email_verify.mail_ignore' => '如果您没有在我们这里开设账户，可忽略此邮件。',
     'account' => [
         'email_change_needs_password' => '更改此地址需要输入账户密码。',
         'billing_email_hint' => '发票的可选邮箱（例如财务部门）。为空时使用登录地址。',

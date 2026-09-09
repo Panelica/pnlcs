@@ -2,13 +2,28 @@
 
 namespace App\Models;
 
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    /**
+     * The verification mail is ours, not Laravel's.
+     *
+     * The trait would send Illuminate's own VerifyEmail notification: no
+     * company name, no language, none of the operator's branding, and nothing
+     * the templates screen can edit. Anything that reaches for the framework
+     * method - a Registered event, a package - gets our mail instead.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        \App\Http\Controllers\Client\EmailVerificationController::send($this);
+    }
+
+    use HasFactory, MustVerifyEmailTrait, Notifiable;
 
     protected $fillable = [
         "first_name",

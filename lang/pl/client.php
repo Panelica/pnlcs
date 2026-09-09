@@ -1,6 +1,25 @@
 <?php
 
 return [
+    'email_verify.title' => 'Potwierdź swój adres e-mail',
+    'email_verify.subtitle' => 'Jedno kliknięcie i konto jest gotowe do zamówień.',
+    'email_verify.sent_to' => 'Wysłaliśmy link potwierdzający na adres :email.',
+    'email_verify.hint' => 'Link jest ważny 24 godziny. Jeśli nie dotarł w ciągu kilku minut, sprawdź folder spam.',
+    'email_verify.resend' => 'Wyślij ponownie',
+    'email_verify.change_email' => 'Zły adres? Zmień go',
+    'email_verify.sent' => 'Link potwierdzający wysłany na :email.',
+    'email_verify.send_failed' => 'Nie udało się wysłać wiadomości potwierdzającej. Spróbuj za chwilę.',
+    'email_verify.verified' => 'Twój adres e-mail został potwierdzony.',
+    'email_verify.link_invalid' => 'Ten link jest nieprawidłowy lub wygasł. Zaloguj się i poproś o nowy.',
+    'email_verify.needed_for_order' => 'Potwierdź adres e-mail przed złożeniem zamówienia.',
+    'email_verify.banner' => 'Twój adres e-mail (:email) nie został jeszcze potwierdzony.',
+    'email_verify.banner_link' => 'Potwierdź teraz',
+    'email_verify.mail_subject' => 'Potwierdź swój adres e-mail - :company',
+    'email_verify.mail_greeting' => 'Witaj :name,',
+    'email_verify.mail_intro' => 'Potwierdź, że :email to Twój adres, abyśmy mogli wysyłać faktury i powiadomienia.',
+    'email_verify.mail_button' => 'Potwierdzam adres e-mail',
+    'email_verify.mail_fallback' => 'Jeśli przycisk nie działa, skopiuj ten adres do przeglądarki:',
+    'email_verify.mail_ignore' => 'Jeśli nie zakładałeś u nas konta, zignoruj tę wiadomość.',
     'account' => [
         'email_change_needs_password' => 'Zmiana tego adresu wymaga hasła do Twojego konta.',
         'billing_email_hint' => 'Opcjonalny adres e-mail do faktur (np. działu księgowości). Gdy pusty, używany jest adres logowania.',

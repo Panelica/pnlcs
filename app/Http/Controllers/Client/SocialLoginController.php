@@ -76,8 +76,13 @@ class SocialLoginController extends Controller
 
             if ($user) {
                 // Same person, already a customer here. Linking is safe
-                // because Google verified this address before handing it over.
+                // because Google verified this address before handing it over
+                // - which also settles any verification still outstanding.
                 $user->update(['google_id' => $googleId]);
+
+                if (! $user->hasVerifiedEmail()) {
+                    $user->markEmailAsVerified();
+                }
             }
         }
 
@@ -92,6 +97,12 @@ class SocialLoginController extends Controller
                 'email' => $email,
                 'google_id' => $googleId,
             ], $request);
+
+            // Google only hands over an address it has already verified, so
+            // asking the customer to prove it again would be theatre - and
+            // would strand them at the checkout waiting for a mail they never
+            // needed.
+            $user->markEmailAsVerified();
 
             Auth::login($user);
             $request->session()->regenerate();
