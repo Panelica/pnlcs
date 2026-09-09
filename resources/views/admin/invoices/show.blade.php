@@ -212,8 +212,20 @@
                     @if($invoice->buyer('address1'))
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.name') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('address1') }}<br>{{ $invoice->buyer('city') }}, {{ $invoice->buyer('state') }} {{ $invoice->buyer('postcode') }}<br>{{ $invoice->buyer('country') }}</td></tr>
                     @endif
+                    {{-- Alici kimligi: fatura elle kesilirken portala girilecek
+                         olan tam da bu uc satir. Fatura kesildigi andaki hali
+                         gosteriliyor (buyer_*), musterinin bugunku hali degil. --}}
+                    @if($invoice->buyer('client_type'))
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.buyer_type') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('client_type') === 'company' ? __('admin.clients.billing_type_company') : __('admin.clients.billing_type_individual') }}</td></tr>
+                    @endif
+                    @if($invoice->buyer('tax_office'))
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.buyer_tax_office') }}</td><td style="padding:4px 0;">{{ $invoice->buyer('tax_office') }}</td></tr>
+                    @endif
                     @if($invoice->buyer('tax_id'))
                     <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.tax_id') }}</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->buyer('tax_id') }}</td></tr>
+                    @endif
+                    @if($invoice->buyer('national_id'))
+                    <tr><td style="padding:4px 0;color:#777;">{{ __('admin.invoices.buyer_national_id') }}</td><td style="padding:4px 0;font-family:monospace;font-size:12px;">{{ $invoice->buyer('national_id') }}</td></tr>
                     @endif
                     @foreach($invoice->buyerCustomFields() as $label => $value)
                     <tr><td style="padding:4px 0;color:#777;">{{ $label }}</td><td style="padding:4px 0;">{{ $value }}</td></tr>

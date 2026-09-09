@@ -1,6 +1,15 @@
 <?php
 
 return [
+    'amount_in' => 'Do zapłaty',
+    'rate_label' => 'Kurs wymiany',
+    'rate_note' => 'Rozliczono w :to, przeliczone z :from po kursie :rate.',
+    'rate_note_official' => 'Przeliczono po :kind opublikowanym przez :source dnia :date: 1 :from = :rate :to:ref',
+    'rate_kind_selling' => 'kursie sprzedaży dewiz',
+    'rate_kind_buying' => 'kursie kupna dewiz',
+    'rate_bulletin' => 'tabela',
+    'tax_office' => 'Urząd skarbowy',
+    'registry_no' => 'Nr rejestru',
     'amount' => 'Kwota',
     'bill_to' => 'Odbiorca Faktury',
     'credit' => 'Kredyt',

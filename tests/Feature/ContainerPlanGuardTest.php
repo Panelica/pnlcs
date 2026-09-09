@@ -62,7 +62,7 @@ test('a container plan cannot be saved with zero containers', function () {
         ->assertSessionHas('error', __('admin.products.container_plan_needs_containers'));
 
     // Nothing was written: the contradiction never reaches the database.
-    $saved = json_decode((string) $product->fresh()->config_options, true) ?: [];
+    $saved = (array) $product->fresh()->config_options;
     expect($saved['panelica_container_plan'] ?? 0)->toBe(0);
 });
 
@@ -77,7 +77,7 @@ test('the same product saves once it allows a container', function () {
         ]))
         ->assertSessionMissing('error');
 
-    $saved = json_decode((string) $product->fresh()->config_options, true);
+    $saved = (array) $product->fresh()->config_options;
     expect($saved['res_max_containers'])->toBe(1)
         ->and($saved['panelica_container_plan'])->toBe(1);
 });

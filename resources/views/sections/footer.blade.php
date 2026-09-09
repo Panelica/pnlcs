@@ -48,7 +48,9 @@
             </div>
             <div>
                 <div class="footer__col-title">{{ __('sections.footer.col_support') }}</div>
+                @if(kb_enabled())
                 <a href="/client/knowledgebase" class="footer__link">{{ __('sections.footer.knowledge_base') }}</a>
+                @endif
                 <a href="/client/announcements" class="footer__link">{{ __('sections.footer.announcements') }}</a>
                 <a href="/client/contact" class="footer__link">{{ __('sections.footer.contact_us') }}</a>
                 <a href="{{ $bUrl }}" class="footer__link">{{ $bWebsite }}</a>

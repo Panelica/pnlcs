@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'cart.billing_identity_required' => 'Potrzebujemy Twoich danych do faktury. Po zapisaniu wrócisz do kroku płatności.',
+    'cart.billing_identity_saved' => 'Dane do faktury zapisane. Możesz dokończyć zamówienie.',
+    'cart.save_and_continue' => 'Zapisz i przejdź do płatności',
     'pages.about_title' => 'O nas',
     'pages.about_description' => ':company świadczy usługi hostingu, domen i poczty dla Twojej strony, projektów i firmy.',
     'pages.about_who' => 'Kim jesteśmy',
@@ -494,12 +497,23 @@ return [
     'footer.all_rights_reserved' => 'Wszelkie prawa zastrzeżone.',
     'footer.brand' => 'PNLCS',
     'form' => [
+        'client_type' => 'Typ klienta',
+        'client_type_individual' => 'Osoba prywatna',
+        'client_type_company' => 'Firma',
+        'company_title' => 'Zarejestrowana nazwa firmy',
+        'tax_office' => 'Urząd skarbowy',
+        'tax_id' => 'NIP',
+        'national_id' => 'Nr dowodu / PESEL',
         'company' => 'Firma',
         'optional' => 'opcjonalnie',
         'phone' => 'Telefon',
     ],
     'form.optional' => 'opcjonalnie',
     'funds' => [
+        'you_will_receive' => 'Otrzymane środki',
+        'bulletin' => 'tabela',
+        'rate_notice' => 'Zastosowany kurs to oficjalny kurs sprzedaży z chwili otrzymania płatności; jest podany na fakturze.',
+        'rate_line' => ':paid przeliczone po 1 :from = :rate (:source)',
         'add_amount' => 'Kwota doładowania',
         'available_credit_desc' => 'Dostępne do wykorzystania na fakturach i zamówieniach',
         'current_balance' => 'Aktualne saldo',
@@ -538,6 +552,8 @@ return [
         'title' => 'Historia e-maili',
     ],
     'invoices' => [
+        'pn_amount_hint' => 'Podaj przelaną kwotę w walucie, w której zapłacono. Odpowiada to :amount na fakturze.',
+        'pn_reported_in_billing' => 'Kwota zgłoszona przez klienta: :amount (kurs :rate, źródło :source).',
         'amount_paid' => 'Zapłacona kwota',
         'back_to_invoices' => 'Wróć do faktur',
         'payment_notification_intro' => 'Wysłałeś już przelew bankowy? Daj nam znać poniżej, a my zweryfikujemy go tak szybko, jak to możliwe.',
@@ -636,6 +652,10 @@ return [
     'my_invoices' => 'Moje faktury',
     'my_services' => 'Moje usługi',
     'nav' => [
+        'my_certificates' => 'Moje certyfikaty',
+        'product_groups' => 'Grupy produktów',
+        'transfer_domain' => 'Transfer domeny',
+        'whois_lookup' => 'Sprawdź WHOIS',
         'home_site' => 'Strona główna',
         'account' => 'Konto',
         'add_funds' => 'Dodaj środki',

@@ -91,6 +91,17 @@ class SettingController extends Controller
         'OpenAIApiKey', 'OpenAIModel',
         'GoogleLoginEnabled', 'GoogleClientId', 'GoogleClientSecret',
         'EmailVerificationRequired',
+        // Seller identity beyond the basics: what a contract, an official
+        // invoice and the contact page name. Optional everywhere, required by
+        // law in some places.
+        'CompanyLegalName', 'TaxOffice', 'MersisNo', 'TradeRegistryNo', 'Postcode', 'State', 'AbuseEmail', 'DpoEmail',
+        'AboutText', 'KnowledgeBaseEnabled',
+        // Billing in a second currency, with an official rate source.
+        'BillingCurrency', 'OfficialRateProvider', 'TcmbRateKind', 'PaymentReferencePrefix',
+        // Orders from these addresses are accepted without payment (testing).
+        'AutoApproveOrderEmails',
+        // The registrar float watch.
+        'BalanceWatchRegistrar', 'RegistrarBalanceThreshold', 'RegistrarBalanceCurrency', 'RegistrarBalanceAlertEmail',
     ];
 
     public function updateGeneral(Request $request)
@@ -118,6 +129,9 @@ class SettingController extends Controller
         }
         if (! isset($data['EmailVerificationRequired'])) {
             $data['EmailVerificationRequired'] = '0';
+        }
+        if (! isset($data['KnowledgeBaseEnabled'])) {
+            $data['KnowledgeBaseEnabled'] = '0';
         }
         if (! isset($data['TwilioVerifyEnabled'])) {
             $data['TwilioVerifyEnabled'] = '0';

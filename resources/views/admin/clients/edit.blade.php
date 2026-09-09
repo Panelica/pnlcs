@@ -26,6 +26,19 @@
                         <x-company-lookup />
                     </div>
                 </div>
+                {{-- The billing identity. Not enforced here: an admin must be able
+                     to open a record with gaps, but should see them now rather
+                     than when the invoice is written. Which fields matter
+                     depends on the customer type. --}}
+                <div class="form-group"><label class="form-label">{{ __('admin.clients.billing_type') }}</label>
+                    <select name="client_type" class="form-control">
+                        <option value="">-</option>
+                        <option value="individual" {{ old('client_type', $client->client_type) === 'individual' ? 'selected' : '' }}>{{ __('admin.clients.billing_type_individual') }}</option>
+                        <option value="company" {{ old('client_type', $client->client_type) === 'company' ? 'selected' : '' }}>{{ __('admin.clients.billing_type_company') }}</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.clients.billing_tax_office') }}</label><input type="text" name="tax_office" value="{{ old('tax_office', $client->tax_office) }}" maxlength="100" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.clients.billing_national_id') }}</label><input type="text" name="national_id" value="{{ old('national_id', $client->national_id) }}" maxlength="20" class="form-control"></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.address') }}</label><input type="text" name="address1" value="{{ old('address1', $client->address1) }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="city" value="{{ old('city', $client->city) }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.state') }}</label><input type="text" name="state" value="{{ old('state', $client->state) }}" class="form-control"></div>

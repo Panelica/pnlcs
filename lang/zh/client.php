@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'cart.billing_identity_required' => '开具发票前需要您的开票信息。保存后将返回付款步骤。',
+    'cart.billing_identity_saved' => '开票信息已保存，现在可以完成订单。',
+    'cart.save_and_continue' => '保存并继续付款',
     'pages.about_title' => '关于我们',
     'pages.about_description' => ':company 为您的网站、项目和业务提供主机、域名和邮件服务。',
     'pages.about_who' => '我们是谁',
@@ -493,12 +496,23 @@ return [
     'footer.all_rights_reserved' => '保留所有权利。',
     'footer.brand' => 'PNLCS',
     'form' => [
+        'client_type' => '客户类型',
+        'client_type_individual' => '个人',
+        'client_type_company' => '企业',
+        'company_title' => '注册公司名称',
+        'tax_office' => '税务局',
+        'tax_id' => '税号',
+        'national_id' => '身份证号',
         'company' => '公司',
         'optional' => '可选',
         'phone' => '电话',
     ],
     'form.optional' => '可选',
     'funds' => [
+        'you_will_receive' => '您将获得的余额',
+        'bulletin' => '公告',
+        'rate_notice' => '适用汇率为收到付款时的官方卖出汇率，并显示在发票上。',
+        'rate_line' => ':paid 按 1 :from = :rate 换算（:source）',
         'add_amount' => '充值金额',
         'available_credit_desc' => '可用于支付发票和订单。',
         'current_balance' => '当前余额',
@@ -537,6 +551,8 @@ return [
         'title' => '邮件记录',
     ],
     'invoices' => [
+        'pn_amount_hint' => '请以您支付的货币输入转账金额。对应发票上的 :amount。',
+        'pn_reported_in_billing' => '客户报告的金额：:amount（汇率 :rate，来源 :source）。',
         'amount_paid' => '已付金额',
         'back_to_invoices' => '返回发票',
         'payment_notification_intro' => '已经完成银行转账？请在下方通知我们，我们会尽快核实。',
@@ -635,6 +651,10 @@ return [
     'my_invoices' => '我的发票',
     'my_services' => '我的服务',
     'nav' => [
+        'my_certificates' => '我的证书',
+        'product_groups' => '产品分组',
+        'transfer_domain' => '域名转入',
+        'whois_lookup' => 'WHOIS 查询',
         'home_site' => '首页',
         'account' => '账户',
         'add_funds' => '充值',

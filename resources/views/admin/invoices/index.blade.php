@@ -15,6 +15,10 @@
     @foreach([
         "" => __('common.form.all'),
         "unpaid" => __('admin.invoices.filter_unpaid'),
+        {{-- Was missing: an invoice moves here when the customer files a
+             transfer notification, and it showed under no tab at all - an
+             invoice waiting for approval must be in plain sight. --}}
+        "payment_pending" => __('admin.invoices.filter_payment_pending'),
         "paid" => __('admin.invoices.filter_paid'),
         "overdue" => __('admin.invoices.filter_overdue'),
         "cancelled" => __('admin.invoices.filter_cancelled'),
@@ -59,7 +63,7 @@
                 @php
                 $badgeClass = match(strtolower($invoice->status ?? "")) {
                     "active", "paid"     => "badge-paid",
-                    "pending"            => "badge-pending",
+                    "pending", "payment_pending" => "badge-pending",
                     "unpaid"             => "badge-unpaid",
                     "overdue"            => "badge-overdue",
                     "suspended"          => "badge-suspended",
@@ -90,7 +94,7 @@
                     </td>
                     <td style="color:#666;">{{ $invoice->date?->format(date_fmt()) ?? "-" }}</td>
                     <td style="color:#666;">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
-                    <td style="text-align:right;font-weight:500;">{{ money_fmt($invoice->total) }}</td>
+                    <td style="text-align:right;font-weight:500;">{{ dual_money_fmt($invoice->total, $invoice) }}</td>
                     <td><span class="badge {{ $badgeClass }}" style="{{ $badgeStyle }}">{{ $statusLabel }}</span></td>
                     <td>
                         <a href="{{ route("admin.invoices.show", $invoice) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>

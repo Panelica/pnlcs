@@ -229,6 +229,9 @@ class AuthController extends Controller
             'postcode' => 'required|string|max:20',
             'country' => 'required|string|size:2',
             'tax_id' => 'nullable|string|max:50',
+            'client_type' => 'nullable|in:individual,company',
+            'tax_office' => 'nullable|string|max:100',
+            'national_id' => 'nullable|string|max:20',
             'phone_number' => 'nullable|string|max:30',
             'tos' => 'required|accepted',
         ]);

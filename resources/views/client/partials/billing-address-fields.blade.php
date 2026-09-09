@@ -40,6 +40,58 @@
         @error('postcode')<div class="text-danger text-sm">{{ $message }}</div>@enderror
     </div>
 </div>
+@if(\App\Support\BillingIdentity::turkish())
+{{-- Where the seller is bound by the Turkish invoicing rules the buyer has to
+     be typed: a company by trade title, tax office and tax number, a private
+     person by national ID. Elsewhere the tax number below is enough. --}}
+<div class="form-group" data-billing-identity>
+    <label class="form-label">{{ __('client.form.client_type') }}<span class="req" style="color:#c43c35;">*</span></label>
+    <div style="display:flex;gap:18px;margin:4px 0 8px;">
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:14px;">
+            <input type="radio" name="client_type" value="individual" @checked(old('client_type', $addr?->client_type ?: 'individual') === 'individual') required>
+            {{ __('client.form.client_type_individual') }}
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:14px;">
+            <input type="radio" name="client_type" value="company" @checked(old('client_type', $addr?->client_type) === 'company')>
+            {{ __('client.form.client_type_company') }}
+        </label>
+    </div>
+    @error('client_type')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+    <div data-identity-for="individual" class="form-group">
+        <label class="form-label" for="national_id">{{ __('client.form.national_id') }}<span class="req" style="color:#c43c35;">*</span></label>
+        <input type="text" id="national_id" name="national_id" value="{{ old('national_id', $addr?->national_id) }}" inputmode="numeric" maxlength="20" class="form-control">
+        @error('national_id')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+    </div>
+    <div data-identity-for="company">
+        <div class="form-group">
+            <label class="form-label" for="company_name">{{ __('client.form.company_title') }}<span class="req" style="color:#c43c35;">*</span></label>
+            <input type="text" id="company_name" name="company_name" value="{{ old('company_name', $addr?->company_name) }}" class="form-control">
+            @error('company_name')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="tax_office">{{ __('client.form.tax_office') }}<span class="req" style="color:#c43c35;">*</span></label>
+            <input type="text" id="tax_office" name="tax_office" value="{{ old('tax_office', $addr?->tax_office) }}" class="form-control">
+            @error('tax_office')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    var root = document.querySelector('[data-billing-identity]');
+    if (!root) { return; }
+    var radios = root.querySelectorAll('input[name="client_type"]');
+    function apply() {
+        var picked = root.querySelector('input[name="client_type"]:checked');
+        var type = picked ? picked.value : 'individual';
+        root.querySelectorAll('[data-identity-for]').forEach(function (block) {
+            block.hidden = block.getAttribute('data-identity-for') !== type;
+        });
+    }
+    Array.prototype.forEach.call(radios, function (r) { r.addEventListener('change', apply); });
+    apply();
+})();
+</script>
+@endif
 <div class="{{ $grid }}">
     <div class="form-group">
         <label class="form-label" for="state">{{ __('common.form.state') }}</label>

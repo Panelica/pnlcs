@@ -74,6 +74,13 @@ class ClientController extends Controller
             'billing_email' => 'nullable|email|max:255',
             'company_name' => 'nullable|string|max:255',
             'tax_id' => 'nullable|string|max:20',
+            // The billing identity. These were displayed on the form and never
+            // saved: a field that is not in the array validate() returns never
+            // reaches update(), so an admin typed a value, saved, and found
+            // the field empty.
+            'client_type' => 'nullable|in:individual,company',
+            'tax_office' => 'nullable|string|max:100',
+            'national_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',
@@ -106,6 +113,77 @@ class ClientController extends Controller
         $this->saveCustomFieldValues($client, $request);
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_created'));
+    }
+
+    /**
+     * Every customer's billing identity in one table.
+     *
+     * While invoices are issued by hand, collecting this customer by customer
+     * becomes the day's work. The table shows exactly the fields an official
+     * invoice needs, marks the gaps, and the "only incomplete" filter says who
+     * to chase at the start of the month.
+     */
+    public function billingIdentity(Request $request)
+    {
+        $query = Client::query();
+
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        $clients = $query->orderBy('id', 'asc')->get();
+
+        // What is missing is a rule per customer type, not a column query -
+        // which is why the filter and the count live here rather than in SQL.
+        $missing = $clients->mapWithKeys(fn (Client $c) => [$c->id => $c->missingBillingIdentity()]);
+
+        if ($request->boolean('only_missing')) {
+            $clients = $clients->filter(fn (Client $c) => $missing[$c->id] !== []);
+        }
+
+        return view('admin.clients.billing-identity', [
+            'clients' => $clients,
+            'missing' => $missing,
+            'missingCount' => $missing->filter(fn (array $m) => $m !== [])->count(),
+        ]);
+    }
+
+    /** The same table, in a form an accountant can be sent. */
+    public function billingIdentityCsv(Request $request): StreamedResponse
+    {
+        $query = Client::query();
+
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        $clients = $query->orderBy('id', 'asc')->get();
+
+        if ($request->boolean('only_missing')) {
+            $clients = $clients->filter(fn (Client $c) => $c->missingBillingIdentity() !== []);
+        }
+
+        $rows = $clients->map(fn (Client $c) => [
+            $c->id,
+            $c->full_name,
+            $c->client_type === 'company' ? __('admin.clients.billing_type_company') : ($c->client_type === 'individual' ? __('admin.clients.billing_type_individual') : ''),
+            $c->company_name ?? '',
+            $c->tax_office ?? '',
+            $c->tax_id ?? '',
+            $c->national_id ?? '',
+            $c->address1 ?? '',
+            $c->city ?? '',
+            $c->country ?? '',
+            $c->full_phone ?? '',
+            $c->email,
+            implode(' | ', \App\Support\BillingIdentity::labels($c->missingBillingIdentity())),
+        ]);
+
+        return $this->streamCsvDownload(
+            'billing-identity-'.now()->format('Y-m-d').'.csv',
+            ['ID', __('admin.clients.name'), __('admin.clients.billing_type'), __('client.form.company_title'), __('admin.clients.billing_tax_office'), __('common.form.tax_id'), __('admin.clients.billing_national_id'), __('common.form.street_address'), __('common.form.city'), __('common.form.country'), __('client.form.phone'), __('common.form.email_address'), __('admin.clients.billing_missing_column')],
+            $rows
+        );
     }
 
     public function show(Request $request, Client $client)
@@ -384,6 +462,13 @@ class ClientController extends Controller
             'billing_email' => 'nullable|email|max:255',
             'company_name' => 'nullable|string|max:255',
             'tax_id' => 'nullable|string|max:20',
+            // The billing identity. These were displayed on the form and never
+            // saved: a field that is not in the array validate() returns never
+            // reaches update(), so an admin typed a value, saved, and found
+            // the field empty.
+            'client_type' => 'nullable|in:individual,company',
+            'tax_office' => 'nullable|string|max:100',
+            'national_id' => 'nullable|string|max:20',
             'address1' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:255',

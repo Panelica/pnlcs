@@ -53,6 +53,28 @@ class PaymentNotificationController extends Controller
 
         $amount = (float) ($validated['amount'] ?? $paymentNotification->amount);
 
+        // Fatura bu arada baska bir yoldan kapanmis olabilir: yonetici toplu
+        // islemden "Odendi" isaretlemis, musteri karttan odemis, ya da fatura
+        // iptal edilmis. Bildirimi o durumda onaylamak para zincirini ikinci
+        // kez calistiriyor - fatura zaten kapali oldugu icin tutar musteriye
+        // alacak bakiyesi olarak yaziliyor ve ortada olmayan bir borc doguyor.
+        // Bildirim kayda gecip kapaniyor, tahsilat tekrarlanmiyor.
+        $invoice = $paymentNotification->invoice;
+
+        if ($invoice && in_array(strtolower((string) $invoice->status), InvoiceStatus::settled(), true)) {
+            $paymentNotification->update([
+                'status' => 'approved',
+                'amount' => $amount,
+                'admin_id' => auth('admin')->id(),
+                'admin_note' => $validated['admin_note'] ?? null,
+                'reviewed_at' => now(),
+            ]);
+
+            return back()->with('info', __('admin.payment_notifications.already_settled', [
+                'status' => __('client.status.'.strtolower((string) $invoice->status)),
+            ]));
+        }
+
         $result = $this->payments->applyPayment(
             $paymentNotification->invoice,
             $paymentNotification->gateway,

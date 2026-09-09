@@ -169,3 +169,16 @@ test('cloudflare\'s "could not place" answers are not treated as countries', fun
 
     expect(GeoLocale::country($request))->toBeNull();
 });
+
+// ------------------------------------------------------ knowledge base switch
+
+test('turning the knowledge base off removes it from the menus and the routes', function () {
+    \App\Models\Setting::set('KnowledgeBaseEnabled', '0');
+
+    $this->get(route('client.kb.index'))->assertNotFound();
+    $this->get(route('client.contact'))->assertOk()->assertDontSee(route('client.kb.index'));
+
+    \App\Models\Setting::set('KnowledgeBaseEnabled', '1');
+    $this->get(route('client.kb.index'))->assertOk();
+    $this->get(route('client.contact'))->assertOk()->assertSee(route('client.kb.index'));
+});

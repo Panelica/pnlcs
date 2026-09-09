@@ -42,8 +42,8 @@
                 <tr>
                     <td>{{ $item->description }}</td>
                     <td style="text-align:right">{{ (int) $item->qty }}</td>
-                    <td style="text-align:right">{{ money_fmt($item->amount) }}</td>
-                    <td style="text-align:right;font-weight:600">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
+                    <td style="text-align:right">{{ invoice_money_fmt($item->amount, $invoice) }}</td>
+                    <td style="text-align:right;font-weight:600">{{ invoice_money_fmt($item->amount * (int) $item->qty, $invoice) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -68,36 +68,43 @@
             @if($invoice->subtotal && $invoice->subtotal != $invoice->total)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.subtotal') }}</span>
-                <span>{{ money_fmt($invoice->subtotal) }}</span>
+                <span>{{ invoice_money_fmt($invoice->subtotal, $invoice) }}</span>
             </div>
             @endif
             @foreach($vatGroups as $label => $g)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ $label }}</span>
                 <span style="display:flex;gap:24px">
-                    <span>{{ money_fmt($g['amount']) }}</span>
-                    <span>{{ money_fmt($g['net']) }}</span>
+                    <span>{{ invoice_money_fmt($g['amount'], $invoice) }}</span>
+                    <span>{{ invoice_money_fmt($g['net'], $invoice) }}</span>
                 </span>
             </div>
             @endforeach
             @if(($invoice->tax2 ?? 0) > 0)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.cart.tax').' 2' }}{{ $invoice->tax_rate2 > 0 ? " (" . rtrim(rtrim(number_format((float) $invoice->tax_rate2, 2), '0'), '.') . "%)" : '' }}</span>
-                <span>{{ money_fmt($invoice->tax2) }}</span>
+                <span>{{ invoice_money_fmt($invoice->tax2, $invoice) }}</span>
             </div>
             @endif
             <div style="display:flex;justify-content:space-between;padding:12px 0 4px;font-size:17px;font-weight:800;color:var(--primary)">
                 <span>{{ __('client.invoices.total_due') }}</span>
-                <span>{{ money_fmt($invoice->total) }}</span>
+                <span>{{ invoice_money_fmt($invoice->total, $invoice) }}</span>
             </div>
+            @if(billing_rate_note($invoice))
+            <div style="display:flex;justify-content:space-between;gap:16px;font-weight:700;font-size:17px;padding-top:8px;border-top:2px solid var(--border,#e5e7eb);margin-top:6px;">
+                <span>{{ __('pdf.amount_in') }}</span>
+                <span>{{ billing_money_fmt($invoice->total, $invoice) }}</span>
+            </div>
+            <div class="text-muted" style="font-size:12px;margin-top:8px;line-height:1.5;">{{ billing_rate_note($invoice) }}</div>
+            @endif
             @if(isset($balance) && $balance > 0 && $balance < (float) $invoice->total)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-top:1px solid #f1f5f9">
                 <span class="text-muted">{{ __('client.invoices.amount_paid') }}</span>
-                <span>{{ money_fmt((float) $invoice->total - $balance) }}</span>
+                <span>{{ invoice_money_fmt((float) $invoice->total - $balance, $invoice) }}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:14px;font-weight:700;color:#dc3545">
                 <span>{{ __('client.invoices.remaining_balance') }}</span>
-                <span>{{ money_fmt($balance) }}</span>
+                <span>{{ invoice_money_fmt($balance, $invoice) }}</span>
             </div>
             @endif
         </div>
@@ -109,7 +116,7 @@
     <strong>{{ __('client.invoices.payment_notification_pending_title') }}</strong><br>
     {{ __('client.invoices.payment_notification_pending_text') }}
     @if(isset($pendingNotification) && $pendingNotification)
-    <br><small class="text-muted">{{ __('client.invoices.reported_on') }} {{ $pendingNotification->created_at->timezone(display_tz())->format(datetime_fmt()) }} — {{ money_fmt((float) $pendingNotification->amount) }}</small>
+    <br><small class="text-muted">{{ __('client.invoices.reported_on') }} {{ $pendingNotification->created_at->timezone(display_tz())->format(datetime_fmt()) }} — {{ dual_money_fmt((float) $pendingNotification->amount, $invoice) }}</small>
     @endif
 </div>
 @endif
@@ -119,7 +126,7 @@
     <div class="pn-card-header" style="background:linear-gradient(135deg,var(--primary),#1e5fa0);border-radius:12px 12px 0 0">
         <span style="font-size:15px;font-weight:700;color:#fff">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:-2px;margin-right:6px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-            {{ __('client.invoices.pay_this_invoice') }} — {{ money_fmt($balance ?? $invoice->total) }}
+            {{ __('client.invoices.pay_this_invoice') }} — {{ dual_money_fmt($balance ?? $invoice->total, $invoice) }}
         </span>
     </div>
     <div class="pn-card-body">

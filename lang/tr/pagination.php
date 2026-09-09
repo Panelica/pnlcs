@@ -3,8 +3,8 @@
 return [
     'previous' => '&laquo; Önceki',
     'next' => 'Sonraki &raquo;',
-    'showing' => 'Gösteriliyor',
-    'to' => 'den',
-    'of' => 'için',
-    'results' => 'sonuç',
+    'showing' => 'Gösterilen',
+    'to' => '-',
+    'of' => '/',
+    'results' => 'kayıt',
 ];

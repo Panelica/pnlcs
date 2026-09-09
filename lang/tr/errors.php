@@ -11,13 +11,13 @@ return [
     ],
     '419' => [
         'message' => 'Sizin session has expired. Lutfen refresh  page and try again.',
-        'refresh' => 'Refresh Sayfa',
+        'refresh' => 'Sayfayı Yenile',
         'title' => 'Oturum Expired',
     ],
     '500' => [
-        'message' => 'We\'re experiencing technical difficulties. Lutfen try again later.',
-        'title' => 'Something Went Wrong',
+        'message' => 'Teknik bir sorun yaşıyoruz. Lütfen daha sonra tekrar deneyin.',
+        'title' => 'Bir Şeyler Ters Gitti',
     ],
-    'go_back' => 'Geri Don',
-    'go_home' => 'Go Ana Sayfa',
+    'go_back' => 'Geri Dön',
+    'go_home' => 'Ana Sayfaya Git',
 ];

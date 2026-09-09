@@ -9,6 +9,16 @@ use App\Models\KbCategory;
 class KbController extends Controller
 {
     /**
+     * One switch, every door: with the knowledge base turned off in the
+     * settings the links are gone from the menus, and a bookmarked or
+     * crawled URL gets a 404 rather than an empty article list.
+     */
+    public function __construct()
+    {
+        abort_unless(kb_enabled(), 404);
+    }
+
+    /**
      * The knowledge base is public: no login, no client account. Articles
      * carry a published switch in the admin screen, stored inverted as
      * `private`, and nothing here used to look at it — an article taken down,

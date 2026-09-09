@@ -15,10 +15,45 @@ class Client extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * Whether we hold enough about this customer to issue them a valid invoice.
+     *
+     * Turkish law wants the buyer's identity on the invoice: a company needs
+     * its trade title, tax office and tax number; a person needs their national
+     * ID. Both need a postal address and a telephone. Asked once here so the
+     * checkout, the client area and the API cannot disagree about whether a
+     * customer is ready to order.
+     *
+     * @return array<int, string> The missing field names, empty when complete.
+     */
+    public function missingBillingIdentity(): array
+    {
+        // Which fields are asked for lives in App\Support\BillingIdentity: the
+        // same list decides the stars on the admin forms, and two copies would
+        // age apart.
+        $missing = [];
+
+        foreach (\App\Support\BillingIdentity::required($this->client_type) as $field) {
+            if (trim((string) $this->{$field}) === '') {
+                $missing[] = $field;
+            }
+        }
+
+        return $missing;
+    }
+
+    public function hasBillingIdentity(): bool
+    {
+        return $this->missingBillingIdentity() === [];
+    }
+
     protected $fillable = [
         'first_name',
         'last_name',
         'company_name',
+        'client_type',
+        'tax_office',
+        'national_id',
         'email',
         'billing_email',
         'address1',

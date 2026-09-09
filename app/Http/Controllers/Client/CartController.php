@@ -401,7 +401,7 @@ class CartController extends Controller
      */
     private function validateBillingAddress(Request $request): array
     {
-        return $request->validate([
+        $rules = [
             'address1' => 'required|string|max:255',
             'address2' => 'nullable|string|max:255',
             'city' => 'required|string|max:255',
@@ -409,7 +409,23 @@ class CartController extends Controller
             'postcode' => 'required|string|max:20',
             'country' => 'required|string|size:2',
             'tax_id' => 'nullable|string|max:50',
-        ]);
+        ];
+
+        // A seller bound by the Turkish invoicing rules has to know which kind
+        // of buyer this is and identify them accordingly. The same rules the
+        // admin screens and the profile page read.
+        if (\App\Support\BillingIdentity::turkish()) {
+            $rules += [
+                'phone_number' => 'required|string|max:30',
+                'client_type' => 'required|in:individual,company',
+                'company_name' => 'required_if:client_type,company|nullable|string|max:255',
+                'tax_office' => 'required_if:client_type,company|nullable|string|max:100',
+                'tax_id' => 'required_if:client_type,company|nullable|string|max:50',
+                'national_id' => 'required_if:client_type,individual|nullable|string|max:20',
+            ];
+        }
+
+        return $request->validate($rules);
     }
 
     private function needsBillingAddress(?Client $client): bool

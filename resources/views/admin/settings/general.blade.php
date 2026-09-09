@@ -192,6 +192,78 @@
         </div>
     </div>
 
+    {{-- The seller's registered identity. A contract, an official invoice and
+         the contact page all name it, and they read these same fields so the
+         three can never disagree. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.legal_identity') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.company_legal_name') }}</label><input type="text" name="CompanyLegalName" value="{{ $settings['CompanyLegalName'] ?? '' }}" class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.company_legal_name_hint') }}</div></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.tax_office') }}</label><input type="text" name="TaxOffice" value="{{ $settings['TaxOffice'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.postcode') }}</label><input type="text" name="Postcode" value="{{ $settings['Postcode'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.state') }}</label><input type="text" name="State" value="{{ $settings['State'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.trade_registry_no') }}</label><input type="text" name="TradeRegistryNo" value="{{ $settings['TradeRegistryNo'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.mersis_no') }}</label><input type="text" name="MersisNo" value="{{ $settings['MersisNo'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.abuse_email') }}</label><input type="email" name="AbuseEmail" value="{{ $settings['AbuseEmail'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.dpo_email') }}</label><input type="email" name="DpoEmail" value="{{ $settings['DpoEmail'] ?? '' }}" class="form-control"></div>
+            </div>
+            <div class="form-group"><label class="form-label">{{ __('admin.settings.about_text') }}</label><textarea name="AboutText" rows="5" class="form-control">{{ $settings['AboutText'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.about_text_hint') }} <a href="{{ route('pages.about') }}" target="_blank" rel="noopener">{{ route('pages.about') }}</a></div></div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="checkbox" name="KnowledgeBaseEnabled" value="1" {{ ($settings['KnowledgeBaseEnabled'] ?? '1') !== '0' ? 'checked' : '' }}>
+                {{ __('admin.settings.knowledge_base_enabled') }}
+            </label>
+        </div>
+    </div>
+
+    {{-- Billing in a second currency. The shop keeps pricing in its own
+         currency; each invoice freezes the rate it was struck at, and names
+         the source when there is an official one to name. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.billing_currency_section') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.billing_currency') }}</label>
+                    <select name="BillingCurrency" class="form-control">
+                        <option value="">{{ __('admin.settings.billing_currency_none') }}</option>
+                        @foreach(\App\Models\Currency::orderBy('code')->get() as $cur)
+                            <option value="{{ $cur->code }}" {{ ($settings['BillingCurrency'] ?? '') === $cur->code ? 'selected' : '' }}>{{ $cur->code }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.official_rate_provider') }}</label>
+                    <select name="OfficialRateProvider" class="form-control">
+                        <option value="">{{ __('admin.settings.official_rate_none') }}</option>
+                        <option value="tcmb" {{ ($settings['OfficialRateProvider'] ?? '') === 'tcmb' ? 'selected' : '' }}>{{ __('admin.settings.official_rate_tcmb') }}</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.tcmb_rate_kind') }}</label>
+                    <select name="TcmbRateKind" class="form-control">
+                        <option value="ForexSelling" {{ ($settings['TcmbRateKind'] ?? 'ForexSelling') === 'ForexSelling' ? 'selected' : '' }}>{{ __('pdf.rate_kind_selling') }}</option>
+                        <option value="ForexBuying" {{ ($settings['TcmbRateKind'] ?? '') === 'ForexBuying' ? 'selected' : '' }}>{{ __('pdf.rate_kind_buying') }}</option>
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.payment_reference_prefix') }}</label><input type="text" name="PaymentReferencePrefix" value="{{ $settings['PaymentReferencePrefix'] ?? 'INV' }}" maxlength="8" class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.payment_reference_prefix_hint') }}</div></div>
+                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.settings.auto_approve_emails') }}</label><input type="text" name="AutoApproveOrderEmails" value="{{ $settings['AutoApproveOrderEmails'] ?? '' }}" class="form-control" placeholder="tester@example.com, qa@example.com"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.auto_approve_emails_hint') }}</div></div>
+            </div>
+            <div style="font-size:12px;color:#777;">{{ __('admin.settings.billing_currency_hint') }}</div>
+        </div>
+    </div>
+
+    {{-- The registrar float. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.registrar_balance') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_watch_module') }}</label><input type="text" name="BalanceWatchRegistrar" value="{{ $settings['BalanceWatchRegistrar'] ?? '' }}" class="form-control" placeholder="domainnameapi"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_floor') }}</label><input type="number" step="0.01" min="0" name="RegistrarBalanceThreshold" value="{{ $settings['RegistrarBalanceThreshold'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_currency') }}</label><input type="text" name="RegistrarBalanceCurrency" value="{{ $settings['RegistrarBalanceCurrency'] ?? '' }}" maxlength="3" class="form-control" placeholder="USD"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_alert_email') }}</label><input type="email" name="RegistrarBalanceAlertEmail" value="{{ $settings['RegistrarBalanceAlertEmail'] ?? '' }}" class="form-control"></div>
+            </div>
+            <div style="font-size:12px;color:#777;">{{ __('admin.settings.registrar_balance_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Late fees. The command that charges them has always read these three
          settings; there was nowhere to enter them, so it read "none" every
          morning and stopped. --}}

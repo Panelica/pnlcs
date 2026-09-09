@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Currency;
 use App\Models\Setting;
+use App\Services\TcmbRateService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -52,6 +53,14 @@ class CurrencyUpdateCommand extends Command
             $updated[] = $code;
         }
 
+        // The billing currency's rate comes from an official source instead,
+        // when the operator named one: invoices print the rate they were
+        // struck at, and a customer can check a central bank bulletin number
+        // but not a commercial API's.
+        if ((string) Setting::get('OfficialRateProvider', '') === 'tcmb') {
+            $this->applyOfficialLiraRate($base, $updated, $missing);
+        }
+
         // Base rate is 1.0 by definition.
         if ((float) $base->rate !== 1.0) {
             $base->update(['rate' => 1.0]);
@@ -68,6 +77,55 @@ class CurrencyUpdateCommand extends Command
         ));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Overwrite the lira rate with the official TCMB one and record its
+     * provenance, so an invoice can print where the number came from.
+     *
+     * A failure here is not fatal - the commercial rate already fetched stays,
+     * and the invoice simply names that source instead.
+     */
+    private function applyOfficialLiraRate(Currency $base, array &$updated, array &$missing): void
+    {
+        if (strtoupper($base->code) !== 'USD') {
+            return;                       // TCMB quotes against the lira only
+        }
+
+        $try = Currency::where('code', 'TRY')->first();
+
+        if (! $try) {
+            return;
+        }
+
+        $kind = (string) Setting::get('TcmbRateKind', 'ForexSelling');
+        $official = app(TcmbRateService::class)->rateFor('USD', $kind);
+
+        if ($official === null) {
+            $this->warn('TCMB unavailable - lira rate left at the commercial provider value.');
+
+            return;
+        }
+
+        $try->update(['rate' => round($official['rate'], 5)]);
+
+        Setting::set('ExchangeRateSource', $official['source']);
+        Setting::set('ExchangeRateKind', $official['kind']);
+        Setting::set('ExchangeRateDate', $official['date']);
+        Setting::set('ExchangeRateBulletin', (string) $official['bulletin']);
+
+        if (! in_array('TRY', $updated, true)) {
+            $updated[] = 'TRY';
+        }
+        $missing = array_values(array_diff($missing, ['TRY']));
+
+        $this->info(sprintf(
+            'TRY set from TCMB %s (%s, bulletin %s): 1 USD = %s TRY',
+            $official['kind'],
+            $official['date'],
+            $official['bulletin'] ?? '-',
+            number_format($official['rate'], 4)
+        ));
     }
 
     /**

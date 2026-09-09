@@ -36,7 +36,7 @@ it('saves managed resource limits into config_options and preserves feature text
         ])
         ->assertRedirect();
 
-    $cfg = json_decode($product->fresh()->config_options, true);
+    $cfg = (array) $product->fresh()->config_options;
     expect($cfg['res_managed'])->toBe(1)
         ->and($cfg['res_cpu_percent'])->toBe(200)
         ->and($cfg['res_memory_mb'])->toBe(2048)

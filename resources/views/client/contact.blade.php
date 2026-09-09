@@ -112,6 +112,7 @@
                 </a>
             </div>
         </div>
+        @if(kb_enabled())
         <div class="pn-card">
             <div class="pn-card-body">
                 <div style="font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:14px">{{ __('client.nav.knowledge_base') }}</div>
@@ -119,6 +120,7 @@
                 <a href="{{ route("client.kb.index") }}" class="btn btn-outline" style="width:100%;justify-content:center">{{ __('client.contact.browse_articles') }}</a>
             </div>
         </div>
+        @endif
     </div>
 </div>
 

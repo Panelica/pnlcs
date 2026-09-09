@@ -23,15 +23,64 @@ class FundsController extends Controller
         // used to list every gateway that had ever had a setting saved.
         $gateways = collect(app(ModuleRegistry::class)->usableGateways())->sort()->values();
 
-        return view('client.funds.index', compact('gateways'));
+        return view('client.funds.index', compact('gateways') + $this->rateContext());
+    }
+
+    /**
+     * The rate and currencies used when adding funds.
+     *
+     * The customer pays in the billing currency and the balance is kept in
+     * the shop currency - every price is in it, and keeping the balance in
+     * the billing currency would mean one more conversion the other way on
+     * every sale. Which bulletin the rate came from is shown to the customer;
+     * they should not be asked to pay in without seeing how their money will
+     * be converted.
+     *
+     * @return array<string, mixed>
+     */
+    private function rateContext(): array
+    {
+        $shop = \App\Models\Currency::getDefault();
+        $code = (string) \App\Models\Setting::get('BillingCurrency', '');
+        $billing = $code !== '' ? \App\Models\Currency::where('code', $code)->first() : null;
+
+        // The shop already bills in its own currency: no conversion, the form is in the shop currency.
+        $rate = ($billing && $shop && strtoupper($billing->code) !== strtoupper($shop->code) && (float) $billing->rate > 0)
+            ? (float) $billing->rate
+            : null;
+
+        return [
+            'shopCurrency'    => $shop,
+            'billingCurrency' => $rate !== null ? $billing : null,
+            'exchangeRate'    => $rate,
+            'rateSource'      => \App\Models\Setting::get('ExchangeRateSource') ?: null,
+            'rateDate'        => \App\Models\Setting::get('ExchangeRateDate') ?: null,
+            'rateBulletin'    => \App\Models\Setting::get('ExchangeRateBulletin') ?: null,
+        ];
     }
 
     public function store(Request $request)
     {
+        $ctx = $this->rateContext();
+        $rate = $ctx['exchangeRate'];
+
+        // The entered amount is in the currency the customer pays in: the
+        // billing currency if there is one, the shop currency otherwise. The
+        // minimum has to be in that currency too - 5 of one is not 5 of the other.
+        $minimum = $rate !== null ? funds_round_preset(5 * $rate) : 5;
+        $maximum = $rate !== null ? funds_round_preset(10000 * $rate) : 10000;
+
         $validated = $request->validate([
-            'amount'         => 'required|numeric|min:5|max:10000',
+            'amount'         => "required|numeric|min:{$minimum}|max:{$maximum}",
             'payment_method' => 'required|string|max:50',
         ]);
+
+        $paidAmount = (float) $validated['amount'];
+
+        // What reaches the invoice and the balance is always in the shop currency.
+        $validated['amount'] = $rate !== null
+            ? round($paidAmount / $rate, 2)
+            : $paidAmount;
 
         $client = $this->currentClient();
 
@@ -66,11 +115,24 @@ class FundsController extends Controller
             'payment_method' => $gateway,
         ]);
 
+        // The description carries the rate that was applied: a customer
+        // looking at the invoice six months later should be able to see why
+        // their 1000 became 20.76.
+        $description = __('messages.invoice.add_funds_description');
+
+        if ($rate !== null) {
+            $description .= ' — ' . __('client.funds.rate_line', [
+                'paid'   => number_format($paidAmount, 2, ',', '.') . ' ' . ($ctx['billingCurrency']->suffix ?: $ctx['billingCurrency']->code),
+                'rate'   => number_format($rate, 4, ',', '.'),
+                'source' => trim(($ctx['rateSource'] ?? '') . ' ' . ($ctx['rateDate'] ?? '')),
+            ]);
+        }
+
         InvoiceItem::create([
             'invoice_id'  => $invoice->id,
             'client_id'   => $client->id,
             'type'        => 'AddFunds',
-            'description' => __('messages.invoice.add_funds_description'),
+            'description' => $description,
             'amount'      => $validated['amount'],
             'taxed'       => false,
         ]);

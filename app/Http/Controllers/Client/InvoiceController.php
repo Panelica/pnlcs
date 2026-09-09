@@ -26,12 +26,20 @@ class InvoiceController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(25);
 
+        $this->flashPaymentOutcome(request()->query('payment'));
+
         return view('client.invoices.index', compact('invoices'));
     }
 
     public function show(Invoice $invoice)
     {
         abort_if($invoice->client_id !== $this->getClientId(), 403);
+
+        // The outcome of a payment return arrives as a code in the query
+        // string: the callback request has no session, so it cannot flash a
+        // message. A code, never free text - printing text from the address
+        // bar onto the page would be an open injection door.
+        $this->flashPaymentOutcome(request()->query('payment'));
         $invoice->load('items');
 
         // The value is encrypted at rest, so it is compared after it comes
@@ -44,6 +52,16 @@ class InvoiceController extends Controller
 
         if (empty($gateways)) {
             $gateways = ['banktransfer'];
+        }
+
+        // The customer already chose how to pay when they placed the order.
+        // The tabs were ordered by gateway_settings row order, which put bank
+        // transfer first: a customer who chose card opened the invoice, saw a
+        // table of IBANs and reported "the payment screen never came". Their
+        // chosen method is the first tab, and the first tab is the open one.
+        $chosen = strtolower(trim((string) $invoice->payment_method));
+        if ($chosen !== '' && in_array($chosen, $gateways, true)) {
+            usort($gateways, fn ($a, $b) => ($b === $chosen) <=> ($a === $chosen));
         }
 
         $gatewayForms = [];
@@ -73,6 +91,28 @@ class InvoiceController extends Controller
         $balance = app(PaymentService::class)->balance($invoice);
 
         return view('client.invoices.show', compact('invoice', 'gateways', 'gatewayForms', 'gatewayLabels', 'pendingNotification', 'balance'));
+    }
+
+    /**
+     * Show the customer the outcome of a payment return.
+     */
+    private function flashPaymentOutcome(?string $code): void
+    {
+        $messages = [
+            'success'       => ['success', 'messages.iyzico.paid'],
+            'failed'        => ['error', 'messages.iyzico.failed'],
+            'notconfigured' => ['error', 'messages.iyzico.not_configured'],
+            'orphan'        => ['error', 'messages.iyzico.invoice_missing'],
+        ];
+
+        if (! $code || ! isset($messages[$code])) {
+            return;
+        }
+
+        [$kind, $key] = $messages[$code];
+
+        // now(): the message is printed on this page, not on the next request.
+        session()->now($kind, __($key));
     }
 
     /**
@@ -106,17 +146,40 @@ class InvoiceController extends Controller
             $receiptPath = $request->file('receipt')->store("payment-receipts/{$invoice->id}", 'local');
         }
 
+        // The form asks for the amount in the currency the customer paid at
+        // the bank; the payment chain works in the invoice's source currency,
+        // which is what applyPayment takes off the balance when an admin
+        // approves. Converted at the rate stamped on the invoice, so a later
+        // rate move cannot change what this document settles at. The figure
+        // the customer reported goes in the note so an admin can match it
+        // against the bank statement line for line.
+        $reported = (float) $validated['amount'];
+        $amount = $reported;
+        $note = $validated['client_note'] ?? null;
+
+        if (has_billing_conversion($invoice)) {
+            $amount = round($reported / (float) $invoice->exchange_rate, 2);
+
+            $line = __('client.invoices.pn_reported_in_billing', [
+                'amount' => billing_money_fmt($amount, $invoice),
+                'rate' => number_format((float) $invoice->exchange_rate, 4),
+                'source' => (string) ($invoice->exchange_rate_source ?: '-'),
+            ]);
+
+            $note = trim($line."\n".(string) $note);
+        }
+
         $notification = PaymentNotification::create([
             'invoice_id'    => $invoice->id,
             'client_id'     => $invoice->client_id,
             'gateway'       => 'banktransfer',
             'sender_name'   => $validated['sender_name'],
             'bank_name'     => $validated['bank_name'] ?? null,
-            'amount'        => $validated['amount'],
+            'amount'        => $amount,
             'transfer_date' => $validated['transfer_date'],
             'reference'     => $validated['reference'] ?? null,
             'receipt_path'  => $receiptPath,
-            'client_note'   => $validated['client_note'] ?? null,
+            'client_note'   => $note,
             'status'        => 'pending',
         ]);
 

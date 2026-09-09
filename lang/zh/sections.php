@@ -27,6 +27,7 @@ return [
         'title' => '常见问题',
     ],
     'footer' => [
+        'developed_by' => '设计与开发',
         'about' => '关于我们',
         'announcements' => '公告',
         'blog' => '博客',

@@ -429,10 +429,12 @@
                         {{ __('client.nav.my_tickets') }}
                     </a>
                     <div class="sep"></div>
+                    @if(kb_enabled())
                     <a href="{{ route("client.kb.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                         {{ __('client.nav.knowledge_base') }}
                     </a>
+                    @endif
                     <a href="{{ route("client.announcements.index") }}">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
                         {{ __('client.nav.announcements') }}
@@ -524,7 +526,9 @@
         <div class="pn-mobile-sec">{{ __('client.nav.support') }}</div>
         <a href="{{ route("client.tickets.create") }}" style="padding-left:36px">{{ __('client.nav.open_ticket') }}</a>
         <a href="{{ route("client.tickets.index") }}" style="padding-left:36px">{{ __('client.nav.my_tickets') }}</a>
+        @if(kb_enabled())
         <a href="{{ route("client.kb.index") }}" style="padding-left:36px">{{ __('client.nav.knowledge_base') }}</a>
+        @endif
         <a href="{{ route("client.announcements.index") }}" style="padding-left:36px">{{ __('client.nav.announcements') }}</a>
         <div class="pn-mobile-sec">{{ __('client.nav.account') }}</div>
         <a href="{{ route("client.account.profile") }}" style="padding-left:36px">{{ __('client.nav.profile') }}</a>
@@ -605,8 +609,10 @@
     <a href="{{ route("client.contact") }}">{{ __('client.nav.contact') }}</a>
     &nbsp;&middot;&nbsp;
     <a href="{{ route("client.announcements.index") }}">{{ __('client.nav.announcements') }}</a>
+    @if(kb_enabled())
     &nbsp;&middot;&nbsp;
     <a href="{{ route("client.kb.index") }}">{{ __('client.nav.knowledge_base') }}</a>
+    @endif
 </footer>
 
 @yield("scripts")

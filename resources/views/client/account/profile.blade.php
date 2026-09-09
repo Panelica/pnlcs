@@ -25,6 +25,14 @@
     </div>
 </div>
 @endif
+@if(session('fatura_sonrasi_odeme'))
+{{-- Musteri siparis verirken buraya dustu; sayfanin neden acildigi ve
+     kaydettikten sonra ne olacagi yazili olmazsa siparisi birakip gidiyor. --}}
+<div class="pn-alert pn-alert-info" style="margin-bottom:16px;">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <span>{{ __('client.cart.billing_identity_required') }}</span>
+</div>
+@endif
 <div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.profile.personal_info') }}</span></div>
     <div class="pn-card-body">
@@ -51,33 +59,62 @@
             <div class="form-grid-2">
                 <div class="form-group">
                     <label class="form-label" for="email">{{ __('common.form.email_address') }}<span class="req">*</span></label>
-                    <input type="email" id="email" name="email" value="{{ old("email", $user->email) }}" required class="form-control">
+                    <input type="email" id="email" name="email" value="{{ old("email", $user->email) }}" required class="form-control"
+                        data-giris-epostasi="{{ $user->email }}">
                 </div>
-                <div class="form-group">
-                    <label class="form-label" for="current_password">{{ __('client.account.current_password') }}</label>
-                    <input type="password" id="current_password" name="current_password" autocomplete="current-password" class="form-control">
+                {{-- Yalnizca giris e-postasi degistirilirse sorulur. Siparis
+                     akisi fatura kimligi icin bu sayfaya dusuyor; oraya gelen
+                     musteri hicbir sifre alani gormemeli. --}}
+                <div class="form-group" data-eposta-onay @unless($errors->has('current_password')) hidden @endunless>
+                    <label class="form-label" for="current_password">{{ __('client.account.current_password') }}<span class="req">*</span></label>
+                    <input type="password" id="current_password" name="current_password"
+                        value="" autocomplete="off" readonly data-oto-doldurma-yok
+                        class="form-control">
                     <div style="color:var(--muted);font-size:12px;margin-top:4px;">{{ __('client.account.email_change_needs_password') }}</div>
                     @error('current_password')<div style="color:#c00;font-size:12px;margin-top:4px;">{{ $message }}</div>@enderror
                 </div>
             </div>
-            <div style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border,#e5e5e5);">
-                <div style="font-size:13px;font-weight:600;margin-bottom:2px;">{{ __('client.password.update_password') }}</div>
-                <div style="color:var(--muted);font-size:12px;margin-bottom:12px;">{{ __('client.password.page_subtitle') }}</div>
-                <div class="form-grid-2">
-                    <div class="form-group">
-                        <label class="form-label" for="new_password">{{ __('common.form.new_password') }}</label>
-                        <input type="password" id="new_password" name="new_password" autocomplete="new-password" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="new_password_confirmation">{{ __('client.password.confirm_new') }}</label>
-                        <input type="password" id="new_password_confirmation" name="new_password_confirmation" autocomplete="new-password" class="form-control">
+            <div class="form-group">
+                {{-- Fatura kimligi: sirketse unvan/vergi dairesi/vergi no,
+                     sahissa TC kimlik. Siparis verebilmek icin zorunlu. --}}
+                <div data-musteri-tipi>
+                <label class="form-label">{{ __('client.form.client_type') }}<span style="color:#c43c35;">*</span></label>
+                <div style="display:flex;gap:18px;margin-bottom:12px;">
+                    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:14px;">
+                        <input type="radio" name="client_type" value="individual" @checked(old('client_type', $client?->client_type ?: 'individual') === 'individual') required>
+                        {{ __('client.form.client_type_individual') }}
+                    </label>
+                    <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:14px;">
+                        <input type="radio" name="client_type" value="company" @checked(old('client_type', $client?->client_type) === 'company')>
+                        {{ __('client.form.client_type_company') }}
+                    </label>
+                </div>
+                @error('client_type') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
+
+                <div data-mt="individual" style="margin-bottom:12px;">
+                    <label class="form-label" for="national_id">{{ __('client.form.national_id') }}<span style="color:#c43c35;">*</span></label>
+                    <input type="text" id="national_id" name="national_id" value="{{ old('national_id', $client?->national_id) }}" inputmode="numeric" maxlength="20" class="form-control">
+                    @error('national_id') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
+                </div>
+
+                <div data-mt="company" style="margin-bottom:12px;">
+                    <label class="form-label" for="company_name">{{ __('client.form.company_title') }}<span style="color:#c43c35;">*</span></label>
+                    <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
+                    @error('company_name') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
+                    <div class="form-row" style="margin-top:12px;">
+                        <div class="form-group">
+                            <label class="form-label" for="tax_office">{{ __('client.form.tax_office') }}<span style="color:#c43c35;">*</span></label>
+                            <input type="text" id="tax_office" name="tax_office" value="{{ old('tax_office', $client?->tax_office) }}" class="form-control">
+                            @error('tax_office') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="tax_id">{{ __('client.form.tax_id') }}<span style="color:#c43c35;">*</span></label>
+                            <input type="text" id="tax_id" name="tax_id" value="{{ old('tax_id', $client?->tax_id) }}" inputmode="numeric" maxlength="20" class="form-control">
+                            @error('tax_id') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
+                        </div>
                     </div>
                 </div>
-                <div style="color:var(--muted);font-size:12px;">{{ __('client.password.min_chars') }}</div>
-            </div>
-            <div class="form-group">
-                <label class="form-label" for="company_name">{{ __('common.form.company_name') }}</label>
-                <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
+                </div>
             </div>
             <div class="form-grid-2">
                 <div class="form-group">
@@ -176,10 +213,103 @@
                 </div>
             </div>
             @endif
-            <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
+            <button type="submit" class="btn btn-primary">{{ session('fatura_sonrasi_odeme') ? __('client.cart.save_and_continue') : __('common.actions.save_changes') }}</button>
         </form>
     </div>
 </div>
 
 @endsection
 
+{{--
+     Musteri turu secimi. Alpine yerine duz JS: musteri paneli iskeletinde
+     Alpine yuklu degil ve x-cloak ile gizlenen iki blok bir daha hic
+     acilmazdi. Bu haliyle CDN'e de bagli degil.
+--}}
+<script>
+(function () {
+    function baglaMusteriTipi(kok) {
+        var sahis  = kok.querySelector('[data-mt="individual"]');
+        var sirket = kok.querySelector('[data-mt="company"]');
+        var radios = kok.querySelectorAll('input[name="client_type"]');
+
+        if (!sahis || !sirket || !radios.length) { return; }
+
+        function uygula() {
+            var secili = kok.querySelector('input[name="client_type"]:checked');
+            var deger = secili ? secili.value : 'individual';
+            sahis.hidden  = deger !== 'individual';
+            sirket.hidden = deger !== 'company';
+        }
+
+        Array.prototype.forEach.call(radios, function (r) {
+            r.addEventListener('change', uygula);
+        });
+
+        uygula();
+    }
+
+    function baslat() {
+        Array.prototype.forEach.call(
+            document.querySelectorAll('[data-musteri-tipi]'),
+            baglaMusteriTipi
+        );
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', baslat);
+    } else {
+        baslat();
+    }
+})();
+</script>
+
+{{--
+     Mevcut sifre yalnizca giris e-postasi degistiginde gerekiyor; alan da
+     ancak o zaman aciliyor. Profil sayfasi siparis akisinda fatura kimligi
+     icin de kullaniliyor ve orada sifre alani gormek istemiyoruz.
+--}}
+<script>
+(function () {
+    var eposta = document.querySelector('[data-giris-epostasi]');
+    var kutu   = document.querySelector('[data-eposta-onay]');
+
+    if (!eposta || !kutu) { return; }
+
+    var asil = (eposta.getAttribute('data-giris-epostasi') || '').trim().toLowerCase();
+
+    function uygula() {
+        var degisti = eposta.value.trim().toLowerCase() !== asil;
+        kutu.hidden = !degisti;
+        if (!degisti) {
+            var alan = kutu.querySelector('input');
+            if (alan) { alan.value = ''; }
+        }
+    }
+
+    eposta.addEventListener('input', uygula);
+    eposta.addEventListener('change', uygula);
+    uygula();
+})();
+</script>
+
+{{--
+     Keep the browser's password manager out of the password fields. They
+     arrive empty from the server; it is the browser that fills them in.
+--}}
+<script>
+(function () {
+    function serbestBirak(e) {
+        e.target.removeAttribute('readonly');
+    }
+
+    Array.prototype.forEach.call(
+        document.querySelectorAll('[data-oto-doldurma-yok]'),
+        function (alan) {
+            alan.value = '';
+            alan.addEventListener('focus', serbestBirak, { once: true });
+            // Dokunmatik cihazlarda odak yerine once tiklama geliyor.
+            alan.addEventListener('mousedown', serbestBirak, { once: true });
+        }
+    );
+})();
+</script>

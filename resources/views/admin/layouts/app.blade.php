@@ -70,6 +70,7 @@
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-user"></i> {{ __('admin.nav.clients') }}</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.clients.index') }}">{{ __('admin.nav.view_search_clients') }}</a></li>
+                    <li><a href="{{ route('admin.clients.billing') }}">{{ __('admin.clients.billing_identity') }}</a></li>
                     <li><a href="{{ route('admin.clients.create') }}">{{ __('admin.nav.add_new_client') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.services.index') }}">{{ __('admin.nav.products_services') }}</a></li>
@@ -289,6 +290,7 @@
         <div class="sidebar-header"><i class="fas fa-user"></i> {{ __('admin.sidebar.clients') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.clients.index') }}" @if($routeName === 'admin.clients.index') class="active" @endif>{{ __('admin.nav.view_search_clients') }}</a></li>
+            <li><a href="{{ route('admin.clients.billing') }}" @if($routeName === 'admin.clients.billing') class="active" @endif>{{ __('admin.clients.billing_identity') }}</a></li>
             <li><a href="{{ route('admin.clients.create') }}" @if($routeName === 'admin.clients.create') class="active" @endif>{{ __('admin.nav.add_new_client') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.services') }}</div>

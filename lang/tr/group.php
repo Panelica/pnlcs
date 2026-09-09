@@ -2,6 +2,6 @@
 
 return [
     'page' => [
-        'title' => 'Urun Grup',
+        'title' => 'Ürün Grubu',
     ],
 ];

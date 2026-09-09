@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'banktransfer.no_accounts' => 'Nie skonfigurowano jeszcze danych bankowych do przelewów. Skontaktuj się z nami.',
     'registrar_balance' => [
         'low_subject' => 'Niskie saldo rejestratora - pozostało :amount :currency',
         'low_body' => 'Saldo konta rejestratora domen (:registrar) spadło do :amount :currency.

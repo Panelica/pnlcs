@@ -328,3 +328,206 @@ if (! function_exists('kb_enabled')) {
         }
     }
 }
+
+if (! function_exists('invoice_money_fmt')) {
+    /**
+     * An amount in the currency the invoice itself was written in.
+     *
+     * Never the shop's current currency: an invoice raised in dollars stays a
+     * dollar invoice after the shop moves to lira, and the reverse. Only
+     * documents that predate the stamp fall back to the shop currency.
+     */
+    function invoice_money_fmt(float|int|string|null $amount, $invoice = null): string
+    {
+        static $cache = [];
+
+        $code = $invoice->source_currency ?? null;
+
+        if (! $code) {
+            return money_fmt($amount);
+        }
+
+        $code = strtoupper($code);
+
+        if (! array_key_exists($code, $cache)) {
+            try {
+                $cache[$code] = Currency::where('code', $code)->first();
+            } catch (Throwable) {
+                $cache[$code] = null;
+            }
+        }
+
+        $currency = $cache[$code];
+        $value = number_format((float) $amount, 2);
+
+        if (! $currency) {
+            return $value.' '.$code;
+        }
+
+        $prefix = $currency->prefix ?? '';
+        $suffix = $currency->suffix ?? '';
+
+        if ($prefix === '' && $suffix === '') {
+            $suffix = ' '.$code;
+        }
+
+        return $prefix.$value.$suffix;
+    }
+}
+
+if (! function_exists('billing_money_fmt')) {
+    /**
+     * An amount as the customer is actually billed for it.
+     *
+     * The shop prices in one currency and bills in another; the invoice froze
+     * the rate when it was raised, so the figure printed on a document does
+     * not drift as the rate moves.
+     */
+    function billing_money_fmt(float|int|string|null $amount, $invoice = null): string
+    {
+        if (! $invoice || empty($invoice->billing_currency) || ! (float) $invoice->exchange_rate) {
+            return money_fmt($amount);
+        }
+
+        $converted = round((float) $amount * (float) $invoice->exchange_rate, 2);
+
+        $currency = Currency::where('code', $invoice->billing_currency)->first();
+        $prefix = $currency->prefix ?? '';
+        $suffix = $currency->suffix ?? '';
+
+        if ($prefix === '' && $suffix === '') {
+            $suffix = ' '.$invoice->billing_currency;
+        }
+
+        return $prefix.number_format($converted, 2).$suffix;
+    }
+}
+
+if (! function_exists('payment_ref')) {
+    /**
+     * The short reference a customer writes in a bank transfer description.
+     *
+     * The invoice number (INV-202608-000002) is the document's official
+     * number and stays so, but the customer types it into a bank's
+     * description box by hand: nineteen characters, two dashes, six digits of
+     * zeroes. One wrong digit and the payment cannot be matched. The reference
+     * is the invoice id behind a short prefix instead - short, readable over
+     * the phone, hard to mistype. The prefix is a setting so that a host can
+     * keep the code its customers already know.
+     */
+    function payment_ref($invoice = null): string
+    {
+        if (! $invoice) {
+            return '';
+        }
+
+        try {
+            $prefix = strtoupper(trim((string) Setting::get('PaymentReferencePrefix', 'INV')));
+        } catch (Throwable) {
+            $prefix = 'INV';
+        }
+
+        return ($prefix !== '' ? $prefix : 'INV').((int) ($invoice->id ?? 0));
+    }
+}
+
+if (! function_exists('has_billing_conversion')) {
+    /** Whether the invoice carries a separate billing-currency stamp. */
+    function has_billing_conversion($invoice = null): bool
+    {
+        if (! $invoice || empty($invoice->billing_currency) || ! (float) $invoice->exchange_rate) {
+            return false;
+        }
+
+        return strtoupper((string) $invoice->billing_currency)
+            !== strtoupper((string) ($invoice->source_currency ?? currency_code_default()));
+    }
+}
+
+if (! function_exists('billing_amount')) {
+    /** The raw amount in the billing currency - for writing into input fields. */
+    function billing_amount(float|int|string|null $amount, $invoice = null): float
+    {
+        if (! has_billing_conversion($invoice)) {
+            return round((float) $amount, 2);
+        }
+
+        return round((float) $amount * (float) $invoice->exchange_rate, 2);
+    }
+}
+
+if (! function_exists('dual_money_fmt')) {
+    /**
+     * The amount due in both currencies: billing currency first, then the
+     * shop currency in brackets.
+     *
+     * The shop prices in one currency and the customer pays in another.
+     * Telling them to transfer "6.60 USD" is an instruction with no
+     * counterpart at their bank; the figure they will actually pay in is the
+     * one that leads. The shop figure stays because the invoice lines and any
+     * refund are worked out in it.
+     */
+    function dual_money_fmt(float|int|string|null $amount, $invoice = null): string
+    {
+        if (! has_billing_conversion($invoice)) {
+            return invoice_money_fmt($amount, $invoice);
+        }
+
+        return billing_money_fmt($amount, $invoice).' ('.invoice_money_fmt($amount, $invoice).')';
+    }
+}
+
+if (! function_exists('billing_rate_note')) {
+    /**
+     * The sentence that tells the customer which rate their bill was struck at.
+     */
+    function billing_rate_note($invoice): ?string
+    {
+        if (! $invoice || empty($invoice->billing_currency) || ! (float) $invoice->exchange_rate) {
+            return null;
+        }
+
+        $shop = Currency::getDefault();
+        $from = strtoupper($invoice->source_currency ?: ($shop->code ?? 'USD'));
+        $to = strtoupper($invoice->billing_currency);
+        $rate = number_format((float) $invoice->exchange_rate, 4);
+
+        // Without a named source the sentence is just an assertion; with one
+        // the customer can open the bulletin and check the number.
+        if (! empty($invoice->exchange_rate_source)) {
+            $kinds = [
+                'ForexSelling' => __('pdf.rate_kind_selling'),
+                'ForexBuying' => __('pdf.rate_kind_buying'),
+            ];
+
+            return __('pdf.rate_note_official', [
+                'source' => $invoice->exchange_rate_source,
+                'date' => $invoice->exchange_rate_date ?: '',
+                'kind' => $kinds[$invoice->exchange_rate_kind] ?? __('pdf.rate_kind_selling'),
+                'from' => $from,
+                'to' => $to,
+                'rate' => $rate,
+                'ref' => $invoice->exchange_rate_ref ? ' ('.__('pdf.rate_bulletin').' '.$invoice->exchange_rate_ref.')' : '',
+            ]);
+        }
+
+        return __('pdf.rate_note', ['from' => $from, 'to' => $to, 'rate' => $rate]);
+    }
+}
+
+if (! function_exists('funds_round_preset')) {
+    /**
+     * A top-up preset converted at the day's rate, rounded to a figure a
+     * person would actually type: 5 x 40.13 is offered as 200, not 200.65.
+     */
+    function funds_round_preset(float $amount): float
+    {
+        if ($amount < 10) {
+            return max(1.0, round($amount));
+        }
+
+        $magnitude = 10 ** (floor(log10($amount)) - 1);
+
+        return (float) (round($amount / $magnitude) * $magnitude);
+    }
+}

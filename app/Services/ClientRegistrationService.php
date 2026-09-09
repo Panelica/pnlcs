@@ -55,6 +55,10 @@ class ClientRegistrationService
             // used this setting; the two doors now agree.
             'country' => $validated['country'] ?? Setting::get('Country', 'US'),
             'tax_id' => $validated['tax_id'] ?? null,
+            // The billing identity, where the seller's rules ask for it.
+            'client_type' => $validated['client_type'] ?? null,
+            'tax_office' => $validated['tax_office'] ?? null,
+            'national_id' => $validated['national_id'] ?? null,
             'phone_number' => $validated['phone_number'] ?? null,
         ]);
         $client->users()->attach($user->id, ['owner' => true]);

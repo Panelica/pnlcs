@@ -141,6 +141,9 @@ test('the remaining buttons print the amount in the currency the shop sells in',
     gatewayKey('authorize', 'api_login_id', 'login');
     gatewayKey('authorize', 'transaction_key', 'key');
     gatewayKey('authorize', 'client_key', 'ckey');
+    // Bank transfer shows nothing to pay into until a bank is set up.
+    gatewayKey('banktransfer', 'bank_name', 'Test Bank');
+    gatewayKey('banktransfer', 'iban', 'GB00TEST00000000000000');
     $invoice = shopInvoice(100.0);
 
     expect(app(AuthorizeNetModule::class)->getPaymentForm($invoice))

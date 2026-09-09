@@ -44,7 +44,14 @@
             @endif
             <div class="company-name">{{ $company['name'] }}</div>
             @if($company['address'])<div>{{ $company['address'] }}</div>@endif
-            @if($company['city'])<div>{{ $company['city'] }} {{ $company['country'] }}</div>@endif
+            @if(!empty($company['legal_name']) && $company['legal_name'] !== $company['name'])
+                {{-- The registered title under the brand: the brand is what the
+                     customer recognises, the title is who invoiced them. --}}
+                <div>{{ $company['legal_name'] }}</div>
+            @endif
+            @if($company['city'])<div>{{ trim(($company['postcode'] ?? '').' '.$company['city']) }} {{ $company['country'] }}</div>@endif
+            @if(!empty($company['tax_office']))<div>{{ __('pdf.tax_office') }}: {{ $company['tax_office'] }}</div>@endif
+            @if(!empty($company['mersis']))<div>{{ __('pdf.registry_no') }}: {{ $company['mersis'] }}</div>@endif
             @if($company['phone'])<div>{{ $company['phone'] }}</div>@endif
             @if($company['email'])<div>{{ $company['email'] }}</div>@endif
             @if($company['tax_id'])<div>{{ __('pdf.tax_id') }}: {{ $company['tax_id'] }}</div>@endif
@@ -124,9 +131,9 @@
             <tr>
                 <td>{{ $item->description }}</td>
                 <td class="text-right">{{ (int) $item->qty }}</td>
-                <td class="text-right">{{ money_fmt((float)$item->amount) }}</td>
+                <td class="text-right">{{ invoice_money_fmt((float)$item->amount, $invoice) }}</td>
                 <td class="text-right">{{ $rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.') . '%' : '—' }}</td>
-                <td class="text-right">{{ money_fmt((float)$item->amount * (int)$item->qty) }}</td>
+                <td class="text-right">{{ invoice_money_fmt((float)$item->amount * (int)$item->qty, $invoice) }}</td>
             </tr>
             @empty
             <tr><td colspan="5" style="text-align:center; color:#999;">{{ __('pdf.no_items') }}</td></tr>
@@ -151,21 +158,29 @@
 
     <div class="totals">
         <table>
-            <tr><td>{{ __('pdf.subtotal') }}:</td><td class="text-right"></td><td class="text-right">{{ money_fmt((float)$invoice->subtotal) }}</td></tr>
+            <tr><td>{{ __('pdf.subtotal') }}:</td><td class="text-right"></td><td class="text-right">{{ invoice_money_fmt((float)$invoice->subtotal, $invoice) }}</td></tr>
             @foreach($vatGroups as $label => $g)
-            <tr><td>{{ $label }}:</td><td class="text-right">{{ money_fmt($g['amount']) }}</td><td class="text-right">{{ money_fmt($g['net']) }}</td></tr>
+            <tr><td>{{ $label }}:</td><td class="text-right">{{ invoice_money_fmt($g['amount'], $invoice) }}</td><td class="text-right">{{ invoice_money_fmt($g['net'], $invoice) }}</td></tr>
             @endforeach
             {{-- The second tax. An invoice has carried two since the tax screen
                  grew a level for each; this document showed only the first, so
                  the lines did not add up to the total being asked for. --}}
             @if((float)($invoice->tax2 ?? 0) > 0)
-            <tr><td>{{ __('pdf.tax') }} 2{{ $invoice->tax_rate2 ? ' ('.rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.').'%)' : '' }}:</td><td class="text-right">{{ money_fmt((float)$invoice->tax2) }}</td><td class="text-right"></td></tr>
+            <tr><td>{{ __('pdf.tax') }} 2{{ $invoice->tax_rate2 ? ' ('.rtrim(rtrim(number_format((float)$invoice->tax_rate2, 2), '0'), '.').'%)' : '' }}:</td><td class="text-right">{{ invoice_money_fmt((float)$invoice->tax2, $invoice) }}</td><td class="text-right"></td></tr>
             @endif
             @if((float)$invoice->credit > 0)
-            <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ money_fmt((float)$invoice->credit) }}</td><td class="text-right"></td></tr>
+            <tr><td>{{ __('pdf.credit') }}:</td><td class="text-right">-{{ invoice_money_fmt((float)$invoice->credit, $invoice) }}</td><td class="text-right"></td></tr>
             @endif
-            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right"></td><td class="text-right">{{ money_fmt((float)$invoice->total) }}</td></tr>
+            <tr class="total-row"><td>{{ __('pdf.total') }}:</td><td class="text-right"></td><td class="text-right">{{ invoice_money_fmt((float)$invoice->total, $invoice) }}</td></tr>
+            @if(billing_rate_note($invoice))
+            {{-- What the customer actually pays, in the currency they pay in,
+                 under the rate the document was struck at. --}}
+            <tr class="total-row"><td>{{ __('pdf.amount_in') }} ({{ strtoupper($invoice->billing_currency) }}):</td><td class="text-right"></td><td class="text-right">{{ billing_money_fmt((float)$invoice->total, $invoice) }}</td></tr>
+            @endif
         </table>
+    @if(billing_rate_note($invoice))
+    <div style="clear:both; margin-top:14px; font-size:10px; color:#666; text-align:right;">{{ billing_rate_note($invoice) }}</div>
+    @endif
     </div>
 
     @if($invoice->notes)

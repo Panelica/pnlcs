@@ -30,12 +30,23 @@
 
         <form method="POST" action="{{ route("client.funds.store") }}">
             @csrf
+            @php
+                // The customer pays in the billing currency; the balance is
+                // kept in the shop currency. Limits and presets follow the
+                // rate so 5 of one currency is never mistaken for 5 of another.
+                $converted = ($exchangeRate ?? null) !== null;
+                $sign      = $converted ? ($billingCurrency->suffix ?: $billingCurrency->code) : ($shopCurrency?->prefix ?: '$');
+                $presets   = collect([10, 25, 50, 100, 250, 500])->map(fn ($v) => $converted ? funds_round_preset($v * $exchangeRate) : $v)->unique()->values();
+                $minimum   = $converted ? funds_round_preset(5 * $exchangeRate) : 5;
+                $maximum   = $converted ? funds_round_preset(10000 * $exchangeRate) : 10000;
+            @endphp
+
             <div class="form-group">
                 <label class="form-label">{{ __('client.funds.quick_amounts') }}</label>
                 <div class="pn-amount-grid">
-                    @foreach([10, 25, 50, 100, 250, 500] as $preset)
+                    @foreach($presets as $preset)
                     <button type="button" class="pn-amount-btn" onclick="setAmount({{ $preset }}, this)">
-                        ${{ $preset }}
+                        {{ number_format($preset, 0, ',', '.') }} {{ $sign }}
                     </button>
                     @endforeach
                 </div>
@@ -43,12 +54,38 @@
             <div class="form-group">
                 <label class="form-label" for="amount">{{ __('client.funds.custom_amount') }}</label>
                 <div style="position:relative">
-                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;font-weight:600">$</span>
-                    <input type="number" id="amount" name="amount" value="{{ old("amount") }}" min="5" max="10000" step="0.01" required
-                        class="form-control" style="padding-left:26px" placeholder="0.00">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;font-weight:600">{{ $sign }}</span>
+                    <input type="number" id="amount" name="amount" value="{{ old("amount") }}"
+                        min="{{ $minimum }}" max="{{ $maximum }}" step="0.01" required
+                        class="form-control" style="padding-left:34px" placeholder="0,00"
+                        @if($converted) data-rate="{{ $exchangeRate }}" @endif>
                 </div>
-                <div class="form-hint">{{ __('client.funds.amount_range') }}</div>
+                <div class="form-hint">
+                    {{ number_format($minimum, 0, ',', '.') }} {{ $sign }} – {{ number_format($maximum, 0, ',', '.') }} {{ $sign }}
+                </div>
             </div>
+
+            @if($converted)
+            {{-- Conversion box: the customer pays in one currency and the
+                 services are priced in another; how much balance they get and
+                 at which rate has to be visible before they pay. --}}
+            <div class="form-group">
+                <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:var(--bg);">
+                    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;">
+                        <span style="font-size:13px;color:var(--muted);">{{ __('client.funds.you_will_receive') }}</span>
+                        <strong id="convertedAmount" style="font-size:19px;font-weight:800;">{{ $shopCurrency?->prefix ?: '$' }}0.00</strong>
+                    </div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.55;">
+                        1 {{ $shopCurrency->code }} = {{ number_format($exchangeRate, 4, ',', '.') }} {{ $billingCurrency->code }}
+                        @if($rateSource)
+                            · {{ $rateSource }}@if($rateDate) {{ $rateDate }}@endif
+                            @if($rateBulletin) ({{ __('client.funds.bulletin') }} {{ $rateBulletin }})@endif
+                        @endif
+                    </div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:6px;">{{ __('client.funds.rate_notice') }}</div>
+                </div>
+            </div>
+            @endif
             <div class="form-group">
                 <label class="form-label" for="payment_method">{{ __('client.checkout.payment_method') }} <span class="req">*</span></label>
                 <select id="payment_method" name="payment_method" required class="form-control">
@@ -75,6 +112,7 @@
 <script>
 function setAmount(v, btn) {
     document.getElementById("amount").value = v;
+    if (window.updateConversion) { window.updateConversion(); }
     document.querySelectorAll(".pn-amount-btn").forEach(b => b.classList.remove("selected"));
     btn.classList.add("selected");
 }
@@ -82,3 +120,29 @@ function setAmount(v, btn) {
 @endsection
 
 @endsection
+
+<script>
+(function () {
+    var input = document.getElementById('amount');
+    var target = document.getElementById('convertedAmount');
+
+    if (!input || !target) { return; }
+
+    var rate = parseFloat(input.getAttribute('data-rate') || '0');
+    var sign = @json($shopCurrency?->prefix ?: '$');
+
+    window.updateConversion = function () {
+        var paid = parseFloat(input.value);
+
+        if (!rate || !isFinite(paid) || paid <= 0) {
+            target.textContent = sign + '0.00';
+            return;
+        }
+
+        target.textContent = sign + (paid / rate).toFixed(2);
+    };
+
+    input.addEventListener('input', window.updateConversion);
+    window.updateConversion();
+})();
+</script>

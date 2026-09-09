@@ -1,6 +1,15 @@
 <?php
 
 return [
+    'amount_in' => 'Amount due',
+    'rate_label' => 'Exchange rate',
+    'rate_note' => 'Billed in :to, converted from :from at a rate of :rate.',
+    'rate_note_official' => 'Converted at the :kind published by :source on :date: 1 :from = :rate :to:ref',
+    'rate_kind_selling' => 'forex selling rate',
+    'rate_kind_buying' => 'forex buying rate',
+    'rate_bulletin' => 'bulletin',
+    'tax_office' => 'Tax office',
+    'registry_no' => 'Registry no',
     'amount' => 'Amount',
     'bill_to' => 'Bill To',
     'credit' => 'Credit',

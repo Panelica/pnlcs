@@ -24,6 +24,10 @@ class InvoicePdfService
     {
         return [
             'name' => company_name(),
+            // The registered company title, which is not the brand. An invoice
+            // that will be fed to an official e-invoicing integration has to
+            // carry the legal entity, not the trading name.
+            'legal_name' => $this->firstFilled(['CompanyLegalName']),
             'domain' => Setting::get('Domain', ''),
             // The screen's key first, then the older hand-set name. The
             // fallbacks are not writable from any screen, but honouring a value
@@ -31,10 +35,13 @@ class InvoicePdfService
             // decision (CompanyDetailsTest) - the same stance the logo takes.
             'address' => $this->firstFilled(['Address', 'CompanyAddress']),
             'city' => $this->firstFilled(['CompanyCity', 'City']),
+            'postcode' => $this->firstFilled(['Postcode']),
             'country' => $this->firstFilled(['Country', 'CompanyCountry']),
             'phone' => $this->firstFilled(['PhoneNumber', 'CompanyPhone']),
             'email' => $this->firstFilled(['Email', 'CompanyEmail']),
+            'tax_office' => $this->firstFilled(['TaxOffice']),
             'tax_id' => $this->firstFilled(['TaxID']),
+            'mersis' => $this->firstFilled(['MersisNo']),
             'logo' => $this->logoFile(),
         ];
     }

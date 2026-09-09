@@ -45,6 +45,10 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     Route::middleware('admin.permission:list_clients')->group(function () {
         Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
         Route::get('clients/export/csv', [ClientController::class, 'exportCsv'])->name('clients.export');
+        // The billing identity table. A read-only list, so it sits with list_clients. Before clients/{client}: registered
+        // after it, "billing-identity" would be taken for a client id.
+        Route::get('clients/billing-identity', [ClientController::class, 'billingIdentity'])->name('clients.billing');
+        Route::get('clients/billing-identity/csv', [ClientController::class, 'billingIdentityCsv'])->name('clients.billing.csv');
     });
     Route::middleware('admin.permission:create_clients')->group(function () {
         Route::get('clients/create', [ClientController::class, 'create'])->name('clients.create');

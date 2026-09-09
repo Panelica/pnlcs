@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'banktransfer.no_accounts' => 'No bank details have been set up for transfers yet. Please contact us.',
     'registrar_balance' => [
         'low_subject' => 'Registrar balance is low - :amount :currency left',
         'low_body' => 'The balance on your domain registrar account (:registrar) has fallen to :amount :currency.
@@ -122,7 +123,7 @@ API access may be broken. While the balance cannot be read, no low-balance warni
     'banktransfer.sort_code' => 'Sort Code / Routing',
     'banktransfer.swift' => 'SWIFT/BIC',
     'banktransfer.transfer_pending' => 'Your invoice will be marked as paid once the transfer is confirmed by an administrator.',
-    'banktransfer.use_invoice_reference' => 'Please use your invoice number as the payment reference.',
+    'banktransfer.use_invoice_reference' => 'Write this code in the transfer description:',
     'info' => [
         'payment_notification_already_pending' => 'You already have a payment notification under review for this invoice.',
     ],

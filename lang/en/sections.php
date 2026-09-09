@@ -28,6 +28,7 @@ return [
         'title' => 'Frequently Asked Questions',
     ],
     'footer' => [
+        'developed_by' => 'Design & Development',
         'about' => 'About',
         'announcements' => 'Announcements',
         'blog' => 'Blog',

@@ -1,6 +1,15 @@
 <?php
 
 return [
+    'amount_in' => '应付金额',
+    'rate_label' => '汇率',
+    'rate_note' => '以 :to 结算，按 :rate 从 :from 换算。',
+    'rate_note_official' => '按 :source 于 :date 公布的:kind换算：1 :from = :rate :to:ref',
+    'rate_kind_selling' => '外汇卖出价',
+    'rate_kind_buying' => '外汇买入价',
+    'rate_bulletin' => '公告',
+    'tax_office' => '税务局',
+    'registry_no' => '登记号',
     'amount' => '金额',
     'bill_to' => '账单接收方',
     'credit' => '余额抵扣',

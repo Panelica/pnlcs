@@ -30,9 +30,15 @@
                     <input type="text" name="bank_name" class="pn-input" value="{{ old('bank_name') }}" maxlength="255">
                 </div>
                 <div>
-                    <label class="pn-label">{{ __('client.invoices.pn_amount') }} *</label>
+                    {{-- Musteri bankaya lira yatiriyor; alani dolar olarak
+                         doldurmak bildirimi bastan yanlis yapiyordu. --}}
+                    <label class="pn-label">{{ __('client.invoices.pn_amount') }}
+                        @if(has_billing_conversion($invoice)) ({{ strtoupper($invoice->billing_currency) }}) @endif *</label>
                     <input type="number" name="amount" class="pn-input" step="0.01" min="0.01"
-                           value="{{ old('amount', number_format((float) ($balance ?? $invoice->total), 2, '.', '')) }}" required>
+                           value="{{ old('amount', number_format(billing_amount((float) ($balance ?? $invoice->total), $invoice), 2, '.', '')) }}" required>
+                    @if(has_billing_conversion($invoice))
+                    <small class="text-muted">{{ __('client.invoices.pn_amount_hint', ['amount' => invoice_money_fmt($balance ?? $invoice->total, $invoice)]) }}</small>
+                    @endif
                 </div>
                 <div>
                     <label class="pn-label">{{ __('client.invoices.pn_transfer_date') }} *</label>
@@ -41,7 +47,7 @@
                 <div>
                     <label class="pn-label">{{ __('client.invoices.pn_reference') }}</label>
                     <input type="text" name="reference" class="pn-input" value="{{ old('reference') }}" maxlength="255"
-                           placeholder="{{ __('client.invoices.pn_reference_placeholder', ['num' => $invoice->invoice_num ?? $invoice->id]) }}">
+                           placeholder="{{ __('client.invoices.pn_reference_placeholder', ['num' => payment_ref($invoice)]) }}">
                 </div>
                 <div>
                     <label class="pn-label">{{ __('client.invoices.pn_receipt') }}</label>

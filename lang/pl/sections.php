@@ -27,6 +27,7 @@ return [
         'title' => 'Najczęściej Zadawane Pytania',
     ],
     'footer' => [
+        'developed_by' => 'Projekt i oprogramowanie',
         'about' => 'O nas',
         'announcements' => 'Ogłoszenia',
         'blog' => 'Blog',

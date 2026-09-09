@@ -14,7 +14,75 @@ class Invoice extends Model {
         'buyer_first_name', 'buyer_last_name', 'buyer_company_name', 'buyer_email',
         'buyer_address1', 'buyer_address2', 'buyer_city', 'buyer_state',
         'buyer_postcode', 'buyer_country', 'buyer_tax_id', 'buyer_tax_exempt',
-        'buyer_custom_fields'];
+        'buyer_custom_fields',
+        // For an official e-invoice: a company buyer needs a tax office, a
+        // private buyer is identified by national ID rather than tax number,
+        // and which of the two applies is read from the customer type.
+        'buyer_tax_office', 'buyer_national_id', 'buyer_client_type',
+        // The shop prices in one currency and may bill in another, at the
+        // rate that stood when the invoice was raised.
+        'source_currency', 'billing_currency', 'exchange_rate',
+        'exchange_rate_source', 'exchange_rate_kind', 'exchange_rate_date', 'exchange_rate_ref'];
+
+    /**
+     * Freeze the billing rate the moment an invoice comes into existence.
+     *
+     * Prices are kept in the shop currency, but the customer pays in the
+     * billing currency. Stamping the rate here - rather than converting at
+     * print time - means a document reprinted next year still shows the lira
+     * figure the customer actually agreed to.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Invoice $invoice) {
+            $shop = Currency::getDefault();
+
+            // The currency the amounts on this row are denominated in. Without
+            // it, switching the shop currency later reinterprets every past
+            // invoice at the new sign.
+            if ($invoice->source_currency === null && $shop) {
+                $invoice->source_currency = strtoupper($shop->code);
+            }
+
+            if ($invoice->billing_currency !== null) {
+                return;
+            }
+
+            $code = (string) Setting::get('BillingCurrency', '');
+
+            if ($code === '') {
+                return;                       // not configured: shop currency only
+            }
+
+            if (! $shop || strtoupper($shop->code) === strtoupper($code)) {
+                return;                       // already billing in the shop currency
+            }
+
+            $target = Currency::where('code', $code)->first();
+
+            if (! $target || (float) $target->rate <= 0) {
+                return;
+            }
+
+            $invoice->billing_currency = strtoupper($code);
+            $invoice->exchange_rate = (float) $target->rate;
+
+            // Provenance travels with the rate: a bare number on an invoice is
+            // not something a customer can verify.
+            $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
+            $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
+            $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
+            $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
+        });
+    }
+
+    /**
+     * An amount in the currency this invoice is billed in.
+     */
+    public function inBillingCurrency(float|int|string|null $amount): float
+    {
+        return round((float) $amount * (float) ($this->exchange_rate ?: 1), 2);
+    }
 
     /**
      * Invoices the customer still owes money on.
@@ -105,6 +173,9 @@ class Invoice extends Model {
             'buyer_postcode' => $client->postcode,
             'buyer_country' => $client->country,
             'buyer_tax_id' => $client->tax_id,
+            'buyer_tax_office' => $client->tax_office,
+            'buyer_national_id' => $client->national_id,
+            'buyer_client_type' => $client->client_type,
             'buyer_tax_exempt' => (bool) $client->tax_exempt,
             'buyer_custom_fields' => CustomField::invoiceSnapshot($client),
         ];

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'cart.billing_identity_required' => 'We need your billing details before we can issue an invoice. Once you save them you will be returned to the payment step.',
+    'cart.billing_identity_saved' => 'Your billing details have been saved. You can now complete your order.',
+    'cart.save_and_continue' => 'Save and continue to payment',
     'pages.about_title' => 'About Us',
     'pages.about_description' => ':company provides hosting, domain and email services for your website, your projects and your business.',
     'pages.about_who' => 'Who we are',
@@ -494,12 +497,23 @@ return [
     'footer.all_rights_reserved' => 'All rights reserved.',
     'footer.brand' => 'PNLCS',
     'form' => [
+        'client_type' => 'Customer type',
+        'client_type_individual' => 'Individual',
+        'client_type_company' => 'Company',
+        'company_title' => 'Registered company name',
+        'tax_office' => 'Tax office',
+        'tax_id' => 'Tax number',
+        'national_id' => 'National ID number',
         'company' => 'Company',
         'optional' => 'optional',
         'phone' => 'Phone',
     ],
     'form.optional' => 'optional',
     'funds' => [
+        'you_will_receive' => 'Credit you will receive',
+        'bulletin' => 'bulletin',
+        'rate_notice' => 'The rate applied is the official selling rate at the moment your payment is received, and it is shown on your invoice.',
+        'rate_line' => ':paid converted at 1 :from = :rate (:source)',
         'add_amount' => 'Amount to Add',
         'available_credit_desc' => 'Available to use on invoices and orders',
         'current_balance' => 'Current Balance',
@@ -538,6 +552,8 @@ return [
         'title' => 'Email History',
     ],
     'invoices' => [
+        'pn_amount_hint' => 'Enter the amount you transferred, in the currency you paid. This corresponds to :amount on the invoice.',
+        'pn_reported_in_billing' => 'Amount reported by the customer: :amount (rate :rate, source :source).',
         'amount_paid' => 'Amount Paid',
         'back_to_invoices' => 'Back to Invoices',
         'payment_notification_intro' => 'Already sent your bank transfer? Let us know below and we will verify it as soon as possible.',
@@ -550,7 +566,7 @@ return [
         'pn_receipt' => 'Receipt / Dekont',
         'pn_receipt_hint' => 'JPG, PNG or PDF — max 5 MB (optional)',
         'pn_reference' => 'Transfer Reference',
-        'pn_reference_placeholder' => 'e.g. Invoice #:num',
+        'pn_reference_placeholder' => 'e.g. :num',
         'pn_sender_name' => 'Sender Name',
         'pn_submit' => 'Submit Payment Notification',
         'pn_transfer_date' => 'Transfer Date',
@@ -636,6 +652,10 @@ return [
     'my_invoices' => 'My Invoices',
     'my_services' => 'My Services',
     'nav' => [
+        'my_certificates' => 'My Certificates',
+        'product_groups' => 'Product groups',
+        'transfer_domain' => 'Transfer Domain',
+        'whois_lookup' => 'WHOIS Lookup',
         'home_site' => 'Home',
         'account' => 'Account',
         'add_funds' => 'Add Funds',

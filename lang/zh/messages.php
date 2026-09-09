@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'banktransfer.no_accounts' => '尚未设置转账银行信息，请联系我们。',
     'registrar_balance' => [
         'low_subject' => '注册商余额不足 - 仅剩 :amount :currency',
         'low_body' => '您的域名注册商账户（:registrar）余额已降至 :amount :currency。
