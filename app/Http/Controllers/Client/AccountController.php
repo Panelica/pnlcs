@@ -89,6 +89,7 @@ class AccountController extends Controller
             'city' => 'nullable|string|max:100',
             'state' => 'nullable|string|max:100',
             'postcode' => 'nullable|string|max:20',
+            'tax_id' => 'nullable|string|max:50',
             // The column will not hold null, so asking is better than crashing.
             'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:50',
@@ -162,6 +163,7 @@ class AccountController extends Controller
                 'state' => $request->state,
                 'postcode' => $request->postcode,
                 'country' => $request->country,
+                'tax_id' => $request->tax_id,
                 'phone_number' => $request->phone_number,
                 // clients.language is NOT NULL; a profile update that does not
                 // carry the field must keep the current value, not null it.

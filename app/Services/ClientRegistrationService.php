@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Events\ClientCreated;
 use App\Http\Middleware\AffiliateTracking;
 use App\Models\Client;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -27,7 +28,11 @@ class ClientRegistrationService
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            // An account opened through Google has no password of its own.
+            // Inventing one would leave a hash its owner never chose and a
+            // reset link that quietly turns a Google account into a local one.
+            'password' => isset($validated['password']) ? Hash::make($validated['password']) : null,
+            'google_id' => $validated['google_id'] ?? null,
         ]);
 
         $client = Client::create([
@@ -40,8 +45,16 @@ class ClientRegistrationService
             'email' => $validated['email'],
             'company_name' => $validated['company_name'] ?? null,
             'address1' => $validated['address1'] ?? null,
+            'address2' => $validated['address2'] ?? null,
             'city' => $validated['city'] ?? null,
-            'country' => $validated['country'] ?? 'US',
+            'state' => $validated['state'] ?? null,
+            'postcode' => $validated['postcode'] ?? null,
+            // Falls back to the operator's own country, not to a hardcoded
+            // one: the tax rate is looked up by country, so a wrong default
+            // is a wrong invoice. The admin "create client" screen has always
+            // used this setting; the two doors now agree.
+            'country' => $validated['country'] ?? Setting::get('Country', 'US'),
+            'tax_id' => $validated['tax_id'] ?? null,
             'phone_number' => $validated['phone_number'] ?? null,
         ]);
         $client->users()->attach($user->id, ['owner' => true]);

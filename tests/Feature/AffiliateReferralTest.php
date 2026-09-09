@@ -58,6 +58,7 @@ test('registering with the referral cookie links the new client to the affiliate
             'first_name' => 'Refer', 'last_name' => 'Red',
             'email' => 'referred@example.com',
             'password' => 'Secret123!', 'password_confirmation' => 'Secret123!',
+            'address1' => '1 Test Street', 'city' => 'Istanbul', 'postcode' => '34000', 'country' => 'TR',
             'tos' => '1',
         ])->assertRedirect();
 
@@ -69,6 +70,7 @@ test('registering without a cookie leaves the client unreferred', function () {
         'first_name' => 'No', 'last_name' => 'Ref',
         'email' => 'noref@example.com',
         'password' => 'Secret123!', 'password_confirmation' => 'Secret123!',
+        'address1' => '1 Test Street', 'city' => 'Istanbul', 'postcode' => '34000', 'country' => 'TR',
         'tos' => '1',
     ])->assertRedirect();
 

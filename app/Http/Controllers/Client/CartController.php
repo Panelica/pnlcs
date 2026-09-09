@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Enums\ClientStatus;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
+use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Domain;
 use App\Models\GatewaySettings;
@@ -222,8 +223,10 @@ class CartController extends Controller
 
         $currency = Currency::getDefault();
         $paymentMethods = $this->getAvailablePaymentMethods();
+        $needsBillingAddress = $this->needsBillingAddress($client);
+        $countries = \App\Support\Countries::all();
 
-        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods'));
+        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'client', 'needsBillingAddress', 'countries'));
     }
 
     public function processCheckout(Request $request)
@@ -237,6 +240,7 @@ class CartController extends Controller
         ]);
 
         $clientId = $this->optionalClientId();
+        $billing = [];
 
         if (! $clientId) {
             // The account is opened here, on the payment step - the one moment
@@ -255,10 +259,12 @@ class CartController extends Controller
                 return back()->withErrors(['email' => __('auth.email_not_accepted')])->withInput();
             }
 
+            $billing = $this->validateBillingAddress($request);
+
             $guestCart = $this->cartService->getOrCreateCart(null);
 
             [$user, $newClient] = app(\App\Services\ClientRegistrationService::class)
-                ->register($account, $request);
+                ->register($account + $billing, $request);
 
             $guestCart->update(['user_id' => $newClient->id]);
 
@@ -271,6 +277,14 @@ class CartController extends Controller
             $client = $newClient;
         } else {
             $client = $this->currentClient();
+
+            if ($this->needsBillingAddress($client)) {
+                $billing = $this->validateBillingAddress($request);
+
+                if ($client) {
+                    $client->fill($billing)->save();
+                }
+            }
         }
 
         // Closing or suspending an account should stop new business; the
@@ -300,6 +314,47 @@ class CartController extends Controller
      * payment on an installation where no card gateway was configured and be
      * quietly handed a bank transfer at the next step.
      */
+    /**
+     * Whether this order has to stop and ask for an invoicing address.
+     *
+     * A guest is opening an account here, so they always answer. An existing
+     * customer answers only if the address was never captured - which is
+     * every customer who signed up before this screen asked, and every one
+     * who came through the inline checkout form.
+     */
+    /**
+     * The address an invoice will be issued to.
+     *
+     * Checked after the account details so that a guest with a taken or
+     * banned email hears about the email first - the thing they have to fix
+     * before anything else can matter.
+     *
+     * @return array<string, mixed>
+     */
+    private function validateBillingAddress(Request $request): array
+    {
+        return $request->validate([
+            'address1' => 'required|string|max:255',
+            'address2' => 'nullable|string|max:255',
+            'city' => 'required|string|max:255',
+            'state' => 'nullable|string|max:100',
+            'postcode' => 'required|string|max:20',
+            'country' => 'required|string|size:2',
+            'tax_id' => 'nullable|string|max:50',
+        ]);
+    }
+
+    private function needsBillingAddress(?Client $client): bool
+    {
+        if (! $client) {
+            return true;
+        }
+
+        return trim((string) $client->address1) === ''
+            || trim((string) $client->city) === ''
+            || trim((string) $client->postcode) === '';
+    }
+
     private function getAvailablePaymentMethods(): array
     {
         $registry = app(ModuleRegistry::class);

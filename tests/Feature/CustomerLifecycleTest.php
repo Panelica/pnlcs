@@ -86,6 +86,7 @@ test('a customer goes from signup to termination through the real endpoints', fu
         'first_name' => 'Ayşe', 'last_name' => 'Yılmaz',
         'email' => 'ayse@example.com',
         'password' => 'Secret123!', 'password_confirmation' => 'Secret123!',
+        'address1' => '1 Test Street', 'city' => 'Istanbul', 'postcode' => '34000', 'country' => 'TR',
         'tos' => '1',
     ])->assertRedirect();
 

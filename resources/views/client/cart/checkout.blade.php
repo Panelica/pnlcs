@@ -85,6 +85,22 @@
             </div>
             @endauth
 
+            {{-- Asked here when it is missing, and only then: an existing
+                 customer who already has an address should not have to retype
+                 it to buy a second service. A guest always sees it, because
+                 the account is being opened on this page. --}}
+            @if($needsBillingAddress)
+            <div class="pn-card mb-16">
+                <div class="pn-card-header">
+                    <span class="pn-card-title">{{ __('common.form.billing_address') }}</span>
+                </div>
+                <div class="pn-card-body">
+                    <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px;">{{ __('common.form.billing_address_hint') }}</p>
+                    @include('client.partials.billing-address-fields')
+                </div>
+            </div>
+            @endif
+
             <div class="pn-card mb-16">
                 <div class="pn-card-header"><span class="pn-card-title">{{ __('client.checkout.payment_method') }}</span></div>
                 <div class="pn-card-body">

@@ -76,6 +76,11 @@ test('paying opens the account and places the order in one stroke', function () 
         'email' => 'guest.buyer@example.test',
         'password' => 'secret-enough',
         'password_confirmation' => 'secret-enough',
+        // The invoice has to be issued to somewhere, so checkout asks.
+        'address1' => '12 Market Street',
+        'city' => 'Istanbul',
+        'postcode' => '34000',
+        'country' => 'TR',
         'payment_method' => 'banktransfer',
         'terms' => '1',
     ]);
@@ -86,7 +91,13 @@ test('paying opens the account and places the order in one stroke', function () 
     expect($client)->not->toBeNull()
         ->and(User::where('email', 'guest.buyer@example.test')->exists())->toBeTrue()
         ->and(auth()->check())->toBeTrue()                       // logged in, not bounced
-        ->and(Order::where('client_id', $client->id)->count())->toBe(1);
+        ->and(Order::where('client_id', $client->id)->count())->toBe(1)
+        // Stored, not dropped on the floor: the tax rate and the invoice PDF
+        // both read these back.
+        ->and($client->address1)->toBe('12 Market Street')
+        ->and($client->city)->toBe('Istanbul')
+        ->and($client->postcode)->toBe('34000')
+        ->and($client->country)->toBe('TR');
 });
 
 test('the guest cart survives logging in instead', function () {

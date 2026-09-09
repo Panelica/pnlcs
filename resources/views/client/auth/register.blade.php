@@ -82,6 +82,11 @@
                         <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" class="form-control">
                     </div>
                 </div>
+                <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid #e5e5e5;">
+                    <div style="font-size:13px;font-weight:600;">{{ __('common.form.billing_address') }}</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ __('common.form.billing_address_hint') }}</div>
+                </div>
+                @include('client.partials.billing-address-fields', ['gridClass' => 'form-row'])
                 <div style="margin-bottom:16px;">
                     <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;">
                         <input type="checkbox" name="tos" value="1" {{ old('tos') ? 'checked' : '' }} style="margin-top:3px;" required>
@@ -103,6 +108,7 @@
                 </div>
                 <button type="submit" class="btn btn-primary" style="margin-top:4px;">{{ __('client.auth.create_account') }}</button>
             </form>
+            @include('client.partials.google-button')
         </div>
     </div>
     <div class="login-link">

@@ -20,6 +20,7 @@ test('client can register', function () {
         'email' => 'newclient@example.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
+        'address1' => '1 Test Street', 'city' => 'Istanbul', 'postcode' => '34000', 'country' => 'TR',
         'tos' => '1',
     ]);
     $response->assertRedirect(route('client.home'));

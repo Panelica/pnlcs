@@ -127,6 +127,20 @@
                     <input type="text" id="postcode" name="postcode" value="{{ old("postcode", $client?->postcode) }}" class="form-control">
                 </div>
             </div>
+            {{-- Both are printed on the invoice and both were only editable
+                 from the admin side: a company could not correct the tax
+                 number their own invoices carry. --}}
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="state">{{ __('common.form.state') }}</label>
+                    <input type="text" id="state" name="state" value="{{ old("state", $client?->state) }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="tax_id">{{ __('common.form.tax_id') }}</label>
+                    <input type="text" id="tax_id" name="tax_id" value="{{ old("tax_id", $client?->tax_id) }}" class="form-control">
+                    <small class="text-muted">{{ __('common.form.tax_id_hint') }}</small>
+                </div>
+            </div>
             @if(isset($customFields) && $customFields->isNotEmpty())
             <div style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border,#e5e5e5);">
                 <div style="font-size:13px;font-weight:600;margin-bottom:12px;">{{ __('client.profile.custom_fields') }}</div>

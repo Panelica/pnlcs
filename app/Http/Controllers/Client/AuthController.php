@@ -208,7 +208,7 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return view('client.auth.register');
+        return view('client.auth.register', ['countries' => \App\Support\Countries::all()]);
     }
 
     public function register(Request $request)
@@ -219,9 +219,16 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'company_name' => 'nullable|string|max:255',
-            'address1' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
-            'country' => 'nullable|string|max:2',
+            // Required, not optional: an account with no address cannot be
+            // invoiced correctly, cannot be taxed at the right rate and
+            // cannot register a domain. Asking later means never asking.
+            'address1' => 'required|string|max:255',
+            'address2' => 'nullable|string|max:255',
+            'city' => 'required|string|max:255',
+            'state' => 'nullable|string|max:100',
+            'postcode' => 'required|string|max:20',
+            'country' => 'required|string|size:2',
+            'tax_id' => 'nullable|string|max:50',
             'phone_number' => 'nullable|string|max:30',
             'tos' => 'required|accepted',
         ]);
