@@ -1567,6 +1567,7 @@ return [
     'messages.report_not_found' => 'Report not found',
     'messages.service_next_due_updated' => 'Service next due date updated.',
     'messages.service_status_updated' => 'Service status changed to :status.',
+    'messages.service_live_cannot_delete' => 'This service still has a live account on its server. Terminate it first, then delete the record.',
     'messages.service_deleted' => 'Service deleted.',
     'messages.services_update_failed' => ':count service(s) could not be changed on their server and were left as they were. A retry has been queued.',
     'messages.bulk_suspension_reason' => 'Suspended by administrator',

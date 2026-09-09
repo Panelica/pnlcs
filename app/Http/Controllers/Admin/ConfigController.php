@@ -69,6 +69,46 @@ class ConfigController extends Controller
         ]);
     }
 
+    /**
+     * The rights an operator can hand out are capped at the rights they hold.
+     *
+     * Staff management used to be enough to become a full administrator:
+     * create a colleague on the full-admin role, or a role with every right,
+     * then sign in as that. A full administrator may grant anything; anyone
+     * else may only grant a subset of their own permissions, and never the
+     * full-admin flag.
+     */
+    private function canGrant(AdminRole $role): bool
+    {
+        $self = auth('admin')->user();
+
+        if (! $self || ! $self->role) {
+            return false;
+        }
+
+        if ($self->role->is_full_admin) {
+            return true;
+        }
+
+        if ($role->is_full_admin) {
+            return false;
+        }
+
+        return array_diff($role->permissions ?? [], $self->role->permissions ?? []) === [];
+    }
+
+    /** A validation rule for a role_id the acting operator is allowed to assign. */
+    private function grantableRole(): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) {
+            $role = AdminRole::find($value);
+
+            if ($role && ! $this->canGrant($role)) {
+                $fail(__('messages.error.role_beyond_your_rights'));
+            }
+        };
+    }
+
     public function storeAdmin(Request $request)
     {
         $v = $request->validate([
@@ -77,7 +117,7 @@ class ConfigController extends Controller
             'password' => 'required|min:6',
             'first_name' => 'required',
             'last_name' => 'required',
-            'role_id' => 'required|exists:admin_roles,id',
+            'role_id' => ['required', 'exists:admin_roles,id', $this->grantableRole()],
         ]);
         $v['password'] = Hash::make($v['password']);
         Admin::create($v);
@@ -87,12 +127,16 @@ class ConfigController extends Controller
 
     public function updateAdmin(Request $request, Admin $admin)
     {
+        // Editing an account - its password included - is taking it over.
+        // Only somebody who could have granted that account's role may.
+        abort_unless($admin->role && $this->canGrant($admin->role), 403);
+
         $v = $request->validate([
             'username' => 'required|unique:admins,username,'.$admin->id,
             'email' => 'required|email|unique:admins,email,'.$admin->id,
             'first_name' => 'required',
             'last_name' => 'required',
-            'role_id' => 'required|exists:admin_roles,id',
+            'role_id' => ['required', 'exists:admin_roles,id', $this->grantableRole()],
             'password' => 'nullable|min:6',
         ]);
         if (empty($v['password'])) {
@@ -130,6 +174,10 @@ class ConfigController extends Controller
         $v = $request->validate($this->roleRules());
         $v['is_full_admin'] = $request->boolean('is_full_admin');
         $v['permissions'] = $v['is_full_admin'] ? [] : ($v['permissions'] ?? []);
+
+        if ($error = $this->roleBeyondRights($v)) {
+            return back()->withInput()->withErrors($error);
+        }
         AdminRole::create($v);
 
         return back()->with('success', __('messages.success.role_created_successfully'));
@@ -137,9 +185,16 @@ class ConfigController extends Controller
 
     public function updateRole(Request $request, AdminRole $role)
     {
+        // A role one could not have created is not one to rewrite either.
+        abort_unless($this->canGrant($role), 403);
+
         $v = $request->validate($this->roleRules($role));
         $v['is_full_admin'] = $request->boolean('is_full_admin');
         $v['permissions'] = $v['is_full_admin'] ? [] : ($v['permissions'] ?? []);
+
+        if ($error = $this->roleBeyondRights($v)) {
+            return back()->withInput()->withErrors($error);
+        }
 
         // Editing your own role down to something that cannot administer roles
         // leaves the installation with no way back in but the database.
@@ -161,6 +216,31 @@ class ConfigController extends Controller
     /**
      * @return array<string, mixed>
      */
+    /**
+     * The field a role definition oversteps the acting operator's rights on,
+     * or null when it does not.
+     *
+     * @return array<string, string>|null
+     */
+    private function roleBeyondRights(array $v): ?array
+    {
+        $self = auth('admin')->user();
+
+        if ($self?->role?->is_full_admin) {
+            return null;
+        }
+
+        if ($v['is_full_admin']) {
+            return ['is_full_admin' => __('messages.error.role_beyond_your_rights')];
+        }
+
+        if (array_diff($v['permissions'] ?? [], $self?->role?->permissions ?? []) !== []) {
+            return ['permissions' => __('messages.error.role_beyond_your_rights')];
+        }
+
+        return null;
+    }
+
     private function roleRules(?AdminRole $role = null): array
     {
         return [

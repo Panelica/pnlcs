@@ -227,31 +227,4 @@ class DomainSearchController extends Controller
             "grace_period" => $pricing->grace_period,
         ];
     }
-
-
-    public function rawWhois(Request $request)
-    {
-        $request->validate(["domain" => "required|string|max:253"]);
-
-        $domain = trim(strtolower($request->domain));
-        $parts  = explode(".", $domain);
-        if (count($parts) < 2) {
-            return response()->json(["error" => "Invalid domain"]);
-        }
-
-        $tldKey      = implode(".", array_slice($parts, 1));
-        $whoisServer = $this->whoisServers[$tldKey] ?? null;
-
-        if (!$whoisServer) {
-            return response()->json(["error" => "No WHOIS server known for ." . $tldKey, "response" => ""]);
-        }
-
-        $result = $this->queryWhois($domain, $whoisServer);
-        return response()->json([
-            "domain"     => $domain,
-            "server"     => $whoisServer,
-            "available"  => $result["available"],
-            "response"   => $result["response"],
-        ]);
-    }
 }

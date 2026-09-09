@@ -233,3 +233,36 @@ test('a host can list up to three banks and hide one without deleting it', funct
         ->not->toContain('Hidden Bank')
         ->and(substr_count($form, 'Example Hosting Ltd'))->toBe(2);
 });
+
+test('a turkish company cannot check out without a tax number', function () {
+    // The tax number rule sat in the base rules as optional and the identity
+    // rules were merged with +, which keeps the first definition.
+    Setting::set('Country', 'TR');
+    $product = Product::factory()->create(['group_id' => ProductGroup::factory()->create()->id, 'server_type' => '', 'type' => 'other', 'hidden' => false, 'retired' => false]);
+    Pricing::create(['type' => 'product', 'currency_id' => Currency::getDefault()?->id ?? Currency::factory()->create()->id, 'rel_id' => $product->id, 'monthly' => 10]);
+    $this->post(route('client.cart.add'), ['product_id' => $product->id, 'billing_cycle' => 'monthly']);
+
+    $this->post(route('client.cart.process'), [
+        'first_name' => 'A', 'last_name' => 'B', 'email' => 'tr-notax@example.test',
+        'password' => 'secret-enough', 'password_confirmation' => 'secret-enough',
+        'address1' => 'x', 'city' => 'y', 'postcode' => 'z', 'country' => 'TR', 'phone_number' => '5551112233',
+        'client_type' => 'company', 'company_name' => 'Acme', 'tax_office' => 'Kadikoy', 'tax_id' => '',
+        'payment_method' => 'banktransfer', 'terms' => '1',
+    ])->assertSessionHasErrors('tax_id');
+});
+
+test('a signed-in customer with an address but no identity is asked for it at checkout', function () {
+    Setting::set('Country', 'TR');
+    $client = billedClient(['client_type' => null, 'tax_office' => null, 'national_id' => null, 'phone_number' => '5551112233']);
+    $user = User::factory()->create();
+    $user->clients()->attach($client->id);
+    $product = Product::factory()->create(['group_id' => ProductGroup::factory()->create()->id, 'server_type' => '', 'type' => 'other', 'hidden' => false, 'retired' => false]);
+    Pricing::create(['type' => 'product', 'currency_id' => Currency::getDefault()?->id ?? Currency::factory()->create()->id, 'rel_id' => $product->id, 'monthly' => 10]);
+    $this->actingAs($user)->post(route('client.cart.add'), ['product_id' => $product->id, 'billing_cycle' => 'monthly']);
+
+    $html = $this->actingAs($user)->get(route('client.cart.checkout'))->assertOk()->getContent();
+    expect($html)->toContain('name="client_type"');
+
+    $this->actingAs($user)->post(route('client.cart.process'), ['payment_method' => 'banktransfer', 'terms' => '1'])
+        ->assertSessionHasErrors('client_type');
+});

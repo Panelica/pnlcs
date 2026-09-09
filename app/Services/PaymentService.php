@@ -142,6 +142,25 @@ class PaymentService
     }
 
     /**
+     * The status an open invoice should carry, worked out from the money and
+     * the calendar rather than remembered: overdue past its due date, part
+     * paid when something has been received, unpaid otherwise. Used when an
+     * invoice comes back from a parked state such as payment_pending.
+     */
+    public function openStatusFor(Invoice $invoice): string
+    {
+        if ($invoice->due_date && $invoice->due_date->copy()->startOfDay()->lt(now()->startOfDay())) {
+            return InvoiceStatus::Overdue->value;
+        }
+
+        if ($this->amountPaid($invoice) > 0.009 && $this->balance($invoice) > 0.009) {
+            return InvoiceStatus::PartiallyPaid->value;
+        }
+
+        return InvoiceStatus::Unpaid->value;
+    }
+
+    /**
      * Remaining balance of an invoice: total minus net recorded payments.
      * (invoice.total is already net of applied account credit.)
      */
@@ -195,6 +214,13 @@ class PaymentService
         // has always known better and hands that balance back; refunding could
         // not, and cancelling refuses a paid invoice, so the money was stuck
         // with each door pointing at the other.
+        // Cancelling already handed everything on the invoice back as account
+        // balance; the payment rows stay as history, so counting them here
+        // would pay the same money out a second time.
+        if (strtolower((string) $invoice->status) === InvoiceStatus::Cancelled->value) {
+            return ['success' => false, 'message' => 'This invoice was cancelled and its payments were already returned as credit.'];
+        }
+
         $appliedCredit = round((float) $invoice->credit, 2);
         $paid = round($this->amountPaid($invoice) + $appliedCredit, 2);
 

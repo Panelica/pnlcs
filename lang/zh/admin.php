@@ -1567,6 +1567,7 @@ return [
     'messages.report_not_found' => '报表未找到',
     'messages.service_next_due_updated' => '服务的下次到期日已更新。',
     'messages.service_status_updated' => '服务状态已更改为 :status。',
+    'messages.service_live_cannot_delete' => '该服务在其服务器上仍有活动账户。请先终止，再删除记录。',
     'messages.service_deleted' => '服务已删除。',
     'messages.services_update_failed' => ':count 项服务无法在其服务器上更改，已保持原状，并已加入重试队列。',
     'messages.bulk_suspension_reason' => '由管理员暂停',

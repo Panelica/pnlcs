@@ -71,8 +71,21 @@ class SocialLoginController extends Controller
         // address can be claimed elsewhere, an id cannot.
         $user = User::where('google_id', $googleId)->first();
 
+        // Google says whether it has verified the address. Linking an
+        // existing account by address is only safe when it has: otherwise
+        // anyone who could put a customer's address on a Google account
+        // would be let into that customer's account.
+        $raw = (array) ($googleUser->user ?? []);
+        $addressVerified = ! array_key_exists('email_verified', $raw) || filter_var($raw['email_verified'], FILTER_VALIDATE_BOOL);
+
         if (! $user) {
             $user = User::where('email', $email)->first();
+
+            if ($user && ! $addressVerified) {
+                Log::warning('Google sign-in refused: address not verified by Google', ['email' => $email]);
+
+                return redirect()->route('client.login')->with('error', __('auth.social_failed'));
+            }
 
             if ($user) {
                 // Same person, already a customer here. Linking is safe
@@ -110,6 +123,11 @@ class SocialLoginController extends Controller
             // Google gave a name and an email; an invoice needs an address.
             return redirect()->route('client.account.profile')
                 ->with('success', __('auth.social_complete_profile'));
+        }
+
+        // The same rule as the password door: a closed account is finished.
+        if ($user->clients()->exists() && ! $user->clients()->where('status', '!=', \App\Enums\ClientStatus::Closed->value)->exists()) {
+            return redirect()->route('client.login')->with('error', __('auth.account_closed'));
         }
 
         Auth::login($user);

@@ -415,14 +415,17 @@ class CartController extends Controller
         // of buyer this is and identify them accordingly. The same rules the
         // admin screens and the profile page read.
         if (\App\Support\BillingIdentity::turkish()) {
-            $rules += [
+            // array_merge, not +: tax_id is already above as optional and the
+            // union operator kept that, so a company could check out without
+            // a tax number.
+            $rules = array_merge($rules, [
                 'phone_number' => 'required|string|max:30',
                 'client_type' => 'required|in:individual,company',
                 'company_name' => 'required_if:client_type,company|nullable|string|max:255',
                 'tax_office' => 'required_if:client_type,company|nullable|string|max:100',
                 'tax_id' => 'required_if:client_type,company|nullable|string|max:50',
                 'national_id' => 'required_if:client_type,individual|nullable|string|max:20',
-            ];
+            ]);
         }
 
         return $request->validate($rules);
@@ -434,9 +437,12 @@ class CartController extends Controller
             return true;
         }
 
+        // An address on file is not enough where the seller needs more: a
+        // Turkish seller cannot invoice a company without its tax office.
         return trim((string) $client->address1) === ''
             || trim((string) $client->city) === ''
-            || trim((string) $client->postcode) === '';
+            || trim((string) $client->postcode) === ''
+            || $client->missingBillingIdentity() !== [];
     }
 
     private function getAvailablePaymentMethods(): array

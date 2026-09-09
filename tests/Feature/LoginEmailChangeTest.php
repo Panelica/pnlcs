@@ -110,3 +110,19 @@ test('clearing the country is refused rather than crashing', function () {
         ->put(route('client.account.update'), profileFields(['country' => '']))
         ->assertSessionHasErrors('country');
 });
+
+test('a new login address has to be verified again before it is trusted', function () {
+    // The verification stamp belonged to the old address; it used to carry
+    // over, so an unverified address inherited a verified one's standing.
+    \App\Models\Setting::set('EmailVerificationRequired', '1');
+    Mail::fake();
+    [$user] = profileOwner();
+    $user->forceFill(['email_verified_at' => now()])->save();
+
+    $this->actingAs($user)
+        ->put(route('client.account.update'), profileFields(['email' => 'moved@example.test', 'current_password' => 'the-real-password']))
+        ->assertSessionHasNoErrors();
+
+    expect($user->fresh()->email_verified_at)->toBeNull();
+    Mail::assertSent(\App\Mail\EmailVerificationMail::class, fn ($m) => $m->hasTo('moved@example.test'));
+});

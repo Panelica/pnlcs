@@ -104,3 +104,35 @@ test('a banned address cannot open an account through google', function () {
 
     expect(User::where('email', 'banned@example.test')->exists())->toBeFalse();
 });
+
+test('a closed account cannot come back in through google', function () {
+    // The password door checks the account status; this door did not, so a
+    // customer whose account had been closed could still sign in with Google.
+    enableGoogleLogin();
+    $user = User::factory()->create(['email' => 'closed@example.test', 'google_id' => 'google-closed']);
+    $client = Client::factory()->create(['email' => 'closed@example.test', 'status' => 'closed']);
+    $user->clients()->attach($client->id);
+    fakeGoogleUser('closed@example.test', 'google-closed');
+
+    $this->get(route('client.social.google.callback'))->assertRedirect(route('client.login'));
+
+    $this->assertGuest();
+});
+
+test('an address google has not verified is never linked to an existing account', function () {
+    // Linking by address is only safe when Google vouches for the address;
+    // otherwise anyone who can put a victim's address on a Google account
+    // would walk into the victim's customer account.
+    enableGoogleLogin();
+    User::factory()->create(['email' => 'victim@example.test']);
+    $googleUser = (new SocialiteUser)->map(['id' => 'google-x', 'name' => 'Some Body', 'email' => 'victim@example.test']);
+    $googleUser->setRaw(['email' => 'victim@example.test', 'email_verified' => false]);
+    $provider = Mockery::mock('Laravel\Socialite\Contracts\Provider');
+    $provider->shouldReceive('user')->andReturn($googleUser);
+    Socialite::shouldReceive('driver')->with('google')->andReturn($provider);
+
+    $this->get(route('client.social.google.callback'))->assertRedirect(route('client.login'));
+
+    $this->assertGuest();
+    expect(User::where('email', 'victim@example.test')->value('google_id'))->toBeNull();
+});

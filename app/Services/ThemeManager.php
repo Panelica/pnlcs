@@ -88,8 +88,23 @@ class ThemeManager
     /**
      * Activate a theme by slug.
      */
+    /**
+     * A slug is a directory name and nothing more. Anything that could name
+     * a different place - a dot, a slash, a NUL - is refused before the disk
+     * is touched: delete() once asked only whether the directory existed, and
+     * ".." named the application root itself.
+     */
+    public static function validSlug(string $slug): bool
+    {
+        return (bool) preg_match('/^[a-z0-9][a-z0-9_-]{0,49}$/', $slug);
+    }
+
     public function activate(string $slug): bool
     {
+        if (! self::validSlug($slug)) {
+            return false;
+        }
+
         $path = $this->themesPath . '/' . $slug;
         if (!is_dir($path) || !file_exists($path . '/theme.json')) {
             return false;
@@ -194,6 +209,10 @@ class ThemeManager
      */
     public function delete(string $slug): array
     {
+        if (! self::validSlug($slug)) {
+            return ['success' => false, 'message' => __('messages.theme.invalid_slug')];
+        }
+
         $themes = $this->getInstalled();
         if (isset($themes[$slug]) && $themes[$slug]->isBuiltin) {
             return ['success' => false, 'message' => __('messages.theme.cannot_delete_builtin')];

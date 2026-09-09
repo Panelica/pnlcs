@@ -151,3 +151,18 @@ test('the remaining buttons print the amount in the currency the shop sells in',
         ->and(app(BankTransferModule::class)->getPaymentForm($invoice))
         ->toContain('£100.00');
 });
+
+test('the stripe intent the browser asks for is in the shop currency too', function () {
+    // The module defaults to the shop currency; the controller in front of it
+    // used to override that with "usd", so the test above passed while a
+    // GBP shop charged real cards in dollars.
+    gatewayKey('stripe', 'secret_key', 'sk_test');
+    Http::fake(['*' => Http::response(['id' => 'pi_1', 'client_secret' => 'cs_1'], 200)]);
+    $invoice = shopInvoice(100.0);
+    $user = \App\Models\User::factory()->create();
+    $user->clients()->attach($invoice->client_id);
+
+    $this->actingAs($user)->post(route('gateway.stripe.intent', $invoice))->assertOk();
+
+    Http::assertSent(fn ($request) => ($request['currency'] ?? '') === 'gbp');
+});

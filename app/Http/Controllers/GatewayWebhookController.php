@@ -106,7 +106,10 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => false, "message" => "Stripe module not available."]);
         }
 
-        $result = $module->capture($invoice, $invoice->amountDue(), ["currency" => "usd"]);
+        // No currency override: the module charges in the currency the shop
+        // sells in. A hard-coded "usd" here once charged a GBP shop's
+        // customers in dollars while the module's own test stayed green.
+        $result = $module->capture($invoice, $invoice->amountDue());
         return response()->json($result);
     }
 

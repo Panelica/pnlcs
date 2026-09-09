@@ -119,8 +119,10 @@ class PaymentNotificationController extends Controller
 
         // Release the invoice back to unpaid so the client can pay again.
         $invoice = $paymentNotification->invoice;
+        // Back to where it was, not to plain unpaid: that cleared an overdue
+        // mark and forgot a part payment the customer had already made.
         if ($invoice && strtolower((string) $invoice->status) === InvoiceStatus::PaymentPending->value) {
-            $invoice->update(['status' => InvoiceStatus::Unpaid->value]);
+            $invoice->update(['status' => $this->payments->openStatusFor($invoice)]);
         }
 
         try {

@@ -1567,6 +1567,7 @@ return [
     'messages.report_not_found' => 'Raport nie znaleziony',
     'messages.service_next_due_updated' => 'Zaktualizowano następny termin płatności usługi.',
     'messages.service_status_updated' => 'Status usługi zmieniony na :status.',
+    'messages.service_live_cannot_delete' => 'Ta usługa ma wciąż aktywne konto na serwerze. Najpierw je zakończ, potem usuń rekord.',
     'messages.service_deleted' => 'Usługa została usunięta.',
     'messages.services_update_failed' => ':count usług nie można było zmienić na ich serwerze i pozostawiono je bez zmian. Ponowna próba została zaplanowana.',
     'messages.bulk_suspension_reason' => 'Zawieszone przez administratora',

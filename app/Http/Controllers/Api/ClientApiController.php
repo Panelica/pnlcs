@@ -249,8 +249,11 @@ class ClientApiController extends BaseApiController
     public function getUsers(Request $request)
     {
         $query = User::query();
+        // Logins belong to accounts through the client_user pivot; users carry
+        // no client_id column, and filtering on one answered with a database
+        // error.
         if ($request->filled('clientid')) {
-            $query->where('client_id', $request->clientid);
+            $query->whereHas('clients', fn ($q) => $q->whereKey($request->clientid));
         }
 
         return $this->success(['users' => $query->paginate($this->getPerPage(), ['*'], 'page', $this->getPage())->items()]);
@@ -260,10 +263,12 @@ class ClientApiController extends BaseApiController
     {
         $validated = $request->validate(['email' => 'required|email', 'password' => 'required|min:6', 'first_name' => 'required', 'last_name' => 'required']);
         $validated['password'] = bcrypt($validated['password']);
-        if ($request->filled('clientid')) {
-            $validated['client_id'] = $request->clientid;
-        }
         $user = User::create($validated);
+        // Attach through the pivot: a client_id written on the user went
+        // nowhere, and the login could open no account.
+        if ($request->filled('clientid') && Client::whereKey($request->clientid)->exists()) {
+            $user->clients()->syncWithoutDetaching([(int) $request->clientid]);
+        }
 
         return $this->success(['userid' => $user->id]);
     }

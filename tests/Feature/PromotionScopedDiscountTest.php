@@ -69,3 +69,29 @@ it('still discounts the whole invoice when the code covers everything', function
 
     expect((float) discountLine($invoice)->amount)->toBe(-10.0);
 });
+
+it('quotes the scoped discount in the cart the way the invoice will charge it', function () {
+    // The cart quoted the percentage off the whole basket while the invoice
+    // took it off the covered product only: the customer saw 50 off and was
+    // billed 5 off.
+    $group = ProductGroup::factory()->create();
+    $covered = Product::factory()->create(['group_id' => $group->id, 'name' => 'Covered', 'tax' => false]);
+    $other = Product::factory()->create(['group_id' => $group->id, 'name' => 'Other', 'tax' => false]);
+    \App\Models\Pricing::create(['type' => 'product', 'currency_id' => \App\Models\Currency::getDefault()?->id ?? \App\Models\Currency::factory()->create(['is_default' => true])->id, 'rel_id' => $covered->id, 'monthly' => 10]);
+    \App\Models\Pricing::create(['type' => 'product', 'currency_id' => \App\Models\Currency::getDefault()->id, 'rel_id' => $other->id, 'monthly' => 90]);
+    Promotion::create(['code' => 'HALF-A', 'type' => 'percentage', 'value' => 50, 'applies_to' => json_encode([$covered->id])]);
+
+    $client = Client::factory()->create(['tax_exempt' => true]);
+    $carts = app(\App\Services\CartService::class);
+    $cart = $carts->getOrCreateCart($client->id);
+    $carts->addProduct($cart, $covered, 'monthly', 'a.example.com');
+    $carts->addProduct($cart, $other, 'monthly', 'b.example.com');
+    $carts->applyPromoCode($cart, 'HALF-A');
+
+    $quoted = $carts->calculateTotal($cart->fresh());
+    $order = $carts->checkout($cart->fresh(), $client->id, 'banktransfer');
+
+    expect($quoted['discount'])->toBe(5.0)
+        ->and((float) $order->invoice->total)->toBe($quoted['total'])
+        ->and((float) $order->invoice->total)->toBe(95.0);
+});

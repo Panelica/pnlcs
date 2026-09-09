@@ -1548,6 +1548,7 @@ return [
     'messages.report_not_found' => 'Rapor bulunamadı',
     'messages.service_next_due_updated' => 'Hizmetin bir sonraki ödeme tarihi güncellendi.',
     'messages.service_status_updated' => 'Hizmet durumu :status olarak değiştirildi.',
+    'messages.service_live_cannot_delete' => 'Bu hizmetin sunucusunda hâlâ canlı bir hesap var. Önce sonlandırın, sonra kaydı silin.',
     'messages.service_deleted' => 'Hizmet silindi.',
     'messages.services_update_failed' => ':count hizmet sunucusunda degistirilemedi ve oldugu gibi birakildi. Yeniden deneme kuyruga alindi.',
     'messages.bulk_suspension_reason' => 'Yönetici tarafindan askiya alindi',

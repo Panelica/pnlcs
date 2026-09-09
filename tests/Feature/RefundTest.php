@@ -127,3 +127,20 @@ test('admin refund endpoint processes an offline refund', function () {
 
     expect($invoice->fresh()->status)->toBe(InvoiceStatus::Refunded->value);
 });
+
+test('a cancelled invoice cannot be refunded: cancelling already handed the money back', function () {
+    $client = Client::factory()->create(['credit' => 0]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 100]);
+    app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'tx-part', 40.0);
+
+    // Cancelling returns the 40 to the customer's balance.
+    app(\App\Services\InvoiceService::class)->cancelInvoice($invoice->fresh());
+    expect((float) $client->fresh()->credit)->toBe(40.0);
+
+    // Refunding the same invoice afterwards would pay the 40 out a second time.
+    $result = app(PaymentService::class)->refundInvoice($invoice->fresh());
+
+    expect($result['success'])->toBeFalse()
+        ->and(Transaction::where('invoice_id', $invoice->id)->where('amount_out', '>', 0)->count())->toBe(0)
+        ->and((float) $client->fresh()->credit)->toBe(40.0);
+});

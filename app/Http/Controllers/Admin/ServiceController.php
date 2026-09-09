@@ -135,6 +135,16 @@ class ServiceController extends Controller
 
     public function destroy(Request $request, Service $service)
     {
+        // Deleting the row does not delete the account: a live one on a
+        // server would carry on running with nothing left to bill it or say
+        // who it belongs to. Terminate first, then delete.
+        $live = in_array(strtolower((string) $service->status), [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)
+            && $this->provisioning->resolveModule($service) !== null;
+
+        if ($live) {
+            return back()->with('error', __('admin.messages.service_live_cannot_delete'));
+        }
+
         $service->delete();
 
         return redirect()->route('admin.services.index')->with('success', __('admin.messages.service_deleted'));

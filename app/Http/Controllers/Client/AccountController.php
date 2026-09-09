@@ -78,7 +78,7 @@ class AccountController extends Controller
         $user = auth()->user();
         $client = $this->currentClient();
 
-        $request->validate([
+        $rules = [
             'first_name' => 'required|string|max:100',
             'last_name' => 'required|string|max:100',
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
@@ -99,7 +99,24 @@ class AccountController extends Controller
             'language' => 'nullable|string|max:10',
             'new_password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'new_password_confirmation' => 'required_with:new_password|string',
-        ]);
+        ];
+
+        // The identity an invoice needs is required here as it is at checkout
+        // and on the admin form; the profile used to be the one door through
+        // which those details could be taken away again. array_merge, not +:
+        // these keys exist above as optional and must be replaced.
+        if (\App\Support\BillingIdentity::turkish()) {
+            $rules = array_merge($rules, [
+                'phone_number' => 'required|string|max:50',
+                'client_type' => 'required|in:individual,company',
+                'company_name' => 'required_if:client_type,company|nullable|string|max:255',
+                'tax_office' => 'required_if:client_type,company|nullable|string|max:100',
+                'tax_id' => 'required_if:client_type,company|nullable|string|max:50',
+                'national_id' => 'required_if:client_type,individual|nullable|string|max:20',
+            ]);
+        }
+
+        $request->validate($rules);
 
         $previousEmail = (string) $user->email;
         $changingLogin = strcasecmp($previousEmail, (string) $request->email) !== 0;
@@ -147,6 +164,12 @@ class AccountController extends Controller
         }
 
         if ($changingLogin) {
+            // The verification stamp belonged to the old address. The new one
+            // proves itself the way a sign-up does; until then the account is
+            // back on the "verify your address" page.
+            $user->forceFill(['email_verified_at' => null])->save();
+            \App\Http\Controllers\Client\EmailVerificationController::send($user->fresh());
+
             // The address losing the account hears about it; that is the one
             // warning somebody has if it was not them.
             try {

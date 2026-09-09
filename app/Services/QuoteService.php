@@ -59,11 +59,17 @@ class QuoteService
 
     public function recalculateTotals(Quote $quote): Quote
     {
-        $quote->load('items');
+        $quote->load('items', 'client');
 
         $subtotal = 0;
         $taxTotal = 0;
-        $taxRate = TaxRule::defaultRate();
+        // The customer's own rate, the way the invoice will read it: country
+        // and state first, the default rule last, nothing for a customer
+        // marked tax exempt. Reading the default rule alone quoted one total
+        // and billed another.
+        $taxRate = $quote->client
+            ? (float) app(InvoiceService::class)->calculateTax(0.0, $quote->client->id)['tax_rate']
+            : TaxRule::defaultRate();
 
         foreach ($quote->items as $item) {
             $lineTotal = ($item->quantity * $item->unit_price) - $item->discount;

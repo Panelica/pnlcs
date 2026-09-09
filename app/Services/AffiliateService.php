@@ -41,7 +41,16 @@ class AffiliateService
     public function requestWithdrawal(Affiliate $affiliate, float $amount): bool
     {
         $minPayout = (float) Setting::get('AffiliateMinPayout', 25);
-        if ($affiliate->balance < $amount || $amount < $minPayout) {
+        if ($amount < $minPayout) {
+            return false;
+        }
+
+        // Read and debit under a row lock, the way convertToCredit() does: two
+        // withdrawal requests sent together could each pass the balance check
+        // and take the same money out twice.
+        return DB::transaction(function () use ($affiliate, $amount) {
+        $affiliate = Affiliate::whereKey($affiliate->id)->lockForUpdate()->first();
+        if (! $affiliate || $affiliate->balance < $amount) {
             return false;
         }
 
@@ -69,6 +78,7 @@ class AffiliateService
         ]);
 
         return true;
+        });
     }
 
     /**

@@ -156,7 +156,13 @@ class ProductController extends Controller
             'auto_setup' => 'nullable|in:order,payment,manual',
             'server_type' => ['nullable', Rule::in(array_keys(app(ModuleRegistry::class)->serverModuleNames()))],
             'server_group_id' => 'nullable|exists:server_groups,id',
+            // A price is a number, or -1 for "not sold on this cycle". Anything
+            // else used to go straight to the database and come back as an error page.
+            'pricing' => 'nullable|array',
+            'pricing.*' => 'nullable|array',
+            'pricing.*.*' => 'nullable|numeric|min:-1',
         ]);
+        unset($validated['pricing']);
         $validated['slug'] = Str::slug($validated['name']);
 
         // The plan lives on the panel; the product records which one it sells.
@@ -256,7 +262,11 @@ class ProductController extends Controller
             'ssl_module' => 'nullable|string|max:100',
             'stock_control' => 'nullable|boolean',
             'stock_qty' => 'nullable|integer|min:0',
+            'pricing' => 'nullable|array',
+            'pricing.*' => 'nullable|array',
+            'pricing.*.*' => 'nullable|numeric|min:-1',
         ]);
+        unset($validated['pricing']);
         $validated['stock_control'] = $request->boolean('stock_control');
         $validated['stock_qty'] = (int) $request->input('stock_qty', 0);
         $validated['hidden'] = $request->boolean('hidden');

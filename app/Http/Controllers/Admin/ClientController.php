@@ -204,7 +204,14 @@ class ClientController extends Controller
         $data['domainCount'] = $client->domains()->count();
         $data['invoiceCount'] = $client->invoices()->excludeSettledProformas()->count();
         $data['ticketCount'] = $client->tickets()->count();
-        $data['unpaidInvoices'] = $client->invoices()->where('status', 'unpaid')->sum('total');
+        // What the customer still owes: every open invoice's remaining balance.
+        // Counting only the ones literally marked unpaid left out the overdue
+        // ones - the money the operator most wants to see on this page.
+        $payments = app(\App\Services\PaymentService::class);
+        $data['unpaidInvoices'] = $client->invoices()
+            ->whereIn('status', ['unpaid', 'overdue', 'partially_paid', 'payment_pending', 'collections'])
+            ->get()
+            ->sum(fn ($invoice) => $payments->balance($invoice));
 
         switch ($tab) {
             case 'services':
@@ -236,7 +243,6 @@ class ClientController extends Controller
                 $data['domainCount'] = $client->domains()->count();
                 $data['invoiceCount'] = $client->invoices()->excludeSettledProformas()->count();
                 $data['ticketCount'] = $client->tickets()->count();
-                $data['unpaidInvoices'] = $client->invoices()->where('status', 'unpaid')->sum('total');
                 $data['recentInvoices'] = $client->invoices()->excludeSettledProformas()->orderBy('id', 'desc')->limit(5)->get();
                 $data['recentTickets'] = $client->tickets()->with('department')->orderBy('id', 'desc')->limit(5)->get();
                 $data['recentServices'] = $client->services()->with('product')->orderBy('id', 'desc')->limit(5)->get();

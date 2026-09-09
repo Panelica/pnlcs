@@ -75,6 +75,7 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
         'you_cannot_delete_your_own_account' => 'Kendi hesabınızı silemezsiniz.',
         'you_have_no_balance_to_withdraw' => 'You have no balance to withdraw.',
     ],
+    'error.role_beyond_your_rights' => 'Bu rol, sizin sahip olmadığınız yetkiler içeriyor.',
     'error.addon_not_active' => 'Eklenti aktif değil. Lütfen önce etkinleştirin.',
     'error.addon_not_found' => 'Eklenti bulunamadı.',
     'error.cart_is_empty' => 'Sepetiniz boş.',

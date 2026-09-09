@@ -402,7 +402,10 @@ class InvoiceGenerationService
      */
     public function markOverdueInvoices(): int
     {
-        return Invoice::where('status', 'unpaid')
+        // A token payment used to take an invoice out of the collections chain
+        // for good: partially_paid past its due date was never marked, so the
+        // reminders, the late fee and the suspension job never saw it.
+        return Invoice::whereIn('status', [InvoiceStatus::Unpaid->value, InvoiceStatus::PartiallyPaid->value])
             ->whereNotNull('due_date')
             ->where('due_date', '<', now()->startOfDay())
             ->update(['status' => 'overdue']);

@@ -75,6 +75,7 @@ API access may be broken. While the balance cannot be read, no low-balance warni
         'you_cannot_delete_your_own_account' => 'You cannot delete your own account.',
         'you_have_no_balance_to_withdraw' => 'You have no balance to withdraw.',
     ],
+    'error.role_beyond_your_rights' => 'That role carries rights you do not hold yourself.',
     'error.addon_not_active' => 'Addon is not active. Please activate it first.',
     'error.addon_not_found' => 'Addon not found.',
     'error.cart_is_empty' => 'Your cart is empty.',

@@ -16,7 +16,7 @@ class TicketApiController extends BaseApiController
         if ($request->filled('status')) $query->where('status', $request->status);
         if ($request->filled('deptid')) $query->where('department_id', $request->deptid);
         if ($request->filled('userid')) $query->where('client_id', $request->userid);
-        return $this->paginated($query->orderBy('last_reply','desc')->paginate($request->get('limitnum',25)));
+        return $this->paginated($query->orderBy('last_reply','desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage()));
     }
     public function getTicket(Request $request)
     {

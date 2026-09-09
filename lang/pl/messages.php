@@ -75,6 +75,7 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
         'you_cannot_delete_your_own_account' => 'Nie możesz usunąć własnego konta.',
         'you_have_no_balance_to_withdraw' => 'Nie masz salda do wypłaty.',
     ],
+    'error.role_beyond_your_rights' => 'Ta rola zawiera uprawnienia, których sam nie posiadasz.',
     'error.addon_not_active' => 'Dodatek nie jest aktywny. Najpierw go aktywuj.',
     'error.addon_not_found' => 'Nie znaleziono dodatku.',
     'error.cart_is_empty' => 'Twój koszyk jest pusty.',

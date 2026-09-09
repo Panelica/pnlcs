@@ -353,6 +353,24 @@ class CartService
             if ($promo && $promo->isValidFor($this->cartClient($cart), $this->cartProductIds($cart))) {
                 $discountable = $taxable + $untaxed;
 
+                // A code limited to some products comes off those lines only,
+                // exactly as the invoice writes it. The cart used to take the
+                // percentage off the whole basket, so the customer was quoted
+                // 50 off and billed 5 off.
+                $covered = $promo->coveredProductIds();
+
+                if ($covered !== []) {
+                    $coveredAmount = 0.0;
+
+                    foreach ($items as $item) {
+                        if (($item['type'] ?? 'product') !== 'domain' && in_array((int) ($item['product_id'] ?? 0), $covered, true)) {
+                            $coveredAmount += (float) ($item['price'] ?? 0);
+                        }
+                    }
+
+                    $discountable = min($coveredAmount, $discountable);
+                }
+
                 $promoDiscount = $promo->type === 'percentage'
                     ? round($discountable * ((float) $promo->value / 100), 2)
                     : min((float) $promo->value, $discountable);

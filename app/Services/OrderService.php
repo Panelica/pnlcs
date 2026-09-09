@@ -501,7 +501,16 @@ class OrderService
 
         run_hook('CancelOrder', ['order' => $order]);
 
-        return DB::transaction(function () use ($order) {
+        // Accounts that exist on a server are terminated there, below and
+        // outside the transaction, and ProvisioningService writes the status
+        // once the panel has said yes. Flipping them to cancelled here used to
+        // leave the hosting running with nothing left to say it existed.
+        $live = Service::where('order_id', $order->id)
+            ->whereIn('status', [ServiceStatus::Active->value, ServiceStatus::Suspended->value])
+            ->get()
+            ->filter(fn (Service $service) => $this->provisioning->resolveModule($service) !== null);
+
+        $order = DB::transaction(function () use ($order, $live) {
             $order->update(['status' => OrderStatus::Cancelled->value]);
 
             // Before the services flip: stock was taken when this order was
@@ -510,6 +519,7 @@ class OrderService
 
             Service::where('order_id', $order->id)
                 ->whereNotIn('status', [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value])
+                ->whereNotIn('id', $live->pluck('id')->all())
                 ->update([
                     'status' => ServiceStatus::Cancelled->value,
                     'termination_date' => now()->toDateString(),
@@ -519,16 +529,47 @@ class OrderService
                 ->whereNotIn('status', [DomainStatus::Expired->value, DomainStatus::Cancelled->value])
                 ->update(['status' => DomainStatus::Cancelled->value]);
 
-            // Cancel the linked invoice if still unpaid
-            if ($order->invoice_id) {
-                $invoice = $order->invoice;
-                if ($invoice && in_array($invoice->status, [InvoiceStatus::Unpaid->value, InvoiceStatus::Overdue->value])) {
-                    $this->invoiceService->cancelInvoice($invoice);
-                }
-            }
+            // Close the linked invoice unless it was paid in full. Anything
+            // short of that - unpaid, overdue, part paid, a transfer awaiting
+            // approval - is an invoice for an order that no longer exists;
+            // cancelling it hands whatever was paid back as balance. Only
+            // unpaid and overdue were closed before, so a customer who had
+            // paid part of a cancelled order kept being chased for the rest.
+            $this->closeOrderInvoice($order);
 
             return $order->fresh();
         });
+
+        // A refusal is queued for retry by ProvisioningService; the service
+        // keeps its status until the panel has actually let go of the account.
+        foreach ($live as $service) {
+            $result = $this->provisioning->terminateAccount($service);
+
+            // The panel has let go: the record reads as cancelled, the way
+            // every other service on a cancelled order does.
+            if ($result['success'] ?? false) {
+                $service->fresh()->update([
+                    'status' => ServiceStatus::Cancelled->value,
+                    'termination_date' => now()->toDateString(),
+                ]);
+            }
+        }
+
+        return $order->fresh();
+    }
+
+    /**
+     * Cancel the order's invoice unless it has been paid in full. A paid
+     * invoice is refunded, not cancelled; cancelInvoice() itself ignores one
+     * already cancelled.
+     */
+    private function closeOrderInvoice(Order $order): void
+    {
+        $invoice = $order->invoice_id ? $order->invoice : null;
+
+        if ($invoice && strtolower((string) $invoice->status) !== InvoiceStatus::Paid->value) {
+            $this->invoiceService->cancelInvoice($invoice);
+        }
     }
 
     /** Written onto every service an order's fraud verdict suspends. */
@@ -580,13 +621,7 @@ class OrderService
                 ]);
             }
 
-            // Cancel unpaid invoice
-            if ($order->invoice_id) {
-                $invoice = $order->invoice;
-                if ($invoice && in_array($invoice->status, [InvoiceStatus::Unpaid->value, InvoiceStatus::Overdue->value])) {
-                    $this->invoiceService->cancelInvoice($invoice);
-                }
-            }
+            $this->closeOrderInvoice($order);
 
             return $services;
         });

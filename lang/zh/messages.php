@@ -75,6 +75,7 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
         'you_cannot_delete_your_own_account' => '不能删除您自己的账户。',
         'you_have_no_balance_to_withdraw' => '没有可提现余额。',
     ],
+    'error.role_beyond_your_rights' => '该角色包含您自己不具备的权限。',
     'error.addon_not_active' => '附加模块未激活，请先将其激活。',
     'error.addon_not_found' => '未找到附加模块。',
     'error.cart_is_empty' => '购物车为空。',

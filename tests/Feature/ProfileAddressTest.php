@@ -89,3 +89,20 @@ test('the name and sign-in address still come from the login', function () {
         ->assertSee('kerem@example.test', false)
         ->assertSee('Kerem', false);
 });
+
+test('a turkish seller does not let a company blank out its tax office on the profile', function () {
+    // Checkout and the admin form insist on the identity an invoice needs;
+    // the profile form did not, so the details could be removed again there.
+    \App\Models\Setting::set('Country', 'TR');
+    [$user, $client] = profileCustomer();
+    $client->update(['client_type' => 'company', 'tax_office' => 'Kadikoy', 'tax_id' => '1234567890']);
+
+    $this->actingAs($user)->put(route('client.account.update'), [
+        'first_name' => 'Kerem', 'last_name' => 'Yilmaz', 'email' => 'kerem@example.test',
+        'country' => 'TR', 'address1' => 'Ataturk Bulvari 42', 'city' => 'Ankara', 'postcode' => '06420',
+        'phone_number' => '+90 555 111 22 33', 'client_type' => 'company', 'company_name' => 'Yilmaz Bilisim',
+        'tax_id' => '1234567890', 'tax_office' => '',
+    ])->assertSessionHasErrors('tax_office');
+
+    expect($client->fresh()->tax_office)->toBe('Kadikoy');
+});
