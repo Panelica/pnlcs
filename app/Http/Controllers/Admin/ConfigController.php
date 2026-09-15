@@ -1451,16 +1451,29 @@ class ConfigController extends Controller
     }
 
     // Gateway/Registrar settings
+
+    /**
+     * How many settings one module may be handed at once. No module declares
+     * anything close to this, so the cap only ever stops a tampered form from
+     * filling the table with rows.
+     */
+    private const SETTINGS_MAX_KEYS = 50;
+
     public function updateGatewaySettings(Request $request, string $gateway)
     {
-        $settings = $request->input('settings', []);
-        $json = $request->input('settings_json');
-        if ($json && empty($settings)) {
-            $decoded = json_decode($json, true);
-            if (is_array($decoded)) {
-                $settings = $decoded;
-            }
+        // Only an installed gateway can be configured. The screen is built from
+        // the registry alone, so a name that resolves to no module did not come
+        // from the form, and writing it would leave settings for a gateway that
+        // can never be displayed or used again.
+        $module = app(ModuleRegistry::class)->getGatewayModule($gateway);
+        if (! $module) {
+            abort(404);
         }
+
+        $settings = $this->sanitiseModuleSettings(
+            $this->readPostedSettings($request),
+            $this->secretFieldNames($module->getConfigFields())
+        );
 
         // An unticked checkbox posts nothing, so it has to be written as off
         // rather than left as it was.
@@ -1469,11 +1482,92 @@ class ConfigController extends Controller
         foreach ($settings as $key => $value) {
             GatewaySettings::updateOrCreate(
                 ['gateway' => $gateway, 'setting' => $key],
-                ['value' => $value ?? '']
+                ['value' => $value]
             );
         }
 
         return back()->with('success', __('admin.messages.gateway_updated'));
+    }
+
+    /**
+     * The posted settings bag, from either the individual inputs or the
+     * raw-JSON textarea the screens offer when a module declares no fields.
+     */
+    private function readPostedSettings(Request $request): array
+    {
+        // Nothing checked the shape of any of this before: a value could be an
+        // array handed to a string column, or a megabyte long.
+        $request->validate([
+            'settings' => ['sometimes', 'array', 'max:'.self::SETTINGS_MAX_KEYS],
+            'settings.*' => ['nullable', 'string', 'max:8192'],
+            'settings_json' => ['nullable', 'string', 'max:65535'],
+        ]);
+
+        $settings = $request->input('settings', []);
+        if (! is_array($settings)) {
+            $settings = [];
+        }
+
+        $json = $request->input('settings_json');
+        if ($json && empty($settings)) {
+            $decoded = json_decode($json, true);
+            if (is_array($decoded)) {
+                // The textarea bypasses the rules above, so it gets the same
+                // ceiling here; anything past it is a tampered request.
+                $settings = array_slice($decoded, 0, self::SETTINGS_MAX_KEYS, true);
+            }
+        }
+
+        return $settings;
+    }
+
+    /** The names a module marks as secret, so a blank one can mean "keep". */
+    private function secretFieldNames(array $configFields): array
+    {
+        return collect($configFields)
+            ->filter(fn ($field) => ($field['type'] ?? null) === 'password')
+            ->pluck('name')
+            ->filter(fn ($name) => is_string($name) && $name !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Bound a posted settings bag to what a module setting can actually be.
+     *
+     * Module-declared names are deliberately NOT used as a whitelist. A
+     * registrar stores a "name" setting that no module declares (it is the
+     * operator's own label, read back in registrars()), and a third-party
+     * module is free to read a setting it does not advertise; whitelisting
+     * would make both permanently unconfigurable.
+     */
+    private function sanitiseModuleSettings(array $settings, array $secretFields): array
+    {
+        $clean = [];
+
+        foreach ($settings as $key => $value) {
+            if (! is_string($key) || ! preg_match('/^[A-Za-z0-9_.-]{1,64}$/', $key)) {
+                continue;
+            }
+
+            // A string column takes a string; anything else is a tampered form.
+            if (is_array($value) || is_object($value)) {
+                continue;
+            }
+
+            $value = (string) ($value ?? '');
+
+            // Secret fields ship empty because they are never rendered back, so
+            // a blank one means the operator did not touch it - not that they
+            // want the gateway's live key deleted.
+            if (in_array($key, $secretFields, true) && trim($value) === '') {
+                continue;
+            }
+
+            $clean[$key] = $value;
+        }
+
+        return $clean;
     }
 
     public function updateRegistrarSettings(Request $request, string $registrar)
@@ -1481,14 +1575,18 @@ class ConfigController extends Controller
         // Mirrors updateGatewaySettings: individual settings[key] inputs, with
         // an optional raw-JSON textarea as fallback. This method used to be an
         // empty stub that reported success without persisting anything.
-        $settings = $request->input('settings', []);
-        $json = $request->input('settings_json');
-        if ($json && empty($settings)) {
-            $decoded = json_decode($json, true);
-            if (is_array($decoded)) {
-                $settings = $decoded;
-            }
-        }
+        //
+        // Unlike gateways, a missing module is NOT refused here: registrars()
+        // lists the stored registrar names alongside the installed ones, so a
+        // registrar whose module is absent is still on the screen and must stay
+        // editable. Without a module there are no declared fields, so the screen
+        // shows the JSON textarea and no secret inputs.
+        $module = app(ModuleRegistry::class)->getRegistrarModule($registrar);
+
+        $settings = $this->sanitiseModuleSettings(
+            $this->readPostedSettings($request),
+            $this->secretFieldNames($module?->getConfigFields() ?? [])
+        );
 
         // An unticked checkbox posts nothing, so it has to be written as off
         // rather than left as it was.
@@ -1497,7 +1595,7 @@ class ConfigController extends Controller
         foreach ($settings as $key => $value) {
             RegistrarSettings::updateOrCreate(
                 ['registrar' => $registrar, 'setting' => $key],
-                ['value' => $value ?? '']
+                ['value' => $value]
             );
         }
 

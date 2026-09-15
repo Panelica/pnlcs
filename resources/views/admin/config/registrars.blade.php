@@ -42,7 +42,11 @@
                     <div class="form-group">
                         <label class="form-label">{{ $field['label'] ?? ucfirst(str_replace('_', ' ', $key)) }}</label>
                         @if($type === 'password')
-                            <input type="password" name="settings[{{ $key }}]" value="{{ $value }}" class="form-control" autocomplete="new-password">
+                            {{-- A stored secret never travels back to the browser. It used to be
+                                 printed into value=, which put the live registrar password in the
+                                 page source of every visit. The field now ships empty and a blank
+                                 submission means "keep what is saved". --}}
+                            <input type="password" name="settings[{{ $key }}]" value="" class="form-control" autocomplete="new-password" placeholder="{{ (string) $value !== '' ? __('admin.settings.smtp_password_keep') : '' }}">
                         @elseif($type === 'textarea')
                             <textarea name="settings[{{ $key }}]" rows="3" class="form-control">{{ $value }}</textarea>
                         @elseif($type === 'yesno')
