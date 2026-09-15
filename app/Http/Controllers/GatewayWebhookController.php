@@ -204,6 +204,33 @@ class GatewayWebhookController extends Controller
             return response("Webhook processing error", 500);
         }
 
+        if ($result["retry_delivery"] ?? false) {
+            // The third answer a module may give, and the only one that asks
+            // the gateway to come back. "Worked" and "failed for good" were the
+            // only two categories here, and both are answered 2xx on purpose —
+            // a gateway only stops knocking when it gets one. That left nothing
+            // to say for the case that is neither: the work was not done and it
+            // still has to be. A duplicate delivery arriving while the first is
+            // in flight is that case, and so is the retry of a delivery that
+            // crashed, which is the one the gateway is sending precisely
+            // because it never got its 2xx.
+            //
+            // 409, because the request conflicts with the state of the thing it
+            // names — another delivery of this event holds it — and because a
+            // conflict is what the client can resolve by sending the request
+            // again later, which is exactly what is wanted. Stripe treats
+            // anything that is not 2xx as a failed delivery and retries it "for
+            // up to three days with an exponential back off in live mode"
+            // (https://docs.stripe.com/webhooks), so any non-2xx would bring
+            // the event back; the reason for this one rather than a 500 is that
+            // a 500 already means something here — the module threw, a few
+            // lines up — and an operator reading the gateway's delivery log
+            // should not have to guess which of the two happened.
+            Log::info("Webhook [{$gateway}] asked for this delivery to be repeated", $result);
+
+            return response("retry", 409);
+        }
+
         if (!($result["success"] ?? false)) {
             Log::warning("Webhook [{$gateway}] returned failure", $result);
             // Return 200 to prevent repeated delivery for logic-level failures

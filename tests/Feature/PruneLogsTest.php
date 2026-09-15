@@ -55,6 +55,20 @@ test('a custom retention setting overrides the default', function () {
     Setting::set('retention_gateway_logs_days', '90');
 });
 
+test('gateway_events is pruned, but only long after any gateway would retry', function () {
+    // One row per webhook delivered, so on a busy install this outgrows every
+    // other table here. Ninety days is far outside the window in which any
+    // gateway would redeliver - Stripe gives up after three - so pruning can
+    // never hand a retry its own work back to do a second time.
+    seedRow('gateway_events', ['gateway' => 'stripe', 'event_id' => 'evt_ancient', 'event_type' => 'payment_intent.succeeded', 'processed_at' => now()->subDays(200)], now()->subDays(200));
+    seedRow('gateway_events', ['gateway' => 'stripe', 'event_id' => 'evt_recent', 'event_type' => 'payment_intent.succeeded', 'processed_at' => now()->subDays(2)], now()->subDays(2));
+
+    $this->artisan('pnlcs:prune-logs')->assertExitCode(0);
+
+    expect(DB::table('gateway_events')->where('event_id', 'evt_ancient')->exists())->toBeFalse()
+        ->and(DB::table('gateway_events')->where('event_id', 'evt_recent')->exists())->toBeTrue();
+});
+
 test('dry run reports without deleting', function () {
     seedRow('emails', ['subject' => 'old', 'message' => 'x', 'date' => now()->subDays(200), 'to' => 'a@b.c'], now()->subDays(200));
 

@@ -32,6 +32,12 @@ class PruneLogsCommand extends Command
             'emails'           => [180, 'retention_emails_days', null],
             'ticket_mail_logs' => [90,  'retention_ticket_mail_logs_days', null],
             'gateway_logs'     => [90,  'retention_gateway_logs_days', null],
+            // One row per webhook delivered, so on a busy install this grows
+            // faster than anything else here. Ninety days is far outside any
+            // redelivery window - Stripe gives up after three days
+            // (https://docs.stripe.com/webhooks) - so pruning can never hand a
+            // retry back its own work to do a second time.
+            'gateway_events'   => [90,  'retention_gateway_events_days', null],
             'activity_logs'    => [365, 'retention_activity_logs_days', null],
             'module_queue'     => [30,  'retention_module_queue_days', function ($q) {
                 // Work still waiting to run is never pruned - and neither is a
