@@ -108,40 +108,24 @@ class SettingController extends Controller
     {
         $data = $request->only(self::GENERAL_KEYS);
 
-        // An unticked checkbox is absent from the request, not false.
-        if (! isset($data['MailEnabled'])) {
-            $data['MailEnabled'] = '0';
-        }
-        if (! isset($data['InvoiceNumberYearlyReset'])) {
-            $data['InvoiceNumberYearlyReset'] = '0';
-        }
-        if (! isset($data['AutoTerminationEnabled'])) {
-            $data['AutoTerminationEnabled'] = '0';
-        }
-        if (! isset($data['MaxMindEnabled'])) {
-            $data['MaxMindEnabled'] = '0';
-        }
-        if (! isset($data['FraudLabsEnabled'])) {
-            $data['FraudLabsEnabled'] = '0';
-        }
-        if (! isset($data['GoogleLoginEnabled'])) {
-            $data['GoogleLoginEnabled'] = '0';
-        }
-        if (! isset($data['EmailVerificationRequired'])) {
-            $data['EmailVerificationRequired'] = '0';
-        }
-        if (! isset($data['KnowledgeBaseEnabled'])) {
-            $data['KnowledgeBaseEnabled'] = '0';
-        }
-        if (! isset($data['TwilioVerifyEnabled'])) {
-            $data['TwilioVerifyEnabled'] = '0';
-        }
-        if (! isset($data['ProformaEnabled'])) {
-            $data['ProformaEnabled'] = '0';
-        }
-        if (! isset($data['HidePaidProformas'])) {
-            $data['HidePaidProformas'] = '0';
-        }
+        // An unticked checkbox is absent from the request, not false - so each
+        // one is preceded in the form by a hidden field of the same name
+        // carrying '0', and the later checkbox overrides it when ticked.
+        //
+        // This used to be eleven "if it is missing, write '0'" blocks here
+        // instead. Two screens post to this endpoint: the general settings form
+        // and the AI section of admin/config/languages/index.blade.php, which
+        // carries an OpenAI key and a model and nothing else. Saving that one
+        // therefore switched off outgoing mail, fraud screening, Google login,
+        // email verification, the knowledge base, two-factor verification,
+        // proforma invoicing and automatic termination, silently. A form now
+        // states its own switches, so a form that does not contain one has no
+        // opinion about it.
+        //
+        // MaintenanceMode gained a hidden field for the opposite reason: it was
+        // never in that list, so unticking it said nothing and the stored '1'
+        // survived every save. It is read by MaintenanceMode middleware, so the
+        // portal could be shut and not reopened.
 
         // The form never carries the stored mail password back, so an empty
         // field means the operator did not touch it - not that they want the

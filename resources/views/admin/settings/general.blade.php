@@ -84,7 +84,7 @@
                 </div>
             </div>
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:5px;">
-                <input type="checkbox" name="AutoTerminationEnabled" value="1" {{ !empty($settings['AutoTerminationEnabled']) ? 'checked' : '' }}>
+                <input type="hidden" name="AutoTerminationEnabled" value="0"><input type="checkbox" name="AutoTerminationEnabled" value="1" {{ !empty($settings['AutoTerminationEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.auto_termination_label') }}
             </label>
             <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.automation_hint') }}</div>
@@ -99,7 +99,7 @@
         <div class="card-header"><strong>{{ __('admin.settings.fraud_screening') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="checkbox" name="MaxMindEnabled" value="1" {{ !empty($settings['MaxMindEnabled']) ? 'checked' : '' }}>
+                <input type="hidden" name="MaxMindEnabled" value="0"><input type="checkbox" name="MaxMindEnabled" value="1" {{ !empty($settings['MaxMindEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.maxmind_enabled') }}
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
@@ -113,7 +113,7 @@
                 </div>
             </div>
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:10px;">
-                <input type="checkbox" name="FraudLabsEnabled" value="1" {{ !empty($settings['FraudLabsEnabled']) ? 'checked' : '' }}>
+                <input type="hidden" name="FraudLabsEnabled" value="0"><input type="checkbox" name="FraudLabsEnabled" value="1" {{ !empty($settings['FraudLabsEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.fraudlabs_enabled') }}
             </label>
             <div class="form-group" style="margin-top:8px;max-width:calc(50% - 8px);">
@@ -130,7 +130,7 @@
         <div class="card-header"><strong>{{ __('admin.settings.sms_verification') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="checkbox" name="TwilioVerifyEnabled" value="1" {{ !empty($settings['TwilioVerifyEnabled']) ? 'checked' : '' }}>
+                <input type="hidden" name="TwilioVerifyEnabled" value="0"><input type="checkbox" name="TwilioVerifyEnabled" value="1" {{ !empty($settings['TwilioVerifyEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.twilio_enabled') }}
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-top:8px;">
@@ -158,7 +158,7 @@
         <div class="card-header"><strong>{{ __('admin.settings.email_verification') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="checkbox" name="EmailVerificationRequired" value="1" {{ ($settings['EmailVerificationRequired'] ?? '1') === '1' ? 'checked' : '' }}>
+                <input type="hidden" name="EmailVerificationRequired" value="0"><input type="checkbox" name="EmailVerificationRequired" value="1" {{ ($settings['EmailVerificationRequired'] ?? '1') === '1' ? 'checked' : '' }}>
                 {{ __('admin.settings.email_verification_required') }}
             </label>
             <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.email_verification_hint') }}</div>
@@ -172,7 +172,7 @@
         <div class="card-header"><strong>{{ __('admin.settings.social_login') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="checkbox" name="GoogleLoginEnabled" value="1" {{ !empty($settings['GoogleLoginEnabled']) ? 'checked' : '' }}>
+                <input type="hidden" name="GoogleLoginEnabled" value="0"><input type="checkbox" name="GoogleLoginEnabled" value="1" {{ !empty($settings['GoogleLoginEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.google_login_enabled') }}
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
@@ -210,7 +210,7 @@
             </div>
             <div class="form-group"><label class="form-label">{{ __('admin.settings.about_text') }}</label><textarea name="AboutText" rows="5" class="form-control">{{ $settings['AboutText'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.about_text_hint') }} <a href="{{ route('pages.about') }}" target="_blank" rel="noopener">{{ route('pages.about') }}</a></div></div>
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                <input type="checkbox" name="KnowledgeBaseEnabled" value="1" {{ ($settings['KnowledgeBaseEnabled'] ?? '1') !== '0' ? 'checked' : '' }}>
+                <input type="hidden" name="KnowledgeBaseEnabled" value="0"><input type="checkbox" name="KnowledgeBaseEnabled" value="1" {{ ($settings['KnowledgeBaseEnabled'] ?? '1') !== '0' ? 'checked' : '' }}>
                 {{ __('admin.settings.knowledge_base_enabled') }}
             </label>
         </div>
@@ -300,7 +300,7 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.client_area_template') }}</label><input type="text" name="ActiveClientAreaTemplate" value="{{ $settings['ActiveClientAreaTemplate'] ?? 'default' }}" class="form-control"></div>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:5px;">
-                <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="MaintenanceMode" value="1" {{ !empty($settings['MaintenanceMode']) ? 'checked' : '' }}> {{ __('admin.settings.maintenance_mode_label') }}</label>
+                <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="hidden" name="MaintenanceMode" value="0"><input type="checkbox" name="MaintenanceMode" value="1" {{ !empty($settings['MaintenanceMode']) ? 'checked' : '' }}> {{ __('admin.settings.maintenance_mode_label') }}</label>
                 <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="OrderFormDisplayedOn" value="orderforms" {{ ($settings['OrderFormDisplayedOn'] ?? '') === 'orderforms' ? 'checked' : '' }}> {{ __('admin.settings.enable_order_form') }}</label>
             </div>
         </div>
@@ -326,7 +326,7 @@
                 <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">
             </div>
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:6px;">
-                <input type="checkbox" name="InvoiceNumberYearlyReset" value="1" {{ !empty($settings['InvoiceNumberYearlyReset']) && $settings['InvoiceNumberYearlyReset'] == '1' ? 'checked' : '' }}>
+                <input type="hidden" name="InvoiceNumberYearlyReset" value="0"><input type="checkbox" name="InvoiceNumberYearlyReset" value="1" {{ !empty($settings['InvoiceNumberYearlyReset']) && $settings['InvoiceNumberYearlyReset'] == '1' ? 'checked' : '' }}>
                 {{ __('admin.settings.invoice_number_reset_year') }}
             </label>
             <div style="font-size:12px;color:#777;margin-top:6px;">
@@ -339,7 +339,7 @@
                 <code id="invoice-number-preview" style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-weight:600;">{{ $invoicePreview }}</code>
             </div>
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:14px;font-weight:600;">
-                <input type="checkbox" id="proforma-enabled" name="ProformaEnabled" value="1" onchange="document.getElementById('proforma-scheme').style.display = this.checked ? '' : 'none';" {{ $proformaEnabled ? 'checked' : '' }}>
+                <input type="hidden" name="ProformaEnabled" value="0"><input type="checkbox" id="proforma-enabled" name="ProformaEnabled" value="1" onchange="document.getElementById('proforma-scheme').style.display = this.checked ? '' : 'none';" {{ $proformaEnabled ? 'checked' : '' }}>
                 {{ __('admin.settings.proforma_enabled') }}
             </label>
             <div id="proforma-scheme" style="{{ $proformaEnabled ? '' : 'display:none;' }}">
@@ -354,7 +354,7 @@
                     </div>
                 </div>
                 <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:10px;">
-                    <input type="checkbox" name="HidePaidProformas" value="1" {{ ($settings['HidePaidProformas'] ?? '1') == '1' ? 'checked' : '' }}>
+                    <input type="hidden" name="HidePaidProformas" value="0"><input type="checkbox" name="HidePaidProformas" value="1" {{ ($settings['HidePaidProformas'] ?? '1') == '1' ? 'checked' : '' }}>
                     {{ __('admin.settings.hide_paid_proformas') }}
                 </label>
             </div>
@@ -382,7 +382,7 @@
                     <label class="form-label">{{ __('admin.settings.enable_email_sending') }}</label>
                     <div style="padding-top:8px;">
                         <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                            <input type="checkbox" name="MailEnabled" value="1" {{ !empty($settings['MailEnabled']) && $settings['MailEnabled'] == '1' ? 'checked' : '' }}>
+                            <input type="hidden" name="MailEnabled" value="0"><input type="checkbox" name="MailEnabled" value="1" {{ !empty($settings['MailEnabled']) && $settings['MailEnabled'] == '1' ? 'checked' : '' }}>
                             {{ __('admin.settings.enable_outgoing_emails') }}
                         </label>
                     </div>

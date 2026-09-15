@@ -22,17 +22,33 @@ it('lets the operator configure suspension and termination', function () {
         ->and((int) Setting::get('AutoTerminationDays'))->toBe(45);
 });
 
-it('treats the absent checkbox as switching termination off', function () {
+it('treats a cleared checkbox as switching termination off', function () {
     Setting::set('AutoTerminationEnabled', '1');
 
+    // The cleared box used to be recognised by its absence from the request.
+    // Absence meant two different things - "cleared on this form" and "this
+    // screen has no such switch" - and the second one let the languages screen
+    // switch termination off while saving an OpenAI key. The checkbox now has a
+    // hidden partner carrying '0', so this is what the browser sends.
     $this->actingAs(Admin::factory()->create(), 'admin')
         ->post(route('admin.settings.general.update'), [
             'CompanyName' => 'Test Co',
             'AutoSuspensionDays' => '3',
             'AutoTerminationDays' => '30',
+            'AutoTerminationEnabled' => '0',
         ])->assertRedirect();
 
     expect((int) Setting::get('AutoTerminationEnabled'))->toBe(0);
+});
+
+it('leaves termination alone when the posting screen has no such switch', function () {
+    Setting::set('AutoTerminationEnabled', '1');
+
+    $this->actingAs(Admin::factory()->create(), 'admin')
+        ->post(route('admin.settings.general.update'), ['OpenAIModel' => 'gpt-4o'])
+        ->assertRedirect();
+
+    expect((int) Setting::get('AutoTerminationEnabled'))->toBe(1);
 });
 
 it('offers the automation fields on the settings screen', function () {

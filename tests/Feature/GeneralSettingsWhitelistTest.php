@@ -64,9 +64,34 @@ test('the fields the form does own still save', function () {
 test('an unticked mail switch still turns mail off', function () {
     Setting::set('MailEnabled', '1', 'general');
 
+    // An unticked checkbox used to be recognised by its absence, which is why
+    // this once posted nothing at all. Absence turned out to mean two different
+    // things - "unticked here" and "this screen has no such switch" - and the
+    // second one silently disabled mail whenever the languages screen saved an
+    // OpenAI key. Each checkbox now has a hidden partner carrying '0', so the
+    // form states its switches instead of leaving them to be inferred, and this
+    // is what the browser sends when the box is clear.
+    //
+    // That the form really renders those hidden fields is proven separately, in
+    // GeneralSettingsScopeTest; without that pair this test would only be
+    // checking the handler against an invented payload.
     $this->actingAs(generalSettingsAdmin(), 'admin')
-        ->post(route('admin.settings.general.update'), ['CompanyName' => 'Real Company'])
-        ->assertRedirect();
+        ->post(route('admin.settings.general.update'), [
+            'CompanyName' => 'Real Company',
+            'MailEnabled' => '0',
+        ])->assertRedirect();
 
     expect(Setting::get('MailEnabled'))->toBe('0');
+});
+
+test('a screen without the mail switch cannot turn mail off', function () {
+    Setting::set('MailEnabled', '1', 'general');
+
+    // The same endpoint is posted to by the AI section of the languages screen,
+    // which carries no switches at all.
+    $this->actingAs(generalSettingsAdmin(), 'admin')
+        ->post(route('admin.settings.general.update'), ['OpenAIModel' => 'gpt-4o'])
+        ->assertRedirect();
+
+    expect(Setting::get('MailEnabled'))->toBe('1');
 });
