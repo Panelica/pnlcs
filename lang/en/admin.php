@@ -1233,6 +1233,8 @@ return [
     'gateways.secret_key' => 'Secret Key',
     'gateways.sort_code' => 'Sort Code / SWIFT',
     'gateways.sort_order' => 'Sort Order',
+    'gateways.auto_charge_link' => 'Automatic payment settings',
+    'gateways.auto_charge_note' => 'This gateway can store a customer\'s card, so automatic payment can use it.',
     'gateways.title' => 'Payment Gateways',
     'gateways.transaction_key' => 'Transaction Key',
     'gateways.visible_name' => 'Visible Name',

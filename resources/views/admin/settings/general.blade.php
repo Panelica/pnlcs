@@ -102,7 +102,7 @@
          "absent" cannot be told apart from "cleared" - a form states its own
          switches rather than leaving them to be inferred from what is missing.
          There is deliberately no matching block in the controller. --}}
-    <div class="card" style="margin-bottom:15px;">
+    <div class="card" id="auto-charge" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.auto_charge') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">

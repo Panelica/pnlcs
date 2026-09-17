@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Constants\Permissions;
+use App\Contracts\TokenizableGatewayInterface;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Admin;
@@ -692,12 +693,21 @@ class ConfigController extends Controller
                     'fields' => $module?->getConfigFields() ?? [],
                     'values' => $values->toArray(),
                     'active' => (string) ($values['active'] ?? '0') === '1',
+                    // Automatic payment can only ever use a gateway that
+                    // stores cards, and its switch lives on another screen
+                    // entirely. Saying so here, on the card the operator is
+                    // already looking at, is the only place they would think
+                    // to look for it.
+                    'vaults_cards' => $module instanceof TokenizableGatewayInterface,
                 ];
             })
             ->sortBy(fn ($gw) => [$gw->active ? 0 : 1, $gw->label])
             ->values();
 
-        return view('admin.config.gateways', ['gateways' => $gateways]);
+        return view('admin.config.gateways', [
+            'gateways' => $gateways,
+            'autoChargeOn' => \App\Support\AutoCharge::enabled(),
+        ]);
     }
 
     public function registrars()

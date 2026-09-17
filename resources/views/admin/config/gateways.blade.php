@@ -65,6 +65,20 @@
 
                 <button type="submit" class="btn btn-primary btn-sm" style="margin-top:8px;">{{ __('admin.gateways.save_settings') }}</button>
             </form>
+
+            @if($gw->vaults_cards)
+                {{-- This gateway can keep a customer's card, which is the only
+                     thing automatic payment can charge. The switch for it lives
+                     on the general settings screen, so the operator configuring
+                     Stripe would otherwise have no way of knowing it exists. --}}
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e7eb;font-size:12px;color:#666;">
+                    <span class="badge {{ $autoChargeOn ? 'badge-active' : 'badge-cancelled' }}">
+                        {{ $autoChargeOn ? __('common.status.active') : __('common.status.inactive') }}
+                    </span>
+                    {{ __('admin.gateways.auto_charge_note') }}
+                    <a href="{{ route('admin.settings.general') }}#auto-charge">{{ __('admin.gateways.auto_charge_link') }}</a>
+                </div>
+            @endif
         </div>
     </details>
 @endforeach

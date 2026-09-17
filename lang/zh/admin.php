@@ -1233,6 +1233,8 @@ return [
     'gateways.secret_key' => '密钥',
     'gateways.sort_code' => '银行代码 / SWIFT',
     'gateways.sort_order' => '排序顺序',
+    'gateways.auto_charge_link' => '自动付款设置',
+    'gateways.auto_charge_note' => '此支付网关可以保存客户的银行卡，因此自动付款可以使用它。',
     'gateways.title' => '支付网关',
     'gateways.transaction_key' => '交易密钥',
     'gateways.visible_name' => '可见名称',

@@ -1223,6 +1223,8 @@ return [
     'gateways.secret_key' => 'Gizli Anahtar Anahtar',
     'gateways.sort_code' => 'Sırala Kod / SWIFT',
     'gateways.sort_order' => 'Sırala Sipariş',
+    'gateways.auto_charge_link' => 'Otomatik ödeme ayarları',
+    'gateways.auto_charge_note' => 'Bu ödeme sağlayıcı müşterinin kartını saklayabilir, yani otomatik ödeme onu kullanabilir.',
     'gateways.title' => 'Ödeme Ödeme Yöntemis',
     'gateways.transaction_key' => 'Transaction Anahtar',
     'gateways.visible_name' => 'Visible Ad',

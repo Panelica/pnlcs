@@ -1233,6 +1233,8 @@ return [
     'gateways.secret_key' => 'Sekretny klucz',
     'gateways.sort_code' => 'Sort Code / SWIFT',
     'gateways.sort_order' => 'Kolejność sortowania',
+    'gateways.auto_charge_link' => 'Ustawienia płatności automatycznej',
+    'gateways.auto_charge_note' => 'Ta bramka może przechowywać kartę klienta, więc płatność automatyczna może z niej korzystać.',
     'gateways.title' => 'Bramki płatności',
     'gateways.transaction_key' => 'Klucz transakcji',
     'gateways.visible_name' => 'Widoczna nazwa',
