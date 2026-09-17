@@ -563,20 +563,22 @@ test('a gateway refusal that will not change its mind is reported on the first s
 // ---------------------------------------------------------------------------
 
 test('removing a card stored by a gateway that cannot detach records no request that nothing can satisfy', function () {
-    // THE FEATURE IS NEVER SWITCHED ON. This is an ordinary iyzico shop:
-    // GatewayWebhookController::rememberIyzicoCard writes a remote_token on any
-    // payment where the customer ticked 'save my card', with no setting
-    // consulted, and IyzicoModule implements GatewayModuleInterface only.
+    // THE FEATURE IS NEVER SWITCHED ON, and the gateway holding the card
+    // implements GatewayModuleInterface only — PayPal here. It used to be
+    // iyzico, which now implements TokenizableGatewayInterface and so CAN be
+    // told to let a card go; the case this test is about is a module that never
+    // will be, whatever an operator configures.
     Http::fake();
     [$user, $client] = vaultingCustomer();
 
-    expect(App\Support\AutoCharge::enabled())->toBeFalse();
+    expect(App\Support\AutoCharge::enabled())->toBeFalse()
+        ->and(app(App\Services\Module\ModuleRegistry::class)->canDetachStoredMethods('paypal'))->toBeFalse();
 
     $card = PaymentMethod::create([
         'client_id' => $client->id,
-        'gateway_name' => 'iyzico',
+        'gateway_name' => 'paypal',
         'payment_type' => 'cc',
-        'remote_token' => json_encode(['cardUserKey' => 'cuk_1', 'cardToken' => 'ct_1']),
+        'remote_token' => 'ba_agreement_1',
     ]);
 
     $this->actingAs($user)->delete(route('client.payment-methods.destroy', $card));
@@ -610,9 +612,9 @@ test('a card already waiting on a gateway that cannot detach stops being asked a
     // Written by an earlier build, before the request was refused at the click.
     $card = PaymentMethod::create([
         'client_id' => $client->id,
-        'gateway_name' => 'iyzico',
+        'gateway_name' => 'paypal',
         'payment_type' => 'cc',
-        'remote_token' => 'ct_1',
+        'remote_token' => 'ba_agreement_1',
     ]);
     $card->forceFill(['detach_requested_at' => now()->subDays(3)])->save();
     $card->delete();

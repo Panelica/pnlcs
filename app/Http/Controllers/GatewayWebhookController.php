@@ -702,38 +702,32 @@ HTML;
      *
      * The card number never reaches us; what is kept is iyzico's handle for
      * it, which is what saves asking for the card again on a renewal.
+     *
+     * THE WRITING MOVED INTO THE MODULE AND ONLY THE CALL IS LEFT HERE. A
+     * customer can now reach a stored card by two doors — this callback, and
+     * IyzicoModule::confirmVaulting() when the browser comes back from the form
+     * — and two places that both create a stored card are two chances to
+     * disagree about what one looks like, or to write two rows for one card.
+     * TokenizableGatewayInterface::confirmVaulting() requires the second door
+     * to write by the same route as the first, so the first now goes through
+     * that route too. The method is an updateOrCreate on the same key it always
+     * used, so whichever door arrives second changes nothing.
      */
     private function rememberIyzicoCard(Invoice $invoice, array $verified): void
     {
-        $cardUserKey = $verified["card_user_key"] ?? null;
-        $cardToken = $verified["card_token"] ?? null;
+        $module = $this->registry->getGatewayModule("iyzico");
 
-        if (! $cardUserKey || ! $cardToken) {
+        if (! $module instanceof \Modules\Gateways\Iyzico\IyzicoModule) {
+            // Unreachable while the module is registered — this callback's own
+            // route resolves it a few lines earlier — and logged rather than
+            // ignored so that a registry someone has replaced cannot make cards
+            // stop being stored in silence.
+            Log::warning("iyzico: the card could not be stored because no iyzico module is registered");
+
             return;
         }
 
-        try {
-            \App\Models\PaymentMethod::updateOrCreate(
-                [
-                    "client_id" => $invoice->client_id,
-                    "gateway_name" => "iyzico",
-                    "last_four" => $verified["last_four"] ?? null,
-                ],
-                [
-                    "description" => trim("iyzico ".($verified["card_association"] ?? "")),
-                    "payment_type" => "card",
-                    "remote_token" => json_encode([
-                        "cardUserKey" => $cardUserKey,
-                        "cardToken" => $cardToken,
-                    ]),
-                ]
-            );
-        } catch (\Throwable $e) {
-            // A card that cannot be stored does not make the payment any less
-            // valid; it only means the customer types their card again next
-            // time.
-            Log::warning("iyzico: card key could not be stored: ".$e->getMessage());
-        }
+        $module->rememberStoredCard((int) $invoice->client_id, $verified);
     }
 
     /**

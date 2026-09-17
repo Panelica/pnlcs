@@ -167,21 +167,38 @@ class PaymentMethodController extends Controller
 
         abort_if($client === null, 403);
 
-        [$name, $module] = $gateway;
+        // WALKED, NOT PICKED. A gateway that stores cards is not necessarily a
+        // gateway that can open a card-add form: iyzico charges stored cards
+        // unattended but has no hosted form that stores one without either a
+        // payment or a card number crossing this server, so it declines here
+        // and costs nothing to pass — its refusal is a fact about the
+        // integration and makes no request. Taking only the first candidate
+        // meant a shop with iyzico saved before Stripe could no longer add a
+        // Stripe card at all.
+        $name = null;
+        $session = null;
 
-        $session = $module->beginVaulting($client);
+        foreach ($this->vaultingGateways() as [$candidate, $module]) {
+            $opened = $module->beginVaulting($client);
 
-        if (! ($session['success'] ?? false)) {
+            if ($opened['success'] ?? false) {
+                $name = $candidate;
+                $session = $opened;
+                break;
+            }
+
             // Whatever the gateway said goes to the log, not to the customer:
             // "Stripe secret key not configured" is an operator's sentence and
             // telling a customer their card was refused when the shop has not
             // finished setting itself up is worse than telling them nothing.
             Log::error('Card vaulting: the gateway would not open a session', [
                 'client' => $client->id,
-                'gateway' => $name,
-                'error' => $session['message'] ?? null,
+                'gateway' => $candidate,
+                'error' => $opened['message'] ?? null,
             ]);
+        }
 
+        if ($session === null) {
             return redirect()->route('client.payment-methods.index')
                 ->with('error', __('client.payment_methods.card_unavailable'));
         }
@@ -231,13 +248,33 @@ class PaymentMethodController extends Controller
 
         $validated = $request->validate([
             'session_id' => ['required', 'string', 'max:255'],
+            // Which module opened the session. Optional so that a form already
+            // open in somebody's browser when this shipped still submits; the
+            // first candidate is what that page would have been given.
+            'gateway' => ['nullable', 'string', 'max:64'],
             // Not a checkbox that may be absent: the page will not submit
             // without it, and a POST that arrives without it is not a customer
             // who has agreed to anything.
             'consent' => ['accepted'],
         ]);
 
+        // THE SESSION ID MEANS NOTHING TO THE WRONG GATEWAY, and more than one
+        // module can store cards now. Confirming a Stripe SetupIntent against
+        // iyzico does not merely fail, it fails for a reason nobody can read.
+        // The name the page was drawn with is therefore carried on the form and
+        // honoured here, and a name that is not a tokenising gateway on this
+        // shop is not a customer's mistake to explain — it is a 404.
         [$name, $module] = $gateway;
+
+        $asked = strtolower(trim((string) ($validated['gateway'] ?? '')));
+
+        if ($asked !== '') {
+            $known = app(ModuleRegistry::class)->tokenisedGateways();
+
+            abort_unless(isset($known[$asked]), 404);
+
+            [$name, $module] = [$asked, $known[$asked]];
+        }
 
         $result = $module->confirmVaulting($client, $validated['session_id']);
 
@@ -286,15 +323,47 @@ class PaymentMethodController extends Controller
      */
     private function vaultingGateway(): ?array
     {
+        $gateways = $this->vaultingGateways();
+
+        return $gateways === [] ? null : $gateways[0];
+    }
+
+    /**
+     * Every gateway that could store a card, in a stable order.
+     *
+     * IT USED TO BE "WHICHEVER CAME FIRST OUT OF THE DATABASE", and that was
+     * safe only while exactly one module implemented the interface.
+     * usableGateways() walks GatewaySettings::all()->groupBy('gateway'), which
+     * is insertion order and nothing more, so on a shop with two tokenising
+     * gateways configured the card form belonged to whichever operator happened
+     * to save their keys first. Sorting by name does not make that a good
+     * choice, but it makes it the SAME choice on every request and on every
+     * install, which is what an operator debugging "why does the card form say
+     * that" needs before anything else.
+     *
+     * The list is returned rather than the first of it because "could store a
+     * card" and "can open a browser session right now" are different questions.
+     * iyzico implements the interface — it stores cards, detaches them and
+     * charges them unattended — but it has no card-add form that keeps the card
+     * off this server, so it declines to open a session. A shop running it
+     * beside Stripe must still be able to add a Stripe card, so createCard()
+     * walks this list until one opens.
+     *
+     * @return array<int, array{0: string, 1: \App\Contracts\TokenizableGatewayInterface}>
+     */
+    private function vaultingGateways(): array
+    {
         $gateways = app(ModuleRegistry::class)->tokenisedGateways();
 
-        if ($gateways === []) {
-            return null;
+        ksort($gateways);
+
+        $ordered = [];
+
+        foreach ($gateways as $name => $module) {
+            $ordered[] = [(string) $name, $module];
         }
 
-        $name = (string) array_key_first($gateways);
-
-        return [$name, $gateways[$name]];
+        return $ordered;
     }
 
     /**

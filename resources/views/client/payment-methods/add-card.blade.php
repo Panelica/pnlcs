@@ -52,6 +52,11 @@
         <form method="POST" action="{{ route('client.payment-methods.store-card') }}" id="pn-card-form" style="display:none">
             @csrf
             <input type="hidden" name="session_id" id="pn-card-session">
+            {{-- Which gateway opened the session that is about to be confirmed.
+                 More than one module can store cards now, and the id below
+                 means nothing to the wrong one: without this the confirmation
+                 was sent to whichever gateway happened to sort first. --}}
+            <input type="hidden" name="gateway" value="{{ $gateway }}">
             <input type="hidden" name="consent" id="pn-card-consent-value" value="0">
         </form>
     </div>
