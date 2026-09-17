@@ -2963,4 +2963,26 @@ return [
     'clients.domain_first_payment' => 'Kwota pierwszej płatności',
     'clients.add_domain_renewal_note' => 'Faktura za odnowienie jest wystawiana automatycznie na podstawie następnego terminu płatności i ceny odnowienia, o ile cena odnowienia jest większa od zera.',
     'clients.domain_added' => 'Domena została dodana do klienta.',
+
+    // Platnosc automatyczna: przelaczniki operatora dla obciazania zapisanej karty.
+    'settings.auto_charge' => 'Płatność automatyczna',
+    'settings.auto_charge_enabled' => 'Opłacaj faktury kartą zapisaną przez klienta',
+    'settings.auto_charge_days_before' => 'Obciąż tyle dni przed terminem płatności',
+    'settings.auto_charge_max_attempts' => 'Liczba prób na fakturę',
+    'settings.auto_charge_retry_days' => 'Odstęp między próbami (w dniach)',
+    'settings.auto_charge_hint' => 'Domyślnie wyłączone, a gdy jest wyłączone, nic nie jest obciążane: faktury powstają i są wysyłane dokładnie tak jak dziś. Po włączeniu nieopłacona faktura odnowieniowa jest obciążana kartą do niej przypisaną, najwyżej raz na podany odstęp i nie więcej niż wskazaną liczbę prób; karta, którą bank ostatecznie odrzucił, nie jest pytana po raz drugi. Odstęp krótszy niż jeden dzień nie jest dozwolony, ponieważ bramka płatnicza odpowiada na powtórzenie tego samego obciążenia w ciągu dwudziestu czterech godzin z własnego zapisu, zamiast ponownie pytać kartę. Pobierane są wszystkie wymagalne i nieopłacone faktury, nie tylko odnowienia - w tym wszystko, co jest już zaległe w dniu włączenia, niezależnie od wieku. Uruchom najpierw php artisan pnlcs:auto-charge --dry-run, aby zobaczyć, co dokładnie zostałoby obciążone pierwszego ranka.',
+
+    'dashboard.charges_need_review' => 'obciążeń karty do sprawdzenia',
+    'invoices.filter_charge_review' => 'Do sprawdzenia',
+    'invoices.charge_review_title' => 'Tę fakturę trzeba sprawdzić w bramce płatniczej',
+    'invoices.charge_review_body' => 'Dla tej faktury wysłano automatyczne obciążenie karty, a jego wynik nigdy nie został zapisany, więc pieniądze mogły zostać pobrane albo nie. Otwórz bramkę płatniczą i sprawdź. Żaden automat nie obciąży tej faktury ponownie, dopóki jej nie zwolnisz poniżej.',
+    'invoices.charge_review_amount' => 'Żądana kwota',
+    'invoices.charge_review_sent' => 'Przekazano do sprawdzenia',
+    'invoices.charge_review_reference' => 'Referencja bramki',
+    'invoices.charge_review_release' => 'Zwolnij do automatycznego pobierania',
+    'invoices.charge_review_release_hint' => 'Dopiero po sprawdzeniu bramki. Jeśli płatność jednak przeszła, zapisz ją na tej fakturze zamiast ją zwalniać.',
+    'invoices.charge_review_confirm' => 'Czy sprawdziłeś bramkę płatniczą? Zwolnienie pozwoli ponownie obciążyć kartę.',
+    'invoices.charge_review_released' => 'Zwolniono. Automatyczne pobieranie może ponownie obciążyć tę fakturę.',
+    'invoices.charge_review_released_log' => 'Automatyczna płatność kartą zwolniona do pobrania po sprawdzeniu bramki przez operatora',
+    'invoices.charge_review_nothing' => 'Na tej fakturze nie ma nic, co czekałoby na sprawdzenie.',
 ];

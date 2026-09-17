@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ChargeAttemptState;
 use App\Models\Invoice;
+use App\Models\InvoiceChargeAttempt;
 use App\Services\Module\ModuleRegistry;
+use App\Support\AutoCharge;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -111,6 +114,70 @@ class GatewayWebhookController extends Controller
         // customers in dollars while the module's own test stayed green.
         $result = $module->capture($invoice, $invoice->amountDue());
         return response()->json($result);
+    }
+
+    /**
+     * Stripe: hand back the secret for a charge the bank stopped
+     * (POST /gateway/stripe/authenticate/{invoice}).
+     *
+     * A stored card was charged while the customer was away and the issuer
+     * asked for the cardholder. This is the cardholder arriving. The intent is
+     * not taken from the request — the browser sends nothing but which invoice
+     * it is looking at — but read from the attempt row the charger wrote, so
+     * the only payment that can be resumed here is the one this system started
+     * itself and recorded.
+     *
+     * Once the browser has finished the authentication it posts to the existing
+     * confirm endpoint, which verifies with Stripe and credits through
+     * PaymentService like every other payment. The webhook will say the same
+     * thing a moment later and be refused as a duplicate.
+     *
+     * 404 while the shop is not collecting by card: there is no attempt row to
+     * resume on such an installation, and an endpoint that answered would be a
+     * surface the feature's switch does not cover.
+     */
+    public function stripeAuthenticate(Request $request, Invoice $invoice)
+    {
+        // Whose invoice it is, asked before anything else and asked the same
+        // way on every endpoint in this group: a customer poking at somebody
+        // else's invoice is told the same thing here as at the seven capture
+        // endpoints beside it, rather than having the shop's configuration
+        // answer first and hide the refusal behind a 404.
+        $this->authoriseInvoice($invoice);
+
+        abort_unless(AutoCharge::enabled(), 404);
+
+        $attempt = InvoiceChargeAttempt::where('invoice_id', $invoice->id)
+            ->where('state', ChargeAttemptState::ActionRequired->value)
+            ->first();
+
+        if (! $attempt || ! $attempt->last_transaction_id) {
+            return response()->json(["success" => false, "message" => "Nothing is waiting to be confirmed on this invoice."]);
+        }
+
+        $module = $this->registry->getGatewayModule("stripe");
+        if (! $module || ! method_exists($module, "resumeAuthentication")) {
+            return response()->json(["success" => false, "message" => "Stripe module not available."]);
+        }
+
+        $result = $module->resumeAuthentication($invoice, (string) $attempt->last_transaction_id);
+
+        if (! ($result["success"] ?? false)) {
+            Log::info("Stripe: an authentication could not be resumed", [
+                "invoice" => $invoice->id,
+                "reason"  => $result["message"] ?? null,
+            ]);
+
+            // What went wrong is for the log. The customer is told that this
+            // route is closed and shown the ordinary pay form, which works
+            // whatever became of the old intent.
+            return response()->json(["success" => false, "message" => __("client.invoices.authenticate_unavailable")]);
+        }
+
+        return response()->json([
+            "success"       => true,
+            "client_secret" => $result["client_secret"] ?? null,
+        ]);
     }
 
     /**

@@ -90,7 +90,29 @@ class InvoiceController extends Controller
 
         $balance = app(PaymentService::class)->balance($invoice);
 
-        return view('client.invoices.show', compact('invoice', 'gateways', 'gatewayForms', 'gatewayLabels', 'pendingNotification', 'balance'));
+        // What the automatic charger has made of this invoice, so that the
+        // customer can read it here rather than only in an email they may have
+        // missed: a card that was refused, a retry that is coming, or a bank
+        // waiting for them to confirm a payment they can finish from this page.
+        //
+        // Null while the shop does not collect by card. Nothing on such an
+        // installation ever writes one of these rows, and asking for it would
+        // be a query this page has never made.
+        $chargeAttempt = \App\Support\AutoCharge::enabled()
+            ? \App\Models\InvoiceChargeAttempt::where('invoice_id', $invoice->id)->first()
+            : null;
+
+        // The key Stripe.js is initialised with, and only where the page has an
+        // unfinished authentication to offer. Publishable by name and by
+        // design: it identifies the account to the browser and can do nothing
+        // on its own. The secret key is never passed to a view.
+        $stripePublishableKey = $chargeAttempt
+            ? (string) \App\Models\GatewaySettings::where('gateway', 'stripe')
+                ->where('setting', 'publishable_key')
+                ->first()?->value
+            : null;
+
+        return view('client.invoices.show', compact('invoice', 'gateways', 'gatewayForms', 'gatewayLabels', 'pendingNotification', 'balance', 'chargeAttempt', 'stripePublishableKey'));
     }
 
     /**

@@ -121,6 +121,56 @@
 </div>
 @endif
 
+{{-- What happened when we tried to take this from the card on file.
+     Rendered only where there is something to say and only while the shop
+     collects by card at all: the controller hands over nothing otherwise, so
+     an installation with the feature switched off draws this block never. --}}
+@if(isset($chargeAttempt) && $chargeAttempt && in_array(strtolower($invoice->status), ["unpaid", "overdue", "partially_paid"]))
+    @if($chargeAttempt->state === \App\Enums\ChargeAttemptState::ActionRequired)
+    <div class="pn-alert pn-alert-warning mb-24" style="padding:14px 18px;">
+        <div>
+            <strong>{{ __('client.invoices.charge_action_required_title') }}</strong><br>
+            {{ __('client.invoices.charge_action_required_text') }}
+            <div style="margin-top:10px">
+                <button type="button" id="pn-authenticate-btn" class="btn btn-primary btn-sm"
+                        onclick="pnAuthenticate({{ $invoice->id }})">
+                    {{ __('client.invoices.charge_authenticate_button') }}
+                </button>
+                <span id="pn-authenticate-error" class="text-sm" style="margin-left:10px"></span>
+            </div>
+        </div>
+    </div>
+    @elseif($chargeAttempt->state === \App\Enums\ChargeAttemptState::Scheduled)
+    <div class="pn-alert pn-alert-warning mb-24" style="padding:14px 18px;">
+        <div>
+            <strong>{{ __('client.invoices.charge_failed_title') }}</strong><br>
+            @if($chargeAttempt->next_attempt_at)
+                {{ __('client.invoices.charge_retry_text', ['date' => $chargeAttempt->next_attempt_at->timezone(display_tz())->format(date_fmt())]) }}
+            @else
+                {{ __('client.invoices.charge_failed_text') }}
+            @endif
+        </div>
+    </div>
+    @elseif($chargeAttempt->state === \App\Enums\ChargeAttemptState::Exhausted)
+    <div class="pn-alert pn-alert-warning mb-24" style="padding:14px 18px;">
+        <div>
+            <strong>{{ __('client.invoices.charge_failed_title') }}</strong><br>
+            {{ __('client.invoices.charge_failed_text') }}
+        </div>
+    </div>
+    @elseif($chargeAttempt->state === \App\Enums\ChargeAttemptState::NeedsReview)
+    {{-- A charge was sent and we cannot yet say what became of it. Saying so
+         is the point: a customer who pays again on top of a payment that did
+         go through has paid twice for one invoice. --}}
+    <div class="pn-alert pn-alert-info mb-24" style="padding:14px 18px;">
+        <div>
+            <strong>{{ __('client.invoices.charge_checking_title') }}</strong><br>
+            {{ __('client.invoices.charge_checking_text') }}
+        </div>
+    </div>
+    @endif
+@endif
+
 @if(in_array(strtolower($invoice->status), ["unpaid", "overdue", "partially_paid"]))
 <div class="pn-card mb-24">
     <div class="pn-card-header" style="background:linear-gradient(135deg,var(--primary),#1e5fa0);border-radius:12px 12px 0 0">
@@ -185,6 +235,59 @@ function switchGw(e, gw) {
     e.currentTarget.classList.add("active");
     const panel = document.getElementById("gw-" + gw);
     if (panel) panel.classList.add("active");
+}
+// The cardholder finishing a charge their bank stopped. The intent is not
+// named here: the server reads it from what the charger recorded, hands back
+// only that intent's client secret, and the same confirm endpoint every other
+// card payment goes through credits the invoice.
+function pnAuthenticate(id) {
+    var btn = document.getElementById("pn-authenticate-btn");
+    var msg = document.getElementById("pn-authenticate-error");
+    if (btn) { btn.disabled = true; }
+    if (msg) { msg.textContent = ""; }
+
+    function stop(text) {
+        if (msg) { msg.textContent = text; }
+        if (btn) { btn.disabled = false; }
+    }
+
+    fetch("/gateway/stripe/authenticate/" + id, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "X-CSRF-TOKEN": @json(csrf_token())}
+    }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d.success || !d.client_secret) {
+            stop(d.message || @json(__('client.invoices.authenticate_unavailable')));
+            return;
+        }
+
+        if (typeof Stripe === "undefined") {
+            stop(@json(__('client.invoices.authenticate_unavailable')));
+            return;
+        }
+
+        var stripe = Stripe(@json($stripePublishableKey ?? ''));
+
+        return stripe.handleNextAction({ clientSecret: d.client_secret }).then(function (result) {
+            if (result.error) {
+                stop(result.error.message || @json(__('client.invoices.authenticate_unavailable')));
+                return;
+            }
+
+            return fetch("/gateway/stripe/confirm/" + id, {
+                method: "POST",
+                headers: {"Content-Type": "application/json", "X-CSRF-TOKEN": @json(csrf_token())},
+                body: JSON.stringify({ payment_intent_id: result.paymentIntent.id })
+            }).then(function (r) { return r.json(); }).then(function (res) {
+                if (res.success) { window.location.href = res.redirect_url || window.location.href; }
+                else { stop(res.message || @json(__('client.invoices.authenticate_unavailable'))); }
+            });
+        });
+    }).catch(function () {
+        // A label, not a sentence: the other caller appends the browser's
+        // own message to it, and this one left the customer looking at a bare
+        // 'Network error:'.
+        stop(@json(__('client.invoices.network_error_only')));
+    });
 }
 function stripePayNow(id) {
     fetch("/gateway/stripe/intent/" + id, {

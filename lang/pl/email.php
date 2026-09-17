@@ -276,4 +276,19 @@ return [
         'body' => 'Twoja faktura #:number została wystawiona w KSeF.',
         'ksef_number' => 'Numer KSeF',
     ],
+    'auto_charge_failed' => [
+        'subject' => 'Nie udało się pobrać płatności za fakturę #:number',
+        'attempted' => 'Próbowaliśmy pobrać :amount za fakturę #:number z zapisanej u nas karty, ale płatność nie została przyjęta.',
+        'card_label' => 'Karta',
+        'card_ended' => 'Bank informuje, że ta karta nie może już być używana — prosimy zapisać inną.',
+        'will_retry' => 'Spróbujemy ponownie tą samą kartą :date. Jeśli płatność się powiedzie, nie musisz nic robić.',
+        'given_up' => 'Nie będziemy już próbować obciążać tej karty za tę fakturę.',
+        'please_pay' => 'Prosimy opłacić fakturę samodzielnie albo zapisać działającą kartę, której użyjemy następnym razem.',
+    ],
+    'auto_charge_action_required' => [
+        'subject' => 'Bank prosi o potwierdzenie płatności - faktura #:number',
+        'intro' => 'Bank poprosił o Twoje potwierdzenie, zanim zwolni :amount za fakturę #:number. Tylko Ty możesz go udzielić, więc zatrzymaliśmy się na tym etapie.',
+        'nothing_taken' => 'Z Twojej karty nie pobrano żadnych środków.',
+        'what_to_do' => 'Otwórz fakturę i użyj przycisku "Potwierdź w banku". Kończy on płatność, którą już rozpoczęliśmy, więc nie zostaniesz obciążony dwukrotnie.',
+    ],
 ];

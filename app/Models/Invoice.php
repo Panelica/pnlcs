@@ -128,6 +128,15 @@ class Invoice extends Model {
     public function items() { return $this->hasMany(InvoiceItem::class); }
     public function transactions() { return $this->hasMany(Transaction::class); }
 
+    /**
+     * Where this invoice stands with the card that is meant to pay it.
+     *
+     * hasOne, because invoice_charge_attempts.invoice_id is unique - one
+     * arbitrator per invoice, for all time. Null on every invoice in a shop
+     * that does not collect by card.
+     */
+    public function chargeAttempt() { return $this->hasOne(InvoiceChargeAttempt::class); }
+
     /** The proforma this VAT invoice was issued from. */
     public function sourceInvoice() { return $this->belongsTo(self::class, 'source_invoice_id'); }
 

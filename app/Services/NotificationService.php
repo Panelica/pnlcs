@@ -33,6 +33,10 @@ class NotificationService
             // file only: the customer tried to pay, it did not work, and
             // nobody found out until they wrote in.
             'payment.failed',
+            // A stored card was charged, or may have been, and PNLCS cannot
+            // say what became of the money. Nothing automatic will touch that
+            // invoice again, so somebody has to open the gateway and look.
+            'payment.charge_needs_review',
             'ticket.opened',
             'ticket.replied',
             'service.activated',

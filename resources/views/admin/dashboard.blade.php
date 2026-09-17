@@ -106,6 +106,14 @@
                 <strong>{{ $waiting['tickets'] }}</strong> {{ __('admin.dashboard.open_tickets') }}
             </a>
         @endif
+        {{-- Money may have moved and nobody can say. Red, because it is the
+             only thing on this line that cannot wait for somebody to feel like
+             it. --}}
+        @if(!empty($waiting['charge_review']))
+            <a href="{{ route('admin.invoices.index') }}?status=charge_review" style="font-size:13px;text-decoration:none;color:#b91c1c;font-weight:700;">
+                <strong>{{ $waiting['charge_review'] }}</strong> {{ __('admin.dashboard.charges_need_review') }}
+            </a>
+        @endif
     </div>
     @endif
 </div>

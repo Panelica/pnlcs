@@ -275,4 +275,19 @@ return [
         'body' => '您的发票 #:number 已在 KSeF 中开具。',
         'ksef_number' => 'KSeF 编号',
     ],
+    'auto_charge_failed' => [
+        'subject' => '未能为发票 #:number 扣款',
+        'attempted' => '我们尝试从您存留的银行卡中扣取发票 #:number 的 :amount，但未获通过。',
+        'card_label' => '银行卡',
+        'card_ended' => '您的银行表示该卡已无法继续使用，请更换并保存另一张卡。',
+        'will_retry' => '我们将于 :date 用同一张卡再试一次。届时若扣款成功，您无需做任何事。',
+        'given_up' => '这张发票我们不会再尝试扣这张卡了。',
+        'please_pay' => '请您自行支付该发票，或保存一张可用的卡，下次我们将使用它。',
+    ],
+    'auto_charge_action_required' => [
+        'subject' => '您的银行需要您确认一笔付款 - 发票 #:number',
+        'intro' => '您的银行在放行发票 #:number 的 :amount 之前要求您本人确认。只有您能完成确认，因此我们在此停下。',
+        'nothing_taken' => '尚未从您的卡中扣除任何款项。',
+        'what_to_do' => '打开该发票，点击上面的"向银行确认"按钮。它会完成我们已经发起的那笔付款，因此不会重复扣款。',
+    ],
 ];

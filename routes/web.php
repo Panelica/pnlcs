@@ -75,6 +75,10 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('gateway/paypal/capture/{invoice}',    [GatewayWebhookController::class, 'paypalCapture'])->name('gateway.paypal.capture');
     Route::post('gateway/stripe/intent/{invoice}',     [GatewayWebhookController::class, 'stripeIntent'])->name('gateway.stripe.intent');
     Route::post('gateway/stripe/confirm/{invoice}',    [GatewayWebhookController::class, 'stripeConfirm'])->name('gateway.stripe.confirm');
+    // The cardholder coming back to a charge their bank stopped. 404s unless
+    // the shop collects by card, and resumes only the intent the charger
+    // itself recorded on the invoice.
+    Route::post('gateway/stripe/authenticate/{invoice}', [GatewayWebhookController::class, 'stripeAuthenticate'])->name('gateway.stripe.authenticate');
     Route::post('gateway/authorize/capture/{invoice}', [GatewayWebhookController::class, 'authorizeCapture'])->name('gateway.authorize.capture');
     Route::post('gateway/mollie/capture/{invoice}', [GatewayWebhookController::class, 'mollieCapture'])->name('gateway.mollie.capture');
     Route::post('gateway/razorpay/capture/{invoice}', [GatewayWebhookController::class, 'razorpayCapture'])->name('gateway.razorpay.capture');

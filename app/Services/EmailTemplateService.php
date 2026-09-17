@@ -29,6 +29,8 @@ class EmailTemplateService
     private const MAP = [
         'AccountSignupMail' => 'Account Signup Email',
         'AffiliateWelcomeMail' => 'Affiliate Welcome Email',
+        'AutoChargeActionRequiredMail' => 'Automatic Payment Authentication Required',
+        'AutoChargeFailedMail' => 'Automatic Payment Failed',
         'CancellationConfirmMail' => 'Cancellation Confirmation',
         'DomainRegistrationMail' => 'Domain Registration Confirmation',
         'EmailVerificationMail' => 'Email Verification',

@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\GatewaySettings;
 use App\Models\Invoice;
+use App\Models\InvoiceChargeAttempt;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Server;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Services\WidgetManager;
+use App\Support\AutoCharge;
 
 class DashboardController extends Controller
 {
@@ -64,6 +66,21 @@ class DashboardController extends Controller
 
             if ($me->hasPermission('list_tickets')) {
                 $counts['tickets'] = Ticket::open()->count();
+            }
+
+            // Charges whose outcome nobody could establish. This is the one
+            // count here that is about money that may already have left a
+            // customer's card: the charge was sent, the answer was never
+            // written down, and nothing automatic will touch that invoice
+            // again. It belongs on the dashboard for the same reason the
+            // pending orders do — it is waiting on a person, and the person
+            // has no other way of finding out.
+            //
+            // Asked only where it can mean something: an installation that
+            // does not collect by card runs exactly the dashboard queries it
+            // ran before this feature existed.
+            if ($me->hasPermission('manage_invoices') && AutoCharge::enabled()) {
+                $counts['charge_review'] = InvoiceChargeAttempt::query()->needsReview()->count();
             }
         } catch (\Throwable $e) {
             // A dashboard that cannot count is still a dashboard. Never let a

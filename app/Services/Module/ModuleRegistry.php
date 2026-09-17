@@ -6,6 +6,7 @@ use App\Contracts\GatewayModuleInterface;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\ServerModuleInterface;
 use App\Contracts\SslModuleInterface;
+use App\Contracts\TokenizableGatewayInterface;
 use App\Models\GatewaySettings;
 
 class ModuleRegistry
@@ -141,6 +142,65 @@ class ModuleRegistry
         }
 
         return $usable;
+    }
+
+    /**
+     * The usable gateways that can also store a card and charge it later.
+     *
+     * Two questions in one place, because the two screens that ask it must
+     * never disagree. The charger asks it to decide what it may present a card
+     * to; the client portal asks it to decide whether to offer to store a card
+     * at all. A portal that offered storage for a gateway the charger cannot
+     * use would collect card details for nothing, and a charger that reached
+     * for a gateway the portal never offered would charge a card the customer
+     * has not agreed to store.
+     *
+     * isTokenised() is not the test. It says a gateway keeps a handle to a
+     * card; it says nothing about charging that handle with nobody watching,
+     * which is a different promise with different failure modes, so the
+     * capability interface is what is asked.
+     *
+     * @return array<string, TokenizableGatewayInterface> keyed by lower-case gateway name
+     */
+    public function tokenisedGateways(): array
+    {
+        $found = [];
+
+        foreach ($this->usableGateways() as $name) {
+            $module = $this->getGatewayModule($name);
+
+            if ($module instanceof TokenizableGatewayInterface) {
+                $found[self::key($name)] = $module;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * Could this gateway ever detach a stored card, whatever its settings say?
+     *
+     * A CAPABILITY QUESTION, DELIBERATELY NOT A CONFIGURATION ONE, and the
+     * difference is the whole point. tokenisedGateways() answers "is this
+     * gateway switched on and does it have its keys", which changes minute to
+     * minute: an operator rotating a secret key would, if that were the test,
+     * turn every card removed in those five minutes into a card PNLCS never
+     * asks the gateway to let go of. This asks whether the module implements
+     * the interface at all, which is a fact about the code and cannot be true
+     * one morning and false the next.
+     *
+     * The class string is tested rather than an instance, so asking costs no
+     * container resolution and no gateway construction.
+     *
+     * A gateway with no module registered answers false. Nothing in this
+     * installation could carry out a detach for it, and recording a request
+     * that nothing can perform is exactly the failure this exists to stop.
+     */
+    public function canDetachStoredMethods(string $name): bool
+    {
+        $class = $this->gatewayModules[self::key($name)] ?? null;
+
+        return $class !== null && is_a($class, TokenizableGatewayInterface::class, true);
     }
 
     public function getGatewayModule(string $name): ?GatewayModuleInterface

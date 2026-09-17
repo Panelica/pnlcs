@@ -275,4 +275,19 @@ return [
         'body' => ':number numaralı faturanız KSeF\'te düzenlendi.',
         'ksef_number' => 'KSeF Numarası',
     ],
+    'auto_charge_failed' => [
+        'subject' => ':number numaralı fatura için ödeme alınamadı',
+        'attempted' => ':number numaralı fatura için kayıtlı kartınızdan :amount tutarı çekilmek istendi, ancak işlem kabul edilmedi.',
+        'card_label' => 'Kart',
+        'card_ended' => 'Bankanız bu kartın artık kullanılamayacağını bildiriyor; lütfen başka bir kart kaydedin.',
+        'will_retry' => 'Aynı kartla :date tarihinde tekrar deneyeceğiz. O gün işlem geçerse yapmanız gereken bir şey yok.',
+        'given_up' => 'Bu fatura için bu kartı bir daha denemeyeceğiz.',
+        'please_pay' => 'Lütfen faturayı kendiniz ödeyin veya çalışan bir kart kaydedin; bir sonraki seferde onu kullanalım.',
+    ],
+    'auto_charge_action_required' => [
+        'subject' => 'Bankanız bir ödemeyi onaylamanızı istiyor - :number numaralı fatura',
+        'intro' => 'Bankanız, :number numaralı fatura için :amount tutarını serbest bırakmadan önce onayınızı istedi. Bunu yalnızca siz verebileceğiniz için işlemi burada durdurduk.',
+        'nothing_taken' => 'Kartınızdan herhangi bir tutar çekilmedi.',
+        'what_to_do' => 'Faturayı açın ve üzerindeki "Bankanızla onaylayın" düğmesini kullanın. Bu, zaten başlattığımız ödemeyi tamamlar; böylece iki kez tahsilat yapılmaz.',
+    ],
 ];

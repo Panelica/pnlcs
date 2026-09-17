@@ -23,7 +23,14 @@
         "overdue" => __('admin.invoices.filter_overdue'),
         "cancelled" => __('admin.invoices.filter_cancelled'),
         "draft" => __('admin.invoices.filter_draft'),
-    ] as $val => $label)
+    ] + (\App\Support\AutoCharge::enabled()
+        {{-- Not a status. The invoices whose automatic card payment was sent
+             and whose outcome could not be established, which is where the
+             dashboard count links to. Offered only where the shop collects by
+             card: a tab for something that cannot happen is worse than no
+             tab. --}}
+        ? [\App\Http\Controllers\Admin\InvoiceController::CHARGE_REVIEW_FILTER => __('admin.invoices.filter_charge_review')]
+        : []) as $val => $label)
     @php $isActive = (request("status","unpaid") == $val); @endphp
     <a href="{{ route("admin.invoices.index", ["status" => $val]) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">

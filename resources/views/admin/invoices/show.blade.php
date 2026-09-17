@@ -33,6 +33,35 @@
     </div>
 </div>
 
+{{-- A charge was sent for this invoice and its outcome was never established.
+     This is the whole of what the operator has to act on: what was asked for,
+     from which card, when, the gateway's own reference if there is one, and the
+     one button that ends the state. Nothing automatic will touch this invoice
+     again until somebody presses it. --}}
+@if(!empty($chargeReview))
+<div class="card" style="margin-bottom:15px;border-left:4px solid #b91c1c;">
+    <div class="card-header"><strong style="color:#b91c1c;">{{ __('admin.invoices.charge_review_title') }}</strong></div>
+    <div class="card-body">
+        <p style="margin:0 0 8px;font-size:13px;">{{ __('admin.invoices.charge_review_body') }}</p>
+        <ul style="margin:0 0 10px;padding-left:18px;font-size:13px;color:#444;">
+            <li>{{ __('admin.invoices.charge_review_amount') }}: <strong>{{ $chargeReview->currency }} {{ number_format((float) $chargeReview->amount, 2) }}</strong></li>
+            <li>{{ __('admin.invoices.charge_review_sent') }}: <strong>{{ $chargeReview->updated_at?->format(datetime_fmt()) }}</strong></li>
+            @if($chargeReview->last_transaction_id)
+            <li>{{ __('admin.invoices.charge_review_reference') }}: <strong>{{ $chargeReview->last_transaction_id }}</strong></li>
+            @endif
+            @if($chargeReview->last_message)
+            <li>{{ $chargeReview->last_message }}</li>
+            @endif
+        </ul>
+        <form method="POST" action="{{ route('admin.invoices.charge-review.release', $invoice) }}" onsubmit="return confirm('{{ __('admin.invoices.charge_review_confirm') }}')">
+            @csrf
+            <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.invoices.charge_review_release') }}</button>
+            <small class="text-muted" style="margin-left:8px;">{{ __('admin.invoices.charge_review_release_hint') }}</small>
+        </form>
+    </div>
+</div>
+@endif
+
 @if(in_array($st, ['paid', 'partially_paid']))
 <div id="refund-form" style="display:none;margin-bottom:15px;">
     <div class="card">

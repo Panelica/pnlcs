@@ -3,6 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{-- Every script in this layout that posts with fetch() reads its CSRF
+         token from here, the way the admin layout has always done
+         (admin/layouts/app.blade.php:6). It was never added here, so those
+         requests sent an empty token and were refused with a 419 — including
+         the card payment form the Stripe module renders on an invoice, which
+         reads exactly this tag and has been unable to take a payment in the
+         client area. --}}
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", __("client.my_account")) - {{ company_name() }}</title>
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <link rel="preconnect" href="https://fonts.googleapis.com">

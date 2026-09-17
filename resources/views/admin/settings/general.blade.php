@@ -91,6 +91,43 @@
         </div>
     </div>
 
+    {{-- Automatic payment. The billing clock already raises the renewal
+         invoices; this is the half that pays one with a card the customer has
+         already stored. It ships OFF, and while it is off the product behaves
+         exactly as it did before it existed.
+
+         The checkbox carries a hidden field of the same name in front of it, so
+         that a cleared box posts a value instead of vanishing from the request.
+         More than one screen posts to admin.settings.general.update, and
+         "absent" cannot be told apart from "cleared" - a form states its own
+         switches rather than leaving them to be inferred from what is missing.
+         There is deliberately no matching block in the controller. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.auto_charge') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="hidden" name="AutoChargeEnabled" value="0">
+                <input type="checkbox" name="AutoChargeEnabled" value="1" {{ !empty($settings['AutoChargeEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.auto_charge_enabled') }}
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.auto_charge_days_before') }}</label>
+                    <input type="number" min="0" name="AutoChargeDaysBefore" value="{{ $settings['AutoChargeDaysBefore'] ?? \App\Support\AutoCharge::DEFAULT_DAYS_BEFORE }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.auto_charge_max_attempts') }}</label>
+                    <input type="number" min="1" name="AutoChargeMaxAttempts" value="{{ $settings['AutoChargeMaxAttempts'] ?? \App\Support\AutoCharge::DEFAULT_MAX_ATTEMPTS }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.auto_charge_retry_days') }}</label>
+                    <input type="number" min="{{ \App\Support\AutoCharge::MINIMUM_RETRY_DAYS }}" name="AutoChargeRetryDays" value="{{ $settings['AutoChargeRetryDays'] ?? \App\Support\AutoCharge::DEFAULT_RETRY_DAYS }}" class="form-control">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.auto_charge_hint') }}</div>
+        </div>
+    </div>
+
     {{-- External fraud screening. Advisory like the built-in rules: a missing
          key or an outage never blocks an order (see FraudDetectionService).
          The secret fields keep their stored value when left blank, the same

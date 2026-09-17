@@ -327,11 +327,93 @@ test('what Stripe itself advises about retrying beats our list', function () {
     // than any table kept in this repository — in both directions.
     expect($charge(['type' => 'card_error', 'decline_code' => 'insufficient_funds', 'advice_code' => 'do_not_try_again'])['retryable'])->toBeFalse()
         ->and($charge(['type' => 'card_error', 'decline_code' => 'lost_card', 'advice_code' => 'try_again_later'])['retryable'])->toBeTrue()
-        // A refusal that never reached the bank is judged on its own terms:
-        // Stripe having a bad minute is worth repeating, being asked something
+        // A refusal that never reached the bank is judged on its own terms.
+        // Being asked to slow down is worth repeating — "rate limiters run
+        // before the API's idempotency layer", so the request never executed
+        // and the next one is a first attempt — while being asked something
         // invalid is not.
-        ->and($charge(['type' => 'api_error', 'message' => 'Stripe is having trouble'], 500)['retryable'])->toBeTrue()
+        ->and($charge(['type' => 'api_error', 'message' => 'Slow down'], 429)['retryable'])->toBeTrue()
         ->and($charge(['type' => 'invalid_request_error', 'message' => 'No such customer'], 400)['retryable'])->toBeFalse();
+
+    // THE 500 USED TO BE ON THAT LIST, under the comment "Stripe having a bad
+    // minute is worth repeating". It is not a refusal at all — see the test
+    // below — and the assertion that it was retryable is what scheduled a
+    // second real debit for it three days later.
+});
+
+test('an answer that does not say whether the card was charged is not a decline', function () {
+    stripeVaultConfigured();
+
+    $invoice = stripeVaultInvoice();
+    $card = vaultedStripeCard($invoice);
+    $charge = refusedCharge($invoice, $card);
+
+    // Stripe's own words about the first of these, and the reason none of them
+    // may be written down as a failure: "You should treat the result of a 500
+    // request as indeterminate ... if creating a charge returns a 500 error but
+    // we detect that the information has gone out to a payment network, we'll
+    // try to roll it forward. If not, we'll try to roll it back. If this
+    // doesn't resolve the issue, you may still see requests with a 500 error
+    // that produce user-visible side effects."
+    // (https://docs.stripe.com/error-low-level, fetched 2026-09-17.)
+    //
+    // 502, 503 and 504 sit beside it in that page's status table as "Server
+    // Errors", and are if anything less determinate still: they are typically
+    // written by something in front of the API that has no idea what the API
+    // did. 424 is the judgement call — "External Dependency Failed: The request
+    // couldn't be completed due to a failure in a dependency external to
+    // Stripe", where for a card charge the external dependency is the payment
+    // network itself, and nothing in the documentation says the operation did
+    // not execute.
+    foreach ([500, 502, 503, 504, 424] as $status) {
+        $result = $charge(['type' => 'api_error', 'message' => 'Stripe is having trouble'], $status);
+
+        expect($result['success'])->toBeFalse($status)
+            ->and($result['outcome_unknown'])->toBeTrue("{$status} does not say what became of the charge")
+            // NOT retryable, which in this engine means "raise a fresh charge in
+            // three days" — outside the twenty-four hours Stripe keeps the
+            // idempotency key, so a new debit rather than a replay.
+            ->and($result['retryable'])->toBeFalse("{$status} must not schedule a fresh charge")
+            // Withheld on purpose: on an in-flight row a transaction id means
+            // "the money moved and the ledger owes an entry".
+            ->and($result['transaction_id'] ?? null)->toBeNull($status);
+    }
+
+    // AND THE DETERMINATE ONES ARE UNTOUCHED. Each of these is the API telling
+    // us what happened to this charge, so each stays an ordinary failure with
+    // an ordinary retry decision — 429 because rate limiting happens before the
+    // API method runs, 402 because the issuer answered, 400 because the request
+    // was ours to get wrong.
+    foreach ([429, 402, 400] as $status) {
+        $result = $charge(['type' => 'api_error', 'message' => 'Determinate'], $status);
+
+        expect($result['status'])->toBe('failed', $status)
+            ->and($result)->not->toHaveKey('outcome_unknown', "{$status} is a known outcome");
+    }
+});
+
+test('an indeterminate answer never writes anything on the customer\'s card', function () {
+    stripeVaultConfigured();
+
+    $invoice = stripeVaultInvoice();
+    $card = vaultedStripeCard($invoice);
+    $charge = refusedCharge($invoice, $card);
+
+    // A 503 carrying what looks like a final decline code. The card branch and
+    // the retry branch are both downstream of the question this asserts is
+    // asked first: marking a customer's card as needing their attention on the
+    // strength of an answer that does not say what became of the charge sends
+    // them to their bank over a bad minute at the gateway — and it is the same
+    // ordering mistake that let the retry be scheduled.
+    $result = $charge(['type' => 'card_error', 'code' => 'card_declined', 'decline_code' => 'lost_card', 'message' => 'Declined'], 503);
+
+    expect($result['outcome_unknown'])->toBeTrue()
+        ->and($card->fresh()->status)->toBe(PaymentMethod::STATUS_ACTIVE);
+
+    // The control: the same decline code, determinate, still ends the card.
+    $charge(['type' => 'card_error', 'code' => 'card_declined', 'decline_code' => 'lost_card', 'message' => 'Declined'], 402);
+
+    expect($card->fresh()->status)->toBe(PaymentMethod::STATUS_REQUIRES_UPDATE);
 });
 
 test('an unfinished payment is never reported as money taken', function () {
@@ -344,10 +426,47 @@ test('an unfinished payment is never reported as money taken', function () {
 
     // Stripe has the request but has not said the money is there. Crediting
     // the invoice on that would hand over the service for a payment that may
-    // still fail; refusing to look again would lose one that succeeds.
+    // still fail.
+    //
+    // AND IT IS NOT A RETRYABLE FAILURE EITHER, which is what this asserted
+    // until the round that found it. A retryable failure is scheduled by
+    // InvoiceChargeAttempt::nextAttemptMoment for at least the day after the
+    // attempt — deliberately outside the twenty-four hours Stripe keeps an
+    // idempotency key — so 'look again later' meant a second, genuine charge
+    // for a payment that was very probably completing while we called it
+    // failed. outcome_unknown is the honest answer, and the caller has a
+    // machine for it: the attempt stays in flight and is replayed inside the
+    // window, where the same key returns the first request's own result.
     expect($result['success'])->toBeFalse()
         ->and($result['status'])->toBe('failed')
-        ->and($result['retryable'])->toBeTrue();
+        ->and($result['outcome_unknown'])->toBeTrue()
+        ->and($result['retryable'])->toBeFalse()
+        // The intent id is deliberately withheld: on an in-flight attempt row
+        // a transaction id means 'the money moved and the ledger owes an
+        // entry', and the rescue sweep credits such a row without asking
+        // anybody. Handing it this one would credit an invoice against money
+        // that may never arrive.
+        ->and($result['transaction_id'] ?? null)->toBeNull();
+});
+
+test('a charge that was sent with no answer coming back is not reported as a failure', function () {
+    stripeVaultConfigured();
+
+    // The POST left this machine and the connection died. Stripe may have
+    // taken the money; nothing here can say.
+    Http::fake(fn () => throw new Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out'));
+
+    $invoice = stripeVaultInvoice();
+
+    $result = app(StripeModule::class)->chargeStoredMethod($invoice, vaultedStripeCard($invoice), 50.0);
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['outcome_unknown'])->toBeTrue()
+        // retryable false so that a caller which has never heard of
+        // outcome_unknown cannot schedule a fresh charge on the strength of
+        // it: the safe reading for an old caller is 'do not try again'.
+        ->and($result['retryable'])->toBeFalse()
+        ->and($result['transaction_id'] ?? null)->toBeNull();
 });
 
 test('a card belonging to somebody else is never charged', function () {
@@ -433,6 +552,32 @@ test('a bank asking for the cardholder is never called worth retrying', function
         expect($charged['retryable'])->toBeFalse("{$code} must not be retried by the charge")
             ->and($reported['retryable'])->toBeFalse("{$code} must not be retried by the webhook either");
     }
+});
+
+test('the failed-payment webhook is not swept up by the charge path\'s indeterminacy test', function () {
+    stripeVaultConfigured();
+
+    $invoice = stripeVaultInvoice();
+
+    // THE SECOND CALLER OF declineIsRetryable(), and the one a guard written for
+    // the charge path could quietly break. webhookPaymentFailed() passes no
+    // status because there was no request of ours to get a status for: the
+    // event IS Stripe telling us what became of the payment, which is as
+    // determinate as an answer gets. Read as "no answer came back" it would
+    // come out indeterminate, and every ordinary decline reported by webhook
+    // would stop being worth another attempt.
+    $reported = fn (array $error) => app(StripeModule::class)->processWebhook(stripeVaultDelivery([
+        'id' => 'evt_'.($error['decline_code'] ?? 'x').'_'.$invoice->id,
+        'type' => 'payment_intent.payment_failed',
+        'data' => ['object' => [
+            'id' => 'pi_'.($error['decline_code'] ?? 'x'),
+            'metadata' => ['invoice_id' => (string) $invoice->id],
+            'last_payment_error' => $error,
+        ]],
+    ]));
+
+    expect($reported(['type' => 'card_error', 'decline_code' => 'insufficient_funds', 'message' => 'No funds'])['retryable'])->toBeTrue()
+        ->and($reported(['type' => 'card_error', 'decline_code' => 'lost_card', 'message' => 'Lost'])['retryable'])->toBeFalse();
 });
 
 test('authentication is answered as authentication however Stripe words it', function () {

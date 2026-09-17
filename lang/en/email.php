@@ -276,4 +276,19 @@ return [
         'body' => 'Your invoice #:number has been issued in KSeF.',
         'ksef_number' => 'KSeF Number',
     ],
+    'auto_charge_failed' => [
+        'subject' => 'We could not take payment for invoice #:number',
+        'attempted' => 'We tried to take :amount for invoice #:number from the card you have with us, and it was not accepted.',
+        'card_label' => 'Card',
+        'card_ended' => 'Your bank says this card can no longer be used, so please store a different one.',
+        'will_retry' => 'We will try the same card again on :date. If it goes through then, there is nothing for you to do.',
+        'given_up' => 'We will not try this card again for this invoice.',
+        'please_pay' => 'Please pay the invoice yourself, or store a card that works and we will use it next time.',
+    ],
+    'auto_charge_action_required' => [
+        'subject' => 'Your bank wants you to confirm a payment - invoice #:number',
+        'intro' => 'Your bank asked for your confirmation before releasing :amount for invoice #:number. Only you can give it, so we stopped there.',
+        'nothing_taken' => 'Nothing has been taken from your card.',
+        'what_to_do' => 'Open the invoice and use the "Confirm with your bank" button on it. That finishes the payment we already started, so you are not charged twice.',
+    ],
 ];

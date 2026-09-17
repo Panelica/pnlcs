@@ -11,6 +11,7 @@ use App\Models\ActivityLog;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Invoice;
+use App\Models\InvoiceChargeAttempt;
 use App\Models\InvoiceItem;
 use App\Models\InvoiceProduct;
 use App\Models\Product;
@@ -20,6 +21,7 @@ use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
 use App\Services\PaymentService;
+use App\Support\AutoCharge;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -29,6 +31,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class InvoiceController extends Controller
 {
     use CsvExportable;
+
+    /** The status tab that is not a status: invoices whose card charge needs a person. */
+    public const CHARGE_REVIEW_FILTER = 'charge_review';
 
     public function __construct(
         protected InvoiceService $invoiceService,
@@ -44,6 +49,14 @@ class InvoiceController extends Controller
 
         if ($status === 'unpaid') {
             $query->whereIn('status', ['unpaid', 'overdue']);
+        } elseif ($status === self::CHARGE_REVIEW_FILTER) {
+            // Not an invoice status: the invoices whose automatic card payment
+            // was sent and whose outcome could not be established. They are
+            // listed here rather than on a screen of their own because this is
+            // the screen an operator already has open, and each one's answer is
+            // on its own invoice page. The dashboard count links straight to
+            // this view.
+            $query->whereHas('chargeAttempt', fn ($q) => $q->needsReview());
         } elseif ($status !== '') {
             $query->where('status', $status);
         }
@@ -68,7 +81,56 @@ class InvoiceController extends Controller
 
         $activityLog = ActivityLog::forInvoice($invoice)->limit(50)->get();
 
-        return view('admin.invoices.show', compact('invoice', 'activityLog'));
+        // Only asked where it can mean something. An installation that does not
+        // collect by card runs exactly the queries it ran before this feature
+        // existed, on this page as everywhere else.
+        $chargeReview = AutoCharge::enabled()
+            ? InvoiceChargeAttempt::query()->needsReview()->where('invoice_id', $invoice->id)->first()
+            : null;
+
+        return view('admin.invoices.show', compact('invoice', 'activityLog', 'chargeReview'));
+    }
+
+    /**
+     * A person has looked at the gateway; let the charger try this one again.
+     *
+     * needs_review is the state that says "a charge was sent and we cannot tell
+     * what became of it". Nothing automatic clears it, on purpose — but until
+     * now nothing at all did, so an invoice that landed there was out of
+     * automatic collection for ever even after the operator had established
+     * that no money had moved. That is what this button is: the human end of
+     * the state, and the only thing in the system that writes it off.
+     *
+     * The row is deleted rather than rewritten. One row per invoice is the
+     * table's whole design, and what it holds after a review is answered is a
+     * card's attempt count that the review has just made meaningless — the next
+     * claim starts clean, which is exactly what "try this again" means. The
+     * trail is kept where the rest of an invoice's history is kept.
+     *
+     * It refuses anything that is not in review. A scheduled retry, an
+     * exhausted card or an attempt in flight are all live state, and deleting
+     * one of those would hand the invoice straight back to the charger with its
+     * dunning count reset — or, for an in-flight row, remove the very thing
+     * that stops a second charge.
+     */
+    public function releaseChargeReview(Invoice $invoice): RedirectResponse
+    {
+        $row = InvoiceChargeAttempt::query()->needsReview()->where('invoice_id', $invoice->id)->first();
+
+        if ($row === null) {
+            return back()->with('info', __('admin.invoices.charge_review_nothing'));
+        }
+
+        $row->delete();
+
+        ActivityLog::log(
+            __('admin.invoices.charge_review_released_log'),
+            auth('admin')->user()?->email,
+            $invoice->client_id,
+            $invoice->id,
+        );
+
+        return back()->with('success', __('admin.invoices.charge_review_released'));
     }
 
     /**

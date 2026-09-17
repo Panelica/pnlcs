@@ -150,39 +150,52 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
     }
 
     /**
-     * A name Stripe can recognise a repeat of this exact request by.
+     * A name Stripe can recognise a repeat of this exact request by, WORKED OUT
+     * FROM THE REQUEST ITSELF — which is the fallback, not the main road.
      *
      * Stripe keeps the answer it gave the first time a key was used and hands
      * that same answer back for the next twenty-four hours instead of doing
      * the work again. So a POST that timed out on the network and was sent
      * again creates one customer and takes one payment, not two.
      *
-     * Two things about how the key is built matter. It is derived rather than
-     * random: a fresh random key on the retry would be a different request to
-     * Stripe and would defeat the whole mechanism. And everything that varies
-     * goes into it, the amount above all, because Stripe treats the same key
-     * arriving with different parameters as an error rather than as a repeat.
-     * Deriving the key from the very figures being sent is what keeps those
-     * two frozen together: a different amount is a different key describing a
-     * genuinely different request, so the error case cannot arise.
+     * A caller with a memory of its own supplies the key instead, and
+     * chargeStoredMethod() prefers it: written down before the first POST and
+     * handed back unchanged on every repeat, a stored key cannot drift, while
+     * a derived one is exactly as stable as its least stable input. THAT IS NOT
+     * A THEORETICAL PREFERENCE. This digest is keyed on config('app.key'), and
+     * an operator who rotates APP_KEY — documented by Laravel, supported by
+     * config/app.php's previous_keys, survived by App\Casts\EncryptedValue
+     * whether it is rotated gracefully or not — changed the key underneath an
+     * in-flight charge with nothing anywhere signalling it. The replay went out
+     * under a key Stripe had never seen, Stripe had no saved result to answer
+     * from, and the card was charged a second time for money that had very
+     * possibly already left it. InvoiceChargeAttempt::mintIdempotencyKey()
+     * carries the repair.
      *
-     * The digest is keyed on the application key so that two installations
-     * sharing one Stripe account cannot both claim invoice #5.
+     * What remains here is still right for what it is used for. It is derived
+     * rather than random because a caller with nothing written down needs the
+     * same figures to give the same key; everything that varies goes into it,
+     * the amount above all, because Stripe treats the same key arriving with
+     * different parameters as an error rather than as a repeat; and the digest
+     * is keyed on the application key so that two installations sharing one
+     * Stripe account do not both claim invoice #5 — which holds until one of
+     * them is a restored image of the other, when they share that key too. A
+     * stored random key needs none of those arguments.
      *
-     * Only two calls carry one, and both are calls no human is watching: the
-     * customer record a card hangs off, and the off-session charge. The two
-     * browser-driven calls — creating an intent to pay, and refunding one — do
-     * not, for reasons written where each of them sends.
+     * Only two calls reach this now, and both are calls no human is watching:
+     * the customer record a card hangs off, and an off-session charge whose
+     * caller brought no key. The two browser-driven calls — creating an intent
+     * to pay, and refunding one — carry no key at all, for reasons written
+     * where each of them sends.
      *
-     * What the key does not do is worth stating plainly. It protects "charge
-     * invoice N this exact amount", not "charge invoice N", because the amount
-     * is inside it; and Stripe prunes keys after twenty-four hours ("We
+     * What a derived key does not do is worth stating plainly. It protects
+     * "charge invoice N this exact amount", not "charge invoice N", because the
+     * amount is inside it; and Stripe prunes keys after twenty-four hours ("We
      * generate a new request if a key is reused after the original is pruned",
-     * https://docs.stripe.com/api/idempotent_requests). A retry a day later, or
-     * after a late fee has moved the balance, is therefore a genuinely new
-     * request. Closing that gap needs the attempt written down before the POST
-     * — invoice, amount, key, resulting intent — which is work for whichever
-     * dunning run first calls chargeStoredMethod(), since nothing calls it yet.
+     * https://docs.stripe.com/api/idempotent_requests), so a retry a day later,
+     * or after a late fee has moved the balance, is a genuinely new request. A
+     * stored key changes none of that: what it changes is that the string is no
+     * longer recomputed, so it can no longer come out different.
      */
     private function idempotencyKey(string $scope, array $parts): string
     {
@@ -381,6 +394,81 @@ HTML;
     }
 
     /**
+     * Hand back the secret that lets the cardholder finish an off-session
+     * charge their bank stopped.
+     *
+     * When an unattended charge comes back requires_action the money has not
+     * moved and the card is fine: the issuer wants the person. That intent is
+     * still sitting at Stripe waiting to be confirmed, and
+     * "stripe.handleNextAction ... finish[es] confirmation of a PaymentIntent
+     * with the requires_action status" (https://docs.stripe.com/js/
+     * payment_intents/handle_next_action, fetched 2026-09-16) — which is what
+     * this secret is for.
+     *
+     * FINISHING THE SAME INTENT IS THE SAFE ROUTE, and not only the cheap one.
+     * The alternative is a fresh PaymentIntent from the ordinary pay form,
+     * which is a second authorisation for the same invoice sitting beside the
+     * first: if both are ever completed the customer has paid twice and the
+     * second becomes account credit. Completing this one cannot do that. It
+     * carries the invoice in its metadata, so both the webhook and the confirm
+     * endpoint credit it by the same transaction id, and PaymentService refuses
+     * that pair the second time it sees it.
+     *
+     * NOTHING IS TAKEN ON THE STRENGTH OF THE CALLER'S WORD. The intent is read
+     * from Stripe, it has to name this invoice, and it has to still be waiting
+     * for the cardholder. An intent that has since succeeded, been cancelled or
+     * fallen back to requires_payment_method is refused — handleNextAction
+     * "will throw an error if the PaymentIntent has a different status", and
+     * the customer is better served by the ordinary pay form than by a button
+     * that throws.
+     *
+     * The client secret is the browser's to hold: it can confirm this one
+     * intent and do nothing else. The secret API key stays here.
+     */
+    public function resumeAuthentication(Invoice $invoice, string $intentId): array
+    {
+        $secretKey = $this->getSetting("secret_key");
+        if (!$secretKey) {
+            return ["success" => false, "message" => "Stripe secret key not configured."];
+        }
+
+        try {
+            $response = Http::withToken($secretKey)
+                ->get("https://api.stripe.com/v1/payment_intents/" . urlencode($intentId));
+        } catch (ConnectionException $e) {
+            return ["success" => false, "message" => "Stripe could not be reached."];
+        }
+
+        if (!$response->successful()) {
+            return ["success" => false, "message" => "Stripe: payment intent lookup failed."];
+        }
+
+        $intent = (array) $response->json();
+
+        if ((int) ($intent["metadata"]["invoice_id"] ?? 0) !== (int) $invoice->id) {
+            Log::warning("Stripe: refused to resume an authentication for another invoice", [
+                "invoice" => $invoice->id,
+                "intent"  => $intent["id"] ?? $intentId,
+            ]);
+
+            return ["success" => false, "message" => "That payment does not belong to this invoice."];
+        }
+
+        if (($intent["status"] ?? "") !== "requires_action") {
+            return [
+                "success" => false,
+                "message" => "That payment is no longer waiting to be confirmed (status: " . ($intent["status"] ?? "unknown") . ").",
+            ];
+        }
+
+        return [
+            "success"       => true,
+            "client_secret" => $intent["client_secret"] ?? null,
+            "intent_id"     => $intent["id"] ?? $intentId,
+        ];
+    }
+
+    /**
      * Verify a PaymentIntent server-side before crediting an invoice.
      * The intent id arrives from the browser, so confirm with Stripe that it
      * actually succeeded, that it belongs to THIS invoice, and use Stripe's
@@ -494,6 +582,176 @@ HTML;
     }
 
     /**
+     * The browser says the card went in. Ask Stripe, then store it.
+     *
+     * The webhook is the way a card normally becomes a row here, and on a
+     * shop whose endpoint is registered and reachable it will get there on its
+     * own. This is the same ending reached from the other side, and it exists
+     * because the customer is standing in front of the screen right now: a
+     * delivery that is thirty seconds late, an endpoint nobody registered, a
+     * local installation that Stripe cannot reach at all, and the customer is
+     * looking at a page that does not list the card they just typed in. They
+     * type it again. Each attempt leaves another card attached to their Stripe
+     * customer, and the shop that cannot receive webhooks never collects a
+     * penny.
+     *
+     * NOTHING FROM THE BROWSER IS TRUSTED EXCEPT AS A QUESTION. The id is used
+     * to ask Stripe what happened, and everything written comes out of Stripe's
+     * answer: the status, the payment method, the customer, the client the
+     * intent was opened for. A confirmation for somebody else's intent is
+     * refused before anything is written, which is why the client is a
+     * parameter here — checking afterwards would mean checking after the card
+     * had already been stored against the other account.
+     *
+     * AND IT WRITES NOTHING OF ITS OWN. The retrieved object goes to
+     * webhookSetupSucceeded(), the same handler the webhook feeds, so there is
+     * one definition of what a stored card looks like and one place that
+     * creates it. The two paths racing each other is the ordinary case and it
+     * is safe: that handler is an updateOrCreate keyed on the token, so
+     * whichever arrives second writes the same row again.
+     */
+    public function confirmVaulting(Client $client, string $sessionId): array
+    {
+        $secretKey = $this->getSetting("secret_key");
+        if (!$secretKey) {
+            return ["success" => false, "message" => "Stripe secret key not configured."];
+        }
+
+        try {
+            $response = Http::withToken($secretKey)
+                ->get("https://api.stripe.com/v1/setup_intents/" . urlencode($sessionId));
+        } catch (ConnectionException $e) {
+            Log::warning("Stripe: setup intent could not be read back", [
+                "client"       => $client->id,
+                "setup_intent" => $sessionId,
+                "error"        => $e->getMessage(),
+            ]);
+
+            // Not an error the customer caused and not one they can fix. The
+            // webhook is still coming, so the honest answer is "not yet".
+            return ["success" => false, "message" => "Stripe could not be reached."];
+        }
+
+        if (!$response->successful()) {
+            Log::warning("Stripe: setup intent lookup failed", [
+                "client"       => $client->id,
+                "setup_intent" => $sessionId,
+                "status"       => $response->status(),
+                "error"        => $response->json("error.message"),
+            ]);
+
+            return ["success" => false, "message" => "Stripe did not recognise that card setup."];
+        }
+
+        $intent = (array) $response->json();
+
+        // Belongs to somebody else, or to no one. Either way this session is
+        // not the caller's to finish, and the card is not written.
+        if ((int) ($intent["metadata"]["client_id"] ?? 0) !== (int) $client->id) {
+            Log::warning("Stripe: refused to finish a card setup opened for another client", [
+                "client"       => $client->id,
+                "setup_intent" => $intent["id"] ?? $sessionId,
+            ]);
+
+            return ["success" => false, "message" => "That card setup does not belong to this account."];
+        }
+
+        // 'succeeded' is the only status that means there is a card to keep.
+        // requires_action and requires_payment_method are both live sessions
+        // the customer can still finish; processing is Stripe still working.
+        // None of them is a stored card, and storing one anyway would put a
+        // token in the table that the charger would present and be refused on.
+        if (($intent["status"] ?? "") !== "succeeded") {
+            return [
+                "success" => false,
+                "message" => "That card has not finished being stored (status: " . ($intent["status"] ?? "unknown") . ").",
+            ];
+        }
+
+        return $this->webhookSetupSucceeded($intent);
+    }
+
+    /**
+     * Stop holding a customer's card.
+     *
+     * "Detaches a PaymentMethod object from a Customer. Detachment is permanent
+     * and irreversible — once detached, a PaymentMethod can no longer be used
+     * for payments or re-attached to a Customer."
+     * (https://docs.stripe.com/api/payment_methods/detach, fetched 2026-09-16.)
+     * That is exactly what a customer who removes their card is asking for, and
+     * it is why this is never called from a screen: it cannot be undone, and it
+     * must not be attempted on a row the customer has not actually removed.
+     *
+     * NO IDEMPOTENCY KEY, and none is wanted. The operation is naturally
+     * idempotent — a second detach of the same token is answered with
+     * resource_missing or payment_method_unexpected_state, both of which mean
+     * the card is not attached to anybody, which is the result asked for. A key
+     * would replay the first answer for a day and tell the sweep nothing about
+     * what is true now.
+     */
+    public function detachStoredMethod(PaymentMethod $method): array
+    {
+        if (strtolower((string) $method->gateway_name) !== "stripe") {
+            return ["success" => false, "message" => "That payment method was not stored with Stripe.", "retryable" => false];
+        }
+
+        $token = $method->remote_token;
+
+        if (!is_string($token) || $token === "") {
+            // Nothing was ever stored at Stripe for this row, so there is
+            // nothing for Stripe to let go of.
+            return ["success" => true, "message" => "No stored token to detach."];
+        }
+
+        $secretKey = $this->getSetting("secret_key");
+        if (!$secretKey) {
+            // The operator will put the key back. Until then the card is still
+            // at Stripe and saying otherwise would be a lie in the table.
+            return ["success" => false, "message" => "Stripe secret key not configured.", "retryable" => true];
+        }
+
+        try {
+            $response = Http::asForm()
+                ->withToken($secretKey)
+                ->post("https://api.stripe.com/v1/payment_methods/" . urlencode($token) . "/detach");
+        } catch (ConnectionException $e) {
+            return ["success" => false, "message" => "Stripe could not be reached: " . $e->getMessage(), "retryable" => true];
+        }
+
+        if ($response->successful()) {
+            return ["success" => true, "message" => "Detached at Stripe."];
+        }
+
+        $code = (string) $response->json("error.code", "");
+
+        // Gone already. resource_missing is "The ID provided isn't valid.
+        // Either the resource doesn't exist, or an ID for a different resource
+        // has been provided"; payment_method_unexpected_state is what a
+        // PaymentMethod that is attached to nobody answers a detach with
+        // (https://docs.stripe.com/error-codes, fetched 2026-09-16). Neither
+        // leaves a card attached to this customer, which is the only thing
+        // being asked for, so both are finished rather than retried for ever.
+        if (in_array($code, ["resource_missing", "payment_method_unexpected_state"], true)) {
+            Log::info("Stripe: stored card was already gone", [
+                "method" => $method->id,
+                "code"   => $code,
+            ]);
+
+            return ["success" => true, "message" => "Stripe is no longer holding that card."];
+        }
+
+        // Keys for the wrong account, or live keys against a test token. Asking
+        // again changes nothing; a person has to look.
+        $permanent = $code === "livemode_mismatch";
+
+        return [
+            "success"   => false,
+            "message"   => "Stripe error: " . $response->json("error.message", "Unknown error"),
+            "retryable" => !$permanent,
+        ];
+    }
+
+    /**
      * The Stripe customer this client's cards hang off, created if need be.
      *
      * Stored cards belong to a customer record at Stripe, and a client who
@@ -593,10 +851,13 @@ HTML;
      * third answer is the one worth keeping apart from a decline, which is
      * what the three statuses in the contract are for.
      *
-     * The idempotency key covers the invoice, the card and the amount, so a
-     * job that crashes between the POST and writing down what happened can be
-     * run again without taking the money twice. Because the key expires after
-     * a day, a genuine retry tomorrow is a genuine new attempt.
+     * The idempotency key makes a job that crashes between the POST and writing
+     * down what happened safe to run again without taking the money twice.
+     * $params['idempotency_key'] is where it comes from when the caller keeps
+     * one — the attempt row writes it before the first request and hands the
+     * same string back for every repeat — and idempotencyKey() works one out
+     * from the figures when the caller keeps none. Because Stripe expires a key
+     * after a day, a genuine retry tomorrow is a genuine new attempt either way.
      *
      * Nothing is asked of Stripe until the row itself has been read. A card the
      * customer removed and a card already known to need their attention are
@@ -605,15 +866,27 @@ HTML;
      * — and because issuers read repeated attempts on a card they have already
      * refused as fraud, which drags down acceptance on the cards that would
      * have worked.
+     *
+     * $params["replay"] IS THE ONE FACT THIS MODULE CANNOT WORK OUT FOR ITSELF,
+     * and the whole of what changes when it is true. This class is stateless by
+     * design: it sees one HTTP exchange and has no idea whether the identical
+     * POST went out fifteen minutes ago under the identical key. The caller
+     * does — it is written in the attempt row, it is the reason the caller was
+     * allowed to send at all, and InvoiceChargeAttempt::repeatsARequestAlreadySent()
+     * is where it is read. True means: you have already sent this, we never
+     * heard what became of it, and that is the question you are now answering.
+     * outcomeIsIndeterminate() explains what it does with that.
      */
     public function chargeStoredMethod(Invoice $invoice, PaymentMethod $method, float $amount, array $params = []): array
     {
+        $isReplay = ($params["replay"] ?? false) === true;
+
         $secretKey = $this->getSetting("secret_key");
         if (!$secretKey) {
             // Retryable: nothing was asked of the card, so nothing has been
             // learned about it. Once a key is configured this same attempt
             // works, and refusing to try again would strand the invoice.
-            return $this->chargeFailed("Stripe secret key not configured.", null, true);
+            return $this->nothingWasSent($isReplay, "Stripe secret key not configured.", true);
         }
 
         // The card belongs to a client; the invoice belongs to a client. If
@@ -627,11 +900,11 @@ HTML;
                 "method"         => $method->id,
                 "method_client"  => $method->client_id,
             ]);
-            return $this->chargeFailed("Stored payment method does not belong to this invoice's client.");
+            return $this->nothingWasSent($isReplay, "Stored payment method does not belong to this invoice's client.");
         }
 
         if ($method->gateway_name !== "stripe") {
-            return $this->chargeFailed("Stored payment method was not stored with Stripe.");
+            return $this->nothingWasSent($isReplay, "Stored payment method was not stored with Stripe.");
         }
 
         // A card in the bin is a card the customer has told us to stop using.
@@ -645,7 +918,7 @@ HTML;
                 "method"  => $method->id,
             ]);
 
-            return $this->chargeFailed("Stored payment method has been removed.");
+            return $this->nothingWasSent($isReplay, "Stored payment method has been removed.");
         }
 
         // And a card already known to need the customer's attention is not
@@ -657,27 +930,70 @@ HTML;
                 "status"  => $method->status,
             ]);
 
-            return $this->chargeFailed("Stored payment method needs the customer to update it.");
+            return $this->nothingWasSent($isReplay, "Stored payment method needs the customer to update it.");
         }
 
         $paymentMethodId = $method->remote_token;
         $customerId      = $method->gateway_customer_id;
 
         if (!$paymentMethodId || !$customerId) {
-            return $this->chargeFailed("Stored payment method is missing its Stripe customer or token.");
+            return $this->nothingWasSent($isReplay, "Stored payment method is missing its Stripe customer or token.");
         }
 
         $currency     = strtolower($params["currency"] ?? shop_currency_code());
         $minorAmount  = $this->minorUnits($amount, $currency);
 
         if ($minorAmount <= 0) {
-            return $this->chargeFailed("Nothing left to charge on this invoice.");
+            return $this->nothingWasSent($isReplay, "Nothing left to charge on this invoice.");
         }
+
+        // THE NAME THIS REQUEST GOES OUT UNDER, AND WHO OWNS IT.
+        //
+        // The caller's, whenever the caller has one. It writes the key down
+        // before the first POST and hands the same string back on every repeat
+        // of it, which is the only way a repeat can be proved to be a repeat:
+        // this module is stateless across calls and can do nothing but work the
+        // key out again from what it has in front of it. Working it out again
+        // is what used to break — idempotencyKey() hashes the figures under
+        // config('app.key'), so an application key rotated between a send and
+        // its replay produced a different key, Stripe had no saved result to
+        // answer from, and the "replay" charged the card a second time.
+        //
+        // The derivation stays for callers with no memory of their own: the
+        // same figures give the same key, which is still right for a job that
+        // is simply run twice. It is only ever a fallback now.
+        $suppliedKey = $params["idempotency_key"] ?? null;
+        $suppliedKey = is_string($suppliedKey) && trim($suppliedKey) !== "" ? trim($suppliedKey) : null;
+
+        // AND ON A REPLAY THERE IS NO FALLBACK, because a derived key is
+        // exactly the thing that cannot be trusted to be the one the first
+        // request carried. A caller that says "you have already sent this" and
+        // cannot say what it was sent as is asking for a charge nobody can
+        // prove is a repeat, and the answer to that is to send nothing: the row
+        // stays in flight, the bounded machinery asks a few more times and then
+        // fetches a person, and no card is touched on a guess. Unreachable
+        // through AutoChargeService, which always carries the row's key, and
+        // written anyway for the same reason nothingWasSent() is: a module has
+        // to be right about its own answers whoever is asking.
+        if ($isReplay && $suppliedKey === null) {
+            return $this->nothingWasSent(
+                $isReplay,
+                "This end cannot name the idempotency key the charge in flight was sent under."
+            );
+        }
+
+        // Both of these are the same fact in two shapes: what came back, and
+        // why nothing did. They are held side by side rather than answered in
+        // two separate branches because the question that matters next — was
+        // the card charged? — is one question, and it is asked once, below.
+        $response          = null;
+        $connectionFailure = null;
 
         try {
             $response = Http::asForm()
                 ->withToken($secretKey)
-                ->withHeaders(["Idempotency-Key" => $this->idempotencyKey("offsession", [$invoice->id, $method->id, $minorAmount, $currency])])
+                ->withHeaders(["Idempotency-Key" => $suppliedKey
+                    ?? $this->idempotencyKey("offsession", [$invoice->id, $method->id, $minorAmount, $currency])])
                 ->post("https://api.stripe.com/v1/payment_intents", [
                     "amount"                 => $minorAmount,
                     "currency"               => $currency,
@@ -694,15 +1010,75 @@ HTML;
                     "metadata[invoice_num]"  => $invoice->invoice_num ?? $invoice->id,
                 ]);
         } catch (ConnectionException $e) {
-            // The request may well have reached Stripe; we simply never heard
-            // the answer. Saying so honestly and asking for another attempt is
-            // safe precisely because the key above makes the second attempt
-            // the same request rather than a second charge.
-            Log::warning("Stripe: off-session charge could not be sent", [
-                "invoice" => $invoice->id,
-                "error"   => $e->getMessage(),
+            // Nothing is decided here. A dropped connection is one of the
+            // shapes of "we do not know", not a second kind of answer, and the
+            // moment it was allowed to decide for itself was the moment the
+            // three branches of this method started disagreeing about the same
+            // customer's money.
+            $connectionFailure = $e->getMessage();
+        }
+
+        // =====================================================================
+        // THE ONE QUESTION: DO WE KNOW WHETHER THE CARD WAS CHARGED?
+        //
+        // Asked once, of one predicate, before anything else about this
+        // response is read — before the body, before the decline codes, before
+        // the card is written to and before a retry is scheduled. Every branch
+        // below it may assume the answer is yes.
+        //
+        // IT USED TO BE THREE DECISIONS IN THREE PLACES AND THEY DID NOT AGREE.
+        // A dropped connection returned outcome_unknown here; a 2xx carrying an
+        // unfinished intent returned outcome_unknown a few lines down; and an
+        // HTTP 500 — the case Stripe documents in as many words as
+        // indeterminate — fell through to the refusal branch and was recorded
+        // as an ordinary retryable decline. All three are the same fact about
+        // the same customer's money, and the odd one out was the one that
+        // scheduled a second real debit for it three days later, outside the
+        // twenty-four hours Stripe keeps the idempotency key that would have
+        // made the repeat a replay rather than a charge.
+        //
+        // outcomeIsIndeterminate() carries the evidence for which HTTP answers
+        // belong in here and which do not.
+        // =====================================================================
+        if ($this->outcomeIsIndeterminate($response?->status(), $isReplay)) {
+            // AT ERROR LEVEL FOR BOTH SHAPES. This is the only outcome this
+            // module produces that can leave a customer's money somewhere
+            // nothing has written down; it costs an operator one log line in a
+            // rare case, and it is the last channel standing when the others
+            // are ignored.
+            Log::error("Stripe: an off-session charge was sent and no answer came back that says what became of it", [
+                "invoice"      => $invoice->id,
+                "method"       => $method->id,
+                "status"       => $response?->status(),
+                "error"        => $connectionFailure ?? $response?->json("error.message"),
+                "code"         => $response?->json("error.code"),
+                // WHICH QUESTION WAS BEING ASKED. A 429 or a 401 in the status
+                // above reads as a plain refusal until you know this was a
+                // repeat, at which point it reads as what it is: an answer that
+                // never looked at the charge we are asking about. It is the
+                // second thing a person opening the parked row needs.
+                "replay"       => $isReplay,
+                // RECORDED, NEVER OBEYED. outcomeIsIndeterminate() explains why
+                // this module does not let Stripe-Should-Retry answer the
+                // question above; it is logged because it is the first thing a
+                // person opening the parked row will want to see.
+                "should_retry" => ($response?->header("Stripe-Should-Retry") ?: null),
             ]);
-            return $this->chargeFailed("Stripe could not be reached: " . $e->getMessage(), null, true);
+
+            // The caller has exactly the machinery for this: the attempt row
+            // stays in flight and the fifteen-minute rescue sweep replays it
+            // INSIDE the window, where the same key returns the first
+            // request's own result — "Subsequent requests with the same key
+            // return the same result, including 500 errors"
+            // (https://docs.stripe.com/api/idempotent_requests, fetched
+            // 2026-09-17) — so we learn what became of it without the card
+            // being asked twice. Bounded by InvoiceChargeAttempt's
+            // REPLAY_WINDOW_SECONDS, measured from the FIRST send, and by
+            // MAX_REPLAYS; when either runs out the row goes to a person
+            // rather than to a card.
+            return $this->outcomeUnknown($connectionFailure !== null
+                ? "Stripe could not be reached: " . $connectionFailure
+                : "Stripe answered " . $response->status() . " and did not say whether the charge went through.");
         }
 
         if ($response->successful()) {
@@ -736,16 +1112,28 @@ HTML;
 
             // Anything else — 'processing' above all — means Stripe has the
             // request but has not said the money is there. Not a success: the
-            // invoice must not be credited on a maybe. Not a dead end either,
-            // so another look later is worth having, and the webhook will say
-            // what became of it in the meantime.
+            // invoice must not be credited on a maybe. And not a failure
+            // either, which is what it used to be reported as: a retryable
+            // failure is scheduled for the day after next, by which time the
+            // idempotency key has been pruned and the retry is a brand new
+            // charge for a payment that was very likely completing while we
+            // called it failed.
+            //
+            // The intent id is deliberately NOT returned. On an in-flight row
+            // last_transaction_id means one thing only — "the gateway has
+            // answered and the ledger owes an entry" — and AutoChargeService's
+            // rescue sweep credits such a row from our own records without
+            // asking anybody. Handing it the id of a payment that is merely
+            // processing would credit an invoice against money that may never
+            // arrive. What resolves this is the replay inside the window, or
+            // the payment_intent webhook, or a person.
             Log::info("Stripe: off-session charge is not finished", [
                 "invoice" => $invoice->id,
                 "intent"  => $intent["id"] ?? null,
                 "status"  => $status,
             ]);
 
-            return $this->chargeFailed("Stripe returned an unfinished payment (status: " . ($status ?: "unknown") . ").", null, true);
+            return $this->outcomeUnknown("Stripe returned an unfinished payment (status: " . ($status ?: "unknown") . ").");
         }
 
         $error       = (array) $response->json("error", []);
@@ -772,7 +1160,7 @@ HTML;
         // codes it tests for are the same ones the retry list reads, so a
         // refusal that slips past this branch is still refused a retry rather
         // than being handed to a dunning loop that can never satisfy it.
-        if ($response->status() === 402 && $this->cardholderMustAuthenticate($error)) {
+        if ($response->status() === self::CARD_DECLINED && $this->cardholderMustAuthenticate($error)) {
             return [
                 "success"        => false,
                 "status"         => "requires_action",
@@ -800,7 +1188,7 @@ HTML;
         return $this->chargeFailed(
             "Stripe error: " . $message,
             $declineCode ?: $code,
-            $this->declineIsRetryable($error, $response->status())
+            $this->declineIsRetryable($error, $response->status(), $isReplay)
         );
     }
 
@@ -822,6 +1210,284 @@ HTML;
             "retryable"    => $retryable,
         ];
     }
+
+    /**
+     * The charge was sent and what became of it is not known.
+     *
+     * Kept apart from chargeFailed() because the two mean opposite things about
+     * the customer's money: a failure says nothing was taken, and this says
+     * something may have been. retryable is false so that a caller which has
+     * never heard of outcome_unknown cannot schedule a fresh charge on the
+     * strength of it — the safe reading for an old caller is "do not try
+     * again", not "try again tomorrow".
+     *
+     * WHICH ANSWERS ARRIVE HERE IS outcomeIsIndeterminate()'S QUESTION AND
+     * NOTHING ELSE'S. Three doors lead in: that predicate, asked once of the
+     * HTTP exchange (no answer, 5xx, 424, and on a replay everything that is
+     * not the gateway's own word on the charge); the unfinished-intent branch,
+     * where a 2xx says the gateway has the payment but not that the money is
+     * there; and nothingWasSent() on a replay, where this end refused before
+     * the POST and so learned nothing at all. The second is a different kind of
+     * evidence rather than a second opinion — it reads the body, not the status
+     * — and it is deliberately not folded into the predicate, which would then
+     * be answering two questions with one name.
+     */
+    private function outcomeUnknown(string $message): array
+    {
+        return [
+            "success"         => false,
+            "status"          => "failed",
+            "outcome_unknown" => true,
+            "message"         => $message,
+            "decline_code"    => null,
+            "retryable"       => false,
+        ];
+    }
+
+    /**
+     * This end refused before anything went out — and on a replay that is not
+     * an answer about the charge that DID go out.
+     *
+     * Every refusal above the POST is a fact about the state of things right
+     * now: no secret key, a card the customer has since removed, a card the
+     * issuer has already finished with. On a first send that is the whole
+     * truth, and chargeFailed() is the honest report of it: nothing was taken,
+     * because nothing was sent.
+     *
+     * ON A REPLAY THE SAME SENTENCE IS TRUE AND IRRELEVANT. A replay only
+     * happens because a charge WAS sent, minutes ago, and nobody heard what
+     * became of it; that is the open question, and "we declined to send
+     * anything this time" says nothing whatever about it. Reported as a failure
+     * it closes the question with an answer to a different one — and the
+     * closing is not harmless either way round. A refusal carrying
+     * retryable => true (a missing secret key is one) schedules a fresh charge
+     * three days out, against a key Stripe pruned two days earlier, which is a
+     * second real debit; a refusal carrying retryable => false writes the row
+     * off as exhausted, where none of the operator's channels fires and the
+     * first charge is never looked at by anybody.
+     *
+     * So on a replay these all become outcomeUnknown(), and the row stays in
+     * flight for the bounded machinery that already owns unknown outcomes: a
+     * few more replays, then the deadline or the cap, then a person.
+     *
+     * The caller's own guards make this belt rather than braces — AutoCharge
+     * resolves a chargeable card before it claims anything, so most of these
+     * cannot be reached on a replay through it. It is written anyway, because
+     * a module must be right about what its own answers mean whoever is asking.
+     */
+    private function nothingWasSent(bool $isReplay, string $message, bool $retryable = false): array
+    {
+        if ($isReplay) {
+            return $this->outcomeUnknown(
+                $message . " Nothing was sent this time, so what became of the charge already sent is still unknown."
+            );
+        }
+
+        return $this->chargeFailed($message, null, $retryable);
+    }
+
+    /**
+     * DOES THIS ANSWER LEAVE IT UNKNOWN WHETHER THE CARD WAS CHARGED?
+     *
+     * AND IT IS NOT THE SAME QUESTION ON A FIRST SEND AS ON A REPLAY, which is
+     * the distinction $isReplay carries in and the one this predicate was
+     * missing. On a first send the question is "did THIS request take money?".
+     * On a replay the money at stake was put at stake by a request that went
+     * out minutes ago and was never heard about, so the question is "does this
+     * answer tell me what became of THAT one?" — and most answers do not, while
+     * reading exactly like answers that do.
+     *
+     * The single place that question is decided in this module, and the reason
+     * it is a named predicate rather than a condition inside whichever branch
+     * happened to need it: "we do not know" is one concept, every path has to
+     * mean the same thing by it, and every path that answers yes has to end up
+     * in the same machinery. Answering yes routes the charge to
+     * outcomeUnknown(), which the caller holds in flight, replays inside the
+     * gateway's idempotency window a bounded number of times, and finally hands
+     * to a person. Answering no says the card's fate is known and licenses
+     * everything the refusal branch does with it: marking the card, telling the
+     * customer their payment failed, and scheduling a fresh charge days later.
+     *
+     * NULL IS NO ANSWER AT ALL — a dropped connection, a read timeout. The
+     * request may have reached Stripe and Stripe may have reached the payment
+     * network; nothing this end can see which. It is passed in as null rather
+     * than handled in its own branch so that the transport case and the HTTP
+     * case cannot drift apart again.
+     *
+     * 5xx IS INDETERMINATE, AND STRIPE SAYS SO WITHOUT QUALIFICATION. "You
+     * should treat the result of a `500` request as indeterminate." — "Treat
+     * requests that return `500` errors as indeterminate." — "if creating a
+     * charge returns a `500` error but we detect that the information has gone
+     * out to a payment network, we'll try to roll it forward. If not, we'll try
+     * to roll it back. If this doesn't resolve the issue, you may still see
+     * requests with a `500` error that produce user-visible side effects."
+     * (https://docs.stripe.com/error-low-level, fetched 2026-09-17.) The table
+     * on that same page groups 500, 502, 503 and 504 together as "Server
+     * Errors"; the ones that are not 500 are, if anything, less determinate
+     * still, because a 502 or a 504 is typically written by something in front
+     * of the API that has no idea what the API did. So the whole range is in.
+     *
+     * 424 IS INDETERMINATE TOO, and this is a judgement rather than a quotation
+     * so it is worth the paragraph. Stripe documents it as "External Dependency
+     * Failed: The request couldn't be completed due to a failure in a
+     * dependency external to Stripe" and says nothing else about it. Three
+     * things decide it. First, for a card charge the external dependency IS the
+     * payment network, which is precisely the place Stripe's own 500 wording
+     * says a charge may have reached before the failure. Second, "couldn't be
+     * completed" describes the request, not the money: nowhere does the
+     * documentation say the operation did not execute — contrast the sentence
+     * quoted under 429 below, which says exactly that and is why 429 is treated
+     * as the opposite. Third, Stripe's rule for 4xx is that "as long as an API
+     * method began execution, Stripe's API servers will cache the results of
+     * the request regardless of what they were", and a dependency failure is by
+     * definition something that happened after execution began — so a 424 is
+     * cached like any other answer, and a repeat sent after the key is pruned
+     * is a brand-new charge in exactly the way a repeated 500 is. With no
+     * evidence that the card was not charged, the only honest answer is that we
+     * do not know.
+     *
+     * 429 ON A FIRST SEND IS NOT INDETERMINATE, and it deliberately keeps its
+     * ordinary retryable-decline treatment. "a request that's rate limited with
+     * a `429` can produce a different result with the same idempotency key
+     * because rate limiters run before the API's idempotency layer" (same
+     * page). Running before the idempotency layer means running before the API
+     * method: the request never executed, no card was touched, and nothing was
+     * cached — so a fresh request days later is a first charge, which is what
+     * the retry schedule is for. Treating it as indeterminate everywhere would
+     * park a perfectly ordinary "come back later" for a human, and turn a
+     * throttled morning into a queue of invoices nobody may collect.
+     *
+     * 429 ON A REPLAY IS THE SAME SENTENCE READ THE OTHER WAY ROUND, and this
+     * is the whole of what $isReplay changes. "Rate limiters run before the
+     * API's idempotency layer" means the rate limiter answered WITHOUT the
+     * saved record of the first request ever being looked at. On a first send
+     * that is reassuring — nothing ran. On a replay it is the opposite: this
+     * answer is silent about the one thing we are asking, and the first
+     * request's own outcome is exactly as unknown after it as before it.
+     * Believed as an ordinary retryable decline it scheduled a fresh charge
+     * three days out, forty-eight hours after Stripe pruned the key, on top of
+     * a charge the 500 above forbids us to assume failed. Measured on the real
+     * crontab: two real requests at Stripe, seventy-two hours apart, one
+     * idempotency key, and an invoice the panel reports as paid once.
+     *
+     * 4xx OTHERWISE, ON A FIRST SEND, IS NOT INDETERMINATE. A 402 is the
+     * issuer's answer, a 400 is our own request being wrong, a 401 never
+     * reached the account, and a 409 is the idempotency layer refusing THIS
+     * request outright — in every one of them the API has told us what happened
+     * to this charge, which on a first send is the only charge there is.
+     *
+     * ON A REPLAY THE LIST IS INVERTED, AND DELIBERATELY SO. Asking which
+     * statuses are produced before the idempotency layer means keeping a
+     * running list of Stripe's pre-execution failures and being wrong the day
+     * they add one — the mistake that put the 5xx test in declineIsRetryable()
+     * and left 429 out of this one. The question is asked from the other end
+     * instead: which answers can ONLY have come from the record of the original
+     * request? Two. A 2xx, which is the saved PaymentIntent (or, inside the
+     * window with the key still held, a fresh one that is the same thing), and
+     * a 402, which is the issuer's verdict on this charge — Stripe "saves the
+     * resulting status code and body of the first request made for any given
+     * idempotency key, regardless of whether it succeeds or fails", so a 402
+     * arriving on a replay is the first request's own decline being read back.
+     * Everything else — 429, 401, 403, 404, 409, 400, one Stripe has not
+     * invented yet — is treated as silence about the original, and silence is
+     * what the in-flight machinery is for. It costs a replay, and past the cap
+     * or the deadline it costs a person's attention; it cannot cost a second
+     * debit.
+     *
+     * AND THIS MODULE DOES NOT READ Stripe-Should-Retry, which is a deliberate
+     * refusal rather than an oversight. Stripe documents it as "`true`
+     * indicates that a client should retry the request", "`false` means that a
+     * client should *not* retry the request because it won't have an additional
+     * effect", and absent means "the API can't determine whether or not it can
+     * retry the request. Clients should fall back to other properties of the
+     * response (like the status code)". Three reasons not to consult it here:
+     *
+     *  - IT ANSWERS A DIFFERENT QUESTION. Every value of it is about whether to
+     *    send this request AGAIN; none of them is about whether the FIRST one
+     *    reached a payment network. Stripe's indeterminacy sentence about 500s
+     *    is not qualified by the header anywhere on the page.
+     *  - IT IS ON A DIFFERENT CLOCK. The header is written for a client library
+     *    repeating the request in milliseconds with the same key, inside the
+     *    retention window. "Retryable" in the engine that reads this module
+     *    means "raise a fresh charge three days from now, against a key Stripe
+     *    will have pruned". Letting a header that means "try again in 200ms"
+     *    authorise that is the very confusion this whole class of defect is
+     *    made of.
+     *  - THE THING A `true` WOULD BUY IS ALREADY BUILT. An immediate repeat
+     *    with the same key is what the rescue sweep does — bounded, recorded,
+     *    and with a person at the end of it. A second retry mechanism inside
+     *    this method would be another place deciding the same thing, which is
+     *    what this predicate exists to stop.
+     *
+     * The fallback the header's absence prescribes — judge by the status code —
+     * is therefore what this module does in every case. The value is logged
+     * where an indeterminate answer is raised, so an operator investigating one
+     * can see what Stripe thought, without it ever deciding anything.
+     */
+    private function outcomeIsIndeterminate(?int $status, bool $isReplay = false): bool
+    {
+        // No answer arrived, so there is nothing to read and nothing to know.
+        if ($status === null) {
+            return true;
+        }
+
+        if ($status >= 500 || $status === self::EXTERNAL_DEPENDENCY_FAILED) {
+            return true;
+        }
+
+        // A first send: the answer is about the only request there is.
+        if (!$isReplay) {
+            return false;
+        }
+
+        return !$this->answersForTheOriginalRequest($status);
+    }
+
+    /**
+     * Could this answer only have come from the gateway's record of the request
+     * we are asking about?
+     *
+     * An allow-list, and small on purpose. Its job is to be wrong in the
+     * direction of a person rather than in the direction of a card: a status
+     * left out of it that really was the saved result costs one review, and a
+     * status wrongly let in costs a customer a second debit.
+     *
+     * 2xx is the PaymentIntent — succeeded, requires_action, or still
+     * processing, which the branch below the predicate turns back into an
+     * unknown outcome on its own evidence. 402 is the issuer's verdict, and
+     * Stripe only sets a decline_code "for card errors resulting from a card
+     * issuer decline" (https://docs.stripe.com/api/errors), so it is the one
+     * refusal that cannot have been written before the charge was attempted.
+     *
+     * Both are reachable on a replay only because the caller proved the key is
+     * still held before it sent — InvoiceChargeAttempt::REPLAY_WINDOW_SECONDS —
+     * so an answer arriving here has either been served out of the saved record
+     * or been produced by the one request that record belongs to.
+     */
+    private function answersForTheOriginalRequest(int $status): bool
+    {
+        return ($status >= 200 && $status < 300) || $status === self::CARD_DECLINED;
+    }
+
+    /**
+     * "External Dependency Failed", the one 4xx that does not tell us what
+     * became of the charge. Named rather than written as a bare 424 at the
+     * point of use, because a bare number in a condition is how the 5xx test
+     * came to be sitting in declineIsRetryable() answering the wrong question.
+     * https://docs.stripe.com/error-low-level (HTTP status code reference)
+     */
+    private const EXTERNAL_DEPENDENCY_FAILED = 424;
+
+    /** Too many requests: refused before the API method ran, so nothing happened. */
+    private const RATE_LIMITED = 429;
+
+    /**
+     * The issuer answered. Named for the same reason 424 is: it is the one
+     * refusal that can only have been written after the charge was put to a
+     * card, which is what makes it safe to resolve a replay with.
+     * https://docs.stripe.com/error-low-level (HTTP status code reference)
+     */
+    private const CARD_DECLINED = 402;
 
     /**
      * Declines that will not change their mind.
@@ -981,14 +1647,50 @@ HTML;
      * issuer decline" (https://docs.stripe.com/api/errors) — a refusal that
      * carries one is an issuer's answer by definition.
      *
-     * The rest divides the way the documentation does: a bad minute at Stripe
-     * or too many requests is worth repeating, an invalid request is not unless
-     * it is one of the three that describe a moment, and an idempotency error
-     * means the same key was sent with different parameters, which will be just
-     * as true tomorrow.
+     * The rest divides the way the documentation does: being asked to slow down
+     * is worth repeating, an invalid request is not unless it is one of the
+     * three that describe a moment, and an idempotency error means the same key
+     * was sent with different parameters, which will be just as true tomorrow.
+     *
+     * WHAT IS NO LONGER HERE IS THE 5xx. "A bad minute at Stripe is worth
+     * repeating" reads as common sense and was the whole defect: repeating it
+     * meant a fresh charge three days later, by which time Stripe has pruned
+     * the idempotency key that would have made the repeat a replay, for a
+     * charge Stripe's own documentation forbids us to assume failed. That
+     * question belongs to outcomeIsIndeterminate() and is settled before this
+     * method is reached.
      */
-    private function declineIsRetryable(array $error, ?int $status = null): bool
+    private function declineIsRetryable(array $error, ?int $status = null, bool $isReplay = false): bool
     {
+        // NOBODY MAY ASK THIS ABOUT AN OUTCOME THAT IS NOT KNOWN, and asking it
+        // anyway is the defect this guard closes. "Is another attempt worth
+        // making?" presupposes that this attempt is over and took no money;
+        // where that is not established the question has no true answer, and
+        // the answer it used to be given — yes, on the strength of a 5xx —
+        // scheduled a fresh charge three days out for a charge that may already
+        // have gone through.
+        //
+        // The charge path settles indeterminacy before it gets here, so this is
+        // belt rather than braces. It is written anyway because this method has
+        // a second caller and will acquire more, and because false is the safe
+        // reading for one that forgets: it stops the dunning cycle rather than
+        // authorising a debit.
+        //
+        // $status === null is excluded on purpose. It means "no HTTP answer at
+        // all" on the charge path — where outcomeIsIndeterminate() has already
+        // caught it — but webhookPaymentFailed() passes no status because there
+        // was no request: the event IS Stripe telling us the payment failed,
+        // which is as determinate as an answer gets. Reading its null as an
+        // unknown outcome would mark every failed-payment webhook unretryable.
+        //
+        // $isReplay defaults to false for the same caller. A webhook is not a
+        // presentation of anything, so there is no earlier request of ours for
+        // its verdict to be silent about; false is both the true value and the
+        // one that leaves that path untouched.
+        if ($status !== null && $this->outcomeIsIndeterminate($status, $isReplay)) {
+            return false;
+        }
+
         $advice = $error["advice_code"] ?? null;
 
         if ($advice === "do_not_try_again" || $advice === "confirm_card_data") {
@@ -999,10 +1701,24 @@ HTML;
             return true;
         }
 
-        // Stripe having trouble, or asking us to slow down. Both are about the
-        // connection rather than the card, so they are answered before anything
-        // in the body is read. https://docs.stripe.com/api/errors
-        if ($status !== null && ($status >= 500 || $status === 429)) {
+        // Asked to slow down, on a request that is the first of its kind. The
+        // card was never reached: "a request that's rate limited with a `429`
+        // can produce a different result with the same idempotency key because
+        // rate limiters run before the API's idempotency layer"
+        // (https://docs.stripe.com/error-low-level, fetched 2026-09-17), and
+        // running before the idempotency layer means running before the API
+        // method. Nothing executed, nothing was cached, and the next attempt is
+        // a first attempt — so this is an ordinary retry and not one of
+        // outcomeIsIndeterminate()'s cases, which is why the 5xx test that used
+        // to share this line is no longer on it.
+        //
+        // A REPLAY NEVER REACHES THIS LINE, and the same sentence is why. An
+        // answer the rate limiter wrote is an answer the record of the original
+        // request was never consulted for, so on a replay it is silence rather
+        // than a verdict; the guard above has already sent it to
+        // outcomeUnknown(). Written as a first-send rule and left here because
+        // that is what it is, rather than deleted and rediscovered later.
+        if ($status === self::RATE_LIMITED) {
             return true;
         }
 
@@ -1017,10 +1733,14 @@ HTML;
             "api_error"             => true,
             "invalid_request_error" => in_array($error["code"] ?? null, self::RETRYABLE_REQUEST_CODES, true),
             "idempotency_error"     => false,
-            // A refusal that named no type at all. Nothing has been learned
-            // about the card, so the only honest reading is the transport's:
-            // worth another go unless the status said otherwise.
-            default                 => $status === null || $status >= 500,
+            // A refusal that named no type at all, from a status that says the
+            // charge is over. The only reading left is the webhook's: no HTTP
+            // exchange, nothing learned about the card, worth another go. The
+            // "or the status was 5xx" half this arm used to carry is gone — a
+            // 5xx never reaches this method now, and leaving the claim in place
+            // would be a second opinion about indeterminacy sitting in the one
+            // file that must only have one.
+            default                 => $status === null,
         };
     }
 
@@ -1386,7 +2106,7 @@ HTML;
         // delivery fail: the event stays claimed and unstamped, Stripe
         // redelivers for up to three days (https://docs.stripe.com/webhooks),
         // and the next delivery writes the row the first one could not.
-        PaymentMethod::updateOrCreate(
+        $stored = PaymentMethod::updateOrCreate(
             [
                 "client_id"    => $clientId,
                 "gateway_name" => "stripe",
@@ -1394,6 +2114,15 @@ HTML;
             ],
             $columns
         );
+
+        // A stored card nothing points at is a stored card the charger will not
+        // use. AutoChargeService refuses to choose between several cards when
+        // none is marked, so without this the first card a client stores leaves
+        // them with automatic payment switched on, a card on file, and a
+        // collection that stops at the second card with nothing said to anybody
+        // but the log. The model holds the rule, including its refusal to
+        // demote a default the customer picked themselves.
+        $stored->becomeDefaultIfClientHasNone();
 
         // The customer this card hangs off, in the place that is asked first
         // next time. Normally it is already there, written when the customer

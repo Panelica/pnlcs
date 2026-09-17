@@ -500,4 +500,12 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
     'company_lookup.deactivated' => '公司查询已停用。',
     'company_lookup.key_configured' => '已配置',
     'company_lookup.key_missing' => '未配置',
+    'auto_charge' => [
+        'needs_review_subject' => '请核查支付网关：:count 张账单可能已经被扣款',
+        'needs_review_body' => '以下账单已发出自动银行卡扣款，但其结果从未被记录，因此款项可能已从客户的银行卡扣除而未在此处留下记录。
+
+账单：:invoices
+
+请打开支付网关，查明每一笔的结果。任何自动流程都不会再次对这些账单扣款 - 面板在每张账单自己的页面上等待您处理。',
+    ],
 ];

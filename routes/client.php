@@ -206,6 +206,15 @@ Route::prefix('client')->name('client.')->middleware('banned.ip')->group(functio
         Route::post('payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
         Route::post('payment-methods/{paymentMethod}/default', [PaymentMethodController::class, 'setDefault'])->name('payment-methods.default');
         Route::delete('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+        // The customer's own stop switch for automatic card payment. 404s while
+        // the shop is not collecting by card, which is also when the page does
+        // not render it.
+        Route::post('payment-methods/auto-charge', [PaymentMethodController::class, 'autoCharge'])->name('payment-methods.auto-charge');
+        // Storing a card with the tokenising gateway. Both 404 unless the shop
+        // collects by card and has a gateway that can store one — a card form
+        // that leads nowhere must not be reachable at all.
+        Route::get('payment-methods/add-card', [PaymentMethodController::class, 'createCard'])->name('payment-methods.add-card');
+        Route::post('payment-methods/add-card', [PaymentMethodController::class, 'storeCard'])->name('payment-methods.store-card');
 
         // Email history
         Route::get('emails', [EmailController::class, 'index'])->name('emails.index');

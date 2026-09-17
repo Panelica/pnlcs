@@ -2963,4 +2963,26 @@ return [
     'clients.domain_first_payment' => '首次付款金额',
     'clients.add_domain_renewal_note' => '只要续费价格大于零，续费账单将根据下次到期日和续费价格自动生成。',
     'clients.domain_added' => '域名已添加到该客户。',
+
+    // 自动付款：对已保存银行卡扣款的运营开关。
+    'settings.auto_charge' => '自动付款',
+    'settings.auto_charge_enabled' => '使用客户已保存的银行卡支付账单',
+    'settings.auto_charge_days_before' => '在到期日前多少天扣款',
+    'settings.auto_charge_max_attempts' => '每张账单的尝试次数',
+    'settings.auto_charge_retry_days' => '两次尝试之间的间隔天数',
+    'settings.auto_charge_hint' => '默认关闭；关闭时不会发生任何扣款：账单的生成与发送与现在完全相同。开启后，未付的续费账单将使用其绑定的银行卡扣款，每个间隔最多一次，且不超过设定的尝试次数；已被银行彻底拒绝的银行卡不会被再次尝试。两次尝试的间隔不得少于一天，因为支付网关会在二十四小时内以自身记录回应重复的同一笔扣款，而不会再次向银行卡发起请求。系统会收取所有到期且未支付的账单，而不仅仅是续费账单 —— 包括您开启当天已经欠付的任何账单，无论多久以前。请先运行 php artisan pnlcs:auto-charge --dry-run，查看第一个早晨究竟会扣哪些款。',
+
+    'dashboard.charges_need_review' => '笔银行卡扣款需要核查',
+    'invoices.filter_charge_review' => '需要核查',
+    'invoices.charge_review_title' => '这张账单需要在支付网关核查',
+    'invoices.charge_review_body' => '本账单已发出自动银行卡扣款，但其结果从未被记录，因此款项可能已被扣除，也可能没有。请打开支付网关查明。在您于下方放行之前，任何自动流程都不会再次对这张账单扣款。',
+    'invoices.charge_review_amount' => '请求金额',
+    'invoices.charge_review_sent' => '移交核查时间',
+    'invoices.charge_review_reference' => '网关参考号',
+    'invoices.charge_review_release' => '放行以恢复自动收款',
+    'invoices.charge_review_release_hint' => '请仅在核查网关之后操作。如果款项确实已经扣除，请将其记入本账单，而不是放行。',
+    'invoices.charge_review_confirm' => '您已经核查过支付网关了吗？放行后将允许再次对该银行卡扣款。',
+    'invoices.charge_review_released' => '已放行。自动收款可以再次对这张账单扣款。',
+    'invoices.charge_review_released_log' => '操作员核查支付网关后，已放行自动银行卡扣款',
+    'invoices.charge_review_nothing' => '这张账单上没有等待核查的内容。',
 ];

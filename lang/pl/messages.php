@@ -501,4 +501,12 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
     'company_lookup.deactivated' => 'Wyszukiwanie firmy dezaktywowane.',
     'company_lookup.key_configured' => 'Skonfigurowany',
     'company_lookup.key_missing' => 'Nie skonfigurowany',
+    'auto_charge' => [
+        'needs_review_subject' => 'Sprawdź bramkę płatniczą: :count faktura(y) mogły już zostać obciążone',
+        'needs_review_body' => 'Dla poniższych faktur wysłano automatyczne obciążenie karty, a jego wynik nigdy nie został zapisany, więc pieniądze mogły zostać pobrane z karty klienta bez zapisania tego tutaj.
+
+Faktury: :invoices
+
+Otwórz bramkę płatniczą i sprawdź, co stało się z każdą z nich. Żaden automat nie obciąży tych faktur ponownie - panel czeka na Ciebie, na stronie każdej z faktur.',
+    ],
 ];

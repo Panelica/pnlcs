@@ -2963,4 +2963,28 @@ return [
     'clients.domain_first_payment' => 'First payment amount',
     'clients.add_domain_renewal_note' => 'A renewal invoice is raised automatically from the next due date and the renewal price, as long as the renewal price is above zero.',
     'clients.domain_added' => 'Domain added to the client.',
+
+    // Automatic payment: the operator switches for charging a stored card.
+    'settings.auto_charge' => 'Automatic Payment',
+    'settings.auto_charge_enabled' => 'Pay invoices with the card the customer has stored',
+    'settings.auto_charge_days_before' => 'Charge this many days before the due date',
+    'settings.auto_charge_max_attempts' => 'Attempts per invoice',
+    'settings.auto_charge_retry_days' => 'Days between attempts',
+    'settings.auto_charge_hint' => 'Off by default, and while it is off nothing is ever charged: invoices are raised and sent exactly as they are today. Switched on, an unpaid renewal invoice is presented to the card recorded against it, at most once per interval and no more than the given number of attempts; a card the bank has finished with is not asked a second time. Fewer than one day between attempts is not allowed, because the gateway answers a repeat of the same charge within twenty-four hours from its own record instead of asking the card again. It collects every invoice that is due and not paid, not only renewals - including anything already owed on the day you switch it on, however old. Run php artisan pnlcs:auto-charge --dry-run first to see exactly what the first morning would charge.',
+
+    // Automatic payment: what an operator is shown when a charge was sent and
+    // its outcome could not be established. See AutoChargeService::alertOperator.
+    'dashboard.charges_need_review' => 'card charges need checking',
+    'invoices.filter_charge_review' => 'Needs checking',
+    'invoices.charge_review_title' => 'This invoice needs checking at the payment gateway',
+    'invoices.charge_review_body' => 'An automatic card payment was sent for this invoice and its outcome was never recorded, so the money may or may not have been taken. Open the gateway and find out. Nothing automatic will charge this invoice again until you release it below.',
+    'invoices.charge_review_amount' => 'Amount asked for',
+    'invoices.charge_review_sent' => 'Left for checking',
+    'invoices.charge_review_reference' => 'Gateway reference',
+    'invoices.charge_review_release' => 'Release for automatic collection',
+    'invoices.charge_review_release_hint' => 'Only once you have checked the gateway. If the payment did go through, record it against this invoice instead of releasing it.',
+    'invoices.charge_review_confirm' => 'Have you checked the gateway? Releasing this allows the card to be charged again.',
+    'invoices.charge_review_released' => 'Released. Automatic collection may charge this invoice again.',
+    'invoices.charge_review_released_log' => 'Automatic card payment released for collection after an operator checked the gateway',
+    'invoices.charge_review_nothing' => 'There is nothing waiting to be checked on this invoice.',
 ];

@@ -501,4 +501,12 @@ API access may be broken. While the balance cannot be read, no low-balance warni
     'company_lookup.deactivated' => 'Company Lookup deactivated.',
     'company_lookup.key_configured' => 'Configured',
     'company_lookup.key_missing' => 'Not configured',
+    'auto_charge' => [
+        'needs_review_subject' => 'Check the payment gateway: :count invoice(s) may already have been charged',
+        'needs_review_body' => 'An automatic card payment was sent for the invoice(s) below and its outcome was never recorded, so money may have left a customer\'s card without being recorded here.
+
+Invoices: :invoices
+
+Open the gateway and find out what became of each of them. Nothing automatic will charge these invoices again - the panel is waiting for you, on each invoice\'s own page.',
+    ],
 ];

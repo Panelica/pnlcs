@@ -2963,4 +2963,26 @@ return [
     'addon_modules' => [
         'changelog' => 'Değişiklik Günlüğü',
     ],
+
+    // Otomatik odeme: kayitli kartla tahsilat icin operator anahtarlari.
+    'settings.auto_charge' => 'Otomatik Ödeme',
+    'settings.auto_charge_enabled' => 'Faturaları müşterinin kayıtlı kartıyla öde',
+    'settings.auto_charge_days_before' => 'Vadeden kaç gün önce çekilsin',
+    'settings.auto_charge_max_attempts' => 'Fatura başına deneme sayısı',
+    'settings.auto_charge_retry_days' => 'Denemeler arası gün',
+    'settings.auto_charge_hint' => 'Varsayılan olarak kapalıdır ve kapalıyken hiçbir tahsilat yapılmaz: faturalar bugünkü gibi oluşturulur ve gönderilir. Açıldığında, ödenmemiş bir yenileme faturası kendisine kayıtlı kartla tahsil edilmeye çalışılır; her aralıkta en fazla bir kez ve verilen deneme sayısını aşmadan. Bankanın kesin olarak reddettiği bir kart ikinci kez denenmez. Denemeler arasına bir günden az süre konamaz; çünkü ödeme sağlayıcı yirmi dört saat içinde tekrarlanan aynı tahsilatı karta yeniden sormak yerine kendi kaydından yanıtlar. Yalnızca yenilemeler değil, vadesi gelmiş ve ödenmemiş tüm faturalar tahsil edilir; bunu açtığınız gün ne kadar eski olursa olsun birikmiş tüm borçlar dahildir. İlk sabah nelerin tahsil edileceğini görmek için önce php artisan pnlcs:auto-charge --dry-run komutunu çalıştırın.',
+
+    'dashboard.charges_need_review' => 'kart tahsilatı kontrol bekliyor',
+    'invoices.filter_charge_review' => 'Kontrol bekliyor',
+    'invoices.charge_review_title' => 'Bu fatura ödeme sağlayıcıda kontrol edilmeli',
+    'invoices.charge_review_body' => 'Bu fatura için otomatik kart tahsilatı gönderildi ve sonucu hiçbir zaman kaydedilmedi; para çekilmiş de olabilir, çekilmemiş de. Ödeme sağlayıcıyı açıp durumu öğrenin. Aşağıdan serbest bırakmadığınız sürece hiçbir otomatik işlem bu faturayı yeniden tahsil etmeye çalışmaz.',
+    'invoices.charge_review_amount' => 'İstenen tutar',
+    'invoices.charge_review_sent' => 'Kontrole bırakıldı',
+    'invoices.charge_review_reference' => 'Sağlayıcı referansı',
+    'invoices.charge_review_release' => 'Otomatik tahsilata geri ver',
+    'invoices.charge_review_release_hint' => 'Yalnızca ödeme sağlayıcıyı kontrol ettikten sonra. Ödeme gerçekleşmişse serbest bırakmak yerine bu faturaya kaydedin.',
+    'invoices.charge_review_confirm' => 'Ödeme sağlayıcıyı kontrol ettiniz mi? Serbest bırakmak kartın yeniden tahsil edilmesine izin verir.',
+    'invoices.charge_review_released' => 'Serbest bırakıldı. Otomatik tahsilat bu faturayı yeniden deneyebilir.',
+    'invoices.charge_review_released_log' => 'Operatör ödeme sağlayıcıyı kontrol ettikten sonra otomatik kart tahsilatı serbest bırakıldı',
+    'invoices.charge_review_nothing' => 'Bu faturada kontrol bekleyen bir şey yok.',
 ];

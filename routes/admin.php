@@ -140,6 +140,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
 
     Route::middleware('admin.permission:manage_invoices')->group(function () {
         Route::post('invoices/{invoice}/mark-paid', [InvoiceController::class, 'markPaid'])->name('invoices.mark-paid');
+        // The human end of needs_review: an operator who has checked the
+        // gateway lets automatic collection have this invoice back.
+        Route::post('invoices/{invoice}/charge-review/release', [InvoiceController::class, 'releaseChargeReview'])->name('invoices.charge-review.release');
         Route::post('invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
         Route::post('invoices/{invoice}/refund', [InvoiceController::class, 'refund'])->name('invoices.refund');
         Route::post('invoices/{invoice}/send', [InvoiceController::class, 'sendInvoice'])->name('invoices.send');

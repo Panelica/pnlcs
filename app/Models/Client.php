@@ -69,6 +69,10 @@ class Client extends Model
         'group_id',
         'currency_id',
         'default_payment_method',
+        // The customer's own answer to automatic card payment. Fillable so the
+        // client area's toggle can write it through the ordinary update path;
+        // no admin form validates a key by this name, so nothing else can.
+        'auto_charge',
         'credit',
         'tax_exempt',
         'language',
@@ -83,6 +87,7 @@ class Client extends Model
             'status' => ClientStatus::class,
             'credit' => 'decimal:2',
             'tax_exempt' => 'boolean',
+            'auto_charge' => 'boolean',
             'late_fee_overide' => 'boolean',
             'override_auto_suspend' => 'boolean',
         ];

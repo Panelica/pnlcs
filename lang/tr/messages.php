@@ -505,4 +505,12 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'company_lookup' => [
         'settings_title' => 'Şirket Sorgulama (PL)',
     ],
+    'auto_charge' => [
+        'needs_review_subject' => 'Ödeme sağlayıcıyı kontrol edin: :count fatura için tahsilat yapılmış olabilir',
+        'needs_review_body' => 'Aşağıdaki faturalar için otomatik kart tahsilatı gönderildi ve sonucu hiçbir zaman kaydedilmedi; para müşterinin kartından çekilmiş ve burada kaydedilmemiş olabilir.
+
+Faturalar: :invoices
+
+Ödeme sağlayıcıyı açıp her birinin akıbetini öğrenin. Hiçbir otomatik işlem bu faturaları yeniden tahsil etmeye çalışmaz - panel sizi bekliyor, her faturanın kendi sayfasında.',
+    ],
 ];

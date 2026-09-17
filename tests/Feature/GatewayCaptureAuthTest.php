@@ -41,6 +41,10 @@ function signedInCustomer(): array
 $endpoints = [
     'gateway.stripe.intent',
     'gateway.stripe.confirm',
+    // The cardholder finishing an authentication their bank asked for. It
+    // hands back a live client secret for a payment intent, so it belongs on
+    // this list for exactly the reason the other two do.
+    'gateway.stripe.authenticate',
     'gateway.paypal.capture',
     'gateway.authorize.capture',
     'gateway.mollie.capture',

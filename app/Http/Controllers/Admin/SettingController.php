@@ -102,6 +102,10 @@ class SettingController extends Controller
         'AutoApproveOrderEmails',
         // The registrar float watch.
         'BalanceWatchRegistrar', 'RegistrarBalanceThreshold', 'RegistrarBalanceCurrency', 'RegistrarBalanceAlertEmail',
+        // Paying renewal invoices with a card the customer has already stored.
+        // Off by default; read through App\Support\AutoCharge so the screen
+        // and the code cannot disagree about what a blank setting means.
+        'AutoChargeEnabled', 'AutoChargeDaysBefore', 'AutoChargeMaxAttempts', 'AutoChargeRetryDays',
     ];
 
     public function updateGeneral(Request $request)

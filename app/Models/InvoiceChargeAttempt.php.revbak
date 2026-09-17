@@ -1,0 +1,899 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\ChargeAttemptState;
+use App\Enums\ChargeClaim;
+use App\Support\AutoCharge;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * One invoice's standing with the card that is meant to pay it.
+ *
+ * Nothing calls any of this yet. It is the arbitrator a charger has to go
+ * through, written before the charger so that the charger has nowhere else to
+ * go: take the invoice here, and charge only if you were given it.
+ *
+ * The rule the whole class is built to keep is that a customer is never charged
+ * twice for one invoice. Two things threaten it. The first is two workers at
+ * once — an overlapping cron, an operator running the command by hand — and the
+ * unique key on invoice_id settles that: the second insert loses on the key
+ * rather than on being slower. The second is worse and is the reason this is
+ * not simply a lock: a worker that takes an invoice, sends the charge and dies
+ * before writing the answer down. The money may have moved. Nothing here can
+ * see that it did.
+ *
+ * So a cold lease is not permission. It is a question, and the answer comes
+ * from Stripe's idempotency layer: a repeat of the identical request returns
+ * the saved result of the first one instead of charging again, for at least
+ * twenty-four hours, and only while the parameters match: "The idempotency
+ * layer compares incoming parameters to those of the original request and
+ * errors if they're not the same to prevent accidental misuse"
+ * (https://docs.stripe.com/api/idempotent_requests, fetched 2026-09-16). When
+ * this row can prove the repeat would be identical — the same key it wrote down
+ * before the first request went out, same invoice, same card, same money, same
+ * currency, still inside the window measured from the FIRST send, and not
+ * already asked MAX_REPLAYS times without an answer — the replay is safe and is
+ * taken. The key is written rather than worked out again, because a key that is
+ * recomputed is only as stable as whatever the recomputation reads. When it cannot, the row is marked for a person and no
+ * card is touched. An unattended process guessing about a charge that may
+ * already have happened is exactly the failure that has to be designed out.
+ *
+ * WHICH MEANS EVERY ROW COMES TO REST, and that is a property rather than a
+ * hope. A replay is a step, never a destination: it resolves the row, or it
+ * spends one of a fixed allowance, or the deadline it cannot postpone arrives —
+ * and the last two both end at needs_review, where a person is fetched. There
+ * is no path on which this row is handed to the gateway for ever.
+ */
+class InvoiceChargeAttempt extends Model
+{
+    /**
+     * How long a worker may hold an invoice before another may take over.
+     *
+     * Bounded by our own side of the wire. One attempt is a single HTTP request
+     * to the gateway — Laravel's client gives up after thirty seconds unless
+     * told otherwise, and StripeModule does not tell it otherwise — plus the
+     * database work either side of it. Fifteen minutes is thirty times that,
+     * and erring long is the safe direction: a lease that outlives a crash by
+     * ten minutes costs a delayed rescue, while a lease shorter than a live
+     * attempt would put two workers on one card, which is the thing being
+     * prevented.
+     */
+    public const LEASE_SECONDS = 900;
+
+    /**
+     * How long after the FIRST send a replay is still provably the same request.
+     *
+     * Stripe keeps an idempotency key for at least twenty-four hours: "You can
+     * remove keys from the system automatically after they're at least 24 hours
+     * old. We generate a new request if a key is reused after the original is
+     * pruned" (https://docs.stripe.com/api/idempotent_requests, fetched
+     * 2026-09-16). Twenty three is deliberate margin: first_sent_at is our
+     * clock and the retention is theirs, and the cost of being an hour too
+     * cautious is one invoice going to a human instead of being replayed, while
+     * the cost of being an hour too confident is a second charge on a real card.
+     *
+     * MEASURED FROM first_sent_at, AND NEVER AGAIN FROM claimed_at. It was
+     * measured from claimed_at, and claimed_at is the lease: every replay
+     * refreshes it, because refreshing it is exactly what stops two rescuers
+     * racing. So the clock the deadline was read from was reset by the very act
+     * the deadline was meant to stop, the row was perpetually fifteen minutes
+     * old, and the sweep built to rescue it was the one thing preventing it
+     * from ever resting. Measured over three simulated days of the real
+     * schedule against a gateway that never answered: 289 presentations of one
+     * charge, nothing ever parked, and every presentation past the twenty-fourth
+     * hour a genuine second charge with a familiar name — an idempotency key
+     * carries no time component, stored or derived, so a repeat sent after the
+     * prune is a brand-new charge and not a replay however faithfully it
+     * repeats the first request.
+     *
+     * created_at cannot stand in for first_sent_at either: restart() reuses the
+     * row for a genuinely new attempt without resetting it, so a row on its
+     * third dunning attempt would inherit a deadline that expired weeks ago and
+     * be refused a rescue it is entitled to.
+     *
+     * THIS NUMBER DOES NOT MOVE; THE CADENCE THAT READS IT DOES. The charger is
+     * scheduled once a day, so consecutive runs are twenty-four hours apart and
+     * every crashed attempt used to be looked at exactly one hour after this
+     * window had closed — the recovery this whole design exists for could never
+     * fire, and every interrupted charge went silently to needs_review. Raising
+     * the window to cover a daily cadence would mean replaying against a key
+     * Stripe may already have pruned, which is not a replay at all but a second
+     * charge with a familiar name. So the rescue sweep runs every fifteen
+     * minutes instead (`pnlcs:auto-charge --rescue`, routes/console.php): well
+     * inside this window, and ahead of the 07:30 late fee that would change the
+     * amount and make a replay unprovable in the other direction.
+     */
+    public const REPLAY_WINDOW_SECONDS = 23 * 3600;
+
+    /**
+     * How many times one abandoned attempt may be handed back to the gateway.
+     *
+     * A SECOND BOUND, AND NOT A SPARE COPY OF THE FIRST. REPLAY_WINDOW_SECONDS
+     * says when a replay stops being SAFE; this says when it stops being worth
+     * anything. Neither subsumes the other, and both are needed.
+     *
+     * Take the cap on its own: it bounds presentations but not time. A sweep
+     * that is down for a day, then runs, then is down for another day, then
+     * runs, has used two of four replays and sent the second of them against a
+     * key Stripe pruned twenty-four hours earlier. That is a second charge, and
+     * only a deadline anchored to the first send can refuse it.
+     *
+     * Take the deadline on its own: at fifteen-minute sweeps it still permits
+     * ninety-two presentations of one charge. Every one is safe and every one
+     * is pointless — the gateway has been asked ninety-two times and has said
+     * nothing ninety-two times — while AutoCharge::maxAttempts, the setting
+     * whose whole purpose is to keep an issuer from seeing a card asked over
+     * and over, counts the row as one attempt throughout.
+     *
+     * FOUR IS ONE HOUR at the cadence routes/console.php actually runs. The
+     * question the number answers is how long a gateway may go on saying
+     * nothing about a charge that may already have taken somebody's money
+     * before a person is fetched. An hour rides out the blips that fix
+     * themselves, and is short enough that the customer's bank statement is not
+     * where this gets discovered. Past it there is no safe automatic answer
+     * left, which is the point at which this class stops and asks for a human
+     * everywhere else too.
+     *
+     * COUNTED, NOT TIMED, and deliberately so: what this bounds is what the
+     * GATEWAY is shown, and a count is the only thing that still bounds that
+     * when an operator runs the sweep by hand in a loop, or when somebody
+     * changes everyFifteenMinutes() to everyMinute().
+     */
+    public const MAX_REPLAYS = 4;
+
+    /** What a row parked by the claim says, and what the operator reads first. */
+    public const UNRECORDED_OUTCOME = 'An attempt was sent and its outcome was never recorded. Check the gateway before charging this invoice again.';
+
+    protected $fillable = [
+        'invoice_id', 'payment_method_id', 'state', 'attempts', 'replays', 'amount', 'currency', 'idempotency_key',
+        'claimed_at', 'first_sent_at', 'next_attempt_at', 'last_transaction_id', 'last_decline_code', 'last_message',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'state' => ChargeAttemptState::class,
+            'attempts' => 'integer',
+            'replays' => 'integer',
+            'amount' => 'decimal:2',
+            'claimed_at' => 'datetime',
+            'first_sent_at' => 'datetime',
+            'next_attempt_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * A row is INSERTED at the moment its first request is sent, so on the way
+     * in the lease and the first send are the same instant; only a replay ever
+     * makes them differ. Defaulted here rather than left to every caller
+     * because a NULL first_sent_at refuses every replay, so an insert that
+     * forgot the column would quietly switch off the crash recovery this whole
+     * class exists for — and would do it without an error anywhere.
+     *
+     * The key the request goes out under is defaulted here for exactly the same
+     * reason, and the two belong together: they are the whole of what makes a
+     * replay provable, one saying the gateway still holds the name and the
+     * other saying what the name is.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $attempt): void {
+            $attempt->first_sent_at ??= $attempt->claimed_at ?? $attempt->freshTimestamp();
+            $attempt->idempotency_key ??= self::mintIdempotencyKey();
+        });
+    }
+
+    /**
+     * A name for ONE operation at the gateway, minted here and never worked out
+     * again.
+     *
+     * WHY IT IS STORED RATHER THAN DERIVED, which is the whole of this repair.
+     * StripeModule used to build the key by hashing the invoice, the card, the
+     * minor amount and the currency under config('app.key'), and
+     * replayIsProvablyTheSameRequest() proved the first four before letting a
+     * rescuer send. It could not prove the fifth. An operator who rotates
+     * APP_KEY — which Laravel documents, which config/app.php:102 supports
+     * through APP_PREVIOUS_KEYS, and which App\Casts\EncryptedValue survives
+     * anyway by handing back what it cannot decrypt — leaves a working
+     * installation in which the replay of an in-flight charge goes out under a
+     * key the gateway has never seen. Stripe has no saved result for it, so it
+     * executes: a second real debit on top of a first charge nobody may assume
+     * failed, with the row resting at succeeded and the invoice reading paid.
+     *
+     * A derived key is exactly as stable as its least stable input, and the
+     * inputs are whatever the derivation happens to name today. A written-down
+     * key has no inputs. It cannot drift when the application key moves, when
+     * somebody edits the derivation, when a currency or an amount is corrected,
+     * or when a future input is added — because nothing recomputes it. The
+     * proof that a replay is the same request stops being a re-derivation that
+     * has to enumerate every input correctly, and becomes the only thing it can
+     * honestly be: the same string, read back.
+     *
+     * RANDOM, AND LONG. What a key must be is stable for one operation and
+     * unique across operations; it is sent to Stripe in a plain header, so
+     * there is nothing here to keep secret and the HMAC bought no
+     * confidentiality. Twenty bytes from the CSPRNG are unique across two
+     * installations sharing one Stripe account with no installation identifier
+     * to coordinate on — and this tree has none, which is why the digest was
+     * keyed on the application key in the first place. That was strictly worse
+     * than randomness: two installs restored from one image share an
+     * application key AND an invoice numbering, so their derived keys collide
+     * exactly, and the second install's charge is answered out of the first
+     * install's saved result and never collected.
+     *
+     * MINTED ON CREATE AND ON restart(), which is to say once per operation.
+     * A replay does not mint: a replay is the same operation being asked about
+     * again. restart() does: a new card, a new amount, or the same pair days
+     * later is a new request at the gateway and must never be answered out of
+     * the saved record of the old one. Defaulted here, beside first_sent_at and
+     * for the same reason — an insert that forgot the column would produce a
+     * row that can never prove a replay, and would do it silently.
+     */
+    private static function mintIdempotencyKey(): string
+    {
+        // The shape StripeModule's own derived keys have, so that an operator
+        // searching the gateway's logs for pnlcs-offsession-* finds every
+        // unattended charge whichever end named it.
+        return 'pnlcs-offsession-'.bin2hex(random_bytes(20));
+    }
+
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class);
+    }
+
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
+    /** The arbitrator row for an invoice, if collection has ever started on it. */
+    public static function forInvoice(Invoice|int $invoice): ?self
+    {
+        return static::where('invoice_id', $invoice instanceof Invoice ? $invoice->id : $invoice)->first();
+    }
+
+    /**
+     * Does the charge this worker is about to send REPEAT one the gateway
+     * already has, under the same idempotency key?
+     *
+     * The one fact a gateway module cannot see and must be told. A module is
+     * handed a single HTTP exchange and has no memory across calls; this row is
+     * the memory, and this is the question the row exists to answer.
+     *
+     * IT IS ONE COLUMN BECAUSE IT IS ONE FACT, AND THE COLUMN IS ALREADY RIGHT.
+     * replays is incremented in exactly one place — takeOver(), and only after
+     * replayIsProvablyTheSameRequest() has shown that the row can still name the
+     * key the charge went out under, that the parameters it was sent with are
+     * unchanged, and that the gateway is still inside the window where it holds
+     * that key. So a non-zero replays is not a guess that this
+     * POST is a repeat; it is the same proof the worker was let through on.
+     * restart() puts it back to zero for the same reason: a new card, a new
+     * amount, or a retry days later against a key Stripe has pruned is a NEW
+     * request, and its first send is a first send.
+     *
+     * WHY THE CALLER ASKS THIS AT ALL. Once a charge has gone out and nobody
+     * heard the answer, only a definitive statement about THAT request may
+     * resolve it — the gateway's saved result, or the issuer's verdict. Plenty
+     * of perfectly ordinary answers are about the repeat instead: a rate limit,
+     * an expired key, the idempotency layer refusing this presentation. Believed
+     * as verdicts they close an open question with an answer to a different
+     * one, and the closing costs either a second real debit (when they read as
+     * retryable) or an unread row marked exhausted (when they do not). Only the
+     * module can tell those apart by status; only this row knows the question is
+     * even being asked. So the fact travels, and it travels this way round
+     * because it is one boolean about our own history rather than a new
+     * obligation on every gateway to explain its error taxonomy.
+     */
+    public function repeatsARequestAlreadySent(): bool
+    {
+        return (int) $this->replays > 0;
+    }
+
+    /**
+     * Take this invoice for charging, unless it is somebody else's or finished.
+     *
+     * The insert IS the check. Asking whether a row exists and inserting
+     * afterwards leaves a gap two workers fit through side by side, and an
+     * overlapping cron is precisely how two workers arrive together. The unique
+     * key on invoice_id decides, and a duplicate-key error is an answer rather
+     * than a fault.
+     *
+     * Everything past the insert is a guarded update: the WHERE clause repeats
+     * the state this worker read, so a worker that lost a race matches no row
+     * and is told Held rather than proceeding on a reading that has already
+     * expired. Held is the fallback for every surprise on purpose — it costs a
+     * day's delay, and the other answers cost money.
+     *
+     * The master switch is not consulted here. Whether the feature is on at all
+     * is the command's question; this class's job is to be right about the
+     * invoice, and a model that silently refused would make an operator debug
+     * the wrong layer.
+     *
+     * @param  float  $amount  What is about to be charged, in $currency
+     * @param  int|null  $maxAttempts  Defaults to the operator's setting
+     */
+    public static function claim(
+        Invoice $invoice,
+        PaymentMethod $method,
+        float $amount,
+        string $currency,
+        ?int $maxAttempts = null,
+        ?CarbonInterface $now = null,
+    ): ChargeClaim {
+        $now = $now ? $now->copy() : now();
+        $maxAttempts = $maxAttempts ?? AutoCharge::maxAttempts();
+
+        try {
+            static::create([
+                'invoice_id' => $invoice->id,
+                'payment_method_id' => $method->id,
+                'state' => ChargeAttemptState::InFlight,
+                'attempts' => 1,
+                'amount' => $amount,
+                'currency' => strtoupper($currency),
+                'claimed_at' => $now,
+                // The lease and the replay deadline start together and then
+                // part company: claimed_at is refreshed by every rescuer that
+                // takes the row, first_sent_at is not touched again until
+                // restart() sends a genuinely new request.
+                'first_sent_at' => $now,
+                'replays' => 0,
+            ]);
+
+            return ChargeClaim::Taken;
+        } catch (UniqueConstraintViolationException) {
+            // This invoice has been through here before. Which is all the
+            // exception says; the row says the rest.
+            //
+            // Only that one exception, and on purpose. A table that is not
+            // there because the migration has not run, a lost connection, a
+            // deadlock — those escape, because the only honest thing this
+            // method can say about an invoice it could not write down is
+            // nothing, and nothing means the charger skips it and tries again
+            // tomorrow. Reading a failed write as "nobody else has this" is the
+            // shape of the hole the unique key exists to close.
+        }
+
+        $existing = static::forInvoice($invoice);
+
+        if ($existing === null) {
+            // The row collided a moment ago and is gone now, which in practice
+            // means the invoice was deleted underneath this worker. There is
+            // nothing to charge and nothing to record it against.
+            return ChargeClaim::Closed;
+        }
+
+        return $existing->takeOver($method, $amount, $currency, $maxAttempts, $now);
+    }
+
+    /**
+     * Decide what this worker may do with a row that already exists.
+     */
+    private function takeOver(
+        PaymentMethod $method,
+        float $amount,
+        string $currency,
+        int $maxAttempts,
+        CarbonInterface $now,
+    ): ChargeClaim {
+        if ($this->state === ChargeAttemptState::InFlight) {
+            if ($this->claimed_at !== null && $this->claimed_at->gt($now->copy()->subSeconds(self::LEASE_SECONDS))) {
+                // Somebody is inside the charge right now.
+                return ChargeClaim::Held;
+            }
+
+            // The worker that took this never came back and the money may or
+            // may not have moved. A replay that Stripe will answer from its own
+            // record rather than by charging again is safe; anything else is a
+            // guess, and a guess here is a second charge.
+            if ($this->replayIsProvablyTheSameRequest($method, $amount, $currency, $now)) {
+                // claimed_at moves and replays counts up; attempts does not,
+                // because at the gateway this is the request that was already
+                // made rather than another one.
+                //
+                // first_sent_at IS NOT TOUCHED, and that is the whole repair.
+                // It is the clock the deadline is measured from, and a replay
+                // that reset it would push the deadline out by fifteen minutes
+                // every fifteen minutes — which is what the lease used to do
+                // when it was doing both jobs.
+                return $this->guardedUpdate(['claimed_at' => $now, 'replays' => $this->replays + 1])
+                    ? ChargeClaim::Taken
+                    : ChargeClaim::Held;
+            }
+
+            $parked = $this->guardedUpdate([
+                'state' => ChargeAttemptState::NeedsReview->value,
+                'claimed_at' => null,
+                'next_attempt_at' => null,
+                'last_message' => self::trim(self::UNRECORDED_OUTCOME),
+            ]);
+
+            // Whether or not that landed, this worker charges nothing. But the
+            // two cases are not the same fact: the worker whose write landed is
+            // the one that has just parked an invoice a person now has to look
+            // at, and saying so is what gets that person fetched. A worker that
+            // lost the race is told Closed, so one parking makes one alert.
+            if ($parked) {
+                $this->shout(self::UNRECORDED_OUTCOME);
+
+                return ChargeClaim::Parked;
+            }
+
+            return ChargeClaim::Closed;
+        }
+
+        // Past here the row carries a verdict rather than an attempt.
+
+        if (! $this->state->reopensForAnotherCard()) {
+            // Paid, or waiting on a person. Neither is reopened by anything
+            // automatic, a new card included.
+            return ChargeClaim::Closed;
+        }
+
+        // A card the customer has replaced is a different question from the one
+        // that was answered here. The old card's refusals, and the old card's
+        // backoff, belong to the old card.
+        if ((int) $this->payment_method_id !== (int) $method->id) {
+            return $this->restart($method, $amount, $currency, $now, 1);
+        }
+
+        if ($this->state->isFinished()) {
+            // action_required or exhausted, on the same card. Nothing
+            // unattended changes either of them.
+            return ChargeClaim::Closed;
+        }
+
+        if ($this->attempts >= $maxAttempts) {
+            // The cap can move under a scheduled row: an operator who lowers it
+            // means it, and a row scheduled under the old cap must not outlive
+            // the decision.
+            $this->guardedUpdate([
+                'state' => ChargeAttemptState::Exhausted->value,
+                'next_attempt_at' => null,
+            ]);
+
+            return ChargeClaim::Closed;
+        }
+
+        if ($this->next_attempt_at === null || $this->next_attempt_at->gt($now)) {
+            // A scheduled row with no time on it is not something this class
+            // ever writes, so it is damage rather than a schedule. Both
+            // readings lead the same way: not now.
+            return ChargeClaim::NotDue;
+        }
+
+        return $this->restart($method, $amount, $currency, $now, $this->attempts + 1);
+    }
+
+    /**
+     * Put the row back in flight for this worker.
+     *
+     * The three last_ columns are cleared rather than left to be overwritten
+     * when the answer comes. They describe an attempt that is over, and an
+     * in-flight row carrying the previous attempt's verdict reads as fact: a
+     * PaymentIntent id belonging to a card the customer has since replaced,
+     * offered to them as the payment to go and authenticate, sends them to a
+     * charge that will never complete.
+     *
+     * first_sent_at, replays and the idempotency key are reset for the same
+     * reason, and forgetting any of them would be worse than untidy. This is a
+     * NEW request at the gateway — a different amount, a different card, or the
+     * same pair a day later — so it gets its own deadline, its own allowance
+     * and its own name. A row that carried the previous attempt's deadline
+     * forward would be refused the rescue it is entitled to the moment it
+     * crashed, and would go to a human for a replay that was provably safe. A
+     * row that carried the previous attempt's KEY forward would be worse in the
+     * other direction: a legitimate later charge, answered out of the saved
+     * record of the attempt before it, would report the old outcome and never
+     * reach the card at all. The derived key had that hazard built in — same
+     * invoice, same card, same amount meant the same key for ever — and only
+     * Stripe's twenty-four-hour prune stood between a one-day retry and a
+     * decline copied from yesterday. Minted here, a new attempt is a new
+     * request whatever the clock says.
+     */
+    private function restart(
+        PaymentMethod $method,
+        float $amount,
+        string $currency,
+        CarbonInterface $now,
+        int $attempts,
+    ): ChargeClaim {
+        return $this->guardedUpdate([
+            'payment_method_id' => $method->id,
+            'state' => ChargeAttemptState::InFlight->value,
+            'attempts' => $attempts,
+            'replays' => 0,
+            'amount' => $amount,
+            'currency' => strtoupper($currency),
+            'idempotency_key' => self::mintIdempotencyKey(),
+            'claimed_at' => $now,
+            'first_sent_at' => $now,
+            'next_attempt_at' => null,
+            'last_transaction_id' => null,
+            'last_decline_code' => null,
+            'last_message' => null,
+        ]) ? ChargeClaim::Taken : ChargeClaim::Held;
+    }
+
+    /**
+     * Would sending this charge again be the same request the gateway already
+     * has, rather than a second one?
+     *
+     * THE KEY IS THE ONE FACT HERE THAT IS THE REQUEST'S IDENTITY RATHER THAN
+     * EVIDENCE ABOUT IT — the others say the repeat would look the same, this
+     * one says it IS the same, which is what the gateway files its answer under.
+     * (Asked third only because the two clocks below are cheaper and refuse
+     * more; the order costs nothing either way.)
+     *
+     * The charge in flight was sent under the key on this row; a repeat under
+     * that same string is the same request to the gateway, and a repeat under
+     * any other string is a new charge whatever else matches. It used to be derived
+     * at the moment of sending — hash_hmac over the invoice, the card, the
+     * minor amount and the currency, keyed on config('app.key') — and this
+     * method proved four of those five inputs and could not prove the fifth, so
+     * an APP_KEY rotation between a send and its replay sent the "replay" under
+     * a key Stripe had never seen and charged the card a second time. The key
+     * is written down now (see mintIdempotencyKey), which is what makes it
+     * unable to drift for that reason or for any other.
+     *
+     * NULL MEANS WE CANNOT NAME IT, and the honest reading of that is that no
+     * replay is provable. It happens on rows written before the column existed,
+     * whose key depended on an application key that may since have moved, and
+     * it is deliberately the same answer this method gives a NULL first_sent_at:
+     * fall through, park the row, fetch a person, touch no card.
+     *
+     * THE OTHER FOUR ARE STILL LOAD-BEARING AND ARE NOT A SPARE COPY OF THE
+     * KEY. Stripe's idempotency layer "compares incoming parameters to those of
+     * the original request and errors if they're not the same to prevent
+     * accidental misuse" (https://docs.stripe.com/api/idempotent_requests), so
+     * presenting the stored key with an amount a late fee has moved does not
+     * replay anything — it is an error that says nothing about the charge in
+     * flight, and the row would spend its replay allowance learning nothing.
+     * The window still matters for the same reason it always did: past the
+     * prune the gateway has forgotten the key, and the stored string it has
+     * forgotten buys exactly as little as a recomputed one would.
+     *
+     * Two clocks say no here and they are asked first, because a no from either
+     * is final and neither depends on the card. The cap is asked before the
+     * deadline only because it is the cheaper comparison; they are independent
+     * (see MAX_REPLAYS for why both exist), and a row that fails any of these
+     * falls through to the branch that parks it for a person rather than
+     * quietly stopping — a replay that simply ran out is still a charge whose
+     * fate nobody knows.
+     */
+    private function replayIsProvablyTheSameRequest(
+        PaymentMethod $method,
+        float $amount,
+        string $currency,
+        CarbonInterface $now,
+    ): bool {
+        if ($this->replays >= self::MAX_REPLAYS) {
+            return false;
+        }
+
+        // NULL means an insert that did not say when the request went out, and
+        // the honest reading of that is "we cannot prove it is recent". booted()
+        // makes sure this class never writes one.
+        if ($this->first_sent_at === null || $this->first_sent_at->lte($now->copy()->subSeconds(self::REPLAY_WINDOW_SECONDS))) {
+            return false;
+        }
+
+        // The name the charge in flight went out under. Without it there is
+        // nothing to repeat, only something to send again.
+        if (! is_string($this->idempotency_key) || trim($this->idempotency_key) === '') {
+            return false;
+        }
+
+        if ((int) $this->payment_method_id !== (int) $method->id) {
+            return false;
+        }
+
+        if (strtoupper((string) $this->currency) !== strtoupper($currency)) {
+            return false;
+        }
+
+        // Both sides come from the same two-decimal domain, so this is an
+        // equality test written so that a float that lost its last bit on the
+        // way through PHP still counts as equal.
+        return abs((float) $this->amount - $amount) < 0.005;
+    }
+
+    /**
+     * Repeat the reading this decision was made on, so a worker that lost a
+     * race writes nothing.
+     *
+     * state, attempts and claimed_at together separate every transition this
+     * class makes from every other one, including the one pair that would
+     * otherwise collide: two rescuers replaying the same abandoned attempt
+     * leave state and attempts alone, and are told apart by claimed_at.
+     */
+    private function guardedUpdate(array $values): bool
+    {
+        $query = static::query()
+            ->whereKey($this->getKey())
+            ->where('state', $this->state?->value)
+            ->where('attempts', $this->attempts);
+
+        if ($this->claimed_at === null) {
+            $query->whereNull('claimed_at');
+        } else {
+            $query->where('claimed_at', $this->claimed_at);
+        }
+
+        $changed = $query->update($values) > 0;
+
+        if ($changed) {
+            $this->refresh();
+        }
+
+        return $changed;
+    }
+
+    /**
+     * The money was taken.
+     *
+     * Written unguarded, unlike every other transition here. A worker whose
+     * lease went cold while the gateway was slow has still just been told that
+     * a real card was charged, and a guard would drop that on the floor to
+     * protect a row. The invoice being credited is PaymentService's business
+     * and it refuses a transaction id it already holds, so the worst a late
+     * success can do here is overwrite a rescuer's identical answer.
+     */
+    public function recordSuccess(?string $transactionId, ?float $amount = null): void
+    {
+        $this->forceFill([
+            'state' => ChargeAttemptState::Succeeded,
+            'claimed_at' => null,
+            'next_attempt_at' => null,
+            'last_transaction_id' => $transactionId,
+            'last_decline_code' => null,
+            'last_message' => null,
+        ] + ($amount === null ? [] : ['amount' => $amount]))->save();
+    }
+
+    /**
+     * The gateway has answered and the money has moved — written down BEFORE
+     * anything is credited.
+     *
+     * This single write is what makes a payment recoverable from PNLCS's own
+     * records rather than only from Stripe's. Between the gateway answering and
+     * PaymentService recording the money there is a database transaction that
+     * takes lockForUpdate on the invoice; a deadlock or a lock-wait timeout
+     * there used to leave the card charged, the invoice unpaid, no transaction
+     * row anywhere, and nothing in this system that knew the money had gone.
+     *
+     * The state stays in_flight, deliberately. in_flight with a transaction id
+     * means "the gateway has answered and the ledger owes an entry", scopeStuck
+     * is already the query that finds it once the lease goes cold, and
+     * AutoChargeService::rescue() credits it without asking the gateway
+     * anything. Nothing else in this class ever writes last_transaction_id onto
+     * an in-flight row — restart() clears the last_ columns when a row is
+     * re-taken — so that combination has exactly one meaning.
+     *
+     * Unguarded, for the same reason recordSuccess() is: a real card has just
+     * been charged and no reading about a row is worth dropping that on the
+     * floor.
+     */
+    public function recordCharged(string $transactionId, ?float $amount = null): void
+    {
+        $this->forceFill([
+            'last_transaction_id' => $transactionId,
+            'last_decline_code' => null,
+            'last_message' => null,
+        ] + ($amount === null ? [] : ['amount' => $amount]))->save();
+    }
+
+    /**
+     * Park this invoice until a person looks at the gateway.
+     *
+     * The only public way to write needs_review, and it raises the error log
+     * itself so that the state cannot be entered quietly from anywhere. It was
+     * written in one place with no log call of any severity, folded into the
+     * run summary beside the invoices that were paid, and read by nothing —
+     * which is how "money may have moved and we cannot tell" became the
+     * quietest outcome in the feature.
+     *
+     * last_transaction_id is kept on purpose. If the charge was recorded before
+     * the fault, that id is exactly what lets the rescue sweep credit the money
+     * afterwards, and it is the first thing the operator needs to find the
+     * payment at the gateway.
+     */
+    public function markNeedsReview(string $message): void
+    {
+        $this->forceFill([
+            'state' => ChargeAttemptState::NeedsReview,
+            'claimed_at' => null,
+            'next_attempt_at' => null,
+            'last_message' => self::trim($message),
+        ])->save();
+
+        $this->shout($message);
+    }
+
+    /** Say it where an operator's log aggregator will pick it up. */
+    private function shout(string $message): void
+    {
+        Log::error('AutoCharge: an invoice has been left for a person — a charge was sent and its outcome could not be established', [
+            'invoice' => $this->invoice_id,
+            'attempt' => $this->id,
+            'method' => $this->payment_method_id,
+            'amount' => $this->amount,
+            'currency' => $this->currency,
+            'transaction' => $this->last_transaction_id,
+            // How many times the gateway was asked and said nothing, which is
+            // the first thing the operator wants to know before opening it.
+            'replays' => $this->replays,
+            'reason' => $message,
+        ]);
+    }
+
+    /**
+     * The bank will take the money once the cardholder says so.
+     *
+     * Not a failure and not retryable: the same intent comes back asking for
+     * the same person, so the id is kept to send them to it. The row stops
+     * being the charger's business until a card changes or a person acts.
+     */
+    public function recordActionRequired(?string $transactionId, ?string $message = null, ?string $declineCode = null): void
+    {
+        $this->forceFill([
+            'state' => ChargeAttemptState::ActionRequired,
+            'claimed_at' => null,
+            'next_attempt_at' => null,
+            'last_transaction_id' => $transactionId,
+            'last_decline_code' => $declineCode,
+            'last_message' => self::trim($message),
+        ])->save();
+    }
+
+    /**
+     * The charge did not happen.
+     *
+     * Two questions decide what comes next and they are asked in this order. A
+     * refusal that will not change its mind ends the matter whatever the count
+     * says — asking a dead card twice more teaches the issuer to distrust every
+     * card we present. Only then does the count matter.
+     */
+    public function recordFailure(
+        ?string $message,
+        ?string $declineCode,
+        bool $retryable,
+        ?int $maxAttempts = null,
+        ?int $retryDays = null,
+        ?CarbonInterface $now = null,
+    ): void {
+        $now = $now ? $now->copy() : now();
+        $maxAttempts = $maxAttempts ?? AutoCharge::maxAttempts();
+        $retryDays = max(AutoCharge::MINIMUM_RETRY_DAYS, $retryDays ?? AutoCharge::retryDays());
+
+        $finished = ! $retryable || $this->attempts >= $maxAttempts;
+
+        $this->forceFill([
+            'state' => $finished ? ChargeAttemptState::Exhausted : ChargeAttemptState::Scheduled,
+            'claimed_at' => null,
+            'next_attempt_at' => $finished ? null : self::nextAttemptMoment($now, $retryDays),
+            'last_decline_code' => $declineCode,
+            'last_message' => self::trim($message),
+        ])->save();
+    }
+
+    /**
+     * The morning a retry becomes due.
+     *
+     * MIDNIGHT, NOT THE CLOCK TIME OF THE LAST ATTEMPT, and the difference is a
+     * whole day of somebody's dunning cycle.
+     *
+     * What reads this column is a once-a-day job. pnlcs:auto-charge runs at
+     * 06:45 and scopeDue() takes rows whose next_attempt_at has passed, so a
+     * retry written as "now plus three days" becomes due at 06:45:03 on day
+     * three — three seconds after the run that was supposed to make it, because
+     * the moment it was written was AFTER a gateway round-trip while the moment
+     * it is read is BEFORE one. The row is not due by a second or two, the run
+     * moves on, and the retry lands twenty-four hours later than the operator
+     * asked for. It is not a race that sometimes goes the right way either: the
+     * write always happens later in a run than the read does, so a clock-time
+     * schedule is systematically one day late.
+     *
+     * A day late matters here because the schedule is arranged around the jobs
+     * either side of it. With the shipped defaults the third and last attempt
+     * falls on the morning pnlcs:auto-suspend runs, fifteen minutes before it —
+     * a final go at the card before the customer is switched off. Slipping a
+     * day puts that attempt AFTER the suspension instead: the customer is
+     * suspended and emailed, charged the next morning, then unsuspended and
+     * emailed again. Invoice::scopeOverduePastGrace already carries a complaint
+     * about a bug of exactly that shape.
+     *
+     * Rounding down to midnight can only ever make a retry due EARLIER in the
+     * day it was already meant to fall on, never on an earlier day: the
+     * interval is at least AutoCharge::MINIMUM_RETRY_DAYS, so the boundary
+     * taken is tomorrow's at the very soonest. Nothing is charged at midnight
+     * either — the run that acts on it is still the 06:45 one.
+     *
+     * AND NEVER INSIDE THE GATEWAY'S MEMORY. Rounding down opens a gap the
+     * clock-time version did not have: at an interval of one day, a refusal
+     * recorded at 06:45:03 would come due at midnight and be attempted at
+     * 06:45:00 — twenty-three hours, fifty-nine minutes and fifty-seven seconds
+     * later, which is inside the twenty-four hours Stripe keeps an idempotency
+     * key for: "You can remove keys from the system automatically after they're
+     * at least 24 hours old", and, of what it does while it still holds one,
+     * "Stripe's idempotency works by saving the resulting status code and body
+     * of the first request made for any given idempotency key, regardless of
+     * whether it succeeds or fails. Subsequent requests with the same key
+     * return the same result, including 500 errors"
+     * (https://docs.stripe.com/api/idempotent_requests,
+     * fetched 2026-09-16). StripeModule's key is built from the invoice, the
+     * card, the amount and the currency and none of those have changed, so the
+     * repeat would be answered out of Stripe's record and the card would never
+     * be asked: a decline copied from yesterday, counted against the customer
+     * as though the issuer had refused twice. A run started by hand late at
+     * night makes it worse still — midnight is then an hour away.
+     *
+     * So anything landing inside that window is pushed to the start of the day
+     * after it, which is both safely outside and, being a day boundary again,
+     * certain to be picked up by the run that reaches it. In practice this only
+     * ever bites AutoChargeRetryDays = 1, which becomes the morning after next;
+     * AutoCharge::MINIMUM_RETRY_DAYS already carries the reasoning for why that
+     * setting is on the edge. The shipped default of three is untouched.
+     */
+    private static function nextAttemptMoment(CarbonInterface $now, int $retryDays): CarbonInterface
+    {
+        $next = $now->copy()->addDays($retryDays)->startOfDay();
+
+        // The soonest a repeat of the same request is a new request rather than
+        // a replay of the old one.
+        $earliest = $now->copy()->addDay();
+
+        if ($next->lt($earliest)) {
+            $next = $earliest->copy()->addDay()->startOfDay();
+        }
+
+        return $next;
+    }
+
+    /** Rows the charger may take now. */
+    public function scopeDue(Builder $query, ?CarbonInterface $now = null): Builder
+    {
+        return $query->where('state', ChargeAttemptState::Scheduled)
+            ->whereNotNull('next_attempt_at')
+            ->where('next_attempt_at', '<=', $now ?? now());
+    }
+
+    /** Invoices parked for a person to look at. */
+    public function scopeNeedsReview(Builder $query): Builder
+    {
+        return $query->where('state', ChargeAttemptState::NeedsReview);
+    }
+
+    /**
+     * Attempts that were taken and never came back.
+     *
+     * The charger rescues these as it meets them, one invoice at a time. This
+     * is for the other reader: an operator who wants to know, this minute,
+     * which invoices have a charge of unknown fate hanging over them.
+     */
+    public function scopeStuck(Builder $query, ?CarbonInterface $now = null): Builder
+    {
+        $now = $now ? $now->copy() : now();
+
+        return $query->where('state', ChargeAttemptState::InFlight)
+            ->whereNotNull('claimed_at')
+            ->where('claimed_at', '<=', $now->copy()->subSeconds(self::LEASE_SECONDS));
+    }
+
+    /** last_message is a column, not a log; the gateway's words are cut to fit. */
+    private static function trim(?string $message): ?string
+    {
+        if ($message === null) {
+            return null;
+        }
+
+        return mb_substr($message, 0, 500);
+    }
+}
