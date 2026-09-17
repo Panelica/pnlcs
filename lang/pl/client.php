@@ -989,6 +989,7 @@ return [
         'type_bankaccount' => 'Konto bankowe',
         'type_creditcard' => 'Karta kredytowa',
         'type_other' => 'Inne',
+        'type_paypal' => 'Konto PayPal',
         'auto_charge_title' => 'Płatność automatyczna',
         'auto_charge_on_hint' => 'Opłacamy Twoje faktury domyślną kartą w terminie ich płatności lub krótko przed nim. Możesz to wyłączyć w dowolnej chwili.',
         'auto_charge_off_hint' => 'Nie będziemy obciążać Twojej karty. Każdą fakturę opłacasz samodzielnie.',

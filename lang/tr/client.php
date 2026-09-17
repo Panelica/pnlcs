@@ -988,6 +988,7 @@ return [
         'type_bankaccount' => 'Banka Hesabı',
         'type_creditcard' => 'Kredi Kartı',
         'type_other' => 'Diğer',
+        'type_paypal' => 'PayPal hesabı',
         'auto_charge_title' => 'Otomatik ödeme',
         'auto_charge_on_hint' => 'Faturalarınızı vadelerinde veya kısa bir süre öncesinde varsayılan kartınızla öderiz. Bunu istediğiniz zaman durdurabilirsiniz.',
         'auto_charge_off_hint' => 'Kartınızdan tahsilat yapmayız. Her faturayı kendiniz ödersiniz.',

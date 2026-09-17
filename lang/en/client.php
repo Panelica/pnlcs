@@ -989,6 +989,7 @@ return [
         'type_bankaccount' => 'Bank Account',
         'type_creditcard' => 'Credit Card',
         'type_other' => 'Other',
+        'type_paypal' => 'PayPal account',
         'auto_charge_title' => 'Automatic payment',
         'auto_charge_on_hint' => 'We pay your invoices with your default card on or shortly before their due date. You can stop this at any time.',
         'auto_charge_off_hint' => 'We will not charge your card. You pay each invoice yourself.',

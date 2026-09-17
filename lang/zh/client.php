@@ -988,6 +988,7 @@ return [
         'type_bankaccount' => '银行账户',
         'type_creditcard' => '信用卡',
         'type_other' => '其他',
+        'type_paypal' => 'PayPal 账户',
         'auto_charge_title' => '自动付款',
         'auto_charge_on_hint' => '在发票到期当天或到期前不久，我们会用您的默认银行卡代为支付。您可以随时停用。',
         'auto_charge_off_hint' => '我们不会扣您的卡，每张发票由您自行支付。',

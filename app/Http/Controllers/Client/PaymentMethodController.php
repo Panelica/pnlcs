@@ -273,14 +273,39 @@ class PaymentMethodController extends Controller
     }
 
     /**
-     * The gateway this shop stores cards with, or null if there is none.
+     * The gateways whose storing flow this page knows how to finish.
      *
-     * The registry's list is the charger's list — one definition, so the offer
-     * to store a card and the willingness to charge it can never disagree. The
-     * first is taken when there are several, which today cannot happen: Stripe
-     * is the only module implementing the capability. A second one would need a
-     * choice on the page, and a choice is what the customer would then be given
-     * rather than what this method would guess.
+     * NOT A LIST OF WHO CAN VAULT — ModuleRegistry answers that, and it is a
+     * longer list. This is the narrower question the screen has to ask: can
+     * add-card.blade.php actually draw this gateway's flow and can storeCard()
+     * receive its answer? Stripe's finishes in the browser against a client
+     * secret, which is what that view is built around and what it already
+     * tests for by name. PayPal's does not: its vault sends the payer to
+     * PayPal's own site and brings them back to a return_url, so it needs a
+     * screen and a route that do not exist yet.
+     *
+     * WITHOUT THIS THE STRIPE FORM WOULD HAVE DISAPPEARED THE DAY A SECOND
+     * MODULE IMPLEMENTED THE CAPABILITY. tokenisedGateways() is built by
+     * walking usableGateways(), which walks the gateway_settings rows in
+     * whatever order the table hands them over; a shop with PayPal configured
+     * before Stripe would have had array_key_first() answer "paypal", and the
+     * view — which draws nothing it does not recognise — would have rendered a
+     * page with no card field on it. Nothing would have failed; customers would
+     * simply have stopped being able to store a card.
+     *
+     * A second DRAWABLE gateway is what turns this into a choice on the page
+     * rather than a preference in a constant, and that choice is the customer's
+     * to make rather than this method's to guess.
+     */
+    private const FLOWS_THIS_PAGE_CAN_FINISH = ['stripe'];
+
+    /**
+     * The gateway this shop stores payment methods with, or null if there is
+     * none this page can see a flow through.
+     *
+     * The registry's list is the charger's list, so the offer to store and the
+     * willingness to charge can never disagree about capability; this narrows
+     * it to what the screen can finish, for the reason above.
      *
      * @return array{0: string, 1: \App\Contracts\TokenizableGatewayInterface}|null
      */
@@ -288,13 +313,13 @@ class PaymentMethodController extends Controller
     {
         $gateways = app(ModuleRegistry::class)->tokenisedGateways();
 
-        if ($gateways === []) {
-            return null;
+        foreach (self::FLOWS_THIS_PAGE_CAN_FINISH as $name) {
+            if (isset($gateways[$name])) {
+                return [$name, $gateways[$name]];
+            }
         }
 
-        $name = (string) array_key_first($gateways);
-
-        return [$name, $gateways[$name]];
+        return null;
     }
 
     /**
