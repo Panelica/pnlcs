@@ -11,6 +11,7 @@ use App\Models\GatewayEvent;
 use App\Models\GatewaySettings;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
+use App\Models\Transaction;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -51,8 +52,26 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             return ["success" => false, "message" => "Stripe secret key not configured."];
         }
 
-        $currency = strtolower($params["currency"] ?? shop_currency_code());
-        $amountCents = (int) round($amount * 100);
+        // The invoice's own currency, not the shop's current one. The two are
+        // the same until an operator changes the shop currency, and after that
+        // the shop's answer reinterprets an old invoice at the new sign - the
+        // exact failure add_source_currency_to_invoices was written to stop
+        // ("a 264.89 lira invoice reprinted as 264.89 dollars"). Charging is
+        // where that misreading costs money rather than ink.
+        //
+        // It also has to agree with refund(): that leg converts with
+        // refundCurrency(), which reads the same column. Two legs reading two
+        // different sources is a hundredfold refund error the moment one of
+        // them is zero-decimal.
+        //
+        // Invoices raised before that column existed carry null and fall back
+        // to the shop, which is exactly what this line did for everyone before.
+        $currency = strtolower($params["currency"] ?? ($invoice->source_currency ?: shop_currency_code()));
+
+        // Converted with the very currency this request carries, three lines
+        // down, so the figure and the unit it is counted in cannot come apart.
+        // A hundred yen is a hundred, not ten thousand.
+        $minorAmount = $this->minorUnits($amount, $currency);
 
         // No idempotency key here, deliberately. This endpoint is reached from
         // the customer's own browser every time the pay form is opened, and a
@@ -66,7 +85,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         $response = Http::asForm()
             ->withToken($secretKey)
             ->post("https://api.stripe.com/v1/payment_intents", [
-                "amount"                      => $amountCents,
+                "amount"                      => $minorAmount,
                 "currency"                    => $currency,
                 "payment_method_types[]"      => "card",
                 "description"                 => "Invoice #" . ($invoice->invoice_num ?? $invoice->id),
@@ -99,7 +118,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             return ["success" => false, "message" => "Stripe secret key not configured."];
         }
 
-        $amountCents = (int) round($amount * 100);
+        $minorAmount = $this->minorUnits($amount, $this->refundCurrency($transactionId));
 
         // No idempotency key on a refund, and this is the one place where going
         // without is safer than guessing at one.
@@ -127,7 +146,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             ->withToken($secretKey)
             ->post("https://api.stripe.com/v1/refunds", [
                 "payment_intent" => $transactionId,
-                "amount"         => $amountCents,
+                "amount"         => $minorAmount,
             ]);
 
         if (!$response->successful()) {
@@ -251,15 +270,17 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
      * currency is operator-set free text with no validation behind it, so this
      * has to hold for whatever is typed in.
      *
-     * KNOWN DEFECT, LEFT ALONE ON PURPOSE: capture(), refund() and
-     * verifyPaymentIntent() still multiply and divide by a hundred
-     * unconditionally, and so does webhookPaymentSucceeded(). They are wrong in
-     * both directions at once, which is the only reason a zero-decimal shop's
-     * books currently agree with themselves: the charge is a hundred times too
-     * big and the amount recorded against it is a hundredth of what Stripe
-     * took. Correcting only the outbound half would turn a loud disaster into a
-     * quiet one, so those four move together, with their return legs, as a
-     * deliberate change of their own.
+     * Every path that names an amount to Stripe now comes through here:
+     * capture(), refund() and chargeStoredMethod() on the way out, with
+     * verifyPaymentIntent() and webhookPaymentSucceeded() reading Stripe's
+     * figures back through reportedMajorUnits() on the way in. They moved
+     * together on purpose. Until they did, the four were wrong in both
+     * directions at once, and that is the only reason a zero-decimal shop's
+     * books agreed with themselves: the charge was a hundred times the invoice
+     * and the amount recorded against it was a hundredth of what Stripe took,
+     * so the ledger balanced while the customer was out a hundredfold.
+     * Correcting the outbound half alone would have turned a loud disaster into
+     * a quiet one.
      */
     private function minorUnits(float $amount, string $currency): int
     {
@@ -294,6 +315,86 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         }
 
         return (float) ($minorAmount / 100);
+    }
+
+    /**
+     * A figure Stripe has reported, read back into the units the shop counts in.
+     *
+     * Stripe says what currency its own objects are in — "currency (enum):
+     * Three-letter ISO currency code, in lowercase"
+     * (https://docs.stripe.com/api/payment_intents/object) — so neither of the
+     * two inbound paths has to guess. Where that currency is zero-decimal the
+     * division by a hundred is simply wrong and majorUnits() is asked instead.
+     *
+     * Everywhere else the expression these paths have always used is kept
+     * exactly, down to its type: 2500/100 is the int 25 in PHP, 5050/100 is the
+     * float 50.5, and a test holds that int in place deliberately
+     * (tests/Feature/StripeWebhookDeduplicationTest.php, "a successful payment
+     * still answers exactly as it did"). Handing majorUnits() the two-decimal
+     * case as well would read better and would change the answer a two-decimal
+     * shop gets — 25 becoming 25.0 — for no gain: both callers' figures are
+     * cast to float before anything is written down
+     * (GatewayWebhookController::handle and ::stripeConfirm), so the change
+     * would be invisible everywhere except in that assertion. Invisible is not
+     * the same as absent, and the shops that are fine today get to stay
+     * byte-identical.
+     *
+     * A currency that is missing, or is not a string, falls back to that same
+     * division — which is what both paths did for every currency until now, so
+     * an unrecognisable payload behaves exactly as it always has rather than
+     * newly refusing. Stripe puts the field on every PaymentIntent it sends;
+     * in practice this fallback is reached only by hand-written payloads.
+     */
+    private function reportedMajorUnits(mixed $minorAmount, mixed $currency): int|float
+    {
+        if (is_string($currency) && in_array(strtolower($currency), self::ZERO_DECIMAL_CURRENCIES, true)) {
+            return $this->majorUnits((int) $minorAmount, $currency);
+        }
+
+        return $minorAmount / 100;
+    }
+
+    /**
+     * The currency an amount about to be refunded is counted in.
+     *
+     * A refund request carries no currency of its own — it names the payment
+     * intent and an amount, and Stripe reads the currency off the intent — and
+     * the gateway contract hands this method nothing but an id and a number.
+     * So the unit has to be recovered, and the honest question is what unit the
+     * number is already in rather than what Stripe will read it as.
+     *
+     * It comes from PaymentService::refundInvoice(), which works it out from
+     * the payments recorded against one invoice (app/Services/PaymentService.php:224-243)
+     * and then picks the settling transaction to refund against
+     * (PaymentService.php:245-249). So the number is in that invoice's own
+     * currency — the one stamped on the row the day it was raised, in
+     * Invoice::booted() (app/Models/Invoice.php:43-45) — and that same row is
+     * findable here by the id being refunded against.
+     *
+     * The shop's current currency is the fallback, for an id with no row behind
+     * it and for an invoice raised before that column existed. It is also what
+     * this method used implicitly until now, so nothing moves for a shop that
+     * has always sold in one currency: source_currency and shop_currency_code()
+     * are then the same three letters.
+     *
+     * Stripe is the authority on what currency the intent is in and is
+     * deliberately not asked. That would be a second API call on every refund,
+     * including the two-decimal refunds that are nearly all of them, and this
+     * repair is not allowed to add a request to a path that works today.
+     *
+     * The lookup does not filter on the gateway. The id is a Stripe id already,
+     * and a row written before this module settled on a lower-case gateway name
+     * would be missed by such a filter and silently fall back.
+     */
+    private function refundCurrency(string $transactionId): string
+    {
+        $invoice = Transaction::query()
+            ->where("transaction_id", $transactionId)
+            ->whereNotNull("invoice_id")
+            ->latest("id")
+            ->first()?->invoice;
+
+        return strtolower($invoice?->source_currency ?: shop_currency_code());
     }
 
     public function getPaymentForm(Invoice $invoice): string
@@ -507,7 +608,9 @@ HTML;
         return [
             "success"        => true,
             "transaction_id" => $intent["id"] ?? $intentId,
-            "amount"         => (int) ($intent["amount_received"] ?? 0) / 100,
+            // Stripe's own figure, in Stripe's own units, read back through the
+            // currency Stripe put on the intent it came from.
+            "amount"         => $this->reportedMajorUnits((int) ($intent["amount_received"] ?? 0), $intent["currency"] ?? null),
         ];
     }
 
@@ -1958,27 +2061,34 @@ HTML;
     /**
      * Money arrived.
      *
-     * Unchanged from the day this module was written: the webhook controller
-     * credits the invoice when it sees an invoice_id and a transaction_id
-     * together, and PaymentService refuses the same transaction twice.
+     * The shape of the answer is unchanged from the day this module was
+     * written: the webhook controller credits the invoice when it sees an
+     * invoice_id and a transaction_id together, and PaymentService refuses the
+     * same transaction twice. Only the reading of the amount has moved, onto
+     * the currency the event itself names.
      */
     private function webhookPaymentSucceeded(array $intentObj): array
     {
-        $intentId    = $intentObj["id"] ?? null;
-        $invoiceId   = $intentObj["metadata"]["invoice_id"] ?? null;
-        $amountCents = $intentObj["amount_received"] ?? 0;
+        $intentId  = $intentObj["id"] ?? null;
+        $invoiceId = $intentObj["metadata"]["invoice_id"] ?? null;
+
+        // What the event says was collected, in the currency the same event
+        // says it was collected in. A yen payment reports 5000 and means 5000;
+        // dividing it by a hundred credited the invoice with fifty and left the
+        // books agreeing with a charge that was a hundred times too big.
+        $amount = $this->reportedMajorUnits($intentObj["amount_received"] ?? 0, $intentObj["currency"] ?? null);
 
         Log::info("Stripe webhook: payment_intent.succeeded", [
             "intent_id"  => $intentId,
             "invoice_id" => $invoiceId,
-            "amount"     => $amountCents / 100,
+            "amount"     => $amount,
         ]);
 
         return [
             "success"        => true,
             "transaction_id" => $intentId,
             "invoice_id"     => $invoiceId,
-            "amount"         => $amountCents / 100,
+            "amount"         => $amount,
             "gateway"        => "stripe",
         ];
     }
