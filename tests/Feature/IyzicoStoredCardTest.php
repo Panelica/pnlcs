@@ -773,18 +773,26 @@ test('confirming a payment where the customer did not tick "save my card" stores
 // INVARIANT ZERO.
 // =============================================================================
 
-test('the other gateway modules are untouched and still satisfy the contract they always did', function () {
+test('every gateway module still satisfies the contract it always did', function () {
+    // THIS ONCE LISTED THE MODULES THAT MUST NOT VAULT, AND NAMED PAYPAL AMONG
+    // THEM. PayPal then gained the capability on purpose and the test failed for
+    // a reason that had nothing to do with what it is for. Capability is meant
+    // to spread; the invariant is that gaining it never costs a module the
+    // contract every gateway has always had to satisfy.
     $registry = app(ModuleRegistry::class);
 
-    foreach (['paypal', 'banktransfer', 'authorize', 'mollie', 'razorpay', 'tpay'] as $name) {
+    foreach ($registry->getGatewayModules() as $name) {
         $module = $registry->getGatewayModule($name);
 
-        if ($module === null) {
-            continue;
-        }
+        expect($module)->toBeInstanceOf(App\Contracts\GatewayModuleInterface::class, "{$name} no longer satisfies GatewayModuleInterface");
 
-        expect($module)->toBeInstanceOf(App\Contracts\GatewayModuleInterface::class)
-            ->and($module)->not->toBeInstanceOf(App\Contracts\TokenizableGatewayInterface::class);
+        // A module that claims it can keep a card has to be able to answer all
+        // four questions, not merely carry the marker.
+        if ($module instanceof App\Contracts\TokenizableGatewayInterface) {
+            foreach (['beginVaulting', 'confirmVaulting', 'detachStoredMethod', 'chargeStoredMethod'] as $method) {
+                expect(method_exists($module, $method))->toBeTrue("{$name} claims the vaulting capability without {$method}()");
+            }
+        }
     }
 });
 

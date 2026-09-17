@@ -181,10 +181,28 @@ class PaymentMethodController extends Controller
         foreach ($this->vaultingGateways() as [$candidate, $module]) {
             $opened = $module->beginVaulting($client);
 
-            if ($opened['success'] ?? false) {
+            // Opening a session is not the same as this page being able to
+            // finish it. PayPal opens one and hands back an approve link for
+            // the customer's browser to be sent to; this screen renders an
+            // inline form from a client secret and has no redirect leg built,
+            // so a PayPal session accepted here would draw a card form with
+            // nothing behind it. The test is what came back, not which gateway
+            // sent it - a hard-coded list of names would have to be edited
+            // every time a gateway is added, which is the defect this walk
+            // already exists to fix.
+            if (($opened['success'] ?? false) && ($opened['client_secret'] ?? null)) {
                 $name = $candidate;
                 $session = $opened;
                 break;
+            }
+
+            if ($opened['success'] ?? false) {
+                Log::info('Card vaulting: the gateway opened a session this page cannot finish', [
+                    'client' => $client->id,
+                    'gateway' => $candidate,
+                ]);
+
+                continue;
             }
 
             // Whatever the gateway said goes to the log, not to the customer:
@@ -309,15 +327,35 @@ class PaymentMethodController extends Controller
             ->with('success', __('client.payment_methods.card_stored'));
     }
 
-    /**
-     * The gateway this shop stores cards with, or null if there is none.
+    /*
+     * WHICH GATEWAY STORES THE CARD IS DECIDED BY ASKING, NOT BY NAMING.
      *
-     * The registry's list is the charger's list — one definition, so the offer
-     * to store a card and the willingness to charge it can never disagree. The
-     * first is taken when there are several, which today cannot happen: Stripe
-     * is the only module implementing the capability. A second one would need a
-     * choice on the page, and a choice is what the customer would then be given
-     * rather than what this method would guess.
+     * Two questions look alike and are not. ModuleRegistry answers "who can
+     * keep a card", which is the charger's list and the longer one. This screen
+     * has to answer a narrower one: whose flow can add-card.blade.php actually
+     * draw, and can storeCard() receive its answer? Stripe's finishes in the
+     * browser against a client secret, which is what that view is built around.
+     * PayPal's does not - its vault sends the payer to PayPal and brings them
+     * back to a return_url, and the screen and route for that leg do not exist
+     * yet, so PayPal can be charged unattended but cannot be added from here.
+     *
+     * createCard() decides that by looking at what the gateway handed back
+     * rather than at its name. A list of names would have to be edited every
+     * time a module gained the capability, and forgetting to edit it is exactly
+     * the silent failure this walk exists to prevent: tokenisedGateways() is
+     * built from gateway_settings in whatever order the table returns, so
+     * taking the first entry meant a shop that configured iyzico before Stripe
+     * quietly lost the ability to add a Stripe card. Nothing errored; the form
+     * simply stopped being drawn.
+     */
+
+    /**
+     * The gateway this shop stores payment methods with, or null if there is
+     * none this page can see a flow through.
+     *
+     * The registry's list is the charger's list, so the offer to store and the
+     * willingness to charge can never disagree about capability; this narrows
+     * it to what the screen can finish, for the reason above.
      *
      * @return array{0: string, 1: \App\Contracts\TokenizableGatewayInterface}|null
      */

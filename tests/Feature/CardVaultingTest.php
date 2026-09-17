@@ -563,20 +563,29 @@ test('a gateway refusal that will not change its mind is reported on the first s
 // ---------------------------------------------------------------------------
 
 test('removing a card stored by a gateway that cannot detach records no request that nothing can satisfy', function () {
-    // THE FEATURE IS NEVER SWITCHED ON, and the gateway holding the card
-    // implements GatewayModuleInterface only — PayPal here. It used to be
-    // iyzico, which now implements TokenizableGatewayInterface and so CAN be
-    // told to let a card go; the case this test is about is a module that never
-    // will be, whatever an operator configures.
+    // THE FEATURE IS NEVER SWITCHED ON, and the gateway holding the card is one
+    // that cannot be told to let it go.
+    //
+    // WHICH ONE IS NOT NAMED, ON PURPOSE. This test named iyzico, then PayPal,
+    // and each time that module gained the capability the test started failing
+    // for a reason that had nothing to do with what it is about. It asks the
+    // registry instead, so it keeps testing the same thing however many modules
+    // learn to detach — and fails loudly if a day comes when they all can,
+    // because then the branch it guards is dead code rather than untested.
     Http::fake();
     [$user, $client] = vaultingCustomer();
 
-    expect(App\Support\AutoCharge::enabled())->toBeFalse()
-        ->and(app(App\Services\Module\ModuleRegistry::class)->canDetachStoredMethods('paypal'))->toBeFalse();
+    $registry = app(App\Services\Module\ModuleRegistry::class);
+
+    $cannotDetach = collect($registry->getGatewayModules())
+        ->first(fn (string $name) => ! $registry->canDetachStoredMethods($name));
+
+    expect($cannotDetach)->not->toBeNull('every gateway can now detach; this test guards a branch that no longer exists')
+        ->and(App\Support\AutoCharge::enabled())->toBeFalse();
 
     $card = PaymentMethod::create([
         'client_id' => $client->id,
-        'gateway_name' => 'paypal',
+        'gateway_name' => $cannotDetach,
         'payment_type' => 'cc',
         'remote_token' => 'ba_agreement_1',
     ]);
@@ -609,10 +618,18 @@ test('a card already waiting on a gateway that cannot detach stops being asked a
     Http::fake();
     [, $client] = vaultingCustomer();
 
+    // Asked rather than named, for the reason given in the test above.
+    $registry = app(App\Services\Module\ModuleRegistry::class);
+
+    $cannotDetach = collect($registry->getGatewayModules())
+        ->first(fn (string $name) => ! $registry->canDetachStoredMethods($name));
+
+    expect($cannotDetach)->not->toBeNull('every gateway can now detach; this test guards a branch that no longer exists');
+
     // Written by an earlier build, before the request was refused at the click.
     $card = PaymentMethod::create([
         'client_id' => $client->id,
-        'gateway_name' => 'paypal',
+        'gateway_name' => $cannotDetach,
         'payment_type' => 'cc',
         'remote_token' => 'ba_agreement_1',
     ]);
