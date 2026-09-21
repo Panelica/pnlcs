@@ -72,7 +72,39 @@ class ModuleServiceProvider extends ServiceProvider
             // SSL Modules
             $registry->registerSsl('gogetssl', \Modules\Ssl\GoGetSSL\GoGetSslModule::class);
 
+            $this->discoverModules($registry);
+
             return $registry;
         });
+    }
+
+    private function discoverModules(ModuleRegistry $registry): void
+    {
+        foreach (glob(base_path('modules/*/*/pnlcs.json')) ?: [] as $manifestPath) {
+            $manifest = json_decode(
+                (string) file_get_contents($manifestPath),
+                true
+            );
+
+            if (! is_array($manifest)) {
+                continue;
+            }
+
+            $name = strtolower(trim((string) ($manifest['name'] ?? '')));
+            $type = strtolower(trim((string) ($manifest['type'] ?? '')));
+            $class = trim((string) ($manifest['class'] ?? ''));
+
+            if ($name === '' || $type === '' || $class === '' || ! class_exists($class)) {
+                continue;
+            }
+
+            match ($type) {
+                'server' => $registry->registerServer($name, $class),
+                'gateway' => $registry->registerGateway($name, $class),
+                'registrar' => $registry->registerRegistrar($name, $class),
+                'ssl' => $registry->registerSsl($name, $class),
+                default => null,
+            };
+        }
     }
 }
