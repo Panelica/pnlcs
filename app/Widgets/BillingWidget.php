@@ -42,13 +42,13 @@ class BillingWidget implements WidgetModuleInterface
     {
         return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
             <div style="text-align:center;padding:16px;border-right:1px solid var(--pn-border);border-bottom:1px solid var(--pn-border);">
-                <div style="font-size:22px;font-weight:700;color:#46a546;">'.e(money_fmt($data["today"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.__('admin.dashboard.today').'</div></div>
+                <div style="font-size:22px;font-weight:700;color:#46a546;">'.e(money_fmt($data["today"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.e(__('admin.dashboard.today')).'</div></div>
             <div style="text-align:center;padding:16px;border-bottom:1px solid var(--pn-border);">
-                <div style="font-size:22px;font-weight:700;color:#f89406;">'.e(money_fmt($data["month"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.__('admin.dashboard.this_month').'</div></div>
+                <div style="font-size:22px;font-weight:700;color:#f89406;">'.e(money_fmt($data["month"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.e(__('admin.dashboard.this_month')).'</div></div>
             <div style="text-align:center;padding:16px;border-right:1px solid var(--pn-border);">
-                <div style="font-size:22px;font-weight:700;color:#c43c35;">'.e(money_fmt($data["year"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.__('admin.dashboard.this_year').'</div></div>
+                <div style="font-size:22px;font-weight:700;color:#c43c35;">'.e(money_fmt($data["year"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.e(__('admin.dashboard.this_year')).'</div></div>
             <div style="text-align:center;padding:16px;">
-                <div style="font-size:22px;font-weight:700;">'.e(money_fmt($data["all"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.__('admin.dashboard.all_time').'</div></div>
+                <div style="font-size:22px;font-weight:700;">'.e(money_fmt($data["all"])).'</div><div style="font-size:11px;color:var(--pn-muted);">'.e(__('admin.dashboard.all_time')).'</div></div>
         </div>';
     }
 }

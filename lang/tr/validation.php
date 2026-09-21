@@ -18,7 +18,7 @@ return [
     ],
     'min_length' => ':attribute alanı en az :min karakter olmalıdır.',
     'numeric' => ':attribute alanı sayı olmalıdır.',
-    'password_requirements' => 'Şifre en az 8 karakter olmalıdır.',
+    'password_requirements' => 'Parola en az 8 karakter olmalıdır.',
     'required' => ':attribute alanı zorunludur.',
     'string' => ':attribute alanı metin olmalıdır.',
     'unique' => ':attribute alanı zaten kullanılıyor.',

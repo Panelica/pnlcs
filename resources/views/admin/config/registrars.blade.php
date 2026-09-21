@@ -18,7 +18,7 @@
                 {{ $reg->label }}
                 @if($reg->help)
                 <span class="help-badge" tabindex="0">?
-                    <span class="help-tooltip"><span class="help-tooltip-inner">{!! $reg->help !!}</span></span>
+                    <span class="help-tooltip"><span class="help-tooltip-inner">{{ inline_markup($reg->help) }}</span></span>
                 </span>
                 @endif
             </span>

@@ -24,7 +24,15 @@
         <div class="hero__inner">
             <div>
                 <div class="hero__badge"><i class="ri-shield-check-line"></i> {{ $badgeText }}</div>
-                <h1 class="hero__title">{!! $heroTitle !!}</h1>
+                {{-- The headline is the one string on this page allowed to
+                     carry markup: the Turkish and English values both wrap
+                     their second half in <span> for the accent colour that
+                     .hero__title span sets. It reaches here from the site
+                     content editor or from sections.hero.title, and both of
+                     those are operator-writable, so it goes through the same
+                     allow-list the public guide pages use rather than through
+                     a raw echo. See App\Support\InlineMarkup. --}}
+                <h1 class="hero__title">{{ inline_markup($heroTitle) }}</h1>
                 <p class="hero__title-sub">{{ $heroSubtitle }}</p>
                 <p class="hero__desc">{{ $heroDesc }}</p>
                 <div class="hero__stats">

@@ -15,7 +15,9 @@
              reason the mail never arrives, and the customer cannot spot one
              they were never shown. --}}
         <p style="margin:0 0 14px;">
-            {!! __('client.email_verify.sent_to', ['email' => '<strong>'.e(auth()->user()->email).'</strong>']) !!}
+            {{-- trans_markup escapes the address as part of the sentence, so
+                 it is not escaped again here. --}}
+            {{ trans_markup('client.email_verify.sent_to', ['email' => '<strong>'.auth()->user()->email.'</strong>']) }}
         </p>
 
         <p style="margin:0 0 18px;color:var(--muted);font-size:13px;">

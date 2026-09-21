@@ -50,11 +50,11 @@ class HealthWidget implements WidgetModuleInterface
     public function render(array $data): string
     {
         $items = [
-            [__('admin.dashboard.php'), $data['php_version'] ?? PHP_VERSION, '#337ab7'],
-            [__('admin.dashboard.laravel'), $data['laravel_version'] ?? '-', '#c43c35'],
-            [__('admin.dashboard.db_size'), ($data['db_size_mb'] ?? 0) . ' MB', '#46a546'],
-            [__('admin.dashboard.disk_free'), ($data['disk_free_gb'] ?? 0) . ' GB', '#f89406'],
-            [__('admin.dashboard.uptime'), $data['uptime_str'] ?? __('admin.dashboard.na'), '#008b8b'],
+            [e(__('admin.dashboard.php')), $data['php_version'] ?? PHP_VERSION, '#337ab7'],
+            [e(__('admin.dashboard.laravel')), $data['laravel_version'] ?? '-', '#c43c35'],
+            [e(__('admin.dashboard.db_size')), ($data['db_size_mb'] ?? 0) . ' MB', '#46a546'],
+            [e(__('admin.dashboard.disk_free')), ($data['disk_free_gb'] ?? 0) . ' GB', '#f89406'],
+            [e(__('admin.dashboard.uptime')), $data['uptime_str'] ?? e(__('admin.dashboard.na')), '#008b8b'],
         ];
         $html = '';
         foreach ($items as $item) {

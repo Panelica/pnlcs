@@ -37,12 +37,12 @@ class OverviewWidget implements WidgetModuleInterface
     public function render(array $data): string
     {
         $stats = [
-            [__('admin.dashboard.w_clients'), $data["clients"], "#337ab7", "admin/clients"],
-            [__('admin.dashboard.active_services'), $data["services"], "#46a546", "admin/services"],
-            [__('admin.dashboard.active_domains'), $data["domains"], "#008b8b", "admin/domains"],
-            [__('admin.dashboard.pending_orders'), $data["orders_pending"], "#f89406", "admin/orders"],
-            [__('admin.dashboard.open_tickets'), $data["tickets_open"], "#c43c35", "admin/tickets"],
-            [__('admin.dashboard.unpaid_invoices'), $data["invoices_unpaid"], "#d68100", "admin/invoices"],
+            [e(__('admin.dashboard.w_clients')), $data["clients"], "#337ab7", "admin/clients"],
+            [e(__('admin.dashboard.active_services')), $data["services"], "#46a546", "admin/services"],
+            [e(__('admin.dashboard.active_domains')), $data["domains"], "#008b8b", "admin/domains"],
+            [e(__('admin.dashboard.pending_orders')), $data["orders_pending"], "#f89406", "admin/orders"],
+            [e(__('admin.dashboard.open_tickets')), $data["tickets_open"], "#c43c35", "admin/tickets"],
+            [e(__('admin.dashboard.unpaid_invoices')), $data["invoices_unpaid"], "#d68100", "admin/invoices"],
         ];
         $html = '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:0;">';
         foreach ($stats as [$label, $value, $color, $link]) {

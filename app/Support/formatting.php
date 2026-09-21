@@ -2,6 +2,8 @@
 
 use App\Models\Currency;
 use App\Models\Setting;
+use App\Support\InlineMarkup;
+use Illuminate\Support\HtmlString;
 
 if (! function_exists('money_fmt')) {
     /**
@@ -529,5 +531,46 @@ if (! function_exists('funds_round_preset')) {
         $magnitude = 10 ** (floor(log10($amount)) - 1);
 
         return (float) (round($amount / $magnitude) * $magnitude);
+    }
+}
+
+if (! function_exists('trans_markup')) {
+    /**
+     * A translated sentence that is allowed to carry a little markup.
+     *
+     * For the prose whose <strong> or <code> belongs inside the key rather
+     * than in the blade around it - see App\Support\InlineMarkup for why
+     * splitting those sentences is not an option and why the guard sits on
+     * the render side.
+     *
+     * Returns an HtmlString, so the call site is {{ trans_markup('...') }}
+     * and not {!! __('...') !!}: the value reaches the page through the
+     * allow-list or it does not reach it at all, and a reviewer grepping the
+     * view for raw echoes finds nothing to check by hand.
+     *
+     * Replacements are made before the guard runs, so :host, :domain and a
+     * :link built in the view are escaped and judged by exactly the same
+     * rules as the stored text they land in.
+     */
+    function trans_markup(string $key, array $replace = [], ?string $locale = null): HtmlString
+    {
+        $line = __($key, $replace, $locale);
+
+        // __() hands back an array when the key names a whole group. Printing
+        // the key is what the reader would have seen anyway, and it says
+        // which key was asked for wrongly.
+        return InlineMarkup::render(is_string($line) ? $line : $key);
+    }
+}
+
+if (! function_exists('inline_markup')) {
+    /**
+     * The same guard for a sentence that has already been resolved - one that
+     * may have come from the site content editor instead of a translation, as
+     * the homepage headline does.
+     */
+    function inline_markup(?string $value): HtmlString
+    {
+        return InlineMarkup::render($value);
     }
 }

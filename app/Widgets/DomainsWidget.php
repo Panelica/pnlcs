@@ -39,9 +39,9 @@ class DomainsWidget implements WidgetModuleInterface
 
     public function render(array $data): string
     {
-        $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);display:flex;justify-content:space-between;font-size:13px;"><span>'.__('admin.dashboard.total_label').': <b>'.e($data["total"]).'</b></span><span style="color:#c43c35;">'.__('admin.dashboard.expiring_30d').': <b>'.e($data["expiring"]).'</b></span></div>';
+        $html = '<div style="padding:12px 16px;border-bottom:1px solid var(--pn-border);display:flex;justify-content:space-between;font-size:13px;"><span>'.e(__('admin.dashboard.total_label')).': <b>'.e($data["total"]).'</b></span><span style="color:#c43c35;">'.e(__('admin.dashboard.expiring_30d')).': <b>'.e($data["expiring"]).'</b></span></div>';
         foreach ($data["upcoming"] as $d) { $html .= '<div style="padding:8px 16px;border-bottom:1px solid var(--pn-border);font-size:13px;">'.e($d["domain"]).'<span style="float:right;color:var(--pn-muted);font-size:11px;">'.e($d["expiry_date"]).'</span></div>'; }
-        if (empty($data["upcoming"])) { $html .= '<div style="padding:16px;text-align:center;font-size:13px;color:var(--pn-muted);">'.__('admin.dashboard.no_domains_expiring').'</div>'; }
+        if (empty($data["upcoming"])) { $html .= '<div style="padding:16px;text-align:center;font-size:13px;color:var(--pn-muted);">'.e(__('admin.dashboard.no_domains_expiring')).'</div>'; }
         return $html;
     }
 }

@@ -38,17 +38,17 @@
         <h2 style="margin:0;font-size:16px;font-weight:700;">{{ __('admin.api_docs.auth_title') }}</h2>
     </div>
     <div class="card-body" style="padding:16px;">
-        <p style="margin:0 0 12px;font-size:13px;color:#555;">{!! __('admin.api_docs.auth_intro') !!}</p>
+        <p style="margin:0 0 12px;font-size:13px;color:#555;">{{ trans_markup('admin.api_docs.auth_intro') }}</p>
         <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:16px;">
             <thead><tr><th style="text-align:left;padding:6px 10px;background:#fafafa;border-bottom:2px solid #e5e5e5;">{{ __('admin.api_docs.parameter') }}</th><th style="text-align:left;padding:6px 10px;background:#fafafa;border-bottom:2px solid #e5e5e5;">{{ __('common.table.description') }}</th></tr></thead>
             <tbody>
                 <tr><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;"><code>identifier</code></td><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;">{{ __('admin.api_docs.identifier_desc') }}</td></tr>
                 <tr><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;"><code>secret</code></td><td style="padding:6px 10px;border-bottom:1px solid #f0f0f0;">{{ __('admin.api_docs.secret_desc') }}</td></tr>
-                <tr><td style="padding:6px 10px;"><code>action</code></td><td style="padding:6px 10px;">{!! __('admin.api_docs.action_param_desc') !!}</td></tr>
+                <tr><td style="padding:6px 10px;"><code>action</code></td><td style="padding:6px 10px;">{{ trans_markup('admin.api_docs.action_param_desc') }}</td></tr>
             </tbody>
         </table>
         <p style="font-size:13px;color:#555;margin:0 0 8px;"><strong>{{ __('admin.api_docs.base_url') }}:</strong> <code>POST {{ url('/api/v1') }}</code></p>
-        <p style="font-size:12px;color:#888;margin:0;">{!! __('admin.api_docs.response_note') !!}</p>
+        <p style="font-size:12px;color:#888;margin:0;">{{ trans_markup('admin.api_docs.response_note') }}</p>
     </div>
 </div>
 

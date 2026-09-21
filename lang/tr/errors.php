@@ -2,17 +2,17 @@
 
 return [
     '403' => [
-        'message' => 'You don\'t have permission to access bu resource.',
-        'title' => 'Access Denied',
+        'message' => 'Bu sayfaya erişim izniniz yok.',
+        'title' => 'Erişim Reddedildi',
     ],
     '404' => [
-        'message' => ' page you\'re looking for doesn\'t exist or  moved.',
-        'title' => 'Sayfa Not Found',
+        'message' => 'Aradığınız sayfa bulunamadı.',
+        'title' => 'Sayfa Bulunamadı',
     ],
     '419' => [
-        'message' => 'Sizin session has expired. Lutfen refresh  page and try again.',
+        'message' => 'Oturumunuzun süresi doldu. Lütfen sayfayı yenileyip tekrar deneyin.',
         'refresh' => 'Sayfayı Yenile',
-        'title' => 'Oturum Expired',
+        'title' => 'Sayfanın Süresi Doldu',
     ],
     '500' => [
         'message' => 'Teknik bir sorun yaşıyoruz. Lütfen daha sonra tekrar deneyin.',

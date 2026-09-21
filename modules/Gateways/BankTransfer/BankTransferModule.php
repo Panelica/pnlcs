@@ -113,7 +113,18 @@ class BankTransferModule implements GatewayModuleInterface
             "message" => "Bank transfer refunds must be processed manually. Please contact your bank.",
         ];
     }
-
+    /**
+     * The form a customer sees when they choose bank transfer.
+     *
+     * EVERY TRANSLATION IS ESCAPED, not only the data. The values come from
+     * dynamic_translations, which the admin translation editor writes with no
+     * sanitising, and this string is printed by
+     * resources/views/client/invoices/show.blade.php with {!! !!} because it
+     * is a form. So a stored <script> in any of these sixteen labels ran in a
+     * paying customer's browser. None of these keys ships with markup - the
+     * fifteen banktransfer.* values and invoices.invoice_prefix are all plain
+     * text - so escaping them changes nothing a customer reads.
+     */
     public function getPaymentForm(Invoice $invoice): string
     {
         $e = fn (string $v): string => htmlspecialchars($v, ENT_QUOTES, "UTF-8");
@@ -127,19 +138,19 @@ class BankTransferModule implements GatewayModuleInterface
         // follows in brackets.
         $amount      = dual_money_fmt($invoice->amountDue(), $invoice);
 
-        $detailsTitle = __('messages.banktransfer.details_title');
-        $bankLabel    = __('messages.banktransfer.bank_name');
-        $holderLabel  = __('messages.banktransfer.account_name');
-        $ibanLabel    = __('messages.banktransfer.iban');
-        $refLabel     = __('messages.banktransfer.reference');
-        $amountLabel  = __('messages.banktransfer.amount');
-        $noteLabel    = __('messages.banktransfer.note');
-        $refHint      = __('messages.banktransfer.use_invoice_reference');
+        $detailsTitle = $e(__('messages.banktransfer.details_title'));
+        $bankLabel    = $e(__('messages.banktransfer.bank_name'));
+        $holderLabel  = $e(__('messages.banktransfer.account_name'));
+        $ibanLabel    = $e(__('messages.banktransfer.iban'));
+        $refLabel     = $e(__('messages.banktransfer.reference'));
+        $amountLabel  = $e(__('messages.banktransfer.amount'));
+        $noteLabel    = $e(__('messages.banktransfer.note'));
+        $refHint      = $e(__('messages.banktransfer.use_invoice_reference'));
         // The reference is the short code, not the invoice number: the long
         // number is hard to get right in a bank's description box.
         $reference     = $e(payment_ref($invoice));
-        $invoiceLabel = __('client.invoices.invoice_prefix', ['id' => $invoiceNum]);
-        $pendingHint  = __('messages.banktransfer.transfer_pending');
+        $invoiceLabel = $e(__('client.invoices.invoice_prefix', ['id' => $invoiceNum]));
+        $pendingHint  = $e(__('messages.banktransfer.transfer_pending'));
 
         // Each bank in its own table: stacked in one table, a customer could
         // pair one bank's name with another's IBAN.
@@ -153,10 +164,10 @@ class BankTransferModule implements GatewayModuleInterface
             }
 
             foreach ([
-                "account_number" => __('messages.banktransfer.account_number'),
-                "sort_code"      => __('messages.banktransfer.sort_code'),
+                "account_number" => $e(__('messages.banktransfer.account_number')),
+                "sort_code"      => $e(__('messages.banktransfer.sort_code')),
                 "iban"           => $ibanLabel,
-                "swift"          => __('messages.banktransfer.swift'),
+                "swift"          => $e(__('messages.banktransfer.swift')),
             ] as $field => $label) {
                 if ($bank[$field] !== "") {
                     $rows .= '<tr><th scope="row">'.$label.'</th><td><code>'.$e($bank[$field]).'</code></td></tr>';
@@ -169,7 +180,7 @@ class BankTransferModule implements GatewayModuleInterface
         }
 
         if ($bankBlocks === "") {
-            return '<div class="alert alert-warning">'.__('messages.banktransfer.no_accounts').'</div>';
+            return '<div class="alert alert-warning">'.$e(__('messages.banktransfer.no_accounts')).'</div>';
         }
 
         // Reference and amount are the same whichever bank is used; once, at
@@ -178,7 +189,7 @@ class BankTransferModule implements GatewayModuleInterface
         // in one currency for a figure that came from another, and cannot
         // check the number without the source and date of the rate.
         $rateRow = billing_rate_note($invoice)
-            ? '<tr><th scope="row">'.__('pdf.rate_label').'</th><td>'.$e(billing_rate_note($invoice)).'</td></tr>'
+            ? '<tr><th scope="row">'.$e(__('pdf.rate_label')).'</th><td>'.$e(billing_rate_note($invoice)).'</td></tr>'
             : '';
 
         $summary = '<div class="card my-3"><div class="card-body p-0"><table class="table table-bordered mb-0"><tbody>'
@@ -188,7 +199,7 @@ class BankTransferModule implements GatewayModuleInterface
             . '</tbody></table></div></div>';
 
         $notesHtml = $notes !== ""
-            ? '<div class="alert alert-info mt-3"><strong>'.__('messages.banktransfer.instructions').'</strong><br>'.nl2br($e($notes)).'</div>'
+            ? '<div class="alert alert-info mt-3"><strong>'.$e(__('messages.banktransfer.instructions')).'</strong><br>'.nl2br($e($notes)).'</div>'
             : "";
 
         return '<div class="card my-3"><div class="card-header bg-light">'
