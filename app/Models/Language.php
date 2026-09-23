@@ -31,6 +31,18 @@ class Language extends Model
         return $query->where('is_default', true);
     }
 
+    /**
+     * Languages an operator may make the default: the ones already switched
+     * on, and the ones fully translated even while switched off. Offering
+     * only the active ones hid finished translations behind a second screen —
+     * a fresh install has English alone switched on, so Turkish at 100% never
+     * appeared in the list. Making a language the default switches it on.
+     */
+    public function scopeEligibleAsDefault($query)
+    {
+        return $query->where(fn ($q) => $q->where('is_active', true)->orWhere('translation_progress', '>=', 100));
+    }
+
     public static function getDefault(): ?self
     {
         return static::where('is_default', true)->first();

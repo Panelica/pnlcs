@@ -835,6 +835,7 @@ return [
     'config.languages.ai_translate_confirm' => 'AI translate all missing keys for :name?',
     'config.languages.clear_cache' => 'Clear Cache',
     'config.languages.default_language' => 'Default Language',
+    'config.languages.inactive_enabled_on_save' => 'switched on when saved',
     'config.languages.direction' => 'Direction',
     'config.languages.flag' => 'Flag',
     'config.languages.gpt35' => 'GPT-3.5 Turbo (Legacy)',

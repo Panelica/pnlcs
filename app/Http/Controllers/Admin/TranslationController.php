@@ -57,7 +57,9 @@ class TranslationController extends Controller
             $lang->save();
         }
 
-        return view('admin.config.languages.index', compact('languages', 'totalKeys'));
+        $defaultCandidates = Language::eligibleAsDefault()->orderBy('sort_order')->get();
+
+        return view('admin.config.languages.index', compact('languages', 'totalKeys', 'defaultCandidates'));
     }
 
     public function toggle(Language $language)
@@ -73,7 +75,9 @@ class TranslationController extends Controller
 
     public function setDefault(Request $request)
     {
-        $request->validate(['code' => 'required|exists:languages,code']);
+        $request->validate(['code' => ['required', 'string', \Illuminate\Validation\Rule::in(
+            Language::eligibleAsDefault()->pluck('code')->all()
+        )]]);
         Language::where('is_default', true)->update(['is_default' => false]);
         Language::where('code', $request->code)->update(['is_default' => true, 'is_active' => true]);
         Setting::set('DefaultLanguage', $request->code, 'language');

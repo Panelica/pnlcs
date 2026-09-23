@@ -825,6 +825,7 @@ return [
     'config.languages.ai_translate_confirm' => ':name için eksik tüm anahtarlar yapay zekâ ile çevrilsin mi?',
     'config.languages.clear_cache' => 'Önbelleği Temizle',
     'config.languages.default_language' => 'Varsayılan Dil',
+    'config.languages.inactive_enabled_on_save' => 'kaydedince etkinleşir',
     'config.languages.direction' => 'Yön',
     'config.languages.flag' => 'Bayrak',
     'config.languages.gpt35' => 'GPT-3.5 Turbo (Eski)',

@@ -835,6 +835,7 @@ return [
     'config.languages.ai_translate_confirm' => '确定使用 AI 翻译 :name 的所有缺失文案吗？',
     'config.languages.clear_cache' => '清除缓存',
     'config.languages.default_language' => '默认语言',
+    'config.languages.inactive_enabled_on_save' => '保存后将启用',
     'config.languages.direction' => '文字方向',
     'config.languages.flag' => '国旗图标',
     'config.languages.gpt35' => 'GPT-3.5 Turbo（旧版）',

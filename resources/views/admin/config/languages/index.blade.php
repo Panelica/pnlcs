@@ -99,8 +99,8 @@
             <div class="form-group">
                 <label class="form-label">{{ __('admin.config.languages.default_language') }}</label>
                 <select name="code" class="form-control" style="max-width:300px;">
-                    @foreach($languages->where('is_active', true) as $lang)
-                    <option value="{{ $lang->code }}" {{ $lang->is_default ? 'selected' : '' }}>{{ $lang->name }} ({{ $lang->native_name }})</option>
+                    @foreach($defaultCandidates as $lang)
+                    <option value="{{ $lang->code }}" {{ $lang->is_default ? 'selected' : '' }}>{{ $lang->name }} ({{ $lang->native_name }}){{ $lang->is_active ? '' : ' — '.__('admin.config.languages.inactive_enabled_on_save') }}</option>
                     @endforeach
                 </select>
             </div>

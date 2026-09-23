@@ -835,6 +835,7 @@ return [
     'config.languages.ai_translate_confirm' => 'Przetłumaczyć przez AI wszystkie brakujące klucze dla :name?',
     'config.languages.clear_cache' => 'Wyczyść pamięć podręczną',
     'config.languages.default_language' => 'Język domyślny',
+    'config.languages.inactive_enabled_on_save' => 'zostanie włączony po zapisaniu',
     'config.languages.direction' => 'Kierunek',
     'config.languages.flag' => 'Flaga',
     'config.languages.gpt35' => 'GPT-3.5 Turbo (Legacy)',
