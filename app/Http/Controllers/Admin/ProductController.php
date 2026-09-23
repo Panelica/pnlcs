@@ -234,6 +234,7 @@ class ProductController extends Controller
             'panelicaPlans' => $panelicaPlans,
             'panelicaTemplates' => $panelicaTemplates,
             'serverModules' => app(ModuleRegistry::class)->serverModuleNames(),
+            'sslModules' => app(ModuleRegistry::class)->sslModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => $this->packagesFor($product->server_type),
             'selectedPackage' => (string) ($this->productConfig($product)['package_name']

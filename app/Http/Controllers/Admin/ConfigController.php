@@ -596,9 +596,24 @@ class ConfigController extends Controller
 
     public function servers()
     {
+        $servers = Server::all();
+        $registry = app(ModuleRegistry::class);
+
+        // The type choices come from the modules installed and switched on,
+        // not a list typed into the page: that list offered CyberPanel, which
+        // has no module, and left out HestiaCP, Proxmox and Vultr, which do.
+        // A type an existing server already carries stays choosable, so
+        // editing that server does not silently change it.
+        $types = $registry->serverModuleNames();
+        $all = $registry->serverModuleNames(true);
+        foreach ($servers->pluck('type')->filter()->map(fn ($t) => strtolower((string) $t))->unique() as $type) {
+            $types[$type] ??= $all[$type] ?? ucfirst($type);
+        }
+
         return view('admin.config.servers', [
-            'servers' => Server::all(),
+            'servers' => $servers,
             'groups' => ServerGroup::all(),
+            'serverTypes' => $types,
         ]);
     }
 

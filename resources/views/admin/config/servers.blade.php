@@ -72,12 +72,9 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.ip_address') }}</label><input type="text" name="ip_address" class="form-control" placeholder="e.g. 138.201.59.57"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.server_type') }}</label>
                         <select name="type" class="form-control" onchange="serverTypeTuning(this, '')">
-                            <option value="panelica">Panelica</option>
-                            <option value="cpanel">cPanel/WHM</option>
-                            <option value="plesk">Plesk</option>
-                            <option value="directadmin">DirectAdmin</option>
-                            <option value="cyberpanel">CyberPanel</option>
-                            <option value="custom">Custom / Other</option>
+                            @foreach($serverTypes as $typeKey => $typeLabel)
+                            <option value="{{ $typeKey }}" @selected($typeKey === 'panelica')>{{ $typeLabel }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.port') }}</label><input type="number" name="port" value="8443" class="form-control" data-role="port"></div>
@@ -124,12 +121,9 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.ip_address') }}</label><input type="text" id="edit-ip" name="ip_address" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.server_type') }}</label>
                         <select id="edit-type" name="type" class="form-control" onchange="serverTypeTuning(this, 'edit')">
-                            <option value="panelica">Panelica</option>
-                            <option value="cpanel">cPanel/WHM</option>
-                            <option value="plesk">Plesk</option>
-                            <option value="directadmin">DirectAdmin</option>
-                            <option value="cyberpanel">CyberPanel</option>
-                            <option value="custom">Custom / Other</option>
+                            @foreach($serverTypes as $typeKey => $typeLabel)
+                            <option value="{{ $typeKey }}" @selected($typeKey === 'panelica')>{{ $typeLabel }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.port') }}</label><input type="number" id="edit-port" name="port" class="form-control"></div>

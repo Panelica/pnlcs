@@ -7,7 +7,6 @@ use App\Models\EmailTemplate;
 use App\Models\Language;
 use App\Observers\EmailTemplateObserver;
 use App\Observers\LanguageObserver;
-use App\Services\Module\ModuleRegistry;
 use App\Services\ThemeManager;
 use App\Services\ReportManager;
 use App\Services\WidgetManager;
@@ -24,7 +23,6 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(ModuleRegistry::class);
         $this->app->bind(\App\Contracts\MailboxClientInterface::class, \App\Services\Mail\ImapMailboxClient::class);
         $this->app->singleton(ThemeManager::class);
         $this->app->singleton(ReportManager::class);
@@ -76,23 +74,6 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(10)->by('api-ip:'.$request->ip());
         });
-        $registry = $this->app->make(ModuleRegistry::class);
-
-        // Server modules
-        $registry->registerServer("custom",      \Modules\Servers\Custom\CustomModule::class);
-        $registry->registerServer("panelica",    \Modules\Servers\Panelica\PanelicaModule::class);
-        $registry->registerServer("cpanel",      \Modules\Servers\CPanel\CPanelModule::class);
-
-        // Gateway modules
-        $registry->registerGateway("banktransfer", \Modules\Gateways\BankTransfer\BankTransferModule::class);
-        $registry->registerGateway("paypal",       \Modules\Gateways\PayPal\PayPalModule::class);
-        $registry->registerGateway("stripe",       \Modules\Gateways\Stripe\StripeModule::class);
-        $registry->registerGateway("authorize",    \Modules\Gateways\AuthorizeNet\AuthorizeNetModule::class);
-
-        // Registrar modules
-        $registry->registerRegistrar("manual", \Modules\Registrars\Manual\ManualRegistrar::class);
-        $registry->registerRegistrar("enom",   \Modules\Registrars\Enom\EnomRegistrar::class);
-
         // Theme Engine: prepend active theme's view directory
         try {
             $themeManager = $this->app->make(ThemeManager::class);

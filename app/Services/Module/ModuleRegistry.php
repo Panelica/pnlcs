@@ -8,6 +8,7 @@ use App\Contracts\ServerModuleInterface;
 use App\Contracts\SslModuleInterface;
 use App\Contracts\TokenizableGatewayInterface;
 use App\Models\GatewaySettings;
+use App\Models\Setting;
 
 class ModuleRegistry
 {
@@ -19,6 +20,30 @@ class ModuleRegistry
 
     protected array $sslModules = [];
 
+    /** @var array<string, array<string, string>> type => key => manifest path, for modules found by discovery */
+    protected array $discovered = [];
+
+    /**
+     * How the vendors write their own names. getModuleName() is the lookup key
+     * for most built-in modules ("cpanel", "gogetssl"), and ucfirst() of that
+     * is not a name anyone would recognise on a form.
+     */
+    private const DISPLAY_NAMES = [
+        'cpanel' => 'cPanel/WHM',
+        'directadmin' => 'DirectAdmin',
+        'hestiacp' => 'HestiaCP',
+        'proxmox' => 'Proxmox VE',
+        'gogetssl' => 'GoGetSSL',
+    ];
+
+    /** The interface each module type must implement, keyed by manifest type. */
+    public const TYPE_CONTRACTS = [
+        'server' => ServerModuleInterface::class,
+        'gateway' => GatewayModuleInterface::class,
+        'registrar' => RegistrarModuleInterface::class,
+        'ssl' => SslModuleInterface::class,
+    ];
+
     /**
      * Module names are matched case-insensitively. Stored values disagree on
      * case with the registration keys — the registrar modules write
@@ -29,6 +54,63 @@ class ModuleRegistry
     private static function key(string $name): string
     {
         return strtolower(trim($name));
+    }
+
+    /**
+     * Register a module found through its pnlcs.json manifest.
+     *
+     * Two rules, both chosen on purpose:
+     *
+     *  - An explicit registration wins. The built-in modules already ship
+     *    manifests; today none carries a "class", but the day one does, it
+     *    must not silently replace the entry the core registered for it.
+     *  - The class must be the kind of module its manifest says it is. A
+     *    gateway manifest pointing at a server class would load, pass
+     *    class_exists(), and fail only when a customer reached checkout.
+     *
+     * Returns whether the module was registered.
+     */
+    public function registerDiscovered(string $type, string $name, string $class, string $manifestPath): bool
+    {
+        $contract = self::TYPE_CONTRACTS[$type] ?? null;
+
+        if ($contract === null || $this->has($type, $name) || ! is_a($class, $contract, true)) {
+            return false;
+        }
+
+        match ($type) {
+            'server' => $this->registerServer($name, $class),
+            'gateway' => $this->registerGateway($name, $class),
+            'registrar' => $this->registerRegistrar($name, $class),
+            'ssl' => $this->registerSsl($name, $class),
+        };
+
+        $this->discovered[$type][self::key($name)] = $manifestPath;
+
+        return true;
+    }
+
+    public function has(string $type, string $name): bool
+    {
+        return isset($this->classesOf($type)[self::key($name)]);
+    }
+
+    /** Whether this module came from a manifest rather than the core's own list. */
+    public function isDiscovered(string $type, string $name): bool
+    {
+        return isset($this->discovered[$type][self::key($name)]);
+    }
+
+    /** @return array<string, string> key => class, for one module type */
+    public function classesOf(string $type): array
+    {
+        return match ($type) {
+            'server' => $this->serverModules,
+            'gateway' => $this->gatewayModules,
+            'registrar' => $this->registrarModules,
+            'ssl' => $this->sslModules,
+            default => [],
+        };
     }
 
     public function registerServer(string $name, string $class): void
@@ -56,16 +138,21 @@ class ModuleRegistry
      *
      * @return array<string, string> registration key => display name
      */
-    public function serverModuleNames(): array
+    public function serverModuleNames(bool $includeSwitchedOff = false): array
     {
         $names = [];
 
         foreach (array_keys($this->serverModules) as $key) {
+            if (! $includeSwitchedOff && $this->isSwitchedOff('server', $key)) {
+                continue;
+            }
+
             try {
                 // getModuleName() is the lookup key for most modules, which
                 // makes a poor label; only use it when it says something more.
                 $name = (string) ($this->getServerModule($key)?->getModuleName() ?? '');
-                $names[$key] = strtolower($name) === $key || $name === '' ? ucfirst($key) : $name;
+                $names[$key] = self::DISPLAY_NAMES[$key]
+                    ?? (strtolower($name) === $key || $name === '' ? ucfirst($key) : $name);
             } catch (\Throwable) {
                 $names[$key] = ucfirst($key);
             }
@@ -74,6 +161,62 @@ class ModuleRegistry
         ksort($names);
 
         return $names;
+    }
+
+    /**
+     * The SSL modules this installation offers, for the product form.
+     *
+     * @return array<string, string> registration key => display name
+     */
+    public function sslModuleNames(bool $includeSwitchedOff = false): array
+    {
+        $names = [];
+
+        foreach (array_keys($this->sslModules) as $key) {
+            if (! $includeSwitchedOff && $this->isSwitchedOff('ssl', $key)) {
+                continue;
+            }
+            try {
+                $name = (string) ($this->getSslModule($key)?->getModuleName() ?? '');
+                $names[$key] = self::DISPLAY_NAMES[$key]
+                    ?? (strtolower($name) === $key || $name === '' ? ucfirst($key) : $name);
+            } catch (\Throwable) {
+                $names[$key] = ucfirst($key);
+            }
+        }
+
+        ksort($names);
+
+        return $names;
+    }
+
+    /**
+     * Whether an operator switched this server or SSL module off on the
+     * modules screen. Off means "do not offer it when choosing a module";
+     * nothing already using it is affected, and ModuleSwitchboard refuses to
+     * switch off a module anything uses.
+     *
+     * Gateways, registrars and addons are not asked here: each has had its own
+     * switch for longer, read where it matters (see ModuleSwitchboard).
+     */
+    public function isSwitchedOff(string $type, string $name): bool
+    {
+        try {
+            return Setting::get(self::switchKey($type, $name), '0') === '1';
+        } catch (\Throwable) {
+            // Install and migrate run before the settings table exists.
+            return false;
+        }
+    }
+
+    public function switchOff(string $type, string $name, bool $off): void
+    {
+        Setting::set(self::switchKey($type, $name), $off ? '1' : '0', 'modules');
+    }
+
+    private static function switchKey(string $type, string $name): string
+    {
+        return 'module_'.$type.'_'.self::key($name).'_off';
     }
 
     /**

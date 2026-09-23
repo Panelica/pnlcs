@@ -78,6 +78,14 @@ class ModuleServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Register third-party modules that describe themselves with a pnlcs.json
+     * manifest, so installing one does not mean editing this file.
+     *
+     * The rules about what a manifest may register live in
+     * ModuleRegistry::registerDiscovered(): the core's own registrations
+     * above always win, and the class must implement its type's contract.
+     */
     private function discoverModules(ModuleRegistry $registry): void
     {
         foreach (glob(base_path('modules/*/*/pnlcs.json')) ?: [] as $manifestPath) {
@@ -98,13 +106,7 @@ class ModuleServiceProvider extends ServiceProvider
                 continue;
             }
 
-            match ($type) {
-                'server' => $registry->registerServer($name, $class),
-                'gateway' => $registry->registerGateway($name, $class),
-                'registrar' => $registry->registerRegistrar($name, $class),
-                'ssl' => $registry->registerSsl($name, $class),
-                default => null,
-            };
+            $registry->registerDiscovered($type, $name, $class, $manifestPath);
         }
     }
 }
