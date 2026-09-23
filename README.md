@@ -340,16 +340,19 @@ fill in the customer's real domain path*
 | Component | Minimum |
 |-----------|---------|
 | PHP       | **8.4** (the locked Symfony 8 dependencies require it — 8.3 installs, then answers every request with a 500) |
-| MySQL     | 8.0 (or MariaDB 10.6) |
-| Node.js   | 18+ |
+| Database  | MySQL 8.0 or MariaDB 10.6+ |
+| Node.js   | 18+ (20 LTS recommended) — only needed to build the frontend assets |
 | Composer  | 2.x |
 | Web server | Nginx or Apache with PHP-FPM |
+| Tools     | `git`, `unzip`, `curl` |
 | Disk | **~130 MB** for the app itself (code + PHP dependencies + built assets); the Docker image is ~410 MB. Allow **at least 2 GB free** for the database, ticket/backup uploads and logs as they grow. `node_modules` (~100 MB) is only needed while building and can be removed afterwards. |
 | RAM | 1 GB works for a small install; 2 GB is comfortable with the database on the same box |
-| PHP extensions | `bcmath`, `curl`, `dom`, `fileinfo`, `gd`, `mbstring`, `mysqli`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip`, `imap` |
+| PHP extensions (required) | `bcmath`, `curl`, `dom`, `fileinfo`, `gd`, `intl`, `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip` — the install wizard checks each one |
+| PHP extensions (optional) | `imap` — only for turning emails in a mailbox into support tickets (Setup → Ticket Departments → mail import). Everything else works without it. |
 
-**Optional but recommended:** Redis (session/cache), SMTP server or relay
-(email delivery), supervisor (queue worker).
+**Optional but recommended:** an SMTP server or relay for email delivery,
+Redis for session/cache, and a TLS certificate (Let's Encrypt) before you take
+payments.
 
 ---
 
@@ -394,31 +397,64 @@ production deployment notes:**
 
 ---
 
-## Self-Hosted Installation
+## Self-Hosted Installation (without Docker)
+
+This is a plain Laravel install on your own server: PHP-FPM, MySQL or MariaDB,
+and Nginx. Every command below was run, in this order, on freshly created
+servers:
+
+| Operating system | PHP | Database | Result |
+|---|---|---|---|
+| Ubuntu 24.04.5 LTS | 8.4.25 (ondrej PPA) | MySQL 8.0.46 | ✅ installed, wizard completed, scheduler and update tested |
+| Debian 13 (trixie) | 8.4.24 (Debian) | MariaDB 11.8.6 | ✅ installed, wizard completed, scheduler and update tested |
+| AlmaLinux 9.8 | 8.4.26 (Remi) | MySQL 8.0 (AppStream) | ✅ installed with SELinux enforcing, wizard completed |
+
+Rocky Linux 9 uses the same commands as AlmaLinux 9.
+
+> **The one rule that prevents most install problems:** the whole PNLCS
+> directory belongs to the **web server user**, and every `composer`, `php
+> artisan` and `npm` command runs **as that user**. The install wizard writes
+> `.env`, the application writes `storage/`, and updates run `git`, `composer`
+> and `npm` inside the tree. When the tree is owned by `root` you get a 500 on
+> the last step of the wizard (`.env` not writable), `fatal: detected dubious
+> ownership` from `git pull`, and `EACCES` from `npm` — we reproduced all three
+> by following the old instructions on a clean Ubuntu server.
+
+The values that differ between the two families, used throughout this guide:
+
+| | Ubuntu / Debian | AlmaLinux / Rocky |
+|---|---|---|
+| Web server user | `www-data` | `apache` (PHP-FPM runs as `apache`, Nginx can reach its socket) |
+| PHP-FPM socket | `/run/php/php8.4-fpm.sock` | `/run/php-fpm/www.sock` |
+| PHP-FPM service | `php8.4-fpm` | `php-fpm` |
+| Database service | `mysql` (Ubuntu) / `mariadb` (Debian) | `mysqld` |
+| Nginx site file | `/etc/nginx/sites-available/pnlcs` | `/etc/nginx/conf.d/pnlcs.conf` |
+| SELinux | not used | **enforcing** — step 10 is required |
+
+The guide uses `/var/www/pnlcs` as the install directory and
+`billing.example.com` as the address — replace both with your own.
 
 ### 0. Prepare the server
 
-Skip this if PHP, MySQL, Node and Composer are already installed (a control
-panel such as Panelica gives you all of them).
+Skip this if PHP 8.4, a database, Node and Composer are already installed (a
+control panel such as Panelica gives you all of them — see
+[Installing inside a hosting-panel account](#installing-inside-a-hosting-panel-account-panelica-cpanel-)).
 
-**Ubuntu 24.04 / Debian 13**
+**Ubuntu 24.04**
+
+Ubuntu 24.04 ships PHP 8.3, which is not enough, so PHP 8.4 comes from the
+ondrej PPA.
 
 ```bash
-# PHP 8.4 with the extensions PNLCS needs.
-# Ubuntu 24.04 ships 8.3 in its own repos, which is not enough - add the
-# ondrej PPA first. Debian 13 carries 8.4 natively; skip the PPA line there.
-sudo add-apt-repository -y ppa:ondrej/php   # Ubuntu only
+sudo apt update
+sudo apt install -y software-properties-common git unzip curl
+sudo add-apt-repository -y ppa:ondrej/php
 sudo apt update
 sudo apt install -y php8.4-fpm php8.4-cli php8.4-mysql php8.4-mbstring \
   php8.4-xml php8.4-curl php8.4-zip php8.4-gd php8.4-bcmath php8.4-intl php8.4-imap
+sudo apt install -y mysql-server nginx
 
-# Database
-sudo apt install -y mysql-server        # or: mariadb-server
-
-# Web server
-sudo apt install -y nginx
-
-# Node.js 20 LTS (for building the frontend assets)
+# Node.js 20 LTS (only for building the frontend assets)
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
@@ -427,62 +463,141 @@ curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 ```
 
-**RHEL family (AlmaLinux 9 / Rocky 9)**
+**Debian 13**
+
+Debian 13 carries PHP 8.4 itself — no extra repository. Two differences from
+Ubuntu, both found on a clean Debian 13 server:
+
+- **There is no `php8.4-imap` package.** Leave it out: if you put it in the
+  list, `apt` refuses the whole line and installs no PHP at all. `imap` is
+  optional (mailbox → ticket import only).
+- **There is no `mysql-server` package.** Debian ships MariaDB, which PNLCS
+  supports.
+
+```bash
+sudo apt update
+sudo apt install -y git unzip curl
+sudo apt install -y php8.4-fpm php8.4-cli php8.4-mysql php8.4-mbstring \
+  php8.4-xml php8.4-curl php8.4-zip php8.4-gd php8.4-bcmath php8.4-intl
+sudo apt install -y mariadb-server nginx
+
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
+
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+```
+
+**AlmaLinux 9 / Rocky Linux 9**
+
+PHP 8.4 comes from the Remi repository. The `zip` extension is a separate
+package here (`php-pecl-zip`), and unlike Debian-based systems the services
+are **not** started for you.
 
 ```bash
 sudo dnf install -y epel-release https://rpms.remirepo.net/enterprise/remi-release-9.rpm
-sudo dnf module reset php -y && sudo dnf module enable php:remi-8.4 -y
+sudo dnf module reset php -y
+sudo dnf module enable php:remi-8.4 -y
 sudo dnf install -y php php-fpm php-mysqlnd php-mbstring php-xml php-gd \
-  php-bcmath php-intl php-imap mysql-server nginx
+  php-bcmath php-intl php-imap php-pecl-zip \
+  mysql-server nginx git unzip policycoreutils-python-utils
+
 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
 sudo dnf install -y nodejs
+
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+
+# Start the services now and on every boot.
+sudo systemctl enable --now php-fpm mysqld nginx
 ```
 
-Check what you have:
+**Check what you have:**
 
 ```bash
-php -v          # 8.4 or newer — 8.3 will 500 at runtime
-mysql --version # 8.0 / MariaDB 10.6 or newer
-node -v         # 18 or newer
-composer -V     # 2.x
+php -v          # PHP 8.4.x — 8.3 will 500 at runtime
+php -m | grep -E '^(bcmath|curl|dom|fileinfo|gd|intl|mbstring|openssl|pdo_mysql|tokenizer|xml|zip)$' | wc -l   # 12
+mysql --version # MySQL 8.0 / MariaDB 10.6 or newer
+node -v         # v18 or newer
+composer -V     # Composer version 2.x
 ```
 
-### 1. Clone the repository
+**Firewall.** The cloud images we tested had no firewall enabled. If yours
+does, open HTTP and HTTPS — `sudo ufw allow 'Nginx Full'` on Ubuntu, or
+`sudo firewall-cmd --permanent --add-service=http --add-service=https && sudo firewall-cmd --reload`
+on AlmaLinux/Rocky.
+
+### 1. Get the code and hand it to the web server user
 
 ```bash
-git clone https://github.com/Panelica/pnlcs.git
-cd pnlcs
+sudo git clone https://github.com/Panelica/pnlcs.git /var/www/pnlcs
+sudo chown -R www-data:www-data /var/www/pnlcs     # AlmaLinux/Rocky: apache:apache
+cd /var/www/pnlcs
 ```
+
+Define a short helper for the rest of this guide. It runs a command as the web
+server user, with a writable home for the Composer and npm caches (the web
+user's own home, `/var/www`, belongs to root):
+
+```bash
+# Ubuntu / Debian
+pn() { sudo -u www-data HOME=/tmp/pnlcs-home COMPOSER_HOME=/tmp/pnlcs-home/composer "$@"; }
+
+# AlmaLinux / Rocky
+pn() { sudo -u apache HOME=/tmp/pnlcs-home COMPOSER_HOME=/tmp/pnlcs-home/composer "$@"; }
+```
+
+The helper only lives in your current shell — define it again if you log in
+later.
 
 ### 2. Install PHP dependencies
 
 ```bash
-composer install --no-dev --optimize-autoloader
+pn composer install --no-dev --optimize-autoloader --no-interaction
 ```
 
+> **AlmaLinux/Rocky:** `sudo` there does not search `/usr/local/bin`, so the
+> line above answers `sudo: composer: command not found`. Use the full path:
+> `pn /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction`
+
 ### 3. Create the database
+
+Open the database console as root — on a fresh server `root` signs in through
+the system account, so there is no password to type:
+
+```bash
+sudo mysql
+```
+
+Then create the database and a user for PNLCS (MySQL and MariaDB accept the
+same statements):
 
 ```sql
 CREATE DATABASE pnlcs CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'pnlcs'@'localhost' IDENTIFIED BY 'choose-a-strong-password';
 GRANT ALL PRIVILEGES ON pnlcs.* TO 'pnlcs'@'localhost';
 FLUSH PRIVILEGES;
+EXIT;
 ```
 
-### 4. Configure environment
+### 4. Configure the environment
 
 ```bash
-cp .env.example .env
+pn cp .env.example .env
+sudo nano .env
 ```
 
-Open `.env` in your editor and set at least these values:
+Set at least these values (editing the existing file keeps its owner):
 
 ```ini
 APP_NAME="Your Company"
-APP_URL=https://billing.your-domain.com
+APP_URL=https://billing.example.com
 APP_ENV=production
 APP_DEBUG=false
 
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
 DB_DATABASE=pnlcs
 DB_USERNAME=pnlcs
 DB_PASSWORD=choose-a-strong-password
@@ -491,19 +606,32 @@ MAIL_FROM_ADDRESS="noreply@your-domain.com"
 MAIL_FROM_NAME="Your Company"
 ```
 
-**Note:** `DB_CONNECTION` defaults to `mysql` — do not change it to `sqlite`
-unless you know what you're doing (some migrations use MySQL-specific SQL).
+Then make `.env` readable by the web user only — it holds your database
+password and application key, and the install wizard must be able to write it:
+
+```bash
+sudo chown www-data:www-data .env     # AlmaLinux/Rocky: apache:apache
+sudo chmod 640 .env
+```
+
+**Notes**
+- Keep `DB_CONNECTION=mysql` for MariaDB too; do not switch to `sqlite` (some
+  migrations use MySQL-specific SQL).
+- If the site starts on plain HTTP while you set up TLS, use `http://` in
+  `APP_URL` for now and change it in step 15.
+- Mail server settings (SMTP host, user, password) are entered in the admin
+  panel later, not here.
 
 ### 5. Generate the application key
 
 ```bash
-php artisan key:generate
+pn php artisan key:generate
 ```
 
-### 6. Run migrations
+### 6. Run the database migrations
 
 ```bash
-php artisan migrate --force
+pn php artisan migrate --force
 ```
 
 **Do not run `php artisan db:seed` here.** The install wizard you will open
@@ -522,42 +650,51 @@ browser step at all, `php artisan db:seed --force` is how you seed - the
 default administrator is then `admin` / `admin123`, the wizard stays closed
 by design, and changing that password is your first job.
 
-### 7. Build frontend assets
+### 7. Build the frontend assets
 
 ```bash
-npm install
-npm run build
+pn npm ci
+pn npm run build
 ```
 
-### 8. Create the public storage symlink
+### 8. Link public storage
 
 ```bash
-php artisan storage:link
+pn php artisan storage:link
 ```
 
-### 9. Cache configuration for production
+### 9. Cache configuration, routes and views
 
 ```bash
-php artisan optimize
+pn php artisan optimize
 ```
 
-### 10. Set directory permissions
+### 10. SELinux (AlmaLinux / Rocky only)
+
+SELinux is enforcing on AlmaLinux and Rocky. Without these lines every page
+answers **500**: PHP-FPM may not write to `storage/`, and may not connect to
+the database. We measured exactly those two denials in the audit log of a
+clean AlmaLinux 9 server.
 
 ```bash
-chmod -R 775 storage bootstrap/cache
-chown -R www-data:www-data storage bootstrap/cache
+sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/pnlcs/storage(/.*)?"
+sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/pnlcs/bootstrap/cache(/.*)?"
+sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/pnlcs/\.env"
+sudo restorecon -R /var/www/pnlcs
+
+sudo setsebool -P httpd_can_network_connect_db 1   # PHP → MySQL/MariaDB
+sudo setsebool -P httpd_can_network_connect 1      # PHP → payment gateways, server and registrar APIs, SMTP
 ```
 
-*(adjust the user to match your server — `nginx`, `apache`, or your panel user)*
+Do not switch SELinux off to make the errors go away — these rules give the
+application exactly what it needs and nothing more.
 
-### 11. Point your web server to `public/`
+### 11. Point Nginx at `public/`
 
-Whatever you use — a control panel, raw Nginx, Apache, Caddy — make sure
-**the document root is the `public/` directory**, not the project root.
-Pointing it at the project root exposes `.env`, so this is the one step worth
-double-checking.
+The document root must be the **`public/`** directory, never the project root —
+pointing it at the project root exposes `.env`.
 
-**Nginx example** (`/etc/nginx/sites-available/pnlcs`):
+**Ubuntu / Debian** — create `/etc/nginx/sites-available/pnlcs`:
 
 ```nginx
 server {
@@ -584,49 +721,125 @@ server {
 }
 ```
 
+Enable it and **remove the default site** — otherwise a request to the
+server's IP address keeps landing on the "Welcome to nginx" page:
+
 ```bash
 sudo ln -s /etc/nginx/sites-available/pnlcs /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Add HTTPS with Certbot (`sudo certbot --nginx -d billing.example.com`) before
-taking payments — the checkout and admin login should never run over plain HTTP.
+**AlmaLinux / Rocky** — create `/etc/nginx/conf.d/pnlcs.conf` with the same
+block, changing only the PHP-FPM socket:
 
-### 12. Open the install wizard
+```nginx
+        fastcgi_pass unix:/run/php-fpm/www.sock;
+```
 
-Visit **https://billing.example.com/install** in your browser. The wizard
-checks requirements, seeds the database, asks for your administrator
-username and password, and takes the application name and URL - then locks
-itself permanently. This is where your admin account is created; there is no
-default password to change afterwards.
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+**Check it before you open a browser:**
+
+```bash
+curl -sI http://billing.example.com/install | head -1      # HTTP/1.1 302 Found  (→ the wizard)
+curl -sI http://billing.example.com/.env | head -1         # 403 or 404 — never 200
+```
+
+Using Apache or Caddy instead? The same rule applies: document root =
+`public/`, PHP handled by PHP-FPM 8.4, and every request that is not a file
+rewritten to `index.php`.
+
+### 12. Run the install wizard
+
+Open **http://billing.example.com/install** in your browser. The wizard walks
+through:
+
+1. **Requirements** — PHP version, every required extension, and whether
+   `storage/`, `bootstrap/cache/` and `.env` are writable. Everything must be
+   green before **Continue** appears; a red line names exactly what to fix.
+2. **Database** — skipped automatically, because you already ran the
+   migrations in step 6.
+3. **Administrator** — the username, email and password *you* choose. There
+   is no default password to change afterwards.
+4. **Application** — the public URL, the company name and the default
+   language.
+5. **Finish** — the wizard writes a lock file and closes itself permanently;
+   `/install` answers 404 from then on.
+
+Sign in at **http://billing.example.com/admin/login**.
 
 ### 13. Schedule the cron runner
 
-Add a single line to the web user's crontab (`crontab -e`):
+Everything that happens by itself — invoice generation, payment reminders,
+suspensions, SSL polling, backups, queued mail — is driven by one cron line
+for the web server user:
+
+```bash
+sudo crontab -u www-data -e     # AlmaLinux/Rocky: -u apache
+```
 
 ```
-* * * * * cd /path/to/pnlcs && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/pnlcs && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-This drives invoice generation, payment reminders, automatic suspensions,
-SSL polling, and other background tasks.
+Check that the schedule is there and runs cleanly:
 
-### 14. Queue: sync by default, worker only if you switch
+```bash
+pn php artisan schedule:list
+pn php artisan schedule:run
+```
+
+### 14. Queue: no separate worker needed
 
 `.env.example` ships `QUEUE_CONNECTION=sync`: mail and background jobs run
-inline and always happen, which is the right shape for a single-server
-install. Switch to `database` only **together with** a running worker - the
-database driver without a worker puts every queued email into the jobs table
-forever, and nothing sends while everything looks fine. A simple `supervisor`
-entry for that setup:
+inline, which is the right shape for a single server.
+
+If you switch to `QUEUE_CONNECTION=database`, **the cron line from step 13
+already processes the queue**: the scheduler starts a worker every minute
+that drains the queue and stops. We verified this on a clean server — a
+queued email was in the `jobs` table before `schedule:run`, and sent after
+it, with no supervisor installed. Jobs therefore wait **up to a minute**.
+
+Add a permanent worker only if you want queued jobs to run instantly. A
+`supervisor` entry for that:
 
 ```ini
 [program:pnlcs-worker]
-command=php /path/to/pnlcs/artisan queue:work database --sleep=3 --tries=3 --max-time=3600
+command=php /var/www/pnlcs/artisan queue:work database --sleep=3 --tries=3 --max-time=3600
 autostart=true
 autorestart=true
 user=www-data
 ```
+
+### 15. Turn on HTTPS
+
+Checkout and the admin login must never run over plain HTTP. With Certbot
+(Ubuntu/Debian: `sudo apt install -y certbot python3-certbot-nginx`):
+
+```bash
+sudo certbot --nginx -d billing.example.com
+```
+
+Then make sure `APP_URL` in `.env` starts with `https://` and refresh the
+cache:
+
+```bash
+pn php artisan optimize
+```
+
+### 16. Final check
+
+```bash
+curl -sI https://billing.example.com/install | head -1   # 404 — the wizard is closed
+curl -sI https://billing.example.com/.env | head -1      # 403 or 404
+ls -l /var/www/pnlcs/.env                                  # owned by the web user, mode 640
+pn php artisan schedule:run                                # finishes without errors
+```
+
+Then continue with [First Steps After Installation](#first-steps-after-installation).
 
 
 ### Installing inside a hosting-panel account (Panelica, cPanel, …)
@@ -719,57 +932,78 @@ git config --global --add safe.directory /var/www/pnlcs
 
 ### Self-hosted (without Docker)
 
-If you installed PNLCS directly on a server (see **Self-Hosted Installation**
-below), you update it **in place** — new code, migrations and rebuilt assets,
-your data untouched. Run every command from your PNLCS directory
-(`cd /path/to/pnlcs`).
+If you installed PNLCS directly on a server (see
+[Self-Hosted Installation](#self-hosted-installation-without-docker) above),
+you update it **in place** — new code, migrations and rebuilt assets, your data
+untouched. Run everything from the PNLCS directory **as the web server user**,
+with the same `pn` helper as the installation:
 
-**1. Back up and pause the app (recommended on production).**
 ```bash
-php artisan down            # shows a maintenance page to visitors
-mysqldump -u pnlcs -p pnlcs > backup-$(date +%F).sql   # database snapshot
+cd /var/www/pnlcs
+pn() { sudo -u www-data HOME=/tmp/pnlcs-home COMPOSER_HOME=/tmp/pnlcs-home/composer "$@"; }   # AlmaLinux/Rocky: -u apache
 ```
 
-**2. Pull the latest code from this repository.**
+**1. Back up and pause the app.**
 ```bash
-git pull origin main
+pn php artisan down                                   # maintenance page for visitors
+pn php artisan pnlcs:db-backup                        # database snapshot → storage/app/backups/db/
 ```
 
-**3. Update PHP dependencies.**
+**2. Pull the latest code.**
 ```bash
-composer install --no-dev --optimize-autoloader
+pn git pull origin main
 ```
 
-**4. Apply any new database migrations.**
+**3. Update PHP dependencies.** (AlmaLinux/Rocky: `pn /usr/local/bin/composer …`)
 ```bash
-php artisan migrate --force
+pn composer install --no-dev --optimize-autoloader --no-interaction
+```
+
+**4. Apply new database migrations.**
+```bash
+pn php artisan migrate --force
 ```
 
 **5. Rebuild the frontend assets.**
 ```bash
-npm ci && npm run build
+pn npm ci
+pn npm run build
 ```
 
-**6. Refresh the cached config, routes and views.**
+**6. Rebuild the cached config, routes and views.**
 ```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+pn php artisan optimize
 ```
 
 **7. Reload PHP so the new code goes live.**
 ```bash
-sudo systemctl reload php8.4-fpm    # or your process manager / FPM pool
+sudo systemctl reload php8.4-fpm      # AlmaLinux/Rocky: sudo systemctl reload php-fpm
 ```
+Do not skip this one. PHP's opcode cache can keep serving the previous code
+for a while after the files change; on one of our own installs that showed up
+as `Route [...] not defined` and a 500 on the dashboard until PHP-FPM was
+reloaded.
 
 **8. Bring the app back up.**
 ```bash
-php artisan up
+pn php artisan up
 ```
 
-That's it — your installation now runs the latest code with all data intact.
-If you use a queue worker (step 13 of installation), restart it too:
-`php artisan queue:restart`.
+If you run a permanent queue worker (installation step 14), restart it too:
+`pn php artisan queue:restart`.
+
+We ran this exact sequence on a Debian 13 install: maintenance mode on,
+pull, composer, migrations, `npm ci`, build, cache, reload, back live — no
+errors, site answering 200 afterwards.
+
+**Errors here almost always mean the tree is not owned by the web user.**
+`fatal: detected dubious ownership in repository` from `git`, or `EACCES` from
+`npm`, means some files belong to `root` — typically from an older
+installation that ran commands with plain `sudo`. Fix it once and re-run:
+
+```bash
+sudo chown -R www-data:www-data /var/www/pnlcs     # AlmaLinux/Rocky: apache:apache
+```
 
 ### Inside a hosting-panel account (Panelica, cPanel, …)
 
@@ -811,12 +1045,12 @@ Once the site loads and you can reach `/admin/login`, do these in order:
 - Use the administrator username and password you chose in the install
   wizard. (Only a headless install that seeded by hand has the default
   `admin` / `admin123` - if that is you, changing it is the first job.)
-- (Recommended) Enable **Two-Factor Authentication** under
-  **My Account → Security**.
+- (Recommended) Enable **Two-Factor Authentication** from **My Account**
+  (the menu under your name) → **Turn on**.
 
 ### 2. Configure General Settings
 
-**Settings → General**
+**Setup → General Settings**
 
 - Company name, support email, logo, favicon
 - Default language, currency, timezone
@@ -824,17 +1058,21 @@ Once the site loads and you can reach `/admin/login`, do these in order:
 
 ### 3. Configure Email Delivery
 
-**Settings → Email** (or edit `.env` directly)
+**Setup → General Settings → Mail Configuration**
 
-- Set `MAIL_MAILER` to `smtp` (default is `log` for testing)
-- Fill in `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`
-- Send a **test email** from the settings page to verify
+- Choose **SMTP** and fill in the host, port, username, password and
+  encryption of your mail server or relay
+- Set the sender address and name
+- Save, then press **Send Test Email** and check the inbox
 
-Until this is done, emails are written to `storage/logs/laravel.log` only.
+These settings are stored in the database and override the `MAIL_*` values in
+`.env`. Until mail is configured, `.env.example`'s `MAIL_MAILER=log` is in
+effect: nothing is delivered, and with the default `LOG_LEVEL=warning` the
+messages are not written to the log either.
 
 ### 4. Customize Appearance
 
-**Settings → Appearance**
+**Setup → Appearance**
 
 - Pick a theme from the 15 built-in options
 - Upload your logo and favicon
@@ -843,7 +1081,7 @@ Until this is done, emails are written to `storage/logs/laravel.log` only.
 
 ### 5. Add Payment Gateways
 
-**Configuration → Gateways**
+**Setup → Payment Gateways**
 
 - **Stripe** — paste your API keys, enable
 - **PayPal** — client ID + secret (sandbox or live)
@@ -852,7 +1090,7 @@ Until this is done, emails are written to `storage/logs/laravel.log` only.
 
 ### 6. Add Server Modules (if you sell hosting)
 
-**Configuration → Servers**
+**Setup → Servers**
 
 - Add your Panelica / cPanel / Plesk / DirectAdmin server
 - Test the API connection from the server edit page
@@ -869,7 +1107,7 @@ Until this is done, emails are written to `storage/logs/laravel.log` only.
 
 ### 8. Configure Domain Pricing (if you sell domains)
 
-**Configuration → Domain Pricing**
+**Setup → Domain Pricing**
 
 - Add TLDs you sell (`.com`, `.net`, ...)
 - Set registration, transfer, and renewal prices
@@ -877,7 +1115,7 @@ Until this is done, emails are written to `storage/logs/laravel.log` only.
 
 ### 9. Set Up Tax Rules
 
-**Configuration → Tax**
+**Setup → Tax Rules**
 
 - Add country-level or state-level tax rules
 - Choose inclusive or exclusive tax display
@@ -885,7 +1123,7 @@ Until this is done, emails are written to `storage/logs/laravel.log` only.
 
 ### 10. (Optional) Invite Staff and Define Roles
 
-**Configuration → Admin Roles / Admins**
+**Setup → Admin Roles** and **Setup → Admin Accounts**
 
 - Create custom roles (e.g. "Billing Manager", "Support Agent")
 - Pick permissions per role from the 45+ available
@@ -893,7 +1131,7 @@ Until this is done, emails are written to `storage/logs/laravel.log` only.
 
 ### 11. Enable Email Verification for Signups (recommended)
 
-**Settings → General → Security**
+**Setup → General Settings → Email Verification**
 
 - Toggle **Require email verification** on
 - New signups will receive a verification link before they can order
@@ -910,17 +1148,9 @@ Until this is done, emails are written to `storage/logs/laravel.log` only.
 
 ## Upgrading
 
-```bash
-git pull
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-npm install
-npm run build
-php artisan optimize:clear
-php artisan optimize
-```
-
-Always back up your database before pulling new migrations.
+See [Updating](#updating) — Docker, self-hosted and hosting-panel installs
+each have their own short procedure there. Always back up the database before
+applying new migrations.
 
 ---
 
@@ -929,9 +1159,10 @@ Always back up your database before pulling new migrations.
 PNLCS ships with modular **server**, **gateway**, **registrar**, and **SSL
 provider** integrations under the `modules/` directory. Add control-panel
 servers (cPanel, Plesk, DirectAdmin, Proxmox, HestiaCP, Vultr, Panelica),
-configure payment gateways (Stripe, PayPal, Authorize.Net, Razorpay, Mollie,
-Tpay, bank transfer), and connect domain registrars (Enom, Namecheap, ResellerClub)
-without touching core code.
+configure payment gateways (Stripe, PayPal, iyzico, Authorize.Net, Razorpay,
+Mollie, Tpay, bank transfer), and connect domain registrars (Enom, Namecheap,
+ResellerClub, OpenProvider, HRD) — and add your own modules without touching
+core code (see [Writing your own module](#writing-your-own-module)).
 
 > 💡 **Choosing a panel to sell on?** The **[Panelica](https://panelica.com)**
 > server module is tested end-to-end and provisions instantly. Panelica is a
@@ -971,8 +1202,144 @@ If you run one of these against a real provider, please open an issue with
 what worked and what didn't — especially anything the faked responses could
 not have caught. A short note is enough; we can iterate from there.
 
-Adding a new module? Look at the existing ones as a reference; each module
-is a self-contained directory with a handler class and optional config view.
+### Managing modules — Setup → Modules
+
+**Setup → Modules** lists every installed server, payment gateway, registrar,
+SSL and addon module on one screen, each with an on/off switch:
+
+- Switching a **gateway** off removes it from checkout; switching a
+  **registrar** off removes it from the domain search; switching an **addon**
+  off deactivates it. These are the same switches as on each module's own
+  settings page — flipping one here or there is the same thing.
+- Switching a **server** or **SSL** module off removes it from the forms that
+  choose a module (new servers, new products). A server or SSL module that a
+  server or product still uses **cannot** be switched off; the screen shows
+  how many records use it.
+- Modules you added yourself are marked **Third-party**.
+
+Credentials and options stay on each type's own page (**Setup → Payment
+Gateways**, **Servers**, **Domain Registrars**, **SSL Modules**, and the
+**Extensions** page for addons); the **Configure** button on each section
+takes you there.
+
+### Writing your own module
+
+A module is a folder under `modules/`. Drop it in, add a `pnlcs.json`
+manifest, and PNLCS registers it on the next request — **no edit to the core,
+nothing to re-register after an update**, because your folder is not part of
+this repository.
+
+**1. Folder layout** — exactly two levels below `modules/`:
+
+```
+modules/
+└── Gateways/                 ← Gateways, Servers, Registrars or Ssl
+    └── AcmePay/
+        ├── AcmePayModule.php
+        └── pnlcs.json
+```
+
+The namespace follows the path (PSR-4, `Modules\` → `modules/`), so the class
+above is `Modules\Gateways\AcmePay\AcmePayModule`.
+
+**2. The manifest** — `pnlcs.json`:
+
+```json
+{
+    "name": "acmepay",
+    "type": "gateway",
+    "class": "Modules\\Gateways\\AcmePay\\AcmePayModule",
+    "version": "1.0.0",
+    "display_name": "AcmePay",
+    "description": "AcmePay card payments",
+    "author": { "name": "Your Company" }
+}
+```
+
+| Field | Required | Meaning |
+|---|---|---|
+| `name` | yes | Unique key, stored on invoices, products and settings. Lower-case, no spaces. |
+| `type` | yes | `gateway`, `server`, `registrar` or `ssl` |
+| `class` | yes | Fully qualified class name of the module |
+| `version`, `display_name`, `description`, `author` | no | Informational |
+
+Two rules are enforced when the manifest is read, so a broken module cannot
+break a working installation:
+
+- **A built-in module always wins.** A manifest named `stripe` (or any other
+  built-in name) is ignored — it cannot replace a module that ships with
+  PNLCS.
+- **The class must be the type it claims.** The class must implement the
+  interface for its `type` (table below). A server class announced as a
+  gateway is not registered at all, instead of failing at checkout.
+
+A manifest that does not parse, names a class that does not exist, or leaves
+out `name`, `type` or `class` is skipped silently.
+
+**3. The interface** — implement the one for your type (`app/Contracts/`):
+
+| `type` | Interface | Methods |
+|---|---|---|
+| `gateway` | `App\Contracts\GatewayModuleInterface` | `capture`, `refund`, `getPaymentForm`, `processWebhook`, `getConfigFields`, `getModuleName`, `isTokenised` |
+| `server` | `App\Contracts\ServerModuleInterface` | `create`, `suspend`, `unsuspend`, `terminate`, `changePassword`, `changePackage`, `usageUpdate`, `testConnection`, `getConfigFields`, `getModuleName` |
+| `registrar` | `App\Contracts\RegistrarModuleInterface` | `register`, `transfer`, `renew`, `getNameservers`, `saveNameservers`, `getEPPCode`, `getLockStatus`, `toggleLock`, `checkAvailability`, `getConfigFields`, `getModuleName` |
+| `ssl` | `App\Contracts\SslModuleInterface` | `purchaseCertificate`, `getCertificateStatus`, `renewCertificate`, `revokeCertificate`, `reissueCertificate`, `resendValidationEmail`, `changeValidationMethod`, `getApproverEmails`, `getWebServerTypes`, `getCertificateTypes`, `decodeCsr`, `generateCsr`, `testConnection`, `getConfigFields`, `getModuleName` |
+
+A gateway that can store a card and charge it later (automatic payment) also
+implements `App\Contracts\TokenizableGatewayInterface` (`beginVaulting`,
+`confirmVaulting`, `detachStoredMethod`, `chargeStoredMethod`); the Stripe,
+iyzico and PayPal modules are complete examples.
+
+Actions return an array with at least `success` (bool) and `message`
+(string) — for example `['success' => true, 'message' => 'Account created']`.
+
+**4. Settings** — for gateway, registrar and SSL modules,
+`getConfigFields()` describes the fields on the module's settings page; PNLCS
+draws the form and stores the values. A gateway is only offered at checkout
+once every field marked `required` has a value. (Server modules get their
+connection details — hostname, port, username, password or API key, access
+hash — from the **Setup → Servers** form instead.)
+
+```php
+public function getConfigFields(): array
+{
+    return [
+        ['name' => 'api_key',  'label' => 'API Key',   'type' => 'password', 'required' => true],
+        ['name' => 'mode',     'label' => 'Mode',      'type' => 'select',   'options' => ['live' => 'Live', 'test' => 'Test']],
+        ['name' => 'debug',    'label' => 'Debug log', 'type' => 'yesno',    'default' => '0'],
+        ['name' => 'note',     'label' => 'Note',      'type' => 'textarea'],
+    ];
+}
+```
+
+Field types: `text`, `password` (never echoed back into the page), `textarea`,
+`select` (with `options`) and `yesno`. A gateway reads its saved values from
+`App\Models\GatewaySettings` (`gateway` = your `name`, `setting` = the field
+`name`); the Mollie and Tpay modules show the pattern in a few lines.
+
+**5. Start from a working module.** The simplest complete examples are
+`modules/Servers/Custom` (a server module where every action succeeds) and
+`modules/Gateways/BankTransfer` (an offline gateway). Copy one, rename the
+folder, namespace and class, write the manifest, and open **Setup → Modules**
+— your module appears there marked **Third-party**.
+
+**Current limitation — gateway webhooks.** Payment-confirmation webhooks are
+routed to the built-in gateways by name (`/gateway/stripe/webhook`,
+`/gateway/paypal/webhook`, …). A third-party gateway's `processWebhook()` has
+no public URL yet, so a gateway that confirms payments only through webhooks
+cannot be completed as a drop-in module today. Redirect-and-return gateways
+and server, registrar and SSL modules are not affected.
+
+**Addons** (`modules/Addons/<Name>/<Name>Module.php`, implementing
+`App\Contracts\AddonModuleInterface`) need no manifest: any addon folder is
+listed on the **Extensions** page (`/admin/config/addons/modules`, in the
+settings sidebar) and on the Modules screen, where it is activated. The Staff Board and Project Management addons are working
+examples.
+
+**Tests.** `tests/Feature/ModuleDiscoveryTest.php` shows how to exercise a
+module through the same discovery the application uses. Pull requests that add
+a module with tests are reviewed first.
+
 
 ---
 
@@ -980,24 +1347,33 @@ is a self-contained directory with a handler class and optional config view.
 
 PNLCS ships a first-party [Model Context Protocol](https://modelcontextprotocol.io)
 server, [`pnlcs-mcp` on npm](https://www.npmjs.com/package/pnlcs-mcp). Connect
-Claude Code, Claude Desktop, Cursor or VS Code to your install and ask it
-things in plain English — *which invoices are overdue*, *any orders held as
-fraud*, *open a ticket for this client*. Fifteen read tools are always
+any MCP-compatible AI client — Cursor, VS Code and others — to your install and
+ask it things in plain English: *which invoices are overdue*, *any orders held
+as fraud*, *open a ticket for this client*. Fifteen read tools are always
 available; the seven write tools exist only when you opt in with
 `PNLCS_ALLOW_WRITES=1`. Zero dependencies, nothing to install on the PNLCS
 side — it speaks to the same admin API your screens use, with an API
-credential you create under **Configuration → API Credentials**.
+credential you create under **Setup → API Credentials**.
 
-Setup for every client lives in [`mcp/README.md`](mcp/README.md). Claude Code
-users need one command:
+Most clients take the same JSON block:
 
-```bash
-claude mcp add pnlcs \
-  --env PNLCS_URL=https://billing.example.com \
-  --env PNLCS_IDENTIFIER=your_identifier \
-  --env PNLCS_SECRET=your_secret \
-  -- npx -y pnlcs-mcp
+```json
+{
+  "mcpServers": {
+    "pnlcs": {
+      "command": "npx",
+      "args": ["-y", "pnlcs-mcp"],
+      "env": {
+        "PNLCS_URL": "https://billing.example.com",
+        "PNLCS_IDENTIFIER": "your_identifier",
+        "PNLCS_SECRET": "your_secret"
+      }
+    }
+  }
+}
 ```
+
+Client-by-client setup lives in [`mcp/README.md`](mcp/README.md).
 
 ---
 
@@ -1005,7 +1381,7 @@ claude mcp add pnlcs \
 
 All UI strings live in the database (`dynamic_translations` table) and
 flat PHP files under `lang/<locale>/`. Translations are editable from the
-admin panel under **Configuration → Languages & Translations**. Exporting
+admin panel under **Setup → Languages**. Exporting
 to JSON, importing, and AI-assisted batch translation are supported out
 of the box.
 
@@ -1062,7 +1438,7 @@ gunzip < storage/app/backups/db/pnlcs-20260101-043000.sql.gz | mysql -u pnlcs -p
 
 ## Payment Gateways
 
-Configure gateways under **Configuration → Gateways**. Open a gateway, fill in
+Configure gateways under **Setup → Payment Gateways**. Open a gateway, fill in
 its keys, save, enable it, then **test with a small order before going live**.
 Checkout must run over **HTTPS**.
 
@@ -1131,9 +1507,60 @@ The web root points at the project folder instead of `public/`. Point the
 document root at `pnlcs/public` — nothing above it should be web-served.
 
 **Invoices/emails never send, but nothing errors**
-`QUEUE_CONNECTION=database` is set without a running worker, so jobs pile up in
-the `jobs` table forever. Either keep `QUEUE_CONNECTION=sync` (the default), or
-run a worker (`php artisan queue:work`).
+Three causes, in order of likelihood:
+1. **Mail is not configured.** Until SMTP is set under **Setup → General
+   Settings → Mail Configuration**, `MAIL_MAILER=log` is in effect and nothing
+   leaves the server.
+2. **The cron line is missing.** With `QUEUE_CONNECTION=database`, queued mail
+   is sent by the scheduler (installation step 13), which starts a worker
+   every minute. No cron, no worker: jobs stay in the `jobs` table. Check with
+   `crontab -u www-data -l`.
+3. **Mail is switched off** in the panel settings — the log then says
+   `Outgoing mail suppressed: mail is disabled in the panel settings.`
+
+**The last step of the install wizard answers 500**
+`storage/logs/laravel-*.log` says `file_put_contents(/var/www/pnlcs/.env):
+Failed to open stream: Permission denied`. The wizard writes `.env`, and the
+file belongs to `root`. Give it to the web user and reload the page:
+`sudo chown www-data:www-data .env && sudo chmod 640 .env` (AlmaLinux/Rocky:
+`apache:apache`). Current versions of the wizard show this on the requirements
+page (".env ✗ not writable") before you start.
+
+**AlmaLinux / Rocky: every page is a 500, and `storage/logs` is empty**
+SELinux is blocking PHP-FPM. `sudo grep denied /var/log/audit/audit.log | tail`
+shows `{ write } … name="logs"` (cannot write `storage/`) and
+`{ name_connect } … dest=3306` (cannot reach the database). Run the commands
+in installation step 10.
+
+**AlmaLinux / Rocky: `sudo: composer: command not found`**
+`sudo` there does not search `/usr/local/bin`. Call Composer by its full path:
+`sudo -u apache /usr/local/bin/composer install --no-dev --optimize-autoloader`.
+
+**`git pull` says `detected dubious ownership`, or `npm` fails with `EACCES`**
+Part of the tree belongs to `root` while the command runs as the web user
+(usually an older install that ran `sudo git clone` / `sudo npm install` and
+only handed `storage/` over). Give the whole directory to the web user once:
+`sudo chown -R www-data:www-data /var/www/pnlcs`, then re-run.
+
+**The server's IP address shows "Welcome to nginx!" instead of PNLCS**
+The distribution's default site is still enabled and answers every request
+that does not match your `server_name`. Remove it:
+`sudo rm /etc/nginx/sites-enabled/default && sudo systemctl reload nginx`.
+
+**`apt` installs no PHP at all on Debian 13 (`Unable to locate package php8.4-imap`)**
+Debian 13 does not package the `imap` extension; one missing package makes
+`apt` refuse the whole line. Install the list without `php8.4-imap` — see
+installation step 0.
+
+**Mailbox import does nothing, and the log says `the PHP imap extension is not installed`**
+Ticket import from a mailbox (**Setup → Ticket Departments**) needs PHP's
+`imap` extension, which PHP 8.4 no longer bundles. Install `php8.4-imap`
+(Ubuntu, ondrej PPA) or `php-imap` (AlmaLinux/Rocky, Remi) and reload PHP-FPM.
+The rest of PNLCS does not need it.
+
+**A page shows `Route [...] not defined` right after an update**
+PHP-FPM is still serving the previous code from its opcode cache. Reload it:
+`sudo systemctl reload php8.4-fpm` (AlmaLinux/Rocky: `php-fpm`).
 
 **The `/install` wizard is already locked, or you never got to choose a password**
 You ran `php artisan db:seed` by hand before opening the wizard; seeing an
@@ -1171,13 +1598,16 @@ Issues and pull requests are welcome.
 
 Ways to help:
 
-1. **Test a module** from the "Needs testing" list above and file an issue
+1. **Test a module** against a real provider account — the
+   [module table](#modules--servers-payment-gateways--domain-registrars) shows
+   which ones have only been tested with faked responses — and file an issue
    with what you found.
 2. **Report a bug** with reproduction steps — screenshots help a lot.
 3. **Improve a translation** via the admin UI's export, edit a JSON file,
    and send us a PR.
-4. **Write documentation** — installation on specific hosting panels, how
-   to add a custom module, etc.
+4. **Write a module** — see [Writing your own module](#writing-your-own-module).
+5. **Write documentation** — installation on other distributions or hosting
+   panels, and anything this README gets wrong.
 
 Please keep in mind:
 
