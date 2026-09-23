@@ -210,9 +210,28 @@ class ServiceApiController extends BaseApiController
             return $this->error('Service Not Found', 404);
         }
 
-        // No server module exposes custom functions, and saying one ran is
-        // worse than saying there is nothing to run.
-        return $this->error('Custom module functions are not implemented.', 501);
+        // A server module offers custom functions by listing them in
+        // customFunctions() (method name => label); each takes the service and
+        // answers like any module action. None of the built-in modules offers
+        // any, so for them this says so - by name - rather than pretending.
+        $request->validate(['func_name' => 'required|string|max:100']);
+        $module = app(\App\Services\Module\ModuleRegistry::class)->getServerModule((string) ($service->product?->server_type ?? ''));
+        $offered = $module && method_exists($module, 'customFunctions') ? (array) $module->customFunctions() : [];
+        $func = (string) $request->func_name;
+
+        if (! array_key_exists($func, $offered) || ! method_exists($module, $func)) {
+            return $this->error('This service\'s module offers no custom function named '.$func.'.'.($offered ? ' It offers: '.implode(', ', array_keys($offered)).'.' : ''), 404);
+        }
+
+        try {
+            $result = (array) $module->{$func}($service);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Custom module function {$func} failed for service #{$service->id}: {$e->getMessage()}");
+
+            return $this->error('The module function failed.', 502);
+        }
+
+        return ($result['success'] ?? false) ? $this->success($result) : $this->error($result['message'] ?? 'Module action failed', 422);
     }
 
     public function upgradeProduct(Request $request)
@@ -284,9 +303,39 @@ class ServiceApiController extends BaseApiController
         return $this->paginated($items);
     }
 
-    public function addProduct(Request $request)
+    /**
+     * Create a catalogue product (WHMCS AddProduct) - through ProductCreator,
+     * exactly as the product screen does it. WHMCS names are accepted:
+     * gid, paytype, module, servergroupid, autosetup, and a type of
+     * hostingaccount / reselleraccount / server / other.
+     */
+    public function addProduct(Request $request, \App\Services\ProductCreator $creator)
     {
-        // A refusal, not a success: nothing was created.
-        return $this->error('Services are created through addorder.', 501);
+        $this->alias($request, 'gid', 'group_id');
+        $this->alias($request, 'paytype', 'pay_type');
+        $this->alias($request, 'module', 'server_type');
+        $this->alias($request, 'servergroupid', 'server_group_id');
+        $this->alias($request, 'autosetup', 'auto_setup');
+        $request->merge([
+            'type' => match (strtolower((string) $request->input('type'))) {
+                'hostingaccount' => 'hosting',
+                'reselleraccount' => 'reseller',
+                'server' => 'vps',
+                default => strtolower((string) $request->input('type')),
+            },
+            'auto_setup' => match (strtolower((string) $request->input('auto_setup'))) {
+                'on' => 'order',
+                '' => null,
+                default => strtolower((string) $request->input('auto_setup')),
+            },
+        ]);
+        if ($request->filled('server_type')) {
+            $request->merge(['server_type' => strtolower((string) $request->server_type)]);
+        }
+
+        $validated = $request->validate(\App\Services\ProductCreator::rules());
+        $product = $creator->create($validated, (array) $request->input('pricing', []), $request->filled('package_name') ? (string) $request->package_name : null);
+
+        return $this->success(['pid' => $product->id]);
     }
 }

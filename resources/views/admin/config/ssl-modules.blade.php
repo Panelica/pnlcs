@@ -38,9 +38,10 @@
                             <label class="form-check-label">{{ __('common.status.enabled') }}</label>
                         </div>
                     @elseif(($field['type'] ?? 'text') === 'password')
-                        <input type="password" name="settings[{{ $key }}]" class="form-control"
-                            value="{{ $settings[$name][$key] ?? '' }}"
-                            {{ !empty($field['required']) ? 'required' : '' }}>
+                        {{-- Never echoed back: blank keeps the stored password. --}}
+                        <input type="password" name="settings[{{ $key }}]" class="form-control" value="" autocomplete="new-password"
+                            placeholder="{{ ($settings[$name][$key] ?? '') !== '' ? __('admin.settings.smtp_password_keep') : '' }}"
+                            {{ !empty($field['required']) && ($settings[$name][$key] ?? '') === '' ? 'required' : '' }}>
                     @else
                         <input type="text" name="settings[{{ $key }}]" class="form-control"
                             value="{{ $settings[$name][$key] ?? '' }}"

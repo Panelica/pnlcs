@@ -148,45 +148,13 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'group_id' => 'required|exists:product_groups,id',
-            'type' => 'required|in:hosting,reseller,vps,ssl,other',
-            'description' => 'nullable|string',
-            'pay_type' => 'required|in:free,onetime,recurring',
-            'auto_setup' => 'nullable|in:order,payment,manual',
-            'server_type' => ['nullable', Rule::in(array_keys(app(ModuleRegistry::class)->serverModuleNames()))],
-            'server_group_id' => 'nullable|exists:server_groups,id',
-            // A price is a number, or -1 for "not sold on this cycle". Anything
-            // else used to go straight to the database and come back as an error page.
-            'pricing' => 'nullable|array',
-            'pricing.*' => 'nullable|array',
-            'pricing.*.*' => 'nullable|numeric|min:-1',
-        ]);
-        unset($validated['pricing']);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated = $request->validate(\App\Services\ProductCreator::rules());
 
-        // The plan lives on the panel; the product records which one it sells.
-        if ($request->filled('package_name')) {
-            $validated['config_options'] = ['package_name' => $request->input('package_name')];
-        }
-
-        $product = Product::create($validated);
-
-        // Create default pricing for each currency
-        foreach (Currency::all() as $currency) {
-            Pricing::create([
-                'type' => 'product',
-                'currency_id' => $currency->id,
-                'rel_id' => $product->id,
-                'monthly' => $request->input("pricing.{$currency->id}.monthly", -1),
-                'quarterly' => $request->input("pricing.{$currency->id}.quarterly", -1),
-                'semiannually' => $request->input("pricing.{$currency->id}.semiannually", -1),
-                'annually' => $request->input("pricing.{$currency->id}.annually", -1),
-                'biennially' => $request->input("pricing.{$currency->id}.biennially", -1),
-                'triennially' => $request->input("pricing.{$currency->id}.triennially", -1),
-            ]);
-        }
+        $product = app(\App\Services\ProductCreator::class)->create(
+            $validated,
+            (array) $request->input('pricing', []),
+            $request->filled('package_name') ? (string) $request->input('package_name') : null,
+        );
 
         return redirect()->route('admin.products.edit', $product)->with('success', __('admin.messages.product_created'));
     }

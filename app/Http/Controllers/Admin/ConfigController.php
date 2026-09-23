@@ -1482,7 +1482,7 @@ class ConfigController extends Controller
      * anything close to this, so the cap only ever stops a tampered form from
      * filling the table with rows.
      */
-    private const SETTINGS_MAX_KEYS = 50;
+    private const SETTINGS_MAX_KEYS = \App\Support\ModuleSettings::MAX_KEYS;
 
     public function updateGatewaySettings(Request $request, string $gateway)
     {
@@ -1549,50 +1549,13 @@ class ConfigController extends Controller
     /** The names a module marks as secret, so a blank one can mean "keep". */
     private function secretFieldNames(array $configFields): array
     {
-        return collect($configFields)
-            ->filter(fn ($field) => ($field['type'] ?? null) === 'password')
-            ->pluck('name')
-            ->filter(fn ($name) => is_string($name) && $name !== '')
-            ->values()
-            ->all();
+        return \App\Support\ModuleSettings::secretFieldNames($configFields);
     }
 
-    /**
-     * Bound a posted settings bag to what a module setting can actually be.
-     *
-     * Module-declared names are deliberately NOT used as a whitelist. A
-     * registrar stores a "name" setting that no module declares (it is the
-     * operator's own label, read back in registrars()), and a third-party
-     * module is free to read a setting it does not advertise; whitelisting
-     * would make both permanently unconfigurable.
-     */
+    /** See ModuleSettings::sanitise - the screens and the API share the rules. */
     private function sanitiseModuleSettings(array $settings, array $secretFields): array
     {
-        $clean = [];
-
-        foreach ($settings as $key => $value) {
-            if (! is_string($key) || ! preg_match('/^[A-Za-z0-9_.-]{1,64}$/', $key)) {
-                continue;
-            }
-
-            // A string column takes a string; anything else is a tampered form.
-            if (is_array($value) || is_object($value)) {
-                continue;
-            }
-
-            $value = (string) ($value ?? '');
-
-            // Secret fields ship empty because they are never rendered back, so
-            // a blank one means the operator did not touch it - not that they
-            // want the gateway's live key deleted.
-            if (in_array($key, $secretFields, true) && trim($value) === '') {
-                continue;
-            }
-
-            $clean[$key] = $value;
-        }
-
-        return $clean;
+        return \App\Support\ModuleSettings::sanitise($settings, $secretFields);
     }
 
     public function updateRegistrarSettings(Request $request, string $registrar)
@@ -1749,9 +1712,24 @@ class ConfigController extends Controller
         return view('admin.config.ssl-modules', compact('modules', 'settings'));
     }
 
+    /**
+     * The SSL settings wrote whatever arrived: an array into a text column, and
+     * a blank password over the stored one - while the page printed the stored
+     * API password into its own source for the form to send back. Same rules
+     * as the gateway and registrar screens now: the password is never rendered
+     * and a blank one means "keep".
+     */
     public function updateSslModuleSettings(Request $request, string $module)
     {
-        $settings = $request->input('settings', []);
+        $sslModule = app(ModuleRegistry::class)->getSslModule($module);
+        if (! $sslModule) {
+            abort(404);
+        }
+
+        $settings = $this->sanitiseModuleSettings(
+            $this->readPostedSettings($request),
+            $this->secretFieldNames($sslModule->getConfigFields())
+        );
 
         foreach ($settings as $key => $value) {
             SslModuleSettings::setSetting($module, $key, $value);

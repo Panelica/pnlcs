@@ -47,6 +47,9 @@ class NotificationService
             'service.provision_failed',
         ],
         'system' => [
+            // Sent by an integration through the API's triggernotificationevent;
+            // routed like any other event by the rules set up for it.
+            'api.custom',
             'backup.failed',
             'module.failed',
             'module.failed_permanently',

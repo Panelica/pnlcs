@@ -10,6 +10,13 @@ class SslModuleSettings extends Model
 
     protected $fillable = ['module', 'setting', 'value'];
 
+    /**
+     * The provider's API password was kept in plain text. Encrypted from now on;
+     * rows written before read back unchanged (EncryptedValue falls back to the
+     * stored value) and are encrypted the next time they are saved.
+     */
+    protected $casts = ['value' => \App\Casts\EncryptedValue::class];
+
     public static function getForModule(string $module): array
     {
         return static::where('module', $module)

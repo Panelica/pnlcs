@@ -59,6 +59,13 @@ const GUARD_PUBLIC_CLIENT = [
     // unless an operator has configured an OAuth client (GoogleLoginTest).
     'client.social.google.redirect', 'client.social.google.callback',
 
+    // A one-time sign-in link and an account invitation are opened from an
+    // email or an integration, usually with no session yet. The token is the
+    // guard: one use, a minute for SSO, seven days for an invitation, and an
+    // invitation to an existing login still needs that login signed in
+    // (ApiNewEndpointsTest).
+    'client.sso', 'client.invite.show', 'client.invite.accept',
+
     // The confirmation link arrives by email and is opened on whichever
     // device that mail landed on, often with no session at all. Its signature
     // is the guard (EmailVerificationTest).

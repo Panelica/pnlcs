@@ -377,11 +377,13 @@ test('getmodulequeue shows the real queue, never the payload', function () {
         ->and($r->getContent())->not->toContain('the-new-password');
 });
 
-test('endpoints that do nothing now say so instead of reporting success', function () {
+test('endpoints that once reported success for nothing now ask for what they need', function () {
+    // They said "done" and did nothing; they now do the work (ApiNewEndpointsTest),
+    // so an empty call is told what is missing - never "success".
     $h = auditHeaders(auditFullAdmin());
 
     foreach (['updatemoduleconfiguration', 'triggernotificationevent', 'starttasktimer', 'endtasktimer'] as $action) {
-        $this->withHeaders($h)->post('/api/v1/'.$action)->assertStatus(501);
+        $this->withHeaders($h)->post('/api/v1/'.$action)->assertStatus(422);
     }
 });
 

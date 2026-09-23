@@ -7,4 +7,5 @@ class ProjectTask extends Model {
 
     protected $fillable = ["project_id","task","notes","admin","completed","due_date","sort_order"];
     public function project() { return $this->belongsTo(Project::class); }
+    public function timers() { return $this->hasMany(ProjectTaskTimer::class); }
 }

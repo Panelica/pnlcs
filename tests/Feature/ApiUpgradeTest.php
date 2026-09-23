@@ -129,7 +129,12 @@ test('an upgrade to the package the service is already on is refused', function 
 test('a custom module function is refused rather than reported as run', function () {
     $service = upgradableService(pricedPlan(10));
 
+    // No function named: asked for one. A function the module does not offer:
+    // refused by name. Never "success".
     $this->withHeaders(apiKeyHeaders())
         ->postJson('/api/v1/modulecustom', ['serviceid' => $service->id])
-        ->assertStatus(501);
+        ->assertStatus(422);
+    $this->withHeaders(apiKeyHeaders())
+        ->postJson('/api/v1/modulecustom', ['serviceid' => $service->id, 'func_name' => 'reboot'])
+        ->assertStatus(404);
 });

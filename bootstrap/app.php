@@ -57,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.2fa' => AdminTwoFactorVerify::class,
             '2fa' => TwoFactorVerify::class,
             'admin.permission' => CheckAdminPermission::class,
+            'client.permission' => \App\Http\Middleware\CheckClientPermission::class,
         ]);
 
         $middleware->redirectGuestsTo(function ($request) {

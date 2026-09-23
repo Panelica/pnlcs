@@ -42,31 +42,43 @@ test('capturing a payment does not claim to have taken money', function () {
 });
 
 test('no login token is handed out that cannot sign anyone in', function () {
+    // An account with no login has nobody to sign in as: no token.
     $client = Client::factory()->create();
 
     $response = $this->withHeaders(fabricationHeaders())
         ->postJson('/api/v1/createssotoken', ['clientid' => $client->id])
-        ->assertStatus(501);
+        ->assertStatus(404);
 
-    expect($response->json('data.token') ?? $response->json('token'))->toBeNull();
+    expect($response->json('access_token'))->toBeNull();
+    // With a login, the token is a real one-time link (ApiNewEndpointsTest).
 });
 
 test('no invite code is handed out that cannot be redeemed', function () {
+    // Without an address there is nobody to send it to: no invitation is made.
     $this->withHeaders(fabricationHeaders())
         ->postJson('/api/v1/createclientinvite', ['clientid' => Client::factory()->create()->id])
-        ->assertStatus(501);
+        ->assertStatus(422);
+
+    expect(\App\Models\UserInvite::count())->toBe(0);
+    // A real invitation is redeemed end to end in ApiNewEndpointsTest.
 });
 
 test('permissions are neither invented nor pretended to be saved', function () {
     $headers = fabricationHeaders();
 
-    $this->withHeaders($headers)
-        ->getJson('/api/v1/getuserpermissions?userid=1')
-        ->assertStatus(501);
+    // Per-login permissions are stored and enforced now (ClientPermissions);
+    // a name that is not one of them is refused, never saved.
+    $client = Client::factory()->create();
+    $user = \App\Models\User::factory()->create();
+    $user->clients()->attach($client->id, ['owner' => false]);
 
     $this->withHeaders($headers)
-        ->postJson('/api/v1/updateuserpermissions', ['userid' => 1, 'permissions' => ['view_invoices']])
-        ->assertStatus(501);
+        ->getJson('/api/v1/getuserpermissions?userid='.$user->id)
+        ->assertStatus(422);
+
+    $this->withHeaders($headers)
+        ->postJson('/api/v1/updateuserpermissions', ['userid' => $user->id, 'clientid' => $client->id, 'permissions' => ['view_invoices']])
+        ->assertStatus(422);
 });
 
 test('releasing a domain is refused rather than reported', function () {

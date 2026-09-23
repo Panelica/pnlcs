@@ -73,10 +73,12 @@ it('lets the customer permission write the customer note', function () {
     expect($client->fresh()->notes)->toBe('rewritten');
 });
 
-it('says the send-email endpoints do nothing', function () {
+it('keeps the send-email endpoints behind the mass-mail permission', function () {
+    // They send mail now (ApiNewEndpointsTest): "manage settings" alone is not
+    // the permission the mass-mail screen asks for, so it is not enough here.
     foreach (['sendemail', 'sendadminemail'] as $endpoint) {
         $this->withHeaders(writeCredentialFor([Permissions::MANAGE_SETTINGS]))
             ->postJson('/api/v1/'.$endpoint, ['messagename' => 'x'])
-            ->assertStatus(501);
+            ->assertStatus(403);
     }
 });

@@ -41,7 +41,7 @@ Route::prefix('v1')->group(function () {
     Route::post('addbannedip', [SystemApiController::class, 'addBannedIp']);
     Route::post('validatelogin', [SystemApiController::class, 'validateLogin']);
     Route::post('sendemail', [SystemApiController::class, 'sendEmail']);
-    Route::post('sendadminemail', [SystemApiController::class, 'sendEmail']);
+    Route::post('sendadminemail', [SystemApiController::class, 'sendAdminEmail']);
     Route::post('resetpassword', [SystemApiController::class, 'resetPassword']);
     Route::get('getautomationlog', [SystemApiController::class, 'getActivityLog']); // alias
     Route::post('activatemodule', [SystemApiController::class, 'activateModule']);

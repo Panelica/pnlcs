@@ -552,19 +552,102 @@ class SystemApiController extends BaseApiController
     }
 
     /**
-     * These three said a module had been configured, that its parameters were
-     * none, and that a notification had gone out - and did nothing. Module
-     * settings are changed on their own screens; there is no event bus here to
-     * trigger.
+     * The settings a module asks for (WHMCS GetModuleConfigurationParameters):
+     * each field's name, label, type and whether it is required - never the
+     * stored values.
      */
-    public function getModuleConfigParams(Request $request)
+    public function getModuleConfigParams(Request $request, \App\Services\Module\ModuleSwitchboard $switchboard)
     {
-        return $this->error('Reading module configuration through the API is not implemented.', 501);
+        [$type, $name, $fields] = $this->moduleFields($request, $switchboard);
+        if ($fields instanceof \Illuminate\Http\JsonResponse) {
+            return $fields;
+        }
+
+        $params = collect($fields)->map(fn ($field, $key) => [
+            'name' => $field['name'] ?? (is_string($key) ? $key : null),
+            'label' => $field['label'] ?? null,
+            'type' => $field['type'] ?? 'text',
+            'required' => (bool) ($field['required'] ?? false),
+            'options' => $field['options'] ?? null,
+        ])->filter(fn ($f) => is_string($f['name']))->values();
+
+        return $this->success(['moduleType' => $type, 'moduleName' => $name, 'parameters' => $params->all()]);
     }
 
-    public function updateModuleConfig(Request $request)
+    /**
+     * Change a module's settings (WHMCS UpdateModuleConfiguration), under the
+     * same rules as its settings screen (ModuleSettings): a blank password
+     * keeps the stored one, and nothing that is not a string is written.
+     */
+    public function updateModuleConfig(Request $request, \App\Services\Module\ModuleSwitchboard $switchboard)
     {
-        return $this->error('Changing module configuration through the API is not implemented.', 501);
+        $request->validate([
+            'parameters' => 'required|array|max:'.\App\Support\ModuleSettings::MAX_KEYS,
+            'parameters.*' => 'nullable|string|max:8192',
+        ]);
+
+        [$type, $name, $fields] = $this->moduleFields($request, $switchboard);
+        if ($fields instanceof \Illuminate\Http\JsonResponse) {
+            return $fields;
+        }
+        if ($type === 'server') {
+            return $this->error('Server modules keep their settings on each server (Setup -> Servers), not on the module.', 422);
+        }
+
+        // The permission each settings screen asks for. "manage settings" alone
+        // is not enough to rewrite a gateway's live keys in the panel, and must
+        // not be here either.
+        $needed = match ($type) {
+            'gateway' => Permissions::MANAGE_GATEWAYS,
+            'registrar' => Permissions::MANAGE_REGISTRARS,
+            'ssl' => Permissions::MANAGE_SERVERS,
+            'addon' => Permissions::MANAGE_PRODUCTS,
+        };
+        if (! auth('admin')->user()?->hasPermission($needed)) {
+            return $this->error('Your account does not have permission for this action.', 403);
+        }
+
+        $settings = \App\Support\ModuleSettings::sanitise(
+            (array) $request->input('parameters'),
+            \App\Support\ModuleSettings::secretFieldNames($fields)
+        );
+
+        foreach ($settings as $key => $value) {
+            match ($type) {
+                'gateway' => \App\Models\GatewaySettings::updateOrCreate(['gateway' => $name, 'setting' => $key], ['value' => $value]),
+                'registrar' => \App\Models\RegistrarSettings::updateOrCreate(['registrar' => $name, 'setting' => $key], ['value' => $value]),
+                'ssl' => \App\Models\SslModuleSettings::setSetting($name, $key, $value),
+                'addon' => app(\App\Services\AddonManager::class)->saveSettings($name, [$key => $value]),
+            };
+        }
+
+        return $this->success(['moduleType' => $type, 'moduleName' => $name, 'updated' => array_keys($settings)]);
+    }
+
+    /** @return array{0: string, 1: string, 2: array|\Illuminate\Http\JsonResponse} */
+    private function moduleFields(Request $request, \App\Services\Module\ModuleSwitchboard $switchboard): array
+    {
+        $request->validate([
+            'moduleType' => ['required', 'string', Rule::in(\App\Services\Module\ModuleSwitchboard::TYPES)],
+            'moduleName' => 'required|string|max:100',
+        ]);
+        $type = (string) $request->moduleType;
+        $name = strtolower((string) $request->moduleName);
+
+        if (! $switchboard->exists($type, $name)) {
+            return [$type, $name, $this->error('No '.$type.' module named '.$name.' is installed.', 404)];
+        }
+
+        $registry = app(ModuleRegistry::class);
+        $fields = match ($type) {
+            'server' => $registry->getServerModule($name)?->getConfigFields() ?? [],
+            'gateway' => $registry->getGatewayModule($name)?->getConfigFields() ?? [],
+            'registrar' => $registry->getRegistrarModule($name)?->getConfigFields() ?? [],
+            'ssl' => $registry->getSslModule($name)?->getConfigFields() ?? [],
+            'addon' => app(\App\Services\AddonManager::class)->find($name)?->config() ?? [],
+        };
+
+        return [$type, $name, $fields];
     }
 
     // ===== PERMISSIONS =====
@@ -575,9 +658,30 @@ class SystemApiController extends BaseApiController
     }
 
     // ===== NOTIFICATIONS =====
-    public function triggerNotification(Request $request)
+    /**
+     * Send a custom notification (WHMCS TriggerNotificationEvent) through the
+     * channels the operator set up for the "api.custom" event under Setup ->
+     * Notification Channels - email, Slack, a webhook or Telegram.
+     */
+    public function triggerNotification(Request $request, \App\Services\NotificationService $notifications)
     {
-        return $this->error('Triggering notification events through the API is not implemented.', 501);
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string|max:4000',
+            'url' => 'nullable|url|max:2048',
+            'notification_identifier' => 'nullable|string|max:100',
+        ]);
+
+        $rules = \App\Models\NotificationRule::where('event', 'api.custom')->where('active', true)->count();
+
+        $notifications->dispatch('api.custom', [
+            'subject' => $validated['title'],
+            'message' => $validated['title']."\n\n".$validated['message'].(isset($validated['url']) ? "\n\n".$validated['url'] : ''),
+            'identifier' => $validated['notification_identifier'] ?? null,
+            'url' => $validated['url'] ?? null,
+        ]);
+
+        return $this->success(['event' => 'api.custom', 'rules' => $rules]);
     }
 
     // ===== ENCRYPTION =====
@@ -616,13 +720,114 @@ class SystemApiController extends BaseApiController
 
     // ===== EMAIL =====
     /**
-     * Said the mail had been queued and queued nothing. Mail is sent by the
-     * things that have something to say - an invoice, a ticket reply - and
-     * there is no code here to send one to order.
+     * Send a customer an email (WHMCS SendEmail).
+     *
+     * Two shapes. messagename names one of the email templates below and id
+     * the record it is about; the mail is built exactly as the event that
+     * normally sends it builds it, in the customer's language, with their
+     * contacts copied as their preferences say. Or customsubject and
+     * custommessage write the mail on the spot, to the customer id points at
+     * (customtype says whether id is a client, an invoice, a service or a
+     * domain). Mail switched off in the settings stays off.
      */
     public function sendEmail(Request $request)
     {
-        return $this->error('Sending mail from the API is not implemented.', 501);
+        $request->validate([
+            'messagename' => 'required_without:customsubject|nullable|string|max:100',
+            'customtype' => 'nullable|in:general,invoice,product,domain',
+            'customsubject' => 'required_without:messagename|nullable|string|max:255',
+            'custommessage' => 'required_with:customsubject|nullable|string|max:65535',
+            'id' => 'required|integer',
+        ]);
+
+        if ($request->filled('messagename')) {
+            $builders = self::templateMails();
+            $name = strtolower(trim((string) $request->messagename));
+            if (! isset($builders[$name])) {
+                return $this->error('That template cannot be sent on demand. Templates that can: '.implode(', ', array_keys($builders)).'.', 422);
+            }
+
+            $built = $builders[$name]((int) $request->id);
+            if ($built === null) {
+                return $this->error('No record with that id for this template.', 404);
+            }
+            [$to, $mail] = $built;
+        } else {
+            $client = match ($request->input('customtype', 'general')) {
+                'invoice' => Invoice::find($request->id)?->client,
+                'product' => Service::find($request->id)?->client,
+                'domain' => Domain::find($request->id)?->client,
+                default => Client::find($request->id),
+            };
+            if (! $client) {
+                return $this->error('No customer found for that id.', 404);
+            }
+            $to = $client->email;
+            $mail = new \App\Mail\BulkMassMail((string) $request->customsubject, (string) $request->custommessage, trim($client->first_name.' '.$client->last_name));
+        }
+
+        if (! $to) {
+            return $this->error('The customer has no email address.', 422);
+        }
+
+        \Illuminate\Support\Facades\Mail::to($to)->queue($mail);
+
+        return $this->success(['recipient' => $to]);
+    }
+
+    /**
+     * The templates sendemail can build from an id - the ones whose mail is
+     * about one record. The others need context an id cannot carry (a payment
+     * notification, a verification token) and are sent by their own events.
+     *
+     * @return array<string, \Closure(int): ?array{0: string, 1: \Illuminate\Mail\Mailable}>
+     */
+    private static function templateMails(): array
+    {
+        $invoice = fn (int $id) => Invoice::with('client')->find($id);
+        $service = fn (int $id) => Service::with('client')->find($id);
+        $domain = fn (int $id) => Domain::with('client')->find($id);
+        $days = fn ($date) => $date ? (int) now()->startOfDay()->diffInDays(\Illuminate\Support\Carbon::parse($date)->startOfDay(), false) : 0;
+
+        return [
+            'invoice created' => fn (int $id) => ($i = $invoice($id)) ? [$i->client?->billingEmail(), new \App\Mail\InvoiceCreatedMail($i)] : null,
+            'invoice payment confirmation' => fn (int $id) => ($i = $invoice($id)) ? [$i->client?->billingEmail(), new \App\Mail\InvoicePaidMail($i)] : null,
+            'invoice reminder' => fn (int $id) => ($i = $invoice($id)) ? [$i->client?->billingEmail(), new \App\Mail\PaymentReminderMail($i, $days($i->due_date))] : null,
+            'invoice overdue' => fn (int $id) => ($i = $invoice($id)) ? [$i->client?->billingEmail(), new \App\Mail\InvoiceOverdueMail($i, max(0, -$days($i->due_date)))] : null,
+            'service welcome email' => fn (int $id) => ($v = $service($id)) ? [$v->client?->email, new \App\Mail\ServiceWelcomeMail($v)] : null,
+            'service suspension' => fn (int $id) => ($v = $service($id)) ? [$v->client?->email, new \App\Mail\ServiceSuspensionMail($v, (string) ($v->suspension_reason ?? ''))] : null,
+            'service unsuspension' => fn (int $id) => ($v = $service($id)) ? [$v->client?->email, new \App\Mail\ServiceUnsuspensionMail($v)] : null,
+            'service termination' => fn (int $id) => ($v = $service($id)) ? [$v->client?->email, new \App\Mail\ServiceTerminationMail($v)] : null,
+            'order confirmation' => fn (int $id) => ($o = Order::with('client')->find($id)) ? [$o->client?->email, new \App\Mail\OrderConfirmationMail($o)] : null,
+            'domain registration confirmation' => fn (int $id) => ($d = $domain($id)) ? [$d->client?->email, new \App\Mail\DomainRegistrationMail($d)] : null,
+            'domain renewal reminder' => fn (int $id) => ($d = $domain($id)) ? [$d->client?->email, new \App\Mail\DomainRenewalReminderMail($d, max(0, $days($d->expiry_date)))] : null,
+            'account signup email' => fn (int $id) => ($c = Client::find($id)) ? [$c->email, new \App\Mail\AccountSignupMail($c)] : null,
+        ];
+    }
+
+    /**
+     * Email the staff (WHMCS SendAdminEmail): every active member of staff, or
+     * with deptid those who handle that support department.
+     */
+    public function sendAdminEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'customsubject' => 'required|string|max:255',
+            'custommessage' => 'required|string|max:65535',
+            'deptid' => 'nullable|integer|exists:ticket_departments,id',
+        ]);
+
+        $admins = Admin::where('is_disabled', false)->whereNotNull('email')->get()
+            ->filter(fn (Admin $a) => ! $request->filled('deptid')
+                || in_array((int) $request->deptid, array_map('intval', (array) ($a->support_departments ?? [])), true));
+
+        foreach ($admins as $admin) {
+            \Illuminate\Support\Facades\Mail::to($admin->email)->queue(
+                new \App\Mail\BulkMassMail($validated['customsubject'], $validated['custommessage'], trim($admin->first_name.' '.$admin->last_name))
+            );
+        }
+
+        return $this->success(['recipients' => $admins->count()]);
     }
 
     /**
@@ -820,7 +1025,7 @@ class SystemApiController extends BaseApiController
 
     public function getProject(Request $request)
     {
-        $project = Project::with('client', 'tasks', 'messages')->find($request->id ?? $request->projectid);
+        $project = Project::with('client', 'tasks.timers', 'messages')->find($request->id ?? $request->projectid);
         if (! $project) {
             return $this->error('Project Not Found', 404);
         }
@@ -937,17 +1142,46 @@ class SystemApiController extends BaseApiController
     }
 
     /**
-     * Said a timer had started and stopped; project tasks keep no time at all,
-     * so nothing was ever recorded.
+     * Start timing a project task for the caller (WHMCS StartTaskTimer). One
+     * running timer per task and member of staff: a second start would count
+     * the same minutes twice.
      */
     public function startTaskTimer(Request $request)
     {
-        return $this->error('Task timers are not implemented; project tasks do not record time.', 501);
+        $request->validate(['taskid' => 'required|integer', 'projectid' => 'nullable|integer']);
+
+        $task = ProjectTask::find($request->taskid);
+        if (! $task || ($request->filled('projectid') && (int) $task->project_id !== (int) $request->projectid)) {
+            return $this->error('Task Not Found', 404);
+        }
+
+        $adminId = auth('admin')->id();
+        $running = $task->timers()->where('admin_id', $adminId)->whereNull('ended_at')->first();
+        if ($running) {
+            return $this->error('A timer is already running for this task (timerid '.$running->id.').', 409);
+        }
+
+        $timer = $task->timers()->create(['admin_id' => $adminId, 'started_at' => now()]);
+
+        return $this->success(['timerid' => $timer->id, 'taskid' => $task->id, 'started_at' => $timer->started_at->toIso8601String()]);
     }
 
+    /** Stop a timer (WHMCS EndTaskTimer) and say how long it ran. */
     public function endTaskTimer(Request $request)
     {
-        return $this->error('Task timers are not implemented; project tasks do not record time.', 501);
+        $request->validate(['timerid' => 'required|integer']);
+
+        $timer = \App\Models\ProjectTaskTimer::find($request->timerid);
+        if (! $timer) {
+            return $this->error('Timer Not Found', 404);
+        }
+        if ($timer->ended_at === null) {
+            $timer->update(['ended_at' => now()]);
+        }
+
+        $total = $timer->task->timers()->get()->sum(fn ($t) => $t->seconds());
+
+        return $this->success(['timerid' => $timer->id, 'seconds' => $timer->seconds(), 'task_total_seconds' => $total]);
     }
 
     // ===== AFFILIATES =====

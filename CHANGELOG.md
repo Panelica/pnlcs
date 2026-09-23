@@ -2,6 +2,85 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09-23 — API & MCP security audit, German, modules, Live Servers
+
+### ⚠️ Action required if you used pnlcs-mcp 1.0.4 or older
+
+**Rotate the API credential you gave it.** Versions up to 1.0.4 sent the
+identifier and secret in the query string of every read, so they were written
+to your web server's access log, to any proxy in between and to request logs.
+Create a new credential under **Setup → API Credentials**, put it in your MCP
+client's configuration, update to `pnlcs-mcp` 1.0.5 (which sends credentials
+only in the `X-API-Key` / `X-API-Secret` headers), and delete the old
+credential.
+
+### Security
+
+- **Secrets no longer leave the API.** SSL certificate private keys
+  (`getsslorders`, `getsslorder`), domain transfer (EPP) codes
+  (`getclientsdomains`), the support mailbox password (`getsupportdepartments`,
+  `gettickets`, `getticket`) and contact password hashes
+  (`getclientsdetails`, `getcontacts`) were part of the responses. They are
+  hidden at the model now, so no endpoint can return them.
+- A **disabled** staff account's API credential and password stopped working
+  only in the admin area; the API refuses them now.
+- An account with **two-factor authentication** could reach the API with its
+  password alone; it needs an API credential now.
+- `createoauthcredential` created keys owned by the first administrator and
+  needed only "manage settings"; keys now belong to the caller and need
+  "manage staff", as on the staff screen.
+- Projects, quotes, affiliates, products, promotions, registrars, module
+  settings and mail endpoints answer to the same permissions as their screens.
+- Reflected XSS on the client **reset-password** page (the token and email
+  from the URL were printed unescaped) is fixed.
+- The SSL provider password was printed into the SSL settings page and stored
+  in plain text; it is never rendered now and is stored encrypted.
+
+### API correctness
+
+- `getclientsproducts`, `getclientsdomains` and `gettransactions` ignored
+  `clientid` and returned **every customer's** records; they filter now.
+- `deleteuserclient` deleted the login instead of removing it from one
+  account; `geninvoices` ignored `clientid` and billed everyone (filters are
+  refused now); `blockticketsender` blocked signups instead of tickets.
+- Replies, notes, log entries and project messages are signed by the caller,
+  not by whatever the request said.
+- The parameter names the API reference documents (the WHMCS names) are the
+  ones the API reads; the reference was corrected where it was wrong.
+- Newly implemented: `sendemail`, `sendadminemail`, `resetpassword`,
+  `activatemodule`, `deactivatemodule`, `getmoduleconfigurationparameters`,
+  `updatemoduleconfiguration`, `triggernotificationevent` (new `api.custom`
+  notification event), `starttasktimer`, `endtasktimer`, `addproduct`,
+  `updatepaymethod`, `deletepaymethod`, `modulecustom`, `createssotoken`
+  (one-time client-area sign-in links), `createclientinvite` (account
+  invitations) and `getuserpermissions` / `updateuserpermissions`
+  (per-login permissions, enforced in the client area; owners and existing
+  logins keep full access).
+- Still answering 501 on purpose: `addpaymethod` (cards are added by the
+  customer at the gateway's form; card numbers never pass through PNLCS),
+  `capturepayment`, `domainupdatewhoisinfo`, `domainrelease`,
+  `encryptpassword`, `decryptpassword`.
+
+### pnlcs-mcp 1.0.5
+
+Credentials in headers only; client-scoped tools also send `userid` so older
+installs filter too; ticket replies are filed as staff; the live test checks
+the data, not only "success".
+
+### German
+
+A complete German translation, **contributed by Dirk Mehmke** — thank you!
+Reviewed and merged with a handful of corrections.
+
+### Admin
+
+- **Setup → Modules**: every installed module with an on/off switch.
+- Third-party modules are discovered from a `pnlcs.json` manifest
+  (PR #47, thanks to @terbora-core); see "Writing your own module" in the
+  README.
+- **Live Servers** quick action: one-click sign-in to your Panelica servers.
+- Fully translated languages can be chosen as the default language.
+
 ## 2026-09 — Tax model, extensible addons, Tpay & Polish-market billing
 
 A round of billing and extensibility work, largely from community

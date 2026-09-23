@@ -132,6 +132,15 @@ class ApiPermissionMap
         'deleteoauthcredential' => Permissions::MANAGE_STAFF,
         // Checks a customer's password: a customer-record question.
         'validatelogin' => Permissions::VIEW_CLIENTS,
+        // Signing in as a customer, inviting a login to their account and
+        // setting what it may do: the "log in as this client" permission.
+        'createssotoken' => Permissions::EDIT_CLIENTS,
+        'createclientinvite' => Permissions::EDIT_CLIENTS,
+        'updateuserpermissions' => Permissions::EDIT_CLIENTS,
+        'getuserpermissions' => Permissions::LIST_CLIENTS,
+        // Mail to customers and to staff: the mass-mail screen's permission.
+        'sendemail' => Permissions::MANAGE_EMAIL_TEMPLATES,
+        'sendadminemail' => Permissions::MANAGE_EMAIL_TEMPLATES,
     ];
 
     /**

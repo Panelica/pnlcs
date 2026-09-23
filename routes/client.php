@@ -23,13 +23,23 @@ use App\Http\Controllers\DomainSearchController;
 use App\Http\Middleware\TwoFactorVerify;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('client')->name('client.')->middleware('banned.ip')->group(function () {
+Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permission'])->group(function () {
     Route::get('login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.submit');
     Route::get('register', [AuthController::class, 'showRegister'])->name('register');
     // Signing up makes an account and sends mail; the contact form next to
     // it has been counted all along.
     Route::post('register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register.submit');
+
+    // One-time sign-in links (the API's createssotoken) and account
+    // invitations (createclientinvite). Both are opened from an email or an
+    // integration, often by somebody not signed in yet.
+    Route::get('sso/{token}', \App\Http\Controllers\Client\SsoController::class)
+        ->middleware('throttle:20,1')->name('sso');
+    Route::get('invite/{token}', [\App\Http\Controllers\Client\InviteController::class, 'show'])
+        ->middleware('throttle:30,1')->name('invite.show');
+    Route::post('invite/{token}', [\App\Http\Controllers\Client\InviteController::class, 'accept'])
+        ->middleware('throttle:10,1')->name('invite.accept');
 
     // Proving the address on an account. The link itself carries no session -
     // a customer opens it on whatever device their mail is on - so it sits
