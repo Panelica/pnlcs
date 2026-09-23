@@ -344,7 +344,7 @@ fill in the customer's real domain path*
 | Node.js   | 18+ (20 LTS recommended) — only needed to build the frontend assets |
 | Composer  | 2.x |
 | Web server | Nginx or Apache with PHP-FPM |
-| Tools     | `git`, `unzip`, `curl` |
+| Tools     | `git`, `unzip`, `curl`, `cron` |
 | Disk | **~130 MB** for the app itself (code + PHP dependencies + built assets); the Docker image is ~410 MB. Allow **at least 2 GB free** for the database, ticket/backup uploads and logs as they grow. `node_modules` (~100 MB) is only needed while building and can be removed afterwards. |
 | RAM | 1 GB works for a small install; 2 GB is comfortable with the database on the same box |
 | PHP extensions (required) | `bcmath`, `curl`, `dom`, `fileinfo`, `gd`, `intl`, `mbstring`, `openssl`, `pdo_mysql`, `tokenizer`, `xml`, `zip` — the install wizard checks each one |
@@ -447,7 +447,7 @@ ondrej PPA.
 
 ```bash
 sudo apt update
-sudo apt install -y software-properties-common git unzip curl
+sudo apt install -y software-properties-common git unzip curl cron
 sudo add-apt-repository -y ppa:ondrej/php
 sudo apt update
 sudo apt install -y php8.4-fpm php8.4-cli php8.4-mysql php8.4-mbstring \
@@ -473,10 +473,12 @@ Ubuntu, both found on a clean Debian 13 server:
   optional (mailbox → ticket import only).
 - **There is no `mysql-server` package.** Debian ships MariaDB, which PNLCS
   supports.
+- **`cron` is not installed** on the Debian 13 cloud image — without it the
+  scheduler in step 13 never runs. It is in the list below.
 
 ```bash
 sudo apt update
-sudo apt install -y git unzip curl
+sudo apt install -y git unzip curl cron
 sudo apt install -y php8.4-fpm php8.4-cli php8.4-mysql php8.4-mbstring \
   php8.4-xml php8.4-curl php8.4-zip php8.4-gd php8.4-bcmath php8.4-intl
 sudo apt install -y mariadb-server nginx
@@ -500,7 +502,7 @@ sudo dnf module reset php -y
 sudo dnf module enable php:remi-8.4 -y
 sudo dnf install -y php php-fpm php-mysqlnd php-mbstring php-xml php-gd \
   php-bcmath php-intl php-imap php-pecl-zip \
-  mysql-server nginx git unzip policycoreutils-python-utils
+  mysql-server nginx git unzip cronie policycoreutils-python-utils
 
 curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
 sudo dnf install -y nodejs
