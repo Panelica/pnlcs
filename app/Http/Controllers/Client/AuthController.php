@@ -6,7 +6,6 @@ use App\Enums\ClientStatus;
 use App\Events\ClientCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\AffiliateTracking;
-use App\Mail\PasswordResetMail;
 use App\Models\BannedEmail;
 use App\Models\Client;
 use App\Models\User;
@@ -17,8 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -279,22 +276,10 @@ class AuthController extends Controller
     public function sendResetLink(Request $request)
     {
         $request->validate(['email' => 'required|email']);
-        $user = User::where('email', $request->email)->first();
-        if (! $user) {
-            return back()->with('success', __('messages.success.if_an_account_exists_with_that_email_a_password_re'));
-        }
-        $token = Str::random(64);
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $request->email],
-            ['token' => Hash::make($token), 'created_at' => now()]
-        );
-        $resetUrl = route('client.password.reset', ['token' => $token]).'?email='.urlencode($request->email);
-        try {
-            Mail::to($request->email)->send(new PasswordResetMail($resetUrl, $request->email));
-        } catch (\Throwable $e) {
-            // Never log the token; only the delivery failure.
-            Log::error('Password reset email failed for '.$request->email.': '.$e->getMessage());
-        }
+
+        // Whether or not an account exists, the answer is the same: the form
+        // must not tell a stranger which addresses have logins.
+        app(\App\Services\PasswordResetSender::class)->send((string) $request->email);
 
         return back()->with('success', __('messages.success.if_an_account_exists_with_that_email_a_password_re'));
     }

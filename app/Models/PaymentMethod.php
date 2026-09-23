@@ -45,6 +45,29 @@ class PaymentMethod extends Model {
     }
 
     /**
+     * Stop using this method and ask the gateway to forget it.
+     *
+     * The row goes at once - that is what stops PNLCS charging it - and the
+     * gateway half is recorded for pnlcs:detach-payment-methods to carry out
+     * (see requestGatewayDetach). The client area and the API both remove a
+     * method through here, so neither can forget the second half.
+     */
+    public function remove(): void
+    {
+        $this->requestGatewayDetach();
+        $this->delete();
+    }
+
+    /** Make this the customer's default method, and no other. */
+    public function makeDefault(): void
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            static::where('client_id', $this->client_id)->update(['is_default' => false]);
+            $this->forceFill(['is_default' => true])->save();
+        });
+    }
+
+    /**
      * The customer has asked for this card not to be kept.
      *
      * Written in the customer's own request, where it costs one UPDATE and

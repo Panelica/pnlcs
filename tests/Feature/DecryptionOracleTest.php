@@ -32,10 +32,17 @@ it('does not decrypt what it is handed', function () {
     expect($response->json('password'))->not->toBe('the-real-access-key');
 });
 
-it('says the endpoints that do nothing do nothing', function () {
+/*
+ * These three used to answer "done" and do nothing, then 501. Since the API
+ * audit of 2026-09-23 they do the work, through the same code as the
+ * forgot-password form and the Modules screen - so an empty call is asked for
+ * what it left out rather than told the endpoint does not exist. What they do
+ * is tested in ApiAuditFixesTest.
+ */
+it('asks for what is missing instead of pretending, on the endpoints that now do their work', function () {
     foreach (['resetpassword', 'activatemodule', 'deactivatemodule'] as $endpoint) {
         $this->withHeaders(oracleHeaders())
             ->postJson('/api/v1/'.$endpoint, [])
-            ->assertStatus(501);
+            ->assertStatus(422);
     }
 });

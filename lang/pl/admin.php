@@ -276,7 +276,7 @@ return [
     'api_docs.desc_domainsync' => 'Zsynchronizuj wygaśnięcie i status domeny z rejestratorem',
     'api_docs.desc_domaintransfer' => 'Przenieś domenę do tego rejestratora',
     'api_docs.desc_domainupdatelockstatus' => 'Włącz lub wyłącz blokadę transferu domeny',
-    'api_docs.desc_domainwhois' => 'Wykonaj zapytanie WHOIS dla domeny',
+    'api_docs.desc_domainwhois' => 'Sprawdź, czy domena jest dostępna do rejestracji',
     'api_docs.desc_fraudorder' => 'Oznacz zamówienie jako oszukańcze',
     'api_docs.desc_getadmindetails' => 'Pobierz szczegóły uwierzytelnionego administratora',
     'api_docs.desc_getadminroles' => 'Wyświetl wszystkie role administratorów',

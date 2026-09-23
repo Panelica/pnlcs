@@ -103,8 +103,7 @@ class PaymentMethodController extends Controller
     {
         abort_if($paymentMethod->client_id !== $this->getClientId(), 403);
 
-        PaymentMethod::where('client_id', $this->getClientId())->update(['is_default' => false]);
-        $paymentMethod->update(['is_default' => true]);
+        $paymentMethod->makeDefault();
 
         return back()->with('success', __('client.payment_methods.default_updated'));
     }
@@ -134,8 +133,7 @@ class PaymentMethodController extends Controller
     {
         abort_if($paymentMethod->client_id !== $this->getClientId(), 403);
 
-        $paymentMethod->requestGatewayDetach();
-        $paymentMethod->delete();
+        $paymentMethod->remove();
 
         return back()->with('success', __('client.payment_methods.removed'));
     }

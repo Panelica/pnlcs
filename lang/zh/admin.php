@@ -276,7 +276,7 @@ return [
     'api_docs.desc_domainsync' => '从注册商同步域名到期日期和状态',
     'api_docs.desc_domaintransfer' => '将域名转入此注册商',
     'api_docs.desc_domainupdatelockstatus' => '启用或禁用域名转移锁',
-    'api_docs.desc_domainwhois' => '查询域名的 WHOIS 信息',
+    'api_docs.desc_domainwhois' => '检查域名是否可以注册',
     'api_docs.desc_fraudorder' => '将订单标记为欺诈订单',
     'api_docs.desc_getadmindetails' => '获取当前已认证管理员的详情',
     'api_docs.desc_getadminroles' => '列出所有管理员角色',

@@ -19,14 +19,28 @@ class ServiceApiController extends BaseApiController
     public function getClientsProducts(Request $request)
     {
         $query = Service::with('client', 'product');
-        if ($request->filled('userid')) {
-            $query->where('client_id', $request->userid);
+        // WHMCS names the customer filter clientid and also filters by
+        // serviceid, pid and domain. Only userid was read here, so asking for
+        // one customer's services - or for one service - returned every
+        // service in the installation.
+        $clientId = $request->input('clientid', $request->input('userid'));
+        if (filled($clientId)) {
+            $query->where('client_id', $clientId);
+        }
+        if ($request->filled('serviceid')) {
+            $query->whereKey($request->serviceid);
+        }
+        if ($request->filled('pid')) {
+            $query->where('product_id', $request->pid);
+        }
+        if ($request->filled('domain')) {
+            $query->where('domain', $request->domain);
         }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        return $this->paginated($query->orderBy('id', 'desc')->paginate($request->get('limitnum', 25)));
+        return $this->paginated($query->orderBy('id', 'desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage()));
     }
 
     public function updateClientProduct(Request $request)
@@ -47,6 +61,13 @@ class ServiceApiController extends BaseApiController
             'status' => ['sometimes', Rule::enum(ServiceStatus::class)],
             'billing_cycle' => ['sometimes', 'in:onetime,monthly,quarterly,semiannually,annually,biennially,triennially'],
             'next_due_date' => ['sometimes', 'date'],
+            // The name the server module creates the account for; a value that
+            // is not a hostname could never be provisioned or found again.
+            'domain' => ['sometimes', 'nullable', 'string', 'max:253', function ($attribute, $value, $fail) {
+                if ($value !== null && $value !== '' && (! filter_var($value, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || ! str_contains((string) $value, '.'))) {
+                    $fail('The domain must be a domain name.');
+                }
+            }],
         ]);
 
         foreach (['status', 'domain', 'username', 'password', 'next_due_date', 'billing_cycle', 'notes'] as $f) {
@@ -142,6 +163,8 @@ class ServiceApiController extends BaseApiController
 
     public function getClientsAddons(Request $request)
     {
+        // WHMCS names the customer filter clientid here.
+        $this->alias($request, 'clientid', 'userid');
         $query = ServiceAddon::with('service', 'addon');
         if ($request->filled('serviceid')) {
             $query->where('service_id', $request->serviceid);
@@ -159,8 +182,18 @@ class ServiceApiController extends BaseApiController
         if (! $addon) {
             return $this->error('Addon Not Found', 404);
         }
+        // The addon billing run matches "active" exactly; any other word left
+        // the addon neither billed nor cancelled. Cancelling goes through the
+        // service that also stops the next due date.
+        $request->validate(['status' => ['sometimes', Rule::enum(ServiceStatus::class)]]);
         if ($request->has('status')) {
-            $addon->status = $request->status;
+            $status = strtolower((string) $request->status);
+            if ($status === ServiceStatus::Cancelled->value) {
+                app(\App\Services\AddonService::class)->cancel($addon);
+                $addon->refresh();
+            } else {
+                $addon->status = $status;
+            }
         }
         if ($request->has('notes')) {
             $addon->notes = $request->notes;
@@ -214,20 +247,39 @@ class ServiceApiController extends BaseApiController
         if (! $service) {
             return $this->error('Service Not Found', 404);
         }
+
+        // The two types the customer area writes. This wrote "end_of_billing"
+        // by default and took any word at all, so the requests it made read
+        // differently from every other one.
+        $request->validate([
+            'type' => ['nullable', 'string', Rule::in(['Immediate', 'End of Billing Period', 'immediate', 'end_of_billing'])],
+            'reason' => 'nullable|string|max:1000',
+        ]);
+        $type = match (strtolower((string) $request->input('type', 'End of Billing Period'))) {
+            'immediate' => 'Immediate',
+            default => 'End of Billing Period',
+        };
+
+        // Same rule as the customer area: a service that is already gone has
+        // nothing left to cancel.
+        if (in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true)) {
+            return $this->error('The service is not live, so there is nothing to cancel.', 422);
+        }
+
         $open = CancellationRequest::where('service_id', $service->id)->whereNull('processed_at')->first();
 
         if ($open) {
             return $this->error('A cancellation request is already open for this service', 409);
         }
 
-        CancellationRequest::create(['service_id' => $service->id, 'type' => $request->get('type', 'end_of_billing'), 'reason' => $request->get('reason', '')]);
+        CancellationRequest::create(['service_id' => $service->id, 'type' => $type, 'reason' => (string) $request->input('reason', '')]);
 
         return $this->success(['serviceid' => $service->id]);
     }
 
     public function getCancelledPackages(Request $request)
     {
-        $items = CancellationRequest::with('service')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage());
+        $items = CancellationRequest::with('service')->orderBy('id', 'desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage());
 
         return $this->paginated($items);
     }

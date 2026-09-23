@@ -276,7 +276,7 @@ return [
     'api_docs.desc_domainsync' => 'Sync domain expiry and status from registrar',
     'api_docs.desc_domaintransfer' => 'Transfer a domain to this registrar',
     'api_docs.desc_domainupdatelockstatus' => 'Enable or disable domain transfer lock',
-    'api_docs.desc_domainwhois' => 'Perform a WHOIS lookup for a domain',
+    'api_docs.desc_domainwhois' => 'Check whether a domain is available to register',
     'api_docs.desc_fraudorder' => 'Mark an order as fraudulent',
     'api_docs.desc_getadmindetails' => 'Get details for the authenticated admin',
     'api_docs.desc_getadminroles' => 'List all admin roles',

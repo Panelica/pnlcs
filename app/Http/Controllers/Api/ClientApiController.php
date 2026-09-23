@@ -11,6 +11,7 @@ use App\Models\Contact;
 use App\Models\Credit;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ClientApiController extends BaseApiController
 {
@@ -19,6 +20,8 @@ class ClientApiController extends BaseApiController
 
     public function getClients(Request $request)
     {
+        // WHMCS orders the list with "sorting" (ASC/DESC).
+        $this->alias($request, 'sorting', 'order');
         $query = Client::query();
         if ($request->filled('search')) {
             $query->search($request->search);
@@ -119,6 +122,10 @@ class ClientApiController extends BaseApiController
         $request->validate([
             'email' => ['sometimes', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)],
             'status' => ['sometimes', Rule::enum(ClientStatus::class)],
+            // Sent empty, a name reached a NOT NULL column as a 500.
+            'firstname' => 'sometimes|required|string|max:255',
+            'lastname' => 'sometimes|required|string|max:255',
+            'country' => 'sometimes|nullable|string|size:2',
         ]);
 
         foreach (['first_name' => 'firstname', 'last_name' => 'lastname', 'email' => 'email', 'company_name' => 'companyname', 'address1' => 'address1', 'city' => 'city', 'state' => 'state', 'postcode' => 'postcode', 'country' => 'country', 'phone_number' => 'phonenumber', 'status' => 'status'] as $db => $api) {
@@ -168,11 +175,19 @@ class ClientApiController extends BaseApiController
 
     public function addClientNote(Request $request)
     {
+        $this->alias($request, 'userid', 'clientid');
         $client = Client::find($request->clientid);
         if (! $client) {
             return $this->error('Client Not Found', 404);
         }
-        ClientNote::create(['client_id' => $client->id, 'admin' => $request->adminusername ?? 'system', 'note' => $request->note ?? $request->notes ?? $request->message, 'sticky' => $request->boolean('sticky')]);
+        // Signed by the caller. The author was whatever "adminusername" said,
+        // so a note could be put on a customer's record in any colleague's
+        // name; and an empty note reached a NOT NULL column as a 500.
+        $note = $request->note ?? $request->notes ?? $request->message;
+        if (! is_string($note) || trim($note) === '') {
+            return $this->error('A note is required.', 422);
+        }
+        ClientNote::create(['client_id' => $client->id, 'admin' => (string) (auth('admin')->user()?->username ?? 'API'), 'note' => $note, 'sticky' => $request->boolean('sticky')]);
 
         return $this->success();
     }
@@ -201,6 +216,11 @@ class ClientApiController extends BaseApiController
         if (! $contact) {
             return $this->error('Contact Not Found', 404);
         }
+        $request->validate([
+            'firstname' => 'sometimes|required|string|max:255',
+            'lastname' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|max:255',
+        ]);
         foreach (['first_name' => 'firstname', 'last_name' => 'lastname', 'email' => 'email'] as $db => $api) {
             if ($request->has($api)) {
                 $contact->$db = $request->$api;
@@ -240,8 +260,11 @@ class ClientApiController extends BaseApiController
     public function addCredit(Request $request)
     {
         $validated = $request->validate(['clientid' => 'required|exists:clients,id', 'description' => 'required|string', 'amount' => 'required|numeric|min:0.01']);
-        Credit::create(['client_id' => $validated['clientid'], 'date' => now()->format('Y-m-d'), 'description' => $validated['description'], 'amount' => $validated['amount']]);
-        Client::find($validated['clientid'])->increment('credit', $validated['amount']);
+        // The ledger line and the balance move together or not at all.
+        DB::transaction(function () use ($validated) {
+            Credit::create(['client_id' => $validated['clientid'], 'date' => now()->format('Y-m-d'), 'description' => $validated['description'], 'amount' => $validated['amount']]);
+            Client::whereKey($validated['clientid'])->increment('credit', $validated['amount']);
+        });
 
         return $this->success();
     }
@@ -261,7 +284,11 @@ class ClientApiController extends BaseApiController
 
     public function addUser(Request $request)
     {
-        $validated = $request->validate(['email' => 'required|email', 'password' => 'required|min:6', 'first_name' => 'required', 'last_name' => 'required']);
+        // users.email is unique in the database; checking it here turns a
+        // taken address into a 422 instead of a 500. Eight characters is what
+        // addclient and the registration form ask for.
+        $validated = $request->validate(['email' => 'required|email|max:255|unique:users,email', 'password' => 'required|string|min:8', 'first_name' => 'required|string|max:255', 'last_name' => 'required|string|max:255', 'clientid' => 'nullable|integer|exists:clients,id']);
+        unset($validated['clientid']);
         $validated['password'] = bcrypt($validated['password']);
         $user = User::create($validated);
         // Attach through the pivot: a client_id written on the user went
@@ -279,6 +306,12 @@ class ClientApiController extends BaseApiController
         if (! $user) {
             return $this->error('User Not Found', 404);
         }
+        $request->validate([
+            'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'first_name' => 'sometimes|required|string|max:255',
+            'last_name' => 'sometimes|required|string|max:255',
+            'password' => 'sometimes|nullable|string|min:8',
+        ]);
         foreach (['email', 'first_name', 'last_name'] as $f) {
             if ($request->has($f)) {
                 $user->$f = $request->$f;
@@ -292,15 +325,28 @@ class ClientApiController extends BaseApiController
         return $this->success(['userid' => $user->id]);
     }
 
+    /**
+     * Take a login off one account (WHMCS DeleteUserClient).
+     *
+     * This deleted the login outright. A login can open several accounts, so
+     * asking to remove it from one closed every other account it belonged to
+     * as well, and there is no undo. It now does what the name says: the link
+     * between this login and this account goes, the login stays.
+     */
     public function deleteUserClient(Request $request)
     {
+        $request->validate(['userid' => 'required|integer', 'clientid' => 'required|integer']);
+
         $user = User::find($request->userid);
         if (! $user) {
             return $this->error('User Not Found', 404);
         }
-        $user->delete();
+        if (! $user->clients()->whereKey($request->clientid)->exists()) {
+            return $this->error('That login is not on that account.', 404);
+        }
+        $user->clients()->detach((int) $request->clientid);
 
-        return $this->success();
+        return $this->success(['userid' => $user->id, 'clientid' => (int) $request->clientid]);
     }
 
     public function createClientInvite(Request $request)

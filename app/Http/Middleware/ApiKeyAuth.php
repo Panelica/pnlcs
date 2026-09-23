@@ -58,6 +58,17 @@ class ApiKeyAuth
         if ($username && $password) {
             $admin = Admin::where('username', $username)->first();
             if ($admin && Hash::check($password, $admin->password)) {
+                // A password is only half of what this account signs in with.
+                // Accepting it alone here walked straight past the second
+                // factor the admin login asks for; an API credential is the
+                // way in for an account that has one.
+                if ($admin->second_factor_type && $admin->second_factor_secret) {
+                    return response()->json([
+                        'result' => 'error',
+                        'message' => 'This account uses two-factor authentication. Use an API credential (identifier and secret) instead of the password.',
+                    ], 401);
+                }
+
                 return $this->asAdmin($request, $next, $admin);
             }
 
@@ -99,6 +110,16 @@ class ApiKeyAuth
             return response()->json([
                 'result' => 'error',
                 'message' => 'The account this credential belongs to no longer exists.',
+            ], 403);
+        }
+
+        // The admin login refuses a disabled account; its credentials and its
+        // password must not keep working here after the account was switched
+        // off - that is usually the moment somebody left.
+        if ($admin->is_disabled) {
+            return response()->json([
+                'result' => 'error',
+                'message' => 'The account this credential belongs to is disabled.',
             ], 403);
         }
 

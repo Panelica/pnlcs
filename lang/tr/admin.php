@@ -267,7 +267,7 @@ return [
     'api_docs.desc_domainsync' => 'Alan adı bitiş tarihini ve durumunu kayıt kuruluşundan eşitler',
     'api_docs.desc_domaintransfer' => 'Alan adını bu kayıt kuruluşuna transfer eder',
     'api_docs.desc_domainupdatelockstatus' => 'Alan adı transfer kilidini açar veya kapatır',
-    'api_docs.desc_domainwhois' => 'Alan adı için WHOIS sorgusu yapar',
+    'api_docs.desc_domainwhois' => 'Bir alan adının kayda açık olup olmadığını kontrol eder',
     'api_docs.desc_fraudorder' => 'Siparişi sahte olarak işaretler',
     'api_docs.desc_getadmindetails' => 'Kimliği doğrulanmış yöneticinin bilgilerini getirir',
     'api_docs.desc_getadminroles' => 'Tüm yönetici rollerini listeler',

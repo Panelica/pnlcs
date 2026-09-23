@@ -97,12 +97,41 @@ class ApiPermissionMap
         'getstaffonline' => Permissions::MANAGE_STAFF,
         'getservers' => Permissions::MANAGE_SERVERS,
         'getmodulequeue' => Permissions::LIST_SERVICES,
-        'getquotes' => Permissions::MANAGE_QUOTES,
+        // Quotes, projects and affiliates each have their own screen and their
+        // own permissions. Only some of their calls were listed here, so the
+        // rest fell back to the generic "system" pair: a member of staff with
+        // "view system" could read any project, and one without "manage
+        // quotes" could create and delete quotes if they could edit settings.
+        'getquotes' => Permissions::LIST_QUOTES,
+        'createquote' => Permissions::MANAGE_QUOTES,
+        'updatequote' => Permissions::MANAGE_QUOTES,
+        'deletequote' => Permissions::MANAGE_QUOTES,
         'sendquote' => Permissions::MANAGE_QUOTES,
         'acceptquote' => Permissions::MANAGE_QUOTES,
-        'getprojects' => Permissions::MANAGE_PROJECTS,
+        'getprojects' => Permissions::LIST_PROJECTS,
+        'getproject' => Permissions::LIST_PROJECTS,
+        'createproject' => Permissions::MANAGE_PROJECTS,
+        'updateproject' => Permissions::MANAGE_PROJECTS,
         'addprojecttask' => Permissions::MANAGE_PROJECTS,
+        'updateprojecttask' => Permissions::MANAGE_PROJECTS,
+        'deleteprojecttask' => Permissions::MANAGE_PROJECTS,
         'addprojectmessage' => Permissions::MANAGE_PROJECTS,
+        'starttasktimer' => Permissions::MANAGE_PROJECTS,
+        'endtasktimer' => Permissions::MANAGE_PROJECTS,
+        'getaffiliates' => Permissions::MANAGE_AFFILIATES,
+        'affiliateactivate' => Permissions::MANAGE_AFFILIATES,
+        'getproducts' => Permissions::LIST_PRODUCTS,
+        'getpromotions' => Permissions::MANAGE_PROMOTIONS,
+        'getregistrars' => Permissions::MANAGE_REGISTRARS,
+        // API credentials are issued from the staff screens, behind "manage
+        // staff". Here they were behind "manage settings", and a new one was
+        // owned by whichever administrator happened to be first in the table.
+        'listoauthcredentials' => Permissions::MANAGE_STAFF,
+        'createoauthcredential' => Permissions::MANAGE_STAFF,
+        'updateoauthcredential' => Permissions::MANAGE_STAFF,
+        'deleteoauthcredential' => Permissions::MANAGE_STAFF,
+        // Checks a customer's password: a customer-record question.
+        'validatelogin' => Permissions::VIEW_CLIENTS,
     ];
 
     /**

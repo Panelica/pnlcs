@@ -18,8 +18,14 @@ class DomainApiController extends BaseApiController
     public function getClientsDomains(Request $request)
     {
         $query = Domain::with('client');
-        if ($request->filled('userid')) {
-            $query->where('client_id', $request->userid);
+        // clientid is the WHMCS name for this filter; only userid was read,
+        // so asking for one customer's domains returned everyone's.
+        $clientId = $request->input('clientid', $request->input('userid'));
+        if (filled($clientId)) {
+            $query->where('client_id', $clientId);
+        }
+        if ($request->filled('domainid')) {
+            $query->whereKey($request->domainid);
         }
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -48,6 +54,11 @@ class DomainApiController extends BaseApiController
         if (! $domain) {
             return $this->error('Domain Not Found', 404);
         }
+        // The names the reference screen and WHMCS use for these fields.
+        $this->alias($request, 'expirydate', 'expiry_date');
+        $this->alias($request, 'nextduedate', 'next_due_date');
+        $this->alias($request, 'regdate', 'registration_date');
+        $this->alias($request, 'paymentmethod', 'payment_method');
         // The fields the renewal run reads back as facts. domains.status is not
         // cast to the enum, so a typo was written as it stood and the domain
         // dropped out of the billing run for good - it bills domains that are
@@ -58,9 +69,27 @@ class DomainApiController extends BaseApiController
             'status' => ['sometimes', Rule::enum(DomainStatus::class)],
             'expiry_date' => ['sometimes', 'date'],
             'next_due_date' => ['sometimes', 'date'],
+            'registration_date' => ['sometimes', 'date'],
+            // A registrar this installation has: the renewal and every lock or
+            // nameserver change go to the module named here.
+            'registrar' => ['sometimes', 'string', function ($attribute, $value, $fail) {
+                if (! app(ModuleRegistry::class)->getRegistrarModule((string) $value)) {
+                    $fail('The registrar is not a registrar module installed here.');
+                }
+            }],
+            'dns_management' => ['sometimes', 'boolean'],
+            'email_forwarding' => ['sometimes', 'boolean'],
+            'id_protection' => ['sometimes', 'boolean'],
+            // A gateway this installation has; an unknown name is a method
+            // nothing can take the payment through.
+            'payment_method' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                if ($value !== null && $value !== '' && ! app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule((string) $value)) {
+                    $fail('The payment method is not a payment gateway installed here.');
+                }
+            }],
         ]);
 
-        $fields = ['status', 'expiry_date', 'next_due_date', 'notes', 'dns_management', 'email_forwarding', 'id_protection', 'payment_method'];
+        $fields = ['status', 'expiry_date', 'next_due_date', 'registration_date', 'registrar', 'notes', 'dns_management', 'email_forwarding', 'id_protection', 'payment_method'];
         foreach ($fields as $f) {
             if ($request->has($f)) {
                 $domain->$f = $request->$f;
@@ -247,7 +276,10 @@ class DomainApiController extends BaseApiController
         if (! $domain) {
             return $this->error('Domain Not Found', 404);
         }
-        $domain->id_protection = ! $domain->id_protection;
+        // WHMCS takes the wanted state in idprotect; flipping whatever was
+        // stored meant two identical calls cancelled each other out.
+        $request->validate(['idprotect' => 'sometimes|boolean']);
+        $domain->id_protection = $request->has('idprotect') ? $request->boolean('idprotect') : ! $domain->id_protection;
         $domain->save();
 
         return $this->success(['domainid' => $domain->id, 'idprotection' => $domain->id_protection]);
@@ -266,8 +298,19 @@ class DomainApiController extends BaseApiController
             'clientid' => 'required|exists:clients,id',
             'domain' => 'required|string|max:253',
             'years' => 'nullable|integer|min:1|max:10',
-            'registrar' => 'nullable|string|max:100',
+            // A registrar this installation has; an unknown name left a domain
+            // that no module would ever register or renew.
+            'registrar' => ['nullable', 'string', 'max:100', function ($attribute, $value, $fail) {
+                if (! app(ModuleRegistry::class)->getRegistrarModule((string) $value)) {
+                    $fail('The registrar is not a registrar module installed here.');
+                }
+            }],
         ]);
+
+        $name = strtolower(trim($validated['domain']));
+        if (! filter_var($name, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || ! str_contains($name, '.')) {
+            return $this->error('Invalid domain name', 422);
+        }
 
         $client = Client::findOrFail($validated['clientid']);
 
@@ -321,32 +364,53 @@ class DomainApiController extends BaseApiController
         ]);
     }
 
-    public function domainWhois(Request $request)
+    /**
+     * Is this domain free to register (WHMCS DomainWhois)?
+     *
+     * This asked whois.iana.org, which answers about the TLD's registry, not
+     * about the name - so every lookup came back "success" with the .com
+     * registry's details, whatever the name. It also read the socket with no
+     * deadline. It now asks what the domain search asks, and says so when
+     * nobody could be asked rather than guessing.
+     */
+    public function domainWhois(Request $request, \App\Services\DomainAvailability $availability)
     {
-        $domain = $request->domain;
-        if (! filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME)) {
-            return $this->error('Invalid domain name');
-        }        $whois = '';
-        try {
-            $fp = @fsockopen('whois.iana.org', 43, $errno, $errstr, 5);
-            if ($fp) {
-                fwrite($fp, $domain.'
-');
-                while (! feof($fp)) {
-                    $whois .= fgets($fp, 128);
-                }                fclose($fp);
-            }
-        } catch (\Exception $e) {
-            $whois = 'WHOIS lookup failed';
+        $request->validate(['domain' => 'required|string|max:253']);
+        $domain = strtolower(trim((string) $request->domain));
+
+        if (! filter_var($domain, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || ! str_contains($domain, '.')) {
+            return $this->error('Invalid domain name', 422);
         }
 
-return $this->success(['domain' => $domain, 'whois' => $whois ?: 'No data available', 'status' => 'success']);
+        $result = $availability->check($domain);
+
+        if (! $result['checked']) {
+            return $this->error('The availability of this domain could not be checked: no registrar or WHOIS server answered.', 503);
+        }
+
+        return $this->success([
+            'domain' => $result['domain'],
+            'status' => $result['available'] ? 'available' : 'unavailable',
+        ]);
     }
 
     public function createOrUpdateTld(Request $request)
     {
-        $validated = $request->validate(['extension' => 'required|string']);
-        $tld = DomainPricing::updateOrCreate(['extension' => $validated['extension']], $request->only(['register_price', 'transfer_price', 'renew_price', 'enabled', 'sort_order']));
+        // Prices reached the table as sent: a word became a 500, and a negative
+        // price sold the name at a loss.
+        $validated = $request->validate([
+            'extension' => ['required', 'string', 'max:63', 'regex:/^\\.?[a-z0-9-]+(\\.[a-z0-9-]+)*$/i'],
+            'register_price' => 'sometimes|nullable|numeric|min:0',
+            'transfer_price' => 'sometimes|nullable|numeric|min:0',
+            'renew_price' => 'sometimes|nullable|numeric|min:0',
+            'enabled' => 'sometimes|boolean',
+            'sort_order' => 'sometimes|integer|min:0',
+        ]);
+        // Stored with the leading dot, as the pricing screen and the domain
+        // search look it up.
+        $extension = '.'.ltrim(strtolower($validated['extension']), '.');
+        unset($validated['extension']);
+        $tld = DomainPricing::updateOrCreate(['extension' => $extension], $validated);
 
         return $this->success(['tldid' => $tld->id]);
     }

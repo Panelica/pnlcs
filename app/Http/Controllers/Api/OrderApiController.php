@@ -42,13 +42,22 @@ class OrderApiController extends BaseApiController
     {
         $validated = $request->validate([
             'clientid' => 'required|exists:clients,id',
-            'paymentmethod' => 'nullable|string',
+            // A gateway this installation has: an unknown name produced an
+            // invoice nobody could pay through anything.
+            'paymentmethod' => ['nullable', 'string', function ($attribute, $value, $fail) {
+                if (! app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule((string) $value)) {
+                    $fail('The paymentmethod is not a payment gateway installed here.');
+                }
+            }],
             'promocode' => 'nullable|string',
             'pid' => 'nullable|array',
             'pid.*' => 'exists:products,id',
             'domain' => 'nullable|array',
             'billingcycle' => 'nullable|array',
+            // A negative override made a negative invoice: the shop owing the
+            // customer for the order they placed.
             'priceoverride' => 'nullable|array',
+            'priceoverride.*' => 'nullable|numeric|min:0',
         ]);
 
         $items = $this->orderedItems($request, $validated);

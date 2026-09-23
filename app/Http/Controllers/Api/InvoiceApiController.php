@@ -8,11 +8,11 @@ use App\Models\Currency;
 use App\Enums\InvoiceStatus;
 use Illuminate\Validation\Rule;
 use App\Models\Invoice;
+use App\Models\PaymentMethod;
 use App\Models\Transaction;
 use App\Services\InvoiceGenerationService;
 use App\Services\InvoiceService;
 use App\Services\PaymentService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -131,6 +131,8 @@ class InvoiceApiController extends BaseApiController
         if (! $invoice) {
             return $this->error('Invoice Not Found', 404);
         }
+        $this->alias($request, 'duedate', 'due_date');
+        $this->alias($request, 'paymentmethod', 'payment_method');
         // Collecting the money runs entirely off these two. The overdue run
         // marks unpaid invoices, the late fee and the suspension act on overdue
         // ones, the reminders go out for unpaid and overdue, and the client area
@@ -142,9 +144,17 @@ class InvoiceApiController extends BaseApiController
         $request->validate([
             'status' => ['sometimes', Rule::enum(InvoiceStatus::class)],
             'due_date' => ['sometimes', 'date'],
+            'date' => ['sometimes', 'date'],
+            // A gateway this installation has; an unknown name is a method
+            // nothing can take the payment through.
+            'payment_method' => ['sometimes', 'nullable', 'string', function ($attribute, $value, $fail) {
+                if ($value !== null && $value !== '' && ! app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule((string) $value)) {
+                    $fail('The payment method is not a payment gateway installed here.');
+                }
+            }],
         ]);
 
-        foreach (['due_date', 'payment_method', 'notes'] as $f) {
+        foreach (['date', 'due_date', 'payment_method', 'notes'] as $f) {
             if ($request->has($f)) {
                 $invoice->$f = $request->$f;
             }
@@ -255,7 +265,17 @@ class InvoiceApiController extends BaseApiController
 
     public function addTransaction(Request $request)
     {
-        $validated = $request->validate(['userid' => 'required|exists:clients,id', 'description' => 'required|string', 'amountin' => 'nullable|numeric', 'amountout' => 'nullable|numeric']);
+        // A transaction pointing at an invoice that does not exist, or at
+        // somebody else's invoice, is a ledger line nobody can reconcile.
+        $validated = $request->validate([
+            'userid' => 'required|exists:clients,id',
+            'description' => 'required|string',
+            'amountin' => 'nullable|numeric|min:0',
+            'amountout' => 'nullable|numeric|min:0',
+            'invoiceid' => ['nullable', 'integer', Rule::exists('invoices', 'id')->where('client_id', $request->input('userid'))],
+            'transid' => 'nullable|string|max:255',
+            'gateway' => 'nullable|string|max:100',
+        ]);
         $tx = Transaction::create(['client_id' => $validated['userid'], 'date' => now()->format('Y-m-d'), 'description' => $validated['description'], 'amount_in' => $validated['amountin'] ?? 0, 'amount_out' => $validated['amountout'] ?? 0, 'transaction_id' => $request->transid, 'invoice_id' => $request->invoiceid, 'gateway' => $request->gateway]);
 
         return $this->success(['transactionid' => $tx->id]);
@@ -264,8 +284,11 @@ class InvoiceApiController extends BaseApiController
     public function getTransactions(Request $request)
     {
         $query = Transaction::with('client');
-        if ($request->filled('userid')) {
-            $query->where('client_id', $request->userid);
+        // WHMCS names this filter clientid; only userid was read, so a caller
+        // asking for one customer's payments got everyone's.
+        $clientId = $request->input('clientid', $request->input('userid'));
+        if (filled($clientId)) {
+            $query->where('client_id', $clientId);
         }
         if ($request->filled('invoiceid')) {
             $query->where('invoice_id', $request->invoiceid);
@@ -302,6 +325,13 @@ class InvoiceApiController extends BaseApiController
 
     public function genInvoices(Request $request)
     {
+        // The run bills every due service in the installation. A caller naming
+        // one customer or one service expected that one only, and got the whole
+        // run instead - invoices for everybody, raised by a request about one.
+        if ($request->filled('clientid') || $request->filled('serviceids') || $request->filled('domainids') || $request->filled('addonids')) {
+            return $this->error('geninvoices runs for every due service; filtering by client, service, domain or addon is not supported. Call it without filters, or create the invoice with createinvoice.', 422);
+        }
+
         $summary = app(InvoiceGenerationService::class)->generateDueInvoices();
 
         return $this->success([
@@ -322,7 +352,7 @@ class InvoiceApiController extends BaseApiController
 
     public function addBillableItem(Request $request)
     {
-        $validated = $request->validate(['clientid' => 'required|exists:clients,id', 'description' => 'required', 'amount' => 'required|numeric']);
+        $validated = $request->validate(['clientid' => 'required|exists:clients,id', 'description' => 'required|string|max:255', 'amount' => 'required|numeric', 'duedate' => 'nullable|date']);
         $item = BillableItem::create(['client_id' => $validated['clientid'], 'description' => $validated['description'], 'amount' => $validated['amount'], 'due_date' => $request->duedate]);
 
         return $this->success(['billableitemid' => $item->id]);
@@ -335,29 +365,84 @@ class InvoiceApiController extends BaseApiController
             return $this->error('Client Not Found', 404);
         }
 
-        return $this->success(['paymethods' => []]);
+        // The customer's stored methods, as the client area lists them. This
+        // answered an empty list for every customer; cards have been stored
+        // since automatic payment arrived. Tokens and gateway customer ids
+        // stay out - they are what a charge is made with.
+        $methods = PaymentMethod::where('client_id', $client->id)
+            ->whereNull('detach_requested_at')
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (PaymentMethod $m) => [
+                'id' => $m->id,
+                'type' => $m->payment_type,
+                'description' => $m->description,
+                'gateway_name' => $m->gateway_name,
+                'card_type' => $m->card_brand,
+                'card_last_four' => $m->last_four,
+                'expiry_date' => $m->exp_month && $m->exp_year ? sprintf('%02d/%d', $m->exp_month, $m->exp_year) : $m->expiry_date,
+                'is_default' => (bool) $m->is_default,
+                'status' => $m->status,
+            ])
+            ->values();
+
+        return $this->success(['clientid' => $client->id, 'paymethods' => $methods->all()]);
     }
 
-    // Stored payment methods are not managed through this API. Saying "deleted"
-    // to a caller who asked to remove a stored card, and removing nothing, is
-    // the worst of both.
+    /**
+     * A card is stored through the gateway's own form, with the customer
+     * there to pass 3-D Secure; there is nothing an API caller could send
+     * that would store one. The client area's "add card" screen is the way.
+     */
     public function addPayMethod(Request $request)
     {
-        return $this->notImplemented('addpaymethod');
+        return $this->error('Adding a payment method needs the customer at the gateway\'s own card form (3-D Secure). Ask them to add it from the client area.', 501);
     }
 
+    /**
+     * Make a stored method the default, or rename it. The same model method
+     * the client area's "make default" button uses.
+     */
     public function updatePayMethod(Request $request)
     {
-        return $this->notImplemented('updatepaymethod');
+        $request->validate([
+            'clientid' => 'required|integer',
+            'paymethodid' => 'required|integer',
+            'set_as_default' => 'sometimes|boolean',
+            'description' => 'sometimes|nullable|string|max:255',
+        ]);
+
+        $method = PaymentMethod::where('client_id', $request->clientid)->find($request->paymethodid);
+        if (! $method) {
+            return $this->error('Payment method not found for that client.', 404);
+        }
+
+        if ($request->has('description')) {
+            $method->update(['description' => $request->description]);
+        }
+        if ($request->boolean('set_as_default')) {
+            $method->makeDefault();
+        }
+
+        return $this->success(['paymethodid' => $method->id, 'is_default' => (bool) $method->fresh()->is_default]);
     }
 
+    /**
+     * Remove a stored method: PNLCS stops using it at once, and the gateway is
+     * asked to forget it on the next detach run - what the client area does.
+     */
     public function deletePayMethod(Request $request)
     {
-        return $this->notImplemented('deletepaymethod');
-    }
+        $request->validate(['clientid' => 'required|integer', 'paymethodid' => 'required|integer']);
 
-    private function notImplemented(string $endpoint): JsonResponse
-    {
-        return $this->error("The {$endpoint} endpoint is not implemented. Manage payment methods from the client area.", 501);
+        $method = PaymentMethod::where('client_id', $request->clientid)->find($request->paymethodid);
+        if (! $method) {
+            return $this->error('Payment method not found for that client.', 404);
+        }
+
+        $method->remove();
+
+        return $this->success(['paymethodid' => (int) $request->paymethodid]);
     }
 }

@@ -10,10 +10,11 @@ class ProjectTaskFactory extends Factory
         return [
             'project_id' => Project::factory(),
             'task' => fake()->sentence(),
-            'status' => fake()->randomElement(['Pending', 'In Progress', 'Completed']),
+            // The columns project_tasks actually has: it never had a status or
+            // a time_spent, so this factory could not create a single row.
+            'completed' => fake()->boolean(30),
             'due_date' => fake()->optional(0.7)->dateTimeBetween('now', '+1 month'),
             'notes' => fake()->optional(0.3)->sentence(),
-            'time_spent' => fake()->numberBetween(0, 480),
         ];
     }
 }

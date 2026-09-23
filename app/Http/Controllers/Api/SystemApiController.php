@@ -12,6 +12,7 @@ use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Email;
 use App\Models\EmailTemplate;
+use App\Models\ModuleQueue;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderStatus;
@@ -27,14 +28,23 @@ use App\Models\Ticket;
 use App\Models\TodoItem;
 use App\Models\User;
 use App\Services\QuoteService;
+use App\Constants\Permissions;
+use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SystemApiController extends BaseApiController
 {
+    /** What the project screens offer and filter by. */
+    private const PROJECT_STATUSES = ['pending', 'in_progress', 'completed', 'cancelled'];
+
+    /** The to-do statuses offered by gettodoitemstatuses and accepted by updatetodoitem. */
+    private const TODO_STATUSES = ['New', 'In Progress', 'Completed', 'Deferred'];
+
     public function getStats()
     {
         return $this->success([
@@ -138,11 +148,28 @@ class SystemApiController extends BaseApiController
         return $this->paginated($query->orderBy('id', 'desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage()));
     }
 
+    /**
+     * The entry is written in the caller's name. The actor used to be whatever
+     * the request said in "user", so a script could put any member of staff's
+     * name on the log - the record that is meant to say who did what. An empty
+     * description reached a typed parameter and answered with a 500.
+     */
     public function logActivity(Request $request)
     {
-        ActivityLog::log($request->description, $request->user);
+        $validated = $request->validate([
+            'description' => 'required|string|max:1000',
+            'clientid' => 'nullable|integer|exists:clients,id',
+        ]);
+
+        ActivityLog::log($validated['description'], $this->callerName(), $validated['clientid'] ?? null);
 
         return $this->success();
+    }
+
+    /** The username of the member of staff the credential answers for. */
+    private function callerName(): string
+    {
+        return (string) (auth('admin')->user()?->username ?? 'API');
     }
 
     public function getAdminUsers()
@@ -227,8 +254,11 @@ class SystemApiController extends BaseApiController
 
     public function addAnnouncement(Request $request)
     {
-        $validated = $request->validate(['title' => 'required|string', 'announcement' => 'required|string']);
-        $a = Announcement::create($validated);
+        $validated = $request->validate(['title' => 'required|string|max:255', 'announcement' => 'required|string', 'published' => 'sometimes|boolean']);
+        // "published" was documented and dropped, so an announcement sent with
+        // published=0 to be reviewed first went straight onto the site. Left
+        // out, it is published - the column's default, as before.
+        $a = Announcement::create(['title' => $validated['title'], 'announcement' => $validated['announcement'], 'published' => $request->boolean('published', true)]);
 
         return $this->success(['announcementid' => $a->id]);
     }
@@ -239,10 +269,18 @@ class SystemApiController extends BaseApiController
         if (! $a) {
             return $this->error('Announcement Not Found', 404);
         }
-        foreach (['title', 'announcement', 'published'] as $f) {
+        $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'announcement' => 'sometimes|required|string',
+            'published' => 'sometimes|boolean',
+        ]);
+        foreach (['title', 'announcement'] as $f) {
             if ($request->has($f)) {
                 $a->$f = $request->$f;
             }
+        }
+        if ($request->has('published')) {
+            $a->published = $request->boolean('published');
         }
         $a->save();
 
@@ -298,16 +336,51 @@ class SystemApiController extends BaseApiController
         return $this->success(['servers' => $servers->toArray()]);
     }
 
-    public function getRegistrars()
+    /**
+     * The registrar modules installed here, and whether each is offered in the
+     * domain search. This listed the names that had a settings row, which left
+     * out every installed registrar nobody had opened yet and said nothing
+     * about which were switched on.
+     */
+    public function getRegistrars(ModuleRegistry $registry)
     {
-        $registrars = DB::table('registrar_settings')->select('registrar')->distinct()->pluck('registrar');
+        // Through the model: the values are stored encrypted.
+        $visible = \App\Models\RegistrarSettings::where('setting', 'visible')->get()->pluck('value', 'registrar');
 
-        return $this->success(['registrars' => $registrars->toArray()]);
+        $registrars = collect($registry->getRegistrarModules())
+            ->map(function (string $key) use ($registry, $visible) {
+                $value = isset($visible[$key]) ? (string) $visible[$key] : null;
+
+                return [
+                    'module' => $key,
+                    'displayname' => $registry->getRegistrarModule($key)?->getModuleName() ?? ucfirst($key),
+                    'active' => $key === 'manual' ? $value !== '0' : $value === '1',
+                ];
+            })
+            ->values();
+
+        return $this->success(['registrars' => $registrars->all()]);
     }
 
-    public function getProducts()
+    /**
+     * The catalogue, filtered the way the reference screen says it can be: by
+     * product id, group id or server module. The filters were documented and
+     * ignored, so a caller asking for one product got all of them.
+     */
+    public function getProducts(Request $request)
     {
-        return $this->success(['products' => Product::with('group', 'pricing')->get()->toArray()]);
+        $query = Product::with('group', 'pricing');
+        if ($request->filled('pid')) {
+            $query->whereKey($request->pid);
+        }
+        if ($request->filled('gid')) {
+            $query->where('group_id', $request->gid);
+        }
+        if ($request->filled('module')) {
+            $query->whereRaw('LOWER(server_type) = ?', [strtolower((string) $request->module)]);
+        }
+
+        return $this->success(['products' => $query->get()->toArray()]);
     }
 
     public function getPromotions()
@@ -374,21 +447,47 @@ class SystemApiController extends BaseApiController
         if (! $item) {
             return $this->error('Item Not Found', 404);
         }
-        foreach (['title', 'description', 'status', 'due_date', 'admin'] as $f) {
+        // A date that is not one reached the column and came back as a 500.
+        // The status is one of the four gettodoitemstatuses offers; anything
+        // else was stored and matched no filter the to-do screen has.
+        $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'status' => ['sometimes', 'required', 'string', function ($attribute, $value, $fail) {
+                if (! in_array(strtolower((string) $value), array_map('strtolower', self::TODO_STATUSES), true)) {
+                    $fail('The status must be one of: '.implode(', ', self::TODO_STATUSES).'.');
+                }
+            }],
+            'due_date' => 'sometimes|nullable|date',
+        ]);
+        foreach (['title', 'description', 'due_date', 'admin'] as $f) {
             if ($request->has($f)) {
                 $item->$f = $request->$f;
             }
+        }
+        if ($request->has('status')) {
+            $item->status = collect(self::TODO_STATUSES)->first(fn ($s) => strtolower($s) === strtolower((string) $request->status));
         }
         $item->save();
 
         return $this->success();
     }
 
-    public function getPaymentMethods()
+    /**
+     * The gateways a customer can actually pay with - switched on and holding
+     * the keys they need. This listed every gateway that had ever had a
+     * setting saved, switched off or not, so an integration offered methods
+     * checkout would refuse.
+     */
+    public function getPaymentMethods(ModuleRegistry $registry)
     {
-        $gateways = DB::table('gateway_settings')->select('gateway')->distinct()->pluck('gateway');
+        $methods = collect($registry->usableGateways())
+            ->map(fn (string $name) => [
+                'module' => $name,
+                'displayname' => payment_method_label($name),
+            ])
+            ->values();
 
-        return $this->success(['paymentmethods' => $gateways->toArray()]);
+        return $this->success(['totalresults' => $methods->count(), 'paymentmethods' => $methods->all()]);
     }
 
     public function getOrderStatuses()
@@ -398,7 +497,19 @@ class SystemApiController extends BaseApiController
 
     public function addBannedIp(Request $request)
     {
-        $validated = $request->validate(['ip' => 'required|string', 'reason' => 'nullable|string']);
+        // Something the ban check can match - a full address, or a prefix
+        // ending in * (BlockBannedIp::matches). Anything else was stored,
+        // listed as banned, and never blocked anyone.
+        $validated = $request->validate([
+            'ip' => ['required', 'string', 'max:64', function ($attribute, $value, $fail) {
+                $ok = filter_var($value, FILTER_VALIDATE_IP) !== false
+                    || preg_match('/^[0-9a-fA-F:.]+\*$/', (string) $value);
+                if (! $ok) {
+                    $fail('The ip must be an IP address or a prefix ending in *, such as 203.0.113.*');
+                }
+            }],
+            'reason' => 'nullable|string|max:255',
+        ]);
         BannedIp::create($validated);
 
         return $this->success();
@@ -406,6 +517,8 @@ class SystemApiController extends BaseApiController
 
     public function validateLogin(Request $request)
     {
+        $request->validate(['email' => 'required|email', 'password2' => 'required|string']);
+
         $user = User::where('email', $request->email)->first();
         if (! $user || ! Hash::check($request->password2, $user->password)) {
             return $this->error('Invalid credentials', 401);
@@ -417,35 +530,54 @@ class SystemApiController extends BaseApiController
     // ===== TODO STATUSES =====
     public function getTodoItemStatuses()
     {
-        return $this->success(['statuses' => ['New', 'In Progress', 'Completed', 'Deferred']]);
+        return $this->success(['statuses' => self::TODO_STATUSES]);
     }
 
     // ===== MODULE =====
+    /**
+     * The server actions waiting to be retried. It answered an empty list
+     * while the queue table held work, so a monitor built on it never saw a
+     * provisioning backlog. The payload is left out: a password change carries
+     * the new password in it.
+     */
     public function getModuleQueue(Request $request)
     {
-        return $this->success(['queue' => []]);
+        $request->validate(['status' => 'nullable|in:pending,completed,failed,cancelled']);
+
+        $query = ModuleQueue::query()
+            ->select(['id', 'service_id', 'action', 'status', 'attempts', 'max_attempts', 'next_attempt_at', 'last_error', 'completed_at', 'created_at'])
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status), fn ($q) => $q->whereIn('status', ['pending', 'failed']));
+
+        return $this->paginated($query->orderBy('id', 'desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage()));
     }
 
+    /**
+     * These three said a module had been configured, that its parameters were
+     * none, and that a notification had gone out - and did nothing. Module
+     * settings are changed on their own screens; there is no event bus here to
+     * trigger.
+     */
     public function getModuleConfigParams(Request $request)
     {
-        return $this->success(['parameters' => []]);
+        return $this->error('Reading module configuration through the API is not implemented.', 501);
     }
 
     public function updateModuleConfig(Request $request)
     {
-        return $this->success(['message' => 'Module configuration updated']);
+        return $this->error('Changing module configuration through the API is not implemented.', 501);
     }
 
     // ===== PERMISSIONS =====
+    /** The permission keys a role can be given - the real list, not a made-up one. */
     public function getPermissionsList()
     {
-        return $this->success(['permissions' => ['clients', 'orders', 'invoices', 'tickets', 'services', 'domains', 'servers', 'settings', 'reports', 'addons', 'system']]);
+        return $this->success(['permissions' => Permissions::all()]);
     }
 
     // ===== NOTIFICATIONS =====
     public function triggerNotification(Request $request)
     {
-        return $this->success(['message' => 'Notification triggered']);
+        return $this->error('Triggering notification events through the API is not implemented.', 501);
     }
 
     // ===== ENCRYPTION =====
@@ -494,23 +626,62 @@ class SystemApiController extends BaseApiController
     }
 
     /**
-     * Said a reset mail had been sent and sent nothing. The customer area
-     * sends them; there is no code here to do it.
+     * Send a customer login the link to choose a new password, through the
+     * same sender the forgot-password form uses. It used to say a mail had
+     * been sent and send nothing, then to refuse; the form's code was here to
+     * be used all along. Staff are told plainly when there is no such login.
      */
-    public function resetPassword(Request $request)
+    public function resetPassword(Request $request, \App\Services\PasswordResetSender $sender)
     {
-        return $this->error('Sending a password reset from the API is not implemented.', 501);
+        $request->validate([
+            'email' => 'required_without:id|nullable|email',
+            'id' => 'required_without:email|nullable|integer',
+        ]);
+
+        $email = $request->filled('email')
+            ? (string) $request->email
+            : (string) User::whereKey($request->id)->value('email');
+
+        if ($email === '' || ! $sender->send($email)) {
+            return $this->error('No customer login has that address.', 404);
+        }
+
+        return $this->success(['email' => $email]);
     }
 
     // ===== MODULE ACTIVATION =====
-    public function activateModule(Request $request)
+    /**
+     * Switch a module on or off - the same switch the Setup -> Modules screen
+     * flips, with the same rules (a server or SSL module in use stays on).
+     */
+    public function activateModule(Request $request, \App\Services\Module\ModuleSwitchboard $switchboard)
     {
-        return $this->error('Activating a module from the API is not implemented.', 501);
+        return $this->switchModule($request, $switchboard, true);
     }
 
-    public function deactivateModule(Request $request)
+    public function deactivateModule(Request $request, \App\Services\Module\ModuleSwitchboard $switchboard)
     {
-        return $this->error('Deactivating a module from the API is not implemented.', 501);
+        return $this->switchModule($request, $switchboard, false);
+    }
+
+    private function switchModule(Request $request, \App\Services\Module\ModuleSwitchboard $switchboard, bool $on)
+    {
+        $validated = $request->validate([
+            'moduleType' => ['required', 'string', Rule::in(\App\Services\Module\ModuleSwitchboard::TYPES)],
+            'moduleName' => 'required|string|max:100',
+        ]);
+        $type = $validated['moduleType'];
+        $name = strtolower($validated['moduleName']);
+
+        if (! $switchboard->exists($type, $name)) {
+            return $this->error('No '.$type.' module named '.$name.' is installed.', 404);
+        }
+
+        $result = $switchboard->setActive($type, $name, $on);
+
+        return $result['success']
+            ? $this->success(['moduleType' => $type, 'moduleName' => $name, 'active' => $on])
+            : $this->error($result['message'], 422);
     }
 
     // ===== QUOTES =====
@@ -523,15 +694,19 @@ class SystemApiController extends BaseApiController
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-        $quotes = $query->orderBy('id', 'desc')->paginate($request->get('limitnum', 25));
+        $quotes = $query->orderBy('id', 'desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage());
 
         return $this->paginated($quotes);
     }
 
     public function createQuote(Request $request)
     {
-        $validated = $request->validate(['clientid' => 'required|exists:clients,id', 'valid_until' => 'nullable|date']);
-        $quote = Quote::create(['client_id' => $validated['clientid'], 'date' => now()->format('Y-m-d'), 'valid_until' => $validated['valid_until'] ?? now()->addDays(30)->format('Y-m-d'), 'subject' => $request->get('subject', 'Quote'), 'status' => 'draft', 'subtotal' => 0, 'tax' => 0, 'total' => 0]);
+        // The documented (WHMCS) names. lineitems in WHMCS is a serialized PHP
+        // array; it is not unserialized here - items[] carries the lines.
+        $this->alias($request, 'userid', 'clientid');
+        $this->alias($request, 'validuntil', 'valid_until');
+        $validated = $request->validate(['clientid' => 'required|exists:clients,id', 'valid_until' => 'nullable|date', 'subject' => 'nullable|string|max:255', 'items' => 'nullable|array']);
+        $quote = Quote::create(['client_id' => $validated['clientid'], 'date' => now()->format('Y-m-d'), 'valid_until' => $validated['valid_until'] ?? now()->addDays(30)->format('Y-m-d'), 'subject' => $request->get('subject', 'Quote'), 'status' => 'Draft', 'subtotal' => 0, 'tax' => 0, 'total' => 0]);
         if ($request->has('items')) {
             foreach ((array) $request->items as $item) {
                 // Through the same service the panel uses, so the columns are
@@ -559,6 +734,14 @@ class SystemApiController extends BaseApiController
         if (! $quote) {
             return $this->error('Quote Not Found', 404);
         }
+        $this->alias($request, 'validuntil', 'valid_until');
+        // The status is compared exactly by the customer area and the quote
+        // screens: a lower-case "sent" is the bug sendquote was fixed for,
+        // and here it was still open.
+        $request->validate([
+            'status' => ['sometimes', 'required', Rule::in(['Draft', 'Sent', 'Accepted', 'Declined'])],
+            'valid_until' => 'sometimes|nullable|date',
+        ]);
         foreach (['status', 'valid_until', 'notes', 'customer_notes', 'proposal'] as $f) {
             if ($request->has($f)) {
                 $quote->$f = $request->$f;
@@ -630,7 +813,7 @@ class SystemApiController extends BaseApiController
         if ($request->filled('userid')) {
             $query->where('client_id', $request->userid);
         }
-        $projects = $query->orderBy('id', 'desc')->paginate($request->get('limitnum', 25));
+        $projects = $query->orderBy('id', 'desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage());
 
         return $this->paginated($projects);
     }
@@ -647,8 +830,16 @@ class SystemApiController extends BaseApiController
 
     public function createProject(Request $request)
     {
-        $validated = $request->validate(['title' => 'required', 'clientid' => 'required|exists:clients,id']);
-        $project = Project::create(['title' => $validated['title'], 'client_id' => $validated['clientid'], 'description' => $request->description, 'status' => $request->get('status', 'active'), 'admin_id' => Admin::first()->id ?? 18080]);
+        // In the caller's name, not the first administrator's, and with a
+        // status the project screens know: "active" is not one of them, so
+        // every project opened here was missing from every status filter.
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'clientid' => 'required|exists:clients,id',
+            'status' => ['nullable', Rule::in(self::PROJECT_STATUSES)],
+            'due_date' => 'nullable|date',
+        ]);
+        $project = Project::create(['title' => $validated['title'], 'client_id' => $validated['clientid'], 'description' => $request->description, 'status' => $validated['status'] ?? 'pending', 'due_date' => $validated['due_date'] ?? null, 'admin_id' => auth('admin')->id()]);
 
         return $this->success(['projectid' => $project->id]);
     }
@@ -659,6 +850,11 @@ class SystemApiController extends BaseApiController
         if (! $project) {
             return $this->error('Project Not Found', 404);
         }
+        $request->validate([
+            'title' => 'sometimes|required|string|max:255',
+            'status' => ['sometimes', 'required', Rule::in(self::PROJECT_STATUSES)],
+            'due_date' => 'sometimes|nullable|date',
+        ]);
         foreach (['title', 'description', 'status', 'due_date'] as $f) {
             if ($request->has($f)) {
                 $project->$f = $request->$f;
@@ -675,7 +871,11 @@ class SystemApiController extends BaseApiController
         if (! $project) {
             return $this->error('Project Not Found', 404);
         }
-        $msg = $project->messages()->create(['message' => $request->message, 'admin_id' => Admin::first()->id ?? 18080]);
+        // project_messages keeps the author's name in "admin"; the id this
+        // wrote into a column that does not exist was dropped, so every message
+        // posted here had no author at all.
+        $validated = $request->validate(['message' => 'required|string']);
+        $msg = $project->messages()->create(['message' => $validated['message'], 'admin' => $this->callerName()]);
 
         return $this->success(['messageid' => $msg->id]);
     }
@@ -686,7 +886,12 @@ class SystemApiController extends BaseApiController
         if (! $project) {
             return $this->error('Project Not Found', 404);
         }
-        $task = $project->tasks()->create(['task' => $request->title ?? $request->task ?? 'Task', 'notes' => $request->description ?? $request->notes, 'completed' => 0]);
+        $request->validate([
+            'task' => 'required_without:title|nullable|string|max:255',
+            'title' => 'required_without:task|nullable|string|max:255',
+            'due_date' => 'nullable|date',
+        ]);
+        $task = $project->tasks()->create(['task' => $request->title ?? $request->task, 'notes' => $request->description ?? $request->notes, 'completed' => 0, 'due_date' => $request->due_date, 'admin' => $this->callerName()]);
 
         return $this->success(['taskid' => $task->id]);
     }
@@ -697,6 +902,12 @@ class SystemApiController extends BaseApiController
         if (! $task) {
             return $this->error('Task Not Found', 404);
         }
+        $request->validate([
+            'task' => 'sometimes|required|string|max:255',
+            'title' => 'sometimes|required|string|max:255',
+            'completed' => 'sometimes|boolean',
+            'due_date' => 'sometimes|nullable|date',
+        ]);
         if ($request->has('title') || $request->has('task')) {
             $task->task = $request->title ?? $request->task;
         }
@@ -704,7 +915,7 @@ class SystemApiController extends BaseApiController
             $task->notes = $request->description ?? $request->notes;
         }
         if ($request->has('completed')) {
-            $task->completed = $request->completed;
+            $task->completed = $request->boolean('completed');
         }
         if ($request->has('due_date')) {
             $task->due_date = $request->due_date;
@@ -725,20 +936,24 @@ class SystemApiController extends BaseApiController
         return $this->success();
     }
 
+    /**
+     * Said a timer had started and stopped; project tasks keep no time at all,
+     * so nothing was ever recorded.
+     */
     public function startTaskTimer(Request $request)
     {
-        return $this->success(['message' => 'Timer started']);
+        return $this->error('Task timers are not implemented; project tasks do not record time.', 501);
     }
 
     public function endTaskTimer(Request $request)
     {
-        return $this->success(['message' => 'Timer stopped']);
+        return $this->error('Task timers are not implemented; project tasks do not record time.', 501);
     }
 
     // ===== AFFILIATES =====
     public function getAffiliates(Request $request)
     {
-        $affiliates = Affiliate::with('client')->paginate($request->get('limitnum', 25));
+        $affiliates = Affiliate::with('client')->orderBy('id', 'desc')->paginate($this->getPerPage(), ['*'], 'page', $this->getPage());
 
         return $this->paginated($affiliates);
     }
@@ -764,8 +979,13 @@ class SystemApiController extends BaseApiController
 
     public function createOAuthCredential(Request $request)
     {
+        // Owned by the caller, as the staff screen does it. It used to belong to
+        // whichever administrator was first in the table - usually the owner of
+        // the installation - so anyone allowed to call this could mint a key
+        // that answered with the owner's full access.
+        $request->validate(['description' => 'nullable|string|max:255']);
         $plain = Str::random(64);
-        $cred = ApiCredential::create(['admin_id' => Admin::first()->id ?? 18080, 'identifier' => Str::random(32), 'secret' => ApiCredential::hashSecret($plain), 'description' => $request->description, 'active' => true]);
+        $cred = ApiCredential::create(['admin_id' => auth('admin')->id(), 'identifier' => Str::random(32), 'secret' => ApiCredential::hashSecret($plain), 'description' => $request->description, 'active' => true]);
 
         // Return the plaintext secret once — only its hash is stored.
         return $this->success(['credentialid' => $cred->id, 'identifier' => $cred->identifier, 'secret' => $plain]);

@@ -10,6 +10,14 @@ class Domain extends Model
 {
     use HasFactory;
 
+    /**
+     * The transfer code is decrypted by its cast and was serialised with every
+     * domain, so getclientsdomains handed any caller allowed to list domains
+     * the code that moves each one to another registrar. domainrequestepp is
+     * the one door for it, one domain at a time.
+     */
+    protected $hidden = ['epp_code'];
+
     protected $fillable = ['client_id', 'order_id', 'type', 'domain', 'epp_code', 'registrar', 'registration_period', 'registration_date', 'expiry_date', 'next_due_date', 'status', 'dns_management', 'email_forwarding', 'id_protection', 'is_premium', 'payment_method', 'first_payment_amount', 'recurring_amount', 'nameservers', 'notes', 'last_sync_at', 'last_sync_status', 'renewal_reminder_stage', 'renewal_reminder_sent_at'];
 
     protected function casts(): array

@@ -9,6 +9,9 @@ class ApiCredential extends Model {
     protected $fillable = ["admin_id", "api_role_id", "identifier", "secret", "description", "allowed_ips", "active"];
     protected $casts = ["allowed_ips" => "array", "active" => "boolean"];
 
+    /** The stored hash of the secret is never part of any serialised output. */
+    protected $hidden = ["secret"];
+
     /** SHA-256 digest used to store and compare API secrets (secrets are high-entropy,
      *  so a fast digest is safe and lets us look up Bearer tokens by hash). */
     public static function hashSecret(string $plain): string

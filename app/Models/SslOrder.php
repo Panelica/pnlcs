@@ -22,6 +22,14 @@ class SslOrder extends Model
         'expiry_notice_days', 'expiry_notice_sent_at',
     ];
 
+    /**
+     * The certificate's private key is decrypted by its cast and was part of
+     * every serialised order, so getsslorders and getsslorder handed it to any
+     * API caller allowed to list services. It leaves only in the download the
+     * customer or an administrator asks for (SslProvisioningService).
+     */
+    protected $hidden = ['private_key'];
+
     protected function casts(): array
     {
         return [

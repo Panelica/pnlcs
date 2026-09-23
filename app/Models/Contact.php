@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Contact extends Model
 {
     /**
+     * Never serialised. contacts.password was returned by getclientsdetails
+     * (the client with its contacts) and getcontacts, so every API caller
+     * allowed to list clients received the contacts' password hashes.
+     */
+    protected $hidden = ['password'];
+
+    /**
      * Whether this contact asked for a given kind of email.
      *
      * The kinds are the email template types: invoice, product, domain,
