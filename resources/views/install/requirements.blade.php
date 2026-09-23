@@ -22,7 +22,7 @@
         </div>
 
         <div class="border border-slate-200 rounded p-3">
-            <div class="text-sm font-medium text-slate-700 mb-2">Writable Directories</div>
+            <div class="text-sm font-medium text-slate-700 mb-2">Writable Files &amp; Directories</div>
             @foreach($writable as $path => $ok)
                 <div class="text-xs flex justify-between py-0.5">
                     <code class="text-slate-600">{{ $path }}</code>

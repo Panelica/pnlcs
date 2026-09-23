@@ -73,6 +73,18 @@ class ImapMailboxClient implements MailboxClientInterface
         if ($this->stream && $this->connectedDepartmentId === $department->id) {
             return $this->stream;
         }
+
+        // PHP 8.4 moved imap out of core, and some distributions (Debian 13)
+        // no longer package it. Without this the importer died every five
+        // minutes on "Call to undefined function imap_open()", which says
+        // nothing about what to install.
+        if (! function_exists('imap_open')) {
+            Log::error('Mail import: the PHP imap extension is not installed, so no mailbox can be read. Install php8.4-imap (or the PECL imap extension) and restart PHP-FPM.', [
+                'department_id' => $department->id,
+            ]);
+
+            return null;
+        }
         $this->disconnect();
 
         $protocol = $department->import_protocol === 'pop3' ? 'pop3' : 'imap';

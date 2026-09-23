@@ -55,6 +55,11 @@ class InstallController extends Controller
             'storage/framework/' => is_writable(storage_path('framework')),
             'storage/logs/' => is_writable(storage_path('logs')),
             'bootstrap/cache/' => is_writable(base_path('bootstrap/cache')),
+            // The wizard writes the database, URL and name it is given into
+            // .env. Asking only whether the file exists let a root-owned .env
+            // through this page, and the last step then died with a 500 after
+            // the administrator had already been created.
+            '.env' => is_writable(base_path('.env')),
         ];
 
         $assets = [
