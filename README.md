@@ -407,7 +407,7 @@ servers:
 |---|---|---|---|
 | Ubuntu 24.04.5 LTS | 8.4.25 (ondrej PPA) | MySQL 8.0.46 | ✅ installed, wizard completed, scheduler and update tested |
 | Debian 13 (trixie) | 8.4.24 (Debian) | MariaDB 11.8.6 | ✅ installed, wizard completed, scheduler and update tested |
-| AlmaLinux 9.8 | 8.4.26 (Remi) | MySQL 8.0 (AppStream) | ✅ installed with SELinux enforcing, wizard completed |
+| AlmaLinux 9.8 | 8.4.26 (Remi) | MySQL 8.0.46 (AppStream) | ✅ installed with SELinux enforcing (0 denials), wizard completed, scheduler and update tested |
 
 Rocky Linux 9 uses the same commands as AlmaLinux 9.
 
