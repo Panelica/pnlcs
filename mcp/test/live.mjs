@@ -68,6 +68,13 @@ async function tool(name, args = {}, expectError = null) {
   }
 }
 
+// A tool that answered "success" with the wrong records is still a failure:
+// the customer filters once returned every customer's services and passed
+// here, because only the word "success" was looked at.
+function check(name, ok, note) {
+  results.push([name, Boolean(ok), ok ? '' : note]);
+}
+
 // Handshake first - a client that cannot initialize has no tools at all.
 const init = await rpc('initialize', { protocolVersion: '2025-06-18' });
 if (init.result?.serverInfo?.name !== 'pnlcs-mcp') {
@@ -98,8 +105,13 @@ const clientid = created?.clientid;
 
 await tool('get_client', { email });
 await tool('get_client', { clientid });
-await tool('list_client_services', { clientid });
-await tool('list_client_domains', { clientid });
+const services = await tool('list_client_services', { clientid });
+const domains = await tool('list_client_domains', { clientid });
+// A client created a moment ago owns nothing yet.
+check('(contract) list_client_services is scoped to the client', services && services.totalresults === 0,
+  `a brand-new client came back with ${services?.totalresults} services - the clientid filter is not applied`);
+check('(contract) list_client_domains is scoped to the client', domains && domains.totalresults === 0,
+  `a brand-new client came back with ${domains?.totalresults} domains - the clientid filter is not applied`);
 
 const invoice = await tool('create_invoice', {
   userid: clientid,
@@ -108,6 +120,10 @@ const invoice = await tool('create_invoice', {
 const invoiceid = invoice?.invoiceid ?? invoice?.id;
 await tool('get_invoice', { invoiceid });
 await tool('add_invoice_payment', { invoiceid, transid: `MCP-${stamp}`, amount: 1.5, gateway: 'banktransfer' });
+const txs = await tool('list_transactions', { clientid });
+const txOwners = [...new Set((txs?.data ?? []).map((t) => t.client_id))];
+check('(contract) list_transactions is scoped to the client', txs && txs.totalresults >= 1 && txOwners.length === 1 && txOwners[0] === clientid,
+  `expected only client ${clientid}'s payments, got owners ${JSON.stringify(txOwners)}`);
 
 // A department to open the ticket in, read straight off the API. The harness
 // must report a failure here, not die of it.
@@ -124,6 +140,10 @@ const ticket = await tool('open_ticket', {
 const ticketid = ticket?.ticketid ?? ticket?.id;
 await tool('get_ticket', { ticketid });
 await tool('add_ticket_reply', { ticketid, message: 'And replied to by it.' });
+const after = await tool('get_ticket', { ticketid });
+const last = (after?.ticket?.replies ?? []).at(-1);
+check('(contract) add_ticket_reply is filed as staff', last && last.admin && after.ticket.status === 'Answered',
+  `reply author ${JSON.stringify(last?.admin)}, ticket status ${after?.ticket?.status} - the reply was filed as the customer's`);
 
 // Suspension needs a provisioned hosting account; a live check must not touch
 // one. The wire is proven by the error path: a definite, readable refusal.

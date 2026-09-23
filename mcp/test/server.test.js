@@ -12,7 +12,7 @@ import { once } from 'node:events';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { toolset } from '../lib/tools.js';
+import { toolset, paramsFor } from '../lib/tools.js';
 
 const serverPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'server.js');
 
@@ -31,6 +31,9 @@ before(async () => {
     seen.push({
       method: req.method,
       path: url.pathname,
+      rawUrl: req.url,
+      rawBody: body,
+      headers: req.headers,
       query: Object.fromEntries(url.searchParams),
       json: body ? JSON.parse(body) : null,
     });
@@ -165,9 +168,18 @@ test('every tool reaches its PNLCS action with the right method, auth and params
       assert.equal(req.method, tool.method ?? 'GET', tool.name);
 
       const carried = req.method === 'GET' ? req.query : req.json;
-      assert.equal(carried.identifier, 'stub_id', `${tool.name} carries the identifier`);
-      assert.equal(carried.secret, 'stub_secret', `${tool.name} carries the secret`);
-      for (const [k, v] of Object.entries(args)) {
+
+      // Credentials in the headers, and nowhere else: a secret in the query
+      // string lands in every access log between here and PNLCS.
+      assert.equal(req.headers['x-api-key'], 'stub_id', `${tool.name} sends the identifier header`);
+      assert.equal(req.headers['x-api-secret'], 'stub_secret', `${tool.name} sends the secret header`);
+      assert.ok(!req.rawUrl.includes('stub_secret'), `${tool.name} keeps the secret out of the URL`);
+      assert.ok(!req.rawUrl.includes('stub_id'), `${tool.name} keeps the identifier out of the URL`);
+      assert.ok(!req.rawBody.includes('stub_secret'), `${tool.name} keeps the secret out of the body`);
+
+      // Everything the tool means to send - the caller's arguments plus the
+      // parameters the tool fixes or copies - arrives as sent.
+      for (const [k, v] of Object.entries(paramsFor(tool, args))) {
         const sent = carried[k];
         if (req.method === 'GET') {
           assert.equal(sent, String(v), `${tool.name} sends ${k}`);
@@ -304,4 +316,32 @@ test('with no environment at all, introspection works and a tool call explains i
   const call = answers.find((a) => a.id === 3);
   assert.equal(call.result.isError, true);
   assert.match(call.result.content[0].text, /PNLCS_URL/);
+});
+
+test('the client-scoped lists also send userid, so older installs still filter', async () => {
+  const mcp = startMcp();
+  try {
+    for (const name of ['list_client_services', 'list_client_domains', 'list_transactions']) {
+      seen.length = 0;
+      await mcp.rpc('tools/call', { name, arguments: { clientid: 42 } });
+      assert.equal(seen[0].query.clientid, '42', `${name} sends clientid`);
+      assert.equal(seen[0].query.userid, '42', `${name} also sends userid`);
+    }
+  } finally {
+    mcp.stop();
+  }
+});
+
+test('a ticket reply and a new ticket are sent as staff', async () => {
+  const mcp = startMcp({ PNLCS_ALLOW_WRITES: '1' });
+  try {
+    for (const name of ['add_ticket_reply', 'open_ticket']) {
+      seen.length = 0;
+      await mcp.rpc('tools/call', { name, arguments: SAMPLE_ARGS[name] });
+      // Without adminusername PNLCS files the reply as the customer's.
+      assert.ok(seen[0].json.adminusername, `${name} is sent as staff`);
+    }
+  } finally {
+    mcp.stop();
+  }
 });

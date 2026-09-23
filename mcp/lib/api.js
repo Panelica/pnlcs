@@ -1,7 +1,11 @@
 // The thin wire to a PNLCS install. Every tool goes through callAction: read
 // actions travel as GET query strings, write actions as JSON POSTs - the same
-// two shapes the PNLCS API serves its own screens with. Credentials ride in
-// the identifier/secret parameters the API has always taken.
+// two shapes the PNLCS API serves its own screens with.
+//
+// Credentials ride in the X-API-Key / X-API-Secret headers, never in the URL
+// or the body. They used to go in the query string of every read, which put
+// the secret into the web server's access log, any proxy's log and the
+// install's own request log on every call.
 
 export function config(env = process.env) {
   const url = (env.PNLCS_URL || '').replace(/\/+$/, '');
@@ -24,20 +28,23 @@ export async function callAction(cfg, action, params = {}, method = 'GET') {
   // returns; 30 seconds is far beyond any healthy PNLCS answer.
   const signal = AbortSignal.timeout(30_000);
 
+  const auth = { 'X-API-Key': cfg.identifier, 'X-API-Secret': cfg.secret, Accept: 'application/json' };
+
   let response;
   try {
     if (method === 'GET') {
-      const qs = new URLSearchParams({ identifier: cfg.identifier, secret: cfg.secret });
+      const qs = new URLSearchParams();
       for (const [k, v] of Object.entries(clean)) qs.set(k, String(v));
-      response = await fetch(`${cfg.url}/api/v1/${action}?${qs}`, {
-        headers: { Accept: 'application/json' },
+      const query = qs.toString();
+      response = await fetch(`${cfg.url}/api/v1/${action}${query ? `?${query}` : ''}`, {
+        headers: auth,
         signal,
       });
     } else {
       response = await fetch(`${cfg.url}/api/v1/${action}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ identifier: cfg.identifier, secret: cfg.secret, ...clean }),
+        headers: { ...auth, 'Content-Type': 'application/json' },
+        body: JSON.stringify(clean),
         signal,
       });
     }

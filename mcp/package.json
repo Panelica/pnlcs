@@ -1,7 +1,7 @@
 {
   "name": "pnlcs-mcp",
-  "version": "1.0.4",
-  "description": "Model Context Protocol server for PNLCS - query clients, invoices, orders and tickets from Claude Desktop, Cursor and friends.",
+  "version": "1.0.5",
+  "description": "Model Context Protocol server for PNLCS - query clients, invoices, orders and tickets from any MCP client.",
   "license": "MIT",
   "type": "module",
   "bin": {

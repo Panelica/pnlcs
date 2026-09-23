@@ -8,9 +8,9 @@
 
 import { createInterface } from 'node:readline';
 import { config, callAction } from './lib/api.js';
-import { descriptors, findTool } from './lib/tools.js';
+import { descriptors, findTool, paramsFor } from './lib/tools.js';
 
-const VERSION = '1.0.4';
+const VERSION = '1.0.5';
 
 // Configuration is read lazily, at the first tool call. Registries and
 // directories (Glama among them) start the server with no environment at all
@@ -63,7 +63,7 @@ async function handle(msg) {
         return replyError(id, -32602, `Unknown tool: ${params?.name}`);
       }
       try {
-        const body = await callAction(getCfg(), tool.action, params?.arguments ?? {}, tool.method ?? 'GET');
+        const body = await callAction(getCfg(), tool.action, paramsFor(tool, params?.arguments ?? {}), tool.method ?? 'GET');
         return reply(id, { content: [{ type: 'text', text: JSON.stringify(body, null, 2) }] });
       } catch (e) {
         // Tool-level failures are results, not protocol errors - the model

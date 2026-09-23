@@ -2,7 +2,7 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server for
 [PNLCS](https://github.com/Panelica/pnlcs), the open-source billing panel.
-Connect Claude Code, Claude Desktop, Cursor, VS Code or any other MCP client
+Connect any MCP client - Cursor, VS Code, Windsurf, Cline, Zed and others -
 to your PNLCS install and work with it in plain English:
 
 > *"Which invoices are overdue?"* — *"Show me this client's services and
@@ -21,11 +21,17 @@ PNLCS admin API you already have. Nothing is installed on the PNLCS side.
 ## 1. Create an API credential in PNLCS
 
 1. Log in to the **admin area** of your PNLCS install.
-2. Go to **Configuration → API Credentials**.
+2. Go to **Setup → API Credentials** (needs the *manage staff* permission).
 3. Click **Create**, give it a name like `mcp`, and copy the two values it
    shows you:
    - **Identifier** — the credential's username
    - **Secret** — shown once; store it somewhere safe
+
+The credential answers with **its owner's permissions**: every tool can do
+exactly what that member of staff could do in the admin area, and a tool the
+owner may not use answers *Your account does not have permission for this
+action.* Create it under a dedicated staff account with the role you want the
+assistant to have. A disabled account's credential stops working at once.
 
 That pair is all the server needs, passed through three environment
 variables:
@@ -41,27 +47,10 @@ variables:
 
 ## 2. Connect your client
 
-### Claude Code (CLI)
+### The configuration block
 
-One command:
-
-```bash
-claude mcp add pnlcs \
-  --env PNLCS_URL=https://billing.example.com \
-  --env PNLCS_IDENTIFIER=your_identifier \
-  --env PNLCS_SECRET=your_secret \
-  -- npx -y pnlcs-mcp
-```
-
-Add `--env PNLCS_ALLOW_WRITES=1` if you also want the write tools.
-Use `--scope project` to share the entry with your team via `.mcp.json`
-(put the secret in your shell environment, not in the committed file).
-Check it with `claude mcp list`; remove it with `claude mcp remove pnlcs`.
-
-### Claude Desktop
-
-Edit `claude_desktop_config.json`
-(macOS: `~/Library/Application Support/Claude/`, Windows: `%APPDATA%\Claude\`):
+Most MCP clients read the same JSON block - put it wherever your client keeps
+its MCP servers:
 
 ```json
 {
@@ -79,12 +68,15 @@ Edit `claude_desktop_config.json`
 }
 ```
 
-Restart Claude Desktop; the tools appear under the hammer icon.
+Add `"PNLCS_ALLOW_WRITES": "1"` to `env` if you also want the write tools.
+Restart the client after editing its configuration. If the file is committed
+to a repository, keep the secret out of it and supply it from your shell
+environment instead.
 
 ### Cursor
 
 **Settings → MCP → Add new global MCP server**, or create `.cursor/mcp.json`
-in your project (same JSON shape as Claude Desktop above).
+in your project with the block above.
 
 ### VS Code (Copilot agent mode)
 
@@ -121,7 +113,7 @@ above. From a git checkout, `node mcp/server.js` works identically.
 
 | Tool | What it answers |
 |---|---|
-| `get_stats` | Client, order, invoice and revenue totals |
+| `get_stats` | Counts of clients, services, domains, invoices, orders, tickets and staff |
 | `get_health` | Health of the install itself |
 | `list_clients` | Clients, searchable by name/email/company, pageable |
 | `get_client` | One client with contacts, by `clientid` **or** `email` |
@@ -144,8 +136,8 @@ above. From a git checkout, `node mcp/server.js` works identically.
 | `add_client` | Create a client; with `password2` it also opens a portal login |
 | `create_invoice` | Invoice a client with one or more line items |
 | `add_invoice_payment` | Record a payment; marks the invoice paid when covered |
-| `open_ticket` | Open a support ticket |
-| `add_ticket_reply` | Reply to a ticket |
+| `open_ticket` | Open a support ticket for a customer, as staff |
+| `add_ticket_reply` | Reply to a ticket as staff — signed by the credential's owner, emailed to the customer, ticket marked *Answered* |
 | `suspend_service` | Suspend a hosting service **on its server** |
 | `unsuspend_service` | Lift a suspension |
 
@@ -161,6 +153,10 @@ not setting the flag.
 - The secret only ever travels between the machine running your AI client
   and your PNLCS install, over the same HTTPS API your admin screens use.
   It is never sent to the model provider; the model sees tool *results*.
+- The identifier and secret travel in the `X-API-Key` / `X-API-Secret`
+  request headers, never in the URL, so they do not end up in web server,
+  proxy or request logs. (Versions before 1.0.5 sent them in the query
+  string of every read - rotate the credential if you used one of those.)
 - Prefer a **dedicated API credential** for MCP so you can revoke it alone.
 - PNLCS rate-limits API credentials (300 requests/minute per credential),
   so a runaway agent cannot hammer your install.
@@ -177,6 +173,8 @@ not setting the flag.
 | `PNLCS did not answer within 30 seconds` | The install is unreachable from this machine — check the URL and any firewall |
 | Tools missing in the client | Restart the client after editing its config; check its MCP log for the stderr line above |
 | Write tools missing | That is the default — set `PNLCS_ALLOW_WRITES=1` |
+| `Your account does not have permission for this action.` | The credential's owner lacks that permission in PNLCS — give their role the permission, or use a credential of a member of staff who has it |
+| `The account this credential belongs to is disabled.` | The owning staff account was disabled in PNLCS; issue a credential from an active account |
 
 ## 6. Tests
 
