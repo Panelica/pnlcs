@@ -43,8 +43,10 @@ const TRANSLATION_GAP_BUDGET = [
     'pl' => 0,
     'zh' => 0,
     'tr' => 0,
-    // The twenty-six that were generated together and left behind.
-    'ar' => 984, 'az' => 984, 'ca' => 984, 'cs' => 984, 'da' => 984, 'de' => 984,
+    // German: complete since Dirk Mehmke's translation, 2026-09-23.
+    'de' => 0,
+    // The twenty-five that were generated together and left behind.
+    'ar' => 984, 'az' => 984, 'ca' => 984, 'cs' => 984, 'da' => 984,
     'el' => 984, 'es' => 984, 'et' => 984, 'fa' => 984, 'fi' => 984, 'fr' => 984,
     'he' => 984, 'hr' => 984, 'hu' => 984, 'it' => 984, 'ja' => 984, 'ko' => 984,
     'mk' => 984, 'nl' => 984, 'no' => 984, 'pt-br' => 984, 'ro' => 984,
@@ -82,7 +84,7 @@ test('the complete languages stay complete', function () {
     // says nothing about what is on that line, which is the next three tests'
     // job. Keeping the two apart is deliberate: a missing key and an English
     // value are different faults with different fixes.
-    foreach (['pl', 'zh', 'tr'] as $locale) {
+    foreach (['pl', 'zh', 'tr', 'de'] as $locale) {
         expect(count(array_diff_key(localeKeys('en'), localeKeys($locale))))->toBe(0);
     }
 });
@@ -136,6 +138,9 @@ function localeValues(string $locale): array
  */
 const UNTRANSLATED_VALUE_BUDGET = [
     'tr' => 33,
+    // Measured 2026-09-23: words German writes the same way - Name, Status,
+    // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
+    'de' => 100,
     'pl' => 70,
     'zh' => 20,
 ];

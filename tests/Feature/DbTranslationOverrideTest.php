@@ -127,8 +127,10 @@ test('the same pair saved in the other order behaves identically', function () {
 test('a key nobody has translated still falls back to the file', function () {
     dbTrans('de', 'client', 'dashboard.welcome_back', 'Willkommen zurück, :name!');
 
-    // A different key in the same group, untouched by the editor.
-    expect(__('client.my_account'))->toBe(__('client.my_account', [], 'en'));
+    // A different key in the same group, untouched by the editor, reads what
+    // the German file says.
+    expect(__('client.my_account'))->toBe(germanFileValue('my_account'))
+        ->and(germanFileValue('my_account'))->not->toBe(__('client.my_account', [], 'en'));
 });
 
 test('an empty database value is not allowed to blank a translation', function () {
@@ -145,7 +147,7 @@ test('an empty database value is not allowed to blank a translation', function (
     app('translator')->setLocale('de');
 
     expect(__('client.dashboard.welcome_back', ['name' => 'Ada']))
-        ->toBe('Welcome back, Ada!');
+        ->toBe(str_replace(':name', 'Ada', germanFileValue('dashboard.welcome_back')));
 });
 
 test('one locale does not borrow another locale rows', function () {
@@ -163,3 +165,11 @@ test('one group does not borrow another group rows', function () {
     // admin.dashboard.welcome_back is a different group; nothing was saved for it.
     expect(__('admin.dashboard.welcome_back'))->not->toBe('Willkommen zurück, :name!');
 });
+
+/** The value lang/de/client.php gives a key - flat key first, as Laravel reads it. */
+function germanFileValue(string $key): string
+{
+    $file = require lang_path('de/client.php');
+
+    return (string) (array_key_exists($key, $file) ? $file[$key] : \Illuminate\Support\Arr::get($file, $key));
+}

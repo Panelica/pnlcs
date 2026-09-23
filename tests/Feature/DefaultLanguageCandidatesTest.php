@@ -26,7 +26,7 @@ function seedLanguages(): void
     foreach ([
         ['en', 'English', 'English', true, true, 1],
         ['tr', 'Turkish', 'Türkçe', false, false, 2],
-        ['de', 'German', 'Deutsch', false, false, 3],
+        ['fr', 'French', 'Français', false, false, 3],
     ] as [$code, $name, $native, $active, $default, $sort]) {
         Language::updateOrCreate(['code' => $code], [
             'name' => $name, 'native_name' => $native, 'direction' => 'ltr',
@@ -53,14 +53,14 @@ test('a fully translated language is offered as default while switched off', fun
         ->getContent();
 
     // The page computes progress from the shipped files, so these are the
-    // real numbers: Turkish is complete, German is not.
+    // real numbers: Turkish is complete, French is not.
     expect((float) Language::where('code', 'tr')->value('translation_progress'))->toBe(100.0)
-        ->and((float) Language::where('code', 'de')->value('translation_progress'))->toBeLessThan(100.0);
+        ->and((float) Language::where('code', 'fr')->value('translation_progress'))->toBeLessThan(100.0);
 
     $codes = defaultSelectCodes($html);
     expect($codes)->toContain('en')
         ->and($codes)->toContain('tr')
-        ->and($codes)->not->toContain('de');
+        ->and($codes)->not->toContain('fr');
 });
 
 test('choosing it makes it the default and switches it on', function () {
@@ -85,9 +85,9 @@ test('an unfinished, switched-off language cannot be posted as default', functio
     $this->actingAs($admin, 'admin')->get(route('admin.config.languages.index'));
 
     $this->actingAs($admin, 'admin')
-        ->post(route('admin.config.languages.set-default'), ['code' => 'de'])
+        ->post(route('admin.config.languages.set-default'), ['code' => 'fr'])
         ->assertSessionHasErrors('code');
 
-    expect(Language::where('code', 'de')->value('is_default'))->toBeFalse()
+    expect(Language::where('code', 'fr')->value('is_default'))->toBeFalse()
         ->and(Language::where('code', 'en')->value('is_default'))->toBeTrue();
 });
