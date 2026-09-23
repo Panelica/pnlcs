@@ -42,6 +42,13 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // =============================================
     // Clients CRUD
     // =============================================
+    // Live Servers — the Panelica servers, one click from their panel
+    Route::middleware('admin.permission:manage_servers')->group(function () {
+        Route::get('live-servers', [\App\Http\Controllers\Admin\LiveServerController::class, 'index'])->name('live-servers.index');
+        Route::post('live-servers/{server}/login', [\App\Http\Controllers\Admin\LiveServerController::class, 'login'])
+            ->middleware('throttle:20,1')->name('live-servers.login');
+    });
+
     Route::middleware('admin.permission:list_clients')->group(function () {
         Route::get('clients', [ClientController::class, 'index'])->name('clients.index');
         Route::get('clients/export/csv', [ClientController::class, 'exportCsv'])->name('clients.export');
@@ -311,6 +318,12 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('promotions', [ConfigController::class, 'storePromotion'])->name('promotions.store');
             Route::put('promotions/{promotion}', [ConfigController::class, 'updatePromotion'])->name('promotions.update');
             Route::delete('promotions/{promotion}', [ConfigController::class, 'destroyPromotion'])->name('promotions.destroy');
+        });
+
+        // Every installed module and its on/off switch — manage_settings
+        Route::middleware('admin.permission:manage_settings')->group(function () {
+            Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules');
+            Route::post('modules/{type}/{key}/toggle', [\App\Http\Controllers\Admin\ModuleController::class, 'toggle'])->name('modules.toggle');
         });
 
         // Servers & Domains — manage_servers

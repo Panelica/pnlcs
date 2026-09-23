@@ -70,6 +70,7 @@
                     $me?->hasPermission('manage_gateways') ? ['admin.config.gateways', __('admin.dashboard.payments')] : null,
                     $me?->hasPermission('manage_products') ? ['admin.products.index', __('admin.dashboard.products')] : null,
                     $me?->hasPermission('manage_servers') ? ['admin.config.servers', __('admin.dashboard.servers')] : null,
+                    $me?->hasPermission('manage_servers') ? ['admin.live-servers.index', __('admin.dashboard.live_servers')] : null,
                     $me?->hasPermission('manage_domains') ? ['admin.config.domain-pricing', __('admin.dashboard.domains')] : null,
                 ]));
             @endphp

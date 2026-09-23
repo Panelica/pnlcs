@@ -204,6 +204,7 @@
                     <li><a href="{{ route('admin.config.server-groups') }}">{{ __('admin.nav.server_groups') }}</a></li>
                     <li><a href="{{ route('admin.config.domain-pricing') }}">{{ __('admin.nav.domain_pricing') }}</a></li>
                     <li class="divider"></li>
+                    <li><a href="{{ route('admin.config.modules') }}">{{ __('admin.nav.modules') }}</a></li>
                     <li><a href="{{ route('admin.config.gateways') }}">{{ __('admin.nav.payment_gateways') }}</a></li>
                     <li><a href="{{ route('admin.config.registrars') }}">{{ __('admin.nav.domain_registrars') }}</a></li>
                     <li><a href="{{ route('admin.config.sslModules') }}">{{ __('admin.nav.ssl_modules') }}</a></li>
@@ -398,6 +399,7 @@
             <li><a href="{{ route('admin.config.api-credentials') }}" @if($routeName === 'admin.config.api-credentials') class="active" @endif>{{ __('admin.nav.api_credentials') }}</a></li>
             <li><a href="https://panelica.github.io/pnlcs/" target="_blank" rel="noopener">{{ __('admin.nav.user_guide') }}</a></li>
             <li><a href="{{ route('admin.api-docs') }}" @if($routeName === 'admin.api-docs') class="active" @endif>{{ __('admin.nav.api_documentation') }}</a></li>
+            <li><a href="{{ route('admin.config.modules') }}" @if($routeName === 'admin.config.modules') class="active" @endif>{{ __('admin.nav.modules') }}</a></li>
         </ul>
 
         <div class="sidebar-header"><i class="fas fa-credit-card"></i> {{ __('admin.sidebar.payments') }}</div>

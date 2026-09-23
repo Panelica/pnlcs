@@ -874,6 +874,47 @@ class PanelicaModule extends AbstractServerModule
     }
 
     /**
+     * Mint a one-time login URL for the operator, into the panel as the owner
+     * of this server's API key (the Live Servers screen).
+     *
+     * The panel is asked who owns the key (GET /v1/me) rather than PNLCS
+     * storing a user id: the key is the credential the operator gave us, and
+     * whoever it belongs to is who they chose to be on that server. The login
+     * URL itself is the panel's own — single use, five minutes — minted by the
+     * same endpoint the customer "Login to panel" button uses.
+     *
+     * @return array{success: bool, message: string, url?: string}
+     */
+    public function operatorLogin(Server $server): array
+    {
+        try {
+            $me = $this->get($server, '/v1/me');
+            $userId = $me->successful() ? (string) ($me->json('data.user_id') ?? '') : '';
+
+            if ($userId === '') {
+                Log::warning('PanelicaModule::operatorLogin could not identify the key owner', ['server' => $server->id, 'status' => $me->status()]);
+
+                return ['success' => false, 'message' => __('admin.live_servers.error_key_owner')];
+            }
+
+            $resp = $this->post($server, "/v1/accounts/{$userId}/sso-login", [], 15);
+            $url = $resp->successful() ? (string) ($resp->json('data.url') ?? '') : '';
+
+            if ($url === '' || ! preg_match('#^https://#i', $url)) {
+                Log::warning('PanelicaModule::operatorLogin got no login URL', ['server' => $server->id, 'status' => $resp->status()]);
+
+                return ['success' => false, 'message' => __('admin.live_servers.error_no_url')];
+            }
+
+            return ['success' => true, 'message' => '', 'url' => $url];
+        } catch (\Throwable $e) {
+            Log::warning('PanelicaModule::operatorLogin unreachable', ['server' => $server->id, 'error' => $e->getMessage()]);
+
+            return ['success' => false, 'message' => __('admin.live_servers.error_unreachable')];
+        }
+    }
+
+    /**
      * Mint a one-time single-sign-on URL so the customer can jump straight into
      * their hosting control panel (POST /v1/accounts/{id}/sso-login).
      */
