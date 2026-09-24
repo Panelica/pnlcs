@@ -71,7 +71,7 @@ Create a new client account.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addclient \
+curl -X POST https://example.com/api/v1/addclient \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "firstname=Ada" \
@@ -115,7 +115,7 @@ Add a note to a client's account.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addclientnote \
+curl -X POST https://example.com/api/v1/addclientnote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=1" \
@@ -150,7 +150,7 @@ Add a sub-contact to a client.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addcontact \
+curl -X POST https://example.com/api/v1/addcontact \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1" \
@@ -187,7 +187,7 @@ Add credit to a client's account balance.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addcredit \
+curl -X POST https://example.com/api/v1/addcredit \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1" \
@@ -223,7 +223,7 @@ Create a client-area login.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/adduser \
+curl -X POST https://example.com/api/v1/adduser \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "email=client@example.com" \
@@ -270,7 +270,7 @@ Apply client credit to an invoice.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/applycredit \
+curl -X POST https://example.com/api/v1/applycredit \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "invoiceid=1" \
@@ -310,7 +310,7 @@ Close a client account.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/closeclient \
+curl -X POST https://example.com/api/v1/closeclient \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1"
@@ -354,7 +354,7 @@ Invite someone to a client account.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/createclientinvite \
+curl -X POST https://example.com/api/v1/createclientinvite \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=7" \
@@ -403,7 +403,7 @@ Create a one-time sign-in link to the client area.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/createssotoken \
+curl -X POST https://example.com/api/v1/createssotoken \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "client_id=7" \
@@ -444,7 +444,7 @@ Delete a client account.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteclient \
+curl -X POST https://example.com/api/v1/deleteclient \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1"
@@ -479,7 +479,7 @@ Delete a sub-contact.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deletecontact \
+curl -X POST https://example.com/api/v1/deletecontact \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "contactid=1"
@@ -520,7 +520,7 @@ Remove a login from a client account.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteuserclient \
+curl -X POST https://example.com/api/v1/deleteuserclient \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=1" \
@@ -549,7 +549,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getclientgroups \
+curl -G https://example.com/api/v1/getclientgroups \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -598,7 +598,7 @@ List clients with optional search/filtering.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getclients \
+curl -G https://example.com/api/v1/getclients \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -637,7 +637,7 @@ One of `clientid` or `email` is required.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getclientsdetails \
+curl -G https://example.com/api/v1/getclientsdetails \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1"
@@ -672,7 +672,7 @@ Get sub-contacts for a client.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getcontacts \
+curl -G https://example.com/api/v1/getcontacts \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -701,7 +701,7 @@ List credit entries.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getcredits \
+curl -G https://example.com/api/v1/getcredits \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -740,7 +740,7 @@ Get what a login may do on a client account.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getuserpermissions \
+curl -G https://example.com/api/v1/getuserpermissions \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=1" \
@@ -776,7 +776,7 @@ List client-area logins.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getusers \
+curl -G https://example.com/api/v1/getusers \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -825,7 +825,7 @@ Update an existing client's details.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateclient \
+curl -X POST https://example.com/api/v1/updateclient \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1"
@@ -864,7 +864,7 @@ Update a sub-contact.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updatecontact \
+curl -X POST https://example.com/api/v1/updatecontact \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "contactid=1"
@@ -904,7 +904,7 @@ Update a client-area login.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateuser \
+curl -X POST https://example.com/api/v1/updateuser \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=1"
@@ -948,7 +948,7 @@ Change what a login may do on a client account.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateuserpermissions \
+curl -X POST https://example.com/api/v1/updateuserpermissions \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=1" \

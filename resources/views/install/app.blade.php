@@ -9,7 +9,7 @@
         <div>
             <label class="text-sm font-medium text-slate-700">Application URL</label>
             <input type="url" name="app_url" value="{{ old('app_url', $app_url) }}" required class="mt-1 w-full px-3 py-2 border border-slate-300 rounded text-sm">
-            <p class="text-xs text-slate-500 mt-1">Public URL where this PNLCS will be reachable (e.g. https://billing.example.com).</p>
+            <p class="text-xs text-slate-500 mt-1">Public URL where this PNLCS will be reachable (e.g. https://example.com).</p>
         </div>
         <div>
             <label class="text-sm font-medium text-slate-700">Application Name</label>

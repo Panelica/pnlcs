@@ -42,7 +42,7 @@ Make a client an affiliate.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/affiliateactivate \
+curl -X POST https://example.com/api/v1/affiliateactivate \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1"
@@ -79,7 +79,7 @@ List affiliates.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getaffiliates \
+curl -G https://example.com/api/v1/getaffiliates \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```

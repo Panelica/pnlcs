@@ -58,7 +58,7 @@ The server reads four environment variables:
 
 | Variable | Value |
 |---|---|
-| `PNLCS_URL` | Your PNLCS address, for example `https://billing.example.com` |
+| `PNLCS_URL` | Your PNLCS address, for example `https://example.com` |
 | `PNLCS_IDENTIFIER` | The credential identifier |
 | `PNLCS_SECRET` | The credential secret |
 | `PNLCS_ALLOW_WRITES` | Optional. `1` also offers the tools that change something |
@@ -73,7 +73,7 @@ keeps its MCP servers:
       "command": "npx",
       "args": ["-y", "pnlcs-mcp"],
       "env": {
-        "PNLCS_URL": "https://billing.example.com",
+        "PNLCS_URL": "https://example.com",
         "PNLCS_IDENTIFIER": "your_identifier",
         "PNLCS_SECRET": "your_secret"
       }
@@ -101,7 +101,7 @@ Restart the client after changing its configuration.
           "command": "npx",
           "args": ["-y", "pnlcs-mcp"],
           "env": {
-            "PNLCS_URL": "https://billing.example.com",
+            "PNLCS_URL": "https://example.com",
             "PNLCS_IDENTIFIER": "your_identifier",
             "PNLCS_SECRET": "your_secret"
           }

@@ -14,7 +14,7 @@
             "url": "{baseUrl}",
             "variables": {
                 "baseUrl": {
-                    "default": "https://billing.example.com",
+                    "default": "https://example.com",
                     "description": "Your PNLCS address"
                 }
             }

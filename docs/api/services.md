@@ -56,7 +56,7 @@ Request cancellation of a service.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addcancelrequest \
+curl -X POST https://example.com/api/v1/addcancelrequest \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1"
@@ -98,7 +98,7 @@ Create a new product/package.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addproduct \
+curl -X POST https://example.com/api/v1/addproduct \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "name=Starter" \
@@ -140,7 +140,7 @@ List cancellation requests.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getcancelledpackages \
+curl -G https://example.com/api/v1/getcancelledpackages \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -170,7 +170,7 @@ Get all addons for a client.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getclientsaddons \
+curl -G https://example.com/api/v1/getclientsaddons \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -211,7 +211,7 @@ List services/products for a client.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getclientsproducts \
+curl -G https://example.com/api/v1/getclientsproducts \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -250,7 +250,7 @@ Run Change Package on a service module.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/modulechangepackage \
+curl -X POST https://example.com/api/v1/modulechangepackage \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1" \
@@ -288,7 +288,7 @@ Change the account password on the server.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/modulechangepw \
+curl -X POST https://example.com/api/v1/modulechangepw \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1" \
@@ -329,7 +329,7 @@ Run the module Create function for a service.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/modulecreate \
+curl -X POST https://example.com/api/v1/modulecreate \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1"
@@ -370,7 +370,7 @@ Run a custom function of a server module.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/modulecustom \
+curl -X POST https://example.com/api/v1/modulecustom \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1" \
@@ -408,7 +408,7 @@ Suspend a hosting service.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/modulesuspend \
+curl -X POST https://example.com/api/v1/modulesuspend \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1"
@@ -447,7 +447,7 @@ Run the module Terminate function.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/moduleterminate \
+curl -X POST https://example.com/api/v1/moduleterminate \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1"
@@ -483,7 +483,7 @@ Unsuspend/reactivate a service.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/moduleunsuspend \
+curl -X POST https://example.com/api/v1/moduleunsuspend \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1"
@@ -521,7 +521,7 @@ Update a service addon.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateclientaddon \
+curl -X POST https://example.com/api/v1/updateclientaddon \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "id=1"
@@ -567,7 +567,7 @@ Update a client's hosting service record.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateclientproduct \
+curl -X POST https://example.com/api/v1/updateclientproduct \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1"
@@ -610,7 +610,7 @@ Move a service to another product, billing the difference.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/upgradeproduct \
+curl -X POST https://example.com/api/v1/upgradeproduct \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "serviceid=1" \

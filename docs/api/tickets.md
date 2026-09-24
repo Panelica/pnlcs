@@ -57,7 +57,7 @@ Add a staff note to a ticket.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addticketnote \
+curl -X POST https://example.com/api/v1/addticketnote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1" \
@@ -100,7 +100,7 @@ Add a reply to an existing ticket.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addticketreply \
+curl -X POST https://example.com/api/v1/addticketreply \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1" \
@@ -143,7 +143,7 @@ Block a ticket sender.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/blockticketsender \
+curl -X POST https://example.com/api/v1/blockticketsender \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1"
@@ -178,7 +178,7 @@ Delete a ticket and all its replies.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteticket \
+curl -X POST https://example.com/api/v1/deleteticket \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1"
@@ -213,7 +213,7 @@ Delete a staff note from a ticket.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteticketnote \
+curl -X POST https://example.com/api/v1/deleteticketnote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "noteid=1"
@@ -248,7 +248,7 @@ Delete a specific ticket reply.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteticketreply \
+curl -X POST https://example.com/api/v1/deleteticketreply \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "replyid=1"
@@ -276,7 +276,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getsupportdepartments \
+curl -G https://example.com/api/v1/getsupportdepartments \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -303,7 +303,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getsupportstatuses \
+curl -G https://example.com/api/v1/getsupportstatuses \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -338,7 +338,7 @@ Get a single ticket with replies.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getticket \
+curl -G https://example.com/api/v1/getticket \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1"
@@ -377,7 +377,7 @@ List or download the files on a ticket.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getticketattachment \
+curl -G https://example.com/api/v1/getticketattachment \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1"
@@ -405,7 +405,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getticketcounts \
+curl -G https://example.com/api/v1/getticketcounts \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -440,7 +440,7 @@ List the staff notes on a ticket.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getticketnotes \
+curl -G https://example.com/api/v1/getticketnotes \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1"
@@ -468,7 +468,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getticketpredefinedcats \
+curl -G https://example.com/api/v1/getticketpredefinedcats \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -497,7 +497,7 @@ List canned replies.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getticketpredefinedreplies \
+curl -G https://example.com/api/v1/getticketpredefinedreplies \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -536,7 +536,7 @@ List support tickets with optional filtering.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/gettickets \
+curl -G https://example.com/api/v1/gettickets \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -576,7 +576,7 @@ Merge one ticket into another.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/mergeticket \
+curl -X POST https://example.com/api/v1/mergeticket \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1" \
@@ -618,7 +618,7 @@ Open a new support ticket.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/openticket \
+curl -X POST https://example.com/api/v1/openticket \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "deptid=1" \
@@ -662,7 +662,7 @@ Update ticket status or details.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateticket \
+curl -X POST https://example.com/api/v1/updateticket \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ticketid=1"
@@ -699,7 +699,7 @@ Edit a ticket reply.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateticketreply \
+curl -X POST https://example.com/api/v1/updateticketreply \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "replyid=1"

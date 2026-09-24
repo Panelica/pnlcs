@@ -48,7 +48,7 @@ Create an API credential.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/createoauthcredential \
+curl -X POST https://example.com/api/v1/createoauthcredential \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -82,7 +82,7 @@ Delete an API credential.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteoauthcredential \
+curl -X POST https://example.com/api/v1/deleteoauthcredential \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "credentialid=1"
@@ -110,7 +110,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/listoauthcredentials \
+curl -G https://example.com/api/v1/listoauthcredentials \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -149,7 +149,7 @@ Update an API credential.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateoauthcredential \
+curl -X POST https://example.com/api/v1/updateoauthcredential \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "credentialid=1"

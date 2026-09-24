@@ -51,7 +51,7 @@ Add a message/comment to a project.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addprojectmessage \
+curl -X POST https://example.com/api/v1/addprojectmessage \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "projectid=1" \
@@ -91,7 +91,7 @@ Add a task to a project.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addprojecttask \
+curl -X POST https://example.com/api/v1/addprojecttask \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "projectid=1" \
@@ -129,7 +129,7 @@ Create a new project.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/createproject \
+curl -X POST https://example.com/api/v1/createproject \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "title=example" \
@@ -165,7 +165,7 @@ Delete a task from a project.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteprojecttask \
+curl -X POST https://example.com/api/v1/deleteprojecttask \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "taskid=1"
@@ -206,7 +206,7 @@ Stop a task timer.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/endtasktimer \
+curl -X POST https://example.com/api/v1/endtasktimer \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "timerid=1"
@@ -242,7 +242,7 @@ Get a single project with tasks and messages.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getproject \
+curl -G https://example.com/api/v1/getproject \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "projectid=1"
@@ -280,7 +280,7 @@ List all projects.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getprojects \
+curl -G https://example.com/api/v1/getprojects \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -322,7 +322,7 @@ Start a task timer.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/starttasktimer \
+curl -X POST https://example.com/api/v1/starttasktimer \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "taskid=1"
@@ -362,7 +362,7 @@ Update a project's details.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateproject \
+curl -X POST https://example.com/api/v1/updateproject \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "projectid=1"
@@ -402,7 +402,7 @@ Update a project task.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateprojecttask \
+curl -X POST https://example.com/api/v1/updateprojecttask \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "taskid=1"

@@ -35,7 +35,7 @@
 <p align="center">
   <a href="https://pnlcs.com/"><b>Website</b></a> ·
   <a href="https://hosting.panelica.com/"><b>Live Demo</b></a> ·
-  <a href="https://panelica.github.io/pnlcs/">Documentation</a> ·
+  <a href="https://docs.pnlcs.com/">Documentation</a> ·
   <a href="#quick-start-with-docker">Docker</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#first-steps-after-installation">First Steps</a> ·
@@ -432,7 +432,7 @@ The values that differ between the two families, used throughout this guide:
 | SELinux | not used | **enforcing** — step 10 is required |
 
 The guide uses `/var/www/pnlcs` as the install directory and
-`billing.example.com` as the address — replace both with your own.
+`example.com` as the address — replace both with your own.
 
 ### 0. Prepare the server
 
@@ -593,7 +593,7 @@ Set at least these values (editing the existing file keeps its owner):
 
 ```ini
 APP_NAME="Your Company"
-APP_URL=https://billing.example.com
+APP_URL=https://example.com
 APP_ENV=production
 APP_DEBUG=false
 
@@ -701,7 +701,7 @@ pointing it at the project root exposes `.env`.
 ```nginx
 server {
     listen 80;
-    server_name billing.example.com;
+    server_name example.com;
     root /var/www/pnlcs/public;      # note: /public
 
     index index.php;
@@ -746,8 +746,8 @@ sudo nginx -t && sudo systemctl reload nginx
 **Check it before you open a browser:**
 
 ```bash
-curl -sI http://billing.example.com/install | head -1      # HTTP/1.1 302 Found  (→ the wizard)
-curl -sI http://billing.example.com/.env | head -1         # 403 or 404 — never 200
+curl -sI http://example.com/install | head -1      # HTTP/1.1 302 Found  (→ the wizard)
+curl -sI http://example.com/.env | head -1         # 403 or 404 — never 200
 ```
 
 Using Apache or Caddy instead? The same rule applies: document root =
@@ -756,7 +756,7 @@ rewritten to `index.php`.
 
 ### 12. Run the install wizard
 
-Open **http://billing.example.com/install** in your browser. The wizard walks
+Open **http://example.com/install** in your browser. The wizard walks
 through:
 
 1. **Requirements** — PHP version, every required extension, and whether
@@ -771,7 +771,7 @@ through:
 5. **Finish** — the wizard writes a lock file and closes itself permanently;
    `/install` answers 404 from then on.
 
-Sign in at **http://billing.example.com/admin/login**.
+Sign in at **http://example.com/admin/login**.
 
 ### 13. Schedule the cron runner
 
@@ -822,7 +822,7 @@ Checkout and the admin login must never run over plain HTTP. With Certbot
 (Ubuntu/Debian: `sudo apt install -y certbot python3-certbot-nginx`):
 
 ```bash
-sudo certbot --nginx -d billing.example.com
+sudo certbot --nginx -d example.com
 ```
 
 Then make sure `APP_URL` in `.env` starts with `https://` and refresh the
@@ -835,8 +835,8 @@ pn php artisan optimize
 ### 16. Final check
 
 ```bash
-curl -sI https://billing.example.com/install | head -1   # 404 — the wizard is closed
-curl -sI https://billing.example.com/.env | head -1      # 403 or 404
+curl -sI https://example.com/install | head -1   # 404 — the wizard is closed
+curl -sI https://example.com/.env | head -1      # 403 or 404
 ls -l /var/www/pnlcs/.env                                  # owned by the web user, mode 640
 pn php artisan schedule:run                                # finishes without errors
 ```
@@ -1034,9 +1034,9 @@ nothing here. Your data, uploads and settings are untouched.
 ## First Steps After Installation
 
 > 📖 **New to hosting billing?** The full
-> **[user guide](https://panelica.github.io/pnlcs/)** walks you through every
+> **[user guide](https://docs.pnlcs.com/)** walks you through every
 > concept and task in plain language — start with
-> **[Your First Sale](https://panelica.github.io/pnlcs/getting-started/your-first-sale/)**
+> **[Your First Sale](https://docs.pnlcs.com/getting-started/your-first-sale/)**
 > for an end-to-end walkthrough. The steps below are the quick version.
 
 Once the site loads and you can reach `/admin/login`, do these in order:
@@ -1366,7 +1366,7 @@ Most clients take the same JSON block:
       "command": "npx",
       "args": ["-y", "pnlcs-mcp"],
       "env": {
-        "PNLCS_URL": "https://billing.example.com",
+        "PNLCS_URL": "https://example.com",
         "PNLCS_IDENTIFIER": "your_identifier",
         "PNLCS_SECRET": "your_secret"
       }

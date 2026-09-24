@@ -10,7 +10,7 @@ All notable changes to PNLCS are documented here. Newest first.
   required), response fields, errors, the permission it needs and a curl
   example that works as written. Plus an OpenAPI 3.1 file to import into
   Postman, Insomnia or Bruno. See the API section of the
-  [documentation](https://panelica.github.io/pnlcs/api/).
+  [documentation](https://docs.pnlcs.com/api/).
 - The pages are generated from the route table and `config/api_docs.php`
   (`php artisan pnlcs:api-docs`); a test fails when a route has no entry, when
   a parameter documented as optional turns out to be required (or the

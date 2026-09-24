@@ -86,7 +86,7 @@ Switch a module on.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/activatemodule \
+curl -X POST https://example.com/api/v1/activatemodule \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "moduleType=example" \
@@ -119,7 +119,7 @@ Create a new announcement.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addannouncement \
+curl -X POST https://example.com/api/v1/addannouncement \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "title=example" \
@@ -150,7 +150,7 @@ Ban an IP address or range.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addbannedip \
+curl -X POST https://example.com/api/v1/addbannedip \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "ip=example"
@@ -190,7 +190,7 @@ Switch a module off.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deactivatemodule \
+curl -X POST https://example.com/api/v1/deactivatemodule \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "moduleType=example" \
@@ -237,7 +237,7 @@ Delete an announcement.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteannouncement \
+curl -X POST https://example.com/api/v1/deleteannouncement \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "announcementid=1"
@@ -284,7 +284,7 @@ List the activity log.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getactivitylog \
+curl -G https://example.com/api/v1/getactivitylog \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -319,7 +319,7 @@ Get a staff account (the caller by default).
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getadmindetails \
+curl -G https://example.com/api/v1/getadmindetails \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -346,7 +346,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getadminusers \
+curl -G https://example.com/api/v1/getadminusers \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -382,7 +382,7 @@ List the published announcements.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getannouncements \
+curl -G https://example.com/api/v1/getannouncements \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -420,7 +420,7 @@ List the activity log (automation).
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getautomationlog \
+curl -G https://example.com/api/v1/getautomationlog \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -456,7 +456,7 @@ Read a setting.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getconfigurationvalue \
+curl -G https://example.com/api/v1/getconfigurationvalue \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "setting=example"
@@ -494,7 +494,7 @@ List the mail sent to clients.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getemails \
+curl -G https://example.com/api/v1/getemails \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -521,7 +521,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getemailtemplates \
+curl -G https://example.com/api/v1/getemailtemplates \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -551,7 +551,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/gethealthstatus \
+curl -G https://example.com/api/v1/gethealthstatus \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -589,7 +589,7 @@ List the settings a module asks for.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getmoduleconfigurationparameters \
+curl -G https://example.com/api/v1/getmoduleconfigurationparameters \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "moduleType=example" \
@@ -628,7 +628,7 @@ List server actions waiting to be retried.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getmodulequeue \
+curl -G https://example.com/api/v1/getmodulequeue \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -655,7 +655,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getorderstatuses \
+curl -G https://example.com/api/v1/getorderstatuses \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -683,7 +683,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getpaymentmethods \
+curl -G https://example.com/api/v1/getpaymentmethods \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -710,7 +710,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getpermissionslist \
+curl -G https://example.com/api/v1/getpermissionslist \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -741,7 +741,7 @@ List all products/packages in the system.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getproducts \
+curl -G https://example.com/api/v1/getproducts \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -768,7 +768,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getpromotions \
+curl -G https://example.com/api/v1/getpromotions \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -795,7 +795,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getregistrars \
+curl -G https://example.com/api/v1/getregistrars \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -822,7 +822,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getservers \
+curl -G https://example.com/api/v1/getservers \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -849,7 +849,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getstaffonline \
+curl -G https://example.com/api/v1/getstaffonline \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -876,7 +876,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getstats \
+curl -G https://example.com/api/v1/getstats \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -905,7 +905,7 @@ List to-do items.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/gettodoitems \
+curl -G https://example.com/api/v1/gettodoitems \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -932,7 +932,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/gettodoitemstatuses \
+curl -G https://example.com/api/v1/gettodoitemstatuses \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -964,7 +964,7 @@ Write an entry in the activity log.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/logactivity \
+curl -X POST https://example.com/api/v1/logactivity \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "description=example"
@@ -992,7 +992,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/pnlcsdetails \
+curl -G https://example.com/api/v1/pnlcsdetails \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -1033,7 +1033,7 @@ One of `email` or `id` is required.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/resetpassword \
+curl -X POST https://example.com/api/v1/resetpassword \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "email=client@example.com"
@@ -1068,7 +1068,7 @@ Send an email to the staff.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/sendadminemail \
+curl -X POST https://example.com/api/v1/sendadminemail \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "customsubject=example" \
@@ -1115,7 +1115,7 @@ One of `messagename` or `customsubject` is required.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/sendemail \
+curl -X POST https://example.com/api/v1/sendemail \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "messagename=invoice reminder" \
@@ -1155,7 +1155,7 @@ Change a setting.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/setconfigurationvalue \
+curl -X POST https://example.com/api/v1/setconfigurationvalue \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "setting=example" \
@@ -1193,7 +1193,7 @@ Send a custom notification.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/triggernotificationevent \
+curl -X POST https://example.com/api/v1/triggernotificationevent \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "title=example" \
@@ -1231,7 +1231,7 @@ Replace the admin notes on a client.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateadminnotes \
+curl -X POST https://example.com/api/v1/updateadminnotes \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1"
@@ -1269,7 +1269,7 @@ Update an announcement.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateannouncement \
+curl -X POST https://example.com/api/v1/updateannouncement \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "announcementid=1"
@@ -1314,7 +1314,7 @@ Change a module's settings.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updatemoduleconfiguration \
+curl -X POST https://example.com/api/v1/updatemoduleconfiguration \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "moduleType=gateway" \
@@ -1356,7 +1356,7 @@ Update a to-do item.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updatetodoitem \
+curl -X POST https://example.com/api/v1/updatetodoitem \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "itemid=1"
@@ -1393,7 +1393,7 @@ Validate client login credentials.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/validatelogin \
+curl -X POST https://example.com/api/v1/validatelogin \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "email=client@example.com" \
@@ -1425,7 +1425,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/whmcsdetails \
+curl -G https://example.com/api/v1/whmcsdetails \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```

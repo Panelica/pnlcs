@@ -48,7 +48,7 @@ Accept a quote and raise its invoice.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/acceptquote \
+curl -X POST https://example.com/api/v1/acceptquote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "quoteid=1"
@@ -84,7 +84,7 @@ Create a new quote for a client.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/createquote \
+curl -X POST https://example.com/api/v1/createquote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=1"
@@ -119,7 +119,7 @@ Delete a quote.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deletequote \
+curl -X POST https://example.com/api/v1/deletequote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "quoteid=1"
@@ -158,7 +158,7 @@ List all quotes with optional filtering.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getquotes \
+curl -G https://example.com/api/v1/getquotes \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -197,7 +197,7 @@ Mark a quote as sent to the client.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/sendquote \
+curl -X POST https://example.com/api/v1/sendquote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "quoteid=1"
@@ -238,7 +238,7 @@ Update an existing quote.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updatequote \
+curl -X POST https://example.com/api/v1/updatequote \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "quoteid=1"

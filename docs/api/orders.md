@@ -49,7 +49,7 @@ Accept/approve a pending order.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/acceptorder \
+curl -X POST https://example.com/api/v1/acceptorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "orderid=1"
@@ -96,7 +96,7 @@ Create a new order for a client.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addorder \
+curl -X POST https://example.com/api/v1/addorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=7" \
@@ -139,7 +139,7 @@ Cancel an order.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/cancelorder \
+curl -X POST https://example.com/api/v1/cancelorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "orderid=1"
@@ -174,7 +174,7 @@ Delete an order.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deleteorder \
+curl -X POST https://example.com/api/v1/deleteorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "orderid=1"
@@ -214,7 +214,7 @@ Mark an order as fraudulent.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/fraudorder \
+curl -X POST https://example.com/api/v1/fraudorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "orderid=1"
@@ -251,7 +251,7 @@ List all orders with optional filtering.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getorders \
+curl -G https://example.com/api/v1/getorders \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -290,7 +290,7 @@ Score an order for fraud.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/orderfraudcheck \
+curl -X POST https://example.com/api/v1/orderfraudcheck \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "orderid=1"
@@ -329,7 +329,7 @@ Set an order back to pending.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/pendingorder \
+curl -X POST https://example.com/api/v1/pendingorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "orderid=1"

@@ -1,6 +1,6 @@
 site_name: PNLCS Documentation
 site_description: User guide, API reference and MCP server for PNLCS — the open-source, self-hosted WHMCS alternative
-site_url: https://panelica.github.io/pnlcs/
+site_url: https://docs.pnlcs.com/
 repo_url: https://github.com/Panelica/pnlcs
 repo_name: Panelica/pnlcs
 edit_uri: edit/main/docs/

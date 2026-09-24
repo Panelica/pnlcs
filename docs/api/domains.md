@@ -53,7 +53,7 @@ Create or update a domain extension and its prices.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/createorupdatetld \
+curl -X POST https://example.com/api/v1/createorupdatetld \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "extension=example"
@@ -92,7 +92,7 @@ Get the registrar lock status of a domain.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/domaingetlockingstatus \
+curl -G https://example.com/api/v1/domaingetlockingstatus \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1"
@@ -136,7 +136,7 @@ Get the nameservers of a domain.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/domaingetnameservers \
+curl -G https://example.com/api/v1/domaingetnameservers \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1"
@@ -176,7 +176,7 @@ Get the contact details of a domain.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/domaingetwhoisinfo \
+curl -G https://example.com/api/v1/domaingetwhoisinfo \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1"
@@ -216,7 +216,7 @@ Register a new domain.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/domainregister \
+curl -X POST https://example.com/api/v1/domainregister \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1" \
@@ -260,7 +260,7 @@ Renew an existing domain.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/domainrenew \
+curl -X POST https://example.com/api/v1/domainrenew \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1"
@@ -299,7 +299,7 @@ Get the transfer (EPP) code of a domain.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/domainrequestepp \
+curl -G https://example.com/api/v1/domainrequestepp \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1"
@@ -337,7 +337,7 @@ Turn ID protection on or off.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/domaintoggleidprotect \
+curl -X POST https://example.com/api/v1/domaintoggleidprotect \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1"
@@ -375,7 +375,7 @@ Transfer a domain to this registrar.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/domaintransfer \
+curl -X POST https://example.com/api/v1/domaintransfer \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1" \
@@ -416,7 +416,7 @@ Lock or unlock a domain at the registrar.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/domainupdatelockingstatus \
+curl -X POST https://example.com/api/v1/domainupdatelockingstatus \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1" \
@@ -462,7 +462,7 @@ Change the nameservers of a domain.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/domainupdatenameservers \
+curl -X POST https://example.com/api/v1/domainupdatenameservers \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1" \
@@ -515,7 +515,7 @@ Check whether a domain is available to register.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/domainwhois \
+curl -G https://example.com/api/v1/domainwhois \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domain=example"
@@ -553,7 +553,7 @@ List domains for a specific client.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getclientsdomains \
+curl -G https://example.com/api/v1/getclientsdomains \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -580,7 +580,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/gettldpricing \
+curl -G https://example.com/api/v1/gettldpricing \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -628,7 +628,7 @@ Update a domain record.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateclientdomain \
+curl -X POST https://example.com/api/v1/updateclientdomain \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domainid=1"

@@ -49,7 +49,7 @@
         </table>
         <p style="font-size:13px;color:#555;margin:0 0 8px;"><strong>{{ __('admin.api_docs.base_url') }}:</strong> <code>{{ url('/api/v1') }}/&lt;action&gt;</code></p>
         <p style="font-size:12px;color:#888;margin:0 0 8px;">{{ trans_markup('admin.api_docs.response_note') }}</p>
-        <p style="font-size:13px;margin:0;"><a href="https://panelica.github.io/pnlcs/api/" target="_blank" rel="noopener">{{ __('admin.api_docs.full_reference') }}</a></p>
+        <p style="font-size:13px;margin:0;"><a href="https://docs.pnlcs.com/api/" target="_blank" rel="noopener">{{ __('admin.api_docs.full_reference') }}</a></p>
     </div>
 </div>
 

@@ -24,13 +24,13 @@ Credentials** and create one. You get two values:
   copy it now; if you lose it, create a new credential.
 
 **2. Make a call.** Every action has its own address,
-`https://your-pnlcs/api/v1/<action>`:
+`https://example.com/api/v1/<action>`:
 
 ```bash
 export PNLCS_IDENTIFIER="your identifier"
 export PNLCS_SECRET="your secret"
 
-curl -G https://billing.example.com/api/v1/getclients \
+curl -G https://example.com/api/v1/getclients \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "limitnum=5"
@@ -51,7 +51,7 @@ curl -G https://billing.example.com/api/v1/getclients \
 
 ## Addresses and methods
 
-- Base address: `https://your-pnlcs/api/v1/`, followed by the action name.
+- Base address: `https://example.com/api/v1/`, followed by the action name.
 - Actions that read use **GET**; actions that change something use **POST**.
   Each action's page says which. Calling with the other method answers `405`
   and names the right one.
@@ -207,7 +207,7 @@ needs a credential.
 ## Coming from WHMCS
 
 1. Replace `https://your-whmcs/includes/api.php` with
-   `https://your-pnlcs/api/v1/<action>`, where `<action>` is the WHMCS
+   `https://example.com/api/v1/<action>`, where `<action>` is the WHMCS
    action name in lower case (`GetClients` becomes `getclients`).
 2. Send the credential in the `X-API-Key` and `X-API-Secret` headers (or keep
    the `identifier` and `secret` parameters).

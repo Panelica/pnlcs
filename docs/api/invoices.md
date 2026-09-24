@@ -50,7 +50,7 @@ Add a billable item for a client.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addbillableitem \
+curl -X POST https://example.com/api/v1/addbillableitem \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1" \
@@ -98,7 +98,7 @@ Record a manual payment for an invoice.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addinvoicepayment \
+curl -X POST https://example.com/api/v1/addinvoicepayment \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "invoiceid=1" \
@@ -150,7 +150,7 @@ Add a manual transaction record.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addtransaction \
+curl -X POST https://example.com/api/v1/addtransaction \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=1" \
@@ -208,7 +208,7 @@ Create a new invoice.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/createinvoice \
+curl -X POST https://example.com/api/v1/createinvoice \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "userid=7" \
@@ -251,7 +251,7 @@ Remove a stored payment method.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/deletepaymethod \
+curl -X POST https://example.com/api/v1/deletepaymethod \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1" \
@@ -292,7 +292,7 @@ None.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/geninvoices \
+curl -X POST https://example.com/api/v1/geninvoices \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -319,7 +319,7 @@ None.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getcurrencies \
+curl -G https://example.com/api/v1/getcurrencies \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -354,7 +354,7 @@ Get a single invoice with line items.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getinvoice \
+curl -G https://example.com/api/v1/getinvoice \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "invoiceid=1"
@@ -393,7 +393,7 @@ List invoices with optional filtering.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getinvoices \
+curl -G https://example.com/api/v1/getinvoices \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -429,7 +429,7 @@ List a client's stored payment methods.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getpaymethods \
+curl -G https://example.com/api/v1/getpaymethods \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1"
@@ -465,7 +465,7 @@ List payment transactions with optional filtering.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/gettransactions \
+curl -G https://example.com/api/v1/gettransactions \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -510,7 +510,7 @@ Update an existing invoice.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updateinvoice \
+curl -X POST https://example.com/api/v1/updateinvoice \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "invoiceid=1"
@@ -550,7 +550,7 @@ Rename a stored payment method or make it the default.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updatepaymethod \
+curl -X POST https://example.com/api/v1/updatepaymethod \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1" \
@@ -589,7 +589,7 @@ Update a transaction.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/updatetransaction \
+curl -X POST https://example.com/api/v1/updatetransaction \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "transactionid=1"

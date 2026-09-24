@@ -47,7 +47,7 @@ Create an SSL certificate order.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/addsslorder \
+curl -X POST https://example.com/api/v1/addsslorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "client_id=1" \
@@ -88,7 +88,7 @@ Revoke an SSL certificate.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/cancelsslorder \
+curl -X POST https://example.com/api/v1/cancelsslorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "order_id=1"
@@ -134,7 +134,7 @@ Send the CSR and details for an SSL order.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/configsslorder \
+curl -X POST https://example.com/api/v1/configsslorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "order_id=1"
@@ -173,7 +173,7 @@ List the addresses that may approve a certificate.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getsslapproveremails \
+curl -G https://example.com/api/v1/getsslapproveremails \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "domain=example"
@@ -209,7 +209,7 @@ Get one SSL order.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getsslorder \
+curl -G https://example.com/api/v1/getsslorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "order_id=1"
@@ -243,7 +243,7 @@ List SSL orders.
 **Example**
 
 ```bash
-curl -G https://billing.example.com/api/v1/getsslorders \
+curl -G https://example.com/api/v1/getsslorders \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET"
 ```
@@ -280,7 +280,7 @@ Reissue an SSL certificate.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/reissuesslorder \
+curl -X POST https://example.com/api/v1/reissuesslorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "order_id=1" \
@@ -317,7 +317,7 @@ Resend the SSL validation email.
 **Example**
 
 ```bash
-curl -X POST https://billing.example.com/api/v1/resendsslvalidation \
+curl -X POST https://example.com/api/v1/resendsslvalidation \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "order_id=1"

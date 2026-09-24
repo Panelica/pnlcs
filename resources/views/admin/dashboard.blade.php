@@ -10,7 +10,7 @@
                 <strong style="font-size:15px;">{{ __('admin.setup.title') }}</strong>
                 <span style="color:var(--pn-muted,#888);font-size:13px;margin-left:8px;">{{ __('admin.setup.progress', ['done' => $setup['done'], 'total' => $setup['total']]) }}</span>
             </div>
-            <a href="https://panelica.github.io/pnlcs/getting-started/setup-checklist/" target="_blank" rel="noopener" style="font-size:13px;">{{ __('admin.setup.open_guide') }} &rarr;</a>
+            <a href="https://docs.pnlcs.com/getting-started/setup-checklist/" target="_blank" rel="noopener" style="font-size:13px;">{{ __('admin.setup.open_guide') }} &rarr;</a>
         </div>
         <div style="height:6px;background:var(--pn-border,#e5e7eb);border-radius:4px;margin:12px 0;overflow:hidden;">
             <div style="height:100%;width:{{ $setup['total'] ? round($setup['done'] / $setup['total'] * 100) : 0 }}%;background:var(--pn-primary,#4f46e5);"></div>

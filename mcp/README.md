@@ -38,7 +38,7 @@ variables:
 
 | Variable | Value |
 |---|---|
-| `PNLCS_URL` | Your install's address, e.g. `https://billing.example.com` |
+| `PNLCS_URL` | Your install's address, e.g. `https://example.com` |
 | `PNLCS_IDENTIFIER` | The credential's identifier |
 | `PNLCS_SECRET` | The credential's secret |
 | `PNLCS_ALLOW_WRITES` | Optional. Set to `1` to also enable the write tools (see below) |
@@ -59,7 +59,7 @@ its MCP servers:
       "command": "npx",
       "args": ["-y", "pnlcs-mcp"],
       "env": {
-        "PNLCS_URL": "https://billing.example.com",
+        "PNLCS_URL": "https://example.com",
         "PNLCS_IDENTIFIER": "your_identifier",
         "PNLCS_SECRET": "your_secret"
       }
@@ -90,7 +90,7 @@ Create `.vscode/mcp.json`:
       "command": "npx",
       "args": ["-y", "pnlcs-mcp"],
       "env": {
-        "PNLCS_URL": "https://billing.example.com",
+        "PNLCS_URL": "https://example.com",
         "PNLCS_IDENTIFIER": "your_identifier",
         "PNLCS_SECRET": "your_secret"
       }
