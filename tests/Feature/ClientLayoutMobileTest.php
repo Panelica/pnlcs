@@ -33,8 +33,11 @@ it('offers a visitor the login and sign-up links inside the phone menu', functio
     $menu = substr($html, strpos($html, 'id="pnMobileMenu"'));
 
     expect($menu)->toContain(route('client.login'))->toContain(route('client.register'));
-    // The bar buttons carry the class the phone layout hides.
-    expect($html)->toContain('pn-guest-btn');
+    // The bar buttons carry the class the phone layout hides, and the rule has
+    // to win over app.css, which sets every .btn to inline-flex !important -
+    // without that the buttons stayed and squeezed the brand to "PA...".
+    expect($html)->toContain('pn-guest-btn')
+        ->toContain('.pn-nav-right .pn-guest-btn{display:none !important}');
 });
 
 it('lets the contact page fall to one column instead of a fixed side column', function () {

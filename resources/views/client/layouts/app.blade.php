@@ -85,7 +85,9 @@
             .pn-brand{min-width:0;flex-shrink:1;font-size:17px}
             .pn-brand-text{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
             .pn-nav-right{gap:6px;min-width:0}
-            .pn-nav-right .pn-guest-btn,.pn-user-name,.pn-lang-name{display:none}
+            .pn-user-name,.pn-lang-name{display:none}
+            /* app.css gives every .btn display:inline-flex !important */
+            .pn-nav-right .pn-guest-btn{display:none !important}
             .pn-user-btn{padding:4px 6px}
         }
         /* Set by the script below when the bar is wider than the window - a
