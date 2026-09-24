@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Modules\Servers\AbstractServerModule;
 
-class PanelicaModule extends AbstractServerModule
+class PanelicaModule extends AbstractServerModule implements \App\Contracts\HostsAccountDomains
 {
     /** Installing an app pulls images; a multi-container template takes minutes. */
     private const DEPLOY_TIMEOUT = 300;
@@ -3022,6 +3022,66 @@ class PanelicaModule extends AbstractServerModule
         }
 
         return $out;
+    }
+
+    /**
+     * Add a domain the customer bought to their existing panel account. The
+     * module could only list an account's domains; the code that creates one
+     * lived inside create() and could not be called afterwards, so a domain
+     * bought later never reached the panel. Contributed by ENA Hosting.
+     *
+     * A domain already on the account counts as success, so the button can be
+     * pressed twice. The new domain takes the PHP version and web server of the
+     * account's first domain, so one customer does not end up with two setups;
+     * without one, the product's settings, then the panel defaults.
+     */
+    public function createAccountDomain(Service $service, string $domain): array
+    {
+        $server = $this->getServer($service);
+        $accountId = $this->linkedAccountId($service);
+
+        if (! $server) {
+            return $this->buildResult(false, 'No Panelica server is set for this service.');
+        }
+        if (! $accountId) {
+            return $this->buildResult(false, 'This service is not linked to a Panelica account.');
+        }
+
+        $domain = strtolower(trim($domain));
+
+        foreach ($this->accountDomains($service) as $id => $name) {
+            if (strcasecmp($name, $domain) === 0) {
+                return $this->buildResult(true, 'The domain is already on the account.', ['domain_id' => $id, 'already' => true]);
+            }
+        }
+
+        $config = $this->productConfigFor($service);
+        $php = (string) ($config['php_version'] ?? '8.3');
+        $web = (string) ($config['web_server'] ?? 'nginx_only');
+
+        $existing = $this->get($server, "/v1/accounts/{$accountId}/domains");
+        $first = $existing->successful() ? (($existing->json('data') ?? [])[0] ?? null) : null;
+        if (is_array($first)) {
+            $php = (string) ($first['php_version'] ?? $php);
+            $web = (string) ($first['web_server'] ?? $web);
+        }
+
+        $resp = $this->post($server, '/v1/domains', [
+            'name' => $domain,
+            'user_id' => $accountId,
+            'php_version' => $php,
+            'web_server' => $web,
+        ]);
+
+        if (! $resp->successful()) {
+            Log::error('PanelicaModule::createAccountDomain failed', ['domain' => $domain, 'account' => $accountId, 'status' => $resp->status(), 'body' => $resp->body()]);
+
+            return $this->buildResult(false, $this->apiMessage($resp, 'The panel refused to create the domain.'));
+        }
+
+        $body = $resp->json();
+
+        return $this->buildResult(true, 'Domain created on the panel.', ['domain_id' => $body['data']['id'] ?? $body['id'] ?? null]);
     }
 
     /**

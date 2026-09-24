@@ -127,6 +127,14 @@ class DomainSyncCommand extends Command
                 Log::warning("Domain sync failed for {$domain->domain}: {$message}");
                 $this->warn("{$domain->domain}: {$message}");
 
+                // An active domain its registrar has never heard of is not a
+                // sync hiccup: the customer paid and the name is not registered.
+                // That used to leave one log line a day and nothing else.
+                // Reported by ENA Hosting.
+                if (strtolower((string) $domain->status) === 'active' && self::unknownAtRegistrar((string) $message)) {
+                    $this->alertMissingAtRegistrar($domain, (string) $message);
+                }
+
                 continue;
             }
 
@@ -255,5 +263,32 @@ class DomainSyncCommand extends Command
         }
 
         return (string) $value;
+    }
+
+    /** Registrars word "no such domain" in several ways; these are the ones seen. */
+    private static function unknownAtRegistrar(string $message): bool
+    {
+        return (bool) preg_match('/could not be found|not be found|not found|no such domain|does not exist/i', $message);
+    }
+
+    private function alertMissingAtRegistrar(Domain $domain, string $message): void
+    {
+        // The sync runs every day and the domain stays missing until somebody
+        // acts: once a week is a reminder, every day is noise people mute.
+        if (! \Illuminate\Support\Facades\Cache::add('domain-missing-at-registrar:'.$domain->id, true, now()->addDays(7))) {
+            return;
+        }
+
+        try {
+            app(\App\Services\NotificationService::class)->dispatch('domain.registration_failed', [
+                'event_type' => 'domain.registration_failed',
+                'subject' => 'Domain is active here but missing at the registrar',
+                'message' => "{$domain->domain} is active in PNLCS, but {$domain->registrar} does not know it: \"{$message}\". "
+                    .'If the customer has paid, the domain is not registered and needs attention.',
+                'domain_id' => $domain->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Domain sync alert failed: '.$e->getMessage());
+        }
     }
 }

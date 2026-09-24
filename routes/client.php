@@ -195,6 +195,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('domains/transfer', [DomainController::class, 'transfer'])->name('domains.transfer');
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
         Route::put('domains/{domain}/nameservers', [DomainController::class, 'updateNameservers'])->name('domains.nameservers');
+        Route::post('domains/{domain}/attach-hosting', [DomainController::class, 'attachToHosting'])->name('domains.attach-hosting');
         Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->name('domains.lock');
         Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');

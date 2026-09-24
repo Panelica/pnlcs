@@ -9,7 +9,8 @@
     filled in, and the first invoice goes out wrong.
 
     Expects: $countries (code => name); optionally $client for existing
-    values and $gridClass for the two-column class the host page styles.
+    values, $gridClass for the two-column class the host page styles, and
+    showPhone=false where the page has its own phone field.
 --}}
 @php($addr = $client ?? null)
 @php($grid = $gridClass ?? 'form-grid-2')
@@ -40,6 +41,17 @@
         @error('postcode')<div class="text-danger text-sm">{{ $message }}</div>@enderror
     </div>
 </div>
+{{-- A seller bound by the Turkish invoicing rules needs the buyer's phone,
+     and checkout required it (CartController::validateBillingAddress) without
+     ever asking for it: no guest could finish an order. Reported by ENA
+     Hosting. A page with a phone field of its own passes showPhone=false. --}}
+@if(\App\Support\BillingIdentity::turkish() && ($showPhone ?? true))
+<div class="form-group">
+    <label class="form-label" for="phone_number">{{ __('client.form.phone') }}<span class="req" style="color:#c43c35;">*</span></label>
+    <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number', $addr?->phone_number) }}" required maxlength="30" inputmode="tel" autocomplete="tel" class="form-control">
+    @error('phone_number')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+</div>
+@endif
 @if(\App\Support\BillingIdentity::turkish())
 {{-- Where the seller is bound by the Turkish invoicing rules the buyer has to
      be typed: a company by trade title, tax office and tax number, a private

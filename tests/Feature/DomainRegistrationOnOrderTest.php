@@ -95,12 +95,16 @@ it('tells somebody when the registry refused', function () {
     expect(in_array('domain.registration_failed', $seen->getArrayCopy(), true))->toBeTrue();
 });
 
-it('still activates a domain the panel does not register through anyone', function () {
+// A registrar name this installation cannot load used to be treated like no
+// registrar at all: the paid domain was marked active and never registered
+// (reported by ENA Hosting, 2026-09-24). It waits now; EnaHostingFixesTest
+// holds the alert, and a domain with no registrar at all stays active.
+it('leaves a paid domain pending when its registrar cannot be loaded', function () {
     $order = domainOrderFor('nobody-registers-here');
 
     app(OrderService::class)->acceptOrder($order);
 
     $domain = Domain::where('order_id', $order->id)->firstOrFail();
 
-    expect(strtolower((string) $domain->status))->toBe('active');
+    expect(strtolower((string) $domain->status))->toBe('pending');
 });

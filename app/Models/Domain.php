@@ -26,6 +26,20 @@ class Domain extends Model
     }
 
     /**
+     * The nameservers on record, in order. The column holds a JSON list or
+     * object (ns1 => ...) written by different paths; this reads either.
+     *
+     * @return list<string>
+     */
+    public function nameserverList(): array
+    {
+        $raw = $this->nameservers;
+        $list = is_array($raw) ? $raw : (json_decode((string) ($raw ?? ''), true) ?: []);
+
+        return array_values(array_filter(array_map(fn ($v) => trim((string) $v), (array) $list)));
+    }
+
+    /**
      * Whether this domain is set to renew.
      *
      * There is no column for it. The customer's switch flips payment_method to

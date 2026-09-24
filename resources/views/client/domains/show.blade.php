@@ -45,15 +45,63 @@
     <div class="pn-card">
         <div class="pn-card-header">{{ __('client.domains.nameservers') }}</div>
         <div class="pn-card-body">
-            @php $ns = json_decode($domain->nameservers ?? '[]', true) ?: []; @endphp
-            @if(count($ns) > 0)
-            <dl>
-                @foreach(array_values($ns) as $i => $nameserver)
-                <div class="detail-row"><dt>NS{{ $i+1 }}</dt><dd style="font-family:monospace; font-size:12px;">{{ $nameserver }}</dd></div>
-                @endforeach
-            </dl>
-            @else
-            <p style="font-size:13px; color:var(--muted); margin:0;">{{ __('client.domains.ns_not_available') }}</p>
+            {{-- The route and DomainController::updateNameservers() existed, but
+                 no screen posted to them: the customer could read the
+                 nameservers and not change them. Reported by ENA Hosting. --}}
+            @php $ns = $domain->nameserverList(); @endphp
+            <form method="POST" action="{{ route('client.domains.nameservers', $domain) }}">
+                @csrf
+                @method('PUT')
+                @for($i = 1; $i <= 5; $i++)
+                <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                    <label for="ns{{ $i }}" style="font-size:12px;color:var(--muted);width:34px;flex-shrink:0;margin:0;">NS{{ $i }}</label>
+                    <input type="text" id="ns{{ $i }}" name="ns{{ $i }}" value="{{ old('ns'.$i, $ns[$i-1] ?? '') }}"
+                           class="form-control" style="font-family:monospace;font-size:12.5px;" autocomplete="off" spellcheck="false"
+                           @if($i <= 2) required @else placeholder="{{ __('client.form.optional') }}" @endif>
+                </div>
+                @error('ns'.$i)<div class="text-danger text-sm" style="margin:-4px 0 8px 44px;">{{ $message }}</div>@enderror
+                @endfor
+                <p style="font-size:12px;color:var(--muted);margin:10px 0 12px;">{{ __('client.domains.ns_change_hint') }}</p>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('client.domains.update_nameservers') }}</button>
+            </form>
+
+            {{-- One step: put the domain on one of the customer's hosting
+                 accounts and point it there. Running it again is harmless. --}}
+            @if(($hostings ?? collect())->isNotEmpty())
+            @php
+                $setUp = $hostings->firstWhere('set_up', true);
+                $first = $setUp ?? $hostings->first();
+            @endphp
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+                @if($setUp)
+                <p style="font-size:12.5px;color:var(--success);font-weight:600;margin:0 0 10px;">&#10003; {{ __('client.domains.attach_already') }}</p>
+                @endif
+                <form method="POST" action="{{ route('client.domains.attach-hosting', $domain) }}">
+                    @csrf
+                    @if($hostings->count() > 1)
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label" for="service_id">{{ __('client.domains.attach_choose_service') }}</label>
+                        <select id="service_id" name="service_id" class="form-control">
+                            @foreach($hostings as $h)
+                            <option value="{{ $h['service']->id }}" @selected($h['service']->id === $first['service']->id)>{{ $h['service']->product?->name }}{{ $h['service']->domain ? ' - '.$h['service']->domain : '' }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @else
+                    <input type="hidden" name="service_id" value="{{ $first['service']->id }}">
+                    @endif
+                    <button type="submit" class="btn btn-success btn-sm">{{ $setUp ? __('client.domains.attach_to_hosting_again') : __('client.domains.attach_to_hosting') }}</button>
+                    <p style="font-size:12px;color:var(--muted);margin:8px 0 0;">
+                        @if($setUp)
+                            {{ __('client.domains.attach_again_hint') }}
+                        @elseif($first['nameservers'] !== [])
+                            {{ __('client.domains.attach_to_hosting_hint', ['ns' => implode(', ', $first['nameservers'])]) }}
+                        @else
+                            {{ __('client.domains.attach_to_hosting_hint_no_ns') }}
+                        @endif
+                    </p>
+                </form>
+            </div>
             @endif
         </div>
     </div>

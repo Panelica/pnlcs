@@ -86,7 +86,7 @@
                     <div style="font-size:13px;font-weight:600;">{{ __('common.form.billing_address') }}</div>
                     <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ __('common.form.billing_address_hint') }}</div>
                 </div>
-                @include('client.partials.billing-address-fields', ['gridClass' => 'form-row'])
+                @include('client.partials.billing-address-fields', ['gridClass' => 'form-row', 'showPhone' => false])
                 <div style="margin-bottom:16px;">
                     <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;">
                         <input type="checkbox" name="tos" value="1" {{ old('tos') ? 'checked' : '' }} style="margin-top:3px;" required>

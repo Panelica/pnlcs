@@ -58,6 +58,10 @@ class ModuleServiceProvider extends ServiceProvider
             $registry->registerRegistrar("manual", \Modules\Registrars\Manual\ManualRegistrar::class);
             // HRD Registrar (hrd.pl)
             $registry->registerRegistrar("hrd", \Modules\Registrars\HRD\HrdRegistrar::class);
+            // DomainNameAPI (Turkey). The module shipped without this line and
+            // without a pnlcs.json, so it could be configured nowhere and every
+            // domain naming it was treated as having no registrar.
+            $registry->registerRegistrar("domainnameapi", \Modules\Registrars\DomainNameApi\DomainNameApiRegistrar::class);
 
             // Mollie (EU)
             $registry->registerGateway("mollie", \Modules\Gateways\Mollie\MollieModule::class);

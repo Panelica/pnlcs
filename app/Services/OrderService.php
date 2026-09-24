@@ -755,7 +755,37 @@ class OrderService
         }
 
         if (! $registrar) {
-            $domain->update(['status' => DomainStatus::Active->value]);
+            // A domain with no registrar at all was bought elsewhere and is
+            // only billed here: active, as before. One that names a registrar
+            // this installation cannot load - not registered, switched off,
+            // misspelt - is a paid domain nobody will ever register. It was
+            // marked active all the same and nobody was told; a customer's
+            // paid domain (registrar domainnameapi, whose module was never
+            // registered) stayed unregistered that way. It waits now, and the
+            // operator hears about it. Reported by ENA Hosting.
+            $named = trim((string) $domain->registrar);
+
+            if ($named === '') {
+                $domain->update(['status' => DomainStatus::Active->value]);
+
+                return;
+            }
+
+            $domain->update(['status' => DomainStatus::Pending->value]);
+
+            Log::error("Domain registration skipped for {$domain->domain}: registrar module '{$named}' is not available, so nothing was sent to the registry.");
+
+            try {
+                app(NotificationService::class)->dispatch('domain.registration_failed', [
+                    'event_type' => 'domain.registration_failed',
+                    'subject' => 'Domain registration skipped - registrar module not available',
+                    'message' => "{$domain->domain} was ordered and paid for, but the registrar module '{$named}' is not available in this installation, so no registration request was sent. "
+                        .'The domain is not registered and needs attention.',
+                    'domain_id' => $domain->id,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Domain registration alert failed: '.$e->getMessage());
+            }
 
             return;
         }

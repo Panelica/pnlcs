@@ -2,6 +2,42 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09-24 — Domain fixes from ENA Hosting, "set up on my hosting"
+
+Found by **ENA Hosting** running PNLCS in production, fixed on their own
+install and taken into PNLCS so every install has them. Thank you!
+
+### Fixed
+
+- **A paid domain could be marked active without being registered.** The
+  DomainNameAPI registrar module shipped without being registered, so it could
+  not be configured, and a domain naming a registrar that cannot be loaded was
+  treated as having no registrar and marked active. Such a domain now stays
+  pending and the operator is notified; a domain with no registrar at all
+  (bought elsewhere, billed here) is still recorded as active.
+- The daily domain sync warns (at most weekly) about an active domain its
+  registrar does not know. DomainNameAPI now passes its own "not found" words
+  through, so the warning can recognise them.
+- **Customers could not change their nameservers**: the client area showed
+  them read-only, though the route to change them existed. The domain page
+  has the form now.
+- **DomainNameAPI refused every nameserver change**: it sent POST where the
+  API takes PUT, and read the empty success answer as a failure.
+- **A seller in Turkey could not take an order**: checkout required a phone
+  number and never asked for it. The billing address fields ask for it now.
+- Turkish, German and Polish error messages name form fields in their own
+  language instead of English.
+- The registrar balance watch (DomainNameAPI by default) no longer warns an
+  install that has not configured that registrar.
+
+### New
+
+- **Set up on my hosting**: from a domain's page, a customer adds the domain
+  to one of their hosting accounts and points its nameservers there in one
+  step (they choose the account when they have several). Nameservers come from
+  the server the account is on, else the registrar's defaults. Works with any
+  server module that implements `HostsAccountDomains`; Panelica does.
+
 ## 2026-09-24 — Complete API reference, MCP guide, API error shape
 
 ### Documentation

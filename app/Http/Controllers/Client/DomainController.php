@@ -47,7 +47,47 @@ class DomainController extends Controller
             }
         }
 
-        return view('client.domains.show', compact('domain', 'locked'));
+        // The hosting accounts this domain can be set up on, and where it
+        // already is. One panel call per account; customers have one or two.
+        $hosting = app(\App\Services\DomainHosting::class);
+        $hostings = $hosting->candidates($this->getClientId())->map(fn ($service) => [
+            'service' => $service,
+            'nameservers' => $hosting->nameserversFor($service, $domain),
+            'set_up' => $hosting->isSetUp($service, $domain),
+        ]);
+
+        return view('client.domains.show', compact('domain', 'locked', 'hostings'));
+    }
+
+    /**
+     * Set the domain up on one of the customer's hosting accounts and point its
+     * nameservers there, in one step. Contributed by ENA Hosting.
+     */
+    public function attachToHosting(Request $request, Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+        $request->validate(['service_id' => 'nullable|integer']);
+
+        $hosting = app(\App\Services\DomainHosting::class);
+        $candidates = $hosting->candidates($this->getClientId());
+        $service = $request->filled('service_id')
+            ? $candidates->firstWhere('id', (int) $request->service_id)
+            : $candidates->first();
+
+        $back = redirect()->route('client.domains.show', $domain);
+
+        if (! $service) {
+            return $back->with('error', __('client.domains.attach_no_hosting'));
+        }
+
+        $result = $hosting->attach($service, $domain);
+
+        return match ($result['stage']) {
+            'done' => $back->with('success', __('client.domains.attach_success')),
+            'none' => $back->with('success', __('client.domains.attach_success_no_ns')),
+            'nameservers' => $back->with('error', __('client.domains.attach_ok_ns_failed', ['reason' => $result['message']])),
+            default => $back->with('error', __('client.domains.attach_failed', ['reason' => $result['message']])),
+        };
     }
 
     public function updateNameservers(Request $request, Domain $domain)

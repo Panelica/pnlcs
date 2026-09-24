@@ -39,6 +39,9 @@ class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainDat
 
     protected string $apiKey;
 
+    /** Why the last details() lookup failed, in the registry's words. */
+    protected ?string $lastError = null;
+
     public function __construct()
     {
         $settings = $this->loadSettings();
@@ -105,7 +108,10 @@ class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainDat
     {
         $info = $this->details($domain->domain);
         if ($info === null) {
-            return ['success' => false, 'message' => 'Could not read the domain from DomainNameAPI.'];
+            // The registry's own words: "not found" is how the daily sync learns
+            // that a domain shown as active was never registered, and a generic
+            // sentence hid it.
+            return ['success' => false, 'message' => $this->lastError ?? 'Could not read the domain from DomainNameAPI.'];
         }
 
         return [
@@ -213,7 +219,10 @@ class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainDat
 
     public function saveNameservers(Domain $domain, array $nameservers): bool
     {
-        $response = $this->call('POST', 'domains/dns/name-server', [
+        // PUT: the API answers POST here with 405 Method Not Allowed, so every
+        // nameserver change was refused. Found and verified against the live
+        // API by ENA Hosting.
+        $response = $this->call('PUT', 'domains/dns/name-server', [
             'domainName'  => $domain->domain,
             'nameServers' => array_values(array_filter($nameservers)),
         ]);
@@ -273,8 +282,12 @@ class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainDat
 
     protected function details(string $domain): ?array
     {
+        $this->lastError = null;
         $response = $this->call('GET', 'domains/info', ['domainName' => $domain]);
         if (! $this->ok($response)) {
+            $reason = $response['_error'] ?? $response['message'] ?? $response['operationMessage'] ?? null;
+            $this->lastError = is_string($reason) && $reason !== '' ? $reason : null;
+
             return null;
         }
 
@@ -439,6 +452,14 @@ class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainDat
                 : $request->send($method, $url, ['json' => $data]);
 
             $body = $response->json();
+
+            // A success with no body (204 No Content) is how the nameserver
+            // update answers; it was read as an unreadable response and the
+            // change reported as failed.
+            if ($body === null && $response->successful()) {
+                return ['success' => true];
+            }
+
             if (! is_array($body)) {
                 return ['_error' => "Unreadable response from DomainNameAPI (HTTP {$response->status()})."];
             }

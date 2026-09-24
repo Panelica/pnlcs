@@ -37,6 +37,24 @@ class RegistrarBalanceCheckCommand extends Command
             return self::SUCCESS;
         }
 
+        // The watch defaults to DomainNameAPI. While its module was never
+        // registered the check stopped above on every install; now that it
+        // loads, an install that does not use it would be mailed "balance
+        // unreadable" every day. A registrar nobody has configured has no
+        // balance to watch.
+        $stored = \App\Models\RegistrarSettings::where('registrar', $registrar)->get()
+            ->filter(fn ($row) => trim((string) $row->value) !== '')
+            ->pluck('setting')
+            ->all();
+        $missing = collect($module->getConfigFields())
+            ->filter(fn ($field) => ($field['required'] ?? false) && ! in_array($field['name'], $stored, true));
+
+        if ($missing->isNotEmpty()) {
+            $this->info("Registrar '{$registrar}' is not configured here: no balance to watch.");
+
+            return self::SUCCESS;
+        }
+
         try {
             $balance = $module->getBalance();
         } catch (\Throwable $e) {
