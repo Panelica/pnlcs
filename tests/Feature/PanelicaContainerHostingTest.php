@@ -260,6 +260,21 @@ it('shows the containers tab and forbids other clients', function () use ($MINE,
     $this->actingAs($intruder)->post(route('client.services.containers.destroy', $s), ['container_id' => 'c-mine'])->assertForbidden();
 });
 
+it('opens every panel sign-in link from the containers tab in a new tab', function () use ($MINE, $CATALOGUE) {
+    // The panel is another site: signing in there replaced the client area,
+    // and the way back was the browser's back button. The backups tab already
+    // opened it in a new tab; this one did not (found by ENA Hosting).
+    fakeContainerApi(5, [$MINE], $CATALOGUE);
+    [$owner, $s] = ctService(ctServer());
+    $html = $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk()->getContent();
+
+    preg_match_all('#<a\b[^>]*href="[^"]*/services/'.$s->id.'/login[^"]*"[^>]*>#', $html, $links);
+    expect($links[0])->toHaveCount(3);
+    foreach ($links[0] as $a) {
+        expect($a)->toContain('target="_blank"')->toContain('rel="noopener"');
+    }
+});
+
 it('answers a slow install with a sentence, not a server error', function () use ($CATALOGUE) {
     Http::fake(function ($request) use ($CATALOGUE) {
         $url = $request->url();

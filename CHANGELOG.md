@@ -15,6 +15,12 @@ All notable changes to PNLCS are documented here. Newest first.
 - The order statuses in the API reference are written as PNLCS stores them:
   `pending`, `active`, `cancelled`, `fraud`.
 
+### Changed
+
+- **Signing in to the hosting panel opens it in a new tab** from the service
+  page and the containers tab, as it already did from the backups tab, so the
+  client area stays open. From ENA Hosting.
+
 ### MCP server 1.0.7
 
 - **Every tool is now checked against the API reference.** A new test reads

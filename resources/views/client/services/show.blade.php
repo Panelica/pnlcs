@@ -103,7 +103,7 @@
     </div>
     @if($st === 'active')
     <div class="sv-hact">
-        @if($isPanelica)<a href="{{ route('client.services.login', $service) }}" class="sv-b sv-b-solid"><i class="ri-external-link-line"></i>{{ __('client.services.login_to_panel') }}</a>@endif
+        @if($isPanelica)<a href="{{ route('client.services.login', $service) }}" target="_blank" rel="noopener" class="sv-b sv-b-solid"><i class="ri-external-link-line"></i>{{ __('client.services.login_to_panel') }}</a>@endif
         <a href="{{ route('client.services.upgrade', $service) }}" class="sv-b sv-b-glass"><i class="ri-arrow-up-down-line"></i>{{ __('client.services.upgrade_downgrade') }}</a>
         <a href="{{ route('client.services.cancel', $service) }}" class="sv-b sv-b-glass"><i class="ri-close-circle-line"></i>{{ __('client.services.request_cancellation') }}</a>
     </div>

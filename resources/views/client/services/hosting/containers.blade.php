@@ -461,10 +461,10 @@
                      non-root user and half the work needs the other one. --}}
                 <div class="ct-term">
                     <span>{{ __('client.hosting.containers.terminal') }}</span>
-                    <a href="{{ route('client.services.login', ['service' => $service, 'to' => 'terminal', 'container' => $c['id']]) }}">
+                    <a href="{{ route('client.services.login', ['service' => $service, 'to' => 'terminal', 'container' => $c['id']]) }}" target="_blank" rel="noopener">
                         <i class="ri-terminal-line"></i>{{ __('client.hosting.containers.terminal_default') }}
                     </a>
-                    <a href="{{ route('client.services.login', ['service' => $service, 'to' => 'terminal', 'container' => $c['id'], 'user' => 'root']) }}">
+                    <a href="{{ route('client.services.login', ['service' => $service, 'to' => 'terminal', 'container' => $c['id'], 'user' => 'root']) }}" target="_blank" rel="noopener">
                         <i class="ri-shield-user-line"></i>{{ __('client.hosting.containers.terminal_root') }}
                     </a>
                 </div>
@@ -540,7 +540,7 @@
     <div class="ct-note info">
         <i class="ri-terminal-box-line"></i>
         <span>{{ __('client.hosting.containers.panel_hint') }}
-            <a class="ct-panel-link" href="{{ route('client.services.login', ['service' => $service, 'to' => 'docker']) }}">
+            <a class="ct-panel-link" href="{{ route('client.services.login', ['service' => $service, 'to' => 'docker']) }}" target="_blank" rel="noopener">
                 {{ __('client.hosting.containers.open_panel') }} <i class="ri-arrow-right-line"></i>
             </a>
         </span>
