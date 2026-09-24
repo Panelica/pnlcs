@@ -1,5 +1,6 @@
 <p align="center">
-  <a href="https://pnlcs.com/"><b>pnlcs.com</b></a>
+  <a href="https://pnlcs.com/"><b>pnlcs.com</b></a> ·
+  <a href="https://docs.pnlcs.com/"><b>docs.pnlcs.com</b></a>
 </p>
 
 <h1 align="center">PNLCS</h1>
@@ -24,18 +25,23 @@
 </p>
 
 <p align="center">
+  <a href="https://docs.pnlcs.com/"><img src="https://img.shields.io/badge/%F0%9F%93%96%20Documentation-docs.pnlcs.com-0EA5E9?style=for-the-badge&logoColor=white" alt="Documentation — docs.pnlcs.com" height="36"></a>
+</p>
+
+<p align="center">
   <a href="https://pnlcs.com/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Website-pnlcs.com-4051A9?style=for-the-badge&logoColor=white" alt="Website — pnlcs.com"></a>
   <a href="https://hosting.panelica.com/"><img src="https://img.shields.io/badge/%F0%9F%9A%80%20Live%20Demo-hosting.panelica.com-22C55E?style=for-the-badge&logoColor=white" alt="Live Demo — hosting.panelica.com"></a>
 </p>
 
 <p align="center">
-  <b>👉 Try the live demo: <a href="https://hosting.panelica.com/">hosting.panelica.com</a></b>
+  <b>👉 Try the live demo: <a href="https://hosting.panelica.com/">hosting.panelica.com</a></b><br>
+  <b>📖 Read the documentation: <a href="https://docs.pnlcs.com/">docs.pnlcs.com</a></b> — user guide, the full API reference and the MCP server
 </p>
 
 <p align="center">
   <a href="https://pnlcs.com/"><b>Website</b></a> ·
   <a href="https://hosting.panelica.com/"><b>Live Demo</b></a> ·
-  <a href="https://docs.pnlcs.com/">Documentation</a> ·
+  <a href="https://docs.pnlcs.com/"><b>Documentation</b></a> ·
   <a href="#quick-start-with-docker">Docker</a> ·
   <a href="#installation">Installation</a> ·
   <a href="#first-steps-after-installation">First Steps</a> ·
