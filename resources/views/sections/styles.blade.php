@@ -521,6 +521,12 @@
             .footer__bottom { flex-direction: column; gap: 12px; text-align: center; }
             .hero__title { font-size: 28px; }
             .cta-banner__title { font-size: 28px; }
+            /* Four links and three dividers, or a long brand name beside the
+               cart, login and menu buttons, are wider than a phone. */
+            .top-bar__right { gap: 10px; }
+            .top-bar__right .top-bar__divider { display: none; }
+            .main-nav__brand { font-size: 20px; min-width: 0; }
+            .main-nav__right { gap: 6px; }
         }
         /* ===== DARK MODE ===== */
         :root[data-theme="dark"] {

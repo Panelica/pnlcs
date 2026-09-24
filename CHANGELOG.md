@@ -2,6 +2,30 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09-25 — The client area on phones
+
+Reported in GitHub discussion #3, and measured in a browser at 320, 360, 375,
+768, 1024 and 1280 pixels on every client page before and after.
+
+### Fixed
+
+- **On a phone the menu button was off the screen.** The language name, the
+  user's name and the login and sign-up buttons pushed it past the right edge,
+  so a visitor could not open the menu at all. On narrow screens these now
+  shrink to icons or move into the menu, and a long company name is shortened.
+- **A store with many product groups broke the desktop bar.** Every group was
+  its own bar item; with a dozen groups the bar was 2,400 pixels wide on a
+  1280-pixel screen. The groups are listed in the Services menu now, and a bar
+  that still does not fit folds into the menu button.
+- **Lists scrolled the whole page sideways** (services, domains, invoices,
+  quotes, tickets, contacts, affiliates). A wide table now scrolls inside its
+  own card.
+- The contact, change password and new ticket pages keep their side column
+  beside the form only when there is room for it; the knowledge base, the
+  payment notification form, the order summary and several button rows no
+  longer overflow narrow screens; the top bar of the home page and the guide
+  pages' side menu fit a phone.
+
 ## 2026-09-24 — API permissions, MCP server checked against the API
 
 ### Fixed

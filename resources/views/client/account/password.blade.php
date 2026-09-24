@@ -16,7 +16,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 380px;gap:32px;align-items:start"><div class="pn-card">
+<div class="pn-aside-grid" style="--aside:380px"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.password.update_password') }}</span></div>
     <div class="pn-card-body">
         @if($errors->any())

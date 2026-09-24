@@ -86,7 +86,7 @@
                 <label class="form-label">{{ __('client.tickets.attachment') }} <span style="font-weight:400;color:var(--muted)">({{ __('client.form.optional') }}, {{ __('client.tickets.max_10mb') }})</span></label>
                 <input type="file" name="attachment" accept=".jpg,.png,.gif,.pdf,.doc,.docx,.txt,.zip" class="form-control" style="padding:6px 10px;">
             </div>
-            <div class="flex gap-8">
+            <div class="flex gap-8" style="flex-wrap:wrap">
                 <button type="submit" class="btn btn-primary">{{ __('client.tickets.post_reply_btn') }}</button>
                 <a href="{{ route("client.tickets.index") }}" class="btn btn-outline">{{ __('client.tickets.back_to_tickets') }}</a>
             </div>

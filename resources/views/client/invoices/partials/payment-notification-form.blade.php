@@ -20,7 +20,7 @@
 
         <form method="POST" action="{{ route('client.invoices.payment-notification', $invoice) }}" enctype="multipart/form-data">
             @csrf
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-grid-2">
                 <div>
                     <label class="pn-label">{{ __('client.invoices.pn_sender_name') }} *</label>
                     <input type="text" name="sender_name" class="pn-input" value="{{ old('sender_name') }}" required maxlength="255">

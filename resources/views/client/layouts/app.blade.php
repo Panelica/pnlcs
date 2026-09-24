@@ -76,6 +76,25 @@
         .pn-mobile-menu a:hover{background:var(--primary-light);color:var(--primary)}
         .pn-mobile-sec{padding:8px 24px 4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.7px;margin-top:6px}
         @media(max-width:960px){.pn-nav{display:none}.pn-hamburger{display:flex}.pn-mobile-menu.open{display:block}}
+        /* A phone has room for the brand, a few icons and the menu button. The
+           words beside them (language name, the user's name, the login and
+           sign-up buttons) pushed the menu button off the screen, so a visitor
+           could not open the menu at all. They move into the menu instead. */
+        @media(max-width:600px){
+            .pn-navbar-inner{padding:0 12px;gap:6px}
+            .pn-brand{min-width:0;flex-shrink:1;font-size:17px}
+            .pn-brand-text{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+            .pn-nav-right{gap:6px;min-width:0}
+            .pn-nav-right .pn-guest-btn,.pn-user-name,.pn-lang-name{display:none}
+            .pn-user-btn{padding:4px 6px}
+        }
+        /* Set by the script below when the bar is wider than the window - a
+           long company name, a language with longer words - at any width. */
+        .pn-navbar.pn-compact .pn-nav{display:none}
+        .pn-navbar.pn-compact .pn-hamburger{display:flex}
+        .pn-navbar.pn-compact .pn-mobile-menu.open{display:block}
+        .pn-mobile-guest{display:flex;gap:8px;padding:12px 24px 4px}
+        .pn-mobile-guest .btn{flex:1;justify-content:center}
 
         /* ─── LAYOUT ─── */
         .pn-main{max-width:1440px;margin:0 auto;padding:36px 40px;width:100%;flex:1}
@@ -133,6 +152,10 @@
         .pn-table tbody tr:hover td{background:var(--bg)}
         .pn-table a{color:var(--primary);text-decoration:none;font-weight:500}
         .pn-table a:hover{text-decoration:underline}
+        /* On a phone a list with five or six columns is wider than the screen.
+           The table scrolls inside its card instead of dragging the whole page
+           sideways. */
+        @media(max-width:768px){.pn-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}}
 
         /* ─── FORMS ─── */
         .form-group{margin-bottom:20px}
@@ -142,13 +165,13 @@
            bank-transfer notification, payment methods, two-factor setup, quotes -
            used them while nothing defined them, so their inputs rendered with no
            border and no background: invisible fields on a white card. */
-        .form-control,.pn-input{width:100%;padding:9px 13px;font-size:13.5px;color:var(--text);background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:border-color 0.15s,box-shadow 0.15s;outline:none;font-family:inherit}
+        .form-control,.pn-input{width:100%;max-width:100%;min-width:0;padding:9px 13px;font-size:13.5px;color:var(--text);background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:border-color 0.15s,box-shadow 0.15s;outline:none;font-family:inherit}
         .form-control:focus,.pn-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,77,128,0.1)}
         textarea.form-control,textarea.pn-input{resize:vertical;min-height:120px;line-height:1.6}
         select.form-control{cursor:pointer}
         .form-hint{font-size:12px;color:var(--muted);margin-top:4px}
         .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        @media(max-width:600px){.form-grid-2{grid-template-columns:1fr}}
+        @media(max-width:600px){.form-grid-2{grid-template-columns:minmax(0,1fr)}}
 
         /* ─── ALERTS ─── */
         .pn-alert{padding:12px 16px;border-radius:var(--radius-sm);font-size:13.5px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;border:1px solid transparent}
@@ -177,7 +200,11 @@
 
         /* ─── TWO COL ─── */
         .pn-2col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
-        @media(max-width:768px){.pn-2col{grid-template-columns:1fr}}
+        @media(max-width:768px){.pn-2col{grid-template-columns:minmax(0,1fr)}}
+        /* A page with a side column (contact, password, new ticket): the side
+           column goes under the main one when there is no room beside it. */
+        .pn-aside-grid{display:grid;grid-template-columns:1fr var(--aside,360px);gap:32px;align-items:start}
+        @media(max-width:900px){.pn-aside-grid{grid-template-columns:minmax(0,1fr)}}
 
         /* ─── PROGRESS BARS ─── */
         .pn-progress-wrap{background:#e2e8f0;border-radius:999px;height:8px;overflow:hidden}
@@ -234,7 +261,7 @@
 
         /* ─── CHECKOUT ─── */
         .pn-checkout-grid{display:grid;grid-template-columns:1fr 320px;gap:24px}
-        @media(max-width:900px){.pn-checkout-grid{grid-template-columns:1fr}}
+        @media(max-width:900px){.pn-checkout-grid{grid-template-columns:minmax(0,1fr)}}
         .pn-pay-option{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:all 0.15s}
         .pn-pay-option:hover{border-color:var(--primary);background:var(--primary-light)}
         .pn-pay-option.selected{border-color:var(--primary);background:var(--primary-light)}
@@ -262,7 +289,7 @@
 
         /* ─── CART ─── */
         .pn-cart-grid{display:grid;grid-template-columns:1fr 300px;gap:20px}
-        @media(max-width:900px){.pn-cart-grid{grid-template-columns:1fr}}
+        @media(max-width:900px){.pn-cart-grid{grid-template-columns:minmax(0,1fr)}}
         .pn-order-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13.5px;border-bottom:1px solid var(--border)}
         .pn-order-row:last-child{border-bottom:none;font-weight:700;font-size:15px;padding-top:12px}
         .pn-order-row .key{color:var(--muted)}
@@ -341,7 +368,7 @@
 
 <nav class="pn-navbar">
     <div class="pn-navbar-inner">
-        <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="Logo" style="max-height:32px;">@else {{ company_name() }} <span class="pn-brand-dot"></span>@endif</a>
+        <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="Logo" style="max-height:32px;max-width:100%;">@else <span class="pn-brand-text">{{ company_name() }}</span> <span class="pn-brand-dot"></span>@endif</a>
 
         <div class="pn-nav">
             <div class="pn-nav-item">
@@ -360,22 +387,24 @@
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         {{ __('client.nav.order_new_service') }}
                     </a>
+                    {{-- A guest's menu mirrors the storefront: one link per
+                         product group, straight from the catalogue - the same
+                         source the marketing pages read, so the menus cannot
+                         drift apart. They sit in this dropdown rather than the
+                         bar: one bar item per group pushed the menu, the login
+                         buttons and the rest of the bar off the screen on a
+                         store with a dozen groups. --}}
+                    @guest
+                    @php $navGroups = \App\Models\ProductGroup::where('hidden', 0)->orderBy('sort_order')->get(); @endphp
+                    @if($navGroups->isNotEmpty())
+                    <div class="sep"></div>
+                    @foreach($navGroups as $navGroup)
+                    <a href="{{ route("client.store") }}?kategori={{ $navGroup->slug }}">{{ $navGroup->name }}</a>
+                    @endforeach
+                    @endif
+                    @endguest
                 </div>
             </div>
-            {{-- A guest's menu mirrors the storefront: one link per product
-                 group, straight from the catalogue - the same source the
-                 marketing pages read, so the menus cannot drift apart. --}}
-            @guest
-            @php $navGroups = \App\Models\ProductGroup::where('hidden', 0)->orderBy('sort_order')->get(); @endphp
-            @foreach($navGroups as $navGroup)
-            <div class="pn-nav-item">
-                <a href="{{ route("client.store") }}?kategori={{ $navGroup->slug }}"
-                   class="pn-nav-link {{ request()->routeIs("client.store*") && request("kategori") === $navGroup->slug ? "active" : "" }}">
-                    {{ $navGroup->name }}
-                </a>
-            </div>
-            @endforeach
-            @endguest
             <div class="pn-nav-item">
                 <button type="button" class="pn-nav-link {{ request()->routeIs("client.domains.*") ? "active" : "" }}">{{ __('client.nav.domains') }}
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
@@ -495,7 +524,7 @@
             <div class="pn-nav-item">
                 <a class="pn-user-btn pn-nav-link">
                     <div class="pn-avatar">{{ strtoupper(substr(auth()->user()->first_name ?? "U", 0, 1)) }}</div>
-                    {{ auth()->user()->first_name }}
+                    <span class="pn-user-name">{{ auth()->user()->first_name }}</span>
                     <svg class="pn-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
                 </a>
                 <div class="pn-dropdown" style="right:0;left:auto;min-width:180px;">
@@ -513,8 +542,8 @@
                 </div>
             </div>
             @else
-                <a href="{{ route("client.login") }}" class="btn btn-outline btn-sm">{{ __('common.actions.login') }}</a>
-                <a href="{{ route("client.register") }}" class="btn btn-primary btn-sm">{{ __('client.nav.get_started') }}</a>
+                <a href="{{ route("client.login") }}" class="btn btn-outline btn-sm pn-guest-btn">{{ __('common.actions.login') }}</a>
+                <a href="{{ route("client.register") }}" class="btn btn-primary btn-sm pn-guest-btn">{{ __('client.nav.get_started') }}</a>
             @endauth
         </div>
 
@@ -524,6 +553,12 @@
     </div>
 
     <div id="pnMobileMenu" class="pn-mobile-menu">
+        @guest
+        <div class="pn-mobile-guest">
+            <a href="{{ route("client.login") }}" class="btn btn-outline btn-sm">{{ __('common.actions.login') }}</a>
+            <a href="{{ route("client.register") }}" class="btn btn-primary btn-sm">{{ __('client.nav.get_started') }}</a>
+        </div>
+        @endguest
         <a href="{{ route("client.home") }}">{{ __('client.nav.dashboard') }}</a>
         <div class="pn-mobile-sec">{{ __('client.nav.services') }}</div>
         <a href="{{ route("client.services.index") }}" style="padding-left:36px">{{ __('client.nav.my_services') }}</a>
@@ -627,6 +662,18 @@
 {{-- A page may push instead of yielding; without this the block is silently discarded. --}}
 @stack('scripts')
 <script>
+// Fold the bar into the menu button when it does not fit the window.
+(function () {
+    var bar = document.querySelector(".pn-navbar"), inner = bar && bar.querySelector(".pn-navbar-inner");
+    if (!inner) return;
+    function fit() {
+        bar.classList.remove("pn-compact");
+        if (inner.scrollWidth > inner.clientWidth + 1) bar.classList.add("pn-compact");
+    }
+    fit();
+    window.addEventListener("resize", fit);
+    window.addEventListener("load", fit);
+})();
 // Dropdown click toggle for mobile/touch
 document.querySelectorAll(".pn-nav-item > .pn-nav-link, .pn-nav-item > button.pn-nav-link").forEach(function(link) {
     link.addEventListener("click", function(e) {

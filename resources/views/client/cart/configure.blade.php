@@ -3,7 +3,7 @@
 @section('styles')
 <style>
     .config-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
-    @media (max-width: 900px) { .config-layout { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { .config-layout { grid-template-columns: minmax(0, 1fr); } }
     .cycle-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .cycle-option { border: 1px solid #ddd; border-radius: 4px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.15s; }
     .cycle-option:hover { border-color: #337ab7; background: #f0f6ff; }

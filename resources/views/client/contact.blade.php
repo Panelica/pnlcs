@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 380px;gap:32px;max-width:100%">
+<div class="pn-aside-grid" style="--aside:380px;align-items:stretch">
     <div class="pn-card">
         <div class="pn-card-header"><span class="pn-card-title">{{ __('client.contact.send_message') }}</span></div>
         <div class="pn-card-body">

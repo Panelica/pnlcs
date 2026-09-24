@@ -48,7 +48,7 @@
                 <label class="form-label" for="reason">{{ __('client.services.cancellation_reason') }}</label>
                 <textarea id="reason" name="reason" rows="4" class="form-control" placeholder="{{ __('client.services.cancellation_reason_placeholder') }}">{{ old('reason') }}</textarea>
             </div>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button type="submit" class="btn btn-danger">{{ __('client.services.submit_cancellation') }}</button>
                 <a href="{{ route('client.services.show', $service) }}" class="btn btn-outline">{{ __('common.actions.cancel') }}</a>
             </div>

@@ -80,7 +80,8 @@
         [data-theme="dark"] { --legal-ink: #dfe4ec; --legal-muted: #97a1b3; --legal-line: #2c3444; --legal-hover: #1a2029;
                 --legal-active: #232b38; --legal-link: #7aa5f7; --legal-accent: #7aa5f7; }
         @media (max-width: 900px) {
-            .legal-grid { grid-template-columns: 1fr; gap: 26px; }
+            .legal-grid { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+            .legal-side a { overflow-wrap: anywhere; }
             .legal-side { position: static; }
             .legal-head h1 { font-size: 25px; }
         }

@@ -7,7 +7,7 @@
         <h1 class="pn-page-title">{{ __('client.domains.page_title') }}</h1>
         <p class="pn-page-subtitle">{{ __('client.domains.page_subtitle') }}</p>
     </div>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <a href="{{ route('client.domain.search') }}" class="btn btn-primary">
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             {{ __('client.domains.register_domain') }}

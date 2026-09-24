@@ -24,7 +24,7 @@
     @endif
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:24px">
+<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(min(340px, 100%), 1fr));gap:24px">
 @forelse($categories as $cat)
     <div class="pn-card" style="padding:0;overflow:hidden">
         <div style="padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">

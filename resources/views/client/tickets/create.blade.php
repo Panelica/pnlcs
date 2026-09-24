@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 360px;gap:32px;align-items:start"><div class="pn-card">
+<div class="pn-aside-grid"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.tickets.new_support_request') }}</span></div>
     <div class="pn-card-body">
         @if($errors->any())

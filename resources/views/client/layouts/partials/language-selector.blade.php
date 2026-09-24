@@ -4,7 +4,7 @@
         @if($activeLanguages->firstWhere('code', $currentLocale)?->flag_code)
         <img src="https://flagcdn.com/16x12/{{ $activeLanguages->firstWhere('code', $currentLocale)->flag_code }}.png" alt="" style="border-radius:1px;">
         @endif
-        <span>{{ $currentLocaleName ?? 'English' }}</span>
+        <span class="pn-lang-name">{{ $currentLocaleName ?? 'English' }}</span>
         <svg class="pn-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </button>
     <div class="pn-dropdown" style="right:0;left:auto;min-width:160px;">
