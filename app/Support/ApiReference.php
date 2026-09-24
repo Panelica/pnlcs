@@ -115,9 +115,29 @@ class ApiReference
             return array_map('strval', $spec['example']);
         }
 
+        // Values that pass validation where a word would not: a real domain,
+        // an address, a module type the API knows.
+        $named = [
+            'domain' => 'example.com',
+            'ip' => '203.0.113.7',
+            'extension' => '.com',
+            'setting' => 'CompanyName',
+            'moduleType' => 'gateway',
+            'moduleName' => 'banktransfer',
+            'module' => 'gogetssl',
+            'priority' => 'medium',
+            'type' => 'hostingaccount',
+            'paytype' => 'recurring',
+        ];
+
         $wanted = array_filter(self::params($spec), fn (array $p) => $p['required'] || $p['name'] === ($spec['one_of'][0] ?? null));
         $values = [];
         foreach ($wanted as $p) {
+            if (isset($named[$p['name']])) {
+                $values[$p['name']] = $named[$p['name']];
+
+                continue;
+            }
             $values[$p['type'] === 'array' ? $p['name'].'[0]' : $p['name']] = match ($p['type']) {
                 'integer', 'array', 'boolean' => '1',
                 'number' => '10.00',

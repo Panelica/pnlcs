@@ -51,7 +51,7 @@ curl -X POST https://example.com/api/v1/addsslorder \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "client_id=1" \
-  --data-urlencode "module=example"
+  --data-urlencode "module=gogetssl"
 ```
 
 ## cancelsslorder
@@ -176,7 +176,7 @@ List the addresses that may approve a certificate.
 curl -G https://example.com/api/v1/getsslapproveremails \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "domain=example"
+  --data-urlencode "domain=example.com"
 ```
 
 ## getsslorder

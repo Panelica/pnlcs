@@ -56,7 +56,7 @@ Create or update a domain extension and its prices.
 curl -X POST https://example.com/api/v1/createorupdatetld \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "extension=example"
+  --data-urlencode "extension=.com"
 ```
 
 ## domaingetlockingstatus
@@ -220,7 +220,7 @@ curl -X POST https://example.com/api/v1/domainregister \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
   --data-urlencode "clientid=1" \
-  --data-urlencode "domain=example"
+  --data-urlencode "domain=example.com"
 ```
 
 ## domainrelease
@@ -518,7 +518,7 @@ Check whether a domain is available to register.
 curl -G https://example.com/api/v1/domainwhois \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "domain=example"
+  --data-urlencode "domain=example.com"
 ```
 
 ## getclientsdomains

@@ -22,12 +22,22 @@ class TranslationServiceProvider extends BaseTranslationServiceProvider
         });
     }
 
+    /**
+     * The framework's own lang directory first, then the application's, as
+     * Laravel's provider does. Given only the application's, every validation
+     * rule without a line in lang/<locale>/validation.php - 97 of the
+     * framework's 107, among them "in", "date", "integer" and "exists" -
+     * showed its raw key ("validation.in") to the person filling the form and
+     * to API callers.
+     */
     protected function registerLoader(): void
     {
         $this->app->singleton('translation.loader', function ($app) {
+            $framework = dirname((new \ReflectionClass(BaseTranslationServiceProvider::class))->getFileName()).'/lang';
+
             return new DbTranslationLoader(
                 $app['files'],
-                $app['path.lang']
+                [$framework, $app['path.lang']]
             );
         });
     }

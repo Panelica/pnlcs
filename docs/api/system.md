@@ -89,8 +89,8 @@ Switch a module on.
 curl -X POST https://example.com/api/v1/activatemodule \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "moduleType=example" \
-  --data-urlencode "moduleName=example"
+  --data-urlencode "moduleType=gateway" \
+  --data-urlencode "moduleName=banktransfer"
 ```
 
 ## addannouncement
@@ -153,7 +153,7 @@ Ban an IP address or range.
 curl -X POST https://example.com/api/v1/addbannedip \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "ip=example"
+  --data-urlencode "ip=203.0.113.7"
 ```
 
 ## deactivatemodule
@@ -193,8 +193,8 @@ Switch a module off.
 curl -X POST https://example.com/api/v1/deactivatemodule \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "moduleType=example" \
-  --data-urlencode "moduleName=example"
+  --data-urlencode "moduleType=gateway" \
+  --data-urlencode "moduleName=banktransfer"
 ```
 
 ## decryptpassword
@@ -459,7 +459,7 @@ Read a setting.
 curl -G https://example.com/api/v1/getconfigurationvalue \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "setting=example"
+  --data-urlencode "setting=CompanyName"
 ```
 
 ## getemails
@@ -592,8 +592,8 @@ List the settings a module asks for.
 curl -G https://example.com/api/v1/getmoduleconfigurationparameters \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "moduleType=example" \
-  --data-urlencode "moduleName=example"
+  --data-urlencode "moduleType=gateway" \
+  --data-urlencode "moduleName=banktransfer"
 ```
 
 ## getmodulequeue
@@ -1158,7 +1158,7 @@ Change a setting.
 curl -X POST https://example.com/api/v1/setconfigurationvalue \
   -H "X-API-Key: $PNLCS_IDENTIFIER" \
   -H "X-API-Secret: $PNLCS_SECRET" \
-  --data-urlencode "setting=example" \
+  --data-urlencode "setting=CompanyName" \
   --data-urlencode "value=example"
 ```
 
