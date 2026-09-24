@@ -94,3 +94,28 @@ test('a network issue can be corrected after it is reported', function () {
 
     expect($issue->fresh()->status)->toBe('resolved');
 });
+
+test('the recovery codes shown when turning it on are stored, and each works once', function () {
+    // They were shown and never stored - the admins table had no column for
+    // them - so a member of staff who lost the phone was locked out.
+    $admin = accountAdmin();
+    $google = new PragmaRX\Google2FA\Google2FA;
+    $secret = $google->generateSecretKey();
+
+    $this->withSession(['2fa_setup_secret' => $secret, 'admin_2fa_verified' => true])
+        ->actingAs($admin, 'admin')
+        ->post(route('admin.2fa.enable'), ['code' => $google->getCurrentOtp($secret)])
+        ->assertRedirect(route('admin.my-account'));
+
+    $codes = $admin->fresh()->backup_codes;
+    expect($codes)->toHaveCount(8);
+
+    // Signing in with one of them, in place of the phone.
+    $this->flushSession();
+    $this->withSession(['admin_2fa_pending' => true])
+        ->actingAs($admin->fresh(), 'admin')
+        ->post(route('admin.2fa.verify.submit'), ['code' => strtolower($codes[0])])
+        ->assertRedirect(route('admin.dashboard'));
+
+    expect($admin->fresh()->backup_codes)->toHaveCount(7)->not->toContain($codes[0]);
+});

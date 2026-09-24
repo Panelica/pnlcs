@@ -141,12 +141,14 @@ class AuthController extends Controller
 
         $backupCodes = $twoFactor->generateBackupCodes();
 
+        // The recovery codes shown on the next page are the ones stored: they
+        // used to be shown and thrown away, so none of them ever worked.
         $admin->update([
             'second_factor_type' => 'totp',
             'second_factor_secret' => $secret,
+            'backup_codes' => $backupCodes,
         ]);
 
-        // Store backup codes on user model (admin doesn't have backup_codes field, store in notes or add)
         session()->forget('2fa_setup_secret');
         session(['admin_2fa_verified' => true]);
 
@@ -166,6 +168,7 @@ class AuthController extends Controller
         $admin->update([
             'second_factor_type' => null,
             'second_factor_secret' => null,
+            'backup_codes' => null,
         ]);
 
         session()->forget('admin_2fa_verified');

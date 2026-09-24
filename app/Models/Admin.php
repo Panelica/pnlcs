@@ -14,12 +14,12 @@ class Admin extends Authenticatable
     protected $fillable = [
         "role_id", "username", "email", "password", "first_name", "last_name",
         "signature", "is_disabled", "support_departments", "ticket_notifications",
-        "second_factor_type", "second_factor_secret", "language",
+        "second_factor_type", "second_factor_secret", "backup_codes", "language",
         "last_login", "last_login_ip",
     ];
 
     protected $hidden = [
-        "password", "remember_token", "second_factor_secret",
+        "password", "remember_token", "second_factor_secret", "backup_codes",
     ];
 
     protected function casts(): array
@@ -30,6 +30,8 @@ class Admin extends Authenticatable
             "support_departments" => "array",
             "ticket_notifications" => "boolean",
             "last_login" => "datetime",
+            // As on the customer side: stored encrypted, one entry per code.
+            "backup_codes" => "encrypted:array",
         ];
     }
 
