@@ -30,7 +30,7 @@ Create or update a domain extension and its prices.
 
 `POST /api/v1/createorupdatetld`
 
-**Permission:** `manage_domains`
+**Permission:** `manage_servers`
 
 **Parameters**
 

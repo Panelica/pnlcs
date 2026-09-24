@@ -352,3 +352,52 @@ test('docs/mcp/tools.md lists the tools this server offers', async () => {
   const page = readFileSync(new URL('../../docs/mcp/tools.md', import.meta.url), 'utf8');
   assert.equal(page, render(), 'run node mcp/scripts/docs.mjs and commit docs/mcp/tools.md');
 });
+
+test('every tool calls a real API action, with its method and parameters', async () => {
+  // The API reference (docs/api/openapi.json, generated from the route table)
+  // is the contract. A tool that names an action, a method or a parameter the
+  // API does not have fails quietly at run time - PNLCS ignores an unknown
+  // parameter - so it is checked here instead.
+  const { readFileSync } = await import('node:fs');
+  const spec = JSON.parse(readFileSync(new URL('../../docs/api/openapi.json', import.meta.url), 'utf8'));
+  const problems = [];
+
+  for (const tool of toolset(true)) {
+    const path = spec.paths[`/api/v1/${tool.action}`];
+    const method = (tool.method ?? 'GET').toLowerCase();
+    const op = path?.[method];
+    if (!op) {
+      problems.push(`${tool.name}: no ${method.toUpperCase()} /api/v1/${tool.action}`);
+      continue;
+    }
+
+    let known = {};
+    let required = [];
+    if (method === 'get') {
+      for (const p of op.parameters ?? []) known[p.name.replace(/\[\]$/, '')] = p.description ?? '';
+      required = (op.parameters ?? []).filter((p) => p.required).map((p) => p.name);
+    } else {
+      const ref = op.requestBody?.content?.['application/x-www-form-urlencoded']?.schema?.$ref;
+      const schema = ref ? spec.components.schemas[ref.split('/').pop()] : { properties: {} };
+      for (const [name, prop] of Object.entries(schema.properties ?? {})) known[name] = prop.description ?? '';
+      required = schema.required ?? [];
+    }
+
+    const sent = [...Object.keys(tool.args), ...Object.keys(tool.fixed ?? {})];
+    for (const name of sent) {
+      if (!(name in known)) problems.push(`${tool.name}: ${tool.action} has no parameter ${name}`);
+    }
+    // A second name the tool also sends must be one the reference says the
+    // action accepts ("userid is accepted too").
+    for (const [from, alias] of Object.entries(tool.also ?? {})) {
+      if (!(known[from] ?? '').includes(`${alias} is accepted too`)) problems.push(`${tool.name}: ${tool.action} does not accept ${alias} for ${from}`);
+    }
+    for (const name of required) {
+      if (!(tool.required ?? []).includes(name) && !(name in (tool.fixed ?? {}))) {
+        problems.push(`${tool.name}: ${tool.action} requires ${name}, the tool does not`);
+      }
+    }
+  }
+
+  assert.deepEqual(problems, []);
+});

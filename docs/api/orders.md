@@ -234,7 +234,7 @@ List all orders with optional filtering.
 |---|---|---|---|
 | `id` | integer | no | One order. |
 | `userid` | integer | no | Only this client's orders. |
-| `status` | string | no | An order status, such as Pending, Active, Cancelled or Fraud. |
+| `status` | string | no | pending, active, cancelled or fraud. |
 | `limitstart` | integer | no | Where the page starts. Default 0. |
 | `limitnum` | integer | no | Page size, 1 to 250. Default 25. |
 

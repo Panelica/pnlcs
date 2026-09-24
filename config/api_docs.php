@@ -749,7 +749,7 @@ return [
         'params' => [
             'id' => ['integer', 'One order.'],
             'userid' => ['integer', 'Only this client\'s orders.'],
-            'status' => ['string', 'An order status, such as Pending, Active, Cancelled or Fraud.'],
+            'status' => ['string', 'pending, active, cancelled or fraud.'],
         ],
     ],
     'addorder' => [

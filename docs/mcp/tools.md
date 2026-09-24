@@ -71,7 +71,7 @@ Calls the API action [`getclientsdomains`](../api/all-endpoints.md) with GET.
 
 ### list_invoices
 
-List invoices. Filter by status (draft, unpaid, paid, overdue, cancelled) or client.
+List invoices, newest first. Filter by status (draft, unpaid, paid, partially_paid, overdue, cancelled, refunded, collections, payment_pending) or client.
 
 Calls the API action [`getinvoices`](../api/all-endpoints.md) with GET.
 
@@ -107,13 +107,14 @@ Calls the API action [`getorders`](../api/all-endpoints.md) with GET.
 
 ### list_tickets
 
-List support tickets. Filter by status.
+List support tickets, most recently active first. Filter by status or client.
 
 Calls the API action [`gettickets`](../api/all-endpoints.md) with GET.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
-| `status` | string | no | Ticket status, e.g. open, answered, closed |
+| `status` | string | no | Ticket status, e.g. Open, Answered, Customer-Reply, Closed |
+| `clientid` | integer | no | Only this client |
 | `limitnum` | integer | no | Page size, default 25 |
 | `limitstart` | integer | no | Offset to start from |
 

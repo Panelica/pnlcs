@@ -303,22 +303,6 @@ class SystemApiController extends BaseApiController
         return $this->success(['templates' => EmailTemplate::all()->toArray()]);
     }
 
-    public function updateEmailTemplate(Request $request)
-    {
-        $template = EmailTemplate::find($request->templateid);
-        if (! $template) {
-            return $this->error('Template Not Found', 404);
-        }
-        foreach (['subject', 'message', 'disabled'] as $f) {
-            if ($request->has($f)) {
-                $template->$f = $request->$f;
-            }
-        }
-        $template->save();
-
-        return $this->success(['templateid' => $template->id]);
-    }
-
     public function getEmails(Request $request)
     {
         $query = Email::query();
@@ -388,36 +372,6 @@ class SystemApiController extends BaseApiController
         return $this->success(['promotions' => Promotion::all()->toArray()]);
     }
 
-    public function addPromotion(Request $request)
-    {
-        $validated = $request->validate([
-            'code' => 'required|string|max:100|unique:promotions,code',
-            'type' => 'required|in:percentage,fixed_amount',
-            'value' => 'required|numeric|min:0',
-        ]);
-        $promo = Promotion::create(array_merge($validated, [
-            'start_date' => $request->startdate ?? now()->format('Y-m-d'),
-            'expiration_date' => $request->expirationdate ?? null,
-            'max_uses' => $request->maxuses ?? 0,
-            'uses' => 0,
-            'recurring' => $request->boolean('recurring'),
-            'notes' => $request->notes ?? null,
-        ]));
-
-        return $this->success(['promotionid' => $promo->id]);
-    }
-
-    public function deletePromotion(Request $request)
-    {
-        $promo = Promotion::find($request->promotionid);
-        if (! $promo) {
-            return $this->error('Promotion Not Found', 404);
-        }
-        $promo->delete();
-
-        return $this->success();
-    }
-
     public function getTodoItems(Request $request)
     {
         $query = TodoItem::query();
@@ -426,19 +380,6 @@ class SystemApiController extends BaseApiController
         }
 
         return $this->success(['items' => $query->orderBy('id', 'desc')->get()->toArray()]);
-    }
-
-    public function addTodoItem(Request $request)
-    {
-        $validated = $request->validate(['title' => 'required|string|max:255']);
-        $item = TodoItem::create(array_merge($validated, [
-            'description' => $request->description ?? null,
-            'due_date' => $request->duedate ?? null,
-            'admin' => $request->adminusername ?? null,
-            'status' => $request->status ?? 'pending',
-        ]));
-
-        return $this->success(['itemid' => $item->id]);
     }
 
     public function updateTodoItem(Request $request)

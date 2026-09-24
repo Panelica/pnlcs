@@ -2,6 +2,29 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09-24 — API permissions, MCP server checked against the API
+
+### Fixed
+
+- **Two API actions answered to the wrong permission.** `resetpassword` (a
+  customer login's password) was allowed with "manage settings" instead of
+  "edit clients", and `createorupdatetld` (domain prices) with "manage domains"
+  instead of "manage servers", the permission the admin area asks for the same
+  change. Each has a test that fails on the old mapping.
+- Four API methods that no route reached were removed.
+- The order statuses in the API reference are written as PNLCS stores them:
+  `pending`, `active`, `cancelled`, `fraud`.
+
+### MCP server
+
+- **Every tool is now checked against the API reference.** A new test reads
+  `docs/api/openapi.json` and fails when a tool calls an action that does not
+  exist, uses the wrong HTTP method, sends a parameter the action does not
+  take, or leaves out one the action requires.
+- `list_tickets` can filter by client, and lists the ticket statuses as
+  PNLCS writes them.
+- `list_invoices` names all nine invoice statuses; four were missing.
+
 ## 2026-09-24 — The complete documentation, staff 2FA recovery codes
 
 ### Documentation

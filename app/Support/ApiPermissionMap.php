@@ -140,6 +140,15 @@ class ApiPermissionMap
         'getuserpermissions' => Permissions::LIST_CLIENTS,
         // Mail to customers and to staff: the mass-mail screen's permission.
         'sendemail' => Permissions::MANAGE_EMAIL_TEMPLATES,
+        // A password-reset link is sent to a customer's login: a customer
+        // record question, like the one-time sign-in link above. It fell to
+        // "manage settings", so staff trusted with the settings could mail
+        // any customer a reset link and staff who edit customers could not.
+        'resetpassword' => Permissions::EDIT_CLIENTS,
+        // Extension prices are set on the domain pricing screen, which asks
+        // for "manage servers". Here they fell to the domain controller's
+        // "manage domains": the API let through who the screen refused.
+        'createorupdatetld' => Permissions::MANAGE_SERVERS,
         'sendadminemail' => Permissions::MANAGE_EMAIL_TEMPLATES,
     ];
 

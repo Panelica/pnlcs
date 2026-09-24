@@ -1003,7 +1003,7 @@ Send a client login the password reset link.
 
 `POST /api/v1/resetpassword`
 
-**Permission:** `manage_settings`
+**Permission:** `edit_clients`
 
 **Parameters**
 

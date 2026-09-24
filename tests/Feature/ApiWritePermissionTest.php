@@ -82,3 +82,29 @@ it('keeps the send-email endpoints behind the mass-mail permission', function ()
             ->assertStatus(403);
     }
 });
+
+it('asks the customer permission, not the settings one, to send a reset link', function () {
+    // A reset link goes to a customer's login. Under "manage settings" it
+    // could be sent by staff with no rights over customers, and not by those
+    // who edit them.
+    $this->withHeaders(writeCredentialFor([Permissions::MANAGE_SETTINGS]))
+        ->postJson('/api/v1/resetpassword', ['email' => 'nobody@example.com'])
+        ->assertStatus(403);
+
+    $this->withHeaders(writeCredentialFor([Permissions::EDIT_CLIENTS]))
+        ->postJson('/api/v1/resetpassword', ['email' => 'nobody@example.com'])
+        ->assertStatus(404)
+        ->assertJsonPath('message', 'No customer login has that address.');
+});
+
+it('asks for the domain pricing screen\'s permission to change extension prices', function () {
+    // The pricing screen asks for "manage servers"; the API asked for
+    // "manage domains" and let through who the screen refused.
+    $this->withHeaders(writeCredentialFor([Permissions::MANAGE_DOMAINS]))
+        ->postJson('/api/v1/createorupdatetld', ['extension' => '.test', 'register_price' => 9])
+        ->assertStatus(403);
+
+    $this->withHeaders(writeCredentialFor([Permissions::MANAGE_SERVERS]))
+        ->postJson('/api/v1/createorupdatetld', ['extension' => '.test', 'register_price' => 9])
+        ->assertOk();
+});

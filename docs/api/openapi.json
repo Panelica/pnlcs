@@ -1583,7 +1583,7 @@
                 "tags": [
                     "Domains"
                 ],
-                "description": "Permission: manage_domains.",
+                "description": "Permission: manage_servers.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4357,7 +4357,7 @@
                         "name": "status",
                         "in": "query",
                         "required": false,
-                        "description": "An order status, such as Pending, Active, Cancelled or Fraud.",
+                        "description": "pending, active, cancelled or fraud.",
                         "schema": {
                             "type": "string"
                         }
@@ -6387,7 +6387,7 @@
                 "tags": [
                     "System"
                 ],
-                "description": "Sends the same link as the Forgot password form. The password itself is never set or returned. Permission: manage_settings.",
+                "description": "Sends the same link as the Forgot password form. The password itself is never set or returned. Permission: edit_clients.",
                 "requestBody": {
                     "required": false,
                     "content": {
