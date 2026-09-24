@@ -15,7 +15,7 @@ All notable changes to PNLCS are documented here. Newest first.
 - The order statuses in the API reference are written as PNLCS stores them:
   `pending`, `active`, `cancelled`, `fraud`.
 
-### MCP server
+### MCP server 1.0.7
 
 - **Every tool is now checked against the API reference.** A new test reads
   `docs/api/openapi.json` and fails when a tool calls an action that does not

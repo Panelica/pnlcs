@@ -10,7 +10,7 @@ import { createInterface } from 'node:readline';
 import { config, callAction } from './lib/api.js';
 import { descriptors, findTool, paramsFor } from './lib/tools.js';
 
-const VERSION = '1.0.6';
+const VERSION = '1.0.7';
 
 // Configuration is read lazily, at the first tool call. Registries and
 // directories (Glama among them) start the server with no environment at all
