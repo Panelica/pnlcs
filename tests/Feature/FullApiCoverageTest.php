@@ -104,7 +104,7 @@ test('getProducts returns products with group relation', function () {
 // ===== HEALTH STATUS =====
 
 test('getHealthStatus returns full system info', function () {
-    $response = $this->getJson('/api/v1/gethealthstatus');
+    $response = $this->getJson('/api/v1/gethealthstatus', $this->apiHeaders);
     $response->assertStatus(200)
         ->assertJson(['result' => 'success'])
         ->assertJsonStructure([

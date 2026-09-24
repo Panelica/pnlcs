@@ -15,8 +15,11 @@ class ApiKeyAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Allow health endpoint without auth
-        if ($request->is('api/health') || $request->is('api/v1/gethealthstatus')) {
+        // The liveness probe is public so uptime monitors can use it; it says
+        // only up or down. /api/v1/gethealthstatus is its detailed twin - PHP
+        // and framework versions, disk, memory, the database error - and was
+        // let through here as well, handing all of that to anyone who asked.
+        if ($request->is('api/health')) {
             return $next($request);
         }
 

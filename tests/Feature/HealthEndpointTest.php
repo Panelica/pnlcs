@@ -40,3 +40,11 @@ test('the authenticated health endpoint still returns the full picture', functio
 
     expect($health)->toHaveKeys(['status', 'laravel', 'php', 'database', 'disk', 'memory']);
 });
+
+test('the detailed health endpoint is closed to anonymous callers', function () {
+    // It was let through without credentials, so anyone could read the PHP
+    // and framework versions, the disk and memory figures and, with the
+    // database down, the connection error.
+    $this->getJson('/api/v1/gethealthstatus')->assertStatus(401)
+        ->assertJsonMissingPath('health');
+});
