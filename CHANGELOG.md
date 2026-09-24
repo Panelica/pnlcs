@@ -2,6 +2,35 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09-24 — The complete documentation, staff 2FA recovery codes
+
+### Documentation
+
+The [documentation](https://docs.pnlcs.com) now covers PNLCS end to end:
+
+- **Installation**: requirements, Docker, your own server (Ubuntu, Debian,
+  AlmaLinux; every command tested on fresh servers), a hosting-panel account,
+  updating, backups and a security checklist.
+- **Guides** for the Modules screen, Live Servers, languages and translations,
+  and client logins and permissions, alongside the updated existing ones.
+- **Developer**: writing a module, hooks (five that were missing are listed
+  now), themes, translations, contributing.
+- **Troubleshooting** and an **FAQ**; every scheduled command, with its
+  schedule.
+
+Going through the product page by page corrected what the old pages said:
+menu paths that no longer exist, a tax setting (prices with tax included) and
+a per-product tax switch that PNLCS does not have, a two-factor requirement
+per staff role that does not exist, staff being emailed their login (they are
+not), the number of themes (16), and the queue worker advice.
+
+### Fixed
+
+- **Staff two-factor recovery codes did not work.** Turning 2FA on showed eight
+  codes and stored none: the admins table had no column for them, so a member
+  of staff who kept the codes and lost the phone was locked out. They are
+  stored now, encrypted, and each works once.
+
 ## 2026-09-24 — Domain fixes from ENA Hosting, "set up on my hosting"
 
 Found by **ENA Hosting** running PNLCS in production, fixed on their own

@@ -1,38 +1,47 @@
 # Tax Rules
 
-If you need to charge VAT, GST or sales tax, configure it under
-**Configuration → Tax**.
+If you charge VAT, GST or sales tax, set the rates under **Setup → Tax
+Rules**.
 
-## Add a tax rule
+## Add rates
 
-1. **Configuration → Tax → Add Rule**
-2. Set the **name** (e.g. "VAT", "GST"), the **rate** (e.g. `20` for 20%), and
-   the **region** it applies to (country and, optionally, state/province).
-3. Save.
+Rates are grouped by **country** and, optionally, **state or province**. For
+each group you add one or more named rates (for example "VAT 20%") and mark
+one as the group's default.
 
-You can add several rules — for example a national rate plus regional rates.
+1. **Setup → Tax Rules**
+2. Choose the country (and state, if the rate is regional).
+3. Add the rate: a name and a percentage.
+4. Save.
 
-## Inclusive vs exclusive
+A group with an **empty country** is the global default: it applies to every
+customer no other rule matches.
 
-Under **Settings → General**, choose how tax is displayed:
+## Which rate a customer pays
 
-- **Exclusive** — prices are shown pre-tax and tax is added at checkout
-  (common in the US and B2B).
-- **Inclusive** — prices already include tax (common in the EU B2C).
+For each invoice PNLCS looks at the customer's country and state, and uses the
+first of these that exists:
 
-## Which products are taxed
+1. the rate for that **country and state**;
+2. the rate for the **country** (no state);
+3. the **global default**.
 
-Tax only applies to products marked **taxable**. Set this per product when you
-create or edit it (**Products**). Domains and some fees are often left
-non-taxable — check your local rules.
+No match, no tax. The tax is added on top of the price and shown on the
+invoice as its own line.
 
-## How tax is applied
+## Customers who pay no tax
 
-At checkout and on each renewal invoice, PNLCS matches the customer's country
-(and state, if set) against your tax rules and adds the matching rate to
-taxable line items. The invoice shows the tax as a separate line.
+Mark a customer **tax exempt** on their profile (**Clients → the client**) and
+their invoices carry no tax, whatever the rules say.
+
+## Good to know
+
+- Prices are entered **before tax**: the rate is added to them. There is no
+  setting to enter prices with tax already included.
+- Every product is taxable; there is no per-product switch on the product
+  screen yet.
 
 !!! warning "Tax is your responsibility"
-    PNLCS applies the rates you configure — it is not tax advice. Rules like EU
-    VAT MOSS, reverse-charge for B2B, and US nexus vary by jurisdiction.
-    Confirm your obligations with an accountant.
+    PNLCS applies the rates you configure; it is not tax advice. EU VAT, B2B
+    reverse charge and US sales-tax nexus depend on the jurisdiction. Confirm
+    your obligations with an accountant.

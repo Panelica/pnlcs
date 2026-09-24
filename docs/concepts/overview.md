@@ -63,13 +63,14 @@ See [Servers & Modules](servers-and-modules.md).
 
 ### Gateway
 
-A **payment gateway** is how money comes in — Stripe, PayPal, Authorize.Net,
-bank transfer. See [Payment Gateways](../guides/payment-gateways.md).
+A **payment gateway** is how money comes in: Stripe, PayPal, Authorize.Net,
+Mollie, Razorpay, Tpay, iyzico, or bank transfer. See [Payment Gateways](../guides/payment-gateways.md).
 
 ### Registrar
 
-A **registrar module** registers and renews **domains** (e.g. Enom, or Manual
-if you handle domains yourself). See [Sell Domains](../guides/sell-domains.md).
+A **registrar module** registers and renews **domains**: Namecheap,
+ResellerClub, OpenProvider, Enom, HRD, DomainNameAPI, or Manual if you
+register names yourself. See [Sell Domains](../guides/sell-domains.md).
 
 ## Admin vs Client — two sides
 

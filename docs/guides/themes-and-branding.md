@@ -1,13 +1,13 @@
 # Themes & Branding
 
 Make PNLCS look like *your* company. Everything here is under
-**Settings → Appearance**.
+**Setup → Appearance**.
 
 ## Pick a theme
 
-PNLCS includes 15 built-in themes (Arctic, Aurora, Coral, Ember, Forest,
-Midnight, Mint, Neon, Ocean, Panelica, Royal, Slate, Starter, Sunset, and
-more). Install/activate one WordPress-style with a single click; you can switch
+PNLCS includes 16 built-in themes: Arctic, Aurora, Coral, Ember, Flavor,
+Forest, Midnight, Mint, Neon, Ocean, Panelica, Royal, Slate, Starter, Sunset
+and Terra. Install/activate one WordPress-style with a single click; you can switch
 any time.
 
 Each theme supports a **dark mode** toggle.
@@ -32,6 +32,8 @@ site carries your brand, not ours.
 
 ## Custom domain for the portal
 
-Point your billing subdomain (e.g. `billing.your-domain.com`) at your PNLCS
-install and set `APP_URL` accordingly (**Settings → General** or `.env`). The
-customer portal then lives entirely on your own domain.
+Point the domain your customers should use (for example `example.com`) at
+your PNLCS server, and set `APP_URL` in `.env` to it. The client area then
+lives entirely on your own domain.
+
+To build a theme of your own, see [Themes](../developer/themes.md).

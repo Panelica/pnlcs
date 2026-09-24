@@ -1,63 +1,82 @@
 # Scheduled Commands
 
-PNLCS automates recurring work through Laravel's scheduler. **One** cron line
-drives all of it:
+Everything PNLCS does by itself runs from Laravel's scheduler, driven by
+**one** cron line for the web server user:
 
 ```
-* * * * * cd /path/to/pnlcs && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/pnlcs && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-On the official Docker image this runs inside the container automatically.
+The Docker image runs the scheduler inside the container; there is no cron
+line to add there.
 
-## What the scheduler runs
+## What runs, and when
 
-| Command | Schedule | What it does |
-|---------|----------|--------------|
-| `pnlcs:generate-invoices` | Daily 06:00 | Create renewal invoices for upcoming due dates |
-| `pnlcs:mark-overdue` | Daily 06:30 | Flag unpaid invoices past due as overdue |
-| `pnlcs:auto-suspend` | Daily 07:00 | Suspend services with long-unpaid invoices |
-| `pnlcs:apply-late-fees` | Daily 07:30 | Add late fees to overdue invoices |
-| `pnlcs:payment-reminders` | Daily 08:00 | Email upcoming/overdue payment reminders |
-| `pnlcs:process-cancellations` | Daily 02:00 | Action scheduled cancellations |
-| `pnlcs:domain-sync` | Daily 03:00 | Sync domain statuses with registrars |
-| `pnlcs:unsuspend-on-payment` | Every 30 min | Unsuspend services whose invoice was just paid |
-| `pnlcs:module-queue` | Every 5 min | Retry failed provisioning jobs (backoff) |
-| `pnlcs:mail-import` | Every 5 min | Import support mailboxes into tickets |
-| `pnlcs:currency-update` | Daily 05:30 | Refresh exchange rates |
-| `pnlcs:db-backup` | Daily 04:30 | Gzip database backup with rotation |
-| `pnlcs:prune-logs` | Daily 03:45 | Trim old log/history rows |
-| `pnlcs:ssl-status-poll` | Every 5 min | Poll SSL order status |
-| `pnlcs:ssl-expiry-check` | Daily 09:00 | Warn about expiring certificates |
-| `pnlcs:ticket-escalation` | Every 15 min | Escalate tickets per your rules |
-| `pnlcs:usage-polling` | Hourly | Pull disk/bandwidth usage for overage billing |
+Times are the server's time zone.
 
-## Running a command manually
+### Billing
 
-You can run any of these by hand from the project directory, e.g.:
+| Command | When | What it does |
+|---|---|---|
+| `pnlcs:generate-invoices` | daily 06:00 | Raises renewal invoices for services, addons and domains coming due |
+| `pnlcs:mark-overdue` | daily 06:30 | Marks unpaid invoices past their due date as overdue |
+| `pnlcs:auto-charge` | daily 06:45 | Charges stored cards for due invoices; does nothing until **Automatic Payment** is switched on (**Setup → General Settings**) |
+| `pnlcs:auto-charge --rescue` | every 15 minutes | Finishes card charges a crashed run left halfway; does nothing while automatic payment is off |
+| `pnlcs:apply-late-fees` | daily 07:30 | Adds late fees to overdue invoices, if late fees are set up |
+| `pnlcs:payment-reminders` | daily 08:00 | Emails reminders for invoices coming due and overdue |
+| `pnlcs:unsuspend-on-payment` | every 30 minutes | Unsuspends services whose invoice has been paid |
+| `pnlcs:cc-expiry-alerts` | monthly | Tells customers whose stored card is about to expire |
+| `pnlcs:detach-payment-methods` | every 5 minutes | Asks the gateway to forget cards customers removed |
+| `pnlcs:currency-update` | daily 05:30 | Updates exchange rates (setting `currency_auto_update`; `--force` runs it anyway) |
+
+### Services
+
+| Command | When | What it does |
+|---|---|---|
+| `pnlcs:auto-suspend` | daily 07:00 | Suspends services whose invoices stayed unpaid past the grace period |
+| `pnlcs:auto-terminate` | daily 08:00 | Terminates long-suspended services; does nothing until **auto-termination** is switched on (**Setup → General Settings → Automation**) |
+| `pnlcs:process-cancellations` | daily 02:00 | Carries out cancellation requests that are due |
+| `pnlcs:module-queue` | every 5 minutes | Retries server actions that failed, with increasing delays |
+| `pnlcs:usage-polling` | hourly | Reads disk and bandwidth use from the servers, for overage billing |
+
+### Domains and SSL
+
+| Command | When | What it does |
+|---|---|---|
+| `pnlcs:domain-sync` | daily 03:00 | Reads expiry, status and nameservers from the registrars |
+| `pnlcs:domain-renewal-reminders` | daily 09:15 | Emails customers whose domains are about to expire |
+| `pnlcs:registrar-balance` | 08:00 and 20:00 | Warns when the prepaid balance at the watched registrar falls to the floor |
+| `pnlcs:ssl-status-poll` | every 5 minutes | Checks pending certificate orders with the SSL provider |
+| `pnlcs:ssl-expiry-check` | daily 09:00 | Warns about certificates about to expire |
+
+### Support and upkeep
+
+| Command | When | What it does |
+|---|---|---|
+| `pnlcs:mail-import` | every 5 minutes | Turns email in support mailboxes into tickets |
+| `pnlcs:ticket-escalation` | every 15 minutes | Applies your ticket escalation rules |
+| `pnlcs:db-backup` | daily 04:30 | Backs up the database ([Backups](../install/backups.md)) |
+| `pnlcs:prune-logs` | daily 03:45 | Deletes old rows from log and history tables (`retention_*_days` settings) |
+| `queue:work` | every minute | Sends queued mail and runs queued jobs, then stops |
+
+## The queue
+
+With `QUEUE_CONNECTION=sync` (the default), mail and jobs run immediately and
+the `queue:work` line has nothing to do. With `QUEUE_CONNECTION=database`, the
+scheduler's `queue:work` sends queued work within a minute: no separate worker
+is needed. Run a permanent worker only if you want queued jobs to go out
+instantly; see [installation step 14](../install/native.md#14-queue-no-separate-worker-needed).
+
+## Running a command by hand
+
+From the PNLCS directory, as the web server user:
 
 ```bash
 php artisan pnlcs:db-backup
 php artisan pnlcs:currency-update --force
 php artisan pnlcs:prune-logs --dry-run
+php artisan schedule:list          # everything scheduled, with the next run time
 ```
 
-## The queue worker
-
-Emails and background jobs run through a queue. Keep a worker running (via
-supervisor) so they process promptly:
-
-```ini
-[program:pnlcs-worker]
-command=php /path/to/pnlcs/artisan queue:work database --sleep=3 --tries=3 --max-time=3600
-autostart=true
-autorestart=true
-user=www-data
-```
-
-## Relevant settings
-
-| Setting | Effect |
-|---------|--------|
-| `db_backup_enabled` / `db_backup_retention` | Toggle backups, how many to keep |
-| `currency_auto_update` | Toggle exchange-rate updates |
-| `retention_*_days` | How long each log/history table is kept |
+**Utilities → Automation Status** in the admin area shows when the scheduled
+jobs last ran.

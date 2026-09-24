@@ -1,65 +1,53 @@
 # Configure Email
 
 Email is **required**. Invoices, order confirmations, password resets, welcome
-messages and ticket replies all go out by email. Until it's configured, PNLCS
-writes messages to a log file and customers receive nothing.
+messages and ticket replies all go out by email.
 
-## Set up SMTP
+## Set up sending
 
-**Settings → Email** (or edit `.env` directly)
+**Setup → General Settings → Mail Configuration**
 
-Set the mailer to `smtp` and fill in your mail server details:
+| Field | What to enter |
+|---|---|
+| **Enable outgoing emails** | On. Off stops every email PNLCS sends; the log then records `Outgoing mail suppressed: mail is disabled in the panel settings.` |
+| **Mail type** | **SMTP** (recommended), or **PHP mail** to hand mail to the server's own `sendmail`. |
+| **System email address** | The sender address, for example `noreply@example.com`. |
+| **Email from name** | The sender name customers see, for example your company name. |
+| **SMTP host** | Your mail provider's SMTP server. |
+| **SMTP port** | `587` for STARTTLS, `465` for SSL. |
+| **SMTP encryption** | `TLS` for port 587, `SSL` for 465. |
+| **SMTP username / password** | From your mail provider. Left empty on a later save, the stored password is kept. |
 
-| Field | Example |
-|-------|---------|
-| Mailer | `smtp` |
-| Host | `smtp.your-provider.com` |
-| Port | `587` (STARTTLS) or `465` (SSL) |
-| Encryption | `tls` or `ssl` |
-| Username | your SMTP username |
-| Password | your SMTP password |
-| From address | `noreply@your-domain.com` |
-| From name | `Your Company` |
+Save, then press **Send Test Email** and check that it arrives, spam folder
+included. The test goes through exactly the same settings as real mail.
 
-If you edit `.env` instead of the settings page, the keys are:
+!!! note "The panel wins over `.env`"
+    Once a mail type is chosen here, these settings replace the `MAIL_*` values
+    in `.env`. Until then `.env` decides, and a fresh install's `.env` has
+    `MAIL_MAILER=log`: mail is written to the log, not sent.
 
-```ini
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.your-provider.com
-MAIL_PORT=587
-MAIL_USERNAME=your-username
-MAIL_PASSWORD=your-password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@your-domain.com"
-MAIL_FROM_NAME="Your Company"
-```
+## Keep it out of spam folders
 
-## Send a test email
+Set these DNS records for the domain you send from:
 
-From **Settings → Email**, use the **Send test email** button. Check that it
-arrives (including the spam folder). If it doesn't, see
-[Email not sending](../troubleshooting/common-issues.md#emails-are-not-being-sent).
+- **SPF**: allows your mail server to send for the domain.
+- **DKIM**: signs outgoing mail (your mail provider gives you the record).
+- **DMARC**: a policy that ties SPF and DKIM together.
 
-## Improve deliverability
-
-To keep invoices out of spam folders, set up these DNS records for your sending
-domain:
-
-- **SPF** — authorize your mail server to send for the domain
-- **DKIM** — sign outgoing mail (your mail provider gives you the record)
-- **DMARC** — a policy record that ties SPF and DKIM together
-
-A dedicated transactional email provider (Postmark, SES, Mailgun, SendGrid…)
-generally lands in the inbox more reliably than a self-hosted SMTP server.
+A transactional mail service (Amazon SES, Postmark, Mailgun, SendGrid and the
+like) usually reaches the inbox more reliably than a self-hosted SMTP server.
 
 ## Email templates
 
-PNLCS ships with ready-made templates (invoice created, invoice paid, order
-confirmation, welcome, ticket replies and more). Edit their wording under
-**Configuration → Email Templates**.
+PNLCS ships ready-made templates: invoice created, payment confirmation,
+reminders, order confirmation, service welcome, suspension, domain renewal and
+more. Change their wording under **Setup → Email Templates**.
 
-## Where messages are logged
+## What was sent
 
-Every email PNLCS sends is also recorded, so customers can read their history
-under the client portal's **Email History** page, and you can confirm what was
-sent.
+Every email PNLCS sends to a customer is recorded. Customers read theirs under
+**Email History** in the client area; staff see them on the client's record.
+
+## Not arriving?
+
+See [Emails are not being sent](../troubleshooting/common-issues.md#emails-are-not-being-sent).

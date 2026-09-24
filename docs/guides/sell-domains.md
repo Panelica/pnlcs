@@ -1,55 +1,78 @@
 # Sell Domains
 
-PNLCS can sell domain registrations, transfers and renewals alongside hosting.
+PNLCS sells domain registrations, transfers and renewals alongside hosting.
+Selling domains is optional: if you only sell hosting, skip this page.
 
-## 1. Set domain pricing
+## 1. Set the prices
 
-**Configuration → Domain Pricing**
+**Setup → Domain Pricing**
 
-Add each **TLD** you want to sell (`.com`, `.net`, `.org`, …) and set:
+Add each extension you sell (`.com`, `.net`, `.org`...) with its **register**,
+**transfer** and **renew** price. Customers can only order extensions that are
+listed and enabled here.
 
-- **Register** price (per year)
-- **Transfer** price
-- **Renew** price
+## 2. Choose a registrar
 
-Customers can only order TLDs that have pricing set here.
+**Setup → Domain Registrars**
 
-## 2. Choose a registrar module
+A registrar module registers, transfers and renews names at the registry.
+Open it, enter the credentials from your registrar account, and switch it on.
 
-**Configuration → Registrars**
+| Registrar | What it asks for |
+|---|---|
+| **Namecheap** | API username, API key, the whitelisted IP of your server, sandbox mode |
+| **ResellerClub** | Reseller ID, API key, test mode |
+| **OpenProvider** | Username, password, sandbox mode |
+| **Enom** | Username (UID), password, test mode |
+| **HRD** (Poland) | Login, API hash, API password, default nameserver group |
+| **DomainNameAPI** (Turkey) | Reseller ID, live and test API keys, test mode, default nameservers |
+| **Manual** | Nothing: you register names yourself at any registrar and record them in PNLCS |
 
-- **Enom** — automatic registration/renewal via the Enom API (enter your
-  Enom credentials)
-- **Manual** — you register domains yourself at your registrar and record them
-  in PNLCS by hand
+**Manual** is a good start, or the answer when your registrar has no module
+yet: billing works exactly the same, and the registration step is yours.
 
-Pick **Manual** if you're just starting out or resell through a registrar that
-isn't integrated yet — everything still bills correctly, you just do the
-registration step manually.
+!!! warning "A paid domain is never marked registered without a registrar"
+    If a domain's registrar cannot be loaded (switched off, or no longer
+    installed), a paid order leaves the domain **pending** and you get a
+    notification, rather than showing it active while nothing was registered.
 
-## 3. How customers buy domains
+## 3. How customers buy
 
-- On the **public site**, a **domain search** lets visitors check availability
-  and add a domain to their cart.
-- During **hosting checkout**, customers can register or transfer a domain in
-  the same order.
+- The **domain search** on the public site (`/client/domain-search`) checks
+  availability and puts a name in the cart.
+- During hosting checkout, customers can register or transfer a domain in the
+  same order.
+- A transfer asks for the EPP (auth) code from the current registrar.
 
-## Domain management for customers
+## What customers can do with their domains
 
-From the client portal, customers can:
+In the client area, on each domain's page:
 
-- View their domains, registration and expiry dates
-- Update **nameservers**
-- Toggle the **registrar lock**
-- Retrieve the **EPP/auth code** (for transfers out)
-- Toggle **auto-renew**
+- see registration and expiry dates;
+- **change the nameservers** (sent to the registrar);
+- turn **auto-renew** on or off;
+- turn the **registrar lock** on or off, and get the **EPP code** to move the
+  domain away;
+- **set the domain up on their hosting** (below).
 
-## Renewals
+### Set up on my hosting
 
-Like services, domains renew on a cycle. PNLCS generates a renewal invoice
-ahead of the expiry date and (with auto-renew and a registrar module) can renew
-automatically on payment.
+A customer with an active hosting account can add a domain to it and point the
+domain there in one step: **Set Up on My Hosting**, on the domain's page. With
+several hosting accounts they choose which one.
 
-!!! note
-    Selling domains is optional. If you only sell hosting, you can skip this
-    entire section.
+PNLCS adds the domain to the account first, and only then changes its
+nameservers to the ones entered on the account's **server** (**Setup →
+Servers**), or else to the registrar's default nameservers. Pressing it again
+changes nothing already done. It works for hosting on Panelica servers.
+
+## Renewals and syncing
+
+- Like services, domains renew on a cycle: PNLCS raises the renewal invoice
+  ahead of expiry and renews at the registrar once it is paid. Reminders go out
+  before expiry.
+- Every night PNLCS asks the registrar for each domain's expiry, status and
+  nameservers, and updates its records. A domain shown as active that the
+  registrar does not know raises a notification, at most once a week.
+- **Registrar balance watch** (**Setup → General Settings**) warns you when
+  your prepaid balance at the registrar falls to a floor you set.

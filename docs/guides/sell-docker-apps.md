@@ -41,7 +41,7 @@ what they bought.
 
 ## 1. Connect a Panelica server
 
-**Configuration → Servers → Add Server**, type **Panelica**. See
+**Setup → Servers → Add Server**, type **Panelica**. See
 [Connect a Server](connect-a-server.md).
 
 The server's API key must carry the `docker:*` scopes. Without them the
@@ -91,7 +91,7 @@ Use this for "run your own stack" plans where a domain would be meaningless.
 
 ## 3. Build the product
 
-**Products → Create Product**, then set:
+**Setup → Products/Services → New Hosting Product**, then set:
 
 1. **Server Type** → `panelica`
 2. **Panelica Resources** section:
@@ -114,7 +114,7 @@ Use this for "run your own stack" plans where a domain would be meaningless.
 
 ## 4. Curate the catalogue
 
-**Products → App Catalogue**
+**Setup → Products/Services → App Catalogue (in the sidebar)**
 
 The Panelica server decides *what exists* — which apps, which plans may install
 them, whether an app is active. This screen decides *how you sell them*:
@@ -148,7 +148,7 @@ usable logo file, and a wrong logo is worse than a letter tile.
     half-finished and every customer page load called out to GitHub and jsDelivr.
     PNLCS serves logos from its own storage instead.
 
-**To change a logo**, use *Products → App Catalogue*: upload a file, or paste a
+**To change a logo**, use *Setup → Products/Services → App Catalogue (in the sidebar)*: upload a file, or paste a
 URL to fetch from. That writes into layer 1, which wins over the shipped set and
 survives updates.
 
@@ -168,7 +168,7 @@ it could not fetch. It never touches the logos committed to the repository.
 
 ## 5. Put it in the shop window
 
-**Configuration → Homepage** → enable the **One-Click Apps** section.
+**Setup → Appearance** → enable the **One-Click Apps** section.
 
 It shows what a visitor can install, ordered the same way the order form orders
 it — featured first, then your order, then how often each app has actually been

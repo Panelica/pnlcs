@@ -3,13 +3,13 @@
 Collect extra information about your clients — a tax ID such as **NIP**, PESEL,
 a company VAT number, a billing reference, or anything else your business needs.
 
-Custom client field definitions live in **Configuration → Custom Fields** and
+Custom client field definitions live in **Setup → Custom Fields** and
 are shown when staff create or edit a client. Saved values are displayed on the
 client's summary page.
 
 ## Add a field
 
-1. **Configuration → Custom Fields → Add Custom Field**
+1. **Setup → Custom Fields → Add Custom Field**
 2. Fill in the field definition (see below).
 3. Save.
 
@@ -44,10 +44,10 @@ The new field immediately appears on the client create/edit forms.
 
 ## Where values are used
 
-- **Admin → Clients → Create / Edit Client** renders each field according to
+- **Clients → Add New Client, or a client's edit page** renders each field according to
   its type (checkbox, dropdown options, date/number input, regex validation);
   `Required` fields must be filled before the client can be saved.
-- **Admin → Clients → Client (summary tab)** lists the client's custom field
+- **Clients → a client's summary tab** lists the client's custom field
   values in a "Custom Fields" panel.
 
 ## Implementation notes

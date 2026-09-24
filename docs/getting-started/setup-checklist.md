@@ -1,111 +1,102 @@
 # Setup Checklist
 
-Work through these in order. Each one takes a few minutes, and together they
-turn a fresh install into a system that can actually take orders and provision
-hosting. The dashboard shows the same checklist and ticks items off as you
-complete them.
+Work through these in order. Each takes a few minutes, and together they turn
+a fresh install into one that can take orders and provision hosting. The admin
+dashboard shows the same checklist and ticks items off as you complete them.
 
 !!! note
-    You don't need every item to start — but **email** and at least **one
+    You do not need every item to start, but **email** and at least **one
     payment gateway** are required before real customers can order.
 
-## 1. General settings
+## 1. Company details
 
-**Settings → General**
+**Setup → General Settings**
 
-- Company name, support email, logo and favicon
-- Default language, currency and timezone
-- Invoice due terms and tax display behavior
+- **Company Information**: company name, address, support email.
+- **Localization**: default language, currency and timezone.
+- **Invoices**: numbering, due terms and how tax is shown.
 
-This is your business identity — it appears on invoices, emails and the
-customer portal.
+This is your business identity: it appears on invoices, emails and the client
+area.
 
 ## 2. Email delivery *(required)*
 
-**Settings → Email**
+**Setup → General Settings → Mail Configuration**
 
-Set `MAIL_MAILER` to `smtp` and fill in your mail server details, then send a
-**test email** from the same page.
+Choose **SMTP**, fill in your mail server, save, and press **Send Test Email**.
+Until mail is configured nothing reaches your customers: no invoices, no order
+confirmations, no ticket replies.
 
-Until this works, PNLCS writes emails to a log file instead of sending them, so
-customers never receive invoices, order confirmations or ticket replies.
-
-➡️ Full guide: [Configure Email](../guides/configure-email.md)
+➡️ [Configure Email](../guides/configure-email.md)
 
 ## 3. Payment gateways *(required)*
 
-**Configuration → Gateways**
+**Setup → Payment Gateways**
 
-Enable at least one:
+Enable at least one: Stripe, PayPal, Mollie, Razorpay, Authorize.Net, iyzico,
+Tpay, or **Bank Transfer** for payments you confirm by hand.
 
-- **Stripe** — paste your API keys
-- **PayPal** — client ID + secret
-- **Bank Transfer** — enter the instructions shown to customers
+➡️ [Payment Gateways](../guides/payment-gateways.md)
 
-➡️ Full guide: [Payment Gateways](../guides/payment-gateways.md)
+## 4. Servers *(if you sell hosting or VPS)*
 
-## 4. Server modules *(if you sell hosting or VPS)*
+**Setup → Servers**
 
-**Configuration → Servers**
+Add the server accounts are created on (Panelica, cPanel, Plesk, DirectAdmin,
+HestiaCP, Proxmox or Vultr) and test the connection.
 
-Add the server your accounts will be created on — Panelica, cPanel, Plesk,
-DirectAdmin, HestiaCP, Proxmox or Vultr — and test the connection.
-
-➡️ Full guide: [Connect a Server](../guides/connect-a-server.md)
+➡️ [Connect a Server](../guides/connect-a-server.md)
 
 ## 5. Your first product
 
-**Products**
+**Setup → Products/Services**
 
-Create a product group (e.g. "Shared Hosting"), then a product linked to your
-server and a billing cycle and price.
+Create a product group (for example "Shared Hosting"), then a product linked to
+your server, with a billing cycle and a price.
 
-➡️ Walkthrough: [Your First Sale](your-first-sale.md)
+➡️ [Your First Sale](your-first-sale.md)
 
 ## 6. Domain pricing *(if you sell domains)*
 
-**Configuration → Domain Pricing** — add TLDs and set register/transfer/renew
-prices.
+**Setup → Domain Pricing** for the extensions and their prices, and
+**Setup → Domain Registrars** for the registrar that registers them.
 
-➡️ Full guide: [Sell Domains](../guides/sell-domains.md)
+➡️ [Sell Domains](../guides/sell-domains.md)
 
-## 7. Tax rules *(if you charge tax/VAT)*
+## 7. Tax *(if you charge tax or VAT)*
 
-**Configuration → Tax** — add country/state tax rates and choose inclusive or
-exclusive display.
+**Setup → Tax Rules**
 
-➡️ Full guide: [Tax Rules](../guides/tax-rules.md)
+➡️ [Tax Rules](../guides/tax-rules.md)
 
-## 8. Staff and roles *(optional)*
+## 8. Staff *(optional)*
 
-**Configuration → Admin Roles / Admins** — create roles with specific
-permissions and invite team members.
+**Setup → Admin Roles** and **Setup → Admin Accounts**: roles with the
+permissions each job needs, then the people.
 
-➡️ Full guide: [Staff & Roles](../guides/staff-and-roles.md)
+➡️ [Staff & Roles](../guides/staff-and-roles.md)
 
-## 9. Account security *(recommended)*
+## 9. Sign-up checks *(recommended)*
 
-Clients can turn on **two-factor authentication** from their own **Security**
-page, and you can require 2FA per staff role under **Configuration → Staff
-Roles**. A built-in *require email verification* toggle for new signups is on
-the roadmap; until it ships, review new sign-ups before their first order if
-you want a manual check.
+- **Setup → General Settings → Email Verification**: new customers confirm
+  their address before they can order. On by default.
+- **Setup → General Settings → Fraud Screening**: MaxMind or FraudLabs Pro
+  scores each order; a risky one is held under **Orders → Fraud**.
 
 ## 10. The cron runner *(required for automation)*
 
-Invoices, reminders, suspensions and provisioning retries all run on a
-schedule. Make sure the cron line is installed:
+Invoices, reminders, suspensions and provisioning retries run on a schedule.
+On your own server, add the cron line from the installation guide:
 
 ```
-* * * * * cd /path/to/pnlcs && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/pnlcs && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Docker installs handle this automatically.
+The Docker image runs the scheduler by itself.
 
 ➡️ What runs and when: [Scheduled Commands](../reference/scheduled-commands.md)
 
 ## Ready?
 
-Once email and a gateway are set, walk through a real end-to-end sale:
-
-➡️ [Your First Sale](your-first-sale.md)
+➡️ [Your First Sale](your-first-sale.md): one full order, from shop to a
+running hosting account.

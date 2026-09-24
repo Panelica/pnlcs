@@ -1,55 +1,45 @@
 # First Login
 
-After installation, PNLCS creates a single administrator account so you can get
-in. Your very first job is to sign in and secure it.
-
 ## 1. Open the admin login
 
-Go to:
-
 ```
-https://your-domain/admin/login
+https://example.com/admin/login
 ```
 
-Replace `your-domain` with wherever you installed PNLCS (for a Docker install
-this is usually `http://localhost:8090/admin/login`).
+Use your own address in place of `example.com`. With the Docker quick start it
+is `http://localhost:8090/admin/login`.
 
-## 2. Sign in with the default credentials
+## 2. Sign in
 
-If you installed with the **in-app install wizard**, you chose your own
-username and password during setup — use those.
+Use the username and password **you chose in the install wizard**. There is
+no default password to change.
 
-If you installed **manually** (`php artisan db:seed`), the default account is:
+!!! danger "Only if you seeded the database by hand"
+    A headless install that ran `php artisan db:seed` instead of the wizard
+    starts with the account `admin` / `admin123`. That password is public
+    knowledge: change it before anything else (step 3).
 
-| Field | Value |
-|-------|-------|
-| Username | `admin` |
-| Password | `admin123` |
+## 3. Your account
 
-!!! danger "Change this immediately"
-    The default `admin` / `admin123` password is public knowledge. Anyone who
-    finds your panel can try it. Change it before you do anything else.
+Open **My Account** from the menu under your name. It has three parts:
 
-## 3. Change your password
+- **Profile information**: your name, email and language.
+- **Change password**.
+- **Two-factor authentication**: turn it on now (step 4).
 
-1. Click your name in the top-right corner → **My Account**.
-2. Open **Change Password**.
-3. Set a long, unique password and save.
+## 4. Turn on two-factor authentication
 
-## 4. Turn on two-factor authentication (recommended)
+1. Under **My Account → Two-factor authentication**, choose to turn it on.
+2. Scan the QR code with an authenticator app (Google Authenticator, Authy,
+   1Password and the like), or type the secret shown under it.
+3. Enter the 6-digit code the app shows.
+4. **Write down the recovery codes** the next page shows. Each one signs you in
+   once in place of the phone; keep them somewhere other than the phone.
 
-Still under **My Account**, enable **Two-Factor Authentication (2FA)**:
-
-1. Scan the QR code with an authenticator app (Google Authenticator, Authy, 1Password, etc.).
-2. Enter the 6-digit code to confirm.
-3. Save your recovery codes somewhere safe.
-
-From now on you'll enter a code from your phone at each login. This protects
-your billing system even if your password leaks.
+From now on you enter a code from the app at every sign-in. It protects your
+billing system even if your password leaks.
 
 ## What's next
 
-Your account is secure. Now configure the essentials so the panel can send
-email, take payments and provision hosting:
-
-➡️ [Setup Checklist](setup-checklist.md)
+➡️ [Setup Checklist](setup-checklist.md): email, a payment gateway, a server
+and your first product.

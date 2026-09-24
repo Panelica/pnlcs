@@ -150,7 +150,7 @@ Panelica is simply where PNLCS feels most at home.
 *Built-in translation editor — 30 locales, 2,232 translation keys, AI-assisted bulk translate*
 
 ![Appearance & Themes](docs/screenshots/admin-appearance.png)
-*WordPress-style theme system with 15 built-in themes, logo/favicon upload, dark mode toggle, and homepage builder*
+*WordPress-style theme system with 16 built-in themes, logo/favicon upload, dark mode toggle, and homepage builder*
 
 ![Servers Configuration](docs/screenshots/admin-servers.png)
 *Server module management — connect Panelica, cPanel, Plesk, DirectAdmin, Proxmox, or custom servers*
@@ -233,8 +233,8 @@ marked before it is chosen, not after it fails*
 
 ### 🎨 Theme System
 
-- **15 built-in themes** (Arctic, Aurora, Coral, Ember, Forest, Midnight,
-  Mint, Neon, Ocean, Panelica, Royal, Slate, Starter, Sunset, and more)
+- **16 built-in themes** (Arctic, Aurora, Coral, Ember, Flavor, Forest,
+  Midnight, Mint, Neon, Ocean, Panelica, Royal, Slate, Starter, Sunset, Terra)
 - **WordPress-style** install / activate / delete workflow
 - **Homepage builder** with reorderable sections
 - **Per-site white-label** options (logo, favicon, footer copyright)
@@ -254,7 +254,7 @@ marked before it is chosen, not after it fails*
 
 - **Recurring billing** — monthly, quarterly, semi-annually, annually, biennially
 - **Auto-suspend** unpaid services after configurable grace period
-- **Late fees**, promotions, coupons, tax rules (inclusive/exclusive)
+- **Late fees**, promotions, coupons, tax rules by country and state
 - **Overage billing** — disk / bandwidth metering, opt-in per product
 - **Credit balances** & add-funds flow
 - **Automated reminders** — invoice, payment, CC expiry, domain renewal
@@ -610,7 +610,7 @@ DB_DATABASE=pnlcs
 DB_USERNAME=pnlcs
 DB_PASSWORD=choose-a-strong-password
 
-MAIL_FROM_ADDRESS="noreply@your-domain.com"
+MAIL_FROM_ADDRESS="noreply@example.com"
 MAIL_FROM_NAME="Your Company"
 ```
 
@@ -1049,7 +1049,7 @@ Once the site loads and you can reach `/admin/login`, do these in order:
 
 ### 1. Sign in
 
-- URL: `https://billing.your-domain.com/admin/login`
+- URL: `https://example.com/admin/login`
 - Use the administrator username and password you chose in the install
   wizard. (Only a headless install that seeded by hand has the default
   `admin` / `admin123` - if that is you, changing it is the first job.)
@@ -1082,7 +1082,7 @@ messages are not written to the log either.
 
 **Setup → Appearance**
 
-- Pick a theme from the 15 built-in options
+- Pick a theme from the 16 built-in options
 - Upload your logo and favicon
 - Configure homepage sections (hero, features, pricing, testimonials)
 - Set up white-label footer text
@@ -1106,7 +1106,7 @@ messages are not written to the log either.
 
 ### 7. Create Your First Product
 
-**Products** (main admin menu)
+**Setup → Products/Services**
 
 - Create a **product group** (e.g. "Shared Hosting")
 - Create a product, link it to a server and a module
@@ -1125,9 +1125,9 @@ messages are not written to the log either.
 
 **Setup → Tax Rules**
 
-- Add country-level or state-level tax rules
-- Choose inclusive or exclusive tax display
-- Assign taxable flag to products individually
+- Add rates per country, or per state within a country, and a global default
+- Rates are added on top of prices; a client marked tax exempt pays none
+- See the [Tax Rules guide](https://docs.pnlcs.com/guides/tax-rules/)
 
 ### 10. (Optional) Invite Staff and Define Roles
 
@@ -1169,7 +1169,7 @@ provider** integrations under the `modules/` directory. Add control-panel
 servers (cPanel, Plesk, DirectAdmin, Proxmox, HestiaCP, Vultr, Panelica),
 configure payment gateways (Stripe, PayPal, iyzico, Authorize.Net, Razorpay,
 Mollie, Tpay, bank transfer), and connect domain registrars (Enom, Namecheap,
-ResellerClub, OpenProvider, HRD) — and add your own modules without touching
+ResellerClub, OpenProvider, HRD, DomainNameAPI) — and add your own modules without touching
 core code (see [Writing your own module](#writing-your-own-module)).
 
 > 💡 **Choosing a panel to sell on?** The **[Panelica](https://panelica.com)**
@@ -1194,6 +1194,7 @@ a statement that the integration has been run against a live provider account.
 | Vultr         | Server    | Covered         |
 | Custom        | Server    | None yet        |
 | Stripe        | Gateway   | Covered         |
+| iyzico        | Gateway   | Covered         |
 | PayPal        | Gateway   | Covered         |
 | Authorize.Net | Gateway   | Covered         |
 | Razorpay      | Gateway   | Covered         |
@@ -1203,6 +1204,9 @@ a statement that the integration has been run against a live provider account.
 | Enom          | Registrar | Covered         |
 | Namecheap     | Registrar | Covered         |
 | ResellerClub  | Registrar | Covered         |
+| OpenProvider  | Registrar | Covered         |
+| DomainNameAPI | Registrar | Partly (nameservers, domain sync) |
+| HRD           | Registrar | None yet        |
 | Manual        | Registrar | None yet        |
 | GoGetSSL      | SSL       | Covered         |
 
@@ -1466,7 +1470,7 @@ Card gateways confirm a payment by calling back, so set the webhook URL in the
 provider's dashboard to:
 
 ```
-https://your-domain.com/gateway/<gateway>/webhook
+https://example.com/gateway/<gateway>/webhook
 ```
 
 for example `…/gateway/stripe/webhook` or `…/gateway/paypal/webhook` (also

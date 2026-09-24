@@ -36,8 +36,11 @@ servers — PNLCS just needs to manage them going forward.
 ### 4. Bring customers over
 
 For each customer, create a **client** in PNLCS and add their existing
-**services** (linked to the right server, with the correct next due date and
-price). New renewal invoices then bill from PNLCS.
+**services**: on the client, **Services → Add Service**, with the right product,
+next due date and price. On a Panelica server, **Link to an existing account**
+lists the accounts already on it; pick the customer's, and PNLCS manages that
+account from then on (suspend, terminate, password). Leave it empty for a
+billing-only record. New renewal invoices then bill from PNLCS.
 
 Two common patterns:
 
@@ -55,8 +58,11 @@ install. Redirect the old WHMCS URL if you can.
 
 - **Data model parity:** WHMCS's clients/products/orders/invoices/services map
   1:1 to PNLCS, so exported CSVs are easy to re-enter or script against the API.
-- **API:** PNLCS has a REST API ([reference](../reference/developer.md)) you can
-  script bulk client/service creation against.
+- **API:** the PNLCS API uses the WHMCS action names (`addclient`,
+  `addorder`, `getclientsproducts`...), so migration scripts written for WHMCS
+  carry over with a new address. See the [API reference](../api/index.md),
+  and [Coming from WHMCS](../api/index.md#coming-from-whmcs) for the
+  differences.
 - **Passwords:** hosting account passwords live on the control panel, not in
   PNLCS — moving billing doesn't disturb live sites.
 

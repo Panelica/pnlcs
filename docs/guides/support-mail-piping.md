@@ -16,17 +16,17 @@ replies thread correctly.
 
 ## Set it up
 
-**Configuration → Support Departments → (edit a department) → Mail Import**
+**Setup → Ticket Departments → (edit a department) → Mail Import**
 
 Fill in the mailbox this department should read:
 
 | Field | Example |
 |-------|---------|
 | Protocol | IMAP (recommended) or POP3 |
-| Host | `mail.your-domain.com` |
+| Host | your mail provider's IMAP or POP3 server |
 | Port | `993` (IMAP SSL) / `995` (POP3 SSL) |
 | Encryption | SSL or STARTTLS |
-| Username | `support@your-domain.com` |
+| Username | the support mailbox, for example `support@example.com` |
 | Password | the mailbox password |
 | Folder | `INBOX` |
 
@@ -49,5 +49,8 @@ Enable **mail import** for the department and save.
 ## Requirements
 
 - A dedicated support mailbox you can connect to over IMAP/POP3.
-- The `imap` PHP extension (included in the official Docker image; install it
-  on your server if you set PNLCS up manually).
+- PHP's `imap` extension. The Docker image has it; on your own server install
+  `php8.4-imap` (Ubuntu, ondrej PPA) or `php-imap` (AlmaLinux/Rocky, Remi).
+  Debian 13 does not package it. Without it the import logs
+  `the PHP imap extension is not installed` and does nothing; the rest of
+  PNLCS does not need it.

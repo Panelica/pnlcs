@@ -13,14 +13,14 @@ sense.
 
 ## Step 1 — Create a product group
 
-**Products → Product Groups → Create Group**
+**Setup → Products/Services → New Group**
 
 A group is just a category customers browse, e.g. **Shared Hosting**. Give it a
 name and save.
 
 ## Step 2 — Create a product
 
-**Products → Create Product**
+**Setup → Products/Services → New Hosting Product**
 
 - **Name**: e.g. "Starter Hosting"
 - **Group**: the group you just made
@@ -43,7 +43,7 @@ Save. Your product now appears in the customer shop.
 
 Open an **incognito/private browser window** so you're not logged in as admin.
 
-1. Go to `https://your-domain/client/register` and create a test customer.
+1. Go to `https://example.com/client/register` and create a test customer.
 2. Browse the shop, pick your product, choose a billing cycle.
 3. Enter a domain name for the account and continue to checkout.
 4. An **order** and an **unpaid invoice** are created.
@@ -64,9 +64,9 @@ The moment the payment is confirmed, PNLCS:
 
 Back in the **admin panel**:
 
-- **Billing → Invoices** — the invoice is *Paid*
-- **Clients → your test client → Services** — the service is *Active*
-- **Orders** — the order is *Active*
+- **Billing → Invoices**: the invoice is *Paid*
+- **Clients → View/Search Clients → your test client → Services**: the service is *Active*
+- **Orders → List All Orders**: the order is *Active*
 - If a server module is connected, the account exists on that server
 
 Congratulations — that's a full sale, start to finish. Everything else in PNLCS

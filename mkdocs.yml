@@ -64,6 +64,15 @@ plugins:
 
 nav:
   - Home: index.md
+  - Installation:
+      - Overview: install/index.md
+      - Requirements: install/requirements.md
+      - Docker: install/docker.md
+      - On Your Own Server: install/native.md
+      - Inside a Hosting Panel: install/hosting-panel.md
+      - Updating: install/updating.md
+      - Backups: install/backups.md
+      - Security Checklist: install/security.md
   - Getting Started:
       - First Login: getting-started/first-login.md
       - Setup Checklist: getting-started/setup-checklist.md
@@ -77,15 +86,19 @@ nav:
       - Configure Email: guides/configure-email.md
       - Payment Gateways: guides/payment-gateways.md
       - Connect a Server: guides/connect-a-server.md
+      - Live Servers: guides/live-servers.md
+      - Modules: guides/modules.md
       - Sell Domains: guides/sell-domains.md
       - Sell Docker Apps: guides/sell-docker-apps.md
       - Tax Rules: guides/tax-rules.md
+      - Custom Client Fields: guides/custom-fields.md
       - Themes & Branding: guides/themes-and-branding.md
+      - Languages & Translations: guides/languages.md
       - Staff & Roles: guides/staff-and-roles.md
+      - Client Logins & Permissions: guides/client-logins-and-permissions.md
       - Support Mail Piping: guides/support-mail-piping.md
       - Migrate from WHMCS: guides/migrate-from-whmcs.md
-  - Troubleshooting:
-      - Common Issues: troubleshooting/common-issues.md
+      - Deploy on Plesk: guides/deploy-plesk.md
   - API:
       - Overview: api/index.md
       - All Endpoints: api/all-endpoints.md
@@ -104,6 +117,15 @@ nav:
   - MCP Server:
       - Setup: mcp/index.md
       - Tools: mcp/tools.md
+  - Developer:
+      - Overview: developer/index.md
+      - Writing a Module: developer/modules.md
+      - Hooks: developer/hooks.md
+      - Themes: developer/themes.md
+      - Translations: developer/translations.md
+      - Contributing: developer/contributing.md
+  - Troubleshooting:
+      - Common Issues: troubleshooting/common-issues.md
+      - FAQ: troubleshooting/faq.md
   - Reference:
       - Scheduled Commands: reference/scheduled-commands.md
-      - Developer API & Hooks: reference/developer.md

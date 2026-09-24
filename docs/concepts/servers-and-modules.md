@@ -7,7 +7,7 @@ is one of the most valuable things PNLCS does. This page explains how it works.
 
 A **server** in PNLCS is a record describing a machine where customer accounts
 live: its hostname, port, and API credentials. You add servers under
-**Configuration → Servers**.
+**Setup → Servers**.
 
 ## Module
 

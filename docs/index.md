@@ -33,19 +33,21 @@ language, with no prior WHMCS experience assumed. It also holds the complete
 
 | Section | What's in it |
 |---------|--------------|
+| **Installation** | Docker, your own server or a hosting-panel account; updating, backups, security |
 | **Getting Started** | The fastest path from a fresh install to your first paid, provisioned order |
 | **Concepts** | Plain-English explanations of the core ideas — clients, products, services, orders, invoices, servers, modules |
 | **Guides** | Task-by-task how-tos: email, payment gateways, connecting a server, selling domains, tax, custom client fields, migrating from WHMCS, and more |
 | **API** | Every API action: parameters, responses, errors, permissions and a working example, plus an OpenAPI file |
 | **MCP Server** | Connecting an AI assistant to PNLCS, and every tool it gets |
-| **Reference** | Scheduled commands and the developer API/hooks |
+| **Developer** | Writing modules, hooks, themes, translations, contributing |
+| **Troubleshooting** | Common errors and the FAQ |
+| **Reference** | Every scheduled command |
 
 ## Before you begin
 
 You should already have PNLCS **installed** and be able to reach
-`https://your-domain/admin/login`. If not, see the
-[installation instructions in the README](https://github.com/Panelica/pnlcs#self-hosted-installation)
-or the [Docker quick start](https://github.com/Panelica/pnlcs#quick-start-with-docker).
+`https://example.com/admin/login`. If not, see the
+[installation guide](install/index.md).
 
 ## Need help?
 
