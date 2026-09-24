@@ -1,0 +1,4 @@
+/* Parameter and field names are identifiers: never break them across lines. */
+.md-typeset table:not([class]) td:first-child code {
+  white-space: nowrap;
+}

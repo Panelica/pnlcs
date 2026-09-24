@@ -22,8 +22,8 @@ PNLCS admin API you already have. Nothing is installed on the PNLCS side.
 
 1. Log in to the **admin area** of your PNLCS install.
 2. Go to **Setup → API Credentials** (needs the *manage staff* permission).
-3. Click **Create**, give it a name like `mcp`, and copy the two values it
-   shows you:
+3. Click **Generate API Key**, give it a name like `mcp`, and copy the two
+   values it shows you:
    - **Identifier** — the credential's username
    - **Secret** — shown once; store it somewhere safe
 
@@ -115,7 +115,7 @@ above. From a git checkout, `node mcp/server.js` works identically.
 |---|---|
 | `get_stats` | Counts of clients, services, domains, invoices, orders, tickets and staff |
 | `get_health` | Health of the install itself |
-| `list_clients` | Clients, searchable by name/email/company, pageable |
+| `list_clients` | Clients, searchable by name/email/company, sortable (`sorting=DESC` for newest first), pageable |
 | `get_client` | One client with contacts, by `clientid` **or** `email` |
 | `list_client_services` | Hosting services of one client |
 | `list_client_domains` | Domains of one client |
@@ -158,6 +158,8 @@ not setting the flag.
   proxy or request logs. (Versions before 1.0.5 sent them in the query
   string of every read - rotate the credential if you used one of those.)
 - Prefer a **dedicated API credential** for MCP so you can revoke it alone.
+- Restrict the credential to the address of the machine running your AI
+  client: **Edit** on the API Credentials screen, **Allowed IP addresses**.
 - PNLCS rate-limits API credentials (300 requests/minute per credential),
   so a runaway agent cannot hammer your install.
 - Keep `PNLCS_ALLOW_WRITES` off unless you actually want the assistant
@@ -169,7 +171,8 @@ not setting the flag.
 | Symptom | Cause |
 |---|---|
 | Every tool answers `Set PNLCS_URL, PNLCS_IDENTIFIER and PNLCS_SECRET.` | One of the three variables is missing from the client config |
-| Every tool answers `Invalid API secret` | Identifier/secret pair is wrong, or the credential was deactivated |
+| Every tool answers `Invalid API secret` | The secret does not belong to that identifier |
+| Every tool answers `Authentication required...` | No active credential has that identifier: mistyped, switched off or deleted |
 | `PNLCS did not answer within 30 seconds` | The install is unreachable from this machine — check the URL and any firewall |
 | Tools missing in the client | Restart the client after editing its config; check its MCP log for the stderr line above |
 | Write tools missing | That is the default — set `PNLCS_ALLOW_WRITES=1` |

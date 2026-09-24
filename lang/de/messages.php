@@ -181,6 +181,7 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
         'api_credential_deleted' => 'API-Anmeldeinformationen gelöscht.',
         'api_credential_generated' => 'API-Anmeldeinformationen generiert.',
         'api_credential_revoked' => 'API-Anmeldeinformationen wurden widerrufen.',
+        'api_credential_updated' => 'API-Zugangsdaten aktualisiert.',
         'appearance_updated_successfully' => 'Erscheinungsbild erfolgreich aktualisiert.',
         'article_created' => 'Artikel erstellt.',
         'article_deleted' => 'Artikel gelöscht.',

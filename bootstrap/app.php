@@ -66,6 +66,50 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withEvents(false)
     ->withExceptions(function (Exceptions $exceptions): void {
+        // The API answers every error as {"result":"error","message":...}, the
+        // shape WHMCS-compatible clients test. Three kinds came back in the
+        // framework's own shape instead, without "result": a field that failed
+        // validation (422), an action that does not exist (404) and the wrong
+        // method (405). A client checking result saw none of them as errors.
+        // The framework's "errors" list is kept alongside, for callers that
+        // already read it.
+        $exceptions->render(function (Illuminate\Validation\ValidationException $e, $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json(['result' => 'error', 'message' => $e->getMessage(), 'errors' => $e->errors()], $e->status);
+        });
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException $e, $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'result' => 'error',
+                'message' => 'This action is called with '.($e->getHeaders()['Allow'] ?? 'another method').'.',
+            ], 405, $e->getHeaders());
+        });
+        $exceptions->render(function (NotFoundHttpException $e, $request) {
+            if (! $request->is('api/*') || $e->getPrevious() instanceof ModelNotFoundException) {
+                return null;
+            }
+
+            return response()->json(['result' => 'error', 'message' => 'There is no API action at this address.'], 404);
+        });
+        // Anything else the framework answers on the API's behalf - above all
+        // 429 when the rate limit is reached - keeps its status and headers
+        // (Retry-After) and gains the same shape.
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e, $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            $message = $e->getMessage() !== '' ? $e->getMessage() : (Symfony\Component\HttpFoundation\Response::$statusTexts[$e->getStatusCode()] ?? 'Error');
+
+            return response()->json(['result' => 'error', 'message' => $message], $e->getStatusCode(), $e->getHeaders());
+        });
+
         // Model binding failure (ör. /admin/clients/999 — client yok)
         // → İlgili listeleme sayfasına flash mesajla döndür, generic 404 yerine
         $exceptions->render(function (NotFoundHttpException $e, $request) {

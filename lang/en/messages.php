@@ -184,6 +184,7 @@ API access may be broken. While the balance cannot be read, no low-balance warni
         'api_credential_deleted' => 'API credential deleted.',
         'api_credential_generated' => 'API credential generated.',
         'api_credential_revoked' => 'API credential revoked.',
+        'api_credential_updated' => 'API credential updated.',
         'appearance_updated_successfully' => 'Appearance updated successfully.',
         'article_created' => 'Article created.',
         'article_deleted' => 'Article deleted.',

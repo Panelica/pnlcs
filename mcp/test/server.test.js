@@ -90,7 +90,7 @@ function startMcp(extraEnv = {}) {
 
 // Arguments that satisfy every tool's schema for the wire test.
 const SAMPLE_ARGS = {
-  list_clients: { search: 'ada', limitnum: 5, limitstart: 10 },
+  list_clients: { search: 'ada', sorting: 'DESC', limitnum: 5, limitstart: 10 },
   get_client: { clientid: 7 },
   list_client_services: { clientid: 7 },
   list_client_domains: { clientid: 7 },
@@ -344,4 +344,11 @@ test('a ticket reply and a new ticket are sent as staff', async () => {
   } finally {
     mcp.stop();
   }
+});
+
+test('docs/mcp/tools.md lists the tools this server offers', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { render } = await import('../scripts/docs.mjs');
+  const page = readFileSync(new URL('../../docs/mcp/tools.md', import.meta.url), 'utf8');
+  assert.equal(page, render(), 'run node mcp/scripts/docs.mjs and commit docs/mcp/tools.md');
 });

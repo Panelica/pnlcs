@@ -287,6 +287,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::middleware('admin.permission:manage_staff')->group(function () {
             Route::get('api-credentials', [ConfigController::class, 'apiCredentials'])->name('api-credentials');
             Route::post('api-credentials', [ConfigController::class, 'storeApiCredential'])->name('api-credentials.store');
+            Route::put('api-credentials/{credential}', [ConfigController::class, 'updateApiCredential'])->name('api-credentials.update');
             Route::delete('api-credentials/{credential}', [ConfigController::class, 'destroyApiCredential'])->name('api-credentials.destroy');
         });
 

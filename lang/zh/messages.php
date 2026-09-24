@@ -183,6 +183,7 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
         'api_credential_deleted' => 'API 凭据已删除。',
         'api_credential_generated' => 'API 凭据已生成。',
         'api_credential_revoked' => 'API 凭据已撤销。',
+        'api_credential_updated' => 'API 凭据已更新。',
         'appearance_updated_successfully' => '外观已成功更新。',
         'article_created' => '文章已创建。',
         'article_deleted' => '文章已删除。',

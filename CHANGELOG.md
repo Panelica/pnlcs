@@ -2,6 +2,56 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09-24 — Complete API reference, MCP guide, API error shape
+
+### Documentation
+
+- **Every API action is documented**: all 171, with parameters (and which are
+  required), response fields, errors, the permission it needs and a curl
+  example that works as written. Plus an OpenAPI 3.1 file to import into
+  Postman, Insomnia or Bruno. See the API section of the
+  [documentation](https://panelica.github.io/pnlcs/api/).
+- The pages are generated from the route table and `config/api_docs.php`
+  (`php artisan pnlcs:api-docs`); a test fails when a route has no entry, when
+  a parameter documented as optional turns out to be required (or the
+  reverse), when an example does not reach its endpoint, or when the pages on
+  disk are stale.
+- **MCP server guide** and a tool reference generated from the server's own
+  tool list.
+- The admin **API Documentation** screen described a single `/api/v1` address
+  taking an `action` parameter (it answered 404), listed a GET-only action as
+  POST (405), sent invoice lines in a shape the API ignored, named the
+  `validatelogin` password parameter wrongly and left out required
+  parameters of several actions. It now shows what really works, in all five
+  languages, and links to the full reference. Twelve action descriptions that
+  did not match the code were corrected, and 91 missing ones were added.
+
+### Security
+
+- `/api/v1/gethealthstatus` answered **without a credential**, giving anyone
+  the PHP and framework versions, disk and memory figures, and the database
+  error when the database was down. It needs a credential now; the public
+  uptime probe is `/api/health`, which says only up or down.
+
+### API
+
+- **Every error now has `result: error`.** Validation failures (422), an
+  unknown action (404), the wrong method (405, which now names the right one)
+  and the rate limit (429, with `Retry-After`) came back in the framework's own
+  shape, without the `result` field that WHMCS-compatible clients test. The
+  validation `errors` list is kept alongside.
+- **Credentials can be restricted to IP addresses** from the API Credentials
+  screen (and with `allowed_ips` in `createoauthcredential` /
+  `updateoauthcredential`). The API always enforced such a list, but nothing
+  could set one. The screen can also edit a credential and switch it off
+  without deleting it.
+
+### MCP server 1.0.6
+
+- `list_clients` said it listed the newest clients first; the API lists the
+  oldest first. The description is corrected and `orderby` / `sorting` were
+  added, so "newest first" can be asked for.
+
 ## 2026-09-23 — API & MCP security audit, German, modules, Live Servers
 
 ### ⚠️ Action required if you used pnlcs-mcp 1.0.4 or older

@@ -1206,7 +1206,7 @@ class SystemApiController extends BaseApiController
     // ===== OAUTH =====
     public function listOAuthCredentials(Request $request)
     {
-        $creds = ApiCredential::where('active', true)->get(['id', 'identifier', 'description', 'created_at']);
+        $creds = ApiCredential::where('active', true)->get(['id', 'identifier', 'description', 'allowed_ips', 'created_at']);
 
         return $this->success(['credentials' => $creds->toArray()]);
     }
@@ -1218,11 +1218,15 @@ class SystemApiController extends BaseApiController
         // the installation - so anyone allowed to call this could mint a key
         // that answered with the owner's full access.
         $request->validate(['description' => 'nullable|string|max:255']);
+        [$allowed, $bad] = \App\Support\IpAllowList::parse($request->input('allowed_ips'));
+        if ($allowed === null) {
+            return $this->error('Not an IP address or range: '.$bad, 422);
+        }
         $plain = Str::random(64);
-        $cred = ApiCredential::create(['admin_id' => auth('admin')->id(), 'identifier' => Str::random(32), 'secret' => ApiCredential::hashSecret($plain), 'description' => $request->description, 'active' => true]);
+        $cred = ApiCredential::create(['admin_id' => auth('admin')->id(), 'identifier' => Str::random(32), 'secret' => ApiCredential::hashSecret($plain), 'description' => $request->description, 'allowed_ips' => $allowed ?: null, 'active' => true]);
 
         // Return the plaintext secret once — only its hash is stored.
-        return $this->success(['credentialid' => $cred->id, 'identifier' => $cred->identifier, 'secret' => $plain]);
+        return $this->success(['credentialid' => $cred->id, 'identifier' => $cred->identifier, 'secret' => $plain, 'allowed_ips' => $allowed]);
     }
 
     public function updateOAuthCredential(Request $request)
@@ -1236,6 +1240,13 @@ class SystemApiController extends BaseApiController
         }
         if ($request->has('active')) {
             $cred->active = $request->boolean('active');
+        }
+        if ($request->has('allowed_ips')) {
+            [$allowed, $bad] = \App\Support\IpAllowList::parse($request->input('allowed_ips'));
+            if ($allowed === null) {
+                return $this->error('Not an IP address or range: '.$bad, 422);
+            }
+            $cred->allowed_ips = $allowed ?: null;
         }
         $cred->save();
 

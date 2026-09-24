@@ -182,6 +182,7 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
         'api_credential_deleted' => 'API kimlik bilgisi silindi.',
         'api_credential_generated' => 'API kimlik bilgisi üretildi.',
         'api_credential_revoked' => 'API kimlik bilgisi iptal edildi.',
+        'api_credential_updated' => 'API kimlik bilgisi güncellendi.',
         'appearance_updated_successfully' => 'Görünüm ayarları güncellendi.',
         'article_created' => 'Makale oluşturuldu.',
         'article_deleted' => 'Makale silindi.',

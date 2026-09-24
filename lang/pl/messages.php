@@ -184,6 +184,7 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
         'api_credential_deleted' => 'Dane API usunięte.',
         'api_credential_generated' => 'Dane API wygenerowane.',
         'api_credential_revoked' => 'Dane API cofnięte.',
+        'api_credential_updated' => 'Dane API zaktualizowane.',
         'appearance_updated_successfully' => 'Wygląd zaktualizowany pomyślnie.',
         'article_created' => 'Artykuł utworzony.',
         'article_deleted' => 'Artykuł usunięty.',

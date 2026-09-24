@@ -3,7 +3,13 @@
 Welcome! **PNLCS** is a free, open-source, self-hosted **hosting billing and
 client management platform** — an open alternative to WHMCS. This is the user
 guide: it explains how to run your hosting business with PNLCS, in plain
-language, with no prior WHMCS experience assumed.
+language, with no prior WHMCS experience assumed. It also holds the complete
+[API reference](api/index.md) and the guide to the [MCP server](mcp/index.md).
+
+!!! info "This documentation is growing"
+    We are expanding these pages, and details may change between releases.
+    If something is missing or does not match what you see, please
+    [open an issue](https://github.com/Panelica/pnlcs/issues).
 
 !!! tip "New here and not sure where to start?"
     Follow these three pages in order and you'll have a working, selling
@@ -30,6 +36,8 @@ language, with no prior WHMCS experience assumed.
 | **Getting Started** | The fastest path from a fresh install to your first paid, provisioned order |
 | **Concepts** | Plain-English explanations of the core ideas — clients, products, services, orders, invoices, servers, modules |
 | **Guides** | Task-by-task how-tos: email, payment gateways, connecting a server, selling domains, tax, custom client fields, migrating from WHMCS, and more |
+| **API** | Every API action: parameters, responses, errors, permissions and a working example, plus an OpenAPI file |
+| **MCP Server** | Connecting an AI assistant to PNLCS, and every tool it gets |
 | **Reference** | Scheduled commands and the developer API/hooks |
 
 ## Before you begin

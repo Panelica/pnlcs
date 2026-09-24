@@ -274,16 +274,59 @@ class ConfigController extends Controller
 
     public function storeApiCredential(Request $request)
     {
+        $validated = $request->validate([
+            'description' => 'required|string|max:255',
+            'allowed_ips' => 'nullable|string|max:5000',
+        ]);
+        $allowed = $this->allowedIpsFrom($validated['allowed_ips'] ?? null);
+
         $secret = Str::random(64);
         ApiCredential::create([
             'admin_id' => auth('admin')->id(),
             'identifier' => Str::random(32),
             'secret' => ApiCredential::hashSecret($secret),
-            'description' => $request->description,
+            'description' => $validated['description'],
+            'allowed_ips' => $allowed ?: null,
             'active' => true,
         ]);
 
         return back()->with('success', __('messages.success.api_credential_generated'))->with('new_secret', $secret);
+    }
+
+    /**
+     * Change a credential's description, the addresses it may be used from,
+     * and whether it works at all. The secret never changes: a new secret is a
+     * new credential.
+     */
+    public function updateApiCredential(Request $request, ApiCredential $credential)
+    {
+        $validated = $request->validate([
+            'description' => 'required|string|max:255',
+            'allowed_ips' => 'nullable|string|max:5000',
+        ]);
+        $allowed = $this->allowedIpsFrom($validated['allowed_ips'] ?? null);
+
+        $credential->update([
+            'description' => $validated['description'],
+            'allowed_ips' => $allowed ?: null,
+            'active' => $request->boolean('active'),
+        ]);
+
+        return back()->with('success', __('messages.success.api_credential_updated'));
+    }
+
+    /** The allow-list from the form, or back to it with the entry that is not an address. */
+    private function allowedIpsFrom(?string $input): array
+    {
+        [$list, $bad] = \App\Support\IpAllowList::parse($input);
+
+        if ($list === null) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'allowed_ips' => __('admin.api_credentials.invalid_ip', ['value' => $bad]),
+            ]);
+        }
+
+        return $list;
     }
 
     public function destroyApiCredential(ApiCredential $credential)
@@ -1682,7 +1725,7 @@ class ConfigController extends Controller
                 'desc' => \Illuminate\Support\Facades\Lang::has($descKey)
                     ? __($descKey)
                     : ucfirst(strtolower(preg_replace('/(?<!^)[A-Z]/', ' $0', $method))),
-                'params' => $params[$slug] ?? '',
+                'params' => \App\Support\ApiReference::hint($params[$slug] ?? []),
             ];
         }
 

@@ -7,12 +7,18 @@
     <button type="button" onclick="document.getElementById('modal-add-api').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.api_credentials.generate_key') }}</button>
 </div>
 
+@if($errors->any())
+<div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">
+    <ul style="margin:0;padding-left:18px;">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+</div>
+@endif
+
 @if(session('new_secret'))
 <div style="padding:15px;background:#fcf8e3;border:1px solid #faebcc;border-radius:4px;margin-bottom:15px;">
     <strong style="color:#8a6d3b;">{{ __('admin.api_credentials.save_secret_warning') }}</strong>
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
         <code id="api-secret-display" style="flex:1;padding:10px;background:#fff;border:1px solid #ddd;border-radius:3px;font-size:14px;word-break:break-all;">{{ session('new_secret') }}</code>
-        <button type="button" class="btn btn-default btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('api-secret-display').textContent);this.textContent='Copied!';">{{ __('common.actions.copy') }}</button>
+        <button type="button" class="btn btn-default btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('api-secret-display').textContent);this.textContent=@js(__('admin.api_credentials.copied'));">{{ __('common.actions.copy') }}</button>
     </div>
 </div>
 @endif
@@ -24,16 +30,18 @@
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.api_credentials.no_keys') }}</div>
     @else
     <table class="data-table">
-        <thead><tr><th>{{ __('common.table.description') }}</th><th>{{ __('admin.api_credentials.identifier') }}</th><th>{{ __('admin.api_credentials.admin') }}</th><th>{{ __('common.table.created') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.description') }}</th><th>{{ __('admin.api_credentials.identifier') }}</th><th>{{ __('admin.api_credentials.admin') }}</th><th>{{ __('admin.api_credentials.allowed_from') }}</th><th>{{ __('common.table.created') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($credentials as $cred)
         <tr>
             <td style="font-weight:600;">{{ $cred->description ?: __('admin.api_credentials.no_description') }}</td>
             <td><code style="font-size:12px;background:#f5f5f5;padding:2px 6px;border-radius:3px;">{{ $cred->identifier }}</code></td>
             <td style="font-size:12px;">{{ $cred->admin->full_name ?? 'N/A' }}</td>
+            <td style="font-size:12px;">@if(! empty($cred->allowed_ips)){{ implode(', ', $cred->allowed_ips) }}@else<span style="color:#999;">{{ __('admin.api_credentials.anywhere') }}</span>@endif</td>
             <td style="font-size:12px;color:#777;">{{ $cred->created_at?->timezone(display_tz())->format(datetime_fmt()) ?? '-' }}</td>
             <td><span class="badge {{ $cred->active ? 'badge-active' : 'badge-suspended' }}">{{ $cred->active ? __('common.status.active') : __('common.status.disabled') }}</span></td>
-            <td style="text-align:right;">
+            <td style="text-align:right;white-space:nowrap;">
+                <button type="button" class="btn btn-default btn-xs" onclick="document.getElementById('modal-edit-api-{{ $cred->id }}').style.display='flex'">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $cred) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.api_credentials.confirm_revoke") }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.api_credentials.revoke') }}</button>
@@ -66,7 +74,12 @@
             <div style="padding:20px;">
                 <div class="form-group">
                     <label class="form-label">{{ __('common.form.description') }} *</label>
-                    <input type="text" name="description" required class="form-control" placeholder="e.g. Mobile App, External CRM">
+                    <input type="text" name="description" required maxlength="255" class="form-control" placeholder="{{ __('admin.api_credentials.description_placeholder') }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.api_credentials.allowed_ips') }}</label>
+                    <textarea name="allowed_ips" rows="3" class="form-control" style="font-family:monospace;font-size:12px;"></textarea>
+                    <small style="color:#777;font-size:12px;">{{ __('admin.api_credentials.allowed_ips_hint') }}</small>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -76,4 +89,37 @@
         </form>
     </div>
 </div>
+{{-- Edit modals: description, allowed addresses, on/off. The secret never changes. --}}
+@foreach($credentials ?? [] as $cred)
+<div id="modal-edit-api-{{ $cred->id }}" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="this.parentElement.style.display='none'"></div>
+    <div style="position:relative;background:#fff;border-radius:4px;width:450px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:16px;">{{ __('admin.api_credentials.edit_credential') }}</h4>
+            <button type="button" onclick="this.closest('[id]').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('admin.config.api-credentials.update', $cred) }}">
+            @csrf @method('PUT')
+            <div style="padding:20px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('common.form.description') }} *</label>
+                    <input type="text" name="description" required maxlength="255" class="form-control" value="{{ $cred->description }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.api_credentials.allowed_ips') }}</label>
+                    <textarea name="allowed_ips" rows="3" class="form-control" style="font-family:monospace;font-size:12px;">{{ implode("\n", (array) $cred->allowed_ips) }}</textarea>
+                    <small style="color:#777;font-size:12px;">{{ __('admin.api_credentials.allowed_ips_hint') }}</small>
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;font-weight:normal;">
+                    <input type="checkbox" name="active" value="1" @checked($cred->active)> {{ __('common.status.active') }}
+                </label>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="this.closest('[id]').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endforeach
 @endsection

@@ -47,8 +47,9 @@
                 <tr><td style="padding:6px 10px;"><code>action</code></td><td style="padding:6px 10px;">{{ trans_markup('admin.api_docs.action_param_desc') }}</td></tr>
             </tbody>
         </table>
-        <p style="font-size:13px;color:#555;margin:0 0 8px;"><strong>{{ __('admin.api_docs.base_url') }}:</strong> <code>POST {{ url('/api/v1') }}</code></p>
-        <p style="font-size:12px;color:#888;margin:0;">{{ trans_markup('admin.api_docs.response_note') }}</p>
+        <p style="font-size:13px;color:#555;margin:0 0 8px;"><strong>{{ __('admin.api_docs.base_url') }}:</strong> <code>{{ url('/api/v1') }}/&lt;action&gt;</code></p>
+        <p style="font-size:12px;color:#888;margin:0 0 8px;">{{ trans_markup('admin.api_docs.response_note') }}</p>
+        <p style="font-size:13px;margin:0;"><a href="https://panelica.github.io/pnlcs/api/" target="_blank" rel="noopener">{{ __('admin.api_docs.full_reference') }}</a></p>
     </div>
 </div>
 
@@ -101,25 +102,18 @@
             <button class="tab-btn" onclick="switchTab('python1','tab-python1-btn')">Python</button>
         </div>
         <div id="curl1" class="tab-pane active">
-<pre class="code-block">curl -X POST {{ url('/api/v1') }} \
-  -d "identifier=YOUR_IDENTIFIER" \
-  -d "secret=YOUR_SECRET" \
-  -d "action=getclients" \
+<pre class="code-block">curl -G {{ url('/api/v1/getclients') }} \
+  -H "X-API-Key: YOUR_IDENTIFIER" \
+  -H "X-API-Secret: YOUR_SECRET" \
   -d "limitnum=25"</pre>
         </div>
         <div id="php1" class="tab-pane">
 <pre class="code-block">&lt;?php
-$url = '{{ url('/api/v1') }}';
-$params = [
-    'identifier' => 'YOUR_IDENTIFIER',
-    'secret'     => 'YOUR_SECRET',
-    'action'     => 'getclients',
-    'limitnum'   => 25,
-];
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, $url);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
+$ch = curl_init('{{ url('/api/v1/getclients') }}?' . http_build_query(['limitnum' => 25]));
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'X-API-Key: YOUR_IDENTIFIER',
+    'X-API-Secret: YOUR_SECRET',
+]);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 $result = json_decode(curl_exec($ch), true);
 curl_close($ch);
@@ -127,53 +121,46 @@ print_r($result);</pre>
         </div>
         <div id="python1" class="tab-pane">
 <pre class="code-block">import requests
-
-url = '{{ url('/api/v1') }}'
-payload = {
-    'identifier': 'YOUR_IDENTIFIER',
-    'secret': 'YOUR_SECRET',
-    'action': 'getclients',
-    'limitnum': 25,
-}
-response = requests.post(url, data=payload)
+response = requests.get(
+    '{{ url('/api/v1/getclients') }}',
+    headers={'X-API-Key': 'YOUR_IDENTIFIER', 'X-API-Secret': 'YOUR_SECRET'},
+    params={'limitnum': 25},
+)
 print(response.json())</pre>
         </div>
-
         <hr style="margin:20px 0;">
-
         <h4 style="font-size:14px;font-weight:700;margin:0 0 8px;">{{ __('admin.api_docs.example_create_invoice') }}</h4>
         <div class="tab-btns">
             <button class="tab-btn active" onclick="switchTab('curl2','tab-curl2-btn')">cURL</button>
             <button class="tab-btn" onclick="switchTab('php2','tab-php2-btn')">PHP</button>
         </div>
         <div id="curl2" class="tab-pane active">
-<pre class="code-block">curl -X POST {{ url('/api/v1') }} \
-  -d "identifier=YOUR_IDENTIFIER" \
-  -d "secret=YOUR_SECRET" \
-  -d "action=createinvoice" \
+<pre class="code-block">curl -X POST {{ url('/api/v1/createinvoice') }} \
+  -H "X-API-Key: YOUR_IDENTIFIER" \
+  -H "X-API-Secret: YOUR_SECRET" \
   -d "userid=1" \
-  -d "date=2026-01-01" \
   -d "duedate=2026-01-15" \
-  -d "itemdescription[]=Hosting - January 2026" \
-  -d "itemamount[]=29.99" \
+  -d "items[0][description]=Hosting - January 2026" \
+  -d "items[0][amount]=29.99" \
   -d "paymentmethod=banktransfer"</pre>
         </div>
         <div id="php2" class="tab-pane">
 <pre class="code-block">&lt;?php
-$params = [
-    'identifier'       => 'YOUR_IDENTIFIER',
-    'secret'           => 'YOUR_SECRET',
-    'action'           => 'createinvoice',
-    'userid'           => 1,
-    'date'             => '2026-01-01',
-    'duedate'          => '2026-01-15',
-    'itemdescription'  => ['Hosting - January 2026'],
-    'itemamount'       => [29.99],
-    'paymentmethod'    => 'banktransfer',
-];
-// ... send POST request ...</pre>
+$ch = curl_init('{{ url('/api/v1/createinvoice') }}');
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'X-API-Key: YOUR_IDENTIFIER',
+    'X-API-Secret: YOUR_SECRET',
+]);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+    'userid'        => 1,
+    'duedate'       => '2026-01-15',
+    'items'         => [['description' => 'Hosting - January 2026', 'amount' => 29.99]],
+    'paymentmethod' => 'banktransfer',
+]));
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+$result = json_decode(curl_exec($ch), true);</pre>
         </div>
-
         <hr style="margin:20px 0;">
 
         <h4 style="font-size:14px;font-weight:700;margin:0 0 8px;">{{ __('admin.api_docs.example_response') }}</h4>
@@ -182,15 +169,13 @@ $params = [
   "totalresults": 25,         {{ __('admin.api_docs.response_total_comment') }}
   "startnumber": 0,           {{ __('admin.api_docs.response_start_comment') }}
   "numreturned": 10,          {{ __('admin.api_docs.response_num_comment') }}
-  "clients": {                {{ __('admin.api_docs.response_data_comment') }}
-    "client": [ ... ]
-  }
+  "data": [ ... ]             {{ __('admin.api_docs.response_data_comment') }}
 }
 
 {{ __('admin.api_docs.response_error_comment') }}
 {
   "result": "error",
-  "message": "Authentication Failed"
+  "message": "Invalid API secret"
 }</pre>
 
     </div>

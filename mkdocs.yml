@@ -1,5 +1,5 @@
 site_name: PNLCS Documentation
-site_description: User guide for PNLCS — the open-source, self-hosted WHMCS alternative
+site_description: User guide, API reference and MCP server for PNLCS — the open-source, self-hosted WHMCS alternative
 site_url: https://panelica.github.io/pnlcs/
 repo_url: https://github.com/Panelica/pnlcs
 repo_name: Panelica/pnlcs
@@ -8,6 +8,7 @@ copyright: Built and maintained by the Panelica team · MIT Licensed
 
 theme:
   name: material
+  custom_dir: overrides
   language: en
   palette:
     - media: "(prefers-color-scheme: light)"
@@ -32,12 +33,18 @@ theme:
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.tabs.link
     - toc.follow
+    - announce.dismiss
 
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -48,6 +55,9 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -76,6 +86,24 @@ nav:
       - Migrate from WHMCS: guides/migrate-from-whmcs.md
   - Troubleshooting:
       - Common Issues: troubleshooting/common-issues.md
+  - API:
+      - Overview: api/index.md
+      - All Endpoints: api/all-endpoints.md
+      - Clients: api/clients.md
+      - Invoices & Billing: api/invoices.md
+      - Orders: api/orders.md
+      - Services & Products: api/services.md
+      - Domains: api/domains.md
+      - Support Tickets: api/tickets.md
+      - Quotes: api/quotes.md
+      - Projects: api/projects.md
+      - Affiliates: api/affiliates.md
+      - SSL Certificates: api/ssl.md
+      - API Credentials: api/credentials.md
+      - System: api/system.md
+  - MCP Server:
+      - Setup: mcp/index.md
+      - Tools: mcp/tools.md
   - Reference:
       - Scheduled Commands: reference/scheduled-commands.md
       - Developer API & Hooks: reference/developer.md
