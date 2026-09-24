@@ -140,7 +140,10 @@ const UNTRANSLATED_VALUE_BUDGET = [
     'tr' => 33,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
-    'de' => 100,
+    // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
+    // German hosting writes Domain, Domains and Registrar, not Domäne or
+    // Standesbeamter. Those 25 labels are the whole of the raise.
+    'de' => 125,
     'pl' => 70,
     'zh' => 20,
 ];

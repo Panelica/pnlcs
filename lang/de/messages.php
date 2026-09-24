@@ -419,7 +419,7 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
     'validation.line_item_amount_required' => 'Jede Position muss einen Betrag haben.',
     'validation.line_item_description_required' => 'Jede Werbebuchung muss eine Beschreibung haben.',
     'whois.connect_error' => 'Fehler: Verbindung zu :server konnte nicht hergestellt werden (Fehlernummer=:errno: :errstr)',
-    'whois.invalid_domain' => 'Ungültiger Domänenname.',
+    'whois.invalid_domain' => 'Ungültiger Domainname.',
     'whois.no_server_known' => 'Für .:tld. ist kein WHOIS-Server bekannt. Versuchen Sie, whois.iana.org manuell abzufragen.',
     'ksef.settings_title' => 'KSEF (e-Rechnungen)',
     'ksef.sidebar' => 'KSEF',

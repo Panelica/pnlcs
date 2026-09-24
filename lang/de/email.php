@@ -58,7 +58,7 @@ return [
         'customer' => 'Kunde',
         'date_label' => 'Datum',
         'department_label' => 'Abteilung',
-        'domain_label' => 'Domäne',
+        'domain_label' => 'Domain',
         'due_date_label' => 'Fälligkeitsdatum',
         'email_label' => 'E-Mail',
         'footer' => 'Dies ist eine automatisierte Nachricht. Bitte antworten Sie nicht direkt.',
@@ -212,7 +212,7 @@ return [
         'configuration_submitted_subject' => 'SSL-Konfiguration übermittelt',
     ],
     'ssl_config_required' => [
-        'activate_text' => 'Um Ihr SSL-Zertifikat zu aktivieren, müssen Sie den Konfigurationsprozess abschließen, indem Sie Ihre CSR (Certificate Signing Request) bereitstellen und eine Domänenvalidierungsmethode auswählen.',
+        'activate_text' => 'Um Ihr SSL-Zertifikat zu aktivieren, müssen Sie den Konfigurationsprozess abschließen, indem Sie Ihre CSR (Certificate Signing Request) bereitstellen und eine Methode zur Domainvalidierung auswählen.',
         'body' => 'Ihre SSL-Zertifikatsbestellung ist eingegangen und wartet auf die Konfiguration.',
         'configure_button' => 'Konfigurieren Sie das SSL-Zertifikat',
         'csr_help' => 'Wenn Sie Hilfe bei der Erstellung einer CSR benötigen, wenden Sie sich bitte an unser Support-Team.',

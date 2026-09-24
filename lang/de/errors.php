@@ -19,5 +19,5 @@ return [
         'title' => 'Serverfehler',
     ],
     'go_back' => 'Geh zurück',
-    'go_home' => 'Geh nach Hause',
+    'go_home' => 'Zur Homepage',
 ];
