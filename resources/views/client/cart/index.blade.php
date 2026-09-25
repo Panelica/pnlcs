@@ -42,10 +42,15 @@
                         @foreach($totals["items"] as $key => $item)
                         <tr>
                             <td>
-                                <div style="font-weight:600">{{ $item["product_name"] ?? $item["name"] ?? "Product" }}</div>
+                                @if(($item["type"] ?? "") === "domain")
+                                {{-- A domain line said "Product", with a dash for its term. --}}
+                                <div style="font-weight:600">{{ __(($item["action"] ?? "register") === "transfer" ? 'client.cart.line_domain_transfer' : 'client.cart.line_domain_register') }}</div>
+                                @else
+                                <div style="font-weight:600">{{ $item["product_name"] ?? $item["name"] ?? __('client.cart.product') }}</div>
+                                @endif
                                 @if(!empty($item["domain"]))<div class="text-muted text-sm">{{ $item["domain"] }}</div>@endif
                             </td>
-                            <td class="text-muted" style="text-transform:capitalize">{{ $item["billing_cycle"] ?? "-" }}</td>
+                            <td class="text-muted" style="text-transform:capitalize">{{ ($item["type"] ?? "") === "domain" ? trans_choice('client.cart.line_years', (int) ($item["years"] ?? 1), ['count' => (int) ($item["years"] ?? 1)]) : ($item["billing_cycle"] ?? "-") }}</td>
                             <td style="text-align:right;font-weight:700">{{ money_fmt($item["price"] ?? 0) }}</td>
                             <td>
                                 <form method="POST" action="{{ route("client.cart.remove", $key) }}" style="display:inline">

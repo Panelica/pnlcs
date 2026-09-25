@@ -109,7 +109,7 @@
                                  really is the one that comes up selected. --}}
                             @foreach($pricedCycles as $cycle => $cyclePrice)
                                 <label class="cycle-option {{ $loop->first ? 'selected' : '' }}">
-                                    <input type="radio" name="billing_cycle" value="{{ $cycle }}" {{ $loop->first ? 'checked' : '' }}
+                                    <input type="radio" name="billing_cycle" value="{{ $cycle }}" data-price="{{ $cyclePrice }}" {{ $loop->first ? 'checked' : '' }}
                                         onchange="document.querySelectorAll('.cycle-option').forEach(e=>e.classList.remove('selected')); this.closest('.cycle-option').classList.add('selected')">
                                     <div class="cycle-price">{{ $currency?->prefix }}{{ number_format($cyclePrice, 2) }}{{ $currency?->suffix }}</div>
                                     <div class="cycle-label">{{ $cycle }}</div>
@@ -226,17 +226,27 @@
                 <div class="pn-card-body">
                     <div style="display:flex; gap:8px; margin-bottom:12px;">
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                            <input type="radio" name="domain_option" value="register" checked> {{ __('client.cart.register_new_domain') }}
+                            <input type="radio" name="domain_option" value="register" @checked(old('domain_option', 'register') === 'register')> {{ __('client.cart.register_new_domain') }}
                         </label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                            <input type="radio" name="domain_option" value="transfer"> {{ __('client.cart.transfer_existing') }}
+                            <input type="radio" name="domain_option" value="transfer" @checked(old('domain_option') === 'transfer')> {{ __('client.cart.transfer_existing') }}
                         </label>
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-                            <input type="radio" name="domain_option" value="own"> {{ __('client.cart.use_own_domain') }}
+                            <input type="radio" name="domain_option" value="own" @checked(old('domain_option') === 'own')> {{ __('client.cart.use_own_domain') }}
                         </label>
                     </div>
                     <div class="form-group">
-                        <input type="text" name="domain" class="form-control" placeholder="yourdomain.com" value="{{ old('domain') }}">
+                        <input type="text" name="domain" id="domainInput" class="form-control" placeholder="yourdomain.com" value="{{ old('domain') }}" autocomplete="off">
+                        @error('domain')<div class="text-sm" style="color:var(--danger);margin-top:6px;">{{ $message }}</div>@enderror
+                        {{-- Whether the name can be had and what it costs: a new
+                             domain or a transfer is bought with the hosting. --}}
+                        <div id="domainStatus" class="text-sm" style="margin-top:6px;" aria-live="polite"></div>
+                    </div>
+                    <div class="form-group" id="eppField" @if(old('domain_option') !== 'transfer') hidden @endif>
+                        <label class="form-label" for="epp_code">{{ __('client.domains.epp_code') }}</label>
+                        <input type="text" name="epp_code" id="epp_code" class="form-control" value="{{ old('epp_code') }}" autocomplete="off">
+                        <div class="text-muted text-sm" style="margin-top:4px;">{{ __('client.domains.epp_code_transfer_hint') }}</div>
+                        @error('epp_code')<div class="text-sm" style="color:var(--danger);margin-top:6px;">{{ $message }}</div>@enderror
                     </div>
                 </div>
             </div>
@@ -264,6 +274,10 @@
                         <span style="color:var(--muted);">{{ __('client.cart.billing_cycle') }}</span>
                         <span id="summaryBilling">&mdash;</span>
                     </div>
+                    <div class="summary-row" id="summaryDomainRow" style="display:none;">
+                        <span style="color:var(--muted);">{{ __('client.cart.domain') }}</span>
+                        <span id="summaryDomain"></span>
+                    </div>
                     <div class="summary-row">
                         <span>{{ __('client.cart.total') }}</span>
                         <span id="summaryTotal" style="color:#1a4d80;">&mdash;</span>
@@ -283,9 +297,58 @@ document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
         document.getElementById('summaryBilling').textContent = labels[this.value] || this.value;
         var label = this.closest('.cycle-option');
         var price = label ? label.querySelector('.cycle-price').textContent : '-';
-        document.getElementById('summaryTotal').textContent = price;
+        // With a domain being bought the total is both; the domain script
+        // below owns that sum once it has loaded.
+        if (window.pnlcsUpdateTotal) { window.pnlcsUpdateTotal(); } else { document.getElementById('summaryTotal').textContent = price; }
     });
 });
+// A new domain or a transfer is bought with the hosting (issue #48): check the
+// name, show its price in the summary and add it to the total. The cart checks
+// it again when the form is sent, so this is information, not the gate.
+(function () {
+    var input = document.getElementById('domainInput');
+    if (!input) return;
+    var status = document.getElementById('domainStatus'), epp = document.getElementById('eppField');
+    var row = document.getElementById('summaryDomainRow'), cell = document.getElementById('summaryDomain');
+    var token = (document.querySelector('#configForm input[name=_token]') || {}).value;
+    var cur = { prefix: @json($currency?->prefix ?? ''), suffix: @json($currency?->suffix ?? '') };
+    var texts = { checking: @json(__('client.cart.domain_checking')), unchecked: @json(__('client.cart.domain_unchecked')) };
+    var domainPrice = 0, timer = null, seq = 0;
+    function option() { var r = document.querySelector('input[name=domain_option]:checked'); return r ? r.value : 'own'; }
+    function money(n) { return cur.prefix + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + cur.suffix; }
+    window.pnlcsUpdateTotal = function () {
+        var c = document.querySelector('input[name=billing_cycle]:checked');
+        var base = c ? parseFloat(c.getAttribute('data-price') || '0') : 0;
+        document.getElementById('summaryTotal').textContent = money(base + domainPrice);
+    };
+    function show(text, color, price, formatted) {
+        domainPrice = price;
+        status.textContent = text; status.style.color = color;
+        row.style.display = price > 0 ? '' : 'none'; cell.textContent = formatted || '';
+        window.pnlcsUpdateTotal();
+    }
+    function quote() {
+        var opt = option(), name = input.value.trim(), mine = ++seq;
+        epp.hidden = opt !== 'transfer';
+        if (opt === 'own' || name.indexOf('.') < 1) { show('', '', 0); return; }
+        status.textContent = texts.checking; status.style.color = 'var(--muted)';
+        fetch(@json(route('client.cart.domain-quote')), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+            body: JSON.stringify({ domain: name, type: opt })
+        }).then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+          .then(function (q) {
+              if (mine !== seq) return;
+              if (q.status === 'ok') { show(q.message, 'var(--success)', Number(q.price), q.price_formatted); }
+              else { show(q.message, 'var(--danger)', 0); }
+          })
+          .catch(function () { if (mine === seq) show(texts.unchecked.replace(':domain', name), 'var(--danger)', 0); });
+    }
+    input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(quote, 600); });
+    document.querySelectorAll('input[name=domain_option]').forEach(function (r) { r.addEventListener('change', quote); });
+    quote();
+})();
+
 var first = document.querySelector('input[name=billing_cycle]:checked');
 if (first) { first.dispatchEvent(new Event('change')); }
 

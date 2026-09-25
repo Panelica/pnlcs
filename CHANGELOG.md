@@ -2,6 +2,29 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 2026-09-25 — A domain ordered with hosting is checked, priced and registered
+
+Reported in GitHub issue #48.
+
+### Fixed
+
+- **"Register a new domain" on a hosting order did nothing but leave a note.**
+  The name was never checked, never priced, never put on the invoice and never
+  sent to the registrar: the customer paid for the hosting alone and believed
+  the domain came with it. The same was true of "Transfer". The domain now goes
+  into the cart as a line of its own, at the price on the domain price list,
+  and is registered (or transferred) when the invoice is paid, exactly like a
+  domain bought from the domain search.
+- The name is checked before anything goes into the cart: a registered name
+  cannot be ordered as a new registration, a name the registry could not
+  answer for is not assumed to be free, a name nobody has registered cannot be
+  transferred, a transfer asks for the EPP code, and an extension the shop does
+  not sell is refused without leaving the hosting in the cart on its own.
+- The order summary on the configure page shows whether the name is available
+  and what it costs, and adds it to the total.
+- The cart names a domain line "Domain registration" or "Domain transfer" with
+  its term, instead of "Product" and a dash.
+
 ## 2026-09-25 — The client area on phones
 
 Reported in GitHub discussion #3, and measured in a browser at 320, 360, 375,

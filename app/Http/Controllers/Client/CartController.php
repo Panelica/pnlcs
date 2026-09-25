@@ -95,6 +95,7 @@ class CartController extends Controller
             'addons' => 'nullable|array',
             'addons.*' => 'integer',
             'app_slug' => 'nullable|string|max:100',
+            'epp_code' => 'nullable|string|max:255',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -117,6 +118,28 @@ class CartController extends Controller
                 $appSlug = $chosen;
             }
         }
+        // The same reading the search box gives it: a customer pastes an
+        // address, and it used to be stored exactly as pasted.
+        $domain = Domain::normalise($request->domain) ?: null;
+
+        // "Register a new domain" and "Transfer" are purchases of their own.
+        // They used to be a note on the service - never checked, priced,
+        // invoiced or registered (issue #48). The name is checked here, before
+        // anything goes into the cart, so a refusal leaves no hosting behind
+        // without the domain it was ordered for.
+        $domainOption = $request->input('domain_option');
+        $buysDomain = $product->show_domain_options && $domain !== null
+            && in_array($domainOption, ['register', 'transfer'], true);
+        if ($buysDomain) {
+            if ($domainOption === 'transfer' && trim((string) $request->input('epp_code')) === '') {
+                throw ValidationException::withMessages(['epp_code' => __('client.cart.epp_code_required')]);
+            }
+            $quote = $this->cartService->quoteDomain($domain, $domainOption);
+            if ($problem = $this->cartService->domainQuoteProblem($quote)) {
+                throw ValidationException::withMessages(['domain' => $problem]);
+            }
+        }
+
         $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
 
@@ -124,9 +147,7 @@ class CartController extends Controller
             $cart,
             $product,
             $request->billing_cycle,
-            // The same reading the search box gives it: a customer pastes an
-            // address, and it used to be stored exactly as pasted.
-            Domain::normalise($request->domain) ?: null,
+            $domain,
             $request->input('config_options', []),
             $request->input('notes'),
             $request->input('domain_option'),
@@ -134,8 +155,38 @@ class CartController extends Controller
             $appSlug
         );
 
+        // Already there when the customer found it on the search page first.
+        if ($buysDomain && ! $this->cartService->hasDomain($cart, $domain)) {
+            $this->cartService->addDomain($cart, $domain, $domainOption, 1, $request->input('epp_code'));
+        }
+
         return redirect()->route('client.cart.index')
             ->with('success', __('messages.success.product_added_to_cart'));
+    }
+
+    /**
+     * Price and availability of the domain typed on the configure page, for
+     * its order summary. The cart asks the same question again on submit.
+     */
+    public function domainQuote(Request $request)
+    {
+        $request->validate([
+            'domain' => 'required|string|max:253',
+            'type' => 'required|string|in:register,transfer',
+        ]);
+
+        $quote = $this->cartService->quoteDomain(Domain::normalise($request->domain), $request->type);
+
+        return response()->json([
+            'domain' => $quote['domain'],
+            'type' => $quote['type'],
+            'status' => $quote['status'],
+            'price' => $quote['price'],
+            'price_formatted' => money_fmt($quote['price']),
+            'message' => $this->cartService->domainQuoteProblem($quote)
+                ?? __($quote['type'] === 'transfer' ? 'client.cart.domain_transfer_quote' : 'client.cart.domain_available',
+                    ['domain' => $quote['domain'], 'price' => money_fmt($quote['price'])]),
+        ]);
     }
 
     /**

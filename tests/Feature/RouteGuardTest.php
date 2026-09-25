@@ -77,6 +77,9 @@ const GUARD_PUBLIC_CLIENT = [
     'client.cart.index',
     'client.cart.add',
     'client.cart.add-domain',
+    // The configure page's order summary: price and availability of the domain
+    // bought with the hosting, for a visitor as much as for a customer.
+    'client.cart.domain-quote',
     'client.cart.remove',
     'client.cart.promo',
     'client.cart.checkout',

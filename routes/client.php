@@ -96,6 +96,8 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
     Route::get('cart', [CartController::class, 'index'])->name('cart.index');
     Route::post('cart/add', [CartController::class, 'addToCart'])->name('cart.add');
     Route::post('cart/add-domain', [CartController::class, 'addDomainToCart'])->name('cart.add-domain');
+    // Asks the registry, as the domain search does, so it is throttled the same way.
+    Route::post('cart/domain-quote', [CartController::class, 'domainQuote'])->middleware('throttle:20,1')->name('cart.domain-quote');
     Route::delete('cart/remove/{index}', [CartController::class, 'removeItem'])->name('cart.remove');
     Route::post('cart/promo', [CartController::class, 'applyPromo'])->name('cart.promo');
     Route::get('cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');

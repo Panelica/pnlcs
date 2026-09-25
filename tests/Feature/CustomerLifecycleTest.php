@@ -7,6 +7,8 @@ use App\Models\ConfigOptionGroup;
 use App\Models\ConfigOptionLink;
 use App\Models\ConfigOptionSub;
 use App\Models\Currency;
+use App\Models\Domain;
+use App\Models\DomainPricing;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\ModuleQueue;
@@ -19,6 +21,7 @@ use App\Models\ServerGroup;
 use App\Models\Service;
 use App\Models\ServiceConfigOption;
 use App\Models\User;
+use App\Services\DomainAvailability;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
@@ -81,6 +84,20 @@ test('a customer goes from signup to termination through the real endpoints', fu
     $fx = shop();
     $admin = Admin::factory()->create();
 
+    // "Register a new domain" is a purchase of its own: priced from the domain
+    // price list and checked with the registry (issue #48). The registry is
+    // stood in for here, answering that the name is free.
+    DomainPricing::updateOrCreate(['extension' => '.com'], [
+        'register_price' => 12, 'transfer_price' => 10, 'renew_price' => 14,
+        'min_years' => 1, 'max_years' => 10, 'enabled' => true,
+    ]);
+    app()->instance(DomainAvailability::class, new class extends DomainAvailability {
+        public function check(string $domain): array
+        {
+            return ['domain' => $domain, 'available' => true, 'checked' => true];
+        }
+    });
+
     // ── 1. Sign up ────────────────────────────────────────────────────────
     $this->post(route('client.register.submit'), [
         'first_name' => 'Ayşe', 'last_name' => 'Yılmaz',
@@ -125,7 +142,11 @@ test('a customer goes from signup to termination through the real endpoints', fu
     $invoice = Invoice::findOrFail($order->invoice_id);
     $service = Service::where('order_id', $order->id)->firstOrFail();
 
-    expect((float) $invoice->total)->toBe(40.0)
+    // 40 for the hosting and its option, 12 for the domain. This was 40: the
+    // domain the customer asked to register was neither billed nor registered.
+    expect((float) $invoice->total)->toBe(52.0)
+        ->and(InvoiceItem::where('invoice_id', $invoice->id)->where('type', 'Domain')->count())->toBe(1)
+        ->and(Domain::where('order_id', $order->id)->where('domain', 'ayse-example.com')->exists())->toBeTrue()
         ->and($service->status)->toBe('pending')
         ->and($service->notes)->toContain('Lütfen PHP 8.3 kurun')
         ->and(ServiceConfigOption::where('service_id', $service->id)->count())->toBe(1);

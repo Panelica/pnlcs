@@ -189,6 +189,72 @@ class CartService
     }
 
     /**
+     * Can this name be had, and what does a year of it cost?
+     *
+     * Hosting ordered with "register a new domain" or "transfer" used to note
+     * the name on the service and nothing else: it was never checked, never
+     * priced and never registered, so the customer paid for the hosting alone
+     * believing the domain came with it (GitHub issue #48). The configure page
+     * asks this to show the price in the summary, and the cart asks it again
+     * before adding the domain, because the request is not the page.
+     *
+     * status: ok, taken (register: someone has it), unchecked (the registry did
+     * not answer - never read as free), not_registered (transfer: there is
+     * nothing to transfer), tld_unsupported (the shop does not sell it).
+     *
+     * @return array{domain: string, type: string, status: string, price: float}
+     */
+    public function quoteDomain(string $domain, string $type): array
+    {
+        $type = $type === 'transfer' ? 'transfer' : 'register';
+        $tld = '.'.implode('.', array_slice(explode('.', $domain), 1));
+        $pricing = str_contains($domain, '.')
+            ? DomainPricing::where('extension', $tld)->where('enabled', true)->first()
+            : null;
+
+        $quote = ['domain' => $domain, 'type' => $type, 'tld' => $tld, 'status' => 'tld_unsupported', 'price' => 0.0];
+        if (! $pricing) {
+            return $quote;
+        }
+
+        $quote['price'] = round((float) ($type === 'transfer' ? $pricing->transfer_price : $pricing->register_price), 2);
+        $lookup = app(DomainAvailability::class)->check($domain);
+
+        if ($type === 'register') {
+            $quote['status'] = ! $lookup['checked'] ? 'unchecked' : ($lookup['available'] ? 'ok' : 'taken');
+        } else {
+            // A transfer needs a registered name; if the registry could not
+            // say, the registrar is the one who will find out.
+            $quote['status'] = ($lookup['checked'] && $lookup['available']) ? 'not_registered' : 'ok';
+        }
+
+        return $quote;
+    }
+
+    /** What to tell the customer about a quote that is not ok. */
+    public function domainQuoteProblem(array $quote): ?string
+    {
+        return match ($quote['status']) {
+            'taken' => __('client.cart.domain_taken', ['domain' => $quote['domain']]),
+            'unchecked' => __('client.cart.domain_unchecked', ['domain' => $quote['domain']]),
+            'not_registered' => __('client.cart.domain_not_registered', ['domain' => $quote['domain']]),
+            'tld_unsupported' => __('client.cart.domain_tld_unsupported', ['tld' => $quote['tld']]),
+            default => null,
+        };
+    }
+
+    public function hasDomain(Cart $cart, string $domain): bool
+    {
+        foreach ($this->getData($cart)['items'] ?? [] as $item) {
+            if (($item['type'] ?? '') === 'domain' && strcasecmp((string) ($item['domain'] ?? ''), $domain) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Add a domain registration/transfer to the cart.
      */
     public function addDomain(Cart $cart, string $domain, string $type = 'register', int $years = 1, ?string $eppCode = null): Cart
