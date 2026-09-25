@@ -46,3 +46,17 @@ it('lets the contact page fall to one column instead of a fixed side column', fu
     expect($html)->toContain('class="pn-aside-grid"')
         ->not->toContain('grid-template-columns:1fr 380px');
 });
+
+it('keeps the side column layout under a theme that brings its own client layout', function () {
+    // flavor (and custom themes, such as a hosting company's own) replace the
+    // client layout. The side-column pages carried their grid in that layout
+    // once, so under such a theme they fell apart into one column on desktop.
+    $finder = app('view')->getFinder();
+    app('view')->prependLocation(base_path('themes/flavor/views'));
+    $finder->flush();
+
+    $html = $this->get(route('client.contact'))->assertOk()->getContent();
+
+    expect($html)->toContain('class="pn-aside-grid"')
+        ->toContain('.pn-aside-grid{display:grid;grid-template-columns:1fr var(--aside,360px)');
+});

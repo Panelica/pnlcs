@@ -9,6 +9,7 @@
     </div>
 </div>
 
+@include('client.partials.aside-grid-style')
 <div class="pn-aside-grid" style="--aside:380px;align-items:stretch">
     <div class="pn-card">
         <div class="pn-card-header"><span class="pn-card-title">{{ __('client.contact.send_message') }}</span></div>

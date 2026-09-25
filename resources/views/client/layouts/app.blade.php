@@ -203,10 +203,6 @@
         /* ─── TWO COL ─── */
         .pn-2col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
         @media(max-width:768px){.pn-2col{grid-template-columns:minmax(0,1fr)}}
-        /* A page with a side column (contact, password, new ticket): the side
-           column goes under the main one when there is no room beside it. */
-        .pn-aside-grid{display:grid;grid-template-columns:1fr var(--aside,360px);gap:32px;align-items:start}
-        @media(max-width:900px){.pn-aside-grid{grid-template-columns:minmax(0,1fr)}}
 
         /* ─── PROGRESS BARS ─── */
         .pn-progress-wrap{background:#e2e8f0;border-radius:999px;height:8px;overflow:hidden}

@@ -16,6 +16,7 @@
     </div>
 </div>
 
+@include('client.partials.aside-grid-style')
 <div class="pn-aside-grid" style="--aside:380px"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.password.update_password') }}</span></div>
     <div class="pn-card-body">

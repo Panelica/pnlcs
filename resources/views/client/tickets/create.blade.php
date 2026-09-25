@@ -14,6 +14,7 @@
     </div>
 </div>
 
+@include('client.partials.aside-grid-style')
 <div class="pn-aside-grid"><div class="pn-card">
     <div class="pn-card-header"><span class="pn-card-title">{{ __('client.tickets.new_support_request') }}</span></div>
     <div class="pn-card-body">
