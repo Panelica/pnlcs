@@ -94,7 +94,8 @@
     </div>
 
     @php $cfg = is_string($product->config_options) ? (json_decode($product->config_options, true) ?: []) : ($product->config_options ?? []); @endphp
-    <div class="card" style="margin-bottom:15px;">
+    @include('admin.products.partials.proxmox')
+    <div class="card" data-module-card="panelica" style="margin-bottom:15px;">
         <div class="card-header"><strong>Panelica Resources</strong> <span style="font-size:11px;color:#888;">&mdash; enforced cgroups/quota limits (full panel parity)</span></div>
         <div class="card-body">
             <input type="hidden" name="res_section" value="1">
@@ -197,6 +198,24 @@
 
 @push('scripts')
 <script>
+// Each module's settings card shows only for that module. The Panelica card
+// used to be on every product, so a Proxmox product was asked for PHP limits
+// and mailbox counts it would never use.
+(function () {
+    var moduleSelect = document.querySelector('select[name="server_type"]');
+    var panelica = document.querySelector('[data-module-card="panelica"]');
+    function showCards() {
+        var m = moduleSelect ? moduleSelect.value : '';
+        if (panelica) {
+            var on = m === '' || m === 'panelica';
+            panelica.style.display = on ? '' : 'none';
+            panelica.querySelectorAll('input,select,textarea').forEach(function (f) { f.disabled = !on; });
+        }
+        if (window.pnlcsProxmoxCard) { window.pnlcsProxmoxCard.show(m === 'proxmox'); }
+    }
+    if (moduleSelect) { moduleSelect.addEventListener('change', showCards); }
+    document.addEventListener('DOMContentLoaded', showCards);
+})();
 (function () {
     var moduleSelect = document.querySelector('select[name="server_type"]');
     var packageSelect = document.getElementById('package-select');

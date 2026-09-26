@@ -93,14 +93,36 @@ class ServiceController extends Controller
             'unsuspend' => $this->provisioning->unsuspendAccount($service),
             'terminate' => $this->provisioning->terminateAccount($service),
             'changepassword' => $this->provisioning->changePassword($service, $request->get('password', '')),
+            'pve_start', 'pve_shutdown', 'pve_reboot', 'pve_stop' => $this->proxmox($service)?->power($service, substr($action, 4))
+                ?? ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
+            'pve_claim' => $this->proxmox($service)?->claim($service, (int) $request->validate(['vmid' => 'required|integer|min:100'])['vmid'])
+                ?? ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
             default => ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
         };
 
         if ($result['success'] ?? false) {
-            return back()->with('success', __('admin.messages.module_action_success', ['action' => ucfirst($action)]));
+            return back()->with('success', str_starts_with($action, 'pve_')
+                ? $result['message']
+                : __('admin.messages.module_action_success', ['action' => ucfirst($action)]));
         }
 
         return back()->with('error', $result['message'] ?? __('admin.messages.module_action_failed'));
+    }
+
+    private function proxmox(Service $service): ?\Modules\Servers\Proxmox\ProxmoxModule
+    {
+        $module = $this->provisioning->resolveModule($service);
+
+        return $module instanceof \Modules\Servers\Proxmox\ProxmoxModule ? $module : null;
+    }
+
+    /** Live state of the service's virtual server, for the admin page. */
+    public function vpsStatus(Service $service)
+    {
+        $module = $this->proxmox($service);
+        abort_unless($module, 404);
+
+        return response()->json($module->vmStatus($service));
     }
 
     /**

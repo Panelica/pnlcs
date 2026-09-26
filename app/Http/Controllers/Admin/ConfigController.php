@@ -688,6 +688,12 @@ class ConfigController extends Controller
             return back()->withInput()->withErrors(['access_hash' => $error]);
         }
 
+        $settings = $this->serverSettings($request);
+        if (is_string($settings)) {
+            return back()->withInput()->withErrors(['settings' => $settings]);
+        }
+        $v['settings'] = $settings;
+
         $server = Server::create($v);
 
         $warning = $this->hostnameWarning($server->hostname, $server->ip_address);
@@ -1113,6 +1119,12 @@ class ConfigController extends Controller
             return back()->withInput()->withErrors(['access_hash' => $error]);
         }
 
+        $settings = $this->serverSettings($request, $server);
+        if (is_string($settings)) {
+            return back()->withInput()->withErrors(['settings' => $settings]);
+        }
+        $v['settings'] = $settings;
+
         $server->update($v);
 
         $warning = $this->hostnameWarning($server->hostname, $server->ip_address);
@@ -1156,6 +1168,69 @@ class ConfigController extends Controller
         }
 
         return trim($hostname, " \t\n\r\0\x0B.");
+    }
+
+    /**
+     * The type-specific settings from the form, or an error message.
+     *
+     * Only Proxmox has any today: the node, the resource pool, the VM ids
+     * PNLCS may use and the IPv4 addresses it hands out. Settings of a type
+     * the server no longer has are dropped, so switching the type does not
+     * leave a hidden pool behind.
+     */
+    private function serverSettings(Request $request, ?Server $existing = null): array|string|null
+    {
+        $settings = $existing?->settings ?? [];
+
+        if (strtolower((string) $request->input('type')) !== 'proxmox') {
+            return array_diff_key($settings, array_flip(['node', 'pool', 'vmid_min', 'vmid_max', 'ipv4_pool', 'verify_tls', 'ci_vendor', 'backup_storage'])) ?: null;
+        }
+
+        $in = (array) $request->input('settings', []);
+        $name = '/^[A-Za-z0-9][A-Za-z0-9._-]{0,62}$/';
+        $node = trim((string) ($in['node'] ?? ''));
+        $pool = trim((string) ($in['pool'] ?? ''));
+        $min = (int) ($in['vmid_min'] ?? 0);
+        $max = (int) ($in['vmid_max'] ?? 0);
+        $ipv4 = trim(str_replace("\r\n", "\n", (string) ($in['ipv4_pool'] ?? '')));
+        $vendor = trim((string) ($in['ci_vendor'] ?? ''));
+        $backupStorage = trim((string) ($in['backup_storage'] ?? ''));
+        if ($backupStorage !== '' && ! preg_match($name, $backupStorage)) {
+            return __('proxmox.admin.backup_storage_invalid');
+        }
+
+        if ($vendor !== '' && ! preg_match('#^[A-Za-z0-9][A-Za-z0-9._-]*:snippets/[A-Za-z0-9._/-]+$#', $vendor)) {
+            return __('proxmox.admin.ci_vendor_invalid');
+        }
+
+        if ($node !== '' && ! preg_match($name, $node)) {
+            return __('proxmox.admin.node_invalid');
+        }
+        if ($pool !== '' && ! preg_match($name, $pool)) {
+            return __('proxmox.admin.pool_invalid');
+        }
+        if ($min !== 0 && ($min < 100 || $min > 999999999)) {
+            return __('proxmox.admin.vmid_invalid');
+        }
+        if ($max !== 0 && ($min === 0 || $max < $min)) {
+            return __('proxmox.admin.vmid_invalid');
+        }
+        try {
+            \Modules\Servers\Proxmox\Ipv4Pool::ranges($ipv4);
+        } catch (\InvalidArgumentException $e) {
+            return __('proxmox.error.pool_invalid', ['line' => $e->getMessage()]);
+        }
+
+        return array_merge($settings, [
+            'node' => $node,
+            'pool' => $pool,
+            'vmid_min' => $min ?: null,
+            'vmid_max' => $max ?: null,
+            'ipv4_pool' => $ipv4,
+            'verify_tls' => ! empty($in['verify_tls']),
+            'ci_vendor' => $vendor,
+            'backup_storage' => $backupStorage,
+        ]);
     }
 
     private function credentialError(Request $request, ?Server $existing = null): ?string
@@ -1237,7 +1312,7 @@ class ConfigController extends Controller
     {
         $host = $server->hostname ?? $server->ip_address;
         $port = $server->port ?? match ($server->type) {
-            'panelica' => 8443, 'cpanel' => 2087, 'plesk' => 8443, 'directadmin' => 2222, default => 22
+            'panelica' => 8443, 'cpanel' => 2087, 'plesk' => 8443, 'directadmin' => 2222, 'proxmox' => 8006, default => 22
         };
         if (empty($host)) {
             return back()->with('error', __('admin.messages.no_hostname'));
@@ -1253,6 +1328,20 @@ class ConfigController extends Controller
             // never sign in was given a green light and provisioning failed
             // later with nobody watching.
             $module = app(ModuleRegistry::class)->getServerModule((string) $server->type);
+
+            // A module that can say more than yes or no (which rights are
+            // missing, which node is offline) shows its full report.
+            if ($module && method_exists($module, 'diagnose')) {
+                try {
+                    $report = $module->diagnose($server);
+                } catch (\Throwable $e) {
+                    return back()->with('error', __('admin.servers.auth_error', ['host' => $host, 'error' => $e->getMessage()]));
+                }
+
+                return back()
+                    ->with($report['ok'] ? 'success' : 'error', __($report['ok'] ? 'proxmox.admin.test_passed' : 'proxmox.admin.test_failed', ['name' => $server->name]))
+                    ->with('server_report', ['server_id' => $server->id, 'name' => $server->name] + $report);
+            }
 
             if ($module) {
                 try {

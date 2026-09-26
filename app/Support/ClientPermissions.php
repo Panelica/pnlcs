@@ -32,7 +32,7 @@ class ClientPermissions
 
         return match (true) {
             $name === 'client.services.login' => 'productsso',
-            in_array($name, ['client.services.index', 'client.services.show', 'client.services.usage'], true) => 'products',
+            in_array($name, ['client.services.index', 'client.services.show', 'client.services.usage', 'client.services.vps.status', 'client.services.vps.graphs', 'client.services.vps.snapshots', 'client.services.vps.backups'], true) => 'products',
             str_starts_with($name, 'client.services.') => 'manageproducts',
             in_array($name, ['client.ssl.index', 'client.ssl.show'], true) => 'products',
             str_starts_with($name, 'client.ssl.') => 'manageproducts',

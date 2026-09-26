@@ -130,6 +130,106 @@ class ProductController extends Controller
         return response()->json($this->packagesFor($request->query('module')));
     }
 
+    /**
+     * Nodes, storages, bridges and templates of a Proxmox server, for the
+     * product form's drop-downs. Asked live, so the form offers what the
+     * cluster really has rather than names typed from memory.
+     */
+    public function proxmoxCatalog(Request $request)
+    {
+        $server = Server::where('type', 'proxmox')
+            ->when($request->integer('server_id'), fn ($q, $id) => $q->whereKey($id))
+            ->orderByDesc('active')->first();
+
+        if (! $server) {
+            return response()->json(['ok' => false, 'error' => __('admin.products.no_server_for_module')]);
+        }
+
+        $module = app(ModuleRegistry::class)->getServerModule('proxmox');
+        try {
+            $catalog = $module->catalog($server, (string) $request->query('node', ''));
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'error' => $e->getMessage()]);
+        }
+
+        return response()->json($catalog + ['server_id' => $server->id]);
+    }
+
+    /**
+     * The Proxmox part of the product form, validated and ready to merge into
+     * config_options.
+     */
+    private function proxmoxConfig(Request $request): array
+    {
+        $v = $request->validate([
+            'pve_type' => 'required|in:qemu,lxc',
+            'pve_node' => ['nullable', 'regex:/^[A-Za-z0-9][A-Za-z0-9._-]*$/'],
+            'pve_template' => 'nullable|integer|min:100',
+            'pve_ostemplate' => 'nullable|string|max:255',
+            'pve_iso' => 'nullable|string|max:255',
+            'pve_storage' => ['required', 'regex:/^[A-Za-z0-9][A-Za-z0-9._-]*$/'],
+            'pve_bridge' => ['required', 'regex:/^[A-Za-z0-9][A-Za-z0-9._-]*$/'],
+            'pve_vlan' => 'nullable|integer|min:0|max:4094',
+            'pve_rate' => 'nullable|numeric|min:0|max:100000',
+            'pve_cores' => 'required|integer|min:1|max:512',
+            'pve_sockets' => 'nullable|integer|min:1|max:8',
+            'pve_cpulimit' => 'nullable|numeric|min:0|max:512',
+            'pve_memory' => 'required|integer|min:64',
+            'pve_swap' => 'nullable|integer|min:0',
+            'pve_disk' => 'required|integer|min:1',
+            'pve_bandwidth' => 'nullable|integer|min:0',
+            'pve_snapshots' => 'nullable|integer|min:0|max:50',
+            'pve_backups' => 'nullable|integer|min:0|max:100',
+            'pve_ipv4' => 'required|in:dhcp,pool',
+            'pve_ipv6' => 'nullable|in:none,auto',
+            'pve_ciuser' => ['nullable', 'regex:/^[a-z_][a-z0-9_-]{0,31}$/'],
+            'pve_nameserver' => 'nullable|string|max:255',
+            'pve_os_choices' => 'nullable|array',
+            'pve_os_choices.*' => 'string|max:255',
+        ]);
+
+        if ($v['pve_type'] === 'lxc' && blank($v['pve_ostemplate'] ?? null)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['pve_ostemplate' => __('proxmox.error.no_ostemplate')]);
+        }
+        if ($v['pve_type'] === 'qemu' && blank($v['pve_template'] ?? null) && blank($v['pve_iso'] ?? null)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['pve_template' => __('proxmox.error.no_template')]);
+        }
+
+        $names = (array) $request->input('pve_os_names', []);
+
+        return [
+            'pve_type' => $v['pve_type'],
+            'pve_node' => (string) ($v['pve_node'] ?? ''),
+            'pve_template' => (string) ($v['pve_template'] ?? ''),
+            'pve_ostemplate' => (string) ($v['pve_ostemplate'] ?? ''),
+            'pve_iso' => (string) ($v['pve_iso'] ?? ''),
+            'pve_storage' => $v['pve_storage'],
+            'pve_bridge' => $v['pve_bridge'],
+            'pve_vlan' => (int) ($v['pve_vlan'] ?? 0),
+            'pve_rate' => (float) ($v['pve_rate'] ?? 0),
+            'pve_firewall' => $request->boolean('pve_firewall') ? 1 : 0,
+            'pve_cores' => (int) $v['pve_cores'],
+            'pve_sockets' => (int) ($v['pve_sockets'] ?? 1),
+            'pve_cpulimit' => (float) ($v['pve_cpulimit'] ?? 0),
+            'pve_memory' => (int) $v['pve_memory'],
+            'pve_swap' => (int) ($v['pve_swap'] ?? 512),
+            'pve_disk' => (int) $v['pve_disk'],
+            'pve_bandwidth' => (int) ($v['pve_bandwidth'] ?? 0),
+            'pve_snapshots' => (int) ($v['pve_snapshots'] ?? 0),
+            'pve_backups' => (int) ($v['pve_backups'] ?? 0),
+            'pve_ipv4' => $v['pve_ipv4'],
+            'pve_ipv6' => $v['pve_ipv6'] ?? 'none',
+            'pve_nesting' => $request->boolean('pve_nesting') ? 1 : 0,
+            'pve_protection' => $request->boolean('pve_protection') ? 1 : 0,
+            'pve_ciuser' => (string) ($v['pve_ciuser'] ?? 'root') ?: 'root',
+            'pve_ciupgrade' => $request->boolean('pve_ciupgrade') ? 1 : 0,
+            'pve_nameserver' => (string) ($v['pve_nameserver'] ?? ''),
+            'pve_os_choices' => collect($v['pve_os_choices'] ?? [])
+                ->map(fn ($id) => ['id' => (string) $id, 'name' => trim((string) ($names[$id] ?? '')) ?: \Modules\Servers\Proxmox\ProxmoxPlan::imageName((string) $id)])
+                ->values()->all(),
+        ];
+    }
+
     public function create()
     {
         $groups = ProductGroup::orderBy('sort_order')->get();
@@ -205,6 +305,7 @@ class ProductController extends Controller
             'sslModules' => app(ModuleRegistry::class)->sslModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => $this->packagesFor($product->server_type),
+            'proxmoxServers' => Server::where('type', 'proxmox')->orderByDesc('active')->orderBy('name')->get(['id', 'name', 'active']),
             'selectedPackage' => (string) ($this->productConfig($product)['package_name']
                 ?? $this->productConfig($product)['panelica_plan_id']
                 ?? $this->productConfig($product)['cpanel_package']
@@ -237,6 +338,13 @@ class ProductController extends Controller
             'pricing.*.*' => 'nullable|numeric|min:-1',
         ]);
         unset($validated['pricing']);
+
+        // Checked before anything is saved, so a bad Proxmox field does not
+        // leave the product half updated.
+        $proxmoxConfig = $request->boolean('pve_section') && strtolower((string) ($validated['server_type'] ?? '')) === 'proxmox'
+            ? $this->proxmoxConfig($request)
+            : null;
+
         $validated['stock_control'] = $request->boolean('stock_control');
         $validated['stock_qty'] = (int) $request->input('stock_qty', 0);
         $validated['hidden'] = $request->boolean('hidden');
@@ -249,6 +357,10 @@ class ProductController extends Controller
             $config = $this->productConfig($product->fresh());
             $config['package_name'] = (string) $request->input('package_name');
             $product->update(['config_options' => $config]);
+        }
+
+        if ($proxmoxConfig !== null) {
+            $product->update(['config_options' => array_merge($this->productConfig($product->fresh()), $proxmoxConfig)]);
         }
 
         // Panelica managed resources -> merged into config_options (preserves

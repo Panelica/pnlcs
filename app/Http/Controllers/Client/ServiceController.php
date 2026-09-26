@@ -49,7 +49,18 @@ class ServiceController extends Controller
         // Resolved from the module so a different server type simply returns [].
         $hostingFeatures = $service->hostingFeatureKeys();
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures'));
+        // Virtual server controls, for modules that run one (Proxmox).
+        $vpsFeatures = [];
+        $reinstallChoices = [];
+        if ($service->server_id && in_array(strtolower((string) $service->status), ['active', 'suspended'], true)) {
+            $module = app(ProvisioningService::class)->resolveModule($service);
+            if ($module && method_exists($module, 'vpsFeatures')) {
+                $vpsFeatures = $module->vpsFeatures($service);
+                $reinstallChoices = \Modules\Servers\Proxmox\ProxmoxPlan::forService($service)->reinstallChoices();
+            }
+        }
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices'));
     }
 
     /** Order an addon for a running service; it starts once its invoice is paid. */

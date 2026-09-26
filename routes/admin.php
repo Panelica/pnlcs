@@ -86,6 +86,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     Route::middleware('admin.permission:list_products')->group(function () {
         // The product form asks the server which plans it offers.
         Route::get('products/packages', [ProductController::class, 'packages'])->name('products.packages');
+        Route::get('products/proxmox-catalog', [ProductController::class, 'proxmoxCatalog'])->name('products.proxmox-catalog');
         Route::get('products', [ProductController::class, 'index'])->name('products.index');
     });
     // The app catalogue lives on the panel; what we own is how it looks to a
@@ -176,6 +177,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:manage_services')->group(function () {
         Route::post('services/{service}/module/{action}', [ServiceController::class, 'moduleAction'])->name('services.module-action');
+        Route::get('services/{service}/vps-status', [ServiceController::class, 'vpsStatus'])->name('services.vps-status');
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
         Route::put('services/{service}/next-due', [ServiceController::class, 'updateNextDue'])->name('services.next-due');

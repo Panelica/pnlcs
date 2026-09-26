@@ -239,11 +239,14 @@ test('vultr usage lists all instances without the broken tag filter and updates 
 // ---------------------------------------------------------------------------
 
 test('proxmox api calls are form-encoded for pre-7.2 compatibility', function () {
-    Http::fake(['*' => Http::response(['data' => 'UPID:ok'], 200)]);
+    $pve = \Tests\Support\FakeProxmox::install();
 
+    // Module data still in the legacy notes column, on a guest marked for it.
     $service = fixSvc('proxmox', ['access_hash' => 'PVEAPIToken=root@pam!x=y'], [
         'notes' => json_encode(['proxmox_vmid' => 100, 'proxmox_node' => 'pve', 'proxmox_type' => 'qemu']),
     ]);
+    $pve->guests[100] = ['node' => 'pve', 'type' => 'qemu', 'template' => 0, 'status' => 'stopped',
+        'config' => ['tags' => 'pnlcs;pnlcs-s'.$service->id]];
 
     (new \Modules\Servers\Proxmox\ProxmoxModule())->unsuspend($service->fresh(['server']));
 

@@ -130,6 +130,17 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('services/{service}', [ServiceController::class, 'show'])->name('services.show');
         Route::get('services/{service}/login', [ServiceController::class, 'loginToPanel'])->name('services.login');
         Route::get('services/{service}/usage', [ServiceController::class, 'usage'])->name('services.usage');
+        // Virtual servers (Proxmox): status and graphs are read often; the
+        // rest changes the machine and is rate limited.
+        Route::get('services/{service}/vps/status', [\App\Http\Controllers\Client\VpsController::class, 'status'])->middleware('throttle:60,1')->name('services.vps.status');
+        Route::get('services/{service}/vps/graphs', [\App\Http\Controllers\Client\VpsController::class, 'graphs'])->middleware('throttle:60,1')->name('services.vps.graphs');
+        Route::post('services/{service}/vps/power', [\App\Http\Controllers\Client\VpsController::class, 'power'])->middleware('throttle:10,1')->name('services.vps.power');
+        Route::post('services/{service}/vps/password', [\App\Http\Controllers\Client\VpsController::class, 'password'])->middleware('throttle:5,1')->name('services.vps.password');
+        Route::post('services/{service}/vps/reinstall', [\App\Http\Controllers\Client\VpsController::class, 'reinstall'])->middleware('throttle:3,10')->name('services.vps.reinstall');
+        Route::get('services/{service}/vps/snapshots', [\App\Http\Controllers\Client\VpsController::class, 'snapshots'])->middleware('throttle:60,1')->name('services.vps.snapshots');
+        Route::post('services/{service}/vps/snapshots', [\App\Http\Controllers\Client\VpsController::class, 'snapshotAction'])->middleware('throttle:10,1')->name('services.vps.snapshots.action');
+        Route::get('services/{service}/vps/backups', [\App\Http\Controllers\Client\VpsController::class, 'backups'])->middleware('throttle:60,1')->name('services.vps.backups');
+        Route::post('services/{service}/vps/backups', [\App\Http\Controllers\Client\VpsController::class, 'backupAction'])->middleware('throttle:6,10')->name('services.vps.backups.action');
         Route::get('services/{service}/cancel', [ServiceController::class, 'requestCancellation'])->name('services.cancel');
         Route::post('services/{service}/cancel', [ServiceController::class, 'submitCancellation'])->name('services.cancel.submit');
         Route::get('services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');

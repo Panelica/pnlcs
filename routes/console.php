@@ -86,6 +86,9 @@ Schedule::command('pnlcs:ticket-escalation')->everyFifteenMinutes();
 // Usage Polling - hourly
 Schedule::command('pnlcs:usage-polling')->hourly();
 
+// Proxmox reinstalls, restores and rollbacks: send the next task when one ends
+Schedule::command('pnlcs:proxmox-tasks')->everyMinute()->withoutOverlapping(10);
+
 // Module queue — retry failed provisioning actions every 5 minutes
 Schedule::command('pnlcs:module-queue')->everyFiveMinutes()->withoutOverlapping();
 

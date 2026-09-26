@@ -141,6 +141,10 @@
 </div>
 @endif
 
+@if(!empty($vpsFeatures))
+@include('client.services.partials.vps')
+@endif
+
 {{-- App launcher --}}
 @if(!empty($feat) && $st === 'active')
 <div class="sv-sec"><i class="ri-apps-2-line"></i>{{ __('client.hosting.title') }}</div>

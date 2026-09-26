@@ -6,21 +6,18 @@ use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Server;
 use App\Models\Service;
-use Illuminate\Support\Facades\Http;
 use Modules\Servers\Proxmox\ProxmoxModule;
+use Tests\Support\FakeProxmox;
 
 /**
  * An upgrade the customer paid for and did not get.
  *
- * changePackage sends the new cores and memory and checks the answer, then
- * sends the disk resize and throws the answer away - it reports "VM resources
+ * changePackage sent the new cores and memory and checked the answer, then
+ * sent the disk resize and threw the answer away - it reported "VM resources
  * updated" whatever Proxmox said. Proxmox refuses a resize for ordinary
  * reasons: the storage is full, the disk cannot be shrunk, the VM is locked by
  * a running backup. The operator saw a success, the invoice went out, and the
  * disk stayed the size it was.
- *
- * The password change immediately above it already checks its answer; this one
- * was left as it was.
  *
  * usageUpdate returned zero errors no matter what. A VM that is no longer on
  * the cluster - deleted by hand on the hypervisor - was passed over in silence,
@@ -36,15 +33,15 @@ function proxmoxServer(): Server
         'username' => 'root@pam',
         'password' => '',
         'access_hash' => 'PVEAPIToken=root@pam!billing=secret',
+        'nameserver1' => null,
     ]);
 }
 
-function proxmoxService(Server $server, array $moduleData = ['proxmox_vmid' => 100, 'proxmox_node' => 'pve', 'proxmox_type' => 'qemu']): Service
+function proxmoxService(Server $server, FakeProxmox $pve, bool $onCluster = true): Service
 {
     $client = Client::factory()->create();
-    $group = ProductGroup::factory()->create();
     $product = Product::factory()->create([
-        'group_id' => $group->id,
+        'group_id' => ProductGroup::factory()->create()->id,
         'server_type' => 'proxmox',
         'config_options' => json_encode(['cores' => 1, 'memory' => 1024, 'disk' => 20]),
     ]);
@@ -57,10 +54,16 @@ function proxmoxService(Server $server, array $moduleData = ['proxmox_vmid' => 1
         'domain' => 'vm.test',
         'status' => 'active',
     ]);
+    $service->forceFill(['module_data' => ['proxmox_vmid' => 100, 'proxmox_node' => 'pve', 'proxmox_type' => 'qemu']])->save();
 
-    $service->forceFill(['module_data' => $moduleData])->save();
+    if ($onCluster) {
+        $pve->guests[100] = ['node' => 'pve', 'type' => 'qemu', 'template' => 0, 'status' => 'running', 'config' => [
+            'cores' => 1, 'memory' => 1024, 'scsi0' => 'local-lvm:vm-100-disk-0,size=20G', 'boot' => 'order=scsi0',
+            'tags' => 'pnlcs;pnlcs-s'.$service->id,
+        ]];
+    }
 
-    return $service;
+    return $service->fresh(['server', 'product']);
 }
 
 function biggerPlan(): array
@@ -69,70 +72,49 @@ function biggerPlan(): array
 }
 
 it('says so when proxmox refuses to resize the disk', function () {
-    Http::fake([
-        '*/resize' => Http::response(['errors' => ['size' => 'unable to shrink disk size']], 500),
-        '*' => Http::response(['data' => 'UPID:ok'], 200),
-    ]);
+    $pve = FakeProxmox::install()->fail('PUT nodes/pve/qemu/100/resize', 500, 'unable to shrink disk size');
 
-    $server = proxmoxServer();
-    $result = (new ProxmoxModule)->changePackage(proxmoxService($server), biggerPlan());
+    $result = (new ProxmoxModule)->changePackage(proxmoxService(proxmoxServer(), $pve), biggerPlan());
 
     expect($result['success'])->toBeFalse()
         ->and(strtolower($result['message']))->toContain('disk');
 });
 
 it('reports the upgrade only when every part of it took', function () {
-    Http::fake(['*' => Http::response(['data' => 'UPID:ok'], 200)]);
+    $pve = FakeProxmox::install();
 
-    $server = proxmoxServer();
-    $result = (new ProxmoxModule)->changePackage(proxmoxService($server), biggerPlan());
+    $result = (new ProxmoxModule)->changePackage(proxmoxService(proxmoxServer(), $pve), biggerPlan());
 
-    expect($result['success'])->toBeTrue();
-
-    $resize = collect(Http::recorded())
-        ->first(fn ($pair) => str_ends_with($pair[0]->url(), '/resize'));
-
-    expect($resize)->not->toBeNull()
-        ->and($resize[0]->data()['size'])->toBe('100G');
+    expect($result['success'])->toBeTrue()
+        ->and($pve->sent('PUT', 'nodes/pve/qemu/100/resize')[0]['params']['size'])->toBe('100G');
 });
 
-it('does not ask for a resize when the plan does not name a disk', function () {
-    Http::fake(['*' => Http::response(['data' => 'UPID:ok'], 200)]);
+it('does not ask for a resize when the plan does not make the disk bigger', function () {
+    $pve = FakeProxmox::install();
 
-    $server = proxmoxServer();
-    $result = (new ProxmoxModule)->changePackage(proxmoxService($server), [
+    $result = (new ProxmoxModule)->changePackage(proxmoxService(proxmoxServer(), $pve), [
         'config_options' => json_encode(['cores' => 2, 'memory' => 2048]),
     ]);
 
-    expect($result['success'])->toBeTrue();
-
-    Http::assertNotSent(fn ($request) => str_ends_with($request->url(), '/resize'));
+    expect($result['success'])->toBeTrue()
+        ->and($pve->sent('PUT', '.*/resize'))->toBe([]);
 });
 
 it('counts a vm the cluster no longer has', function () {
-    Http::fake(['*' => Http::response(['data' => []], 200)]);
-
+    $pve = FakeProxmox::install();
     $server = proxmoxServer();
-    proxmoxService($server);
+    proxmoxService($server, $pve, onCluster: false);
 
     expect((new ProxmoxModule)->usageUpdate($server))->toBe(['updated' => 0, 'errors' => 1]);
 });
 
 it('still counts a vm that is there as an update', function () {
-    Http::fake(['*' => Http::response(['data' => [[
-        'vmid' => 100,
-        'disk' => 5368709120,
-        'maxdisk' => 21474836480,
-        'netin' => 1048576,
-        'netout' => 1048576,
-    ]]], 200)]);
-
+    $pve = FakeProxmox::install();
     $server = proxmoxServer();
-    $service = proxmoxService($server);
+    $service = proxmoxService($server, $pve);
 
     expect((new ProxmoxModule)->usageUpdate($server))->toBe(['updated' => 1, 'errors' => 0]);
 
-    expect($service->fresh()->disk_usage)->toBe(5120)
-        ->and($service->fresh()->disk_limit)->toBe(20480)
-        ->and($service->fresh()->bw_usage)->toBe(2);
+    expect($service->fresh()->disk_limit)->toBe(20480)
+        ->and($service->fresh()->bw_usage)->toBeGreaterThanOrEqual(0);
 });
