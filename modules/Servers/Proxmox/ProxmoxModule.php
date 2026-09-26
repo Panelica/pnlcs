@@ -27,7 +27,7 @@ class ProxmoxModule extends AbstractServerModule
     public const TAG = 'pnlcs';
 
     /** Power actions a customer may run from the client area. */
-    public const CLIENT_POWER_ACTIONS = ['start', 'shutdown', 'reboot', 'stop'];
+    public const CLIENT_POWER_ACTIONS = ['start', 'shutdown', 'reboot', 'stop', 'reset'];
 
     public function getModuleName(): string
     {
@@ -1042,16 +1042,42 @@ class ProxmoxModule extends AbstractServerModule
             'cpus' => (int) ($v['cpus'] ?? $cfg['cores'] ?? 1),
             'cpu' => round(((float) ($v['cpu'] ?? 0)) * 100, 1),
             'memory' => ['used' => (int) round(($v['mem'] ?? 0) / 1048576), 'max' => (int) round(($v['maxmem'] ?? 0) / 1048576)],
-            'disk' => [
-                'used' => round(($v['disk'] ?? 0) / 1073741824, 1),
-                'max' => round(($v['maxdisk'] ?? 0) / 1073741824, 1),
-            ],
+            'disk' => $this->diskUsage($api, $guest, $v, $running),
             'net' => ['in' => (int) ($v['netin'] ?? 0), 'out' => (int) ($v['netout'] ?? 0)],
             'agent' => $guest['type'] === 'qemu' && ! empty($v['agent']),
             'addresses' => $running ? $this->addresses($api, $guest, $service) : $this->configuredAddresses($service, $guest),
             'image' => $this->imageLabel($service),
             'last_error' => $lastError,
         ];
+    }
+
+    /**
+     * Disk size and how much of it is in use.
+     *
+     * Proxmox knows the fill level of a container, but not of a virtual
+     * machine: there it reports 0. The guest agent can say how full the root
+     * filesystem is, so it is asked when it runs; otherwise "used" stays null
+     * and the page shows only the size rather than a made-up 0.
+     */
+    private function diskUsage(ProxmoxClient $api, array $guest, array $v, bool $running): array
+    {
+        $gb = fn ($bytes) => round(((float) $bytes) / 1073741824, 1);
+        $max = $gb($v['maxdisk'] ?? 0);
+
+        if ($guest['type'] === 'lxc') {
+            return ['used' => $gb($v['disk'] ?? 0), 'max' => $max, 'fs_size' => $max];
+        }
+        if (! $running || empty($v['agent'])) {
+            return ['used' => null, 'max' => $max, 'fs_size' => null];
+        }
+
+        $fs = $api->get("{$guest['path']}/agent/get-fsinfo");
+        $root = collect(is_array($fs->data['result'] ?? null) ? $fs->data['result'] : [])
+            ->first(fn ($f) => in_array($f['mountpoint'] ?? '', ['/', 'C:\\'], true) && isset($f['total-bytes'], $f['used-bytes']));
+
+        return $root
+            ? ['used' => $gb($root['used-bytes']), 'max' => $max, 'fs_size' => $gb($root['total-bytes'])]
+            : ['used' => null, 'max' => $max, 'fs_size' => null];
     }
 
     /** The name the product gave the installed image, or one made from its id. */
@@ -1292,6 +1318,37 @@ class ProxmoxModule extends AbstractServerModule
     // =========================================================================
     // Connection
     // =========================================================================
+
+    /**
+     * The guests this server's token can see, for the "link an existing
+     * server" picker when an operator adds a service by hand. Templates are
+     * left out; a guest already tagged for a service says which one, and
+     * claim() refuses it.
+     *
+     * @return array<int, array{id: string, username: string, email: string, status: string}>
+     */
+    public function listAccounts(Server $server): array
+    {
+        $guests = $this->client($server)->get('cluster/resources', ['type' => 'vm']);
+        if (! $guests->ok) {
+            return [];
+        }
+
+        return collect($guests->list())
+            ->filter(fn ($g) => empty($g['template']) && isset($g['vmid']))
+            ->sortBy('vmid')
+            ->map(function ($g) {
+                $owner = collect(self::tagsOf($g))->map(fn ($t) => preg_match('/^'.self::TAG.'-s(\d+)$/', $t, $m) ? (int) $m[1] : null)->filter()->first();
+
+                return [
+                    'id' => (string) $g['vmid'],
+                    'username' => '#'.$g['vmid'].' '.($g['name'] ?? ''),
+                    'email' => ($g['node'] ?? '').(($g['type'] ?? '') === 'lxc' ? ' · LXC' : ''),
+                    'status' => $owner ? __('proxmox.admin.linked_to', ['service' => $owner]) : (string) ($g['status'] ?? ''),
+                ];
+            })
+            ->values()->all();
+    }
 
     public function testConnection(Server $server): bool
     {

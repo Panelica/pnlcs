@@ -190,8 +190,11 @@
         <ul class="sv-dl">
             <li><span class="k">{{ __('client.services.server') }}</span><span class="v">{{ $service->server->name ?? '—' }}</span></li>
             <li><span class="k">{{ __('client.services.username') }}</span><span class="v"><span class="sv-code">{{ $service->username ?? '—' }}</span></span></li>
+            {{-- A virtual server's host is the hypervisor: its address is not the customer's business. --}}
+            @if(strtolower((string) $service->server?->type) !== 'proxmox')
             @if($service->server?->hostname)<li><span class="k">{{ __('client.services.hostname') }}</span><span class="v">{{ $service->server->hostname }}</span></li>@endif
             @if($service->server?->ip)<li><span class="k">{{ __('client.services.ip_address') }}</span><span class="v"><span class="sv-code">{{ $service->server->ip }}</span></span></li>@endif
+            @endif
         </ul>
     </div>
 </div>

@@ -32,8 +32,8 @@ class ServiceConfigOption extends Model
     /** What the customer chose, ready for display: "RAM: 4 GB" or "Extra IP x2". */
     public function label(): string
     {
-        $name = $this->option?->option_name ?? '';
-        $value = $this->sub?->option_name ?? '';
+        $name = $this->option?->displayName() ?? '';
+        $value = $this->sub?->displayName() ?? '';
 
         if ($value === '') {
             return $this->qty > 1 ? "{$name} x{$this->qty}" : $name;

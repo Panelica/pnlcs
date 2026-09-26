@@ -42,10 +42,16 @@ Servers**.
     - Its access key in **Access Hash**, or its password in **Password**.
 
 === "Proxmox"
-    - **Port:** 8006.
-    - An API token in **Access Hash**, in the form
-      `PVEAPIToken=user@realm!tokenid=UUID`; or a username (default
-      `root@pam`) and password.
+    - **Port:** 8006. No nameservers are needed.
+    - **API token ID** (e.g. `pnlcs@pve!billing`) and **API token secret**,
+      from *Datacenter → Permissions → API Tokens*. A pasted
+      `PVEAPIToken=user@realm!name=secret` line works too.
+    - With privilege separation on, the token has only the permissions given
+      to the token itself. **Test** reads them and prints the `pveum` commands
+      that fix what is missing.
+    - Node, resource pool, VM id range, IPv4 addresses, backup storage and
+      cloud-init snippet are set on the same form. See
+      [Sell VPS on Proxmox VE](sell-vps-on-proxmox.md).
 
 === "Vultr"
     - Your Vultr API key in **Access Hash**. The module talks to Vultr's API

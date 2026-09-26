@@ -220,6 +220,20 @@ class ClientController extends Controller
                 // customer in by hand): only real, sellable products and the
                 // servers an operator can place them on.
                 $data['products'] = Product::where('retired', false)->orderBy('name')->get(['id', 'name', 'server_type']);
+                // Each product's order options, so the form can offer them (an
+                // operator adding a VPS picks its operating system and size).
+                $optionService = app(\App\Services\ConfigOptionService::class);
+                $data['productOptions'] = $data['products']->mapWithKeys(fn ($p) => [$p->id => $optionService->groupsFor($p)
+                    ->flatMap(fn ($g) => $g->options)
+                    ->filter(fn ($o) => $o->subs->isNotEmpty() && ($o->isChoice() || $o->isQuantity() || $o->isCheckbox()))
+                    ->map(fn ($o) => [
+                        'id' => $o->id,
+                        'name' => $o->displayName(),
+                        'type' => $o->isQuantity() ? 'quantity' : ($o->isCheckbox() ? 'checkbox' : 'choice'),
+                        'min' => (int) ($o->qty_minimum ?? 0),
+                        'max' => $o->qty_maximum ? (int) $o->qty_maximum : null,
+                        'subs' => $o->subs->map(fn ($s) => ['id' => $s->id, 'label' => $s->displayName()])->values(),
+                    ])->values()])->filter(fn ($o) => $o->isNotEmpty());
                 $data['servers'] = Server::where('active', true)->orderBy('name')->get(['id', 'name', 'type']);
                 break;
             case 'domains':
@@ -298,7 +312,20 @@ class ClientController extends Controller
             'provision' => ['boolean'],
             // Link an already-existing server account (migration): the panel user id.
             'link_user_id' => ['nullable', 'string', 'max:100'],
+            'config_options' => ['nullable', 'array'],
         ]);
+
+        // The product's order options (operating system, memory...), checked
+        // against what the product offers before anything is written.
+        $optionService = app(\App\Services\ConfigOptionService::class);
+        $optionPayload = [];
+        if ($request->filled('config_options')) {
+            $optionPayload = $optionService->toCartPayload($optionService->normalise(
+                Product::findOrFail($validated['product_id']),
+                (array) $request->input('config_options'),
+                $validated['billing_cycle'],
+            ));
+        }
 
         // Two modes, the way WHMCS lets you choose a module command on a manual
         // add: provision on, and we run the server module's Create to build a
@@ -322,6 +349,8 @@ class ClientController extends Controller
             'auto_renew' => true,
         ]);
 
+        $optionService->attachToService($service, $optionPayload);
+
         ActivityLog::log(
             $provision
                 ? "Service #{$service->id} added to client #{$client->id} and provisioned on the server"
@@ -335,6 +364,14 @@ class ClientController extends Controller
         // panel user id stored in module_data; we also copy the username for show.
         $linked = false;
         if (! $provision && ($linkUserId = trim((string) $request->input('link_user_id'))) !== '') {
+            // A virtual server is linked by tagging the guest for this service.
+            $module = $service->server ? app(ModuleRegistry::class)->getServerModule($service->server->type) : null;
+            if ($module instanceof \Modules\Servers\Proxmox\ProxmoxModule) {
+                $claimed = $module->claim($service, (int) $linkUserId);
+
+                return redirect()->route('admin.clients.show', ['client' => $client, 'tab' => 'services'])
+                    ->with($claimed['success'] ? 'success' : 'error', $claimed['message']);
+            }
             if ($service->server) {
                 $module = app(ModuleRegistry::class)->getServerModule($service->server->type);
                 if ($module && method_exists($module, 'listAccounts')) {

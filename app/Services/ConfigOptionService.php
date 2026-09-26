@@ -67,7 +67,7 @@ class ConfigOptionService
                     if ($qty < $min || ($max > 0 && $qty > $max)) {
                         throw ValidationException::withMessages([
                             "config_options.{$option->id}" => __('client.cart.option_quantity_invalid', [
-                                'option' => $option->option_name, 'min' => $min, 'max' => $max ?: '∞',
+                                'option' => $option->displayName(), 'min' => $min, 'max' => $max ?: '∞',
                             ]),
                         ]);
                     }
@@ -108,14 +108,14 @@ class ConfigOptionService
                         continue;
                     }
                     throw ValidationException::withMessages([
-                        "config_options.{$option->id}" => __('client.cart.option_required', ['option' => $option->option_name]),
+                        "config_options.{$option->id}" => __('client.cart.option_required', ['option' => $option->displayName()]),
                     ]);
                 }
 
                 $sub = $option->subs->firstWhere('id', (int) $value);
                 if (! $sub) {
                     throw ValidationException::withMessages([
-                        "config_options.{$option->id}" => __('client.cart.option_invalid', ['option' => $option->option_name]),
+                        "config_options.{$option->id}" => __('client.cart.option_invalid', ['option' => $option->displayName()]),
                     ]);
                 }
 
@@ -147,7 +147,7 @@ class ConfigOptionService
         if ($sub && ! $sub->offeredOn($cycle)) {
             throw ValidationException::withMessages([
                 "config_options.{$option->id}" => __('client.cart.option_not_on_cycle', [
-                    'option' => $option->option_name,
+                    'option' => $option->displayName(),
                 ]),
             ]);
         }
@@ -175,7 +175,7 @@ class ConfigOptionService
             /** @var ConfigOption $option */
             $option = $row['option'];
             $sub = $row['sub_id'] ? $option->subs->firstWhere('id', $row['sub_id']) : null;
-            $label = $sub ? "{$option->option_name}: {$sub->option_name}" : $option->option_name;
+            $label = $sub ? "{$option->displayName()}: {$sub->displayName()}" : $option->displayName();
             if ($row['qty'] > 1) {
                 $label .= " x{$row['qty']}";
             }

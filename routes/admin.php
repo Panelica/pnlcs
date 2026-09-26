@@ -92,6 +92,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // The app catalogue lives on the panel; what we own is how it looks to a
     // customer, so this manages the images only.
     Route::middleware('admin.permission:manage_products')->group(function () {
+        Route::post('products/{product}/proxmox-options', [ProductController::class, 'proxmoxOptions'])->name('products.proxmox-options');
         Route::get('docker-apps', [DockerAppController::class, 'index'])->name('docker-apps.index');
         Route::post('docker-apps/upload', [DockerAppController::class, 'upload'])->name('docker-apps.upload');
         Route::post('docker-apps/fetch', [DockerAppController::class, 'fetch'])->name('docker-apps.fetch');
@@ -177,7 +178,18 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:manage_services')->group(function () {
         Route::post('services/{service}/module/{action}', [ServiceController::class, 'moduleAction'])->name('services.module-action');
-        Route::get('services/{service}/vps-status', [ServiceController::class, 'vpsStatus'])->name('services.vps-status');
+        Route::get('services/{service}/vps-status', [\App\Http\Controllers\Admin\VpsController::class, 'status'])->name('services.vps-status');
+        Route::prefix('services/{service}/vps')->name('services.vps.')->controller(\App\Http\Controllers\Admin\VpsController::class)->group(function () {
+            Route::get('status', 'status')->name('status');
+            Route::get('graphs', 'graphs')->name('graphs');
+            Route::post('power', 'power')->middleware('throttle:30,1')->name('power');
+            Route::post('password', 'password')->middleware('throttle:10,1')->name('password');
+            Route::post('reinstall', 'reinstall')->middleware('throttle:5,10')->name('reinstall');
+            Route::get('snapshots', 'snapshots')->name('snapshots');
+            Route::post('snapshots', 'snapshotAction')->middleware('throttle:20,1')->name('snapshots.action');
+            Route::get('backups', 'backups')->name('backups');
+            Route::post('backups', 'backupAction')->middleware('throttle:10,1')->name('backups.action');
+        });
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
         Route::put('services/{service}/next-due', [ServiceController::class, 'updateNextDue'])->name('services.next-due');

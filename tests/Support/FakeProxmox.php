@@ -305,6 +305,12 @@ final class FakeProxmox
             $method === 'GET' && $action === 'agent/network-get-interfaces' => $this->agentRunning
                 ? $this->ok(['result' => [['name' => 'lo', 'ip-addresses' => [['ip-address' => '127.0.0.1']]], ['name' => 'eth0', 'ip-addresses' => [['ip-address' => '192.0.2.50'], ['ip-address' => 'fe80::1']]]]])
                 : $this->error(500, 'QEMU guest agent is not running'),
+            $method === 'GET' && $action === 'agent/get-fsinfo' => $this->agentRunning
+                ? $this->ok(['result' => [
+                    ['mountpoint' => '/boot/efi', 'type' => 'vfat', 'total-bytes' => 132_000_000, 'used-bytes' => 6_000_000],
+                    ['mountpoint' => '/', 'type' => 'ext4', 'total-bytes' => 20 * 1073741824, 'used-bytes' => (int) (3.5 * 1073741824)],
+                ]])
+                : $this->error(500, 'QEMU guest agent is not running'),
             $method === 'GET' && $action === 'interfaces' => $this->ok([['name' => 'lo', 'inet' => '127.0.0.1/8'], ['name' => 'eth0', 'inet' => '192.0.2.60/24']]),
             $method === 'GET' && $action === 'rrddata' => $this->ok($this->rrd($p['timeframe'] ?? 'hour')),
             default => $this->error(501, "Method '{$method} /{$path}' not implemented"),

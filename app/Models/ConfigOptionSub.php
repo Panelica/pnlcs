@@ -81,4 +81,16 @@ class ConfigOptionSub extends Model
         // -1 marks a cycle the option is not offered on, not a discount.
         return $price > 0 ? $price : 0.0;
     }
+
+    /**
+     * The name shown to customers. A module reads a "key|Label" name by its
+     * key (memory|RAM, 2048|2 GB), the way WHMCS does; customers see only the
+     * label after the bar.
+     */
+    public function displayName(): string
+    {
+        $parts = explode('|', (string) $this->option_name, 2);
+
+        return isset($parts[1]) && trim($parts[1]) !== '' ? trim($parts[1]) : (string) $this->option_name;
+    }
 }

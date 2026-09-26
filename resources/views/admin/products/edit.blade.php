@@ -41,7 +41,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="package-group">
                     <label class="form-label">{{ __('admin.products.package') }}</label>
                     <select name="package_name" id="package-select" class="form-control">
                         <option value="">{{ __('admin.products.package_default') }}</option>
@@ -212,6 +212,9 @@
             panelica.querySelectorAll('input,select,textarea').forEach(function (f) { f.disabled = !on; });
         }
         if (window.pnlcsProxmoxCard) { window.pnlcsProxmoxCard.show(m === 'proxmox'); }
+        // Proxmox has no plans on the server: its resources are set in its own card.
+        var pkg = document.getElementById('package-group');
+        if (pkg) { pkg.style.display = m === 'proxmox' ? 'none' : ''; }
     }
     if (moduleSelect) { moduleSelect.addEventListener('change', showCards); }
     document.addEventListener('DOMContentLoaded', showCards);

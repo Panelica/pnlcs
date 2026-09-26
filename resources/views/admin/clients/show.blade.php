@@ -281,6 +281,41 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     </select>
                 </div>
             </div>
+            {{-- The chosen product's order options (operating system, memory...). --}}
+            <div id="svc-options" style="display:none;margin-top:12px;">
+                <div style="font-weight:600;font-size:13px;margin-bottom:8px;">{{ __('client.cart.configurable_options') }}</div>
+                <div id="svc-options-body" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;"></div>
+            </div>
+            <script>
+            (function () {
+                var opts = @json($productOptions ?? []);
+                var product = document.querySelector('#add-service-form select[name=product_id]');
+                var box = document.getElementById('svc-options'), body = document.getElementById('svc-options-body');
+                if (!product || !box) return;
+                var old = @json((array) old('config_options', []));
+                function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
+                function render() {
+                    var list = opts[product.value] || [];
+                    box.style.display = list.length ? '' : 'none';
+                    body.innerHTML = list.map(function (o) {
+                        var name = 'config_options[' + o.id + ']', prev = old[o.id];
+                        var field;
+                        if (o.type === 'choice') {
+                            field = '<select name="' + name + '" class="form-control">' + o.subs.map(function (s) {
+                                return '<option value="' + s.id + '"' + (String(prev) === String(s.id) ? ' selected' : '') + '>' + esc(s.label) + '</option>';
+                            }).join('') + '</select>';
+                        } else if (o.type === 'checkbox') {
+                            field = '<label style="font-size:13px;display:flex;gap:6px;align-items:center;"><input type="checkbox" name="' + name + '" value="1"' + (prev ? ' checked' : '') + '> ' + esc(o.subs[0].label) + '</label>';
+                        } else {
+                            field = '<input type="number" name="' + name + '" class="form-control" min="' + o.min + '"' + (o.max ? ' max="' + o.max + '"' : '') + ' value="' + esc(prev !== undefined ? prev : o.min) + '">';
+                        }
+                        return '<div class="form-group" style="margin:0;"><label class="form-label">' + esc(o.name) + '</label>' + field + '</div>';
+                    }).join('');
+                }
+                product.addEventListener('change', render);
+                render();
+            })();
+            </script>
             <div class="form-group" id="link-account-row" style="margin-top:12px;display:none;">
                 <label class="form-label">{{ __('admin.clients.link_existing') }}</label>
                 <select name="link_user_id" id="link-user-id" class="form-control">

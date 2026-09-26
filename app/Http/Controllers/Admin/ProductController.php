@@ -156,6 +156,35 @@ class ProductController extends Controller
     }
 
     /**
+     * Build the order options (operating system, memory, cores, disk) of a
+     * Proxmox product from the short form on its page, in one step.
+     */
+    public function proxmoxOptions(Request $request, Product $product)
+    {
+        if (strtolower((string) $product->server_type) !== 'proxmox') {
+            return response()->json(['success' => false, 'message' => __('proxmox.product.opt_save_first')], 422);
+        }
+
+        $request->validate([
+            'options' => 'required|array',
+            'options.*.title' => 'nullable|string|max:80',
+            'options.*.choices' => 'required|array|min:1|max:30',
+            'options.*.choices.*.value' => 'required|string|max:255',
+            'options.*.choices.*.label' => 'nullable|string|max:80',
+            'options.*.choices.*.price' => 'nullable|numeric|min:0|max:100000',
+        ]);
+
+        $group = \Modules\Servers\Proxmox\ProxmoxOrderOptions::create($product, (array) $request->input('options'));
+        \App\Models\ActivityLog::log("Order options created for Proxmox product #{$product->id} (group #{$group->id})", auth('admin')->user()?->full_name ?: 'admin');
+
+        return response()->json([
+            'success' => true,
+            'message' => __('proxmox.product.opt_created'),
+            'linked' => \Modules\Servers\Proxmox\ProxmoxOrderOptions::linked($product->fresh()),
+        ]);
+    }
+
+    /**
      * The Proxmox part of the product form, validated and ready to merge into
      * config_options.
      */
@@ -306,6 +335,7 @@ class ProductController extends Controller
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => $this->packagesFor($product->server_type),
             'proxmoxServers' => Server::where('type', 'proxmox')->orderByDesc('active')->orderBy('name')->get(['id', 'name', 'active']),
+            'pveOrderOptions' => strtolower((string) $product->server_type) === 'proxmox' ? \Modules\Servers\Proxmox\ProxmoxOrderOptions::linked($product) : [],
             'selectedPackage' => (string) ($this->productConfig($product)['package_name']
                 ?? $this->productConfig($product)['panelica_plan_id']
                 ?? $this->productConfig($product)['cpanel_package']

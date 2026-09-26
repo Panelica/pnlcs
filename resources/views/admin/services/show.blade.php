@@ -161,52 +161,32 @@
 </div>
 
 @if(strtolower((string) ($service->server?->type ?? $service->product?->server_type)) === 'proxmox')
-@php($pveData = $service->module_data ?? [])
-<div class="card" style="margin-bottom:15px;" id="pve-admin">
-    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-        <strong>{{ __('proxmox.admin.vm_title') }}</strong>
-        <span style="font-size:12px;color:#666;" id="pve-admin-state">{{ !empty($pveData['proxmox_vmid']) ? __('proxmox.client.loading') : __('proxmox.admin.no_vm') }}</span>
+@php $pveData = $service->module_data ?? []; @endphp
+<div style="margin-bottom:15px;" id="pve-admin">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px;">
+        <strong style="font-size:15px;">{{ __('proxmox.admin.vm_title') }}</strong>
+        @if(empty($pveData['proxmox_vmid']))<span style="font-size:12px;color:#666;">{{ __('proxmox.admin.no_vm') }}</span>@endif
     </div>
-    <div class="card-body">
-        @if(!empty($pveData['proxmox_vmid']))
-        <table style="width:100%;font-size:13px;margin-bottom:10px;" id="pve-admin-table">
-            <tr><td style="color:#777;width:180px;padding:4px 0;">{{ __('proxmox.admin.vm_where') }}</td><td style="font-family:monospace;">{{ __('proxmox.admin.vm_where_value', ['vmid' => $pveData['proxmox_vmid'], 'node' => $pveData['proxmox_node'] ?? '-', 'type' => $pveData['proxmox_type'] ?? 'qemu']) }}</td></tr>
-            <tr><td style="color:#777;padding:4px 0;">{{ __('proxmox.client.addresses') }}</td><td id="pve-admin-ips" style="font-family:monospace;">&hellip;</td></tr>
-            <tr><td style="color:#777;padding:4px 0;">{{ __('proxmox.admin.vm_resources') }}</td><td id="pve-admin-res">&hellip;</td></tr>
-            @if(!empty($pveData['pve_ipv4']))<tr><td style="color:#777;padding:4px 0;">{{ __('proxmox.admin.pool_address') }}</td><td style="font-family:monospace;">{{ __('proxmox.admin.pool_address_value', ['address' => $pveData['pve_ipv4'].'/'.($pveData['pve_ipv4_prefix'] ?? ''), 'gateway' => $pveData['pve_ipv4_gateway'] ?? '']) }}</td></tr>@endif
-        </table>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            @foreach(['start' => 'success', 'reboot' => 'default', 'shutdown' => 'warning', 'stop' => 'danger'] as $pa => $style)
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'pve_'.$pa]) }}" @if($pa !== 'start') onsubmit="return confirm(@js(__('proxmox.client.confirm_'.$pa)))" @endif>
-                @csrf <button type="submit" class="btn btn-{{ $style }} btn-sm">{{ __('proxmox.client.'.$pa) }}</button>
-            </form>
-            @endforeach
+    @if(!empty($pveData['proxmox_vmid']))
+    @php
+        $vpsUrls = [];
+        foreach (['status', 'graphs', 'power', 'password', 'reinstall', 'snapshots', 'backups'] as $name) {
+            $vpsUrls[$name] = route('admin.services.vps.'.$name, $service);
+        }
+        $vpsUrls['snapshotAction'] = route('admin.services.vps.snapshots.action', $service);
+        $vpsUrls['backupAction'] = route('admin.services.vps.backups.action', $service);
+        $vpsCanChange = in_array(strtolower((string) $service->status), ['active', 'suspended'], true);
+    @endphp
+    <x-vps-panel :service="$service" :admin="true" :features="$vpsFeatures" :choices="$reinstallChoices" :can-change="$vpsCanChange" :urls="$vpsUrls"
+    >
+        <div class="vps-sec">
+            @include('admin.services.partials.pve-claim')
         </div>
-        @endif
-        <form method="POST" action="{{ route('admin.services.module-action', [$service, 'pve_claim']) }}" style="display:flex;gap:6px;align-items:center;margin-top:12px;flex-wrap:wrap;" onsubmit="return confirm(@js(__('proxmox.admin.claim_confirm')))">
-            @csrf
-            <label style="font-size:12px;color:#666;margin:0;">{{ __('proxmox.admin.claim_label') }}</label>
-            <input type="number" name="vmid" min="100" value="{{ $pveData['proxmox_vmid'] ?? '' }}" class="form-control" style="width:120px;font-size:12px;" required>
-            <button type="submit" class="btn btn-default btn-sm">{{ __('proxmox.admin.claim') }}</button>
-            <small style="color:#888;flex-basis:100%;">{{ __('proxmox.admin.claim_hint') }}</small>
-        </form>
-    </div>
+    </x-vps-panel>
+    @else
+    <div class="card"><div class="card-body">@include('admin.services.partials.pve-claim')</div></div>
+    @endif
 </div>
-@if(!empty($pveData['proxmox_vmid']))
-<script>
-fetch(@json(route('admin.services.vps-status', $service)), { headers: { 'Accept': 'application/json' } })
-    .then(function (r) { return r.json(); })
-    .then(function (s) {
-        var state = document.getElementById('pve-admin-state');
-        if (!s.available) { state.textContent = s.error || @json(__('proxmox.client.unavailable')); state.style.color = '#b91c1c'; return; }
-        state.textContent = s.status + (s.lock ? ' (' + s.lock + ')' : '');
-        state.style.color = s.status === 'running' ? '#15803d' : '#b45309';
-        document.getElementById('pve-admin-ips').textContent = (s.addresses || []).join(', ') || '-';
-        document.getElementById('pve-admin-res').textContent = @json(__('proxmox.admin.vm_resources_value'))
-            .replace(':cpu', s.cpu).replace(':cores', s.cpus).replace(':mem', s.memory.used).replace(':maxmem', s.memory.max).replace(':disk', s.disk.max);
-    });
-</script>
-@endif
 @endif
 
 @if($service->notes)

@@ -38,4 +38,16 @@ class ConfigOption extends Model
     {
         return $this->option_type === 'checkbox';
     }
+
+    /**
+     * The name shown to customers. A module reads a "key|Label" name by its
+     * key (memory|RAM, 2048|2 GB), the way WHMCS does; customers see only the
+     * label after the bar.
+     */
+    public function displayName(): string
+    {
+        $parts = explode('|', (string) $this->option_name, 2);
+
+        return isset($parts[1]) && trim($parts[1]) !== '' ? trim($parts[1]) : (string) $this->option_name;
+    }
 }

@@ -90,6 +90,7 @@ nav:
       - Modules: guides/modules.md
       - Sell Domains: guides/sell-domains.md
       - Sell Docker Apps: guides/sell-docker-apps.md
+      - Sell VPS on Proxmox VE: guides/sell-vps-on-proxmox.md
       - Tax Rules: guides/tax-rules.md
       - Custom Client Fields: guides/custom-fields.md
       - Themes & Branding: guides/themes-and-branding.md

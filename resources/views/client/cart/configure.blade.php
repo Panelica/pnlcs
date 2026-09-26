@@ -14,6 +14,7 @@
     .order-summary { position: sticky; top: 70px; }
     .summary-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
     .summary-row:last-child { border-bottom: none; font-weight: 600; }
+    #summaryExtras .summary-row:last-child { border-bottom: 1px solid #f0f0f0; font-weight: 400; }
 </style>
 @endsection
 @section('content')
@@ -135,13 +136,15 @@
                                 $previous = old('config_options.'.$option->id);
                             @endphp
                             <div class="form-group" style="margin-bottom:14px;">
-                                <label class="form-label" for="opt-{{ $option->id }}">{{ $option->option_name }}</label>
+                                <label class="form-label" for="opt-{{ $option->id }}">{{ $option->displayName() }}</label>
 
                                 @if($option->isQuantity())
                                     @php $unit = $option->subs->first(); @endphp
                                     <input type="number" id="opt-{{ $option->id }}"
                                            name="config_options[{{ $option->id }}]"
                                            class="form-control config-option"
+                                           data-name="{{ $option->displayName() }}"
+                                           data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $unit?->priceFor($c) ?? 0)) }}"
                                            data-unit-price="{{ $unit?->priceFor($selectedCycle) ?? 0 }}"
                                            value="{{ $previous ?? $option->qty_minimum ?? 0 }}"
                                            min="{{ $option->qty_minimum ?? 0 }}"
@@ -157,9 +160,11 @@
                                         <input type="checkbox" id="opt-{{ $option->id }}"
                                                name="config_options[{{ $option->id }}]" value="1"
                                                class="config-option"
+                                               data-name="{{ $option->displayName() }}"
+                                               data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $sub?->priceFor($c) ?? 0)) }}"
                                                data-unit-price="{{ $sub?->priceFor($selectedCycle) ?? 0 }}"
                                                @checked($previous)>
-                                        <span>{{ $sub?->option_name ?? $option->option_name }}
+                                        <span>{{ $sub?->displayName() ?? $option->displayName() }}
                                             @if(($sub?->priceFor($selectedCycle) ?? 0) > 0)
                                                 (+{{ $currency?->prefix }}{{ number_format($sub->priceFor($selectedCycle), 2) }})
                                             @endif
@@ -169,13 +174,16 @@
                                 @else
                                     <select id="opt-{{ $option->id }}"
                                             name="config_options[{{ $option->id }}]"
+                                            data-name="{{ $option->displayName() }}"
                                             class="form-control config-option" required>
                                         @foreach($option->subs as $sub)
                                             @php $price = $sub->priceFor($selectedCycle); @endphp
                                             <option value="{{ $sub->id }}"
+                                                    data-label="{{ $sub->displayName() }}"
+                                                    data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $sub->priceFor($c))) }}"
                                                     data-unit-price="{{ $price }}"
                                                     @selected((string) $previous === (string) $sub->id)>
-                                                {{ $sub->option_name }}@if($price > 0) (+{{ $currency?->prefix }}{{ number_format($price, 2) }})@endif
+                                                {{ $sub->displayName() }}@if($price > 0) (+{{ $currency?->prefix }}{{ number_format($price, 2) }})@endif
                                             </option>
                                         @endforeach
                                     </select>
@@ -204,6 +212,8 @@
                         <label style="display:flex; align-items:flex-start; gap:8px; margin-bottom:10px; cursor:pointer;">
                             <input type="checkbox" name="addons[]" value="{{ $addon->id }}"
                                    class="cart-addon" data-unit-price="{{ $addonPrice }}"
+                                   data-name="{{ $addon->name }}"
+                                   data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $addon->priceFor($c))) }}"
                                    @checked(in_array($addon->id, $previousAddons, true))>
                             <span>
                                 <strong>{{ $addon->name }}</strong>
@@ -219,8 +229,19 @@
                 </div>
             </div>
             @endif
+            {{-- Hostname: a virtual server is named, not sold a domain. --}}
+            @if(strtolower((string) $product->server_type) === 'proxmox')
+            <div class="pn-card" style="margin-bottom:16px;">
+                <div class="pn-card-header">{{ __('proxmox.client.order_hostname') }} <span style="font-weight:400; color:var(--muted);">({{ __('client.form.optional') }})</span></div>
+                <div class="pn-card-body">
+                    <input type="hidden" name="domain_option" value="own">
+                    <input type="text" name="domain" id="vpsHostname" class="form-control" value="{{ old('domain') }}" autocomplete="off" maxlength="63" pattern="[A-Za-z0-9]([A-Za-z0-9\-\.]*[A-Za-z0-9])?" aria-label="{{ __('proxmox.client.order_hostname') }}">
+                    <div class="text-muted text-sm" style="margin-top:6px;">{{ __('proxmox.client.order_hostname_hint') }}</div>
+                    @error('domain')<div class="text-sm" style="color:var(--danger);margin-top:6px;">{{ $message }}</div>@enderror
+                </div>
+            </div>
             {{-- Domain --}}
-            @if($product->show_domain_options)
+            @elseif($product->show_domain_options)
             <div class="pn-card" style="margin-bottom:16px;">
                 <div class="pn-card-header">{{ __('client.cart.domain') }}</div>
                 <div class="pn-card-body">
@@ -274,6 +295,7 @@
                         <span style="color:var(--muted);">{{ __('client.cart.billing_cycle') }}</span>
                         <span id="summaryBilling">&mdash;</span>
                     </div>
+                    <div id="summaryExtras"></div>
                     <div class="summary-row" id="summaryDomainRow" style="display:none;">
                         <span style="color:var(--muted);">{{ __('client.cart.domain') }}</span>
                         <span id="summaryDomain"></span>
@@ -291,15 +313,52 @@
 
 @section('scripts')
 <script>
+// The total is the cycle's price plus every chosen option and addon, for
+// that cycle, plus a domain being bought with it.
+(function () {
+    var cur = { prefix: @json($currency?->prefix ?? ''), suffix: @json($currency?->suffix ?? '') };
+    function money(n) { return cur.prefix + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + cur.suffix; }
+    function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
+    function priceOf(el, cycle) {
+        try { var p = JSON.parse(el.getAttribute('data-prices') || '{}'); if (cycle in p) { return Number(p[cycle]) || 0; } } catch (e) {}
+        return Number(el.getAttribute('data-unit-price') || 0);
+    }
+    window.pnlcsDomainPrice = 0;
+    window.pnlcsUpdateTotal = function () {
+        var c = document.querySelector('input[name=billing_cycle]:checked');
+        var cycle = c ? c.value : 'monthly', total = c ? parseFloat(c.getAttribute('data-price') || '0') : 0, rows = '';
+        document.querySelectorAll('select.config-option').forEach(function (sel) {
+            sel.querySelectorAll('option').forEach(function (o) {
+                var p = priceOf(o, cycle);
+                o.textContent = (o.getAttribute('data-label') || o.textContent) + (p > 0 ? ' (+' + money(p) + ')' : '');
+            });
+            var o = sel.options[sel.selectedIndex]; if (!o) { return; }
+            var p = priceOf(o, cycle); total += p;
+            rows += '<div class="summary-row"><span style="color:var(--muted);">' + esc(sel.getAttribute('data-name')) + '</span><span>' + esc(o.getAttribute('data-label') || '') + (p > 0 ? ' <small style="color:var(--muted)">+' + esc(money(p)) + '</small>' : '') + '</span></div>';
+        });
+        document.querySelectorAll('input.config-option').forEach(function (el) {
+            var qty = el.type === 'checkbox' ? (el.checked ? 1 : 0) : Math.max(0, parseInt(el.value || '0', 10));
+            if (!qty) { return; }
+            var p = priceOf(el, cycle) * qty; total += p;
+            rows += '<div class="summary-row"><span style="color:var(--muted);">' + esc(el.getAttribute('data-name')) + (el.type === 'checkbox' ? '' : ' x' + qty) + '</span><span>' + (p > 0 ? '+' + esc(money(p)) : '') + '</span></div>';
+        });
+        document.querySelectorAll('input.cart-addon:checked').forEach(function (el) {
+            var p = priceOf(el, cycle); total += p;
+            rows += '<div class="summary-row"><span style="color:var(--muted);">' + esc(el.getAttribute('data-name')) + '</span><span>' + (p > 0 ? '+' + esc(money(p)) : '') + '</span></div>';
+        });
+        var box = document.getElementById('summaryExtras'); if (box) { box.innerHTML = rows; }
+        document.getElementById('summaryTotal').textContent = money(total + (window.pnlcsDomainPrice || 0));
+    };
+    document.addEventListener('change', function (e) { if (e.target.closest('.config-option, .cart-addon')) { window.pnlcsUpdateTotal(); } });
+    document.addEventListener('input', function (e) { if (e.target.matches('input.config-option[type=number]')) { window.pnlcsUpdateTotal(); } });
+})();
 document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
     radio.addEventListener('change', function() {
         var labels = { monthly: '{{ __("client.cart.cycle_monthly") }}', quarterly: '{{ __("client.cart.cycle_quarterly") }}', semiannually: '{{ __("client.cart.cycle_semiannually") }}', annually: '{{ __("client.cart.cycle_annually") }}', biennially: '{{ __("client.cart.cycle_biennially") }}', triennially: '{{ __("client.cart.cycle_triennially") }}' };
         document.getElementById('summaryBilling').textContent = labels[this.value] || this.value;
-        var label = this.closest('.cycle-option');
-        var price = label ? label.querySelector('.cycle-price').textContent : '-';
         // With a domain being bought the total is both; the domain script
         // below owns that sum once it has loaded.
-        if (window.pnlcsUpdateTotal) { window.pnlcsUpdateTotal(); } else { document.getElementById('summaryTotal').textContent = price; }
+        window.pnlcsUpdateTotal();
     });
 });
 // A new domain or a transfer is bought with the hosting (issue #48): check the
@@ -316,13 +375,8 @@ document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
     var domainPrice = 0, timer = null, seq = 0;
     function option() { var r = document.querySelector('input[name=domain_option]:checked'); return r ? r.value : 'own'; }
     function money(n) { return cur.prefix + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + cur.suffix; }
-    window.pnlcsUpdateTotal = function () {
-        var c = document.querySelector('input[name=billing_cycle]:checked');
-        var base = c ? parseFloat(c.getAttribute('data-price') || '0') : 0;
-        document.getElementById('summaryTotal').textContent = money(base + domainPrice);
-    };
     function show(text, color, price, formatted) {
-        domainPrice = price;
+        domainPrice = price; window.pnlcsDomainPrice = price;
         status.textContent = text; status.style.color = color;
         row.style.display = price > 0 ? '' : 'none'; cell.textContent = formatted || '';
         window.pnlcsUpdateTotal();

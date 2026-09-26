@@ -35,7 +35,14 @@ class ServiceController extends Controller
             ? app(AddonService::class)->availableFor($service->product)
             : collect();
 
-        return view('admin.services.show', compact('service', 'availableAddons'));
+        $vpsFeatures = [];
+        $reinstallChoices = [];
+        if ($module = $this->proxmox($service)) {
+            $vpsFeatures = $module->vpsFeatures($service);
+            $reinstallChoices = \Modules\Servers\Proxmox\ProxmoxPlan::forService($service)->reinstallChoices();
+        }
+
+        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices'));
     }
 
     /**
@@ -93,7 +100,7 @@ class ServiceController extends Controller
             'unsuspend' => $this->provisioning->unsuspendAccount($service),
             'terminate' => $this->provisioning->terminateAccount($service),
             'changepassword' => $this->provisioning->changePassword($service, $request->get('password', '')),
-            'pve_start', 'pve_shutdown', 'pve_reboot', 'pve_stop' => $this->proxmox($service)?->power($service, substr($action, 4))
+            'pve_start', 'pve_shutdown', 'pve_reboot', 'pve_stop', 'pve_reset' => $this->proxmox($service)?->power($service, substr($action, 4))
                 ?? ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
             'pve_claim' => $this->proxmox($service)?->claim($service, (int) $request->validate(['vmid' => 'required|integer|min:100'])['vmid'])
                 ?? ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
@@ -114,15 +121,6 @@ class ServiceController extends Controller
         $module = $this->provisioning->resolveModule($service);
 
         return $module instanceof \Modules\Servers\Proxmox\ProxmoxModule ? $module : null;
-    }
-
-    /** Live state of the service's virtual server, for the admin page. */
-    public function vpsStatus(Service $service)
-    {
-        $module = $this->proxmox($service);
-        abort_unless($module, 404);
-
-        return response()->json($module->vmStatus($service));
     }
 
     /**

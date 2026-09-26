@@ -46,6 +46,7 @@
   <a href="#installation">Installation</a> ·
   <a href="#first-steps-after-installation">First Steps</a> ·
   <a href="#screenshots">Screenshots</a> ·
+  <a href="#selling-vps-on-proxmox-ve">Proxmox VPS</a> ·
   <a href="#features">Features</a> ·
   <a href="#modules">Modules</a> ·
   <a href="#contributing">Contributing</a>
@@ -82,12 +83,14 @@ plays nicely with other control panels too — so we built one.
 - Client portal, admin panel, and core billing flows
 - Invoicing, orders, services, domains, tickets, knowledge base
 - The **Panelica server module** (fully tested against live servers)
+- The **Proxmox VE server module** for selling VPS — tested end to end on a
+  live Proxmox VE 9.1 host with a pool-limited API token
 - Stripe payment gateway (tested in production)
 - Multi-language UI (30 locales, admin-editable translations)
 
 **What needs your help:**
 
-- **cPanel / Plesk / DirectAdmin / Proxmox server modules** — code is in
+- **cPanel / Plesk / DirectAdmin server modules** — code is in
   place but we have not tested them end-to-end. If you run one of these,
   please try it out and open an issue (or even better, a pull request)
   telling us what you found.
@@ -158,6 +161,11 @@ Panelica is simply where PNLCS feels most at home.
 ![Support Tickets](docs/screenshots/admin-tickets.png)
 *Ticket system with departments, priority routing, internal notes, and escalation rules*
 
+![Proxmox VPS product](docs/screenshots/admin-proxmox-product.png)
+*A Proxmox VPS product: resources with quick-fill sizes, template and placement
+read live from the cluster, network, what the customer may keep, and order
+options built in one step. [Full detail below](#selling-vps-on-proxmox-ve)*
+
 ### Client-Facing Site
 
 ![Homepage (default theme)](docs/screenshots/homepage-default.png)
@@ -170,6 +178,14 @@ Panelica is simply where PNLCS feels most at home.
 *The app showcase: 98 applications a customer can install into their hosting,
 with the logos shipped in the repository. Heading, copy, button and how many
 apps to show are all editable from the admin Homepage screen*
+
+### Client Portal — Virtual Servers
+
+![VPS control panel](docs/screenshots/client-vps.png)
+*A customer's VPS on Proxmox VE: power buttons including reset, live CPU,
+memory, disk fill and uptime, addresses, and usage graphs with axes, times and
+values on hover. The admin's service page shows the same panel.
+[Full detail below](#selling-vps-on-proxmox-ve)*
 
 ### Client Portal — Hosting Management
 
@@ -338,6 +354,80 @@ panel's namespace and cgroup isolation — never as root.
 ![Cron jobs](docs/screenshots/client-cron.png)
 *Common schedules or a full five-field expression, with example commands that
 fill in the customer's real domain path*
+
+---
+
+## Selling VPS on Proxmox VE
+
+PNLCS sells KVM virtual machines and LXC containers on **Proxmox VE**. When an
+order is paid, the server is cloned from a cloud-init template, sized, given
+an address and started; the customer then runs it from the billing portal.
+The module is tested end to end against a live Proxmox VE 9.1 host through an
+API token that can reach only its own resource pool.
+
+![VPS control panel](docs/screenshots/client-vps.png)
+*The customer's virtual server: state and power, live usage, addresses and
+login, and usage graphs for the last hour, day, week, month or year*
+
+### What the customer can do
+
+| Area | What happens |
+|------|--------------|
+| **Power** | Start, reboot, shut down (forced after a minute if the system ignores it), force off, and reset |
+| **Live status** | CPU, memory, uptime and addresses; for a VM with the QEMU guest agent, how full the root filesystem is |
+| **Graphs** | CPU, memory, network in/out and disk read/write from Proxmox's own statistics, with axes, times and values on hover |
+| **Root password** | Set at once through the guest agent, otherwise at the next boot |
+| **Reinstall** | Pick an operating system the product offers and type the server's name to confirm; the VM id, MAC and address stay |
+| **Snapshots** | Take, roll back and delete, up to the number the plan allows |
+| **Backups** | Back up to the server's backup storage (local or Proxmox Backup Server), restore after a typed confirmation, delete |
+
+![Snapshots, backups, password and reinstall](docs/screenshots/client-vps-manage.png)
+*Everything that changes the server asks first; anything that wipes it asks
+for the server's name*
+
+Long work — a reinstall or a restore — is not held in the web request. It runs
+as a job the scheduler advances every minute, and the page shows its progress.
+
+### Ordering
+
+![Ordering a VPS](docs/screenshots/client-vps-order.png)
+*The customer picks the operating system, memory and cores; the summary adds
+each choice for the chosen billing cycle, and a VPS asks for a hostname rather
+than offering a domain purchase*
+
+### Setting it up
+
+1. **Create an API token** in Proxmox under *Datacenter → Permissions → API
+   Tokens*. With privilege separation on, a token has only the permissions
+   given to the token itself — a freshly made one has none.
+2. **Add the server** under *Setup → Servers*, type **Proxmox VE**: hostname,
+   port 8006, the token ID (`user@realm!name`) and its secret. No nameservers
+   are needed. Optionally set the node, a resource pool, a VM id range, IPv4
+   addresses to hand out, the backup storage and a cloud-init vendor snippet.
+3. **Press Test.** It reads the token's real permissions and reports what is
+   missing — and what is more than billing needs — with the exact `pveum`
+   commands to fix it, plus ready-made recipes that turn the official Debian,
+   Ubuntu, AlmaLinux and Rocky cloud images into templates.
+4. **Create the product** with the *Proxmox VE* module. Its card sets the
+   resources (with quick-fill sizes), the template, storage and bridge read
+   live from the cluster, the network, the snapshots and backups the customer
+   may keep, and the operating systems they may reinstall with. **Create order
+   options** builds the checkout choices — operating system, memory, cores,
+   disk — with their monthly prices in one step.
+5. **Adding a VPS by hand** (*Clients → Services → Add service*): pick the
+   product and its options and let PNLCS build it, or link a virtual machine
+   that already runs by picking it from the list.
+
+### Built not to touch what it does not own
+
+- Every server PNLCS creates carries a tag and a note naming its service. It
+  stops, reinstalls or deletes a machine only when that mark is there — a VM
+  id in the billing records is never enough on its own.
+- Servers are created with Proxmox's deletion protection on; it is lifted only
+  for the moment a service is terminated.
+- A suspended server is switched off *and* its start-at-boot is turned off, so
+  a host reboot does not bring it back.
+- The customer never sees the hypervisor's address.
 
 ---
 

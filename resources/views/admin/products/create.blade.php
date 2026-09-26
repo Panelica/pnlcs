@@ -47,7 +47,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="package-group">
                     <label class="form-label">{{ __('admin.products.package') }}</label>
                     <select name="package_name" id="package-select" class="form-control">
                         <option value="">{{ __('admin.products.package_default') }}</option>
@@ -58,7 +58,12 @@
                     <div id="package-note" style="color:#777;font-size:12px;margin-top:4px;">
                         {{ $packageList['error'] ?? __('admin.products.package_hint') }}
                     </div>
-                </div>                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ old('description') }}</textarea></div>
+                </div>
+                <div class="form-group" id="pve-create-hint" style="display:none;">
+                    <label class="form-label">{{ __('proxmox.product.title') }}</label>
+                    <div style="font-size:12px;color:#555;background:#f1f5fb;border:1px solid #dbe5f3;border-radius:6px;padding:8px 10px;">{{ __('proxmox.product.create_hint') }}</div>
+                </div>
+                <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="3" class="form-control">{{ old('description') }}</textarea></div>
             </div>
         </div>
     </div>
@@ -97,6 +102,15 @@
     var packageSelect = document.getElementById('package-select');
     var note = document.getElementById('package-note');
     if (! moduleSelect || ! packageSelect) { return; }
+
+    // Proxmox has no plans on the server: its resources are set on the next page.
+    function proxmoxHint() {
+        var pve = moduleSelect.value === 'proxmox';
+        document.getElementById('package-group').style.display = pve ? 'none' : '';
+        document.getElementById('pve-create-hint').style.display = pve ? '' : 'none';
+    }
+    moduleSelect.addEventListener('change', proxmoxHint);
+    proxmoxHint();
 
     moduleSelect.addEventListener('change', function () {
         var chosen = packageSelect.value;
