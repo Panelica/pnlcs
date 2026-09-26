@@ -2930,7 +2930,7 @@ return [
     'invoices.filter_unpaid' => 'Ödenmemiş',
     'clients.billing_email_hint' => 'Faturalar ve ödeme hatırlatmaları için isteğe bağlı adres. Boşsa hesap e-postası kullanılır.',
     'clients.add_service' => 'Servis Ekle',
-    'clients.add_service_hint' => 'Müşterinin hâlihazırda kullandığı mevcut bir servisi (örneğin başka bir panelden taşınan) kaydedin ki PNLCS yenilemelerini faturalasın. Bu yalnızca faturalama kaydı oluşturur — sunucuda hesap açmaz.',
+    'clients.add_service_hint' => 'Bu müşteriye bir hizmet ekleyin. Sunucu modülünün hesabı kurması için "Hesabı sunucuda şimdi oluştur" kutusunu işaretleyin (VPS\'te aşağıda seçilen seçeneklerle); zaten çalışan bir hizmeti, örneğin başka bir panelden taşınmış olanı, PNLCS\'in yenilemelerini faturalaması için kaydetmek istiyorsanız işaretlemeyin.',
     'clients.service_server' => 'Sunucu',
     'clients.service_no_server' => 'Sunucu yok (yalnız faturalama)',
     'clients.service_added' => 'Servis müşteriye eklendi.',

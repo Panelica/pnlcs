@@ -195,7 +195,7 @@ YAML;
 
         // Rights on the guests
         if ($perms !== null) {
-            $have = $this->rightsAt($perms, $guestPath);
+            $have = self::rightsAt($perms, $guestPath);
             $missingEssential = array_values(array_diff(self::ESSENTIAL, $have));
             $missingOther = array_values(array_diff(array_diff(self::GUEST_PRIVILEGES, self::ESSENTIAL), $have));
 
@@ -210,7 +210,7 @@ YAML;
                 $rightsProblem = true;
             }
 
-            $excess = array_values(array_intersect(self::TOO_MUCH, $this->rightsAt($perms, '/')));
+            $excess = array_values(array_intersect(self::TOO_MUCH, self::rightsAt($perms, '/')));
             if ($excess !== []) {
                 $add('warn', 'too_much', ['privs' => implode(', ', $excess)]);
                 $rightsProblem = true;
@@ -227,7 +227,7 @@ YAML;
                 $failed = true;
             } else {
                 $usable = $perms === null ? $disks : $disks->filter(
-                    fn ($s) => in_array('Datastore.AllocateSpace', $this->rightsAt($perms, '/storage/'.$s['storage']), true)
+                    fn ($s) => in_array('Datastore.AllocateSpace', self::rightsAt($perms, '/storage/'.$s['storage']), true)
                 );
                 if ($usable->isEmpty()) {
                     $add('fail', 'storage_rights', ['storages' => $disks->pluck('storage')->implode(', ')]);
@@ -278,7 +278,7 @@ YAML;
             if (! $store || ! in_array('backup', explode(',', (string) ($store['content'] ?? '')), true)) {
                 $add('fail', 'backup_storage_missing', ['storage' => $backupStorage, 'node' => $node]);
                 $failed = true;
-            } elseif ($perms !== null && ! in_array('Datastore.AllocateSpace', $this->rightsAt($perms, '/storage/'.$backupStorage), true)) {
+            } elseif ($perms !== null && ! in_array('Datastore.AllocateSpace', self::rightsAt($perms, '/storage/'.$backupStorage), true)) {
                 $add('fail', 'backup_storage_rights', ['storage' => $backupStorage]);
                 $failed = $rightsProblem = true;
             } else {
@@ -286,6 +286,21 @@ YAML;
             }
         } elseif ($backupStorage === '') {
             $add('info', 'no_backup_storage');
+        }
+
+        // The image library: fetching cloud images and container templates
+        // onto the node from the admin panel. Optional - templates made by
+        // hand work the same.
+        $imageCommands = null;
+        if ($perms !== null && $node !== '') {
+            $imageStore = isset($storages) ? (string) ($storages->first(fn ($s) => in_array('import', explode(',', (string) ($s['content'] ?? '')), true))['storage'] ?? '') : '';
+            $missingImages = (new ProxmoxImages($this->api, $server))->missingRights($node, $imageStore ?: 'local');
+            if ($missingImages !== []) {
+                $add('info', 'images_rights', ['privs' => implode(', ', $missingImages)]);
+                $imageCommands = ProxmoxImages::rightsCommands($imageStore ?: 'local');
+            } else {
+                $add('ok', 'images_ready');
+            }
         }
 
         // VM id range and addresses
@@ -316,6 +331,9 @@ YAML;
         if ($snippetCommands !== null) {
             $commands = trim(($commands ?? '')."\n".$snippetCommands);
         }
+        if ($imageCommands !== null && ! str_contains((string) $commands, 'PNLCSImages')) {
+            $commands = trim(($commands ?? '')."\n".$imageCommands);
+        }
 
         $answer = $this->answer(! $failed, $release, $identity, $checks, $commands);
         $answer['recipes'] = $this->templateRecipes($pool, (string) ((isset($disks) ? ($disks->first()['storage'] ?? null) : null) ?? 'local-lvm'));
@@ -329,7 +347,7 @@ YAML;
      *
      * @return array<string, array<string, bool>>|null
      */
-    private function permissions(): ?array
+    public function permissions(): ?array
     {
         $answer = $this->api->get('access/permissions');
         if (! $answer->ok) {
@@ -348,7 +366,7 @@ YAML;
      * A right granted at "/pool" or "/" reaches "/pool/pnlcs" too, unless it
      * was granted with propagation switched off.
      */
-    private function rightsAt(array $perms, string $path): array
+    public static function rightsAt(array $perms, string $path): array
     {
         $have = [];
         foreach ($perms as $aclPath => $privs) {
@@ -386,6 +404,7 @@ YAML;
             'pveum acl modify /nodes --users pnlcs@pve --roles PVEAuditor',
             '# '.__('proxmox.commands.templates'),
             "pveum pool modify {$pool} --vms <template-id>",
+            ProxmoxImages::rightsCommands(),
         ]);
     }
 

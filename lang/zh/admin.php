@@ -2946,7 +2946,7 @@ return [
     'settings.twilio_verify_service_sid' => 'Twilio Verify 服务 SID',
     'settings.sms_verification_hint' => '客户会在其安全页面看到验证手机按钮。验证码、尝试次数和十分钟有效期完全由 Twilio 保管;面板只记录验证通过的时刻。留空的密钥字段将保留已保存的值。',
     'clients.add_service' => '添加服务',
-    'clients.add_service_hint' => '记录客户已在使用的现有服务（例如从其他面板迁移过来的），以便 PNLCS 对其续订计费。这只会创建计费记录，不会在服务器上开通账户。',
+    'clients.add_service_hint' => '为此客户添加服务。勾选“立即在服务器上创建账户”，由服务器模块创建（VPS 会使用下方所选的选项）；不勾选则只记录一项已在运行的服务（例如从其他面板迁移而来），以便 PNLCS 为其续费开票。',
     'clients.service_server' => '服务器',
     'clients.service_no_server' => '无服务器（仅计费）',
     'clients.service_added' => '服务已添加到客户。',

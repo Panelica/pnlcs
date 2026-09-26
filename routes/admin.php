@@ -348,6 +348,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::put('servers/{server}', [ConfigController::class, 'updateServer'])->name('servers.update');
             Route::delete('servers/{server}', [ConfigController::class, 'destroyServer'])->name('servers.destroy');
             Route::post('servers/{server}/test', [ConfigController::class, 'testServerConnection'])->name('servers.test');
+            Route::get('servers/{server}/images', [\App\Http\Controllers\Admin\ProxmoxImageController::class, 'show'])->name('servers.images');
+            Route::get('servers/{server}/images/status', [\App\Http\Controllers\Admin\ProxmoxImageController::class, 'status'])->name('servers.images.status');
+            Route::post('servers/{server}/images', [\App\Http\Controllers\Admin\ProxmoxImageController::class, 'install'])->middleware('throttle:20,1')->name('servers.images.install');
 
             Route::get('server-groups', [ConfigController::class, 'serverGroups'])->name('server-groups');
             Route::post('server-groups', [ConfigController::class, 'storeServerGroup'])->name('server-groups.store');

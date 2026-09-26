@@ -45,7 +45,7 @@ final class ProxmoxCatalog
             ->where('template', 1)
             ->map(fn ($t) => [
                 'id' => (string) $t['vmid'],
-                'name' => "#{$t['vmid']} ".($t['name'] ?? '').' ('.($t['type'] ?? 'qemu').', '.$t['node'].')',
+                'name' => "#{$t['vmid']} ".(ProxmoxImages::friendlyName((string) ($t['name'] ?? '')) ?? ($t['name'] ?? '')).' ('.($t['type'] ?? 'qemu').', '.$t['node'].')',
                 'type' => (string) ($t['type'] ?? 'qemu'),
                 'node' => (string) $t['node'],
             ])

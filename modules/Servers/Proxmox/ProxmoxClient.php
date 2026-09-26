@@ -252,6 +252,37 @@ class ProxmoxClient
         return ProxmoxResult::failed("The task is still running on Proxmox after {$timeout} seconds ({$upid}).", 504);
     }
 
+    /**
+     * Where a task is now, without waiting: ok when it finished well, a
+     * failure with its reason when it did not, and 504 while it still runs.
+     */
+    public function taskState(string $node, mixed $upid): ProxmoxResult
+    {
+        if (! is_string($upid) || ! str_starts_with($upid, 'UPID:')) {
+            return new ProxmoxResult(true, 200, $upid);
+        }
+        $status = $this->get('nodes/'.rawurlencode($node).'/tasks/'.rawurlencode($upid).'/status');
+        if (! $status->ok) {
+            return $status;
+        }
+        if (($status->data['status'] ?? null) !== 'stopped') {
+            return ProxmoxResult::failed($this->taskTail($node, $upid), 504);
+        }
+        $exit = (string) ($status->data['exitstatus'] ?? '');
+
+        return str_starts_with($exit, 'OK') || str_starts_with($exit, 'WARNINGS')
+            ? new ProxmoxResult(true, 200, $upid)
+            : ProxmoxResult::failed($this->taskError($node, $upid, $exit));
+    }
+
+    /** The newest line of a running task's log, e.g. a download's progress. */
+    public function taskTail(string $node, string $upid): string
+    {
+        $log = $this->get('nodes/'.rawurlencode($node).'/tasks/'.rawurlencode($upid).'/log', ['start' => 0, 'limit' => 5000]);
+
+        return (string) (collect($log->list())->pluck('t')->filter()->last() ?? '');
+    }
+
     /** The last lines of a failed task's log say why it failed. */
     private function taskError(string $node, string $upid, string $exit): string
     {

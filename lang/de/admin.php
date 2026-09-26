@@ -2945,7 +2945,7 @@ return [
     'settings.twilio_verify_service_sid' => 'Twilio-Dienst-SID überprüfen',
     'settings.sms_verification_hint' => 'Kunden sehen auf ihrer Sicherheitsseite die Schaltfläche „Telefon bestätigen“. Code, Versuche und der zehnminütige Ablauf werden vollständig von Twilio verwaltet; das Panel speichert nur den Zeitpunkt der erfolgreichen Bestätigung. Ein leeres Geheimnisfeld behält den gespeicherten Wert bei.',
     'clients.add_service' => 'Dienst hinzufügen',
-    'clients.add_service_hint' => 'Erfassen Sie einen vorhandenen Dienst, den der Kunde bereits ausführt (z. B. einen, der von einem anderen Panel migriert wurde), damit PNLCS seine Verlängerungen in Rechnung stellt. Dadurch wird nur der Abrechnungsdatensatz erstellt – das Konto wird nicht auf dem Server bereitgestellt.',
+    'clients.add_service_hint' => 'Fügen Sie diesem Kunden einen Dienst hinzu. Haken Sie „Erstellen Sie jetzt das Konto auf dem Server“ an, damit das Servermodul ihn einrichtet (bei einem VPS mit den unten gewählten Optionen); lassen Sie den Haken weg, um einen bereits laufenden Dienst zu erfassen, etwa einen aus einem anderen Panel übernommenen, damit PNLCS seine Verlängerungen abrechnet.',
     'clients.service_server' => 'Server',
     'clients.service_no_server' => 'Kein Server (nur Abrechnung)',
     'clients.service_added' => 'Dienst zum Client hinzugefügt.',

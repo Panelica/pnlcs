@@ -2946,7 +2946,7 @@ return [
     'settings.twilio_verify_service_sid' => 'Twilio Verify service SID',
     'settings.sms_verification_hint' => 'Clients get a Verify Phone button on their Security page. The code, its attempts and its ten-minute expiry all live at Twilio; the panel only records the moment a check comes back approved. A secret field left blank keeps its stored value.',
     'clients.add_service' => 'Add Service',
-    'clients.add_service_hint' => 'Record an existing service the customer already runs (for example one migrated in from another panel) so PNLCS bills its renewals. This only creates the billing record — it does not provision the account on the server.',
+    'clients.add_service_hint' => 'Add a service for this customer. Tick "Create the account on the server now" to have the server module build it (for a VPS, with the options chosen below); leave it unticked to record a service that already runs, for example one migrated in from another panel, so PNLCS bills its renewals.',
     'clients.service_server' => 'Server',
     'clients.service_no_server' => 'No server (billing only)',
     'clients.service_added' => 'Service added to the client.',

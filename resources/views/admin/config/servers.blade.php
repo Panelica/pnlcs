@@ -76,6 +76,9 @@
                     @csrf
                     <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.test') }}</button>
                 </form>
+                @if(strtolower((string) $server->type) === 'proxmox')
+                <a href="{{ route('admin.config.servers.images', $server) }}" class="btn btn-default btn-xs">{{ __('proxmox.images.button') }}</a>
+                @endif
                 <button type="button" class="btn btn-default btn-xs" onclick="editServer({{ $server->id }},{{ json_encode($server->name) }},{{ json_encode($server->hostname) }},{{ json_encode($server->ip_address) }},{{ json_encode($server->type) }},{{ (int)($server->port ?? 8443) }},{{ json_encode($server->username) }},{{ (int)($server->max_accounts ?? 500) }},{{ json_encode($server->nameserver1 ?? '') }},{{ json_encode($server->nameserver2 ?? '') }},{{ $server->active ? 'true' : 'false' }},{{ json_encode((object) ($server->settings ?? [])) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.servers.destroy', $server) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.servers.confirm_delete') }}')">
                     @csrf @method("DELETE")

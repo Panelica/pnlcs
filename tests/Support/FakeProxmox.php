@@ -218,6 +218,25 @@ final class FakeProxmox
         if ($method === 'GET' && $rest === ['network']) {
             return $this->ok([['iface' => 'vmbr0', 'type' => 'bridge', 'cidr' => '192.0.2.10/24'], ['iface' => 'eno1', 'type' => 'eth']]);
         }
+        // The image library: files fetched onto the node, and the appliance catalogue.
+        if ($method === 'POST' && ($rest[0] ?? '') === 'storage' && ($rest[2] ?? '') === 'download-url') {
+            $this->volumes[$rest[1]][] = ['volid' => "{$rest[1]}:{$p['content']}/{$p['filename']}", 'content' => $p['content'], 'size' => 400 * 1048576];
+
+            return $this->task();
+        }
+        if ($rest === ['aplinfo']) {
+            if ($method === 'GET') {
+                return $this->ok([
+                    ['template' => 'debian-12-standard_12.12-1_amd64.tar.zst', 'section' => 'system', 'headline' => 'Debian 12 Bookworm (standard)'],
+                    ['template' => 'ubuntu-24.04-standard_24.04-2_amd64.tar.zst', 'section' => 'system', 'headline' => 'Ubuntu 24.04 Noble (standard)'],
+                    ['template' => 'alpine-3.24-default_20260714_arm64.tar.xz', 'section' => 'system', 'headline' => 'Alpine for arm64'],
+                    ['template' => 'proxmox-mailgateway-9.0-standard_9.0-1_amd64.tar.zst', 'section' => 'mail', 'headline' => 'Mail gateway'],
+                ]);
+            }
+            $this->volumes[$p['storage']][] = ['volid' => "{$p['storage']}:vztmpl/{$p['template']}", 'content' => 'vztmpl', 'size' => 120 * 1048576];
+
+            return $this->task();
+        }
         if (($rest[0] ?? '') === 'tasks') {
             $upid = $rest[1] ?? '';
             if (($rest[2] ?? '') === 'log') {
@@ -245,6 +264,11 @@ final class FakeProxmox
         $action = implode('/', array_slice($rest, 2));
         $guest = $this->guests[$vmid] ?? null;
 
+        if ($action === 'template' && $method === 'POST' && $guest) {
+            $this->guests[$vmid]['template'] = 1;
+
+            return $this->task();
+        }
         if ($action === 'clone' && $method === 'POST') {
             return $this->cloneGuest($vmid, $p);
         }

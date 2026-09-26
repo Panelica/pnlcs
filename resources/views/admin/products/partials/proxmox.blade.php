@@ -136,7 +136,7 @@
                         <option value="">{{ __('proxmox.product.template_none') }}</option>
                         @if($current('template', 'template_id') !== '')<option value="{{ $current('template', 'template_id') }}" selected>#{{ $current('template', 'template_id') }}</option>@endif
                     </select>
-                    <small style="color:#888;">{{ __('proxmox.product.template_hint') }}</small>
+                    <small style="color:#888;">{{ __('proxmox.product.template_hint') }} <a href="#" id="pve-images-link" target="_blank" rel="noopener" data-base="{{ route('admin.config.servers.images', ['server' => '__ID__']) }}">{{ __('proxmox.product.images_link') }}</a></small>
                 </div>
                 <div class="form-group pve-span2" data-pve-only="lxc">
                     <label class="form-label">{{ __('proxmox.product.ostemplate') }}</label>
@@ -377,6 +377,11 @@
             })
             .catch(function () { note.textContent = @json(__('proxmox.product.load_failed')); note.style.color = '#b91c1c'; });
     }
+
+    var imagesLink = document.getElementById('pve-images-link');
+    function imagesHref() { if (imagesLink) { imagesLink.href = serverSel.value ? imagesLink.getAttribute('data-base').replace('__ID__', serverSel.value) : '#'; } }
+    serverSel.addEventListener('change', imagesHref);
+    imagesHref();
 
     typeSel.addEventListener('change', applyType);
     document.getElementById('pve-refresh').addEventListener('click', load);

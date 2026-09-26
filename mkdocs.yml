@@ -90,7 +90,15 @@ nav:
       - Modules: guides/modules.md
       - Sell Domains: guides/sell-domains.md
       - Sell Docker Apps: guides/sell-docker-apps.md
-      - Sell VPS on Proxmox VE: guides/sell-vps-on-proxmox.md
+      - Sell VPS on Proxmox VE:
+          - Overview: guides/sell-vps-on-proxmox.md
+          - 1. Prepare Proxmox: guides/proxmox/prepare-proxmox.md
+          - 2. Connect the Server: guides/proxmox/connect-the-server.md
+          - 3. Install Operating Systems: guides/proxmox/operating-systems.md
+          - 4. Create the Product: guides/proxmox/create-the-product.md
+          - 5. The Customer's Panel: guides/proxmox/customer-panel.md
+          - Running VPS Services: guides/proxmox/running-vps.md
+          - Troubleshooting & Questions: guides/proxmox/troubleshooting.md
       - Tax Rules: guides/tax-rules.md
       - Custom Client Fields: guides/custom-fields.md
       - Themes & Branding: guides/themes-and-branding.md

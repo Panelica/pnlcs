@@ -34,6 +34,15 @@ class ProxmoxTasksCommand extends Command
             $this->line("service #{$service->id}: {$state}");
         }
 
+        // Image downloads started from the admin panel carry on here too.
+        foreach (\App\Models\Server::where('type', 'proxmox')->where('settings', 'like', '%image_jobs%')->get() as $server) {
+            try {
+                \Modules\Servers\Proxmox\ProxmoxImages::for($server)->advance();
+            } catch (\Throwable $e) {
+                $this->warn("server #{$server->id}: {$e->getMessage()}");
+            }
+        }
+
         return self::SUCCESS;
     }
 }

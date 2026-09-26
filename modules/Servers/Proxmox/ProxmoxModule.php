@@ -504,7 +504,10 @@ class ProxmoxModule extends AbstractServerModule
 
     private function mergeTags(array $cfg, Service $service): string
     {
-        return implode(';', array_unique([...self::tagsOf($cfg), self::TAG, self::serviceTag($service)]));
+        // A clone inherits its template's tags; the image library's mark names a template, not a server.
+        $own = array_diff(self::tagsOf($cfg), [ProxmoxImages::TAG]);
+
+        return implode(';', array_unique([...$own, self::TAG, self::serviceTag($service)]));
     }
 
     private function guestName(Service $service, int $vmid): string
