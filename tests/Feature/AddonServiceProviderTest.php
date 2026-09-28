@@ -5,8 +5,12 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Providers\AddonServiceProvider;
 use App\Services\AddonManager;
+use Illuminate\Container\Container;
+use Illuminate\Contracts\Http\Kernel as HttpKernel;
+use Illuminate\Foundation\Bootstrap\LoadConfiguration;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
 
 /*
  * Addons could add hooks and an admin page, but no page of their own for
@@ -23,7 +27,7 @@ use Illuminate\Support\Facades\Log;
  * activate() stores.
  */
 
-const ZZ_ADDON_DIRS = ['modules/Addons/ZzAddonPage', 'modules/Addons/ZzAddonBroken'];
+const ZZ_ADDON_DIRS = ['modules/Addons/ZzAddonPage', 'modules/Addons/ZzGood', 'modules/Addons/ZzBoom', 'modules/Addons/ZzSyntax'];
 
 function zzAddonModule(string $folder, string $name): string
 {
@@ -109,6 +113,7 @@ beforeEach(function () {
 
 afterEach(function () {
     app()->forgetInstance('routes.cached');
+    File::delete(storage_path('logs/zz-addon-boot.log'));
     foreach (ZZ_ADDON_DIRS as $dir) {
         File::deleteDirectory(base_path($dir));
     }
@@ -149,17 +154,6 @@ test('addons without a provider file add none', function () {
     expect(freshAddonManager()->activeProviders())->toBe([]);
 });
 
-test('a provider that throws is logged and skipped, not fatal', function () {
-    // Its own folder and class: a class name can only be loaded once per process.
-    writeZzAddon("throw new \\RuntimeException('broken addon');", 'ZzAddonBroken', 'zzaddonbroken');
-    Setting::set('addon_zzaddonbroken_active', '1', 'addons');
-    freshAddonManager();
-
-    Log::shouldReceive('error')->once()->withArgs(fn ($message) => str_contains($message, 'ZzAddonBrokenServiceProvider') && str_contains($message, 'broken addon'));
-
-    bootAddonProviders();
-});
-
 test('activating or deactivating an addon clears cached routes', function () {
     writeZzAddon('//');
     $manager = freshAddonManager();
@@ -174,4 +168,96 @@ test('activating or deactivating an addon clears cached routes', function () {
     File::put($cache, '<?php // cached again');
     $manager->deactivate('zzaddonpage');
     expect(File::exists($cache))->toBeFalse();
+});
+
+/*
+ * A real request, in the order Laravel boots for it: a fresh application
+ * from bootstrap/app.php, its HTTP kernel bootstrapping every provider. (The
+ * tests above call AddonServiceProvider::boot() on an application that has
+ * already booted, which is not the order a request follows.)
+ *
+ * The fresh application opens its own database connection and cannot see
+ * this test's transaction, so which addons are active is given to it
+ * directly, and its log goes to a file of its own.
+ */
+function zzProvider(string $folder, string $body): void
+{
+    $dir = base_path('modules/Addons/'.$folder);
+    File::ensureDirectoryExists($dir);
+    File::put($dir."/{$folder}Module.php", zzAddonModule($folder, strtolower($folder)));
+    File::put($dir."/{$folder}ServiceProvider.php", <<<PHP
+<?php
+
+namespace Modules\Addons\\{$folder};
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
+
+class {$folder}ServiceProvider extends ServiceProvider
+{
+    {$body}
+}
+PHP);
+}
+
+function zzGood(): void
+{
+    zzProvider('ZzGood', "public function boot(): void\n    {\n        Route::middleware('web')->get('zz-good', fn () => 'zz good page');\n    }");
+}
+
+/** @return array{0: int, 1: string} status of GET $uri and what was logged */
+function zzRealRequest(string $uri, array $active): array
+{
+    $log = storage_path('logs/zz-addon-boot.log');
+    File::delete($log);
+    $testApp = Container::getInstance();
+
+    $app = require base_path('bootstrap/app.php');
+    // Bound as the boot phase starts: AppServiceProvider registers the real manager before that.
+    $app->booting(fn ($app) => $app->instance(AddonManager::class, new class($active) extends AddonManager
+    {
+        public function __construct(private array $on) {}
+
+        public function isActive(string $name): bool
+        {
+            return in_array($name, $this->on, true);
+        }
+    }));
+    $app->afterBootstrapping(LoadConfiguration::class, function ($app) use ($log) {
+        $app['config']->set('logging.channels.zz', ['driver' => 'single', 'path' => $log]);
+        $app['config']->set('logging.default', 'zz');
+    });
+
+    try {
+        $status = $app->make(HttpKernel::class)->handle(Request::create($uri))->getStatusCode();
+    } finally {
+        Container::setInstance($testApp);
+        Facade::clearResolvedInstances();
+        Facade::setFacadeApplication($testApp);
+    }
+
+    return [$status, File::exists($log) ? File::get($log) : ''];
+}
+
+test('an addon provider whose boot() throws is logged and skipped, the panel keeps answering', function () {
+    zzGood();
+    zzProvider('ZzBoom', "public function boot(): void\n    {\n        throw new \\RuntimeException('boom');\n    }");
+
+    [$status, $log] = zzRealRequest('/zz-good', ['zzgood', 'zzboom']);
+
+    expect($status)->toBe(200)
+        ->and($log)->toContain('Addon zzboom: service provider failed to load, skipped')
+        ->and($log)->toContain('boom');
+});
+
+test('an addon provider file that does not parse skips only that addon', function () {
+    zzGood();
+    File::ensureDirectoryExists(base_path('modules/Addons/ZzSyntax'));
+    File::put(base_path('modules/Addons/ZzSyntax/ZzSyntaxModule.php'), zzAddonModule('ZzSyntax', 'zzsyntax'));
+    File::put(base_path('modules/Addons/ZzSyntax/ZzSyntaxServiceProvider.php'), "<?php\n\nnamespace Modules\\Addons\\ZzSyntax;\n\nclass ZzSyntaxServiceProvider extends {\n");
+
+    [$status, $log] = zzRealRequest('/zz-good', ['zzgood', 'zzsyntax']);
+
+    expect($status)->toBe(200)
+        ->and($log)->toContain('Addon zzsyntax: service provider failed to load, skipped');
 });

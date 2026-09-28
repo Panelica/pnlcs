@@ -116,13 +116,16 @@ class AddonManager
     }
 
     /**
-     * Service provider classes of the active addons: an addon may ship
-     * modules/Addons/<Dir>/<Dir>ServiceProvider.php (class
+     * Service provider classes of the active addons, keyed by addon name: an
+     * addon may ship modules/Addons/<Dir>/<Dir>ServiceProvider.php (class
      * Modules\Addons\<Dir>\<Dir>ServiceProvider). The active check uses the
      * addon's own name, the key activate() stores, so a folder named
      * differently from getName() (StaffBoard / "staffboard") is still found.
      *
-     * @return list<class-string<ServiceProvider>>
+     * Only the file is looked for here; the class is not loaded, so a broken
+     * file is reported for its own addon by AddonServiceProvider.
+     *
+     * @return array<string, class-string<ServiceProvider>>
      */
     public function activeProviders(): array
     {
@@ -133,11 +136,8 @@ class AddonManager
             }
             $dir = dirname((string) (new \ReflectionClass($addon))->getFileName());
             $folder = basename($dir);
-            $class = 'Modules\\Addons\\'.$folder.'\\'.$folder.'ServiceProvider';
-            if (File::exists("{$dir}/{$folder}ServiceProvider.php")
-                && class_exists($class)
-                && is_subclass_of($class, ServiceProvider::class)) {
-                $providers[] = $class;
+            if (File::exists("{$dir}/{$folder}ServiceProvider.php")) {
+                $providers[$name] = 'Modules\\Addons\\'.$folder.'\\'.$folder.'ServiceProvider';
             }
         }
 

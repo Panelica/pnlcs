@@ -117,8 +117,10 @@ service provider, `modules/Addons/<Name>/<Name>ServiceProvider.php` (class
 `Modules\Addons\<Name>\<Name>ServiceProvider`). PNLCS registers it while the
 addon is active, so through it the addon can use the framework's own means:
 routes (pages for customers or visitors), views, migrations and scheduled
-tasks. Inactive addons, and addons without the file, change nothing; a provider
-that throws is logged and skipped. Activating or deactivating an addon clears
+tasks. Inactive addons, and addons without the file, change nothing. A provider
+that fails - its file does not load, or its `register()` or `boot()` throws - is
+logged with the addon's name (`Addon <name>: service provider failed to load`)
+and skipped; the panel and the other addons keep working. Activating or deactivating an addon clears
 cached routes (`php artisan optimize`), so its pages appear and disappear at once.
 
 ```php
