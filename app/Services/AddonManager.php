@@ -6,7 +6,9 @@ use App\Contracts\AddonModuleInterface;
 use App\Models\AddonSetting;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\ServiceProvider;
 
 class AddonManager
 {
@@ -92,6 +94,7 @@ class AddonManager
         if ($result['success'] ?? false) {
             Setting::set("addon_{$name}_active", '1', 'addons');
             Setting::set("addon_{$name}_version", $addon->getVersion(), 'addons');
+            $this->forgetCachedRoutes();
         }
         return $result;
     }
@@ -108,7 +111,48 @@ class AddonManager
 
         $result = $addon->deactivate();
         Setting::set("addon_{$name}_active", '0', 'addons');
+        $this->forgetCachedRoutes();
         return $result;
+    }
+
+    /**
+     * Service provider classes of the active addons, keyed by addon name: an
+     * addon may ship modules/Addons/<Dir>/<Dir>ServiceProvider.php (class
+     * Modules\Addons\<Dir>\<Dir>ServiceProvider). The active check uses the
+     * addon's own name, the key activate() stores, so a folder named
+     * differently from getName() (StaffBoard / "staffboard") is still found.
+     *
+     * Only the file is looked for here; the class is not loaded, so a broken
+     * file is reported for its own addon by AddonServiceProvider.
+     *
+     * @return array<string, class-string<ServiceProvider>>
+     */
+    public function activeProviders(): array
+    {
+        $providers = [];
+        foreach ($this->all() as $name => $addon) {
+            if (! $this->isActive($name)) {
+                continue;
+            }
+            $dir = dirname((string) (new \ReflectionClass($addon))->getFileName());
+            $folder = basename($dir);
+            if (File::exists("{$dir}/{$folder}ServiceProvider.php")) {
+                $providers[$name] = 'Modules\\Addons\\'.$folder.'\\'.$folder.'ServiceProvider';
+            }
+        }
+
+        return $providers;
+    }
+
+    /**
+     * Routes cached by `php artisan optimize` would keep an addon's pages after
+     * it is deactivated, or miss them after it is activated.
+     */
+    protected function forgetCachedRoutes(): void
+    {
+        if (app()->routesAreCached()) {
+            Artisan::call('route:clear');
+        }
     }
 
     /**

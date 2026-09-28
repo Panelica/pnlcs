@@ -4,6 +4,7 @@ return [
     App\Providers\ViewServiceProvider::class,
     App\Providers\AppServiceProvider::class,
     App\Providers\ModuleServiceProvider::class,
+    App\Providers\AddonServiceProvider::class,
     Modules\Ksef\KsefServiceProvider::class,
     Modules\CompanyLookup\CompanyLookupServiceProvider::class,
     App\Providers\MailConfigProvider::class,

@@ -112,6 +112,52 @@ listed on the **Extensions** page (`/admin/config/addons/modules`, in the
 settings sidebar) and on the Modules screen, where it is activated. The Staff Board and Project Management addons are working
 examples.
 
+**Pages, views and tables from an addon.** An addon may ship its own Laravel
+service provider, `modules/Addons/<Name>/<Name>ServiceProvider.php` (class
+`Modules\Addons\<Name>\<Name>ServiceProvider`). PNLCS registers it while the
+addon is active, so through it the addon can use the framework's own means:
+routes (pages for customers or visitors), views, migrations and scheduled
+tasks. Inactive addons, and addons without the file, change nothing. A provider
+that fails - its file does not load, or its `register()` or `boot()` throws - is
+logged with the addon's name (`Addon <name>: service provider failed to load`)
+and skipped; the panel and the other addons keep working. Activating or deactivating an addon clears
+cached routes (`php artisan optimize`), so its pages appear and disappear at once.
+
+```php
+// modules/Addons/Reviews/ReviewsServiceProvider.php
+namespace Modules\Addons\Reviews;
+
+use Illuminate\Support\ServiceProvider;
+
+class ReviewsServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        $this->loadRoutesFrom(__DIR__.'/routes.php');
+        $this->loadViewsFrom(__DIR__.'/views', 'reviews');      // view('reviews::index')
+        $this->loadMigrationsFrom(__DIR__.'/migrations');
+    }
+}
+```
+
+```php
+// modules/Addons/Reviews/routes.php
+use Illuminate\Support\Facades\Route;
+
+// A client-area page: the same guards as the client area's own pages.
+Route::middleware(['web', 'banned.ip', 'client.permission', 'auth', '2fa'])
+    ->prefix('client')->name('client.')
+    ->group(function () {
+        Route::get('reviews', [\Modules\Addons\Reviews\ReviewsController::class, 'index'])->name('reviews.index');
+    });
+
+// A public page.
+Route::middleware('web')->get('reviews', [\Modules\Addons\Reviews\PublicController::class, 'index'])->name('reviews.public');
+```
+
+Keep route paths and names under your addon's own prefix so they cannot clash
+with PNLCS or other addons.
+
 **Tests.** `tests/Feature/ModuleDiscoveryTest.php` shows how to exercise a
 module through the same discovery the application uses. Pull requests that add
 a module with tests are reviewed first.
