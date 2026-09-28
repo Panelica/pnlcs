@@ -6,6 +6,7 @@ use App\Services\AddonManager;
 use App\Services\HookManager;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
 class HookServiceProvider extends ServiceProvider
@@ -92,23 +93,19 @@ class HookServiceProvider extends ServiceProvider
             }
         }
 
-        // Addons: gated on active state (Setting-based; DB may be absent during install)
-        $addonsDir = "{$base}/Addons";
-        if (File::isDirectory($addonsDir)) {
+        // Addons: only while active, checked by the addon's own name - the key
+        // activate() stores - not its folder name. isActive() already answers
+        // "no" without a database (installer), so this only fails when the
+        // addon folders cannot be read at all.
+        if (File::isDirectory("{$base}/Addons")) {
             try {
-                $addonManager = $this->app->make(AddonManager::class);
-                foreach (File::directories($addonsDir) as $addonDir) {
-                    $hookFile = "{$addonDir}/hooks.php";
-                    if (!File::exists($hookFile)) {
-                        continue;
-                    }
-                    $name = basename($addonDir);
-                    if ($addonManager->isActive($name)) {
-                        $this->requireHookFile($hookFile);
-                    }
-                }
+                $hookFiles = $this->app->make(AddonManager::class)->activeHookFiles();
             } catch (\Throwable $e) {
-                // Installer / migrate context without DB — skip addon hooks silently.
+                Log::error('Addon hook files not loaded, addon discovery failed: '.$e->getMessage());
+                $hookFiles = [];
+            }
+            foreach ($hookFiles as $hookFile) {
+                $this->requireHookFile($hookFile);
             }
         }
     }

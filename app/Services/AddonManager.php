@@ -145,6 +145,31 @@ class AddonManager
     }
 
     /**
+     * hooks.php files of the active addons, keyed by addon name
+     * (modules/Addons/<Dir>/hooks.php). Like activeProviders(), the active
+     * check uses the addon's own name, the key activate() stores: a folder
+     * named differently from getName() (StaffBoard / "staffboard") would
+     * otherwise never count as active and its hooks would never load.
+     *
+     * @return array<string, string>
+     */
+    public function activeHookFiles(): array
+    {
+        $files = [];
+        foreach ($this->all() as $name => $addon) {
+            if (! $this->isActive($name)) {
+                continue;
+            }
+            $file = dirname((string) (new \ReflectionClass($addon))->getFileName()).'/hooks.php';
+            if (File::exists($file)) {
+                $files[$name] = $file;
+            }
+        }
+
+        return $files;
+    }
+
+    /**
      * Routes cached by `php artisan optimize` would keep an addon's pages after
      * it is deactivated, or miss them after it is activated.
      */
