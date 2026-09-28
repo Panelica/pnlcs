@@ -8,6 +8,7 @@ use App\Models\Setting;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
 class AddonManager
@@ -36,12 +37,18 @@ class AddonManager
             $file = "{$dir}/{$dirName}Module.php";
 
             if (File::exists($file)) {
-                require_once $file;
-                if (class_exists($fqcn)) {
-                    $instance = new $fqcn();
-                    if ($instance instanceof AddonModuleInterface) {
-                        $this->addons[$instance->getName()] = $instance;
+                // One addon whose module file does not load must not hide the
+                // others: their hooks and service providers depend on this list.
+                try {
+                    require_once $file;
+                    if (class_exists($fqcn)) {
+                        $instance = new $fqcn();
+                        if ($instance instanceof AddonModuleInterface) {
+                            $this->addons[$instance->getName()] = $instance;
+                        }
                     }
+                } catch (\Throwable $e) {
+                    Log::error("Addon {$dirName}: module file failed to load, skipped — ".$e->getMessage());
                 }
             }
         }
@@ -142,6 +149,31 @@ class AddonManager
         }
 
         return $providers;
+    }
+
+    /**
+     * hooks.php files of the active addons, keyed by addon name
+     * (modules/Addons/<Dir>/hooks.php). Like activeProviders(), the active
+     * check uses the addon's own name, the key activate() stores: a folder
+     * named differently from getName() (StaffBoard / "staffboard") would
+     * otherwise never count as active and its hooks would never load.
+     *
+     * @return array<string, string>
+     */
+    public function activeHookFiles(): array
+    {
+        $files = [];
+        foreach ($this->all() as $name => $addon) {
+            if (! $this->isActive($name)) {
+                continue;
+            }
+            $file = dirname((string) (new \ReflectionClass($addon))->getFileName()).'/hooks.php';
+            if (File::exists($file)) {
+                $files[$name] = $file;
+            }
+        }
+
+        return $files;
     }
 
     /**
