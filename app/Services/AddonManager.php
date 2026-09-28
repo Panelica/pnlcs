@@ -8,6 +8,7 @@ use App\Models\Setting;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
 class AddonManager
@@ -36,12 +37,18 @@ class AddonManager
             $file = "{$dir}/{$dirName}Module.php";
 
             if (File::exists($file)) {
-                require_once $file;
-                if (class_exists($fqcn)) {
-                    $instance = new $fqcn();
-                    if ($instance instanceof AddonModuleInterface) {
-                        $this->addons[$instance->getName()] = $instance;
+                // One addon whose module file does not load must not hide the
+                // others: their hooks and service providers depend on this list.
+                try {
+                    require_once $file;
+                    if (class_exists($fqcn)) {
+                        $instance = new $fqcn();
+                        if ($instance instanceof AddonModuleInterface) {
+                            $this->addons[$instance->getName()] = $instance;
+                        }
                     }
+                } catch (\Throwable $e) {
+                    Log::error("Addon {$dirName}: module file failed to load, skipped — ".$e->getMessage());
                 }
             }
         }
