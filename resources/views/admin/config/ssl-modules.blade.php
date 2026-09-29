@@ -8,13 +8,6 @@
     <a href="{{ route('admin.config.servers') }}" class="btn btn-secondary">{{ __('common.actions.back') }}</a>
 </div>
 
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-
 @foreach($modules as $name => $module)
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
