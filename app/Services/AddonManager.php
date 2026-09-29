@@ -188,16 +188,46 @@ class AddonManager
     }
 
     /**
-     * Get sidebar items from all active addons.
+     * The admin menu entries of the active addons (their sidebar()), shown in
+     * the admin navigation's Extensions menu.
+     *
+     * An entry needs a label and a url; anything else is left out. An addon
+     * whose sidebar() throws is logged and skipped, so one broken addon does
+     * not take the admin panel down with it.
+     *
+     * @return array<int, array{label: string, url: string, children: array<int, array{label: string, url: string}>}>
      */
     public function getSidebarItems(): array
     {
+        $valid = fn ($entry) => is_array($entry) && is_string($entry['label'] ?? null) && $entry['label'] !== ''
+            && is_string($entry['url'] ?? null) && $entry['url'] !== '';
+
         $items = [];
         foreach ($this->all() as $name => $addon) {
-            if ($this->isActive($name)) {
-                $items = array_merge($items, $addon->sidebar());
+            if (! $this->isActive($name)) {
+                continue;
+            }
+
+            try {
+                $entries = $addon->sidebar();
+            } catch (\Throwable $e) {
+                Log::error("Addon {$name}: sidebar() failed, its menu entries are skipped — ".$e->getMessage());
+
+                continue;
+            }
+
+            foreach (array_filter((array) $entries, $valid) as $entry) {
+                $items[] = [
+                    'label' => $entry['label'],
+                    'url' => $entry['url'],
+                    'children' => array_values(array_map(
+                        fn ($child) => ['label' => $child['label'], 'url' => $child['url']],
+                        array_filter((array) ($entry['children'] ?? []), $valid),
+                    )),
+                ];
             }
         }
+
         return $items;
     }
 

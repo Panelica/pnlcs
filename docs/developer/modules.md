@@ -112,6 +112,13 @@ listed on the **Extensions** page (`/admin/config/addons/modules`, in the
 settings sidebar) and on the Modules screen, where it is activated. The Staff Board and Project Management addons are working
 examples.
 
+**Admin menu entries.** While an addon is active, the entries its `sidebar()`
+returns are listed in the **Extensions** menu of the admin top navigation. An
+entry is `['label' => …, 'url' => …]`, optionally with `'children'` of the same
+shape; entries without a label or a url are left out, and an addon whose
+`sidebar()` throws is logged and skipped. The addon's own page
+(`output()`) lives at `/admin/config/addons/modules/<name>`.
+
 **Pages, views and tables from an addon.** An addon may ship its own Laravel
 service provider, `modules/Addons/<Name>/<Name>ServiceProvider.php` (class
 `Modules\Addons\<Name>\<Name>ServiceProvider`). PNLCS registers it while the

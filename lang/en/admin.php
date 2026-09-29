@@ -16,6 +16,7 @@ return [
     'addon_modules.description' => 'Extend PNLCS with extensions. Activate, configure, and manage.',
     'addon_modules.no_modules' => 'No extensions found in modules/Addons/ directory.',
     'addon_modules.open' => 'Open',
+    'addon_modules.manage' => 'Manage extensions',
     'addon_modules.settings' => 'Settings',
     'addon_modules.key_is_set' => 'A value is set (leave blank to keep it)',
     'addon_modules.status_active' => 'ACTIVE',

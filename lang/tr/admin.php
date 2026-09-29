@@ -15,6 +15,7 @@ return [
     'addon_modules.description' => 'PNLCS\'i ek modüllerle genişletin. Etkinleştirin, yapılandırın, yönetin.',
     'addon_modules.no_modules' => 'modules/Addons/ dizininde ek modül bulunamadı.',
     'addon_modules.open' => 'Açık',
+    'addon_modules.manage' => 'Ek modülleri yönet',
     'addon_modules.status_active' => 'ETKİN',
     'addon_modules.status_inactive' => 'PASİF',
     'addon_modules.title' => 'Ek Modüller',
