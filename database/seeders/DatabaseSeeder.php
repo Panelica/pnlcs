@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
         Currency::firstOrCreate(['code' => 'EUR'], ['prefix' => '€', 'suffix' => ' EUR', 'rate' => 0.92000]);
         Currency::firstOrCreate(['code' => 'GBP'], ['prefix' => '£', 'suffix' => ' GBP', 'rate' => 0.79000]);
         Currency::firstOrCreate(['code' => 'TRY'], ['prefix' => '₺', 'suffix' => ' TRY', 'rate' => 32.50000]);
+        Currency::firstOrCreate(['code' => 'PLN'], ['prefix' => '', 'suffix' => ' zł', 'rate' => 3.84000]);
 
         // Default Polish VAT rates, grouped under Poland; 23% is the default.
         TaxRule::firstOrCreate(['name' => 'VAT 23%', 'country' => 'PL'], ['tax_rate' => 23.00, 'state' => '', 'is_default' => true]);

@@ -51,6 +51,9 @@ class DemoSeeder extends Seeder
         Currency::firstOrCreate(['code' => 'TRY'], [
             'prefix' => '₺', 'suffix' => '', 'rate' => 32.50000, 'is_default' => false,
         ]);
+        Currency::firstOrCreate(['code' => 'PLN'], [
+            'prefix' => '', 'suffix' => ' zł', 'rate' => 3.84000, 'is_default' => false,
+        ]);
 
         // 2. Admin roles
         $fullRole = AdminRole::firstOrCreate(
