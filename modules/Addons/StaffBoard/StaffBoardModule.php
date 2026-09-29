@@ -36,7 +36,7 @@ class StaffBoardModule implements AddonModuleInterface
     public function sidebar(): array
     {
         return [
-            ['label' => 'Staff Board', 'icon' => 'clipboard', 'url' => '/admin/addons/staffboard'],
+            ['label' => 'Staff Board', 'icon' => 'clipboard', 'url' => '/admin/config/addons/modules/staffboard'],
         ];
     }
 

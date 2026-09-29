@@ -16,6 +16,7 @@ return [
     'addon_modules.description' => 'Rozszerz PNLCS o rozszerzenia. Aktywuj, konfiguruj i zarządzaj.',
     'addon_modules.no_modules' => 'Nie znaleziono rozszerzeń w katalogu modules/Addons/.',
     'addon_modules.open' => 'Otwórz',
+    'addon_modules.manage' => 'Zarządzaj rozszerzeniami',
     'addon_modules.settings' => 'Ustawienia',
     'addon_modules.key_is_set' => 'Wartość jest ustawiona (pozostaw puste, aby zachować)',
     'addon_modules.status_active' => 'AKTYWNY',

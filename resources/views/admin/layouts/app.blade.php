@@ -146,6 +146,25 @@
                     <li><a href="{{ route('admin.whois.index') }}">{{ __('admin.nav.whois_lookup') }}</a></li>
                 </ul>
             </li>
+
+            {{-- Extensions: the menu entries of active addons (their sidebar()) --}}
+            @if(!empty($addonMenuItems))
+            <li class="has-dropdown" style="float:left; width:auto; position:relative;">
+                <a href="#" onclick="event.preventDefault();"><i class="fas fa-puzzle-piece"></i> {{ __('admin.nav.addon_modules') }}</a>
+                <ul class="dropdown-menu">
+                    @foreach($addonMenuItems as $item)
+                    @if(!$loop->first && $item['children'])<li class="divider"></li>@endif
+                    <li><a href="{{ $item['url'] }}">{{ $item['label'] }}</a></li>
+                    @foreach($item['children'] as $child)
+                    @continue($child['url'] === $item['url'])
+                    <li><a href="{{ $child['url'] }}" style="padding-left:28px;">{{ $child['label'] }}</a></li>
+                    @endforeach
+                    @endforeach
+                    <li class="divider"></li>
+                    <li><a href="{{ route('admin.config.addons.modules') }}">{{ __('admin.addon_modules.manage') }}</a></li>
+                </ul>
+            </li>
+            @endif
         </ul>
     </div>
 

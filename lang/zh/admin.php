@@ -16,6 +16,7 @@ return [
     'addon_modules.description' => '使用附加模块扩展 PNLCS，并在此激活、配置和管理模块。',
     'addon_modules.no_modules' => '在 modules/Addons/ 目录中未找到附加模块。',
     'addon_modules.open' => '打开',
+    'addon_modules.manage' => '管理附加模块',
     'addon_modules.settings' => '设置',
     'addon_modules.key_is_set' => '已设置（留空以保留）',
     'addon_modules.status_active' => '启用',

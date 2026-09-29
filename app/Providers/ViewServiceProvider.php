@@ -42,6 +42,10 @@ class ViewServiceProvider extends ServiceProvider
 
             // Whether the KSeF addon is enabled — gates the billing-menu entry.
             $view->with('ksefActive', app(AddonManager::class)->isActive('ksef'));
+
+            // The admin menu entries active addons declare in sidebar(); shown
+            // in the Extensions menu of the top navigation.
+            $view->with('addonMenuItems', rescue(fn () => app(AddonManager::class)->getSidebarItems(), []));
         });
 
         View::composer([
