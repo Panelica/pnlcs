@@ -546,34 +546,95 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
     </div>
 </div>
 @forelse($notes as $note)
-<div class="card" style="margin-bottom:8px;{{ $note->sticky ? 'border-left:4px solid #f0ad4e;' : '' }}">
+<div class="card note-card"
+     data-update-url="{{ route('admin.clients.notes.update', [$client, $note]) }}"
+     data-delete-url="{{ route('admin.clients.notes.destroy', [$client, $note]) }}"
+     data-sticky="{{ $note->sticky ? '1' : '0' }}"
+     style="margin-bottom:8px;{{ $note->sticky ? 'border-left:4px solid #f0ad4e;' : '' }}">
     <div class="card-body" style="padding:10px 15px;">
-        <details>
-            <summary style="cursor:pointer;font-size:13px;color:#333;margin:0 0 6px;">{{ $note->note }}</summary>
-            <form method="POST" action="{{ route('admin.clients.notes.update', [$client, $note]) }}" style="margin-top:8px;">
-                @csrf
-                <textarea name="note" rows="3" class="form-control" style="font-size:13px;">{{ $note->note }}</textarea>
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-                    <label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;">
-                        <input type="checkbox" name="sticky" value="1" {{ $note->sticky ? 'checked' : '' }}> {{ __('admin.clients.sticky_note') }}
-                    </label>
-                    <button type="submit" class="btn btn-primary btn-sm" style="font-size:12px;">{{ __('common.actions.save_changes') }}</button>
-                </div>
-            </form>
-        </details>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
-            <span style="font-size:11px;color:#999;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
-            <form method="POST" action="{{ route('admin.clients.notes.destroy', [$client, $note]) }}" onsubmit="return confirm('{{ __('admin.confirm_delete') }}');" style="margin:0;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm" style="font-size:12px;color:#c43c35;padding:2px 8px;">{{ __('common.actions.delete') }}</button>
-            </form>
+        <div style="margin-bottom:6px;">
+            <span style="font-size:11px;color:#6c757d;">
+                {{ __('admin.clients.author') }} <span style="color:#1a4d80;font-weight:500;">{{ $note->admin }}</span> · {{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}
+                @if($note->sticky)<span style="color:#f0ad4e;"> · {{ __('admin.clients.pinned') }}</span>@endif
+            </span>
+            @if($note->edited_by)
+            <div style="font-size:11px;color:#6c757d;margin-top:2px;">
+                {{ __('admin.clients.edited_by') }} <span style="color:#1a4d80;font-weight:500;">{{ $note->edited_by }}</span> · {{ $note->updated_at->timezone(display_tz())->format(datetime_fmt()) }}
+            </div>
+            @endif
+        </div>
+        <textarea class="note-edit form-control" rows="2" style="font-size:13px;">{{ $note->note }}</textarea>
+        <div style="text-align:right;margin-top:6px;">
+            <button type="button" class="note-delete btn btn-danger btn-sm">{{ __('common.actions.delete') }}</button>
         </div>
     </div>
 </div>
 @empty
 <p style="color:#999;font-size:13px;">{{ __('admin.clients.no_notes') }}</p>
 @endforelse
+
+<script>
+(function () {
+    var token = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+    function post(url, method, data) {
+        return fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify(data),
+        }).then(function (r) { return r.json(); });
+    }
+
+    document.querySelectorAll('.note-card').forEach(function (card) {
+        var area = card.querySelector('.note-edit');
+        var del = card.querySelector('.note-delete');
+        var sticky = card.getAttribute('data-sticky') === '1';
+        var original = area.value;
+
+        area.addEventListener('blur', function () {
+            var val = area.value.trim();
+            if (val === '') {
+                area.value = original;
+                return;
+            }
+            if (val === original) return;
+            post(card.getAttribute('data-update-url'), 'POST', { note: val, sticky: sticky ? 1 : 0 })
+                .then(function (d) {
+                    if (d && d.success) {
+                        area.value = d.note;
+                        original = d.note;
+                    } else {
+                        area.value = original;
+                    }
+                })
+                .catch(function () { area.value = original; });
+        });
+
+        area.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                area.value = original;
+                area.blur();
+            }
+        });
+
+        del.addEventListener('click', function () {
+            if (!confirm(@json(__('admin.confirm_delete')))) return;
+            post(card.getAttribute('data-delete-url'), 'DELETE', {})
+                .then(function (d) {
+                    if (d && d.success) {
+                        card.remove();
+                    }
+                })
+                .catch(function () {});
+        });
+    });
+})();
+</script>
 
 @elseif($tab === 'log')
 <div class="card">

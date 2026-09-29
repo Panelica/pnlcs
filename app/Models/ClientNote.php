@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ClientNote extends Model {
     protected $table = "client_notes";
-    protected $fillable = ["client_id", "admin", "note", "sticky"];
+    protected $fillable = ["client_id", "admin", "edited_by", "note", "sticky"];
 
     public function client() { return $this->belongsTo(Client::class); }
 }

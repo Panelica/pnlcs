@@ -770,6 +770,8 @@ return [
     'clients.paid_invoices' => 'Paid Invoices',
     'clients.phone' => 'Phone',
     'clients.pinned' => 'Pinned',
+    'clients.author' => 'Author',
+    'clients.edited_by' => 'Edited by',
     'clients.quick_actions' => 'Quick Actions',
     'clients.registered' => 'Registered',
     'clients.status' => 'Status',

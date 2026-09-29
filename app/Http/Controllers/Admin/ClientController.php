@@ -299,16 +299,29 @@ class ClientController extends Controller
         $note->update([
             'note' => $validated['note'],
             'sticky' => $validated['sticky'] ?? false,
+            'edited_by' => auth('admin')->user()?->full_name ?: 'system',
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'note' => $note->note,
+                'sticky' => (bool) $note->sticky,
+            ]);
+        }
 
         return back()->with('success', __('messages.success.note_updated'));
     }
 
-    public function destroyNote(Client $client, ClientNote $note)
+    public function destroyNote(Request $request, Client $client, ClientNote $note)
     {
         abort_if($note->client_id !== $client->id, 404);
 
         $note->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return back()->with('success', __('messages.success.note_deleted'));
     }
