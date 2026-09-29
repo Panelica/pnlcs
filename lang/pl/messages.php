@@ -267,6 +267,8 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
         'network_issue_deleted' => 'Problem sieciowy usunięty.',
         'network_issue_updated' => 'Problem sieciowy zaktualizowany.',
         'note_added' => 'Notatka dodana.',
+        'note_updated' => 'Notatka zaktualizowana.',
+        'note_deleted' => 'Notatka usunięta.',
         'notification_provider_created' => 'Dostawca powiadomień dodany.',
         'notification_provider_deleted' => 'Dostawca powiadomień usunięty.',
         'notification_provider_updated' => 'Dostawca powiadomień zaktualizowany.',

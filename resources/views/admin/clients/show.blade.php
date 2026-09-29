@@ -548,8 +548,27 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 @forelse($notes as $note)
 <div class="card" style="margin-bottom:8px;{{ $note->sticky ? 'border-left:4px solid #f0ad4e;' : '' }}">
     <div class="card-body" style="padding:10px 15px;">
-        <p style="margin:0 0 6px;font-size:13px;color:#333;">{{ $note->note }}</p>
-        <span style="font-size:11px;color:#999;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
+        <details>
+            <summary style="cursor:pointer;font-size:13px;color:#333;margin:0 0 6px;">{{ $note->note }}</summary>
+            <form method="POST" action="{{ route('admin.clients.notes.update', [$client, $note]) }}" style="margin-top:8px;">
+                @csrf
+                <textarea name="note" rows="3" class="form-control" style="font-size:13px;">{{ $note->note }}</textarea>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+                    <label style="font-size:12px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                        <input type="checkbox" name="sticky" value="1" {{ $note->sticky ? 'checked' : '' }}> {{ __('admin.clients.sticky_note') }}
+                    </label>
+                    <button type="submit" class="btn btn-primary btn-sm" style="font-size:12px;">{{ __('common.actions.save_changes') }}</button>
+                </div>
+            </form>
+        </details>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+            <span style="font-size:11px;color:#999;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}{{ $note->sticky ? ' — ' . __('admin.clients.pinned') : '' }}</span>
+            <form method="POST" action="{{ route('admin.clients.notes.destroy', [$client, $note]) }}" onsubmit="return confirm('{{ __('admin.confirm_delete') }}');" style="margin:0;">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm" style="font-size:12px;color:#c43c35;padding:2px 8px;">{{ __('common.actions.delete') }}</button>
+            </form>
+        </div>
     </div>
 </div>
 @empty

@@ -70,6 +70,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update');
         Route::patch('clients/{client}', [ClientController::class, 'update']);
         Route::post('clients/{client}/notes', [ClientController::class, 'storeNote'])->name('clients.notes.store');
+        Route::post('clients/{client}/notes/{note}', [ClientController::class, 'updateNote'])->name('clients.notes.update');
+        Route::delete('clients/{client}/notes/{note}', [ClientController::class, 'destroyNote'])->name('clients.notes.destroy');
         Route::post('clients/{client}/services', [ClientController::class, 'storeService'])->name('clients.services.store');
         Route::post('clients/{client}/domains', [ClientController::class, 'storeDomainForClient'])->name('clients.domains.store');
         Route::get('servers/{server}/accounts', [ClientController::class, 'serverAccounts'])->name('clients.server-accounts');

@@ -267,6 +267,8 @@ API access may be broken. While the balance cannot be read, no low-balance warni
         'network_issue_deleted' => 'Network issue deleted.',
         'network_issue_updated' => 'Network issue updated.',
         'note_added' => 'Note added.',
+        'note_updated' => 'Note updated.',
+        'note_deleted' => 'Note deleted.',
         'notification_provider_created' => 'Notification provider added.',
         'notification_provider_deleted' => 'Notification provider removed.',
         'notification_provider_updated' => 'Notification provider updated.',
