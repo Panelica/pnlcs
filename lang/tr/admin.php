@@ -19,6 +19,8 @@ return [
     'addon_modules.status_active' => 'ETKİN',
     'addon_modules.status_inactive' => 'PASİF',
     'addon_modules.title' => 'Ek Modüller',
+    'addon_modules.upgraded' => ':name :version sürümüne yükseltildi.',
+    'addon_modules.upgrade_failed' => ':name yükseltilemedi, bir sonraki açılışta yeniden denenecek: :message',
     'addons' => 'Eklentiler',
     'addons.active' => 'Etkin',
     'addons.add_addon' => 'Ek Hizmet Ekle',

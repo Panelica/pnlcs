@@ -97,6 +97,14 @@ class AddonManager
             return ['success' => false, 'message' => __('messages.error.addon_not_found')];
         }
 
+        // Files replaced by a newer version while the addon was off: its
+        // upgrade() runs before it comes back, or the version it records
+        // would skip the upgrade for good.
+        $upgrade = $this->upgradeIfNewer($name, $addon);
+        if ($upgrade !== null && ! ($upgrade['success'] ?? false)) {
+            return $upgrade;
+        }
+
         $result = $addon->activate();
         if ($result['success'] ?? false) {
             Setting::set("addon_{$name}_active", '1', 'addons');
@@ -104,6 +112,63 @@ class AddonManager
             $this->forgetCachedRoutes();
         }
         return $result;
+    }
+
+    /**
+     * Run upgrade() for every active addon whose files are newer than the
+     * version recorded for it, the way WHMCS upgrades an addon when its
+     * admin screens are next opened.
+     *
+     * @return array<string, array{success: bool, message?: string}> keyed by addon name; only the addons that were upgraded or failed
+     */
+    public function runPendingUpgrades(): array
+    {
+        $results = [];
+        foreach ($this->all() as $name => $addon) {
+            if ($this->isActive($name) && ($result = $this->upgradeIfNewer($name, $addon)) !== null) {
+                $results[$name] = $result;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Call the addon's upgrade() with the recorded version when its files
+     * carry a newer one, and record the new version once it succeeds. A
+     * failed or throwing upgrade keeps the old version, so it is tried again
+     * next time; it is logged either way. Null when there is nothing to do: no
+     * recorded version (nothing to upgrade from), or not newer.
+     *
+     * @return array{success: bool, message?: string}|null
+     */
+    protected function upgradeIfNewer(string $name, AddonModuleInterface $addon): ?array
+    {
+        try {
+            $recorded = (string) Setting::get("addon_{$name}_version", '');
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $current = $addon->getVersion();
+        if ($recorded === '' || ! version_compare($current, $recorded, '>')) {
+            return null;
+        }
+
+        try {
+            $result = $addon->upgrade($recorded);
+        } catch (\Throwable $e) {
+            $result = ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if ($result['success'] ?? false) {
+            Setting::set("addon_{$name}_version", $current, 'addons');
+            Log::info("Addon {$name}: upgraded from {$recorded} to {$current}");
+        } else {
+            Log::error("Addon {$name}: upgrade from {$recorded} to {$current} failed — ".($result['message'] ?? 'no message'));
+        }
+
+        return ['success' => (bool) ($result['success'] ?? false), 'message' => (string) ($result['message'] ?? '')];
     }
 
     /**

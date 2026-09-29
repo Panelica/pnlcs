@@ -22,6 +22,8 @@ return [
     'addon_modules.status_active' => '启用',
     'addon_modules.status_inactive' => '未启用',
     'addon_modules.title' => '附加模块',
+    'addon_modules.upgraded' => ':name 已升级到 :version 版本。',
+    'addon_modules.upgrade_failed' => ':name 升级失败，下次打开时重试：:message',
     'addons' => '附加服务',
     'addons.active' => '已启用',
     'addons.add_addon' => '添加附加服务',

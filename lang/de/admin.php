@@ -22,6 +22,8 @@ return [
     'addon_modules.status_active' => 'AKTIV',
     'addon_modules.status_inactive' => 'INAKTIV',
     'addon_modules.title' => 'Erweiterungen',
+    'addon_modules.upgraded' => ':name wurde auf Version :version aktualisiert.',
+    'addon_modules.upgrade_failed' => ':name konnte nicht aktualisiert werden, beim nächsten Mal wird es erneut versucht: :message',
     'addons' => 'Add-ons',
     'addons.active' => 'Aktiv',
     'addons.add_addon' => 'Add-on hinzufügen',
