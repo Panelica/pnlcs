@@ -7,6 +7,7 @@ use App\Models\AddonSetting;
 use App\Models\Setting;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -115,11 +116,30 @@ class AddonManager
     }
 
     /**
-     * Run upgrade() for every active addon whose files are newer than the
-     * version recorded for it, the way WHMCS upgrades an addon when its
-     * admin screens are next opened.
+     * Active addons whose files carry a newer version than the one recorded
+     * for them, keyed by name. Read only: the Extensions screen shows these
+     * as waiting for `php artisan pnlcs:addons-upgrade`.
      *
-     * @return array<string, array{success: bool, message?: string}> keyed by addon name; only the addons that were upgraded or failed
+     * @return array<string, array{from: string, to: string}>
+     */
+    public function pendingUpgrades(): array
+    {
+        $pending = [];
+        foreach ($this->all() as $name => $addon) {
+            if ($this->isActive($name) && ($from = $this->olderRecordedVersion($name, $addon)) !== null) {
+                $pending[$name] = ['from' => $from, 'to' => $addon->getVersion()];
+            }
+        }
+
+        return $pending;
+    }
+
+    /**
+     * Run upgrade() for every active addon whose files are newer than the
+     * version recorded for it. Called by `php artisan pnlcs:addons-upgrade`,
+     * a step of the update sequence (docs/install/updating.md).
+     *
+     * @return array<string, array{success: bool, skipped: bool, message: string, from: string, to: string}> keyed by addon name; only the addons that had an upgrade due
      */
     public function runPendingUpgrades(): array
     {
@@ -133,16 +153,8 @@ class AddonManager
         return $results;
     }
 
-    /**
-     * Call the addon's upgrade() with the recorded version when its files
-     * carry a newer one, and record the new version once it succeeds. A
-     * failed or throwing upgrade keeps the old version, so it is tried again
-     * next time; it is logged either way. Null when there is nothing to do: no
-     * recorded version (nothing to upgrade from), or not newer.
-     *
-     * @return array{success: bool, message?: string}|null
-     */
-    protected function upgradeIfNewer(string $name, AddonModuleInterface $addon): ?array
+    /** The recorded version when the addon's files are newer; null when nothing is recorded or it is not older. */
+    protected function olderRecordedVersion(string $name, AddonModuleInterface $addon): ?string
     {
         try {
             $recorded = (string) Setting::get("addon_{$name}_version", '');
@@ -150,25 +162,58 @@ class AddonManager
             return null;
         }
 
-        $current = $addon->getVersion();
-        if ($recorded === '' || ! version_compare($current, $recorded, '>')) {
+        return $recorded !== '' && version_compare($addon->getVersion(), $recorded, '>') ? $recorded : null;
+    }
+
+    /**
+     * Call the addon's upgrade() with the recorded version when its files
+     * carry a newer one, and record the new version once it succeeds.
+     *
+     * One upgrade of an addon at a time: the run holds a lock per addon, and a
+     * second run that finds it held skips that addon instead of upgrading it
+     * again. The recorded version is read again under the lock, so a run that
+     * waited behind a finished upgrade finds nothing left to do.
+     *
+     * A failed or throwing upgrade keeps the old version, so it is tried again
+     * next time; it is logged either way. Null when there is nothing to do.
+     *
+     * @return array{success: bool, skipped: bool, message: string, from: string, to: string}|null
+     */
+    protected function upgradeIfNewer(string $name, AddonModuleInterface $addon): ?array
+    {
+        if ($this->olderRecordedVersion($name, $addon) === null) {
             return null;
         }
 
+        $current = $addon->getVersion();
+        $lock = Cache::lock("addon-upgrade:{$name}", 600);
+        if (! $lock->get()) {
+            return ['success' => false, 'skipped' => true, 'message' => 'another upgrade of this addon is running', 'from' => '', 'to' => $current];
+        }
+
         try {
-            $result = $addon->upgrade($recorded);
-        } catch (\Throwable $e) {
-            $result = ['success' => false, 'message' => $e->getMessage()];
-        }
+            $recorded = $this->olderRecordedVersion($name, $addon);
+            if ($recorded === null) {
+                return null;
+            }
 
-        if ($result['success'] ?? false) {
-            Setting::set("addon_{$name}_version", $current, 'addons');
-            Log::info("Addon {$name}: upgraded from {$recorded} to {$current}");
-        } else {
-            Log::error("Addon {$name}: upgrade from {$recorded} to {$current} failed — ".($result['message'] ?? 'no message'));
-        }
+            try {
+                $result = $addon->upgrade($recorded);
+            } catch (\Throwable $e) {
+                $result = ['success' => false, 'message' => $e->getMessage()];
+            }
 
-        return ['success' => (bool) ($result['success'] ?? false), 'message' => (string) ($result['message'] ?? '')];
+            if ($result['success'] ?? false) {
+                Setting::set("addon_{$name}_version", $current, 'addons');
+                Log::info("Addon {$name}: upgraded from {$recorded} to {$current}");
+            } else {
+                Log::error("Addon {$name}: upgrade from {$recorded} to {$current} failed — ".($result['message'] ?? 'no message'));
+            }
+
+            return ['success' => (bool) ($result['success'] ?? false), 'skipped' => false, 'message' => (string) ($result['message'] ?? ''), 'from' => $recorded, 'to' => $current];
+        } finally {
+            $lock->release();
+        }
     }
 
     /**

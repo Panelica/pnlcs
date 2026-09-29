@@ -12,18 +12,19 @@ class AddonController extends Controller
 
     public function index()
     {
-        $this->runPendingUpgrades();
         $addons = $this->manager->all();
         $statuses = [];
         foreach ($addons as $name => $addon) {
             $statuses[$name] = $this->manager->isActive($name);
         }
-        return view('admin.config.addon-modules', compact('addons', 'statuses'));
+        // Shown, not run: upgrades run with `php artisan pnlcs:addons-upgrade`.
+        $pending = $this->manager->pendingUpgrades();
+
+        return view('admin.config.addon-modules', compact('addons', 'statuses', 'pending'));
     }
 
     public function show(string $name, Request $request)
     {
-        $this->runPendingUpgrades();
         $addon = $this->manager->find($name);
         if (!$addon) {
             return back()->with('error', __('messages.error.addon_not_found'));
@@ -91,32 +92,5 @@ class AddonController extends Controller
         }
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
-    }
-
-    /**
-     * An active addon whose files were replaced by a newer version is
-     * upgraded when its admin screens are next opened; the outcome is shown
-     * on the page being opened, next to any message already there.
-     */
-    private function runPendingUpgrades(): void
-    {
-        $done = [];
-        $failed = [];
-        foreach ($this->manager->runPendingUpgrades() as $name => $result) {
-            $addon = $this->manager->find($name);
-            $label = $addon?->getDisplayName() ?? $name;
-            if ($result['success']) {
-                $done[] = __('admin.addon_modules.upgraded', ['name' => $label, 'version' => $addon?->getVersion()]);
-            } else {
-                $failed[] = __('admin.addon_modules.upgrade_failed', ['name' => $label, 'message' => $result['message'] ?? '']);
-            }
-        }
-
-        if ($done) {
-            session()->now('success', trim(session('success').' '.implode(' ', $done)));
-        }
-        if ($failed) {
-            session()->now('error', trim(session('error').' '.implode(' ', $failed)));
-        }
     }
 }

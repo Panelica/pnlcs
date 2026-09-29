@@ -86,9 +86,10 @@ pn git pull origin main
 pn composer install --no-dev --optimize-autoloader --no-interaction
 ```
 
-**4. Apply new database migrations.**
+**4. Apply new database migrations, then the upgrades of updated addons.**
 ```bash
 pn php artisan migrate --force
+pn php artisan pnlcs:addons-upgrade                   # runs upgrade() of addons whose files are newer
 ```
 
 **5. Rebuild the frontend assets.**
@@ -144,6 +145,7 @@ php84 artisan down                                        # maintenance page
 git pull origin main
 php84 /usr/local/bin/composer install --no-dev --optimize-autoloader
 php84 artisan migrate --force                             # applies new migrations
+php84 artisan pnlcs:addons-upgrade                        # upgrades of updated addons
 npm ci && npm run build                                   # the account's Node
 php84 artisan optimize                                    # rebuild cached config/routes/views
 php84 artisan up
