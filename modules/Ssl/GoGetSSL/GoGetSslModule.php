@@ -29,11 +29,6 @@ class GoGetSslModule extends AbstractSslModule
                 'type' => 'password',
                 'required' => true,
             ],
-            'sandbox_mode' => [
-                'label' => 'Sandbox Mode',
-                'type' => 'checkbox',
-                'default' => '1',
-            ],
         ];
     }
 
@@ -473,10 +468,7 @@ class GoGetSslModule extends AbstractSslModule
 
     protected function getApiBase(): string
     {
-        $sandbox = $this->getSetting('sandbox_mode', '1');
-        return $sandbox === '1'
-            ? 'https://sandbox.gogetssl.com/api'
-            : 'https://my.gogetssl.com/api';
+        return 'https://my.gogetssl.com/api';
     }
 
     protected function authenticate(): void
