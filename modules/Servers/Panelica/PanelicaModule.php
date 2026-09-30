@@ -579,9 +579,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $resp = $this->post($server, "/v1/accounts/{$userId}/suspend", ['reason' => $reason]);
 
         if (! $resp->successful()) {
-            $msg = $resp->json('message') ?? $resp->body();
-
-            return $this->buildResult(false, "Suspend failed: {$msg}");
+            return $this->refusal($server, (string) $userId, 'Suspend', $resp);
         }
 
         $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => $reason]);
@@ -608,9 +606,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $resp = $this->post($server, "/v1/accounts/{$userId}/unsuspend", []);
 
         if (! $resp->successful()) {
-            $msg = $resp->json('message') ?? $resp->body();
-
-            return $this->buildResult(false, "Unsuspend failed: {$msg}");
+            return $this->refusal($server, (string) $userId, 'Unsuspend', $resp);
         }
 
         $service->update(['status' => 'active', 'suspension_date' => null, 'suspension_reason' => null]);
@@ -637,9 +633,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $resp = $this->delete($server, "/v1/accounts/{$userId}");
 
         if (! $resp->successful()) {
-            $msg = $resp->json('message') ?? $resp->body();
-
-            return $this->buildResult(false, "Terminate failed: {$msg}");
+            return $this->refusal($server, (string) $userId, 'Terminate', $resp);
         }
 
         $service->update(['status' => 'terminated', 'termination_date' => now()]);
@@ -647,6 +641,43 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $this->logAction($service, 'terminate', $result);
 
         return $result;
+    }
+
+    /**
+     * The panel refused a suspend, unsuspend or terminate.
+     *
+     * Panelica answers a missing account with 400 and "user not found" - but
+     * it gives the same answer when its own database lookup failed for any
+     * other reason. Taken at its word, the retry queue kept a service whose
+     * account is gone on a daily loop (reopen, five tries, "will NOT be
+     * retried", again the next morning). Treated as final without checking,
+     * one bad moment on the panel would stop auto-suspend for that service
+     * for good. So the account itself is asked for: only a 404 there counts
+     * as gone, and is reported in the words the queue treats as final
+     * (ProvisioningService::willNeverSucceed). Anything else is returned as
+     * the panel said it, and retried as before.
+     */
+    private function refusal(Server $server, string $userId, string $action, Response $resp): array
+    {
+        $msg = $resp->json('message') ?? $resp->body();
+
+        $saysMissing = $resp->status() === 404
+            || stripos((string) $resp->json('details'), 'user not found') !== false;
+
+        if ($saysMissing && $this->accountIsGone($server, $userId)) {
+            return $this->buildResult(false, "{$action} failed: the account does not exist on the Panelica server (user {$userId}).");
+        }
+
+        return $this->buildResult(false, "{$action} failed: {$msg}");
+    }
+
+    private function accountIsGone(Server $server, string $userId): bool
+    {
+        try {
+            return $this->get($server, "/v1/accounts/{$userId}")->status() === 404;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function changePassword(Service $service, string $newPassword): array

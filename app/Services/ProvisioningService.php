@@ -34,6 +34,7 @@ class ProvisioningService
                 $service->status = ServiceStatus::Active->value;
                 $service->registration_date = $service->registration_date ?? now();
                 $service->save();
+                $this->settleQueue($service, 'create');
                 run_hook('AfterModuleCreate', ['service' => $service, 'result' => $result]);
                 event(new ServiceActivated($service));
             } elseif ($queueOnFail) {
@@ -72,6 +73,7 @@ class ProvisioningService
                 $service->suspension_date = now();
                 $service->suspension_reason = $reason;
                 $service->save();
+                $this->settleQueue($service, 'suspend');
                 run_hook('AfterModuleSuspend', ['service' => $service, 'reason' => $reason]);
                 event(new ServiceSuspended($service, $reason));
             } elseif ($queueOnFail) {
@@ -110,6 +112,7 @@ class ProvisioningService
                 $service->suspension_date = null;
                 $service->suspension_reason = null;
                 $service->save();
+                $this->settleQueue($service, 'unsuspend');
                 run_hook('AfterModuleUnsuspend', ['service' => $service]);
             } elseif ($queueOnFail) {
                 $this->enqueueRetry($service, 'unsuspend', $result['message'] ?? 'Module unsuspend failed');
@@ -146,6 +149,7 @@ class ProvisioningService
                 $service->status = ServiceStatus::Terminated->value;
                 $service->termination_date = now();
                 $service->save();
+                $this->settleQueue($service, 'terminate');
                 run_hook('AfterModuleTerminate', ['service' => $service]);
                 event(new ServiceTerminated($service));
             } elseif ($queueOnFail) {
@@ -270,6 +274,28 @@ class ProvisioningService
         }
 
         return false;
+    }
+
+    /**
+     * The action went through, so whatever the queue still holds for it is
+     * done - including an entry it had given up on. hasGivenUp() reads failed
+     * entries and nothing ever cleared them: once an operator had put things
+     * right and suspended by hand, auto-suspend still skipped that service
+     * the next time it fell behind, on the strength of a refusal that no
+     * longer applied.
+     */
+    private function settleQueue(Service $service, string $action): void
+    {
+        try {
+            ModuleQueue::where('service_id', $service->id)
+                ->where('action', $action)
+                ->whereIn('status', ['pending', 'failed'])
+                ->update(['status' => 'completed', 'completed_at' => now(), 'last_error' => null]);
+        } catch (\Throwable $e) {
+            Log::warning('ProvisioningService: could not settle the module queue', [
+                'service_id' => $service->id, 'action' => $action, 'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function enqueueRetry(Service $service, string $action, string $error, array $payload = []): void
