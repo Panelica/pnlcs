@@ -53,13 +53,15 @@ class ClientRegistrationService
             // one: the tax rate is looked up by country, so a wrong default
             // is a wrong invoice. The admin "create client" screen has always
             // used this setting; the two doors now agree.
-            'country' => $validated['country'] ?? Setting::get('Country', 'US'),
+            'country' => $validated['country'] ?: Setting::get('Country', 'PL') ?: 'PL',
             'tax_id' => $validated['tax_id'] ?? null,
+            'language' => $this->resolveLanguage($validated),
             // The billing identity, where the seller's rules ask for it.
             'client_type' => $validated['client_type'] ?? null,
             'tax_office' => $validated['tax_office'] ?? null,
             'national_id' => $validated['national_id'] ?? null,
             'phone_number' => $validated['phone_number'] ?? null,
+            'phone_prefix' => $validated['phone_prefix'] ?? null,
         ]);
         $client->users()->attach($user->id, ['owner' => true]);
 
@@ -73,5 +75,29 @@ class ClientRegistrationService
         event(new ClientCreated($client));
 
         return [$user, $client];
+    }
+
+    /**
+     * The UI language for a new account: an explicit choice wins, then the
+     * language that belongs to the chosen country (when we publish it), then
+     * the site default.
+     */
+    private function resolveLanguage(array $validated): ?string
+    {
+        if (! empty($validated['language'])) {
+            return $validated['language'];
+        }
+
+        $mapped = \App\Support\GeoLocale::languageForCountry($validated['country'] ?? null);
+        $active = \App\Models\Language::getActiveLanguages()
+            ->pluck('code')
+            ->map(fn ($c) => strtolower((string) $c))
+            ->all();
+
+        if ($mapped && in_array(strtolower($mapped), $active, true)) {
+            return $mapped;
+        }
+
+        return Setting::get('DefaultLanguage', 'pl');
     }
 }

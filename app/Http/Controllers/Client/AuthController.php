@@ -203,9 +203,13 @@ class AuthController extends Controller
         return back()->with('success', __('messages.success.2fa_has_been_disabled'));
     }
 
-    public function showRegister()
+    public function showRegister(Request $request)
     {
-        return view('client.auth.register', ['countries' => \App\Support\Countries::all()]);
+        return view('client.auth.register', [
+            'countries' => \App\Support\Countries::all(),
+            'detectedCountry' => \App\Support\GeoLocale::country($request) ?: (\App\Models\Setting::get('Country') ?: 'PL'),
+            'languages' => \App\Models\Language::getActiveLanguages(),
+        ]);
     }
 
     public function register(Request $request)
@@ -216,20 +220,21 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'company_name' => 'nullable|string|max:255',
-            // Required, not optional: an account with no address cannot be
-            // invoiced correctly, cannot be taxed at the right rate and
-            // cannot register a domain. Asking later means never asking.
-            'address1' => 'required|string|max:255',
+            // Optional at registration: the address can be completed later,
+            // from the profile, before the first invoice or domain order.
+            'address1' => 'nullable|string|max:255',
             'address2' => 'nullable|string|max:255',
-            'city' => 'required|string|max:255',
+            'city' => 'nullable|string|max:255',
             'state' => 'nullable|string|max:100',
-            'postcode' => 'required|string|max:20',
+            'postcode' => 'nullable|string|max:20',
             'country' => 'required|string|size:2',
             'tax_id' => 'nullable|string|max:50',
             'client_type' => 'nullable|in:individual,company',
+            'language' => 'nullable|string|max:10',
             'tax_office' => 'nullable|string|max:100',
             'national_id' => 'nullable|string|max:20',
             'phone_number' => 'nullable|string|max:30',
+            'phone_prefix' => 'nullable|string|max:10',
             'tos' => 'required|accepted',
         ]);
 

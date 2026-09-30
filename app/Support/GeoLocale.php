@@ -124,4 +124,16 @@ class GeoLocale
         // likely to read English than Turkish.
         return in_array('en', $activeLocales, true) ? 'en' : null;
     }
+
+    /**
+     * The language that belongs to a country, or null when we have no mapping.
+     *
+     * @return string|null
+     */
+    public static function languageForCountry(?string $country): ?string
+    {
+        $country = strtoupper(trim((string) $country));
+
+        return self::COUNTRY_LANGUAGE[$country] ?? null;
+    }
 }

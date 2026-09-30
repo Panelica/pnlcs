@@ -72,21 +72,41 @@
                     <label class="form-label" for="password_confirmation">{{ __('common.form.confirm_password') }}<span style="color:#c43c35;">*</span></label>
                     <input type="password" id="password_confirmation" name="password_confirmation" required class="form-control">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="phone_number">{{ __('client.form.phone') }} <span style="color:var(--muted); font-weight:400;">({{ __('client.form.optional') }})</span></label>
-                        <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" class="form-control">
+                <div class="form-group">
+                    <label class="form-label" for="phone_number">{{ __('client.form.phone') }} <span style="color:var(--muted); font-weight:400;">({{ __('client.form.optional') }})</span></label>
+                    <div style="display:flex;gap:6px;">
+                        <select name="phone_prefix" id="phone_prefix" class="form-control" style="width:110px !important;flex-shrink:0;">
+                            @foreach(\App\Support\Countries::PHONE_PREFIXES as $code => $prefix)
+                            <option value="{{ $prefix }}" {{ old('phone_prefix') == $prefix ? 'selected' : '' }}>{{ $code }} {{ $prefix }}</option>
+                            @endforeach
+                        </select>
+                        <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" class="form-control" style="flex:1;min-width:0;">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="company_name">{{ __('client.form.company') }} <span style="color:var(--muted); font-weight:400;">({{ __('client.form.optional') }})</span></label>
-                        <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" class="form-control">
-                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="country">{{ __('common.form.country') }}</label>
+                    <select id="country" name="country" class="form-control">
+                        @foreach($countries as $code => $name)
+                        <option value="{{ $code }}" {{ old('country', $detectedCountry ?? 'PL') === $code ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="company_name">{{ __('client.form.company') }} <span style="color:var(--muted); font-weight:400;">({{ __('client.form.optional') }})</span></label>
+                    <input type="text" id="company_name" name="company_name" value="{{ old('company_name') }}" class="form-control">
                 </div>
                 <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid #e5e5e5;">
-                    <div style="font-size:13px;font-weight:600;">{{ __('common.form.billing_address') }}</div>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ __('common.form.billing_address_hint') }}</div>
+                    <div style="font-size:13px;font-weight:600;">{{ __('client.form.client_type') }}</div>
                 </div>
-                @include('client.partials.billing-address-fields', ['gridClass' => 'form-row', 'showPhone' => false])
+                @php $clientType = old('client_type') ?: 'individual'; @endphp
+                <div style="display:flex;gap:16px;align-items:center;margin-bottom:14px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+                        <input type="radio" name="client_type" value="individual" {{ $clientType === 'individual' ? 'checked' : '' }}> {{ __('client.form.client_type_individual') }}
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+                        <input type="radio" name="client_type" value="company" {{ $clientType === 'company' ? 'checked' : '' }}> {{ __('client.form.client_type_company') }}
+                    </label>
+                </div>
                 <div style="margin-bottom:16px;">
                     <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;">
                         <input type="checkbox" name="tos" value="1" {{ old('tos') ? 'checked' : '' }} style="margin-top:3px;" required>
@@ -115,5 +135,19 @@
         {{ __('client.auth.already_have_account') }} <a href="{{ route('client.login') }}">{{ __('client.auth.sign_in') }}</a>
     </div>
 </div>
+<script>
+(function () {
+    var map = {!! json_encode(\App\Support\Countries::PHONE_PREFIXES) !!};
+    var country = document.getElementById('country');
+    var prefix = document.getElementById('phone_prefix');
+    if (!country || !prefix) return;
+    function sync() {
+        var code = (country.value || '').toUpperCase();
+        if (map[code]) prefix.value = map[code];
+    }
+    country.addEventListener('change', sync);
+    sync();
+})();
+</script>
 </body>
 </html>

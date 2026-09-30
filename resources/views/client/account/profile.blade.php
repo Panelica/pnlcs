@@ -102,17 +102,10 @@
                     <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
                     @error('company_name') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                     <div class="form-row" style="margin-top:12px;">
-                        @if(\App\Support\BillingIdentity::turkish())
-                        <div class="form-group">
+                        <div class="form-group" id="tax-office-row" style="{{ strtoupper((string) old('country', $client->country)) === 'TR' ? '' : 'display:none;' }}">
                             <label class="form-label" for="tax_office">{{ __('client.form.tax_office') }}</label>
                             <input type="text" id="tax_office" name="tax_office" value="{{ old('tax_office', $client?->tax_office) }}" class="form-control">
                             @error('tax_office') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
-                        </div>
-                        @endif
-                        <div class="form-group">
-                            <label class="form-label" for="tax_id">{{ __('client.form.tax_id') }}<span style="color:#c43c35;">*</span></label>
-                            <input type="text" id="tax_id" name="tax_id" value="{{ old('tax_id', $client?->tax_id) }}" inputmode="numeric" maxlength="20" class="form-control">
-                            @error('tax_id') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                         </div>
                     </div>
                 </div>
@@ -126,7 +119,14 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="phone_number">{{ __('common.form.phone_number') }}</label>
-                    <input type="text" id="phone_number" name="phone_number" value="{{ old("phone_number", $client?->phone_number) }}" class="form-control">
+                    <div style="display:flex;gap:6px;">
+                        <select name="phone_prefix" id="phone_prefix" class="form-control" style="width:110px !important;flex-shrink:0;">
+                            @foreach(\App\Support\Countries::PHONE_PREFIXES as $code => $prefix)
+                            <option value="{{ $prefix }}" {{ old('phone_prefix', $client?->phone_prefix) == $prefix ? 'selected' : '' }}>{{ $code }} {{ $prefix }}</option>
+                            @endforeach
+                        </select>
+                        <input type="text" id="phone_number" name="phone_number" value="{{ old("phone_number", $client?->phone_number) }}" class="form-control" style="flex:1;min-width:0;">
+                    </div>
                 </div>
             </div>
             <div class="form-grid-2">
@@ -262,6 +262,22 @@
     } else {
         baslat();
     }
+})();
+</script>
+
+<script>
+(function () {
+    var map = {!! json_encode(\App\Support\Countries::PHONE_PREFIXES) !!};
+    var country = document.getElementById('country');
+    var row = document.getElementById('tax-office-row');
+    var prefix = document.getElementById('phone_prefix');
+    function sync() {
+        var code = (country.value || '').toUpperCase();
+        if (row) row.style.display = (code === 'TR') ? '' : 'none';
+        if (prefix && map[code]) prefix.value = map[code];
+    }
+    if (country) country.addEventListener('change', sync);
+    sync();
 })();
 </script>
 

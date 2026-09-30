@@ -96,6 +96,7 @@ class AccountController extends Controller
             // The column will not hold null, so asking is better than crashing.
             'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:50',
+            'phone_prefix' => 'nullable|string|max:10',
             'language' => 'nullable|string|max:10',
             'new_password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'new_password_confirmation' => 'required_with:new_password|string',
@@ -202,6 +203,7 @@ class AccountController extends Controller
                 'tax_office' => $request->tax_office,
                 'national_id' => $request->national_id,
                 'phone_number' => $request->phone_number,
+                'phone_prefix' => $request->phone_prefix,
                 // clients.language is NOT NULL; a profile update that does not
                 // carry the field must keep the current value, not null it.
                 'language' => $request->input('language') ?: $client->language,
