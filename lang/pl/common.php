@@ -149,7 +149,7 @@ return [
     'form.select_country' => '-- Wybierz kraj --',
     'form.street_address' => 'Adres ulicy',
     'form.state' => 'Województwo / Region',
-    'form.tax_id' => 'NIP / Numer VAT',
+    'form.tax_id' => 'NIP',
     'form.tax_id_hint' => 'Tylko firmy. Drukowany na fakturach.',
     'form.billing_address' => 'Adres rozliczeniowy',
     'form.billing_address_hint' => 'Na ten adres wystawiane są faktury.',

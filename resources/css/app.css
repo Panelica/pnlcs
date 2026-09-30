@@ -13,6 +13,7 @@ a:hover { color: var(--theme-primary, #1A4D80); text-decoration: underline; }
 img { max-width: 100%; }
 h1, h2, h3, h4, h5, h6 { font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif; }
 [x-cloak] { display: none !important; }
+[hidden] { display: none !important; }
 
 /* ── NAVIGATION BAR ── */
 .navigation { margin: 0; padding: 5px; background-color: var(--theme-nav-bg, #1A4D80); display: inline-block; vertical-align: top; width: 100%; }

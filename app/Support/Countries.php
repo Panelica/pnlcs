@@ -114,6 +114,19 @@ class Countries
     ];
 
     /**
+     * Polish voivodeships (województwa), offered as a pick list for the
+     * state/region field when the country is Poland.
+     *
+     * @var list<string>
+     */
+    public const PL_STATES = [
+        'Dolnośląskie', 'Kujawsko-pomorskie', 'Lubelskie', 'Lubuskie',
+        'Łódzkie', 'Małopolskie', 'Mazowieckie', 'Opolskie',
+        'Podkarpackie', 'Podlaskie', 'Pomorskie', 'Śląskie',
+        'Świętokrzyskie', 'Warmińsko-mazurskie', 'Wielkopolskie', 'Zachodniopomorskie',
+    ];
+
+    /**
      * The dialling prefix for a country code, or null when unknown.
      */
     public static function phonePrefix(?string $country): ?string

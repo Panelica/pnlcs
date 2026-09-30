@@ -102,11 +102,13 @@
                     <input type="text" id="company_name" name="company_name" value="{{ old("company_name", $client?->company_name) }}" class="form-control">
                     @error('company_name') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                     <div class="form-row" style="margin-top:12px;">
+                        @if(\App\Support\BillingIdentity::turkish())
                         <div class="form-group">
-                            <label class="form-label" for="tax_office">{{ __('client.form.tax_office') }}<span style="color:#c43c35;">*</span></label>
+                            <label class="form-label" for="tax_office">{{ __('client.form.tax_office') }}</label>
                             <input type="text" id="tax_office" name="tax_office" value="{{ old('tax_office', $client?->tax_office) }}" class="form-control">
                             @error('tax_office') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                         </div>
+                        @endif
                         <div class="form-group">
                             <label class="form-label" for="tax_id">{{ __('client.form.tax_id') }}<span style="color:#c43c35;">*</span></label>
                             <input type="text" id="tax_id" name="tax_id" value="{{ old('tax_id', $client?->tax_id) }}" inputmode="numeric" maxlength="20" class="form-control">
