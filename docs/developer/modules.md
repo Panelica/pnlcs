@@ -165,6 +165,18 @@ Route::middleware('web')->get('reviews', [\Modules\Addons\Reviews\PublicControll
 Keep route paths and names under your addon's own prefix so they cannot clash
 with PNLCS or other addons.
 
+**Upgrades.** PNLCS records the version an addon was activated at. When the
+addon's files carry a newer `getVersion()`, its `upgrade($fromVersion)` runs
+once, with the recorded version, when `php artisan pnlcs:addons-upgrade` runs
+(a step of the update sequence, right after `migrate --force`; see
+[Updating](../install/updating.md)), or before the addon is switched back on
+if it was off. Return `['success' => true]` and the new version is recorded; on
+failure (or an exception) the old version stays, the error is logged, the
+command exits non-zero and the upgrade is tried again on the next run. A failed
+upgrade also keeps an inactive addon off. Each addon's upgrade runs under a
+lock, so two runs at once never upgrade it twice. Until it has run, the
+Extensions screen shows the upgrade as pending.
+
 **Tests.** `tests/Feature/ModuleDiscoveryTest.php` shows how to exercise a
 module through the same discovery the application uses. Pull requests that add
 a module with tests are reviewed first.

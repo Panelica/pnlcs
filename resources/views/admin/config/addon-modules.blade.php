@@ -23,6 +23,9 @@
         </div>
         <div class="card-body" style="padding:16px;">
             <p style="font-size:13px;color:var(--pn-muted);margin:0 0 12px;">{{ $addon->getDescription() }}</p>
+            @if(isset($pending[$name]))
+            <div class="alert alert-warning" style="font-size:12px;margin:0 0 12px;">{{ __('admin.addon_modules.upgrade_pending', ['from' => $pending[$name]['from'], 'to' => $pending[$name]['to']]) }} <code>php artisan pnlcs:addons-upgrade</code></div>
+            @endif
             <div style="font-size:12px;margin-bottom:12px;">
                 <span>{{ __('admin.addon_modules.author') }}: <b>{{ $addon->getAuthor() }}</b></span>
             </div>

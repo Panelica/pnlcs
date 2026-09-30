@@ -17,7 +17,10 @@ class AddonController extends Controller
         foreach ($addons as $name => $addon) {
             $statuses[$name] = $this->manager->isActive($name);
         }
-        return view('admin.config.addon-modules', compact('addons', 'statuses'));
+        // Shown, not run: upgrades run with `php artisan pnlcs:addons-upgrade`.
+        $pending = $this->manager->pendingUpgrades();
+
+        return view('admin.config.addon-modules', compact('addons', 'statuses', 'pending'));
     }
 
     public function show(string $name, Request $request)

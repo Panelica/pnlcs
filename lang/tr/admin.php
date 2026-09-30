@@ -19,6 +19,7 @@ return [
     'addon_modules.status_active' => 'ETKİN',
     'addon_modules.status_inactive' => 'PASİF',
     'addon_modules.title' => 'Ek Modüller',
+    'addon_modules.upgrade_pending' => ':to sürümü kurulu ama :from sürümünden yükseltme henüz çalıştırılmadı. Çalıştırın:',
     'addons' => 'Eklentiler',
     'addons.active' => 'Etkin',
     'addons.add_addon' => 'Ek Hizmet Ekle',

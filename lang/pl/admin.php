@@ -22,6 +22,7 @@ return [
     'addon_modules.status_active' => 'AKTYWNY',
     'addon_modules.status_inactive' => 'NIEAKTYWNY',
     'addon_modules.title' => 'Rozszerzenia',
+    'addon_modules.upgrade_pending' => 'Wersja :to jest zainstalowana, ale aktualizacja z :from jeszcze nie została uruchomiona. Uruchom:',
     'addons' => 'Dodatki',
     'addons.active' => 'Aktywny',
     'addons.add_addon' => 'Dodaj dodatek',

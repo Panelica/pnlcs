@@ -22,6 +22,7 @@ return [
     'addon_modules.status_active' => 'ACTIVE',
     'addon_modules.status_inactive' => 'INACTIVE',
     'addon_modules.title' => 'Extensions',
+    'addon_modules.upgrade_pending' => 'Version :to is installed but its upgrade from :from has not run yet. Run:',
     'addons' => 'Addons',
     'addons.active' => 'Active',
     'addons.add_addon' => 'Add Addon',

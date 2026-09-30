@@ -22,6 +22,7 @@ return [
     'addon_modules.status_active' => 'AKTIV',
     'addon_modules.status_inactive' => 'INAKTIV',
     'addon_modules.title' => 'Erweiterungen',
+    'addon_modules.upgrade_pending' => 'Version :to ist installiert, das Upgrade von :from wurde aber noch nicht ausgeführt. Ausführen:',
     'addons' => 'Add-ons',
     'addons.active' => 'Aktiv',
     'addons.add_addon' => 'Add-on hinzufügen',

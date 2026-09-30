@@ -22,6 +22,7 @@ return [
     'addon_modules.status_active' => '启用',
     'addon_modules.status_inactive' => '未启用',
     'addon_modules.title' => '附加模块',
+    'addon_modules.upgrade_pending' => '已安装 :to 版本，但从 :from 的升级尚未运行。请运行：',
     'addons' => '附加服务',
     'addons.active' => '已启用',
     'addons.add_addon' => '添加附加服务',
