@@ -223,11 +223,13 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
         Route::put('domains/{domain}/nameservers', [DomainController::class, 'updateNameservers'])->name('domains.nameservers');
         Route::post('domains/{domain}/attach-hosting', [DomainController::class, 'attachToHosting'])->name('domains.attach-hosting');
-        Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->name('domains.lock');
+        // A transfer code or an unlocked domain lets the name leave: confirmed
+        // with an emailed code first (SensitiveActionConfirmation).
+        Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->middleware('client.confirm')->name('domains.lock');
         Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
         Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
         Route::post('domains/{domain}/restore', [DomainController::class, 'restore'])->name('domains.restore');
-        Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');
+        Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->middleware('client.confirm')->name('domains.epp');
 
         // Invoices
         Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
@@ -308,6 +310,9 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::delete('account/users/{user}', [\App\Http\Controllers\Client\AccountUserController::class, 'destroy'])->name('account.users.destroy');
         Route::delete('account/users/invites/{invite}', [\App\Http\Controllers\Client\AccountUserController::class, 'cancelInvite'])->name('account.users.invites.destroy');
         Route::post('account/personal-data', [AccountController::class, 'exportData'])->middleware('throttle:5,1')->name('account.personal-data');
+        Route::get('confirm', [\App\Http\Controllers\Client\ConfirmSensitiveController::class, 'show'])->name('confirm.show');
+        Route::post('confirm/send', [\App\Http\Controllers\Client\ConfirmSensitiveController::class, 'send'])->middleware('throttle:5,10')->name('confirm.send');
+        Route::post('confirm', [\App\Http\Controllers\Client\ConfirmSensitiveController::class, 'verify'])->middleware('throttle:10,1')->name('confirm.verify');
         Route::post('account/phone/verification', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'start'])->name('account.phone.verify');
         Route::post('account/phone/verification-check', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'check'])->name('account.phone.verify_check');
         Route::post('account/security/sessions/{sessionId}/logout', [AccountController::class, 'logoutSession'])->name('account.security.logout_session');

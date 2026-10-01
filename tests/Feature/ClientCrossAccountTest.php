@@ -106,7 +106,11 @@ test('a customer cannot change another customer records', function () {
 
     $leaks = [];
     foreach ($attacks as [$verb, $url, $payload]) {
-        $response = $this->actingAs($attacker)->$verb($url, $payload);
+        $response = $this->actingAs($attacker)
+            // Confirmed just now (emailed code), so what is tested is the
+            // ownership check, not the confirmation in front of it.
+            ->withSession(['sensitive_confirmed' => ['user' => $attacker->id, 'at' => now()->getTimestamp()]])
+            ->$verb($url, $payload);
         if ($response->getStatusCode() < 400 && ! $response->isRedirect()) {
             $leaks[] = "$verb $url => HTTP ".$response->getStatusCode();
         }

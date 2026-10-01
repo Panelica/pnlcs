@@ -31,11 +31,17 @@ function customerDomain(string $registrar = 'Namecheap', string $status = 'activ
     return compact('user', 'domain');
 }
 
+/** These actions now ask for an emailed code first; these tests are about what happens after. */
+function confirmedJustNow(User $user): array
+{
+    return ['sensitive_confirmed' => ['user' => $user->id, 'at' => now()->getTimestamp()]];
+}
+
 test('locking a domain does not overwrite what the domain is', function () {
     Http::fake(['*' => Http::response('<?xml version="1.0"?><ApiResponse Status="OK"><CommandResponse><DomainSetRegistrarLockResult IsSuccess="true" /></CommandResponse></ApiResponse>', 200)]);
     $fx = customerDomain();
 
-    $this->actingAs($fx['user'])->post(route('client.domains.lock', $fx['domain']))->assertRedirect();
+    $this->actingAs($fx['user'])->withSession(confirmedJustNow($fx['user']))->post(route('client.domains.lock', $fx['domain']))->assertRedirect();
 
     // status says whether the domain is active, expired, cancelled. It is not
     // somewhere to keep a lock flag.
@@ -46,7 +52,7 @@ test('unlocking an expired domain does not bring it back to life', function () {
     Http::fake(['*' => Http::response('<?xml version="1.0"?><ApiResponse Status="OK"></ApiResponse>', 200)]);
     $fx = customerDomain('Namecheap', 'expired');
 
-    $this->actingAs($fx['user'])->post(route('client.domains.lock', $fx['domain']))->assertRedirect();
+    $this->actingAs($fx['user'])->withSession(confirmedJustNow($fx['user']))->post(route('client.domains.lock', $fx['domain']))->assertRedirect();
 
     // Setting it active would put it back in front of the renewal generator.
     expect(strtolower($fx['domain']->fresh()->status))->toBe('expired');
@@ -56,7 +62,7 @@ test('the lock reaches the registrar', function () {
     Http::fake(['*' => Http::response('<?xml version="1.0"?><ApiResponse Status="OK"><CommandResponse><DomainSetRegistrarLockResult IsSuccess="true" /></CommandResponse></ApiResponse>', 200)]);
     $fx = customerDomain();
 
-    $this->actingAs($fx['user'])->post(route('client.domains.lock', $fx['domain']))->assertRedirect();
+    $this->actingAs($fx['user'])->withSession(confirmedJustNow($fx['user']))->post(route('client.domains.lock', $fx['domain']))->assertRedirect();
 
     Http::assertSent(fn ($request) => str_contains(strtolower($request->url().json_encode($request->data())), 'registrarlock'));
 });
@@ -65,7 +71,7 @@ test('the EPP code comes from the registrar, not from a hash of the domain name'
     Http::fake(['*' => Http::response('<?xml version="1.0"?><ApiResponse Status="OK"></ApiResponse>', 200)]);
     $fx = customerDomain();
 
-    $response = $this->actingAs($fx['user'])->getJson(route('client.domains.epp', $fx['domain']));
+    $response = $this->actingAs($fx['user'])->withSession(confirmedJustNow($fx['user']))->getJson(route('client.domains.epp', $fx['domain']));
 
     $response->assertOk();
 
@@ -77,7 +83,7 @@ test('the EPP code comes from the registrar, not from a hash of the domain name'
 test('a domain with no registrar module says so instead of inventing a code', function () {
     $fx = customerDomain('Manual');
 
-    $response = $this->actingAs($fx['user'])->getJson(route('client.domains.epp', $fx['domain']));
+    $response = $this->actingAs($fx['user'])->withSession(confirmedJustNow($fx['user']))->getJson(route('client.domains.epp', $fx['domain']));
 
     $response->assertOk();
 
