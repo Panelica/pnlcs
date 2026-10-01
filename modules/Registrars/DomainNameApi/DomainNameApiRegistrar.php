@@ -214,7 +214,15 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
             return ['success' => false, 'message' => $this->errorOf($response, 'Renewal failed')];
         }
 
-        return ['success' => true, 'message' => 'Domain renewed via DomainNameAPI.'];
+        // The module moves the dates on, as the other registrars do:
+        // DomainService::renewDomain() leaves them to it on success. Left
+        // alone, a paid renewal kept next_due_date where it was, and the
+        // "already paid for this period" guard then never billed the next
+        // year - the domain lapsed a year later with nobody told.
+        $newExpiry = ($domain->expiry_date ?? now())->copy()->addYears($years);
+        $domain->update(['expiry_date' => $newExpiry, 'next_due_date' => $newExpiry->copy()]);
+
+        return ['success' => true, 'message' => 'Domain renewed via DomainNameAPI.', 'expiry_date' => $newExpiry->toDateString()];
     }
 
     public function transfer(Domain $domain, string $eppCode): array
