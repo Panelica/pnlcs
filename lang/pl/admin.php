@@ -201,6 +201,8 @@ return [
     'affiliates.withdrawn_label' => 'Wypłacone:',
     'amount' => 'Kwota',
     'announcements' => 'Ogłoszenia',
+    'announcements.category' => 'Kategoria',
+    'announcements.category_hint' => 'np. Konserwacja, Produkt, Cennik',
     'announcements.add_announcement' => 'Dodaj ogłoszenie',
     'announcements.confirm_delete' => 'Usunąć to ogłoszenie?',
     'announcements.content' => 'Treść',

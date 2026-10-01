@@ -49,7 +49,7 @@ const GUARD_PUBLIC_CLIENT = [
     'client.password.request', 'client.password.email', 'client.password.reset',
     'client.password.update.reset',
     'client.contact', 'client.contact.submit',
-    'client.announcements.index', 'client.announcements.show',
+    'client.announcements.index', 'client.announcements.show', 'client.announcements.rss',
     'client.kb.index', 'client.kb.show',
     'client.network-status',
     'client.domain.pricing', 'client.domain.search', 'client.domain.check',

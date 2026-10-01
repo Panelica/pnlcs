@@ -887,6 +887,7 @@ class ConfigController extends Controller
     {
         return view('admin.config.announcements', [
             'announcements' => Announcement::orderBy('id', 'desc')->get(),
+            'categories' => Announcement::whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
         ]);
     }
 
@@ -897,9 +898,10 @@ class ConfigController extends Controller
         if (! $request->filled('announcement') && $request->filled('body')) {
             $request->merge(['announcement' => $request->input('body')]);
         }
-        $v = $request->validate(['title' => 'required', 'announcement' => 'required|string', 'published' => 'boolean']);
+        $v = $request->validate(['title' => 'required', 'category' => 'nullable|string|max:60', 'announcement' => 'required|string', 'published' => 'boolean']);
         Announcement::create([
             'title' => $v['title'],
+            'category' => $v['category'] ?? null,
             'announcement' => $v['announcement'],
             'published' => $request->boolean('published'),
         ]);
@@ -1423,7 +1425,7 @@ class ConfigController extends Controller
     // Announcements
     public function updateAnnouncement(Request $request, Announcement $announcement)
     {
-        $v = $request->validate(['title' => 'required', 'published' => 'boolean']);
+        $v = $request->validate(['title' => 'required', 'category' => 'nullable|string|max:60', 'published' => 'boolean']);
         $v['announcement'] = $request->body ?? $request->announcement ?? $announcement->announcement;
         $announcement->update($v);
 

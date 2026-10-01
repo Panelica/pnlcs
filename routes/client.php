@@ -69,6 +69,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
     Route::get('announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
     // Network / server status (public)
     Route::get('network-status', [NetworkStatusController::class, 'index'])->name('network-status');
+    Route::get('announcements.rss', [AnnouncementController::class, 'rss'])->name('announcements.rss');
     Route::get('announcements/{announcement}', [AnnouncementController::class, 'show'])->name('announcements.show');
 
     // Contact (public)

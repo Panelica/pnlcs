@@ -201,6 +201,8 @@ return [
     'affiliates.withdrawn_label' => 'Withdrawn:',
     'amount' => 'Amount',
     'announcements' => 'Announcements',
+    'announcements.category' => 'Category',
+    'announcements.category_hint' => 'e.g. Maintenance, Product, Pricing',
     'announcements.add_announcement' => 'Add Announcement',
     'announcements.confirm_delete' => 'Delete this announcement?',
     'announcements.content' => 'Content',

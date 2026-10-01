@@ -201,6 +201,8 @@ return [
     'affiliates.withdrawn_label' => 'Zurückgezogen:',
     'amount' => 'Betrag',
     'announcements' => 'Ankündigungen',
+    'announcements.category' => 'Kategorie',
+    'announcements.category_hint' => 'z. B. Wartung, Produkt, Preise',
     'announcements.add_announcement' => 'Ankündigung hinzufügen',
     'announcements.confirm_delete' => 'Diese Ankündigung löschen?',
     'announcements.content' => 'Inhalt',

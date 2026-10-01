@@ -192,6 +192,8 @@ return [
     'affiliates.withdrawn_label' => 'Çekilmiş:',
     'amount' => 'Tutar',
     'announcements' => 'Duyurular',
+    'announcements.category' => 'Kategori',
+    'announcements.category_hint' => 'ör. Bakım, Ürün, Fiyat',
     'announcements.add_announcement' => 'Duyuru Ekle',
     'announcements.confirm_delete' => 'Bu duyuru silinsin mi?',
     'announcements.content' => 'İçerik',

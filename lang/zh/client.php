@@ -91,6 +91,8 @@ return [
         'your_link' => '您的推广链接',
     ],
     'announcements' => [
+        'all_categories' => '全部',
+        'rss_feed' => 'RSS 订阅',
         'no_announcements' => '目前暂无公告。',
         'read_more' => '阅读更多',
         'title' => '公告',

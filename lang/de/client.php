@@ -91,6 +91,8 @@ return [
         'your_link' => 'Ihr Empfehlungslink',
     ],
     'announcements' => [
+        'all_categories' => 'Alle',
+        'rss_feed' => 'RSS-Feed',
         'no_announcements' => 'Keine Ankündigungen.',
         'read_more' => 'Lesen Sie mehr',
         'title' => 'Ankündigungen',

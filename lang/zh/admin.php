@@ -201,6 +201,8 @@ return [
     'affiliates.withdrawn_label' => '已提现：',
     'amount' => '金额',
     'announcements' => '公告',
+    'announcements.category' => '分类',
+    'announcements.category_hint' => '例如：维护、产品、价格',
     'announcements.add_announcement' => '添加公告',
     'announcements.confirm_delete' => '确定删除此公告吗？',
     'announcements.content' => '内容',
