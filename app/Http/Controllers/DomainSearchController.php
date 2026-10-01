@@ -67,16 +67,19 @@ class DomainSearchController extends Controller
 
     protected function checkDomainWithAlternatives(string $sld, string $tld, $allTlds): array
     {
-        // Suggest alternatives: the first six endings we sell, besides the one
-        // searched for.
-        $suggestionTlds = [".com", ".net", ".org", ".io", ".co", ".dev", ".app", ".online", ".site", ".xyz"];
+        // Suggest alternatives: the first endings from the operator's list
+        // that are sold, besides the one searched for. The list and its
+        // length are settings (Admin > Settings > Domain search); the
+        // defaults are what was hardcoded here, so nothing changes until an
+        // operator says otherwise - a .com.tr seller could not suggest .com.tr.
         $alternativeTlds = [];
-        foreach ($suggestionTlds as $altTld) {
+        $limit = $this->suggestionCount();
+        foreach ($this->suggestionTlds() as $altTld) {
+            if (count($alternativeTlds) >= $limit) {
+                break;
+            }
             if ($altTld !== $tld && $allTlds->firstWhere("extension", $altTld)) {
                 $alternativeTlds[] = $altTld;
-            }
-            if (count($alternativeTlds) >= 6) {
-                break;
             }
         }
 
@@ -104,6 +107,30 @@ class DomainSearchController extends Controller
     /**
      * @param  array<string, array{domain: string, available: bool, checked: bool}>  $lookups
      */
+    /** The endings the operator wants suggested, in order, each with its leading dot. */
+    public const DEFAULT_SUGGESTIONS = '.com .net .org .io .co .dev .app .online .site .xyz';
+
+    /** @return array<int, string> */
+    protected function suggestionTlds(): array
+    {
+        $raw = (string) \App\Models\Setting::get('DomainSuggestionTlds', '');
+        $raw = trim($raw) === '' ? self::DEFAULT_SUGGESTIONS : $raw;
+
+        $tlds = [];
+        foreach (preg_split('/[\s,]+/', strtolower($raw), -1, PREG_SPLIT_NO_EMPTY) as $tld) {
+            $tlds[] = '.'.ltrim($tld, '.');
+        }
+
+        return array_values(array_unique($tlds));
+    }
+
+    protected function suggestionCount(): int
+    {
+        $count = (int) \App\Models\Setting::get('DomainSuggestionCount', 6);
+
+        return $count > 0 ? min($count, 12) : 6;
+    }
+
     protected function checkSingleDomain(string $sld, string $tld, $allTlds, array $lookups = []): ?array
     {
         $fullDomain = $sld . $tld;
