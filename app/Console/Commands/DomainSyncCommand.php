@@ -242,6 +242,11 @@ class DomainSyncCommand extends Command
             $changes['status'] = $status;
         }
 
+        $privacy = $result['id_protection'] ?? null;
+        if (is_bool($privacy) && (bool) $domain->id_protection !== $privacy) {
+            $changes['id_protection'] = $privacy;
+        }
+
         $nameservers = $result['nameservers'] ?? [];
         if ($nameservers) {
             $encoded = json_encode(array_values($nameservers));
@@ -257,6 +262,9 @@ class DomainSyncCommand extends Command
     {
         if ($value === null || $value === '') {
             return '(empty)';
+        }
+        if (is_bool($value)) {
+            return $value ? 'on' : 'off';
         }
         if ($value instanceof \DateTimeInterface) {
             return $value->format('Y-m-d');
