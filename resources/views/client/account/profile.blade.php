@@ -183,36 +183,7 @@
             @if(isset($customFields) && $customFields->isNotEmpty())
             <div style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border,#e5e5e5);">
                 <div style="font-size:13px;font-weight:600;margin-bottom:12px;">{{ __('client.profile.custom_fields') }}</div>
-                <div class="form-grid-2">
-                    @foreach($customFields as $field)
-                    @php($value = old("custom_fields.{$field->id}", $field->valueFor($client?->id)))
-                    <div class="form-group" @if($field->field_type === 'textarea') style="grid-column:span 2;" @endif>
-                        <label class="form-label" for="custom_field_{{ $field->id }}">{{ $field->field_name }}@if($field->required)<span class="req">*</span>@endif</label>
-                        @if($field->field_type === 'textarea')
-                            <textarea id="custom_field_{{ $field->id }}" name="custom_fields[{{ $field->id }}]" rows="3" class="form-control" @if($field->required) required @endif>{{ $value }}</textarea>
-                        @elseif($field->field_type === 'select')
-                            <select id="custom_field_{{ $field->id }}" name="custom_fields[{{ $field->id }}]" class="form-control" @if($field->required) required @endif>
-                                <option value="">{{ __('common.none') }}</option>
-                                @foreach($field->options() as $opt)
-                                <option value="{{ $opt }}" @if($value === $opt) selected @endif>{{ $opt }}</option>
-                                @endforeach
-                            </select>
-                        @elseif($field->field_type === 'checkbox')
-                            <div style="padding-top:6px;">
-                                <label style="display:flex;align-items:center;gap:6px;font-weight:400;">
-                                    <input type="checkbox" id="custom_field_{{ $field->id }}" name="custom_fields[{{ $field->id }}]" value="1" @if($value) checked @endif> {{ __('admin.custom_fields.checkbox_yes') }}
-                                </label>
-                            </div>
-                        @elseif($field->field_type === 'number')
-                            <input type="number" id="custom_field_{{ $field->id }}" name="custom_fields[{{ $field->id }}]" value="{{ $value }}" class="form-control" @if($field->required) required @endif>
-                        @elseif($field->field_type === 'date')
-                            <input type="date" id="custom_field_{{ $field->id }}" name="custom_fields[{{ $field->id }}]" value="{{ $value }}" class="form-control" @if($field->required) required @endif>
-                        @else
-                            <input type="text" id="custom_field_{{ $field->id }}" name="custom_fields[{{ $field->id }}]" value="{{ $value }}" class="form-control" @if($field->regex) pattern="{{ $field->regex }}" @endif @if($field->required) required @endif>
-                        @endif
-                    </div>
-                    @endforeach
-                </div>
+                @include('client.partials.custom-fields', ['fields' => $customFields, 'clientId' => $client?->id])
             </div>
             @endif
             <button type="submit" class="btn btn-primary">{{ session('fatura_sonrasi_odeme') ? __('client.cart.save_and_continue') : __('common.actions.save_changes') }}</button>

@@ -276,8 +276,12 @@ class CartController extends Controller
         $paymentMethods = $this->getAvailablePaymentMethods();
         $needsBillingAddress = $this->needsBillingAddress($client);
         $countries = \App\Support\Countries::all();
+        // The account is opened on this page, so this is where the fields
+        // flagged "show on order form" are asked. The flag was saved on the
+        // admin screen and read by nothing.
+        $orderFields = $clientId ? collect() : \App\Models\CustomField::orderFields()->get();
 
-        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'client', 'needsBillingAddress', 'countries'));
+        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'client', 'needsBillingAddress', 'countries', 'orderFields'));
     }
 
     public function processCheckout(Request $request)
@@ -312,10 +316,16 @@ class CartController extends Controller
 
             $billing = $this->validateBillingAddress($request);
 
+            $orderFields = \App\Models\CustomField::orderFields()->get();
+            [$fieldRules, $fieldNames] = \App\Models\CustomField::rulesFor($orderFields);
+            $request->validate($fieldRules, [], $fieldNames);
+
             $guestCart = $this->cartService->getOrCreateCart(null);
 
             [$user, $newClient] = app(\App\Services\ClientRegistrationService::class)
                 ->register($account + $billing, $request);
+
+            \App\Models\CustomField::storeValues($newClient->id, $orderFields, (array) $request->input('custom_fields', []));
 
             // The other door into an account, and it needs the same proof:
             // without this the visitor is stopped at the gate below holding a
