@@ -526,7 +526,7 @@ return [
         'company_title' => 'Zarejestrowana nazwa firmy',
         'tax_office' => 'Urząd skarbowy',
         'tax_id' => 'NIP',
-        'national_id' => 'Nr dowodu / PESEL',
+        'national_id' => 'PESEL',
         'company' => 'Firma',
         'optional' => 'opcjonalnie',
         'phone' => 'Telefon',

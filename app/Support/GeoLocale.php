@@ -86,6 +86,21 @@ class GeoLocale
     }
 
     /**
+     * The country implied by the browser's language region (pl-PL → PL), or
+     * null when the browser states no region.
+     */
+    public static function countryFromBrowser(Request $request): ?string
+    {
+        $header = (string) $request->header('Accept-Language');
+
+        if ($header !== '' && preg_match('/(?:^|,)\s*[a-zA-Z]{2}[-_]([a-zA-Z]{2})/', $header, $m)) {
+            return strtoupper($m[1]);
+        }
+
+        return null;
+    }
+
+    /**
      * The language for this visitor, or null when we have nothing to go on.
      *
      * @param  array<int, string>  $activeLocales  The languages actually switched on.

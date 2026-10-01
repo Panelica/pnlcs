@@ -31,17 +31,32 @@
                      than when the invoice is written. Which fields matter
                      depends on the customer type. --}}
                 <div class="form-group"><label class="form-label">{{ __('admin.clients.billing_type') }}</label>
-                    <select name="client_type" class="form-control">
-                        <option value="">-</option>
-                        <option value="individual" {{ old('client_type', $client->client_type) === 'individual' ? 'selected' : '' }}>{{ __('admin.clients.billing_type_individual') }}</option>
-                        <option value="company" {{ old('client_type', $client->client_type) === 'company' ? 'selected' : '' }}>{{ __('admin.clients.billing_type_company') }}</option>
-                    </select>
+                    @php $clientType = old('client_type', $client->client_type) ?: 'individual'; @endphp
+                    <div style="display:flex;gap:16px;align-items:center;padding-top:6px;">
+                        <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+                            <input type="radio" name="client_type" value="individual" {{ $clientType === 'individual' ? 'checked' : '' }}> {{ __('admin.clients.billing_type_individual') }}
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer;">
+                            <input type="radio" name="client_type" value="company" {{ $clientType === 'company' ? 'checked' : '' }}> {{ __('admin.clients.billing_type_company') }}
+                        </label>
+                    </div>
                 </div>
-                <div class="form-group"><label class="form-label">{{ __('admin.clients.billing_tax_office') }}</label><input type="text" name="tax_office" value="{{ old('tax_office', $client->tax_office) }}" maxlength="100" class="form-control"></div>
+                <div class="form-group" id="tax-office-row" style="{{ strtoupper((string) old('country', $client->country)) === 'TR' ? '' : 'display:none;' }}">
+                    <label class="form-label">{{ __('admin.clients.billing_tax_office') }}</label>
+                    <input type="text" name="tax_office" value="{{ old('tax_office', $client->tax_office) }}" maxlength="100" class="form-control">
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.clients.billing_national_id') }}</label><input type="text" name="national_id" value="{{ old('national_id', $client->national_id) }}" maxlength="20" class="form-control"></div>
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('common.form.address') }}</label><input type="text" name="address1" value="{{ old('address1', $client->address1) }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="city" value="{{ old('city', $client->city) }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('common.form.state') }}</label><input type="text" name="state" value="{{ old('state', $client->state) }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('common.form.state') }}</label>
+                    <select id="state-select" class="form-control" style="display:none !important;">
+                        <option value="">{{ __('common.none') }}</option>
+                        @foreach(\App\Support\Countries::PL_STATES as $voivodeship)
+                        <option value="{{ $voivodeship }}" {{ old('state', $client->state) === $voivodeship ? 'selected' : '' }}>{{ $voivodeship }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="state" id="state-input" value="{{ old('state', $client->state) }}" class="form-control">
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.postcode') }}</label><input type="text" name="postcode" value="{{ old('postcode', $client->postcode) }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.country') }}</label>
                     <select name="country" id="country" class="form-control">
@@ -146,11 +161,36 @@
     var map = {!! json_encode(\App\Support\Countries::PHONE_PREFIXES) !!};
     var country = document.getElementById('country');
     var prefix = document.getElementById('phone_prefix');
+    var taxOffice = document.getElementById('tax-office-row');
+    var stateSelect = document.getElementById('state-select');
+    var stateInput = document.getElementById('state-input');
+
+    function syncState() {
+        if (!stateSelect || !stateInput) return;
+        var code = (country.value || '').toUpperCase();
+        if (code === 'PL') {
+            var found = false;
+            for (var i = 0; i < stateSelect.options.length; i++) {
+                if (stateSelect.options[i].value === stateInput.value) { stateSelect.value = stateInput.value; found = true; break; }
+            }
+            if (!found) stateSelect.value = '';
+            stateSelect.style.setProperty('display', 'block', 'important');
+            stateInput.style.setProperty('display', 'none', 'important');
+        } else {
+            stateSelect.style.setProperty('display', 'none', 'important');
+            stateInput.style.setProperty('display', 'block', 'important');
+        }
+    }
+
     function sync() {
         var code = (country.value || '').toUpperCase();
         if (map[code] && prefix) prefix.value = map[code];
+        if (taxOffice) taxOffice.style.display = (code === 'TR') ? '' : 'none';
+        syncState();
     }
+    if (stateSelect) stateSelect.addEventListener('change', function () { stateInput.value = stateSelect.value; });
     if (country) country.addEventListener('change', sync);
+    sync();
 })();
 </script>
 <script>
