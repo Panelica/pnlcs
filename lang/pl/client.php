@@ -1150,6 +1150,7 @@ return [
         'support_staff' => 'Zespół pomocy',
         'team_respond' => 'Nasz zespół odpowie najszybciej, jak to możliwe.',
         'ticket_closed' => 'Ten bilet jest zamknięty.',
+        'close_ticket' => 'Zamknij zgłoszenie',
         'ticket_details' => 'Szczegóły biletu',
         'title' => 'Moje bilety',
         'your_message' => 'Twoja wiadomość',

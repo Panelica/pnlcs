@@ -1149,6 +1149,7 @@ return [
         'support_staff' => '技术支持人员',
         'team_respond' => '我们的团队会尽快回复。',
         'ticket_closed' => '此工单已关闭。',
+        'close_ticket' => '关闭工单',
         'ticket_details' => '工单详情',
         'title' => '我的工单',
         'your_message' => '您的消息',

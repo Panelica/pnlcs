@@ -1149,6 +1149,7 @@ return [
         'support_staff' => 'Destek Ekibi',
         'team_respond' => 'Ekibimiz en kısa sürede yanıtlayacaktır.',
         'ticket_closed' => 'Bu talep kapatıldı.',
+        'close_ticket' => 'Talebi kapat',
         'ticket_details' => 'Destek Talebi Detayları',
         'title' => 'Destek Taleplerim',
         'your_message' => 'Mesajınız',

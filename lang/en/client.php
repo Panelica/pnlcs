@@ -1150,6 +1150,7 @@ return [
         'support_staff' => 'Support Staff',
         'team_respond' => 'Our team will respond as soon as possible.',
         'ticket_closed' => 'This ticket is closed.',
+        'close_ticket' => 'Close ticket',
         'ticket_details' => 'Ticket Details',
         'title' => 'My Tickets',
         'your_message' => 'Your Message',

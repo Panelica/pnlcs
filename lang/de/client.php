@@ -1149,6 +1149,7 @@ return [
         'support_staff' => 'Support-Mitarbeiter',
         'team_respond' => 'Unser Team wird so schnell wie möglich antworten.',
         'ticket_closed' => 'Dieses Ticket ist geschlossen.',
+        'close_ticket' => 'Ticket schließen',
         'ticket_details' => 'Ticketdetails',
         'title' => 'Meine Tickets',
         'your_message' => 'Ihre Nachricht',
