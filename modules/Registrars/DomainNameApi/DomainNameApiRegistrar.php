@@ -436,7 +436,8 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
         $country = strtoupper($pick(['country'], $client->country ?? 'TR')) ?: 'TR';
         [$dialCode, $number] = $this->splitPhone(
             $pick(['phone', 'phone_number'], $client->phone_number ?? ''),
-            $country
+            $country,
+            $pick(['phone_prefix'], $client->phone_prefix ?? '')
         );
 
         return [
@@ -459,7 +460,7 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
      *
      * @return array{0: string, 1: string}
      */
-    protected function splitPhone(string $raw, string $country): array
+    protected function splitPhone(string $raw, string $country, string $prefix = ''): array
     {
         $raw = trim($raw);
 
@@ -480,7 +481,12 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
         }
 
         $digits = preg_replace('/\D/', '', $raw);
-        $code = self::DIAL_CODES[$country] ?? '90';
+
+        // The dialling code the customer picked next to the number (clients.
+        // phone_prefix) wins over a guess from the billing country: a German
+        // address with a Turkish mobile was sent to the registry as +49.
+        $picked = preg_replace('/\D/', '', $prefix);
+        $code = $picked !== '' ? $picked : (self::DIAL_CODES[$country] ?? '90');
 
         // A local number written with its trunk zero: drop it.
         if (str_starts_with($digits, '0')) {
