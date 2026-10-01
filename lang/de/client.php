@@ -441,6 +441,8 @@ return [
     'domain_search.unconfirmed' => 'Verfügbarkeit unbestätigt',
     'domain_search.view_full_list' => 'Vollständige Liste anzeigen',
     'domains' => [
+        'renew_now' => 'Jetzt verlängern',
+        'renew_not_available' => 'Für diese Domain ist keine Verlängerung möglich.',
         'turn_on' => 'Einschalten',
         'turn_off' => 'Ausschalten',
         'auto_renew' => 'Automatische Verlängerung',
@@ -795,6 +797,8 @@ return [
     'security.action' => 'Aktion',
     'services' => [
         'all_types' => 'Alle Arten',
+        'renew_now' => 'Jetzt verlängern',
+        'renew_not_available' => 'Für diesen Dienst ist keine Verlängerung möglich.',
         'addons' => 'Add-ons',
         'amount' => 'Betrag',
         'auto_renew' => 'Automatische Verlängerung',

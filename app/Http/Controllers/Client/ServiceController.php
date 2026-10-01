@@ -14,6 +14,8 @@ use App\Models\ServiceAddon;
 use App\Services\AddonService;
 use App\Services\ProvisioningService;
 use App\Services\UpgradeService;
+use App\Models\Invoice;
+use App\Services\InvoiceGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -77,7 +79,10 @@ class ServiceController extends Controller
             }
         }
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices'));
+        // Offered where renew() would raise an invoice.
+        $canRenewEarly = in_array(strtolower((string) $service->status), ['active', 'suspended'], true) && (float) $service->amount > 0;
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly'));
     }
 
     /** Order an addon for a running service; it starts once its invoice is paid. */
@@ -303,6 +308,39 @@ class ServiceController extends Controller
 
         return redirect()->route('client.services.show', $service->fresh())
             ->with('success', __('messages.success.package_changed'));
+    }
+
+    /**
+     * Renew now: raise the invoice for the next period without waiting for
+     * the nightly run. Paying it moves the due date on (RenewOnPaymentListener).
+     *
+     * InvoiceGenerationService::generateForService() existed for this and
+     * nothing called it, so a customer who wanted to pay ahead - before a
+     * holiday, at the end of a budget year - could not.
+     */
+    public function renew(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+        $service->loadMissing('product');
+
+        if (! in_array(strtolower((string) $service->status), ['active', 'suspended'], true)
+            || (float) $service->amount <= 0
+            || ($service->product?->pay_type ?? 'recurring') !== 'recurring') {
+            return back()->with('error', __('client.services.renew_not_available'));
+        }
+
+        // One renewal invoice at a time: a second click goes to the first.
+        $open = Invoice::where('client_id', $service->client_id)->outstanding()
+            ->whereHas('items', fn ($q) => $q->where('type', 'Hosting')->where('rel_id', $service->id))
+            ->latest('id')->first();
+
+        $invoice = $open ?? app(InvoiceGenerationService::class)->generateForService($service);
+
+        if (! $invoice) {
+            return back()->with('error', __('client.services.renew_not_available'));
+        }
+
+        return redirect()->route('client.invoices.show', $invoice);
     }
 
     public function toggleAutoRenew(Request $request, Service $service)

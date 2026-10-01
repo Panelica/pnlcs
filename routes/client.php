@@ -147,6 +147,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');
         Route::post('services/{service}/upgrade', [ServiceController::class, 'processUpgrade'])->name('services.upgrade.process');
         Route::post('services/{service}/autorenew', [ServiceController::class, 'toggleAutoRenew'])->name('services.autorenew');
+        Route::post('services/{service}/renew', [ServiceController::class, 'renew'])->name('services.renew');
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
 
@@ -212,6 +213,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::post('domains/{domain}/attach-hosting', [DomainController::class, 'attachToHosting'])->name('domains.attach-hosting');
         Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->name('domains.lock');
         Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
+        Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');
 
         // Invoices

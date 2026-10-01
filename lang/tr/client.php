@@ -441,6 +441,8 @@ return [
     'domain_search.unconfirmed' => 'doğrulanmadı',
     'domain_search.view_full_list' => 'Tüm Fiyatları Gör',
     'domains' => [
+        'renew_now' => 'Şimdi yenile',
+        'renew_not_available' => 'Bu alan adı için yenileme yapılamıyor.',
         'turn_on' => 'Aç',
         'turn_off' => 'Kapat',
         'auto_renew' => 'Otomatik Yenileme',
@@ -795,6 +797,8 @@ return [
     'security.action' => 'İşlem',
     'services' => [
         'all_types' => 'Tüm türler',
+        'renew_now' => 'Şimdi yenile',
+        'renew_not_available' => 'Bu hizmet için yenileme yapılamıyor.',
         'addons' => 'Eklentiler',
         'amount' => 'Tutar',
         'auto_renew' => 'Otomatik Yenileme',

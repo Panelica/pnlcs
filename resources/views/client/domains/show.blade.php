@@ -29,7 +29,14 @@
             <dl>
                 <div class="detail-row"><dt>{{ __('client.domains.domain_name') }}</dt><dd>{{ $domain->domain }}</dd></div>
                 <div class="detail-row"><dt>{{ __('client.services.registration_date') }}</dt><dd>{{ $domain->registration_date?->format(date_fmt()) ?? 'N/A' }}</dd></div>
-                <div class="detail-row"><dt>{{ __('client.domains.expiry_date') }}</dt><dd>{{ $domain->expiry_date?->format(date_fmt()) ?? 'N/A' }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.expiry_date') }}</dt><dd>{{ $domain->expiry_date?->format(date_fmt()) ?? 'N/A' }}
+                    @if(strtolower((string) $domain->status) === 'active' && (float) $domain->recurring_amount > 0)
+                    <form method="POST" action="{{ route('client.domains.renew', $domain) }}" style="display:inline;margin-left:8px;">
+                        @csrf
+                        <button type="submit" class="btn btn-default btn-xs">{{ __('client.domains.renew_now') }}</button>
+                    </form>
+                    @endif
+                </dd></div>
                 <div class="detail-row"><dt>{{ __('client.services.auto_renew') }}</dt><dd>
                     {{ $domain->auto_renew ? __("client.status.enabled") : __("client.status.disabled") }}
                     <form method="POST" action="{{ route('client.domains.autorenew', $domain) }}" style="display:inline;margin-left:8px;">

@@ -442,6 +442,8 @@ return [
     'domain_search.unconfirmed' => 'niepotwierdzona',
     'domain_search.view_full_list' => 'Zobacz pełny cennik',
     'domains' => [
+        'renew_now' => 'Odnów teraz',
+        'renew_not_available' => 'Odnowienie tej domeny jest niedostępne.',
         'turn_on' => 'Włącz',
         'turn_off' => 'Wyłącz',
         'auto_renew' => 'Automatyczne odnowienie',
@@ -796,6 +798,8 @@ return [
     'security.action' => 'Akcja',
     'services' => [
         'all_types' => 'Wszystkie typy',
+        'renew_now' => 'Odnów teraz',
+        'renew_not_available' => 'Odnowienie tej usługi jest niedostępne.',
         'addons' => 'Moduły dodatkowe',
         'amount' => 'Kwota',
         'auto_renew' => 'Automatyczne odnowienie',

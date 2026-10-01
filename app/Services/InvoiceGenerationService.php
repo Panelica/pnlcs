@@ -184,6 +184,21 @@ class InvoiceGenerationService
     }
 
     /**
+     * Generate a renewal invoice for one domain, the way the nightly run
+     * does for a domain that is due.
+     */
+    public function generateForDomain(Domain $domain): ?Invoice
+    {
+        $domain->loadMissing('client');
+
+        if (! $domain->client) {
+            return null;
+        }
+
+        return $this->generateForServices($domain->client, [], [], [$domain]);
+    }
+
+    /**
      * Apply a promotion code to an invoice.
      * Validates the code, applies the discount, and increments usage counter.
      *
