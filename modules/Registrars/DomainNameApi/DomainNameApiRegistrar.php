@@ -200,7 +200,11 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
             // DomainNameAPI switches WHOIS privacy on at registration by
             // default, whatever the order asked for; the panel showed it as
             // off because nothing read it back.
-            'id_protection' => isset($info['privacyProtectionStatus']) ? (bool) $info['privacyProtectionStatus'] : null,
+            // Read like readLock(): "false" must not count as on, and anything
+            // unrecognised counts as the registrar not saying.
+            'id_protection' => array_key_exists('privacyProtectionStatus', $info)
+                ? filter_var($info['privacyProtectionStatus'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                : null,
         ];
     }
 

@@ -68,6 +68,26 @@ it('marks privacy off when the registrar has it off', function () {
     expect($domain->fresh()->id_protection)->toBeFalse();
 });
 
+it('reads the string "false" as off, not on', function () {
+    dpsSettings();
+    dpsInfo(['privacyProtectionStatus' => 'false']);
+    $domain = dpsDomain(true);
+
+    $this->artisan('pnlcs:domain-sync')->assertExitCode(0);
+
+    expect($domain->fresh()->id_protection)->toBeFalse();
+});
+
+it('treats a value it cannot read as the registrar not saying', function () {
+    dpsSettings();
+    dpsInfo(['privacyProtectionStatus' => 'maybe']);
+    $domain = dpsDomain(true);
+
+    $this->artisan('pnlcs:domain-sync')->assertExitCode(0);
+
+    expect($domain->fresh()->id_protection)->toBeTrue();
+});
+
 it('leaves privacy alone when the registrar does not say', function () {
     dpsSettings();
     dpsInfo();
