@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\TicketClosed;
 use App\Models\Ticket;
 use App\Models\TicketReply;
 
@@ -31,9 +32,11 @@ class TicketService
         return $reply;
     }
 
-    public function closeTicket(Ticket $ticket): Ticket
+    public function closeTicket(Ticket $ticket, bool $byClient = false): Ticket
     {
         $ticket->update(['status' => 'Closed']);
+
+        event(new TicketClosed($ticket, $byClient));
 
         return $ticket->fresh();
     }

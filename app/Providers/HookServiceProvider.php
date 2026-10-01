@@ -25,6 +25,7 @@ class HookServiceProvider extends ServiceProvider
         \App\Events\InvoicePaid::class       => ['InvoicePaid'],
         \App\Events\TicketOpened::class      => ['TicketOpened', 'TicketOpen'],
         \App\Events\TicketReplied::class     => ['TicketReplied'],
+        \App\Events\TicketClosed::class      => ['TicketClosed', 'TicketClose'],
         \App\Events\ServiceActivated::class  => ['ServiceActivated'],
         \App\Events\ServiceSuspended::class  => ['ServiceSuspended'],
         \App\Events\ServiceTerminated::class => ['ServiceTerminated'],

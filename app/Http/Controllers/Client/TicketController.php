@@ -121,6 +121,25 @@ class TicketController extends Controller
         return view('client.tickets.show', compact('ticket'));
     }
 
+    /**
+     * The customer closes their own ticket once the problem is solved.
+     *
+     * TicketService::closeTicket() existed and nothing called it: a solved
+     * ticket stayed open until staff noticed, and the customer could only
+     * write "you can close this" as one more reply.
+     */
+    public function close(Ticket $ticket)
+    {
+        abort_if($ticket->client_id !== $this->getClientId(), 403);
+
+        if (strtolower((string) $ticket->status) !== 'closed') {
+            app(\App\Services\TicketService::class)->closeTicket($ticket, byClient: true);
+        }
+
+        return redirect()->route('client.tickets.show', $ticket)
+            ->with('success', __('messages.success.ticket_closed'));
+    }
+
     public function reply(Request $request, Ticket $ticket)
     {
         abort_if($ticket->client_id !== $this->getClientId(), 403);

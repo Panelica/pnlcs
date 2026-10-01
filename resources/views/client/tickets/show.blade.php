@@ -91,6 +91,11 @@
                 <a href="{{ route("client.tickets.index") }}" class="btn btn-outline">{{ __('client.tickets.back_to_tickets') }}</a>
             </div>
         </form>
+        {{-- A separate form: the reply form cannot hold a second action. --}}
+        <form method="POST" action="{{ route('client.tickets.close', $ticket) }}" style="margin-top:12px;">
+            @csrf
+            <button type="submit" class="btn btn-outline">{{ __('client.tickets.close_ticket') }}</button>
+        </form>
     </div>
 </div>
 @else
