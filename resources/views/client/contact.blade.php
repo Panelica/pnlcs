@@ -50,6 +50,19 @@
                     <label class="form-label" for="message">{{ __('common.form.message') }}<span class="req">*</span></label>
                     <textarea id="message" name="message" rows="7" required maxlength="5000" class="form-control" placeholder="{{ __('client.contact.how_can_we_help') }}">{{ old("message") }}</textarea>
                 </div>
+                {{-- Only when the operator has switched reCAPTCHA on and saved
+                     both keys; the controller asks the same question, so the
+                     page never shows a challenge it will not check, nor checks
+                     one it did not show. --}}
+                @php
+                    $recaptcha = app(\App\Services\RecaptchaService::class);
+                @endphp
+                @if($recaptcha->enabled())
+                <div class="form-group">
+                    <div class="g-recaptcha" data-sitekey="{{ $recaptcha->siteKey() }}"></div>
+                </div>
+                <script src="https://www.google.com/recaptcha/api.js?hl={{ urlencode(app()->getLocale()) }}" async defer></script>
+                @endif
                 <button type="submit" class="btn btn-primary">{{ __('client.contact.send_message_btn') }}</button>
             </form>
         </div>

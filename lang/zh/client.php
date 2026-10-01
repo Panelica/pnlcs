@@ -287,6 +287,7 @@ return [
     ],
     'contact.department' => '部门',
     'contact.select_department' => '选择部门',
+    'contact.recaptcha_failed' => '请确认您不是机器人，然后重试。',
     'contacts.edit_contact' => '编辑联系人',
     'contacts.add_contact' => '+ 添加联系人',
     'contacts.add_new_contact' => '新增联系人',

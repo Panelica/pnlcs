@@ -288,6 +288,7 @@ return [
     ],
     'contact.department' => 'Department',
     'contact.select_department' => 'Select Department',
+    'contact.recaptcha_failed' => 'Please confirm you are not a robot and try again.',
     'contacts.edit_contact' => 'Edit contact',
     'contacts.add_contact' => '+ Add Contact',
     'contacts.add_new_contact' => 'Add New Contact',

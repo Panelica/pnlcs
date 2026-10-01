@@ -90,6 +90,9 @@ class SettingController extends Controller
         // handler never reads - so pressing save wrote nothing and said nothing.
         'OpenAIApiKey', 'OpenAIModel',
         'GoogleLoginEnabled', 'GoogleClientId', 'GoogleClientSecret',
+        // Google reCAPTCHA on the public contact form, read through
+        // App\Services\RecaptchaService.
+        'RecaptchaEnabled', 'RecaptchaSiteKey', 'RecaptchaSecretKey',
         'EmailVerificationRequired',
         // Seller identity beyond the basics: what a contract, an official
         // invoice and the contact page name. Optional everywhere, required by
@@ -154,6 +157,9 @@ class SettingController extends Controller
         }
         if (trim((string) ($data['GoogleClientSecret'] ?? '')) === '') {
             unset($data['GoogleClientSecret']);
+        }
+        if (trim((string) ($data['RecaptchaSecretKey'] ?? '')) === '') {
+            unset($data['RecaptchaSecretKey']);
         }
 
         foreach ($data as $key => $value) {
