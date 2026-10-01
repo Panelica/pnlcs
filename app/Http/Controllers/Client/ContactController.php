@@ -52,7 +52,7 @@ class ContactController extends Controller
         // refused challenge is sent back with what was typed, and no ticket
         // is opened.
         $recaptcha = app(RecaptchaService::class);
-        if ($recaptcha->enabled()
+        if ($recaptcha->enabled('contact')
             && ! $recaptcha->verify($request->input(RecaptchaService::FIELD), $request->ip())) {
             return back()
                 ->withErrors([RecaptchaService::FIELD => __('client.contact.recaptcha_failed')])

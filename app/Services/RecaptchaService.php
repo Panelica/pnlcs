@@ -25,10 +25,29 @@ class RecaptchaService
     /** The field name the Google widget posts its answer under. */
     public const FIELD = 'g-recaptcha-response';
 
-    public function enabled(): bool
+    /**
+     * Each guarded form has its own switch, so an operator can protect the
+     * public contact form without asking signed-in customers to solve a
+     * challenge too, or the other way round. The keys are shared.
+     */
+    public const FORMS = [
+        'contact' => 'RecaptchaEnabled',
+        'tickets' => 'RecaptchaTicketsEnabled',
+    ];
+
+    public function enabled(string $form = 'contact'): bool
     {
-        return (string) Setting::get('RecaptchaEnabled', '0') === '1'
-            && $this->siteKey() !== ''
+        $switch = self::FORMS[$form] ?? null;
+
+        return $switch !== null
+            && (string) Setting::get($switch, '0') === '1'
+            && $this->configured();
+    }
+
+    /** Both keys saved; without either, no form can use the challenge. */
+    public function configured(): bool
+    {
+        return $this->siteKey() !== ''
             && trim((string) Setting::get('RecaptchaSecretKey', '')) !== '';
     }
 
@@ -41,9 +60,8 @@ class RecaptchaService
      * Whether Google confirms the visitor solved the challenge.
      *
      * Fails closed: an empty answer, a refusal, or Google being unreachable
-     * all return false. The form this guards is the one anyone can post, and
-     * letting submissions through whenever the check cannot be made is
-     * exactly the gap a spammer would wait for.
+     * all return false. Letting submissions through whenever the check
+     * cannot be made is exactly the gap a spammer would wait for.
      */
     public function verify(?string $token, ?string $ip = null): bool
     {

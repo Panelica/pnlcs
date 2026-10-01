@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Service;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
+use App\Services\RecaptchaService;
 use App\Services\TicketService;
 use App\Services\TicketSpamService;
 use Illuminate\Http\Request;
@@ -54,6 +55,17 @@ class TicketController extends Controller
             'attachment' => 'nullable|file|max:10240|mimes:jpg,png,gif,pdf,doc,docx,txt,zip',
             'related_service' => 'nullable|integer',
         ]);
+
+        // Signed-in accounts can be made in bulk too. With the tickets switch
+        // on, an unanswered or refused challenge is sent back with what was
+        // typed, and no ticket is opened. Shares the keys of the contact form.
+        $recaptcha = app(RecaptchaService::class);
+        if ($recaptcha->enabled('tickets')
+            && ! $recaptcha->verify($request->input(RecaptchaService::FIELD), $request->ip())) {
+            return back()
+                ->withErrors([RecaptchaService::FIELD => __('client.contact.recaptcha_failed')])
+                ->withInput();
+        }
 
         // The picker only lists the customer's own services, but the request
         // that follows it would take any id at all.
