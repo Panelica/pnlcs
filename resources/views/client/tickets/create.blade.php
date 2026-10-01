@@ -69,6 +69,7 @@
                 <label class="form-label">{{ __('client.tickets.attachment') }} <span style="font-weight:400;color:var(--muted)">({{ __('client.form.optional') }}, {{ __('client.tickets.max_10mb') }})</span></label>
                 <input type="file" name="attachment" accept=".jpg,.png,.gif,.pdf,.doc,.docx,.txt,.zip" class="form-control" style="padding:6px 10px;">
             </div>
+            @include('client.partials.recaptcha', ['form' => 'tickets'])
             <div class="flex gap-8">
                 <button type="submit" class="btn btn-primary">{{ __('client.tickets.submit_ticket') }}</button>
                 <a href="{{ route("client.tickets.index") }}" class="btn btn-outline">{{ __('common.actions.cancel') }}</a>

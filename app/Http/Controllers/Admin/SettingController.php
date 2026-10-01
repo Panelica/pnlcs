@@ -90,9 +90,10 @@ class SettingController extends Controller
         // handler never reads - so pressing save wrote nothing and said nothing.
         'OpenAIApiKey', 'OpenAIModel',
         'GoogleLoginEnabled', 'GoogleClientId', 'GoogleClientSecret',
-        // Google reCAPTCHA on the public contact form, read through
-        // App\Services\RecaptchaService.
-        'RecaptchaEnabled', 'RecaptchaSiteKey', 'RecaptchaSecretKey',
+        // Google reCAPTCHA, read through App\Services\RecaptchaService: one
+        // switch per guarded form (contact, signed-in ticket form) and one
+        // pair of keys they share.
+        'RecaptchaEnabled', 'RecaptchaTicketsEnabled', 'RecaptchaSiteKey', 'RecaptchaSecretKey',
         'EmailVerificationRequired',
         // Seller identity beyond the basics: what a contract, an official
         // invoice and the contact page name. Optional everywhere, required by

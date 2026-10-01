@@ -229,15 +229,20 @@
         </div>
     </div>
 
-    {{-- Google reCAPTCHA on the public contact form, the one door anyone can
-         open a ticket through. Off until an operator registers their own
-         site, so no key of ours ships in a release. --}}
+    {{-- Google reCAPTCHA in front of the forms that open tickets: the public
+         contact form, the one door anyone can use, and the signed-in ticket
+         form, each with its own switch. Off until an operator registers their
+         own site, so no key of ours ships in a release. --}}
     <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.recaptcha') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
                 <input type="hidden" name="RecaptchaEnabled" value="0"><input type="checkbox" name="RecaptchaEnabled" value="1" {{ !empty($settings['RecaptchaEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.recaptcha_enabled') }}
+            </label>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:6px;">
+                <input type="hidden" name="RecaptchaTicketsEnabled" value="0"><input type="checkbox" name="RecaptchaTicketsEnabled" value="1" {{ !empty($settings['RecaptchaTicketsEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.recaptcha_tickets_enabled') }}
             </label>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
                 <div class="form-group">
