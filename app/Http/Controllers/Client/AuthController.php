@@ -207,7 +207,7 @@ class AuthController extends Controller
     {
         return view('client.auth.register', [
             'countries' => \App\Support\Countries::all(),
-            'detectedCountry' => \App\Support\GeoLocale::country($request) ?: \App\Support\GeoLocale::countryFromBrowser($request) ?: \App\Models\Setting::get('Country'),
+            'detectedCountry' => \App\Support\GeoLocale::country($request) ?: \App\Models\Setting::get('Country') ?: \App\Support\GeoLocale::countryFromBrowser($request),
             'languages' => \App\Models\Language::getActiveLanguages(),
         ]);
     }
