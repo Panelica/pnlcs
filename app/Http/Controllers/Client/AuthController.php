@@ -38,6 +38,14 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
+        // Checked before the password is tried, so a bot cannot use the form
+        // to test passwords when the operator has switched the challenge on.
+        if (! app(\App\Services\RecaptchaService::class)->passes('login', $request->input(\App\Services\RecaptchaService::FIELD), $request->ip())) {
+            return back()
+                ->withErrors([\App\Services\RecaptchaService::FIELD => __('client.contact.recaptcha_failed')])
+                ->onlyInput('email');
+        }
+
         $key = Str::transliterate(Str::lower($request->input('email')).'|'.$request->ip());
         if (RateLimiter::tooManyAttempts($key, 5)) {
             throw ValidationException::withMessages([
@@ -236,6 +244,12 @@ class AuthController extends Controller
             'tos' => 'required|accepted',
         ]);
 
+        if (! app(\App\Services\RecaptchaService::class)->passes('signup', $request->input(\App\Services\RecaptchaService::FIELD), $request->ip())) {
+            return back()
+                ->withErrors([\App\Services\RecaptchaService::FIELD => __('client.contact.recaptcha_failed')])
+                ->withInput($request->except(['password', 'password_confirmation']));
+        }
+
         // The ban list was only ever consulted when scoring an order, so a
         // banned address could open an account and be back inside the panel.
         if (BannedEmail::blocks($validated['email'])) {
@@ -279,6 +293,12 @@ class AuthController extends Controller
     public function sendResetLink(Request $request)
     {
         $request->validate(['email' => 'required|email']);
+
+        if (! app(\App\Services\RecaptchaService::class)->passes('password', $request->input(\App\Services\RecaptchaService::FIELD), $request->ip())) {
+            return back()
+                ->withErrors([\App\Services\RecaptchaService::FIELD => __('client.contact.recaptcha_failed')])
+                ->onlyInput('email');
+        }
 
         // Whether or not an account exists, the answer is the same: the form
         // must not tell a stranger which addresses have logins.

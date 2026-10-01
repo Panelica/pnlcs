@@ -310,6 +310,13 @@ class CartController extends Controller
                 'password' => 'required|string|min:8|confirmed',
             ]);
 
+            // The same door as the register page, behind the same switch.
+            if (! app(\App\Services\RecaptchaService::class)->passes('signup', $request->input(\App\Services\RecaptchaService::FIELD), $request->ip())) {
+                return back()
+                    ->withErrors([\App\Services\RecaptchaService::FIELD => __('client.contact.recaptcha_failed')])
+                    ->withInput($request->except(['password', 'password_confirmation']));
+            }
+
             if (\App\Models\BannedEmail::blocks($account['email'])) {
                 return back()->withErrors(['email' => __('auth.email_not_accepted')])->withInput();
             }

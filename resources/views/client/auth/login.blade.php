@@ -67,6 +67,7 @@
                     </label>
                     <a href="{{ route("client.password.request") }}">{{ __('client.auth.forgot_password') }}</a>
                 </div>
+                @include('client.partials.recaptcha', ['form' => 'login'])
                 <button type="submit" class="btn btn-primary">{{ __('client.auth.sign_in') }}</button>
             </form>
             @include('client.partials.google-button')

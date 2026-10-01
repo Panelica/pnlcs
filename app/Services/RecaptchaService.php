@@ -33,6 +33,12 @@ class RecaptchaService
     public const FORMS = [
         'contact' => 'RecaptchaEnabled',
         'tickets' => 'RecaptchaTicketsEnabled',
+        // Opening an account: the register page and the checkout, where a
+        // visitor opens one mid-order. One switch, because it is one door.
+        'signup' => 'RecaptchaSignupEnabled',
+        'login' => 'RecaptchaLoginEnabled',
+        // Asking for a reset link: each request mails someone.
+        'password' => 'RecaptchaPasswordEnabled',
     ];
 
     public function enabled(string $form = 'contact'): bool
@@ -42,6 +48,16 @@ class RecaptchaService
         return $switch !== null
             && (string) Setting::get($switch, '0') === '1'
             && $this->configured();
+    }
+
+    /**
+     * Whether this request may go on as far as the challenge is concerned:
+     * true when the form's switch is off, otherwise only for an answer
+     * Google accepts. Fails closed like verify().
+     */
+    public function passes(string $form, ?string $token, ?string $ip = null): bool
+    {
+        return ! $this->enabled($form) || $this->verify($token, $ip);
     }
 
     /** Both keys saved; without either, no form can use the challenge. */

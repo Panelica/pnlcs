@@ -244,6 +244,12 @@
                 <input type="hidden" name="RecaptchaTicketsEnabled" value="0"><input type="checkbox" name="RecaptchaTicketsEnabled" value="1" {{ !empty($settings['RecaptchaTicketsEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.recaptcha_tickets_enabled') }}
             </label>
+            @foreach(['RecaptchaSignupEnabled' => 'recaptcha_signup_enabled', 'RecaptchaLoginEnabled' => 'recaptcha_login_enabled', 'RecaptchaPasswordEnabled' => 'recaptcha_password_enabled'] as $recaptchaSwitch => $recaptchaLabel)
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:6px;">
+                <input type="hidden" name="{{ $recaptchaSwitch }}" value="0"><input type="checkbox" name="{{ $recaptchaSwitch }}" value="1" {{ !empty($settings[$recaptchaSwitch]) ? 'checked' : '' }}>
+                {{ __('admin.settings.'.$recaptchaLabel) }}
+            </label>
+            @endforeach
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
                 <div class="form-group">
                     <label class="form-label">{{ __('admin.settings.recaptcha_site_key') }}</label>
