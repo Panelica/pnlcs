@@ -789,6 +789,7 @@ return [
     ],
     'security.action' => 'İşlem',
     'services' => [
+        'all_types' => 'Tüm türler',
         'addons' => 'Eklentiler',
         'amount' => 'Tutar',
         'auto_renew' => 'Otomatik Yenileme',

@@ -789,6 +789,7 @@ return [
     ],
     'security.action' => 'Aktion',
     'services' => [
+        'all_types' => 'Alle Arten',
         'addons' => 'Add-ons',
         'amount' => 'Betrag',
         'auto_renew' => 'Automatische Verlängerung',

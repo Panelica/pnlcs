@@ -789,6 +789,7 @@ return [
     ],
     'security.action' => '操作',
     'services' => [
+        'all_types' => '所有类型',
         'addons' => '附加项',
         'amount' => '金额',
         'auto_renew' => '自动续费',
