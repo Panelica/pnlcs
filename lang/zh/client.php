@@ -775,6 +775,8 @@ return [
         '2fa_desc' => '双因素认证要求同时提供密码和手机验证码，为账户增加一层安全保护。',
         '2fa_enabled' => '双因素认证已启用',
         '2fa_not_enabled' => '双因素认证尚未启用',
+        'backup_codes_title' => '您的备用代码',
+        'backup_codes_hint' => '请将这些代码保存在安全的地方。如果无法使用身份验证器应用，每个代码可登录一次。它们仅在此时显示。',
         'action' => '操作',
         'active_sessions' => '活跃会话',
         'current' => '当前',

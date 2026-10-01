@@ -775,6 +775,8 @@ return [
         '2fa_desc' => 'Die Zwei-Faktor-Authentifizierung fügt Ihrem Konto eine zusätzliche Sicherheitsebene hinzu, indem sie sowohl Ihr Passwort als auch einen Bestätigungscode von Ihrem Telefon erfordert.',
         '2fa_enabled' => 'Die Zwei-Faktor-Authentifizierung ist aktiviert',
         '2fa_not_enabled' => 'Die Zwei-Faktor-Authentifizierung ist nicht aktiviert',
+        'backup_codes_title' => 'Ihre Backup-Codes',
+        'backup_codes_hint' => 'Bewahren Sie diese Codes sicher auf. Wenn Sie keinen Zugriff auf Ihre Authenticator-App haben, meldet Sie jeder Code einmal an. Sie werden nur jetzt angezeigt.',
         'action' => 'Aktion',
         'active_sessions' => 'Aktive Sitzungen',
         'current' => 'Aktuell',

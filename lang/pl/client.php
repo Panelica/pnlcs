@@ -776,6 +776,8 @@ return [
         '2fa_desc' => 'Uwierzytelnianie dwuskładnikowe dodaje dodatkową warstwę zabezpieczeń Twojego konta, wymagając zarówno hasła, jak i kodu weryfikacyjnego z telefonu.',
         '2fa_enabled' => 'Uwierzytelnianie dwuskładnikowe jest włączone',
         '2fa_not_enabled' => 'Uwierzytelnianie dwuskładnikowe nie jest włączone',
+        'backup_codes_title' => 'Twoje kody zapasowe',
+        'backup_codes_hint' => 'Zapisz te kody w bezpiecznym miejscu. Jeśli stracisz dostęp do aplikacji uwierzytelniającej, każdy z nich pozwoli zalogować się jeden raz. Są wyświetlane tylko teraz.',
         'action' => 'Akcja',
         'active_sessions' => 'Aktywne sesje',
         'current' => 'Obecna',

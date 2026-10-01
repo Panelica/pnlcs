@@ -21,6 +21,20 @@
                 <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.disable') }}</button>
             </form>
         </div>
+        {{-- The backup codes are flashed here once, right after 2FA is switched
+             on (AuthController::enable2fa). Nothing showed them, so a customer
+             who lost their phone held codes they had never seen. --}}
+        @if(is_array(session('backup_codes')) && session('backup_codes'))
+        <div style="padding:12px 14px; border:1px solid #faebcc; background:#fcf8e3; border-radius:4px; margin-bottom:14px;">
+            <div style="font-size:13px; font-weight:600; margin-bottom:6px;">{{ __('client.security.backup_codes_title') }}</div>
+            <p style="font-size:12.5px; margin:0 0 10px;">{{ __('client.security.backup_codes_hint') }}</p>
+            <ul style="list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:6px; font-family:ui-monospace, Menlo, monospace; font-size:14px;">
+                @foreach(session('backup_codes') as $backupCode)
+                <li>{{ $backupCode }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
         @else
         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--bg); border:1px solid #e0e0e0; border-radius:4px; margin-bottom:14px;">
             <span style="font-size:13px; color:var(--muted);">{{ __('client.security.2fa_not_enabled') }}</span>
