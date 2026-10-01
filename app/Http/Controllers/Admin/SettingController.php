@@ -106,6 +106,9 @@ class SettingController extends Controller
         'AutoApproveOrderEmails',
         // The registrar float watch.
         'BalanceWatchRegistrar', 'RegistrarBalanceThreshold', 'RegistrarBalanceCurrency', 'RegistrarBalanceAlertEmail',
+        // Which endings the domain search suggests next to the one searched,
+        // in order, and how many (DomainSearchController).
+        'DomainSuggestionTlds', 'DomainSuggestionCount',
         // Paying renewal invoices with a card the customer has already stored.
         // Off by default; read through App\Support\AutoCharge so the screen
         // and the code cannot disagree about what a blank setting means.

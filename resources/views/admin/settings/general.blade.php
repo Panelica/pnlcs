@@ -316,6 +316,19 @@
         </div>
     </div>
 
+    {{-- What the domain search suggests next to the name searched. Empty
+         keeps the built-in list. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.domain_suggestions') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:3fr 1fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.domain_suggestion_tlds') }}</label><input type="text" name="DomainSuggestionTlds" value="{{ $settings['DomainSuggestionTlds'] ?? '' }}" class="form-control" placeholder="{{ \App\Http\Controllers\DomainSearchController::DEFAULT_SUGGESTIONS }}"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.domain_suggestion_count') }}</label><input type="number" min="1" max="12" name="DomainSuggestionCount" value="{{ $settings['DomainSuggestionCount'] ?? '' }}" class="form-control" placeholder="6"></div>
+            </div>
+            <div style="font-size:12px;color:#777;">{{ __('admin.settings.domain_suggestions_hint') }}</div>
+        </div>
+    </div>
+
     {{-- The registrar float. --}}
     <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.registrar_balance') }}</strong></div>
