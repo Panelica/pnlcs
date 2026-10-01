@@ -67,6 +67,7 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'email.test_sent' => 'Test e-postası :address adresine başarıyla gönderildi.',
     'email.test_subject' => 'PNLCS Test E-postası',
     'error' => [
+        'note_update_failed' => 'Not kaydedilemedi.',
         'withdrawal_not_possible' => 'Bu çekim yapılamadı. Ödeyebileceğimiz en küçük miktar :minimum\'dur ve bu, bakiyenizden fazla olamaz.',
         'cannot_remove_own_role_management' => 'Kendi rolünüzden rol yönetimini alamazsınız - kimse bunu geri veremez.',
         'ip_banned' => 'Erişim reddedildi: IP adresiniz bu siteden yasaklandı.',
@@ -265,6 +266,8 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
         'network_issue_deleted' => 'Ağ sorunu kaydı silindi.',
         'network_issue_updated' => 'Ağ sorunu kaydı güncellendi.',
         'note_added' => 'Not eklendi.',
+        'note_updated' => 'Not güncellendi.',
+        'note_deleted' => 'Not silindi.',
         'notification_provider_created' => 'Bildirim sağlayıcısı eklendi.',
         'notification_provider_deleted' => 'Bildirim sağlayıcısı kaldırıldı.',
         'notification_provider_updated' => 'Bildirim sağlayıcısı güncellendi.',

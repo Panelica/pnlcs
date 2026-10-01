@@ -67,6 +67,7 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
     'email.test_sent' => '测试邮件已成功发送至 :address。',
     'email.test_subject' => 'PNLCS 测试邮件',
     'error' => [
+        'note_update_failed' => '备注保存失败。',
         'withdrawal_not_possible' => '无法完成提现。最低提现金额为 :minimum，且提现金额不能超过可用余额。',
         'cannot_remove_own_role_management' => '不能撤销您自身角色的角色管理权限，否则将无人能够重新授予该权限。',
         'ip_banned' => '拒绝访问：您的 IP 地址已被本站封禁。',
@@ -266,6 +267,8 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
         'network_issue_deleted' => '网络故障已删除。',
         'network_issue_updated' => '网络故障已更新。',
         'note_added' => '备注已添加。',
+        'note_updated' => '备注已更新。',
+        'note_deleted' => '备注已删除。',
         'notification_provider_created' => '通知服务商已添加。',
         'notification_provider_deleted' => '通知服务商已移除。',
         'notification_provider_updated' => '通知服务商已更新。',

@@ -296,9 +296,9 @@ class ClientController extends Controller
             'sticky' => 'boolean',
         ]);
 
+        // Inline editing cannot change sticky; keep the stored value.
         $note->update([
             'note' => $validated['note'],
-            'sticky' => $validated['sticky'] ?? false,
             'edited_by' => auth('admin')->user()?->full_name ?: 'system',
         ]);
 

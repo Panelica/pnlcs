@@ -65,6 +65,7 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
     'email.test_sent' => 'Test-E-Mail erfolgreich an :address. gesendet',
     'email.test_subject' => 'PNLCS-Test-E-Mail',
     'error' => [
+        'note_update_failed' => 'Notiz konnte nicht gespeichert werden.',
         'withdrawal_not_possible' => 'Dieser Rückzug konnte nicht erfolgen. Der kleinste Betrag, den wir auszahlen können, ist :minimum und kann nicht höher sein als Ihr Guthaben.',
         'cannot_remove_own_role_management' => 'Das Rollenmanagement kann man der eigenen Rolle nicht entziehen – niemand könnte es zurückgeben.',
         'ip_banned' => 'Zugriff verweigert: Ihre IP-Adresse wurde von dieser Website gesperrt.',
@@ -264,6 +265,8 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
         'network_issue_deleted' => 'Netzwerkproblem gelöscht.',
         'network_issue_updated' => 'Netzwerkproblem aktualisiert.',
         'note_added' => 'Hinweis hinzugefügt.',
+        'note_updated' => 'Notiz aktualisiert.',
+        'note_deleted' => 'Notiz gelöscht.',
         'notification_provider_created' => 'Benachrichtigungsanbieter hinzugefügt.',
         'notification_provider_deleted' => 'Benachrichtigungsanbieter entfernt.',
         'notification_provider_updated' => 'Benachrichtigungsanbieter aktualisiert.',

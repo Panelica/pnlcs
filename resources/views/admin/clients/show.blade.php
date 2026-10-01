@@ -564,7 +564,8 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             @endif
         </div>
         <textarea class="note-edit form-control" rows="2" style="font-size:13px;">{{ $note->note }}</textarea>
-        <div style="text-align:right;margin-top:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+            <span class="note-status" style="font-size:11px;color:#46a546;"></span>
             <button type="button" class="note-delete btn btn-danger btn-sm">{{ __('common.actions.delete') }}</button>
         </div>
     </div>
@@ -593,8 +594,16 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
     document.querySelectorAll('.note-card').forEach(function (card) {
         var area = card.querySelector('.note-edit');
         var del = card.querySelector('.note-delete');
-        var sticky = card.getAttribute('data-sticky') === '1';
+        var status = card.querySelector('.note-status');
         var original = area.value;
+
+        function flash(ok, text) {
+            if (!status) return;
+            status.textContent = text;
+            status.style.color = ok ? '#46a546' : '#c43c35';
+            clearTimeout(status._t);
+            status._t = setTimeout(function () { status.textContent = ''; }, 2500);
+        }
 
         area.addEventListener('blur', function () {
             var val = area.value.trim();
@@ -603,16 +612,21 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 return;
             }
             if (val === original) return;
-            post(card.getAttribute('data-update-url'), 'POST', { note: val, sticky: sticky ? 1 : 0 })
+            post(card.getAttribute('data-update-url'), 'POST', { note: val })
                 .then(function (d) {
                     if (d && d.success) {
                         area.value = d.note;
                         original = d.note;
+                        flash(true, @json(__('messages.success.note_updated')));
                     } else {
                         area.value = original;
+                        flash(false, @json(__('messages.error.note_update_failed')));
                     }
                 })
-                .catch(function () { area.value = original; });
+                .catch(function () {
+                    area.value = original;
+                    flash(false, @json(__('messages.error.note_update_failed')));
+                });
         });
 
         area.addEventListener('keydown', function (e) {

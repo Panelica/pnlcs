@@ -770,6 +770,8 @@ return [
     'clients.paid_invoices' => '已付款发票',
     'clients.phone' => '电话',
     'clients.pinned' => '已置顶',
+    'clients.author' => '作者',
+    'clients.edited_by' => '编辑者',
     'clients.quick_actions' => '快捷操作',
     'clients.registered' => '注册时间',
     'clients.status' => '状态',

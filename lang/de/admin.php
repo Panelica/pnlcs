@@ -770,6 +770,8 @@ return [
     'clients.paid_invoices' => 'Bezahlte Rechnungen',
     'clients.phone' => 'Telefon',
     'clients.pinned' => 'Angepinnt',
+    'clients.author' => 'Autor',
+    'clients.edited_by' => 'Bearbeitet von',
     'clients.quick_actions' => 'Schnelle Aktionen',
     'clients.registered' => 'Registriert',
     'clients.status' => 'Status',
