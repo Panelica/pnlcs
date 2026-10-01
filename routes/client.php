@@ -281,6 +281,12 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::delete('account/contacts/{contact}', [AccountController::class, 'destroyContact'])->name('account.contacts.destroy');
         Route::get('account/payment-methods', [AccountController::class, 'paymentMethods'])->name('account.payment_methods');
         Route::get('account/security', [AccountController::class, 'security'])->name('account.security');
+        // The account owner's Users page (invite, permissions, remove).
+        Route::get('account/users', [\App\Http\Controllers\Client\AccountUserController::class, 'index'])->name('account.users');
+        Route::post('account/users', [\App\Http\Controllers\Client\AccountUserController::class, 'invite'])->middleware('throttle:10,1')->name('account.users.invite');
+        Route::put('account/users/{user}', [\App\Http\Controllers\Client\AccountUserController::class, 'update'])->name('account.users.update');
+        Route::delete('account/users/{user}', [\App\Http\Controllers\Client\AccountUserController::class, 'destroy'])->name('account.users.destroy');
+        Route::delete('account/users/invites/{invite}', [\App\Http\Controllers\Client\AccountUserController::class, 'cancelInvite'])->name('account.users.invites.destroy');
         Route::post('account/phone/verification', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'start'])->name('account.phone.verify');
         Route::post('account/phone/verification-check', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'check'])->name('account.phone.verify_check');
         Route::post('account/security/sessions/{sessionId}/logout', [AccountController::class, 'logoutSession'])->name('account.security.logout_session');

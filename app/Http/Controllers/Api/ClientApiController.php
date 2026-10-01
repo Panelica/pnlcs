@@ -376,23 +376,7 @@ class ClientApiController extends BaseApiController
             return $this->error('That address already has a login on this account.', 409);
         }
 
-        $plain = \Illuminate\Support\Str::random(64);
-        $invite = \App\Models\UserInvite::create([
-            'token' => hash('sha256', $plain),
-            'email' => $email,
-            'client_id' => $client->id,
-            'invited_by' => auth('admin')->id() ?? 0,
-            'permissions' => $permissions,
-        ]);
-
-        $link = route('client.invite.show', $plain);
-        $locale = $client->language ?: config('app.locale');
-        $account = trim($client->company_name ?: $client->first_name.' '.$client->last_name);
-        \Illuminate\Support\Facades\Mail::to($email)->queue(new \App\Mail\BulkMassMail(
-            __('client.invite.mail_subject', ['company' => company_name()], $locale),
-            __('client.invite.mail_body', ['account' => $account, 'company' => company_name(), 'link' => $link, 'days' => \App\Models\UserInvite::VALID_DAYS], $locale),
-            $email
-        ));
+        $invite = app(\App\Services\ClientInviteService::class)->send($client, $email, $permissions, auth('admin')->id() ?? 0);
 
         return $this->success(['inviteid' => $invite->id, 'email' => $email, 'permissions' => $permissions]);
     }
