@@ -47,6 +47,7 @@ class EmailTemplateService
         'ServiceWelcomeMail' => 'Service Welcome Email',
         'CreditCardExpiryMail' => 'Credit Card Expiry Notice',
         'LoginEmailChangedMail' => 'Login Email Changed',
+        'NewDeviceLoginMail' => 'New Device Sign-in',
         'PaymentNotificationRejectedMail' => 'Payment Notification Rejected',
         'SslCertificateExpiringMail' => 'SSL Certificate Expiring',
         'SslCertificateIssuedMail' => 'SSL Certificate Issued',
@@ -250,6 +251,10 @@ class EmailTemplateService
             // without them.
             'previousEmail' => 'previous_email',
             'newEmail' => 'new_email',
+            // Where and with what a login signed in from a new device.
+            'loginIp' => 'login_ip',
+            'loginDevice' => 'login_device',
+            'loginTime' => 'login_time',
             'daysRemaining' => 'days_remaining',
             'daysOverdue' => 'days_overdue',
             'daysUntilExpiry' => 'days_until_expiry',

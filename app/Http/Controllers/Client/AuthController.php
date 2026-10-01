@@ -10,6 +10,7 @@ use App\Models\BannedEmail;
 use App\Models\Client;
 use App\Models\User;
 use App\Services\AffiliateService;
+use App\Services\LoginRecorder;
 use App\Services\TwoFactorService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -81,22 +82,33 @@ class AuthController extends Controller
                 'last_login_ip' => $request->ip(),
             ])->save();
 
-            // Check 2FA
+            // Check 2FA. With a second factor the sign-in is recorded once
+            // it is answered, in verify2fa().
             if ($user->second_factor_type && $user->second_factor_secret) {
                 // Start from unverified every time: 2fa_verified is a plain
                 // session key that regenerate() carries across a fresh login,
                 // and impersonation sets it deliberately. A stale one here
                 // would wave a real 2FA login straight through.
                 session()->forget('2fa_verified');
-                session(['2fa_pending' => true]);
+                session(['2fa_pending' => true, 'login_method' => 'password']);
 
                 return redirect()->route('client.2fa.verify');
             }
+
+            app(LoginRecorder::class)->succeeded($user, $request, 'password');
 
             return redirect()->intended(route('client.home'));
         }
 
         RateLimiter::hit($key, 900);
+
+        // A wrong password for a login that exists goes into that login's
+        // history, where its owner can see it. Unknown addresses are not
+        // stored: there is nobody to show them to.
+        $attempted = User::where('email', $credentials['email'])->first();
+        if ($attempted) {
+            app(LoginRecorder::class)->failed($attempted, $request);
+        }
 
         return back()->withErrors(['email' => __('auth.failed')])->onlyInput('email');
     }
@@ -125,6 +137,7 @@ class AuthController extends Controller
         if ($twoFactor->verify($user->second_factor_secret, $code)) {
             session(['2fa_verified' => true]);
             session()->forget('2fa_pending');
+            app(LoginRecorder::class)->succeeded($user, $request, session()->pull('login_method', 'password'));
 
             return redirect()->intended(route('client.home'));
         }
@@ -137,6 +150,7 @@ class AuthController extends Controller
                 $user->update(['backup_codes' => $result['remaining']]);
                 session(['2fa_verified' => true]);
                 session()->forget('2fa_pending');
+                app(LoginRecorder::class)->succeeded($user, $request, session()->pull('login_method', 'password'));
 
                 return redirect()->intended(route('client.home'));
             }

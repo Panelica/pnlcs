@@ -392,7 +392,10 @@ class AccountController extends Controller
         $client = $this->currentClient();
         $phoneVerifyAvailable = app(\App\Services\Sms\TwilioVerifyClient::class)->enabled();
 
-        return view('client.account.security', compact('user', 'twoFactorEnabled', 'sessions', 'sessionsSupported', 'client', 'phoneVerifyAvailable'));
+        // The last sign-ins and wrong passwords for this login, newest first.
+        $logins = \App\Models\UserLogin::where('user_id', $user->id)->orderByDesc('id')->limit(20)->get();
+
+        return view('client.account.security', compact('user', 'twoFactorEnabled', 'sessions', 'sessionsSupported', 'client', 'phoneVerifyAvailable', 'logins'));
     }
 
     public function logoutSession(string $sessionId)

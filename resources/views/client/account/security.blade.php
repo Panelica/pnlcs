@@ -118,4 +118,42 @@
 </div>
 @endif
 
+<div class="pn-card">
+    <div class="pn-card-header">{{ __('client.security.login_history') }}</div>
+    <div class="pn-card-body" style="padding:0;">
+        <table class="pn-table">
+            <thead>
+                <tr>
+                    <th>{{ __('client.security.login_when') }}</th>
+                    <th>{{ __('client.security.device_ip') }}</th>
+                    <th>{{ __('client.security.login_result') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($logins ?? [] as $login)
+                <tr>
+                    <td style="font-size:13px; white-space:nowrap;">{{ $login->created_at?->format(date_fmt().' H:i') }}</td>
+                    <td>
+                        <div style="font-weight:500; font-size:13px;">{{ $login->ip_address ?: '-' }}</div>
+                        <div style="font-size:12px; color:var(--muted);">{{ \App\Services\LoginRecorder::describe($login->user_agent) }}@if($login->method === 'google') · {{ __('client.security.via_google') }}@endif</div>
+                    </td>
+                    <td>
+                        @if($login->successful)
+                        <span style="font-size:12px; color:#46a546; font-weight:500;">{{ __('client.security.login_ok') }}</span>
+                        @else
+                        <span style="font-size:12px; color:#c0392b; font-weight:500;">{{ __('client.security.login_failed') }}</span>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="3" style="text-align:center; padding:24px; color:var(--muted);">{{ __('client.security.no_logins') }}</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+        <div style="font-size:12px; color:var(--muted); padding:10px 16px;">{{ __('client.security.login_history_hint') }}</div>
+    </div>
+</div>
+
 @endsection

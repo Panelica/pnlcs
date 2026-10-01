@@ -235,6 +235,7 @@ const HARDCODED_VIEW_TEXT_BUDGET = [
     'resources/views/client/ssl/configure.blade.php' => 2,
     'resources/views/emails/bulk-mass.blade.php' => 1,
     'resources/views/emails/login-email-changed.blade.php' => 3,
+    'resources/views/emails/new-device-login.blade.php' => 6,
     'resources/views/emails/password-reset.blade.php' => 5,
     'resources/views/emails/service-welcome.blade.php' => 2,
     'resources/views/errors/403.blade.php' => 1,
