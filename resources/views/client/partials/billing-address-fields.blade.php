@@ -14,6 +14,7 @@
 --}}
 @php($addr = $client ?? null)
 @php($grid = $gridClass ?? 'form-grid-2')
+@if($showCountry ?? true)
 <div class="form-group">
     <label class="form-label" for="country">{{ __('common.form.country') }}<span class="req" style="color:#c43c35;">*</span></label>
     <select id="country" name="country" required class="form-control">
@@ -24,6 +25,7 @@
     </select>
     @error('country')<div class="text-danger text-sm">{{ $message }}</div>@enderror
 </div>
+@endif
 <div class="form-group">
     <label class="form-label" for="address1">{{ __('common.form.street_address') }}<span class="req" style="color:#c43c35;">*</span></label>
     <input type="text" id="address1" name="address1" value="{{ old('address1', $addr?->address1) }}" required class="form-control" autocomplete="street-address">

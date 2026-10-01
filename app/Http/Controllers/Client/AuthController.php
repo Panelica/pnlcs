@@ -207,7 +207,7 @@ class AuthController extends Controller
     {
         return view('client.auth.register', [
             'countries' => \App\Support\Countries::all(),
-            'detectedCountry' => \App\Support\GeoLocale::country($request) ?: (\App\Models\Setting::get('Country') ?: 'PL'),
+            'detectedCountry' => \App\Support\GeoLocale::country($request) ?: \App\Support\GeoLocale::countryFromBrowser($request) ?: \App\Models\Setting::get('Country'),
             'languages' => \App\Models\Language::getActiveLanguages(),
         ]);
     }
@@ -220,13 +220,11 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'company_name' => 'nullable|string|max:255',
-            // Optional at registration: the address can be completed later,
-            // from the profile, before the first invoice or domain order.
-            'address1' => 'nullable|string|max:255',
+            'address1' => 'required|string|max:255',
             'address2' => 'nullable|string|max:255',
-            'city' => 'nullable|string|max:255',
+            'city' => 'required|string|max:255',
             'state' => 'nullable|string|max:100',
-            'postcode' => 'nullable|string|max:20',
+            'postcode' => 'required|string|max:20',
             'country' => 'required|string|size:2',
             'tax_id' => 'nullable|string|max:50',
             'client_type' => 'nullable|in:individual,company',
@@ -234,7 +232,7 @@ class AuthController extends Controller
             'tax_office' => 'nullable|string|max:100',
             'national_id' => 'nullable|string|max:20',
             'phone_number' => 'nullable|string|max:30',
-            'phone_prefix' => 'nullable|string|max:10',
+            'phone_prefix' => 'nullable|string|max:4',
             'tos' => 'required|accepted',
         ]);
 

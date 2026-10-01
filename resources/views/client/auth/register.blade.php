@@ -87,7 +87,7 @@
                     <label class="form-label" for="country">{{ __('common.form.country') }}</label>
                     <select id="country" name="country" class="form-control">
                         @foreach($countries as $code => $name)
-                        <option value="{{ $code }}" {{ old('country', $detectedCountry ?? 'PL') === $code ? 'selected' : '' }}>{{ $name }}</option>
+                        <option value="{{ $code }}" {{ old('country', $detectedCountry ?? '') === $code ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -107,6 +107,11 @@
                         <input type="radio" name="client_type" value="company" {{ $clientType === 'company' ? 'checked' : '' }}> {{ __('client.form.client_type_company') }}
                     </label>
                 </div>
+                <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid #e5e5e5;">
+                    <div style="font-size:13px;font-weight:600;">{{ __('common.form.billing_address') }}</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ __('common.form.billing_address_hint') }}</div>
+                </div>
+                @include('client.partials.billing-address-fields', ['gridClass' => 'form-row', 'showPhone' => false, 'showCountry' => false])
                 <div style="margin-bottom:16px;">
                     <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;">
                         <input type="checkbox" name="tos" value="1" {{ old('tos') ? 'checked' : '' }} style="margin-top:3px;" required>

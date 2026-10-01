@@ -96,7 +96,7 @@ class AccountController extends Controller
             // The column will not hold null, so asking is better than crashing.
             'country' => 'required|string|size:2',
             'phone_number' => 'nullable|string|max:50',
-            'phone_prefix' => 'nullable|string|max:10',
+            'phone_prefix' => 'nullable|string|max:4',
             'language' => 'nullable|string|max:10',
             'new_password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'new_password_confirmation' => 'required_with:new_password|string',
