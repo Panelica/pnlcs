@@ -792,6 +792,7 @@ return [
     ],
     'security.action' => 'Action',
     'services' => [
+        'all_types' => 'All types',
         'addons' => 'Add-ons',
         'amount' => 'Amount',
         'auto_renew' => 'Auto Renew',

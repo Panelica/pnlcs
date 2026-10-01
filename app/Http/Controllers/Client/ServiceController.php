@@ -21,14 +21,31 @@ class ServiceController extends Controller
 {
     use ResolvesClient;
 
-    public function index()
+    public function index(Request $request)
     {
-        $services = Service::with('product')
-            ->where('client_id', $this->getClientId())
-            ->orderBy('id', 'desc')
-            ->paginate(25);
+        $clientId = $this->getClientId();
 
-        return view('client.services.index', compact('services'));
+        // The choices are what this account actually has, so a filter never
+        // offers an empty answer. The list is paginated, so filtering has to
+        // happen here: a filter in the page would only see 25 services.
+        $types = Service::where('services.client_id', $clientId)
+            ->join('products', 'products.id', '=', 'services.product_id')
+            ->distinct()->orderBy('products.type')->pluck('products.type')->all();
+        $statuses = Service::where('client_id', $clientId)
+            ->distinct()->orderBy('status')->pluck('status')->all();
+
+        $type = in_array($request->query('type'), $types, true) ? $request->query('type') : null;
+        $status = in_array($request->query('status'), $statuses, true) ? $request->query('status') : null;
+
+        $services = Service::with('product')
+            ->where('client_id', $clientId)
+            ->when($type, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('type', $type)))
+            ->when($status, fn ($q) => $q->where('status', $status))
+            ->orderBy('id', 'desc')
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('client.services.index', compact('services', 'types', 'statuses', 'type', 'status'));
     }
 
     public function show(Service $service)

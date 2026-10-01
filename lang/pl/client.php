@@ -792,6 +792,7 @@ return [
     ],
     'security.action' => 'Akcja',
     'services' => [
+        'all_types' => 'Wszystkie typy',
         'addons' => 'Moduły dodatkowe',
         'amount' => 'Kwota',
         'auto_renew' => 'Automatyczne odnowienie',
