@@ -65,6 +65,24 @@ class UpgradeService
      *
      * @return array{success: bool, message: ?string, upgrade: ?Upgrade, invoice: ?Invoice, applied: bool}
      */
+    /**
+     * Whether a service can be moved onto this product at all.
+     *
+     * A package change is carried out by the service's own provisioning
+     * module, so the new product has to be provisioned by the same one. The
+     * upgrade screen offered every active product, so a shared-hosting
+     * customer could pick a VPS: the hosting module was asked to apply a VPS
+     * plan it knows nothing about, the change failed at the server, and
+     * billing - which is authoritative in apply() - moved the service onto
+     * the VPS price anyway.
+     */
+    public function canMoveTo(Service $service, Product $newProduct): bool
+    {
+        $service->loadMissing('product');
+
+        return strtolower((string) $service->product?->server_type) === strtolower((string) $newProduct->server_type);
+    }
+
     public function requestProductChange(Service $service, Product $newProduct): array
     {
         $refuse = fn (string $message) => [
@@ -82,6 +100,10 @@ class UpgradeService
 
         if ((int) $newProduct->id === (int) $service->product_id) {
             return $refuse(__('messages.error.already_on_this_product'));
+        }
+
+        if (! $this->canMoveTo($service, $newProduct)) {
+            return $refuse(__('client.cart.product_unavailable'));
         }
 
         // r119-pending: one move at a time. Nothing used to check, so a second

@@ -238,11 +238,18 @@ class ServiceController extends Controller
 
         $prices = [];
 
+        $upgrades = app(UpgradeService::class);
+
         $availableProducts = Product::active()
             ->where('id', '!=', $service->product_id)
             ->with('pricing')
             ->get()
-            ->filter(function (Product $product) use ($cycle, &$prices) {
+            ->filter(function (Product $product) use ($cycle, &$prices, $service, $upgrades) {
+                // Only packages the service's own module can move it onto.
+                if (! $upgrades->canMoveTo($service, $product)) {
+                    return false;
+                }
+
                 $price = $product->priceFor($cycle);
 
                 if ($price === null) {
