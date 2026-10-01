@@ -92,6 +92,8 @@ return [
         'your_link' => 'Your Referral Link',
     ],
     'announcements' => [
+        'all_categories' => 'All',
+        'rss_feed' => 'RSS feed',
         'no_announcements' => 'No announcements.',
         'read_more' => 'Read More',
         'title' => 'Announcements',

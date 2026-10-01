@@ -91,6 +91,8 @@ return [
         'your_link' => 'Referans Bağlantınız',
     ],
     'announcements' => [
+        'all_categories' => 'Tümü',
+        'rss_feed' => 'RSS akışı',
         'no_announcements' => 'Şu anda duyuru yok.',
         'read_more' => 'Devamını Oku',
         'title' => 'Duyurular',

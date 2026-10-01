@@ -254,11 +254,11 @@ class SystemApiController extends BaseApiController
 
     public function addAnnouncement(Request $request)
     {
-        $validated = $request->validate(['title' => 'required|string|max:255', 'announcement' => 'required|string', 'published' => 'sometimes|boolean']);
+        $validated = $request->validate(['title' => 'required|string|max:255', 'category' => 'nullable|string|max:60', 'announcement' => 'required|string', 'published' => 'sometimes|boolean']);
         // "published" was documented and dropped, so an announcement sent with
         // published=0 to be reviewed first went straight onto the site. Left
         // out, it is published - the column's default, as before.
-        $a = Announcement::create(['title' => $validated['title'], 'announcement' => $validated['announcement'], 'published' => $request->boolean('published', true)]);
+        $a = Announcement::create(['title' => $validated['title'], 'category' => $validated['category'] ?? null, 'announcement' => $validated['announcement'], 'published' => $request->boolean('published', true)]);
 
         return $this->success(['announcementid' => $a->id]);
     }
@@ -271,10 +271,11 @@ class SystemApiController extends BaseApiController
         }
         $request->validate([
             'title' => 'sometimes|required|string|max:255',
+            'category' => 'nullable|string|max:60',
             'announcement' => 'sometimes|required|string',
             'published' => 'sometimes|boolean',
         ]);
-        foreach (['title', 'announcement'] as $f) {
+        foreach (['title', 'category', 'announcement'] as $f) {
             if ($request->has($f)) {
                 $a->$f = $request->$f;
             }

@@ -43,10 +43,14 @@
     @endif
 </div>
 
+{{-- The categories already in use, offered while typing one. --}}
+<datalist id="announcement-categories">@foreach($categories ?? [] as $category)<option value="{{ $category }}">@endforeach</datalist>
+
 <x-modal name="add-announcement" title="{{ __('admin.announcements.new_announcement') }}" maxWidth="lg">
     <form method="POST" action="{{ route('admin.config.announcements.store') }}">
         @csrf
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.announcements.category') }}</label><input type="text" name="category" maxlength="60" list="announcement-categories" class="form-control" placeholder="{{ __('admin.announcements.category_hint') }}"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required></textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -66,6 +70,7 @@
     <form method="POST" action="{{ route('admin.config.announcements.update', $ann) }}">
         @csrf @method('PUT')
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $ann->title }}" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('admin.announcements.category') }}</label><input type="text" name="category" value="{{ $ann->category }}" maxlength="60" list="announcement-categories" class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required>{{ $ann->announcement }}</textarea></div>
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
