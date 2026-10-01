@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Contracts\ChecksAvailabilityInBulk;
 use App\Models\Setting;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\Log;
@@ -78,16 +79,95 @@ class DomainAvailability
     public function check(string $domain): array
     {
         $domain = strtolower(trim($domain));
-        $tldKey = substr($domain, strpos($domain, '.') + 1);
 
-        $result = $this->checkWithRegistrar($domain)
-            ?? app(WhoisLookup::class)->check($domain, self::WHOIS_SERVERS[$tldKey] ?? null);
+        $result = $this->checkWithRegistrar($domain) ?? $this->checkWithWhois($domain);
 
         return [
             'domain' => $domain,
             'available' => (bool) $result['available'],
             'checked' => (bool) $result['checked'],
         ];
+    }
+
+    /**
+     * Several names at once - the domain search asks about the name typed and
+     * its suggested endings together.
+     *
+     * A registrar that can take a list is asked once for all of them; any name
+     * it did not answer for goes to WHOIS, as a failed single lookup does. A
+     * registrar that cannot is asked one name at a time, exactly as check().
+     *
+     * @param  array<int, string>  $domains
+     * @return array<string, array{domain: string, available: bool, checked: bool}>
+     */
+    public function checkMany(array $domains): array
+    {
+        $domains = array_values(array_unique(array_map(fn ($d) => strtolower(trim($d)), $domains)));
+
+        $module = $this->registrarModule();
+        if (! $module instanceof ChecksAvailabilityInBulk) {
+            $results = [];
+            foreach ($domains as $domain) {
+                $results[$domain] = $this->check($domain);
+            }
+
+            return $results;
+        }
+
+        try {
+            $answers = $module->checkAvailabilityBulk($domains);
+        } catch (\Throwable $e) {
+            Log::warning('Registrar bulk availability check failed; falling back to WHOIS', [
+                'domains' => $domains,
+                'message' => $e->getMessage(),
+            ]);
+            $answers = [];
+        }
+
+        $results = [];
+        foreach ($domains as $domain) {
+            $result = isset($answers[$domain])
+                ? ['available' => (bool) $answers[$domain]['available'], 'checked' => true]
+                : $this->checkWithWhois($domain);
+
+            $results[$domain] = [
+                'domain' => $domain,
+                'available' => (bool) $result['available'],
+                'checked' => (bool) $result['checked'],
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * @return array{available: bool, checked: bool, response: string}
+     */
+    private function checkWithWhois(string $domain): array
+    {
+        $tldKey = substr($domain, strpos($domain, '.') + 1);
+
+        return app(WhoisLookup::class)->check($domain, self::WHOIS_SERVERS[$tldKey] ?? null);
+    }
+
+    /** The configured registrar module, or null when there is none to ask. */
+    private function registrarModule(): ?object
+    {
+        $name = (string) Setting::get('default_registrar', 'domainnameapi');
+        if ($name === '' || $name === 'manual') {
+            return null;
+        }
+
+        try {
+            return app(ModuleRegistry::class)->getRegistrarModule($name) ?: null;
+        } catch (\Throwable $e) {
+            Log::warning('Registrar module could not be loaded for an availability check', [
+                'registrar' => $name,
+                'message' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**
@@ -99,17 +179,12 @@ class DomainAvailability
      */
     private function checkWithRegistrar(string $domain): ?array
     {
-        $name = (string) Setting::get('default_registrar', 'domainnameapi');
-        if ($name === '' || $name === 'manual') {
+        $module = $this->registrarModule();
+        if (! $module) {
             return null;
         }
 
         try {
-            $module = app(ModuleRegistry::class)->getRegistrarModule($name);
-            if (! $module) {
-                return null;
-            }
-
             $result = $module->checkAvailability($domain);
             if (! empty($result['error'])) {
                 return null;

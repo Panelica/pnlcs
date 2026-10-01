@@ -2,6 +2,7 @@
 
 namespace Modules\Registrars\DomainNameApi;
 
+use App\Contracts\ChecksAvailabilityInBulk;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Log;
  * module can answer for .dev and .app: Google Registry runs no port-43 WHOIS
  * server for them, so a whois-based lookup cannot.
  */
-class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainData
+class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModuleInterface, SyncsDomainData
 {
     /** Dialling codes for the countries this reseller actually sells into. */
     private const DIAL_CODES = [
@@ -78,11 +79,14 @@ class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainDat
 
     public function checkAvailability(string $domain): array
     {
-        $response = $this->call('POST', 'domains/bulk-search', [['domainName' => $domain]]);
+        // domains/search, not a one-name bulk-search: measured against the
+        // live API on 2026-10-01 it answers in about 0.7s where bulk-search
+        // takes about 3s for the same single name.
+        $response = $this->call('POST', 'domains/search', ['domainName' => $domain]);
 
-        // The registry answers per domain; a transport failure has no infos at
-        // all and must not be reported as "taken".
-        $info = $response['infos'][0] ?? null;
+        // A transport failure has no info at all and must not be reported as
+        // "taken".
+        $info = $response['info'] ?? null;
         if (! is_array($info)) {
             return [
                 'available' => false,
@@ -102,6 +106,36 @@ class DomainNameApiRegistrar implements RegistrarModuleInterface, SyncsDomainDat
             'needs_docs' => (bool) ($info['isDocumentRequired'] ?? false),
             'reason'     => $info['reason'] ?? null,
         ];
+    }
+
+    public function checkAvailabilityBulk(array $domains): array
+    {
+        $domains = array_values(array_unique(array_map('strtolower', $domains)));
+        if ($domains === []) {
+            return [];
+        }
+
+        $response = $this->call('POST', 'domains/bulk-search', array_map(
+            fn (string $domain) => ['domainName' => $domain],
+            $domains,
+        ));
+
+        // The registry answers per domain. A name missing from the answer is
+        // left out, not reported as taken: the caller asks WHOIS about it.
+        $answers = [];
+        foreach ($response['infos'] ?? [] as $info) {
+            if (! is_array($info)) {
+                continue;
+            }
+            $name = strtolower((string) ($info['domainName'] ?? ''));
+            if (in_array($name, $domains, true)) {
+                $answers[$name] = [
+                    'available' => strtoupper((string) ($info['status'] ?? '')) === 'AVAILABLE',
+                ];
+            }
+        }
+
+        return $answers;
     }
 
     public function syncDomain(Domain $domain): array

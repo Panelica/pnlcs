@@ -67,23 +67,30 @@ class DomainSearchController extends Controller
 
     protected function checkDomainWithAlternatives(string $sld, string $tld, $allTlds): array
     {
-        // Check primary domain
-        $primary = $this->checkSingleDomain($sld, $tld, $allTlds);
-
-        // Suggest alternatives
+        // Suggest alternatives: the first six endings we sell, besides the one
+        // searched for.
         $suggestionTlds = [".com", ".net", ".org", ".io", ".co", ".dev", ".app", ".online", ".site", ".xyz"];
-        $alternatives   = [];
+        $alternativeTlds = [];
         foreach ($suggestionTlds as $altTld) {
-            if ($altTld === $tld) {
-                continue;
+            if ($altTld !== $tld && $allTlds->firstWhere("extension", $altTld)) {
+                $alternativeTlds[] = $altTld;
             }
-            $result = $this->checkSingleDomain($sld, $altTld, $allTlds);
-            if ($result !== null) {
-                $alternatives[] = $result;
-            }
-            if (count($alternatives) >= 6) {
+            if (count($alternativeTlds) >= 6) {
                 break;
             }
+        }
+
+        // Ask about every name in one go. Asked one after another, a search
+        // with six suggestions waited for seven registry round trips - about
+        // 21 seconds against DomainNameAPI.
+        $askTlds = $allTlds->firstWhere("extension", $tld) ? array_merge([$tld], $alternativeTlds) : $alternativeTlds;
+        $names = array_map(fn ($t) => $sld . $t, $askTlds);
+        $lookups = app(\App\Services\DomainAvailability::class)->checkMany($names);
+
+        $primary = $this->checkSingleDomain($sld, $tld, $allTlds, $lookups);
+        $alternatives = [];
+        foreach ($alternativeTlds as $altTld) {
+            $alternatives[] = $this->checkSingleDomain($sld, $altTld, $allTlds, $lookups);
         }
 
         return [
@@ -94,7 +101,10 @@ class DomainSearchController extends Controller
         ];
     }
 
-    protected function checkSingleDomain(string $sld, string $tld, $allTlds): ?array
+    /**
+     * @param  array<string, array{domain: string, available: bool, checked: bool}>  $lookups
+     */
+    protected function checkSingleDomain(string $sld, string $tld, $allTlds, array $lookups = []): ?array
     {
         $fullDomain = $sld . $tld;
 
@@ -115,7 +125,8 @@ class DomainSearchController extends Controller
         // API is unreachable - an unanswered lookup must still not read as
         // "available". DomainAvailability is the one place that decides; the
         // API's domainwhois asks it too.
-        $whoisResult = app(\App\Services\DomainAvailability::class)->check($fullDomain);
+        $whoisResult = $lookups[strtolower($fullDomain)]
+            ?? app(\App\Services\DomainAvailability::class)->check($fullDomain);
 
         return [
             "domain"      => $fullDomain,
