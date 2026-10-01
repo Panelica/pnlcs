@@ -8,7 +8,7 @@
         <h2>{{ __('client.dashboard.welcome_back', ['name' => auth()->user()->first_name]) }}</h2>
         <p>{{ __('client.dashboard.overview') }}</p>
     </div>
-    @php $credit = auth()->user()->credit ?? 0; @endphp
+    @php $credit = $accountCredit ?? 0; @endphp
     @if($credit > 0)
     <div class="pn-welcome-credit">
         <div class="credit-lbl">{{ __('client.dashboard.account_credit') }}</div>
