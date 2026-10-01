@@ -140,7 +140,12 @@ class OpenProviderRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 'period' => max(1, $years),
             ]);
 
-            return ['success' => true, 'message' => "Domain renewed via Openprovider for {$years} year(s)."];
+            // The dates are the module's to move on success (see
+            // DomainService::renewDomain), as the other registrars do.
+            $newExpiry = ($domain->expiry_date ?? now())->copy()->addYears(max(1, $years));
+            $domain->update(['expiry_date' => $newExpiry, 'next_due_date' => $newExpiry->copy()]);
+
+            return ['success' => true, 'message' => "Domain renewed via Openprovider for {$years} year(s).", 'expiry_date' => $newExpiry->toDateString()];
         } catch (\Throwable $e) {
             Log::error('OpenProvider renew failed', ['domain' => $domain->domain, 'error' => $e->getMessage()]);
 
