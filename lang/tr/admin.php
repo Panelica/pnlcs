@@ -762,6 +762,8 @@ return [
     'clients.paid_invoices' => 'Ödenen Faturalar',
     'clients.phone' => 'Telefon',
     'clients.pinned' => 'Sabitlenmiş',
+    'clients.author' => 'Yazan',
+    'clients.edited_by' => 'Düzenleyen',
     'clients.quick_actions' => 'Hızlı İşlemler',
     'clients.registered' => 'Kayıt Tarihi',
     'clients.status' => 'Durum',

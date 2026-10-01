@@ -287,6 +287,45 @@ class ClientController extends Controller
         return back()->with('success', __('messages.success.note_added'));
     }
 
+    public function updateNote(Request $request, Client $client, ClientNote $note)
+    {
+        abort_if($note->client_id !== $client->id, 404);
+
+        $validated = $request->validate([
+            'note' => 'required|string',
+            'sticky' => 'boolean',
+        ]);
+
+        // Inline editing cannot change sticky; keep the stored value.
+        $note->update([
+            'note' => $validated['note'],
+            'edited_by' => auth('admin')->user()?->full_name ?: 'system',
+        ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'note' => $note->note,
+                'sticky' => (bool) $note->sticky,
+            ]);
+        }
+
+        return back()->with('success', __('messages.success.note_updated'));
+    }
+
+    public function destroyNote(Request $request, Client $client, ClientNote $note)
+    {
+        abort_if($note->client_id !== $client->id, 404);
+
+        $note->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', __('messages.success.note_deleted'));
+    }
+
     /**
      * Attach an existing service to a client by hand.
      *

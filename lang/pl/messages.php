@@ -67,6 +67,7 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
     'email.test_sent' => 'Testowa wiadomość e-mail została wysłana pomyślnie na adres :address.',
     'email.test_subject' => 'PNLCS — testowa wiadomość e-mail',
     'error' => [
+        'note_update_failed' => 'Nie udało się zapisać notatki.',
         'withdrawal_not_possible' => 'Ta wypłata nie mogła zostać zrealizowana. Najmniejsza kwota, jaką możemy wypłacić, to :minimum i nie może ona przekraczać Twojego salda.',
         'cannot_remove_own_role_management' => 'Nie możesz odebrać uprawnień do zarządzania rolami własnej roli — nikt nie mógłby ich później przyznać.',
         'ip_banned' => 'Odmowa dostępu: Twój adres IP został zablokowany na tej stronie.',
@@ -267,6 +268,8 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
         'network_issue_deleted' => 'Problem sieciowy usunięty.',
         'network_issue_updated' => 'Problem sieciowy zaktualizowany.',
         'note_added' => 'Notatka dodana.',
+        'note_updated' => 'Notatka zaktualizowana.',
+        'note_deleted' => 'Notatka usunięta.',
         'notification_provider_created' => 'Dostawca powiadomień dodany.',
         'notification_provider_deleted' => 'Dostawca powiadomień usunięty.',
         'notification_provider_updated' => 'Dostawca powiadomień zaktualizowany.',
