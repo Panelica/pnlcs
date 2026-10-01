@@ -22,8 +22,12 @@ interface SyncsDomainData
      *     expiry_date?: string|null,
      *     status?: string|null,
      *     locked?: bool|null,
-     *     nameservers?: array<int, string>
+     *     nameservers?: array<int, string>,
+     *     id_protection?: bool|null
      * }
+     *
+     * id_protection is whether the registrar hides the registrant in public
+     * WHOIS/RDAP. Leave it out (or null) when the registrar does not say.
      */
     public function syncDomain(Domain $domain): array;
 }

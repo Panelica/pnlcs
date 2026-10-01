@@ -193,6 +193,9 @@ class DomainController extends Controller
         if (! empty($result['nameservers'])) {
             $changes['nameservers'] = json_encode(array_values($result['nameservers']));
         }
+        if (is_bool($result['id_protection'] ?? null)) {
+            $changes['id_protection'] = $result['id_protection'];
+        }
 
         $domain->update($changes);
 
