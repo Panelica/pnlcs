@@ -287,6 +287,7 @@ return [
     ],
     'contact.department' => 'Abteilung',
     'contact.select_department' => 'Wählen Sie eine Abteilung aus',
+    'contact.recaptcha_failed' => 'Bitte bestätigen Sie, dass Sie kein Roboter sind, und versuchen Sie es erneut.',
     'contacts.edit_contact' => 'Kontakt bearbeiten',
     'contacts.add_contact' => '+ Kontakt hinzufügen',
     'contacts.add_new_contact' => 'Neuen Kontakt hinzufügen',

@@ -287,6 +287,7 @@ return [
     ],
     'contact.department' => 'Departman',
     'contact.select_department' => 'Departman Seçin',
+    'contact.recaptcha_failed' => 'Lütfen robot olmadığınızı doğrulayıp tekrar deneyin.',
     'contacts.edit_contact' => 'İletişimi düzenle',
     'contacts.add_contact' => '+ Kişi Ekle',
     'contacts.add_new_contact' => 'Yeni Kişi Ekle',

@@ -7,6 +7,7 @@ use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
+use App\Services\RecaptchaService;
 use App\Services\TicketService;
 use App\Services\TicketSpamService;
 use Illuminate\Http\Request;
@@ -44,6 +45,19 @@ class ContactController extends Controller
             'subject' => 'required|string|max:200',
             'message' => 'required|string|max:5000',
         ]);
+
+        // The honeypot and the spam screen only catch the crude kind; a bot
+        // that leaves the trap empty and writes plausible text walks past
+        // both. When the operator has switched reCAPTCHA on, an unanswered or
+        // refused challenge is sent back with what was typed, and no ticket
+        // is opened.
+        $recaptcha = app(RecaptchaService::class);
+        if ($recaptcha->enabled()
+            && ! $recaptcha->verify($request->input(RecaptchaService::FIELD), $request->ip())) {
+            return back()
+                ->withErrors([RecaptchaService::FIELD => __('client.contact.recaptcha_failed')])
+                ->withInput();
+        }
 
         // Anyone can post this form, so it is the obvious way in for the
         // rubbish the spam screen is configured to keep out.

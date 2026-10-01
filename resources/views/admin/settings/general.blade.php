@@ -229,6 +229,30 @@
         </div>
     </div>
 
+    {{-- Google reCAPTCHA on the public contact form, the one door anyone can
+         open a ticket through. Off until an operator registers their own
+         site, so no key of ours ships in a release. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.recaptcha') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="hidden" name="RecaptchaEnabled" value="0"><input type="checkbox" name="RecaptchaEnabled" value="1" {{ !empty($settings['RecaptchaEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.recaptcha_enabled') }}
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.recaptcha_site_key') }}</label>
+                    <input type="text" name="RecaptchaSiteKey" value="{{ $settings['RecaptchaSiteKey'] ?? '' }}" class="form-control" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.recaptcha_secret_key') }}</label>
+                    <input type="password" name="RecaptchaSecretKey" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['RecaptchaSecretKey']) ? '••••••••' : '' }}">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.recaptcha_hint') }}</div>
+        </div>
+    </div>
+
     {{-- The seller's registered identity. A contract, an official invoice and
          the contact page all name it, and they read these same fields so the
          three can never disagree. --}}
