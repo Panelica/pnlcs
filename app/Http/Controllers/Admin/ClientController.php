@@ -49,7 +49,7 @@ class ClientController extends Controller
         return view('admin.clients.index', compact('clients', 'groups'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $groups = ClientGroup::all();
         $currencies = Currency::all();
@@ -58,7 +58,7 @@ class ClientController extends Controller
         $defaultPaymentMethod = Setting::get('DefaultPaymentMethod', 'banktransfer');
         $languages = \App\Models\Language::getActiveLanguages();
 
-        $defaultCountry = Setting::get('Country', 'PL');
+        $defaultCountry = Setting::get('Country') ?: \App\Support\GeoLocale::country($request) ?: \App\Support\GeoLocale::countryFromBrowser($request);
         $defaultLanguage = Setting::get('DefaultLanguage', config('app.locale', 'en'));
         $defaultPhonePrefix = \App\Support\Countries::phonePrefix($defaultCountry);
 
