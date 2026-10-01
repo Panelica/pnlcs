@@ -56,16 +56,6 @@ class UpgradeService
     }
 
     /**
-     * Move a service onto another package, the way the client area does it.
-     *
-     * A positive prorated difference is invoiced and applied when that invoice
-     * is paid; a downgrade or a like-for-like change is applied at once. The
-     * API used to write product_id and nothing else, which left the customer
-     * on a bigger plan at the old price with a server that had not been told.
-     *
-     * @return array{success: bool, message: ?string, upgrade: ?Upgrade, invoice: ?Invoice, applied: bool}
-     */
-    /**
      * Whether a service can be moved onto this product at all.
      *
      * A package change is carried out by the service's own provisioning
@@ -83,6 +73,16 @@ class UpgradeService
         return strtolower((string) $service->product?->server_type) === strtolower((string) $newProduct->server_type);
     }
 
+    /**
+     * Move a service onto another package, the way the client area does it.
+     *
+     * A positive prorated difference is invoiced and applied when that invoice
+     * is paid; a downgrade or a like-for-like change is applied at once. The
+     * API used to write product_id and nothing else, which left the customer
+     * on a bigger plan at the old price with a server that had not been told.
+     *
+     * @return array{success: bool, message: ?string, upgrade: ?Upgrade, invoice: ?Invoice, applied: bool}
+     */
     public function requestProductChange(Service $service, Product $newProduct): array
     {
         $refuse = fn (string $message) => [
