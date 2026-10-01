@@ -9,6 +9,7 @@ use App\Models\GatewaySettings;
 use App\Models\Invoice;
 use App\Models\PaymentNotification;
 use App\Services\InvoicePdfService;
+use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
 use App\Services\NotificationService;
 use App\Services\PaymentService;
@@ -29,6 +30,40 @@ class InvoiceController extends Controller
         $this->flashPaymentOutcome(request()->query('payment'));
 
         return view('client.invoices.index', compact('invoices'));
+    }
+
+    /**
+     * Pay an open invoice, or part of it, from the account's balance.
+     *
+     * Credit is applied to an invoice when it is created, but an invoice
+     * issued before the customer topped up stayed unpaid with the money
+     * sitting on the account: InvoiceService::applyCredit() was reachable
+     * only through the API.
+     */
+    public function payWithCredit(Invoice $invoice)
+    {
+        abort_if($invoice->client_id !== $this->getClientId(), 403);
+
+        if ($this->creditUsableOn($invoice) <= 0) {
+            return redirect()->route('client.invoices.show', $invoice);
+        }
+
+        $invoice = app(InvoiceService::class)->applyCredit($invoice, (float) $invoice->client->credit);
+
+        return redirect()->route('client.invoices.show', $invoice)
+            ->with('success', __('client.invoices.credit_applied'));
+    }
+
+    /** The account balance this invoice can take: none for a settled or Add Funds invoice. */
+    private function creditUsableOn(Invoice $invoice): float
+    {
+        $open = in_array(strtolower((string) $invoice->status), ['unpaid', 'overdue', 'partially_paid'], true);
+
+        if (! $open || ! $invoice->client || $invoice->items()->where('type', 'AddFunds')->exists()) {
+            return 0.0;
+        }
+
+        return max(0.0, (float) $invoice->client->credit);
     }
 
     public function show(Invoice $invoice)
@@ -112,7 +147,11 @@ class InvoiceController extends Controller
                 ->first()?->value
             : null;
 
-        return view('client.invoices.show', compact('invoice', 'gateways', 'gatewayForms', 'gatewayLabels', 'pendingNotification', 'balance', 'chargeAttempt', 'stripePublishableKey'));
+        // Balance the account holds that this invoice may be paid from (not
+        // an Add Funds invoice: that would pay the top-up with itself).
+        $usableCredit = $this->creditUsableOn($invoice);
+
+        return view('client.invoices.show', compact('invoice', 'gateways', 'gatewayForms', 'gatewayLabels', 'pendingNotification', 'balance', 'chargeAttempt', 'stripePublishableKey', 'usableCredit'));
     }
 
     /**

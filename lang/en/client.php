@@ -578,6 +578,8 @@ return [
         'title' => 'Email History',
     ],
     'invoices' => [
+        'pay_with_credit' => 'Use my account credit (:amount)',
+        'credit_applied' => 'Your account credit was applied to this invoice.',
         'pn_amount_hint' => 'Enter the amount you transferred, in the currency you paid. This corresponds to :amount on the invoice.',
         'pn_reported_in_billing' => 'Amount reported by the customer: :amount (rate :rate, source :source).',
         'amount_paid' => 'Amount Paid',

@@ -578,6 +578,8 @@ return [
         'title' => 'Historia e-maili',
     ],
     'invoices' => [
+        'pay_with_credit' => 'Użyj środków z konta (:amount)',
+        'credit_applied' => 'Środki z konta zostały zaliczone na poczet tej faktury.',
         'pn_amount_hint' => 'Podaj przelaną kwotę w walucie, w której zapłacono. Odpowiada to :amount na fakturze.',
         'pn_reported_in_billing' => 'Kwota zgłoszona przez klienta: :amount (kurs :rate, źródło :source).',
         'amount_paid' => 'Zapłacona kwota',

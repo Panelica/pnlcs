@@ -577,6 +577,8 @@ return [
         'title' => '邮件记录',
     ],
     'invoices' => [
+        'pay_with_credit' => '使用我的账户余额（:amount）',
+        'credit_applied' => '您的账户余额已用于支付此发票。',
         'pn_amount_hint' => '请以您支付的货币输入转账金额。对应发票上的 :amount。',
         'pn_reported_in_billing' => '客户报告的金额：:amount（汇率 :rate，来源 :source）。',
         'amount_paid' => '已付金额',
