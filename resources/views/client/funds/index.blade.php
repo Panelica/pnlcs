@@ -9,7 +9,7 @@
     </div>
 </div>
 
-@php $credit = auth()->user()->credit ?? 0; @endphp
+@php $credit = $accountCredit ?? 0; @endphp
 <div class="pn-card mb-24" style="max-width:100%;background:linear-gradient(135deg,var(--primary),#1e5fa0);border:none">
     <div class="pn-card-body" style="text-align:center;padding:28px">
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:rgba(255,255,255,0.65);margin-bottom:8px">{{ __('client.funds.current_credit') }}</div>

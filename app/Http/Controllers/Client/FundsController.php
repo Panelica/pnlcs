@@ -23,7 +23,10 @@ class FundsController extends Controller
         // used to list every gateway that had ever had a setting saved.
         $gateways = collect(app(ModuleRegistry::class)->usableGateways())->sort()->values();
 
-        return view('client.funds.index', compact('gateways') + $this->rateContext());
+        // The balance being topped up: the current account's clients.credit.
+        $accountCredit = (float) ($this->currentClient()?->credit ?? 0);
+
+        return view('client.funds.index', compact('gateways', 'accountCredit') + $this->rateContext());
     }
 
     /**
