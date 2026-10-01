@@ -58,7 +58,7 @@ class ClientController extends Controller
         $defaultPaymentMethod = Setting::get('DefaultPaymentMethod', 'banktransfer');
         $languages = \App\Models\Language::getActiveLanguages();
 
-        $defaultCountry = \App\Support\GeoLocale::country($request) ?: Setting::get('Country') ?: \App\Support\GeoLocale::countryFromBrowser($request);
+        $defaultCountry = Setting::get('Country') ?: \App\Support\GeoLocale::country($request) ?: \App\Support\GeoLocale::countryFromBrowser($request);
         $defaultLanguage = Setting::get('DefaultLanguage', config('app.locale', 'en'));
         $defaultPhonePrefix = \App\Support\Countries::phonePrefix($defaultCountry);
 
