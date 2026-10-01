@@ -96,8 +96,18 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
             ];
         }
 
+        $available = $this->availabilityOf($info);
+        if ($available === null) {
+            return [
+                'available' => false,
+                'domain'    => $domain,
+                'method'    => 'domainnameapi',
+                'error'     => (string) ($info['reason'] ?? '') ?: 'DomainNameAPI could not check this name.',
+            ];
+        }
+
         return [
-            'available'  => strtoupper((string) ($info['status'] ?? '')) === 'AVAILABLE',
+            'available'  => $available,
             'domain'     => $domain,
             'method'     => 'domainnameapi',
             'price'      => $info['price'] ?? null,
@@ -128,14 +138,47 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
                 continue;
             }
             $name = strtolower((string) ($info['domainName'] ?? ''));
-            if (in_array($name, $domains, true)) {
-                $answers[$name] = [
-                    'available' => strtoupper((string) ($info['status'] ?? '')) === 'AVAILABLE',
-                ];
+            $available = $this->availabilityOf($info);
+            if ($available !== null && in_array($name, $domains, true)) {
+                $answers[$name] = ['available' => $available];
             }
         }
 
         return $answers;
+    }
+
+    /**
+     * What one search answer says: free, taken, or nothing at all.
+     *
+     * The registry was asked about the name only when the status is AVAILABLE
+     * or NOTAVAILABLE. ERROR is no answer, and NOTAVAILABLE with the reason
+     * "Unauthorized TLD" means this reseller account may not sell the ending -
+     * the name itself was never looked up. Both used to be read as "taken",
+     * so a free .io or .co name showed as registered (DomainNameAPI OTE,
+     * 2026-10-01). They are now unanswered, like a failed call: the caller
+     * falls back to WHOIS and never reads them as available.
+     */
+    private function availabilityOf(array $info): ?bool
+    {
+        $status = strtoupper((string) ($info['status'] ?? ''));
+        $reason = (string) ($info['reason'] ?? '');
+
+        if ($status === 'AVAILABLE') {
+            return true;
+        }
+
+        if ($status === 'NOTAVAILABLE' && stripos($reason, 'unauthorized') === false) {
+            return false;
+        }
+
+        if (stripos($reason, 'unauthorized') !== false) {
+            Log::warning('DomainNameAPI: this reseller account may not sell the ending', [
+                'domain' => $info['domainName'] ?? null,
+                'reason' => $reason,
+            ]);
+        }
+
+        return null;
     }
 
     public function syncDomain(Domain $domain): array
