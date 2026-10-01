@@ -60,3 +60,13 @@ test('the admin create form renders the voivodeship select and a free text state
         ->assertSee('Mazowieckie', false)
         ->assertSee('name="state"', false);
 });
+
+test('the admin create form prefers the operator country setting over the CDN', function () {
+    Setting::set('Country', 'PL');
+
+    $this->actingAs(billingIdentityAdmin(), 'admin')
+        ->withHeader('CF-IPCountry', 'DE')
+        ->get(route('admin.clients.create'))
+        ->assertOk()
+        ->assertSee('<option value="PL" selected>', false);
+});
