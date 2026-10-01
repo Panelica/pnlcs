@@ -775,6 +775,8 @@ return [
         '2fa_desc' => 'İki adımlı doğrulama, parolanızın yanında telefonunuzdaki doğrulama kodunu da isteyerek hesabınıza ek bir güvenlik katmanı ekler.',
         '2fa_enabled' => 'İki adımlı doğrulama etkin',
         '2fa_not_enabled' => 'İki adımlı doğrulama etkin değil',
+        'backup_codes_title' => 'Yedek kodlarınız',
+        'backup_codes_hint' => 'Bu kodları güvenli bir yere kaydedin. Doğrulama uygulamanıza erişemezseniz her biriyle bir kez giriş yapabilirsiniz. Yalnızca şimdi gösteriliyor.',
         'action' => 'İşlem',
         'active_sessions' => 'Aktif Oturumlar',
         'current' => 'Mevcut',

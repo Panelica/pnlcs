@@ -776,6 +776,8 @@ return [
         '2fa_desc' => 'Two-factor authentication adds an extra layer of security to your account by requiring both your password and a verification code from your phone.',
         '2fa_enabled' => 'Two-Factor Authentication is enabled',
         '2fa_not_enabled' => 'Two-Factor Authentication is not enabled',
+        'backup_codes_title' => 'Your backup codes',
+        'backup_codes_hint' => 'Save these codes somewhere safe. If you lose your authenticator app, each one signs you in once. They are shown only now.',
         'action' => 'Action',
         'active_sessions' => 'Active Sessions',
         'current' => 'Current',
