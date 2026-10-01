@@ -65,12 +65,34 @@ class UpgradeService
      * plan it knows nothing about, the change failed at the server, and
      * billing - which is authoritative in apply() - moved the service onto
      * the VPS price anyway.
+     *
+     * Within the module, the operator may name the packages a product can
+     * move to (Admin > Products > Upgrade packages). When they have, only
+     * those; when they have not, any package of the same module, so an
+     * install without a list keeps offering upgrades.
      */
     public function canMoveTo(Service $service, Product $newProduct): bool
     {
         $service->loadMissing('product');
+        $current = $service->product;
 
-        return strtolower((string) $service->product?->server_type) === strtolower((string) $newProduct->server_type);
+        if (! $current || strtolower((string) $current->server_type) !== strtolower((string) $newProduct->server_type)) {
+            return false;
+        }
+
+        $paths = $this->upgradePathIds($current);
+
+        return $paths === [] || in_array((int) $newProduct->id, $paths, true);
+    }
+
+    /** @var array<int, list<int>> per request, so the upgrade screen asks once per product */
+    private array $pathCache = [];
+
+    /** @return list<int> */
+    private function upgradePathIds(Product $product): array
+    {
+        return $this->pathCache[$product->id] ??= $product->upgradeProducts()
+            ->pluck('products.id')->map(fn ($id) => (int) $id)->all();
     }
 
     /**

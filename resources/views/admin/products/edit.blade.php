@@ -93,6 +93,24 @@
         </div>
     </div>
 
+    {{-- Which packages this one can move to. Empty: any package of the same module. --}}
+    <div class="card" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.products.upgrade_paths') }}</strong></div>
+        <div class="card-body">
+            <input type="hidden" name="upgrade_paths_section" value="1">
+            @if(($upgradeCandidates ?? collect())->isEmpty())
+            <div style="font-size:12px;color:#777;">{{ __('admin.products.upgrade_paths_none') }}</div>
+            @else
+            <select name="upgrade_paths[]" multiple size="{{ min(8, max(3, $upgradeCandidates->count())) }}" class="form-control" style="max-width:520px;">
+                @foreach($upgradeCandidates as $candidate)
+                <option value="{{ $candidate->id }}" @selected(in_array($candidate->id, $selectedUpgrades ?? [], true))>{{ $candidate->name }}@if($candidate->retired) ({{ __('admin.products.retired') }})@endif</option>
+                @endforeach
+            </select>
+            <div style="font-size:12px;color:#777;margin-top:6px;">{{ __('admin.products.upgrade_paths_hint') }}</div>
+            @endif
+        </div>
+    </div>
+
     @php $cfg = is_string($product->config_options) ? (json_decode($product->config_options, true) ?: []) : ($product->config_options ?? []); @endphp
     @include('admin.products.partials.proxmox')
     <div class="card" data-module-card="panelica" style="margin-bottom:15px;">
