@@ -2074,6 +2074,8 @@ return [
     'services.service_saved' => '服务已保存。',
     'services.package_change_failed' => '无法在服务器上更改套餐：:message',
     'services.domain_invalid' => '域名必须是有效的域名。',
+    'promotions.requires' => '需要全部包含',
+    'promotions.requires_hint' => '可留空。选择产品后，只有当这些产品全部在购物车中时优惠码才有效：用于套装折扣。',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',
     'products.product_group' => '产品组',

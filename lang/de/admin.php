@@ -2074,6 +2074,8 @@ return [
     'services.service_saved' => 'Dienst gespeichert.',
     'services.package_change_failed' => 'Das Paket konnte auf dem Server nicht geändert werden: :message',
     'services.domain_invalid' => 'Die Domain muss ein Domainname sein.',
+    'promotions.requires' => 'Erfordert alle von',
+    'promotions.requires_hint' => 'Leer lassen für keine. Sind Produkte gewählt, gilt der Code nur, wenn alle im Warenkorb liegen: ein Rabatt für ein Set.',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',
     'products.product_group' => 'Produktgruppe',

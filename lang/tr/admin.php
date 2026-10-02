@@ -2055,6 +2055,8 @@ return [
     'services.service_saved' => 'Hizmet kaydedildi.',
     'services.package_change_failed' => 'Paket sunucuda değiştirilemedi: :message',
     'services.domain_invalid' => 'Alan adı geçerli bir alan adı olmalı.',
+    'promotions.requires' => 'Hepsini gerektirir',
+    'promotions.requires_hint' => 'Boş bırakılabilir. Ürün seçilirse kod, yalnız hepsi sepetteyken geçerli olur: bir paket indirimi için.',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
     'products.product_group' => 'Ürün Grubu',

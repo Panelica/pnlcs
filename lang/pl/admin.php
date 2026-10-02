@@ -2074,6 +2074,8 @@ return [
     'services.service_saved' => 'Usługa zapisana.',
     'services.package_change_failed' => 'Nie udało się zmienić pakietu na serwerze: :message',
     'services.domain_invalid' => 'Domena musi być nazwą domeny.',
+    'promotions.requires' => 'Wymaga wszystkich z',
+    'promotions.requires_hint' => 'Zostaw puste, jeśli brak. Gdy wybrano produkty, kod działa tylko wtedy, gdy wszystkie są w koszyku: rabat na zestaw.',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

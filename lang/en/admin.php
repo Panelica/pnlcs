@@ -2074,6 +2074,8 @@ return [
     'services.service_saved' => 'Service saved.',
     'services.package_change_failed' => 'The package could not be changed on the server: :message',
     'services.domain_invalid' => 'The domain must be a domain name.',
+    'promotions.requires' => 'Requires all of',
+    'promotions.requires_hint' => 'Leave empty for none. When products are chosen, the code only works when every one of them is in the basket: a discount for a set.',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',
