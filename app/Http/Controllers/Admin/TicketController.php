@@ -47,4 +47,31 @@ class TicketController extends Controller
 
         return back()->with('success', __('admin.messages.reply_added'));
     }
+
+    /**
+     * Add a staff-only note to the ticket. Notes were shown on this page but
+     * could only be written through the API or by escalation rules.
+     */
+    public function storeNote(Request $request, Ticket $ticket)
+    {
+        $validated = $request->validate(['note' => 'required|string|max:10000']);
+
+        $ticket->notes()->create([
+            'admin' => auth('admin')->user()->username,
+            'message' => $validated['note'],
+        ]);
+
+        return back()->with('success', __('admin.tickets.note_added'));
+    }
+
+    /** Remove a note: only the staff member who wrote it. */
+    public function destroyNote(Ticket $ticket, \App\Models\TicketNote $note)
+    {
+        abort_unless($note->ticket_id === $ticket->id, 404);
+        abort_unless($note->admin === auth('admin')->user()->username, 403);
+
+        $note->delete();
+
+        return back()->with('success', __('admin.tickets.note_deleted'));
+    }
 }

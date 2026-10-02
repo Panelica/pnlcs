@@ -230,6 +230,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:reply_tickets')->group(function () {
         Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
+        // Staff-only notes on a ticket: never shown to the customer, never mailed.
+        Route::post('tickets/{ticket}/notes', [TicketController::class, 'storeNote'])->name('tickets.notes.store');
+        Route::delete('tickets/{ticket}/notes/{note}', [TicketController::class, 'destroyNote'])->name('tickets.notes.destroy');
     });
 
     // =============================================

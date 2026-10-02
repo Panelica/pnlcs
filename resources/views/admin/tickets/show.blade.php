@@ -68,6 +68,20 @@
     </div>
 </div>
 
+{{-- Add a staff-only note. --}}
+@if(auth('admin')->user()?->hasPermission('reply_tickets'))
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-header"><strong>{{ __('admin.tickets.add_note') }}</strong> <span style="font-size:12px;color:#8a6d3b;">{{ __('admin.tickets.note_hint') }}</span></div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.tickets.notes.store', $ticket) }}">
+            @csrf
+            <textarea name="note" rows="3" required maxlength="10000" class="form-control" style="background:#fffdf2;"></textarea>
+            <button type="submit" class="btn btn-warning btn-sm" style="margin-top:8px;">{{ __('admin.tickets.save_note') }}</button>
+        </form>
+    </div>
+</div>
+@endif
+
 {{-- Internal Notes --}}
 @if(isset($ticket->notes) && $ticket->notes->count() > 0)
 <div>
@@ -76,7 +90,11 @@
     <div style="margin-bottom:8px;background:#fcf8e3;border:1px solid #faebcc;border-left:4px solid #e6ac00;border-radius:3px;overflow:hidden;">
         <div style="padding:6px 12px;background:#faf3cd;display:flex;justify-content:space-between;align-items:center;">
             <strong style="font-size:12px;">{{ $note->admin }}</strong>
-            <span style="font-size:11px;color:#8a6d3b;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}</span>
+            <span style="font-size:11px;color:#8a6d3b;display:flex;align-items:center;gap:8px;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}
+                @if($note->admin === auth('admin')->user()?->username)
+                <form method="POST" action="{{ route('admin.tickets.notes.destroy', [$ticket, $note]) }}" style="margin:0;" onsubmit="return confirm('{{ __('admin.tickets.note_confirm_delete') }}')">@csrf @method('DELETE')<button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.delete') }}</button></form>
+                @endif
+            </span>
         </div>
         <div style="padding:10px 12px;font-size:13px;color:#333;">{!! nl2br(e($note->message)) !!}</div>
     </div>
