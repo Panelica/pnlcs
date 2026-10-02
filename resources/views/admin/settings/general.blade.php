@@ -252,7 +252,7 @@
     {{-- A second check before a domain can leave: an emailed code in front of
          its transfer code and its lock. Off by default, so an install that
          updates changes nothing for its customers until the operator says. --}}
-    <div class="card" style="margin-bottom:15px;">
+    <div class="card" id="settings-account_protection" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.account_protection') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
