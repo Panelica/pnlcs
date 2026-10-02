@@ -53,6 +53,10 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         ->middleware('throttle:20,1')->name('social.google.redirect');
     Route::get('auth/google/callback', [\App\Http\Controllers\Client\SocialLoginController::class, 'callback'])
         ->middleware('throttle:20,1')->name('social.google.callback');
+    Route::get('auth/github', [\App\Http\Controllers\Client\GithubLoginController::class, 'redirect'])
+        ->middleware('throttle:20,1')->name('social.github.redirect');
+    Route::get('auth/github/callback', [\App\Http\Controllers\Client\GithubLoginController::class, 'callback'])
+        ->middleware('throttle:20,1')->name('social.github.callback');
 
     // Password Reset
     Route::get('forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
