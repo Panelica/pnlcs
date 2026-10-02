@@ -199,6 +199,17 @@ class InvoiceGenerationService
     }
 
     /**
+     * One renewal invoice for several of a customer's domains, for a customer
+     * renewing them together rather than one invoice each.
+     *
+     * @param  array<int, Domain>  $domains
+     */
+    public function generateForDomains(Client $client, array $domains): ?Invoice
+    {
+        return $this->generateForServices($client, [], [], $domains);
+    }
+
+    /**
      * Apply a promotion code to an invoice.
      * Validates the code, applies the discount, and increments usage counter.
      *
