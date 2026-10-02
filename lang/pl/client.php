@@ -811,6 +811,10 @@ return [
     'services' => [
         'all_types' => 'Wszystkie typy',
         'renew_now' => 'Odnów teraz',
+        'change_cycle' => 'Zmień okres',
+        'cycle_not_available' => 'Ta usługa nie może przejść na ten okres rozliczeniowy.',
+        'cycle_invoice_open' => 'Najpierw opłać lub anuluj otwartą fakturę za przedłużenie tej usługi, a potem zmień okres.',
+        'cycle_changed' => 'Gotowe: od następnego przedłużenia (:date) usługa będzie rozliczana :cycle.',
         'renew_not_available' => 'Odnowienie tej usługi jest niedostępne.',
         'addons' => 'Moduły dodatkowe',
         'amount' => 'Kwota',

@@ -811,6 +811,10 @@ return [
     'services' => [
         'all_types' => 'All types',
         'renew_now' => 'Renew now',
+        'change_cycle' => 'Change cycle',
+        'cycle_not_available' => 'This service cannot move to that billing cycle.',
+        'cycle_invoice_open' => 'Pay or cancel the open renewal invoice for this service first, then change the cycle.',
+        'cycle_changed' => 'Done: from the next renewal (:date) the service is billed :cycle.',
         'renew_not_available' => 'Renewal is not available for this service.',
         'addons' => 'Add-ons',
         'amount' => 'Amount',

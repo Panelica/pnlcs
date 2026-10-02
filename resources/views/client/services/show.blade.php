@@ -173,7 +173,18 @@
         <div class="sv-ph">{{ __('client.services.service_details') }}</div>
         <ul class="sv-dl">
             <li><span class="k">{{ __('client.cart.product') }}</span><span class="v">{{ $service->product?->name ?? '—' }}</span></li>
-            <li><span class="k">{{ __('client.cart.billing_cycle') }}</span><span class="v" style="text-transform:capitalize">{{ $service->billing_cycle ?? '—' }}</span></li>
+            <li><span class="k">{{ __('client.cart.billing_cycle') }}</span><span class="v" style="text-transform:capitalize">{{ $service->billing_cycle ?? '—' }}
+                @if(! empty($cycleOptions))
+                <form method="POST" action="{{ route('client.services.cycle', $service) }}" style="display:inline-flex;gap:6px;align-items:center;margin-left:8px;text-transform:none;">@csrf
+                    <select name="billing_cycle" class="form-control" style="width:auto;padding:2px 6px;font-size:12px;height:auto;" aria-label="{{ __('client.services.change_cycle') }}">
+                        @foreach($cycleOptions as $cycle => $amount)
+                        <option value="{{ $cycle }}">{{ __('common.billing.'.\App\Services\BillingCycleChange::langKey($cycle)) }} · {{ money_fmt($amount) }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.change_cycle') }}</button>
+                </form>
+                @endif
+            </span></li>
             <li><span class="k">{{ __('client.services.amount') }}</span><span class="v">{{ money_fmt($service->amount) }} / {{ $service->billing_cycle }}</span></li>
             <li><span class="k">{{ __('client.services.next_due_date') }}</span><span class="v">{{ $service->next_due_date?->format(date_fmt()) ?? '—' }}
                 @if($canRenewEarly ?? false)
