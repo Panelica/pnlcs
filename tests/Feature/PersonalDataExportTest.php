@@ -12,6 +12,7 @@ use App\Models\SslOrder;
 use App\Models\Ticket;
 use App\Models\TicketDepartment;
 use App\Models\User;
+use App\Models\UserLogin;
 
 /*
  * A customer's copy of their personal data (GDPR Art. 15 / 20, KVKK Art. 11).
@@ -28,6 +29,8 @@ function pdeAccount(): array
     ]);
     $owner = User::factory()->create(['email' => 'ayse@example.test']);
     $client->users()->attach($owner->id, ['owner' => true]);
+    UserLogin::create(['user_id' => $owner->id, 'successful' => true, 'method' => 'password', 'ip_address' => '198.51.100.7',
+        'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0', 'device' => 'DEVICEHASH-'.str_repeat('a', 53)]);
 
     Service::factory()->create(['client_id' => $client->id, 'domain' => 'ayse.example', 'username' => 'ayseu', 'password' => 'SERVICE-SECRET-123']);
     Domain::factory()->create(['client_id' => $client->id, 'domain' => 'ayse.example', 'epp_code' => 'EPP-SECRET-456']);
@@ -51,6 +54,8 @@ it('lets the account owner download everything as JSON', function () {
     $data = $response->json();
     expect($data['account']['first_name'])->toBe('Ayşe')
         ->and($data['logins'][0]['email'])->toBe('ayse@example.test')
+        ->and($data['logins'][0]['sign_ins'][0]['ip_address'])->toBe('198.51.100.7')
+        ->and($data['logins'][0]['sign_ins'][0]['device'])->toBe('Firefox on Windows')
         ->and($data['services'][0]['domain'])->toBe('ayse.example')
         ->and($data['domains'][0]['domain'])->toBe('ayse.example')
         ->and($data['invoices'][0]['items'][0]['description'])->toBe('Hosting Small')
@@ -64,7 +69,7 @@ it('leaves passwords, transfer codes, keys and internal notes out', function () 
 
     $raw = test()->actingAs($owner)->post(route('client.account.personal-data'))->getContent();
 
-    foreach (['WELCOME-PW-321', 'SERVICE-SECRET-123', 'EPP-SECRET-456', 'PRIVATE-KEY-789', 'CSR-000', 'INTERNAL-NOTE-do-not-share', '"password"', 'second_factor', 'remember_token'] as $secret) {
+    foreach (['DEVICEHASH-', 'WELCOME-PW-321', 'SERVICE-SECRET-123', 'EPP-SECRET-456', 'PRIVATE-KEY-789', 'CSR-000', 'INTERNAL-NOTE-do-not-share', '"password":', 'second_factor', 'remember_token'] as $secret) {
         expect($raw)->not->toContain($secret);
     }
 });

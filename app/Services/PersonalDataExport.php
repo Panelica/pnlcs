@@ -15,6 +15,7 @@ use App\Models\Service;
 use App\Models\SslOrder;
 use App\Models\Ticket;
 use App\Models\Transaction;
+use App\Models\UserLogin;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -49,7 +50,18 @@ class PersonalDataExport
             ]) + ['custom_fields' => $this->customFields($client)],
             'logins' => $client->users()->get()->map(fn ($u) => $this->pick($u, [
                 'first_name', 'last_name', 'email', 'email_verified_at', 'last_login', 'last_login_ip', 'created_at',
-            ]) + ['owner' => (bool) $u->pivot->owner])->all(),
+            ]) + [
+                'owner' => (bool) $u->pivot->owner,
+                // The sign-in history kept for this login (not the device
+                // token's hash, which only identifies a browser to us).
+                'sign_ins' => UserLogin::where('user_id', $u->id)->orderByDesc('id')->get()->map(fn ($l) => [
+                    'at' => $l->created_at?->format(DATE_ATOM),
+                    'successful' => (bool) $l->successful,
+                    'method' => $l->method,
+                    'ip_address' => $l->ip_address,
+                    'device' => LoginRecorder::describe($l->user_agent),
+                ])->all(),
+            ])->all(),
             'contacts' => $client->contacts()->get()->map(fn ($c) => $this->pick($c, [
                 'first_name', 'last_name', 'email', 'company_name', 'address1', 'address2', 'city', 'state',
                 'postcode', 'country', 'phone_number', 'created_at',
