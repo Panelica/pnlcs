@@ -35,6 +35,8 @@ Route::post('/admin/2fa', [AuthController::class, 'verify2fa'])->middleware('thr
 Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard, logout, search — no permission required (all admins)
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    // Each kind of result is filtered by the permission its page asks for.
+    Route::get('search', \App\Http\Controllers\Admin\SearchController::class)->middleware('throttle:60,1')->name('search');
     // Signing out must stay reachable while the code is outstanding.
     Route::post('/logout', [AuthController::class, 'logout'])
         ->withoutMiddleware([AdminTwoFactorVerify::class])->name('logout');

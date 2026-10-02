@@ -174,10 +174,12 @@
         <div class="intellisearch" id="intellisearch">
             <form action="{{ route('admin.clients.index') }}" method="GET">
                 <i class="fas fa-search" style="color:#fff;"></i>
-                <input type="text" name="search" class="form-control" placeholder="{{ __('common.placeholder.search') }}"
+                <input type="text" name="search" class="form-control" placeholder="{{ __('common.placeholder.search') }}" autocomplete="off"
+                       role="combobox" aria-expanded="false" aria-controls="intellisearch-results" aria-autocomplete="list"
                        onfocus="document.getElementById('intellisearch').classList.add('active')"
                        onblur="setTimeout(function(){ document.getElementById('intellisearch').classList.remove('active'); }, 200)">
             </form>
+            @include('admin.partials.intellisearch')
         </div>
 
         <ul style="list-style:none; margin:0; padding:0; display:flex; align-items:center; height:45px;">

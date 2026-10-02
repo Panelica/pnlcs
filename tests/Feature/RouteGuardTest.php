@@ -36,6 +36,9 @@ const GUARD_NO_PERMISSION_ADMIN = [
     'admin.2fa.verify', 'admin.2fa.verify.submit', 'admin.2fa.enable', 'admin.2fa.disable',
     'admin.my-account', 'admin.my-account.update',
     'admin.dashboard', 'admin.api-docs',
+    // The bar's search: open to every admin, each kind of result filtered by
+    // the permission its page asks for (AdminSearch).
+    'admin.search',
     'admin.calendar', 'admin.calendar.store', 'admin.calendar.events',
     'admin.calendar.update', 'admin.calendar.destroy',
     'admin.config.todo', 'admin.config.todo.store',
