@@ -75,6 +75,23 @@ class ClientPermissions
         return is_array($stored) ? array_values(array_intersect(self::ALL, $stored)) : self::ALL;
     }
 
+    /**
+     * Whether the login owns the account the client area is showing: the one
+     * picked in the session when the login is on it, else its first (the same
+     * rule as ResolvesClient). Only the owner manages the account's users.
+     */
+    public static function ownsActiveAccount(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $selected = session('active_client_id');
+        $client = ($selected ? $user->clients()->whereKey($selected)->first() : null) ?? $user->clients()->first();
+
+        return (bool) $client?->pivot?->owner;
+    }
+
     public static function allows(User $user, Client $client, string $permission): bool
     {
         return in_array($permission, self::granted($user, $client) ?? [], true);
