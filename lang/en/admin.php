@@ -2076,6 +2076,8 @@ return [
     'services.domain_invalid' => 'The domain must be a domain name.',
     'promotions.requires' => 'Requires all of',
     'promotions.requires_hint' => 'Leave empty for none. When products are chosen, the code only works when every one of them is in the basket: a discount for a set.',
+    'settings.turkish_legal_forms' => 'Publish the Turkish statutory forms',
+    'settings.turkish_legal_forms_hint' => 'Distance sales contract, preliminary information form and KVKK notice. Always on when the country is Turkey; switch on if you sell to consumers in Turkey from elsewhere.',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',

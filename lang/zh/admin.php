@@ -2076,6 +2076,8 @@ return [
     'services.domain_invalid' => '域名必须是有效的域名。',
     'promotions.requires' => '需要全部包含',
     'promotions.requires_hint' => '可留空。选择产品后，只有当这些产品全部在购物车中时优惠码才有效：用于套装折扣。',
+    'settings.turkish_legal_forms' => '发布土耳其法定表格',
+    'settings.turkish_legal_forms_hint' => '远程销售合同、预先告知表和 KVKK 告知书。国家为土耳其时始终启用；如您从其他国家向土耳其消费者销售，请开启。',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',
     'products.product_group' => '产品组',

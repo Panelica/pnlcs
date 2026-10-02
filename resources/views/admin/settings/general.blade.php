@@ -40,6 +40,9 @@
                             <option value="{{ $code }}" {{ ($settings['Country'] ?? '') === $code ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach
                     </select></div>
+                <div class="form-group"><label style="font-size:13px;display:flex;gap:6px;align-items:flex-start;">
+                    <input type="hidden" name="TurkishLegalForms" value="0"><input type="checkbox" name="TurkishLegalForms" value="1" {{ !empty($settings['TurkishLegalForms']) ? 'checked' : '' }} style="margin-top:3px;">
+                    <span>{{ __('admin.settings.turkish_legal_forms') }}<br><small style="color:#777;">{{ __('admin.settings.turkish_legal_forms_hint') }}</small></span></label></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.date_format') }}</label><input type="text" name="DateFormat" value="{{ $settings['DateFormat'] ?? 'd/m/Y' }}" class="form-control" placeholder="d/m/Y"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.timezone') }}</label><input type="text" name="Timezone" value="{{ $settings['Timezone'] ?? 'UTC' }}" class="form-control"></div>
             </div>

@@ -2076,6 +2076,8 @@ return [
     'services.domain_invalid' => 'Domena musi być nazwą domeny.',
     'promotions.requires' => 'Wymaga wszystkich z',
     'promotions.requires_hint' => 'Zostaw puste, jeśli brak. Gdy wybrano produkty, kod działa tylko wtedy, gdy wszystkie są w koszyku: rabat na zestaw.',
+    'settings.turkish_legal_forms' => 'Publikuj tureckie formularze ustawowe',
+    'settings.turkish_legal_forms_hint' => 'Umowa sprzedaży na odległość, formularz informacji wstępnej i klauzula KVKK. Zawsze włączone, gdy krajem jest Turcja; włącz, jeśli sprzedajesz konsumentom w Turcji z innego kraju.',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

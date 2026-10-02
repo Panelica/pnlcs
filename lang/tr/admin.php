@@ -2057,6 +2057,8 @@ return [
     'services.domain_invalid' => 'Alan adı geçerli bir alan adı olmalı.',
     'promotions.requires' => 'Hepsini gerektirir',
     'promotions.requires_hint' => 'Boş bırakılabilir. Ürün seçilirse kod, yalnız hepsi sepetteyken geçerli olur: bir paket indirimi için.',
+    'settings.turkish_legal_forms' => 'Türkçe yasal formları yayınla',
+    'settings.turkish_legal_forms_hint' => 'Mesafeli satış sözleşmesi, ön bilgilendirme formu ve KVKK aydınlatma metni. Ülke Türkiye ise her zaman açıktır; başka bir ülkeden Türkiye\'deki tüketicilere satış yapıyorsanız açın.',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
     'products.product_group' => 'Ürün Grubu',

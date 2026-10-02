@@ -2076,6 +2076,8 @@ return [
     'services.domain_invalid' => 'Die Domain muss ein Domainname sein.',
     'promotions.requires' => 'Erfordert alle von',
     'promotions.requires_hint' => 'Leer lassen für keine. Sind Produkte gewählt, gilt der Code nur, wenn alle im Warenkorb liegen: ein Rabatt für ein Set.',
+    'settings.turkish_legal_forms' => 'Türkische Pflichtformulare veröffentlichen',
+    'settings.turkish_legal_forms_hint' => 'Fernabsatzvertrag, Vorabinformation und KVKK-Hinweis. Bei Land Türkei immer aktiv; einschalten, wenn Sie von anderswo an Verbraucher in der Türkei verkaufen.',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',
     'products.product_group' => 'Produktgruppe',

@@ -120,7 +120,11 @@ class LegalController extends Controller
      */
     public static function published(): array
     {
-        $turkish = strtoupper(trim((string) Setting::get('Country', ''))) === 'TR';
+        // A seller registered elsewhere that sells to consumers in Turkey owes
+        // them the same forms, so they can be switched on without changing the
+        // company's country.
+        $turkish = strtoupper(trim((string) Setting::get('Country', ''))) === 'TR'
+            || (string) Setting::get('TurkishLegalForms', '0') === '1';
 
         return array_filter(self::DOCUMENTS, fn ($doc) => $turkish || empty($doc['tr_only']));
     }
