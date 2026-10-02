@@ -11,7 +11,7 @@ class Affiliate extends Model
 
     protected $table = 'affiliates';
 
-    protected $fillable = ['client_id', 'code', 'visitors', 'pay_type', 'pay_amount', 'onetime', 'balance', 'withdrawn'];
+    protected $fillable = ['client_id', 'code', 'visitors', 'pay_type', 'pay_amount', 'recurring_pay_amount', 'onetime', 'balance', 'withdrawn'];
 
     public function client()
     {

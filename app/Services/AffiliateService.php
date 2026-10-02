@@ -167,7 +167,15 @@ class AffiliateService
             return;
         }
 
-        $commission = $this->calculateCommission($affiliate, $base);
+        // A new sale (the invoice an order raised) earns the affiliate's rate;
+        // a renewal or anything raised later earns the renewal rate when one
+        // is set. Without one, every invoice earns the same, as before.
+        $renewal = ! \App\Models\Order::where('invoice_id', $invoice->id)->exists();
+        $rate = $renewal && $affiliate->recurring_pay_amount !== null
+            ? (float) $affiliate->recurring_pay_amount
+            : (float) $affiliate->pay_amount;
+
+        $commission = $this->calculateCommission($affiliate, $base, $rate);
         if ($commission <= 0) {
             return;
         }
@@ -181,7 +189,7 @@ class AffiliateService
             'transaction_id' => 'AFFCOM-'.strtoupper(uniqid()),
             'amount_in' => $commission,
             'amount_out' => 0,
-            'description' => "Affiliate referral commission - client#{$client->id} invoice#{$invoice->id}",
+            'description' => 'Affiliate referral commission'.($renewal ? ' (renewal)' : '')." - client#{$client->id} invoice#{$invoice->id}",
             'date' => now(),
         ]);
 
@@ -287,14 +295,16 @@ class AffiliateService
             ->sum('amount');
     }
 
-    public function calculateCommission(Affiliate $affiliate, float $invoiceTotal): float
+    public function calculateCommission(Affiliate $affiliate, float $invoiceTotal, ?float $rate = null): float
     {
+        $rate ??= (float) $affiliate->pay_amount;
+
         if ($affiliate->pay_type === 'percentage') {
-            return round($invoiceTotal * ($affiliate->pay_amount / 100), 2);
+            return round($invoiceTotal * ($rate / 100), 2);
         }
 
         // Flat amount
-        return round($affiliate->pay_amount, 2);
+        return round($rate, 2);
     }
 
     /**

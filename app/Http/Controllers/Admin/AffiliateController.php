@@ -74,6 +74,7 @@ class AffiliateController extends Controller
         $validated = $request->validate([
             'pay_type' => 'required|in:percentage,flat',
             'pay_amount' => 'required|numeric|min:0',
+            'recurring_pay_amount' => 'nullable|numeric|min:0',
             'onetime' => 'nullable|boolean',
             'code' => ['nullable', 'string', 'max:32', 'regex:'.Affiliate::CODE_RULE, \Illuminate\Validation\Rule::unique('affiliates', 'code')->ignore($affiliate->id)],
         ]);
@@ -82,6 +83,8 @@ class AffiliateController extends Controller
             'code' => ($validated['code'] ?? null) ? strtolower($validated['code']) : null,
             'pay_type' => $validated['pay_type'],
             'pay_amount' => $validated['pay_amount'],
+            // Empty: renewals earn the same as new sales.
+            'recurring_pay_amount' => $validated['recurring_pay_amount'] ?? null,
             'onetime' => $request->boolean('onetime'),
         ]);
 
