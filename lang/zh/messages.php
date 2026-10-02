@@ -417,6 +417,8 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
     'theme.cannot_delete_builtin' => '无法删除内置主题。',
     'theme.cannot_overwrite_builtin' => '无法覆盖内置主题。',
     'theme.invalid_slug' => '主题标识无效。',
+    'theme.not_writable' => 'Web 服务器无法写入主题文件夹。请让管理员将其设为可写。',
+    'theme.install_failed' => '无法安装主题。未做任何更改。',
     'theme.invalid_theme_json' => 'theme.json 无效：缺少 slug。',
     'theme.invalid_zip' => 'ZIP 文件无效。',
     'theme.no_theme_json' => 'ZIP 中未找到 theme.json。',

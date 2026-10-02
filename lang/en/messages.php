@@ -418,6 +418,8 @@ API access may be broken. While the balance cannot be read, no low-balance warni
     'theme.cannot_delete_builtin' => 'Cannot delete built-in themes.',
     'theme.cannot_overwrite_builtin' => 'Cannot overwrite built-in themes.',
     'theme.invalid_slug' => 'Invalid theme slug.',
+    'theme.not_writable' => 'The themes folder cannot be written to by the web server. Ask your administrator to make it writable.',
+    'theme.install_failed' => 'The theme could not be installed. Nothing was changed.',
     'theme.invalid_theme_json' => 'Invalid theme.json: missing slug.',
     'theme.invalid_zip' => 'Invalid ZIP file.',
     'theme.no_theme_json' => 'No theme.json found in ZIP.',

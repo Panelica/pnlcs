@@ -413,6 +413,8 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'theme.cannot_delete_builtin' => 'Yerleşik temalar silinemez.',
     'theme.cannot_overwrite_builtin' => 'Yerleşik temaların üzerine yazılamaz.',
     'theme.invalid_slug' => 'Tema kısa adı geçersiz.',
+    'theme.not_writable' => 'Temalar klasörüne web sunucusu yazamıyor. Yöneticinizden klasörü yazılabilir yapmasını isteyin.',
+    'theme.install_failed' => 'Tema kurulamadı. Hiçbir şey değiştirilmedi.',
     'theme.invalid_theme_json' => 'theme.json geçersiz: slug eksik.',
     'theme.invalid_zip' => 'ZIP dosyası geçersiz.',
     'theme.no_theme_json' => 'ZIP içinde theme.json bulunamadı.',

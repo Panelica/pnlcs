@@ -415,6 +415,8 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
     'theme.cannot_delete_builtin' => 'Integrierte Designs können nicht gelöscht werden.',
     'theme.cannot_overwrite_builtin' => 'Integrierte Designs können nicht überschrieben werden.',
     'theme.invalid_slug' => 'Ungültiger Theme-Slug.',
+    'theme.not_writable' => 'Der Webserver kann nicht in den Themes-Ordner schreiben. Bitten Sie Ihren Administrator, ihn beschreibbar zu machen.',
+    'theme.install_failed' => 'Das Theme konnte nicht installiert werden. Es wurde nichts geändert.',
     'theme.invalid_theme_json' => 'Ungültige theme.json: Slug fehlt.',
     'theme.invalid_zip' => 'Ungültige ZIP-Datei.',
     'theme.no_theme_json' => 'Keine theme.json in ZIP gefunden.',
