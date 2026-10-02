@@ -84,6 +84,8 @@
                     @if(isset($orderFields) && $orderFields->isNotEmpty())
                     @include('client.partials.custom-fields', ['fields' => $orderFields, 'clientId' => null])
                     @endif
+                    @include('client.partials.recaptcha', ['form' => 'signup'])
+                    @error(\App\Services\RecaptchaService::FIELD)<div class="text-danger text-sm">{{ $message }}</div>@enderror
                 </div>
             </div>
             @endauth

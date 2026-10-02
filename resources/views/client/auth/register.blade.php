@@ -131,6 +131,8 @@
                     </label>
                     @error('tos') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                 </div>
+                @include('client.partials.recaptcha', ['form' => 'signup'])
+                @error(\App\Services\RecaptchaService::FIELD) <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
                 <button type="submit" class="btn btn-primary" style="margin-top:4px;">{{ __('client.auth.create_account') }}</button>
             </form>
             @include('client.partials.google-button')
