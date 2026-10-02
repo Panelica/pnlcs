@@ -919,7 +919,8 @@ class ConfigController extends Controller
     public function downloads()
     {
         return view('admin.config.downloads', [
-            'categories' => DownloadCategory::with('downloads')->get(),
+            'categories' => DownloadCategory::with('downloads.products')->get(),
+            'products' => \App\Models\Product::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -1491,10 +1492,13 @@ class ConfigController extends Controller
             'description' => 'nullable|string',
             'location' => 'required|string',
             'published' => 'boolean',
+            'products' => 'nullable|array',
+            'products.*' => 'integer|exists:products,id',
         ]);
         $v['hidden'] = ! $request->boolean('published');
-        unset($v['published']);
-        Download::create($v);
+        unset($v['published'], $v['products']);
+        // Kept to the owners of these products; none means every signed-in customer.
+        Download::create($v)->products()->sync($request->input('products', []));
 
         return back()->with('success', __('messages.success.download_created'));
     }

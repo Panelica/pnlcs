@@ -22,4 +22,22 @@ class Download extends Model
     {
         return $this->belongsTo(DownloadCategory::class);
     }
+
+    /** The products whose owners may download this; none means everyone signed in. */
+    public function products()
+    {
+        return $this->belongsToMany(Product::class, 'download_product');
+    }
+
+    /**
+     * Downloads a client may see: published, and either open to everyone or
+     * tied to a product the client has an active service of.
+     */
+    public function scopeAvailableTo($query, ?int $clientId)
+    {
+        return $query->where('hidden', false)->where(fn ($q) => $q
+            ->whereDoesntHave('products')
+            ->orWhereHas('products', fn ($p) => $p->whereIn('products.id', Service::where('client_id', $clientId ?? 0)
+                ->where('status', \App\Enums\ServiceStatus::Active->value)->select('product_id'))));
+    }
 }

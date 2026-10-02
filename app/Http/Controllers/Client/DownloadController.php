@@ -2,16 +2,20 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
 use App\Models\Download;
 use App\Models\DownloadCategory;
 
 class DownloadController extends Controller
 {
+    use ResolvesClient;
+
     public function index()
     {
-        $categories = DownloadCategory::with(['downloads' => function ($q) {
-            $q->where('hidden', false)->orderBy('title');
+        $clientId = $this->getClientId();
+        $categories = DownloadCategory::with(['downloads' => function ($q) use ($clientId) {
+            $q->availableTo($clientId)->orderBy('title');
         }])->get();
 
         return view('client.downloads.index', compact('categories'));
@@ -19,7 +23,9 @@ class DownloadController extends Controller
 
     public function download(Download $download)
     {
-        abort_if($download->hidden, 404);
+        // A download kept to a product's owners is not there for anyone else:
+        // 404, as for one that is not published.
+        abort_unless(Download::whereKey($download->id)->availableTo($this->getClientId())->exists(), 404);
 
         $download->increment('download_count');
 
