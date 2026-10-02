@@ -445,6 +445,10 @@ return [
     'domain_search.view_full_list' => '查看完整价格',
     'domains' => [
         'renew_now' => '立即续费',
+        'restore_now' => '恢复',
+        'restore_notice' => '此域名已过期，处于注册局的赎回期。仍可支付 :amount 恢复（一年续费加恢复费）。',
+        'restore_line' => ':domain 恢复（续费和恢复费）',
+        'restore_not_available' => '此域名无法在此恢复。请联系客服。',
         'renew_not_available' => '此域名无法续费。',
         'turn_on' => '开启',
         'turn_off' => '关闭',

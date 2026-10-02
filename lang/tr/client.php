@@ -445,6 +445,10 @@ return [
     'domain_search.view_full_list' => 'Tüm Fiyatları Gör',
     'domains' => [
         'renew_now' => 'Şimdi yenile',
+        'restore_now' => 'Geri al',
+        'restore_notice' => 'Bu alan adının süresi doldu ve geri alma dönemine girdi. :amount karşılığında hâlâ geri alınabilir (bir yıllık yenileme ve geri alma ücreti).',
+        'restore_line' => ':domain geri alma (yenileme ve geri alma ücreti)',
+        'restore_not_available' => 'Bu alan adı buradan geri alınamıyor. Lütfen destek ile iletişime geçin.',
         'renew_not_available' => 'Bu alan adı için yenileme yapılamıyor.',
         'turn_on' => 'Aç',
         'turn_off' => 'Kapat',

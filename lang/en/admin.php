@@ -2030,6 +2030,8 @@ return [
     'clients.marketing_yes' => 'Agreed :date (:source)',
     'clients.marketing_withdrawn' => 'Withdrawn :date',
     'clients.marketing_no' => 'Not given',
+    'domains.restore_todo' => 'Restore :domain at the registrar',
+    'domains.restore_todo_desc' => 'The customer paid the restore invoice #:invoice. Registrar: :registrar. Restore the domain, then check its dates.',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',
