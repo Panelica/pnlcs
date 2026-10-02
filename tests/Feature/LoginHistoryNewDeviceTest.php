@@ -2,6 +2,7 @@
 
 use App\Mail\NewDeviceLoginMail;
 use App\Models\Client;
+use App\Models\EmailTemplate;
 use App\Models\User;
 use App\Models\UserLogin;
 use App\Services\LoginRecorder;
@@ -54,8 +55,15 @@ it('records a sign-in and mails nobody the first time', function () {
     Mail::assertNothingQueued();
 });
 
+/** The operator switches the warning on (it is seeded off). */
+function lhnMailOn(): void
+{
+    EmailTemplate::where('name', 'New Device Sign-in')->update(['disabled' => false]);
+}
+
 it('stays quiet on a browser it has seen and warns about a new one', function () {
     Mail::fake();
+    lhnMailOn();
     $user = lhnUser();
 
     $token = lhnSignIn()->getCookie(LoginRecorder::COOKIE)->getValue();
@@ -134,4 +142,22 @@ it('runs the UserLogin and ClientLogin hooks', function () {
     lhnSignIn();
 
     expect($seen)->toBe([['UserLogin', $user->id, 'password'], ['ClientLogin', $user->id, 'password']]);
+});
+
+it('sends no new-device mail until the operator switches the template on', function () {
+    Mail::fake();
+    $user = lhnUser();
+
+    expect(EmailTemplate::where('name', 'New Device Sign-in')->value('disabled'))->toBeTrue();
+
+    $token = lhnSignIn()->getCookie(LoginRecorder::COOKIE)->getValue();
+    lhnSignIn(str_repeat('n', 40), LHN_UA_WIN);
+
+    Mail::assertNothingQueued();
+    expect(UserLogin::where('user_id', $user->id)->count())->toBe(2);
+    test()->actingAs($user)->get(route('client.account.security'))
+        ->assertOk()->assertDontSee(__('client.security.login_history_mail'));
+
+    lhnMailOn();
+    test()->actingAs($user)->get(route('client.account.security'))->assertSee(__('client.security.login_history_mail'));
 });

@@ -152,7 +152,7 @@
                 @endforelse
             </tbody>
         </table>
-        <div style="font-size:12px; color:var(--muted); padding:10px 16px;">{{ __('client.security.login_history_hint') }}</div>
+        <div style="font-size:12px; color:var(--muted); padding:10px 16px;">{{ __('client.security.login_history_hint') }}@if(\App\Services\LoginRecorder::mailEnabled()) {{ __('client.security.login_history_mail') }}@endif</div>
     </div>
 </div>
 

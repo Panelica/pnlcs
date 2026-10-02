@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Events\ClientLoggedIn;
 use App\Mail\NewDeviceLoginMail;
+use App\Models\EmailTemplate;
 use App\Models\User;
 use App\Models\UserLogin;
 use Illuminate\Http\Request;
@@ -114,9 +115,22 @@ class LoginRecorder
         return $login;
     }
 
+    /**
+     * Whether the new-device mail goes out: its template exists and the
+     * operator has switched it on. It is seeded switched off.
+     */
+    public static function mailEnabled(): bool
+    {
+        try {
+            return EmailTemplate::where('name', 'New Device Sign-in')->where('disabled', false)->exists();
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     private function warn(User $user, UserLogin $login): void
     {
-        if (! $user->email) {
+        if (! $user->email || ! self::mailEnabled()) {
             return;
         }
 
