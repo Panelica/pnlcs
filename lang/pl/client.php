@@ -446,6 +446,10 @@ return [
     'domain_search.view_full_list' => 'Zobacz pełny cennik',
     'domains' => [
         'renew_now' => 'Odnów teraz',
+        'restore_now' => 'Przywróć',
+        'restore_notice' => 'Ta domena wygasła i jest w okresie odkupienia w rejestrze. Nadal można ją przywrócić za :amount (rok przedłużenia i opłata za przywrócenie).',
+        'restore_line' => 'Przywrócenie :domain (przedłużenie i opłata za przywrócenie)',
+        'restore_not_available' => 'Tej domeny nie można przywrócić tutaj. Skontaktuj się z pomocą techniczną.',
         'renew_not_available' => 'Odnowienie tej domeny jest niedostępne.',
         'turn_on' => 'Włącz',
         'turn_off' => 'Wyłącz',

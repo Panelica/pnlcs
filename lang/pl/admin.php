@@ -2030,6 +2030,8 @@ return [
     'clients.marketing_yes' => 'Zgoda :date (:source)',
     'clients.marketing_withdrawn' => 'Wycofana :date',
     'clients.marketing_no' => 'Brak zgody',
+    'domains.restore_todo' => 'Przywróć :domain u rejestratora',
+    'domains.restore_todo_desc' => 'Klient opłacił fakturę za przywrócenie #:invoice. Rejestrator: :registrar. Przywróć domenę, a potem sprawdź jej daty.',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

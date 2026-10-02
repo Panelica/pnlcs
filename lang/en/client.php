@@ -446,6 +446,10 @@ return [
     'domain_search.view_full_list' => 'View Full Pricing',
     'domains' => [
         'renew_now' => 'Renew now',
+        'restore_now' => 'Restore',
+        'restore_notice' => 'This domain has expired and is in the registry\'s redemption period. It can still be restored for :amount (a year\'s renewal and the restore fee).',
+        'restore_line' => 'Restore of :domain (renewal and restore fee)',
+        'restore_not_available' => 'This domain cannot be restored from here. Please contact support.',
         'renew_not_available' => 'Renewal is not available for this domain.',
         'turn_on' => 'Turn on',
         'turn_off' => 'Turn off',

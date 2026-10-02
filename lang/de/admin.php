@@ -2030,6 +2030,8 @@ return [
     'clients.marketing_yes' => 'Zugestimmt :date (:source)',
     'clients.marketing_withdrawn' => 'Widerrufen :date',
     'clients.marketing_no' => 'Nicht erteilt',
+    'domains.restore_todo' => ':domain beim Registrar wiederherstellen',
+    'domains.restore_todo_desc' => 'Der Kunde hat die Wiederherstellungsrechnung #:invoice bezahlt. Registrar: :registrar. Stellen Sie die Domain wieder her und prüfen Sie dann ihre Daten.',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',
     'products.product_group' => 'Produktgruppe',

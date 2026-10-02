@@ -62,6 +62,7 @@ class EventServiceProvider extends ServiceProvider
             [RenewOnPaymentListener::class, 'handleInvoicePaid'],
             [ApplyUpgradeListener::class, 'handleInvoicePaid'],
             [\App\Listeners\SettleMassPaymentListener::class, 'handleInvoicePaid'],
+            [\App\Listeners\RestoreDomainOnPaymentListener::class, 'handleInvoicePaid'],
             LogActivityListener::class,
         ],
         TicketOpened::class => [

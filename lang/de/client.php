@@ -445,6 +445,10 @@ return [
     'domain_search.view_full_list' => 'Vollständige Liste anzeigen',
     'domains' => [
         'renew_now' => 'Jetzt verlängern',
+        'restore_now' => 'Wiederherstellen',
+        'restore_notice' => 'Diese Domain ist abgelaufen und befindet sich in der Redemption-Phase der Registry. Sie kann für :amount noch wiederhergestellt werden (ein Jahr Verlängerung und die Wiederherstellungsgebühr).',
+        'restore_line' => 'Wiederherstellung von :domain (Verlängerung und Wiederherstellungsgebühr)',
+        'restore_not_available' => 'Diese Domain kann hier nicht wiederhergestellt werden. Bitte wenden Sie sich an den Support.',
         'renew_not_available' => 'Für diese Domain ist keine Verlängerung möglich.',
         'turn_on' => 'Einschalten',
         'turn_off' => 'Ausschalten',

@@ -56,7 +56,12 @@ class DomainController extends Controller
             'set_up' => $hosting->isSetUp($service, $domain),
         ]);
 
-        return view('client.domains.show', compact('domain', 'locked', 'hostings'));
+        // In redemption, with a restore price set for the extension.
+        $restore = app(\App\Services\DomainRestoreService::class);
+        $restoreAmount = $restore->offered($domain)
+            ? round((float) $domain->recurring_amount + (float) $restore->restorePrice($domain), 2) : null;
+
+        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount'));
     }
 
     /**
@@ -176,6 +181,22 @@ class DomainController extends Controller
 
         if (! $invoice) {
             return back()->with('error', __('client.domains.renew_not_available'));
+        }
+
+        return redirect()->route('client.invoices.show', $invoice);
+    }
+
+    /**
+     * Restore a domain from the redemption period: raise (or reopen) the
+     * invoice for the renewal plus the extension's restore price.
+     */
+    public function restore(Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+
+        $invoice = app(\App\Services\DomainRestoreService::class)->invoiceFor($domain);
+        if (! $invoice) {
+            return back()->with('error', __('client.domains.restore_not_available'));
         }
 
         return redirect()->route('client.invoices.show', $invoice);

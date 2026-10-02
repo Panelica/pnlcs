@@ -4,6 +4,7 @@ namespace Modules\Registrars\DomainNameApi;
 
 use App\Contracts\ChecksAvailabilityInBulk;
 use App\Contracts\RegistrarModuleInterface;
+use App\Contracts\RestorableRegistrar;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Log;
  * module can answer for .dev and .app: Google Registry runs no port-43 WHOIS
  * server for them, so a whois-based lookup cannot.
  */
-class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModuleInterface, SyncsDomainData
+class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModuleInterface, RestorableRegistrar, SyncsDomainData
 {
     /** Dialling codes for the countries this reseller actually sells into. */
     private const DIAL_CODES = [
@@ -274,6 +275,22 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
         $domain->update(['expiry_date' => $newExpiry, 'next_due_date' => $newExpiry->copy()]);
 
         return ['success' => true, 'message' => 'Domain renewed via DomainNameAPI.', 'expiry_date' => $newExpiry->toDateString()];
+    }
+
+    /**
+     * Bring a domain back from the redemption period (POST domains/restore,
+     * which takes the domain name). The new dates are read back afterwards by
+     * syncDomain(), so nothing is guessed here.
+     */
+    public function restore(Domain $domain): array
+    {
+        $response = $this->call('POST', 'domains/restore', ['domainName' => $domain->domain]);
+
+        if (! $this->ok($response)) {
+            return ['success' => false, 'message' => $this->errorOf($response, 'Restore failed')];
+        }
+
+        return ['success' => true, 'message' => 'Domain restored via DomainNameAPI.'];
     }
 
     public function transfer(Domain $domain, string $eppCode): array

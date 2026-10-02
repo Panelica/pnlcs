@@ -225,6 +225,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->name('domains.lock');
         Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
         Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
+        Route::post('domains/{domain}/restore', [DomainController::class, 'restore'])->name('domains.restore');
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');
 
         // Invoices

@@ -22,6 +22,15 @@
     </div>
 </div>
 
+@if($restoreAmount ?? null)
+<div class="pn-alert pn-alert-warning" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <span>{{ __('client.domains.restore_notice', ['amount' => money_fmt($restoreAmount)]) }}</span>
+    <form method="POST" action="{{ route('client.domains.restore', $domain) }}" style="margin:0;">@csrf
+        <button type="submit" class="btn btn-primary btn-sm">{{ __('client.domains.restore_now') }}</button>
+    </form>
+</div>
+@endif
+
 <div class="detail-grid">
     <div class="pn-card">
         <div class="pn-card-header">{{ __('client.domains.domain_info') }}</div>
