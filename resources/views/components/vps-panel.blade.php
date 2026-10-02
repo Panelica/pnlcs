@@ -283,6 +283,9 @@
                 </select>
                 <label for="vps-repw">{{ __('proxmox.client.new_password_optional') }}</label>
                 <input id="vps-repw" type="password" name="password" minlength="10" autocomplete="new-password">
+                <label for="vps-sshkeys">{{ __('proxmox.client.ssh_keys') }}</label>
+                <textarea id="vps-sshkeys" name="ssh_keys" rows="3" spellcheck="false" style="font-family:monospace;font-size:12px;">{{ data_get($service->module_data, 'pve_sshkeys', '') }}</textarea>
+                <p class="hint">{{ __('proxmox.client.ssh_keys_hint') }}</p>
                 <div class="go"><button type="submit" class="vps-btn solid-danger">{{ __('proxmox.client.reinstall') }}</button></div>
             </form>
             @endif
@@ -496,11 +499,13 @@
             ask({ title: T.reinstall_title, text: fill(T.reinstall_warning, { os: sel.options[sel.selectedIndex].text }), word: confirmWord, ok: T.reinstall }).then(function (typed) {
                 if (!typed) { return; }
                 msg(T.reinstalling, 'info');
-                post(urls.reinstall, { image: f.get('image'), password: f.get('password'), confirm: typed }).then(function (j) {
+                post(urls.reinstall, { image: f.get('image'), password: f.get('password'), ssh_keys: f.get('ssh_keys') || '', confirm: typed }).then(function (j) {
                     if (j && j.data && j.data.password) {
                         msg(j.message + ' ' + T.new_password_is + ' ' + j.data.password, 'ok');
                         var pw = $('vps-pw'); if (pw) { pw.setAttribute('data-pw', j.data.password); }
+                        var keep = reForm.querySelector('textarea[name=ssh_keys]'), keys = keep ? keep.value : '';
                         reForm.reset();
+                        if (keep) { keep.value = keys; }
                     }
                 });
             });

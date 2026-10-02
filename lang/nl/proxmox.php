@@ -369,6 +369,9 @@ return [
         'now' => 'Nu',
         'order_hostname' => 'Hostnaam van de server',
         'order_hostname_hint' => 'De naam die de server krijgt. Een eigen domein zoals example.com werkt goed; u mag het leeg laten.',
+        'ssh_keys' => 'Openbare SSH-sleutels',
+        'ssh_keys_hint' => 'Eén sleutel per regel, in OpenSSH-indeling (de inhoud van uw .pub-bestand). Ze worden op de server gezet zodat u zonder wachtwoord kunt inloggen.',
+        'ssh_keys_invalid' => 'Dit lijkt geen openbare SSH-sleutel. Plak de inhoud van uw .pub-bestand, één sleutel per regel (maximaal 10).',
     ],
 
     'reinstall_started' => 'Gast #:vmid wordt opnieuw geïnstalleerd. Dit duurt een paar minuten; de pagina laat zien wanneer het klaar is.',

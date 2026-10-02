@@ -369,6 +369,9 @@ return [
         'now' => 'Agora',
         'order_hostname' => 'Nome do host do servidor',
         'order_hostname_hint' => 'O nome dado ao servidor. Um domínio seu, como example.com, funciona bem; você pode deixar em branco.',
+        'ssh_keys' => 'Chaves públicas SSH',
+        'ssh_keys_hint' => 'Uma chave por linha, no formato OpenSSH (o conteúdo do seu arquivo .pub). Elas são colocadas no servidor para você entrar sem senha.',
+        'ssh_keys_invalid' => 'Isso não parece uma chave pública SSH. Cole o conteúdo do seu arquivo .pub, uma chave por linha (no máximo 10).',
     ],
 
     'reinstall_started' => 'Reinstalando o convidado #:vmid. Isso leva alguns minutos; a página mostra quando terminar.',

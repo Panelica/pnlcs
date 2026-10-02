@@ -240,6 +240,14 @@
                     @error('domain')<div class="text-sm" style="color:var(--danger);margin-top:6px;">{{ $message }}</div>@enderror
                 </div>
             </div>
+            <div class="pn-card" style="margin-bottom:16px;">
+                <div class="pn-card-header">{{ __('proxmox.client.ssh_keys') }} <span style="font-weight:400; color:var(--muted);">({{ __('client.form.optional') }})</span></div>
+                <div class="pn-card-body">
+                    <textarea name="ssh_keys" id="vpsSshKeys" class="form-control" rows="3" spellcheck="false" style="font-family:monospace;font-size:12px;" aria-label="{{ __('proxmox.client.ssh_keys') }}">{{ old('ssh_keys') }}</textarea>
+                    <div class="text-muted text-sm" style="margin-top:6px;">{{ __('proxmox.client.ssh_keys_hint') }}</div>
+                    @error('ssh_keys')<div class="text-sm" style="color:var(--danger);margin-top:6px;">{{ $message }}</div>@enderror
+                </div>
+            </div>
             {{-- Domain --}}
             @elseif($product->show_domain_options)
             <div class="pn-card" style="margin-bottom:16px;">

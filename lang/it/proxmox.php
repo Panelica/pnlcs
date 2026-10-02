@@ -369,6 +369,9 @@ return [
         'now' => 'Adesso',
         'order_hostname' => 'Nome host del server',
         'order_hostname_hint' => 'Il nome dato al server. Un dominio di tua proprietà, come example.com, va bene; puoi lasciarlo vuoto.',
+        'ssh_keys' => 'Chiavi pubbliche SSH',
+        'ssh_keys_hint' => 'Una chiave per riga, in formato OpenSSH (il contenuto del file .pub). Vengono aggiunte al server per accedere senza password.',
+        'ssh_keys_invalid' => 'Non sembra una chiave pubblica SSH. Incolla il contenuto del file .pub, una chiave per riga (al massimo 10).',
     ],
 
     'reinstall_started' => 'Reinstallazione del guest #:vmid in corso. Richiede alcuni minuti; la pagina mostrerà quando è finita.',

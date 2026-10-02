@@ -369,6 +369,9 @@ return [
         'now' => 'Maintenant',
         'order_hostname' => 'Nom d\'hôte du serveur',
         'order_hostname_hint' => 'Le nom donné au serveur. Un domaine qui vous appartient, comme example.com, convient bien ; vous pouvez laisser vide.',
+        'ssh_keys' => 'Clés publiques SSH',
+        'ssh_keys_hint' => 'Une clé par ligne, au format OpenSSH (le contenu de votre fichier .pub). Elles sont ajoutées au serveur pour vous connecter sans mot de passe.',
+        'ssh_keys_invalid' => 'Cela ne ressemble pas à une clé publique SSH. Collez le contenu de votre fichier .pub, une clé par ligne (10 au maximum).',
     ],
 
     'reinstall_started' => 'Réinstallation de l\'invité #:vmid. Cela prend quelques minutes ; la page indique quand c\'est terminé.',

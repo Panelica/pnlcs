@@ -369,6 +369,9 @@ return [
         'now' => 'Nu',
         'order_hostname' => 'Serverns värdnamn',
         'order_hostname_hint' => 'Namnet servern får. En egen domän som example.com fungerar bra; du kan lämna fältet tomt.',
+        'ssh_keys' => 'Publika SSH-nycklar',
+        'ssh_keys_hint' => 'En nyckel per rad i OpenSSH-format (innehållet i din .pub-fil). De läggs på servern så att du kan logga in utan lösenord.',
+        'ssh_keys_invalid' => 'Det här ser inte ut som en publik SSH-nyckel. Klistra in innehållet i din .pub-fil, en nyckel per rad (högst 10).',
     ],
 
     'reinstall_started' => 'Gästen #:vmid installeras om. Det tar några minuter; sidan visar när det är klart.',

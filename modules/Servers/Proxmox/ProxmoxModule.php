@@ -396,6 +396,12 @@ class ProxmoxModule extends AbstractServerModule
         if ($plan->nesting) {
             $body['features'] = 'nesting=1';
         }
+        // A container takes the keys at creation; a virtual machine gets them
+        // through cloud-init (see configureQemu).
+        $keys = $this->sshKeys($service);
+        if ($keys !== '') {
+            $body['ssh-public-keys'] = $keys;
+        }
         if ($plan->nameserver !== '') {
             $body['nameserver'] = $plan->nameserver;
         }
@@ -636,6 +642,43 @@ class ProxmoxModule extends AbstractServerModule
         $keys = $this->getModuleData($service)['pve_sshkeys'] ?? '';
 
         return is_string($keys) ? trim($keys) : '';
+    }
+
+    /**
+     * SSH public keys as the customer pasted them, one per line, checked and
+     * tidied: null when a line is not an OpenSSH public key, '' when there
+     * are none. A private key pasted by mistake is refused rather than stored.
+     */
+    public static function normaliseSshKeys(?string $text): ?string
+    {
+        $lines = array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $text)), fn ($l) => $l !== ''));
+        if (count($lines) > 10) {
+            return null;
+        }
+        foreach ($lines as $line) {
+            if (! preg_match('/^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(?:256|384|521)|sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-nistp256@openssh\.com) ([A-Za-z0-9+\/]+={0,3})(?: [^\x00-\x1f]{0,200})?$/', $line, $m)) {
+                return null;
+            }
+            // The key data starts with its own type name: catches a truncated paste.
+            $blob = base64_decode($m[2], true);
+            if ($blob === false || strlen($blob) < 4 || substr($blob, 4, strlen($m[1])) !== $m[1]) {
+                return null;
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /** Store the keys the next install puts on the server. */
+    public function setSshKeys(Service $service, string $keys): void
+    {
+        $this->setModuleData($service, ['pve_sshkeys' => $keys]);
+    }
+
+    /** The keys the server is installed with, for the reinstall form. */
+    public function storedSshKeys(Service $service): string
+    {
+        return $this->sshKeys($service);
     }
 
     /**

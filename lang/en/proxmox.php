@@ -369,6 +369,9 @@ return [
         'now' => 'Now',
         'order_hostname' => 'Server hostname',
         'order_hostname_hint' => 'The name the server is given. A domain you own, such as example.com, works well; you can leave it empty.',
+        'ssh_keys' => 'SSH public keys',
+        'ssh_keys_hint' => 'One key per line, in OpenSSH format (the contents of your .pub file). They are put on the server so you can sign in without a password.',
+        'ssh_keys_invalid' => 'This does not look like an SSH public key. Paste the contents of your .pub file, one key per line (at most 10).',
     ],
 
     'reinstall_started' => 'Reinstalling guest #:vmid. This takes a few minutes; the page shows when it is done.',

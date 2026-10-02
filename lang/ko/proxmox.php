@@ -369,6 +369,9 @@ return [
         'now' => '현재',
         'order_hostname' => '서버 호스트 이름',
         'order_hostname_hint' => '서버에 붙일 이름입니다. example.com처럼 소유한 도메인이 좋으며, 비워 둘 수도 있습니다.',
+        'ssh_keys' => 'SSH 공개 키',
+        'ssh_keys_hint' => '한 줄에 하나씩 OpenSSH 형식으로 입력하세요(.pub 파일의 내용). 비밀번호 없이 로그인할 수 있도록 서버에 등록됩니다.',
+        'ssh_keys_invalid' => 'SSH 공개 키가 아닌 것 같습니다. .pub 파일의 내용을 한 줄에 하나씩 붙여 넣으세요(최대 10개).',
     ],
 
     'reinstall_started' => '게스트 #:vmid을(를) 다시 설치하는 중입니다. 몇 분 걸리며, 끝나면 페이지에 표시됩니다.',

@@ -369,6 +369,9 @@ return [
         'now' => 'Sada',
         'order_hostname' => 'Naziv hosta poslužitelja',
         'order_hostname_hint' => 'Naziv koji poslužitelj dobiva. Dobro odgovara vaša domena, npr. example.com; polje možete ostaviti prazno.',
+        'ssh_keys' => 'Javni SSH ključevi',
+        'ssh_keys_hint' => 'Jedan ključ po retku, u OpenSSH formatu (sadržaj vaše .pub datoteke). Dodaju se na poslužitelj da se možete prijaviti bez lozinke.',
+        'ssh_keys_invalid' => 'Ovo ne izgleda kao javni SSH ključ. Zalijepite sadržaj .pub datoteke, jedan ključ po retku (najviše 10).',
     ],
 
     'reinstall_started' => 'Gost #:vmid se ponovno instalira. To traje nekoliko minuta; stranica će pokazati kada je gotovo.',

@@ -369,6 +369,9 @@ return [
         'now' => '当前',
         'order_hostname' => '服务器主机名',
         'order_hostname_hint' => '服务器的名称。使用您拥有的域名（例如 example.com）即可；也可以留空。',
+        'ssh_keys' => 'SSH 公钥',
+        'ssh_keys_hint' => '每行一个密钥，OpenSSH 格式（即 .pub 文件的内容）。密钥会添加到服务器，便于您无需密码登录。',
+        'ssh_keys_invalid' => '这看起来不像 SSH 公钥。请粘贴 .pub 文件的内容，每行一个密钥（最多 10 个）。',
     ],
 
     'reinstall_started' => '正在重装服务器 #:vmid。需要几分钟，完成后页面会显示。',

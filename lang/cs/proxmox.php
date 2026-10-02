@@ -369,6 +369,9 @@ return [
         'now' => 'Nyní',
         'order_hostname' => 'Název hostitele serveru',
         'order_hostname_hint' => 'Název, který server dostane. Dobře poslouží vlastní doména, například example.com; pole můžete nechat prázdné.',
+        'ssh_keys' => 'Veřejné klíče SSH',
+        'ssh_keys_hint' => 'Jeden klíč na řádek ve formátu OpenSSH (obsah souboru .pub). Přidají se na server, abyste se mohli přihlásit bez hesla.',
+        'ssh_keys_invalid' => 'Toto nevypadá jako veřejný klíč SSH. Vložte obsah souboru .pub, jeden klíč na řádek (nejvýše 10).',
     ],
 
     'reinstall_started' => 'Host #:vmid se přeinstalovává. Potrvá to několik minut; stránka ukáže, až bude hotovo.',

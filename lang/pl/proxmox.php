@@ -369,6 +369,9 @@ return [
         'now' => 'Teraz',
         'order_hostname' => 'Nazwa hosta serwera',
         'order_hostname_hint' => 'Nazwa nadana serwerowi. Dobrze sprawdzi się Twoja domena, np. example.com; możesz zostawić puste.',
+        'ssh_keys' => 'Publiczne klucze SSH',
+        'ssh_keys_hint' => 'Jeden klucz w wierszu, w formacie OpenSSH (zawartość pliku .pub). Zostaną dodane do serwera, aby można było logować się bez hasła.',
+        'ssh_keys_invalid' => 'To nie wygląda na publiczny klucz SSH. Wklej zawartość pliku .pub, jeden klucz w wierszu (najwyżej 10).',
     ],
 
     'reinstall_started' => 'Serwer #:vmid jest przeinstalowywany. To potrwa kilka minut; strona pokaże, kiedy się skończy.',
