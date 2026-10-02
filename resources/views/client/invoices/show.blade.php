@@ -180,6 +180,13 @@
         </span>
     </div>
     <div class="pn-card-body">
+        @if(($usableCredit ?? 0) > 0)
+        {{-- The account's balance first: it costs the customer nothing to use. --}}
+        <form method="POST" action="{{ route('client.invoices.pay-with-credit', $invoice) }}" class="mb-16">
+            @csrf
+            <button type="submit" class="btn btn-primary">{{ __('client.invoices.pay_with_credit', ['amount' => money_fmt($usableCredit)]) }}</button>
+        </form>
+        @endif
         @if(!empty($gateways))
         <p class="text-muted text-sm mb-16">{{ __('client.invoices.select_payment_method') }}</p>
         <div class="gw-tabs">

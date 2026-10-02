@@ -12,6 +12,7 @@ use App\Models\InvoiceItem;
 use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Models\Transaction;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class InvoiceService
@@ -265,37 +266,53 @@ class InvoiceService
      */
     public function applyCredit(Invoice $invoice, float $amount): Invoice
     {
-        $status = strtolower((string) $invoice->status);
-        if (in_array($status, [InvoiceStatus::Paid->value, InvoiceStatus::Cancelled->value, InvoiceStatus::Refunded->value], true)) {
-            return $invoice;
-        }
+        // Read the balance and the amount due inside the transaction, on
+        // locked rows. Read before it, two requests at the same moment (a
+        // double click, or the client area and the API together) both saw the
+        // same balance and both applied it: the account went negative and the
+        // invoice was credited twice. Now the second waits for the first and
+        // sees what it left.
+        $applied = DB::transaction(function () use ($invoice, $amount) {
+            $locked = Invoice::whereKey($invoice->id)->lockForUpdate()->first();
+            if (! $locked) {
+                return null;
+            }
 
-        $client = $invoice->client;
-        $availableCredit = (float) $client->credit;
+            $status = strtolower((string) $locked->status);
+            if (in_array($status, [InvoiceStatus::Paid->value, InvoiceStatus::Cancelled->value, InvoiceStatus::Refunded->value], true)) {
+                return null;
+            }
 
-        // Cap at available credit and the invoice's remaining balance
-        // (balance accounts for partial payments already recorded).
-        $balance = app(PaymentService::class)->balance($invoice);
-        $amount = min($amount, $availableCredit, $balance);
+            $client = Client::whereKey($locked->client_id)->lockForUpdate()->first();
+            if (! $client) {
+                return null;
+            }
 
-        if ($amount <= 0) {
-            return $invoice;
-        }
+            // Cap at available credit and the invoice's remaining balance
+            // (balance accounts for partial payments already recorded).
+            $balance = app(PaymentService::class)->balance($locked);
+            $amount = min($amount, (float) $client->credit, $balance);
 
-        $invoice = DB::transaction(function () use ($invoice, $amount, $client) {
-            $newCredit = (float) $invoice->credit + $amount;
-            $newTotal = max(0, (float) $invoice->total - $amount);
+            if ($amount <= 0) {
+                return null;
+            }
 
-            $invoice->update([
-                'credit' => $newCredit,
-                'total' => $newTotal,
+            $locked->update([
+                'credit' => (float) $locked->credit + $amount,
+                'total' => max(0, (float) $locked->total - $amount),
             ]);
 
             // Deduct from client credit balance
             $client->decrement('credit', $amount);
 
-            return $invoice->fresh();
+            return $locked->fresh();
         });
+
+        if (! $applied) {
+            return $invoice->fresh() ?? $invoice;
+        }
+
+        $invoice = $applied;
 
         // Fully covered? Settle through the payment chain (fires InvoicePaid).
         if (app(PaymentService::class)->balance($invoice) <= 0.009) {
@@ -552,9 +569,9 @@ class InvoiceService
      * can offer the operator a choice of the rates the customer is eligible
      * for, with the default first.
      *
-     * @return \Illuminate\Support\Collection<int, TaxRule>
+     * @return Collection<int, TaxRule>
      */
-    public function taxRatesFor(Client $client): \Illuminate\Support\Collection
+    public function taxRatesFor(Client $client): Collection
     {
         $country = (string) $client->country;
         $state = (string) $client->state;

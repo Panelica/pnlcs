@@ -577,6 +577,8 @@ return [
         'title' => 'E-Mail-Verlauf',
     ],
     'invoices' => [
+        'pay_with_credit' => 'Mein Guthaben verwenden (:amount)',
+        'credit_applied' => 'Ihr Guthaben wurde auf diese Rechnung angerechnet.',
         'pn_amount_hint' => 'Geben Sie den überwiesenen Betrag in der Währung ein, in der Sie bezahlt haben. Dies entspricht :amount auf der Rechnung.',
         'pn_reported_in_billing' => 'Vom Kunden gemeldeter Betrag: :amount (Kurs :rate, Quelle :source).',
         'amount_paid' => 'Bezahlter Betrag',

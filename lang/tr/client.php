@@ -577,6 +577,8 @@ return [
         'title' => 'E-posta Geçmişi',
     ],
     'invoices' => [
+        'pay_with_credit' => 'Hesap bakiyemi kullan (:amount)',
+        'credit_applied' => 'Hesap bakiyeniz bu faturaya uygulandı.',
         'pn_amount_hint' => 'Havale ettiğiniz tutarı ödediğiniz para biriminde girin. Faturadaki karşılığı :amount.',
         'pn_reported_in_billing' => 'Müşterinin bildirdiği tutar: :amount (kur :rate, kaynak :source).',
         'amount_paid' => 'Ödenen Tutar',

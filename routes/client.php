@@ -219,6 +219,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::post('invoices/{invoice}/payment-notification', [InvoiceController::class, 'submitPaymentNotification'])->name('invoices.payment-notification');
+        Route::post('invoices/{invoice}/pay-with-credit', [InvoiceController::class, 'payWithCredit'])->name('invoices.pay-with-credit');
 
         // Quotes
         Route::get('quotes', [QuoteController::class, 'index'])->name('quotes.index');
