@@ -1,10 +1,13 @@
 <?php
 
 use App\Mail\ConfirmationCodeMail;
+use App\Models\Admin;
+use App\Models\AdminRole;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Email;
 use App\Models\EmailTemplate;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\SensitiveActionConfirmation;
 use Illuminate\Mail\Events\MessageSent;
@@ -22,6 +25,8 @@ use Illuminate\Support\Facades\Mail;
 
 function csaDomain(): array
 {
+    // The check is off by default; these tests are about it switched on.
+    Setting::set('ConfirmSensitiveActions', '1');
     $user = User::factory()->create(['email' => 'owner@example.test']);
     $client = Client::factory()->create();
     $user->clients()->attach($client->id);
@@ -120,4 +125,22 @@ it('still sends the code when its template is switched off', function () {
     test()->actingAs($user)->post(route('client.confirm.send'))->assertRedirect(route('client.confirm.show'));
 
     expect($sent->getArrayCopy())->toBe(['owner@example.test']);
+});
+
+it('changes nothing while the operator has not switched it on', function () {
+    [$user, $domain] = csaDomain();
+    Setting::set('ConfirmSensitiveActions', '0');
+
+    test()->actingAs($user)->getJson(route('client.domains.epp', $domain))->assertOk();
+    test()->actingAs($user)->get(route('client.domains.epp', $domain))->assertRedirect(route('client.domains.show', $domain));
+});
+
+it('is switched on and off from the settings form', function () {
+    $admin = Admin::factory()->create(['role_id' => AdminRole::factory()->create(['name' => 'S', 'permissions' => ['manage_settings']])->id]);
+    Setting::set('ConfirmSensitiveActions', '0');
+
+    test()->actingAs($admin, 'admin')->get(route('admin.settings.general'))->assertOk()->assertSee('name="ConfirmSensitiveActions"', false);
+    test()->actingAs($admin, 'admin')->post(route('admin.settings.general.update'), ['ConfirmSensitiveActions' => '1'])->assertRedirect();
+
+    expect(SensitiveActionConfirmation::enabled())->toBeTrue();
 });

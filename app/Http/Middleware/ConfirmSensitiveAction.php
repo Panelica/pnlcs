@@ -19,7 +19,7 @@ class ConfirmSensitiveAction
         $user = $request->user();
         $confirmation = app(SensitiveActionConfirmation::class);
 
-        if (! $user || $confirmation->confirmed($user)) {
+        if (! SensitiveActionConfirmation::enabled() || ! $user || $confirmation->confirmed($user)) {
             return $next($request);
         }
 

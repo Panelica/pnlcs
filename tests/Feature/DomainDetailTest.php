@@ -118,10 +118,7 @@ test('user can toggle auto-renew', function () {
 test('epp code endpoint returns json for own domain', function () {
     [$user, $client, $domain] = makeDomainClient();
 
-    // Confirmed just now with the emailed code (ConfirmSensitiveActionTest).
-    $response = $this->actingAs($user)
-        ->withSession(['sensitive_confirmed' => ['user' => $user->id, 'at' => now()->getTimestamp()]])
-        ->getJson(route('client.domains.epp', $domain));
+    $response = $this->actingAs($user)->getJson(route('client.domains.epp', $domain));
     $response->assertStatus(200);
     $response->assertJsonStructure(['epp_code']);
 });

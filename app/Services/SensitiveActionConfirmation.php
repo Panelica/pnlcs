@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\Mail;
  * the person also holds the mailbox. Logins opened through Google have no
  * password, so the check is the mailbox for everyone.
  *
- * Once confirmed, the session stays confirmed for WINDOW_MINUTES.
+ * Once confirmed, the session stays confirmed for WINDOW_MINUTES. Off by
+ * default: the operator switches it on in Settings.
  */
 class SensitiveActionConfirmation
 {
@@ -25,6 +26,12 @@ class SensitiveActionConfirmation
     public const CODE_MINUTES = 10;
 
     public const MAX_ATTEMPTS = 5;
+
+    /** Whether the operator switched the check on (Settings > Account protection). */
+    public static function enabled(): bool
+    {
+        return (string) \App\Models\Setting::get('ConfirmSensitiveActions', '0') === '1';
+    }
 
     public function confirmed(User $user): bool
     {

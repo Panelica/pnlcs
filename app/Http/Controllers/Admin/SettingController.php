@@ -94,6 +94,8 @@ class SettingController extends Controller
         // Google reCAPTCHA, read through App\Services\RecaptchaService: one
         // switch per guarded form (contact, signed-in ticket form, account
         // opening, sign-in, password reset) and one pair of keys they share.
+        // An emailed code before a domain's transfer code or lock (off by default).
+        'ConfirmSensitiveActions',
         'RecaptchaEnabled', 'RecaptchaTicketsEnabled', 'RecaptchaSignupEnabled', 'RecaptchaLoginEnabled', 'RecaptchaPasswordEnabled', 'RecaptchaSiteKey', 'RecaptchaSecretKey',
         'EmailVerificationRequired',
         // Seller identity beyond the basics: what a contract, an official

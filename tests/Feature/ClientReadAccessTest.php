@@ -87,11 +87,7 @@ test('a customer cannot read another customer records', function () {
     $leaked = [];
 
     foreach ($reads as $label => $url) {
-        $response = $this->actingAs($intruder)
-            // Confirmed just now (emailed code), so what is tested is the
-            // ownership check, not the confirmation in front of it.
-            ->withSession(['sensitive_confirmed' => ['user' => $intruder->id, 'at' => now()->getTimestamp()]])
-            ->get($url);
+        $response = $this->actingAs($intruder)->get($url);
 
         if (! in_array($response->status(), [403, 404], true)) {
             $leaked[] = $label.' → HTTP '.$response->status();
