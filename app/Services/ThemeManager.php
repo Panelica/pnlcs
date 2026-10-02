@@ -182,24 +182,56 @@ class ThemeManager
 
         $destPath = $this->themesPath . '/' . $slug;
 
-        // Extract to temp, then move
-        $tmpExtract = sys_get_temp_dir() . '/pnlcs_theme_' . uniqid();
-        $zip->extractTo($tmpExtract);
+        // The themes folder has to take the files at all. Without this the
+        // upload "succeeded" and the theme never appeared.
+        if (!is_dir($this->themesPath) || !is_writable($this->themesPath)) {
+            $zip->close();
+            return ['success' => false, 'message' => __('messages.theme.not_writable')];
+        }
+
+        // Extract next to the themes, on the same filesystem, so putting the
+        // theme in place is a rename. Extracting to the system temp folder
+        // and moving from there failed wherever the two are different
+        // filesystems (a container's /tmp and a mounted volume) - silently.
+        $work = $this->themesPath . '/.pnlcs_install_' . uniqid();
+        $extracted = $zip->extractTo($work);
         $zip->close();
 
         // The actual files may be nested inside a folder
-        $sourceDir = $tmpExtract;
-        if ($rootPrefix) {
-            $sourceDir = $tmpExtract . '/' . rtrim($rootPrefix, '/');
+        $sourceDir = $rootPrefix ? $work . '/' . rtrim($rootPrefix, '/') : $work;
+
+        if (!$extracted || !is_file($sourceDir . '/theme.json')) {
+            File::deleteDirectory($work);
+            return ['success' => false, 'message' => __('messages.theme.install_failed')];
         }
 
-        // Remove old version if exists
+        // The version already installed is set aside, not deleted, until the
+        // new one is in place: a failed install must not leave no theme.
+        $previous = null;
         if (is_dir($destPath)) {
-            File::deleteDirectory($destPath);
+            $previous = $this->themesPath . '/.pnlcs_previous_' . $slug . '_' . uniqid();
+            if (!@rename($destPath, $previous)) {
+                File::deleteDirectory($work);
+                return ['success' => false, 'message' => __('messages.theme.install_failed')];
+            }
         }
 
-        File::moveDirectory($sourceDir, $destPath);
-        File::deleteDirectory($tmpExtract);
+        $placed = @rename($sourceDir, $destPath)
+            || (File::copyDirectory($sourceDir, $destPath) && is_file($destPath . '/theme.json'));
+
+        if (!$placed) {
+            File::deleteDirectory($destPath);
+            if ($previous !== null) {
+                @rename($previous, $destPath);
+            }
+            File::deleteDirectory($work);
+            return ['success' => false, 'message' => __('messages.theme.install_failed')];
+        }
+
+        File::deleteDirectory($work);
+        if ($previous !== null) {
+            File::deleteDirectory($previous);
+        }
 
         return ['success' => true, 'slug' => $slug, 'name' => $themeJson['name'] ?? $slug];
     }

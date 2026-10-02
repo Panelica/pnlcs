@@ -418,6 +418,8 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
     'theme.cannot_delete_builtin' => 'Nie można usunąć wbudowanych motywów.',
     'theme.cannot_overwrite_builtin' => 'Nie można nadpisać wbudowanych motywów.',
     'theme.invalid_slug' => 'Nieprawidłowy identyfikator motywu.',
+    'theme.not_writable' => 'Serwer WWW nie może zapisywać w folderze motywów. Poproś administratora o nadanie uprawnień do zapisu.',
+    'theme.install_failed' => 'Nie udało się zainstalować motywu. Nic nie zostało zmienione.',
     'theme.invalid_theme_json' => 'Nieprawidłowy plik theme.json: brakuje identyfikatora.',
     'theme.invalid_zip' => 'Nieprawidłowy plik ZIP.',
     'theme.no_theme_json' => 'W pliku ZIP nie znaleziono pliku theme.json.',
