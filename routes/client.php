@@ -272,6 +272,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
         Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
         Route::post('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
+        Route::post('tickets/{ticket}/feedback', [TicketController::class, 'feedback'])->middleware('throttle:10,1')->name('tickets.feedback');
         Route::get('tickets/{ticket}/attachment', [TicketController::class, 'downloadAttachment'])->name('tickets.attachment');
         Route::get('tickets/{ticket}/reply/{replyId}/attachment', [TicketController::class, 'downloadAttachment'])->name('tickets.reply.attachment');
 

@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => 'Restore :domain at the registrar',
     'domains.restore_todo_desc' => 'The customer paid the restore invoice #:invoice. Registrar: :registrar. Restore the domain, then check its dates.',
     'affiliates.code_label' => 'Personal link code',
+    'tickets.feedback' => 'Customer rating',
+    'tickets.feedback_rating' => 'Rated :rating out of 5',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',

@@ -53,6 +53,12 @@ class Ticket extends Model
         return $this->hasMany(TicketNote::class);
     }
 
+    /** The customer's rating once the ticket was closed. */
+    public function feedback()
+    {
+        return $this->hasOne(TicketFeedback::class);
+    }
+
     public function scopeOpen($q)
     {
         return $q->where('status', 'open');

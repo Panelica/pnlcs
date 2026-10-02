@@ -65,6 +65,36 @@
 </div>
 @endforeach
 
+{{-- Closed: how did we do? One rating per ticket. --}}
+@if(strtolower($ticket->status) === 'closed')
+<div class="pn-card mt-24">
+    <div class="pn-card-header"><span class="pn-card-title">{{ __('client.tickets.feedback_title') }}</span></div>
+    <div class="pn-card-body">
+        @if($ticket->feedback)
+        <p style="margin:0;">{{ __('client.tickets.feedback_given', ['rating' => $ticket->feedback->rating]) }}</p>
+        @if($ticket->feedback->comments)<p class="text-muted text-sm" style="margin:6px 0 0;">{{ $ticket->feedback->comments }}</p>@endif
+        @else
+        <form method="POST" action="{{ route('client.tickets.feedback', $ticket) }}">
+            @csrf
+            <fieldset style="border:0;padding:0;margin:0 0 12px;">
+                <legend class="form-label">{{ __('client.tickets.feedback_question') }}</legend>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    @foreach([1, 2, 3, 4, 5] as $score)
+                    <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="rating" value="{{ $score }}" required> {{ __('client.tickets.feedback_score_'.$score) }}</label>
+                    @endforeach
+                </div>
+            </fieldset>
+            <div class="form-group">
+                <label class="form-label" for="fb-comments">{{ __('client.tickets.feedback_comments') }}</label>
+                <textarea id="fb-comments" name="comments" rows="3" maxlength="2000" class="form-control"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('client.tickets.feedback_send') }}</button>
+        </form>
+        @endif
+    </div>
+</div>
+@endif
+
 {{-- Reply form --}}
 @if(strtolower($ticket->status) !== 'closed')
 <div class="pn-card mt-24">

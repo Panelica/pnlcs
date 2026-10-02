@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => 'Przywróć :domain u rejestratora',
     'domains.restore_todo_desc' => 'Klient opłacił fakturę za przywrócenie #:invoice. Rejestrator: :registrar. Przywróć domenę, a potem sprawdź jej daty.',
     'affiliates.code_label' => 'Osobisty kod linku',
+    'tickets.feedback' => 'Ocena klienta',
+    'tickets.feedback_rating' => ':rating z 5',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

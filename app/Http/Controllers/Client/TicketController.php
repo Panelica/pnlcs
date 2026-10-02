@@ -116,7 +116,7 @@ class TicketController extends Controller
     public function show(Ticket $ticket)
     {
         abort_if($ticket->client_id !== $this->getClientId(), 403);
-        $ticket->load('department', 'replies');
+        $ticket->load('department', 'replies', 'feedback');
 
         return view('client.tickets.show', compact('ticket'));
     }
@@ -138,6 +138,31 @@ class TicketController extends Controller
 
         return redirect()->route('client.tickets.show', $ticket)
             ->with('success', __('messages.success.ticket_closed'));
+    }
+
+    /**
+     * Rate a closed ticket, once: 1 to 5 and an optional comment. The Support
+     * reports read these; nothing used to write them.
+     */
+    public function feedback(Request $request, Ticket $ticket)
+    {
+        abort_if($ticket->client_id !== $this->getClientId(), 403);
+
+        if (strtolower((string) $ticket->status) !== 'closed' || $ticket->feedback()->exists()) {
+            return back()->with('error', __('client.tickets.feedback_not_available'));
+        }
+
+        $validated = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comments' => 'nullable|string|max:2000',
+        ]);
+
+        $ticket->feedback()->create([
+            'rating' => $validated['rating'],
+            'comments' => $validated['comments'] ?? null,
+        ]);
+
+        return back()->with('success', __('client.tickets.feedback_thanks'));
     }
 
     public function reply(Request $request, Ticket $ticket)
