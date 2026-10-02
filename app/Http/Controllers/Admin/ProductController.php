@@ -334,6 +334,12 @@ class ProductController extends Controller
             'sslModules' => app(ModuleRegistry::class)->sslModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => $this->packagesFor($product->server_type),
+            // Upgrade packages: only products the same module provisions,
+            // the only moves UpgradeService::canMoveTo() allows anyway.
+            'upgradeCandidates' => Product::where('id', '!=', $product->id)
+                ->whereRaw('LOWER(COALESCE(server_type, \'\')) = ?', [strtolower((string) $product->server_type)])
+                ->orderBy('group_id')->orderBy('name')->get(['id', 'name', 'group_id', 'hidden', 'retired']),
+            'selectedUpgrades' => $product->upgradeProducts()->pluck('products.id')->map(fn ($id) => (int) $id)->all(),
             'proxmoxServers' => Server::where('type', 'proxmox')->orderByDesc('active')->orderBy('name')->get(['id', 'name', 'active']),
             'pveOrderOptions' => strtolower((string) $product->server_type) === 'proxmox' ? \Modules\Servers\Proxmox\ProxmoxOrderOptions::linked($product) : [],
             'selectedPackage' => (string) ($this->productConfig($product)['package_name']
@@ -366,8 +372,10 @@ class ProductController extends Controller
             'pricing' => 'nullable|array',
             'pricing.*' => 'nullable|array',
             'pricing.*.*' => 'nullable|numeric|min:-1',
+            'upgrade_paths' => 'nullable|array',
+            'upgrade_paths.*' => 'integer|exists:products,id',
         ]);
-        unset($validated['pricing']);
+        unset($validated['pricing'], $validated['upgrade_paths']);
 
         // Checked before anything is saved, so a bad Proxmox field does not
         // leave the product half updated.
@@ -381,6 +389,19 @@ class ProductController extends Controller
         $validated['retired'] = $request->boolean('retired');
         $validated['is_featured'] = $request->boolean('is_featured');
         $product->update($validated);
+
+        // Upgrade packages, when the form carried the field. Only products of
+        // the product's (possibly just changed) module are kept: a path to
+        // another module could never be taken.
+        if ($request->boolean('upgrade_paths_section')) {
+            $module = strtolower((string) $product->fresh()->server_type);
+            $ids = Product::whereIn('id', (array) $request->input('upgrade_paths', []))
+                ->where('id', '!=', $product->id)
+                ->get(['id', 'server_type'])
+                ->filter(fn (Product $p) => strtolower((string) $p->server_type) === $module)
+                ->pluck('id')->all();
+            $product->upgradeProducts()->sync($ids);
+        }
 
         // The plan the product sells, in the one key every module reads.
         if ($request->has('package_name')) {

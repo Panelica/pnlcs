@@ -110,6 +110,15 @@ class Product extends Model
         return $this->belongsToMany(ConfigOptionGroup::class, 'config_option_links', 'product_id', 'group_id');
     }
 
+    /**
+     * The packages the operator lets this one move to (product_upgrade_paths).
+     * Empty means no list was set: any package of the same module.
+     */
+    public function upgradeProducts()
+    {
+        return $this->belongsToMany(Product::class, 'product_upgrade_paths', 'product_id', 'upgrade_product_id')->withTimestamps();
+    }
+
     public function scopeActive($q)
     {
         return $q->where('hidden', false)->where('retired', false);

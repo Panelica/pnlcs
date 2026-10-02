@@ -56,6 +56,46 @@ class UpgradeService
     }
 
     /**
+     * Whether a service can be moved onto this product at all.
+     *
+     * A package change is carried out by the service's own provisioning
+     * module, so the new product has to be provisioned by the same one. The
+     * upgrade screen offered every active product, so a shared-hosting
+     * customer could pick a VPS: the hosting module was asked to apply a VPS
+     * plan it knows nothing about, the change failed at the server, and
+     * billing - which is authoritative in apply() - moved the service onto
+     * the VPS price anyway.
+     *
+     * Within the module, the operator may name the packages a product can
+     * move to (Admin > Products > Upgrade packages). When they have, only
+     * those; when they have not, any package of the same module, so an
+     * install without a list keeps offering upgrades.
+     */
+    public function canMoveTo(Service $service, Product $newProduct): bool
+    {
+        $service->loadMissing('product');
+        $current = $service->product;
+
+        if (! $current || strtolower((string) $current->server_type) !== strtolower((string) $newProduct->server_type)) {
+            return false;
+        }
+
+        $paths = $this->upgradePathIds($current);
+
+        return $paths === [] || in_array((int) $newProduct->id, $paths, true);
+    }
+
+    /** @var array<int, list<int>> per request, so the upgrade screen asks once per product */
+    private array $pathCache = [];
+
+    /** @return list<int> */
+    private function upgradePathIds(Product $product): array
+    {
+        return $this->pathCache[$product->id] ??= $product->upgradeProducts()
+            ->pluck('products.id')->map(fn ($id) => (int) $id)->all();
+    }
+
+    /**
      * Move a service onto another package, the way the client area does it.
      *
      * A positive prorated difference is invoiced and applied when that invoice
@@ -82,6 +122,10 @@ class UpgradeService
 
         if ((int) $newProduct->id === (int) $service->product_id) {
             return $refuse(__('messages.error.already_on_this_product'));
+        }
+
+        if (! $this->canMoveTo($service, $newProduct)) {
+            return $refuse(__('client.cart.product_unavailable'));
         }
 
         // r119-pending: one move at a time. Nothing used to check, so a second
