@@ -61,7 +61,10 @@ class DomainController extends Controller
         $restoreAmount = $restore->offered($domain)
             ? round((float) $domain->recurring_amount + (float) $restore->restorePrice($domain), 2) : null;
 
-        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount'));
+        // Whether the customer can switch WHOIS privacy from here.
+        $canTogglePrivacy = $module instanceof \App\Contracts\ManagesWhoisPrivacy && strtolower((string) $domain->status) === 'active';
+
+        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount', 'canTogglePrivacy'));
     }
 
     /**
@@ -158,6 +161,38 @@ class DomainController extends Controller
 
         return redirect()->route('client.domains.show', $domain)
             ->with('success', $locked ? __('messages.success.domain_unlocked') : __('messages.success.domain_locked'));
+    }
+
+    /**
+     * Switch WHOIS privacy on or off at the registrar, and record it once the
+     * registrar has done it. The page showed the setting but nothing could
+     * change it.
+     */
+    public function togglePrivacy(Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+
+        $module = $this->registrarFor($domain);
+        if (! $module instanceof \App\Contracts\ManagesWhoisPrivacy || strtolower((string) $domain->status) !== 'active') {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.privacy_unavailable'));
+        }
+
+        $enable = ! $domain->id_protection;
+        try {
+            $result = $module->setPrivacy($domain, $enable);
+        } catch (\Throwable $e) {
+            Log::error("WHOIS privacy change failed for {$domain->domain}: {$e->getMessage()}");
+            $result = ['success' => false];
+        }
+
+        if (! ($result['success'] ?? false)) {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.privacy_failed'));
+        }
+
+        $domain->update(['id_protection' => $enable]);
+
+        return redirect()->route('client.domains.show', $domain)
+            ->with('success', $enable ? __('client.domains.privacy_on') : __('client.domains.privacy_off'));
     }
 
     /**

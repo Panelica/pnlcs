@@ -3,6 +3,7 @@
 namespace Modules\Registrars\DomainNameApi;
 
 use App\Contracts\ChecksAvailabilityInBulk;
+use App\Contracts\ManagesWhoisPrivacy;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\RestorableRegistrar;
 use App\Contracts\SyncsDomainData;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Log;
  * module can answer for .dev and .app: Google Registry runs no port-43 WHOIS
  * server for them, so a whois-based lookup cannot.
  */
-class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModuleInterface, RestorableRegistrar, SyncsDomainData
+class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesWhoisPrivacy, RegistrarModuleInterface, RestorableRegistrar, SyncsDomainData
 {
     /** Dialling codes for the countries this reseller actually sells into. */
     private const DIAL_CODES = [
@@ -367,6 +368,18 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, RegistrarModul
         ]);
 
         return $this->ok($response);
+    }
+
+    public function setPrivacy(Domain $domain, bool $enabled): array
+    {
+        $response = $this->call('POST', 'domains/privacy', [
+            'domainName' => $domain->domain,
+            'privacyStatus' => $enabled,
+        ]);
+
+        return $this->ok($response)
+            ? ['success' => true, 'message' => '']
+            : ['success' => false, 'message' => $this->errorOf($response, 'Privacy could not be changed.')];
     }
 
     // ---------------------------------------------------------------- helpers

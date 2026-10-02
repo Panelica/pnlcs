@@ -53,7 +53,14 @@
                         <button type="submit" class="btn btn-default btn-xs">{{ $domain->auto_renew ? __('client.domains.turn_off') : __('client.domains.turn_on') }}</button>
                     </form>
                 </dd></div>
-                <div class="detail-row"><dt>{{ __('client.domains.id_protection') }}</dt><dd>{{ ($domain->id_protection ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}</dd></div>
+                <div class="detail-row"><dt>{{ __('client.domains.id_protection') }}</dt><dd>{{ ($domain->id_protection ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}
+                    @if($canTogglePrivacy ?? false)
+                    <form method="POST" action="{{ route('client.domains.privacy', $domain) }}" style="display:inline;margin-left:8px;">
+                        @csrf
+                        <button type="submit" class="btn btn-default btn-xs">{{ $domain->id_protection ? __('client.domains.turn_off') : __('client.domains.turn_on') }}</button>
+                    </form>
+                    @endif
+                </dd></div>
                 <div class="detail-row"><dt>{{ __('client.domains.registrar_lock') }}</dt><dd>{{ $locked === null ? __('client.status.unknown') : ($locked ? __("client.status.locked") : __("client.status.unlocked")) }}</dd></div>
             </dl>
         </div>
