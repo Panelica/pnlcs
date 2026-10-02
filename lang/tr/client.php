@@ -813,6 +813,10 @@ return [
     'services' => [
         'all_types' => 'Tüm türler',
         'renew_now' => 'Şimdi yenile',
+        'change_cycle' => 'Dönemi değiştir',
+        'cycle_not_available' => 'Bu hizmet o ödeme dönemine geçemez.',
+        'cycle_invoice_open' => 'Önce bu hizmetin açık yenileme faturasını ödeyin ya da iptal ettirin, sonra dönemi değiştirin.',
+        'cycle_changed' => 'Tamam: bir sonraki yenilemeden (:date) itibaren hizmet :cycle faturalanacak.',
         'renew_not_available' => 'Bu hizmet için yenileme yapılamıyor.',
         'addons' => 'Eklentiler',
         'amount' => 'Tutar',

@@ -82,7 +82,11 @@ class ServiceController extends Controller
         // Offered where renew() would raise an invoice.
         $canRenewEarly = in_array(strtolower((string) $service->status), ['active', 'suspended'], true) && (float) $service->amount > 0;
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly'));
+        // Other billing cycles this service can move to, with their amounts.
+        $cycleOptions = strtolower((string) $service->status) === 'active'
+            ? app(\App\Services\BillingCycleChange::class)->options($service) : [];
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions'));
     }
 
     /** Order an addon for a running service; it starts once its invoice is paid. */
@@ -348,6 +352,22 @@ class ServiceController extends Controller
         }
 
         return redirect()->route('client.invoices.show', $invoice);
+    }
+
+    /**
+     * Move the service to another billing cycle from its next renewal.
+     *
+     * Only the admin could, by editing the service: a customer who wanted to
+     * pay yearly instead of monthly (and get the yearly price) had to ask.
+     */
+    public function changeCycle(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $request->validate(['billing_cycle' => 'required|string|max:20']);
+        $result = app(\App\Services\BillingCycleChange::class)->change($service, (string) $request->input('billing_cycle'));
+
+        return back()->with($result['ok'] ? 'success' : 'error', $result['message']);
     }
 
     public function toggleAutoRenew(Request $request, Service $service)

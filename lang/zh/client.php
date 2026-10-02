@@ -813,6 +813,10 @@ return [
     'services' => [
         'all_types' => '所有类型',
         'renew_now' => '立即续费',
+        'change_cycle' => '更改周期',
+        'cycle_not_available' => '此服务无法更改为该计费周期。',
+        'cycle_invoice_open' => '请先支付或取消此服务未结的续费发票，然后再更改周期。',
+        'cycle_changed' => '完成：从下次续费（:date）起，此服务按:cycle计费。',
         'renew_not_available' => '此服务无法续费。',
         'addons' => '附加项',
         'amount' => '金额',

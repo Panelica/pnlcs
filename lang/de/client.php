@@ -813,6 +813,10 @@ return [
     'services' => [
         'all_types' => 'Alle Arten',
         'renew_now' => 'Jetzt verlängern',
+        'change_cycle' => 'Zeitraum ändern',
+        'cycle_not_available' => 'Dieser Dienst kann nicht auf diesen Abrechnungszeitraum wechseln.',
+        'cycle_invoice_open' => 'Bezahlen oder stornieren Sie zuerst die offene Verlängerungsrechnung für diesen Dienst und ändern Sie dann den Zeitraum.',
+        'cycle_changed' => 'Erledigt: Ab der nächsten Verlängerung (:date) wird der Dienst :cycle abgerechnet.',
         'renew_not_available' => 'Für diesen Dienst ist keine Verlängerung möglich.',
         'addons' => 'Add-ons',
         'amount' => 'Betrag',
