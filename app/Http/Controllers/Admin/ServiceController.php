@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Enums\ServiceStatus;
+use App\Models\ActivityLog;
+use App\Models\Domain;
+use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Services\AddonService;
+use App\Services\BillingCycleChange;
 use App\Services\ProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -42,7 +46,11 @@ class ServiceController extends Controller
             $reinstallChoices = \Modules\Servers\Proxmox\ProxmoxPlan::forService($service)->reinstallChoices();
         }
 
-        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices'));
+        // For the edit form.
+        $products = Product::orderBy('name')->get(['id', 'name', 'server_type']);
+        $cycles = self::cyclesFor($service);
+
+        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles'));
     }
 
     /**
@@ -128,6 +136,70 @@ class ServiceController extends Controller
      * status flag (and the relevant date) on the record; it does not talk to the
      * server module. Use the module actions for that.
      */
+    /** The cycles orders write, plus whatever the service already carries so saving never rewrites it. */
+    private static function cyclesFor(Service $service): array
+    {
+        $cycles = array_values(BillingCycleChange::CYCLES);
+        if ($service->billing_cycle && ! in_array($service->billing_cycle, $cycles, true)) {
+            array_unshift($cycles, (string) $service->billing_cycle);
+        }
+
+        return $cycles;
+    }
+
+    /**
+     * Edit a service's record: product, domain, username, billing cycle,
+     * recurring amount, a "do not suspend until" date and notes.
+     *
+     * The page could only change the due date and the status; everything
+     * else needed the API or the database.
+     */
+    public function update(Request $request, Service $service)
+    {
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            // The name the server module creates the account for.
+            'domain' => ['nullable', 'string', 'max:253', function ($attribute, $value, $fail) {
+                if (! filter_var($value, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) || ! str_contains((string) $value, '.')) {
+                    $fail(__('admin.services.domain_invalid'));
+                }
+            }],
+            'username' => 'nullable|string|max:255',
+            'billing_cycle' => ['required', Rule::in(self::cyclesFor($service))],
+            'amount' => 'required|numeric|min:0|max:99999999',
+            'override_auto_suspend_date' => 'nullable|date',
+            'notes' => 'nullable|string|max:20000',
+        ]);
+
+        $newProduct = (int) $validated['product_id'] !== (int) $service->product_id ? Product::find($validated['product_id']) : null;
+
+        // A service that has an account on a server moves through the module,
+        // so the account is resized too; if the server refuses, nothing is
+        // changed. Without an account (pending, terminated, or no module) the
+        // record is all there is.
+        if ($newProduct && $service->product?->server_type && in_array($service->status, [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)) {
+            $result = $this->provisioning->changePackage($service, $newProduct);
+            if (! ($result['success'] ?? false)) {
+                return back()->withInput()->with('error', __('admin.services.package_change_failed', ['message' => $result['message'] ?? '']));
+            }
+        } elseif ($newProduct) {
+            $service->product_id = $newProduct->id;
+        }
+
+        $service->fill([
+            'domain' => $validated['domain'] !== null ? (Domain::normalise($validated['domain']) ?: null) : null,
+            'username' => $validated['username'],
+            'billing_cycle' => $validated['billing_cycle'],
+            'amount' => $validated['amount'],
+            'override_auto_suspend_date' => $validated['override_auto_suspend_date'],
+            'notes' => $validated['notes'],
+        ])->save();
+
+        ActivityLog::log("Service #{$service->id} edited", auth('admin')->user()->username, $service->client_id);
+
+        return back()->with('success', __('admin.services.service_saved'));
+    }
+
     public function updateStatus(Request $request, Service $service)
     {
         $validated = $request->validate([

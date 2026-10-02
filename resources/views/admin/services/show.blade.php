@@ -93,6 +93,43 @@
     </div>
 </div>
 
+{{-- Edit the service's record. --}}
+<details class="card" style="margin-bottom:15px;" @if($errors->any()) open @endif>
+    <summary class="card-header" style="cursor:pointer;"><strong>{{ __('admin.services.edit_service') }}</strong></summary>
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.services.update', $service) }}">
+            @csrf @method('PUT')
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;font-size:13px;">
+                <label>{{ __('admin.services.product') }}
+                    <select name="product_id" class="form-control">
+                        @foreach($products as $p)
+                        <option value="{{ $p->id }}" @selected((int) old('product_id', $service->product_id) === $p->id)>{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                    <small style="color:#777;">{{ __('admin.services.product_hint') }}</small></label>
+                <label>{{ __('admin.services.domain') }}
+                    <input type="text" name="domain" value="{{ old('domain', $service->domain) }}" class="form-control"></label>
+                <label>{{ __('admin.services.username') }}
+                    <input type="text" name="username" value="{{ old('username', $service->username) }}" class="form-control"></label>
+                <label>{{ __('admin.services.billing_cycle') }}
+                    <select name="billing_cycle" class="form-control">
+                        @foreach($cycles as $cycle)
+                        <option value="{{ $cycle }}" @selected(old('billing_cycle', $service->billing_cycle) === $cycle)>{{ $cycle }}</option>
+                        @endforeach
+                    </select></label>
+                <label>{{ __('admin.services.recurring_amount') }}
+                    <input type="number" step="0.01" min="0" name="amount" value="{{ old('amount', $service->amount) }}" class="form-control"></label>
+                <label>{{ __('admin.services.no_suspend_until') }}
+                    <input type="date" name="override_auto_suspend_date" value="{{ old('override_auto_suspend_date', $service->override_auto_suspend_date ? \Illuminate\Support\Carbon::parse($service->override_auto_suspend_date)->format('Y-m-d') : '') }}" class="form-control">
+                    <small style="color:#777;">{{ __('admin.services.no_suspend_hint') }}</small></label>
+            </div>
+            <label style="display:block;margin-top:12px;font-size:13px;">{{ __('admin.services.notes') }}
+                <textarea name="notes" rows="3" class="form-control">{{ old('notes', $service->notes) }}</textarea></label>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:10px;">{{ __('admin.services.save') }}</button>
+        </form>
+    </div>
+</details>
+
 @if($service->disk_limit > 0 || $service->bw_limit > 0)
 <div class="card" style="margin-bottom:15px;">
     <div class="card-header"><strong>{{ __('admin.services.resource_usage') }}</strong></div>
