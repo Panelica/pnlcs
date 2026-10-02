@@ -41,6 +41,8 @@ class PaymentReminderCommand extends Command
     {
         $invoices = Invoice::with('client')
             ->whereIn('status', [InvoiceStatus::Unpaid->value, InvoiceStatus::Overdue->value])
+            // The invoices a payment invoice lists are reminded of on their own.
+            ->where('type', '!=', \App\Services\MassPaymentService::TYPE)
             ->whereNotNull('due_date')
             ->get();
 

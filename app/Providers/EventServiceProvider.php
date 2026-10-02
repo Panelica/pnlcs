@@ -61,6 +61,7 @@ class EventServiceProvider extends ServiceProvider
             [AutoAcceptOrderListener::class, 'handleInvoicePaid'],
             [RenewOnPaymentListener::class, 'handleInvoicePaid'],
             [ApplyUpgradeListener::class, 'handleInvoicePaid'],
+            [\App\Listeners\SettleMassPaymentListener::class, 'handleInvoicePaid'],
             LogActivityListener::class,
         ],
         TicketOpened::class => [

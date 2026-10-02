@@ -583,6 +583,11 @@ return [
         'title' => 'Email History',
     ],
     'invoices' => [
+        'mass_pay' => 'Pay selected together',
+        'mass_pay_select' => 'Select',
+        'mass_pay_hint' => 'Tick the invoices to pay; one payment covers them all.',
+        'mass_pay_line' => 'Payment for invoice #:num',
+        'mass_pay_pick_two' => 'Pick at least two open invoices to pay together.',
         'pay_with_credit' => 'Use my account credit (:amount)',
         'credit_applied' => 'Your account credit was applied to this invoice.',
         'pn_amount_hint' => 'Enter the amount you transferred, in the currency you paid. This corresponds to :amount on the invoice.',

@@ -1721,6 +1721,9 @@ class AutoChargeService
             // as a special case for the mirror-image reason: an Add Funds
             // invoice must not be settled out of the balance it exists to fill.
             ->whereDoesntHave('items', fn ($q) => $q->where('type', 'AddFunds'))
+            // Nor a payment invoice for several invoices: those invoices are
+            // charged on their own, and charging both would take it twice.
+            ->where('type', '!=', \App\Services\MassPaymentService::TYPE)
 
             // The customer has to be trading, AND they have to want this.
             //
