@@ -369,6 +369,9 @@ return [
         'now' => 'Nyt',
         'order_hostname' => 'Palvelimen isäntänimi',
         'order_hostname_hint' => 'Nimi, jonka palvelin saa. Oma verkkotunnus, kuten example.com, sopii hyvin; voit jättää kentän tyhjäksi.',
+        'ssh_keys' => 'Julkiset SSH-avaimet',
+        'ssh_keys_hint' => 'Yksi avain riviä kohden OpenSSH-muodossa (.pub-tiedostosi sisältö). Ne lisätään palvelimelle, jotta voit kirjautua ilman salasanaa.',
+        'ssh_keys_invalid' => 'Tämä ei näytä julkiselta SSH-avaimelta. Liitä .pub-tiedostosi sisältö, yksi avain riviä kohden (enintään 10).',
     ],
 
     'reinstall_started' => 'Vierasta #:vmid asennetaan uudelleen. Tämä kestää muutaman minuutin; sivu näyttää, kun se on valmis.',

@@ -369,6 +369,9 @@ return [
         'now' => 'Praegu',
         'order_hostname' => 'Serveri hostinimi',
         'order_hostname_hint' => 'Nimi, mille server saab. Sobib sinu oma domeen, näiteks example.com; võid välja ka tühjaks jätta.',
+        'ssh_keys' => 'Avalikud SSH-võtmed',
+        'ssh_keys_hint' => 'Üks võti rea kohta OpenSSH-vormingus (teie .pub-faili sisu). Need lisatakse serverisse, et saaksite sisse logida ilma paroolita.',
+        'ssh_keys_invalid' => 'See ei näe välja nagu avalik SSH-võti. Kleepige oma .pub-faili sisu, üks võti rea kohta (kõige rohkem 10).',
     ],
 
     'reinstall_started' => 'Külalist #:vmid paigaldatakse uuesti. See võtab mõne minuti; leht näitab, kui valmis.',

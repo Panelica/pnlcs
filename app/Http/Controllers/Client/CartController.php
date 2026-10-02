@@ -96,6 +96,7 @@ class CartController extends Controller
             'addons.*' => 'integer',
             'app_slug' => 'nullable|string|max:100',
             'epp_code' => 'nullable|string|max:255',
+            'ssh_keys' => 'nullable|string|max:8000',
         ]);
 
         $product = Product::findOrFail($request->product_id);
@@ -118,6 +119,15 @@ class CartController extends Controller
                 $appSlug = $chosen;
             }
         }
+        // SSH keys for a virtual server, put on it when it is built.
+        $sshKeys = null;
+        if (strtolower((string) $product->server_type) === 'proxmox' && trim((string) $request->input('ssh_keys')) !== '') {
+            $sshKeys = \Modules\Servers\Proxmox\ProxmoxModule::normaliseSshKeys($request->input('ssh_keys'));
+            if ($sshKeys === null) {
+                throw ValidationException::withMessages(['ssh_keys' => __('proxmox.client.ssh_keys_invalid')]);
+            }
+        }
+
         // The same reading the search box gives it: a customer pastes an
         // address, and it used to be stored exactly as pasted.
         $domain = Domain::normalise($request->domain) ?: null;
@@ -152,7 +162,8 @@ class CartController extends Controller
             $request->input('notes'),
             $request->input('domain_option'),
             $request->input('addons', []),
-            $appSlug
+            $appSlug,
+            $sshKeys
         );
 
         // Already there when the customer found it on the search page first.

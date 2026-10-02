@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 use Modules\Servers\Proxmox\ProxmoxModule;
 use Modules\Servers\Proxmox\ProxmoxPlan;
 
@@ -71,10 +72,26 @@ trait ServesVps
             'image' => ['required', 'string', Rule::in($choices)],
             'password' => ['nullable', Password::min(10)->letters()->numbers()],
             'confirm' => ['required', 'string'],
+            'ssh_keys' => ['nullable', 'string', 'max:8000'],
         ]);
+
+        // The keys the fresh install is given; the form shows the current
+        // ones, so sending it back unchanged keeps them and emptying it
+        // removes them.
+        $sshKeys = null;
+        if ($request->has('ssh_keys')) {
+            $sshKeys = ProxmoxModule::normaliseSshKeys($request->input('ssh_keys'));
+            if ($sshKeys === null) {
+                throw ValidationException::withMessages(['ssh_keys' => __('proxmox.client.ssh_keys_invalid')]);
+            }
+        }
 
         if ($refused = $this->vpsConfirmRefused($request, $service)) {
             return $refused;
+        }
+
+        if ($sshKeys !== null) {
+            $module->setSshKeys($service, $sshKeys);
         }
 
         $password = (string) $request->input('password') ?: Str::password(16, symbols: false);

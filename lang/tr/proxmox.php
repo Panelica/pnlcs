@@ -369,6 +369,9 @@ return [
         'now' => 'Şimdi',
         'order_hostname' => 'Sunucu adı',
         'order_hostname_hint' => 'Sunucuya verilecek ad. Sahibi olduğunuz example.com gibi bir alan adı uygundur; boş da bırakabilirsiniz.',
+        'ssh_keys' => 'SSH açık anahtarları',
+        'ssh_keys_hint' => 'Her satıra bir anahtar, OpenSSH biçiminde (.pub dosyanızın içeriği). Şifresiz giriş yapabilmeniz için sunucuya eklenir.',
+        'ssh_keys_invalid' => 'Bu bir SSH açık anahtarına benzemiyor. .pub dosyanızın içeriğini yapıştırın, her satıra bir anahtar (en çok 10).',
     ],
 
     'reinstall_started' => '#:vmid numaralı sunucu yeniden kuruluyor. Bu birkaç dakika sürer; bittiğinde sayfada görünür.',

@@ -148,6 +148,12 @@ class OrderService
                         $service->update(['module_data' => $data]);
                     }
 
+                    // SSH keys for a virtual server: the Proxmox module puts
+                    // them on the machine when it builds it.
+                    if (! empty($item['ssh_keys'])) {
+                        $service->update(['module_data' => array_merge((array) $service->module_data, ['pve_sshkeys' => (string) $item['ssh_keys']])]);
+                    }
+
                     // Configurable options are already inside the service price;
                     // recording them is what lets the panel and the server
                     // module see what was ordered.

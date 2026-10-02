@@ -369,6 +369,9 @@ return [
         'now' => 'Nå',
         'order_hostname' => 'Serverens vertsnavn',
         'order_hostname_hint' => 'Navnet serveren får. Et domene du eier, som example.com, fungerer bra; du kan la feltet stå tomt.',
+        'ssh_keys' => 'Offentlige SSH-nøkler',
+        'ssh_keys_hint' => 'Én nøkkel per linje i OpenSSH-format (innholdet i .pub-filen din). De legges på serveren slik at du kan logge inn uten passord.',
+        'ssh_keys_invalid' => 'Dette ser ikke ut som en offentlig SSH-nøkkel. Lim inn innholdet i .pub-filen, én nøkkel per linje (høyst 10).',
     ],
 
     'reinstall_started' => 'Gjesten #:vmid installeres på nytt. Det tar noen minutter; siden viser når det er ferdig.',

@@ -369,6 +369,9 @@ return [
         'now' => 'Ara',
         'order_hostname' => 'Nom d\'amfitrió del servidor',
         'order_hostname_hint' => 'El nom que rep el servidor. Un domini vostre, com example.com, funciona bé; podeu deixar-lo buit.',
+        'ssh_keys' => 'Claus públiques SSH',
+        'ssh_keys_hint' => 'Una clau per línia, en format OpenSSH (el contingut del fitxer .pub). S\'afegeixen al servidor perquè hi pugueu entrar sense contrasenya.',
+        'ssh_keys_invalid' => 'Això no sembla una clau pública SSH. Enganxeu el contingut del fitxer .pub, una clau per línia (com a màxim 10).',
     ],
 
     'reinstall_started' => 'S\'està reinstal·lant el convidat #:vmid. Triga uns minuts; la pàgina mostrarà quan hagi acabat.',

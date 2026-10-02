@@ -369,6 +369,9 @@ return [
         'now' => 'Jetzt',
         'order_hostname' => 'Hostname des Servers',
         'order_hostname_hint' => 'Der Name, den der Server erhält. Eine eigene Domain wie example.com eignet sich gut; Sie können das Feld auch leer lassen.',
+        'ssh_keys' => 'Öffentliche SSH-Schlüssel',
+        'ssh_keys_hint' => 'Ein Schlüssel pro Zeile im OpenSSH-Format (der Inhalt Ihrer .pub-Datei). Sie werden auf dem Server hinterlegt, damit Sie sich ohne Passwort anmelden können.',
+        'ssh_keys_invalid' => 'Das sieht nicht wie ein öffentlicher SSH-Schlüssel aus. Fügen Sie den Inhalt Ihrer .pub-Datei ein, ein Schlüssel pro Zeile (höchstens 10).',
     ],
 
     'reinstall_started' => 'Gast #:vmid wird neu installiert. Das dauert einige Minuten; die Seite zeigt, wenn es fertig ist.',

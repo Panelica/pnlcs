@@ -369,6 +369,9 @@ return [
         'now' => 'İndi',
         'order_hostname' => 'Serverin host adı',
         'order_hostname_hint' => 'Serverə veriləcək ad. example.com kimi sizə məxsus domen yaxşıdır; boş da saxlaya bilərsiniz.',
+        'ssh_keys' => 'SSH açıq açarları',
+        'ssh_keys_hint' => 'Hər sətirdə bir açar, OpenSSH formatında (.pub faylınızın məzmunu). Parolsuz daxil ola bilməyiniz üçün serverə əlavə olunur.',
+        'ssh_keys_invalid' => 'Bu SSH açıq açarına oxşamır. .pub faylınızın məzmununu yapışdırın, hər sətirdə bir açar (ən çox 10).',
     ],
 
     'reinstall_started' => '#:vmid qonağı yenidən quraşdırılır. Bir neçə dəqiqə çəkir; bitdikdə səhifə göstərəcək.',

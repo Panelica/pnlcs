@@ -369,6 +369,9 @@ return [
         'now' => 'Most',
         'order_hostname' => 'A szerver gazdagépneve',
         'order_hostname_hint' => 'A szerver neve. Jól működik egy saját domain, például example.com; üresen is hagyhatja.',
+        'ssh_keys' => 'Nyilvános SSH-kulcsok',
+        'ssh_keys_hint' => 'Soronként egy kulcs, OpenSSH formátumban (a .pub fájl tartalma). A szerverre kerülnek, így jelszó nélkül léphet be.',
+        'ssh_keys_invalid' => 'Ez nem tűnik nyilvános SSH-kulcsnak. Illessze be a .pub fájl tartalmát, soronként egy kulcsot (legfeljebb 10-et).',
     ],
 
     'reinstall_started' => 'A(z) #:vmid vendég újratelepítése folyamatban. Néhány percig tart; az oldal jelzi, amikor elkészült.',

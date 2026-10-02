@@ -369,6 +369,9 @@ return [
         'now' => 'Acum',
         'order_hostname' => 'Numele de gazdă al serverului',
         'order_hostname_hint' => 'Numele dat serverului. Un domeniu propriu, precum example.com, merge bine; îl puteți lăsa gol.',
+        'ssh_keys' => 'Chei publice SSH',
+        'ssh_keys_hint' => 'O cheie pe rând, în format OpenSSH (conținutul fișierului .pub). Sunt adăugate pe server ca să vă puteți conecta fără parolă.',
+        'ssh_keys_invalid' => 'Aceasta nu pare o cheie publică SSH. Lipiți conținutul fișierului .pub, câte o cheie pe rând (cel mult 10).',
     ],
 
     'reinstall_started' => 'Oaspetele #:vmid se reinstalează. Durează câteva minute; pagina arată când s-a terminat.',
