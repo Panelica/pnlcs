@@ -288,11 +288,17 @@ class ServiceController extends Controller
             })
             ->values();
 
+        // The product's configurable options, to raise without changing product.
+        $optionGroups = strtolower((string) $service->status) === 'active'
+            ? app(\App\Services\ConfigOptionService::class)->groupsFor($service->product) : collect();
+
         return view('client.services.upgrade', [
             'service' => $service,
             'upgrades' => $availableProducts,
             'upgradePrices' => $prices,
             'upgradeCycle' => $cycle,
+            'optionGroups' => $optionGroups,
+            'currentOptions' => app(\App\Services\OptionUpgradeService::class)->current($service),
         ]);
     }
 
@@ -368,6 +374,23 @@ class ServiceController extends Controller
         $result = app(\App\Services\BillingCycleChange::class)->change($service, (string) $request->input('billing_cycle'));
 
         return back()->with($result['ok'] ? 'success' : 'error', $result['message']);
+    }
+
+    /** Raise the service's configurable options (OptionUpgradeService). */
+    public function processOptionUpgrade(Request $request, Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $result = app(\App\Services\OptionUpgradeService::class)->request($service, (array) $request->input('config_options', []));
+
+        if (! $result['success']) {
+            return back()->with('error', $result['message']);
+        }
+        if ($result['invoice']) {
+            return redirect()->route('client.invoices.show', $result['invoice']);
+        }
+
+        return redirect()->route('client.services.show', $service)->with('success', __('client.services.options_applied'));
     }
 
     public function toggleAutoRenew(Request $request, Service $service)
