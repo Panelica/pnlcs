@@ -2035,6 +2035,8 @@ return [
     'affiliates.code_label' => '个人链接代码',
     'affiliates.recurring_amount' => '续费佣金',
     'affiliates.recurring_amount_hint' => '适用于续费及其他非订单产生的发票。留空则与新销售相同；填 0 则续费不付佣金。',
+    'tickets.feedback' => '客户评分',
+    'tickets.feedback_rating' => '满分 5 分，得 :rating 分',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',
     'products.product_group' => '产品组',

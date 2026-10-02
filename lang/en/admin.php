@@ -2035,6 +2035,8 @@ return [
     'affiliates.code_label' => 'Personal link code',
     'affiliates.recurring_amount' => 'Renewal commission',
     'affiliates.recurring_amount_hint' => 'Paid on renewals and other invoices that did not come from an order. Leave empty to pay the same as on new sales; 0 pays nothing on renewals.',
+    'tickets.feedback' => 'Customer rating',
+    'tickets.feedback_rating' => 'Rated :rating out of 5',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',

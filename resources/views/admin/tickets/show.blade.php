@@ -52,6 +52,17 @@
 </div>
 @endforeach
 
+@if($ticket->feedback)
+{{-- The customer's rating of the closed ticket. --}}
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-header"><strong>{{ __('admin.tickets.feedback') }}</strong></div>
+    <div class="card-body" style="font-size:13px;">
+        <strong>{{ __('admin.tickets.feedback_rating', ['rating' => $ticket->feedback->rating]) }}</strong>
+        @if($ticket->feedback->comments)<div style="margin-top:6px;">{!! nl2br(e($ticket->feedback->comments)) !!}</div>@endif
+    </div>
+</div>
+@endif
+
 {{-- Reply Form --}}
 <div class="card" style="margin-bottom:15px;">
     <div class="card-header"><strong>{{ __('admin.tickets.add_reply') }}</strong></div>

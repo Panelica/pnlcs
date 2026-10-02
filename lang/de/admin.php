@@ -2035,6 +2035,8 @@ return [
     'affiliates.code_label' => 'Persönlicher Link-Code',
     'affiliates.recurring_amount' => 'Provision für Verlängerungen',
     'affiliates.recurring_amount_hint' => 'Gilt für Verlängerungen und andere Rechnungen, die nicht aus einer Bestellung stammen. Leer lassen für denselben Satz wie bei Neuverkäufen; 0 zahlt bei Verlängerungen nichts.',
+    'tickets.feedback' => 'Kundenbewertung',
+    'tickets.feedback_rating' => ':rating von 5',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',
     'products.product_group' => 'Produktgruppe',

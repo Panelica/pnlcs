@@ -2035,6 +2035,8 @@ return [
     'affiliates.code_label' => 'Osobisty kod linku',
     'affiliates.recurring_amount' => 'Prowizja od odnowień',
     'affiliates.recurring_amount_hint' => 'Naliczana od odnowień i innych faktur, które nie pochodzą z zamówienia. Puste pole oznacza tę samą stawkę co przy nowej sprzedaży; 0 oznacza brak prowizji od odnowień.',
+    'tickets.feedback' => 'Ocena klienta',
+    'tickets.feedback_rating' => ':rating z 5',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

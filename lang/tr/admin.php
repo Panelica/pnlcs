@@ -2016,6 +2016,8 @@ return [
     'affiliates.code_label' => 'Kişisel bağlantı kodu',
     'affiliates.recurring_amount' => 'Yenileme komisyonu',
     'affiliates.recurring_amount_hint' => 'Yenilemelerde ve siparişten gelmeyen öteki faturalarda ödenir. Boş bırakılırsa yeni satışla aynı oran uygulanır; 0 yenilemelerde komisyon ödemez.',
+    'tickets.feedback' => 'Müşteri puanı',
+    'tickets.feedback_rating' => '5 üzerinden :rating',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
     'products.product_group' => 'Ürün Grubu',
