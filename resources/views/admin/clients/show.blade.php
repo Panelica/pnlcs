@@ -171,6 +171,8 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;width:50%;">{{ __('admin.clients.status') }}</td><td style="padding:5px 0;"><span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.tax_exempt') }}</td><td style="padding:5px 0;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.created') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
+                    @php($consent = \App\Models\MarketingConsent::where('client_id', $client->id)->first())
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.marketing_consent') }}</td><td style="padding:5px 0;">@if($consent?->email_opt_in){{ __('admin.clients.marketing_yes', ['date' => $consent->consented_at?->format(date_fmt()) ?? '-', 'source' => $consent->source]) }}@elseif($consent){{ __('admin.clients.marketing_withdrawn', ['date' => $consent->withdrawn_at?->format(date_fmt()) ?? '-']) }}@else{{ __('admin.clients.marketing_no') }}@endif</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.last_login') }}</td><td style="padding:5px 0;">{{ $client->users->max('last_login')?->diffForHumans() ?? __('admin.clients.never') }}</td></tr>
                 </table>
             </div>

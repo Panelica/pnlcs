@@ -52,7 +52,9 @@ const GUARD_PUBLIC_CLIENT = [
     'client.password.request', 'client.password.email', 'client.password.reset',
     'client.password.update.reset',
     'client.contact', 'client.contact.submit',
-    'client.announcements.index', 'client.announcements.show', 'client.announcements.rss',
+    'client.announcements.index', 'client.announcements.show',
+    // The signed link at the foot of a marketing email (no sign-in by design).
+    'client.unsubscribe', 'client.unsubscribe.store', 'client.announcements.rss',
     'client.kb.index', 'client.kb.show',
     'client.network-status',
     'client.domain.pricing', 'client.domain.search', 'client.domain.check',

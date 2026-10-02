@@ -126,6 +126,12 @@
                     {{ __('client.auth.i_agree_to') }} <a href="#" class="link">{{ __('client.auth.terms_of_service') }}</a> {{ __('client.auth.and') }} <a href="#" class="link">{{ __('client.auth.privacy_policy') }}</a>.
                 </span>
             </label>
+            @guest
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px;font-size:13px;">
+                    <input type="checkbox" name="marketing_emails" value="1" @checked(old('marketing_emails')) style="margin-top:2px;flex-shrink:0;">
+                    <span>{{ __('client.marketing.signup_box') }}</span>
+                </label>
+            @endguest
         </div>
 
         <div>

@@ -33,6 +33,12 @@
             </div>
             <div class="form-group" style="margin-top:12px;"><label class="form-label">{{ __('common.form.subject') }}</label><input type="text" name="subject" required class="form-control" placeholder="{{ __('admin.bulk.email_subject_placeholder') }}"></div>
             <div class="form-group" style="margin-top:12px;"><label class="form-label">{{ __('common.form.message') }}</label><textarea name="message" required class="form-control" rows="6" placeholder="{{ __('admin.bulk.email_body_placeholder') }}"></textarea></div>
+            <div class="form-group" style="margin-top:8px;">
+                <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-weight:normal;">
+                    <input type="checkbox" name="marketing" value="1" style="margin-top:3px;">
+                    <span>{{ __('admin.bulk.marketing') }}<br><small style="color:#777;">{{ __('admin.bulk.marketing_hint') }}</small></span>
+                </label>
+            </div>
         </div>
         <div style="padding:12px 16px;border-top:1px solid #eee;text-align:right;">
             <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('{{ __('admin.bulk.confirm_send') }}')">{{ __('admin.bulk.send_mass_email') }}</button>
