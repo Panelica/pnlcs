@@ -442,6 +442,8 @@ return [
     'domain_search.unconfirmed' => 'unconfirmed',
     'domain_search.view_full_list' => 'View Full Pricing',
     'domains' => [
+        'renew_now' => 'Renew now',
+        'renew_not_available' => 'Renewal is not available for this domain.',
         'turn_on' => 'Turn on',
         'turn_off' => 'Turn off',
         'auto_renew' => 'Auto Renew',
@@ -798,6 +800,8 @@ return [
     'security.action' => 'Action',
     'services' => [
         'all_types' => 'All types',
+        'renew_now' => 'Renew now',
+        'renew_not_available' => 'Renewal is not available for this service.',
         'addons' => 'Add-ons',
         'amount' => 'Amount',
         'auto_renew' => 'Auto Renew',

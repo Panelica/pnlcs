@@ -175,7 +175,12 @@
             <li><span class="k">{{ __('client.cart.product') }}</span><span class="v">{{ $service->product?->name ?? '—' }}</span></li>
             <li><span class="k">{{ __('client.cart.billing_cycle') }}</span><span class="v" style="text-transform:capitalize">{{ $service->billing_cycle ?? '—' }}</span></li>
             <li><span class="k">{{ __('client.services.amount') }}</span><span class="v">{{ money_fmt($service->amount) }} / {{ $service->billing_cycle }}</span></li>
-            <li><span class="k">{{ __('client.services.next_due_date') }}</span><span class="v">{{ $service->next_due_date?->format(date_fmt()) ?? '—' }}</span></li>
+            <li><span class="k">{{ __('client.services.next_due_date') }}</span><span class="v">{{ $service->next_due_date?->format(date_fmt()) ?? '—' }}
+                @if($canRenewEarly ?? false)
+                <form method="POST" action="{{ route('client.services.renew', $service) }}" style="display:inline;margin-left:8px;">@csrf
+                    <button type="submit" class="btn btn-default btn-xs">{{ __('client.services.renew_now') }}</button>
+                </form>
+                @endif</span></li>
             <li><span class="k">{{ __('client.services.registration_date') }}</span><span class="v">{{ $service->registration_date?->format(date_fmt()) ?? '—' }}</span></li>
             <li><span class="k">{{ __('client.services.auto_renew') }}</span><span class="v">
                 <form method="POST" action="{{ route('client.services.autorenew', $service) }}" style="display:inline">@csrf

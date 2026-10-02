@@ -441,6 +441,8 @@ return [
     'domain_search.unconfirmed' => '尚未确认',
     'domain_search.view_full_list' => '查看完整价格',
     'domains' => [
+        'renew_now' => '立即续费',
+        'renew_not_available' => '此域名无法续费。',
         'turn_on' => '开启',
         'turn_off' => '关闭',
         'auto_renew' => '自动续费',
@@ -797,6 +799,8 @@ return [
     'security.action' => '操作',
     'services' => [
         'all_types' => '所有类型',
+        'renew_now' => '立即续费',
+        'renew_not_available' => '此服务无法续费。',
         'addons' => '附加项',
         'amount' => '金额',
         'auto_renew' => '自动续费',

@@ -155,6 +155,32 @@ class DomainController extends Controller
             ->with('success', $locked ? __('messages.success.domain_unlocked') : __('messages.success.domain_locked'));
     }
 
+    /**
+     * Renew now: raise the renewal invoice for this domain without waiting
+     * for the nightly run. Paying it renews the name at the registrar
+     * (RenewOnPaymentListener).
+     */
+    public function renew(Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+
+        if (strtolower((string) $domain->status) !== 'active' || (float) $domain->recurring_amount <= 0) {
+            return back()->with('error', __('client.domains.renew_not_available'));
+        }
+
+        $open = \App\Models\Invoice::where('client_id', $domain->client_id)->outstanding()
+            ->whereHas('items', fn ($q) => $q->where('type', 'Domain')->where('rel_id', $domain->id))
+            ->latest('id')->first();
+
+        $invoice = $open ?? app(\App\Services\InvoiceGenerationService::class)->generateForDomain($domain);
+
+        if (! $invoice) {
+            return back()->with('error', __('client.domains.renew_not_available'));
+        }
+
+        return redirect()->route('client.invoices.show', $invoice);
+    }
+
     public function toggleAutoRenew(Domain $domain)
     {
         $this->authorizeClientDomain($domain);
