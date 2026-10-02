@@ -20,6 +20,7 @@ class HookServiceProvider extends ServiceProvider
      */
     protected array $eventHookMap = [
         \App\Events\ClientCreated::class     => ['ClientCreated', 'ClientAdd'],
+        \App\Events\ClientLoggedIn::class    => ['UserLogin', 'ClientLogin'],
         \App\Events\OrderPlaced::class       => ['OrderPlaced', 'AfterShoppingCartCheckout'],
         \App\Events\InvoiceCreated::class    => ['InvoiceCreated', 'InvoiceCreation'],
         \App\Events\InvoicePaid::class       => ['InvoicePaid'],

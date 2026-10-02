@@ -7,6 +7,7 @@ use App\Models\BannedEmail;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\ClientRegistrationService;
+use App\Services\LoginRecorder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -119,6 +120,7 @@ class SocialLoginController extends Controller
 
             Auth::login($user);
             $request->session()->regenerate();
+            app(LoginRecorder::class)->succeeded($user, $request, 'google');
 
             // Google gave a name and an email; an invoice needs an address.
             return redirect()->route('client.account.profile')
@@ -132,6 +134,14 @@ class SocialLoginController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+
+        // With a second factor, TwoFactorVerify sends the customer on to
+        // answer it, and verify2fa() records the sign-in.
+        if ($user->second_factor_type && $user->second_factor_secret) {
+            session(['login_method' => 'google']);
+        } else {
+            app(LoginRecorder::class)->succeeded($user, $request, 'google');
+        }
 
         return redirect()->intended(route('client.home'));
     }
