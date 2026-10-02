@@ -218,6 +218,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');
         Route::post('domains/{domain}/registrar', [DomainController::class, 'updateRegistrar'])->name('domains.registrar');
+        Route::post('domains/{domain}/move', [DomainController::class, 'move'])->name('domains.move');
     });
 
     // =============================================
