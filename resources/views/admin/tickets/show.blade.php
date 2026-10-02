@@ -109,6 +109,23 @@
     <div class="card-body">
         <form method="POST" action="{{ route('admin.tickets.reply', $ticket) }}">
             @csrf
+            @php $predefined = \App\Models\TicketPredefinedCategory::with(['replies' => fn ($q) => $q->orderBy('name')])->orderBy('name')->get()->filter(fn ($c) => $c->replies->isNotEmpty()); @endphp
+            @if($predefined->isNotEmpty())
+            {{-- A saved answer, added to what is already typed. --}}
+            <div class="form-group" style="margin-bottom:8px;">
+                <select id="predefined-reply" class="form-control input-sm" style="max-width:360px;" aria-label="{{ __('admin.tickets.insert_predefined') }}"
+                        onchange="if (this.value) { var t = this.form.querySelector('textarea[name=message]'); t.value = (t.value ? t.value.replace(/\s*$/, '') + '\n\n' : '') + this.options[this.selectedIndex].dataset.reply; t.focus(); this.value = ''; }">
+                    <option value="">{{ __('admin.tickets.insert_predefined') }}</option>
+                    @foreach($predefined as $category)
+                    <optgroup label="{{ $category->name }}">
+                        @foreach($category->replies as $saved)
+                        <option value="{{ $saved->id }}" data-reply="{{ $saved->reply }}">{{ $saved->name }}</option>
+                        @endforeach
+                    </optgroup>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <div class="form-group">
                 <textarea name="message" rows="6" required placeholder="{{ __('admin.tickets.reply_placeholder') }}" class="form-control"></textarea>
             </div>

@@ -239,6 +239,7 @@
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.ticket-departments') }}">{{ __('admin.nav.ticket_departments') }}</a></li>
                     <li><a href="{{ route('admin.config.ticket-statuses') }}">{{ __('admin.nav.ticket_statuses') }}</a></li>
+                    <li><a href="{{ route('admin.config.predefined-replies') }}">{{ __('admin.nav.predefined_replies') }}</a></li>
                     <li><a href="{{ route('admin.config.email-templates') }}">{{ __('admin.nav.email_templates') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.settings.general') }}">{{ __('admin.nav.general_settings') }}</a></li>
@@ -452,6 +453,7 @@
         <ul class="menu">
             <li><a href="{{ route('admin.config.ticket-departments') }}" @if($routeName === 'admin.config.ticket-departments') class="active" @endif>{{ __('admin.nav.ticket_departments') }}</a></li>
             <li><a href="{{ route('admin.config.ticket-statuses') }}" @if($routeName === 'admin.config.ticket-statuses') class="active" @endif>{{ __('admin.nav.ticket_statuses') }}</a></li>
+            <li><a href="{{ route('admin.config.predefined-replies') }}" @if($routeName === 'admin.config.predefined-replies') class="active" @endif>{{ __('admin.nav.predefined_replies') }}</a></li>
             <li><a href="{{ route('admin.config.email-templates') }}" @if($routeName === 'admin.config.email-templates') class="active" @endif>{{ __('admin.nav.email_templates') }}</a></li>
         </ul>
 
