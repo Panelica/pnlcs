@@ -28,9 +28,49 @@
             @endif
         </div>
         <div><strong style="color:#777;">{{ __('admin.tickets.email_label') }}</strong> {{ $ticket->email }}</div>
+        @if($ticket->flag && ($assignee = \App\Models\Admin::find($ticket->flag)))
+        <div><strong style="color:#777;">{{ __('admin.tickets.assigned_to') }}</strong> {{ $assignee->username }}</div>
+        @endif
         <div><strong style="color:#777;">{{ __('admin.tickets.created_label') }}</strong> {{ $ticket->created_at->timezone(display_tz())->format(datetime_fmt()) }}</div>
     </div>
 </div>
+
+@if($options ?? null)
+{{-- Status, priority, department and assignee. --}}
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-body" style="padding:10px 15px;">
+        <form method="POST" action="{{ route('admin.tickets.update', $ticket) }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;font-size:13px;">
+            @csrf @method('PUT')
+            <label>{{ __('common.table.status') }}<br>
+                <select name="status" class="form-control input-sm">
+                    @foreach($options['statuses'] as $title)
+                    <option value="{{ $title }}" @selected(strcasecmp($title, (string) $ticket->status) === 0)>{{ $title }}</option>
+                    @endforeach
+                </select></label>
+            <label>{{ __('common.table.priority') }}<br>
+                <select name="priority" class="form-control input-sm">
+                    @foreach(['Low', 'Medium', 'High'] as $p)
+                    <option value="{{ $p }}" @selected(strcasecmp($p, (string) $ticket->priority) === 0)>{{ __('admin.tickets.priority_'.strtolower($p)) }}</option>
+                    @endforeach
+                </select></label>
+            <label>{{ __('admin.tickets.department_label') }}<br>
+                <select name="department_id" class="form-control input-sm">
+                    @foreach($options['departments'] as $dep)
+                    <option value="{{ $dep->id }}" @selected($dep->id === $ticket->department_id)>{{ $dep->name }}</option>
+                    @endforeach
+                </select></label>
+            <label>{{ __('admin.tickets.assigned_to') }}<br>
+                <select name="flag" class="form-control input-sm">
+                    <option value="">{{ __('admin.tickets.unassigned') }}</option>
+                    @foreach($options['staff'] as $staff)
+                    <option value="{{ $staff->id }}" @selected((int) $ticket->flag === $staff->id)>{{ $staff->username }}</option>
+                    @endforeach
+                </select></label>
+            <button type="submit" class="btn btn-default btn-sm">{{ __('common.actions.save') }}</button>
+        </form>
+    </div>
+</div>
+@endif
 
 {{-- Original Message --}}
 <div class="card" style="margin-bottom:10px;">

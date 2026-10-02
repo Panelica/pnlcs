@@ -228,6 +228,10 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     Route::middleware('admin.permission:view_tickets')->group(function () {
         Route::get('tickets/{ticket}', [TicketController::class, 'show'])->name('tickets.show');
     });
+    // Status (closing included), priority, department and the staff member it is assigned to.
+    Route::middleware('admin.permission:manage_tickets')->group(function () {
+        Route::put('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+    });
     Route::middleware('admin.permission:reply_tickets')->group(function () {
         Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
         // Staff-only notes on a ticket: never shown to the customer, never mailed.
