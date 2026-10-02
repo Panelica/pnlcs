@@ -56,6 +56,9 @@
                 @if($canEditContacts ?? false)
                 <div class="detail-row"><dt>{{ __('client.domains.contacts_title') }}</dt><dd><a href="{{ route('client.domains.contacts', $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a></dd></div>
                 @endif
+                @if($canManageGlue ?? false)
+                <div class="detail-row"><dt>{{ __('client.domains.glue_title') }}</dt><dd><a href="{{ route('client.domains.glue', $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.manage') }}</a></dd></div>
+                @endif
                 <div class="detail-row"><dt>{{ __('client.domains.id_protection') }}</dt><dd>{{ ($domain->id_protection ?? false) ? __("client.status.enabled") : __("client.status.disabled") }}
                     @if($canTogglePrivacy ?? false)
                     <form method="POST" action="{{ route('client.domains.privacy', $domain) }}" style="display:inline;margin-left:8px;">

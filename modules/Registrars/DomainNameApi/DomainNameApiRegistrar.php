@@ -3,6 +3,7 @@
 namespace Modules\Registrars\DomainNameApi;
 
 use App\Contracts\ChecksAvailabilityInBulk;
+use App\Contracts\ManagesChildNameservers;
 use App\Contracts\ManagesDomainContacts;
 use App\Contracts\ManagesWhoisPrivacy;
 use App\Contracts\RegistrarModuleInterface;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Log;
  * module can answer for .dev and .app: Google Registry runs no port-43 WHOIS
  * server for them, so a whois-based lookup cannot.
  */
-class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesDomainContacts, ManagesWhoisPrivacy, RegistrarModuleInterface, RestorableRegistrar, SyncsDomainData
+class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesChildNameservers, ManagesDomainContacts, ManagesWhoisPrivacy, RegistrarModuleInterface, RestorableRegistrar, SyncsDomainData
 {
     /** Dialling codes for the countries this reseller actually sells into. */
     private const DIAL_CODES = [
@@ -431,6 +432,45 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesDomainC
             : ['success' => false, 'message' => $this->errorOf($response, 'The contact could not be updated.')];
     }
 
+    public function getChildNameservers(Domain $domain): ?array
+    {
+        $info = $this->details($domain->domain);
+        if ($info === null) {
+            return null;
+        }
+
+        return array_values(array_map(fn ($host) => [
+            'host' => strtolower((string) ($host['name'] ?? '')),
+            'ips' => array_values(array_map(fn ($ip) => (string) ($ip['ipAddress'] ?? ''), (array) ($host['ipAddresses'] ?? []))),
+        ], array_filter((array) ($info['hosts'] ?? []), 'is_array')));
+    }
+
+    public function saveChildNameserver(Domain $domain, string $host, array $ips, bool $exists): array
+    {
+        $host = strtolower(rtrim(trim($host), '.'));
+        $addresses = array_map(fn ($ip) => [
+            'ipAddress' => $ip,
+            'ipVersion' => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? 'v4' : 'v6',
+        ], array_values($ips));
+
+        $response = $exists
+            ? $this->call('PUT', 'domains/dns/host', ['domainName' => $domain->domain, 'hostName' => $host, 'newHostName' => $host, 'ipAddresses' => $addresses])
+            : $this->call('POST', 'domains/dns/host', ['domainName' => $domain->domain, 'hostName' => $host, 'ipAddresses' => $addresses]);
+
+        return $this->ok($response)
+            ? ['success' => true, 'message' => '']
+            : ['success' => false, 'message' => $this->errorOf($response, 'The nameserver could not be saved.')];
+    }
+
+    public function deleteChildNameserver(Domain $domain, string $host): array
+    {
+        $response = $this->call('DELETE', 'domains/dns/host', ['domainName' => $domain->domain, 'hostName' => strtolower(rtrim(trim($host), '.'))]);
+
+        return $this->ok($response)
+            ? ['success' => true, 'message' => '']
+            : ['success' => false, 'message' => $this->errorOf($response, 'The nameserver could not be deleted.')];
+    }
+
     // ---------------------------------------------------------------- helpers
 
     /**
@@ -625,9 +665,12 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesDomainC
 
             $url = "{$this->apiUrl}/{$endpoint}";
 
-            $response = $method === 'GET'
-                ? $request->get($url, $data)
-                : $request->send($method, $url, ['json' => $data]);
+            // DELETE takes its arguments in the query string, like GET.
+            $response = match ($method) {
+                'GET' => $request->get($url, $data),
+                'DELETE' => $request->delete($data === [] ? $url : $url.'?'.http_build_query($data)),
+                default => $request->send($method, $url, ['json' => $data]),
+            };
 
             $body = $response->json();
 
