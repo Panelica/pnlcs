@@ -744,6 +744,8 @@ return [
     'clients.custom_fields' => 'Özel Alanlar',
     'clients.edit_client' => 'Müşteriyi Düzenle',
     'clients.edit_client_btn' => 'Müşteriyi Düzenle',
+    'clients.personal_data' => 'Kişisel veriler',
+    'clients.personal_data_hint' => 'Bu müşteri hakkında saklanan her şeyi JSON olarak indirin (KVKK / GDPR başvurusunu yanıtlamak için).',
     'clients.email' => 'E-posta',
     'clients.group_label' => 'Grup',
     'clients.inactive' => 'Pasif',

@@ -155,5 +155,17 @@
         <div style="font-size:12px; color:var(--muted); padding:10px 16px;">{{ __('client.security.login_history_hint') }}@if(\App\Services\LoginRecorder::mailEnabled()) {{ __('client.security.login_history_mail') }}@endif</div>
     </div>
 </div>
+@if($ownsAccount ?? false)
+<div class="pn-card">
+    <div class="pn-card-header">{{ __('client.security.your_data') }}</div>
+    <div class="pn-card-body">
+        <p style="font-size:13px; color:var(--muted); margin-top:0;">{{ __('client.security.your_data_desc') }}</p>
+        <form method="POST" action="{{ route('client.account.personal-data') }}" style="margin:0;">
+            @csrf
+            <button type="submit" class="btn btn-outline btn-sm">{{ __('client.security.download_data') }}</button>
+        </form>
+    </div>
+</div>
+@endif
 
 @endsection

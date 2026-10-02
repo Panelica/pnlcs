@@ -753,6 +753,8 @@ return [
     'clients.custom_fields' => '自定义字段',
     'clients.edit_client' => '编辑客户',
     'clients.edit_client_btn' => '编辑客户',
+    'clients.personal_data' => '个人数据',
+    'clients.personal_data_hint' => '以 JSON 格式下载有关此客户的所有数据，用于答复 GDPR / KVKK 请求。',
     'clients.email' => '电子邮箱',
     'clients.group_label' => '组',
     'clients.inactive' => '未启用',

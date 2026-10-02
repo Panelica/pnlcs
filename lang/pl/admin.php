@@ -753,6 +753,8 @@ return [
     'clients.custom_fields' => 'Pola niestandardowe',
     'clients.edit_client' => 'Edytuj klienta',
     'clients.edit_client_btn' => 'Edytuj klienta',
+    'clients.personal_data' => 'Dane osobowe',
+    'clients.personal_data_hint' => 'Pobierz wszystko, co przechowujemy o tym kliencie, jako JSON, aby odpowiedzieć na wniosek RODO.',
     'clients.email' => 'E-mail',
     'clients.group_label' => 'Grupa',
     'clients.inactive' => 'Nieaktywny',
