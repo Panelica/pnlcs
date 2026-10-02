@@ -32,19 +32,31 @@ class BulkActionController extends Controller
             'client_ids.*' => 'exists:clients,id',
             'subject' => 'required|string|max:255',
             'message' => 'required|string',
+            'marketing' => 'nullable|boolean',
         ]);
 
+        // A marketing message goes only to accounts that agreed to it, each
+        // with a link to stop. A service notice (maintenance, a price change
+        // in a contract) still goes to everyone selected.
+        $marketing = $request->boolean('marketing');
         $clients = Client::whereIn('id', $validated['client_ids'])->get();
         $queued = 0;
+        $skipped = 0;
 
         foreach ($clients as $client) {
             if (! $client->email) {
                 continue;
             }
+            if ($marketing && ! \App\Models\MarketingConsent::optedIn($client)) {
+                $skipped++;
+
+                continue;
+            }
             try {
                 $name = trim("{$client->first_name} {$client->last_name}") ?: $client->email;
                 Mail::to($client->email)->queue(
-                    new BulkMassMail($validated['subject'], $validated['message'], $name)
+                    new BulkMassMail($validated['subject'], $validated['message'], $name,
+                        $marketing ? \App\Models\MarketingConsent::unsubscribeUrl($client) : null)
                 );
                 $queued++;
             } catch (\Throwable $e) {
@@ -52,7 +64,12 @@ class BulkActionController extends Controller
             }
         }
 
-        return back()->with('success', __('admin.messages.emails_sent', ['count' => $queued]));
+        $message = __('admin.messages.emails_sent', ['count' => $queued]);
+        if ($skipped > 0) {
+            $message .= ' '.__('admin.bulk.marketing_skipped', ['count' => $skipped]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function bulkInvoice(Request $request, InvoiceService $invoiceService)

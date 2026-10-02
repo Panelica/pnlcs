@@ -220,6 +220,10 @@ class AccountController extends Controller
             \App\Models\CustomField::storeValues($client->id, $visibleFields, (array) $request->input('custom_fields', []));
         }
 
+        if ($client && $request->boolean('marketing_section')) {
+            \App\Models\MarketingConsent::record($client, $request->boolean('marketing_emails'), 'account', $request->ip());
+        }
+
         return redirect()->route('client.account.profile')
             ->with('success', __('messages.success.profile_updated'));
     }

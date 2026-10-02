@@ -36,6 +36,12 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
     // integration, often by somebody not signed in yet.
     Route::get('sso/{token}', \App\Http\Controllers\Client\SsoController::class)
         ->middleware('throttle:20,1')->name('sso');
+    // The link at the foot of a marketing email: signed, no sign-in needed.
+    Route::get('unsubscribe/{client}', [\App\Http\Controllers\Client\UnsubscribeController::class, 'show'])
+        ->middleware(['signed', 'throttle:30,1'])->name('unsubscribe');
+    Route::post('unsubscribe/{client}', [\App\Http\Controllers\Client\UnsubscribeController::class, 'store'])
+        ->middleware(['signed', 'throttle:30,1'])->name('unsubscribe.store')
+        ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class]);
     Route::get('invite/{token}', [\App\Http\Controllers\Client\InviteController::class, 'show'])
         ->middleware('throttle:30,1')->name('invite.show');
     Route::post('invite/{token}', [\App\Http\Controllers\Client\InviteController::class, 'accept'])

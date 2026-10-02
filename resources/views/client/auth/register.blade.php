@@ -130,6 +130,10 @@
                         <span>{{ __('client.auth.i_agree_to') }} {!! $legalLink((string) \App\Models\Setting::get('TOSUrl', ''), __('client.auth.terms_of_service')) !!} {{ __('client.auth.and') }} {!! $legalLink((string) \App\Models\Setting::get('PrivacyUrl', ''), __('client.auth.privacy_policy')) !!}.</span>
                     </label>
                     @error('tos') <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror
+                    <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px;font-size:13px;">
+                    <input type="checkbox" name="marketing_emails" value="1" @checked(old('marketing_emails')) style="margin-top:2px;flex-shrink:0;">
+                    <span>{{ __('client.marketing.signup_box') }}</span>
+                </label>
                 </div>
                 @include('client.partials.recaptcha', ['form' => 'signup'])
                 @error(\App\Services\RecaptchaService::FIELD) <span style="color:#c43c35;font-size:12px;">{{ $message }}</span> @enderror

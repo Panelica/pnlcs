@@ -186,6 +186,15 @@
                 @include('client.partials.custom-fields', ['fields' => $customFields, 'clientId' => $client?->id])
             </div>
             @endif
+            @if($client)
+            <div style="margin-top:8px;padding-top:14px;border-top:1px solid var(--border,#e5e5e5);">
+                <input type="hidden" name="marketing_section" value="1">
+                <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;">
+                    <input type="checkbox" name="marketing_emails" value="1" @checked(old('marketing_emails', \App\Models\MarketingConsent::optedIn($client))) style="margin-top:2px;flex-shrink:0;">
+                    <span>{{ __('client.marketing.profile_box') }}<br><small class="text-muted">{{ __('client.marketing.profile_hint') }}</small></span>
+                </label>
+            </div>
+            @endif
             <button type="submit" class="btn btn-primary">{{ session('fatura_sonrasi_odeme') ? __('client.cart.save_and_continue') : __('common.actions.save_changes') }}</button>
         </form>
     </div>

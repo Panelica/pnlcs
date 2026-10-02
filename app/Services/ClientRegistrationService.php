@@ -7,6 +7,7 @@ use App\Http\Middleware\AffiliateTracking;
 use App\Models\Client;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\MarketingConsent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -64,6 +65,11 @@ class ClientRegistrationService
             'phone_prefix' => $validated['phone_prefix'] ?? null,
         ]);
         $client->users()->attach($user->id, ['owner' => true]);
+
+        // Marketing email only with a box the customer ticked themselves.
+        if ($request->boolean('marketing_emails')) {
+            MarketingConsent::record($client, true, 'signup', $request->ip());
+        }
 
         // The referral cookie dropped by AffiliateTracking becomes a real link
         // here, whichever door the account came through.
