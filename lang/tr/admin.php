@@ -2014,6 +2014,8 @@ return [
     'domains.restore_todo' => ':domain alan adını kayıt firmasında geri al',
     'domains.restore_todo_desc' => 'Müşteri #:invoice numaralı geri alma faturasını ödedi. Kayıt firması: :registrar. Alan adını geri alın, ardından tarihlerini kontrol edin.',
     'affiliates.code_label' => 'Kişisel bağlantı kodu',
+    'affiliates.recurring_amount' => 'Yenileme komisyonu',
+    'affiliates.recurring_amount_hint' => 'Yenilemelerde ve siparişten gelmeyen öteki faturalarda ödenir. Boş bırakılırsa yeni satışla aynı oran uygulanır; 0 yenilemelerde komisyon ödemez.',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
     'products.product_group' => 'Ürün Grubu',

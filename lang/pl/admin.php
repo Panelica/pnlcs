@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => 'Przywróć :domain u rejestratora',
     'domains.restore_todo_desc' => 'Klient opłacił fakturę za przywrócenie #:invoice. Rejestrator: :registrar. Przywróć domenę, a potem sprawdź jej daty.',
     'affiliates.code_label' => 'Osobisty kod linku',
+    'affiliates.recurring_amount' => 'Prowizja od odnowień',
+    'affiliates.recurring_amount_hint' => 'Naliczana od odnowień i innych faktur, które nie pochodzą z zamówienia. Puste pole oznacza tę samą stawkę co przy nowej sprzedaży; 0 oznacza brak prowizji od odnowień.',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

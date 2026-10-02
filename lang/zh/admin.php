@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => '在注册商处恢复 :domain',
     'domains.restore_todo_desc' => '客户已支付恢复发票 #:invoice。注册商：:registrar。请恢复该域名，然后检查其日期。',
     'affiliates.code_label' => '个人链接代码',
+    'affiliates.recurring_amount' => '续费佣金',
+    'affiliates.recurring_amount_hint' => '适用于续费及其他非订单产生的发票。留空则与新销售相同；填 0 则续费不付佣金。',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',
     'products.product_group' => '产品组',

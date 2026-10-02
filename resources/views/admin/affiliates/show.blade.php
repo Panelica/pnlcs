@@ -42,6 +42,11 @@
                     @error('code')<div style="color:#a94442;font-size:12px;">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label">{{ __('admin.affiliates.recurring_amount') }}</label>
+                    <input type="number" name="recurring_pay_amount" class="form-control" step="0.01" min="0" value="{{ $affiliate->recurring_pay_amount }}" placeholder="{{ $affiliate->pay_amount }}">
+                    <small style="color:#777;">{{ __('admin.affiliates.recurring_amount_hint') }}</small>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
                     <label><input type="checkbox" name="onetime" value="1" {{ $affiliate->onetime ? 'checked' : '' }}> {{ __('admin.affiliates.onetime_commission') }}</label>
                 </div>
                 <button class="btn btn-primary btn-sm" type="submit">{{ __('admin.affiliates.save_settings') }}</button>

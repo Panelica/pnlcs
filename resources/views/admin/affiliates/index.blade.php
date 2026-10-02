@@ -50,7 +50,7 @@
                 <td><a href="{{ route('admin.affiliates.show', $aff) }}">{{ $aff->client?->first_name }} {{ $aff->client?->last_name }}</a></td>
                 <td>{{ number_format($aff->visitors) }}</td>
                 <td>{{ ucfirst($aff->pay_type) }}</td>
-                <td>{{ $aff->pay_type === 'percentage' ? $aff->pay_amount . '%' : '$' . number_format($aff->pay_amount, 2) }}</td>
+                <td>{{ $aff->pay_type === 'percentage' ? $aff->pay_amount . '%' : '$' . number_format($aff->pay_amount, 2) }}@if($aff->recurring_pay_amount !== null) / {{ $aff->pay_type === 'percentage' ? $aff->recurring_pay_amount . '%' : '$' . number_format($aff->recurring_pay_amount, 2) }}@endif</td>
                 <td><strong>{{ money_fmt($aff->balance) }}</strong></td>
                 <td>{{ money_fmt($aff->withdrawn) }}</td>
                 <td><a href="{{ route('admin.affiliates.show', $aff) }}" class="btn btn-sm btn-default">{{ __('common.actions.view') }}</a></td>
