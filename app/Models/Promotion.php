@@ -34,6 +34,13 @@ class Promotion extends Model
             return false;
         }
 
+        // A set: the code only holds when every required product is in the
+        // basket. Stored and never checked, so a "hosting + domain + SSL"
+        // discount went to anyone buying just one of them.
+        if (array_diff($this->requiredProductIds(), array_map('intval', $productIds)) !== []) {
+            return false;
+        }
+
         if (! $client) {
             // A guest in the cart. This check is provisional - the order
             // re-validates against the real client at placement - so only the
@@ -63,7 +70,19 @@ class Promotion extends Model
     /** @return array<int, int> */
     public function coveredProductIds(): array
     {
-        $raw = trim((string) $this->applies_to);
+        return self::idList($this->applies_to);
+    }
+
+    /** @return array<int, int> products that must all be in the basket */
+    public function requiredProductIds(): array
+    {
+        return self::idList($this->requires);
+    }
+
+    /** @return array<int, int> */
+    private static function idList(?string $value): array
+    {
+        $raw = trim((string) $value);
 
         if ($raw === '') {
             return [];

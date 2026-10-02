@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => '在注册商处恢复 :domain',
     'domains.restore_todo_desc' => '客户已支付恢复发票 #:invoice。注册商：:registrar。请恢复该域名，然后检查其日期。',
     'affiliates.code_label' => '个人链接代码',
+    'promotions.requires' => '需要全部包含',
+    'promotions.requires_hint' => '可留空。选择产品后，只有当这些产品全部在购物车中时优惠码才有效：用于套装折扣。',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',
     'products.product_group' => '产品组',

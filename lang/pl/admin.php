@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => 'Przywróć :domain u rejestratora',
     'domains.restore_todo_desc' => 'Klient opłacił fakturę za przywrócenie #:invoice. Rejestrator: :registrar. Przywróć domenę, a potem sprawdź jej daty.',
     'affiliates.code_label' => 'Osobisty kod linku',
+    'promotions.requires' => 'Wymaga wszystkich z',
+    'promotions.requires_hint' => 'Zostaw puste, jeśli brak. Gdy wybrano produkty, kod działa tylko wtedy, gdy wszystkie są w koszyku: rabat na zestaw.',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

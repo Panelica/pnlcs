@@ -594,6 +594,8 @@ class ConfigController extends Controller
             'notes' => 'nullable|string',
             'applies_to' => 'nullable|array',
             'applies_to.*' => 'integer|exists:products,id',
+            'requires' => 'nullable|array',
+            'requires.*' => 'integer|exists:products,id',
             'apply_once' => 'boolean',
             'new_signups_only' => 'boolean',
             'existing_client' => 'boolean',
@@ -604,6 +606,9 @@ class ConfigController extends Controller
         $v['existing_client'] = $request->boolean('existing_client');
         $v['applies_to'] = $request->filled('applies_to')
             ? implode(',', $request->input('applies_to'))
+            : null;
+        $v['requires'] = $request->filled('requires')
+            ? implode(',', $request->input('requires'))
             : null;
         Promotion::create($v);
 

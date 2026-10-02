@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => ':domain beim Registrar wiederherstellen',
     'domains.restore_todo_desc' => 'Der Kunde hat die Wiederherstellungsrechnung #:invoice bezahlt. Registrar: :registrar. Stellen Sie die Domain wieder her und prüfen Sie dann ihre Daten.',
     'affiliates.code_label' => 'Persönlicher Link-Code',
+    'promotions.requires' => 'Erfordert alle von',
+    'promotions.requires_hint' => 'Leer lassen für keine. Sind Produkte gewählt, gilt der Code nur, wenn alle im Warenkorb liegen: ein Rabatt für ein Set.',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',
     'products.product_group' => 'Produktgruppe',

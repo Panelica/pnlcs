@@ -2033,6 +2033,8 @@ return [
     'domains.restore_todo' => 'Restore :domain at the registrar',
     'domains.restore_todo_desc' => 'The customer paid the restore invoice #:invoice. Registrar: :registrar. Restore the domain, then check its dates.',
     'affiliates.code_label' => 'Personal link code',
+    'promotions.requires' => 'Requires all of',
+    'promotions.requires_hint' => 'Leave empty for none. When products are chosen, the code only works when every one of them is in the basket: a discount for a set.',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',
