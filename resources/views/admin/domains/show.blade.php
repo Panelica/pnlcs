@@ -104,6 +104,22 @@
     </div>
 </div>
 
+{{-- Move to another client account. --}}
+<details class="card" style="margin-bottom:15px;" @if($errors->has('client')) open @endif>
+    <summary class="card-header" style="cursor:pointer;"><strong>{{ __('admin.domains.move_title') }}</strong></summary>
+    <div class="card-body">
+        <p style="font-size:12px;color:#777;margin-top:0;">{{ __('admin.domains.move_hint') }}</p>
+        <form method="POST" action="{{ route('admin.domains.move', $domain) }}" style="display:flex;gap:6px;align-items:flex-start;" onsubmit="return confirm('{{ __('admin.domains.move_confirm') }}')">
+            @csrf
+            <div>
+                <input type="text" name="client" value="{{ old('client') }}" required class="form-control input-sm" style="width:260px;" aria-label="{{ __('admin.domains.move_client') }}" placeholder="{{ __('admin.domains.move_client') }}">
+                @error('client')<div style="color:#a94442;font-size:12px;margin-top:4px;">{{ $message }}</div>@enderror
+            </div>
+            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.domains.move_button') }}</button>
+        </form>
+    </div>
+</details>
+
 <div class="card" style="margin-bottom:15px;">
     <div class="card-header"><strong>{{ __('admin.domains.nameservers') }}</strong></div>
     <div class="card-body">

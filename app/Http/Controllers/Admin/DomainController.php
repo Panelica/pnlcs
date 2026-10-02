@@ -138,6 +138,44 @@ class DomainController extends Controller
     }
 
     /**
+     * Move the domain to another client account, for a customer who sold it
+     * or keeps it under another account. Nothing changes at the registry; the
+     * WHOIS contact is the new owner's to update.
+     *
+     * Refused while an unpaid invoice carries the domain: it would stay with
+     * the old account and renew a domain that is no longer theirs.
+     */
+    public function move(Request $request, Domain $domain)
+    {
+        $target = trim((string) $request->validate(['client' => 'required|string|max:255'])['client']);
+        $client = ctype_digit($target)
+            ? \App\Models\Client::find((int) $target)
+            : \App\Models\Client::where('email', $target)->first();
+
+        if (! $client) {
+            return back()->withErrors(['client' => __('admin.domains.move_no_client')]);
+        }
+        if ((int) $client->id === (int) $domain->client_id) {
+            return back()->withErrors(['client' => __('admin.domains.move_same_client')]);
+        }
+
+        $billed = \App\Models\InvoiceItem::where('type', 'Domain')->where('rel_id', $domain->id)
+            ->whereHas('invoice', fn ($q) => $q->outstanding())->exists();
+        if ($billed) {
+            return back()->with('error', __('admin.domains.move_open_invoice'));
+        }
+
+        $from = $domain->client_id;
+        $domain->update(['client_id' => $client->id]);
+
+        $admin = auth('admin')->user()?->username;
+        \App\Models\ActivityLog::log("Domain {$domain->domain} moved to client #{$client->id}", $admin, $from);
+        \App\Models\ActivityLog::log("Domain {$domain->domain} moved here from client #{$from}", $admin, $client->id);
+
+        return back()->with('success', __('admin.domains.moved', ['client' => $client->full_name ?: $client->email]));
+    }
+
+    /**
      * Pull authoritative state (expiry, status, nameservers, lock) back from
      * the registrar. Only registrars that implement SyncsDomainData can do it.
      */
