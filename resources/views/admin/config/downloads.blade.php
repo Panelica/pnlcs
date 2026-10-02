@@ -40,7 +40,7 @@
         <tbody>
         @foreach($category->downloads as $dl)
         <tr>
-            <td style="font-weight:600;">{{ $dl->title }}</td>
+            <td style="font-weight:600;">{{ $dl->title }}@if($dl->products->isNotEmpty())<div style="font-size:11px;font-weight:400;color:#777;">{{ __('admin.downloads.only_for', ['products' => $dl->products->pluck('name')->implode(', ')]) }}</div>@endif</td>
             <td style="font-size:12px;color:#555;">{{ Str::limit($dl->description, 60) }}</td>
             <td style="font-size:12px;font-family:monospace;">{{ Str::limit($dl->location, 40) }}</td>
             <td>{{ $dl->download_count ?? 0 }}</td>
@@ -101,6 +101,14 @@
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control">{{ old('description') }}</textarea></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.downloads.file_url') }}</label><input type="text" name="location" value="{{ old('location') }}" required class="form-control" placeholder="https://..."></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.downloads.products') }}</label>
+                    <select name="products[]" multiple class="form-control" style="height:90px;">
+                        @foreach($products ?? [] as $p)
+                        <option value="{{ $p->id }}" @selected(in_array($p->id, (array) old('products', [])))>{{ $p->name }}</option>
+                        @endforeach
+                    </select>
+                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.downloads.products_hint') }}</p>
+                </div>
                 <div class="form-group"><label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="published" value="1" checked> {{ __('admin.downloads.published') }}</label></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
