@@ -393,6 +393,13 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::put('ticket-statuses/{status}', [ConfigController::class, 'updateTicketStatus'])->name('ticket-statuses.update');
             Route::delete('ticket-statuses/{status}', [ConfigController::class, 'destroyTicketStatus'])->name('ticket-statuses.destroy');
 
+            Route::get('predefined-replies', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'index'])->name('predefined-replies');
+            Route::post('predefined-replies/categories', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'storeCategory'])->name('predefined-replies.categories.store');
+            Route::delete('predefined-replies/categories/{category}', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'destroyCategory'])->name('predefined-replies.categories.destroy');
+            Route::post('predefined-replies', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'store'])->name('predefined-replies.store');
+            Route::put('predefined-replies/{reply}', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'update'])->name('predefined-replies.update');
+            Route::delete('predefined-replies/{reply}', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'destroy'])->name('predefined-replies.destroy');
+
             Route::get('ticket-escalation', [ConfigController::class, 'ticketEscalation'])->name('ticket-escalation');
             Route::post('ticket-escalation', [ConfigController::class, 'storeTicketEscalation'])->name('ticket-escalation.store');
             Route::put('ticket-escalation/{id}', [ConfigController::class, 'updateTicketEscalation'])->name('ticket-escalation.update');
