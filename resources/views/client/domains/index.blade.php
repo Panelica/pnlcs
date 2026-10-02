@@ -18,11 +18,17 @@
     </div>
 </div>
 
+{{-- Renew several at once: the boxes below belong to this form. --}}
+<form method="POST" action="{{ route('client.domains.renew-many') }}" id="renew-many" style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    @csrf
+    <button type="submit" class="btn btn-outline btn-sm">{{ __('client.domains.renew_selected') }}</button>
+</form>
 <div class="pn-card">
     <div class="pn-card-body-flush">
         <table class="pn-table">
             <thead>
                 <tr>
+                    <th style="width:28px;"><span class="sr-only">{{ __('client.domains.renew_selected') }}</span></th>
                     <th>{{ __('client.domains.domain_name') }}</th>
                     <th>{{ __('common.table.status') }}</th>
                     <th>{{ __('client.domains.registration_date_col') }}</th>
@@ -38,6 +44,7 @@
                     $expired = $d->expiry_date && $d->expiry_date->isPast();
                 @endphp
                 <tr>
+                    <td>@if(strtolower((string) $d->status) === 'active' && (float) $d->recurring_amount > 0)<input type="checkbox" name="domain_ids[]" value="{{ $d->id }}" form="renew-many" aria-label="{{ $d->domain }}">@endif</td>
                     <td style="font-weight:600"><a href="{{ route('client.domains.show', $d) }}" style="text-decoration:none;color:inherit;">{{ $d->domain }}</a></td>
                     <td><span class="badge badge-{{ strtolower($d->status) }}">{{ ucfirst($d->status) }}</span></td>
                     <td class="text-muted text-sm">{{ $d->registration_date?->format(date_fmt()) ?? "-" }}</td>
@@ -58,7 +65,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="pn-empty">
                             <div class="pn-empty-icon">&#127760;</div>
                             <p>{{ __('admin.domains.no_domains') }}</p>

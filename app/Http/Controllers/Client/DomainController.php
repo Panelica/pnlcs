@@ -187,6 +187,45 @@ class DomainController extends Controller
     }
 
     /**
+     * Renew several domains on one invoice. Each must be the customer's own,
+     * active and priced, like the single renewal; one already on an open
+     * invoice is left there rather than billed twice.
+     */
+    public function renewMany(Request $request)
+    {
+        $ids = $request->validate([
+            'domain_ids' => 'required|array|min:1|max:100',
+            'domain_ids.*' => 'integer',
+        ])['domain_ids'];
+
+        $domains = Domain::where('client_id', $this->getClientId())->whereIn('id', $ids)->get();
+        if ($domains->count() !== count(array_unique($ids))) {
+            abort(403, __('messages.error.domain_not_yours'));
+        }
+
+        $renewable = $domains->filter(fn (Domain $d) => strtolower((string) $d->status) === 'active' && (float) $d->recurring_amount > 0);
+        $billed = \App\Models\InvoiceItem::where('type', 'Domain')->whereIn('rel_id', $renewable->pluck('id'))
+            ->whereHas('invoice', fn ($q) => $q->outstanding())->pluck('rel_id')->all();
+        $toBill = $renewable->reject(fn (Domain $d) => in_array($d->id, $billed, true));
+
+        if ($toBill->isEmpty()) {
+            return $billed !== []
+                ? redirect()->route('client.invoices.index')->with('info', __('client.domains.renew_many_already_billed'))
+                : back()->with('error', __('client.domains.renew_not_available'));
+        }
+
+        $invoice = app(\App\Services\InvoiceGenerationService::class)->generateForDomains($toBill->first()->client, $toBill->values()->all());
+        if (! $invoice) {
+            return back()->with('error', __('client.domains.renew_not_available'));
+        }
+
+        $skipped = $domains->count() - $toBill->count();
+
+        return redirect()->route('client.invoices.show', $invoice)
+            ->with('success', $skipped > 0 ? __('client.domains.renew_many_some_skipped', ['count' => $skipped]) : __('client.domains.renew_many_done'));
+    }
+
+    /**
      * Restore a domain from the redemption period: raise (or reopen) the
      * invoice for the renewal plus the extension's restore price.
      */

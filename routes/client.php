@@ -220,6 +220,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         // Domains
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
         Route::get('domains/transfer', [DomainController::class, 'transfer'])->name('domains.transfer');
+        Route::post('domains/renew', [DomainController::class, 'renewMany'])->name('domains.renew-many');
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
         Route::put('domains/{domain}/nameservers', [DomainController::class, 'updateNameservers'])->name('domains.nameservers');
         Route::post('domains/{domain}/attach-hosting', [DomainController::class, 'attachToHosting'])->name('domains.attach-hosting');
