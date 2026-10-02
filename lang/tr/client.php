@@ -582,6 +582,11 @@ return [
         'title' => 'E-posta Geçmişi',
     ],
     'invoices' => [
+        'mass_pay' => 'Seçilenleri birlikte öde',
+        'mass_pay_select' => 'Seç',
+        'mass_pay_hint' => 'Ödenecek faturaları işaretleyin; tek ödeme hepsini kapatır.',
+        'mass_pay_line' => '#:num numaralı faturanın ödemesi',
+        'mass_pay_pick_two' => 'Birlikte ödemek için en az iki açık fatura seçin.',
         'pay_with_credit' => 'Hesap bakiyemi kullan (:amount)',
         'credit_applied' => 'Hesap bakiyeniz bu faturaya uygulandı.',
         'pn_amount_hint' => 'Havale ettiğiniz tutarı ödediğiniz para biriminde girin. Faturadaki karşılığı :amount.',

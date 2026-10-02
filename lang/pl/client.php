@@ -583,6 +583,11 @@ return [
         'title' => 'Historia e-maili',
     ],
     'invoices' => [
+        'mass_pay' => 'Opłać zaznaczone razem',
+        'mass_pay_select' => 'Zaznacz',
+        'mass_pay_hint' => 'Zaznacz faktury do opłacenia; jedna płatność pokryje wszystkie.',
+        'mass_pay_line' => 'Płatność za fakturę #:num',
+        'mass_pay_pick_two' => 'Wybierz co najmniej dwie otwarte faktury do wspólnej płatności.',
         'pay_with_credit' => 'Użyj środków z konta (:amount)',
         'credit_applied' => 'Środki z konta zostały zaliczone na poczet tej faktury.',
         'pn_amount_hint' => 'Podaj przelaną kwotę w walucie, w której zapłacono. Odpowiada to :amount na fakturze.',

@@ -26,6 +26,9 @@ class LateFeeCommand extends Command
         $invoices = Invoice::with('items')
             ->where('status', 'overdue')
             ->where('due_date', '<=', now()->subDays($lateFeeMinDays))
+            // A payment invoice for several invoices carries no fee of its
+            // own: the invoices it lists already do.
+            ->where('type', '!=', \App\Services\MassPaymentService::TYPE)
             ->get();
 
         $applied = 0;

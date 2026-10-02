@@ -29,7 +29,11 @@ class InvoiceController extends Controller
 
         $this->flashPaymentOutcome(request()->query('payment'));
 
-        return view('client.invoices.index', compact('invoices'));
+        // The open invoices on this page that can be paid together.
+        $payable = $invoices->getCollection()->filter(fn (Invoice $i) => in_array(strtolower((string) $i->status), ['unpaid', 'overdue', 'partially_paid'], true)
+            && ($i->type ?? 'vat') !== \App\Services\MassPaymentService::TYPE)->values();
+
+        return view('client.invoices.index', compact('invoices', 'payable'));
     }
 
     /**
@@ -40,6 +44,21 @@ class InvoiceController extends Controller
      * sitting on the account: InvoiceService::applyCredit() was reachable
      * only through the API.
      */
+    /** One payment invoice for the open invoices the customer ticked. */
+    public function massPay(\Illuminate\Http\Request $request, \App\Services\MassPaymentService $mass)
+    {
+        $request->validate(['invoice_ids' => 'required|array', 'invoice_ids.*' => 'integer']);
+        $client = \App\Models\Client::find($this->getClientId());
+        abort_unless($client, 403);
+
+        $result = $mass->create($client, (array) $request->input('invoice_ids'));
+        if (! $result['invoice']) {
+            return back()->with('error', $result['message']);
+        }
+
+        return redirect()->route('client.invoices.show', $result['invoice']);
+    }
+
     public function payWithCredit(Invoice $invoice)
     {
         abort_if($invoice->client_id !== $this->getClientId(), 403);
@@ -59,7 +78,9 @@ class InvoiceController extends Controller
     {
         $open = in_array(strtolower((string) $invoice->status), ['unpaid', 'overdue', 'partially_paid'], true);
 
-        if (! $open || ! $invoice->client || $invoice->items()->where('type', 'AddFunds')->exists()) {
+        // Add Funds and a payment for several invoices both turn into credit:
+        // paying them from credit would move it in a circle.
+        if (! $open || ! $invoice->client || $invoice->items()->whereIn('type', ['AddFunds', \App\Services\MassPaymentService::ITEM_TYPE])->exists()) {
             return 0.0;
         }
 

@@ -582,6 +582,11 @@ return [
         'title' => 'E-Mail-Verlauf',
     ],
     'invoices' => [
+        'mass_pay' => 'Ausgewählte zusammen bezahlen',
+        'mass_pay_select' => 'Auswählen',
+        'mass_pay_hint' => 'Wählen Sie die zu zahlenden Rechnungen; eine Zahlung deckt alle.',
+        'mass_pay_line' => 'Zahlung für Rechnung #:num',
+        'mass_pay_pick_two' => 'Wählen Sie mindestens zwei offene Rechnungen aus.',
         'pay_with_credit' => 'Mein Guthaben verwenden (:amount)',
         'credit_applied' => 'Ihr Guthaben wurde auf diese Rechnung angerechnet.',
         'pn_amount_hint' => 'Geben Sie den überwiesenen Betrag in der Währung ein, in der Sie bezahlt haben. Dies entspricht :amount auf der Rechnung.',

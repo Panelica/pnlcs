@@ -582,6 +582,11 @@ return [
         'title' => '邮件记录',
     ],
     'invoices' => [
+        'mass_pay' => '合并支付所选',
+        'mass_pay_select' => '选择',
+        'mass_pay_hint' => '勾选要支付的发票，一次付款即可全部结清。',
+        'mass_pay_line' => '发票 #:num 的付款',
+        'mass_pay_pick_two' => '请至少选择两张未结发票合并支付。',
         'pay_with_credit' => '使用我的账户余额（:amount）',
         'credit_applied' => '您的账户余额已用于支付此发票。',
         'pn_amount_hint' => '请以您支付的货币输入转账金额。对应发票上的 :amount。',

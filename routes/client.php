@@ -229,6 +229,8 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
 
         // Invoices
         Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        // One payment for several open invoices (MassPaymentService).
+        Route::post('invoices/mass-pay', [InvoiceController::class, 'massPay'])->name('invoices.mass-pay');
         Route::get('invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.pdf');
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::post('invoices/{invoice}/payment-notification', [InvoiceController::class, 'submitPaymentNotification'])->name('invoices.payment-notification');

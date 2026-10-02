@@ -439,5 +439,12 @@ class PaymentService
         if ($addFundsTotal > 0) {
             $this->addClientCredit($invoice, $addFundsTotal, "Funds added via invoice #{$invoice->invoice_num}");
         }
+
+        // A payment invoice for several invoices: the money is credited, and
+        // SettleMassPaymentListener then pays each one from it.
+        $massTotal = (float) $invoice->items()->where('type', MassPaymentService::ITEM_TYPE)->sum('amount');
+        if ($massTotal > 0) {
+            $this->addClientCredit($invoice, $massTotal, "Payment for several invoices via #{$invoice->invoice_num}");
+        }
     }
 }

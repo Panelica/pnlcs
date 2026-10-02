@@ -9,11 +9,14 @@
     </div>
 </div>
 
+{{-- Two or more open invoices: tick them and pay them in one go. --}}
+<form method="POST" action="{{ route('client.invoices.mass-pay') }}" id="mass-pay-form">@csrf</form>
 <div class="pn-card">
     <div class="pn-card-body-flush">
         <table class="pn-table">
             <thead>
                 <tr>
+                    @if(($payable ?? collect())->count() > 1)<th style="width:28px"><span class="sr-only">{{ __('client.invoices.mass_pay_select') }}</span></th>@endif
                     <th>{{ __('common.table.invoice_num') }}</th>
                     <th>{{ __('common.table.date') }}</th>
                     <th>{{ __('common.table.due_date') }}</th>
@@ -25,6 +28,7 @@
             <tbody>
                 @forelse($invoices as $inv)
                 <tr style="{{ in_array(strtolower($inv->status), ["unpaid","overdue"]) ? "background:#fffbeb" : "" }}">
+                    @if(($payable ?? collect())->count() > 1)<td>@if($payable->contains('id', $inv->id))<input type="checkbox" name="invoice_ids[]" value="{{ $inv->id }}" form="mass-pay-form" checked aria-label="{{ __('client.invoices.mass_pay_select') }} #{{ $inv->invoice_num ?? $inv->id }}">@endif</td>@endif
                     <td><a href="{{ route("client.invoices.show", $inv) }}" style="font-weight:600">#{{ $inv->invoice_num ?? $inv->id }}</a></td>
                     <td class="text-muted text-sm">{{ $inv->date?->format(date_fmt()) ?? "-" }}</td>
                     <td class="text-muted text-sm" style="{{ strtolower($inv->status) === "overdue" ? "color:var(--danger);font-weight:600" : "" }}">{{ $inv->due_date?->format(date_fmt()) ?? "-" }}</td>
@@ -40,7 +44,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="pn-empty">
                             <div class="pn-empty-icon">&#128196;</div>
                             <p>{{ __('admin.invoices.no_invoices') }}</p>
@@ -51,6 +55,12 @@
             </tbody>
         </table>
     </div>
+    @if(($payable ?? collect())->count() > 1)
+    <div style="display:flex;justify-content:flex-end;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--border,#e5e5e5);">
+        <span class="text-muted text-sm">{{ __('client.invoices.mass_pay_hint') }}</span>
+        <button type="submit" form="mass-pay-form" class="btn btn-accent btn-sm">{{ __('client.invoices.mass_pay') }}</button>
+    </div>
+    @endif
 </div>
 
 @if($invoices instanceof \Illuminate\Pagination\LengthAwarePaginator && $invoices->hasPages())
