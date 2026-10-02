@@ -226,6 +226,26 @@
                 {{ __('admin.settings.google_login_hint') }}
                 <code>{{ route('client.social.google.callback') }}</code>
             </div>
+
+            <hr style="margin:14px 0;">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="hidden" name="GithubLoginEnabled" value="0"><input type="checkbox" name="GithubLoginEnabled" value="1" {{ !empty($settings['GithubLoginEnabled']) ? 'checked' : '' }}>
+                {{ __('admin.settings.github_login_enabled') }}
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:8px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.github_client_id') }}</label>
+                    <input type="text" name="GithubClientId" value="{{ $settings['GithubClientId'] ?? '' }}" class="form-control" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.github_client_secret') }}</label>
+                    <input type="password" name="GithubClientSecret" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['GithubClientSecret']) ? '••••••••' : '' }}">
+                </div>
+            </div>
+            <div style="font-size:12px;color:#777;margin-top:8px;">
+                {{ __('admin.settings.github_login_hint') }}
+                <code>{{ route('client.social.github.callback') }}</code>
+            </div>
         </div>
     </div>
 

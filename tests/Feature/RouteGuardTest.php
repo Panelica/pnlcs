@@ -63,6 +63,7 @@ const GUARD_PUBLIC_CLIENT = [
     // Signing in with Google: open by definition, and both legs answer 404
     // unless an operator has configured an OAuth client (GoogleLoginTest).
     'client.social.google.redirect', 'client.social.google.callback',
+    'client.social.github.redirect', 'client.social.github.callback',
 
     // A one-time sign-in link and an account invitation are opened from an
     // email or an integration, usually with no session yet. The token is the

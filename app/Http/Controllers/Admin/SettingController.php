@@ -90,6 +90,7 @@ class SettingController extends Controller
         // handler never reads - so pressing save wrote nothing and said nothing.
         'OpenAIApiKey', 'OpenAIModel',
         'GoogleLoginEnabled', 'GoogleClientId', 'GoogleClientSecret',
+        'GithubLoginEnabled', 'GithubClientId', 'GithubClientSecret',
         // Google reCAPTCHA, read through App\Services\RecaptchaService: one
         // switch per guarded form (contact, signed-in ticket form, account
         // opening, sign-in, password reset) and one pair of keys they share.
@@ -161,6 +162,9 @@ class SettingController extends Controller
         }
         if (trim((string) ($data['GoogleClientSecret'] ?? '')) === '') {
             unset($data['GoogleClientSecret']);
+        }
+        if (trim((string) ($data['GithubClientSecret'] ?? '')) === '') {
+            unset($data['GithubClientSecret']);
         }
         if (trim((string) ($data['RecaptchaSecretKey'] ?? '')) === '') {
             unset($data['RecaptchaSecretKey']);
