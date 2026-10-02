@@ -2,6 +2,7 @@
 namespace App\Models;
 use App\Models\Client;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rule;
 
 class CustomField extends Model {
     protected $fillable = ["type", "rel_id", "field_name", "field_type", "description", "field_options", "regex", "admin_only", "required", "sort_order", "show_on_invoice", "show_on_order"];
@@ -12,6 +13,68 @@ class CustomField extends Model {
     public static function clientFields()
     {
         return static::where("type", "client")->orderBy("sort_order")->orderBy("id");
+    }
+
+    /** Fields a new customer is asked for while ordering ("show on order form"). */
+    public static function orderFields()
+    {
+        return static::clientFields()->where('admin_only', false)->where('show_on_order', true);
+    }
+
+    /**
+     * Validation rules for submitted custom_fields.{id} values.
+     *
+     * @param  iterable<self>  $fields
+     * @return array{0: array<string, array<int, mixed>>, 1: array<string, string>} rules and attribute names
+     */
+    public static function rulesFor(iterable $fields): array
+    {
+        $rules = [];
+        $names = [];
+
+        foreach ($fields as $field) {
+            $key = "custom_fields.{$field->id}";
+            $rule = [$field->required ? 'required' : 'nullable'];
+
+            $rule = array_merge($rule, match ($field->field_type) {
+                'select' => [Rule::in($field->options())],
+                'number' => ['numeric'],
+                'date' => ['date'],
+                'checkbox' => ['in:1'],
+                default => ['string', 'max:1000'],
+            });
+
+            $rules[$key] = $rule;
+            $names[$key] = $field->field_name;
+        }
+
+        return [$rules, $names];
+    }
+
+    /**
+     * Save submitted values for these fields against an account; an empty
+     * value removes the saved one.
+     *
+     * @param  iterable<self>  $fields
+     * @param  array<int|string, mixed>  $input  custom_fields as submitted, keyed by field id
+     */
+    public static function storeValues(int $clientId, iterable $fields, array $input): void
+    {
+        foreach ($fields as $field) {
+            $raw = $input[$field->id] ?? null;
+            $value = is_array($raw) ? implode(', ', array_filter($raw)) : (string) $raw;
+
+            if ($value === '') {
+                CustomFieldValue::where('field_id', $field->id)->where('rel_id', $clientId)->delete();
+
+                continue;
+            }
+
+            CustomFieldValue::updateOrCreate(
+                ['field_id' => $field->id, 'rel_id' => $clientId],
+                ['value' => $value]
+            );
+        }
     }
 
     /** Value saved against a given client (rel_id), if any. */

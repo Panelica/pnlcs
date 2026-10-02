@@ -215,25 +215,9 @@ class AccountController extends Controller
         if ($client) {
             $visibleFields = \App\Models\CustomField::clientFields()
                 ->where('admin_only', false)
-                ->get()
-                ->keyBy('id');
+                ->get();
 
-            foreach ($visibleFields as $id => $field) {
-                $raw = $request->input("custom_fields.$id");
-
-                $value = is_array($raw) ? implode(', ', array_filter((array) $raw)) : (string) $raw;
-
-                if ($value === '') {
-                    \App\Models\CustomFieldValue::where('field_id', $id)->where('rel_id', $client->id)->delete();
-
-                    continue;
-                }
-
-                \App\Models\CustomFieldValue::updateOrCreate(
-                    ['field_id' => $id, 'rel_id' => $client->id],
-                    ['value' => $value]
-                );
-            }
+            \App\Models\CustomField::storeValues($client->id, $visibleFields, (array) $request->input('custom_fields', []));
         }
 
         return redirect()->route('client.account.profile')

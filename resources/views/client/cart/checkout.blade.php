@@ -81,6 +81,9 @@
                             <input type="password" name="password_confirmation" class="form-control" required autocomplete="new-password">
                         </div>
                     </div>
+                    @if(isset($orderFields) && $orderFields->isNotEmpty())
+                    @include('client.partials.custom-fields', ['fields' => $orderFields, 'clientId' => null])
+                    @endif
                 </div>
             </div>
             @endauth
