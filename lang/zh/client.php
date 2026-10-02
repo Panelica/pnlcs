@@ -58,6 +58,11 @@ return [
     'actions.warning' => '警告',
     'add_funds' => '充值',
     'affiliates' => [
+        'code_label' => '个人代码',
+        'code_placeholder' => '例如 ayse',
+        'code_hint' => '用您自己的词分享链接：?ref=ayse。小写字母、数字和连字符，3 到 32 个字符，不能全是数字。旧链接仍然有效。',
+        'code_saved' => '您的链接代码已保存。',
+        'code_rule' => '请使用 3 到 32 个小写字母、数字和连字符（不能全是数字）。',
         'join_title' => '加入联盟推广计划',
         'join_desc' => '您推荐的客户消费后，您可获得相应佣金。',
         'join_button' => '加入计划',

@@ -2013,6 +2013,7 @@ return [
     'clients.marketing_no' => 'İzin yok',
     'domains.restore_todo' => ':domain alan adını kayıt firmasında geri al',
     'domains.restore_todo_desc' => 'Müşteri #:invoice numaralı geri alma faturasını ödedi. Kayıt firması: :registrar. Alan adını geri alın, ardından tarihlerini kontrol edin.',
+    'affiliates.code_label' => 'Kişisel bağlantı kodu',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
     'products.product_group' => 'Ürün Grubu',

@@ -58,6 +58,11 @@ return [
     'actions.warning' => 'Warning',
     'add_funds' => 'Add Funds',
     'affiliates' => [
+        'code_label' => 'Personal code',
+        'code_placeholder' => 'e.g. ayse',
+        'code_hint' => 'Share a link with your own word: ?ref=ayse. Lower-case letters, digits and dashes, 3 to 32, not only digits. Your old link keeps working.',
+        'code_saved' => 'Your link code was saved.',
+        'code_rule' => 'Use 3 to 32 lower-case letters, digits and dashes (not only digits).',
         'join_title' => 'Join the affiliate programme',
         'join_desc' => 'Earn a share of what the customers you send us spend.',
         'join_button' => 'Join the programme',

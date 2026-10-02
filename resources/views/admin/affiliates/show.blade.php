@@ -15,7 +15,7 @@
                 <tr><td><strong>{{ __('admin.affiliates.visitors_label') }}</strong></td><td>{{ number_format($affiliate->visitors) }}</td></tr>
                 <tr><td><strong>{{ __('admin.affiliates.balance_label') }}</strong></td><td><strong>{{ money_fmt($affiliate->balance) }}</strong></td></tr>
                 <tr><td><strong>{{ __('admin.affiliates.withdrawn_label') }}</strong></td><td>{{ money_fmt($affiliate->withdrawn) }}</td></tr>
-                <tr><td><strong>{{ __('admin.affiliates.referral_link') }}</strong></td><td><code>{{ url('/') }}?ref={{ $affiliate->id }}</code></td></tr>
+                <tr><td><strong>{{ __('admin.affiliates.referral_link') }}</strong></td><td><code>{{ $affiliate->link() }}</code></td></tr>
             </table>
         </div>
     </div>
@@ -35,6 +35,11 @@
                 <div class="form-group" style="margin-bottom:12px;">
                     <label class="form-label">{{ __('admin.affiliates.commission_amount') }}</label>
                     <input type="number" name="pay_amount" class="form-control" step="0.01" value="{{ $affiliate->pay_amount }}">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label">{{ __('admin.affiliates.code_label') }}</label>
+                    <input type="text" name="code" class="form-control" maxlength="32" value="{{ old('code', $affiliate->code) }}">
+                    @error('code')<div style="color:#a94442;font-size:12px;">{{ $message }}</div>@enderror
                 </div>
                 <div class="form-group" style="margin-bottom:12px;">
                     <label><input type="checkbox" name="onetime" value="1" {{ $affiliate->onetime ? 'checked' : '' }}> {{ __('admin.affiliates.onetime_commission') }}</label>

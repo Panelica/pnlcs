@@ -2032,6 +2032,7 @@ return [
     'clients.marketing_no' => '未同意',
     'domains.restore_todo' => '在注册商处恢复 :domain',
     'domains.restore_todo_desc' => '客户已支付恢复发票 #:invoice。注册商：:registrar。请恢复该域名，然后检查其日期。',
+    'affiliates.code_label' => '个人链接代码',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',
     'products.product_group' => '产品组',

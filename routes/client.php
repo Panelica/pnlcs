@@ -285,6 +285,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('affiliates', [AffiliateController::class, 'index'])->name('affiliates.index');
         Route::post('affiliates/activate', [AffiliateController::class, 'activate'])->name('affiliates.activate');
         Route::post('affiliates/withdraw', [AffiliateController::class, 'withdraw'])->name('affiliates.withdraw');
+        Route::post('affiliates/code', [AffiliateController::class, 'updateCode'])->name('affiliates.code');
         Route::post('affiliates/to-balance', [AffiliateController::class, 'toBalance'])->name('affiliates.toBalance');
 
         // Cart & Checkout

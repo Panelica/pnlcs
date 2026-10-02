@@ -37,6 +37,16 @@
             <input type="text" id="refLink" class="form-control" value="{{ $referralLink }}" readonly style="background:var(--bg);font-size:13px">
             <button type="button" class="btn btn-primary" id="copyBtn" onclick="copyLink()" style="flex-shrink:0">{{ __('client.affiliates.copy_link') }}</button>
         </div>
+        <form method="POST" action="{{ route('client.affiliates.code') }}" style="display:flex;gap:8px;max-width:520px;align-items:flex-start;margin-top:14px">
+            @csrf
+            <div style="flex:1">
+                <label class="form-label" for="aff-code">{{ __('client.affiliates.code_label') }}</label>
+                <input type="text" id="aff-code" name="code" value="{{ old('code', $affiliate->code) }}" maxlength="32" class="form-control" placeholder="{{ __('client.affiliates.code_placeholder') }}">
+                @error('code')<div class="text-danger text-sm">{{ $message }}</div>@enderror
+                <small class="text-muted">{{ __('client.affiliates.code_hint') }}</small>
+            </div>
+            <button type="submit" class="btn btn-outline" style="margin-top:22px">{{ __('common.actions.save') }}</button>
+        </form>
     </div>
 </div>
 
