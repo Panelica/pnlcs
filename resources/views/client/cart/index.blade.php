@@ -49,6 +49,15 @@
                                 <div style="font-weight:600">{{ $item["product_name"] ?? $item["name"] ?? __('client.cart.product') }}</div>
                                 @endif
                                 @if(!empty($item["domain"]))<div class="text-muted text-sm">{{ $item["domain"] }}</div>@endif
+                                @if(($item["type"] ?? "") === "domain" && ($item["privacy_price"] ?? null) !== null)
+                                {{-- WHOIS privacy, at the extension's price. --}}
+                                <form method="POST" action="{{ route('client.cart.privacy', $key) }}" class="text-sm" style="margin-top:4px;">
+                                    @csrf
+                                    <input type="hidden" name="privacy" value="{{ !empty($item['privacy']) ? '0' : '1' }}">
+                                    <span>{{ __('client.cart.privacy_label') }}: {{ (float) $item['privacy_price'] > 0 ? __('client.cart.privacy_per_year', ['price' => money_fmt($item['privacy_price'])]) : __('client.cart.privacy_free') }}</span>
+                                    <button type="submit" class="btn btn-default btn-xs" style="margin-left:6px;">{{ !empty($item['privacy']) ? __('common.actions.remove') : __('common.actions.add') }}</button>
+                                </form>
+                                @endif
                             </td>
                             <td class="text-muted" style="text-transform:capitalize">{{ ($item["type"] ?? "") === "domain" ? trans_choice('client.cart.line_years', (int) ($item["years"] ?? 1), ['count' => (int) ($item["years"] ?? 1)]) : ($item["billing_cycle"] ?? "-") }}</td>
                             <td style="text-align:right;font-weight:700">{{ money_fmt($item["price"] ?? 0) }}</td>

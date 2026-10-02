@@ -243,6 +243,19 @@ class CartController extends Controller
             ->with('success', $result['message'] ?? __('messages.success.item_removed_from_cart'));
     }
 
+    /** Add or drop WHOIS privacy on a domain line in the cart. */
+    public function domainPrivacy(Request $request, int $index)
+    {
+        $on = $request->boolean('privacy');
+        $cart = $this->cartService->getOrCreateCart($this->optionalClientId());
+
+        if (! $this->cartService->setDomainPrivacy($cart, $index, $on)) {
+            return redirect()->route('client.cart.index')->with('error', __('client.cart.privacy_unavailable'));
+        }
+
+        return redirect()->route('client.cart.index');
+    }
+
     public function applyPromo(Request $request)
     {
         $request->validate(['code' => 'required|string|max:50']);

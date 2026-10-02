@@ -725,6 +725,8 @@ class ConfigController extends Controller
             'transfer_price' => 'required|numeric|min:0',
             'renew_price' => 'required|numeric|min:0',
             'restore_price' => 'nullable|numeric|min:0',
+            // Per year; empty = not offered at order, 0 = free.
+            'privacy_price' => 'nullable|numeric|min:0',
             'category' => 'nullable|in:generic,local,country,new',
             'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',
@@ -1595,6 +1597,8 @@ class ConfigController extends Controller
             'transfer_price' => 'nullable|numeric|min:0',
             'renew_price' => 'nullable|numeric|min:0',
             'restore_price' => 'nullable|numeric|min:0',
+            // Per year; empty = not offered at order, 0 = free.
+            'privacy_price' => 'nullable|numeric|min:0',
             'category' => 'nullable|in:generic,local,country,new',
             'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',

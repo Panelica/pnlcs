@@ -103,7 +103,7 @@ class OrderService
                         // Points at the domain: paying this line is what renews
                         // it, and the renewal generator dedupes on it.
                         'rel_id' => $domain->id,
-                        'description' => "Domain {$action}: ".($item['domain'] ?? '')." — {$years} Year(s)",
+                        'description' => "Domain {$action}: ".($item['domain'] ?? '')." — {$years} Year(s)".(! empty($item['id_protection']) ? ' + WHOIS privacy' : ''),
                         'amount' => (float) ($item['amount'] ?? 0),
                         'taxed' => true,
                     ];
@@ -808,6 +808,7 @@ class OrderService
             'state' => $client?->state,
             'postcode' => $client?->postcode,
             'country' => $client?->country,
+            'privacy' => (bool) $domain->id_protection,
         ]);
 
         try {
@@ -954,6 +955,8 @@ class OrderService
             'recurring_amount' => $item['renewal_amount'] ?? $item['amount'] ?? 0,
             'first_payment_amount' => $item['amount'] ?? 0,
             'payment_method' => $order->payment_method,
+            // Chosen in the cart; sent to the registrar at registration.
+            'id_protection' => ! empty($item['id_protection']),
         ]);
     }
 
