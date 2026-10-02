@@ -156,6 +156,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::post('services/{service}/cancel', [ServiceController::class, 'submitCancellation'])->name('services.cancel.submit');
         Route::get('services/{service}/upgrade', [ServiceController::class, 'upgrade'])->name('services.upgrade');
         Route::post('services/{service}/upgrade', [ServiceController::class, 'processUpgrade'])->name('services.upgrade.process');
+        Route::post('services/{service}/options', [ServiceController::class, 'processOptionUpgrade'])->name('services.options.upgrade');
         Route::post('services/{service}/autorenew', [ServiceController::class, 'toggleAutoRenew'])->name('services.autorenew');
         Route::post('services/{service}/renew', [ServiceController::class, 'renew'])->name('services.renew');
         Route::post('services/{service}/cycle', [ServiceController::class, 'changeCycle'])->name('services.cycle');

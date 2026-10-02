@@ -65,4 +65,43 @@
 </div>
 @endif
 
+@if(($optionGroups ?? collect())->flatMap->options->filter(fn ($o) => $o->subs->isNotEmpty())->isNotEmpty())
+{{-- Raise the options on this same package: more RAM, a bigger disk. Charged for the days left in the cycle. --}}
+<div class="pn-card" style="margin-top:16px;">
+    <div class="pn-card-header">{{ __('client.services.options_title') }}</div>
+    <div class="pn-card-body">
+        <p style="font-size:13px; color:var(--muted); margin-top:0;">{{ __('client.services.options_hint') }}</p>
+        <form method="POST" action="{{ route('client.services.options.upgrade', $service) }}">
+            @csrf
+            @foreach($optionGroups as $group)
+                @foreach($group->options as $option)
+                    @continue($option->subs->isEmpty())
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label class="form-label" for="uopt-{{ $option->id }}">{{ $option->displayName() }}</label>
+                        @if($option->isQuantity())
+                            <input type="number" id="uopt-{{ $option->id }}" name="config_options[{{ $option->id }}]" class="form-control" style="max-width:160px;"
+                                   value="{{ $currentOptions[$option->id] ?? ($option->qty_minimum ?? 0) }}"
+                                   min="{{ $currentOptions[$option->id] ?? ($option->qty_minimum ?? 0) }}" @if($option->qty_maximum) max="{{ $option->qty_maximum }}" @endif>
+                            <small style="color:var(--muted);">{{ money_fmt($option->subs->first()?->priceFor($upgradeCycle) ?? 0) }} {{ __('client.cart.per_unit') }}</small>
+                        @elseif($option->isCheckbox())
+                            <label style="display:flex; align-items:center; gap:8px; font-size:13px;">
+                                <input type="checkbox" id="uopt-{{ $option->id }}" name="config_options[{{ $option->id }}]" value="1" @checked(isset($currentOptions[$option->id]))>
+                                <span>{{ $option->subs->first()?->displayName() ?? $option->displayName() }} (+{{ money_fmt($option->subs->first()?->priceFor($upgradeCycle) ?? 0) }})</span>
+                            </label>
+                        @else
+                            <select id="uopt-{{ $option->id }}" name="config_options[{{ $option->id }}]" class="form-control" style="max-width:320px;">
+                                @foreach($option->subs as $sub)
+                                <option value="{{ $sub->id }}" @selected((string) ($currentOptions[$option->id] ?? '') === (string) $sub->id)>{{ $sub->displayName() }} · {{ money_fmt($sub->priceFor($upgradeCycle)) }}</option>
+                                @endforeach
+                            </select>
+                        @endif
+                    </div>
+                @endforeach
+            @endforeach
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('client.services.options_submit') }}</button>
+        </form>
+    </div>
+</div>
+@endif
+
 @endsection

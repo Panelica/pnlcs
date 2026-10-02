@@ -249,6 +249,11 @@ class UpgradeService
             return ['success' => true, 'message' => 'Already applied.'];
         }
 
+        // Options raised on the same product (OptionUpgradeService).
+        if ($upgrade->type === OptionUpgradeService::TYPE) {
+            return app(OptionUpgradeService::class)->apply($upgrade);
+        }
+
         $service = Service::find($upgrade->rel_id);
         $newProduct = Product::with('pricing')->find($upgrade->new_value);
 
