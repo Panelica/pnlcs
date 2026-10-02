@@ -45,6 +45,8 @@ class AdminSearch
             'domains' => ['manage_domains', fn () => $this->domains($like)],
             'tickets' => ['view_tickets', fn () => $this->tickets($like, ltrim($query, '#'))],
             'orders' => ['view_orders', fn () => $this->orders($like, $number)],
+            // Sections and fields of Settings > General, read from its view.
+            'settings' => ['manage_settings', fn () => collect(app(AdminSettingsIndex::class)->search($query, self::PER_KIND))],
         ];
 
         $groups = [];

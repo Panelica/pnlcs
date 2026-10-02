@@ -1,6 +1,8 @@
-{{-- Results under the admin bar's search box: clients, invoices, services,
-     domains, tickets and orders, each only when the admin may open it
-     (Admin\SearchController). Enter with nothing picked still searches the
+{{-- Results under the admin bar's search box: pages of the menu (read from
+     the menu on this page, so every entry - an addon's included - is found
+     without a list to keep), then settings sections and clients, invoices,
+     services, domains, tickets and orders, each only when the admin may open
+     it (Admin\SearchController). Enter with nothing picked still searches the
      client list, as the box always did. Styles and script are inline so the
      box works without rebuilding the asset bundle. --}}
 <div id="intellisearch-results" class="is-results" role="listbox" hidden></div>
@@ -15,6 +17,8 @@
 [data-theme="dark"] .is-results { background:#1f2430; color:#e5e7eb; border-color:#374151; }
 [data-theme="dark"] .is-results a { color:#e5e7eb; }
 [data-theme="dark"] .is-results a.is-active, [data-theme="dark"] .is-results a:hover { background:#2b3242; }
+/* A settings section opened from the search. */
+.card:target { outline:2px solid #405189; outline-offset:2px; scroll-margin-top:70px; }
 </style>
 <script>
 (function () {
@@ -23,7 +27,25 @@
     var input = box.querySelector('input[name="search"]');
     var list = document.getElementById('intellisearch-results');
     var endpoint = @json(route('admin.search'));
-    var texts = @json(['none' => __('admin.search.no_results'), 'all' => __('admin.search.all_clients')]);
+    var texts = @json(['none' => __('admin.search.no_results'), 'all' => __('admin.search.all_clients'), 'pages' => __('admin.search.pages')]);
+
+    // The menu's own links: text, the menu they sit in, and where they go.
+    function fold(s) { return (s || '').toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i'); }
+    var pages = [], seen = {};
+    document.querySelectorAll('.navbar-collapse .dropdown-menu a[href]').forEach(function (a) {
+        var href = a.getAttribute('href');
+        var title = a.textContent.replace(/\s+/g, ' ').trim();
+        if (!title || !href || href === '#' || href.indexOf('javascript:') === 0 || seen[href]) return;
+        seen[href] = true;
+        var parent = a.closest('li.has-dropdown');
+        var top = parent ? parent.querySelector(':scope > a') : null;
+        var section = top ? top.textContent.replace(/\s+/g, ' ').trim() : '';
+        pages.push({ title: title, subtitle: section, url: a.href, key: fold(title + ' ' + section) });
+    });
+    function pageMatches(q) {
+        var words = fold(q).split(' ').filter(Boolean);
+        return pages.filter(function (p) { return words.every(function (w) { return p.key.indexOf(w) !== -1; }); }).slice(0, 6);
+    }
     var timer = null, controller = null, active = -1;
 
     function links() { return Array.prototype.slice.call(list.querySelectorAll('a')); }
@@ -37,7 +59,9 @@
     function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
     function render(data) {
         list.textContent = '';
-        (data.groups || []).forEach(function (group) {
+        var found = pageMatches(data.query);
+        var groups = (found.length ? [{ label: texts.pages, items: found }] : []).concat(data.groups || []);
+        groups.forEach(function (group) {
             list.appendChild(el('div', 'is-group', group.label));
             group.items.forEach(function (item) {
                 var a = el('a', '', item.title);
@@ -47,7 +71,7 @@
                 list.appendChild(a);
             });
         });
-        if (!(data.groups || []).length) list.appendChild(el('div', 'is-empty', texts.none));
+        if (!groups.length) list.appendChild(el('div', 'is-empty', texts.none));
         var all = el('a', 'is-all', texts.all.replace(':q', data.query));
         all.href = data.all_clients_url;
         list.appendChild(all);
@@ -58,6 +82,8 @@
     function run() {
         var q = input.value.trim();
         if (q.length < 2) { close(); return; }
+        // The menu answers at once; the records follow when the server does.
+        render({ query: q, groups: [], all_clients_url: @json(route('admin.clients.index')) + '?search=' + encodeURIComponent(q) });
         if (controller) controller.abort();
         controller = new AbortController();
         fetch(endpoint + '?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' }, signal: controller.signal, credentials: 'same-origin' })
