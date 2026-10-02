@@ -222,3 +222,60 @@ it('shows the domain in the order summary and asks for the EPP code on the confi
         // Printed for the script with @json, which escapes the slashes.
         ->assertSee(json_encode(route('client.cart.domain-quote')), false);
 });
+
+/*
+ * The domain line that came with a hosting order belongs to it (follow-up on
+ * #48). It could be removed from the cart on its own, and the order then went
+ * through as hosting set up for a name the customer would never own.
+ */
+it('does not let the domain that came with a hosting order be removed on its own', function () {
+    $fx = hostingDomainFixture();
+    registryAnswers(checked: true, available: true);
+    orderHosting($fx, ['domain' => 'kept-together.com', 'domain_option' => 'register'])->assertSessionHasNoErrors();
+
+    $items = cartItemsFor($fx['client']);
+    $domainIndex = array_search('domain', array_column($items, 'type'), true);
+
+    $this->actingAs($fx['user'])->delete(route('client.cart.remove', $domainIndex))
+        ->assertRedirect(route('client.cart.index'))
+        ->assertSessionHas('error');
+
+    expect(array_column(cartItemsFor($fx['client']), 'type'))->toBe(['product', 'domain']);
+
+    // The cart says why, instead of offering a button that would be refused.
+    $page = $this->actingAs($fx['user'])->get(route('client.cart.index'))->assertOk();
+    $page->assertSee(__('client.cart.comes_with', ['product' => $fx['product']->name]));
+    expect(substr_count($page->getContent(), route('client.cart.remove', $domainIndex)))->toBe(0);
+});
+
+it('takes the domain out with the hosting it came with', function () {
+    $fx = hostingDomainFixture();
+    registryAnswers(checked: true, available: true);
+    orderHosting($fx, ['domain' => 'goes-along.com', 'domain_option' => 'register'])->assertSessionHasNoErrors();
+
+    $items = cartItemsFor($fx['client']);
+    $hostingIndex = array_search('product', array_column($items, 'type'), true);
+
+    $this->actingAs($fx['user'])->delete(route('client.cart.remove', $hostingIndex))
+        ->assertRedirect(route('client.cart.index'))
+        ->assertSessionHas('success', __('client.cart.removed_with_domain', ['domain' => 'goes-along.com']));
+
+    expect(cartItemsFor($fx['client']))->toBe([]);
+});
+
+it('still removes a domain bought on its own', function () {
+    $fx = hostingDomainFixture();
+    registryAnswers(checked: true, available: true);
+    orderHosting($fx, ['domain' => 'my-own-site.com', 'domain_option' => 'own'])->assertSessionHasNoErrors();
+    $this->actingAs($fx['user'])->post(route('client.cart.add-domain'), ['domain' => 'standalone-name.com', 'type' => 'register', 'years' => 1])
+        ->assertSessionHasNoErrors();
+
+    $items = cartItemsFor($fx['client']);
+    $domainIndex = array_search('domain', array_column($items, 'type'), true);
+    expect($domainIndex)->not->toBeFalse();
+
+    $this->actingAs($fx['user'])->delete(route('client.cart.remove', $domainIndex))
+        ->assertSessionHas('success');
+
+    expect(array_column(cartItemsFor($fx['client']), 'type'))->toBe(['product']);
+});

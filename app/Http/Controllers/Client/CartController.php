@@ -222,10 +222,14 @@ class CartController extends Controller
     {
         $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
-        $this->cartService->removeItem($cart, $index);
+        $result = $this->cartService->removeItem($cart, $index);
+
+        if (! $result['removed'] && $result['message']) {
+            return redirect()->route('client.cart.index')->with('error', $result['message']);
+        }
 
         return redirect()->route('client.cart.index')
-            ->with('success', __('messages.success.item_removed_from_cart'));
+            ->with('success', $result['message'] ?? __('messages.success.item_removed_from_cart'));
     }
 
     public function applyPromo(Request $request)

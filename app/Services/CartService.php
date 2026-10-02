@@ -308,17 +308,78 @@ class CartService
         return $this->saveData($cart, $data);
     }
 
-    public function removeItem(Cart $cart, int $index): Cart
+    /**
+     * Take a line out of the cart.
+     *
+     * Hosting ordered with "register a new domain" or "transfer" and the
+     * domain line that came with it belong together (GitHub issue #48). The
+     * domain line could be removed on its own, and the order then went
+     * through as hosting set up for a name the customer would never own. So
+     * that line cannot be removed by itself, and removing the hosting takes
+     * it along. A domain bought on its own is removed as before.
+     *
+     * @return array{removed: bool, message: ?string}
+     */
+    public function removeItem(Cart $cart, int $index): array
     {
         $data = $this->getData($cart);
         $items = $data['items'] ?? [];
 
-        if (isset($items[$index])) {
-            array_splice($items, $index, 1);
-            $data['items'] = array_values($items);
+        if (! isset($items[$index])) {
+            return ['removed' => false, 'message' => null];
         }
 
-        return $this->saveData($cart, $data);
+        $line = $items[$index];
+        $hosting = $this->hostingFor($items, $line);
+
+        if ($hosting !== null) {
+            return ['removed' => false, 'message' => __('client.cart.domain_comes_with_hosting', [
+                'domain' => $line['domain'] ?? '',
+                'product' => $items[$hosting]['product_name'] ?? '',
+            ])];
+        }
+
+        $remove = [$index];
+        if ($this->buysDomain($line)) {
+            foreach ($items as $i => $item) {
+                if ($i !== $index && ($item['type'] ?? '') === 'domain'
+                    && strcasecmp((string) ($item['domain'] ?? ''), (string) ($line['domain'] ?? '')) === 0) {
+                    $remove[] = $i;
+                }
+            }
+        }
+
+        $data['items'] = array_values(array_diff_key($items, array_flip($remove)));
+        $this->saveData($cart, $data);
+
+        return ['removed' => true, 'message' => count($remove) > 1
+            ? __('client.cart.removed_with_domain', ['domain' => $line['domain'] ?? ''])
+            : null];
+    }
+
+    /** The index of the hosting line a domain line came with, or null when it was bought on its own. */
+    private function hostingFor(array $items, array $line): ?int
+    {
+        if (($line['type'] ?? '') !== 'domain') {
+            return null;
+        }
+
+        foreach ($items as $i => $item) {
+            if ($this->buysDomain($item)
+                && strcasecmp((string) ($item['domain'] ?? ''), (string) ($line['domain'] ?? '')) === 0) {
+                return $i;
+            }
+        }
+
+        return null;
+    }
+
+    /** A hosting line that orders its domain (register or transfer) along with it. */
+    private function buysDomain(array $item): bool
+    {
+        return ($item['type'] ?? '') === 'product'
+            && in_array($item['domain_option'] ?? null, ['register', 'transfer'], true)
+            && trim((string) ($item['domain'] ?? '')) !== '';
     }
 
     public function applyPromoCode(Cart $cart, string $code): array
@@ -387,10 +448,14 @@ class CartService
                 }
             }
 
+            $hosting = $this->hostingFor($items, $item);
+
             $enrichedItems[] = array_merge($item, [
                 'price' => $price,
                 'addon_total' => round($addonTotal, 2),
                 'line_total' => round($price + $addonTotal, 2),
+                // The hosting this domain line came with: it goes with that line.
+                'comes_with' => $hosting !== null ? ($items[$hosting]['product_name'] ?? '') : null,
             ]);
         }
 

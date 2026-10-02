@@ -53,11 +53,16 @@
                             <td class="text-muted" style="text-transform:capitalize">{{ ($item["type"] ?? "") === "domain" ? trans_choice('client.cart.line_years', (int) ($item["years"] ?? 1), ['count' => (int) ($item["years"] ?? 1)]) : ($item["billing_cycle"] ?? "-") }}</td>
                             <td style="text-align:right;font-weight:700">{{ money_fmt($item["price"] ?? 0) }}</td>
                             <td>
+                                @if(!empty($item["comes_with"]))
+                                {{-- Ordered with a hosting package: it is removed with that line. --}}
+                                <span class="text-muted text-sm">{{ __('client.cart.comes_with', ['product' => $item["comes_with"]]) }}</span>
+                                @else
                                 <form method="POST" action="{{ route("client.cart.remove", $key) }}" style="display:inline">
                                     @csrf
                                     @method("DELETE")
                                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.remove') }}</button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @endforeach
