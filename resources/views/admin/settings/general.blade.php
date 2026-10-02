@@ -249,6 +249,20 @@
         </div>
     </div>
 
+    {{-- A second check before a domain can leave: an emailed code in front of
+         its transfer code and its lock. Off by default, so an install that
+         updates changes nothing for its customers until the operator says. --}}
+    <div class="card" id="settings-account_protection" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.account_protection') }}</strong></div>
+        <div class="card-body">
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="hidden" name="ConfirmSensitiveActions" value="0"><input type="checkbox" name="ConfirmSensitiveActions" value="1" {{ !empty($settings['ConfirmSensitiveActions']) ? 'checked' : '' }}>
+                {{ __('admin.settings.confirm_sensitive_actions') }}
+            </label>
+            <div style="font-size:12px;color:#777;margin-top:6px;">{{ __('admin.settings.confirm_sensitive_actions_hint') }}</div>
+        </div>
+    </div>
+
     {{-- Google reCAPTCHA in front of the forms that open tickets: the public
          contact form, the one door anyone can use, and the signed-in ticket
          form, each with its own switch. Off until an operator registers their

@@ -32,6 +32,7 @@ class EmailTemplateService
         'AutoChargeActionRequiredMail' => 'Automatic Payment Authentication Required',
         'AutoChargeFailedMail' => 'Automatic Payment Failed',
         'CancellationConfirmMail' => 'Cancellation Confirmation',
+        'ConfirmationCodeMail' => 'Confirmation Code',
         'DomainRegistrationMail' => 'Domain Registration Confirmation',
         'EmailVerificationMail' => 'Email Verification',
         'DomainRenewalReminderMail' => 'Domain Renewal Reminder',
@@ -255,6 +256,9 @@ class EmailTemplateService
             'loginIp' => 'login_ip',
             'loginDevice' => 'login_device',
             'loginTime' => 'login_time',
+            // The code that confirms a sensitive action, and how long it lives.
+            'code' => 'confirmation_code',
+            'minutes' => 'code_minutes',
             'daysRemaining' => 'days_remaining',
             'daysOverdue' => 'days_overdue',
             'daysUntilExpiry' => 'days_until_expiry',

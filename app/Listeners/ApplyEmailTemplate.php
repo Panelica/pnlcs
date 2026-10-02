@@ -47,6 +47,9 @@ class ApplyEmailTemplate
         // leave every new customer holding a "check your inbox" page for a
         // mail that is never sent, and unable to order.
         'EmailVerificationMail',
+        // The code in front of a domain's transfer code and lock: switched
+        // off, it would lock every customer out of both for good.
+        'ConfirmationCodeMail',
     ];
 
     public function __construct(private EmailTemplateService $templates) {}
