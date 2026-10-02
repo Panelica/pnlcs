@@ -65,6 +65,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:view_clients')->group(function () {
         Route::get('clients/{client}', [ClientController::class, 'show'])->name('clients.show');
+        Route::post('clients/{client}/personal-data', [ClientController::class, 'exportPersonalData'])->name('clients.personal-data');
     });
 
     Route::middleware('admin.permission:edit_clients')->group(function () {

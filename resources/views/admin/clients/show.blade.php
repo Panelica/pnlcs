@@ -11,6 +11,10 @@
             </button>
         </form>
         <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-primary btn-sm">{{ __('admin.clients.edit_client_btn') }}</a>
+        <form method="POST" action="{{ route('admin.clients.personal-data', $client) }}" style="display:inline;" title="{{ __('admin.clients.personal_data_hint') }}">
+            @csrf
+            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.clients.personal_data') }}</button>
+        </form>
         <a href="{{ route('admin.clients.index') }}" class="btn btn-default btn-sm">{{ __('common.actions.close') }}</a>
         <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.clients.confirm_delete') }}')">
             @csrf @method('DELETE')

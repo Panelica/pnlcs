@@ -753,6 +753,8 @@ return [
     'clients.custom_fields' => 'Benutzerdefinierte Felder',
     'clients.edit_client' => 'Client bearbeiten',
     'clients.edit_client_btn' => 'Client bearbeiten',
+    'clients.personal_data' => 'Personenbezogene Daten',
+    'clients.personal_data_hint' => 'Alles zu diesem Kunden Gespeicherte als JSON herunterladen, um eine DSGVO-Anfrage zu beantworten.',
     'clients.email' => 'E-Mail',
     'clients.group_label' => 'Gruppe',
     'clients.inactive' => 'Inaktiv',

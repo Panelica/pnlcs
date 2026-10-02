@@ -633,6 +633,21 @@ class ClientController extends Controller
     }
 
     /**
+     * The customer's personal data as JSON, to answer a GDPR / KVKK request
+     * that came by email or post. Same document the account owner can
+     * download from the client area.
+     */
+    public function exportPersonalData(Client $client, \App\Services\PersonalDataExport $export)
+    {
+        \App\Models\ActivityLog::log('Personal data export downloaded by '.(auth('admin')->user()->username ?? 'admin'), auth('admin')->user()->email ?? null, $client->id);
+
+        return response()->json($export->build($client), 200, [
+            'Content-Disposition' => 'attachment; filename="personal-data-'.$client->id.'-'.now()->format('Y-m-d').'.json"',
+            'Cache-Control' => 'no-store',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
      * Export clients list as CSV.
      */
     public function exportCsv(Request $request): StreamedResponse

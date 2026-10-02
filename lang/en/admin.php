@@ -753,6 +753,8 @@ return [
     'clients.custom_fields' => 'Custom Fields',
     'clients.edit_client' => 'Edit Client',
     'clients.edit_client_btn' => 'Edit Client',
+    'clients.personal_data' => 'Personal data',
+    'clients.personal_data_hint' => 'Download everything kept about this customer as JSON, to answer a GDPR / KVKK request.',
     'clients.email' => 'Email',
     'clients.group_label' => 'Group',
     'clients.inactive' => 'Inactive',

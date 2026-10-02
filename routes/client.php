@@ -292,6 +292,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::put('account/users/{user}', [\App\Http\Controllers\Client\AccountUserController::class, 'update'])->name('account.users.update');
         Route::delete('account/users/{user}', [\App\Http\Controllers\Client\AccountUserController::class, 'destroy'])->name('account.users.destroy');
         Route::delete('account/users/invites/{invite}', [\App\Http\Controllers\Client\AccountUserController::class, 'cancelInvite'])->name('account.users.invites.destroy');
+        Route::post('account/personal-data', [AccountController::class, 'exportData'])->middleware('throttle:5,1')->name('account.personal-data');
         Route::post('account/phone/verification', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'start'])->name('account.phone.verify');
         Route::post('account/phone/verification-check', [\App\Http\Controllers\Client\PhoneVerificationController::class, 'check'])->name('account.phone.verify_check');
         Route::post('account/security/sessions/{sessionId}/logout', [AccountController::class, 'logoutSession'])->name('account.security.logout_session');

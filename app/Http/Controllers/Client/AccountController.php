@@ -374,6 +374,31 @@ class AccountController extends Controller
             ->with('success', __('messages.success.contact_updated'));
     }
 
+    /**
+     * A copy of everything kept about this account, as JSON (GDPR Art. 15
+     * and 20, KVKK Art. 11). Only the account owner: it carries the whole
+     * account, invoices and tickets included.
+     */
+    public function exportData(\App\Services\PersonalDataExport $export)
+    {
+        $client = $this->currentClient();
+        abort_unless($client && $client->users()->whereKey(auth()->id())->wherePivot('owner', true)->exists(), 403);
+
+        \App\Models\ActivityLog::log('Personal data export downloaded by the account owner', auth()->user()->email, $client->id);
+
+        return $this->dataDownload($export->build($client), $client);
+    }
+
+    private function dataDownload(array $data, \App\Models\Client $client)
+    {
+        $name = 'personal-data-'.$client->id.'-'.now()->format('Y-m-d').'.json';
+
+        return response()->json($data, 200, [
+            'Content-Disposition' => 'attachment; filename="'.$name.'"',
+            'Cache-Control' => 'no-store',
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     public function security()
     {
         $user = auth()->user();
@@ -394,8 +419,9 @@ class AccountController extends Controller
 
         // The last sign-ins and wrong passwords for this login, newest first.
         $logins = \App\Models\UserLogin::where('user_id', $user->id)->orderByDesc('id')->limit(20)->get();
+        $ownsAccount = $client && $client->users()->whereKey($user->id)->wherePivot('owner', true)->exists();
 
-        return view('client.account.security', compact('user', 'twoFactorEnabled', 'sessions', 'sessionsSupported', 'client', 'phoneVerifyAvailable', 'logins'));
+        return view('client.account.security', compact('ownsAccount', 'user', 'twoFactorEnabled', 'sessions', 'sessionsSupported', 'client', 'phoneVerifyAvailable', 'logins'));
     }
 
     public function logoutSession(string $sessionId)
