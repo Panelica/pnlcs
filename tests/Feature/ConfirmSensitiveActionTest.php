@@ -4,8 +4,11 @@ use App\Mail\ConfirmationCodeMail;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Email;
+use App\Models\EmailTemplate;
 use App\Models\User;
 use App\Services\SensitiveActionConfirmation;
+use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 
 /*
@@ -101,4 +104,20 @@ it('keeps the code out of the mail history', function () {
     $logged = Email::where('to', 'like', '%owner@example.test%')->latest('id')->first();
     expect($logged)->not->toBeNull()
         ->and($logged->message)->not->toMatch('/\b\d{6}\b/');
+});
+
+it('still sends the code when its template is switched off', function () {
+    [$user] = csaDomain();
+    EmailTemplate::updateOrCreate(['name' => 'Confirmation Code', 'language' => 'en'], [
+        'type' => 'general', 'subject' => 'Your code - {CompanyName}', 'message' => '{confirmation_code}', 'disabled' => true,
+    ]);
+
+    // Not Mail::fake(): the fake replaces the mailer, and the listener that
+    // applies (or switches off) a template would never run.
+    $sent = new ArrayObject;
+    Event::listen(MessageSent::class, fn ($e) => $sent->append($e->message->getTo()[0]->getAddress()));
+
+    test()->actingAs($user)->post(route('client.confirm.send'))->assertRedirect(route('client.confirm.show'));
+
+    expect($sent->getArrayCopy())->toBe(['owner@example.test']);
 });
