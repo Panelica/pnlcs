@@ -58,6 +58,11 @@ return [
     'actions.warning' => 'Uyarı',
     'add_funds' => 'Bakiye Yükle',
     'affiliates' => [
+        'code_label' => 'Kişisel kod',
+        'code_placeholder' => 'ör. ayse',
+        'code_hint' => 'Bağlantınızı kendi kelimenizle paylaşın: ?ref=ayse. Küçük harf, rakam ve tire; 3–32 karakter, yalnız rakam olamaz. Eski bağlantınız da çalışmaya devam eder.',
+        'code_saved' => 'Bağlantı kodunuz kaydedildi.',
+        'code_rule' => '3–32 karakter küçük harf, rakam ve tire kullanın (yalnız rakam olamaz).',
         'join_title' => 'Ortaklık programına katılın',
         'join_desc' => 'Bize gönderdiğiniz müşterilerin harcadığı miktarın bir kısmını kazanın.',
         'join_button' => 'Programa katılın',

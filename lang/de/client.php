@@ -58,6 +58,11 @@ return [
     'actions.warning' => 'Warnung',
     'add_funds' => 'Geld hinzufügen',
     'affiliates' => [
+        'code_label' => 'Persönlicher Code',
+        'code_placeholder' => 'z. B. ayse',
+        'code_hint' => 'Teilen Sie einen Link mit Ihrem eigenen Wort: ?ref=ayse. Kleinbuchstaben, Ziffern und Bindestriche, 3 bis 32 Zeichen, nicht nur Ziffern. Ihr alter Link funktioniert weiter.',
+        'code_saved' => 'Ihr Link-Code wurde gespeichert.',
+        'code_rule' => 'Verwenden Sie 3 bis 32 Kleinbuchstaben, Ziffern und Bindestriche (nicht nur Ziffern).',
         'join_title' => 'Treten Sie dem Partnerprogramm bei',
         'join_desc' => 'Verdienen Sie einen Anteil an den Ausgaben der Kunden, die Sie uns schicken.',
         'join_button' => 'Nehmen Sie am Programm teil',

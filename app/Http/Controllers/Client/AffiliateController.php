@@ -31,7 +31,7 @@ class AffiliateController extends Controller
             'pending' => $affiliate?->balance ?? 0,
         ];
 
-        $referralLink = url('/').'?ref='.($affiliate?->id ?? '');
+        $referralLink = $affiliate ? $affiliate->link() : url('/').'?ref=';
 
         $commissions = collect();
         if ($affiliate) {
@@ -131,5 +131,21 @@ class AffiliateController extends Controller
         }
 
         return back()->with('success', __('messages.success.affiliate_credited', ['amount' => number_format($amount, 2)]));
+    }
+
+    /** Set or clear the affiliate's personal code for their link. */
+    public function updateCode(Request $request)
+    {
+        $client = $this->currentClient();
+        $affiliate = $client ? Affiliate::where('client_id', $client->id)->firstOrFail() : abort(404);
+
+        $request->merge(['code' => strtolower(trim((string) $request->input('code')))]);
+        $validated = $request->validate([
+            'code' => ['nullable', 'string', 'max:32', 'regex:'.Affiliate::CODE_RULE, \Illuminate\Validation\Rule::unique('affiliates', 'code')->ignore($affiliate->id)],
+        ], ['code.regex' => __('client.affiliates.code_rule')]);
+
+        $affiliate->update(['code' => $validated['code'] ?: null]);
+
+        return back()->with('success', __('client.affiliates.code_saved'));
     }
 }

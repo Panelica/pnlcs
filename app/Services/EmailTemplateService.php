@@ -238,7 +238,7 @@ class EmailTemplateService
         // operator who customised a body sent "{reset_url}" to a customer who
         // had asked to change their password.
         if (is_object($data['affiliate'] ?? null)) {
-            $vars['affiliate_link'] = url('/?ref='.$data['affiliate']->id);
+            $vars['affiliate_link'] = method_exists($data['affiliate'], 'link') ? $data['affiliate']->link() : url('/?ref='.$data['affiliate']->id);
         }
 
         foreach ([

@@ -23,7 +23,8 @@ class AffiliateTracking
             return $next($request);
         }
 
-        $affiliate = Affiliate::find($refId);
+        // A personal code (?ref=ayse) or, as before, the affiliate's id.
+        $affiliate = Affiliate::findByRef($refId);
         if (! $affiliate) {
             return $next($request);
         }

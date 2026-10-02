@@ -2032,6 +2032,7 @@ return [
     'clients.marketing_no' => 'Not given',
     'domains.restore_todo' => 'Restore :domain at the registrar',
     'domains.restore_todo_desc' => 'The customer paid the restore invoice #:invoice. Registrar: :registrar. Restore the domain, then check its dates.',
+    'affiliates.code_label' => 'Personal link code',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',

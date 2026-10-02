@@ -58,6 +58,11 @@ return [
     'actions.warning' => 'Ostrzeżenie',
     'add_funds' => 'Dodaj środki',
     'affiliates' => [
+        'code_label' => 'Kod osobisty',
+        'code_placeholder' => 'np. ayse',
+        'code_hint' => 'Udostępniaj link z własnym słowem: ?ref=ayse. Małe litery, cyfry i myślniki, od 3 do 32 znaków, nie same cyfry. Stary link nadal działa.',
+        'code_saved' => 'Kod linku został zapisany.',
+        'code_rule' => 'Użyj od 3 do 32 małych liter, cyfr i myślników (nie same cyfry).',
         'join_title' => 'Dołącz do programu partnerskiego',
         'join_desc' => 'Zarabiaj część tego, co wydają klienci, których do nas skierujesz.',
         'join_button' => 'Dołącz do programu',
