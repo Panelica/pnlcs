@@ -36,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
             $m->register("orders", new \App\Widgets\OrdersWidget());
             $m->register("services", new \App\Widgets\ServicesWidget());
             $m->register("domains", new \App\Widgets\DomainsWidget());
+            $m->register("registrar_balance", new \App\Widgets\RegistrarBalanceWidget());
             $m->register("todo", new \App\Widgets\ToDoWidget());
             $m->register("health", new \App\Widgets\HealthWidget());
             $m->register("automation", new \App\Widgets\AutomationWidget());
