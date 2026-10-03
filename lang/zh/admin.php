@@ -2088,6 +2088,8 @@ return [
     'downloads.products' => '仅限以下产品的拥有者',
     'downloads.products_hint' => '留空则所有已登录客户可见。选择产品后，只有拥有其中任一产品有效服务的客户才能查看和下载。',
     'downloads.only_for' => '仅限：:products',
+    'settings.turkish_legal_forms' => '发布土耳其法定表格',
+    'settings.turkish_legal_forms_hint' => '远程销售合同、预先告知表和 KVKK 告知书。国家为土耳其时始终启用；如您从其他国家向土耳其消费者销售，请开启。',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',
     'products.product_group' => '产品组',

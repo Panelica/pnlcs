@@ -96,6 +96,9 @@ class SettingController extends Controller
         // opening, sign-in, password reset) and one pair of keys they share.
         // An emailed code before a domain's transfer code or lock (off by default).
         'ConfirmSensitiveActions',
+        // The Turkish statutory forms (distance sales, preliminary information,
+        // KVKK) for a seller outside Turkey selling to Turkish consumers.
+        'TurkishLegalForms',
         'RecaptchaEnabled', 'RecaptchaTicketsEnabled', 'RecaptchaSignupEnabled', 'RecaptchaLoginEnabled', 'RecaptchaPasswordEnabled', 'RecaptchaSiteKey', 'RecaptchaSecretKey',
         'EmailVerificationRequired',
         // Seller identity beyond the basics: what a contract, an official

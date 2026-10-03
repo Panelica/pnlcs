@@ -2069,6 +2069,8 @@ return [
     'downloads.products' => 'Yalnız şu ürünlerin sahipleri',
     'downloads.products_hint' => 'Boş bırakılırsa giriş yapan her müşteri görür. Ürün seçilirse yalnız bunlardan birinin etkin hizmetine sahip müşteriler görüp indirebilir.',
     'downloads.only_for' => 'Yalnız: :products',
+    'settings.turkish_legal_forms' => 'Türkçe yasal formları yayınla',
+    'settings.turkish_legal_forms_hint' => 'Mesafeli satış sözleşmesi, ön bilgilendirme formu ve KVKK aydınlatma metni. Ülke Türkiye ise her zaman açıktır; başka bir ülkeden Türkiye\'deki tüketicilere satış yapıyorsanız açın.',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
     'products.product_group' => 'Ürün Grubu',

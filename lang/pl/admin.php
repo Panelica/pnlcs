@@ -2088,6 +2088,8 @@ return [
     'downloads.products' => 'Tylko dla właścicieli',
     'downloads.products_hint' => 'Zostaw puste dla wszystkich zalogowanych klientów. Gdy wybrano produkty, widzą i pobierają to tylko klienci z aktywną usługą jednego z nich.',
     'downloads.only_for' => 'Tylko dla: :products',
+    'settings.turkish_legal_forms' => 'Publikuj tureckie formularze ustawowe',
+    'settings.turkish_legal_forms_hint' => 'Umowa sprzedaży na odległość, formularz informacji wstępnej i klauzula KVKK. Zawsze włączone, gdy krajem jest Turcja; włącz, jeśli sprzedajesz konsumentom w Turcji z innego kraju.',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

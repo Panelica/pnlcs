@@ -2088,6 +2088,8 @@ return [
     'downloads.products' => 'Only for owners of',
     'downloads.products_hint' => 'Leave empty for every signed-in customer. When products are chosen, only customers with an active service of one of them see and download it.',
     'downloads.only_for' => 'Only for: :products',
+    'settings.turkish_legal_forms' => 'Publish the Turkish statutory forms',
+    'settings.turkish_legal_forms_hint' => 'Distance sales contract, preliminary information form and KVKK notice. Always on when the country is Turkey; switch on if you sell to consumers in Turkey from elsewhere.',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',

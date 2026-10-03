@@ -2088,6 +2088,8 @@ return [
     'downloads.products' => 'Nur für Inhaber von',
     'downloads.products_hint' => 'Leer lassen für alle angemeldeten Kunden. Sind Produkte gewählt, sehen und laden es nur Kunden mit einem aktiven Dienst eines davon.',
     'downloads.only_for' => 'Nur für: :products',
+    'settings.turkish_legal_forms' => 'Türkische Pflichtformulare veröffentlichen',
+    'settings.turkish_legal_forms_hint' => 'Fernabsatzvertrag, Vorabinformation und KVKK-Hinweis. Bei Land Türkei immer aktiv; einschalten, wenn Sie von anderswo an Verbraucher in der Türkei verkaufen.',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',
     'products.product_group' => 'Produktgruppe',
