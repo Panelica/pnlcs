@@ -954,6 +954,7 @@ return [
         'balance_floor' => '下限 :floor',
         'balance_checked_at' => '检查于 :at',
         'balance_low' => '已达到或低于下限',
+        'balance_not_configured' => '被监控余额的注册商尚未配置。',
         'balance_checked' => '已检查余额。',
         'active_domains' => '已启用域名',
         'active_services' => '已启用服务',

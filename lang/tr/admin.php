@@ -944,6 +944,7 @@ return [
         'balance_floor' => 'Alt sınır :floor',
         'balance_checked_at' => 'kontrol :at',
         'balance_low' => 'Alt sınırda ya da altında',
+        'balance_not_configured' => 'Bakiyesi izlenen kayıt firması henüz ayarlanmadı.',
         'balance_checked' => 'Bakiye kontrol edildi.',
         'active_domains' => 'Aktif Alan Adları',
         'active_services' => 'Aktif Hizmetler',

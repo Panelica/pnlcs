@@ -42,14 +42,7 @@ class RegistrarBalanceCheckCommand extends Command
         // loads, an install that does not use it would be mailed "balance
         // unreadable" every day. A registrar nobody has configured has no
         // balance to watch.
-        $stored = \App\Models\RegistrarSettings::where('registrar', $registrar)->get()
-            ->filter(fn ($row) => trim((string) $row->value) !== '')
-            ->pluck('setting')
-            ->all();
-        $missing = collect($module->getConfigFields())
-            ->filter(fn ($field) => ($field['required'] ?? false) && ! in_array($field['name'], $stored, true));
-
-        if ($missing->isNotEmpty()) {
+        if (! self::configured($registrar, $module)) {
             $this->info("Registrar '{$registrar}' is not configured here: no balance to watch.");
 
             return self::SUCCESS;
@@ -115,6 +108,30 @@ class RegistrarBalanceCheckCommand extends Command
     }
 
     /** The last reading, kept for the dashboard: read from the settings, never by calling the registrar. */
+    /**
+     * Whether the watched registrar can report a balance here: its module
+     * exists, can read a balance, and every required setting is filled. The
+     * dashboard widget asks the same question, so it never offers a check
+     * that would stop at "not configured".
+     */
+    public static function configured(?string $registrar = null, ?object $module = null): bool
+    {
+        $registrar ??= (string) Setting::get('BalanceWatchRegistrar', 'domainnameapi');
+        $module ??= app(ModuleRegistry::class)->getRegistrarModule($registrar);
+        if (! $module || ! method_exists($module, 'getBalance')) {
+            return false;
+        }
+
+        $stored = \App\Models\RegistrarSettings::where('registrar', $registrar)->get()
+            ->filter(fn ($row) => trim((string) $row->value) !== '')
+            ->pluck('setting')
+            ->all();
+
+        return collect($module->getConfigFields())
+            ->filter(fn ($field) => ($field['required'] ?? false) && ! in_array($field['name'], $stored, true))
+            ->isEmpty();
+    }
+
     public static function last(): ?array
     {
         $raw = json_decode((string) Setting::get('RegistrarBalanceLast', ''), true);

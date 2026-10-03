@@ -954,6 +954,7 @@ return [
         'balance_floor' => 'Floor :floor',
         'balance_checked_at' => 'checked :at',
         'balance_low' => 'At or below the floor',
+        'balance_not_configured' => 'The registrar whose balance is watched is not set up yet.',
         'balance_checked' => 'Balance checked.',
         'active_domains' => 'Active Domains',
         'active_services' => 'Active Services',

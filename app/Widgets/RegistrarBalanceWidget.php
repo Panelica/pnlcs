@@ -22,12 +22,17 @@ class RegistrarBalanceWidget implements WidgetModuleInterface
 
     public function getData(): array
     {
-        return ['last' => RegistrarBalanceCheckCommand::last()];
+        return ['configured' => RegistrarBalanceCheckCommand::configured(), 'last' => RegistrarBalanceCheckCommand::last()];
     }
 
     public function render(array $data): string
     {
         $last = $data['last'];
+        if (! ($data['configured'] ?? true)) {
+            // Nothing to check: say so once, with the way to set it up, and no button.
+            return '<div style="padding:12px 16px;font-size:13px;color:var(--pn-muted);">'.e(__('admin.dashboard.balance_not_configured'))
+                .' <a href="'.e(route('admin.config.registrars')).'">'.e(__('admin.registrars.title')).'</a></div>';
+        }
         $button = '<form method="POST" action="'.e(route('admin.config.registrar-balance.check')).'" style="margin:0;">'.csrf_field()
             .'<button type="submit" class="btn btn-default btn-xs">'.e(__('admin.dashboard.check_now')).'</button></form>';
         $row = fn (string $left, string $right) => '<div style="padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;">'.$left.$right.'</div>';

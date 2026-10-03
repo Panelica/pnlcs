@@ -11,6 +11,10 @@ class RegistrarBalanceController extends Controller
 {
     public function check()
     {
+        if (! RegistrarBalanceCheckCommand::configured()) {
+            return back()->with('error', __('admin.dashboard.balance_not_configured'));
+        }
+
         Artisan::call('pnlcs:registrar-balance');
         $last = RegistrarBalanceCheckCommand::last();
 

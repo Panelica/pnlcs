@@ -68,3 +68,17 @@ it('lets staff who manage registrars check now, and shows the widget on the dash
     $other = Admin::factory()->create(['role_id' => AdminRole::factory()->create(['name' => 'R'.uniqid(), 'permissions' => ['list_clients']])->id]);
     test()->actingAs($other, 'admin')->post(route('admin.config.registrar-balance.check'))->assertForbidden();
 });
+
+it('offers no check while the watched registrar is not set up, and says why', function () {
+    // A fresh install, or one that uses another registrar: nothing configured for DomainNameAPI.
+    $admin = Admin::factory()->create(['role_id' => AdminRole::factory()->create(['name' => 'Domains', 'permissions' => ['manage_registrars']])->id]);
+
+    $html = (new RegistrarBalanceWidget)->render((new RegistrarBalanceWidget)->getData());
+    expect($html)->toContain(__('admin.dashboard.balance_not_configured'))
+        ->toContain(route('admin.config.registrars'))
+        ->not->toContain(__('admin.dashboard.check_now'));
+
+    test()->actingAs($admin, 'admin')->from('/admin')->post(route('admin.config.registrar-balance.check'))
+        ->assertRedirect('/admin')->assertSessionHas('error', __('admin.dashboard.balance_not_configured'));
+    expect(RegistrarBalanceCheckCommand::last())->toBeNull();
+});

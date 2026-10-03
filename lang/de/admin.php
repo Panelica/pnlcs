@@ -954,6 +954,7 @@ return [
         'balance_floor' => 'Untergrenze :floor',
         'balance_checked_at' => 'geprüft :at',
         'balance_low' => 'Bei oder unter der Untergrenze',
+        'balance_not_configured' => 'Der Registrar, dessen Guthaben überwacht wird, ist noch nicht eingerichtet.',
         'balance_checked' => 'Guthaben geprüft.',
         'active_domains' => 'Aktive Domänen',
         'active_services' => 'Aktive Dienste',

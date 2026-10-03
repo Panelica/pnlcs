@@ -954,6 +954,7 @@ return [
         'balance_floor' => 'Próg :floor',
         'balance_checked_at' => 'sprawdzono :at',
         'balance_low' => 'Na progu lub poniżej',
+        'balance_not_configured' => 'Rejestrator, którego saldo jest obserwowane, nie jest jeszcze skonfigurowany.',
         'balance_checked' => 'Saldo sprawdzone.',
         'active_domains' => 'Aktywne domeny',
         'active_services' => 'Aktywne usługi',
