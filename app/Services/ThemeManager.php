@@ -279,6 +279,25 @@ class ThemeManager
     }
 
     /**
+     * Put the active theme's views in front of pnlcs' own.
+     *
+     * Error pages are looked up through the errors:: namespace, which Laravel
+     * builds from config('view.paths') each time it renders one
+     * (RegisterErrorViewPaths). The view finder's location alone never reaches
+     * it, so a theme's errors/404 was never used; the path goes in both.
+     */
+    public function applyViewPaths(): void
+    {
+        $viewPath = $this->getViewPath();
+        if (! $viewPath) {
+            return;
+        }
+
+        app('view')->prependLocation($viewPath);
+        config(['view.paths' => array_values(array_unique(array_merge([$viewPath], (array) config('view.paths'))))]);
+    }
+
+    /**
      * Get the asset URL for the active theme.
      */
     public function getAssetUrl(): ?string
