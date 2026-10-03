@@ -76,11 +76,7 @@ class AppServiceProvider extends ServiceProvider
         });
         // Theme Engine: prepend active theme's view directory
         try {
-            $themeManager = $this->app->make(ThemeManager::class);
-            $viewPath = $themeManager->getViewPath();
-            if ($viewPath) {
-                $this->app['view']->prependLocation($viewPath);
-            }
+            $this->app->make(ThemeManager::class)->applyViewPaths();
         } catch (\Throwable $e) {
             // Silently fail during install/migrate when DB is not ready
         }
