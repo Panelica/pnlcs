@@ -1853,6 +1853,9 @@ return [
     'notifications.webhook_url' => 'Webhook 地址',
     'open' => '打开',
     'orders' => [
+        'bulk_done_accept' => '已接受 :done 个订单，跳过 :skipped 个。',
+        'bulk_done_cancel' => '已取消 :done 个订单，跳过 :skipped 个。',
+        'select_none' => '请至少选择一个订单。',
         'accept_order' => '接受订单',
         'actions' => '操作',
         'amount' => '金额',

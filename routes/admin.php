@@ -129,6 +129,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     });
     Route::middleware('admin.permission:manage_orders')->group(function () {
+        Route::post('orders/bulk', [OrderController::class, 'bulk'])->name('orders.bulk');
         Route::post('orders/{order}/accept', [OrderController::class, 'accept'])->name('orders.accept');
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('orders/{order}/fraud', [OrderController::class, 'markFraud'])->name('orders.fraud');

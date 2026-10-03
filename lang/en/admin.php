@@ -1853,6 +1853,9 @@ return [
     'notifications.webhook_url' => 'Webhook URL',
     'open' => 'Open',
     'orders' => [
+        'bulk_done_accept' => ':done orders accepted, :skipped skipped.',
+        'bulk_done_cancel' => ':done orders cancelled, :skipped skipped.',
+        'select_none' => 'Select at least one order.',
         'accept_order' => 'Accept Order',
         'actions' => 'Actions',
         'amount' => 'Amount',

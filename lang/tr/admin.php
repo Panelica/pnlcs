@@ -1834,6 +1834,9 @@ return [
     'notifications.webhook_url' => 'Webhook Adresi',
     'open' => 'Açık',
     'orders' => [
+        'bulk_done_accept' => ':done sipariş onaylandı, :skipped atlandı.',
+        'bulk_done_cancel' => ':done sipariş iptal edildi, :skipped atlandı.',
+        'select_none' => 'En az bir sipariş seçin.',
         'accept_order' => 'Siparişi Kabul Et',
         'actions' => 'İşlemler',
         'amount' => 'Tutar',
