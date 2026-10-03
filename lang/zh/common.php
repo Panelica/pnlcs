@@ -2,6 +2,8 @@
 
 return [
     'actions' => [
+        'preview' => '预览',
+        'test' => '测试',
         'accept' => '接受',
         'activate' => '激活',
         'add' => '添加',
@@ -90,6 +92,10 @@ return [
         'no_results' => '未找到结果。',
     ],
     'form' => [
+        'amount' => '金额',
+        'date' => '日期',
+        'title' => '标题',
+        'type' => '类型',
         'address' => '地址',
         'address1' => '地址行 1',
         'address2' => '地址行 2',
@@ -195,6 +201,8 @@ return [
         'urgent' => '紧急',
     ],
     'status' => [
+        'failed' => '失败',
+        'success' => '成功',
         'accepted' => '已接受',
         'active' => '已启用',
         'answered' => '已回复',

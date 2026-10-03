@@ -2,6 +2,8 @@
 
 return [
     'actions' => [
+        'preview' => 'Önizle',
+        'test' => 'Dene',
         'accept' => 'Kabul Et',
         'activate' => 'Etkinleştir',
         'add' => 'Ekle',
@@ -90,6 +92,10 @@ return [
         'no_results' => 'Sonuç bulunamadı.',
     ],
     'form' => [
+        'amount' => 'Tutar',
+        'date' => 'Tarih',
+        'title' => 'Başlık',
+        'type' => 'Tür',
         'billing_email' => 'Fatura E-postası (Muhasebe)',
         'address' => 'Adres',
         'address1' => 'Adres Satırı 1',
@@ -195,6 +201,8 @@ return [
         'urgent' => 'Acil',
     ],
     'status' => [
+        'failed' => 'Başarısız',
+        'success' => 'Başarılı',
         'payment_pending' => 'Ödeme Bekliyor',
         'partially_paid' => 'Kısmen Ödendi',
         'accepted' => 'Kabul Edildi',

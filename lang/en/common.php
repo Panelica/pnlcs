@@ -2,6 +2,8 @@
 
 return [
     'actions' => [
+        'preview' => 'Preview',
+        'test' => 'Test',
         'accept' => 'Accept',
         'activate' => 'Activate',
         'add' => 'Add',
@@ -90,6 +92,10 @@ return [
         'no_results' => 'No results found.',
     ],
     'form' => [
+        'amount' => 'Amount',
+        'date' => 'Date',
+        'title' => 'Title',
+        'type' => 'Type',
         'address' => 'Address',
         'address1' => 'Address Line 1',
         'address2' => 'Address Line 2',
@@ -195,6 +201,8 @@ return [
         'urgent' => 'Urgent',
     ],
     'status' => [
+        'failed' => 'Failed',
+        'success' => 'Success',
         'accepted' => 'Accepted',
         'active' => 'Active',
         'answered' => 'Answered',

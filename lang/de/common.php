@@ -2,6 +2,8 @@
 
 return [
     'actions' => [
+        'preview' => 'Vorschau',
+        'test' => 'Testen',
         'accept' => 'Akzeptiere',
         'activate' => 'Aktivieren',
         'add' => 'Hinzufügen',
@@ -90,6 +92,10 @@ return [
         'no_results' => 'Keine Ergebnisse gefunden.',
     ],
     'form' => [
+        'amount' => 'Betrag',
+        'date' => 'Datum',
+        'title' => 'Titel',
+        'type' => 'Typ',
         'address' => 'Adresse',
         'address1' => 'Adresszeile 1',
         'address2' => 'Adresszeile 2',
@@ -195,6 +201,8 @@ return [
         'urgent' => 'Dringend',
     ],
     'status' => [
+        'failed' => 'Fehlgeschlagen',
+        'success' => 'Erfolgreich',
         'accepted' => 'Akzeptiert',
         'active' => 'Aktiv',
         'answered' => 'Beantwortet',
