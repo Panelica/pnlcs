@@ -107,10 +107,15 @@ class PaymentService
                 $this->addClientCredit($invoice, $overpay, "Overpayment on invoice #{$invoice->invoice_num} — added as credit");
             }
 
+            // The invoice names the method that settled it: it was created with
+            // the method chosen at checkout, and a customer who then paid by
+            // card read "paid via bank transfer". A payment marked by hand
+            // ('manual') says nothing about the method, so it keeps the one
+            // the invoice has.
             $invoice->update([
                 'status' => InvoiceStatus::Paid->value,
                 'date_paid' => now(),
-            ]);
+            ] + ($gateway !== 'manual' ? ['payment_method' => $gateway] : []));
 
             // AddFunds invoices: the paid amount becomes client credit.
             $this->creditAddFundsItems($invoice, $gateway);
