@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Schema;
  */
 class PruneLogsCommand extends Command
 {
-    protected $signature = 'pnlcs:prune-logs {--dry-run : Report what would be deleted without deleting}';
+    protected $signature = 'pnlcs:prune-logs {--dry-run : Report what would be deleted without deleting} {--table= : Prune only this table}';
 
     protected $description = 'Delete old rows from log/history tables based on retention settings';
 
@@ -27,6 +27,16 @@ class PruneLogsCommand extends Command
      * @var array<string, array{0: int, 1: string, 2: ?callable}>
      */
     private function targets(): array
+    {
+        return self::retentionTargets();
+    }
+
+    /**
+     * The tables this command prunes, for the retention screen too.
+     *
+     * @return array<string, array{0: int, 1: string, 2: ?callable}>
+     */
+    public static function retentionTargets(): array
     {
         return [
             'emails'           => [180, 'retention_emails_days', null],
@@ -60,7 +70,11 @@ class PruneLogsCommand extends Command
         $dryRun = (bool) $this->option('dry-run');
         $totalDeleted = 0;
 
+        $only = $this->option('table');
         foreach ($this->targets() as $table => [$defaultDays, $settingKey, $extra]) {
+            if ($only && $only !== $table) {
+                continue;
+            }
             if (!Schema::hasTable($table)) {
                 continue;
             }
