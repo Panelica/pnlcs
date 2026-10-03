@@ -56,6 +56,45 @@ class OrderController extends Controller
     }
 
     /**
+     * Accept or cancel several orders at once from the list, each the way its
+     * own button does it: only a pending order is accepted, an order already
+     * cancelled or marked fraud is left alone. One that fails is counted and
+     * logged, and the rest still go through.
+     */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $v = $request->validate([
+            'order_ids' => 'required|array|min:1|max:200',
+            'order_ids.*' => 'integer',
+            'action' => 'required|in:accept,cancel',
+        ]);
+
+        $done = 0;
+        $skipped = 0;
+        foreach (Order::whereIn('id', $v['order_ids'])->get() as $order) {
+            $eligible = $v['action'] === 'accept'
+                ? $order->status === OrderStatus::Pending->value
+                : ! in_array($order->status, [OrderStatus::Cancelled->value, OrderStatus::Fraud->value], true);
+            if (! $eligible) {
+                $skipped++;
+
+                continue;
+            }
+            try {
+                $v['action'] === 'accept'
+                    ? $this->orderService->acceptOrder($order, manual: true)
+                    : $this->orderService->cancelOrder($order);
+                $done++;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Bulk order {$v['action']} failed for order #{$order->order_num}: {$e->getMessage()}");
+                $skipped++;
+            }
+        }
+
+        return back()->with($done > 0 ? 'success' : 'info', __('admin.orders.bulk_done_'.$v['action'], ['done' => $done, 'skipped' => $skipped]));
+    }
+
+    /**
      * Cancel an order and terminate related services.
      */
     public function cancel(Order $order): RedirectResponse

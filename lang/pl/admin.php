@@ -1840,6 +1840,9 @@ return [
     'notifications.webhook_url' => 'URL webhook',
     'open' => 'Otwórz',
     'orders' => [
+        'bulk_done_accept' => 'Zaakceptowano zamówień: :done, pominięto: :skipped.',
+        'bulk_done_cancel' => 'Anulowano zamówień: :done, pominięto: :skipped.',
+        'select_none' => 'Wybierz co najmniej jedno zamówienie.',
         'accept_order' => 'Akceptuj zamówienie',
         'actions' => 'Akcje',
         'amount' => 'Kwota',
