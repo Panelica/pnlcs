@@ -3,6 +3,7 @@
 namespace Modules\Registrars\DomainNameApi;
 
 use App\Contracts\ChecksAvailabilityInBulk;
+use App\Contracts\ManagesDomainContacts;
 use App\Contracts\ManagesWhoisPrivacy;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\RestorableRegistrar;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Log;
  * module can answer for .dev and .app: Google Registry runs no port-43 WHOIS
  * server for them, so a whois-based lookup cannot.
  */
-class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesWhoisPrivacy, RegistrarModuleInterface, RestorableRegistrar, SyncsDomainData
+class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesDomainContacts, ManagesWhoisPrivacy, RegistrarModuleInterface, RestorableRegistrar, SyncsDomainData
 {
     /** Dialling codes for the countries this reseller actually sells into. */
     private const DIAL_CODES = [
@@ -380,6 +381,54 @@ class DomainNameApiRegistrar implements ChecksAvailabilityInBulk, ManagesWhoisPr
         return $this->ok($response)
             ? ['success' => true, 'message' => '']
             : ['success' => false, 'message' => $this->errorOf($response, 'Privacy could not be changed.')];
+    }
+
+    public function getContact(Domain $domain): ?array
+    {
+        $info = $this->details($domain->domain);
+        $contacts = is_array($info['contacts'] ?? null) ? $info['contacts'] : [];
+        $registrant = collect($contacts)->first(fn ($c) => strcasecmp((string) ($c['contactType'] ?? ''), 'Registrant') === 0) ?? ($contacts[0] ?? null);
+        if (! is_array($registrant)) {
+            return null;
+        }
+
+        $code = trim((string) ($registrant['phoneCountryCode'] ?? ''));
+        $phone = trim((string) ($registrant['phone'] ?? ''));
+
+        return [
+            'first_name' => (string) ($registrant['firstName'] ?? ''),
+            'last_name' => (string) ($registrant['lastName'] ?? ''),
+            'company_name' => (string) ($registrant['companyName'] ?? ''),
+            'email' => (string) ($registrant['eMail'] ?? $registrant['email'] ?? ''),
+            'phone' => $phone !== '' ? ($code !== '' ? "+{$code} {$phone}" : $phone) : '',
+            'address1' => (string) ($registrant['address'] ?? ''),
+            'city' => (string) ($registrant['city'] ?? ''),
+            'state' => (string) ($registrant['state'] ?? ''),
+            'postcode' => (string) ($registrant['postalCode'] ?? ''),
+            'country' => strtoupper((string) ($registrant['country'] ?? '')),
+        ];
+    }
+
+    public function saveContact(Domain $domain, array $contact): array
+    {
+        // The same shape registration sends, so a contact the registry
+        // accepted at registration is accepted here.
+        $payload = $this->contactPayload($domain, $contact);
+        $payload['companyName'] = $payload['Company'] ?? '';
+
+        $contacts = [];
+        foreach (['Registrant', 'Administrative', 'Technical', 'Billing'] as $role) {
+            $contacts[] = array_merge($payload, ['contactType' => $role]);
+        }
+
+        $response = $this->call('PUT', 'domains/contacts/update', [
+            'domainName' => $domain->domain,
+            'contacts' => $contacts,
+        ]);
+
+        return $this->ok($response)
+            ? ['success' => true, 'message' => '']
+            : ['success' => false, 'message' => $this->errorOf($response, 'The contact could not be updated.')];
     }
 
     // ---------------------------------------------------------------- helpers
