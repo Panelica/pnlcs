@@ -232,6 +232,9 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::post('domains/{domain}/privacy', [DomainController::class, 'togglePrivacy'])->name('domains.privacy');
         Route::get('domains/{domain}/contacts', [DomainController::class, 'contacts'])->name('domains.contacts');
         Route::put('domains/{domain}/contacts', [DomainController::class, 'updateContacts'])->name('domains.contacts.update');
+        Route::get('domains/{domain}/glue', [DomainController::class, 'glue'])->name('domains.glue');
+        Route::post('domains/{domain}/glue', [DomainController::class, 'saveGlue'])->name('domains.glue.save');
+        Route::delete('domains/{domain}/glue', [DomainController::class, 'deleteGlue'])->name('domains.glue.delete');
         Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
         Route::post('domains/{domain}/restore', [DomainController::class, 'restore'])->name('domains.restore');
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->middleware('client.confirm')->name('domains.epp');

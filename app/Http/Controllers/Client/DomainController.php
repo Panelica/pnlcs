@@ -70,7 +70,10 @@ class DomainController extends Controller
         // Whether the registrar lets the customer change the WHOIS contact.
         $canEditContacts = $module instanceof \App\Contracts\ManagesDomainContacts && strtolower((string) $domain->status) === 'active';
 
-        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount', 'canTogglePrivacy', 'canEditContacts'));
+        // Whether the registrar lets the customer manage glue records.
+        $canManageGlue = $module instanceof \App\Contracts\ManagesChildNameservers && strtolower((string) $domain->status) === 'active';
+
+        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount', 'canTogglePrivacy', 'canEditContacts', 'canManageGlue'));
     }
 
     /**
@@ -288,6 +291,112 @@ class DomainController extends Controller
         $module = $this->registrarFor($domain);
 
         return $module instanceof \App\Contracts\ManagesDomainContacts && strtolower((string) $domain->status) === 'active' ? $module : null;
+    }
+
+    /**
+     * The domain's own nameservers (glue records), as the registry has them.
+     */
+    public function glue(Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+        $module = $this->glueModule($domain);
+        if (! $module) {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
+        }
+
+        try {
+            $hosts = $module->getChildNameservers($domain);
+        } catch (\Throwable $e) {
+            Log::warning("Glue lookup failed for {$domain->domain}: {$e->getMessage()}");
+            $hosts = null;
+        }
+
+        return view('client.domains.glue', compact('domain', 'hosts'));
+    }
+
+    /** Add a glue record, or change the addresses of one that exists. */
+    public function saveGlue(Request $request, Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+        $module = $this->glueModule($domain);
+        if (! $module) {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
+        }
+
+        $v = $request->validate([
+            'host' => ['required', 'string', 'max:100'],
+            'ipv4' => ['required', 'ip', 'ipv4'],
+            'ipv6' => ['nullable', 'ip', 'ipv6'],
+        ]);
+
+        $host = $this->glueHost($domain, $v['host']);
+        if ($host === null) {
+            return back()->withInput()->withErrors(['host' => __('client.domains.glue_host_invalid', ['domain' => $domain->domain])]);
+        }
+
+        try {
+            $existing = collect($module->getChildNameservers($domain) ?? [])->pluck('host')->all();
+            $result = $module->saveChildNameserver($domain, $host, array_values(array_filter([$v['ipv4'], $v['ipv6'] ?? null])), in_array($host, $existing, true));
+        } catch (\Throwable $e) {
+            Log::error("Glue save failed for {$host}: {$e->getMessage()}");
+            $result = ['success' => false, 'message' => ''];
+        }
+
+        if (! ($result['success'] ?? false)) {
+            return back()->withInput()->with('error', trim(__('client.domains.glue_failed').' '.($result['message'] ?? '')));
+        }
+
+        return redirect()->route('client.domains.glue', $domain)->with('success', __('client.domains.glue_saved', ['host' => $host]));
+    }
+
+    public function deleteGlue(Request $request, Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+        $module = $this->glueModule($domain);
+        if (! $module) {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
+        }
+
+        $host = $this->glueHost($domain, (string) $request->validate(['host' => 'required|string|max:100'])['host']);
+        if ($host === null) {
+            abort(422);
+        }
+
+        try {
+            $result = $module->deleteChildNameserver($domain, $host);
+        } catch (\Throwable $e) {
+            Log::error("Glue delete failed for {$host}: {$e->getMessage()}");
+            $result = ['success' => false, 'message' => ''];
+        }
+
+        return redirect()->route('client.domains.glue', $domain)->with(
+            ($result['success'] ?? false) ? 'success' : 'error',
+            ($result['success'] ?? false) ? __('client.domains.glue_deleted', ['host' => $host]) : trim(__('client.domains.glue_failed').' '.($result['message'] ?? ''))
+        );
+    }
+
+    private function glueModule(Domain $domain): ?\App\Contracts\ManagesChildNameservers
+    {
+        $module = $this->registrarFor($domain);
+
+        return $module instanceof \App\Contracts\ManagesChildNameservers && strtolower((string) $domain->status) === 'active' ? $module : null;
+    }
+
+    /**
+     * ns1 or ns1.example.com, read as a name under this domain; anything
+     * else (another domain, a bare dot) is refused, since a registry only
+     * takes glue under the domain itself.
+     */
+    private function glueHost(Domain $domain, string $input): ?string
+    {
+        $name = strtolower(rtrim(trim($input), '.'));
+        $suffix = '.'.strtolower($domain->domain);
+        if (! str_ends_with($name, $suffix)) {
+            $name .= $suffix;
+        }
+        $label = substr($name, 0, -strlen($suffix));
+
+        return preg_match('/^(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))*$/', $label) ? $name : null;
     }
 
     /**
