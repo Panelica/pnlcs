@@ -208,6 +208,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // =============================================
     Route::middleware('admin.permission:list_domains')->group(function () {
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
+        Route::get('domains/searches', [\App\Http\Controllers\Admin\DomainSearchLogController::class, 'index'])->name('domains.searches');
     });
     Route::middleware('admin.permission:manage_domains')->group(function () {
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');

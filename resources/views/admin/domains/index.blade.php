@@ -4,7 +4,7 @@
 
 <div class="page-header">
     <h1>{{ __('admin.domains.title') }}</h1>
-    <span style="font-size:13px;color:#666;">{{ $domains->total() }} total</span>
+    <span style="font-size:13px;color:#666;">{{ $domains->total() }} total · <a href="{{ route('admin.domains.searches') }}">{{ __('admin.domain_searches.title') }}</a></span>
 </div>
 
 <!-- Filter Bar -->

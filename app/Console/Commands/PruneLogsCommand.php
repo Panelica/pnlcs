@@ -39,6 +39,8 @@ class PruneLogsCommand extends Command
             // retry back its own work to do a second time.
             'gateway_events'   => [90,  'retention_gateway_events_days', null],
             'activity_logs'    => [365, 'retention_activity_logs_days', null],
+            // Storefront domain searches (DomainSearchController).
+            'whois_logs'       => [90,  'retention_whois_logs_days', null],
             'module_queue'     => [30,  'retention_module_queue_days', function ($q) {
                 // Work still waiting to run is never pruned - and neither is a
                 // failed entry. Those are the panel's record of an action that
