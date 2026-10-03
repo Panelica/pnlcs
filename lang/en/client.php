@@ -468,6 +468,7 @@ return [
         'privacy_failed' => 'The registrar did not change WHOIS privacy. Please try again later or contact support.',
         'privacy_on' => 'WHOIS privacy is on: your contact details are hidden in public WHOIS.',
         'privacy_off' => 'WHOIS privacy is off: your contact details are shown in public WHOIS.',
+        'privacy_sold' => 'WHOIS privacy is sold for this extension: it is added when the domain is ordered. Contact support to add it now.',
         'turn_on' => 'Turn on',
         'turn_off' => 'Turn off',
         'auto_renew' => 'Auto Renew',

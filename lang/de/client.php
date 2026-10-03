@@ -467,6 +467,7 @@ return [
         'privacy_failed' => 'Der Registrar hat den WHOIS-Datenschutz nicht geändert. Bitte später erneut versuchen oder den Support kontaktieren.',
         'privacy_on' => 'WHOIS-Datenschutz ist an: Ihre Kontaktdaten sind im öffentlichen WHOIS verborgen.',
         'privacy_off' => 'WHOIS-Datenschutz ist aus: Ihre Kontaktdaten erscheinen im öffentlichen WHOIS.',
+        'privacy_sold' => 'Für diese Endung wird WHOIS-Datenschutz verkauft: Er wird bei der Bestellung hinzugefügt. Wenden Sie sich an den Support, um ihn jetzt hinzuzufügen.',
         'turn_on' => 'Einschalten',
         'turn_off' => 'Ausschalten',
         'auto_renew' => 'Automatische Verlängerung',

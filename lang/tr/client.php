@@ -467,6 +467,7 @@ return [
         'privacy_failed' => 'Kayıt firması whois gizliliğini değiştirmedi. Daha sonra yeniden deneyin ya da destekle iletişime geçin.',
         'privacy_on' => 'Whois gizliliği açık: iletişim bilgileriniz herkese açık whois kaydında gizleniyor.',
         'privacy_off' => 'Whois gizliliği kapalı: iletişim bilgileriniz herkese açık whois kaydında görünüyor.',
+        'privacy_sold' => 'Bu uzantıda whois gizliliği ücretli: alan adı alınırken eklenir. Şimdi eklemek için destekle iletişime geçin.',
         'turn_on' => 'Aç',
         'turn_off' => 'Kapat',
         'auto_renew' => 'Otomatik Yenileme',

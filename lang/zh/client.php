@@ -467,6 +467,7 @@ return [
         'privacy_failed' => '注册商未能更改 WHOIS 隐私保护。请稍后重试或联系支持。',
         'privacy_on' => 'WHOIS 隐私保护已开启：您的联系信息在公开 WHOIS 中隐藏。',
         'privacy_off' => 'WHOIS 隐私保护已关闭：您的联系信息会显示在公开 WHOIS 中。',
+        'privacy_sold' => '该后缀的 WHOIS 隐私保护需付费：在订购域名时添加。如需现在添加，请联系支持。',
         'turn_on' => '开启',
         'turn_off' => '关闭',
         'auto_renew' => '自动续费',

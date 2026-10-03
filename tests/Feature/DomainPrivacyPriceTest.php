@@ -141,3 +141,38 @@ it('asks the registrar for privacy when the order chose it', function () {
     expect($params['hidden-shop.com']['privacy'] ?? null)->toBeTrue()
         ->and($params['open-shop.com'])->not->toHaveKey('privacy');
 });
+
+it('does not let a domain bought without paid privacy switch it on from the page', function () {
+    \App\Models\RegistrarSettings::updateOrCreate(['registrar' => 'domainnameapi', 'setting' => 'reseller_id'], ['value' => 'reseller-1']);
+    \App\Models\RegistrarSettings::updateOrCreate(['registrar' => 'domainnameapi', 'setting' => 'api_key'], ['value' => 'key-1']);
+    \Illuminate\Support\Facades\Http::fake(['*domains/privacy*' => \Illuminate\Support\Facades\Http::response(['success' => true]), '*' => \Illuminate\Support\Facades\Http::response([], 200)]);
+    wppSetup(3);
+    $user = User::factory()->create();
+    $client = Client::factory()->create();
+    $user->clients()->attach($client->id, ['owner' => true]);
+    $plain = Domain::factory()->create(['client_id' => $client->id, 'domain' => 'plain-sold.com', 'registrar' => 'domainnameapi', 'status' => 'active', 'id_protection' => false, 'registration_period' => 1, 'recurring_amount' => 14]);
+
+    test()->actingAs($user)->get(route('client.domains.show', $plain))->assertOk()->assertDontSee(route('client.domains.privacy', $plain), false);
+    test()->actingAs($user)->post(route('client.domains.privacy', $plain))->assertSessionHas('error');
+    expect($plain->fresh()->id_protection)->toBeFalse();
+    \Illuminate\Support\Facades\Http::assertNotSent(fn ($r) => str_contains($r->url(), 'domains/privacy'));
+});
+
+it('lets paid privacy be switched off, and stops charging for it at renewal', function () {
+    \App\Models\RegistrarSettings::updateOrCreate(['registrar' => 'domainnameapi', 'setting' => 'reseller_id'], ['value' => 'reseller-1']);
+    \App\Models\RegistrarSettings::updateOrCreate(['registrar' => 'domainnameapi', 'setting' => 'api_key'], ['value' => 'key-1']);
+    \Illuminate\Support\Facades\Http::fake(['*domains/privacy*' => \Illuminate\Support\Facades\Http::response(['success' => true]), '*' => \Illuminate\Support\Facades\Http::response([], 200)]);
+    wppSetup(3);
+    $user = User::factory()->create();
+    $client = Client::factory()->create();
+    $user->clients()->attach($client->id, ['owner' => true]);
+    $paid = Domain::factory()->create(['client_id' => $client->id, 'domain' => 'paid-sold.com', 'registrar' => 'domainnameapi', 'status' => 'active', 'id_protection' => true, 'registration_period' => 2, 'recurring_amount' => 34]);
+
+    test()->actingAs($user)->get(route('client.domains.show', $paid))->assertSee(route('client.domains.privacy', $paid), false);
+    test()->actingAs($user)->post(route('client.domains.privacy', $paid))->assertSessionHas('success');
+
+    $paid->refresh();
+    expect($paid->id_protection)->toBeFalse()->and((float) $paid->recurring_amount)->toBe(28.0);
+    // Now off on a sold extension: no free way back.
+    test()->actingAs($user)->post(route('client.domains.privacy', $paid))->assertSessionHas('error');
+});

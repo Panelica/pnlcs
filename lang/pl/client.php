@@ -468,6 +468,7 @@ return [
         'privacy_failed' => 'Rejestrator nie zmienił ochrony prywatności WHOIS. Spróbuj później lub skontaktuj się z pomocą.',
         'privacy_on' => 'Ochrona prywatności WHOIS włączona: Twoje dane kontaktowe są ukryte w publicznym WHOIS.',
         'privacy_off' => 'Ochrona prywatności WHOIS wyłączona: Twoje dane kontaktowe są widoczne w publicznym WHOIS.',
+        'privacy_sold' => 'Dla tej końcówki ochrona prywatności WHOIS jest płatna: dodaje się ją przy zamówieniu domeny. Aby dodać ją teraz, skontaktuj się z pomocą.',
         'turn_on' => 'Włącz',
         'turn_off' => 'Wyłącz',
         'auto_renew' => 'Automatyczne odnowienie',
