@@ -16,6 +16,9 @@ Error: :error
 
 API access may be broken. While the balance cannot be read, no low-balance warning can be raised either.',
     ],
+    'stripe' => [
+        'processing' => 'Processing…',
+    ],
     'iyzico' => [
         'page_title' => 'Secure payment',
         'cancel' => 'Cancel and go back to the invoice',

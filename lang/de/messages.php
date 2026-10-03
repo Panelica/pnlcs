@@ -16,6 +16,9 @@ Fehler: :error
 
 Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht abgelesen werden kann, kann auch keine Warnung bei niedrigem Kontostand ausgegeben werden.',
     ],
+    'stripe' => [
+        'processing' => 'Wird verarbeitet…',
+    ],
     'iyzico' => [
         'page_title' => 'Sichere Zahlung',
         'cancel' => 'Abbrechen und zur Rechnung zurückkehren',

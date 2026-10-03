@@ -16,6 +16,9 @@ Hata: :error
 
 API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye uyarısı da verilemez.',
     ],
+    'stripe' => [
+        'processing' => 'İşleniyor…',
+    ],
     'iyzico' => [
         'page_title' => 'Güvenli ödeme',
         'cancel' => 'Vazgeç ve faturaya dön',

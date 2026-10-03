@@ -404,19 +404,31 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         $invoiceId      = (int) $invoice->id;
 
         if (!$publishableKey) {
-            return "<div class=\"alert alert-danger\">Stripe is not configured. Please contact support.</div>";
+            return "<div class=\"alert alert-danger\">".htmlspecialchars(__("messages.iyzico.not_configured"), ENT_QUOTES, "UTF-8")."</div>";
         }
 
         $safeKey      = htmlspecialchars($publishableKey, ENT_QUOTES, "UTF-8");
         $intentUrl    = url("/gateway/stripe/intent/{$invoiceId}");
         $confirmUrl   = url("/gateway/stripe/confirm/{$invoiceId}");
 
+        // The words on the form, in the customer's language: as HTML for the
+        // button, and as JSON strings for the script. The card wording is
+        // shared with the iyzico form, so it is translated once.
+        $payLabel     = __("messages.iyzico.pay_button", ["amount" => $amount]);
+        $payHtml      = htmlspecialchars($payLabel, ENT_QUOTES, "UTF-8");
+        $js           = fn (string $text): string => json_encode($text, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        $payJs        = $js($payLabel);
+        $processingJs = $js(__("messages.stripe.processing"));
+        $setupJs      = $js(__("messages.error.payment_failed"));
+        $confirmJs    = $js(__("messages.error.payment_failed"));
+        $networkJs    = $js(__("client.invoices.network_error_only"));
+
         return <<<HTML
 <div class="my-3">
     <div id="stripe-card-element" class="form-control p-3" style="min-height:42px;"></div>
     <div id="stripe-card-errors" class="text-danger mt-1 small"></div>
     <button id="stripe-submit-btn" class="btn btn-primary mt-3 w-100" type="button">
-        Pay {$amount}
+        {$payHtml}
     </button>
     <div id="stripe-message" class="mt-2"></div>
 </div>
@@ -435,7 +447,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
     document.getElementById("stripe-submit-btn").addEventListener("click", function() {
         var btn = this;
         btn.disabled = true;
-        btn.textContent = "Processing...";
+        btn.textContent = {$processingJs};
 
         fetch("{$intentUrl}", {
             method: "POST",
@@ -447,9 +459,9 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data.success) {
-                document.getElementById("stripe-card-errors").textContent = data.message || "Setup failed";
+                document.getElementById("stripe-card-errors").textContent = data.message || {$setupJs};
                 btn.disabled = false;
-                btn.textContent = "Pay {$amount}";
+                btn.textContent = {$payJs};
                 return;
             }
             return stripe.confirmCardPayment(data.client_secret, {
@@ -461,7 +473,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             if (result.error) {
                 document.getElementById("stripe-card-errors").textContent = result.error.message;
                 btn.disabled = false;
-                btn.textContent = "Pay {$amount}";
+                btn.textContent = {$payJs};
             } else if (result.paymentIntent.status === "succeeded") {
                 fetch("{$confirmUrl}", {
                     method: "POST",
@@ -476,17 +488,17 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
                     if (res.success) {
                         window.location.href = res.redirect_url || "/client/invoices/{$invoiceId}?payment=success";
                     } else {
-                        document.getElementById("stripe-message").innerHTML = "<div class=\"alert alert-danger\">" + (res.message || "Confirmation failed") + "</div>";
+                        document.getElementById("stripe-message").innerHTML = "<div class=\"alert alert-danger\">" + (res.message || {$confirmJs}) + "</div>";
                         btn.disabled = false;
-                        btn.textContent = "Pay {$amount}";
+                        btn.textContent = {$payJs};
                     }
                 });
             }
         })
         .catch(function(err) {
-            document.getElementById("stripe-card-errors").textContent = "Network error. Please try again.";
+            document.getElementById("stripe-card-errors").textContent = {$networkJs};
             btn.disabled = false;
-            btn.textContent = "Pay {$amount}";
+            btn.textContent = {$payJs};
         });
     });
 })();
