@@ -342,7 +342,65 @@ class ConfigController extends Controller
     {
         return view('admin.config.currencies', [
             'currencies' => Currency::all(),
+            'customerChoice' => (string) Setting::get(\App\Support\CustomerCurrency::SETTING, '0') === '1',
+            'autoUpdateRates' => (string) Setting::get('currency_auto_update', '1') === '1',
+            'clientsPerCurrency' => $this->clientsPerCurrency(),
         ]);
+    }
+
+    /**
+     * How many customers are billed in each currency. An account with no
+     * currency of its own is in the default one.
+     *
+     * @return array<int, int>
+     */
+    private function clientsPerCurrency(): array
+    {
+        $counts = Client::whereNotNull('currency_id')
+            ->selectRaw('currency_id, count(*) as total')
+            ->groupBy('currency_id')
+            ->pluck('total', 'currency_id')
+            ->map(fn ($n) => (int) $n)
+            ->all();
+
+        $default = Currency::getDefault();
+
+        if ($default) {
+            $counts[$default->id] = ($counts[$default->id] ?? 0) + Client::whereNull('currency_id')->count();
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Whether customers choose their own currency, and whether the rates are
+     * fetched every day. Both are read where they act: CustomerCurrency and
+     * pnlcs:currency-update.
+     */
+    public function updateCurrencySettings(Request $request)
+    {
+        $request->validate([
+            'customer_choice' => 'nullable|boolean',
+            'auto_update_rates' => 'nullable|boolean',
+        ]);
+
+        Setting::set(\App\Support\CustomerCurrency::SETTING, $request->boolean('customer_choice') ? '1' : '0', 'billing');
+        Setting::set('currency_auto_update', $request->boolean('auto_update_rates') ? '1' : '0', 'billing');
+
+        return back()->with('success', __('admin.currencies.settings_saved'));
+    }
+
+    /**
+     * Fetch the rates now rather than at the next daily run. Runs whether or
+     * not the daily update is switched on: the operator asked for it.
+     */
+    public function updateCurrencyRates()
+    {
+        $code = \Illuminate\Support\Facades\Artisan::call('pnlcs:currency-update', ['--force' => true]);
+
+        return back()->with($code === 0 ? 'success' : 'error', $code === 0
+            ? __('admin.currencies.rates_updated')
+            : __('admin.currencies.rates_failed'));
     }
 
     public function storeCurrency(Request $request)
@@ -382,6 +440,15 @@ class ConfigController extends Controller
         if ($currency->is_default) {
             return back()->with('error', __('messages.error.cannot_delete_the_default_currency'));
         }
+
+        // Customers billed in it would drop back to the shop currency without
+        // anyone deciding so; their accounts are moved first.
+        $clients = Client::where('currency_id', $currency->id)->count();
+
+        if ($clients > 0) {
+            return back()->with('error', __('admin.currencies.in_use_by_clients', ['code' => $currency->code, 'count' => $clients]));
+        }
+
         $currency->delete();
 
         return back()->with('success', __('messages.success.currency_deleted'));

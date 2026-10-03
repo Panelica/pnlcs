@@ -110,9 +110,9 @@
                                  really is the one that comes up selected. --}}
                             @foreach($pricedCycles as $cycle => $cyclePrice)
                                 <label class="cycle-option {{ $loop->first ? 'selected' : '' }}">
-                                    <input type="radio" name="billing_cycle" value="{{ $cycle }}" data-price="{{ $cyclePrice }}" {{ $loop->first ? 'checked' : '' }}
+                                    <input type="radio" name="billing_cycle" value="{{ $cycle }}" data-price="{{ display_price($cyclePrice) }}" {{ $loop->first ? 'checked' : '' }}
                                         onchange="document.querySelectorAll('.cycle-option').forEach(e=>e.classList.remove('selected')); this.closest('.cycle-option').classList.add('selected')">
-                                    <div class="cycle-price">{{ $currency?->prefix }}{{ number_format($cyclePrice, 2) }}{{ $currency?->suffix }}</div>
+                                    <div class="cycle-price">{{ display_money_fmt($cyclePrice) }}</div>
                                     <div class="cycle-label">{{ $cycle }}</div>
                                 </label>
                             @endforeach
@@ -144,13 +144,13 @@
                                            name="config_options[{{ $option->id }}]"
                                            class="form-control config-option"
                                            data-name="{{ $option->displayName() }}"
-                                           data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $unit?->priceFor($c) ?? 0)) }}"
-                                           data-unit-price="{{ $unit?->priceFor($selectedCycle) ?? 0 }}"
+                                           data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => display_price($unit?->priceFor($c) ?? 0))) }}"
+                                           data-unit-price="{{ display_price($unit?->priceFor($selectedCycle) ?? 0) }}"
                                            value="{{ $previous ?? $option->qty_minimum ?? 0 }}"
                                            min="{{ $option->qty_minimum ?? 0 }}"
                                            @if($option->qty_maximum) max="{{ $option->qty_maximum }}" @endif>
                                     <small style="color:var(--muted);">
-                                        {{ $currency?->prefix }}{{ number_format($unit?->priceFor($selectedCycle) ?? 0, 2) }}
+                                        {{ display_money_fmt($unit?->priceFor($selectedCycle) ?? 0) }}
                                         {{ __('client.cart.per_unit') }}
                                     </small>
 
@@ -161,12 +161,12 @@
                                                name="config_options[{{ $option->id }}]" value="1"
                                                class="config-option"
                                                data-name="{{ $option->displayName() }}"
-                                               data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $sub?->priceFor($c) ?? 0)) }}"
-                                               data-unit-price="{{ $sub?->priceFor($selectedCycle) ?? 0 }}"
+                                               data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => display_price($sub?->priceFor($c) ?? 0))) }}"
+                                               data-unit-price="{{ display_price($sub?->priceFor($selectedCycle) ?? 0) }}"
                                                @checked($previous)>
                                         <span>{{ $sub?->displayName() ?? $option->displayName() }}
                                             @if(($sub?->priceFor($selectedCycle) ?? 0) > 0)
-                                                (+{{ $currency?->prefix }}{{ number_format($sub->priceFor($selectedCycle), 2) }})
+                                                (+{{ display_money_fmt($sub->priceFor($selectedCycle)) }})
                                             @endif
                                         </span>
                                     </label>
@@ -180,10 +180,10 @@
                                             @php $price = $sub->priceFor($selectedCycle); @endphp
                                             <option value="{{ $sub->id }}"
                                                     data-label="{{ $sub->displayName() }}"
-                                                    data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $sub->priceFor($c))) }}"
-                                                    data-unit-price="{{ $price }}"
+                                                    data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $sub->priceFor($c) === null ? null : display_price($sub->priceFor($c)))) }}"
+                                                    data-unit-price="{{ display_price($price) }}"
                                                     @selected((string) $previous === (string) $sub->id)>
-                                                {{ $sub->displayName() }}@if($price > 0) (+{{ $currency?->prefix }}{{ number_format($price, 2) }})@endif
+                                                {{ $sub->displayName() }}@if($price > 0) (+{{ display_money_fmt($price) }})@endif
                                             </option>
                                         @endforeach
                                     </select>
@@ -211,14 +211,14 @@
                         @php $addonPrice = $addon->priceFor($selectedCycle); @endphp
                         <label style="display:flex; align-items:flex-start; gap:8px; margin-bottom:10px; cursor:pointer;">
                             <input type="checkbox" name="addons[]" value="{{ $addon->id }}"
-                                   class="cart-addon" data-unit-price="{{ $addonPrice }}"
+                                   class="cart-addon" data-unit-price="{{ display_price($addonPrice) }}"
                                    data-name="{{ $addon->name }}"
-                                   data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $addon->priceFor($c))) }}"
+                                   data-prices="{{ json_encode(collect($pricedCycles)->map(fn ($p, $c) => $addon->priceFor($c) === null ? null : display_price($addon->priceFor($c)))) }}"
                                    @checked(in_array($addon->id, $previousAddons, true))>
                             <span>
                                 <strong>{{ $addon->name }}</strong>
                                 @if($addonPrice > 0)
-                                    <span style="color:var(--muted);">(+{{ $currency?->prefix }}{{ number_format($addonPrice, 2) }})</span>
+                                    <span style="color:var(--muted);">(+{{ display_money_fmt($addonPrice) }})</span>
                                 @endif
                                 @if($addon->description)
                                     <br><small style="color:var(--muted);">{{ $addon->description }}</small>
@@ -324,7 +324,7 @@
 // The total is the cycle's price plus every chosen option and addon, for
 // that cycle, plus a domain being bought with it.
 (function () {
-    var cur = { prefix: @json($currency?->prefix ?? ''), suffix: @json($currency?->suffix ?? '') };
+    var cur = @json(display_currency_affixes());
     function money(n) { return cur.prefix + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + cur.suffix; }
     function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
     function priceOf(el, cycle) {
@@ -378,7 +378,7 @@ document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
     var status = document.getElementById('domainStatus'), epp = document.getElementById('eppField');
     var row = document.getElementById('summaryDomainRow'), cell = document.getElementById('summaryDomain');
     var token = (document.querySelector('#configForm input[name=_token]') || {}).value;
-    var cur = { prefix: @json($currency?->prefix ?? ''), suffix: @json($currency?->suffix ?? '') };
+    var cur = @json(display_currency_affixes());
     var texts = { checking: @json(__('client.cart.domain_checking')), unchecked: @json(__('client.cart.domain_unchecked')) };
     var domainPrice = 0, timer = null, seq = 0;
     function option() { var r = document.querySelector('input[name=domain_option]:checked'); return r ? r.value : 'own'; }

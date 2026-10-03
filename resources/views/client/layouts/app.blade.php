@@ -518,6 +518,7 @@
 
         <div class="pn-nav-right">
         @include("client.layouts.partials.language-selector")
+        @include("client.layouts.partials.currency-selector")
                 @if($darkModeEnabled ?? false)
                 <button onclick="toggleDarkMode()" class="dark-toggle" title="{{ __('client.toggle_dark_mode') }}" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--muted);font-size:16px;transition:all 0.15s;">
                     <i class="ri-sun-line" id="lightIcon" style="display:none;"></i>

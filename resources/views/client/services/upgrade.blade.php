@@ -16,7 +16,7 @@
 </div>
 @else
 <div style="background:#d9edf7; border:1px solid #bce8f1; color:#31708f; padding:12px 16px; border-radius:4px; font-size:13px; margin-bottom:20px;">
-    {{ __('client.services.currently_on') }}: <strong>{{ $service->product?->name ?? 'Service' }}</strong> &mdash; {{ money_fmt($service->amount) }}/{{ $service->billing_cycle }}
+    {{ __('client.services.currently_on') }}: <strong>{{ $service->product?->name ?? 'Service' }}</strong> &mdash; {{ display_money_fmt($service->amount) }}/{{ $service->billing_cycle }}
 </div>
 
 <div class="pn-card">
@@ -49,7 +49,7 @@
                     </div>
                     @if($price)
                     <div style="text-align:right; white-space:nowrap;">
-                        <div style="font-weight:600; font-size:14px;">{{ money_fmt($price) }}</div>
+                        <div style="font-weight:600; font-size:14px;">{{ display_money_fmt($price) }}</div>
                         <div style="font-size:11px; color:var(--muted);">{{ __('client.services.per_cycle', ['cycle' => $cycle]) }}</div>
                     </div>
                     @endif
@@ -82,16 +82,16 @@
                             <input type="number" id="uopt-{{ $option->id }}" name="config_options[{{ $option->id }}]" class="form-control" style="max-width:160px;"
                                    value="{{ $currentOptions[$option->id] ?? ($option->qty_minimum ?? 0) }}"
                                    min="{{ $currentOptions[$option->id] ?? ($option->qty_minimum ?? 0) }}" @if($option->qty_maximum) max="{{ $option->qty_maximum }}" @endif>
-                            <small style="color:var(--muted);">{{ money_fmt($option->subs->first()?->priceFor($upgradeCycle) ?? 0) }} {{ __('client.cart.per_unit') }}</small>
+                            <small style="color:var(--muted);">{{ display_money_fmt($option->subs->first()?->priceFor($upgradeCycle) ?? 0) }} {{ __('client.cart.per_unit') }}</small>
                         @elseif($option->isCheckbox())
                             <label style="display:flex; align-items:center; gap:8px; font-size:13px;">
                                 <input type="checkbox" id="uopt-{{ $option->id }}" name="config_options[{{ $option->id }}]" value="1" @checked(isset($currentOptions[$option->id]))>
-                                <span>{{ $option->subs->first()?->displayName() ?? $option->displayName() }} (+{{ money_fmt($option->subs->first()?->priceFor($upgradeCycle) ?? 0) }})</span>
+                                <span>{{ $option->subs->first()?->displayName() ?? $option->displayName() }} (+{{ display_money_fmt($option->subs->first()?->priceFor($upgradeCycle) ?? 0) }})</span>
                             </label>
                         @else
                             <select id="uopt-{{ $option->id }}" name="config_options[{{ $option->id }}]" class="form-control" style="max-width:320px;">
                                 @foreach($option->subs as $sub)
-                                <option value="{{ $sub->id }}" @selected((string) ($currentOptions[$option->id] ?? '') === (string) $sub->id)>{{ $sub->displayName() }} · {{ money_fmt($sub->priceFor($upgradeCycle)) }}</option>
+                                <option value="{{ $sub->id }}" @selected((string) ($currentOptions[$option->id] ?? '') === (string) $sub->id)>{{ $sub->displayName() }} · {{ display_money_fmt($sub->priceFor($upgradeCycle)) }}</option>
                                 @endforeach
                             </select>
                         @endif

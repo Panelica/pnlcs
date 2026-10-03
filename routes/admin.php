@@ -331,6 +331,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::put('currencies/{currency}', [ConfigController::class, 'updateCurrency'])->name('currencies.update');
             Route::delete('currencies/{currency}', [ConfigController::class, 'destroyCurrency'])->name('currencies.destroy');
             Route::post('currencies/{currency}/default', [ConfigController::class, 'setDefaultCurrency'])->name('currencies.default');
+            Route::post('currencies/settings', [ConfigController::class, 'updateCurrencySettings'])->name('currencies.settings');
+            Route::post('currencies/update-rates', [ConfigController::class, 'updateCurrencyRates'])->middleware('throttle:6,1')->name('currencies.update-rates');
         });
 
         Route::middleware('admin.permission:manage_settings')->group(function () {

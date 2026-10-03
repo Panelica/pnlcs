@@ -8,6 +8,7 @@ use App\Http\Middleware\BlockBannedIp;
 use App\Http\Middleware\CheckAdminPermission;
 use App\Http\Middleware\MaintenanceMode;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\SetDisplayCurrency;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TwoFactorVerify;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -46,6 +47,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToGroup('web', RedirectToInstaller::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', SetLocale::class);
+        // After the session has started and the locale is set: which currency
+        // the page shows prices in (CustomerCurrency).
+        $middleware->appendToGroup('web', SetDisplayCurrency::class);
         $middleware->appendToGroup('web', MaintenanceMode::class);
         // Counted before anything is checked, so a wrong key costs the caller
         // an attempt too.

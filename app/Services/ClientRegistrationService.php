@@ -63,6 +63,10 @@ class ClientRegistrationService
             'national_id' => $validated['national_id'] ?? null,
             'phone_number' => $validated['phone_number'] ?? null,
             'phone_prefix' => $validated['phone_prefix'] ?? null,
+            // The currency the visitor picked in the top bar, when the shop
+            // lets customers choose: what they were shown is what they are
+            // billed in (CustomerCurrency). Null keeps the shop's.
+            'currency_id' => \App\Support\CustomerCurrency::chosenForNewAccount($request),
         ]);
         $client->users()->attach($user->id, ['owner' => true]);
 

@@ -33,7 +33,26 @@
                 <span class="top-bar__item"><i class="ri-global-line"></i> {{ __('client.topbar.language') }}</span>
                 @endif
                 <div class="top-bar__divider"></div>
+                @if(isset($customerCurrencyChoice) && $customerCurrencyChoice->count() > 1)
+                {{-- The visitor's currency, kept for the session (CustomerCurrency). --}}
+                <details class="top-bar__language top-bar__currency">
+                    <summary class="top-bar__item top-bar__language-toggle">
+                        <i class="ri-money-dollar-circle-line"></i> {{ $displayCurrency?->code ?? __('client.topbar.currency') }}
+                    </summary>
+                    <div class="top-bar__language-menu">
+                        @foreach($customerCurrencyChoice as $choice)
+                            <a href="{{ request()->fullUrlWithQuery(['currency' => $choice->code]) }}" rel="nofollow" class="top-bar__language-option {{ $choice->id === $displayCurrency?->id ? 'top-bar__language-option--active' : '' }}">
+                                {{ $choice->code }}@if(trim($choice->prefix.$choice->suffix) !== '') ({{ trim($choice->prefix.' '.$choice->suffix) }})@endif
+                            </a>
+                        @endforeach
+                    </div>
+                </details>
+                @elseif(($customerCurrencyEnabled ?? false) && $displayCurrency)
+                {{-- A customer's account currency: changed by staff, not by a link. --}}
+                <span class="top-bar__item" title="{{ __('client.topbar.currency_account') }}"><i class="ri-money-dollar-circle-line"></i> {{ $displayCurrency->code }}</span>
+                @else
                 <span class="top-bar__item"><i class="ri-money-dollar-circle-line"></i> {{ __('client.topbar.currency') }}</span>
+                @endif
             </div>
         </div>
     </div>

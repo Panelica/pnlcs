@@ -44,6 +44,26 @@ class FundsController extends Controller
     private function rateContext(): array
     {
         $shop = \App\Models\Currency::getDefault();
+
+        // The customer's own currency first (CustomerCurrency): the invoice
+        // this raises is billed in it, so the form asks in it too, at the
+        // rate the invoice will be stamped with.
+        $own = \App\Support\CustomerCurrency::forClient($this->currentClient());
+
+        if ($own) {
+            $official = strtoupper($own->code) === 'TRY';
+
+            return [
+                'shopCurrency'    => $shop,
+                'billingCurrency' => $own,
+                'exchangeRate'    => \App\Support\CustomerCurrency::rateOf($own),
+                // The official-source settings describe the lira rate only.
+                'rateSource'      => $official ? (\App\Models\Setting::get('ExchangeRateSource') ?: null) : null,
+                'rateDate'        => $official ? (\App\Models\Setting::get('ExchangeRateDate') ?: null) : null,
+                'rateBulletin'    => $official ? (\App\Models\Setting::get('ExchangeRateBulletin') ?: null) : null,
+            ];
+        }
+
         $code = (string) \App\Models\Setting::get('BillingCurrency', '');
         $billing = $code !== '' ? \App\Models\Currency::where('code', $code)->first() : null;
 

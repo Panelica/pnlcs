@@ -54,13 +54,13 @@
                                 <form method="POST" action="{{ route('client.cart.privacy', $key) }}" class="text-sm" style="margin-top:4px;">
                                     @csrf
                                     <input type="hidden" name="privacy" value="{{ !empty($item['privacy']) ? '0' : '1' }}">
-                                    <span>{{ __('client.cart.privacy_label') }}: {{ (float) $item['privacy_price'] > 0 ? __('client.cart.privacy_per_year', ['price' => money_fmt($item['privacy_price'])]) : __('client.cart.privacy_free') }}</span>
+                                    <span>{{ __('client.cart.privacy_label') }}: {{ (float) $item['privacy_price'] > 0 ? __('client.cart.privacy_per_year', ['price' => display_money_fmt($item['privacy_price'])]) : __('client.cart.privacy_free') }}</span>
                                     <button type="submit" class="btn btn-default btn-xs" style="margin-left:6px;">{{ !empty($item['privacy']) ? __('common.actions.remove') : __('common.actions.add') }}</button>
                                 </form>
                                 @endif
                             </td>
                             <td class="text-muted" style="text-transform:capitalize">{{ ($item["type"] ?? "") === "domain" ? trans_choice('client.cart.line_years', (int) ($item["years"] ?? 1), ['count' => (int) ($item["years"] ?? 1)]) : ($item["billing_cycle"] ?? "-") }}</td>
-                            <td style="text-align:right;font-weight:700">{{ money_fmt($item["price"] ?? 0) }}</td>
+                            <td style="text-align:right;font-weight:700">{{ display_money_fmt($item["price"] ?? 0) }}</td>
                             <td>
                                 @if(!empty($item["comes_with"]))
                                 {{-- Ordered with a hosting package: it is removed with that line. --}}
@@ -99,14 +99,15 @@
         <div class="pn-card" style="position:sticky;top:80px">
             <div class="pn-card-header"><span class="pn-card-title">{{ __('client.cart.order_summary') }}</span></div>
             <div class="pn-card-body">
-                <div class="pn-order-row"><span class="key">{{ __('client.cart.subtotal') }}</span><span>{{ money_fmt($totals["subtotal"]) }}</span></div>
+                <div class="pn-order-row"><span class="key">{{ __('client.cart.subtotal') }}</span><span>{{ display_money_fmt($totals["subtotal"]) }}</span></div>
                 @if(($totals["discount"] ?? 0) > 0)
-                <div class="pn-order-row" style="color:var(--success)"><span>{{ __('client.cart.discount') }}</span><span>-{{ money_fmt($totals["discount"]) }}</span></div>
+                <div class="pn-order-row" style="color:var(--success)"><span>{{ __('client.cart.discount') }}</span><span>-{{ display_money_fmt($totals["discount"]) }}</span></div>
                 @endif
                 @if(($totals["tax"] ?? 0) > 0)
-                <div class="pn-order-row"><span class="key">{{ __('client.cart.tax') }} ({{ $totals["tax_rate"] ?? 0 }}%)</span><span>{{ money_fmt($totals["tax"]) }}</span></div>
+                <div class="pn-order-row"><span class="key">{{ __('client.cart.tax') }} ({{ $totals["tax_rate"] ?? 0 }}%)</span><span>{{ display_money_fmt($totals["tax"]) }}</span></div>
                 @endif
-                <div class="pn-order-row"><span>{{ __('client.cart.total') }}</span><span style="color:var(--primary)">{{ money_fmt($totals["total"]) }}</span></div>
+                <div class="pn-order-row"><span>{{ __('client.cart.total') }}</span><span style="color:var(--primary)">{{ display_money_fmt($totals["total"]) }}</span></div>
+                @include('client.cart.partials.currency-note')
                 <a href="{{ route("client.cart.checkout") }}" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:16px">
                     {{ __('client.cart.checkout') }} &rarr;
                 </a>

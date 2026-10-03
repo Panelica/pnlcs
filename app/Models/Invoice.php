@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use App\Enums\InvoiceStatus;
+use App\Support\CustomerCurrency;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -45,6 +46,30 @@ class Invoice extends Model {
             }
 
             if ($invoice->billing_currency !== null) {
+                return;
+            }
+
+            // The customer's own currency comes first, when the operator lets
+            // customers choose (CustomerCurrency) and this one did. The amounts
+            // stay in the shop currency; the stamp is what the customer reads.
+            // Only over shop-currency amounts: the rate is against the shop.
+            $own = $invoice->client_id && $shop && strtoupper((string) $invoice->source_currency) === strtoupper($shop->code)
+                ? CustomerCurrency::forClient(Client::find($invoice->client_id))
+                : null;
+
+            if ($own) {
+                $invoice->billing_currency = strtoupper($own->code);
+                $invoice->exchange_rate = CustomerCurrency::rateOf($own);
+
+                // The provenance settings describe the official lira rate
+                // (pnlcs:currency-update): they belong on a lira stamp only.
+                if (strtoupper($own->code) === 'TRY') {
+                    $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
+                    $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
+                    $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
+                    $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
+                }
+
                 return;
             }
 

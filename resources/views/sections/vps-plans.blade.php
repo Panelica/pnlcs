@@ -55,7 +55,7 @@
                         @endforeach
                     </div>
                     @if($monthlyPrice !== null)
-                        <div class="vps-card__price">{{ $currency?->prefix ?? '$' }}{{ number_format($monthlyPrice, 2) }}{{ $currency?->suffix }}<small>/{{ $priceCycle === 'monthly' ? 'mo' : $priceCycle }}</small></div>
+                        <div class="vps-card__price">{{ display_money_fmt($monthlyPrice) }}<small>/{{ $priceCycle === 'monthly' ? 'mo' : $priceCycle }}</small></div>
                     @else
                         <div class="vps-card__price">{{ __('client.store.contact_us') }}</div>
                     @endif

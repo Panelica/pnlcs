@@ -38,8 +38,6 @@
                 $pricedCycles = $product->pricedCycles($currency?->id);
                 $startingCycle = (string) array_key_first($pricedCycles);
                 $startingPrice = $pricedCycles[$startingCycle] ?? null;
-                $currPrefix = $currency?->prefix ?? "$";
-                $currSuffix = $currency?->suffix ?? "";
             @endphp
             <div class="pn-card pn-product-card {{ $product->is_featured ? "featured" : "" }}">
                 @if($product->is_featured)
@@ -47,7 +45,7 @@
                 @endif
                 <div style="font-size:15px;font-weight:700;color:var(--primary);margin-bottom:8px">{{ $product->name }}</div>
                 @if($startingPrice !== null)
-                    <div class="pn-product-price">{{ $currPrefix }}{{ number_format($startingPrice, 2) }}{{ $currSuffix }} <span class="cycle">/{{ $startingCycle }}</span></div>
+                    <div class="pn-product-price">{{ display_money_fmt($startingPrice) }} <span class="cycle">/{{ $startingCycle }}</span></div>
                 @else
                     <div class="pn-product-price">{{ __('client.store.contact_us') }}</div>
                 @endif

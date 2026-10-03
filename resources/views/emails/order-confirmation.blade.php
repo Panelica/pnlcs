@@ -25,12 +25,12 @@
 <tr>
 <td style="padding:8px;border-bottom:1px solid #eee;">{{ $item->product?->name ?? __('email.common.service') }}</td>
 <td style="padding:8px;border-bottom:1px solid #eee;">{{ $item->domain ?? '-' }}</td>
-<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">{{ money_fmt((float)($item->price ?? 0)) }}</td>
+<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;">{{ $order->invoice ? dual_money_fmt((float)($item->price ?? 0), $order->invoice) : money_fmt((float)($item->price ?? 0)) }}</td>
 </tr>
 @endforeach
 <tr style="background:#f8f9fa;">
 <td colspan="2" style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.total_label') }}</strong></td>
-<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;"><strong>{{ money_fmt($order->total) }}</strong></td>
+<td style="padding:8px;border-bottom:1px solid #eee;text-align:right;"><strong>{{ $order->invoice ? dual_money_fmt($order->total, $order->invoice) : money_fmt($order->total) }}</strong></td>
 </tr>
 </table>
 @endif

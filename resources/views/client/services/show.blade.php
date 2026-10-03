@@ -178,14 +178,14 @@
                 <form method="POST" action="{{ route('client.services.cycle', $service) }}" style="display:inline-flex;gap:6px;align-items:center;margin-left:8px;text-transform:none;">@csrf
                     <select name="billing_cycle" class="form-control" style="width:auto;padding:2px 6px;font-size:12px;height:auto;" aria-label="{{ __('client.services.change_cycle') }}">
                         @foreach($cycleOptions as $cycle => $amount)
-                        <option value="{{ $cycle }}">{{ __('common.billing.'.\App\Services\BillingCycleChange::langKey($cycle)) }} · {{ money_fmt($amount) }}</option>
+                        <option value="{{ $cycle }}">{{ __('common.billing.'.\App\Services\BillingCycleChange::langKey($cycle)) }} · {{ display_money_fmt($amount) }}</option>
                         @endforeach
                     </select>
                     <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.change_cycle') }}</button>
                 </form>
                 @endif
             </span></li>
-            <li><span class="k">{{ __('client.services.amount') }}</span><span class="v">{{ money_fmt($service->amount) }} / {{ $service->billing_cycle }}</span></li>
+            <li><span class="k">{{ __('client.services.amount') }}</span><span class="v">{{ display_money_fmt($service->amount) }} / {{ $service->billing_cycle }}</span></li>
             <li><span class="k">{{ __('client.services.next_due_date') }}</span><span class="v">{{ $service->next_due_date?->format(date_fmt()) ?? '—' }}
                 @if($canRenewEarly ?? false)
                 <form method="POST" action="{{ route('client.services.renew', $service) }}" style="display:inline;margin-left:8px;">@csrf
@@ -221,7 +221,7 @@
     <div style="overflow-x:auto"><table class="pn-table">
         <thead><tr><th>{{ __('common.table.name') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('common.table.billing_cycle') }}</th><th>{{ __('client.services.next_due_date') }}</th><th>{{ __('common.table.status') }}</th><th style="text-align:right">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>@foreach($service->addons as $addon)<tr>
-            <td>{{ $addon->label() }}</td><td>{{ money_fmt($addon->amount) }}</td><td style="text-transform:capitalize">{{ $addon->billing_cycle }}</td>
+            <td>{{ $addon->label() }}</td><td>{{ display_money_fmt($addon->amount) }}</td><td style="text-transform:capitalize">{{ $addon->billing_cycle }}</td>
             <td class="text-muted text-sm">{{ $addon->next_due_date?->format(date_fmt()) ?? '-' }}</td>
             <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ __('client.status.' . strtolower($addon->status)) }}</span></td>
             <td style="text-align:right">@if(in_array(strtolower($addon->status),['active','pending'],true))<form method="POST" action="{{ route('client.services.addons.cancel',[$service,$addon]) }}" onsubmit="return confirm('{{ __('client.services.addon_cancel_confirm') }}')">@csrf<button type="submit" class="pn-btn pn-btn-sm pn-btn-danger">{{ __('client.services.addon_cancel') }}</button></form>@endif</td>
@@ -237,7 +237,7 @@
         <form method="POST" action="{{ route('client.services.addons.store',$service) }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">@csrf
             <input type="hidden" name="addon_id" value="{{ $available->id }}">
             <span><strong>{{ $available->name }}</strong>@if($available->description)<br><small class="text-muted">{{ $available->description }}</small>@endif</span>
-            <span style="white-space:nowrap">{{ money_fmt($available->priceFor($service->billing_cycle ?: 'Monthly')) }} <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.addon_order') }}</button></span>
+            <span style="white-space:nowrap">{{ display_money_fmt($available->priceFor($service->billing_cycle ?: 'Monthly')) }} <button type="submit" class="pn-btn pn-btn-sm">{{ __('client.services.addon_order') }}</button></span>
         </form>@endforeach</div>
 </div>
 @endif

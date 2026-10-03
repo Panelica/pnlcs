@@ -90,7 +90,7 @@
                     <tr>
                         <td><a href="{{ route("client.invoices.show", $invoice) }}">#{{ $invoice->invoice_num ?? $invoice->id }}</a></td>
                         <td class="text-muted text-sm">{{ $invoice->due_date?->format(date_fmt()) ?? "-" }}</td>
-                        <td style="font-weight:600">{{ money_fmt($invoice->total) }}</td>
+                        <td style="font-weight:600">{{ dual_money_fmt($invoice->total, $invoice) }}</td>
                         <td><span class="badge badge-{{ strtolower($invoice->status) }}">{{ invoice_status_label($invoice->status) }}</span></td>
                     </tr>
                     @endforeach
@@ -147,7 +147,7 @@
                         @include('client.services.partials.tool-links', ['svc' => $service])
                     </td>
                     <td class="text-muted">{{ $service->domain ?? "-" }}</td>
-                    <td style="font-weight:600">{{ money_fmt($service->amount) }}<span class="text-muted text-sm">/{{ $service->billing_cycle }}</span></td>
+                    <td style="font-weight:600">{{ display_money_fmt($service->amount) }}<span class="text-muted text-sm">/{{ $service->billing_cycle }}</span></td>
                     <td class="text-muted text-sm">{{ $service->next_due_date?->format(date_fmt()) ?? "N/A" }}</td>
                     <td><span class="badge badge-active">{{ __('client.status.active') }}</span></td>
                 </tr>

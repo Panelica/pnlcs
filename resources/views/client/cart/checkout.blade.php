@@ -141,29 +141,30 @@
                     @foreach($totals["items"] as $item)
                     <div class="pn-order-row">
                         <span class="key" style="font-size:13px">{{ $item["product_name"] ?? __('client.cart.product_fallback') }}</span>
-                        <span style="font-weight:600">{{ money_fmt($item["price"] ?? 0) }}</span>
+                        <span style="font-weight:600">{{ display_money_fmt($item["price"] ?? 0) }}</span>
                     </div>
                     @endforeach
                     @if(($totals["discount"] ?? 0) > 0)
                     <div class="pn-order-row" style="color:var(--success)">
-                        <span>{{ __('client.cart.discount') }}</span><span>-{{ money_fmt($totals["discount"]) }}</span>
+                        <span>{{ __('client.cart.discount') }}</span><span>-{{ display_money_fmt($totals["discount"]) }}</span>
                     </div>
                     @endif
                     @if(($totals["tax"] ?? 0) > 0)
                     <div class="pn-order-row">
-                        <span class="key">{{ __('client.cart.tax') }}</span><span>{{ money_fmt($totals["tax"]) }}</span>
+                        <span class="key">{{ __('client.cart.tax') }}</span><span>{{ display_money_fmt($totals["tax"]) }}</span>
                     </div>
                     @endif
                     <div class="pn-order-row">
                         <span>{{ __('client.cart.total') }}</span>
-                        <span style="color:var(--primary);font-size:18px">{{ money_fmt($totals["total"]) }}</span>
+                        <span style="color:var(--primary);font-size:18px">{{ display_money_fmt($totals["total"]) }}</span>
                     </div>
                     <button type="submit" class="btn btn-accent" style="width:100%;justify-content:center;margin-top:20px;font-size:15px;padding:12px">
                         {{ __('client.checkout.place_order') }} &rarr;
                     </button>
                     <p class="text-muted text-sm" style="text-align:center;margin-top:10px">
-                        {{ __('client.checkout.secure_checkout') }} &mdash; {{ money_fmt($totals["total"]) }}
+                        {{ __('client.checkout.secure_checkout') }} &mdash; {{ display_money_fmt($totals["total"]) }}
                     </p>
+                    @include('client.cart.partials.currency-note')
                 </div>
             </div>
         </div>

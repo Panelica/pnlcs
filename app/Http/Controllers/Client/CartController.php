@@ -192,11 +192,14 @@ class CartController extends Controller
             'domain' => $quote['domain'],
             'type' => $quote['type'],
             'status' => $quote['status'],
-            'price' => $quote['price'],
-            'price_formatted' => money_fmt($quote['price']),
+            // In the currency the page shows prices in: the order summary adds
+            // it to totals that are (CustomerCurrency). The cart prices the
+            // domain again, in the shop currency, when the form is sent.
+            'price' => display_price($quote['price']),
+            'price_formatted' => display_money_fmt($quote['price']),
             'message' => $this->cartService->domainQuoteProblem($quote)
                 ?? __($quote['type'] === 'transfer' ? 'client.cart.domain_transfer_quote' : 'client.cart.domain_available',
-                    ['domain' => $quote['domain'], 'price' => money_fmt($quote['price'])]),
+                    ['domain' => $quote['domain'], 'price' => display_money_fmt($quote['price'])]),
         ]);
     }
 

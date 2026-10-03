@@ -9,7 +9,7 @@
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.invoice_number_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $invoice->invoice_num ?? $invoice->id }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_overdue.amount_due') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ money_fmt($invoice->total) }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_overdue.amount_due') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ dual_money_fmt($invoice->total, $invoice) }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.due_date_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $invoice->due_date?->format(date_fmt()) ?? 'N/A' }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.invoice_overdue.days_overdue') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;color:#dc3545;"><strong>{{ $daysOverdue }}</strong></td></tr>
 </table>

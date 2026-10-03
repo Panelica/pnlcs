@@ -188,6 +188,15 @@
         </form>
         @endif
         @if(!empty($gateways))
+        @if(has_billing_conversion($invoice))
+        {{-- The invoice reads in the customer's currency; most gateways take
+             the shop currency, and a card's own bank converts it. --}}
+        <p class="text-muted text-sm mb-16 pn-currency-note">{{ __('client.invoices.currency_charge_note', [
+            'billing' => strtoupper((string) $invoice->billing_currency),
+            'shop' => strtoupper((string) ($invoice->source_currency ?: currency_code_default())),
+            'amount' => invoice_money_fmt($balance ?? $invoice->total, $invoice),
+        ]) }}</p>
+        @endif
         <p class="text-muted text-sm mb-16">{{ __('client.invoices.select_payment_method') }}</p>
         <div class="gw-tabs">
             @foreach($gateways as $i => $gw)

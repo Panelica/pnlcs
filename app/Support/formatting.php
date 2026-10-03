@@ -272,6 +272,12 @@ if (! function_exists('domain_money_fmt')) {
      */
     function domain_money_fmt(float|int|string|null $amount): string
     {
+        // A visitor who picked a currency sees domains in it like everything
+        // else on the page (CustomerCurrency).
+        if (\App\Support\CustomerCurrency::converting()) {
+            return display_money_fmt($amount);
+        }
+
         static $usdRate = null;
 
         if ($usdRate === null) {
@@ -295,6 +301,68 @@ if (! function_exists('domain_money_fmt')) {
         }
 
         return '$'.number_format((float) $amount * $usdRate, 2);
+    }
+}
+
+if (! function_exists('display_price')) {
+    /**
+     * A shop-currency price in the currency this page shows prices in.
+     *
+     * The same figure the invoice will carry in that currency: the invoice
+     * converts its shop-currency amount at the rate of the day it is raised
+     * (Invoice::booted()), and so does this.
+     */
+    function display_price(float|int|string|null $amount): float
+    {
+        return \App\Support\CustomerCurrency::convert($amount);
+    }
+}
+
+if (! function_exists('display_money_fmt')) {
+    /**
+     * A shop-currency price, shown in the currency this page shows prices in.
+     *
+     * Exactly money_fmt() while the page is in the shop currency, which is
+     * every page unless the operator lets customers choose (Setup >
+     * Currencies) and this customer chose another.
+     */
+    function display_money_fmt(float|int|string|null $amount): string
+    {
+        if (! \App\Support\CustomerCurrency::converting()) {
+            return money_fmt($amount);
+        }
+
+        $currency = \App\Support\CustomerCurrency::current();
+        $prefix = (string) ($currency->prefix ?? '');
+        $suffix = (string) ($currency->suffix ?? '');
+
+        if ($prefix === '' && $suffix === '') {
+            $suffix = ' '.strtoupper((string) $currency->code);
+        }
+
+        return $prefix.number_format(display_price($amount), 2).$suffix;
+    }
+}
+
+if (! function_exists('display_currency_affixes')) {
+    /**
+     * The sign around an amount for the currency this page shows prices in,
+     * for scripts that format totals themselves - the same figures
+     * display_money_fmt() prints.
+     *
+     * @return array{prefix: string, suffix: string}
+     */
+    function display_currency_affixes(): array
+    {
+        $currency = \App\Support\CustomerCurrency::current();
+        $prefix = (string) ($currency->prefix ?? '');
+        $suffix = (string) ($currency->suffix ?? '');
+
+        if (\App\Support\CustomerCurrency::converting() && $prefix === '' && $suffix === '') {
+            $suffix = ' '.strtoupper((string) $currency->code);
+        }
+
+        return ['prefix' => $prefix, 'suffix' => $suffix];
     }
 }
 

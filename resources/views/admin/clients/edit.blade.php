@@ -89,6 +89,15 @@
                         @endforeach
                     </select>
                 </div>
+                @php $clientCurrencyId = (int) old('currency_id', $client->currency_id ?: $currencies->firstWhere('is_default', true)?->id); @endphp
+                <div class="form-group"><label class="form-label">{{ __('common.form.currency') }}</label>
+                    <select name="currency_id" class="form-control">
+                        @foreach($currencies as $c)
+                        <option value="{{ $c->id }}" @selected($clientCurrencyId === (int) $c->id)>{{ $c->code }}@if($c->prefix || $c->suffix) ({{ trim($c->prefix.' '.$c->suffix) }})@endif</option>
+                        @endforeach
+                    </select>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ \App\Support\CustomerCurrency::enabled() ? __('admin.currencies.client_currency_hint_on') : __('admin.currencies.client_currency_hint_off') }}</div>
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.default_payment_method') }}<span style="color:#d9534f;">*</span></label>
                     <select name="default_payment_method" class="form-control">
                         @foreach($paymentMethods as $pm)
