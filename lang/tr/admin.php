@@ -1171,6 +1171,9 @@ return [
     'downloads.title' => 'İndirmeler',
     'edit' => 'Düzenle',
     'email_templates' => [
+        'source_builtin' => 'Değiştirilmedi: bu e-posta hazır tasarımıyla gider. Aşağıdaki metni değiştirirseniz onun yerine sizin metniniz gönderilir.',
+        'source_custom' => 'Bu e-posta için aşağıdaki metniniz, hazır e-postanın yerine gönderilir.',
+        'use_builtin' => 'Hazır e-postayı kullan',
         'save_template' => 'Şablonu Kaydet',
         'template_name' => 'Şablon Adı',
         'type' => 'Tür',

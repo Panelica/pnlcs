@@ -59,6 +59,7 @@
                 <option value="support" @selected($tpl->type === 'support')>{{ __('admin.email_templates.type_support') }}</option>
             </select>
         </div>
+        <p class="email-template-source" style="font-size:12px;color:#555;margin:0 0 6px;">{{ $tpl->custom ? __('admin.email_templates.source_custom') : __('admin.email_templates.source_builtin') }}</p>
         <div class="form-group">
             <label class="form-label">{{ __('admin.email_templates.body_html') }}</label>
             <textarea name="message" rows="10" class="form-control" style="font-family:monospace;font-size:12px;">{{ $tpl->message }}</textarea>
@@ -71,10 +72,16 @@
             </label>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+            @if($tpl->custom)
+            <button type="submit" form="reset-tpl-{{ $loop->index }}" class="btn btn-default btn-sm" style="margin-right:auto;">{{ __('admin.email_templates.use_builtin') }}</button>
+            @endif
             <button type="button" onclick="closeModal('edit-tpl-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.email_templates.save_template') }}</button>
         </div>
     </form>
+    @if($tpl->custom)
+    <form id="reset-tpl-{{ $loop->index }}" method="POST" action="{{ route('admin.config.email-templates.reset', $tpl) }}">@csrf</form>
+    @endif
 </x-modal>
 @endforeach
 @endsection

@@ -159,7 +159,14 @@ class ApplyEmailTemplate
             if ($template->plaintext) {
                 $event->message->html(null);
             } else {
-                $event->message->html(nl2br(e($body), false));
+                // Inside a shared frame (company name, the same type and width
+                // as the built-in emails), not as bare text: the operator's
+                // wording replaces the built-in copy, not the look. A theme can
+                // restyle it by overriding emails/custom.
+                $event->message->html(view('emails.custom', [
+                    'body' => $body,
+                    'companyName' => $vars['CompanyName'] ?? company_name(),
+                ])->render());
             }
 
             $event->message->text($body);
