@@ -1191,6 +1191,9 @@ return [
     'downloads.title' => '下载',
     'edit' => '编辑',
     'email_templates' => [
+        'source_builtin' => '未修改：此邮件以内置设计发送。修改下方文本后，将改为发送您的文本。',
+        'source_custom' => '此邮件将发送您在下方填写的文本，以替代内置邮件。',
+        'use_builtin' => '使用内置邮件',
         'save_template' => '保存模板',
         'template_name' => '模板名称',
         'type' => '类型',

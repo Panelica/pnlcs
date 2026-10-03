@@ -429,6 +429,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::middleware('admin.permission:manage_email_templates')->group(function () {
             Route::get('email-templates', [ConfigController::class, 'emailTemplates'])->name('email-templates');
             Route::put('email-templates/{template}', [ConfigController::class, 'updateEmailTemplate'])->name('email-templates.update');
+            Route::post('email-templates/{template}/reset', [ConfigController::class, 'resetEmailTemplate'])->name('email-templates.reset');
         });
 
         // Announcements — manage_announcements

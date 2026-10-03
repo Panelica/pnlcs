@@ -1096,11 +1096,27 @@ class ConfigController extends Controller
     {
         $validated = $request->validate(['type' => 'nullable|string', 'name' => 'nullable|string', 'subject' => 'nullable|string', 'message' => 'nullable|string', 'from_name' => 'nullable|string', 'from_email' => 'nullable|email', 'disabled' => 'boolean']);
 
-        // Saving makes the template the operator's own, which is what lets
-        // their wording replace the built-in design when the mail goes out.
-        $validated['custom'] = true;
+        // Only a changed body makes the template the operator's own, which is
+        // what lets their wording replace the built-in email. The form always
+        // sends the stored text back, so marking every save as custom swapped
+        // the designed email for that seeded text the moment anyone changed a
+        // subject or switched a template off.
+        $normal = fn ($text) => trim(str_replace(["\r\n", "\r"], "\n", (string) $text));
+        $validated['custom'] = $template->custom
+            || (array_key_exists('message', $validated) && $normal($validated['message']) !== $normal($template->message));
 
         $template->update($validated);
+
+        return back()->with('success', __('messages.success.template_updated'));
+    }
+
+    /**
+     * Back to the built-in email: the stored wording stays for later, but is no
+     * longer sent.
+     */
+    public function resetEmailTemplate(EmailTemplate $template)
+    {
+        $template->update(['custom' => false]);
 
         return back()->with('success', __('messages.success.template_updated'));
     }

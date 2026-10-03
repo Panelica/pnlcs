@@ -1191,6 +1191,9 @@ return [
     'downloads.title' => 'Pliki do pobrania',
     'edit' => 'Edytuj',
     'email_templates' => [
+        'source_builtin' => 'Bez zmian: ta wiadomość jest wysyłana we wbudowanym wyglądzie. Jeśli zmienisz tekst poniżej, zostanie wysłany Twój tekst.',
+        'source_custom' => 'Dla tej wiadomości wysyłany jest Twój tekst poniżej zamiast wbudowanej wiadomości.',
+        'use_builtin' => 'Użyj wbudowanej wiadomości',
         'save_template' => 'Zapisz szablon',
         'template_name' => 'Nazwa szablonu',
         'type' => 'Typ',

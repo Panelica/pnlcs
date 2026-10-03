@@ -1191,6 +1191,9 @@ return [
     'downloads.title' => 'Downloads',
     'edit' => 'Edit',
     'email_templates' => [
+        'source_builtin' => 'Not changed: this email goes out in the built-in design. Change the text below and your text is sent instead.',
+        'source_custom' => 'Your text below is sent for this email, in place of the built-in one.',
+        'use_builtin' => 'Use the built-in email',
         'save_template' => 'Save Template',
         'template_name' => 'Template Name',
         'type' => 'Type',

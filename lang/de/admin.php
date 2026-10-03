@@ -1191,6 +1191,9 @@ return [
     'downloads.title' => 'Downloads',
     'edit' => 'Bearbeiten',
     'email_templates' => [
+        'source_builtin' => 'Unverändert: Diese E-Mail wird im eingebauten Design versendet. Wenn Sie den Text unten ändern, wird stattdessen Ihr Text gesendet.',
+        'source_custom' => 'Für diese E-Mail wird Ihr Text unten anstelle der eingebauten E-Mail gesendet.',
+        'use_builtin' => 'Eingebaute E-Mail verwenden',
         'save_template' => 'Vorlage speichern',
         'template_name' => 'Vorlagenname',
         'type' => 'Typ',
