@@ -2,7 +2,7 @@
 @section('title', __('admin.logs.title'))
 @section('content')
 
-<div class="page-header"><h1>{{ __('admin.logs.title') }}</h1></div>
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;"><h1>{{ __('admin.logs.title') }}</h1>@if(auth('admin')->user()?->hasPermission('manage_settings'))<a href="{{ route('admin.settings.log-retention') }}" class="btn btn-default btn-sm">{{ __('admin.log_retention.title') }}</a>@endif</div>
 
 {{-- Tab Navigation --}}
 <div style="border-bottom:2px solid #ddd;margin-bottom:15px;display:flex;">

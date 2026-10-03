@@ -249,6 +249,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('settings', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings', [SettingController::class, 'updateGeneral'])->name('settings.general.update');
         Route::post('settings/test-email', [SettingController::class, 'testEmail'])->name('settings.test-email');
+        Route::get('settings/log-retention', [\App\Http\Controllers\Admin\LogRetentionController::class, 'index'])->name('settings.log-retention');
+        Route::put('settings/log-retention', [\App\Http\Controllers\Admin\LogRetentionController::class, 'update'])->name('settings.log-retention.update');
+        Route::post('settings/log-retention/prune', [\App\Http\Controllers\Admin\LogRetentionController::class, 'prune'])->middleware('throttle:10,1')->name('settings.log-retention.prune');
 
         // Appearance / Theme
         Route::get('settings/appearance', [SettingController::class, 'appearance'])->name('settings.appearance');
