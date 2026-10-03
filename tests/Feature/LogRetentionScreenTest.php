@@ -58,3 +58,12 @@ it('refuses an unknown table and staff without the settings permission', functio
     test()->actingAs(lrAdmin(), 'admin')->post(route('admin.settings.log-retention.prune'), ['table' => 'users'])->assertNotFound();
     test()->actingAs(lrAdmin(['view_activity_log']), 'admin')->get(route('admin.settings.log-retention'))->assertForbidden();
 });
+
+it('names every pruned table in every language', function () {
+    foreach (array_keys(\App\Console\Commands\PruneLogsCommand::retentionTargets()) as $table) {
+        foreach (['en', 'tr', 'de', 'pl', 'zh'] as $locale) {
+            $key = 'admin.log_retention.table_'.$table;
+            expect(__($key, [], $locale))->not->toBe($key, "{$locale}: {$table}");
+        }
+    }
+});

@@ -2127,6 +2127,7 @@ return [
     'log_retention.table_gateway_logs' => 'Log bramki płatności',
     'log_retention.table_gateway_events' => 'Webhooki płatności',
     'log_retention.table_activity_logs' => 'Log aktywności',
+    'log_retention.table_whois_logs' => 'Wyszukiwania domen',
     'log_retention.table_module_queue' => 'Kolejka modułów (zakończone)',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',

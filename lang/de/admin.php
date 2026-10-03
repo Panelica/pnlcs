@@ -2127,6 +2127,7 @@ return [
     'log_retention.table_gateway_logs' => 'Zahlungsgateway-Protokoll',
     'log_retention.table_gateway_events' => 'Zahlungs-Webhooks',
     'log_retention.table_activity_logs' => 'Aktivitätsprotokoll',
+    'log_retention.table_whois_logs' => 'Domainsuchen',
     'log_retention.table_module_queue' => 'Modulwarteschlange (erledigt)',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',

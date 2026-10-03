@@ -2127,6 +2127,7 @@ return [
     'log_retention.table_gateway_logs' => '支付网关日志',
     'log_retention.table_gateway_events' => '支付 Webhook',
     'log_retention.table_activity_logs' => '活动日志',
+    'log_retention.table_whois_logs' => '域名搜索',
     'log_retention.table_module_queue' => '模块队列（已完成）',
     'products.pricing' => '定价',
     'products.product_details' => '产品详情',

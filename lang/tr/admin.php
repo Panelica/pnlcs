@@ -2108,6 +2108,7 @@ return [
     'log_retention.table_gateway_logs' => 'Ödeme ağ geçidi kaydı',
     'log_retention.table_gateway_events' => 'Ödeme bildirimleri (webhook)',
     'log_retention.table_activity_logs' => 'Etkinlik kaydı',
+    'log_retention.table_whois_logs' => 'Alan adı aramaları',
     'log_retention.table_module_queue' => 'Modül kuyruğu (bitenler)',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
