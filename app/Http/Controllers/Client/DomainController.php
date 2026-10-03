@@ -64,7 +64,10 @@ class DomainController extends Controller
         // Whether the customer can switch WHOIS privacy from here.
         $canTogglePrivacy = $module instanceof \App\Contracts\ManagesWhoisPrivacy && strtolower((string) $domain->status) === 'active';
 
-        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount', 'canTogglePrivacy'));
+        // Whether the registrar lets the customer change the WHOIS contact.
+        $canEditContacts = $module instanceof \App\Contracts\ManagesDomainContacts && strtolower((string) $domain->status) === 'active';
+
+        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount', 'canTogglePrivacy', 'canEditContacts'));
     }
 
     /**
@@ -193,6 +196,81 @@ class DomainController extends Controller
 
         return redirect()->route('client.domains.show', $domain)
             ->with('success', $enable ? __('client.domains.privacy_on') : __('client.domains.privacy_off'));
+    }
+
+    /**
+     * The WHOIS contact form: what the registry holds, or the customer's
+     * profile when it cannot be read.
+     */
+    public function contacts(Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+        $module = $this->contactsModule($domain);
+        if (! $module) {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.contacts_unavailable'));
+        }
+
+        try {
+            $contact = $module->getContact($domain);
+        } catch (\Throwable $e) {
+            Log::warning("WHOIS contact lookup failed for {$domain->domain}: {$e->getMessage()}");
+            $contact = null;
+        }
+
+        $fromProfile = $contact === null;
+        if ($fromProfile) {
+            $client = $domain->client;
+            $contact = [
+                'first_name' => $client?->first_name, 'last_name' => $client?->last_name, 'company_name' => $client?->company_name,
+                'email' => $client?->email, 'phone' => $client?->phone_number, 'address1' => $client?->address1,
+                'city' => $client?->city, 'state' => $client?->state, 'postcode' => $client?->postcode, 'country' => $client?->country,
+            ];
+        }
+        $countries = \App\Support\Countries::all();
+
+        return view('client.domains.contacts', compact('domain', 'contact', 'fromProfile', 'countries'));
+    }
+
+    public function updateContacts(Request $request, Domain $domain)
+    {
+        $this->authorizeClientDomain($domain);
+        $module = $this->contactsModule($domain);
+        if (! $module) {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.contacts_unavailable'));
+        }
+
+        $contact = $request->validate([
+            'first_name' => 'required|string|max:80',
+            'last_name' => 'required|string|max:80',
+            'company_name' => 'nullable|string|max:256',
+            'email' => 'required|email|max:256',
+            'phone' => ['required', 'string', 'max:24', 'regex:/^\+?[0-9 ().-]{6,24}$/'],
+            'address1' => 'required|string|max:256',
+            'city' => 'required|string|max:80',
+            'state' => 'nullable|string|max:80',
+            'postcode' => 'required|string|max:15',
+            'country' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys(\App\Support\Countries::all()))],
+        ]);
+
+        try {
+            $result = $module->saveContact($domain, $contact);
+        } catch (\Throwable $e) {
+            Log::error("WHOIS contact update failed for {$domain->domain}: {$e->getMessage()}");
+            $result = ['success' => false, 'message' => ''];
+        }
+
+        if (! ($result['success'] ?? false)) {
+            return back()->withInput()->with('error', trim(__('client.domains.contacts_failed').' '.($result['message'] ?? '')));
+        }
+
+        return redirect()->route('client.domains.show', $domain)->with('success', __('client.domains.contacts_saved'));
+    }
+
+    private function contactsModule(Domain $domain): ?\App\Contracts\ManagesDomainContacts
+    {
+        $module = $this->registrarFor($domain);
+
+        return $module instanceof \App\Contracts\ManagesDomainContacts && strtolower((string) $domain->status) === 'active' ? $module : null;
     }
 
     /**

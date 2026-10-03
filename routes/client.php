@@ -229,6 +229,8 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::post('domains/{domain}/lock', [DomainController::class, 'toggleLock'])->middleware('client.confirm')->name('domains.lock');
         Route::post('domains/{domain}/autorenew', [DomainController::class, 'toggleAutoRenew'])->name('domains.autorenew');
         Route::post('domains/{domain}/privacy', [DomainController::class, 'togglePrivacy'])->name('domains.privacy');
+        Route::get('domains/{domain}/contacts', [DomainController::class, 'contacts'])->name('domains.contacts');
+        Route::put('domains/{domain}/contacts', [DomainController::class, 'updateContacts'])->name('domains.contacts.update');
         Route::post('domains/{domain}/renew', [DomainController::class, 'renew'])->name('domains.renew');
         Route::post('domains/{domain}/restore', [DomainController::class, 'restore'])->name('domains.restore');
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->middleware('client.confirm')->name('domains.epp');
