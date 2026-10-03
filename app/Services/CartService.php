@@ -294,6 +294,12 @@ class CartService
         // term, not the introductory one that was paid to get the domain.
         $renewal = round((float) $pricing->renew_price * $years, 2);
 
+        // WHOIS privacy, when the extension offers it: free privacy is on
+        // unless the customer turns it off, paid privacy is off until they
+        // add it (setDomainPrivacy()).
+        $privacyYear = $pricing->privacy_price;
+        $privacy = $privacyYear !== null && (float) $privacyYear <= 0;
+
         $data = $this->getData($cart);
 
         $data['items'][] = [
@@ -305,6 +311,10 @@ class CartService
             'epp_code' => $type === 'transfer' ? ($eppCode ?: null) : null,
             'price' => $price,
             'renewal_amount' => $renewal,
+            'base_price' => $price,
+            'base_renewal' => $renewal,
+            'privacy_price' => $privacyYear !== null ? round((float) $privacyYear, 2) : null,
+            'privacy' => $privacy,
         ];
 
         return $this->saveData($cart, $data);
@@ -322,6 +332,28 @@ class CartService
      *
      * @return array{removed: bool, message: ?string}
      */
+    /**
+     * Add or drop WHOIS privacy on a domain line, at the extension's price
+     * for every year of the term, on the first payment and on renewals.
+     */
+    public function setDomainPrivacy(Cart $cart, int $index, bool $on): bool
+    {
+        $data = $this->getData($cart);
+        $item = $data['items'][$index] ?? null;
+
+        if (! $item || ($item['type'] ?? '') !== 'domain' || ! array_key_exists('privacy_price', $item) || $item['privacy_price'] === null) {
+            return false;
+        }
+
+        $extra = $on ? round((float) $item['privacy_price'] * max(1, (int) ($item['years'] ?? 1)), 2) : 0.0;
+        $data['items'][$index]['privacy'] = $on;
+        $data['items'][$index]['price'] = round((float) ($item['base_price'] ?? $item['price']) + $extra, 2);
+        $data['items'][$index]['renewal_amount'] = round((float) ($item['base_renewal'] ?? $item['renewal_amount'] ?? 0) + $extra, 2);
+        $this->saveData($cart, $data);
+
+        return true;
+    }
+
     public function removeItem(Cart $cart, int $index): array
     {
         $data = $this->getData($cart);
@@ -612,6 +644,7 @@ class CartService
                     'epp_code' => $item['epp_code'] ?? null,
                     'amount' => (float) ($item['price'] ?? 0),
                     'renewal_amount' => (float) ($item['renewal_amount'] ?? $item['price'] ?? 0),
+                    'id_protection' => ! empty($item['privacy']),
                 ];
 
                 continue;

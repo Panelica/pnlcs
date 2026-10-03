@@ -2090,6 +2090,8 @@ return [
     'downloads.only_for' => 'Only for: :products',
     'settings.turkish_legal_forms' => 'Publish the Turkish statutory forms',
     'settings.turkish_legal_forms_hint' => 'Distance sales contract, preliminary information form and KVKK notice. Always on when the country is Turkey; switch on if you sell to consumers in Turkey from elsewhere.',
+    'domain_pricing.privacy_price' => 'WHOIS privacy price (per year)',
+    'domain_pricing.privacy_price_hint' => 'Empty: not offered when the domain is ordered. 0: offered free. An amount: sold at that price per year, on the order and on renewals.',
     'products.pricing' => 'Pricing',
     'products.product_details' => 'Product Details',
     'products.product_group' => 'Product Group',

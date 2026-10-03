@@ -2090,6 +2090,8 @@ return [
     'downloads.only_for' => 'Nur für: :products',
     'settings.turkish_legal_forms' => 'Türkische Pflichtformulare veröffentlichen',
     'settings.turkish_legal_forms_hint' => 'Fernabsatzvertrag, Vorabinformation und KVKK-Hinweis. Bei Land Türkei immer aktiv; einschalten, wenn Sie von anderswo an Verbraucher in der Türkei verkaufen.',
+    'domain_pricing.privacy_price' => 'Preis für WHOIS-Datenschutz (pro Jahr)',
+    'domain_pricing.privacy_price_hint' => 'Leer: bei der Bestellung nicht angeboten. 0: kostenlos angeboten. Ein Betrag: zu diesem Jahrespreis verkauft, bei Bestellung und Verlängerung.',
     'products.pricing' => 'Preise',
     'products.product_details' => 'Produktdetails',
     'products.product_group' => 'Produktgruppe',

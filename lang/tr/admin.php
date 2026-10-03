@@ -2071,6 +2071,8 @@ return [
     'downloads.only_for' => 'Yalnız: :products',
     'settings.turkish_legal_forms' => 'Türkçe yasal formları yayınla',
     'settings.turkish_legal_forms_hint' => 'Mesafeli satış sözleşmesi, ön bilgilendirme formu ve KVKK aydınlatma metni. Ülke Türkiye ise her zaman açıktır; başka bir ülkeden Türkiye\'deki tüketicilere satış yapıyorsanız açın.',
+    'domain_pricing.privacy_price' => 'Whois gizliliği fiyatı (yıllık)',
+    'domain_pricing.privacy_price_hint' => 'Boş: alan adı alınırken sunulmaz. 0: ücretsiz sunulur. Tutar: yıllık bu fiyata satılır, siparişte ve yenilemelerde.',
     'products.pricing' => 'Fiyatlandırma',
     'products.product_details' => 'Ürün Detayları',
     'products.product_group' => 'Ürün Grubu',

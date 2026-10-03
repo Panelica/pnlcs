@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 class DomainPricing extends Model {
     protected $table = "domain_pricing";
     protected $fillable = [
-        "extension", "category", "is_popular", "register_price", "transfer_price", "renew_price", "restore_price",
+        "extension", "category", "is_popular", "register_price", "transfer_price", "renew_price", "restore_price", "privacy_price",
         "dns_management", "email_forwarding", "id_protection", "epp_code",
         "auto_registrar", "grace_period", "redemption_grace_period",
         "min_years", "max_years", "sort_order", "enabled"
@@ -22,6 +22,7 @@ class DomainPricing extends Model {
             "transfer_price"  => "float",
             "renew_price"     => "float",
             "restore_price"   => "float",
+            "privacy_price"   => "float",
         ];
     }
 }

@@ -2090,6 +2090,8 @@ return [
     'downloads.only_for' => 'Tylko dla: :products',
     'settings.turkish_legal_forms' => 'Publikuj tureckie formularze ustawowe',
     'settings.turkish_legal_forms_hint' => 'Umowa sprzedaży na odległość, formularz informacji wstępnej i klauzula KVKK. Zawsze włączone, gdy krajem jest Turcja; włącz, jeśli sprzedajesz konsumentom w Turcji z innego kraju.',
+    'domain_pricing.privacy_price' => 'Cena ochrony prywatności WHOIS (rocznie)',
+    'domain_pricing.privacy_price_hint' => 'Puste: nie oferowane przy zamówieniu domeny. 0: oferowane bezpłatnie. Kwota: sprzedawane w tej cenie rocznie, przy zamówieniu i odnowieniach.',
     'products.pricing' => 'Cennik',
     'products.product_details' => 'Szczegóły produktu',
     'products.product_group' => 'Grupa produktów',

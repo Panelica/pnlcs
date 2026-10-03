@@ -87,6 +87,7 @@ const GUARD_PUBLIC_CLIENT = [
     // bought with the hosting, for a visitor as much as for a customer.
     'client.cart.domain-quote',
     'client.cart.remove',
+    'client.cart.privacy',
     'client.cart.promo',
     'client.cart.checkout',
     'client.cart.process',

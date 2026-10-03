@@ -62,7 +62,10 @@ class DomainController extends Controller
             ? round((float) $domain->recurring_amount + (float) $restore->restorePrice($domain), 2) : null;
 
         // Whether the customer can switch WHOIS privacy from here.
-        $canTogglePrivacy = $module instanceof \App\Contracts\ManagesWhoisPrivacy && strtolower((string) $domain->status) === 'active';
+        // Where privacy is sold, a domain that was bought without it cannot
+        // switch it on here for free; it can still switch it off.
+        $canTogglePrivacy = $module instanceof \App\Contracts\ManagesWhoisPrivacy && strtolower((string) $domain->status) === 'active'
+            && ($domain->id_protection || $this->privacyPrice($domain) <= 0);
 
         // Whether the registrar lets the customer change the WHOIS contact.
         $canEditContacts = $module instanceof \App\Contracts\ManagesDomainContacts && strtolower((string) $domain->status) === 'active';
@@ -181,6 +184,11 @@ class DomainController extends Controller
         }
 
         $enable = ! $domain->id_protection;
+        $price = $this->privacyPrice($domain);
+        if ($enable && $price > 0) {
+            return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.privacy_sold'));
+        }
+
         try {
             $result = $module->setPrivacy($domain, $enable);
         } catch (\Throwable $e) {
@@ -192,7 +200,16 @@ class DomainController extends Controller
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.privacy_failed'));
         }
 
-        $domain->update(['id_protection' => $enable]);
+        $changes = ['id_protection' => $enable];
+        // Turning paid privacy off stops charging for it at renewal, never
+        // below the extension's own renewal price for the term.
+        if (! $enable && $price > 0) {
+            $years = max(1, (int) ($domain->registration_period ?: 1));
+            $pricing = \App\Models\DomainPricing::where('extension', $this->extensionOf($domain))->first();
+            $floor = round((float) ($pricing?->renew_price ?? 0) * $years, 2);
+            $changes['recurring_amount'] = max($floor, round((float) $domain->recurring_amount - $price * $years, 2));
+        }
+        $domain->update($changes);
 
         return redirect()->route('client.domains.show', $domain)
             ->with('success', $enable ? __('client.domains.privacy_on') : __('client.domains.privacy_off'));
@@ -414,6 +431,19 @@ class DomainController extends Controller
         }
 
         return app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
+    }
+
+    /** The extension's yearly WHOIS privacy price; 0 when free or not offered. */
+    private function privacyPrice(Domain $domain): float
+    {
+        $price = \App\Models\DomainPricing::where('extension', $this->extensionOf($domain))->value('privacy_price');
+
+        return $price === null ? 0.0 : (float) $price;
+    }
+
+    private function extensionOf(Domain $domain): string
+    {
+        return '.'.implode('.', array_slice(explode('.', strtolower((string) $domain->domain)), 1));
     }
 
     private function authorizeClientDomain(Domain $domain): void
