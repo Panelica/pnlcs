@@ -138,6 +138,19 @@ test('switched on with a single currency there is nothing to choose', function (
     $this->get(route('client.store'))->assertOk()->assertDontSee('pn-currency-selector', false);
 });
 
+test('with it off, the top bar names the shop currency, not a word from the language file', function () {
+    ccShop();
+    \App\Models\Language::updateOrCreate(['code' => 'tr'], ['name' => 'Turkish', 'native_name' => 'Türkçe', 'is_active' => true]);
+
+    // The Turkish file says "TRY" for that label; the shop sells in dollars.
+    $html = $this->get('/?lang=tr')->assertOk()->getContent();
+
+    preg_match('/ri-money-dollar-circle-line"><\/i>\s*([^<\s]+)/', $html, $label);
+
+    expect(app()->getLocale())->toBe('tr')
+        ->and($label[1] ?? null)->toBe('USD');
+});
+
 // ----------------------------------------------------------- visitor choice
 
 test('a visitor picks a currency from the top bar and keeps it for the session', function () {

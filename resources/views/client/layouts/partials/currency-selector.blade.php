@@ -2,7 +2,7 @@
      for the session; a customer's account currency is changed by staff. --}}
 @if(isset($customerCurrencyChoice) && $customerCurrencyChoice->count() > 1)
 <div class="pn-nav-item pn-currency-selector" style="position:relative;">
-    <button type="button" class="pn-nav-link" onclick="this.parentElement.classList.toggle('open')" style="gap:6px;" aria-label="{{ __('client.topbar.currency') }}">
+    <button type="button" class="pn-nav-link" onclick="this.parentElement.classList.toggle('open')" style="gap:6px;" aria-label="{{ __('common.form.currency') }}">
         <span>{{ $displayCurrency?->code }}</span>
         <svg class="pn-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </button>

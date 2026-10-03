@@ -37,7 +37,7 @@
                 {{-- The visitor's currency, kept for the session (CustomerCurrency). --}}
                 <details class="top-bar__language top-bar__currency">
                     <summary class="top-bar__item top-bar__language-toggle">
-                        <i class="ri-money-dollar-circle-line"></i> {{ $displayCurrency?->code ?? __('client.topbar.currency') }}
+                        <i class="ri-money-dollar-circle-line"></i> {{ $displayCurrency?->code ?? currency_code_default() }}
                     </summary>
                     <div class="top-bar__language-menu">
                         @foreach($customerCurrencyChoice as $choice)
@@ -51,7 +51,9 @@
                 {{-- A customer's account currency: changed by staff, not by a link. --}}
                 <span class="top-bar__item" title="{{ __('client.topbar.currency_account') }}"><i class="ri-money-dollar-circle-line"></i> {{ $displayCurrency->code }}</span>
                 @else
-                <span class="top-bar__item"><i class="ri-money-dollar-circle-line"></i> {{ __('client.topbar.currency') }}</span>
+                {{-- The shop's own currency, not a word from the language file:
+                     that printed "TRY" on every Turkish page, whatever the shop sells in. --}}
+                <span class="top-bar__item"><i class="ri-money-dollar-circle-line"></i> {{ currency_code_default() }}</span>
                 @endif
             </div>
         </div>
