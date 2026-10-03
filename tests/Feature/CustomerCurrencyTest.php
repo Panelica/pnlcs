@@ -269,6 +269,27 @@ test('a page that fails still fails, once: the currency step does not swallow it
     expect($runs)->toBe(1);
 });
 
+test('the top bar menus open in front of the sticky navigation', function () {
+    ccShop();
+    ccOn();
+
+    $html = $this->get('/')->assertOk()->getContent();
+
+    // The menus live in .top-bar; the navigation under it is sticky and
+    // layered. Unless the top bar sits on a higher layer, its menus open
+    // behind the navigation and cannot be clicked.
+    $layer = function (string $selector) use ($html): int {
+        preg_match('/\n\s*'.preg_quote($selector, '/').'\s*\{([^}]*)\}/', $html, $rule);
+        preg_match('/z-index:\s*(\d+)/', $rule[1] ?? '', $z);
+
+        return (int) ($z[1] ?? 0);
+    };
+
+    expect($html)->toContain('top-bar__currency')
+        ->and($layer('.main-nav'))->toBeGreaterThan(0)
+        ->and($layer('.top-bar'))->toBeGreaterThan($layer('.main-nav'));
+});
+
 // ------------------------------------------------------ accounts and login
 
 test('the account a visitor opens keeps the currency they picked', function () {

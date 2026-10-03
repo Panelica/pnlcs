@@ -42,6 +42,10 @@
         .top-bar {
             background: var(--theme-nav-bg, #0f1117); color: rgba(255,255,255,0.7);
             padding: 8px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.06);
+            /* One layer above the sticky .main-nav (150): the language and
+               currency menus open downwards over it, and without a layer of
+               its own the top bar's menus were drawn behind the navigation. */
+            position: relative; z-index: 151;
         }
         .top-bar__inner { display: flex; align-items: center; justify-content: space-between; }
         .top-bar__left, .top-bar__right { display: flex; align-items: center; gap: 20px; }
