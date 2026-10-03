@@ -1065,16 +1065,24 @@ class ConfigController extends Controller
 
     // ===== TODO =====
 
-    public function todoList()
+    public function todoList(Request $request)
     {
+        // "Assigned to me": the list a staff member works from.
+        $me = (string) auth('admin')->user()?->username;
+        $mine = $request->boolean('mine') && $me !== '';
+
         return view('admin.config.todo', [
-            'items' => TodoItem::orderBy('id', 'desc')->get(),
+            'items' => TodoItem::when($mine, fn ($q) => $q->where('admin', $me))->orderBy('id', 'desc')->get(),
+            'admins' => \App\Models\Admin::orderBy('username')->pluck('username'),
+            'mine' => $mine,
         ]);
     }
 
     public function storeTodo(Request $request)
     {
-        TodoItem::create($request->validate(['title' => 'required', 'description' => 'nullable|string', 'due_date' => 'nullable|date']));
+        // The list had an "Admin" column that nothing could fill: a task could not be given to anyone.
+        TodoItem::create($request->validate(['title' => 'required', 'description' => 'nullable|string', 'due_date' => 'nullable|date',
+            'admin' => 'nullable|string|exists:admins,username']));
 
         return back()->with('success', __('messages.success.todo_added'));
     }
@@ -1644,7 +1652,8 @@ class ConfigController extends Controller
     // To-Do
     public function updateTodo(Request $request, TodoItem $todo)
     {
-        $todo->update($request->validate(['title' => 'required', 'description' => 'nullable|string', 'status' => 'nullable|string', 'due_date' => 'nullable|date']));
+        $todo->update($request->validate(['title' => 'required', 'description' => 'nullable|string', 'status' => 'nullable|string', 'due_date' => 'nullable|date',
+            'admin' => 'nullable|string|exists:admins,username']));
 
         return back()->with('success', __('messages.success.todo_updated'));
     }

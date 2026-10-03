@@ -4,6 +4,10 @@
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>{{ __('admin.todo.title') }}</h1>
+    <span style="display:flex;gap:4px;margin-left:auto;margin-right:8px;">
+        <a href="{{ route('admin.config.todo') }}" class="btn btn-sm {{ $mine ? 'btn-default' : 'btn-primary' }}">{{ __('admin.todo.all') }}</a>
+        <a href="{{ route('admin.config.todo', ['mine' => 1]) }}" class="btn btn-sm {{ $mine ? 'btn-primary' : 'btn-default' }}">{{ __('admin.todo.mine') }}</a>
+    </span>
     <button type="button" onclick="document.getElementById('modal-add-todo').style.display='flex'" class="btn btn-primary btn-sm">+ {{ __('admin.todo.add_task') }}</button>
 </div>
 <div class="card">
@@ -69,6 +73,11 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.todo.task_title_label') }} *</label><input type="text" name="title" required class="form-control" placeholder="{{ __('admin.todo.placeholder_title') }}"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control" placeholder="{{ __('admin.todo.placeholder_desc') }}"></textarea></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.todo.due_date') }}</label><input type="date" name="due_date" class="form-control"></div>
+                <div class="form-group"><label class="form-label" for="todo-admin">{{ __('admin.todo.assign_to') }}</label>
+                    <select id="todo-admin" name="admin" class="form-control">
+                        <option value="">{{ __('admin.todo.nobody') }}</option>
+                        @foreach($admins as $username)<option value="{{ $username }}">{{ $username }}</option>@endforeach
+                    </select></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-todo').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
