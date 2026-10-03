@@ -16,6 +16,9 @@ Błąd: :error
 
 Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżenie o niskim saldzie nie może zostać wysłane.',
     ],
+    'stripe' => [
+        'processing' => 'Przetwarzanie…',
+    ],
     'iyzico' => [
         'page_title' => 'Bezpieczna płatność',
         'cancel' => 'Anuluj i wróć do faktury',

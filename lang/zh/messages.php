@@ -16,6 +16,9 @@ return [
 
 API 访问可能已中断。在无法读取余额期间，也无法发出余额不足警告。',
     ],
+    'stripe' => [
+        'processing' => '处理中…',
+    ],
     'iyzico' => [
         'page_title' => '安全支付',
         'cancel' => '取消并返回账单',
