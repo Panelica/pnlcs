@@ -32,6 +32,7 @@ class DomainSearchController extends Controller
             $fullDomain = $sld . $tld;
             $searchDomain = $fullDomain;
             $results = $this->checkDomainWithAlternatives($sld, $tld, $tlds);
+            $this->recordSearch($results, $fullDomain);
         }
 
         return view("client.domain-search", compact("tlds", "results", "searchDomain"));
@@ -55,8 +56,27 @@ class DomainSearchController extends Controller
 
         $tlds = DomainPricing::where("enabled", true)->orderBy("sort_order")->get();
         $results = $this->checkDomainWithAlternatives($sld, $tld, $tlds);
+        $this->recordSearch($results, $sld . $tld);
 
         return response()->json($results);
+    }
+
+    /**
+     * The name the visitor asked about, not the suggestions shown with it,
+     * and the account when someone is signed in. Nothing else (no IP).
+     */
+    private function recordSearch(?array $results, string $asked): void
+    {
+        $primary = $results['primary'] ?? null;
+        $available = is_array($primary) && ! empty($primary['checked']) ? (bool) $primary['available'] : null;
+
+        $clientId = null;
+        if ($user = auth()->user()) {
+            $selected = session('active_client_id');
+            $clientId = ($selected ? $user->clients()->whereKey($selected)->value('clients.id') : null) ?? $user->clients()->value('clients.id');
+        }
+
+        \App\Models\WhoisLog::record($asked, $available, $clientId ? (int) $clientId : null, 'search');
     }
 
     public function pricing()

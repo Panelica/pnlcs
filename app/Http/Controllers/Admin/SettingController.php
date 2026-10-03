@@ -99,6 +99,8 @@ class SettingController extends Controller
         // The Turkish statutory forms (distance sales, preliminary information,
         // KVKK) for a seller outside Turkey selling to Turkish consumers.
         'TurkishLegalForms',
+        // Record storefront domain searches (admin.domains.searches); on by default.
+        'DomainSearchLog',
         'RecaptchaEnabled', 'RecaptchaTicketsEnabled', 'RecaptchaSignupEnabled', 'RecaptchaLoginEnabled', 'RecaptchaPasswordEnabled', 'RecaptchaSiteKey', 'RecaptchaSecretKey',
         'EmailVerificationRequired',
         // Seller identity beyond the basics: what a contract, an official
