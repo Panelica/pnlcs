@@ -59,6 +59,7 @@ class RegistrarBalanceCheckCommand extends Command
             $balance = $module->getBalance();
         } catch (\Throwable $e) {
             $this->error('Balance lookup threw: '.$e->getMessage());
+            self::remember(['ok' => false, 'registrar' => $registrar, 'error' => $e->getMessage()]);
             $this->alert_operator(
                 __('messages.registrar_balance.unreadable_subject'),
                 __('messages.registrar_balance.unreadable_body', ['registrar' => $registrar, 'error' => $e->getMessage()]),
@@ -70,6 +71,7 @@ class RegistrarBalanceCheckCommand extends Command
 
         if (! ($balance['success'] ?? false)) {
             $reason = (string) ($balance['message'] ?? 'unknown');
+            self::remember(['ok' => false, 'registrar' => $registrar, 'error' => $reason]);
             $this->error("Balance lookup failed: {$reason}");
             $this->alert_operator(
                 __('messages.registrar_balance.unreadable_subject'),
@@ -81,6 +83,12 @@ class RegistrarBalanceCheckCommand extends Command
         }
 
         $amount = (float) ($balance[strtolower($currency)] ?? 0);
+
+        // What the dashboard shows between checks (RegistrarBalanceWidget).
+        self::remember([
+            'ok' => true, 'registrar' => $registrar, 'currency' => $currency, 'amount' => $amount,
+            'threshold' => $threshold, 'try' => $balance['try'] ?? null, 'usd' => $balance['usd'] ?? null,
+        ]);
 
         $this->info(sprintf('%s balance: %s %s (floor %s)', $registrar, number_format($amount, 2), $currency, number_format($threshold, 2)));
 
@@ -104,6 +112,19 @@ class RegistrarBalanceCheckCommand extends Command
         );
 
         return self::SUCCESS;
+    }
+
+    /** The last reading, kept for the dashboard: read from the settings, never by calling the registrar. */
+    public static function last(): ?array
+    {
+        $raw = json_decode((string) Setting::get('RegistrarBalanceLast', ''), true);
+
+        return is_array($raw) ? $raw : null;
+    }
+
+    private static function remember(array $reading): void
+    {
+        Setting::set('RegistrarBalanceLast', json_encode($reading + ['at' => now()->toIso8601String()]));
     }
 
     /**
