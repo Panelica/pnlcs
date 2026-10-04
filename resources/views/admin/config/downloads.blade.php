@@ -25,7 +25,16 @@
 <div class="card" style="margin-bottom:15px;">
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
         <strong>{{ $category->name }}</strong>
-        <div style="display:flex;gap:6px;">
+        <div style="display:flex;gap:6px;align-items:flex-start;">
+            <details>
+                <summary class="btn btn-default btn-xs" style="list-style:none;">{{ __('common.actions.edit') }}</summary>
+                <form method="POST" action="{{ route('admin.config.downloads.categories.update', $category) }}" style="display:flex;gap:6px;margin-top:6px;">
+                    @csrf @method('PUT')
+                    <input type="text" name="name" value="{{ $category->name }}" required class="form-control" style="font-size:12px;">
+                    <input type="hidden" name="description" value="{{ $category->description }}">
+                    <button type="submit" class="btn btn-primary btn-xs">{{ __('common.actions.save') }}</button>
+                </form>
+            </details>
             <form method="POST" action="{{ route('admin.config.downloads.categories.destroy', $category) }}" onsubmit="return confirm('{{ __('admin.downloads.confirm_delete_category') }}')">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.downloads.delete_category') }}</button>
@@ -42,10 +51,11 @@
         <tr>
             <td style="font-weight:600;">{{ $dl->title }}@if($dl->products->isNotEmpty())<div style="font-size:11px;font-weight:400;color:#777;">{{ __('admin.downloads.only_for', ['products' => $dl->products->pluck('name')->implode(', ')]) }}</div>@endif</td>
             <td style="font-size:12px;color:#555;">{{ Str::limit($dl->description, 60) }}</td>
-            <td style="font-size:12px;font-family:monospace;">{{ Str::limit($dl->location, 40) }}</td>
+            <td style="font-size:12px;font-family:monospace;">@if($dl->isStoredFile()){{ $dl->fileName() }} <span style="font-family:inherit;color:#777;">({{ __('admin.downloads.stored_file') }})</span>@else{{ Str::limit($dl->location, 40) }}@endif</td>
             <td>{{ $dl->download_count ?? 0 }}</td>
             <td><span class="badge-{{ $dl->hidden ? 'draft' : 'active' }}">{{ $dl->hidden ? __('admin.downloads.draft') : __('admin.downloads.published') }}</span></td>
-            <td style="text-align:right;">
+            <td style="text-align:right;white-space:nowrap;">
+                <a href="{{ route('admin.config.downloads.edit', $dl) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
                 <form method="POST" action="{{ route('admin.config.downloads.destroy', $dl) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.downloads.confirm_delete_download') }}')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
@@ -100,7 +110,10 @@
                     </select>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control">{{ old('description') }}</textarea></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.downloads.file_url') }}</label><input type="text" name="location" value="{{ old('location') }}" required class="form-control" placeholder="https://..."></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.downloads.upload_file') }}</label><input type="file" name="file" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.downloads.or_link') }}</label><input type="text" name="location" value="{{ old('location') }}" class="form-control" placeholder="https://...">
+                    <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.downloads.file_or_link_hint') }}</p>
+                </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.downloads.products') }}</label>
                     <select name="products[]" multiple class="form-control" style="height:90px;">
                         @foreach($products ?? [] as $p)

@@ -456,6 +456,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::delete('downloads/categories/{category}', [ConfigController::class, 'destroyDownloadCategory'])->name('downloads.categories.destroy');
             Route::post('downloads', [ConfigController::class, 'storeDownload'])->name('downloads.store');
             Route::delete('downloads/{download}', [ConfigController::class, 'destroyDownload'])->name('downloads.destroy');
+            Route::get('downloads/{download}/edit', [ConfigController::class, 'editDownload'])->name('downloads.edit');
+            Route::put('downloads/{download}', [ConfigController::class, 'updateDownload'])->name('downloads.update');
+            Route::put('downloads/categories/{category}', [ConfigController::class, 'updateDownloadCategory'])->name('downloads.categories.update');
 
             Route::get('network-issues', [ConfigController::class, 'networkIssues'])->name('network-issues');
             Route::post('network-issues', [ConfigController::class, 'storeNetworkIssue'])->name('network-issues.store');
