@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
  * Twilio deletes the verification after approval, expiry (10 minutes) or max
  * attempts, at which point the check endpoint answers 404.
  */
-class TwilioVerifyClient
+class TwilioVerifyClient implements \App\Contracts\PhoneVerifier
 {
     public const BASE = 'https://verify.twilio.com/v2/Services/';
 

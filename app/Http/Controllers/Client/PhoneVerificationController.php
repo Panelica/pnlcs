@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Contracts\PhoneVerifier;
 use App\Services\Sms\TwilioVerifyClient;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,7 @@ class PhoneVerificationController extends Controller
 {
     use \App\Http\Controllers\Concerns\ResolvesClient;
 
-    public function start(TwilioVerifyClient $twilio)
+    public function start(PhoneVerifier $twilio)
     {
         abort_unless($twilio->enabled(), 404);
 
@@ -34,7 +35,7 @@ class PhoneVerificationController extends Controller
         return back()->with('phone_code_sent', true)->with('success', __('client.phone_verify.code_sent'));
     }
 
-    public function check(Request $request, TwilioVerifyClient $twilio)
+    public function check(Request $request, PhoneVerifier $twilio)
     {
         abort_unless($twilio->enabled(), 404);
 

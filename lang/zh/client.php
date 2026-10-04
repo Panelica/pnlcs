@@ -1311,6 +1311,7 @@ return [
     'welcome.meta_description' => ':brand — 可靠的网站托管、VPS 服务器、域名和 SSL 服务。采用 Cgroups v2 与 Nginx 的隔离基础设施。',
     'welcome.meta_title_suffix' => '专业虚拟主机、域名与服务器',
     'welcome_back' => '欢迎回来',
+    'phone_verify.sms_text' => '您的 :company 验证码是 :code，10 分钟内有效。',
     'phone_verify.title' => '手机验证',
     'phone_verify.verified_label' => '手机号码已验证',
     'phone_verify.unverified_label' => '手机号码尚未验证',

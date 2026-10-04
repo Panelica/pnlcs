@@ -419,7 +419,7 @@ class AccountController extends Controller
             : collect();
 
         $client = $this->currentClient();
-        $phoneVerifyAvailable = app(\App\Services\Sms\TwilioVerifyClient::class)->enabled();
+        $phoneVerifyAvailable = app(\App\Contracts\PhoneVerifier::class)->enabled();
 
         // The last sign-ins and wrong passwords for this login, newest first.
         $logins = \App\Models\UserLogin::where('user_id', $user->id)->orderByDesc('id')->limit(20)->get();

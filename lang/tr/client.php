@@ -1311,6 +1311,7 @@ return [
     'welcome.meta_description' => ':brand — güvenilir web hosting, VPS sunucular, alan adı ve SSL. Cgroups v2 ve Nginx ile izole altyapı üzerinde çalışır.',
     'welcome.meta_title_suffix' => 'Profesyonel Web Hosting, Alan Adı ve Sunucu',
     'welcome_back' => 'Tekrar hoş geldiniz',
+    'phone_verify.sms_text' => ':company doğrulama kodunuz: :code. Kod 10 dakika geçerlidir.',
     'phone_verify.title' => 'Telefon Doğrulama',
     'phone_verify.verified_label' => 'Telefon numarası doğrulandı',
     'phone_verify.unverified_label' => 'Telefon numarası henüz doğrulanmadı',

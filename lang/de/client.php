@@ -1311,6 +1311,7 @@ return [
     'welcome.meta_description' => ':brand – zuverlässiges Webhosting, VPS-Server, Domains und SSL. Aufbauend auf einer isolierten Infrastruktur mit Cgroups v2 und Nginx.',
     'welcome.meta_title_suffix' => 'Professionelles Webhosting, Domains und Server',
     'welcome_back' => 'Willkommen zurück',
+    'phone_verify.sms_text' => ':code ist Ihr Bestätigungscode für :company. Er ist 10 Minuten gültig.',
     'phone_verify.title' => 'Telefonverifizierung',
     'phone_verify.verified_label' => 'Telefonnummer bestätigt',
     'phone_verify.unverified_label' => 'Telefonnummer noch nicht bestätigt',

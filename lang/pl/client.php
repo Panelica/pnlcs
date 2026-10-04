@@ -1312,6 +1312,7 @@ return [
     'welcome.meta_description' => ':brand — niezawodny hosting WWW, serwery VPS, domeny i SSL. Zbudowany na izolowanej infrastrukturze z Cgroups v2 i Nginx.',
     'welcome.meta_title_suffix' => 'Profesjonalny hosting WWW, domeny i serwery',
     'welcome_back' => 'Witaj ponownie',
+    'phone_verify.sms_text' => ':code to Twój kod weryfikacyjny :company. Ważny przez 10 minut.',
     'phone_verify.title' => 'Weryfikacja telefonu',
     'phone_verify.verified_label' => 'Numer telefonu zweryfikowany',
     'phone_verify.unverified_label' => 'Numer telefonu jeszcze niezweryfikowany',
