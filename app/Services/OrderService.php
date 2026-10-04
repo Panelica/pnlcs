@@ -7,6 +7,7 @@ use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ServiceStatus;
 use App\Events\OrderPlaced;
+use App\Events\ServiceActivated;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\DomainPricing;
@@ -432,6 +433,15 @@ class OrderService
                     'status' => ServiceStatus::Active->value,
                     'registration_date' => $svc->registration_date ?? now()->toDateString(),
                 ]);
+
+                // The same event a module's create raises: the welcome mail,
+                // the ServiceActivated hook and the activity log hang on it,
+                // and a product sold without a server (a licence, a download)
+                // had none of them. A certificate is the exception: it waits
+                // for the customer's CSR and has its own mail for that below.
+                if (strtolower((string) $svc->product?->type) !== 'ssl') {
+                    event(new ServiceActivated($svc));
+                }
             }
         }
 

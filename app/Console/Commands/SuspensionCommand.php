@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\ServiceStatus;
+use App\Events\ServiceSuspended;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Services\ProvisioningService;
@@ -96,6 +97,9 @@ class SuspensionCommand extends Command
                 'suspension_date' => now(),
                 'suspension_reason' => 'Overdue Invoice - Automatic Suspension',
             ]);
+            // As suspendAccount does for a server: the customer is told and
+            // the ServiceSuspended hook runs, so an addon can act on it.
+            event(new ServiceSuspended($service, 'Overdue Invoice - Automatic Suspension'));
             $suspended++;
         }
 
