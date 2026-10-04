@@ -7,6 +7,7 @@ use App\Enums\ServiceStatus;
 use App\Events\ServiceActivated;
 use App\Events\ServiceSuspended;
 use App\Events\ServiceTerminated;
+use App\Events\ServiceUnsuspended;
 use App\Models\ModuleQueue;
 use App\Models\Product;
 use App\Models\Service;
@@ -114,6 +115,7 @@ class ProvisioningService
                 $service->save();
                 $this->settleQueue($service, 'unsuspend');
                 run_hook('AfterModuleUnsuspend', ['service' => $service]);
+                event(new ServiceUnsuspended($service));
             } elseif ($queueOnFail) {
                 $this->enqueueRetry($service, 'unsuspend', $result['message'] ?? 'Module unsuspend failed');
             }

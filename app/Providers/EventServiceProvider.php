@@ -8,6 +8,7 @@ use App\Events\InvoicePaid;
 use App\Events\OrderPlaced;
 use App\Events\ServiceActivated;
 use App\Events\ServiceSuspended;
+use App\Events\ServiceUnsuspended;
 use App\Events\ServiceTerminated;
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
@@ -79,6 +80,11 @@ class EventServiceProvider extends ServiceProvider
         ],
         ServiceSuspended::class => [
             [SendNotificationListener::class, 'handleServiceSuspended'],
+            LogActivityListener::class,
+        ],
+        // The customer's mail for this is sent by the job that lifts an
+        // overdue suspension (UnsuspendOnPaymentCommand), not here.
+        ServiceUnsuspended::class => [
             LogActivityListener::class,
         ],
         ServiceTerminated::class => [
