@@ -206,3 +206,11 @@ A module can offer more than its interface requires:
 A `hooks.php` file in the module's folder is loaded on every request (for
 addons: only while the addon is active). See [Hooks](hooks.md).
 
+
+**SMS providers.** An addon for a local SMS provider implements
+`App\Contracts\SmsSender` (`send(string $to, string $message): bool`, `$to` in
+E.164) and binds it in its service provider:
+`$this->app->bind(\App\Contracts\SmsSender::class, MySender::class);`.
+Phone verification (`App\Contracts\PhoneVerifier`) then sends six-digit codes
+of its own through it when Twilio Verify is not set up (ten minutes, five
+tries); with Twilio set up, Twilio is used as before.

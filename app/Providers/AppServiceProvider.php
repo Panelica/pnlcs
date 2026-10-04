@@ -24,6 +24,17 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(\App\Contracts\MailboxClientInterface::class, \App\Services\Mail\ImapMailboxClient::class);
+        // Phone verification: Twilio Verify when it is set up, otherwise codes
+        // of our own sent through an SmsSender an addon has bound; neither
+        // means verification is off.
+        $this->app->bind(\App\Contracts\PhoneVerifier::class, function ($app) {
+            $twilio = $app->make(\App\Services\Sms\TwilioVerifyClient::class);
+            if ($twilio->enabled() || ! $app->bound(\App\Contracts\SmsSender::class)) {
+                return $twilio;
+            }
+
+            return new \App\Services\Sms\SmsCodeVerifier($app->make(\App\Contracts\SmsSender::class));
+        });
         $this->app->singleton(ThemeManager::class);
         $this->app->singleton(ReportManager::class);
         $this->app->singleton(AddonManager::class);
