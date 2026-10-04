@@ -33,3 +33,7 @@ Homestead.yaml
 Thumbs.db
 .env.testing
 AGENTS.md
+
+# merge leftovers (git mergetool, patch)
+*.orig
+*.rej
