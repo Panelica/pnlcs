@@ -414,6 +414,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::get('ticket-statuses', [ConfigController::class, 'ticketStatuses'])->name('ticket-statuses');
             Route::post('ticket-statuses', [ConfigController::class, 'storeTicketStatus'])->name('ticket-statuses.store');
             Route::put('ticket-statuses/{status}', [ConfigController::class, 'updateTicketStatus'])->name('ticket-statuses.update');
+            Route::post('ticket-statuses/auto-close', [ConfigController::class, 'saveTicketAutoClose'])->name('ticket-statuses.auto-close');
             Route::delete('ticket-statuses/{status}', [ConfigController::class, 'destroyTicketStatus'])->name('ticket-statuses.destroy');
 
             Route::get('predefined-replies', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'index'])->name('predefined-replies');

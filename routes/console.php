@@ -80,6 +80,9 @@ Schedule::command('pnlcs:ssl-status-poll')->everyFiveMinutes();
 // SSL Expiry Check - daily at 09:00
 Schedule::command('pnlcs:ssl-expiry-check')->dailyAt('09:00');
 
+// Close tickets left inactive in an auto-close status - hourly
+Schedule::command('pnlcs:ticket-auto-close')->hourly()->withoutOverlapping();
+
 // Ticket Escalation - every 15 minutes
 Schedule::command('pnlcs:ticket-escalation')->everyFifteenMinutes();
 

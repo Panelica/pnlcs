@@ -1145,15 +1145,26 @@ class ConfigController extends Controller
     {
         $v = $request->validate(['title' => 'required', 'color' => 'nullable|string', 'sort_order' => 'nullable|integer', 'show_active' => 'boolean', 'show_awaiting' => 'boolean', 'auto_close' => 'boolean']);
         $v['show_active'] = $request->boolean('show_active');
+        $v['auto_close'] = $request->boolean('auto_close');
         TicketStatus::create($v);
 
         return back()->with('success', __('messages.success.ticket_status_created'));
+    }
+
+    /** How long a ticket in an auto-close status may sit unanswered (pnlcs:ticket-auto-close). */
+    public function saveTicketAutoClose(Request $request)
+    {
+        $hours = (int) $request->validate(['hours' => 'required|integer|min:0|max:8760'])['hours'];
+        \App\Models\Setting::set('TicketAutoCloseHours', (string) $hours);
+
+        return back()->with('success', __('admin.ticket_statuses.auto_close_saved'));
     }
 
     public function updateTicketStatus(Request $request, TicketStatus $status)
     {
         $v = $request->validate(['title' => 'required', 'color' => 'nullable|string', 'sort_order' => 'nullable|integer', 'show_active' => 'boolean', 'show_awaiting' => 'boolean', 'auto_close' => 'boolean']);
         $v['show_active'] = $request->boolean('show_active');
+        $v['auto_close'] = $request->boolean('auto_close');
         $status->update($v);
 
         return back()->with('success', __('messages.success.ticket_status_updated'));
