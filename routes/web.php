@@ -68,6 +68,15 @@ Route::post('gateway/iyzico/callback', [GatewayWebhookController::class, 'iyzico
         \App\Http\Middleware\SetLocale::class,
     ]);
 
+// ===== Any other gateway (no CSRF — the module verifies the call) =====
+// For a gateway with no route of its own, such as one installed from a
+// pnlcs.json module. After iyzico's callback above, which it would otherwise
+// take: routes match in the order they are registered.
+Route::match(['get', 'post'], 'gateway/{gateway}/callback', [GatewayWebhookController::class, 'callback'])
+    ->where('gateway', '[a-z0-9_-]+')
+    ->name('gateway.callback')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class]);
+
 // ===== Gateway JS-SDK Capture Endpoints (authenticated, CSRF-protected) =====
 // The comment was true of CSRF only: the group had no auth middleware, so
 // these ran for anyone who knew an invoice id.
