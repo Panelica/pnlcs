@@ -54,6 +54,8 @@
     {{-- Main navigation (horizontal at 1275px+) --}}
     <div class="navbar-collapse">
         <ul>
+            {{-- The dashboard, which only the logo led back to. --}}
+            <li style="float:left; width:auto;"><a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i> {{ __('admin.sidebar.dashboard') }}</a></li>
             {{-- + Add New --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-plus"></i>{{ __('common.actions.add_new') }}</a>
@@ -62,7 +64,7 @@
                     <li><a href="{{ route('admin.orders.index') }}"><i class="fas fa-cube"></i> {{ __('admin.nav.new_order') }}</a></li>
                     <li><a href="{{ route('admin.invoices.create') }}"><i class="fas fa-file-invoice"></i> {{ __('admin.nav.new_invoice') }}</a></li>
                     <li><a href="{{ route('admin.quotes.create') }}"><i class="fas fa-file-signature"></i> {{ __('admin.nav.new_quote') }}</a></li>
-                    <li><a href="{{ route('admin.tickets.index') }}"><i class="fas fa-life-ring"></i> {{ __('admin.nav.new_ticket') }}</a></li>
+                    <li><a href="{{ route('admin.tickets.create') }}"><i class="fas fa-life-ring"></i> {{ __('admin.nav.new_ticket') }}</a></li>
                 </ul>
             </li>
 
@@ -117,7 +119,7 @@
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-life-ring"></i> {{ __('admin.nav.support') }}</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.tickets.index') }}">{{ __('admin.nav.support_tickets') }}</a></li>
-                    <li><a href="{{ route('admin.tickets.index') }}">{{ __('admin.nav.open_ticket') }}</a></li>
+                    <li><a href="{{ route('admin.tickets.create') }}">{{ __('admin.nav.open_ticket') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.announcements') }}">{{ __('admin.nav.announcements') }}</a></li>
                     <li><a href="{{ route('admin.config.downloads') }}">{{ __('admin.nav.downloads') }}</a></li>
