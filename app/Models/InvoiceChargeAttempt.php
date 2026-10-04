@@ -595,7 +595,10 @@ class InvoiceChargeAttempt extends Model
             return false;
         }
 
-        if (false) {
+        // The currency is part of what the gateway was asked for. A shop that
+        // changed its currency between the send and this replay is asking a
+        // different question under the same key; that is for a person.
+        if (strtoupper((string) $this->currency) !== strtoupper($currency)) {
             return false;
         }
 

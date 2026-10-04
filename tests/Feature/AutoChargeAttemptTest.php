@@ -192,6 +192,27 @@ test('an attempt that never came back is handed to a person once a late fee has 
         ->and($row->last_message)->toContain('never recorded');
 });
 
+test('an attempt that never came back is handed to a person once the currency has changed', function () {
+    $invoice = chargeInvoice();
+    $card = storedCard($invoice);
+    $now = now();
+
+    InvoiceChargeAttempt::claim($invoice, $card, 50.00, 'USD', 3, $now);
+
+    // The shop moved to another currency between the crash and the replay.
+    // The currency is part of the request the gateway was sent, so 50 EUR
+    // under the same key is a different charge from the 50 USD that may
+    // already have gone through: a person decides, nothing is sent.
+    expect(InvoiceChargeAttempt::claim($invoice, $card, 50.00, 'EUR', 3, $now->copy()->addHour()))
+        ->toBe(ChargeClaim::Parked);
+
+    $row = attemptRow($invoice);
+
+    expect($row->state)->toBe(ChargeAttemptState::NeedsReview)
+        ->and($row->currency)->toBe('USD')
+        ->and($row->replays)->toBe(0);
+});
+
 test('an attempt that never came back is handed to a person once the gateway has forgotten the key', function () {
     $invoice = chargeInvoice();
     $card = storedCard($invoice);
