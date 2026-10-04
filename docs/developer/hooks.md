@@ -82,6 +82,12 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 | `ServiceSuspended` | service, reason | service suspended |
 | `ServiceUnsuspended` | service | suspension lifted (on a server, or locally for a service with none) |
 | `ServiceTerminated` | service | service terminated |
+| `InvoiceCancelled` | invoice | an invoice was cancelled (admin, bulk action or API) |
+| `ClientEdit` | client, userid, changes, olddata | a client's own details changed (not the balance) |
+| `ClientDelete` | client, userid | a client is about to be deleted |
+| `EmailPreSend` | to, subject, message | a mail is about to leave; return `['abortsend' => true]` to stop it |
+| `ShoppingCartValidateCheckout` | cart, clientId, paymentMethod | the customer submits checkout; return a message (or a list) to refuse the order with it |
+| `DailyCronJob` | — | once a day (00:10, scheduler) |
 | `DownloadRequested` | download, clientId, user | a customer asks for a download, after the access check; return `['abort' => 'reason']` to refuse (403) or `['path' => '/absolute/file', 'name' => 'file.zip']` to hand over that file instead |
 | `DomainRegistered` (also `AfterRegistrarRegistration`) | domain | the registrar registered an ordered domain |
 | `DomainRenewed` (also `AfterRegistrarRenewal`) | domain, years | a renewal went through at the registrar, or was recorded for a domain with no registrar module |

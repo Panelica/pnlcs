@@ -106,3 +106,7 @@ Schedule::command('pnlcs:db-backup')->daily()->at('04:30')->withoutOverlapping()
 
 // Prune high-volume log/history tables — daily, off-peak
 Schedule::command('pnlcs:prune-logs')->daily()->at('03:45')->withoutOverlapping();
+
+// DailyCronJob, as WHMCS has it: once a day, for addons that need a daily
+// task without a scheduler entry of their own.
+Schedule::call(fn () => run_hook('DailyCronJob'))->dailyAt('00:10')->name('hook:DailyCronJob')->withoutOverlapping();

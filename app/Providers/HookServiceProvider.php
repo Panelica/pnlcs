@@ -24,6 +24,7 @@ class HookServiceProvider extends ServiceProvider
         \App\Events\OrderPlaced::class       => ['OrderPlaced', 'AfterShoppingCartCheckout'],
         \App\Events\InvoiceCreated::class    => ['InvoiceCreated', 'InvoiceCreation'],
         \App\Events\InvoicePaid::class       => ['InvoicePaid'],
+        \App\Events\InvoiceCancelled::class  => ['InvoiceCancelled'],
         \App\Events\TicketOpened::class      => ['TicketOpened', 'TicketOpen'],
         \App\Events\TicketReplied::class     => ['TicketReplied'],
         \App\Events\TicketClosed::class      => ['TicketClosed', 'TicketClose'],
