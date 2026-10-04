@@ -18,7 +18,11 @@ use Illuminate\Support\Facades\Log;
  */
 class DomainAvailability
 {
-    /** Port-43 WHOIS servers, by the part of the name after the first dot. */
+    /**
+     * Port-43 WHOIS servers, by the part of the name after the first dot, or by
+     * the last label when that longer suffix is not listed (com.tr → tr,
+     * co.uk → uk): a registry answers for its second-level names too.
+     */
     public const WHOIS_SERVERS = [
         "com"       => "whois.verisign-grs.com",
         "net"       => "whois.verisign-grs.com",
@@ -38,7 +42,8 @@ class DomainAvailability
         "eu"        => "whois.eu",
         "de"        => "whois.denic.de",
         "uk"        => "whois.nic.uk",
-        "tr"        => "whois.nic.tr",
+        // TRABIS took over .tr from METU; whois.nic.tr no longer answers.
+        "tr"        => "whois.trabis.gov.tr",
         "tv"        => "whois.nic.tv",
         "cc"        => "whois.nic.cc",
         "us"        => "whois.nic.us",
@@ -145,9 +150,17 @@ class DomainAvailability
      */
     private function checkWithWhois(string $domain): array
     {
-        $tldKey = substr($domain, strpos($domain, '.') + 1);
+        return app(WhoisLookup::class)->check($domain, self::whoisServerFor($domain));
+    }
 
-        return app(WhoisLookup::class)->check($domain, self::WHOIS_SERVERS[$tldKey] ?? null);
+    /** The WHOIS server for a name: its whole suffix if listed, otherwise its top-level label. */
+    public static function whoisServerFor(string $domain): ?string
+    {
+        $domain = strtolower($domain);
+        $suffix = substr($domain, strpos($domain, '.') + 1);
+        $tld = substr((string) strrchr($domain, '.'), 1);
+
+        return self::WHOIS_SERVERS[$suffix] ?? self::WHOIS_SERVERS[$tld] ?? null;
     }
 
     /** The configured registrar module, or null when there is none to ask. */
