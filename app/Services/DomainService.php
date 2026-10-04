@@ -67,6 +67,8 @@ class DomainService
                 $result = $registrar->renew($domain, $years);
 
                 if ($result['success'] ?? false) {
+                    event(new \App\Events\DomainRenewed($domain->fresh(), $years));
+
                     return $domain->fresh();
                 }
 
@@ -88,6 +90,7 @@ class DomainService
             'expiry_date' => $newExpiry,
             'next_due_date' => $newExpiry->copy(),
         ]);
+        event(new \App\Events\DomainRenewed($domain->fresh(), $years));
 
         return $domain->fresh();
     }

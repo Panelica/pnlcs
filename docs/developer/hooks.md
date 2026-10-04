@@ -83,6 +83,10 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 | `ServiceUnsuspended` | service | suspension lifted (on a server, or locally for a service with none) |
 | `ServiceTerminated` | service | service terminated |
 | `DownloadRequested` | download, clientId, user | a customer asks for a download, after the access check; return `['abort' => 'reason']` to refuse (403) or `['path' => '/absolute/file', 'name' => 'file.zip']` to hand over that file instead |
+| `DomainRegistered` (also `AfterRegistrarRegistration`) | domain | the registrar registered an ordered domain |
+| `DomainRenewed` (also `AfterRegistrarRenewal`) | domain, years | a renewal went through at the registrar, or was recorded for a domain with no registrar module |
+| `DomainTransferStarted` (also `AfterRegistrarTransfer`) | domain | the registrar accepted a transfer request (it completes days later at the registry) |
+| `DomainExpired` | domain, status | the daily domain sync moved a domain past its expiry date to `grace`, `redemption` or `expired` |
 
 ### Clients & Support
 | Hook | Params | When |
