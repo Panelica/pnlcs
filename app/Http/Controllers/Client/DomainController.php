@@ -6,6 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
+use App\Services\DomainRegistrarActions;
 use App\Services\DomainService;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class DomainController extends Controller
         // Where privacy is sold, a domain that was bought without it cannot
         // switch it on here for free; it can still switch it off.
         $canTogglePrivacy = $module instanceof \App\Contracts\ManagesWhoisPrivacy && strtolower((string) $domain->status) === 'active'
-            && ($domain->id_protection || $this->privacyPrice($domain) <= 0);
+            && ($domain->id_protection || app(DomainRegistrarActions::class)->privacyPrice($domain) <= 0);
 
         // Whether the registrar lets the customer change the WHOIS contact.
         $canEditContacts = $module instanceof \App\Contracts\ManagesDomainContacts && strtolower((string) $domain->status) === 'active';
@@ -181,38 +182,19 @@ class DomainController extends Controller
     {
         $this->authorizeClientDomain($domain);
 
-        $module = $this->registrarFor($domain);
-        if (! $module instanceof \App\Contracts\ManagesWhoisPrivacy || strtolower((string) $domain->status) !== 'active') {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->privacyModule($domain)) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.privacy_unavailable'));
         }
 
         $enable = ! $domain->id_protection;
-        $price = $this->privacyPrice($domain);
-        if ($enable && $price > 0) {
+        if ($enable && $actions->privacyPrice($domain) > 0) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.privacy_sold'));
         }
 
-        try {
-            $result = $module->setPrivacy($domain, $enable);
-        } catch (\Throwable $e) {
-            Log::error("WHOIS privacy change failed for {$domain->domain}: {$e->getMessage()}");
-            $result = ['success' => false];
-        }
-
-        if (! ($result['success'] ?? false)) {
+        if (! $actions->setPrivacy($domain, $enable)['success']) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.privacy_failed'));
         }
-
-        $changes = ['id_protection' => $enable];
-        // Turning paid privacy off stops charging for it at renewal, never
-        // below the extension's own renewal price for the term.
-        if (! $enable && $price > 0) {
-            $years = max(1, (int) ($domain->registration_period ?: 1));
-            $pricing = \App\Models\DomainPricing::where('extension', $this->extensionOf($domain))->first();
-            $floor = round((float) ($pricing?->renew_price ?? 0) * $years, 2);
-            $changes['recurring_amount'] = max($floor, round((float) $domain->recurring_amount - $price * $years, 2));
-        }
-        $domain->update($changes);
 
         return redirect()->route('client.domains.show', $domain)
             ->with('success', $enable ? __('client.domains.privacy_on') : __('client.domains.privacy_off'));
@@ -225,27 +207,12 @@ class DomainController extends Controller
     public function contacts(Domain $domain)
     {
         $this->authorizeClientDomain($domain);
-        $module = $this->contactsModule($domain);
-        if (! $module) {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->contactsModule($domain)) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.contacts_unavailable'));
         }
 
-        try {
-            $contact = $module->getContact($domain);
-        } catch (\Throwable $e) {
-            Log::warning("WHOIS contact lookup failed for {$domain->domain}: {$e->getMessage()}");
-            $contact = null;
-        }
-
-        $fromProfile = $contact === null;
-        if ($fromProfile) {
-            $client = $domain->client;
-            $contact = [
-                'first_name' => $client?->first_name, 'last_name' => $client?->last_name, 'company_name' => $client?->company_name,
-                'email' => $client?->email, 'phone' => $client?->phone_number, 'address1' => $client?->address1,
-                'city' => $client?->city, 'state' => $client?->state, 'postcode' => $client?->postcode, 'country' => $client?->country,
-            ];
-        }
+        ['contact' => $contact, 'fromProfile' => $fromProfile] = $actions->contact($domain);
         $countries = \App\Support\Countries::all();
 
         return view('client.domains.contacts', compact('domain', 'contact', 'fromProfile', 'countries'));
@@ -254,62 +221,29 @@ class DomainController extends Controller
     public function updateContacts(Request $request, Domain $domain)
     {
         $this->authorizeClientDomain($domain);
-        $module = $this->contactsModule($domain);
-        if (! $module) {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->contactsModule($domain)) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.contacts_unavailable'));
         }
 
-        $contact = $request->validate([
-            'first_name' => 'required|string|max:80',
-            'last_name' => 'required|string|max:80',
-            'company_name' => 'nullable|string|max:256',
-            'email' => 'required|email|max:256',
-            'phone' => ['required', 'string', 'max:24', 'regex:/^\+?[0-9 ().-]{6,24}$/'],
-            'address1' => 'required|string|max:256',
-            'city' => 'required|string|max:80',
-            'state' => 'nullable|string|max:80',
-            'postcode' => 'required|string|max:15',
-            'country' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys(\App\Support\Countries::all()))],
-        ]);
+        $result = $actions->saveContact($domain, $request->validate(DomainRegistrarActions::contactRules()));
 
-        try {
-            $result = $module->saveContact($domain, $contact);
-        } catch (\Throwable $e) {
-            Log::error("WHOIS contact update failed for {$domain->domain}: {$e->getMessage()}");
-            $result = ['success' => false, 'message' => ''];
-        }
-
-        if (! ($result['success'] ?? false)) {
-            return back()->withInput()->with('error', trim(__('client.domains.contacts_failed').' '.($result['message'] ?? '')));
+        if (! $result['success']) {
+            return back()->withInput()->with('error', trim(__('client.domains.contacts_failed').' '.$result['message']));
         }
 
         return redirect()->route('client.domains.show', $domain)->with('success', __('client.domains.contacts_saved'));
     }
 
-    private function contactsModule(Domain $domain): ?\App\Contracts\ManagesDomainContacts
-    {
-        $module = $this->registrarFor($domain);
-
-        return $module instanceof \App\Contracts\ManagesDomainContacts && strtolower((string) $domain->status) === 'active' ? $module : null;
-    }
-
-    /**
-     * The domain's own nameservers (glue records), as the registry has them.
-     */
     public function glue(Domain $domain)
     {
         $this->authorizeClientDomain($domain);
-        $module = $this->glueModule($domain);
-        if (! $module) {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->glueModule($domain)) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
         }
 
-        try {
-            $hosts = $module->getChildNameservers($domain);
-        } catch (\Throwable $e) {
-            Log::warning("Glue lookup failed for {$domain->domain}: {$e->getMessage()}");
-            $hosts = null;
-        }
+        $hosts = $actions->glueHosts($domain);
 
         return view('client.domains.glue', compact('domain', 'hosts'));
     }
@@ -318,8 +252,8 @@ class DomainController extends Controller
     public function saveGlue(Request $request, Domain $domain)
     {
         $this->authorizeClientDomain($domain);
-        $module = $this->glueModule($domain);
-        if (! $module) {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->glueModule($domain)) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
         }
 
@@ -329,21 +263,14 @@ class DomainController extends Controller
             'ipv6' => ['nullable', 'ip', 'ipv6'],
         ]);
 
-        $host = $this->glueHost($domain, $v['host']);
+        $host = $actions->glueHost($domain, $v['host']);
         if ($host === null) {
             return back()->withInput()->withErrors(['host' => __('client.domains.glue_host_invalid', ['domain' => $domain->domain])]);
         }
 
-        try {
-            $existing = collect($module->getChildNameservers($domain) ?? [])->pluck('host')->all();
-            $result = $module->saveChildNameserver($domain, $host, array_values(array_filter([$v['ipv4'], $v['ipv6'] ?? null])), in_array($host, $existing, true));
-        } catch (\Throwable $e) {
-            Log::error("Glue save failed for {$host}: {$e->getMessage()}");
-            $result = ['success' => false, 'message' => ''];
-        }
-
-        if (! ($result['success'] ?? false)) {
-            return back()->withInput()->with('error', trim(__('client.domains.glue_failed').' '.($result['message'] ?? '')));
+        $result = $actions->saveGlue($domain, $host, [$v['ipv4'], $v['ipv6'] ?? null]);
+        if (! $result['success']) {
+            return back()->withInput()->with('error', trim(__('client.domains.glue_failed').' '.$result['message']));
         }
 
         return redirect()->route('client.domains.glue', $domain)->with('success', __('client.domains.glue_saved', ['host' => $host]));
@@ -352,51 +279,22 @@ class DomainController extends Controller
     public function deleteGlue(Request $request, Domain $domain)
     {
         $this->authorizeClientDomain($domain);
-        $module = $this->glueModule($domain);
-        if (! $module) {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->glueModule($domain)) {
             return redirect()->route('client.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
         }
 
-        $host = $this->glueHost($domain, (string) $request->validate(['host' => 'required|string|max:100'])['host']);
+        $host = $actions->glueHost($domain, (string) $request->validate(['host' => 'required|string|max:100'])['host']);
         if ($host === null) {
             abort(422);
         }
 
-        try {
-            $result = $module->deleteChildNameserver($domain, $host);
-        } catch (\Throwable $e) {
-            Log::error("Glue delete failed for {$host}: {$e->getMessage()}");
-            $result = ['success' => false, 'message' => ''];
-        }
+        $result = $actions->deleteGlue($domain, $host);
 
         return redirect()->route('client.domains.glue', $domain)->with(
-            ($result['success'] ?? false) ? 'success' : 'error',
-            ($result['success'] ?? false) ? __('client.domains.glue_deleted', ['host' => $host]) : trim(__('client.domains.glue_failed').' '.($result['message'] ?? ''))
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? __('client.domains.glue_deleted', ['host' => $host]) : trim(__('client.domains.glue_failed').' '.$result['message'])
         );
-    }
-
-    private function glueModule(Domain $domain): ?\App\Contracts\ManagesChildNameservers
-    {
-        $module = $this->registrarFor($domain);
-
-        return $module instanceof \App\Contracts\ManagesChildNameservers && strtolower((string) $domain->status) === 'active' ? $module : null;
-    }
-
-    /**
-     * ns1 or ns1.example.com, read as a name under this domain; anything
-     * else (another domain, a bare dot) is refused, since a registry only
-     * takes glue under the domain itself.
-     */
-    private function glueHost(Domain $domain, string $input): ?string
-    {
-        $name = strtolower(rtrim(trim($input), '.'));
-        $suffix = '.'.strtolower($domain->domain);
-        if (! str_ends_with($name, $suffix)) {
-            $name .= $suffix;
-        }
-        $label = substr($name, 0, -strlen($suffix));
-
-        return preg_match('/^(?!-)[a-z0-9-]{1,63}(?<!-)(\.(?!-)[a-z0-9-]{1,63}(?<!-))*$/', $label) ? $name : null;
     }
 
     /**
@@ -540,19 +438,6 @@ class DomainController extends Controller
         }
 
         return app(ModuleRegistry::class)->getRegistrarModule((string) $domain->registrar);
-    }
-
-    /** The extension's yearly WHOIS privacy price; 0 when free or not offered. */
-    private function privacyPrice(Domain $domain): float
-    {
-        $price = \App\Models\DomainPricing::where('extension', $this->extensionOf($domain))->value('privacy_price');
-
-        return $price === null ? 0.0 : (float) $price;
-    }
-
-    private function extensionOf(Domain $domain): string
-    {
-        return '.'.implode('.', array_slice(explode('.', strtolower((string) $domain->domain)), 1));
     }
 
     private function authorizeClientDomain(Domain $domain): void

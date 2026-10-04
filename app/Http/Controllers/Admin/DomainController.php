@@ -6,6 +6,7 @@ use App\Contracts\SyncsDomainData;
 use App\Http\Controllers\Controller;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Services\DomainRegistrarActions;
 use App\Services\DomainService;
 use App\Services\Module\ModuleRegistry;
 use Carbon\Carbon;
@@ -99,7 +100,14 @@ class DomainController extends Controller
 
         $registrarOptions = $this->registrarOptions();
 
-        return view('admin.domains.show', compact('domain', 'locked', 'registrarOptions'));
+        // What staff can do at the registrar on the customer's behalf: the
+        // same actions the client area offers, where the registrar can.
+        $actions = app(DomainRegistrarActions::class);
+        $canTogglePrivacy = $actions->privacyModule($domain) !== null;
+        $canEditContacts = $actions->contactsModule($domain) !== null;
+        $canManageGlue = $actions->glueModule($domain) !== null;
+
+        return view('admin.domains.show', compact('domain', 'locked', 'registrarOptions', 'canTogglePrivacy', 'canEditContacts', 'canManageGlue'));
     }
 
     /**
@@ -310,5 +318,112 @@ class DomainController extends Controller
         }
 
         return back()->with('epp_code', $code);
+    }
+
+    /**
+     * Switch WHOIS privacy at the registrar for the customer. Unlike the
+     * client area, staff may switch on privacy that is sold for the
+     * extension; turning paid privacy off still stops charging for it.
+     */
+    public function togglePrivacy(Domain $domain)
+    {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->privacyModule($domain)) {
+            return back()->with('error', __('client.domains.privacy_unavailable'));
+        }
+
+        $enable = ! $domain->id_protection;
+        $result = $actions->setPrivacy($domain, $enable);
+        if (! $result['success']) {
+            return back()->with('error', trim(__('admin.domains.privacy_failed').' '.$result['message']));
+        }
+
+        return back()->with('success', $enable ? __('admin.domains.privacy_on') : __('admin.domains.privacy_off'));
+    }
+
+    public function contacts(Domain $domain)
+    {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->contactsModule($domain)) {
+            return redirect()->route('admin.domains.show', $domain)->with('error', __('client.domains.contacts_unavailable'));
+        }
+
+        ['contact' => $contact, 'fromProfile' => $fromProfile] = $actions->contact($domain);
+        $countries = \App\Support\Countries::all();
+
+        return view('admin.domains.contacts', compact('domain', 'contact', 'fromProfile', 'countries'));
+    }
+
+    public function updateContacts(Request $request, Domain $domain)
+    {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->contactsModule($domain)) {
+            return redirect()->route('admin.domains.show', $domain)->with('error', __('client.domains.contacts_unavailable'));
+        }
+
+        $result = $actions->saveContact($domain, $request->validate(DomainRegistrarActions::contactRules()));
+        if (! $result['success']) {
+            return back()->withInput()->with('error', trim(__('client.domains.contacts_failed').' '.$result['message']));
+        }
+
+        return redirect()->route('admin.domains.show', $domain)->with('success', __('client.domains.contacts_saved'));
+    }
+
+    public function glue(Domain $domain)
+    {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->glueModule($domain)) {
+            return redirect()->route('admin.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
+        }
+
+        $hosts = $actions->glueHosts($domain);
+
+        return view('admin.domains.glue', compact('domain', 'hosts'));
+    }
+
+    public function saveGlue(Request $request, Domain $domain)
+    {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->glueModule($domain)) {
+            return redirect()->route('admin.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
+        }
+
+        $v = $request->validate([
+            'host' => ['required', 'string', 'max:100'],
+            'ipv4' => ['required', 'ip', 'ipv4'],
+            'ipv6' => ['nullable', 'ip', 'ipv6'],
+        ]);
+
+        $host = $actions->glueHost($domain, $v['host']);
+        if ($host === null) {
+            return back()->withInput()->withErrors(['host' => __('client.domains.glue_host_invalid', ['domain' => $domain->domain])]);
+        }
+
+        $result = $actions->saveGlue($domain, $host, [$v['ipv4'], $v['ipv6'] ?? null]);
+        if (! $result['success']) {
+            return back()->withInput()->with('error', trim(__('client.domains.glue_failed').' '.$result['message']));
+        }
+
+        return redirect()->route('admin.domains.glue', $domain)->with('success', __('client.domains.glue_saved', ['host' => $host]));
+    }
+
+    public function deleteGlue(Request $request, Domain $domain)
+    {
+        $actions = app(DomainRegistrarActions::class);
+        if (! $actions->glueModule($domain)) {
+            return redirect()->route('admin.domains.show', $domain)->with('error', __('client.domains.glue_unavailable'));
+        }
+
+        $host = $actions->glueHost($domain, (string) $request->validate(['host' => 'required|string|max:100'])['host']);
+        if ($host === null) {
+            abort(422);
+        }
+
+        $result = $actions->deleteGlue($domain, $host);
+
+        return redirect()->route('admin.domains.glue', $domain)->with(
+            $result['success'] ? 'success' : 'error',
+            $result['success'] ? __('client.domains.glue_deleted', ['host' => $host]) : trim(__('client.domains.glue_failed').' '.$result['message'])
+        );
     }
 }

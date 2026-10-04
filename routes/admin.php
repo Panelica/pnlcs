@@ -221,6 +221,12 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->name('domains.epp');
         Route::post('domains/{domain}/registrar', [DomainController::class, 'updateRegistrar'])->name('domains.registrar');
         Route::post('domains/{domain}/move', [DomainController::class, 'move'])->name('domains.move');
+        Route::post('domains/{domain}/privacy', [DomainController::class, 'togglePrivacy'])->name('domains.privacy');
+        Route::get('domains/{domain}/contacts', [DomainController::class, 'contacts'])->name('domains.contacts');
+        Route::put('domains/{domain}/contacts', [DomainController::class, 'updateContacts'])->name('domains.contacts.update');
+        Route::get('domains/{domain}/glue', [DomainController::class, 'glue'])->name('domains.glue');
+        Route::post('domains/{domain}/glue', [DomainController::class, 'saveGlue'])->name('domains.glue.save');
+        Route::delete('domains/{domain}/glue', [DomainController::class, 'deleteGlue'])->name('domains.glue.delete');
     });
 
     // =============================================
