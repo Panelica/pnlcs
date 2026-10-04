@@ -18,11 +18,26 @@ use Illuminate\Support\Facades\Mail;
 
 class BulkActionController extends Controller
 {
-    public function massEmailForm()
+    public function massEmailForm(Request $request)
     {
         $clients = Client::orderBy('first_name')->get();
 
-        return view('admin.bulk.mass-email', compact('clients'));
+        // Pick recipients by what they have (product, server, group, status,
+        // domain extension); the matches arrive ticked in the list, where they
+        // can still be changed before sending.
+        $filters = $request->only(['product_ids', 'server_ids', 'service_status', 'group_id', 'client_status', 'tld']);
+        $matched = \App\Services\ClientAudience::hasFilters($filters)
+            ? app(\App\Services\ClientAudience::class)->matching($filters)
+            : null;
+
+        return view('admin.bulk.mass-email', [
+            'clients' => $clients,
+            'filters' => $filters,
+            'matched' => $matched,
+            'products' => \App\Models\Product::orderBy('name')->get(['id', 'name']),
+            'servers' => \App\Models\Server::orderBy('name')->get(['id', 'name']),
+            'groups' => \App\Models\ClientGroup::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     public function massEmail(Request $request)

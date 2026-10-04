@@ -15,6 +15,44 @@
 
 {{-- Mass Email Tab --}}
 <div id="tab-email" class="bulk-panel card" style="border-top:none;border-radius:0 0 4px 4px;">
+    {{-- Pick recipients by what they have; the matches arrive ticked below. --}}
+    <form method="GET" action="{{ route('admin.bulk.mass-email') }}" class="card-body" style="border-bottom:1px solid #eee;">
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px;">{{ __('admin.bulk.filter_title') }}</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">
+            <label class="form-label" style="margin:0;">{{ __('admin.bulk.filter_products') }}
+                <select name="product_ids[]" multiple class="form-control" style="height:80px;">
+                    @foreach($products as $p)<option value="{{ $p->id }}" @selected(in_array($p->id, (array) ($filters['product_ids'] ?? [])))>{{ $p->name }}</option>@endforeach
+                </select></label>
+            <label class="form-label" style="margin:0;">{{ __('admin.bulk.filter_servers') }}
+                <select name="server_ids[]" multiple class="form-control" style="height:80px;">
+                    @foreach($servers as $sv)<option value="{{ $sv->id }}" @selected(in_array($sv->id, (array) ($filters['server_ids'] ?? [])))>{{ $sv->name }}</option>@endforeach
+                </select></label>
+            <label class="form-label" style="margin:0;">{{ __('admin.bulk.filter_service_status') }}
+                <select name="service_status" class="form-control">
+                    <option value="">{{ __('admin.bulk.filter_any') }}</option>
+                    @foreach(\App\Enums\ServiceStatus::cases() as $st)<option value="{{ $st->value }}" @selected(($filters['service_status'] ?? '') === $st->value)>{{ __('common.status.'.$st->value) }}</option>@endforeach
+                </select></label>
+            <label class="form-label" style="margin:0;">{{ __('admin.bulk.filter_group') }}
+                <select name="group_id" class="form-control">
+                    <option value="">{{ __('admin.bulk.filter_any') }}</option>
+                    @foreach($groups as $g)<option value="{{ $g->id }}" @selected((string) ($filters['group_id'] ?? '') === (string) $g->id)>{{ $g->name }}</option>@endforeach
+                </select></label>
+            <label class="form-label" style="margin:0;">{{ __('admin.bulk.filter_client_status') }}
+                <select name="client_status" class="form-control">
+                    <option value="">{{ __('admin.bulk.filter_any') }}</option>
+                    @foreach(\App\Enums\ClientStatus::cases() as $st)<option value="{{ $st->value }}" @selected(($filters['client_status'] ?? '') === $st->value)>{{ __('common.status.'.$st->value) }}</option>@endforeach
+                </select></label>
+            <label class="form-label" style="margin:0;">{{ __('admin.bulk.filter_tld') }}
+                <input type="text" name="tld" value="{{ $filters['tld'] ?? '' }}" maxlength="63" class="form-control"></label>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.bulk.filter_apply') }}</button>
+            @if($matched !== null)
+            <span style="font-size:13px;">{{ __('admin.bulk.filter_matched', ['count' => count($matched)]) }}</span>
+            <a href="{{ route('admin.bulk.mass-email') }}" style="font-size:12px;">{{ __('admin.bulk.filter_clear') }}</a>
+            @endif
+        </div>
+    </form>
     <form method="POST" action="{{ route('admin.bulk.mass-email.send') }}">
         @csrf
         <div class="card-body">
@@ -26,7 +64,7 @@
                     </label>
                     @foreach($clients as $client)
                     <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;cursor:pointer;">
-                        <input type="checkbox" name="client_ids[]" value="{{ $client->id }}"> {{ $client->first_name }} {{ $client->last_name }} ({{ $client->email }})
+                        <input type="checkbox" name="client_ids[]" value="{{ $client->id }}" @checked($matched !== null && in_array($client->id, $matched, true))> {{ $client->first_name }} {{ $client->last_name }} ({{ $client->email }})
                     </label>
                     @endforeach
                 </div>
