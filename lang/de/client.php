@@ -166,6 +166,7 @@ return [
         'type' => 'Stornierungsart',
     ],
     'cart' => [
+        'order_questions' => 'Zu Ihrer Bestellung',
         'choose_app' => 'Beginnen Sie mit einer App',
         'app_search_ph' => 'Such-Apps – WordPress, Datenbank, Automatisierung ...',
         'app_search_none' => 'Keine App entspricht dieser Suche.',

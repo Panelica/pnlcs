@@ -166,6 +166,7 @@ return [
         'type' => 'İptal Türü',
     ],
     'cart' => [
+        'order_questions' => 'Siparişiniz hakkında',
         'choose_app' => 'Uygulamanızı seçin',
         'app_search_ph' => 'Uygulama ara - wordpress, veritabanı, otomasyon...',
         'app_search_none' => 'Bu aramaya uyan uygulama yok.',

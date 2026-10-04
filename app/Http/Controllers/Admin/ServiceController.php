@@ -50,7 +50,10 @@ class ServiceController extends Controller
         $products = Product::orderBy('name')->get(['id', 'name', 'server_type']);
         $cycles = self::cyclesFor($service);
 
-        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles'));
+        // The answers to the product's own questions, asked when it was ordered.
+        $productFields = $service->product_id ? \App\Models\CustomField::productFields((int) $service->product_id)->get() : collect();
+
+        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields'));
     }
 
     /**

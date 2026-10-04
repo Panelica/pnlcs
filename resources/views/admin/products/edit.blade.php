@@ -212,6 +212,49 @@
         <a href="{{ route('admin.products.index') }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>
     </div>
 </form>
+
+{{-- The product's own questions, asked on its order form. Their own forms,
+     outside the product form above. --}}
+@php($productFields = \App\Models\CustomField::productFields($product->id)->get())
+<div class="card" id="product-fields" style="margin-top:20px;">
+    <div class="card-header"><strong>{{ __('admin.products.fields_title') }}</strong></div>
+    <div class="card-body">
+        <p style="font-size:12px;color:#777;margin-top:0;">{{ __('admin.products.fields_hint') }}</p>
+        @if($productFields->isNotEmpty())
+        <table class="data-table" style="margin-bottom:15px;">
+            <thead><tr><th>{{ __('common.form.name') }}</th><th>{{ __('common.table.type') }}</th><th></th></tr></thead>
+            <tbody>
+            @foreach($productFields as $field)
+            <tr>
+                <td>{{ $field->field_name }}@if($field->required) *@endif @if($field->admin_only)<span style="color:#999;font-size:12px;">({{ __('admin.products.fields_admin_only') }})</span>@endif</td>
+                <td>{{ $field->field_type }}</td>
+                <td style="text-align:right;">
+                    <form method="POST" action="{{ route('admin.products.fields.destroy', [$product, $field]) }}" onsubmit="return confirm('{{ __('admin.products.fields_confirm_delete') }}')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
+                    </form>
+                </td>
+            </tr>
+            @endforeach
+            </tbody>
+        </table>
+        @endif
+        <form method="POST" action="{{ route('admin.products.fields.store', $product) }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end;">
+            @csrf
+            <div class="form-group" style="margin:0;"><label class="form-label" for="pf-name">{{ __('common.form.name') }}</label><input type="text" id="pf-name" name="field_name" required maxlength="255" class="form-control"></div>
+            <div class="form-group" style="margin:0;"><label class="form-label" for="pf-type">{{ __('common.table.type') }}</label>
+                <select id="pf-type" name="field_type" class="form-control">
+                    @foreach(['text', 'textarea', 'select', 'checkbox', 'number', 'date'] as $t)<option value="{{ $t }}">{{ $t }}</option>@endforeach
+                </select></div>
+            <div class="form-group" style="margin:0;"><label class="form-label" for="pf-options">{{ __('admin.products.fields_options') }}</label><textarea id="pf-options" name="field_options" rows="1" class="form-control"></textarea></div>
+            <div class="form-group" style="margin:0;display:flex;gap:12px;flex-wrap:wrap;">
+                <label style="font-weight:400;display:flex;gap:6px;align-items:center;"><input type="checkbox" name="required" value="1"> {{ __('admin.products.fields_required') }}</label>
+                <label style="font-weight:400;display:flex;gap:6px;align-items:center;"><input type="checkbox" name="admin_only" value="1"> {{ __('admin.products.fields_admin_only') }}</label>
+            </div>
+            <div><button type="submit" class="btn btn-primary btn-sm">{{ __('admin.products.fields_add') }}</button></div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('scripts')

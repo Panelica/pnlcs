@@ -95,7 +95,14 @@ class ServiceController extends Controller
                 ->orderBy('title')->get()
             : collect();
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads'));
+        // What the customer answered to the product's own questions.
+        $orderAnswers = $service->product_id
+            ? \App\Models\CustomField::productFields((int) $service->product_id)->where('admin_only', false)->get()
+                ->map(fn ($field) => ['name' => $field->field_name, 'value' => $field->valueFor($service->id)])
+                ->filter(fn ($row) => filled($row['value']))->values()
+            : collect();
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers'));
     }
 
     /** Order an addon for a running service; it starts once its invoice is paid. */

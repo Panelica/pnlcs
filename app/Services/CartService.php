@@ -83,7 +83,7 @@ class CartService
         return $cart;
     }
 
-    public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null, array $addons = [], ?string $appSlug = null, ?string $sshKeys = null): Cart
+    public function addProduct(Cart $cart, Product $product, string $billingCycle, ?string $domain = null, array $configOptions = [], ?string $notes = null, ?string $domainOption = null, array $addons = [], ?string $appSlug = null, ?string $sshKeys = null, array $customFields = []): Cart
     {
         // The configure page refuses these and the listing leaves them out, but
         // the request that gets here only checked that the id exists — enough to
@@ -183,6 +183,8 @@ class CartService
             'app_slug' => $appSlug,
             // SSH keys for a virtual server, when the customer gave any.
             'ssh_keys' => $sshKeys,
+            // Answers to the product's own questions, keyed by field id.
+            'custom_fields' => $customFields,
             'price' => round($price, 2),
             'notes' => $notes,
         ];
@@ -665,6 +667,7 @@ class CartService
                 // downstream was told.
                 'app_slug' => $item['app_slug'] ?? null,
                 'ssh_keys' => $item['ssh_keys'] ?? null,
+                'custom_fields' => $item['custom_fields'] ?? [],
             ];
         }
 

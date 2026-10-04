@@ -167,6 +167,7 @@ return [
         'type' => 'Cancellation Type',
     ],
     'cart' => [
+        'order_questions' => 'About your order',
         'choose_app' => 'Choose your app',
         'app_search_ph' => 'Search apps - wordpress, database, automation...',
         'app_search_none' => 'No app matches that search.',

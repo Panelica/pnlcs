@@ -166,6 +166,7 @@ return [
         'type' => '取消类型',
     ],
     'cart' => [
+        'order_questions' => '关于您的订单',
         'choose_app' => '选择您的应用',
         'app_search_ph' => '搜索应用 - wordpress、数据库、自动化...',
         'app_search_none' => '没有符合该搜索的应用。',

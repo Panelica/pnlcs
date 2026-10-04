@@ -226,6 +226,37 @@
 </div>
 @endif
 
+@if(($productFields ?? collect())->isNotEmpty())
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-header"><strong>{{ __('admin.products.fields_title') }}</strong></div>
+    <form method="POST" action="{{ route('admin.services.fields', $service) }}">
+        @csrf @method('PUT')
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+            @foreach($productFields as $field)
+            @php($value = old("custom_fields.{$field->id}", $field->valueFor($service->id)))
+            <div class="form-group" style="margin:0;">
+                <label class="form-label" for="pf-{{ $field->id }}">{{ $field->field_name }}@if($field->admin_only) <span style="font-weight:400;color:#999;">({{ __('admin.products.fields_admin_only') }})</span>@endif</label>
+                @if($field->field_type === 'select')
+                <select id="pf-{{ $field->id }}" name="custom_fields[{{ $field->id }}]" class="form-control">
+                    <option value="">—</option>
+                    @foreach($field->options() as $opt)<option value="{{ $opt }}" @selected($value === $opt)>{{ $opt }}</option>@endforeach
+                </select>
+                @elseif($field->field_type === 'textarea')
+                <textarea id="pf-{{ $field->id }}" name="custom_fields[{{ $field->id }}]" rows="2" class="form-control">{{ $value }}</textarea>
+                @elseif($field->field_type === 'checkbox')
+                <label style="font-weight:400;display:flex;gap:6px;align-items:center;"><input type="checkbox" id="pf-{{ $field->id }}" name="custom_fields[{{ $field->id }}]" value="1" @checked($value)> {{ __('common.yes') }}</label>
+                @else
+                <input type="{{ in_array($field->field_type, ['number', 'date'], true) ? $field->field_type : 'text' }}" id="pf-{{ $field->id }}" name="custom_fields[{{ $field->id }}]" value="{{ $value }}" class="form-control">
+                @endif
+                @error("custom_fields.{$field->id}")<div style="color:#a94442;font-size:12px;">{{ $message }}</div>@enderror
+            </div>
+            @endforeach
+        </div>
+        <div style="padding:10px 15px;border-top:1px solid #eee;text-align:right;"><button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save') }}</button></div>
+    </form>
+</div>
+@endif
+
 @if($service->notes)
 <div class="card">
     <div class="card-header"><strong>{{ __('admin.services.notes') }}</strong></div>
