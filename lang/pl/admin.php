@@ -2975,6 +2975,11 @@ return [
     'ticket_statuses.status_name' => 'Nazwa statusu',
     'ticket_statuses.status_name_col' => 'Nazwa statusu',
     'ticket_statuses.title' => 'Statusy zgłoszeń',
+    'ticket_statuses.auto_close' => 'Zamykaj automatycznie przy braku aktywności',
+    'ticket_statuses.auto_close_col' => 'Automatyczne zamykanie',
+    'ticket_statuses.auto_close_hours' => 'Zamykaj nieaktywne zgłoszenia po (godzinach)',
+    'ticket_statuses.auto_close_hint' => '0 wyłącza. Zamykane są tylko zgłoszenia w statusie oznaczonym do automatycznego zamykania, licząc od ostatniej odpowiedzi.',
+    'ticket_statuses.auto_close_saved' => 'Automatyczne zamykanie zapisane.',
     'tickets' => [
         'add_reply' => 'Dodaj odpowiedź',
         'back' => 'Wstecz',

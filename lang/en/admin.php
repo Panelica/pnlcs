@@ -2975,6 +2975,11 @@ return [
     'ticket_statuses.status_name' => 'Status Name',
     'ticket_statuses.status_name_col' => 'Status Name',
     'ticket_statuses.title' => 'Ticket Statuses',
+    'ticket_statuses.auto_close' => 'Close automatically when inactive',
+    'ticket_statuses.auto_close_col' => 'Auto close',
+    'ticket_statuses.auto_close_hours' => 'Close inactive tickets after (hours)',
+    'ticket_statuses.auto_close_hint' => '0 turns it off. Only tickets in a status marked to close automatically are closed, counted from the last reply.',
+    'ticket_statuses.auto_close_saved' => 'Auto-close saved.',
     'tickets' => [
         'add_reply' => 'Add reply',
         'back' => 'Back',

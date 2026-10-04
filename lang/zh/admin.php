@@ -2975,6 +2975,11 @@ return [
     'ticket_statuses.status_name' => '状态名称',
     'ticket_statuses.status_name_col' => '状态名称',
     'ticket_statuses.title' => '工单状态',
+    'ticket_statuses.auto_close' => '无活动时自动关闭',
+    'ticket_statuses.auto_close_col' => '自动关闭',
+    'ticket_statuses.auto_close_hours' => '在此时长后关闭无活动工单（小时）',
+    'ticket_statuses.auto_close_hint' => '0 表示关闭此功能。只有处于标记为自动关闭状态的工单才会被关闭，从最后一次回复起算。',
+    'ticket_statuses.auto_close_saved' => '自动关闭设置已保存。',
     'tickets' => [
         'add_reply' => '添加回复',
         'back' => '返回',
