@@ -23,6 +23,31 @@ class Download extends Model
         return $this->belongsTo(DownloadCategory::class);
     }
 
+    /** Where uploaded files are kept: the private disk, never a public URL. */
+    public const DISK = 'local';
+
+    /**
+     * An uploaded file (type "file", location = its path on the private disk)
+     * rather than a link (type "link", location = the address).
+     */
+    public function isStoredFile(): bool
+    {
+        return $this->type === 'file';
+    }
+
+    /** The uploaded file's name as the customer receives it. */
+    public function fileName(): string
+    {
+        return basename((string) $this->location);
+    }
+
+    public function deleteStoredFile(): void
+    {
+        if ($this->isStoredFile() && filled($this->location)) {
+            \Illuminate\Support\Facades\Storage::disk(self::DISK)->delete($this->location);
+        }
+    }
+
     /** The products whose owners may download this; none means everyone signed in. */
     public function products()
     {

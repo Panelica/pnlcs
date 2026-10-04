@@ -1568,10 +1568,19 @@ class ConfigController extends Controller
         return back()->with('success', __('messages.success.category_created'));
     }
 
+    public function updateDownloadCategory(Request $request, DownloadCategory $category)
+    {
+        $category->update($request->validate(['name' => 'required|string|max:255', 'description' => 'nullable|string']));
+
+        return back()->with('success', __('admin.downloads.category_updated'));
+    }
+
     public function destroyDownloadCategory(DownloadCategory $category)
     {
         // downloads.category_id is constrained with cascadeOnDelete — the
-        // category's downloads are removed with it.
+        // category's downloads are removed with it, so their uploaded files
+        // go first.
+        $category->downloads->each->deleteStoredFile();
         $category->delete();
 
         return back()->with('success', __('messages.success.category_deleted'));
@@ -1579,28 +1588,89 @@ class ConfigController extends Controller
 
     public function storeDownload(Request $request)
     {
+        $v = $this->validateDownload($request, null);
+        $download = new Download($v);
+        $this->takeDownloadSource($request, $download);
+        $download->save();
+        // Kept to the owners of these products; none means every signed-in customer.
+        $download->products()->sync($request->input('products', []));
+
+        return back()->with('success', __('messages.success.download_created'));
+    }
+
+    public function editDownload(Download $download)
+    {
+        return view('admin.config.download-edit', [
+            'download' => $download->load('products'),
+            'categories' => DownloadCategory::orderBy('name')->get(),
+            'products' => \App\Models\Product::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function updateDownload(Request $request, Download $download)
+    {
+        $download->fill($this->validateDownload($request, $download));
+        $this->takeDownloadSource($request, $download);
+        $download->save();
+        $download->products()->sync($request->input('products', []));
+
+        return redirect()->route('admin.config.downloads')->with('success', __('admin.downloads.download_updated'));
+    }
+
+    public function destroyDownload(Download $download)
+    {
+        $download->deleteStoredFile();
+        $download->delete();
+
+        return back()->with('success', __('messages.success.download_deleted'));
+    }
+
+    /**
+     * A download is an uploaded file or a link. A new one needs one of them;
+     * an edit may keep the file or link it has.
+     */
+    private function validateDownload(Request $request, ?Download $download): array
+    {
         $v = $request->validate([
             'category_id' => 'required|exists:download_categories,id',
             'title' => 'required|string',
             'description' => 'nullable|string',
-            'location' => 'required|string',
+            'file' => 'nullable|file',
+            'location' => [$download ? 'nullable' : 'required_without:file', 'nullable', 'string', 'max:2048'],
             'published' => 'boolean',
             'products' => 'nullable|array',
             'products.*' => 'integer|exists:products,id',
         ]);
         $v['hidden'] = ! $request->boolean('published');
-        unset($v['published'], $v['products']);
-        // Kept to the owners of these products; none means every signed-in customer.
-        Download::create($v)->products()->sync($request->input('products', []));
+        unset($v['published'], $v['products'], $v['file'], $v['location']);
 
-        return back()->with('success', __('messages.success.download_created'));
+        return $v;
     }
 
-    public function destroyDownload(Download $download)
+    /**
+     * Put the uploaded file on the private disk (it is handed to customers
+     * by DownloadController after its checks, never by address), or take the
+     * link. Whatever the download had before is removed when it is replaced.
+     */
+    private function takeDownloadSource(Request $request, Download $download): void
     {
-        $download->delete();
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+            $name = preg_replace('/[^A-Za-z0-9._-]+/', '-', $file->getClientOriginalName()) ?: 'download';
+            $path = $file->storeAs('downloads/'.\Illuminate\Support\Str::uuid(), $name, Download::DISK);
 
-        return back()->with('success', __('messages.success.download_deleted'));
+            $download->deleteStoredFile();
+            $download->type = 'file';
+            $download->location = $path;
+
+            return;
+        }
+
+        if (filled($request->input('location'))) {
+            $download->deleteStoredFile();
+            $download->type = 'link';
+            $download->location = (string) $request->input('location');
+        }
     }
 
     // Network Issues
