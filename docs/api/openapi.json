@@ -2758,6 +2758,16 @@
                                 }
                             }
                         }
+                    },
+                    "502": {
+                        "description": "The registrar refused the change or could not be reached; the record is left as it was.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2940,10 +2950,65 @@
                 "tags": [
                     "Domains"
                 ],
-                "description": "Always answers 501: no registrar module implements a contact update. Change the contacts at the registrar. Permission: manage_domains.",
+                "description": "Permission: manage_domains.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domainupdatewhoisinfo"
+                            }
+                        },
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/domainupdatewhoisinfo"
+                            }
+                        }
+                    }
+                },
                 "responses": {
+                    "200": {
+                        "description": "result is success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Success"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "No such domain.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "A field is missing or invalid.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
                     "501": {
-                        "description": "Always answers 501: no registrar module implements a contact update. Change the contacts at the registrar.",
+                        "description": "The domain's registrar cannot change the contact.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "The registrar refused the contact or could not be reached (its message is passed on).",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -9037,6 +9102,66 @@
                 "required": [
                     "domainid",
                     "ns1"
+                ]
+            },
+            "domainupdatewhoisinfo": {
+                "type": "object",
+                "properties": {
+                    "domainid": {
+                        "type": "integer",
+                        "description": "The domain."
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "description": "Registrant first name."
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "description": "Registrant last name."
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "description": "Organisation, if any."
+                    },
+                    "email": {
+                        "type": "string",
+                        "description": "Registrant e-mail address."
+                    },
+                    "phone": {
+                        "type": "string",
+                        "description": "Phone number, e.g. +90 212 555 0101."
+                    },
+                    "address1": {
+                        "type": "string",
+                        "description": "Street address."
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "City."
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "State or province."
+                    },
+                    "postcode": {
+                        "type": "string",
+                        "description": "Postcode."
+                    },
+                    "country": {
+                        "type": "string",
+                        "description": "Two-letter country code."
+                    }
+                },
+                "required": [
+                    "domainid",
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "phone",
+                    "address1",
+                    "city",
+                    "postcode",
+                    "country"
                 ]
             },
             "endtasktimer": {
