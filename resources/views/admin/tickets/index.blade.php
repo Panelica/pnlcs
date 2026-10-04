@@ -2,8 +2,9 @@
 @section("title", __("admin.tickets.title"))
 @section("content")
 
-<div class="page-header">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>{{ __('admin.tickets.title') }}</h1>
+    <a href="{{ route('admin.tickets.create') }}" class="btn btn-primary btn-sm">+ {{ __('admin.tickets.open_ticket') }}</a>
 </div>
 
 <!-- Status Filter Tabs -->

@@ -119,7 +119,7 @@ class SendNotificationListener
     {
         try {
             if ($event->ticket->email) {
-                Mail::to($event->ticket->email)->queue(new TicketOpenedMail($event->ticket, false));
+                Mail::to($event->ticket->email)->queue(new TicketOpenedMail($event->ticket, false, $event->isAdmin));
             }
             if (! $event->isAdmin) {
                 $adminEmail = Setting::get('Email', null);

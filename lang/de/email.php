@@ -258,6 +258,8 @@ return [
         'reply_subject' => 'Ticketantwort – #:number',
     ],
     'ticket_opened' => [
+        'staff_opened' => 'Wir haben ein Support-Ticket für Sie eröffnet.',
+        'staff_reply' => 'Antworten Sie auf diese E-Mail oder in Ihrem Kundenbereich.',
         'admin_new_ticket' => 'Ein neues Support-Ticket wurde eröffnet.',
         'admin_review' => 'Bitte überprüfen Sie dieses Ticket und antworten Sie darauf.',
         'client_review' => 'Unser Team wird Ihr Ticket prüfen und so schnell wie möglich antworten.',

@@ -258,6 +258,8 @@ return [
         'reply_subject' => '工单回复 - #:number',
     ],
     'ticket_opened' => [
+        'staff_opened' => '我们已为您创建了一个支持工单。',
+        'staff_reply' => '您可以直接回复此邮件，或在客户中心回复。',
         'admin_new_ticket' => '新工单已创建。',
         'admin_review' => '请查看并回复此工单。',
         'client_review' => '我们的团队会尽快查看并回复您的工单。',

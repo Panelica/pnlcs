@@ -258,6 +258,8 @@ return [
         'reply_subject' => 'Destek Talebi Yanıtı - #:number',
     ],
     'ticket_opened' => [
+        'staff_opened' => 'Sizin için bir destek talebi açtık.',
+        'staff_reply' => 'Bu e-postayı yanıtlayarak ya da müşteri panelinizden cevap verebilirsiniz.',
         'admin_new_ticket' => 'Yeni bir destek talebi açıldı.',
         'admin_review' => 'Lütfen bu talebi inceleyip yanıtlayın.',
         'client_review' => 'Ekibimiz talebinizi inceleyip en kısa sürede yanıtlayacaktır.',

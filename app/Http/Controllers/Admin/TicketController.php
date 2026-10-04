@@ -28,6 +28,69 @@ class TicketController extends Controller
         return view('admin.tickets.index', compact('tickets', 'departments'));
     }
 
+    /**
+     * Open a ticket for a customer: the customer rang, wrote from somewhere
+     * else, or staff need something from them. Nothing in the admin area
+     * could; the client page's "New ticket" link went to the ticket list.
+     */
+    public function create(Request $request)
+    {
+        $client = $request->filled('client') ? $this->findClient((string) $request->input('client')) : null;
+
+        return view('admin.tickets.create', [
+            'client' => $client,
+            'departments' => TicketDepartment::orderBy('sort_order')->get(['id', 'name']),
+            'services' => $client ? \App\Models\Service::where('client_id', $client->id)->with('product:id,name')->orderByDesc('id')->get(['id', 'product_id', 'domain']) : collect(),
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $v = $request->validate([
+            'client' => 'required|string|max:255',
+            'department_id' => 'required|exists:ticket_departments,id',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string',
+            'priority' => 'required|in:Low,Medium,High',
+            'related_service' => 'nullable|integer',
+        ]);
+
+        $client = $this->findClient($v['client']);
+        if (! $client) {
+            return back()->withInput()->withErrors(['client' => __('admin.tickets.open_no_client')]);
+        }
+        if (! empty($v['related_service']) && ! \App\Models\Service::where('id', $v['related_service'])->where('client_id', $client->id)->exists()) {
+            return back()->withInput()->withErrors(['related_service' => __('admin.tickets.open_service_not_theirs')]);
+        }
+
+        // Staff wrote the first message, so the next move is the customer's:
+        // the ticket starts as Answered, like one staff have replied to.
+        $ticket = app(\App\Services\TicketService::class)->createTicket([
+            'department_id' => $v['department_id'],
+            'client_id' => $client->id,
+            'name' => trim($client->first_name.' '.$client->last_name),
+            'email' => $client->email,
+            'title' => $v['subject'],
+            'message' => $v['message'],
+            'priority' => $v['priority'],
+            'admin' => (string) auth('admin')->user()?->username,
+            'status' => 'Answered',
+            'service' => ! empty($v['related_service']) ? (string) $v['related_service'] : null,
+        ]);
+        // As every other door does; isAdmin tells the customer's mail that
+        // staff opened it, and leaves support's own alert out.
+        event(new \App\Events\TicketOpened($ticket, true));
+
+        return redirect()->route('admin.tickets.show', $ticket)->with('success', __('admin.tickets.open_done', ['tid' => $ticket->tid]));
+    }
+
+    private function findClient(string $input): ?\App\Models\Client
+    {
+        $input = trim($input);
+
+        return ctype_digit($input) ? \App\Models\Client::find((int) $input) : \App\Models\Client::where('email', $input)->first();
+    }
+
     public function show(Ticket $ticket)
     {
         $ticket->load('department', 'client', 'replies', 'notes', 'feedback');
