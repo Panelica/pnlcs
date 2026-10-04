@@ -73,9 +73,9 @@
     $tools = [
         ['k'=>'files','name'=>__('client.hosting.files.title'),'desc'=>__('client.hosting.files.subtitle'),'ic'=>'ri-folder-open-line','c'=>'#3b82f6','route'=>route('client.services.files',$service)],
         ['k'=>'emails','name'=>__('client.hosting.email.title'),'desc'=>__('client.hosting.email.subtitle'),'ic'=>'ri-mail-line','c'=>'#8b5cf6','route'=>route('client.services.emails',$service)],
-        ['k'=>'databases','name'=>'Databases','desc'=>'MySQL databases & users','ic'=>'ri-database-2-line','c'=>'#0ea5e9','route'=>route('client.services.databases',$service)],
-        ['k'=>'ftp','name'=>'FTP Accounts','desc'=>'Manage FTP access','ic'=>'ri-folder-transfer-line','c'=>'#f59e0b','route'=>route('client.services.ftp',$service)],
-        ['k'=>'subdomains','name'=>'Subdomains','desc'=>'Create subdomains','ic'=>'ri-node-tree','c'=>'#10b981','route'=>route('client.services.subdomains',$service)],
+        ['k'=>'databases','name'=>__('client.hosting.databases.title'),'desc'=>__('client.hosting.databases.subtitle'),'ic'=>'ri-database-2-line','c'=>'#0ea5e9','route'=>route('client.services.databases',$service)],
+        ['k'=>'ftp','name'=>__('client.hosting.ftp.title'),'desc'=>__('client.hosting.ftp.subtitle'),'ic'=>'ri-folder-transfer-line','c'=>'#f59e0b','route'=>route('client.services.ftp',$service)],
+        ['k'=>'subdomains','name'=>__('client.hosting.subdomains.title'),'desc'=>__('client.hosting.subdomains.subtitle'),'ic'=>'ri-node-tree','c'=>'#10b981','route'=>route('client.services.subdomains',$service)],
         ['k'=>'dns','name'=>__('client.hosting.dns.title'),'desc'=>__('client.hosting.dns.subtitle'),'ic'=>'ri-global-line','c'=>'#6366f1','route'=>route('client.services.dns',$service)],
         ['k'=>'cron','name'=>__('client.hosting.cron.title'),'desc'=>__('client.hosting.cron.subtitle'),'ic'=>'ri-time-line','c'=>'#ec4899','route'=>route('client.services.cron',$service)],
         ['k'=>'backups','name'=>__('client.hosting.backups.title'),'desc'=>__('client.hosting.backups.subtitle'),'ic'=>'ri-archive-2-line','c'=>'#64748b','route'=>route('client.services.backups',$service)],
