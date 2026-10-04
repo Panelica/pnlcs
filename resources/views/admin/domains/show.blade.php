@@ -48,6 +48,18 @@
             <button type="submit" class="btn btn-default btn-sm">{{ $domain->auto_renew ? __('admin.domains.autorenew_disable') : __('admin.domains.autorenew_enable') }}</button>
         </form>
         <a href="{{ route('admin.domains.epp', $domain) }}" class="btn btn-default btn-sm">{{ __('admin.domains.get_epp_code') }}</a>
+        @if($canTogglePrivacy)
+        <form method="POST" action="{{ route('admin.domains.privacy', $domain) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.domains.confirm_privacy') }}')">
+            @csrf
+            <button type="submit" class="btn btn-default btn-sm">{{ $domain->id_protection ? __('admin.domains.privacy_disable') : __('admin.domains.privacy_enable') }}</button>
+        </form>
+        @endif
+        @if($canEditContacts)
+        <a href="{{ route('admin.domains.contacts', $domain) }}" class="btn btn-default btn-sm">{{ __('client.domains.contacts_title') }}</a>
+        @endif
+        @if($canManageGlue)
+        <a href="{{ route('admin.domains.glue', $domain) }}" class="btn btn-default btn-sm">{{ __('client.domains.glue_title') }}</a>
+        @endif
     </div>
 </div>
 
