@@ -239,7 +239,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::post('domains/{domain}/restore', [DomainController::class, 'restore'])->name('domains.restore');
         Route::get('domains/{domain}/epp', [DomainController::class, 'getEppCode'])->middleware('client.confirm')->name('domains.epp');
         // Giving a domain to another account: as sensitive as the transfer code.
-        Route::post('domains/{domain}/move', [\App\Http\Controllers\Client\DomainMoveController::class, 'offer'])->middleware('client.confirm')->name('domains.move');
+        Route::post('domains/{domain}/move', [\App\Http\Controllers\Client\DomainMoveController::class, 'offer'])->middleware(['client.confirm', 'throttle:5,10'])->name('domains.move');
         Route::post('domain-moves/{offer}/cancel', [\App\Http\Controllers\Client\DomainMoveController::class, 'cancel'])->name('domain-moves.cancel');
         Route::post('domain-moves/{offer}/accept', [\App\Http\Controllers\Client\DomainMoveController::class, 'accept'])->name('domain-moves.accept');
         Route::post('domain-moves/{offer}/decline', [\App\Http\Controllers\Client\DomainMoveController::class, 'decline'])->name('domain-moves.decline');

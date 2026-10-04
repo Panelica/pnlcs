@@ -97,3 +97,38 @@ it('addresses the offer mail to the receiver, and binds it to a template', funct
         ->and($body)->not->toContain(e(__('email.common.greeting', ['name' => 'Selin'])))
         ->and(app(\App\Services\EmailTemplateService::class)->forMailable(DomainMoveOfferedMail::class)?->name)->toBe('Domain Move Offered');
 });
+
+it('is for logins that may manage domains, on both sides', function () {
+    Mail::fake();
+    [$seller, $from] = cdmAccount('s5@example.test');
+    [$buyer, $to] = cdmAccount('b5@example.test');
+    $domain = Domain::factory()->create(['client_id' => $from->id, 'domain' => 'guarded-site.com', 'status' => 'active']);
+    test()->actingAs($seller)->post(route('client.domains.move', $domain), ['email' => 'b5@example.test']);
+    $offer = DomainMoveRequest::latest('id')->firstOrFail();
+
+    $member = function (Client $client): User {
+        $user = User::factory()->create();
+        $client->users()->attach($user->id, ['owner' => false, 'permissions' => json_encode(['tickets'])]);
+
+        return $user;
+    };
+    $buyerStaff = $member($to);
+    $sellerStaff = $member($from);
+
+    test()->actingAs($buyerStaff)->post(route('client.domain-moves.accept', $offer))->assertForbidden();
+    test()->actingAs($buyerStaff)->post(route('client.domain-moves.decline', $offer))->assertForbidden();
+    test()->actingAs($sellerStaff)->post(route('client.domain-moves.cancel', $offer))->assertForbidden();
+
+    expect($offer->fresh()->status)->toBe('pending')->and($domain->fresh()->client_id)->toBe($from->id);
+});
+
+it('limits how often an offer can be made', function () {
+    Mail::fake();
+    [$seller, $from] = cdmAccount('s6@example.test');
+    $domain = Domain::factory()->create(['client_id' => $from->id, 'domain' => 'probe-site.com', 'status' => 'active']);
+
+    foreach (range(1, 5) as $i) {
+        test()->actingAs($seller)->post(route('client.domains.move', $domain), ['email' => "nobody{$i}@example.test"]);
+    }
+    test()->actingAs($seller)->post(route('client.domains.move', $domain), ['email' => 'nobody6@example.test'])->assertStatus(429);
+});
