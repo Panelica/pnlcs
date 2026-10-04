@@ -1050,9 +1050,9 @@ return [
     'domaingetwhoisinfo' => [
         'section' => 'domains',
         'params' => ['*domainid' => ['integer', 'The domain.']],
-        'returns' => ['domainid' => 'integer', 'whois' => 'object: Registrant {Name, Organisation, Address1, City, State, Postcode, Country, Phone Number, Email Address}'],
+        'returns' => ['domainid' => 'integer', 'whois' => 'object: Registrant {First Name, Last Name, Name, Organisation, Address1, City, State, Postcode, Country, Phone Number, Email Address}', 'source' => 'string: registrar or profile'],
         'errors' => [404 => 'No such domain.'],
-        'notes' => 'Built from the client record in PNLCS, not read from the registrar.',
+        'notes' => 'Read from the registrar where it can report the contact (source: registrar); otherwise the client record in PNLCS (source: profile).',
     ],
     'domainupdatewhoisinfo' => [
         'section' => 'domains',
@@ -1085,7 +1085,8 @@ return [
             'idprotect' => ['boolean', 'The state you want. Left out, the current state is flipped.'],
         ],
         'returns' => ['domainid' => 'integer', 'idprotection' => 'boolean'],
-        'errors' => [404 => 'No such domain.', 502 => 'The registrar refused the change or could not be reached; the record is left as it was.'],
+        'errors' => [404 => 'No such domain.', 422 => 'The registrar can switch privacy, but the domain is not active.', 502 => 'The registrar refused the change or could not be reached; the record is left as it was.'],
+        'notes' => 'Turning paid privacy off lowers the domain\'s renewal amount by its privacy price, as the admin and client pages do.',
     ],
     'domainrelease' => [
         'section' => 'domains',

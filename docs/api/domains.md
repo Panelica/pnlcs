@@ -162,7 +162,8 @@ Get the contact details of a domain.
 |---|---|
 | `result` | `success` |
 | `domainid` | integer |
-| `whois` | object: Registrant {Name, Organisation, Address1, City, State, Postcode, Country, Phone Number, Email Address} |
+| `whois` | object: Registrant {First Name, Last Name, Name, Organisation, Address1, City, State, Postcode, Country, Phone Number, Email Address} |
+| `source` | string: registrar or profile |
 
 **Errors**
 
@@ -171,7 +172,7 @@ Get the contact details of a domain.
 | 404 | No such domain. |
 
 !!! note
-    Built from the client record in PNLCS, not read from the registrar.
+    Read from the registrar where it can report the contact (source: registrar); otherwise the client record in PNLCS (source: profile).
 
 **Example**
 
@@ -333,7 +334,11 @@ Turn ID protection on or off.
 | Status | When |
 |---|---|
 | 404 | No such domain. |
+| 422 | The registrar can switch privacy, but the domain is not active. |
 | 502 | The registrar refused the change or could not be reached; the record is left as it was. |
+
+!!! note
+    Turning paid privacy off lowers the domain's renewal amount by its privacy price, as the admin and client pages do.
 
 **Example**
 
