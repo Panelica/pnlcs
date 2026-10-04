@@ -101,8 +101,20 @@ class Client extends Model
             }
         });
 
+        // ClientEdit, as WHMCS has it: after the account's own details change.
+        // Not for the balance or the login stamp, which move on their own.
+        static::updated(function (Client $client) {
+            $changes = array_diff_key($client->getChanges(), array_flip(['credit', 'updated_at', 'last_login', 'last_login_at', 'last_login_ip']));
+            if ($changes !== []) {
+                run_hook('ClientEdit', ['client' => $client, 'userid' => $client->id, 'changes' => $changes, 'olddata' => array_intersect_key($client->getOriginal(), $changes)]);
+            }
+        });
+
         // Cascade delete: clean up all child records
         static::deleting(function (Client $client) {
+            // ClientDelete, before anything is removed.
+            run_hook('ClientDelete', ['client' => $client, 'userid' => $client->id]);
+
             $client->services()->delete();
 
             // Invoices and credits stay. Together with the transactions they

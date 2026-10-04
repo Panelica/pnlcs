@@ -341,6 +341,15 @@ class CartController extends Controller
         ]);
 
         $clientId = $this->optionalClientId();
+
+        // ShoppingCartValidateCheckout, as WHMCS has it: an addon may refuse
+        // the order with a message (a string, or a list of them).
+        $refusals = collect(run_hook('ShoppingCartValidateCheckout', [
+            'cart' => $this->cartService->getOrCreateCart($clientId), 'clientId' => $clientId, 'paymentMethod' => $request->input('payment_method'),
+        ]))->flatten()->filter(fn ($m) => is_string($m) && trim($m) !== '')->values();
+        if ($refusals->isNotEmpty()) {
+            return back()->withErrors(['checkout' => $refusals->all()])->withInput($request->except(['password', 'password_confirmation']));
+        }
         $billing = [];
 
         if (! $clientId) {

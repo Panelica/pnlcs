@@ -485,6 +485,8 @@ class InvoiceService
         $this->returnAppliedCredit($invoice);
 
         $invoice->update(['status' => InvoiceStatus::Cancelled->value]);
+        // Admin, bulk action and API all cancel through here.
+        event(new \App\Events\InvoiceCancelled($invoice->fresh()));
 
         return $invoice->fresh();
     }

@@ -44,6 +44,8 @@ class EventServiceProvider extends ServiceProvider
             // Made from the body before the template rewrote it, the customer
             // would get one message in HTML and a different one in text.
             AddPlainTextPart::class,
+            // Last: addons see the message exactly as it will be sent.
+            \App\Listeners\RunEmailPreSendHook::class,
         ],
         ClientCreated::class => [
             [SendNotificationListener::class, 'handleClientCreated'],
