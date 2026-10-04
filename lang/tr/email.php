@@ -292,4 +292,11 @@ return [
         'nothing_taken' => 'Kartınızdan herhangi bir tutar çekilmedi.',
         'what_to_do' => 'Faturayı açın ve üzerindeki "Bankanızla onaylayın" düğmesini kullanın. Bu, zaten başlattığımız ödemeyi tamamlar; böylece iki kez tahsilat yapılmaz.',
     ],
+    'domain_move' => [
+        'subject' => ':domain alan adı size devredilmek isteniyor',
+        'offered' => ':from size :domain alan adını devretmek istiyor.',
+        'how' => ':date tarihine kadar giriş yapıp Alan adlarım sayfasından kabul edebilir ya da reddedebilirsiniz.',
+        'action' => 'Alan adlarımı aç',
+        'not_expected' => 'Beklemediğiniz bir teklifse yok sayabilir ya da reddedebilirsiniz.',
+    ],
 ];

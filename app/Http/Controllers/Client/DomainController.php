@@ -20,7 +20,11 @@ class DomainController extends Controller
     {
         $domains = Domain::where('client_id', $this->getClientId())->orderBy('id', 'desc')->paginate(25);
 
-        return view('client.domains.index', compact('domains'));
+        // Domains other accounts have offered to this one.
+        $incomingMoves = \App\Models\DomainMoveRequest::with('domain', 'fromClient')
+            ->where('to_client_id', $this->getClientId())->open()->get();
+
+        return view('client.domains.index', compact('domains', 'incomingMoves'));
     }
 
     public function transfer(Request $request)
@@ -74,7 +78,10 @@ class DomainController extends Controller
         // Whether the registrar lets the customer manage glue records.
         $canManageGlue = $module instanceof \App\Contracts\ManagesChildNameservers && strtolower((string) $domain->status) === 'active';
 
-        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount', 'canTogglePrivacy', 'canEditContacts', 'canManageGlue'));
+        // An offer of this domain to another account, while it waits.
+        $outgoingMove = \App\Models\DomainMoveRequest::with('toClient')->where('domain_id', $domain->id)->open()->first();
+
+        return view('client.domains.show', compact('domain', 'locked', 'hostings', 'restoreAmount', 'canTogglePrivacy', 'canEditContacts', 'canManageGlue', 'outgoingMove'));
     }
 
     /**
