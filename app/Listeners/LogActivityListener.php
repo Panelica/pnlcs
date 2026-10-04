@@ -9,6 +9,7 @@ use App\Events\OrderPlaced;
 use App\Events\ServiceActivated;
 use App\Events\ServiceSuspended;
 use App\Events\ServiceTerminated;
+use App\Events\ServiceUnsuspended;
 use App\Events\TicketOpened;
 use App\Events\TicketReplied;
 use App\Models\ActivityLog;
@@ -58,6 +59,7 @@ class LogActivityListener
             $event instanceof TicketReplied => ["Ticket #{$event->ticket->tid} replied", $event->ticket->client_id, null],
             $event instanceof ServiceActivated => ["Service #{$event->service->id} activated", $event->service->client_id, null],
             $event instanceof ServiceSuspended => ["Service #{$event->service->id} suspended", $event->service->client_id, null],
+            $event instanceof ServiceUnsuspended => ["Service #{$event->service->id} unsuspended", $event->service->client_id, null],
             $event instanceof ServiceTerminated => ["Service #{$event->service->id} terminated", $event->service->client_id, null],
             default => [null, null, null],
         };

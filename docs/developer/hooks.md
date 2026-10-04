@@ -80,6 +80,7 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 |---|---|---|
 | `ServiceActivated` | service | service became active |
 | `ServiceSuspended` | service, reason | service suspended |
+| `ServiceUnsuspended` | service | suspension lifted (on a server, or locally for a service with none) |
 | `ServiceTerminated` | service | service terminated |
 
 ### Clients & Support

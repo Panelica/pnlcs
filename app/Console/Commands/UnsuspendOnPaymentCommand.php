@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatus;
+use App\Events\ServiceUnsuspended;
 use App\Mail\ServiceUnsuspensionMail;
 use App\Models\Invoice;
 use App\Models\Service;
@@ -109,6 +110,8 @@ class UnsuspendOnPaymentCommand extends Command
                         'suspension_date' => null,
                         'suspension_reason' => null,
                     ]);
+                    // As unsuspendAccount does for a service on a server.
+                    event(new ServiceUnsuspended($service));
                 }
 
                 if ($service->client?->email) {
