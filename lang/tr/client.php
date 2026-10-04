@@ -166,6 +166,8 @@ return [
         'type' => 'İptal Türü',
     ],
     'cart' => [
+        'free_domain_note' => 'İlk yıl ücretsiz: :tlds.',
+        'free_domain_cycles' => ':cycles ödemede geçerli.',
         'choose_app' => 'Uygulamanızı seçin',
         'app_search_ph' => 'Uygulama ara - wordpress, veritabanı, otomasyon...',
         'app_search_none' => 'Bu aramaya uyan uygulama yok.',

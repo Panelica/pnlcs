@@ -171,6 +171,12 @@ class CartController extends Controller
             $this->cartService->addDomain($cart, $domain, $domainOption, 1, $request->input('epp_code'));
         }
 
+        // Hosting that comes with a free domain: its first year costs nothing
+        // when the extension and the billing cycle qualify.
+        if ($buysDomain && $product->givesFreeDomain('.'.implode('.', array_slice(explode('.', $domain), 1)), $request->billing_cycle)) {
+            $this->cartService->makeDomainFree($cart->fresh(), $domain, $product->id);
+        }
+
         return redirect()->route('client.cart.index')
             ->with('success', __('messages.success.product_added_to_cart'));
     }

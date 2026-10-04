@@ -321,6 +321,30 @@ class CartService
     }
 
     /**
+     * Make the first year of a domain in the cart free, because it was ordered
+     * with a product that gives one (Product::givesFreeDomain()). Only the
+     * registration or transfer is free; the renewal stays at its price. Once
+     * per domain line.
+     */
+    public function makeDomainFree(Cart $cart, string $domain, int $productId): Cart
+    {
+        $data = $this->getData($cart);
+
+        foreach ($data['items'] as $i => $item) {
+            if (($item['type'] ?? '') !== 'domain' || strcasecmp((string) ($item['domain'] ?? ''), $domain) !== 0 || ! empty($item['free_with'])) {
+                continue;
+            }
+            $years = max(1, (int) ($item['years'] ?? 1));
+            $unit = round((float) ($item['base_price'] ?? $item['price'] ?? 0) / $years, 2);
+            $data['items'][$i]['price'] = round(max(0, (float) ($item['price'] ?? 0) - $unit), 2);
+            $data['items'][$i]['base_price'] = round(max(0, (float) ($item['base_price'] ?? 0) - $unit), 2);
+            $data['items'][$i]['free_with'] = $productId;
+        }
+
+        return $this->saveData($cart, $data);
+    }
+
+    /**
      * Take a line out of the cart.
      *
      * Hosting ordered with "register a new domain" or "transfer" and the

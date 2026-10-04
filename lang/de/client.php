@@ -166,6 +166,8 @@ return [
         'type' => 'Stornierungsart',
     ],
     'cart' => [
+        'free_domain_note' => 'Erstes Jahr kostenlos für :tlds.',
+        'free_domain_cycles' => 'Bei Abrechnung :cycles.',
         'choose_app' => 'Beginnen Sie mit einer App',
         'app_search_ph' => 'Such-Apps – WordPress, Datenbank, Automatisierung ...',
         'app_search_none' => 'Keine App entspricht dieser Suche.',
