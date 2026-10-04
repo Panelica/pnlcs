@@ -86,7 +86,16 @@ class ServiceController extends Controller
         $cycleOptions = strtolower((string) $service->status) === 'active'
             ? app(\App\Services\BillingCycleChange::class)->options($service) : [];
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions'));
+        // The files kept to this product's owners (Downloads), shown where the
+        // customer looks for what they bought. Open downloads stay on the
+        // Downloads page; availableTo() already wants an active service.
+        $downloads = $service->product_id
+            ? \App\Models\Download::availableTo($this->getClientId())
+                ->whereHas('products', fn ($q) => $q->where('products.id', $service->product_id))
+                ->orderBy('title')->get()
+            : collect();
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads'));
     }
 
     /** Order an addon for a running service; it starts once its invoice is paid. */
