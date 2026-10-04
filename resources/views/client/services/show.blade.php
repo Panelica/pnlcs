@@ -230,6 +230,18 @@
 </div>
 @endif
 
+@if(($downloads ?? collect())->isNotEmpty())
+<div class="sv-panel" style="margin-bottom:22px">
+    <div class="sv-ph">{{ __('client.downloads.title') }}</div>
+    <div style="overflow-x:auto"><table class="pn-table">
+        <tbody>@foreach($downloads as $download)<tr>
+            <td><strong>{{ $download->title }}</strong>@if($download->description)<br><small class="text-muted">{{ $download->description }}</small>@endif</td>
+            <td style="text-align:right"><a href="{{ route('client.downloads.download', $download) }}" class="btn btn-primary btn-xs">{{ __('common.actions.download') }}</a></td>
+        </tr>@endforeach</tbody>
+    </table></div>
+</div>
+@endif
+
 @if(($availableAddons ?? collect())->isNotEmpty())
 <div class="sv-panel" style="margin-bottom:22px">
     <div class="sv-ph">{{ __('client.services.addons_available') }}</div>
