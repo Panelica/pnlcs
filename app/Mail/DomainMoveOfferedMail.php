@@ -30,6 +30,12 @@ class DomainMoveOfferedMail extends Mailable implements ShouldQueue
     {
         return new Content(view: 'emails.domain-move-offered', with: [
             'offer' => $this->offer,
+            // For the operator's template: the receiver is the client; the
+            // domain goes by name (its model belongs to the giver).
+            'client' => $this->offer->toClient,
+            'offeredDomain' => (string) $this->offer->domain?->domain,
+            'offeredBy' => (string) ($this->offer->fromClient?->full_name ?: $this->offer->fromClient?->email),
+            'offerEnds' => (string) $this->offer->expires_at?->format(date_fmt()),
             'companyName' => company_name(),
         ]);
     }

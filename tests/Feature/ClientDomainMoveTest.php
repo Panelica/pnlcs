@@ -79,3 +79,21 @@ it('refuses an unknown account, someone else\'s domain, a domain with an unpaid 
     test()->actingAs($buyer)->post(route('client.domain-moves.accept', $offer))->assertNotFound();
     expect($domain->fresh()->client_id)->toBe($from->id);
 });
+
+it('addresses the offer mail to the receiver, and binds it to a template', function () {
+    (new \Database\Seeders\EmailTemplateSeeder)->run();
+    $from = Client::factory()->create(['first_name' => 'Selin', 'last_name' => 'Seller', 'email' => 's4@example.test']);
+    $to = Client::factory()->create(['first_name' => 'Burak', 'last_name' => 'Buyer', 'email' => 'b4@example.test']);
+    $domain = Domain::factory()->create(['client_id' => $from->id, 'domain' => 'gift-site.com', 'status' => 'active']);
+    $offer = DomainMoveRequest::create(['domain_id' => $domain->id, 'from_client_id' => $from->id, 'to_client_id' => $to->id, 'status' => 'pending', 'expires_at' => now()->addDays(7)]);
+    $sent = new ArrayObject;
+    \Illuminate\Support\Facades\Event::listen(\Illuminate\Mail\Events\MessageSent::class, fn ($e) => $sent->append($e->message));
+
+    Mail::to('b4@example.test')->send(new DomainMoveOfferedMail($offer));
+
+    $body = $sent[0]->getHtmlBody() ?? $sent[0]->getTextBody();
+    expect($sent[0]->getSubject())->toContain('gift-site.com')
+        ->and($body)->toContain(e(__('email.common.greeting', ['name' => 'Burak'])))->toContain('Selin Seller')->toContain('gift-site.com')
+        ->and($body)->not->toContain(e(__('email.common.greeting', ['name' => 'Selin'])))
+        ->and(app(\App\Services\EmailTemplateService::class)->forMailable(DomainMoveOfferedMail::class)?->name)->toBe('Domain Move Offered');
+});

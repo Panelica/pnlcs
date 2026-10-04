@@ -36,6 +36,7 @@ class EmailTemplateService
         'DomainRegistrationMail' => 'Domain Registration Confirmation',
         'EmailVerificationMail' => 'Email Verification',
         'DomainRenewalReminderMail' => 'Domain Renewal Reminder',
+        'DomainMoveOfferedMail' => 'Domain Move Offered',
         'InvoiceCreatedMail' => 'Invoice Created',
         'InvoiceOverdueMail' => 'Invoice Overdue',
         'InvoicePaidMail' => 'Invoice Payment Confirmation',
@@ -262,6 +263,12 @@ class EmailTemplateService
             'daysRemaining' => 'days_remaining',
             'daysOverdue' => 'days_overdue',
             'daysUntilExpiry' => 'days_until_expiry',
+            // A domain offered by one account to another: passed by name, not
+            // as the domain model, whose client is the giver - the mail is
+            // addressed to the receiver.
+            'offeredDomain' => 'domain',
+            'offeredBy' => 'from_name',
+            'offerEnds' => 'expires_on',
         ] as $property => $name) {
             $value = $data[$property] ?? null;
 
