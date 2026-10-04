@@ -13,7 +13,9 @@
     <li><strong>Gösterim para birimi:</strong> Fiyatlar internet sitesinde ABD doları (USD) olarak gösterilir.</li>
     <li><strong>Faturalama para birimi:</strong> Fatura, siparişin verildiği tarihte Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak Türk lirası (TRY) olarak düzenlenir.</li>
     <li><strong>Kur bilgisi:</strong> Uygulanan kur, kurun tarihi ve TCMB bülten numarası fatura üzerinde açıkça yazılır; Merkez Bankası'nın kendi yayınından doğrulayabilirsiniz.</li>
-    <li><strong>Vergiler:</strong> Türkiye'de yerleşik müşteriler için %20 KDV eklenir. Fatura üzerinde matrah, KDV ve toplam ayrı gösterilir.</li>
+    @if($vatRate > 0)
+    <li><strong>Vergiler:</strong> Türkiye'de yerleşik müşteriler için %{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }} KDV eklenir. Fatura üzerinde matrah, KDV ve toplam ayrı gösterilir.</li>
+    @endif
     <li><strong>Toplam tutar:</strong> Ödeyeceğiniz tüm vergiler dâhil toplam tutar, ödemeyi onaylamadan önce sipariş özetinde gösterilir. Gösterilenin dışında herhangi bir ek ücret alınmaz.</li>
     <li><strong>Ödeme yöntemi:</strong> Havale/EFT ve kredi/banka kartı. Siparişinizde kullanılabilir yöntemler ödeme adımında listelenir. Havale bilgileri sipariş sonrasında müşteri panelinizde ve fatura e-postanızda yer alır. Kart ödemeleri PCI DSS uyumlu bir ödeme kuruluşu üzerinden alınır; kart bilgileriniz tarafımızca görülmez ve saklanmaz.</li>
     <li><strong>Otomatik yenileme ve tekrarlayan tahsilat:</strong> Kartla ödeme yaptığınızda, hizmetin dönem sonunda otomatik yenilenmesi için kartınızdan tekrarlayan tahsilat yapılmasına izin vermiş olursunuz. Bu izni müşteri panelinizden dilediğiniz zaman geri alabilirsiniz.</li>

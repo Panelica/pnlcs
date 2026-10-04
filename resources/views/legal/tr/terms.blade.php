@@ -11,7 +11,9 @@
 
 <h2>3. Ücretler, faturalama ve para birimi</h2>
 <p>Hizmet bedelleri sitemizde <strong>ABD doları (USD)</strong> olarak gösterilir. Fatura, siparişin verildiği gün Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak <strong>Türk lirası (TRY)</strong> olarak düzenlenir. Uygulanan kur, kurun tarihi ve bülten numarası faturanızın üzerinde açıkça yazar; dilediğiniz zaman Merkez Bankası'nın kendi yayınından doğrulayabilirsiniz.</p>
-<p>Türkiye'de yerleşik müşteriler için faturaya <strong>%20 KDV</strong> eklenir. Yurt dışında yerleşik müşteriler için vergi, ilgili ülke mevzuatı ve Türkiye'nin taraf olduğu düzenlemeler çerçevesinde uygulanır.</p>
+@if($vatRate > 0)
+<p>Türkiye'de yerleşik müşteriler için faturaya <strong>%{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }} KDV</strong> eklenir. Yurt dışında yerleşik müşteriler için vergi, ilgili ülke mevzuatı ve Türkiye'nin taraf olduğu düzenlemeler çerçevesinde uygulanır.</p>
+@endif
 <p>Faturalar, düzenlendikleri tarihte ödenmek üzere gönderilir. Vadesi geçen faturalar için hizmet, ödeme yapılana kadar askıya alınabilir. Askıya alma öncesinde en az bir hatırlatma e-postası gönderilir.</p>
 
 <h2>4. Ödeme yöntemleri</h2>
