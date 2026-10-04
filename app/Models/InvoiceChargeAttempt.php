@@ -326,6 +326,7 @@ class InvoiceChargeAttempt extends Model
         string $currency,
         ?int $maxAttempts = null,
         ?CarbonInterface $now = null,
+        bool $dueNow = false,
     ): ChargeClaim {
         $now = $now ? $now->copy() : now();
         $maxAttempts = $maxAttempts ?? AutoCharge::maxAttempts();
@@ -370,7 +371,7 @@ class InvoiceChargeAttempt extends Model
             return ChargeClaim::Closed;
         }
 
-        return $existing->takeOver($method, $amount, $currency, $maxAttempts, $now);
+        return $existing->takeOver($method, $amount, $currency, $maxAttempts, $now, $dueNow);
     }
 
     /**
@@ -382,6 +383,7 @@ class InvoiceChargeAttempt extends Model
         string $currency,
         int $maxAttempts,
         CarbonInterface $now,
+        bool $dueNow = false,
     ): ChargeClaim {
         if ($this->state === ChargeAttemptState::InFlight) {
             if ($this->claimed_at !== null && $this->claimed_at->gt($now->copy()->subSeconds(self::LEASE_SECONDS))) {
@@ -462,7 +464,10 @@ class InvoiceChargeAttempt extends Model
             return ChargeClaim::Closed;
         }
 
-        if ($this->next_attempt_at === null || $this->next_attempt_at->gt($now)) {
+        // Staff asking for the charge now (AutoChargeService::chargeNow) is the
+        // one thing that brings a scheduled retry forward. It is still an
+        // attempt, counted above against the cap.
+        if (! $dueNow && ($this->next_attempt_at === null || $this->next_attempt_at->gt($now))) {
             // A scheduled row with no time on it is not something this class
             // ever writes, so it is damage rather than a schedule. Both
             // readings lead the same way: not now.

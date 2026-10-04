@@ -325,6 +325,9 @@ class AutoChargeService
      */
     private array $handled = [];
 
+    /** Set while chargeNow() runs: the claim may make a scheduled retry early. */
+    private bool $staffAsked = false;
+
     public function __construct(
         private PaymentService $payments,
         private ModuleRegistry $modules,
@@ -340,43 +343,7 @@ class AutoChargeService
      */
     public function run(?int $limit = null, bool $dryRun = false, bool $rescueOnly = false): array
     {
-        $summary = [
-            'enabled' => AutoCharge::enabled(),
-            'considered' => 0,
-            'charged' => 0,
-            'collected' => 0.0,
-            'action_required' => 0,
-            'failed' => 0,
-            'held' => 0,
-            'not_due' => 0,
-            'closed' => 0,
-            'reconciled' => 0,
-            // Money that had already been taken and was credited from what this
-            // system wrote down, without asking the gateway anything.
-            'recovered' => 0,
-            // A card was charged and the payment could not be recorded. The id
-            // is on the attempt row and the next rescue sweep credits it; it is
-            // reported here because an operator should hear about it now.
-            'taken_not_recorded' => 0,
-            // Parked for a person THIS RUN. Not a standing total: a row that
-            // was already waiting for somebody is not counted or alerted again.
-            'needs_review' => 0,
-            'review_invoices' => [],
-            // Charges that were sent and never answered. Left in flight on
-            // purpose; the rescue sweep replays them a bounded number of times
-            // inside the gateway's idempotency window, and parks whatever it
-            // has not settled by the time either bound runs out.
-            'outcome_unknown' => 0,
-            'unknown_invoices' => [],
-            // Invoices whose collection threw and were stepped over.
-            'errors' => 0,
-            // Retries whose date has not arrived, counted across the whole
-            // table rather than only inside this run's window.
-            'waiting' => 0,
-            'requests' => 0,
-            'skipped' => [],
-            'would_charge' => [],
-        ];
+        $summary = $this->blankSummary();
 
         // The master switch, asked before anything else is read. A host that
         // has never heard of this feature must see no change whatsoever, and
@@ -467,6 +434,132 @@ class AutoChargeService
         }
 
         return $summary;
+    }
+
+
+    /** @return array<string, mixed> what a run reports, before it has done anything */
+    private function blankSummary(): array
+    {
+        return [
+            'enabled' => AutoCharge::enabled(),
+            'considered' => 0,
+            'charged' => 0,
+            'collected' => 0.0,
+            'action_required' => 0,
+            'failed' => 0,
+            'held' => 0,
+            'not_due' => 0,
+            'closed' => 0,
+            'reconciled' => 0,
+            // Money that had already been taken and was credited from what this
+            // system wrote down, without asking the gateway anything.
+            'recovered' => 0,
+            // A card was charged and the payment could not be recorded. The id
+            // is on the attempt row and the next rescue sweep credits it; it is
+            // reported here because an operator should hear about it now.
+            'taken_not_recorded' => 0,
+            // Parked for a person THIS RUN. Not a standing total: a row that
+            // was already waiting for somebody is not counted or alerted again.
+            'needs_review' => 0,
+            'review_invoices' => [],
+            // Charges that were sent and never answered. Left in flight on
+            // purpose; the rescue sweep replays them a bounded number of times
+            // inside the gateway's idempotency window, and parks whatever it
+            // has not settled by the time either bound runs out.
+            'outcome_unknown' => 0,
+            'unknown_invoices' => [],
+            // Invoices whose collection threw and were stepped over.
+            'errors' => 0,
+            // Retries whose date has not arrived, counted across the whole
+            // table rather than only inside this run's window.
+            'waiting' => 0,
+            'requests' => 0,
+            'skipped' => [],
+            'would_charge' => [],
+        ];
+    }
+
+    /**
+     * One invoice, now, because a member of staff asked.
+     *
+     * The same road as the morning run and nothing else: the refusals, the
+     * card choice, the claim, the gateway, settle(). So a charge from this
+     * button cannot overlap a scheduled one (the claim arbitrates), an answer
+     * that never comes back is replayed by the rescue sweep, and a refusal
+     * mails the customer exactly as it would have at 06:45.
+     *
+     * What staff asking changes, and only that:
+     * - the invoice need not be inside the days-before-due window;
+     * - a retry that is scheduled for later may be made now. It still counts
+     *   as one of the card's attempts, and a card that has used them all, or
+     *   is waiting on the cardholder to authenticate, is not presented again.
+     *
+     * It needs automatic collection switched on, because the rescue sweep
+     * that finishes an interrupted charge only runs when it is.
+     *
+     * @return string what happened, as a short key the screen turns into words
+     */
+    public function chargeNow(Invoice $invoice): string
+    {
+        if (! AutoCharge::enabled()) {
+            return 'switched_off';
+        }
+
+        $gateways = $this->chargeableGateways();
+        if ($gateways === []) {
+            return 'no_tokenising_gateway';
+        }
+
+        // Orders, Add Funds and mass payments are paid by the customer at the
+        // checkout that raised them, never from a stored card.
+        if ($this->ownBills(Invoice::query()->whereKey($invoice->id))->doesntExist()) {
+            return 'not_a_card_bill';
+        }
+
+        $summary = $this->blankSummary();
+        $this->staffAsked = true;
+
+        try {
+            $this->collect($invoice, $gateways, false, $summary);
+        } catch (\Throwable $e) {
+            Log::error('AutoCharge: a charge staff asked for could not be made', [
+                'invoice' => $invoice->id,
+                'exception' => $e::class,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 'error';
+        } finally {
+            $this->staffAsked = false;
+        }
+
+        if ($summary['needs_review'] > 0) {
+            $this->alertOperator($summary);
+        }
+
+        foreach (['charged', 'taken_not_recorded', 'action_required', 'outcome_unknown', 'failed', 'needs_review', 'held', 'not_due', 'closed'] as $key) {
+            if ($summary[$key] > 0) {
+                return $key;
+            }
+        }
+
+        return (string) (array_key_first($summary['skipped']) ?? 'nothing_owed');
+    }
+
+    /**
+     * The invoices a stored card may pay: not an order's, not Add Funds, not a
+     * mass payment. The same three lines candidates() asks in its own query,
+     * where the reasons for each are written down; keep the two together.
+     */
+    private function ownBills($query)
+    {
+        return $query
+            ->whereNotExists(fn ($q) => $q
+                ->select(DB::raw(1))
+                ->from('orders')
+                ->whereColumn('orders.invoice_id', 'invoices.id'))
+            ->whereDoesntHave('items', fn ($q) => $q->where('type', 'AddFunds'))
+            ->where('type', '!=', \App\Services\MassPaymentService::TYPE);
     }
 
     /**
@@ -576,7 +669,7 @@ class AutoChargeService
             return;
         }
 
-        $claim = InvoiceChargeAttempt::claim($invoice, $method, $amount, $currency);
+        $claim = InvoiceChargeAttempt::claim($invoice, $method, $amount, $currency, dueNow: $this->staffAsked);
 
         if (! $claim->mayProceed()) {
             if ($claim === ChargeClaim::Parked) {

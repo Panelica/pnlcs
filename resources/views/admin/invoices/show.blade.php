@@ -22,6 +22,12 @@
             @csrf
             <button type="submit" class="btn btn-default btn-sm">{{ __('admin.invoices.send') }}</button>
         </form>
+        @if(!empty($canChargeNow))
+        <form method="POST" action="{{ route('admin.invoices.charge-now', $invoice) }}" style="display:inline;" onsubmit="return confirm(@js(__('admin.invoices.charge_now_confirm')))">
+            @csrf
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.invoices.charge_now') }}</button>
+        </form>
+        @endif
         @if(in_array($st, ['unpaid', 'overdue', 'partially_paid', 'payment_pending']))
         <form method="POST" action="{{ route('admin.invoices.remind', $invoice) }}" style="display:inline;">
             @csrf
