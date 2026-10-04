@@ -380,7 +380,19 @@
         <div class="card-header"><strong>{{ __('admin.settings.registrar_balance') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:15px;">
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_watch_module') }}</label><input type="text" name="BalanceWatchRegistrar" value="{{ $settings['BalanceWatchRegistrar'] ?? '' }}" class="form-control" placeholder="domainnameapi"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_watch_module') }}</label>@php
+                    $watchNow = collect($settings)->has('BalanceWatchRegistrar') ? (string) ($settings['BalanceWatchRegistrar'] ?? '') : 'domainnameapi';
+                    $watchList = $balanceRegistrars ?? [];
+                    if ($watchNow !== '' && ! in_array($watchNow, $watchList, true)) {
+                        $watchList[] = $watchNow;
+                    }
+                @endphp
+                <select name="BalanceWatchRegistrar" class="form-control">
+                    <option value="">{{ __('admin.settings.registrar_watch_off') }}</option>
+                    @foreach($watchList as $watchName)
+                        <option value="{{ $watchName }}" @selected($watchNow === $watchName)>{{ $watchName }}</option>
+                    @endforeach
+                </select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_floor') }}</label><input type="number" step="0.01" min="0" name="RegistrarBalanceThreshold" value="{{ $settings['RegistrarBalanceThreshold'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_currency') }}</label><input type="text" name="RegistrarBalanceCurrency" value="{{ $settings['RegistrarBalanceCurrency'] ?? '' }}" maxlength="3" class="form-control" placeholder="USD"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.registrar_alert_email') }}</label><input type="email" name="RegistrarBalanceAlertEmail" value="{{ $settings['RegistrarBalanceAlertEmail'] ?? '' }}" class="form-control"></div>

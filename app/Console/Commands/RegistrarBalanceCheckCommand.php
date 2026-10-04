@@ -25,6 +25,12 @@ class RegistrarBalanceCheckCommand extends Command
 
     public function handle(): int
     {
+        if (self::switchedOff()) {
+            $this->info('The registrar balance watch is switched off.');
+
+            return self::SUCCESS;
+        }
+
         $registrar = (string) Setting::get('BalanceWatchRegistrar', 'domainnameapi');
         $threshold = (float) Setting::get('RegistrarBalanceThreshold', '1000');
         $currency = strtoupper((string) Setting::get('RegistrarBalanceCurrency', 'TRY'));
@@ -130,6 +136,28 @@ class RegistrarBalanceCheckCommand extends Command
         return collect($module->getConfigFields())
             ->filter(fn ($field) => ($field['required'] ?? false) && ! in_array($field['name'], $stored, true))
             ->isEmpty();
+    }
+
+    /**
+     * The watch is off when the module was saved blank, as the settings hint
+     * has always said. A missing setting still means DomainNameAPI.
+     */
+    public static function switchedOff(): bool
+    {
+        return trim((string) Setting::get('BalanceWatchRegistrar', 'domainnameapi')) === '';
+    }
+
+    /**
+     * The registrar modules that can report a balance, for the settings
+     * screen to offer instead of a free-text name.
+     *
+     * @return list<string>
+     */
+    public static function watchable(): array
+    {
+        return collect(app(ModuleRegistry::class)->classesOf('registrar'))
+            ->filter(fn ($class) => method_exists($class, 'getBalance'))
+            ->keys()->sort()->values()->all();
     }
 
     public static function last(): ?array
