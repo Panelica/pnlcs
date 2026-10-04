@@ -70,3 +70,45 @@ test('the WHOIS contact is changed at a registrar that can, and refused plainly 
     $manual->update(['domain' => 'other-shop.com']);
     $this->withHeaders(apiCapHeaders())->post('/api/v1/domainupdatewhoisinfo', ['domainid' => $manual->id] + $contact)->assertStatus(501);
 });
+
+test('turning paid privacy off through the API stops charging for it at renewal, as the admin page does', function () {
+    $domain = apiCapDomain();
+    \App\Models\DomainPricing::updateOrCreate(['extension' => '.com'], ['register_price' => 10, 'renew_price' => 12, 'transfer_price' => 10, 'privacy_price' => 3]);
+    $domain->update(['id_protection' => true, 'recurring_amount' => 15, 'registration_period' => 1]);
+
+    Http::fake(['*domains/privacy*' => Http::response(['success' => true]), '*' => Http::response([], 200)]);
+    $this->withHeaders(apiCapHeaders())->post('/api/v1/domaintoggleidprotect', ['domainid' => $domain->id, 'idprotect' => 0])
+        ->assertOk()->assertJsonPath('idprotection', false);
+
+    expect((float) $domain->fresh()->recurring_amount)->toBe(12.0);
+});
+
+test('privacy is not recorded as changed for a domain that is not active at a registrar that could change it', function () {
+    $domain = apiCapDomain();
+    $domain->update(['status' => 'expired']);
+    Http::fake();
+
+    $this->withHeaders(apiCapHeaders())->post('/api/v1/domaintoggleidprotect', ['domainid' => $domain->id, 'idprotect' => 1])->assertStatus(422);
+    expect($domain->fresh()->id_protection)->toBeFalse();
+    Http::assertNothingSent();
+});
+
+test('the WHOIS contact is read from the registrar, and from the profile only when it cannot be', function () {
+    $domain = apiCapDomain();
+    Http::fake(['*domains/info*' => Http::response(['info' => ['contacts' => [[
+        'contactType' => 'Registrant', 'firstName' => 'Mehmet', 'lastName' => 'Kaya', 'eMail' => 'mehmet@example.test',
+        'phoneCountryCode' => '90', 'phone' => '2125550101', 'address' => 'Moda Cd. 5', 'city' => 'İstanbul', 'postalCode' => '34710', 'country' => 'tr',
+    ]]]]), '*' => Http::response([], 200)]);
+
+    $this->withHeaders(apiCapHeaders())->get('/api/v1/domaingetwhoisinfo?domainid='.$domain->id)->assertOk()
+        ->assertJsonPath('source', 'registrar')
+        ->assertJsonPath('whois.Registrant.Name', 'Mehmet Kaya')
+        ->assertJsonPath('whois.Registrant.Email Address', 'mehmet@example.test')
+        ->assertJsonPath('whois.Registrant.Country', 'TR');
+
+    $manual = apiCapDomain('manual');
+    $manual->update(['domain' => 'third-shop.com']);
+    $this->withHeaders(apiCapHeaders())->get('/api/v1/domaingetwhoisinfo?domainid='.$manual->id)->assertOk()
+        ->assertJsonPath('source', 'profile')
+        ->assertJsonPath('whois.Registrant.Email Address', $manual->client->email);
+});

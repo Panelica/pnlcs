@@ -2510,7 +2510,7 @@
                 "tags": [
                     "Domains"
                 ],
-                "description": "Built from the client record in PNLCS, not read from the registrar. Permission: list_domains.",
+                "description": "Read from the registrar where it can report the contact (source: registrar); otherwise the client record in PNLCS (source: profile). Permission: list_domains.",
                 "parameters": [
                     {
                         "name": "domainid",
@@ -2722,7 +2722,7 @@
                 "tags": [
                     "Domains"
                 ],
-                "description": "Permission: manage_domains.",
+                "description": "Turning paid privacy off lowers the domain's renewal amount by its privacy price, as the admin and client pages do. Permission: manage_domains.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2751,6 +2751,16 @@
                     },
                     "404": {
                         "description": "No such domain.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "The registrar can switch privacy, but the domain is not active.",
                         "content": {
                             "application/json": {
                                 "schema": {
