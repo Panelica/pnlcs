@@ -58,6 +58,10 @@ class LogActivityListener
             $event instanceof TicketReplied => ["Ticket #{$event->ticket->tid} replied", $event->ticket->client_id, null],
             $event instanceof ServiceActivated => ["Service #{$event->service->id} activated", $event->service->client_id, null],
             $event instanceof ServiceSuspended => ["Service #{$event->service->id} suspended", $event->service->client_id, null],
+            $event instanceof \App\Events\DomainRegistered => ["Domain {$event->domain->domain} registered", $event->domain->client_id, null],
+            $event instanceof \App\Events\DomainRenewed => ["Domain {$event->domain->domain} renewed for {$event->years} year(s)", $event->domain->client_id, null],
+            $event instanceof \App\Events\DomainTransferStarted => ["Domain {$event->domain->domain} transfer started", $event->domain->client_id, null],
+            $event instanceof \App\Events\DomainExpired => ["Domain {$event->domain->domain} moved to {$event->status}", $event->domain->client_id, null],
             $event instanceof ServiceTerminated => ["Service #{$event->service->id} terminated", $event->service->client_id, null],
             default => [null, null, null],
         };

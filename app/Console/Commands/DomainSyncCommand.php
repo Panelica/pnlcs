@@ -215,6 +215,7 @@ class DomainSyncCommand extends Command
             }
 
             $domain->update(['status' => $status]);
+            event(new \App\Events\DomainExpired($domain, $status));
             $moved++;
             Log::info("Domain {$domain->domain} moved to {$status} ({$daysPast} days past expiry)");
         }

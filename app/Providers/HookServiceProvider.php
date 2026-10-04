@@ -30,6 +30,11 @@ class HookServiceProvider extends ServiceProvider
         \App\Events\ServiceActivated::class  => ['ServiceActivated'],
         \App\Events\ServiceSuspended::class  => ['ServiceSuspended'],
         \App\Events\ServiceTerminated::class => ['ServiceTerminated'],
+        // WHMCS names beside our own, so WHMCS hooks run unchanged.
+        \App\Events\DomainRegistered::class => ['DomainRegistered', 'AfterRegistrarRegistration'],
+        \App\Events\DomainRenewed::class => ['DomainRenewed', 'AfterRegistrarRenewal'],
+        \App\Events\DomainTransferStarted::class => ['DomainTransferStarted', 'AfterRegistrarTransfer'],
+        \App\Events\DomainExpired::class => ['DomainExpired'],
     ];
 
     public function register(): void

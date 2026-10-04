@@ -81,6 +81,10 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 | `ServiceActivated` | service | service became active |
 | `ServiceSuspended` | service, reason | service suspended |
 | `ServiceTerminated` | service | service terminated |
+| `DomainRegistered` (also `AfterRegistrarRegistration`) | domain | the registrar registered an ordered domain |
+| `DomainRenewed` (also `AfterRegistrarRenewal`) | domain, years | a renewal went through at the registrar, or was recorded for a domain with no registrar module |
+| `DomainTransferStarted` (also `AfterRegistrarTransfer`) | domain | the registrar accepted a transfer request (it completes days later at the registry) |
+| `DomainExpired` | domain, status | the daily domain sync moved a domain past its expiry date to `grace`, `redemption` or `expired` |
 
 ### Clients & Support
 | Hook | Params | When |

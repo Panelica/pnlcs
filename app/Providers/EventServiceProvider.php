@@ -85,6 +85,10 @@ class EventServiceProvider extends ServiceProvider
             [SendNotificationListener::class, 'handleServiceTerminated'],
             LogActivityListener::class,
         ],
+        \App\Events\DomainRegistered::class => [LogActivityListener::class],
+        \App\Events\DomainRenewed::class => [LogActivityListener::class],
+        \App\Events\DomainTransferStarted::class => [LogActivityListener::class],
+        \App\Events\DomainExpired::class => [LogActivityListener::class],
         MessageSent::class => [
             LogSentEmailListener::class,
         ],

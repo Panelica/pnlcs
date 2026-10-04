@@ -396,6 +396,7 @@ class DomainApiController extends BaseApiController
         if (! ($result['success'] ?? false)) {
             return $this->error($result['message'] ?? 'The registrar refused the transfer.', 422);
         }
+        event(new \App\Events\DomainTransferStarted($domain->fresh()));
 
         return $this->success(['domainid' => $domain->id, 'message' => $result['message'] ?? 'Transfer started.']);
     }

@@ -834,6 +834,7 @@ class OrderService
             if (strtolower((string) $domain->status) !== DomainStatus::Active->value) {
                 $domain->update(['status' => DomainStatus::Active->value]);
             }
+            event(new \App\Events\DomainRegistered($domain));
 
             return;
         }
@@ -891,6 +892,9 @@ class OrderService
                 // The code has been consumed; do not keep it lying around.
                 'epp_code' => null,
             ]);
+            // Started, not finished: the losing registrar still has days to
+            // release it.
+            event(new \App\Events\DomainTransferStarted($domain));
 
             return;
         }
