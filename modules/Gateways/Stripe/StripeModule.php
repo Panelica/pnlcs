@@ -408,6 +408,16 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         }
 
         $safeKey      = htmlspecialchars($publishableKey, ENT_QUOTES, "UTF-8");
+
+        // The Payment Element is set up before there is an intent, so it is
+        // told what the intent will be: the same amount, in the same currency
+        // and unit, that capture() asks Stripe for. Stripe refuses the confirm
+        // when the two disagree, so they are worked out by the same code.
+        $currency     = strtolower($invoice->source_currency ?: shop_currency_code());
+        $minorAmount  = $this->minorUnits((float) $invoice->amountDue(), $currency);
+        $currencyJs   = json_encode($currency);
+        $localeJs     = json_encode(str_replace("_", "-", app()->getLocale()));
+        $returnUrl    = json_encode(url("/client/invoices/{$invoiceId}"), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
         $intentUrl    = url("/gateway/stripe/intent/{$invoiceId}");
         $confirmUrl   = url("/gateway/stripe/confirm/{$invoiceId}");
 
@@ -436,44 +446,73 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
 <script>
 (function() {
     var stripe  = Stripe("{$safeKey}");
-    var elements = stripe.elements();
-    var card    = elements.create("card", { style: { base: { fontSize: "16px" } } });
+    // The Payment Element rather than the bare card field: the same card form,
+    // plus Apple Pay and Google Pay where the customer's device has them.
+    // Both wallets are cards to Stripe, so the intent stays card-only and
+    // what gets recorded, refunded and charged later is unchanged. Apple Pay
+    // also needs the site's domain added in the Stripe dashboard.
+    var elements = stripe.elements({
+        mode: "payment",
+        amount: {$minorAmount},
+        currency: {$currencyJs},
+        paymentMethodTypes: ["card"],
+        locale: {$localeJs}
+    });
+    var card    = elements.create("payment", { layout: "tabs" });
     card.mount("#stripe-card-element");
 
-    card.addEventListener("change", function(e) {
+    card.on("change", function(e) {
         document.getElementById("stripe-card-errors").textContent = e.error ? e.error.message : "";
     });
+
+    function failed(message) {
+        var btn = document.getElementById("stripe-submit-btn");
+        document.getElementById("stripe-card-errors").textContent = message;
+        btn.disabled = false;
+        btn.textContent = {$payJs};
+    }
 
     document.getElementById("stripe-submit-btn").addEventListener("click", function() {
         var btn = this;
         btn.disabled = true;
         btn.textContent = {$processingJs};
 
-        fetch("{$intentUrl}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]") ? document.querySelector("meta[name=csrf-token]").content : ""
-            }
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (!data.success) {
-                document.getElementById("stripe-card-errors").textContent = data.message || {$setupJs};
-                btn.disabled = false;
-                btn.textContent = {$payJs};
+        // The element checks what was typed (or opens the wallet sheet)
+        // before any intent is made.
+        elements.submit()
+        .then(function(checked) {
+            if (checked.error) {
+                failed(checked.error.message);
                 return;
             }
-            return stripe.confirmCardPayment(data.client_secret, {
-                payment_method: { card: card }
+            return fetch("{$intentUrl}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]") ? document.querySelector("meta[name=csrf-token]").content : ""
+                }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success) {
+                    failed(data.message || {$setupJs});
+                    return;
+                }
+                // A card's 3-D Secure check opens over the page; nothing here
+                // leaves it unless a bank insists, and then it comes back to
+                // the invoice.
+                return stripe.confirmPayment({
+                    elements: elements,
+                    clientSecret: data.client_secret,
+                    confirmParams: { return_url: {$returnUrl} },
+                    redirect: "if_required"
+                });
             });
         })
         .then(function(result) {
             if (!result) return;
             if (result.error) {
-                document.getElementById("stripe-card-errors").textContent = result.error.message;
-                btn.disabled = false;
-                btn.textContent = {$payJs};
+                failed(result.error.message);
             } else if (result.paymentIntent.status === "succeeded") {
                 fetch("{$confirmUrl}", {
                     method: "POST",
@@ -496,9 +535,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             }
         })
         .catch(function(err) {
-            document.getElementById("stripe-card-errors").textContent = {$networkJs};
-            btn.disabled = false;
-            btn.textContent = {$payJs};
+            failed({$networkJs});
         });
     });
 })();
