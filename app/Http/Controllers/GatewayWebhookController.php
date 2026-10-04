@@ -373,6 +373,59 @@ class GatewayWebhookController extends Controller
         ]);
     }
 
+    // ========== Any other gateway ==========
+
+    /** Gateways with a route of their own above; they keep their own checks. */
+    private const OWN_ROUTES = ['paypal', 'stripe', 'authorize', 'mollie', 'razorpay', 'tpay', 'iyzico'];
+
+    /**
+     * The callback for a gateway that has no route of its own - one installed
+     * from a pnlcs.json module (PayTR, Param, Papara...). Such a gateway could
+     * be found and offered at checkout, but the payment provider had nowhere
+     * to tell this installation the customer had paid.
+     *
+     * The gateway must be switched on with its settings filled in. Its
+     * processWebhook() gets the posted fields plus _raw_payload and _headers
+     * (lower-case names) and verifies them itself; a ['success' => true,
+     * 'invoice_id' => …] answer is applied as a payment, once per transaction
+     * id (PaymentService). It may set 'response' (the body the provider
+     * expects, default "OK") and 'http_status'.
+     */
+    public function callback(Request $request, string $gateway)
+    {
+        $gateway = strtolower($gateway);
+        if (in_array($gateway, self::OWN_ROUTES, true) || ! in_array($gateway, array_map('strtolower', $this->registry->usableGateways()), true)) {
+            return response('Gateway not found', 404);
+        }
+
+        $module = $this->registry->getGatewayModule($gateway);
+        if (! $module) {
+            return response('Gateway not found', 404);
+        }
+
+        $data = array_merge($request->all(), [
+            '_raw_payload' => $request->getContent(),
+            '_headers' => array_map(fn ($values) => implode(', ', (array) $values), array_change_key_case($request->headers->all(), CASE_LOWER)),
+        ]);
+
+        try {
+            $result = $module->processWebhook($data);
+        } catch (\Throwable $e) {
+            Log::error("Gateway callback threw [{$gateway}]: ".$e->getMessage());
+
+            return response('Error', 500);
+        }
+
+        if (($result['success'] ?? false) && ! empty($result['invoice_id'])) {
+            $invoice = Invoice::find($result['invoice_id']);
+            if ($invoice) {
+                $this->recordTransaction($invoice, $gateway, (string) ($result['transaction_id'] ?? ''), (float) ($result['amount'] ?? 0));
+            }
+        }
+
+        return response((string) ($result['response'] ?? 'OK'), (int) ($result['http_status'] ?? 200));
+    }
+
     // ========== Mollie ==========
 
     public function mollie(Request $request)
