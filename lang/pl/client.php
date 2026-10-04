@@ -168,6 +168,8 @@ return [
     ],
     'cart' => [
         'order_questions' => 'O Twoim zamówieniu',
+        'free_domain_note' => 'Pierwszy rok gratis dla :tlds.',
+        'free_domain_cycles' => 'Przy rozliczeniu: :cycles.',
         'choose_app' => 'Wybierz swoją aplikację',
         'app_search_ph' => 'Szukaj aplikacji — wordpress, bazy danych, automatyzacja...',
         'app_search_none' => 'Żadna aplikacja nie pasuje do tego wyszukiwania.',

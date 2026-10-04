@@ -207,6 +207,26 @@
         </div>
     </div>
 
+    {{-- The domain on the order form, and a free first year with it. --}}
+    <input type="hidden" name="domain_section" value="1">
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><strong>{{ __('admin.products.domain_title') }}</strong></div>
+        <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center;"><input type="checkbox" name="show_domain_options" value="1" @checked(old('show_domain_options', $product->show_domain_options))> {{ __('admin.products.show_domain_options') }}</label>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center;"><input type="checkbox" name="free_domain" value="1" @checked(old('free_domain', $product->free_domain))> {{ __('admin.products.free_domain') }}</label>
+            <div class="form-group" style="margin:0;"><label class="form-label" for="fd-tlds">{{ __('admin.products.free_domain_tlds') }}</label><input type="text" id="fd-tlds" name="free_domain_tlds" value="{{ old('free_domain_tlds', implode(', ', $product->freeDomainTlds())) }}" class="form-control"></div>
+            <div class="form-group" style="margin:0;"><label class="form-label">{{ __('admin.products.free_domain_cycles') }}</label>
+                @php($fdChosen = (array) old('free_domain_cycles', $product->freeDomainCycles()))
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    @foreach(['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'] as $fdc)
+                    <label style="font-weight:400;display:flex;gap:4px;align-items:center;font-size:12px;"><input type="checkbox" name="free_domain_cycles[]" value="{{ $fdc }}" @checked(in_array($fdc, $fdChosen, true))> {{ __('common.billing.'.str_replace('semiannually', 'semi_annually', $fdc)) }}</label>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        <p style="font-size:12px;color:#777;margin:0 15px 12px;">{{ __('admin.products.free_domain_hint') }}</p>
+    </div>
+
     <div style="display:flex;gap:8px;">
         <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
         <a href="{{ route('admin.products.index') }}" class="btn btn-default">{{ __('common.actions.cancel') }}</a>

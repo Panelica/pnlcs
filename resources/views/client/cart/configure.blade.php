@@ -253,6 +253,10 @@
             <div class="pn-card" style="margin-bottom:16px;">
                 <div class="pn-card-header">{{ __('client.cart.domain') }}</div>
                 <div class="pn-card-body">
+                    @if($product->free_domain && $product->freeDomainTlds())
+                    @php($ikaCycles = $product->freeDomainCycles())
+                    <p class="text-sm" style="margin-top:0;">{{ __('client.cart.free_domain_note', ['tlds' => implode(', ', $product->freeDomainTlds())]) }}@if($ikaCycles) {{ __('client.cart.free_domain_cycles', ['cycles' => implode(', ', array_map(fn ($c) => __('common.billing.'.str_replace('semiannually', 'semi_annually', $c)), $ikaCycles))]) }}@endif</p>
+                    @endif
                     <div style="display:flex; gap:8px; margin-bottom:12px;">
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
                             <input type="radio" name="domain_option" value="register" @checked(old('domain_option', 'register') === 'register')> {{ __('client.cart.register_new_domain') }}

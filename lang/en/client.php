@@ -168,6 +168,8 @@ return [
     ],
     'cart' => [
         'order_questions' => 'About your order',
+        'free_domain_note' => 'First year free for :tlds.',
+        'free_domain_cycles' => 'With :cycles billing.',
         'choose_app' => 'Choose your app',
         'app_search_ph' => 'Search apps - wordpress, database, automation...',
         'app_search_none' => 'No app matches that search.',

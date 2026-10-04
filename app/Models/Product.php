@@ -10,16 +10,42 @@ class Product extends Model
 {
     use HasFactory, \Illuminate\Database\Eloquent\SoftDeletes;
 
-    protected $fillable = ['type', 'group_id', 'name', 'slug', 'description', 'hidden', 'show_domain_options', 'is_featured', 'retired', 'pay_type', 'auto_setup', 'server_type', 'server_group_id', 'stock_control', 'stock_qty', 'welcome_email_template', 'sort_order', 'config_options', 'tax', 'ssl_module', 'overage_enabled', 'overage_disk_rate', 'overage_bw_rate'];
+    protected $fillable = ['type', 'group_id', 'name', 'slug', 'description', 'hidden', 'show_domain_options', 'free_domain', 'free_domain_tlds', 'free_domain_cycles', 'is_featured', 'retired', 'pay_type', 'auto_setup', 'server_type', 'server_group_id', 'stock_control', 'stock_qty', 'welcome_email_template', 'sort_order', 'config_options', 'tax', 'ssl_module', 'overage_enabled', 'overage_disk_rate', 'overage_bw_rate'];
 
     protected function casts(): array
     {
-        return ['hidden' => 'boolean', 'is_featured' => 'boolean', 'retired' => 'boolean', 'stock_control' => 'boolean', 'tax' => 'boolean', 'overage_enabled' => 'boolean', 'overage_disk_rate' => 'decimal:4', 'overage_bw_rate' => 'decimal:4', 'config_options' => 'array'];
+        return ['free_domain' => 'boolean', 'hidden' => 'boolean', 'is_featured' => 'boolean', 'retired' => 'boolean', 'stock_control' => 'boolean', 'tax' => 'boolean', 'overage_enabled' => 'boolean', 'overage_disk_rate' => 'decimal:4', 'overage_bw_rate' => 'decimal:4', 'config_options' => 'array'];
     }
 
     public function group()
     {
         return $this->belongsTo(ProductGroup::class, 'group_id');
+    }
+
+    /** The extensions a free domain may have (".com", ".com.tr"), lower case with the dot. */
+    public function freeDomainTlds(): array
+    {
+        return collect(preg_split('/[\s,]+/', strtolower((string) $this->free_domain_tlds)))
+            ->filter()->map(fn ($tld) => '.'.ltrim($tld, '.'))->unique()->values()->all();
+    }
+
+    /** The billing cycles (lower case) the free domain comes with; none listed means every cycle. */
+    public function freeDomainCycles(): array
+    {
+        return collect(explode(',', strtolower((string) $this->free_domain_cycles)))->map('trim')->filter()->values()->all();
+    }
+
+    /** Whether a domain of this extension, ordered with this product on this cycle, has its first term free. */
+    public function givesFreeDomain(string $tld, string $billingCycle): bool
+    {
+        if (! $this->free_domain) {
+            return false;
+        }
+        $tld = '.'.ltrim(strtolower($tld), '.');
+        $cycles = $this->freeDomainCycles();
+
+        return in_array($tld, $this->freeDomainTlds(), true)
+            && ($cycles === [] || in_array(strtolower($billingCycle), $cycles, true));
     }
 
     /** Whether the shelf is empty. A product without stock control never is. */

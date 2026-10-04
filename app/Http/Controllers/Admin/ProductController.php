@@ -374,8 +374,23 @@ class ProductController extends Controller
             'pricing.*.*' => 'nullable|numeric|min:-1',
             'upgrade_paths' => 'nullable|array',
             'upgrade_paths.*' => 'integer|exists:products,id',
+            'free_domain_tlds' => 'nullable|string|max:500',
+            'free_domain_cycles' => 'nullable|array',
+            'free_domain_cycles.*' => 'in:monthly,quarterly,semiannually,annually,biennially,triennially',
         ]);
         unset($validated['pricing'], $validated['upgrade_paths']);
+
+        // The domain card: whether the order form offers a domain at all, and
+        // a free first year for some extensions on some billing cycles.
+        if ($request->boolean('domain_section')) {
+            $validated['show_domain_options'] = $request->boolean('show_domain_options');
+            $validated['free_domain'] = $request->boolean('free_domain');
+            $validated['free_domain_tlds'] = collect(preg_split('/[\s,]+/', strtolower((string) ($validated['free_domain_tlds'] ?? ''))))
+                ->filter()->map(fn ($tld) => '.'.ltrim($tld, '.'))->unique()->implode(',') ?: null;
+            $validated['free_domain_cycles'] = implode(',', (array) ($validated['free_domain_cycles'] ?? [])) ?: null;
+        } else {
+            unset($validated['free_domain_tlds'], $validated['free_domain_cycles']);
+        }
 
         // Checked before anything is saved, so a bad Proxmox field does not
         // leave the product half updated.
