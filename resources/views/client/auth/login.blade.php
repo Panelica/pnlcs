@@ -34,6 +34,7 @@
         .register-link { text-align: center; margin-top: 16px; font-size: 13px; color: #777; }
         .register-link a { color: var(--theme-accent, #337ab7); font-weight: 500; text-decoration: none; }
     </style>
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
 </head>
 <body>
 <div class="login-box">
@@ -77,5 +78,6 @@
         {{ __('client.auth.no_account') }} <a href="{{ route('client.register') }}">{{ __('common.actions.register') }}</a>
     </div>
 </div>
+    {!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
 </body>
 </html>

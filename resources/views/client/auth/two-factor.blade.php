@@ -17,6 +17,7 @@
         .btn:hover { opacity:.9; }
         .alert { background:#fee; border:1px solid #fcc; color:#c00; padding:10px; border-radius:6px; margin-bottom:16px; font-size:13px; }
     </style>
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
 </head>
 <body>
 <div class="card">
@@ -43,5 +44,6 @@
         <button type="submit" style="background:none;border:none;color:var(--muted,#888);cursor:pointer;font-size:13px;">{{ __('client.auth.cancel_logout') }}</button>
     </form>
 </div>
+    {!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
 </body>
 </html>

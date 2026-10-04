@@ -37,3 +37,18 @@ if (!function_exists('run_hook')) {
         return app(HookManager::class)->run($hookPoint, $params);
     }
 }
+
+if (!function_exists('hook_output')) {
+    /**
+     * Fire an output hook and join the HTML its callbacks return, as WHMCS's
+     * *Output hooks do (ClientAreaHeadOutput, ClientAreaFooterOutput,
+     * ClientAreaProductDetailsOutput, AdminAreaHeadOutput,
+     * AdminAreaFooterOutput). Only strings are kept; a callback that throws
+     * is logged and skipped by the hook manager. The HTML comes from
+     * installed code and is printed as it is.
+     */
+    function hook_output(string $hookPoint, array $params = []): string
+    {
+        return implode("\n", array_filter(run_hook($hookPoint, $params), fn ($out) => is_string($out) && $out !== ''));
+    }
+}

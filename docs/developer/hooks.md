@@ -113,3 +113,18 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 app(\App\Services\HookManager::class)->registered(); // point => callback count
 app(\App\Services\HookManager::class)->firedLog();   // fired this request
 ```
+
+
+## Output hooks
+
+A callback returns an HTML string, which is printed as it is; anything else is ignored. As in WHMCS.
+
+| Hook | Vars | Printed |
+|---|---|---|
+| `ClientAreaHeadOutput` | user | before `</head>` on the client area, the sign-in and sign-up pages, the home page and the legal pages |
+| `ClientAreaFooterOutput` | user | before `</body>` on the same pages |
+| `ClientAreaProductDetailsOutput` | service | in a panel on the client's service page |
+| `AdminAreaHeadOutput` | admin | before `</head>` in the admin area |
+| `AdminAreaFooterOutput` | admin | before `</body>` in the admin area |
+
+A theme that replaces one of these layouts should call `hook_output()` at the same places, so addons keep working with it.

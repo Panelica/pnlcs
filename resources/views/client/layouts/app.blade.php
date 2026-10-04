@@ -353,6 +353,7 @@
     @if(($textDirection ?? 'ltr') === 'rtl')
     <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
     @endif
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
 </head>
 <body>
 @if(session('impersonating_admin_id'))
@@ -706,6 +707,7 @@ document.addEventListener("click", function(e) {
     function toggleDarkMode(){var d=document.documentElement.getAttribute('data-theme')==='dark';var n=d?'light':'dark';document.documentElement.setAttribute('data-theme',n);document.cookie='pnlcs_theme='+n+';path=/;max-age=31536000;SameSite=Lax';var li=document.getElementById('lightIcon'),di=document.getElementById('darkIcon');if(li&&di){li.style.display=d?'':'none';di.style.display=d?'none':'';}}
     (function(){var m=document.cookie.match(/pnlcs_theme=(\w+)/);if(m&&m[1]==='dark'){document.documentElement.setAttribute('data-theme','dark');var li=document.getElementById('lightIcon'),di=document.getElementById('darkIcon');if(li)li.style.display='';if(di)di.style.display='none';}})();
     </script>
+    {!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
 </body>
 </html>
 <script>
