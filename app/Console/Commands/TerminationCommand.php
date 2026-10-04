@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\ServiceStatus;
+use App\Events\ServiceTerminated;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Services\ProvisioningService;
@@ -92,6 +93,8 @@ class TerminationCommand extends Command
                 'status' => ServiceStatus::Terminated->value,
                 'termination_date' => now(),
             ]);
+            // As terminateAccount does for a server.
+            event(new ServiceTerminated($service));
             $terminated++;
         }
 

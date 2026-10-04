@@ -2,12 +2,11 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\ServiceTerminationMail;
+use App\Events\ServiceTerminated;
 use App\Models\Service;
 use App\Services\ProvisioningService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class ProcessCancellationsCommand extends Command
 {
@@ -49,7 +48,8 @@ class ProcessCancellationsCommand extends Command
                 continue;
             }
 
-            if ($service->server_id && $provisioning->resolveModule($service)) {
+            $onServer = $service->server_id && $provisioning->resolveModule($service);
+            if ($onServer) {
                 $result = $provisioning->terminateAccount($service);
 
                 if (! ($result['success'] ?? false)) {
@@ -66,6 +66,14 @@ class ProcessCancellationsCommand extends Command
                 'status' => 'cancelled',
                 'termination_date' => now(),
             ]);
+            // terminateAccount raised ServiceTerminated for a server; a
+            // service with nothing on a server ends here and raises it now.
+            // The event sends the customer's mail (SendNotificationListener),
+            // so the job no longer sends one of its own: on a server that was
+            // the same mail twice.
+            if (! $onServer) {
+                event(new ServiceTerminated($service));
+            }
 
             // r136-openrequest: close the request that is actually open.
             //
@@ -78,14 +86,6 @@ class ProcessCancellationsCommand extends Command
             $service->cancellationRequest()
                 ->whereNull('processed_at')
                 ->update(['processed_at' => now()]);
-
-            if ($service->client?->email) {
-                try {
-                    Mail::to($service->client->email)->queue(new ServiceTerminationMail($service));
-                } catch (\Throwable $e) {
-                    Log::warning("Cancellation mail failed for service #{$service->id}: {$e->getMessage()}");
-                }
-            }
 
             $processed++;
         }
