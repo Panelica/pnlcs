@@ -293,4 +293,11 @@ return [
         'nothing_taken' => 'Nothing has been taken from your card.',
         'what_to_do' => 'Open the invoice and use the "Confirm with your bank" button on it. That finishes the payment we already started, so you are not charged twice.',
     ],
+    'domain_move' => [
+        'subject' => 'Domain :domain offered to you',
+        'offered' => ':from would like to give you the domain :domain.',
+        'how' => 'Sign in and accept or decline it on your Domains page by :date.',
+        'action' => 'Open my domains',
+        'not_expected' => 'If you did not expect this, you can ignore it or decline it.',
+    ],
 ];

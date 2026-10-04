@@ -293,4 +293,11 @@ return [
         'nothing_taken' => 'Z Twojej karty nie pobrano żadnych środków.',
         'what_to_do' => 'Otwórz fakturę i użyj przycisku "Potwierdź w banku". Kończy on płatność, którą już rozpoczęliśmy, więc nie zostaniesz obciążony dwukrotnie.',
     ],
+    'domain_move' => [
+        'subject' => 'Proponujemy Ci domenę :domain',
+        'offered' => ':from chce przekazać Ci domenę :domain.',
+        'how' => 'Zaloguj się i zaakceptuj lub odrzuć ją na stronie Domeny do :date.',
+        'action' => 'Otwórz moje domeny',
+        'not_expected' => 'Jeśli się tego nie spodziewasz, możesz to zignorować lub odrzucić.',
+    ],
 ];

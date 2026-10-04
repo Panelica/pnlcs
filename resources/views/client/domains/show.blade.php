@@ -146,6 +146,25 @@
 </div>
 @endif
 
+{{-- Give the domain to another client account. --}}
+<div class="pn-card" style="margin-bottom:20px;">
+    <div class="pn-card-header">{{ __('client.domain_move.title') }}</div>
+    <div class="pn-card-body">
+        @if($outgoingMove ?? null)
+        <p class="text-sm" style="margin-top:0;">{{ __('client.domain_move.waiting', ['email' => $outgoingMove->toClient?->email, 'date' => $outgoingMove->expires_at->format(date_fmt())]) }}</p>
+        <form method="POST" action="{{ route('client.domain-moves.cancel', $outgoingMove) }}">@csrf<button type="submit" class="btn btn-outline btn-sm">{{ __('client.domain_move.cancel') }}</button></form>
+        @else
+        <p class="text-muted text-sm" style="margin-top:0;">{{ __('client.domain_move.hint') }}</p>
+        <form method="POST" action="{{ route('client.domains.move', $domain) }}" style="display:flex;gap:8px;flex-wrap:wrap;">
+            @csrf
+            <input type="email" name="email" required maxlength="255" class="form-control" style="max-width:320px;" value="{{ old('email') }}" aria-label="{{ __('client.domain_move.email') }}" placeholder="{{ __('client.domain_move.email') }}">
+            <button type="submit" class="btn btn-outline btn-sm">{{ __('client.domain_move.offer') }}</button>
+        </form>
+        @error('email')<div class="text-sm" style="color:var(--danger);margin-top:6px;">{{ $message }}</div>@enderror
+        @endif
+    </div>
+</div>
+
 {{-- EPP Code --}}
 <div class="pn-card" style="margin-bottom:20px;">
     <div class="pn-card-header">{{ __('client.domains.transfer_domain') }}</div>

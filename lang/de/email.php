@@ -292,4 +292,11 @@ return [
         'nothing_taken' => 'Von Ihrer Karte wurde nichts abgebucht.',
         'what_to_do' => 'Öffnen Sie die Rechnung und klicken Sie darauf auf die Schaltfläche „Mit Ihrer Bank bestätigen“. Damit ist die Zahlung, die wir bereits begonnen haben, abgeschlossen, sodass Ihnen keine doppelte Gebühr berechnet wird.',
     ],
+    'domain_move' => [
+        'subject' => 'Domain :domain wird Ihnen angeboten',
+        'offered' => ':from möchte Ihnen die Domain :domain übergeben.',
+        'how' => 'Melden Sie sich an und nehmen Sie sie bis :date auf Ihrer Domain-Seite an oder lehnen Sie ab.',
+        'action' => 'Meine Domains öffnen',
+        'not_expected' => 'Wenn Sie das nicht erwartet haben, können Sie es ignorieren oder ablehnen.',
+    ],
 ];

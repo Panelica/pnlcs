@@ -38,6 +38,9 @@ class ClientPermissions
             str_starts_with($name, 'client.ssl.') => 'manageproducts',
             in_array($name, ['client.domains.index', 'client.domains.show'], true) => 'domains',
             str_starts_with($name, 'client.domains.') => 'managedomains',
+            // Accepting, declining or withdrawing a domain move changes which
+            // account holds a domain, as much as the offer does.
+            str_starts_with($name, 'client.domain-moves.') => 'managedomains',
             str_starts_with($name, 'client.invoices.'),
             str_starts_with($name, 'client.payment-methods.'),
             str_starts_with($name, 'client.funds.'),

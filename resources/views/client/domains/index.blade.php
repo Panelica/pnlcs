@@ -18,6 +18,19 @@
     </div>
 </div>
 
+@foreach($incomingMoves ?? [] as $move)
+<div class="pn-card" style="margin-bottom:16px;">
+    <div class="pn-card-body" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+        <div><strong>{{ __('client.domain_move.incoming', ['domain' => $move->domain?->domain, 'from' => $move->fromClient?->full_name ?: $move->fromClient?->email]) }}</strong>
+            <div class="text-muted text-sm">{{ __('client.domain_move.incoming_hint', ['date' => $move->expires_at->format(date_fmt())]) }}</div></div>
+        <div style="display:flex;gap:8px;">
+            <form method="POST" action="{{ route('client.domain-moves.accept', $move) }}">@csrf<button type="submit" class="btn btn-primary btn-sm">{{ __('client.domain_move.accept') }}</button></form>
+            <form method="POST" action="{{ route('client.domain-moves.decline', $move) }}">@csrf<button type="submit" class="btn btn-outline btn-sm">{{ __('client.domain_move.decline') }}</button></form>
+        </div>
+    </div>
+</div>
+@endforeach
+
 {{-- Renew several at once: the boxes below belong to this form. --}}
 <form method="POST" action="{{ route('client.domains.renew-many') }}" id="renew-many" style="display:flex;justify-content:flex-end;margin-bottom:8px;">
     @csrf
