@@ -1324,6 +1324,7 @@ return [
     'phone_verify.confirm_btn' => 'Confirm',
     'phone_verify.wrong_code' => 'That code is not right, or it has expired. Send a new one and try again.',
     'phone_verify.send_failed' => 'The code could not be sent right now. Please try again in a moment.',
+    'phone_verify.too_many' => 'Too many codes were asked for. Wait ten minutes and try again.',
     'phone_verify.verified' => 'Your phone number is verified.',
     'permissions.denied' => 'Your login does not have access to this part of the account. Ask the account owner.',
     'sso.invalid' => 'This sign-in link has expired or has already been used.',

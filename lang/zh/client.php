@@ -1323,6 +1323,7 @@ return [
     'phone_verify.confirm_btn' => '确认',
     'phone_verify.wrong_code' => '验证码不正确或已过期。请重新发送后再试。',
     'phone_verify.send_failed' => '暂时无法发送验证码,请稍后重试。',
+    'phone_verify.too_many' => '请求的验证码过多。请等待十分钟后再试。',
     'phone_verify.verified' => '您的手机号码已通过验证。',
     'permissions.denied' => '您的登录账户无权访问此部分，请联系账户所有者。',
     'sso.invalid' => '此登录链接已过期或已被使用。',

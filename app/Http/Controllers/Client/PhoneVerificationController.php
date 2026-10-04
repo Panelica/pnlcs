@@ -28,8 +28,12 @@ class PhoneVerificationController extends Controller
             return back()->withErrors(['phone' => __('client.phone_verify.no_phone')]);
         }
 
-        if ($twilio->start($to) === null) {
+        $started = $twilio->start($to);
+        if ($started === null) {
             return back()->withErrors(['phone' => __('client.phone_verify.send_failed')]);
+        }
+        if (($started['status'] ?? null) === 'too_many_sends') {
+            return back()->with('phone_code_sent', true)->withErrors(['phone' => __('client.phone_verify.too_many')]);
         }
 
         return back()->with('phone_code_sent', true)->with('success', __('client.phone_verify.code_sent'));

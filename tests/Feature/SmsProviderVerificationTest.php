@@ -78,3 +78,41 @@ test('Twilio Verify still wins when it is set up', function () {
 
     expect(app(PhoneVerifier::class))->toBeInstanceOf(TwilioVerifyClient::class);
 });
+
+test('a number gets at most three codes in the window, and the route is throttled', function () {
+    $sender = new SmsProviderTestSender;
+    $verifier = new SmsCodeVerifier($sender);
+
+    foreach (range(1, SmsCodeVerifier::MAX_SENDS) as $send) {
+        expect($verifier->start('+905321112244'))->toBe(['status' => 'pending']);
+    }
+    expect($verifier->start('+905321112244'))->toBe(['status' => 'too_many_sends'])
+        ->and($sender->sent)->toHaveCount(SmsCodeVerifier::MAX_SENDS);
+
+    test()->travel(SmsCodeVerifier::TTL_MINUTES + 1)->minutes();
+    expect($verifier->start('+905321112244'))->toBe(['status' => 'pending']);
+
+    app()->instance(SmsSender::class, new SmsProviderTestSender);
+    [$user] = spvClient();
+    foreach (range(1, 3) as $send) {
+        $this->actingAs($user)->post(route('client.account.phone.verify'))->assertRedirect();
+    }
+    $this->actingAs($user)->post(route('client.account.phone.verify'))->assertStatus(429);
+});
+
+test('a new code does not give back the tries already used', function () {
+    $sender = new SmsProviderTestSender;
+    $verifier = new SmsCodeVerifier($sender);
+
+    $verifier->start('+905321112255');
+    foreach (range(1, SmsCodeVerifier::MAX_ATTEMPTS - 1) as $try) {
+        expect($verifier->check('+905321112255', '000000')['status'])->toBe('pending');
+    }
+
+    $verifier->start('+905321112255');
+    preg_match('/\b(\d{6})\b/', end($sender->sent)[1], $m);
+
+    expect($verifier->check('+905321112255', '000000')['status'])->toBe('max_attempts_reached')
+        ->and($verifier->check('+905321112255', $m[1])['approved'])->toBeFalse()
+        ->and($verifier->start('+905321112255'))->toBe(['status' => 'too_many_sends']);
+});

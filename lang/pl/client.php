@@ -1324,6 +1324,7 @@ return [
     'phone_verify.confirm_btn' => 'Potwierdź',
     'phone_verify.wrong_code' => 'Kod jest błędny lub wygasł. Wyślij nowy i spróbuj ponownie.',
     'phone_verify.send_failed' => 'Nie udało się teraz wysłać kodu. Spróbuj ponownie za chwilę.',
+    'phone_verify.too_many' => 'Zażądano zbyt wielu kodów. Odczekaj dziesięć minut i spróbuj ponownie.',
     'phone_verify.verified' => 'Twój numer telefonu został zweryfikowany.',
     'permissions.denied' => 'Twój login nie ma dostępu do tej części konta. Zwróć się do właściciela konta.',
     'sso.invalid' => 'Ten link logowania wygasł lub został już użyty.',

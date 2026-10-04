@@ -1323,6 +1323,7 @@ return [
     'phone_verify.confirm_btn' => 'Onayla',
     'phone_verify.wrong_code' => 'Kod hatalı ya da süresi dolmuş. Yeni kod gönderip tekrar deneyin.',
     'phone_verify.send_failed' => 'Kod şu anda gönderilemedi. Lütfen birazdan tekrar deneyin.',
+    'phone_verify.too_many' => 'Çok fazla kod istendi. On dakika bekleyip tekrar deneyin.',
     'phone_verify.verified' => 'Telefon numaranız doğrulandı.',
     'permissions.denied' => 'Giriş hesabınızın bu bölüme erişimi yok. Hesap sahibine başvurun.',
     'sso.invalid' => 'Bu giriş bağlantısının süresi dolmuş ya da daha önce kullanılmış.',

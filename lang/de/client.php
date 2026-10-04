@@ -1323,6 +1323,7 @@ return [
     'phone_verify.confirm_btn' => 'Bestätigen',
     'phone_verify.wrong_code' => 'Der Code ist falsch oder abgelaufen. Senden Sie ein neues und versuchen Sie es erneut.',
     'phone_verify.send_failed' => 'Der Code konnte momentan nicht gesendet werden. Bitte versuchen Sie es gleich noch einmal.',
+    'phone_verify.too_many' => 'Es wurden zu viele Codes angefordert. Warten Sie zehn Minuten und versuchen Sie es erneut.',
     'phone_verify.verified' => 'Ihre Telefonnummer ist bestätigt.',
     'cart.app_clear' => 'klare Auswahl',
     'cart.app_intro' => 'Sie kaufen das oben genannte Hosting. Wenn Sie bereits wissen, was Sie ausführen möchten, wählen Sie es hier aus. Es wird dann installiert und auf Ihre Domain verwiesen, wenn Ihr Konto erstellt wird. Andernfalls überspringen Sie dies und installieren Sie anschließend alles, was Sie möchten, über Ihr Control Panel.',
