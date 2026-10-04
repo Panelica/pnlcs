@@ -88,7 +88,18 @@ class InvoiceController extends Controller
             ? InvoiceChargeAttempt::query()->needsReview()->where('invoice_id', $invoice->id)->first()
             : null;
 
-        return view('admin.invoices.show', compact('invoice', 'activityLog', 'chargeReview'));
+        // "Charge card now": offered where the charger could act on it - the
+        // switch is on, the invoice is owed, and the customer has a card a
+        // gateway can charge. chargeNow() asks the rest again, under its claim.
+        $canChargeNow = AutoCharge::enabled()
+            && in_array(strtolower((string) $invoice->status), [InvoiceStatus::Unpaid->value, InvoiceStatus::Overdue->value, InvoiceStatus::PartiallyPaid->value], true)
+            && \App\Models\PaymentMethod::query()
+                ->where('client_id', $invoice->client_id)
+                ->where('status', \App\Models\PaymentMethod::STATUS_ACTIVE)
+                ->whereIn('gateway_name', array_keys(app(ModuleRegistry::class)->tokenisedGateways()))
+                ->exists();
+
+        return view('admin.invoices.show', compact('invoice', 'activityLog', 'chargeReview', 'canChargeNow'));
     }
 
     /**
@@ -113,6 +124,30 @@ class InvoiceController extends Controller
      * dunning count reset — or, for an in-flight row, remove the very thing
      * that stops a second charge.
      */
+    /**
+     * Charge the customer's stored card for this invoice, now.
+     *
+     * Through AutoChargeService::chargeNow, so through the same claim as the
+     * scheduled run: pressing the button twice, or while the 06:45 run has the
+     * invoice, charges once.
+     */
+    public function chargeNow(Invoice $invoice, \App\Services\AutoChargeService $charger): RedirectResponse
+    {
+        $outcome = $charger->chargeNow($invoice);
+
+        ActivityLog::log(
+            __('admin.invoices.charge_now_log', ['outcome' => $outcome]),
+            auth('admin')->user()?->email,
+            $invoice->client_id,
+            $invoice->id,
+        );
+
+        $key = 'admin.invoices.charge_now_'.$outcome;
+        $message = \Illuminate\Support\Facades\Lang::has($key) ? __($key) : __('admin.invoices.charge_now_refused', ['reason' => $outcome]);
+
+        return back()->with($outcome === 'charged' ? 'success' : 'error', $message);
+    }
+
     public function releaseChargeReview(Invoice $invoice): RedirectResponse
     {
         $row = InvoiceChargeAttempt::query()->needsReview()->where('invoice_id', $invoice->id)->first();
