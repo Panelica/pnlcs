@@ -259,6 +259,8 @@ return [
         'reply_subject' => 'Ticket Reply - #:number',
     ],
     'ticket_opened' => [
+        'staff_opened' => 'We have opened a support ticket for you.',
+        'staff_reply' => 'Reply to this email or from your client area.',
         'admin_new_ticket' => 'A new support ticket has been opened.',
         'admin_review' => 'Please review and respond to this ticket.',
         'client_review' => 'Our team will review your ticket and respond as soon as possible.',

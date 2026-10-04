@@ -7,7 +7,7 @@
 <p>{{ __('email.ticket_opened.admin_new_ticket') }}</p>
 @else
 <p>{{ __('email.common.greeting', ['name' => $ticket->client?->first_name ?? __('email.common.customer')]) }}</p>
-<p>{{ __('email.ticket_opened.client_success') }}</p>
+<p>{{ ($byStaff ?? false) ? __('email.ticket_opened.staff_opened') : __('email.ticket_opened.client_success') }}</p>
 @endif
 
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
@@ -27,7 +27,7 @@
 @if($isAdmin ?? false)
 <p>{{ __('email.ticket_opened.admin_review') }}</p>
 @else
-<p>{{ __('email.ticket_opened.client_review') }}</p>
+<p>{{ ($byStaff ?? false) ? __('email.ticket_opened.staff_reply') : __('email.ticket_opened.client_review') }}</p>
 @endif
 
 @include('emails.partials.action', ['url' => route('client.tickets.show', $ticket->id), 'label' => __('email.common.view_ticket')])

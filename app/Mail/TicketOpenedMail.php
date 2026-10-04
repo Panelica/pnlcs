@@ -19,7 +19,8 @@ class TicketOpenedMail extends Mailable implements ShouldQueue
 
     public function __construct(
         public Ticket $ticket,
-        public bool $isAdmin = false
+        public bool $isAdmin = false,
+        public bool $byStaff = false
     ) {
         $this->localizeTo($this->ticket);
     }
@@ -39,6 +40,7 @@ class TicketOpenedMail extends Mailable implements ShouldQueue
             with: [
                 'ticket' => $this->ticket,
                 'isAdmin' => $this->isAdmin,
+                'byStaff' => $this->byStaff,
                 'companyName' => company_name(),
             ],
         );

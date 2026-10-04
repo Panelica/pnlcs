@@ -189,7 +189,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <div class="panel-heading panel-primary">{{ __('admin.clients.quick_actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
                 <a href="{{ route('admin.clients.show', ['client' => $client, 'tab' => 'notes']) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">{{ __('admin.clients.add_note_link') }}</a>
-                <a href="{{ route('admin.tickets.index') }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">{{ __('admin.clients.new_ticket_link') }}</a>
+                <a href="{{ route('admin.tickets.create', ['client' => $client->id]) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">{{ __('admin.clients.new_ticket_link') }}</a>
                 <a href="{{ route('admin.invoices.create', ['client_id' => $client->id]) }}" class="btn btn-default btn-sm" style="width:100%;text-align:left;">{{ __('admin.clients.new_invoice_link') }}</a>
             </div>
         </div>

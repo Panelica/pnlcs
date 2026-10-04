@@ -259,6 +259,8 @@ return [
         'reply_subject' => 'Odpowiedź na zgłoszenie – #:number',
     ],
     'ticket_opened' => [
+        'staff_opened' => 'Otworzyliśmy dla Ciebie zgłoszenie.',
+        'staff_reply' => 'Odpowiedz na tę wiadomość lub w panelu klienta.',
         'admin_new_ticket' => 'Nowe zgłoszenie do pomocy technicznej zostało otwarte.',
         'admin_review' => 'Przejrzyj i odpowiedz na to zgłoszenie.',
         'client_review' => 'Nasz zespół przejrzy Twoje zgłoszenie i odpowie tak szybko, jak to możliwe.',
