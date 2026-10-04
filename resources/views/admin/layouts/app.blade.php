@@ -25,6 +25,7 @@
     @if(($textDirection ?? 'ltr') === 'rtl')
     <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
     @endif
+    {!! hook_output('AdminAreaHeadOutput', ['admin' => auth('admin')->user()]) !!}
 </head>
 <body>
 
@@ -580,5 +581,6 @@ function toggleSidebar() {
 }
 </script>
 @stack('scripts')
+{!! hook_output('AdminAreaFooterOutput', ['admin' => auth('admin')->user()]) !!}
 </body>
 </html>

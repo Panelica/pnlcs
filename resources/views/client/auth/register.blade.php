@@ -29,6 +29,7 @@
         .login-link a { color: #337ab7; font-weight: 500; text-decoration: none; }
         .field-note { font-size: 12px; color: #999; margin-top: 3px; }
     </style>
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
 </head>
 <body>
 <div class="register-box">
@@ -160,5 +161,6 @@
     sync();
 })();
 </script>
+    {!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
 </body>
 </html>

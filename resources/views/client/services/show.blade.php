@@ -230,6 +230,13 @@
 </div>
 @endif
 
+{{-- ClientAreaProductDetailsOutput, as WHMCS has it: what an addon shows for
+     this service (a licence key, an outside account's status). --}}
+@php($productDetailsOutput = hook_output('ClientAreaProductDetailsOutput', ['service' => $service]))
+@if($productDetailsOutput !== '')
+<div class="sv-panel" style="margin-bottom:22px">{!! $productDetailsOutput !!}</div>
+@endif
+
 @if(($downloads ?? collect())->isNotEmpty())
 <div class="sv-panel" style="margin-bottom:22px">
     <div class="sv-ph">{{ __('client.downloads.title') }}</div>

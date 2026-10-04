@@ -91,6 +91,7 @@
             .legal-body { max-width: none; font-size: 11pt; }
         }
     </style>
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
 </head>
 <body x-data="{ mobileMenu: false }">
     @include('sections.topbar')
@@ -103,5 +104,6 @@
     @include('sections.footer', ['content' => collect()])
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
 </body>
 </html>
