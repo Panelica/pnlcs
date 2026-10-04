@@ -73,3 +73,22 @@ test('iyzico keeps its own callback', function () {
 
     expect($route->getName())->toBe('gateway.iyzico.callback');
 });
+
+test('a success without a transaction id is not applied, however often the provider retries', function () {
+    $fake = Mockery::mock(GatewayModuleInterface::class);
+    $fake->shouldReceive('getConfigFields')->andReturn([]);
+    $fake->shouldReceive('getModuleName')->andReturn('noidpay');
+    $fake->shouldReceive('processWebhook')->andReturnUsing(fn (array $data) => ['success' => true, 'invoice_id' => (int) $data['oid'], 'amount' => 100, 'response' => 'OK']);
+    app()->instance(GatewayModuleInterface::class, $fake);
+    app(ModuleRegistry::class)->registerGateway('noidpay', GatewayModuleInterface::class);
+    GatewaySettings::updateOrCreate(['gateway' => 'noidpay', 'setting' => 'active'], ['value' => '1']);
+    $client = Client::factory()->create(['credit' => 0]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'Paid', 'total' => 100, 'subtotal' => 100]);
+
+    foreach (range(1, 3) as $retry) {
+        $this->post('/gateway/noidpay/callback', ['oid' => $invoice->id])->assertOk()->assertSeeText('OK');
+    }
+
+    expect((float) $client->fresh()->credit)->toBe(0.0)
+        ->and(\App\Models\Transaction::where('invoice_id', $invoice->id)->count())->toBe(0);
+});

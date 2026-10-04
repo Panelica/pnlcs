@@ -375,9 +375,6 @@ class GatewayWebhookController extends Controller
 
     // ========== Any other gateway ==========
 
-    /** Gateways with a route of their own above; they keep their own checks. */
-    private const OWN_ROUTES = ['paypal', 'stripe', 'authorize', 'mollie', 'razorpay', 'tpay', 'iyzico'];
-
     /**
      * The callback for a gateway that has no route of its own - one installed
      * from a pnlcs.json module (PayTR, Param, Papara...). Such a gateway could
@@ -394,7 +391,7 @@ class GatewayWebhookController extends Controller
     public function callback(Request $request, string $gateway)
     {
         $gateway = strtolower($gateway);
-        if (in_array($gateway, self::OWN_ROUTES, true) || ! in_array($gateway, array_map('strtolower', $this->registry->usableGateways()), true)) {
+        if ($this->hasOwnRoute($gateway) || ! in_array($gateway, array_map('strtolower', $this->registry->usableGateways()), true)) {
             return response('Gateway not found', 404);
         }
 
@@ -417,13 +414,39 @@ class GatewayWebhookController extends Controller
         }
 
         if (($result['success'] ?? false) && ! empty($result['invoice_id'])) {
+            $transactionId = trim((string) ($result['transaction_id'] ?? ''));
             $invoice = Invoice::find($result['invoice_id']);
-            if ($invoice) {
-                $this->recordTransaction($invoice, $gateway, (string) ($result['transaction_id'] ?? ''), (float) ($result['amount'] ?? 0));
+
+            // PaymentService only recognises a repeat by its transaction id,
+            // and books money for a paid invoice as credit: without an id,
+            // every retry of the same callback would book it again. Providers
+            // retry until they get the answer they expect, so nothing is
+            // applied, and the module's answer still goes back so the retries
+            // stop.
+            if ($transactionId === '') {
+                Log::warning("Gateway callback [{$gateway}] reported a payment without a transaction id; nothing was applied.", [
+                    'invoice_id' => $result['invoice_id'],
+                ]);
+            } elseif ($invoice) {
+                $this->recordTransaction($invoice, $gateway, $transactionId, (float) ($result['amount'] ?? 0));
             }
         }
 
         return response((string) ($result['response'] ?? 'OK'), (int) ($result['http_status'] ?? 200));
+    }
+
+    /**
+     * A gateway with a route of its own (gateway.<name>.webhook and the like)
+     * keeps it and its checks; asked of the router so the list cannot drift
+     * from routes/web.php.
+     */
+    private function hasOwnRoute(string $gateway): bool
+    {
+        $prefix = "gateway.{$gateway}.";
+
+        return collect(app('router')->getRoutes()->getRoutesByName())
+            ->keys()
+            ->contains(fn ($name) => str_starts_with((string) $name, $prefix));
     }
 
     // ========== Mollie ==========

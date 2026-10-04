@@ -99,12 +99,21 @@ Field types: `text`, `password` (never echoed back into the page), `textarea`,
 folder, namespace and class, write the manifest, and open **Setup → Modules**
 — your module appears there marked **Third-party**.
 
-**Current limitation — gateway webhooks.** Payment-confirmation webhooks are
-routed to the built-in gateways by name (`/gateway/stripe/webhook`,
-`/gateway/paypal/webhook`, …). A third-party gateway's `processWebhook()` has
-no public URL yet, so a gateway that confirms payments only through webhooks
-cannot be completed as a drop-in module today. Redirect-and-return gateways
-and server, registrar and SSL modules are not affected.
+**Gateway callbacks.** A gateway without a route of its own receives its
+provider's payment confirmations at `/gateway/<name>/callback` (GET or POST, no
+CSRF; `route('gateway.callback', '<name>')`). The route answers only while the
+gateway is switched on with its required settings filled in.
+
+- `processWebhook()` gets the request fields plus `_raw_payload` (the raw body)
+  and `_headers` (lower-case names). **Verify the call yourself**: signature,
+  amount, currency.
+- Return `['success' => true, 'invoice_id' => …, 'transaction_id' => …,
+  'amount' => …]` to apply a payment. **Always return the provider's
+  transaction id**: it is what keeps a retried callback from paying twice, and
+  a success without one is logged and not applied.
+- `response` (the body your provider expects, `OK` by default) and
+  `http_status` set the reply. Return them on failures too, so the provider
+  stops retrying.
 
 **Addons** (`modules/Addons/<Name>/<Name>Module.php`, implementing
 `App\Contracts\AddonModuleInterface`) need no manifest: any addon folder is
