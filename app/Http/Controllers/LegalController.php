@@ -189,7 +189,25 @@ class LegalController extends Controller
             'documents' => self::published(),
             'revised' => self::REVISED,
             'company' => $this->company(),
+            'vatRate' => self::vatRate(),
         ];
+    }
+
+    /**
+     * The VAT rate the documents may state for a customer resident in Türkiye:
+     * the tax rule for TR, otherwise the default rule. Zero when the shop
+     * charges none, and then the documents say nothing about a rate - they
+     * used to promise 20% VAT on every installation, whatever it charged.
+     */
+    public static function vatRate(): float
+    {
+        try {
+            $tr = \App\Models\TaxRule::where('country', 'TR')->orderByDesc('is_default')->value('tax_rate');
+
+            return max(0.0, (float) ($tr ?? \App\Models\TaxRule::defaultRate()));
+        } catch (\Throwable) {
+            return 0.0;
+        }
     }
 
     /**

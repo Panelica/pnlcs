@@ -11,7 +11,9 @@
 
 <h2>3. Fees, billing and currency</h2>
 <p>Prices are displayed on our site in <strong>US dollars (USD)</strong>. Invoices are issued in <strong>Turkish lira (TRY)</strong>, converted at the foreign exchange selling rate published by the Central Bank of the Republic of Türkiye (TCMB) on the day the order is placed. The rate applied, its date and the bulletin number are printed on your invoice so you can verify them against the Central Bank's own publication.</p>
-<p>Customers resident in Türkiye are charged <strong>20% VAT</strong>. For customers outside Türkiye, tax is applied according to the law of the relevant country and the arrangements to which Türkiye is a party.</p>
+@if($vatRate > 0)
+<p>Customers resident in Türkiye are charged <strong>{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }}% VAT</strong>. For customers outside Türkiye, tax is applied according to the law of the relevant country and the arrangements to which Türkiye is a party.</p>
+@endif
 <p>Invoices are payable on issue. Services with an overdue invoice may be suspended until payment is received. We send at least one reminder before suspending anything.</p>
 
 <h2>4. Payment methods</h2>
