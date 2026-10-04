@@ -33,6 +33,7 @@
         <div style="display:flex;align-items:center;gap:8px;">
             <strong style="font-size:13px;">{{ __('admin.clients.credit_balance') }}:</strong>
             <span style="color:#3c763d;font-weight:600;">{{ money_fmt($client->credit) }}</span>
+            @if(auth('admin')->user()?->hasPermission('manage_invoices'))<a href="{{ route('admin.clients.credit', $client) }}" style="font-size:12px;">{{ __('admin.clients.credit_manage') }}</a>@endif
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
             <strong style="font-size:13px;">{{ __('admin.clients.tax_exempt') }}:</strong>

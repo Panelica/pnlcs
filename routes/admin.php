@@ -68,6 +68,11 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('clients/{client}/personal-data', [ClientController::class, 'exportPersonalData'])->name('clients.personal-data');
     });
 
+    // Money on the client's balance: with the invoices, not the profile.
+    Route::middleware('admin.permission:manage_invoices')->group(function () {
+        Route::get('clients/{client}/credit', [\App\Http\Controllers\Admin\ClientCreditController::class, 'index'])->name('clients.credit');
+        Route::post('clients/{client}/credit', [\App\Http\Controllers\Admin\ClientCreditController::class, 'store'])->name('clients.credit.store');
+    });
     Route::middleware('admin.permission:edit_clients')->group(function () {
         Route::get('clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
         Route::put('clients/{client}', [ClientController::class, 'update'])->name('clients.update');
