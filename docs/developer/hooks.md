@@ -82,6 +82,7 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 | `ServiceSuspended` | service, reason | service suspended |
 | `ServiceUnsuspended` | service | suspension lifted (on a server, or locally for a service with none) |
 | `ServiceTerminated` | service | service terminated |
+| `DownloadRequested` | download, clientId, user | a customer asks for a download, after the access check; return `['abort' => 'reason']` to refuse (403) or `['path' => '/absolute/file', 'name' => 'file.zip']` to hand over that file instead |
 
 ### Clients & Support
 | Hook | Params | When |
