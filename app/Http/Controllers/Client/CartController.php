@@ -70,7 +70,9 @@ class CartController extends Controller
         // form; every other product is unaffected and pays for nothing.
         $apps = $this->productLetsCustomerPickApp($product) ? $this->sellableApps($product) : [];
 
-        return view('client.cart.configure', compact('product', 'cycles', 'currency', 'optionGroups', 'addons', 'apps'));
+        $productFields = \App\Models\CustomField::productFields($product->id)->where('admin_only', false)->get();
+
+        return view('client.cart.configure', compact('product', 'cycles', 'currency', 'optionGroups', 'addons', 'apps', 'productFields'));
     }
 
     public function index()
@@ -100,6 +102,12 @@ class CartController extends Controller
         ]);
 
         $product = Product::findOrFail($request->product_id);
+
+        // The product's own questions. Admin-only fields are staff's, not the
+        // customer's to answer.
+        $productFields = \App\Models\CustomField::productFields($product->id)->where('admin_only', false)->get();
+        [$fieldRules, $fieldNames] = \App\Models\CustomField::rulesFor($productFields);
+        $customFields = $fieldRules === [] ? [] : (array) ($request->validate($fieldRules, [], $fieldNames)['custom_fields'] ?? []);
 
         // What the customer buys is the hosting - memory, CPU, disk. Picking an
         // app to start with is a convenience, not the product, so an order with
@@ -163,7 +171,8 @@ class CartController extends Controller
             $request->input('domain_option'),
             $request->input('addons', []),
             $appSlug,
-            $sshKeys
+            $sshKeys,
+            $customFields
         );
 
         // Already there when the customer found it on the search page first.

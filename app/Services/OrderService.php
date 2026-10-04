@@ -155,6 +155,16 @@ class OrderService
                         $service->update(['module_data' => array_merge((array) $service->module_data, ['pve_sshkeys' => (string) $item['ssh_keys']])]);
                     }
 
+                    // The answers to the product's own questions, kept against
+                    // the service so staff and the customer can read them.
+                    // An order is the customer's word: staff-only fields are
+                    // never filled from it.
+                    if (! empty($item['custom_fields']) && $service->product_id) {
+                        \App\Models\CustomField::storeValues($service->id,
+                            \App\Models\CustomField::productFields((int) $service->product_id)->where('admin_only', false)->get(),
+                            (array) $item['custom_fields']);
+                    }
+
                     // Configurable options are already inside the service price;
                     // recording them is what lets the panel and the server
                     // module see what was ordered.

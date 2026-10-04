@@ -15,6 +15,16 @@ class CustomField extends Model {
         return static::where("type", "client")->orderBy("sort_order")->orderBy("id");
     }
 
+    /**
+     * A product's own questions, asked on its order form (an operating system,
+     * a site to migrate, a licence's domain); the answers are kept against the
+     * service the order creates (rel_id = service id).
+     */
+    public static function productFields(int $productId)
+    {
+        return static::where('type', 'product')->where('rel_id', $productId)->orderBy('sort_order')->orderBy('id');
+    }
+
     /** Fields a new customer is asked for while ordering ("show on order form"). */
     public static function orderFields()
     {

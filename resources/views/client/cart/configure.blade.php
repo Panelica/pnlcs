@@ -281,6 +281,16 @@
             </div>
             @endif
 
+            {{-- The product's own questions, answered for this order. --}}
+            @if(($productFields ?? collect())->isNotEmpty())
+            <div class="pn-card">
+                <div class="pn-card-header">{{ __('client.cart.order_questions') }}</div>
+                <div class="pn-card-body">
+                    @include('client.partials.custom-fields', ['fields' => $productFields, 'clientId' => null])
+                </div>
+            </div>
+            @endif
+
             {{-- Additional Notes --}}
             <div class="pn-card">
                 <div class="pn-card-header">{{ __('client.cart.additional_notes') }} <span style="font-weight:400; color:var(--muted);">({{ __('client.form.optional') }})</span></div>

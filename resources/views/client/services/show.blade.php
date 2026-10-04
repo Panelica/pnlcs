@@ -242,6 +242,13 @@
 </div>
 @endif
 
+@if(($orderAnswers ?? collect())->isNotEmpty())
+<div class="sv-panel" style="margin-bottom:22px">
+    <div class="sv-ph">{{ __('client.cart.order_questions') }}</div>
+    <ul class="sv-dl">@foreach($orderAnswers as $row)<li><span class="k">{{ $row['name'] }}</span><span class="v">{{ $row['value'] === '1' ? __('common.yes') : $row['value'] }}</span></li>@endforeach</ul>
+</div>
+@endif
+
 @if(($availableAddons ?? collect())->isNotEmpty())
 <div class="sv-panel" style="margin-bottom:22px">
     <div class="sv-ph">{{ __('client.services.addons_available') }}</div>

@@ -167,6 +167,7 @@ return [
         'type' => 'Rodzaj anulowania',
     ],
     'cart' => [
+        'order_questions' => 'O Twoim zamówieniu',
         'choose_app' => 'Wybierz swoją aplikację',
         'app_search_ph' => 'Szukaj aplikacji — wordpress, bazy danych, automatyzacja...',
         'app_search_none' => 'Żadna aplikacja nie pasuje do tego wyszukiwania.',
