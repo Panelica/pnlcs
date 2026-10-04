@@ -22,12 +22,22 @@ class RegistrarBalanceWidget implements WidgetModuleInterface
 
     public function getData(): array
     {
-        return ['configured' => RegistrarBalanceCheckCommand::configured(), 'last' => RegistrarBalanceCheckCommand::last()];
+        return [
+            'off' => RegistrarBalanceCheckCommand::switchedOff(),
+            'configured' => RegistrarBalanceCheckCommand::configured(),
+            'last' => RegistrarBalanceCheckCommand::last(),
+        ];
     }
 
     public function render(array $data): string
     {
         $last = $data['last'];
+        // Switched off on purpose is not "not set up": say which it is, and
+        // where to turn it back on. Both used to read "not set up yet".
+        if ($data['off'] ?? false) {
+            return '<div style="padding:12px 16px;font-size:13px;color:var(--pn-muted);">'.e(__('admin.dashboard.balance_watch_off'))
+                .' <a href="'.e(route('admin.settings.general')).'#settings-registrar_balance">'.e(__('admin.settings.registrar_balance')).'</a></div>';
+        }
         if (! ($data['configured'] ?? true)) {
             // Nothing to check: say so once, with the way to set it up, and no button.
             return '<div style="padding:12px 16px;font-size:13px;color:var(--pn-muted);">'.e(__('admin.dashboard.balance_not_configured'))
@@ -49,7 +59,12 @@ class RegistrarBalanceWidget implements WidgetModuleInterface
 
         $low = (float) $last['amount'] <= (float) $last['threshold'];
         $amount = '<b style="font-size:18px;'.($low ? 'color:#c43c35;' : '').'">'.e(number_format((float) $last['amount'], 2)).' '.e($last['currency']).'</b>';
-        $other = $last['currency'] !== 'USD' && $last['usd'] !== null ? ' <span style="color:var(--pn-muted);">· '.e(number_format((float) $last['usd'], 2)).' USD</span>' : '';
+        // A registrar with a second wallet (DomainNameAPI keeps TRY and USD
+        // apart): named as a wallet, so it is not read as the balance
+        // converted, and left out while it is empty.
+        $other = $last['currency'] !== 'USD' && (float) ($last['usd'] ?? 0) != 0.0
+            ? ' <span style="color:var(--pn-muted);">· '.e(__('admin.dashboard.balance_usd_wallet', ['amount' => number_format((float) $last['usd'], 2)])).'</span>'
+            : '';
 
         return $row('<span>'.$amount.$other.'</span>', $button)
             .'<div style="padding:0 16px 12px;font-size:11px;color:var(--pn-muted);">'

@@ -11,6 +11,9 @@ class RegistrarBalanceController extends Controller
 {
     public function check()
     {
+        if (RegistrarBalanceCheckCommand::switchedOff()) {
+            return back()->with('error', __('admin.dashboard.balance_watch_off'));
+        }
         if (! RegistrarBalanceCheckCommand::configured()) {
             return back()->with('error', __('admin.dashboard.balance_not_configured'));
         }
