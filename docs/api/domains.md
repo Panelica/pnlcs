@@ -333,6 +333,7 @@ Turn ID protection on or off.
 | Status | When |
 |---|---|
 | 404 | No such domain. |
+| 502 | The registrar refused the change or could not be reached; the record is left as it was. |
 
 **Example**
 
@@ -477,8 +478,54 @@ Change the contact details of a domain (not available).
 
 **Permission:** `manage_domains`
 
-!!! warning "Not available"
-    Always answers 501: no registrar module implements a contact update. Change the contacts at the registrar.
+**Parameters**
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `domainid` | integer | yes | The domain. |
+| `first_name` | string | yes | Registrant first name. |
+| `last_name` | string | yes | Registrant last name. |
+| `company_name` | string | no | Organisation, if any. |
+| `email` | string | yes | Registrant e-mail address. |
+| `phone` | string | yes | Phone number, e.g. +90 212 555 0101. |
+| `address1` | string | yes | Street address. |
+| `city` | string | yes | City. |
+| `state` | string | no | State or province. |
+| `postcode` | string | yes | Postcode. |
+| `country` | string | yes | Two-letter country code. |
+
+**Response**
+
+| Field | Description |
+|---|---|
+| `result` | `success` |
+| `domainid` | integer |
+
+**Errors**
+
+| Status | When |
+|---|---|
+| 404 | No such domain. |
+| 422 | A field is missing or invalid. |
+| 501 | The domain's registrar cannot change the contact. |
+| 502 | The registrar refused the contact or could not be reached (its message is passed on). |
+
+**Example**
+
+```bash
+curl -X POST https://example.com/api/v1/domainupdatewhoisinfo \
+  -H "X-API-Key: $PNLCS_IDENTIFIER" \
+  -H "X-API-Secret: $PNLCS_SECRET" \
+  --data-urlencode "domainid=1" \
+  --data-urlencode "first_name=example" \
+  --data-urlencode "last_name=example" \
+  --data-urlencode "email=example" \
+  --data-urlencode "phone=example" \
+  --data-urlencode "address1=example" \
+  --data-urlencode "city=example" \
+  --data-urlencode "postcode=example" \
+  --data-urlencode "country=example"
+```
 
 ## domainwhois
 

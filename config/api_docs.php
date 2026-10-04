@@ -1056,7 +1056,21 @@ return [
     ],
     'domainupdatewhoisinfo' => [
         'section' => 'domains',
-        'unavailable' => 'Always answers 501: no registrar module implements a contact update. Change the contacts at the registrar.',
+        'params' => [
+            '*domainid' => ['integer', 'The domain.'],
+            '*first_name' => ['string', 'Registrant first name.'],
+            '*last_name' => ['string', 'Registrant last name.'],
+            'company_name' => ['string', 'Organisation, if any.'],
+            '*email' => ['string', 'Registrant e-mail address.'],
+            '*phone' => ['string', 'Phone number, e.g. +90 212 555 0101.'],
+            '*address1' => ['string', 'Street address.'],
+            '*city' => ['string', 'City.'],
+            'state' => ['string', 'State or province.'],
+            '*postcode' => ['string', 'Postcode.'],
+            '*country' => ['string', 'Two-letter country code.'],
+        ],
+        'returns' => ['domainid' => 'integer'],
+        'errors' => [404 => 'No such domain.', 422 => 'A field is missing or invalid.', 501 => 'The domain\'s registrar cannot change the contact.', 502 => 'The registrar refused the contact or could not be reached (its message is passed on).'],
     ],
     'domainrequestepp' => [
         'section' => 'domains',
@@ -1071,7 +1085,7 @@ return [
             'idprotect' => ['boolean', 'The state you want. Left out, the current state is flipped.'],
         ],
         'returns' => ['domainid' => 'integer', 'idprotection' => 'boolean'],
-        'errors' => [404 => 'No such domain.'],
+        'errors' => [404 => 'No such domain.', 502 => 'The registrar refused the change or could not be reached; the record is left as it was.'],
     ],
     'domainrelease' => [
         'section' => 'domains',

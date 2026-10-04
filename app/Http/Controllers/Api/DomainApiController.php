@@ -230,9 +230,44 @@ class DomainApiController extends BaseApiController
 
     public function domainUpdateWhoisInfo(Request $request)
     {
-        // No registrar module implements a whois update. Reporting success and
-        // changing nothing is worse than saying so.
-        return $this->error('Updating whois contact details is not implemented. Change them at the registrar.', 501);
+        $domain = Domain::find($request->domainid);
+        if (! $domain) {
+            return $this->error('Domain Not Found', 404);
+        }
+
+        // A registrar that can change the contact (ManagesDomainContacts) is
+        // sent the same fields the client area's contact form takes; one that
+        // cannot is still answered honestly rather than with a fake success.
+        $module = $this->registrarFor($domain);
+        if (! $module instanceof \App\Contracts\ManagesDomainContacts) {
+            return $this->error('Updating whois contact details is not supported by this domain\'s registrar. Change them at the registrar.', 501);
+        }
+
+        $contact = $request->validate([
+            'first_name' => 'required|string|max:80',
+            'last_name' => 'required|string|max:80',
+            'company_name' => 'nullable|string|max:256',
+            'email' => 'required|email|max:256',
+            'phone' => ['required', 'string', 'max:24', 'regex:/^\+?[0-9 ().-]{6,24}$/'],
+            'address1' => 'required|string|max:256',
+            'city' => 'required|string|max:80',
+            'state' => 'nullable|string|max:80',
+            'postcode' => 'required|string|max:15',
+            'country' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys(\App\Support\Countries::all()))],
+        ]);
+
+        try {
+            $result = $module->saveContact($domain, $contact);
+        } catch (\Throwable $e) {
+            Log::error("WHOIS contact update failed for {$domain->domain}: {$e->getMessage()}");
+            $result = ['success' => false, 'message' => 'The registrar could not be reached.'];
+        }
+
+        if (! ($result['success'] ?? false)) {
+            return $this->error(($result['message'] ?? '') ?: 'The registrar did not accept the contact.', 502);
+        }
+
+        return $this->success(['domainid' => $domain->id]);
     }
 
     public function domainRequestEpp(Request $request)
@@ -279,7 +314,26 @@ class DomainApiController extends BaseApiController
         // WHMCS takes the wanted state in idprotect; flipping whatever was
         // stored meant two identical calls cancelled each other out.
         $request->validate(['idprotect' => 'sometimes|boolean']);
-        $domain->id_protection = $request->has('idprotect') ? $request->boolean('idprotect') : ! $domain->id_protection;
+        $enable = $request->has('idprotect') ? $request->boolean('idprotect') : ! $domain->id_protection;
+
+        // The record only says what the registrar has: where the registrar
+        // can switch privacy (ManagesWhoisPrivacy), it is asked first, and a
+        // refusal leaves the record as it was. Before, only the record changed
+        // and the WHOIS stayed as it had been.
+        $module = $this->registrarFor($domain);
+        if ($module instanceof \App\Contracts\ManagesWhoisPrivacy && (bool) $domain->id_protection !== $enable) {
+            try {
+                $result = $module->setPrivacy($domain, $enable);
+            } catch (\Throwable $e) {
+                Log::error("WHOIS privacy change failed for {$domain->domain}: {$e->getMessage()}");
+                $result = ['success' => false, 'message' => 'The registrar could not be reached.'];
+            }
+            if (! ($result['success'] ?? false)) {
+                return $this->error(($result['message'] ?? '') ?: 'The registrar did not change WHOIS privacy.', 502);
+            }
+        }
+
+        $domain->id_protection = $enable;
         $domain->save();
 
         return $this->success(['domainid' => $domain->id, 'idprotection' => $domain->id_protection]);
