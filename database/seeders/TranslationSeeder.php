@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\DynamicTranslation;
+use App\Translation\OfficialTranslationRepository;
 use Illuminate\Database\Seeder;
 
 class TranslationSeeder extends Seeder
@@ -10,10 +11,19 @@ class TranslationSeeder extends Seeder
     public function run(): void
     {
         $translations = $this->getTranslations();
+        $shipped = app(OfficialTranslationRepository::class)->forLocale('en');
         $count = 0;
 
         foreach ($translations as $group => $keys) {
             foreach ($keys as $key => $value) {
+                // lang/en is the source. A database copy of a text it already
+                // carries is an override that never moves again: this list was
+                // written in April, and on every install seeded since, the
+                // English the files have learned since then (93 texts by
+                // October) stayed hidden behind it.
+                if (isset($shipped[$group][$key])) {
+                    continue;
+                }
                 DynamicTranslation::updateOrCreate(
                     ["language" => "en", "group" => $group, "key" => $key],
                     ["value" => $value, "is_auto_translated" => false, "is_reviewed" => true]
@@ -25,7 +35,12 @@ class TranslationSeeder extends Seeder
         $this->command->info("Seeded {$count} English translation keys.");
     }
 
-    private function getTranslations(): array
+    /**
+     * The English this seeder wrote on installs up to October 2026. Public so
+     * the migration that removes those frozen copies can recognise them
+     * (2026_10_05_120000_drop_frozen_copies_of_shipped_translations).
+     */
+    public function getTranslations(): array
     {
         return array (
   'admin' => 
