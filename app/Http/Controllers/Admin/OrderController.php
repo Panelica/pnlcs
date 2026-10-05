@@ -74,11 +74,13 @@ class OrderController extends Controller
             return back()->withInput()->withErrors(['client' => __('admin.orders.new_client_unknown')]);
         }
 
-        // The client's own currency, as their invoice is; a cycle the product
+        // The shop-currency price, as the cart takes it: amounts are booked in
+        // the shop currency, and the invoice adds the customer's own currency
+        // as a stamp at the day's rate (Invoice::booted). A cycle the product
         // is not sold on is refused rather than billed at nothing, unless
         // staff set the price themselves.
         $product = \App\Models\Product::findOrFail($v['product_id']);
-        $listed = $product->priceFor($v['billing_cycle'], $client->currency_id ?: null);
+        $listed = $product->priceFor($v['billing_cycle']);
         $price = isset($v['price']) && $v['price'] !== '' ? (float) $v['price'] : $listed;
         if ($price === null) {
             return back()->withInput()->withErrors(['billing_cycle' => __('client.cart.cycle_unavailable')]);

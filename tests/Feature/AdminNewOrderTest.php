@@ -89,3 +89,33 @@ it('is for staff who manage orders, and the menu leads to it', function () {
     $html = test()->actingAs(noAdmin(), 'admin')->get(route('admin.orders.index'))->assertOk()->getContent();
     expect($html)->toContain('href="'.route('admin.orders.create').'"');
 });
+
+it('books the shop price for a customer whose account is in another currency', function () {
+    $product = noProduct(12.5);
+    $other = \App\Models\Currency::factory()->create(['code' => 'PLN', 'is_default' => false, 'rate' => 4]);
+    Pricing::create(['type' => 'product', 'rel_id' => $product->id, 'currency_id' => $other->id,
+        'monthly' => 49.99, 'quarterly' => -1, 'semiannually' => -1, 'annually' => -1, 'biennially' => -1, 'triennially' => -1]);
+    $client = Client::factory()->create(['tax_exempt' => true, 'currency_id' => $other->id]);
+
+    test()->actingAs(noAdmin(), 'admin')->post(route('admin.orders.store'), [
+        'client' => (string) $client->id, 'product_id' => $product->id, 'billing_cycle' => 'monthly', 'payment_method' => 'banktransfer',
+    ])->assertRedirect();
+
+    $order = Order::where('client_id', $client->id)->latest('id')->firstOrFail();
+    expect((float) $order->invoice->total)->toBe(12.5)
+        ->and((float) $order->services()->first()->amount)->toBe(12.5);
+});
+
+it('still prices a customer in another currency when that currency has no price set', function () {
+    $product = noProduct(12.5);
+    $other = \App\Models\Currency::factory()->create(['code' => 'GBP', 'is_default' => false, 'rate' => 0.8]);
+    Pricing::create(['type' => 'product', 'rel_id' => $product->id, 'currency_id' => $other->id,
+        'monthly' => -1, 'quarterly' => -1, 'semiannually' => -1, 'annually' => -1, 'biennially' => -1, 'triennially' => -1]);
+    $client = Client::factory()->create(['tax_exempt' => true, 'currency_id' => $other->id]);
+
+    test()->actingAs(noAdmin(), 'admin')->post(route('admin.orders.store'), [
+        'client' => (string) $client->id, 'product_id' => $product->id, 'billing_cycle' => 'monthly', 'payment_method' => 'banktransfer',
+    ])->assertSessionHasNoErrors()->assertRedirect();
+
+    expect((float) Order::where('client_id', $client->id)->latest('id')->firstOrFail()->invoice->total)->toBe(12.5);
+});
