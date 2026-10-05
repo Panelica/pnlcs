@@ -40,6 +40,10 @@ return [
     'skip' => 'Skip',
     'constant_value' => 'Constant value',
     'constants' => 'Constant values',
+    'transforms' => 'Regex transforms',
+    'transforms_hint' => 'A search → replace applied to the field final value (e.g. /[^0-9]/ → "" keeps only the digits of a NIP).',
+    'transform_pattern' => 'Pattern (regex)',
+    'transform_replacement' => 'Replace with',
     'suggested' => 'suggested',
     'total_rows' => 'Rows to import: :count',
 
@@ -91,5 +95,6 @@ return [
         'invalid_email' => 'Invalid email ":value".',
         'invalid_status' => 'Unknown status ":value".',
         'country_too_long' => 'Country must be an ISO 2-letter code, got ":value".',
+        'invalid_regex' => 'Invalid regular expression for field ":field".',
     ],
 ];

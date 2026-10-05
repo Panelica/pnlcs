@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class WhmcsImportProfile extends Model
 {
     protected $fillable = [
-        'connection_id', 'name', 'source_table', 'target', 'mapping', 'constants', 'match_key', 'import_mode',
+        'connection_id', 'name', 'source_table', 'target', 'mapping', 'constants', 'transforms', 'match_key', 'import_mode',
     ];
 
     protected function casts(): array
@@ -16,6 +16,7 @@ class WhmcsImportProfile extends Model
         return [
             'mapping' => 'array',
             'constants' => 'array',
+            'transforms' => 'array',
         ];
     }
 

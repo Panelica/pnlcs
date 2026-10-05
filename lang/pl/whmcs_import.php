@@ -40,6 +40,10 @@ return [
     'skip' => 'Pomiń',
     'constant_value' => 'Wartość stała',
     'constants' => 'Wartości stałe',
+    'transforms' => 'Transformacje (regex)',
+    'transforms_hint' => 'Zamiana „znajdź → zamień" na finalnej wartości pola (np. /[^0-9]/ → "" zostawia same cyfry NIP).',
+    'transform_pattern' => 'Wzorzec (regex)',
+    'transform_replacement' => 'Zamień na',
     'suggested' => 'podpowiedź',
     'total_rows' => 'Rekordów do importu: :count',
 
@@ -91,5 +95,6 @@ return [
         'invalid_email' => 'Nieprawidłowy email ":value".',
         'invalid_status' => 'Nieznany status ":value".',
         'country_too_long' => 'Kraj musi być dwuliterowym kodem ISO, otrzymano ":value".',
+        'invalid_regex' => 'Nieprawidłowe wyrażenie regularne dla pola ":field".',
     ],
 ];

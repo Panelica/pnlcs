@@ -107,7 +107,7 @@ class MappingEngine
      * Apply the mapping to a single source row.
      *
      * @param  array<string, mixed>  $row
-     * @param  array{columns?: array<string, string|null>, constants?: array<string, string>}  $mapping
+     * @param  array{columns?: array<string, string|null>, constants?: array<string, string>, transforms?: array<string, array{pattern: string, replacement: string}>}  $mapping
      * @return array<string, mixed>
      */
     public function apply(array $row, array $mapping): array
@@ -141,13 +141,39 @@ class MappingEngine
             }
         }
 
+        // Built-in value transforms (today: the WHMCS status words).
         foreach ($result as $field => $value) {
             if (isset($this->transforms[$field])) {
                 $result[$field] = ($this->transforms[$field])($value);
             }
         }
 
+        // Operator-supplied regex transforms, applied last so they see the
+        // final value (after concat, constants and built-in transforms).
+        foreach (($mapping['transforms'] ?? []) as $field => $transform) {
+            if (! array_key_exists($field, $result)) {
+                continue;
+            }
+            $result[$field] = $this->applyRegex(
+                $result[$field],
+                (string) ($transform['pattern'] ?? ''),
+                (string) ($transform['replacement'] ?? ''),
+            );
+        }
+
         return $result;
+    }
+
+    /** preg_replace that returns the original value when the pattern is bad. */
+    protected function applyRegex(mixed $value, string $pattern, string $replacement): string
+    {
+        if ($pattern === '') {
+            return (string) $value;
+        }
+
+        $result = @preg_replace($pattern, $replacement, (string) $value);
+
+        return $result === null ? (string) $value : $result;
     }
 
     /** Map WHMCS status words onto PNLCS's active/inactive/closed. */

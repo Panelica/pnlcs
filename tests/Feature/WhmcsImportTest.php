@@ -72,6 +72,39 @@ test('the mapper normalizes WHMCS status words', function () {
         ->and($engine->apply(['status' => 'Closed'], ['columns' => ['status' => 'status'], 'constants' => []])['status'])->toBe('closed');
 });
 
+test('the mapper applies a regex transform to the final value', function () {
+    $engine = new MappingEngine;
+
+    $target = $engine->apply(
+        ['tax_id' => 'PL6482409327'],
+        [
+            'columns' => ['tax_id' => 'tax_id'],
+            'constants' => [],
+            'transforms' => ['tax_id' => ['pattern' => '/[^0-9]/', 'replacement' => '']],
+        ],
+    );
+
+    expect($target['tax_id'])->toBe('6482409327');
+});
+
+test('validation rejects a broken regex transform', function () {
+    $validator = new ImportValidator;
+
+    $errors = $validator->mapping(
+        [
+            'columns' => ['firstname' => 'first_name', 'lastname' => 'last_name', 'email' => 'email'],
+            'constants' => [],
+            'transforms' => ['tax_id' => ['pattern' => '/[invalid/', 'replacement' => '']],
+        ],
+        ['first_name', 'last_name', 'email', 'tax_id'],
+        ['firstname', 'lastname', 'email'],
+        'email',
+        'add',
+    );
+
+    expect(implode("\n", $errors))->toContain('tax_id');
+});
+
 test('validation demands the non-null fields for add mode', function () {
     $validator = new ImportValidator;
 

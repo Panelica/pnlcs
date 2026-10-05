@@ -71,6 +71,17 @@ class ImportValidator
             $errors[] = __('whmcs_import.validation.match_key_unmapped', ['field' => $matchKey]);
         }
 
+        // Regex transforms must be well-formed before any row is touched.
+        foreach (($mapping['transforms'] ?? []) as $field => $transform) {
+            $pattern = (string) ($transform['pattern'] ?? '');
+            if ($pattern === '') {
+                continue;
+            }
+            if (@preg_match($pattern, '') === false) {
+                $errors[] = __('whmcs_import.validation.invalid_regex', ['field' => $field]);
+            }
+        }
+
         return $errors;
     }
 

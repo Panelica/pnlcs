@@ -164,6 +164,7 @@ class WhmcsImportController extends Controller
             'target' => 'clients',
             'mapping' => $mapping['columns'],
             'constants' => $mapping['constants'],
+            'transforms' => $mapping['transforms'],
             'match_key' => $request->input('match_key') ?: 'email',
             'import_mode' => $request->input('import_mode', 'add'),
         ]);
@@ -277,7 +278,7 @@ class WhmcsImportController extends Controller
         ];
     }
 
-    /** @return array{columns: array<string, string>, constants: array<string, string>} */
+    /** @return array{columns: array<string, string>, constants: array<string, string>, transforms: array<string, array{pattern: string, replacement: string}>} */
     protected function parseMapping(Request $request): array
     {
         $columns = [];
@@ -294,7 +295,19 @@ class WhmcsImportController extends Controller
             }
         }
 
-        return ['columns' => $columns, 'constants' => $constants];
+        $transforms = [];
+        foreach ($request->input('transforms', []) as $field => $transform) {
+            $pattern = trim((string) ($transform['pattern'] ?? ''));
+            if ($pattern === '') {
+                continue;
+            }
+            $transforms[$field] = [
+                'pattern' => $pattern,
+                'replacement' => (string) ($transform['replacement'] ?? ''),
+            ];
+        }
+
+        return ['columns' => $columns, 'constants' => $constants, 'transforms' => $transforms];
     }
 
     /** Mapping from the request, falling back to a loaded profile. */
@@ -308,10 +321,11 @@ class WhmcsImportController extends Controller
             return [
                 'columns' => $profile->mapping ?? [],
                 'constants' => $profile->constants ?? [],
+                'transforms' => $profile->transforms ?? [],
             ];
         }
 
-        return ['columns' => [], 'constants' => []];
+        return ['columns' => [], 'constants' => [], 'transforms' => []];
     }
 
     /**

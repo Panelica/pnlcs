@@ -116,6 +116,29 @@
         </div>
     </details>
 
+    <details class="card" style="margin-bottom:15px;overflow:hidden;">
+        <summary style="cursor:pointer;padding:16px;font-weight:600;list-style:none;">{{ __('whmcs_import.transforms') }}</summary>
+        <div style="padding:0 16px 16px;">
+            <p style="color:#666;font-size:12px;">{{ __('whmcs_import.transforms_hint') }}</p>
+            <table class="data-table">
+                <thead><tr>
+                    <th>{{ __('whmcs_import.target_field') }}</th>
+                    <th>{{ __('whmcs_import.transform_pattern') }}</th>
+                    <th>{{ __('whmcs_import.transform_replacement') }}</th>
+                </tr></thead>
+                <tbody>
+                @foreach($targetFields as $field)
+                    <tr>
+                        <td><code>{{ str_starts_with($field, 'custom_field:') ? substr($field, 13).' ('.__('whmcs_import.custom_field').')' : $field }}</code></td>
+                        <td><input type="text" name="transforms[{{ $field }}][pattern]" value="{{ $mapping['transforms'][$field]['pattern'] ?? '' }}" class="form-control" placeholder="/[^0-9]/"></td>
+                        <td><input type="text" name="transforms[{{ $field }}][replacement]" value="{{ $mapping['transforms'][$field]['replacement'] ?? '' }}" class="form-control"></td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    </details>
+
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:15px;flex-wrap:wrap;">
         <button type="submit" class="btn btn-secondary">{{ __('whmcs_import.preview_button') }}</button>
         <button type="submit" formaction="{{ route('admin.whmcs-import.import', $connection) }}" class="btn btn-primary">{{ __('whmcs_import.import_button') }}</button>
