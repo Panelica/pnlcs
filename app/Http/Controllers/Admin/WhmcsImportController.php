@@ -91,7 +91,7 @@ class WhmcsImportController extends Controller
         $sourceTable = $data['sourceTable'];
         $mapping = $data['mapping'];
 
-        $data['errors'] = $this->validateMapping($data, $mapping, $request->input('match_key'), $request->input('import_mode', 'add'));
+        $data['errors'] = $this->validateMapping($data, $mapping, $request->input('match_key') ?: 'email', $request->input('import_mode', 'add'));
 
         $rows = $connector->rows($sourceTable, 10);
         $connector->enrichRows($rows, $data['prefix'], $data['customFields']);
@@ -114,7 +114,7 @@ class WhmcsImportController extends Controller
         }
 
         $mapping = $data['mapping'];
-        $matchKey = $request->input('match_key') ?: null;
+        $matchKey = $request->input('match_key') ?: 'email';
         $importMode = $request->input('import_mode', 'add');
 
         $errors = $this->validateMapping($data, $mapping, $matchKey, $importMode);
@@ -164,7 +164,7 @@ class WhmcsImportController extends Controller
             'target' => 'clients',
             'mapping' => $mapping['columns'],
             'constants' => $mapping['constants'],
-            'match_key' => $request->input('match_key') ?: null,
+            'match_key' => $request->input('match_key') ?: 'email',
             'import_mode' => $request->input('import_mode', 'add'),
         ]);
 
@@ -269,7 +269,7 @@ class WhmcsImportController extends Controller
             'profile' => $profile,
             'mapping' => $mapping,
             'selected' => $selected,
-            'matchKey' => $request->input('match_key', $profile?->match_key),
+            'matchKey' => $request->input('match_key') ?: ($profile?->match_key ?: 'email'),
             'importMode' => $request->input('import_mode', $profile?->import_mode ?? 'add'),
             'totalCount' => $connector->count($sourceTable),
             'errors' => [],
