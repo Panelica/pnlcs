@@ -22,6 +22,21 @@ class SchemaReader
     }
 
     /**
+     * WHMCS client custom fields (PESEL/NIP, CSA, …). These are not columns
+     * of tblclients; they live in tblcustomfields and are read per-client.
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    public function whmcsCustomFields(WhmcsConnector $connector, string $prefix): array
+    {
+        try {
+            return $connector->clientCustomFields($prefix);
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
      * The PNLCS client fields an import may write to.
      *
      * @return list<string>

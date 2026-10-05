@@ -120,6 +120,25 @@ class WhmcsConnector
      */
     public function each(string $table, int $size, callable $callback): int
     {
+        return $this->iterate($table, $size, $callback);
+    }
+
+    /**
+     * Like each(), but merges each row's client custom-field values under
+     * `custom:{fieldname}` keys before handing it over.
+     *
+     * @param  list<array{id: int, name: string}>  $customFields
+     */
+    public function eachEnriched(string $table, string $prefix, array $customFields, int $size, callable $callback): int
+    {
+        return $this->iterate($table, $size, $callback, $prefix, $customFields);
+    }
+
+    /**
+     * @param  list<array{id: int, name: string}>  $customFields
+     */
+    protected function iterate(string $table, int $size, callable $callback, ?string $prefix = null, ?array $customFields = null): int
+    {
         $size = max(1, min($size, 1000));
         $order = $this->orderColumn($table);
         $offset = 0;
@@ -138,6 +157,11 @@ class WhmcsConnector
             $stmt->execute();
 
             $rows = $stmt->fetchAll();
+
+            if ($prefix !== null && $customFields !== null && $customFields !== []) {
+                $this->enrichRows($rows, $prefix, $customFields);
+            }
+
             foreach ($rows as $row) {
                 $callback($row);
                 $seen++;
@@ -147,6 +171,81 @@ class WhmcsConnector
         } while (count($rows) === $size);
 
         return $seen;
+    }
+
+    /**
+     * Merge client custom-field values into already-fetched rows, keyed as
+     * `custom:{fieldname}` so they cannot collide with a real table column.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @param  list<array{id: int, name: string}>  $customFields
+     */
+    public function enrichRows(array &$rows, string $prefix, array $customFields): void
+    {
+        if ($rows === [] || $customFields === []) {
+            return;
+        }
+
+        $ids = array_values(array_filter(array_map(fn (array $row) => (int) ($row['id'] ?? 0), $rows)));
+        $values = $this->customFieldValues($prefix, $ids);
+
+        foreach ($rows as &$row) {
+            $id = (int) ($row['id'] ?? 0);
+            foreach ($customFields as $field) {
+                $row['custom:'.$field['name']] = $values[$id][$field['id']] ?? null;
+            }
+        }
+        unset($row);
+    }
+
+    /**
+     * The client custom-field definitions (WHMCS "custom fields" live in their
+     * own table, not in tblclients).
+     *
+     * @return list<array{id: int, name: string}>
+     */
+    public function clientCustomFields(string $prefix): array
+    {
+        $stmt = $this->pdo->prepare(sprintf(
+            'SELECT id, fieldname FROM %s WHERE type = ? AND relid = 0 ORDER BY id',
+            $this->quoteIdentifier($prefix.'customfields')
+        ));
+        $stmt->execute(['client']);
+
+        return array_map(
+            fn (array $row) => ['id' => (int) $row['id'], 'name' => $row['fieldname']],
+            $stmt->fetchAll()
+        );
+    }
+
+    /**
+     * Custom-field values for a set of client ids.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, array<int, string>>
+     */
+    public function customFieldValues(string $prefix, array $ids): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $table = $this->quoteIdentifier($prefix.'customfieldsvalues');
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare(sprintf(
+            'SELECT relid, fieldid, value FROM %s WHERE relid IN (%s)',
+            $table,
+            $placeholders
+        ));
+        $stmt->execute($ids);
+
+        $result = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $result[(int) $row['relid']][(int) $row['fieldid']] = $row['value'];
+        }
+
+        return $result;
     }
 
     /** The column to order by when paging, `id` when present, else null. */

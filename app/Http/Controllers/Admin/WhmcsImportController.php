@@ -94,6 +94,7 @@ class WhmcsImportController extends Controller
         $data['errors'] = $this->validateMapping($data, $mapping, $request->input('match_key'), $request->input('import_mode', 'add'));
 
         $rows = $connector->rows($sourceTable, 10);
+        $connector->enrichRows($rows, $data['prefix'], $data['customFields']);
         $data['preview'] = array_map(function (array $row) use ($mapping) {
             return [
                 'source' => $row,
@@ -124,7 +125,7 @@ class WhmcsImportController extends Controller
         }
 
         $summary = $this->importer->run(
-            fn ($callback) => $data['connector']->each($data['sourceTable'], 500, $callback),
+            fn ($callback) => $data['connector']->eachEnriched($data['sourceTable'], $data['prefix'], $data['customFields'], 500, $callback),
             $mapping,
             $importMode,
             $matchKey,
@@ -205,6 +206,17 @@ class WhmcsImportController extends Controller
         $sourceColumns = $connector->columns($sourceTable);
         $targetFields = $this->schema->clientTargetFields();
 
+        // WHMCS keeps PESEL/NIP & co. in custom fields, not in tblclients. They
+        // join the source list under `custom:{name}` so the operator can map
+        // them exactly like a real column.
+        $customFields = [];
+        if ($sourceTable === $connection->prefix.'clients') {
+            $customFields = $this->schema->whmcsCustomFields($connector, $connection->prefix);
+            foreach ($customFields as $field) {
+                $sourceColumns[] = ['name' => 'custom:'.$field['name'], 'type' => 'custom field'];
+            }
+        }
+
         $profile = null;
         if ($request->filled('profile')) {
             $profile = WhmcsImportProfile::where('connection_id', $connection->id)
@@ -238,6 +250,8 @@ class WhmcsImportController extends Controller
             'tables' => $tables,
             'sourceTable' => $sourceTable,
             'sourceColumns' => $sourceColumns,
+            'customFields' => $customFields,
+            'prefix' => $connection->prefix,
             'targetFields' => $targetFields,
             'suggestions' => $suggestions,
             'profiles' => WhmcsImportProfile::orderBy('name')->get(),

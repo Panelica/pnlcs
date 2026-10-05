@@ -48,6 +48,11 @@ class MappingEngine
     {
         $key = strtolower(trim($sourceColumn));
 
+        // Custom fields arrive namespaced as `custom:{fieldname}`.
+        if (str_starts_with($key, 'custom:')) {
+            $key = substr($key, 7);
+        }
+
         $aliases = [
             'firstname' => 'first_name',
             'first_name' => 'first_name',
@@ -83,7 +88,19 @@ class MappingEngine
             'default_payment_method' => 'default_payment_method',
         ];
 
-        return $aliases[$key] ?? null;
+        if (isset($aliases[$key])) {
+            return $aliases[$key];
+        }
+
+        // Substring hints for custom fields like "PESEL/NIP" or "Numer VAT".
+        if (str_contains($key, 'nip') || str_contains($key, 'vat')) {
+            return 'tax_id';
+        }
+        if (str_contains($key, 'pesel')) {
+            return 'national_id';
+        }
+
+        return null;
     }
 
     /**
