@@ -16,7 +16,7 @@ return [
     ],
     '500' => [
         'message' => 'Teknik bir sorun yaşıyoruz. Lütfen daha sonra tekrar deneyin.',
-        'title' => 'Bir Şeyler Ters Gitti',
+        'title' => 'Sunucu Hatası',
     ],
     'go_back' => 'Geri Dön',
     'go_home' => 'Ana Sayfaya Git',

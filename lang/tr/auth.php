@@ -47,7 +47,7 @@ return [
     'register' => [
         'address' => 'Adres',
         'agree_terms' => 'Hizmet Şartları\'nı okudum ve kabul ediyorum',
-        'city' => 'İl / İlçe',
+        'city' => 'İlçe / Şehir',
         'company' => 'Firma Adı',
         'confirm_password' => 'Parola Tekrarı',
         'country' => 'Ülke',
@@ -82,7 +82,7 @@ return [
     'social_complete_profile' => 'Hoş geldiniz. Faturalarınızı kesebilmemiz için lütfen fatura adresinizi tamamlayın.',
     'continue_with_google' => 'Google ile devam et',
     'continue_with_github' => 'GitHub ile devam et',
-    'social_failed_github' => 'GitHub ile giriş yapılamadı. Lütfen tekrar deneyin ya da şifrenizi kullanın.',
+    'social_failed_github' => 'GitHub ile giriş yapılamadı. Lütfen tekrar deneyin ya da parolanızla girin.',
     'github_no_verified_email' => 'GitHub hesabınızda doğrulanmış birincil e-posta adresi yok. GitHub\'da bir adres doğrulayın ya da e-posta adresinizle kayıt olun.',
     'user_not_found' => 'Kullanıcı bulunamadı.',
     'username' => 'Kullanıcı Adı',

@@ -71,7 +71,7 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'email.test_subject' => 'PNLCS Test E-postası',
     'error' => [
         'note_update_failed' => 'Not kaydedilemedi.',
-        'withdrawal_not_possible' => 'Bu çekim yapılamadı. Ödeyebileceğimiz en küçük miktar :minimum\'dur ve bu, bakiyenizden fazla olamaz.',
+        'withdrawal_not_possible' => 'Bu çekim yapılamadı. Ödenebilecek en düşük tutar :minimum; tutar bakiyenizden de fazla olamaz.',
         'cannot_remove_own_role_management' => 'Kendi rolünüzden rol yönetimini alamazsınız - kimse bunu geri veremez.',
         'ip_banned' => 'Erişim reddedildi: IP adresiniz bu siteden yasaklandı.',
         'invoice_not_awaiting_payment' => 'Bu fatura ödeme bekleyen durumda değil.',
@@ -406,7 +406,7 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'success.package_changed' => 'Paketiniz değiştirildi.',
     'error.already_on_this_product' => 'Bu hizmet zaten seçilen üründedir.',
     'error.upgrade_not_available_for_cycle' => 'Seçilen ürün bu fatura döngüsü için mevcut değil.',
-    'error.nameservers_not_saved_at_registrar' => 'Kayıt kuruluşu yeni nameserver\'ları kabul etmedi, bu nedenle hiçbir şey değişmedi. Lütfen tekrar deneyin veya destekle iletişime geçin.',
+    'error.nameservers_not_saved_at_registrar' => 'Kayıt kuruluşu yeni ad sunucularını kabul etmedi, bu nedenle hiçbir şey değişmedi. Lütfen tekrar deneyin veya destekle iletişime geçin.',
     'error.upgrade_already_pending' => 'Bu hizmet için ödenmeyi bekleyen bir paket değişikliği zaten mevcut. Önce o faturayı ödeyin veya iptal edin.',
     'success.whitelabel_saved' => 'Beyaz etiket ayarları kaydedildi.',
     'success.withdrawal_request_submitted' => ':amount tutarındaki çekim talebiniz gönderildi.',

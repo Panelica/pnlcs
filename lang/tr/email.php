@@ -225,7 +225,7 @@ return [
     ],
     'ssl_expiring' => [
         'body' => 'SSL sertifikanızın süresi :days gün içinde doluyor.',
-        'certificate_details' => 'Sertifika Detaylar:',
+        'certificate_details' => 'Sertifika Detayları:',
         'expires' => 'Bitiş tarihi',
         'hello' => 'Merhaba :name,',
         'questions' => 'Yenileme süreciyle ilgili sorularınız olursa lütfen destek ekibimizle iletişime geçin.',
@@ -236,7 +236,7 @@ return [
     ],
     'ssl_issued' => [
         'body' => 'Güzel haber! SSL sertifikanız düzenlendi ve indirmeye hazır.',
-        'certificate_details' => 'Sertifika Detaylar:',
+        'certificate_details' => 'Sertifika Detayları:',
         'download_button' => 'Sertifikayı İndir',
         'download_includes' => 'İndireceğiniz dosyalar:',
         'expires' => 'Bitiş tarihi',
@@ -264,12 +264,12 @@ return [
         'admin_review' => 'Lütfen bu talebi inceleyip yanıtlayın.',
         'client_review' => 'Ekibimiz talebinizi inceleyip en kısa sürede yanıtlayacaktır.',
         'client_success' => 'Destek talebiniz başarıyla oluşturuldu.',
-        'ticket_id' => 'Destek Talebi ID',
+        'ticket_id' => 'Destek Talebi No',
     ],
     'ticket_reply' => [
         'new_reply' => 'Destek talebinize yeni bir yanıt geldi.',
         'reply_from' => 'Yanıtlayan',
-        'ticket_id' => 'Destek Talebi ID',
+        'ticket_id' => 'Destek Talebi No',
         'view_conversation' => 'Yazışmanın tamamını görmek ve yanıtlamak için hesabınıza giriş yapın.',
     ],
     'ksef_issued' => [

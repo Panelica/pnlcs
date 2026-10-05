@@ -136,16 +136,22 @@ function localeValues(string $locale): array
  * Measured 2026-09-21 against lang/en. Lower these as translations land; never
  * raise them - a raise means a value went back to English.
  */
+// Raised 2026-10-05 by exactly these, all written the same in English: the
+// admin labels that used to say "Status label", "Registrar label", "Ssl
+// gogetssl", "Ticket signature hint", "Placeholder desc" and so on became
+// real words, and in these languages the real word is the English one -
+// GoGetSSL everywhere; German Status, Registrar, Domains, Optional and
+// "Details (optional)"; Polish Status.
 const UNTRANSLATED_VALUE_BUDGET = [
-    'tr' => 33,
+    'tr' => 34,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
     // German hosting writes Domain, Domains and Registrar, not Domäne or
     // Standesbeamter. Those 25 labels are the whole of the raise.
-    'de' => 125,
-    'pl' => 70,
-    'zh' => 20,
+    'de' => 130,
+    'pl' => 71,
+    'zh' => 21,
 ];
 
 test('a complete language is translated, not merely present', function () {
@@ -638,7 +644,12 @@ function turkishBareCompoundHead(string $value): ?string
 {
     $heads = ['Tarih', 'Ayarlar', 'Bilgi', 'Detaylar', 'Anahtar', 'Adres', 'Numara',
         'Boyut', 'Konu', 'Durum', 'Sayfa', 'Yöntem', 'Listesi', 'Modu', 'Süre',
-        'Hesap', 'Grup', 'Metin', 'Türü'];
+        // 'Türü' stood here, which is the marked form: it flagged the correct
+        // 'Ürün Türü' and let the bare 'Ürün Tür' through. The bare heads below
+        // were all found unmarked in lang/tr on 2026-10-05 ('Kategori Ad',
+        // 'PHP Sürüm', 'Sunucu Modül', 'Vergi Oran', 'Ödeme Geçmiş' ...).
+        'Hesap', 'Grup', 'Metin', 'Tür', 'Ad', 'Sürüm', 'Modül', 'Oran', 'Değer',
+        'Yapılandırma', 'Geçmiş', 'Rapor', 'Dosya', 'Fiyat', 'Kullanım', 'Günlük'];
 
     /*
      * Judged one by one, and every one of them is adjective + noun, where
@@ -653,6 +664,10 @@ function turkishBareCompoundHead(string $value): ?string
         'Yeni Grup', 'Doldurma Türü', 'En Fazla Hesap', 'Bakım Modu', 'Alan Türü',
         'Uzun Metin', 'Son Tarih', 'İptal Türü', 'Sertifika Türü', 'Özel Anahtar',
         'Web Sunucusu Türü', 'Açık Adres', 'Ana Sayfa', 'Komisyon Türü',
+        // Added 2026-10-05 with the heads Ad, Değer, Fiyat, Geçmiş, Kullanım
+        // and Modül: participle or adjective + noun, or not a compound at all.
+        'Görünen Ad', 'Vadesi Geçmiş', 'Yerel Değer', 'Ana Değer', 'En Fazla Kullanım',
+        'Birim Fiyat', 'Sunucu & Modül',
     ];
 
     if (preg_match('/[.!?:,;]/u', $value) || in_array($value, $correct, true)) {
@@ -783,7 +798,7 @@ test('the shadowed-key debt does not grow', function () {
         "rather than adding a second one. If you removed a twin, lower that\n".
         "file's number in DUPLICATE_KEY_BUDGET in\n".
         "tests/Feature/TranslationParityTest.php. This is a ratchet, not a\n".
-        "statement that the remaining %d are fine.",
+        'statement that the remaining %d are fine.',
         implode("\n", $worse),
         array_sum(DUPLICATE_KEY_BUDGET)
     ));
