@@ -12,6 +12,47 @@
     </div>
 </div>
 
+{{-- AI TRANSLATION - first on the page: the key and model every
+     language's "Translate with AI" uses. Posts to the general-settings
+     handler, which keeps the stored key when the field is left empty. --}}
+@php
+    $aiKeySaved = trim((string) \App\Models\Setting::get('OpenAIApiKey', '')) !== '';
+    $currentModel = trim((string) \App\Models\Setting::get('OpenAIModel', '')) ?: \App\Services\AiTranslationService::DEFAULT_MODEL;
+    $models = \App\Services\AiTranslationService::MODELS;
+    if (! in_array($currentModel, $models, true)) { $models[] = $currentModel; }
+@endphp
+<div class="card" id="ai-settings" style="margin-bottom:16px;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <strong><i class="fas fa-robot"></i> {{ __('admin.config.languages.ai_settings') }}</strong>
+        @if($aiKeySaved)
+        <span class="badge badge-active">{{ __('admin.config.languages.ai_key_saved') }}</span>
+        @else
+        <span class="badge badge-pending">{{ __('admin.config.languages.ai_key_missing') }}</span>
+        @endif
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.settings.general.update') }}" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;">
+            @csrf
+            <div class="form-group" style="margin:0;flex:1;min-width:240px;max-width:420px;">
+                <label class="form-label" for="ai-key">{{ __('admin.config.languages.openai_api_key') }}</label>
+                {{-- The stored key is never echoed back: blank means keep. --}}
+                <input type="password" id="ai-key" name="OpenAIApiKey" autocomplete="new-password" class="form-control"
+                    placeholder="{{ $aiKeySaved ? __('admin.settings.smtp_password_keep') : 'sk-...' }}">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label class="form-label" for="ai-model">{{ __('admin.config.languages.openai_model') }}</label>
+                <select id="ai-model" name="OpenAIModel" class="form-control" style="min-width:180px;">
+                    @foreach($models as $model)
+                    <option value="{{ $model }}" {{ $currentModel === $model ? 'selected' : '' }}>{{ $model }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
+        </form>
+        <p style="margin:10px 0 0;font-size:12px;color:#666;">{{ __('admin.config.languages.ai_settings_hint') }}</p>
+    </div>
+</div>
+
 {{-- Tab navigation --}}
 <div style="display:flex;gap:4px;margin-bottom:16px;">
     <button class="btn btn-sm" onclick="showTab('languages')" id="tab-languages" style="background:var(--theme-primary,#1a4d80);color:#fff;">{{ __('admin.config.languages.tab_languages') }}</button>
@@ -70,12 +111,6 @@
                 <td style="white-space:nowrap;">
                     @if($lang->code !== 'en')
                     <a href="{{ route('admin.config.languages.translations', $lang->code) }}" class="btn btn-default btn-xs"><i class="fas fa-edit"></i> {{ __('admin.config.languages.translate') }}</a>
-                    <form method="POST" action="{{ route('admin.config.languages.ai-translate', $lang->code) }}" style="display:inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-xs btn-primary" onclick="return confirm('{{ __('admin.config.languages.ai_translate_confirm', ['name' => $lang->name]) }}')">
-                            <i class="fas fa-robot"></i> AI
-                        </button>
-                    </form>
                     @else
                     <a href="{{ route('admin.config.languages.translations', $lang->code) }}" class="btn btn-default btn-xs"><i class="fas fa-eye"></i> {{ __('admin.config.languages.view_keys') }}</a>
                     @endif
@@ -102,32 +137,6 @@
                     @foreach($defaultCandidates as $lang)
                     <option value="{{ $lang->code }}" {{ $lang->is_default ? 'selected' : '' }}>{{ $lang->name }} ({{ $lang->native_name }}){{ $lang->is_active ? '' : ' — '.__('admin.config.languages.inactive_enabled_on_save') }}</option>
                     @endforeach
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
-        </form>
-
-        <hr style="margin:24px 0;">
-
-        <h4 style="margin-bottom:12px;">{{ __('admin.config.languages.ai_settings') }}</h4>
-        <form method="POST" action="{{ route('admin.settings.general.update') }}">
-            @csrf
-            <div class="form-group">
-                <label class="form-label">{{ __('admin.config.languages.openai_api_key') }}</label>
-                {{-- Flat field names: the general-settings handler reads only
-                     top-level keys, so the old settings[...] shape was dropped
-                     without a word. The stored key is not echoed back either -
-                     blank means keep, exactly like the SMTP password. --}}
-                <input type="password" name="OpenAIApiKey" autocomplete="new-password" class="form-control" style="max-width:400px;"
-                    placeholder="{{ \App\Models\Setting::get('OpenAIApiKey', '') !== '' ? __('admin.settings.smtp_password_keep') : 'sk-...' }}">
-            </div>
-            <div class="form-group">
-                <label class="form-label">{{ __('admin.config.languages.openai_model') }}</label>
-                <select name="OpenAIModel" class="form-control" style="max-width:300px;">
-                    @php $currentModel = \App\Models\Setting::get('OpenAIModel', 'gpt-4o-mini'); @endphp
-                    <option value="gpt-4o-mini" {{ $currentModel === 'gpt-4o-mini' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt4o_mini') }}</option>
-                    <option value="gpt-4o" {{ $currentModel === 'gpt-4o' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt4o') }}</option>
-                    <option value="gpt-3.5-turbo" {{ $currentModel === 'gpt-3.5-turbo' ? 'selected' : '' }}>{{ __('admin.config.languages.gpt35') }}</option>
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>

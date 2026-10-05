@@ -58,6 +58,23 @@ Either way works:
   [GitHub issue](https://github.com/Panelica/pnlcs/issues). We review it,
   merge it and credit you by name.
 
+## From an install into the files
+
+Texts saved in the editor or produced by **Translate with AI** live in that
+install's database. To turn them into a contribution, run on a checkout of the
+repository:
+
+```bash
+php artisan pnlcs:lang-write tr --dry-run   # what would change
+php artisan pnlcs:lang-write tr             # write into lang/tr/*.php
+php artisan pnlcs:lang-write tr --clear     # and drop the rows now in the files
+```
+
+Only the values that differ from the files are written, in place: comments,
+order and layout stay as they are, so the diff shows just the changed texts.
+A key the file does not have yet is added at its end. Use `--group=admin` for
+one file. Then run the translation tests, commit and open a pull request.
+
 ## A new language
 
 Open an issue first: a language is added to the list the installer seeds and

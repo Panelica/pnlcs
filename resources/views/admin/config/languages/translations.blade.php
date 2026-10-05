@@ -14,14 +14,66 @@
             <input type="file" name="file" accept=".json" style="font-size:12px;max-width:160px;">
             <button type="submit" class="btn btn-default btn-sm"><i class="fas fa-upload"></i> {{ __('admin.config.translations.import') }}</button>
         </form>
-        @if($locale !== 'en')
-        <form method="POST" action="{{ route('admin.config.languages.ai-translate', $locale) }}" style="display:inline;">
-            @csrf
-            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('{{ __('admin.config.translations.ai_translate_confirm') }}')"><i class="fas fa-robot"></i> {{ __('admin.config.translations.ai_translate_missing') }}</button>
-        </form>
+    </div>
+</div>
+
+{{-- Translate with AI: the page asks for one batch at a time and shows
+     each one as it lands, so the run can be watched and stopped. --}}
+@if($locale !== 'en')
+<div class="card" id="ai-panel" style="margin-bottom:16px;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <strong><i class="fas fa-robot"></i> {{ __('admin.config.translations.ai_title') }}</strong>
+        @if($aiConfigured)
+        <span style="font-size:12px;color:#666;">{{ __('admin.config.translations.ai_model', ['model' => $aiModel]) }}</span>
+        @endif
+    </div>
+    <div class="card-body">
+        @if(! $aiConfigured)
+        <p style="margin:0;">{{ __('admin.config.translations.ai_not_configured') }}
+            <a href="{{ route('admin.config.languages.index') }}#ai-settings">{{ __('admin.config.translations.ai_open_settings') }}</a></p>
+        @else
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;">
+            <label style="margin:0;font-weight:normal;cursor:pointer;">
+                <input type="radio" name="ai_mode" value="missing" checked>
+                {{ __('admin.config.translations.ai_mode_missing', ['count' => $aiCounts['missing']]) }}
+            </label>
+            <label style="margin:0;font-weight:normal;cursor:pointer;">
+                <input type="radio" name="ai_mode" value="all">
+                {{ __('admin.config.translations.ai_mode_all', ['count' => $aiCounts['all']]) }}
+            </label>
+            <div style="display:flex;gap:6px;margin-left:auto;">
+                <button type="button" class="btn btn-primary btn-sm" id="ai-start"><i class="fas fa-play"></i> {{ __('admin.config.translations.ai_start') }}</button>
+                <button type="button" class="btn btn-default btn-sm" id="ai-resume" style="display:none !important;"><i class="fas fa-forward"></i> {{ __('admin.config.translations.ai_resume') }}</button>
+                <button type="button" class="btn btn-default btn-sm" id="ai-stop" style="display:none !important;"><i class="fas fa-stop"></i> {{ __('admin.config.translations.ai_stop') }}</button>
+            </div>
+        </div>
+        <p style="margin:8px 0 0;font-size:12px;color:#666;">{{ __('admin.config.translations.ai_hint') }}</p>
+
+        <div id="ai-run" style="display:none;margin-top:14px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="flex:1;background:#e5e7eb;border-radius:999px;height:8px;overflow:hidden;">
+                    <div id="ai-bar" style="height:100%;width:0;background:var(--theme-primary,#1a4d80);transition:width .3s;"></div>
+                </div>
+                <span id="ai-count" style="font-size:12px;color:#666;white-space:nowrap;"></span>
+            </div>
+            <div id="ai-status" style="margin-top:8px;font-size:13px;"></div>
+            <div style="margin-top:10px;max-height:420px;overflow:auto;border:1px solid #e5e7eb;border-radius:4px;">
+                <table class="data-table" style="margin:0;">
+                    <thead>
+                        <tr>
+                            <th style="width:220px;">{{ __('admin.config.translations.key') }}</th>
+                            <th>{{ __('admin.config.translations.source') }}</th>
+                            <th>{{ __('admin.config.translations.target', ['name' => $language->name]) }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ai-log"></tbody>
+                </table>
+            </div>
+        </div>
         @endif
     </div>
 </div>
+@endif
 
 {{-- Filters --}}
 <div class="card" style="margin-bottom:16px;">
@@ -69,7 +121,7 @@
                 @php
                     $fullKey = $enKey->group . '.' . $enKey->key;
                     $targetValue = $targetTranslations[$fullKey] ?? '';
-                    $isAutoTranslated = false;
+                    $isAutoTranslated = isset($autoTranslated[$fullKey]);
                 @endphp
                 <tr>
                     <td><span style="background:#f0f0f0;padding:2px 6px;border-radius:3px;font-size:11px;font-family:monospace;">{{ $enKey->group }}</span></td>
@@ -85,9 +137,9 @@
                     </td>
                     <td style="text-align:center;">
                         @if($targetValue && $isAutoTranslated)
-                        <i class="fas fa-robot" style="color:#f59e0b;" title="Auto-translated"></i>
+                        <i class="fas fa-robot" style="color:#f59e0b;" title="{{ __('admin.config.translations.ai_marker') }}"></i>
                         @elseif($targetValue)
-                        <i class="fas fa-check" style="color:#10b981;" title="Manual"></i>
+                        <i class="fas fa-check" style="color:#10b981;" title="{{ __('admin.config.translations.manual_marker') }}"></i>
                         @else
                         <i class="fas fa-minus" style="color:#d1d5db;"></i>
                         @endif
@@ -104,5 +156,146 @@
         </div>
     </div>
 </form>
+
+@if($locale !== 'en' && $aiConfigured)
+@push('scripts')
+<script>
+(function () {
+    var url = @json(route('admin.config.languages.ai-translate-batch', $locale));
+    var token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    var counts = @json($aiCounts);
+    var text = {
+        confirmAll: @json(__('admin.config.translations.ai_confirm_all', ['name' => $language->name])),
+        progress: @json(__('admin.config.translations.ai_progress')),
+        running: @json(__('admin.config.translations.ai_running')),
+        stopped: @json(__('admin.config.translations.ai_stopped')),
+        done: @json(__('admin.config.translations.ai_done')),
+        nothing: @json(__('admin.config.translations.ai_nothing')),
+        failed: @json(__('admin.config.translations.ai_request_failed')),
+        skippedPlaceholders: @json(__('admin.config.translations.ai_skipped_placeholders')),
+        skippedEmpty: @json(__('admin.config.translations.ai_skipped_empty')),
+        reload: @json(__('admin.config.translations.ai_reload'))
+    };
+    var storeKey = 'pnlcs.ai-translate.' + @json($locale);
+    var el = function (id) { return document.getElementById(id); };
+    var run = null;
+
+    function load() { try { return JSON.parse(localStorage.getItem(storeKey) || 'null'); } catch (e) { return null; } }
+    function save() { try { localStorage.setItem(storeKey, JSON.stringify(run)); } catch (e) {} }
+    function forget() { try { localStorage.removeItem(storeKey); } catch (e) {} }
+    function fill(template, values) { return template.replace(/:(\w+)/g, function (m, k) { return values[k] !== undefined ? values[k] : m; }); }
+
+    function paint() {
+        var pct = run.total > 0 ? Math.min(100, Math.round(run.processed / run.total * 100)) : 100;
+        el('ai-bar').style.width = pct + '%';
+        el('ai-count').textContent = fill(text.progress, {done: run.processed, total: run.total, translated: run.translated, skipped: run.skipped});
+    }
+
+    function status(message, colour) {
+        var box = el('ai-status');
+        box.textContent = message;
+        box.style.color = colour || '';
+    }
+
+    function row(key, source, value, note) {
+        var tr = document.createElement('tr');
+        [key, source, value].forEach(function (cell, i) {
+            var td = document.createElement('td');
+            td.textContent = cell;
+            td.style.fontSize = i === 0 ? '11px' : '13px';
+            if (i === 0) { td.style.fontFamily = 'monospace'; }
+            if (i === 1) { td.style.color = '#666'; }
+            if (note) { td.style.color = '#b45309'; }
+            tr.appendChild(td);
+        });
+        var log = el('ai-log');
+        log.insertBefore(tr, log.firstChild);
+        while (log.children.length > 500) { log.removeChild(log.lastChild); }
+    }
+
+    // The theme sets .btn to display:inline-flex !important, so a plain
+    // display:none on a button does nothing.
+    function show(node, visible) {
+        if (visible) { node.style.removeProperty('display'); } else { node.style.setProperty('display', 'none', 'important'); }
+    }
+
+    function buttons(running) {
+        show(el('ai-start'), ! running);
+        show(el('ai-stop'), running);
+        show(el('ai-resume'), ! running && run && ! run.done);
+        document.querySelectorAll('input[name="ai_mode"]').forEach(function (r) { r.disabled = running; });
+    }
+
+    function step() {
+        if (! run || run.stop) { buttons(false); status(text.stopped); return; }
+        fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': token},
+            body: JSON.stringify({mode: run.mode, cursor: run.cursor})
+        }).then(function (response) {
+            return response.json().catch(function () { return {}; }).then(function (body) { return {ok: response.ok, body: body}; });
+        }).then(function (result) {
+            if (! result.ok) { throw new Error(result.body.message || text.failed); }
+            var data = result.body;
+            data.items.forEach(function (item) { row(item.group + '.' + item.key, item.source, item.value); run.translated++; });
+            data.skipped.forEach(function (item) {
+                row(item.group + '.' + item.key, item.source, item.reason === 'placeholders' ? text.skippedPlaceholders : text.skippedEmpty, true);
+                run.skipped++;
+            });
+            run.processed += data.items.length + data.skipped.length;
+            run.total = Math.max(run.total, run.processed + data.remaining);
+            run.cursor = data.cursor;
+            run.done = data.done;
+            save();
+            paint();
+            if (data.done) {
+                forget();
+                buttons(false);
+                status(fill(text.done, {translated: run.translated, skipped: run.skipped}) + ' ' + text.reload, '#047857');
+                return;
+            }
+            step();
+        }).catch(function (error) {
+            run.stop = true;
+            save();
+            buttons(false);
+            status(error.message, '#b91c1c');
+        });
+    }
+
+    function begin(state) {
+        run = state;
+        run.stop = false;
+        el('ai-run').style.display = '';
+        buttons(true);
+        status(text.running);
+        paint();
+        step();
+    }
+
+    el('ai-start').addEventListener('click', function () {
+        var mode = document.querySelector('input[name="ai_mode"]:checked').value;
+        if (! counts[mode]) { el('ai-run').style.display = ''; status(text.nothing); return; }
+        if (mode === 'all' && ! confirm(text.confirmAll)) { return; }
+        el('ai-log').innerHTML = '';
+        begin({mode: mode, cursor: null, total: counts[mode], processed: 0, translated: 0, skipped: 0, done: false});
+    });
+    el('ai-resume').addEventListener('click', function () { if (run) { begin(run); } });
+    el('ai-stop').addEventListener('click', function () { if (run) { run.stop = true; } });
+
+    // A run interrupted by a closed tab carries on from its last batch.
+    var saved = load();
+    if (saved && ! saved.done && saved.mode) {
+        run = saved;
+        document.querySelectorAll('input[name="ai_mode"]').forEach(function (r) { r.checked = r.value === saved.mode; });
+        el('ai-run').style.display = '';
+        paint();
+        status(text.stopped);
+        buttons(false);
+    }
+})();
+</script>
+@endpush
+@endif
 
 @endsection

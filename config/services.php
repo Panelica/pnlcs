@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    // Translate with AI (App\Services\AiTranslationService). The key and model
+    // are set on Setup > Languages; the address only for an OpenAI-compatible
+    // endpoint other than OpenAI's own.
+    'openai' => [
+        'base_url' => env('OPENAI_BASE_URL', 'https://api.openai.com/v1'),
+    ],
+
 ];

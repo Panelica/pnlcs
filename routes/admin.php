@@ -678,7 +678,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('/translations/{locale}', [TranslationController::class, 'translations'])->name('translations');
         Route::post('/translations/{locale}/save', [TranslationController::class, 'saveTranslation'])->name('save');
         Route::post('/translations/{locale}/bulk-save', [TranslationController::class, 'bulkSave'])->name('bulk-save');
-        Route::post('/ai-translate/{locale}', [TranslationController::class, 'aiTranslate'])->name('ai-translate');
+        Route::post('/ai-translate/{locale}/batch', [TranslationController::class, 'aiTranslateBatch'])->name('ai-translate-batch');
         Route::get('/export/{locale}', [TranslationController::class, 'export'])->name('export');
         Route::post('/import/{locale}', [TranslationController::class, 'import'])->name('import');
         Route::post('/cache-clear', [TranslationController::class, 'clearCache'])->name('cache-clear');

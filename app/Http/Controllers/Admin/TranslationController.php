@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\DynamicTranslation;
 use App\Models\Language;
 use App\Models\Setting;
+use App\Services\AiTranslationService;
 use App\Translation\OfficialTranslationRepository;
 use App\Translation\TranslationCacheManager;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Validation\Rule;
 
 class TranslationController extends Controller
 {
@@ -86,7 +88,7 @@ class TranslationController extends Controller
         return back()->with('success', __('messages.success.settings_saved'));
     }
 
-    public function translations(string $locale, OfficialTranslationRepository $officialTranslations)
+    public function translations(string $locale, OfficialTranslationRepository $officialTranslations, AiTranslationService $ai)
     {
         $language = Language::where('code', $locale)->firstOrFail();
 
@@ -124,25 +126,37 @@ class TranslationController extends Controller
         }
 
         // Database values are optional site-specific overrides.
-        $targetTranslations = DynamicTranslation::where('language', $locale)
+        $overrides = DynamicTranslation::where('language', $locale)
             ->whereNotNull('value')->where('value', '!=', '')
-            ->get(['group', 'key', 'value'])
-            ->reduce(function (array $values, $row) {
-                $values[$row->group.'.'.$row->key] = $row->value;
+            ->get(['group', 'key', 'value', 'is_auto_translated']);
+        $autoTranslated = [];
+        foreach ($overrides as $row) {
+            $targetTranslations[$row->group.'.'.$row->key] = $row->value;
+            if ($row->is_auto_translated) {
+                $autoTranslated[$row->group.'.'.$row->key] = true;
+            }
+        }
 
-                return $values;
-            }, $targetTranslations);
+        // What each "Translate with AI" mode would work through, shown before
+        // it starts so the operator knows the size (and the cost) of the run.
+        $aiCounts = $locale === 'en' ? [] : [
+            'missing' => count($ai->candidates($locale, 'missing')),
+            'all' => count($ai->candidates($locale, 'all')),
+        ];
+        $aiConfigured = $ai->configured();
+        $aiModel = $ai->model();
 
         $groups = collect(array_keys($english))->sort()->values();
 
         $filter = request('filter', 'all');
 
         return view('admin.config.languages.translations', compact(
-            'language', 'englishKeys', 'targetTranslations', 'groups', 'locale', 'filter'
+            'language', 'englishKeys', 'targetTranslations', 'groups', 'locale', 'filter',
+            'autoTranslated', 'aiCounts', 'aiConfigured', 'aiModel'
         ));
     }
 
-    public function saveTranslation(Request $request, string $locale)
+    public function saveTranslation(Request $request, string $locale, OfficialTranslationRepository $officialTranslations)
     {
         $request->validate([
             'group' => 'required|string',
@@ -150,10 +164,7 @@ class TranslationController extends Controller
             'value' => 'nullable|string',
         ]);
 
-        DynamicTranslation::updateOrCreate(
-            ['language' => $locale, 'group' => $request->group, 'key' => $request->key],
-            ['value' => $request->value, 'is_auto_translated' => false, 'is_reviewed' => true]
-        );
+        $this->storeOverride($locale, $request->group, $request->key, (string) $request->value, $officialTranslations->forLocale($locale));
 
         TranslationCacheManager::flushKey($locale, $request->group);
 
@@ -164,20 +175,19 @@ class TranslationController extends Controller
         return back()->with('success', __('messages.success.saved'));
     }
 
-    public function bulkSave(Request $request, string $locale)
+    public function bulkSave(Request $request, string $locale, OfficialTranslationRepository $officialTranslations)
     {
         $translations = $request->input('translations', []);
+        $official = $officialTranslations->forLocale($locale);
         $count = 0;
 
         foreach ($translations as $item) {
             if (empty($item['group']) || empty($item['key'])) {
                 continue;
             }
-            DynamicTranslation::updateOrCreate(
-                ['language' => $locale, 'group' => $item['group'], 'key' => $item['key']],
-                ['value' => $item['value'] ?? '', 'is_auto_translated' => false, 'is_reviewed' => true]
-            );
-            $count++;
+            if ($this->storeOverride($locale, $item['group'], $item['key'], (string) ($item['value'] ?? ''), $official)) {
+                $count++;
+            }
         }
 
         TranslationCacheManager::flushLocale($locale);
@@ -185,129 +195,72 @@ class TranslationController extends Controller
         return back()->with('success', __('admin.messages.translations_saved', ['count' => $count]));
     }
 
-    public function aiTranslate(Request $request, string $locale, OfficialTranslationRepository $officialTranslations)
+    /**
+     * Keep a database override only where it says something the language
+     * file does not.
+     *
+     * The editor posts every row on the page, changed or not, and each one
+     * used to be written to the database. A Save pressed to fix one word
+     * froze the other forty-nine as overrides of the files - and the files
+     * were the part that kept improving. The broken Turkish of the first
+     * release ("Geriup Kods" for "Backup Codes") survived on installs whose
+     * operator had saved a page in it, long after lang/tr was rewritten,
+     * because a database row always wins over the file.
+     *
+     * So a value equal to the shipped text, or empty, removes the override
+     * and lets the file speak; only a real difference is stored.
+     *
+     * @param  array<string, array<string, string>>  $official
+     * @return bool whether an override was stored
+     */
+    private function storeOverride(string $locale, string $group, string $key, string $value, array $official): bool
     {
-        $apiKey = Setting::get('OpenAIApiKey');
-        if (! $apiKey) {
-            return back()->with('error', __('admin.messages.openai_not_configured'));
+        $shipped = $official[$group][$key] ?? null;
+
+        if (trim($value) === '' || ($shipped !== null && $value === $shipped)) {
+            DynamicTranslation::where(['language' => $locale, 'group' => $group, 'key' => $key])->delete();
+
+            return false;
         }
 
-        $language = Language::where('code', $locale)->firstOrFail();
-
-        // Official files are the baseline; AI only fills genuinely missing
-        // values and stores those additions as optional database overrides.
-        $englishKeys = collect();
-        foreach ($officialTranslations->forLocale('en') as $group => $keys) {
-            foreach ($keys as $key => $value) {
-                if ($value !== '') {
-                    $englishKeys->push((object) compact('group', 'key', 'value'));
-                }
-            }
+        $row = DynamicTranslation::firstOrNew(['language' => $locale, 'group' => $group, 'key' => $key]);
+        if ($row->exists && $row->value === $value) {
+            return false;
         }
 
-        $existingKeys = [];
-        foreach ($officialTranslations->forLocale($locale) as $group => $keys) {
-            foreach ($keys as $key => $value) {
-                if ($value !== '') {
-                    $existingKeys[$group.'.'.$key] = true;
-                }
-            }
-        }
-        DynamicTranslation::where('language', $locale)
-            ->whereNotNull('value')
-            ->where('value', '!=', '')
-            ->get(['group', 'key'])
-            ->each(function ($row) use (&$existingKeys) {
-                $existingKeys[$row->group.'.'.$row->key] = true;
-            });
+        $row->fill(['value' => $value, 'is_auto_translated' => false, 'is_reviewed' => true])->save();
 
-        $toTranslate = $englishKeys->filter(function ($item) use ($existingKeys) {
-            return ! isset($existingKeys[$item->group.'.'.$item->key]);
-        });
-
-        if ($toTranslate->isEmpty()) {
-            return back()->with('success', __('admin.messages.all_keys_translated'));
-        }
-
-        // Process in batches of 30
-        $batches = $toTranslate->chunk(30);
-        $model = Setting::get('OpenAIModel', 'gpt-4o-mini');
-        $translated = 0;
-        $failed = 0;
-
-        foreach ($batches as $batch) {
-            $items = [];
-            foreach ($batch as $item) {
-                $items[$item->group.'.'.$item->key] = $item->value;
-            }
-
-            try {
-                $result = $this->callOpenAI($apiKey, $model, $language->native_name, $items);
-                foreach ($result as $fullKey => $translatedValue) {
-                    $parts = explode('.', $fullKey, 2);
-                    if (count($parts) !== 2) {
-                        continue;
-                    }
-                    DynamicTranslation::updateOrCreate(
-                        ['language' => $locale, 'group' => $parts[0], 'key' => $parts[1]],
-                        ['value' => $translatedValue, 'is_auto_translated' => true, 'is_reviewed' => false]
-                    );
-                    $translated++;
-                }
-            } catch (\Throwable $e) {
-                $failed += $batch->count();
-                \Log::error("AI Translation failed for {$locale}: ".$e->getMessage());
-            }
-        }
-
-        TranslationCacheManager::flushLocale($locale);
-
-        return back()->with('success', __('admin.messages.ai_translated', ['translated' => $translated, 'failed' => $failed]));
+        return true;
     }
 
-    private function callOpenAI(string $apiKey, string $model, string $targetLang, array $items): array
+    /**
+     * One batch of machine translation, asked for by the editor page in a
+     * loop so the operator can watch it and stop it. See AiTranslationService.
+     */
+    public function aiTranslateBatch(Request $request, string $locale, AiTranslationService $ai)
     {
-        $systemPrompt = "You are a professional translator for a web hosting billing platform. Translate UI texts from English to {$targetLang}. Rules: 1) Keep :name, :count, :amount placeholders UNCHANGED. 2) Keep technical terms (DNS, SSL, FTP, PHP, MySQL, cPanel, VPS, SMTP) UNTRANSLATED. 3) Hosting/billing context: plan=hosting plan, ticket=support ticket. 4) Maintain UI brevity and formality. 5) Return ONLY valid JSON with same keys.";
-
-        $payload = [
-            'model' => $model,
-            'messages' => [
-                ['role' => 'system', 'content' => $systemPrompt],
-                ['role' => 'user', 'content' => json_encode($items, JSON_UNESCAPED_UNICODE)],
-            ],
-            'temperature' => 0.3,
-            'response_format' => ['type' => 'json_object'],
-        ];
-
-        $ch = curl_init('https://api.openai.com/v1/chat/completions');
-        curl_setopt_array($ch, [
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($payload),
-            CURLOPT_HTTPHEADER => [
-                'Content-Type: application/json',
-                'Authorization: Bearer '.$apiKey,
-            ],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 60,
+        $validated = $request->validate([
+            'mode' => ['required', Rule::in(AiTranslationService::MODES)],
+            'cursor' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($httpCode !== 200) {
-            throw new \RuntimeException("OpenAI API returned HTTP {$httpCode}: {$response}");
+        // English is the source. Answered as JSON: the page reads the reply.
+        $language = Language::where('code', $locale)->where('code', '!=', 'en')->first();
+        if (! $language) {
+            return response()->json(['message' => __('messages.error.not_found', ['item' => $locale])], 404);
         }
 
-        $data = json_decode($response, true);
-        $content = $data['choices'][0]['message']['content'] ?? '';
-        $result = json_decode($content, true);
-
-        if (! is_array($result)) {
-            throw new \RuntimeException('Invalid JSON response from OpenAI');
+        if (! $ai->configured()) {
+            return response()->json(['message' => __('admin.messages.openai_not_configured')], 422);
         }
 
-        return $result;
+        try {
+            return response()->json($ai->translateNext($language, $validated['mode'], $validated['cursor'] ?? null));
+        } catch (\Throwable $e) {
+            \Log::warning("AI translation batch failed for {$locale}: ".$e->getMessage());
+
+            return response()->json(['message' => __('admin.config.translations.ai_failed', ['error' => $e->getMessage()])], 502);
+        }
     }
 
     public function export(string $locale, OfficialTranslationRepository $officialTranslations)
@@ -327,7 +280,7 @@ class TranslationController extends Controller
             ->header('Content-Disposition', "attachment; filename=\"{$locale}.json\"");
     }
 
-    public function import(Request $request, string $locale)
+    public function import(Request $request, string $locale, OfficialTranslationRepository $officialTranslations)
     {
         $request->validate(['file' => 'required|file|mimes:json,txt']);
 
@@ -338,17 +291,23 @@ class TranslationController extends Controller
             return back()->with('error', __('admin.messages.invalid_json'));
         }
 
+        // An exported file carries every text, the shipped ones included;
+        // only what differs from the language file becomes an override (see
+        // storeOverride), so a round trip through Export and Import no longer
+        // pins the whole language to the day it was exported.
+        $official = $officialTranslations->forLocale($locale);
         $count = 0;
         foreach ($data as $group => $keys) {
             if (! is_array($keys)) {
                 continue;
             }
             foreach ($keys as $key => $value) {
-                DynamicTranslation::updateOrCreate(
-                    ['language' => $locale, 'group' => $group, 'key' => $key],
-                    ['value' => $value]
-                );
-                $count++;
+                if (! is_string($value)) {
+                    continue;
+                }
+                if ($this->storeOverride($locale, (string) $group, (string) $key, $value, $official)) {
+                    $count++;
+                }
             }
         }
 

@@ -24,15 +24,36 @@ ship with PNLCS, so they survive updates.
 If a change does not show at once, press **Clear Cache** on the Languages
 page.
 
-## Translate what is missing with AI
+## Translate with AI
 
-1. **Setup → Languages → Settings**: enter an **OpenAI API Key** and choose the
-   **OpenAI Model**.
-2. In a language's editor, press **AI Translate Missing**. Only texts without a
-   translation are sent; your own translations are not touched.
+1. **Setup → Languages**: the **AI Translation Settings** card at the top of the
+   page takes an **OpenAI API Key** and the **OpenAI Model**. Save them once.
+   The key is never shown again; leave the field empty to keep it.
+2. Press **Translate** next to a language. The **Translate with AI** panel at
+   the top of the editor offers two choices, each with the number of texts it
+   covers:
+    - **Only missing texts**: fills what the language has no text for. Nothing
+      that is already there is touched.
+    - **Everything again from English**: translates the whole language anew and
+      replaces the current texts. Use it for a language whose texts you cannot
+      trust.
+3. Press **Start**. Texts go to OpenAI in batches of 30 and are saved as each
+   batch comes back; the progress bar moves and every translated line appears
+   in the panel as it arrives. **Stop** halts after the current batch, and
+   **Continue** carries on from where it stopped, even after the page was
+   closed.
+
+A translation that drops or renames a placeholder (`:name`, `:amount`) is not
+saved; the line shows as skipped and the text keeps what it had. Texts
+translated this way are marked with a robot icon in the editor.
 
 Read the result before you rely on it: machine translation gets tone and
-context wrong.
+context wrong. Correct any line in the editor and press **Save Changes**.
+
+!!! note "Save stores only what you changed"
+    The editor saves a line only when it differs from the text that ships with
+    PNLCS. Setting a line back to the shipped text removes your override, so
+    later improvements to the language reach you again.
 
 ## Export and import
 
