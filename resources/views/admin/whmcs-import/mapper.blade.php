@@ -138,28 +138,33 @@
         @if(count($preview) === 0)
             <div style="padding:16px;color:#666;">{{ __('whmcs_import.no_preview_rows') }}</div>
         @else
-            <table class="table">
-                <thead><tr>
-                    <th style="width:50%;">{{ __('whmcs_import.source_column') }} (WHMCS)</th>
-                    <th>{{ __('whmcs_import.target_field') }} (PNLCS)</th>
-                </tr></thead>
-                <tbody>
-                @foreach($preview as $record)
-                    <tr>
-                        <td>
-                            @foreach($mapping['columns'] as $src => $tgt)
-                                <div><strong>{{ $src }}:</strong> {{ $record['source'][$src] ?? '' }}</div>
-                            @endforeach
-                        </td>
-                        <td>
-                            @foreach($record['target'] as $field => $value)
-                                <div><strong>{{ $field }}:</strong> {{ $value }}</div>
-                            @endforeach
-                        </td>
-                    </tr>
+            <div>
+                @foreach($preview as $i => $record)
+                    @php
+                        $name = trim(($record['target']['first_name'] ?? '').' '.($record['target']['last_name'] ?? ''));
+                        $email = $record['target']['email'] ?? ($record['source']['email'] ?? '');
+                        $heading = $name ?: $email ?: '#'.($i + 1);
+                    @endphp
+                    <div style="padding:16px;{{ !$loop->last ? 'border-bottom:2px solid #e5e7eb;' : '' }}">
+                        <div style="font-weight:600;margin-bottom:10px;color:#1a4d80;">{{ $heading }}</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                            <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:12px;">
+                                <div style="font-size:11px;text-transform:uppercase;color:#999;margin-bottom:6px;">WHMCS</div>
+                                @foreach($mapping['columns'] as $src => $tgt)
+                                    <div style="font-size:13px;line-height:1.6;"><strong>{{ $src }}:</strong> {{ $record['source'][$src] ?? '' }}</div>
+                                @endforeach
+                            </div>
+                            <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:12px;">
+                                <div style="font-size:11px;text-transform:uppercase;color:#0c4a6e;margin-bottom:6px;">PNLCS</div>
+                                @foreach($record['target'] as $field => $value)
+                                    @php $tLabel = str_starts_with($field, 'custom_field:') ? substr($field, 13).' ('.__('whmcs_import.custom_field').')' : $field; @endphp
+                                    <div style="font-size:13px;line-height:1.6;"><strong>{{ $tLabel }}:</strong> {{ $value }}</div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 @endforeach
-                </tbody>
-            </table>
+            </div>
         @endif
     </div>
 @endif
