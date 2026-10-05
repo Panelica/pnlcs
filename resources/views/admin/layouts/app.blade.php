@@ -147,6 +147,7 @@
                     <li><a href="{{ route('admin.config.system-database') }}">{{ __('admin.nav.system_database') }}</a></li>
                     <li><a href="{{ route('admin.config.system-phpinfo') }}">{{ __('admin.nav.php_info') }}</a></li>
                     <li><a href="{{ route('admin.whois.index') }}">{{ __('admin.nav.whois_lookup') }}</a></li>
+                    <li><a href="{{ route('admin.whmcs-import.index') }}">{{ __('whmcs_import.menu_title') }}</a></li>
                 </ul>
             </li>
 
