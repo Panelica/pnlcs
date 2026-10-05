@@ -1,10 +1,7 @@
 <?php
 
-use App\Translation\OfficialTranslationRepository;
-use App\Translation\TranslationCacheManager;
-use Database\Seeders\TranslationSeeder;
+use App\Translation\FrozenTranslationCleaner;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Remove database translations that are only frozen copies of shipped text.
@@ -47,45 +44,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $official = app(OfficialTranslationRepository::class);
-        $seeded = (new TranslationSeeder)->getTranslations();
-        $retired = array_flip(require database_path('data/retired_translations.php'));
-
-        $locales = DB::table('dynamic_translations')->distinct()->pluck('language');
-
-        foreach ($locales as $locale) {
-            $files = $official->forLocale($locale);
-            $doomed = [];
-
-            DB::table('dynamic_translations')
-                ->where('language', $locale)
-                ->orderBy('id')
-                ->select(['id', 'group', 'key', 'value'])
-                ->chunk(1000, function ($rows) use ($locale, $files, $seeded, $retired, &$doomed) {
-                    foreach ($rows as $row) {
-                        $value = (string) $row->value;
-                        $shipped = $files[$row->group][$row->key] ?? null;
-
-                        $copy = $shipped !== null && $value === $shipped;
-
-                        $staleSeed = $locale === 'en'
-                            && $shipped !== null
-                            && ($seeded[$row->group][$row->key] ?? null) === $value;
-
-                        $retiredText = isset($retired[substr(hash('sha256', $locale."\0".$row->group."\0".$row->key."\0".$value), 0, 20)]);
-
-                        if ($copy || $staleSeed || $retiredText) {
-                            $doomed[] = $row->id;
-                        }
-                    }
-                });
-
-            foreach (array_chunk($doomed, 500) as $ids) {
-                DB::table('dynamic_translations')->whereIn('id', $ids)->delete();
-            }
-
-            TranslationCacheManager::flushLocale($locale);
-        }
+        app(FrozenTranslationCleaner::class)->run();
     }
 
     public function down(): void

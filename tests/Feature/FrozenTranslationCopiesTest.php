@@ -79,6 +79,30 @@ test('an old text is only recognised in its own language', function () {
     expect(DynamicTranslation::where(['language' => 'de', 'key' => 'sidebar.shortcuts'])->value('value'))->toBe('Kisayollar');
 });
 
+test('the broken twin of a key written twice, and Turkish from another branch, are removed', function () {
+    // Both from the April files: written beside a correct flat twin, so a
+    // list that kept one value per key never saw them (the second pass).
+    frozenRow('tr', 'admin', 'affiliates.referral_link', 'Referral Baglanti:');
+    frozenRow('tr', 'admin', 'clients.admin_notes', 'Yonetici Nots');
+    frozenRow('tr', 'admin', 'auth.sign_in', 'Giris Yap');
+
+    $migration = require database_path('migrations/2026_10_05_130000_drop_frozen_copies_from_every_branch.php');
+    $migration->up();
+
+    expect(DynamicTranslation::where('language', 'tr')->whereIn('key', ['affiliates.referral_link', 'clients.admin_notes', 'auth.sign_in'])->count())->toBe(0);
+});
+
+test('a database text that is deliberately newer than the file stays', function () {
+    // 2026_08_17_230000_reword_apps_as_resource_hosting rewrote these in the
+    // database after the file had them; the database wording is the current one.
+    frozenRow('en', 'sections', 'apps.cta', 'See the plans');
+
+    runFrozenCopiesMigration();
+
+    app()->setLocale('en');
+    expect(__('sections.apps.cta'))->toBe('See the plans');
+});
+
 test('a Turkish text the operator wrote stays', function () {
     frozenRow('tr', 'auth', 'register.address', 'Fatura Adresi');
 
