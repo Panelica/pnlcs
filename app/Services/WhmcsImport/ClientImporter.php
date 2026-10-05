@@ -3,6 +3,8 @@
 namespace App\Services\WhmcsImport;
 
 use App\Models\Client;
+use App\Models\CustomField;
+use App\Models\CustomFieldValue;
 
 /**
  * Runs the clients import. Read-only on the source, writes only to PNLCS, and
@@ -89,9 +91,11 @@ class ClientImporter
      */
     protected function persist(array $target, ?string $matchKey, string $importMode): array
     {
+        [$columns, $customValues] = $this->splitTarget($target);
+
         $existing = null;
         if ($matchKey !== null && $matchKey !== '') {
-            $value = $target[$matchKey] ?? null;
+            $value = $columns[$matchKey] ?? null;
             if ($value !== null && $value !== '') {
                 $existing = Client::where($matchKey, $value)->first();
             }
@@ -102,7 +106,8 @@ class ClientImporter
                 return [null, false];
             }
 
-            $existing->update($target);
+            $existing->update($columns);
+            $this->storeCustomValues($existing, $customValues);
 
             return [$existing, false];
         }
@@ -111,9 +116,57 @@ class ClientImporter
             return [null, false];
         }
 
-        $client = Client::create($target);
+        $client = Client::create($columns);
+        $this->storeCustomValues($client, $customValues);
 
         return [$client, true];
+    }
+
+    /**
+     * Separate the model's mass-assignable columns from PNLCS client custom
+     * fields, which live in their own table and are written separately.
+     *
+     * @param  array<string, mixed>  $target
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    protected function splitTarget(array $target): array
+    {
+        $columns = [];
+        $custom = [];
+
+        foreach ($target as $key => $value) {
+            if (str_starts_with($key, 'custom_field:')) {
+                $custom[substr($key, strlen('custom_field:'))] = $value;
+            } else {
+                $columns[$key] = $value;
+            }
+        }
+
+        return [$columns, $custom];
+    }
+
+    /**
+     * @param  array<string, mixed>  $customValues  field name => value
+     */
+    protected function storeCustomValues(Client $client, array $customValues): void
+    {
+        foreach ($customValues as $name => $value) {
+            $field = CustomField::where('type', 'client')->where('field_name', $name)->first();
+            if (! $field) {
+                continue;
+            }
+
+            if ($value === null || trim((string) $value) === '') {
+                CustomFieldValue::where('field_id', $field->id)->where('rel_id', $client->id)->delete();
+
+                continue;
+            }
+
+            CustomFieldValue::updateOrCreate(
+                ['field_id' => $field->id, 'rel_id' => $client->id],
+                ['value' => (string) $value],
+            );
+        }
     }
 
     protected function error(array $row, string $message): array

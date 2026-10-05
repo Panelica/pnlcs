@@ -89,8 +89,9 @@
                         <select name="mapping[{{ $name }}]" class="form-control">
                             <option value="__skip__" @selected($current === '__skip__')>{{ __('whmcs_import.skip') }}</option>
                             @foreach($targetFields as $field)
+                                @php $fieldLabel = str_starts_with($field, 'custom_field:') ? substr($field, 13).' ('.__('whmcs_import.custom_field').')' : $field; @endphp
                                 <option value="{{ $field }}" @selected($current === $field)>
-                                    {{ $field }}{{ $suggested === $field ? ' (' . __('whmcs_import.suggested') . ')' : '' }}
+                                    {{ $fieldLabel }}{{ $suggested === $field ? ' (' . __('whmcs_import.suggested') . ')' : '' }}
                                 </option>
                             @endforeach
                         </select>
@@ -113,7 +114,7 @@
                 <tbody>
                 @foreach($targetFields as $field)
                     <tr>
-                        <td><code>{{ $field }}</code></td>
+                        <td><code>{{ str_starts_with($field, 'custom_field:') ? substr($field, 13).' ('.__('whmcs_import.custom_field').')' : $field }}</code></td>
                         <td><input type="text" name="constants[{{ $field }}]" value="{{ $mapping['constants'][$field] ?? '' }}" class="form-control"></td>
                     </tr>
                 @endforeach

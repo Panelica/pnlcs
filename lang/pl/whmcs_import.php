@@ -36,6 +36,7 @@ return [
     'field_mapping' => 'Mapowanie pól',
     'source_column' => 'Pole WHMCS',
     'target_field' => 'Pole PNLCS',
+    'custom_field' => 'pole własne',
     'skip' => 'Pomiń',
     'constant_value' => 'Wartość stała',
     'constants' => 'Wartości stałe',

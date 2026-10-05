@@ -3,6 +3,7 @@
 namespace App\Services\WhmcsImport;
 
 use App\Models\Client;
+use App\Models\CustomField;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -37,7 +38,9 @@ class SchemaReader
     }
 
     /**
-     * The PNLCS client fields an import may write to.
+     * The PNLCS client fields an import may write to: the model's fillable
+     * columns plus any client custom fields (namespaced `custom_field:{name}`
+     * so they cannot collide with a real column of the same name).
      *
      * @return list<string>
      */
@@ -48,13 +51,19 @@ class SchemaReader
         // Internal counters/flags are mass-assignable for the app's own forms
         // but importing them from WHMCS makes no sense; keep them out of the
         // mapper so they cannot be filled with source garbage by accident.
-        return array_values(array_diff($fields, [
+        $fields = array_values(array_diff($fields, [
             'credit',
             'auto_charge',
             'affiliate_id',
             'notes',
             'ip_address',
         ]));
+
+        foreach (CustomField::clientFields()->get(['field_name']) as $field) {
+            $fields[] = 'custom_field:'.$field->field_name;
+        }
+
+        return $fields;
     }
 
     /**

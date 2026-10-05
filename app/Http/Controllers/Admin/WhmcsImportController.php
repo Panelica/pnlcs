@@ -225,7 +225,18 @@ class WhmcsImportController extends Controller
 
         $suggestions = [];
         foreach ($sourceColumns as $column) {
-            $suggestions[$column['name']] = $this->engine->suggest($column['name']);
+            $suggestion = $this->engine->suggest($column['name']);
+
+            // A WHMCS custom field with the same name as a PNLCS custom field
+            // (e.g. CSA) maps onto it; nothing else can guess that here.
+            if ($suggestion === null && str_starts_with($column['name'], 'custom:')) {
+                $name = substr($column['name'], strlen('custom:'));
+                if (in_array('custom_field:'.$name, $targetFields, true)) {
+                    $suggestion = 'custom_field:'.$name;
+                }
+            }
+
+            $suggestions[$column['name']] = $suggestion;
         }
 
         $mapping = $this->mappingFromRequest($request, $profile);

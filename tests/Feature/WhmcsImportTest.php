@@ -212,6 +212,44 @@ test('the schema reader excludes internal client fields', function () {
         ->and($fields)->not->toContain('credit', 'auto_charge', 'affiliate_id');
 });
 
+test('the schema reader exposes PNLCS client custom fields as targets', function () {
+    \App\Models\CustomField::create(['type' => 'client', 'field_name' => 'CSA', 'field_type' => 'text']);
+
+    $fields = (new SchemaReader)->clientTargetFields();
+
+    expect($fields)->toContain('custom_field:CSA');
+});
+
+test('the client importer writes mapped PNLCS custom field values', function () {
+    \App\Models\CustomField::create(['type' => 'client', 'field_name' => 'CSA', 'field_type' => 'text']);
+
+    $importer = app(ClientImporter::class);
+
+    $summary = $importer->run(
+        fn ($cb) => $cb(['id' => 1, 'firstname' => 'Jan', 'lastname' => 'Kowalski', 'email' => 'jan@example.com', 'custom:CSA' => 'csa123']),
+        [
+            'columns' => [
+                'firstname' => 'first_name',
+                'lastname' => 'last_name',
+                'email' => 'email',
+                'custom:CSA' => 'custom_field:CSA',
+            ],
+            'constants' => [],
+        ],
+        'add',
+        'email',
+    );
+
+    expect($summary['errors'])->toBe(0);
+
+    $client = Client::where('email', 'jan@example.com')->first();
+    expect($client)->not->toBeNull();
+
+    $value = \App\Models\CustomFieldValue::where('rel_id', $client->id)->first();
+    expect($value)->not->toBeNull()
+        ->and($value->value)->toBe('csa123');
+});
+
 test('the whmcs import index page is behind manage_settings', function () {
     $this->actingAs(whmcsImportAdmin(), 'admin')
         ->get(route('admin.whmcs-import.index'))

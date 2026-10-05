@@ -36,6 +36,7 @@ return [
     'field_mapping' => 'Field mapping',
     'source_column' => 'WHMCS field',
     'target_field' => 'PNLCS field',
+    'custom_field' => 'custom field',
     'skip' => 'Skip',
     'constant_value' => 'Constant value',
     'constants' => 'Constant values',
