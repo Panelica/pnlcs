@@ -12,13 +12,6 @@
     &middot; {{ __('whmcs_import.total_rows', ['count' => $totalCount]) }}
 </div>
 
-@if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
 @if(!empty($errors))
     <div class="card" style="margin-bottom:15px;border-color:#fca5a5;">
         <div style="padding:16px;border-bottom:1px solid #e5e7eb;font-weight:600;color:#b91c1c;">{{ __('whmcs_import.validation_title') }}</div>

@@ -8,13 +8,6 @@
 
 <p style="color:#666;font-size:13px;margin-bottom:15px;">{{ __('whmcs_import.description') }}</p>
 
-@if(session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
 @if($errors->has('connection'))
     <div class="alert alert-danger">{{ $errors->first('connection') }}</div>
 @endif
