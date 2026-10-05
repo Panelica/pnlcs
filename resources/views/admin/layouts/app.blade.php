@@ -309,6 +309,10 @@
             <li><a href="{{ route('admin.logs.index') }}">{{ __('admin.nav.system_logs') }}</a></li>
             <li><a href="{{ route('admin.config.system-phpinfo') }}">{{ __('admin.nav.php_info') }}</a></li>
             <li><a href="{{ route('admin.whois.index') }}" @if($routeName === 'admin.whois.index' || $routeName === 'admin.whois.lookup') class="active" @endif>{{ __('admin.nav.whois_lookup') }}</a></li>
+        </ul>
+
+        <div class="sidebar-header"><i class="fas fa-tools"></i> {{ __('admin.sidebar.utilities') }}</div>
+        <ul class="menu">
             <li><a href="{{ route('admin.whmcs-import.index') }}" @if(str_starts_with($routeName ?? '', 'admin.whmcs-import')) class="active" @endif>{{ __('whmcs_import.menu_title') }}</a></li>
         </ul>
 
