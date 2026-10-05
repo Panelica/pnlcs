@@ -66,7 +66,7 @@
 
     <div class="card" style="margin-bottom:15px;">
         <div style="padding:16px;border-bottom:1px solid #e5e7eb;font-weight:600;">{{ __('whmcs_import.field_mapping') }}</div>
-        <table class="table">
+        <table class="data-table">
             <thead><tr>
                 <th>{{ __('whmcs_import.source_column') }}</th>
                 <th style="width:60px;"></th>
@@ -106,7 +106,7 @@
         <summary style="cursor:pointer;padding:16px;font-weight:600;list-style:none;">{{ __('whmcs_import.constants') }}</summary>
         <div style="padding:0 16px 16px;">
             <p style="color:#666;font-size:12px;">{{ __('whmcs_import.constant_value') }} — {{ __('whmcs_import.skip') }}</p>
-            <table class="table">
+            <table class="data-table">
                 <thead><tr>
                     <th>{{ __('whmcs_import.target_field') }}</th>
                     <th>{{ __('whmcs_import.constant_value') }}</th>

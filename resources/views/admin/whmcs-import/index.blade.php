@@ -63,7 +63,7 @@
 @if($connections->isNotEmpty())
 <div class="card" style="margin-bottom:20px;">
     <div style="padding:16px;border-bottom:1px solid #e5e7eb;font-weight:600;">{{ __('whmcs_import.saved_connections') }}</div>
-    <table class="table">
+    <table class="data-table">
         <thead><tr>
             <th>{{ __('whmcs_import.connection_name') }}</th>
             <th>{{ __('whmcs_import.host') }}</th>
@@ -87,7 +87,7 @@
 @if($profiles->isNotEmpty())
 <div class="card" style="margin-bottom:20px;">
     <div style="padding:16px;border-bottom:1px solid #e5e7eb;font-weight:600;">{{ __('whmcs_import.saved_profiles') }}</div>
-    <table class="table">
+    <table class="data-table">
         <thead><tr>
             <th>{{ __('whmcs_import.profile_name') }}</th>
             <th>{{ __('whmcs_import.source_table') }}</th>
@@ -120,7 +120,7 @@
 @if($logs->isNotEmpty())
 <div class="card">
     <div style="padding:16px;border-bottom:1px solid #e5e7eb;font-weight:600;">{{ __('whmcs_import.recent_logs') }}</div>
-    <table class="table">
+    <table class="data-table">
         <thead><tr>
             <th>{{ __('whmcs_import.log_date') }}</th>
             <th>{{ __('whmcs_import.source_table') }}</th>

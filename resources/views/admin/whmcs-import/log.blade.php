@@ -25,7 +25,7 @@
     @if(empty($log->error_details))
         <div style="padding:16px;color:#666;">{{ __('whmcs_import.log.no_errors') }}</div>
     @else
-        <table class="table">
+        <table class="data-table">
             <thead><tr>
                 <th>{{ __('whmcs_import.log.whmcs_id') }}</th>
                 <th>{{ __('whmcs_import.log.email') }}</th>
