@@ -3406,4 +3406,13 @@ return [
     'api_credentials.description_placeholder' => '例如：移动应用、外部 CRM',
     'api_credentials.invalid_ip' => '不是有效的 IP 地址或地址段：:value',
     'api_docs.full_reference' => '包含所有参数、响应和错误的完整参考，请参阅 PNLCS 文档。',
+    'tickets.delete' => '删除',
+    'tickets.delete_confirm' => '删除此工单及其回复、备注和附件？此操作无法撤销。',
+    'tickets.deleted' => '工单 #:tid 已删除。',
+    'tickets.bulk_delete' => '删除所选',
+    'tickets.bulk_delete_confirm' => '删除 :count 个工单及其回复、备注和附件？此操作无法撤销。',
+    'tickets.bulk_deleted' => '已删除 :count 个工单。',
+    'tickets.select_none' => '请至少选择一个工单。',
+    'tickets.only_guests' => '仅显示无账户的工单',
+    'tickets.guest' => '无账户',
 ];

@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Events\TicketClosed;
+use App\Models\ActivityLog;
 use App\Models\Ticket;
 use App\Models\TicketReply;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class TicketService
 {
@@ -46,6 +49,44 @@ class TicketService
         $ticket->update(['status' => 'Open']);
 
         return $ticket->fresh();
+    }
+
+    /**
+     * Remove a ticket for good: its replies, notes, tags, rating, watchers and
+     * log go with it (all cascade on ticket_id), and so do the files attached
+     * to it. The admin area had no way to do this at all, and the API's
+     * deleteticket dropped the row and left every attachment on disk.
+     *
+     * The usual reason is spam: the public contact form opens a ticket for
+     * anybody who fills it in, with no account behind it.
+     */
+    public function deleteTicket(Ticket $ticket, string $by = 'System'): void
+    {
+        $id = $ticket->id;
+        $tid = $ticket->tid;
+        $clientId = $ticket->client_id;
+
+        $files = $ticket->replies()->pluck('attachment')
+            ->push($ticket->attachment)
+            ->filter()
+            ->unique()
+            ->values();
+
+        DB::transaction(function () use ($ticket, $id) {
+            // A ticket merged into this one would point at a row that is gone.
+            Ticket::where('merged_ticket_id', $id)->update(['merged_ticket_id' => null]);
+            $ticket->delete();
+        });
+
+        $disk = Storage::disk('local');
+        foreach ($files as $path) {
+            if ($disk->exists($path)) {
+                $disk->delete($path);
+            }
+        }
+        $disk->deleteDirectory("ticket-attachments/{$id}");
+
+        ActivityLog::log("Ticket #{$tid} deleted", $by, $clientId);
     }
 
     protected function generateTicketId(): string

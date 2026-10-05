@@ -112,7 +112,8 @@ class TicketApiController extends BaseApiController
     {
         $ticket = Ticket::find($request->ticketid);
         if (!$ticket) return $this->error('Ticket Not Found', 404);
-        $ticket->delete();
+        // Through the service, which also removes the ticket's attachments.
+        app(\App\Services\TicketService::class)->deleteTicket($ticket, 'API');
         return $this->success();
     }
     public function getTicketCounts()

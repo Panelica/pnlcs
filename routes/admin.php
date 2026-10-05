@@ -255,6 +255,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // Status (closing included), priority, department and the staff member it is assigned to.
     Route::middleware('admin.permission:manage_tickets')->group(function () {
         Route::put('tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
+        Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+        Route::post('tickets/bulk-delete', [TicketController::class, 'bulkDestroy'])->name('tickets.bulk-delete');
     });
     Route::middleware('admin.permission:reply_tickets')->group(function () {
         Route::post('tickets/{ticket}/reply', [TicketController::class, 'reply'])->name('tickets.reply');

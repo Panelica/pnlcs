@@ -3402,4 +3402,13 @@ return [
     'api_credentials.description_placeholder' => 'z. B. Mobile App, externes CRM',
     'api_credentials.invalid_ip' => 'Keine IP-Adresse und kein Bereich: :value',
     'api_docs.full_reference' => 'Die vollständige Referenz mit allen Parametern, Antworten und Fehlern steht in der PNLCS-Dokumentation.',
+    'tickets.delete' => 'Löschen',
+    'tickets.delete_confirm' => 'Dieses Ticket mit Antworten, Notizen und Anhängen löschen? Das kann nicht rückgängig gemacht werden.',
+    'tickets.deleted' => 'Ticket #:tid gelöscht.',
+    'tickets.bulk_delete' => 'Auswahl löschen',
+    'tickets.bulk_delete_confirm' => ':count Tickets mit Antworten, Notizen und Anhängen löschen? Das kann nicht rückgängig gemacht werden.',
+    'tickets.bulk_deleted' => ':count Tickets gelöscht.',
+    'tickets.select_none' => 'Wählen Sie mindestens ein Ticket aus.',
+    'tickets.only_guests' => 'Nur Tickets ohne Kundenkonto',
+    'tickets.guest' => 'Kein Konto',
 ];

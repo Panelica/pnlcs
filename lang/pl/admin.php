@@ -3406,4 +3406,13 @@ return [
     'api_credentials.description_placeholder' => 'np. aplikacja mobilna, zewnętrzny CRM',
     'api_credentials.invalid_ip' => 'To nie jest adres IP ani zakres: :value',
     'api_docs.full_reference' => 'Pełna dokumentacja, z każdym parametrem, odpowiedzią i błędem, znajduje się w dokumentacji PNLCS.',
+    'tickets.delete' => 'Usuń',
+    'tickets.delete_confirm' => 'Usunąć to zgłoszenie wraz z odpowiedziami, notatkami i załącznikami? Tej operacji nie można cofnąć.',
+    'tickets.deleted' => 'Zgłoszenie #:tid zostało usunięte.',
+    'tickets.bulk_delete' => 'Usuń zaznaczone',
+    'tickets.bulk_delete_confirm' => 'Usunąć :count zgłoszeń wraz z odpowiedziami, notatkami i załącznikami? Tej operacji nie można cofnąć.',
+    'tickets.bulk_deleted' => 'Usunięto zgłoszenia: :count.',
+    'tickets.select_none' => 'Zaznacz co najmniej jedno zgłoszenie.',
+    'tickets.only_guests' => 'Tylko zgłoszenia bez konta',
+    'tickets.guest' => 'Bez konta',
 ];

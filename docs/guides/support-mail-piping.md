@@ -54,3 +54,21 @@ Enable **mail import** for the department and save.
   Debian 13 does not package it. Without it the import logs
   `the PHP imap extension is not installed` and does nothing; the rest of
   PNLCS does not need it.
+
+## Tickets without an account, and deleting tickets
+
+Tickets do not only come from signed-in customers. The public **Contact Us**
+form opens a ticket for anybody who fills it in, and mail import does the same
+for unknown senders when you allow them. These tickets have no client account
+behind them, so they are also where spam collects.
+
+- **Support → Tickets → Only tickets without an account** lists just those.
+- Tick tickets in the list (or the box in the header for the whole page) and
+  press **Delete selected**. A single ticket has a **Delete** button on its
+  page.
+- Deleting removes the ticket with its replies, notes and attachments. It
+  cannot be undone, and it needs the **manage tickets** permission.
+
+To keep spam out in the first place, switch on reCAPTCHA for the contact form
+and the ticket form (**Setup → General Settings → reCAPTCHA**) and fill in the
+**Ticket Spam Filter**.

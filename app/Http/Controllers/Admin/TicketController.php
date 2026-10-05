@@ -22,6 +22,11 @@ class TicketController extends Controller
         if ($request->filled('priority')) {
             $query->where('priority', $request->priority);
         }
+        // Tickets with no account behind them: the public contact form, or
+        // mail from an unknown sender. Where contact-form spam collects.
+        if ($request->boolean('guests')) {
+            $query->whereNull('client_id');
+        }
         $tickets = $query->orderBy('last_reply', 'desc')->orderBy('created_at', 'desc')->paginate(25);
         $departments = TicketDepartment::all();
 
@@ -186,5 +191,33 @@ class TicketController extends Controller
         \App\Models\ActivityLog::log("Ticket #{$ticket->tid} updated: status {$validated['status']}, priority {$validated['priority']}", auth('admin')->user()->username, $ticket->client_id);
 
         return back()->with('success', __('admin.tickets.options_saved'));
+    }
+
+    /** Delete one ticket, with everything attached to it. */
+    public function destroy(Ticket $ticket)
+    {
+        $tid = $ticket->tid;
+        app(\App\Services\TicketService::class)->deleteTicket($ticket, auth('admin')->user()->username);
+
+        return redirect()->route('admin.tickets.index')->with('success', __('admin.tickets.deleted', ['tid' => $tid]));
+    }
+
+    /** Delete the tickets ticked on the list. */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_ids' => 'required|array|min:1|max:500',
+            'ticket_ids.*' => 'integer',
+        ]);
+
+        $service = app(\App\Services\TicketService::class);
+        $by = auth('admin')->user()->username;
+        $deleted = 0;
+        foreach (Ticket::whereIn('id', $validated['ticket_ids'])->get() as $ticket) {
+            $service->deleteTicket($ticket, $by);
+            $deleted++;
+        }
+
+        return back()->with('success', __('admin.tickets.bulk_deleted', ['count' => $deleted]));
     }
 }

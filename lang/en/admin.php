@@ -3408,4 +3408,13 @@ return [
     'api_credentials.description_placeholder' => 'e.g. Mobile App, External CRM',
     'api_credentials.invalid_ip' => 'Not an IP address or range: :value',
     'api_docs.full_reference' => 'The complete reference, with every parameter, response and error, is in the PNLCS documentation.',
+    'tickets.delete' => 'Delete',
+    'tickets.delete_confirm' => 'Delete this ticket with its replies, notes and attachments? This cannot be undone.',
+    'tickets.deleted' => 'Ticket #:tid deleted.',
+    'tickets.bulk_delete' => 'Delete selected',
+    'tickets.bulk_delete_confirm' => 'Delete :count tickets with their replies, notes and attachments? This cannot be undone.',
+    'tickets.bulk_deleted' => ':count tickets deleted.',
+    'tickets.select_none' => 'Select at least one ticket.',
+    'tickets.only_guests' => 'Only tickets without an account',
+    'tickets.guest' => 'No account',
 ];

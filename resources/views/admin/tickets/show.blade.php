@@ -7,7 +7,15 @@
         <span class="badge-{{ strtolower($ticket->status) }}" style="font-size:12px;vertical-align:middle;margin-left:6px;">{{ ucfirst($ticket->status) }}</span>
         <span style="font-size:12px;vertical-align:middle;margin-left:4px;padding:2px 8px;background:#e9e9e9;border-radius:3px;color:#555;">{{ ucfirst($ticket->priority) }}</span>
     </h1>
-    <a href="{{ route('admin.tickets.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.tickets.back') }}</a>
+    <div style="display:flex;gap:6px;align-items:center;">
+        @if(auth('admin')->user()?->hasPermission('manage_tickets'))
+        <form method="POST" action="{{ route('admin.tickets.destroy', $ticket) }}" style="margin:0;" onsubmit="return confirm(@js(__('admin.tickets.delete_confirm')))">
+            @csrf @method('DELETE')
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> {{ __('admin.tickets.delete') }}</button>
+        </form>
+        @endif
+        <a href="{{ route('admin.tickets.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.tickets.back') }}</a>
+    </div>
 </div>
 
 {{-- Ticket Info Bar --}}

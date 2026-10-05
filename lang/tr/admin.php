@@ -3406,4 +3406,13 @@ return [
     'api_credentials.description_placeholder' => 'örn. Mobil Uygulama, Harici CRM',
     'api_credentials.invalid_ip' => 'IP adresi veya aralığı değil: :value',
     'api_docs.full_reference' => 'Her parametre, yanıt ve hatayı içeren tam başvuru kılavuzu PNLCS dokümantasyonunda.',
+    'tickets.delete' => 'Sil',
+    'tickets.delete_confirm' => 'Bu destek talebi yanıtları, notları ve ekleriyle birlikte silinsin mi? Bu işlem geri alınamaz.',
+    'tickets.deleted' => '#:tid numaralı destek talebi silindi.',
+    'tickets.bulk_delete' => 'Seçilenleri sil',
+    'tickets.bulk_delete_confirm' => ':count destek talebi yanıtları, notları ve ekleriyle birlikte silinsin mi? Bu işlem geri alınamaz.',
+    'tickets.bulk_deleted' => ':count destek talebi silindi.',
+    'tickets.select_none' => 'En az bir destek talebi seçin.',
+    'tickets.only_guests' => 'Yalnızca hesapsız talepler',
+    'tickets.guest' => 'Hesapsız',
 ];
