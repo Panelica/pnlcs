@@ -3,6 +3,8 @@
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Client;
+use App\Models\CustomField;
+use App\Models\CustomFieldValue;
 use App\Services\WhmcsImport\ClientImporter;
 use App\Services\WhmcsImport\ImportValidator;
 use App\Services\WhmcsImport\MappingEngine;
@@ -213,7 +215,7 @@ test('the schema reader excludes internal client fields', function () {
 });
 
 test('the schema reader exposes PNLCS client custom fields as targets', function () {
-    \App\Models\CustomField::create(['type' => 'client', 'field_name' => 'CSA', 'field_type' => 'text']);
+    CustomField::create(['type' => 'client', 'field_name' => 'CSA', 'field_type' => 'text']);
 
     $fields = (new SchemaReader)->clientTargetFields();
 
@@ -221,7 +223,7 @@ test('the schema reader exposes PNLCS client custom fields as targets', function
 });
 
 test('the client importer writes mapped PNLCS custom field values', function () {
-    \App\Models\CustomField::create(['type' => 'client', 'field_name' => 'CSA', 'field_type' => 'text']);
+    CustomField::create(['type' => 'client', 'field_name' => 'CSA', 'field_type' => 'text']);
 
     $importer = app(ClientImporter::class);
 
@@ -245,7 +247,7 @@ test('the client importer writes mapped PNLCS custom field values', function () 
     $client = Client::where('email', 'jan@example.com')->first();
     expect($client)->not->toBeNull();
 
-    $value = \App\Models\CustomFieldValue::where('rel_id', $client->id)->first();
+    $value = CustomFieldValue::where('rel_id', $client->id)->first();
     expect($value)->not->toBeNull()
         ->and($value->value)->toBe('csa123');
 });
