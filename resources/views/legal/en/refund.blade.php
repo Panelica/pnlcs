@@ -91,7 +91,11 @@
 <p>Approved refunds are paid within <strong>14 days</strong> of approval.</p>
 <ul>
     <li>Refunds are made by the same method as the original payment. <strong>If you paid by card</strong>, the refund goes back to the same card; how quickly it appears on your statement depends on your bank and is outside our control. <strong>If you paid by bank transfer</strong>, we refund to the account the payment came from, so we may ask you to confirm the IBAN.</li>
-    <li>The refund is calculated on the <strong>Turkish lira amount shown on your invoice</strong>. Because the invoice was converted at the TCMB rate on the day it was issued, subsequent exchange rate movements do not change the refund.</li>
+    @if($money['billed'])
+    <li>The refund is calculated on the <strong>{{ $money['billed'] }} amount shown on your invoice</strong>. Because the invoice was converted at the rate of the day it was issued, subsequent exchange rate movements do not change the refund.</li>
+    @else
+    <li>The refund is calculated on the <strong>amount shown on your invoice</strong>.</li>
+    @endif
     <li>Bank charges and transfer fees are not deducted from the refund.</li>
     <li>A credit note is issued against the original invoice.</li>
 </ul>

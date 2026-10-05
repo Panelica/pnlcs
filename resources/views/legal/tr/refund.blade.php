@@ -91,7 +91,11 @@
 <p>Onaylanan iadeler, iade talebinin kabulünden itibaren <strong>en geç 14 gün</strong> içinde yapılır.</p>
 <ul>
     <li>İade, ödemenin yapıldığı yöntemle gerçekleştirilir. <strong>Kartla ödediyseniz</strong> iade aynı karta yapılır; tutarın kart ekstrenize yansıması bankanıza bağlı olarak birkaç iş günü sürebilir ve bu süre bizim kontrolümüzde değildir. <strong>Havale/EFT ile ödediyseniz</strong> iade, ödemenin geldiği hesaba yapılır; bu nedenle sizden IBAN teyidi isteyebiliriz.</li>
-    <li>İade tutarı, <strong>faturada yer alan Türk lirası tutar üzerinden</strong> hesaplanır. Faturanız kesildiği gün geçerli TCMB kuruyla TL'ye çevrildiği için, aradaki kur farkı iade tutarını değiştirmez.</li>
+    @if($money['billed'])
+    <li>İade tutarı, <strong>faturada yer alan {{ $money['billed'] }} tutar üzerinden</strong> hesaplanır. Faturanız kesildiği günün kuruyla çevrildiği için, aradaki kur farkı iade tutarını değiştirmez.</li>
+    @else
+    <li>İade tutarı, <strong>faturada yer alan tutar üzerinden</strong> hesaplanır.</li>
+    @endif
     <li>Banka masrafları ve havale ücretleri iade tutarından düşülmez.</li>
     <li>İade edilen bir hizmet için düzenlenmiş faturaya iade faturası düzenlenir.</li>
 </ul>
