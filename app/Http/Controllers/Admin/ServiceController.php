@@ -184,10 +184,11 @@ class ServiceController extends Controller
             $currentType = strtolower((string) ($service->server?->type ?? $service->product?->server_type ?? ''));
             $newType = strtolower((string) ($newProduct->server_type ?? ''));
 
-            // Moving to a different server module: the account must be recreated
-            // on a server of the new module, so drop the old binding (and its
-            // account data) and let provisioning pick a fresh server.
-            if ($newType !== '' && $newType !== $currentType) {
+            // Moving to a different server module — or to a module-less product
+            // such as SSL — means the account must be recreated (or unbound), so
+            // drop the old binding and its account data and let provisioning pick
+            // a fresh server.
+            if ($newType !== $currentType) {
                 $service->server_id = null;
                 $service->module_data = null;
                 $service->username = null;
