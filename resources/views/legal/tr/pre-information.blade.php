@@ -10,9 +10,15 @@
 
 <h2>3. Fiyat ve ödeme</h2>
 <ul>
-    <li><strong>Gösterim para birimi:</strong> Fiyatlar internet sitesinde ABD doları (USD) olarak gösterilir.</li>
-    <li><strong>Faturalama para birimi:</strong> Fatura, siparişin verildiği tarihte Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak Türk lirası (TRY) olarak düzenlenir.</li>
+    <li><strong>Gösterim para birimi:</strong> Fiyatlar internet sitesinde {{ $money['shown'] }} olarak gösterilir.</li>
+    @if($money['tcmb'])
+    <li><strong>Faturalama para birimi:</strong> Fatura, siparişin verildiği tarihte Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak {{ $money['billed'] }} olarak düzenlenir.</li>
     <li><strong>Kur bilgisi:</strong> Uygulanan kur, kurun tarihi ve TCMB bülten numarası fatura üzerinde açıkça yazılır; Merkez Bankası'nın kendi yayınından doğrulayabilirsiniz.</li>
+    @elseif($money['billed'])
+    <li><strong>Faturalama para birimi:</strong> Fatura, siparişin verildiği tarihteki kur esas alınarak {{ $money['billed'] }} olarak düzenlenir; uygulanan kur fatura üzerinde yazılır.</li>
+    @else
+    <li><strong>Faturalama para birimi:</strong> Fatura da aynı para biriminde düzenlenir.</li>
+    @endif
     @if($vatRate > 0)
     <li><strong>Vergiler:</strong> Türkiye'de yerleşik müşteriler için %{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }} KDV eklenir. Fatura üzerinde matrah, KDV ve toplam ayrı gösterilir.</li>
     @endif

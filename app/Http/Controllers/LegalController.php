@@ -190,7 +190,50 @@ class LegalController extends Controller
             'revised' => self::REVISED,
             'company' => $this->company(),
             'vatRate' => self::vatRate(),
+            'money' => self::money($this->locale()),
         ];
+    }
+
+    /**
+     * What the documents say about currency: the one prices are shown in (the
+     * shop currency), and the one invoices are issued in - the billing
+     * currency when the operator set one (BillingCurrency), stamped at the
+     * day's rate, and whether that rate is the Turkish Central Bank's.
+     *
+     * The documents used to say "shown in US dollars, invoiced in Turkish
+     * lira at the TCMB rate" on every installation, whatever it sold in.
+     *
+     * @return array{shown: string, billed: ?string, tcmb: bool}
+     */
+    public static function money(string $locale): array
+    {
+        try {
+            $shop = strtoupper((string) (\App\Models\Currency::getDefault()?->code ?? 'USD'));
+            $billing = strtoupper(trim((string) \App\Models\Setting::get('BillingCurrency', '')));
+            $tcmb = (string) \App\Models\Setting::get('OfficialRateProvider', '') === 'tcmb';
+        } catch (\Throwable) {
+            return ['shown' => self::currencyName('USD', $locale), 'billed' => null, 'tcmb' => false];
+        }
+
+        $billed = $billing !== '' && $billing !== $shop ? $billing : null;
+
+        return [
+            'shown' => self::currencyName($shop, $locale),
+            'billed' => $billed ? self::currencyName($billed, $locale) : null,
+            'tcmb' => $billed === 'TRY' && $tcmb,
+        ];
+    }
+
+    /** "euro (EUR)", "Türk lirası (TRY)": a name where one is known, the code always. */
+    private static function currencyName(string $code, string $locale): string
+    {
+        $names = [
+            'tr' => ['USD' => 'ABD doları', 'EUR' => 'euro', 'GBP' => 'İngiliz sterlini', 'TRY' => 'Türk lirası', 'PLN' => 'Polonya zlotisi', 'CHF' => 'İsviçre frangı'],
+            'en' => ['USD' => 'US dollars', 'EUR' => 'euros', 'GBP' => 'pounds sterling', 'TRY' => 'Turkish lira', 'PLN' => 'Polish złoty', 'CHF' => 'Swiss francs'],
+        ];
+        $name = $names[$locale === 'tr' ? 'tr' : 'en'][$code] ?? null;
+
+        return $name ? $name.' ('.$code.')' : $code;
     }
 
     /**

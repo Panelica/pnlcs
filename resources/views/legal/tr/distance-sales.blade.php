@@ -12,7 +12,15 @@
 
 <h2>Madde 3 — Sözleşme konusu hizmet ve bedel</h2>
 <p>Hizmetin türü, süresi, adedi ve tüm vergiler dâhil satış bedeli, sipariş özetinde ve faturada ayrıntılı olarak gösterilmiştir. Sipariş özeti ve fatura, işbu sözleşmenin eki ve ayrılmaz parçasıdır.</p>
-<p><strong>Fiyatlandırma ve para birimi:</strong> Hizmet bedelleri internet sitesinde ABD doları (USD) olarak gösterilmektedir. Fatura, siparişin verildiği tarihte Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak Türk lirası olarak düzenlenir. Uygulanan kur, kurun tarihi ve bülten numarası fatura üzerinde açıkça gösterilir.</p>
+<p><strong>Fiyatlandırma ve para birimi:</strong> Hizmet bedelleri internet sitesinde {{ $money['shown'] }} olarak gösterilmektedir.
+@if($money['tcmb'])
+Fatura, siparişin verildiği tarihte Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak {{ $money['billed'] }} olarak düzenlenir. Uygulanan kur, kurun tarihi ve bülten numarası fatura üzerinde açıkça gösterilir.
+@elseif($money['billed'])
+Fatura, siparişin verildiği tarihteki kur esas alınarak {{ $money['billed'] }} olarak düzenlenir; uygulanan kur fatura üzerinde gösterilir.
+@else
+Fatura da aynı para biriminde düzenlenir.
+@endif
+</p>
 @if($vatRate > 0)
 <p><strong>Vergiler:</strong> Türkiye'de yerleşik Alıcılar için satış bedeline %{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }} oranında katma değer vergisi eklenir. Fatura üzerinde matrah, KDV tutarı ve toplam tutar ayrı ayrı gösterilir.</p>
 @endif

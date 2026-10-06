@@ -10,7 +10,15 @@
 <p>Yenilemeyi durdurmak için, dönem bitiminden önce müşteri panelinizden iptal talebi oluşturmanız yeterlidir. İptal talebi oluşturulduktan sonra yeni fatura kesilmez.</p>
 
 <h2>3. Ücretler, faturalama ve para birimi</h2>
-<p>Hizmet bedelleri sitemizde <strong>ABD doları (USD)</strong> olarak gösterilir. Fatura, siparişin verildiği gün Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak <strong>Türk lirası (TRY)</strong> olarak düzenlenir. Uygulanan kur, kurun tarihi ve bülten numarası faturanızın üzerinde açıkça yazar; dilediğiniz zaman Merkez Bankası'nın kendi yayınından doğrulayabilirsiniz.</p>
+<p>Hizmet bedelleri sitemizde <strong>{{ $money['shown'] }}</strong> olarak gösterilir.
+@if($money['tcmb'])
+Fatura, siparişin verildiği gün Türkiye Cumhuriyet Merkez Bankası tarafından yayımlanan döviz satış kuru esas alınarak <strong>{{ $money['billed'] }}</strong> olarak düzenlenir. Uygulanan kur, kurun tarihi ve bülten numarası faturanızın üzerinde açıkça yazar; dilediğiniz zaman Merkez Bankası'nın kendi yayınından doğrulayabilirsiniz.
+@elseif($money['billed'])
+Fatura, siparişin verildiği günün kuru esas alınarak <strong>{{ $money['billed'] }}</strong> olarak düzenlenir; uygulanan kur faturanızın üzerinde yazar.
+@else
+Fatura da aynı para biriminde düzenlenir.
+@endif
+</p>
 @if($vatRate > 0)
 <p>Türkiye'de yerleşik müşteriler için faturaya <strong>%{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }} KDV</strong> eklenir. Yurt dışında yerleşik müşteriler için vergi, ilgili ülke mevzuatı ve Türkiye'nin taraf olduğu düzenlemeler çerçevesinde uygulanır.</p>
 @endif
