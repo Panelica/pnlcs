@@ -258,9 +258,9 @@ const SERVER_TYPE_TUNING = {
     },
     hestiacp: {
         port: 8083, username: true,
-        passwordLabel: 'Admin Password (fallback)', passwordPlaceholder: 'HestiaCP admin password — only used without an access key',
-        hashLabel: 'Access Key (ID:Secret)', hashPlaceholder: 'ACCESS_KEY_ID:SECRET_ACCESS_KEY',
-        hint: '<strong>HestiaCP:</strong> run <code>v-add-access-key \'admin\' \'*\'</code> on the server and paste the <strong>Access Key ID</strong> and <strong>Secret Key</strong>, joined with a colon, into the Access Key field. Username/password is only a fallback for older installs. Port 8083.',
+        passwordLabel: 'Admin Password', passwordPlaceholder: 'HestiaCP admin password — legacy login only',
+        hashLabel: 'Access Key', hashPlaceholder: 'ACCESS_KEY_ID:SECRET_ACCESS_KEY',
+        hint: '<strong>HestiaCP:</strong> run <code>v-add-access-key \'admin\' \'*\'</code> on the server. Paste the two values it prints — the <strong>Access Key ID</strong> and the <strong>Secret Access Key</strong> — joined by a colon (<code>ID:Secret</code>) into the Access Key field. Username/password is only the legacy login fallback. Port 8083.',
     },
     proxmox: {
         port: 8006, username: true, nameservers: false, proxmox: true,
