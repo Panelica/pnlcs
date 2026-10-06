@@ -27,7 +27,7 @@ class HestiaCPModule extends AbstractServerModule
     {
         $port = $server->port ?: 8083;
 
-        return "https://{$this->serverHost($server)}:{$port}/api";
+        return "https://{$this->serverHost($server)}:{$port}/api/";
     }
 
     /**
@@ -40,14 +40,22 @@ class HestiaCPModule extends AbstractServerModule
     {
         $url = $this->baseUrl($server);
         $username = $server->username ?: 'admin';
-        $password = $server->access_hash ?: ($server->password ?? '');
 
         $postData = array_merge([
-            'user' => $username,
-            'password' => $password,
             'returncode' => $json ? 'no' : 'yes',
             'cmd' => $command,
         ], $params);
+
+        // HestiaCP v1.4+ authenticates with an access key (`access_hash` holds
+        // ACCESS_KEY:SECRET_KEY). Fall back to the deprecated admin
+        // user/password form for installs that still use it.
+        $accessHash = trim((string) $server->access_hash);
+        if ($accessHash !== '') {
+            $postData['hash'] = $accessHash;
+        } else {
+            $postData['user'] = $username;
+            $postData['password'] = (string) ($server->password ?? '');
+        }
 
         try {
             $response = Http::asForm()
