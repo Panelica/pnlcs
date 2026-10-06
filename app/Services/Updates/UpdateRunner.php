@@ -175,6 +175,7 @@ class UpdateRunner
                 $this->state->write('report.json', $report);
                 $run['phase'] = 'refused';
                 $this->saveRun($run);
+                $this->removeUnpacked();
                 $this->finish($run, 'refused', 'The update did not start: '.implode(', ', array_column($report['blocking'], 'code')));
 
                 return ['result' => 'refused', 'report' => $report];
@@ -186,6 +187,7 @@ class UpdateRunner
             $run['phase'] = 'failed_before_changes';
             $run['error'] = $e->getMessage();
             $this->saveRun($run);
+            $this->removeUnpacked();
             $this->finish($run, 'failed', $e->getMessage());
 
             throw $e;
@@ -245,8 +247,7 @@ class UpdateRunner
         $this->saveRun($run);
         $this->state->forget('report.json');
         $this->packages->prune(array_filter([$from, $to], fn ($v) => Version::parse($v) !== null));
-        $this->removeDirectory("{$this->runDir}/new");
-        $this->removeDirectory("{$this->runDir}/base");
+        $this->removeUnpacked();
         $this->pruneRuns();
         $this->finish($run, 'updated', "Updated {$from} to {$to}.", $report);
 
@@ -296,6 +297,7 @@ class UpdateRunner
         $run['phase'] = 'rolled_back';
         $run['finished_at'] = now()->toIso8601String();
         $this->saveRun($run);
+        $this->removeUnpacked();
         $this->finish($run, 'rolled_back', 'The update failed and was rolled back: '.($run['error'] ?? 'stopped part way').'. The site runs '.$run['from'].' as before.');
     }
 
@@ -444,6 +446,13 @@ class UpdateRunner
     {
         $this->state->write("runs/{$run['id']}/run.json", $run);
         $this->state->write('current-run.json', $run);
+
+        // Fault injection for the update lab (tools/update-lab): the process
+        // dies at this phase, the way a killed process or a power cut would,
+        // leaving the run for `pnlcs:update-rollback`.
+        if (getenv('PNLCS_UPDATE_LAB_KILL_AT') === $run['phase']) {
+            exit(137);
+        }
     }
 
     private function status(string $state, string $step, array $extra = []): void
@@ -494,6 +503,18 @@ class UpdateRunner
             if (is_array($run) && ($run['phase'] ?? '') === 'done' && filemtime($dir) < $cutoff && $dir !== $this->runDir) {
                 $this->removeDirectory($dir);
             }
+        }
+    }
+
+    /**
+     * The unpacked releases of a run (about 200 MB). The journal, the backups
+     * and the database snapshot stay: they are what a rollback needs.
+     */
+    private function removeUnpacked(): void
+    {
+        if ($this->runDir !== null) {
+            $this->removeDirectory("{$this->runDir}/new");
+            $this->removeDirectory("{$this->runDir}/base");
         }
     }
 
