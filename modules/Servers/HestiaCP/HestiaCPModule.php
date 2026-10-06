@@ -72,8 +72,9 @@ class HestiaCPModule extends AbstractServerModule
             'cmd' => $command,
         ], $params);
 
-        // HestiaCP v1.4+ authenticates with an access key (`access_hash` holds
-        // ACCESS_KEY:SECRET_KEY). Fall back to the deprecated admin
+        // HestiaCP v1.4+ authenticates with an access key: `access_hash` holds
+        // the Access Key ID and Secret Key joined by a colon (ID:Secret), as
+        // printed by `v-add-access-key`. Fall back to the deprecated admin
         // user/password form for installs that still use it.
         $accessHash = trim((string) $server->access_hash);
         if ($accessHash !== '') {

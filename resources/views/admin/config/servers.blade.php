@@ -256,6 +256,12 @@ const SERVER_TYPE_TUNING = {
         hashLabel: 'Access Hash', hashPlaceholder: 'Not used by DirectAdmin',
         hint: '<strong>DirectAdmin:</strong> username is the admin account with its password or a login key, on port 2222.',
     },
+    hestiacp: {
+        port: 8083, username: true,
+        passwordLabel: 'Admin Password (fallback)', passwordPlaceholder: 'HestiaCP admin password — only used without an access key',
+        hashLabel: 'Access Key (ID:Secret)', hashPlaceholder: 'ACCESS_KEY_ID:SECRET_ACCESS_KEY',
+        hint: '<strong>HestiaCP:</strong> run <code>v-add-access-key \'admin\' \'*\'</code> on the server and paste the <strong>Access Key ID</strong> and <strong>Secret Key</strong>, joined with a colon, into the Access Key field. Username/password is only a fallback for older installs. Port 8083.',
+    },
     proxmox: {
         port: 8006, username: true, nameservers: false, proxmox: true,
         usernameLabel: @json(__('proxmox.admin.token_id')), usernamePlaceholder: 'pnlcs@pve!billing',
