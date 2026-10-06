@@ -44,6 +44,7 @@ class ClientImporter
 
             $target = $this->engine->apply($row, $mapping);
             $this->fillMissingNames($target);
+            $this->detectClientType($target);
 
             $creating = ! $this->clientExists($matchKey, $target);
             $problem = $this->validator->record($target, $creating, ['email']);
@@ -104,6 +105,18 @@ class ClientImporter
 
         if (trim((string) ($target['last_name'] ?? '')) === '') {
             $target['last_name'] = '';
+        }
+    }
+
+    /**
+     * A client who has a tax number (NIP/VAT) is a company. Only auto-detect
+     * when the mapping did not set a type itself, so an explicit client_type
+     * mapping still wins.
+     */
+    protected function detectClientType(array &$target): void
+    {
+        if (trim((string) ($target['client_type'] ?? '')) === '' && trim((string) ($target['tax_id'] ?? '')) !== '') {
+            $target['client_type'] = 'company';
         }
     }
 

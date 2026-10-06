@@ -402,6 +402,56 @@ test('the service importer skips a service whose client email is unknown', funct
         ->and($summary['errors'])->toBe(1);
 });
 
+test('the client importer marks a client with a NIP as a company', function () {
+    $importer = app(ClientImporter::class);
+
+    $summary = $importer->run(
+        fn ($cb) => $cb(['id' => 1, 'firstname' => 'Jan', 'lastname' => 'Kowalski', 'email' => 'jan@example.com', 'tax_id' => '6482409327']),
+        [
+            'columns' => [
+                'firstname' => 'first_name',
+                'lastname' => 'last_name',
+                'email' => 'email',
+                'tax_id' => 'tax_id',
+            ],
+            'constants' => [],
+        ],
+        'add',
+        'email',
+    );
+
+    expect($summary['errors'])->toBe(0);
+
+    $client = Client::where('email', 'jan@example.com')->first();
+    expect($client)->not->toBeNull()
+        ->and($client->client_type)->toBe('company');
+});
+
+test('the client importer leaves a client without a NIP as an individual', function () {
+    $importer = app(ClientImporter::class);
+
+    $summary = $importer->run(
+        fn ($cb) => $cb(['id' => 1, 'firstname' => 'Jan', 'lastname' => 'Kowalski', 'email' => 'jan@example.com', 'tax_id' => '']),
+        [
+            'columns' => [
+                'firstname' => 'first_name',
+                'lastname' => 'last_name',
+                'email' => 'email',
+                'tax_id' => 'tax_id',
+            ],
+            'constants' => [],
+        ],
+        'add',
+        'email',
+    );
+
+    expect($summary['errors'])->toBe(0);
+
+    $client = Client::where('email', 'jan@example.com')->first();
+    expect($client)->not->toBeNull()
+        ->and($client->client_type)->toBeNull();
+});
+
 test('the whmcs import index page is behind manage_settings', function () {
     $this->actingAs(whmcsImportAdmin(), 'admin')
         ->get(route('admin.whmcs-import.index'))
