@@ -363,6 +363,15 @@ class AuthController extends Controller
         // person is in their account. Any "remember me" cookie already handed
         // out has to stop working, or the reset changes nothing for them.
         $user->setRememberToken(Str::random(60));
+
+        // The link only ever reaches the inbox of this address, so following it
+        // proves the address the way the verification link does. Without this,
+        // a customer whose account staff opened, and who set a password from
+        // the reset email, was then asked to verify the address they had just
+        // used. The invitation link counts the same way (InviteController).
+        if (! $user->hasVerifiedEmail()) {
+            $user->email_verified_at = now();
+        }
         $user->save();
         \App\Support\PasswordHistory::remember($user, $previousHash);
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
