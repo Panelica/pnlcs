@@ -646,7 +646,7 @@ if (! function_exists('inline_markup')) {
 if (! function_exists('mb_fmt')) {
     /**
      * A size in megabytes, written with the largest unit that reads sensibly:
-     * 512 MB stays "512 MB", 1997 MB becomes "1.9 GB", 2 097 152 MB "2 TB".
+     * 512 MB stays "512 MB", 1536 MB becomes "1.5 GB", 2 097 152 MB "2 TB".
      */
     function mb_fmt(float|int|string|null $mb): string
     {

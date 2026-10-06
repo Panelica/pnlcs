@@ -135,3 +135,31 @@ it('still says nothing happened when hestia will not answer', function () {
 
     expect((new HestiaCPModule)->usageUpdate($server))->toBe(['updated' => 0, 'errors' => 1]);
 });
+
+it('shows the customer what the account has used right now', function () {
+    Http::fake(['*' => Http::response(hestiaListing(['U_DISK' => '300', 'U_BANDWIDTH' => '1500']), 200)]);
+
+    $usage = (new HestiaCPModule)->liveUsage(hestiaService(hestiaServer())->fresh(['server']));
+
+    expect($usage['available'])->toBeTrue()
+        ->and($usage['disk'])->toBe(['used_mb' => 300, 'quota_mb' => 1024])
+        ->and($usage['bandwidth'])->toBe(['used_mb' => 1500]);
+});
+
+it('reads an unlimited disk as no quota', function () {
+    Http::fake(['*' => Http::response(hestiaListing(['DISK_QUOTA' => 'unlimited']), 200)]);
+
+    $usage = (new HestiaCPModule)->liveUsage(hestiaService(hestiaServer())->fresh(['server']));
+
+    expect($usage['disk']['quota_mb'])->toBe(0);
+});
+
+it('leaves the figures empty when hestia does not answer', function () {
+    Http::fake(['*' => Http::response('Error: user not found', 200)]);
+
+    $usage = (new HestiaCPModule)->liveUsage(hestiaService(hestiaServer())->fresh(['server']));
+
+    expect($usage['available'])->toBeTrue()
+        ->and($usage['disk'])->toBeNull()
+        ->and($usage['bandwidth'])->toBeNull();
+});

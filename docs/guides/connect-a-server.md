@@ -39,7 +39,11 @@ Servers**.
 
 === "HestiaCP"
     - **Port:** 8083. **Username:** the admin account (default `admin`).
-    - Its access key in **Access Hash**, or its password in **Password**.
+    - **Access Key:** run `v-add-access-key 'admin' '*'` on the server and
+      paste the two values it prints, the Access Key ID and the Secret Access
+      Key, joined by a colon: `ID:Secret`.
+    - **Admin Password:** only for servers that still use the older
+      user-and-password login. It is not sent when an access key is set.
 
 === "Proxmox"
     - **Port:** 8006. No nameservers are needed.
