@@ -130,34 +130,30 @@
     </div>
 </details>
 
-@if($service->disk_limit > 0 || $service->bw_limit > 0)
+@if($service->disk_limit > 0 || $service->bw_limit > 0 || $service->disk_usage > 0 || $service->bw_usage > 0)
 <div class="card" style="margin-bottom:15px;">
     <div class="card-header"><strong>{{ __('admin.services.resource_usage') }}</strong></div>
     <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-        @if($service->disk_limit > 0)
-        @php $diskPct = min(100, ($service->disk_limit > 0 ? ($service->disk_usage / $service->disk_limit) * 100 : 0)); @endphp
+        @php $diskPct = $service->disk_limit > 0 ? min(100, ($service->disk_usage / $service->disk_limit) * 100) : 0; @endphp
         <div>
             <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
                 <span style="color:#777;">{{ __('admin.services.disk_usage') }}</span>
-                <span style="font-weight:600;">{{ number_format($service->disk_usage) }} MB / {{ number_format($service->disk_limit) }} MB</span>
+                <span style="font-weight:600;">{{ mb_fmt($service->disk_usage) }} / {{ $service->disk_limit > 0 ? mb_fmt($service->disk_limit) : '∞' }}</span>
             </div>
             <div style="background:#e9e9e9;border-radius:3px;height:12px;">
                 <div style="height:12px;border-radius:3px;background:{{ $diskPct > 85 ? '#d9534f' : '#337ab7' }};width:{{ $diskPct }}%;"></div>
             </div>
         </div>
-        @endif
-        @if($service->bw_limit > 0)
-        @php $bwPct = min(100, ($service->bw_limit > 0 ? ($service->bw_usage / $service->bw_limit) * 100 : 0)); @endphp
+        @php $bwPct = $service->bw_limit > 0 ? min(100, ($service->bw_usage / $service->bw_limit) * 100) : 0; @endphp
         <div>
             <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
                 <span style="color:#777;">{{ __('admin.services.bandwidth') }}</span>
-                <span style="font-weight:600;">{{ number_format($service->bw_usage) }} MB / {{ number_format($service->bw_limit) }} MB</span>
+                <span style="font-weight:600;">{{ mb_fmt($service->bw_usage) }} / {{ $service->bw_limit > 0 ? mb_fmt($service->bw_limit) : '∞' }}</span>
             </div>
             <div style="background:#e9e9e9;border-radius:3px;height:12px;">
                 <div style="height:12px;border-radius:3px;background:{{ $bwPct > 85 ? '#d9534f' : '#5cb85c' }};width:{{ $bwPct }}%;"></div>
             </div>
         </div>
-        @endif
     </div>
 </div>
 @endif

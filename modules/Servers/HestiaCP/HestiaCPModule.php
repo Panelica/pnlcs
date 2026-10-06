@@ -387,6 +387,40 @@ class HestiaCPModule extends AbstractServerModule
         return ['updated' => $updated, 'errors' => $errors];
     }
 
+    /**
+     * Live disk and bandwidth for one account, shown on the customer's service
+     * page. Reads v-list-user for the service's HestiaCP username.
+     */
+    public function liveUsage(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $username = strtolower((string) ($this->getModuleData($service)['hestia_username'] ?? $service->username ?? ''));
+        if (! $server || $username === '') {
+            return ['available' => false];
+        }
+
+        $out = ['available' => true, 'disk' => null, 'bandwidth' => null, 'cpu' => null, 'ram' => null, 'domains' => []];
+
+        $result = $this->call($server, 'v-list-user', ['arg1' => $username, 'arg2' => 'json'], json: true);
+        if (! $result['success'] || ! is_array($result['raw'])) {
+            return $out;
+        }
+
+        $account = $result['raw'][$username] ?? null;
+        if (! is_array($account)) {
+            return $out;
+        }
+
+        $quota = $account['DISK_QUOTA'] ?? null;
+        $out['disk'] = [
+            'used_mb' => (int) ($account['U_DISK'] ?? 0),
+            'quota_mb' => is_numeric($quota) ? (int) $quota : 0,
+        ];
+        $out['bandwidth'] = ['used_mb' => (int) ($account['U_BANDWIDTH'] ?? 0)];
+
+        return $out;
+    }
+
     public function testConnection(Server $server): bool
     {
         try {
