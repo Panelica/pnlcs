@@ -695,6 +695,8 @@ return [
     'invoices.issued' => 'Ausgestellt',
     'invoices.network_error' => 'Netzwerkfehler:',
     'invoices.network_error_only' => 'Wir konnten den Zahlungsanbieter nicht erreichen. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
+    'invoices.payment_maybe_taken' => 'Ihre Zahlung ist möglicherweise bereits eingegangen. Bitte laden Sie die Rechnung neu, bevor Sie es erneut versuchen.',
+    'invoices.payment_reload' => 'Rechnung neu laden',
     'invoices.no_payment_methods' => 'Derzeit sind keine Zahlungsmethoden aktiv. Bitte kontaktieren Sie den Support, um Ihre Zahlung abzuschließen.',
     'invoices.not_configured' => 'ist noch nicht konfiguriert. Bitte wenden Sie sich an den Support.',
     'invoices.page_subtitle' => 'Sehen Sie sich Ihre Rechnungen an und bezahlen Sie sie.',

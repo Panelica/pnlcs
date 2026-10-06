@@ -696,6 +696,8 @@ return [
     'invoices.issued' => 'Issued',
     'invoices.network_error' => 'Network error:',
     'invoices.network_error_only' => 'We could not reach the payment provider. Please check your connection and try again.',
+    'invoices.payment_maybe_taken' => 'Your payment may have gone through. Please refresh the invoice before trying again.',
+    'invoices.payment_reload' => 'Refresh the invoice',
     'invoices.no_payment_methods' => 'No payment methods are currently configured. Please contact support.',
     'invoices.not_configured' => 'is not yet configured.',
     'invoices.page_subtitle' => 'View and pay your invoices.',

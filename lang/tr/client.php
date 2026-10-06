@@ -695,6 +695,8 @@ return [
     'invoices.issued' => 'Düzenlenme',
     'invoices.network_error' => 'Ağ hatası:',
     'invoices.network_error_only' => 'Ödeme sağlayıcısına ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.',
+    'invoices.payment_maybe_taken' => 'Ödemeniz alınmış olabilir. Tekrar denemeden önce faturayı yenileyin.',
+    'invoices.payment_reload' => 'Faturayı yenile',
     'invoices.no_payment_methods' => 'Tanımlı ödeme yöntemi yok. Lütfen destekle iletişime geçin.',
     'invoices.not_configured' => 'henüz yapılandırılmadı.',
     'invoices.page_subtitle' => 'Faturalarınızı görüntüleyin ve ödeyin.',

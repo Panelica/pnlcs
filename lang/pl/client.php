@@ -696,6 +696,8 @@ return [
     'invoices.issued' => 'Wystawiono',
     'invoices.network_error' => 'Błąd sieci:',
     'invoices.network_error_only' => 'Nie udało się połączyć z operatorem płatności. Sprawdź połączenie i spróbuj ponownie.',
+    'invoices.payment_maybe_taken' => 'Płatność mogła już zostać pobrana. Odśwież fakturę, zanim spróbujesz ponownie.',
+    'invoices.payment_reload' => 'Odśwież fakturę',
     'invoices.no_payment_methods' => 'Żadna metoda płatności nie jest obecnie skonfigurowana. Skontaktuj się z pomocą techniczną.',
     'invoices.not_configured' => 'nie jest jeszcze skonfigurowany.',
     'invoices.page_subtitle' => 'Przeglądaj i opłacaj swoje faktury.',
