@@ -300,4 +300,27 @@ return [
         'action' => 'Open my domains',
         'not_expected' => 'If you did not expect this, you can ignore it or decline it.',
     ],
+    'password_reset' => [
+        'subject' => 'Reset your :company password',
+        'requested' => 'We received a request to reset the password for your account (:email).',
+        'choose' => 'Click the button below to choose a new password. This link expires in 60 minutes.',
+        'action' => 'Reset password',
+        'fallback' => 'If the button does not work, copy and paste this URL into your browser:',
+        'ignore' => 'If you did not request a password reset, you can safely ignore this email — your password will not change.',
+    ],
+    'new_device_login' => [
+        'subject' => 'New sign-in to your :company account',
+        'intro' => 'Your account was signed in to from a device we have not seen before.',
+        'when' => 'When',
+        'device' => 'Device',
+        'ip' => 'IP address',
+        'was_you' => 'If this was you, there is nothing to do.',
+        'not_you' => 'If it was not, change your password and sign out the sessions you do not recognise:',
+    ],
+    'login_email_changed' => [
+        'subject' => 'The sign-in address on your :company account was changed',
+        'changed' => 'The address used to sign in to your account has been changed from :old to :new.',
+        'how' => 'The change was made from a signed-in session and confirmed with the account password.',
+        'not_you' => 'If this was not you, contact us straight away — whoever made the change can now receive password reset links for the account.',
+    ],
 ];

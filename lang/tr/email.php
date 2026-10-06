@@ -299,4 +299,27 @@ return [
         'action' => 'Alan adlarımı aç',
         'not_expected' => 'Beklemediğiniz bir teklifse yok sayabilir ya da reddedebilirsiniz.',
     ],
+    'password_reset' => [
+        'subject' => ':company şifrenizi sıfırlayın',
+        'requested' => 'Hesabınızın (:email) şifresini sıfırlamak için bir istek aldık.',
+        'choose' => 'Yeni şifrenizi belirlemek için aşağıdaki düğmeye tıklayın. Bağlantı 60 dakika geçerlidir.',
+        'action' => 'Şifremi sıfırla',
+        'fallback' => 'Düğme çalışmazsa bu adresi kopyalayıp tarayıcınıza yapıştırın:',
+        'ignore' => 'Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz; şifreniz değişmez.',
+    ],
+    'new_device_login' => [
+        'subject' => ':company hesabınıza yeni bir giriş yapıldı',
+        'intro' => 'Hesabınıza daha önce görmediğimiz bir cihazdan giriş yapıldı.',
+        'when' => 'Zaman',
+        'device' => 'Cihaz',
+        'ip' => 'IP adresi',
+        'was_you' => 'Giriş yapan sizseniz bir şey yapmanıza gerek yok.',
+        'not_you' => 'Siz değilseniz şifrenizi değiştirin ve tanımadığınız oturumları kapatın:',
+    ],
+    'login_email_changed' => [
+        'subject' => ':company hesabınızın giriş adresi değiştirildi',
+        'changed' => 'Hesabınıza giriş için kullanılan e-posta adresi :old adresinden :new adresine değiştirildi.',
+        'how' => 'Değişiklik açık bir oturumdan yapıldı ve hesap şifresiyle onaylandı.',
+        'not_you' => 'Bu değişikliği siz yapmadıysanız hemen bizimle iletişime geçin: değişikliği yapan kişi artık bu hesabın şifre sıfırlama bağlantılarını alabilir.',
+    ],
 ];

@@ -32,7 +32,7 @@ class NewDeviceLoginMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'New sign-in to your '.company_name().' account');
+        return new Envelope(subject: __('email.new_device_login.subject', ['company' => company_name()]));
     }
 
     public function content(): Content

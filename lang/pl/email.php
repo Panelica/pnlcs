@@ -300,4 +300,27 @@ return [
         'action' => 'Otwórz moje domeny',
         'not_expected' => 'Jeśli się tego nie spodziewasz, możesz to zignorować lub odrzucić.',
     ],
+    'password_reset' => [
+        'subject' => 'Zresetuj hasło do :company',
+        'requested' => 'Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta (:email).',
+        'choose' => 'Kliknij przycisk poniżej, aby ustawić nowe hasło. Link jest ważny przez 60 minut.',
+        'action' => 'Zresetuj hasło',
+        'fallback' => 'Jeśli przycisk nie działa, skopiuj ten adres i wklej go do przeglądarki:',
+        'ignore' => 'Jeśli nie prosiłeś o zresetowanie hasła, możesz zignorować tę wiadomość — Twoje hasło się nie zmieni.',
+    ],
+    'new_device_login' => [
+        'subject' => 'Nowe logowanie do konta :company',
+        'intro' => 'Na Twoje konto zalogowano się z urządzenia, którego wcześniej nie widzieliśmy.',
+        'when' => 'Kiedy',
+        'device' => 'Urządzenie',
+        'ip' => 'Adres IP',
+        'was_you' => 'Jeśli to Ty, nie musisz nic robić.',
+        'not_you' => 'Jeśli nie, zmień hasło i wyloguj sesje, których nie rozpoznajesz:',
+    ],
+    'login_email_changed' => [
+        'subject' => 'Adres logowania do konta :company został zmieniony',
+        'changed' => 'Adres używany do logowania na Twoje konto został zmieniony z :old na :new.',
+        'how' => 'Zmiany dokonano w zalogowanej sesji i potwierdzono hasłem do konta.',
+        'not_you' => 'Jeśli to nie Ty, skontaktuj się z nami natychmiast — osoba, która dokonała zmiany, może teraz otrzymywać linki do resetowania hasła do tego konta.',
+    ],
 ];
