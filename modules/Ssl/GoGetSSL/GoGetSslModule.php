@@ -139,6 +139,10 @@ class GoGetSslModule extends AbstractSslModule
                 }
             } elseif ($status === 'cancelled' || $status === 'rejected') {
                 $updates['status'] = 'Cancelled';
+            } elseif ($status === 'expired') {
+                $updates['status'] = 'Expired';
+            } elseif ($status === 'revoked') {
+                $updates['status'] = 'Revoked';
             } elseif ($status === 'processing' || $status === 'pending') {
                 $updates['status'] = 'Awaiting Issuance';
             }

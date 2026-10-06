@@ -149,7 +149,7 @@
         <div class="card mb-4">
             <div class="card-header"><h5 class="mb-0">{{ __('admin.ssl.actions') }}</h5></div>
             <div class="card-body d-grid gap-2">
-                @if(in_array($order->status, ['Awaiting Issuance', 'Configuration Submitted']))
+                @if(in_array($order->status, ['Awaiting Configuration', 'Awaiting Issuance', 'Configuration Submitted']))
                     <form method="POST" action="{{ route('admin.ssl.action', $order) }}">
                         @csrf
                         <input type="hidden" name="action" value="poll">
@@ -167,6 +167,11 @@
 
                 @if($order->isCompleted())
                     <a href="{{ route('admin.ssl.download', $order) }}" class="btn btn-success w-100">{{ __('admin.ssl.download_cert') }}</a>
+                    <form method="POST" action="{{ route('admin.ssl.action', $order) }}">
+                        @csrf
+                        <input type="hidden" name="action" value="renew">
+                        <button type="submit" class="btn btn-success w-100" onclick="return confirm('Are you sure you want to renew this certificate?')">{{ __('admin.ssl.renew') }}</button>
+                    </form>
                     <form method="POST" action="{{ route('admin.ssl.action', $order) }}">
                         @csrf
                         <input type="hidden" name="action" value="reissue">
