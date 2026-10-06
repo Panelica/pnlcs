@@ -189,6 +189,13 @@ class ServiceController extends Controller
             // drop the old binding and its account data and let provisioning pick
             // a fresh server.
             if ($newType !== $currentType) {
+                // An account that still runs on its server would be left there
+                // with nothing pointing at it: never suspended, never terminated,
+                // never billed. It is closed through the module first.
+                if ($service->server_id && in_array($service->status, [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)) {
+                    return back()->withInput()->with('error', __('admin.services.module_change_needs_termination'));
+                }
+
                 $service->server_id = null;
                 $service->module_data = null;
                 $service->username = null;

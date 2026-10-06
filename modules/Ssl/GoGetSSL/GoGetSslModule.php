@@ -4,6 +4,7 @@ namespace Modules\Ssl\GoGetSSL;
 
 use App\Models\SslOrder;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Modules\Ssl\AbstractSslModule;
 
@@ -162,32 +163,43 @@ class GoGetSslModule extends AbstractSslModule
     /**
      * Every order on the GoGetSSL account, so certificates that were issued
      * before this panel existed (or through another tool) can be imported.
+     * Null when the account could not be read, which is not the same as an
+     * account with no orders.
      *
-     * @return array<int, array{remote_id: string, domain: string, status: string, valid_from: string|null, valid_till: string|null}>
+     * @return array<int, array{remote_id: string, domain: string, status: string, valid_from: string|null, valid_till: string|null}>|null
      */
-    public function listRemoteOrders(): array
+    public function listRemoteOrders(): ?array
     {
         try {
             $this->authenticate();
             $response = $this->apiGet('/orders/');
-            $orders = $response['orders'] ?? $response;
-            if (! is_array($orders)) {
-                return [];
-            }
+        } catch (\Throwable $e) {
+            Log::warning('GoGetSSL order list failed', ['error' => $e->getMessage()]);
 
-            return array_map(
-                fn (array $o) => [
-                    'remote_id' => (string) ($o['order_id'] ?? ''),
-                    'domain' => (string) ($o['common_name'] ?? ''),
-                    'status' => (string) ($o['status'] ?? ''),
-                    'valid_from' => isset($o['valid_from']) ? (string) $o['valid_from'] : null,
-                    'valid_till' => isset($o['valid_till']) ? (string) $o['valid_till'] : null,
-                ],
-                array_values(array_filter($orders, 'is_array'))
-            );
-        } catch (\Throwable) {
-            return [];
+            return null;
         }
+
+        if (! empty($response['error'])) {
+            Log::warning('GoGetSSL order list refused', ['message' => $response['message'] ?? $response['description'] ?? '']);
+
+            return null;
+        }
+
+        $orders = $response['orders'] ?? $response;
+        if (! is_array($orders)) {
+            return null;
+        }
+
+        return array_map(
+            fn (array $o) => [
+                'remote_id' => (string) ($o['order_id'] ?? ''),
+                'domain' => (string) ($o['common_name'] ?? ''),
+                'status' => (string) ($o['status'] ?? ''),
+                'valid_from' => isset($o['valid_from']) ? (string) $o['valid_from'] : null,
+                'valid_till' => isset($o['valid_till']) ? (string) $o['valid_till'] : null,
+            ],
+            array_values(array_filter($orders, 'is_array'))
+        );
     }
 
     /** Map a remote GoGetSSL status word onto the panel's SslOrder status. */

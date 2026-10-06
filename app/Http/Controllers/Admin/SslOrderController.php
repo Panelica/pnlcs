@@ -63,9 +63,14 @@ class SslOrderController extends Controller
     {
         $result = $this->sslService->importRemoteOrders('gogetssl');
 
+        if ($result['failed']) {
+            return back()->with('error', __('admin.ssl.import_failed'));
+        }
+
         return back()->with('success', __('admin.ssl.import_done', [
             'imported' => $result['imported'],
             'updated' => $result['updated'],
+            'skipped' => $result['skipped'],
         ]));
     }
 

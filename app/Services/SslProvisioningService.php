@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Contracts\SslModuleInterface;
+use App\Enums\ServiceStatus;
 use App\Mail\SslCertificateIssuedMail;
 use App\Mail\SslConfigurationRequiredMail;
+use App\Models\Service;
 use App\Models\SslOrder;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\Log;
@@ -195,39 +197,38 @@ class SslProvisioningService
 
     /**
      * Import certificates that already exist at the provider into the panel, so
-     * they can be renewed and revoked here. Each remote order is matched to a
-     * service by domain (common name); an order with no matching service is
-     * skipped, since an SSL order must belong to a client.
+     * they can be renewed and revoked here.
      *
-     * @return array{imported: int, updated: int, skipped: int}
+     * An order the panel already has keeps its service and client: only what
+     * the provider knows better - the status and the expiry - is refreshed.
+     * Matching an existing order by domain again would move it to whichever
+     * service happened to carry that domain first, another client's included.
+     *
+     * A new order is attached to a live service with that domain that has no
+     * certificate yet, an SSL product before a hosting one. An order with no
+     * such service is skipped, since an SSL order must belong to a client.
+     *
+     * @return array{imported: int, updated: int, skipped: int, failed: bool}
      */
     public function importRemoteOrders(string $moduleName): array
     {
+        $result = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => false];
+
         $module = $this->registry->getSslModule($moduleName);
         if (! $module || ! method_exists($module, 'listRemoteOrders')) {
-            return ['imported' => 0, 'updated' => 0, 'skipped' => 0];
+            return ['failed' => true] + $result;
         }
 
         $orders = $module->listRemoteOrders();
-
-        $imported = 0;
-        $updated = 0;
-        $skipped = 0;
+        if ($orders === null) {
+            return ['failed' => true] + $result;
+        }
 
         foreach ($orders as $remote) {
-            $domain = trim((string) ($remote['domain'] ?? ''));
+            $domain = strtolower(trim((string) ($remote['domain'] ?? '')));
             $remoteId = (string) ($remote['remote_id'] ?? '');
             if ($domain === '' || $remoteId === '') {
-                $skipped++;
-
-                continue;
-            }
-
-            // A certificate can only be attached to a client, so an order whose
-            // domain is not a service here is skipped until the service exists.
-            $service = \App\Models\Service::where('domain', $domain)->first();
-            if (! $service) {
-                $skipped++;
+                $result['skipped']++;
 
                 continue;
             }
@@ -235,27 +236,60 @@ class SslProvisioningService
             $status = method_exists($module, 'mapRemoteStatus')
                 ? $module->mapRemoteStatus((string) ($remote['status'] ?? ''))
                 : (string) ($remote['status'] ?? '');
+            $expires = ($remote['valid_till'] ?? null) ?: null;
 
-            $data = [
+            $existing = SslOrder::where('remote_id', $remoteId)->first();
+            if ($existing) {
+                $existing->update(array_filter(['status' => $status, 'crt_expires' => $expires], fn ($v) => $v !== null && $v !== ''));
+                $this->fetchImportedCertificate($module, $existing);
+                $result['updated']++;
+
+                continue;
+            }
+
+            $service = Service::with('product')
+                ->where('domain', $domain)
+                ->whereNotIn('status', [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value, ServiceStatus::Fraud->value])
+                ->doesntHave('sslOrder')
+                ->orderBy('id')
+                ->get()
+                ->sortByDesc(fn (Service $s) => $s->product?->type === 'ssl')
+                ->first();
+
+            if (! $service) {
+                $result['skipped']++;
+
+                continue;
+            }
+
+            $order = SslOrder::create([
                 'remote_id' => $remoteId,
                 'module' => $moduleName,
                 'domain' => $domain,
                 'status' => $status,
-                'crt_expires' => ($remote['valid_till'] ?? null) ?: null,
+                'crt_expires' => $expires,
                 'service_id' => $service->id,
                 'client_id' => $service->client_id,
-            ];
-
-            $existing = SslOrder::where('remote_id', $remoteId)->first();
-            if ($existing) {
-                $existing->update($data);
-                $updated++;
-            } else {
-                SslOrder::create($data);
-                $imported++;
-            }
+            ]);
+            $this->fetchImportedCertificate($module, $order);
+            $result['imported']++;
         }
 
-        return ['imported' => $imported, 'updated' => $updated, 'skipped' => $skipped];
+        return $result;
+    }
+
+    /**
+     * An issued certificate is only usable here - downloaded, renewed, reissued,
+     * revoked - once the panel holds it, and the order list does not carry it.
+     * The module is asked directly rather than through pollCertificateStatus(),
+     * which would e-mail the customer that a long-issued certificate was issued.
+     */
+    protected function fetchImportedCertificate(SslModuleInterface $module, SslOrder $order): void
+    {
+        if ($order->status !== 'Completed' || ! empty($order->cert)) {
+            return;
+        }
+
+        $module->getCertificateStatus($order);
     }
 }
