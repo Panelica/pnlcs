@@ -44,4 +44,26 @@
     @endif
 </div>
 
+@if(!empty($log->skipped_details))
+<div class="card" style="margin-top:20px;">
+    <div style="padding:16px;border-bottom:1px solid #e5e7eb;font-weight:600;">{{ __('whmcs_import.log.skipped_details') }}</div>
+    <table class="data-table">
+        <thead><tr>
+            <th>{{ __('whmcs_import.log.whmcs_id') }}</th>
+            <th>{{ __('whmcs_import.log.email') }}</th>
+            <th>{{ __('whmcs_import.log.error') }}</th>
+        </tr></thead>
+        <tbody>
+        @foreach($log->skipped_details as $detail)
+            <tr>
+                <td>{{ $detail['whmcs_id'] ?? '' }}</td>
+                <td>{{ $detail['email'] ?? '' }}</td>
+                <td>{{ $detail['error'] ?? '' }}</td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+</div>
+@endif
+
 @endsection

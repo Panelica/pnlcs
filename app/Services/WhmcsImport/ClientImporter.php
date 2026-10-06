@@ -36,6 +36,7 @@ class ClientImporter
             'skipped' => 0,
             'errors' => 0,
             'error_details' => [],
+            'skipped_details' => [],
         ];
 
         $rows(function (array $row) use ($mapping, $importMode, $matchKey, &$summary) {
@@ -53,7 +54,7 @@ class ClientImporter
             }
 
             try {
-                [$client, $wasCreated] = $this->persist($target, $matchKey, $importMode);
+                [$client, $wasCreated, $skipReason] = $this->persist($target, $matchKey, $importMode);
             } catch (\Throwable $e) {
                 $summary['errors']++;
                 $summary['error_details'][] = $this->error($row, $e->getMessage());
@@ -63,6 +64,7 @@ class ClientImporter
 
             if ($client === null) {
                 $summary['skipped']++;
+                $summary['skipped_details'][] = $this->error($row, $skipReason ?? '');
 
                 return;
             }
@@ -87,7 +89,7 @@ class ClientImporter
     }
 
     /**
-     * @return array{0: Client|null, 1: bool} the affected client (null = skipped) and whether it was created
+     * @return array{0: Client|null, 1: bool, 2: string|null} the affected client (null = skipped), whether it was created, and the skip reason
      */
     protected function persist(array $target, ?string $matchKey, string $importMode): array
     {
@@ -103,23 +105,23 @@ class ClientImporter
 
         if ($existing !== null) {
             if ($importMode === 'add') {
-                return [null, false];
+                return [null, false, __('whmcs_import.log.skip_exists')];
             }
 
             $existing->update($columns);
             $this->storeCustomValues($existing, $customValues);
 
-            return [$existing, false];
+            return [$existing, false, null];
         }
 
         if ($importMode === 'update') {
-            return [null, false];
+            return [null, false, __('whmcs_import.log.skip_not_found')];
         }
 
         $client = Client::create($columns);
         $this->storeCustomValues($client, $customValues);
 
-        return [$client, true];
+        return [$client, true, null];
     }
 
     /**

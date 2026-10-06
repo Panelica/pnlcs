@@ -9,13 +9,14 @@ class WhmcsImportLog extends Model
 {
     protected $fillable = [
         'source', 'source_table', 'total', 'added', 'updated', 'skipped', 'errors',
-        'error_details', 'admin_id',
+        'error_details', 'skipped_details', 'admin_id',
     ];
 
     protected function casts(): array
     {
         return [
             'error_details' => 'array',
+            'skipped_details' => 'array',
             'total' => 'integer',
             'added' => 'integer',
             'updated' => 'integer',

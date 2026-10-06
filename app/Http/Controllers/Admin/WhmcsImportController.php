@@ -152,6 +152,7 @@ class WhmcsImportController extends Controller
             'skipped' => $summary['skipped'],
             'errors' => $summary['errors'],
             'error_details' => $summary['error_details'],
+            'skipped_details' => $summary['skipped_details'],
             'admin_id' => auth('admin')->id(),
         ]);
 
