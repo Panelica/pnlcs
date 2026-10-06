@@ -2,6 +2,7 @@
 
 use App\Models\Currency;
 use App\Models\Setting;
+use App\Support\CustomerCurrency;
 
 /*
  * The terms, the distance sales contract, the preliminary information form and
@@ -54,4 +55,19 @@ it('says the day\'s rate, not the Central Bank\'s, for another billing currency'
     Setting::set('OfficialRateProvider', '', 'general');
 
     expect(lcPage('terms', 'en'))->toContain('euros (EUR)')->toContain('pounds sterling (GBP)')->not->toContain('Central Bank');
+});
+
+it('says an account in another currency is invoiced in it, when customers may choose', function () {
+    lcShop('USD');
+    Currency::updateOrCreate(['code' => 'EUR'], ['prefix' => '€', 'suffix' => '', 'format' => 1, 'rate' => 0.9, 'is_default' => false]);
+    Setting::set('BillingCurrency', '', 'general');
+    Setting::set(CustomerCurrency::SETTING, '1', 'general');
+
+    expect(lcPage('terms', 'en'))->toContain('If your account is set to one of them, your invoices are issued in that currency')
+        ->and(lcPage('terms', 'tr'))->toContain('Hesabınız bunlardan birinde ise')
+        ->and(lcPage('distance-sales', 'tr'))->toContain('Hesabınız bunlardan birinde ise')
+        ->and(lcPage('pre-information', 'tr'))->toContain('Diğer para birimleri');
+
+    Setting::set(CustomerCurrency::SETTING, '0', 'general');
+    expect(lcPage('terms', 'en'))->not->toContain('If your account is set to one of them');
 });

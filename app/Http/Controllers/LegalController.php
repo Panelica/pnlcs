@@ -203,7 +203,11 @@ class LegalController extends Controller
      * The documents used to say "shown in US dollars, invoiced in Turkish
      * lira at the TCMB rate" on every installation, whatever it sold in.
      *
-     * @return array{shown: string, billed: ?string, tcmb: bool}
+     * With customers allowed to choose their own currency (CustomerCurrency),
+     * an account set to another currency is invoiced in that one instead, at
+     * the day's rate (Invoice::booted) - the documents say so, as "choice".
+     *
+     * @return array{shown: string, billed: ?string, tcmb: bool, choice: bool}
      */
     public static function money(string $locale): array
     {
@@ -212,7 +216,7 @@ class LegalController extends Controller
             $billing = strtoupper(trim((string) \App\Models\Setting::get('BillingCurrency', '')));
             $tcmb = (string) \App\Models\Setting::get('OfficialRateProvider', '') === 'tcmb';
         } catch (\Throwable) {
-            return ['shown' => self::currencyName('USD', $locale), 'billed' => null, 'tcmb' => false];
+            return ['shown' => self::currencyName('USD', $locale), 'billed' => null, 'tcmb' => false, 'choice' => false];
         }
 
         $billed = $billing !== '' && $billing !== $shop ? $billing : null;
@@ -221,6 +225,7 @@ class LegalController extends Controller
             'shown' => self::currencyName($shop, $locale),
             'billed' => $billed ? self::currencyName($billed, $locale) : null,
             'tcmb' => $billed === 'TRY' && $tcmb,
+            'choice' => \App\Support\CustomerCurrency::enabled(),
         ];
     }
 

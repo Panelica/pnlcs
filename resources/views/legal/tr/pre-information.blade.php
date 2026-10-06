@@ -19,6 +19,9 @@
     @else
     <li><strong>Faturalama para birimi:</strong> Fatura da aynı para biriminde düzenlenir.</li>
     @endif
+    @if($money['choice'])
+    <li><strong>Diğer para birimleri:</strong> Fiyatları sunduğumuz diğer para birimlerinde de görüntüleyebilirsiniz. Hesabınız bunlardan birinde ise faturalarınız o para biriminde, her faturanın düzenlendiği günün kuruyla düzenlenir; uygulanan kur faturada yazar.</li>
+    @endif
     @if($vatRate > 0)
     <li><strong>Vergiler:</strong> Türkiye'de yerleşik müşteriler için %{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }} KDV eklenir. Fatura üzerinde matrah, KDV ve toplam ayrı gösterilir.</li>
     @endif

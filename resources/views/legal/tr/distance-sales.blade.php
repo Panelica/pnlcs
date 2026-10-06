@@ -20,6 +20,9 @@ Fatura, siparişin verildiği tarihteki kur esas alınarak {{ $money['billed'] }
 @else
 Fatura da aynı para biriminde düzenlenir.
 @endif
+@if($money['choice'])
+Fiyatları sunduğumuz diğer para birimlerinde de görüntüleyebilirsiniz. Hesabınız bunlardan birinde ise faturalarınız o para biriminde, her faturanın düzenlendiği günün kuruyla düzenlenir; uygulanan kur faturada yazar.
+@endif
 </p>
 @if($vatRate > 0)
 <p><strong>Vergiler:</strong> Türkiye'de yerleşik Alıcılar için satış bedeline %{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }} oranında katma değer vergisi eklenir. Fatura üzerinde matrah, KDV tutarı ve toplam tutar ayrı ayrı gösterilir.</p>

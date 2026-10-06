@@ -18,6 +18,9 @@ Invoices are issued in <strong>{{ $money['billed'] }}</strong>, converted at the
 @else
 Invoices are issued in the same currency.
 @endif
+@if($money['choice'])
+You can also view prices in another currency we offer. If your account is set to one of them, your invoices are issued in that currency instead, converted at the rate of the day each invoice is issued; the rate applied is printed on the invoice.
+@endif
 </p>
 @if($vatRate > 0)
 <p>Customers resident in Türkiye are charged <strong>{{ rtrim(rtrim(number_format($vatRate, 2), '0'), '.') }}% VAT</strong>. For customers outside Türkiye, tax is applied according to the law of the relevant country and the arrangements to which Türkiye is a party.</p>
