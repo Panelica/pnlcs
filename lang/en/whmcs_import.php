@@ -46,6 +46,9 @@ return [
     'transform_replacement' => 'Replace with',
     'suggested' => 'suggested',
     'total_rows' => 'Rows to import: :count',
+    'target_clients' => 'Clients',
+    'target_domains' => 'Domains',
+    'domains_client_hint' => 'Each domain is linked to the PNLCS client whose email matches the WHMCS owner (matched through tblclients).',
 
     'preview_button' => 'Preview',
     'import_button' => 'Run import',
@@ -96,5 +99,6 @@ return [
         'invalid_status' => 'Unknown status ":value".',
         'country_too_long' => 'Country must be an ISO 2-letter code, got ":value".',
         'invalid_regex' => 'Invalid regular expression for field ":field".',
+        'client_not_found' => 'No PNLCS client with email ":email".',
     ],
 ];

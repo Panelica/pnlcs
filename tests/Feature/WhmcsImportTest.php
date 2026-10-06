@@ -285,6 +285,57 @@ test('the client importer writes mapped PNLCS custom field values', function () 
         ->and($value->value)->toBe('csa123');
 });
 
+test('the schema reader exposes PNLCS domain fields as targets', function () {
+    $fields = (new SchemaReader)->domainTargetFields();
+
+    expect($fields)->toContain('domain', 'registrar', 'expiry_date', 'status')
+        ->and($fields)->not->toContain('client_id', 'epp_code');
+});
+
+test('the mapper normalizes WHMCS domain status words', function () {
+    $engine = new MappingEngine;
+
+    expect($engine->apply(['status' => 'Active'], ['columns' => ['status' => 'status']])['status'])->toBe('active')
+        ->and($engine->apply(['status' => 'Pending Transfer'], ['columns' => ['status' => 'status']])['status'])->toBe('pending')
+        ->and($engine->apply(['status' => 'Transferred Away'], ['columns' => ['status' => 'status']])['status'])->toBe('transferred_away');
+});
+
+test('the domain importer links the domain to the client matched by email', function () {
+    $client = Client::factory()->create(['email' => 'owner@example.com']);
+
+    $importer = app(\App\Services\WhmcsImport\DomainImporter::class);
+
+    $summary = $importer->run(
+        fn ($cb) => $cb(['id' => 1, 'userid' => 5, 'domain' => 'example.com', 'status' => 'Active', 'client_email' => 'owner@example.com']),
+        ['columns' => ['domain' => 'domain', 'status' => 'status'], 'constants' => []],
+        'add',
+        'domain',
+    );
+
+    expect($summary['added'])->toBe(1)
+        ->and($summary['errors'])->toBe(0);
+
+    $domain = \App\Models\Domain::where('domain', 'example.com')->first();
+    expect($domain)->not->toBeNull()
+        ->and($domain->client_id)->toBe($client->id)
+        ->and($domain->status->value)->toBe('active');
+});
+
+test('the domain importer skips a domain whose owner email is unknown', function () {
+    $importer = app(\App\Services\WhmcsImport\DomainImporter::class);
+
+    $summary = $importer->run(
+        fn ($cb) => $cb(['id' => 1, 'userid' => 5, 'domain' => 'example.com', 'client_email' => 'ghost@example.com']),
+        ['columns' => ['domain' => 'domain'], 'constants' => []],
+        'add',
+        'domain',
+    );
+
+    expect($summary['added'])->toBe(0)
+        ->and($summary['errors'])->toBe(1)
+        ->and($summary['error_details'][0]['error'])->toContain('ghost@example.com');
+});
+
 test('the whmcs import index page is behind manage_settings', function () {
     $this->actingAs(whmcsImportAdmin(), 'admin')
         ->get(route('admin.whmcs-import.index'))

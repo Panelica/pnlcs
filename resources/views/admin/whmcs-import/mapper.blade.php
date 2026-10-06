@@ -10,7 +10,12 @@
 <div style="color:#666;font-size:13px;margin-bottom:15px;">
     {{ $connection->host }}:{{ $connection->port }} / {{ $connection->database }}
     &middot; {{ __('whmcs_import.total_rows', ['count' => $totalCount]) }}
+    &middot; {{ $target === 'domains' ? __('whmcs_import.target_domains') : __('whmcs_import.target_clients') }}
 </div>
+
+@if($target === 'domains')
+    <div class="alert alert-info" style="font-size:13px;">{{ __('whmcs_import.domains_client_hint') }}</div>
+@endif
 
 @if(!empty($errors))
     <div class="card" style="margin-bottom:15px;border-color:#fca5a5;">

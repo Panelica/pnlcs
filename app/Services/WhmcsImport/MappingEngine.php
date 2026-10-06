@@ -30,6 +30,7 @@ class MappingEngine
     public function __construct()
     {
         $this->register('status', fn ($value) => $this->statusValue($value));
+        $this->register('type', fn ($value) => strtolower(trim((string) $value)));
     }
 
     /**
@@ -86,6 +87,25 @@ class MappingEngine
             'tax_office' => 'tax_office',
             'national_id' => 'national_id',
             'default_payment_method' => 'default_payment_method',
+            'domain' => 'domain',
+            'registrar' => 'registrar',
+            'registrationperiod' => 'registration_period',
+            'registration_period' => 'registration_period',
+            'registrationdate' => 'registration_date',
+            'registration_date' => 'registration_date',
+            'expirydate' => 'expiry_date',
+            'expiry_date' => 'expiry_date',
+            'nextduedate' => 'next_due_date',
+            'next_due_date' => 'next_due_date',
+            'type' => 'type',
+            'firstpaymentamount' => 'first_payment_amount',
+            'recurringamount' => 'recurring_amount',
+            'paymentmethod' => 'payment_method',
+            'dnsmanagement' => 'dns_management',
+            'emailforwarding' => 'email_forwarding',
+            'idprotection' => 'id_protection',
+            'is_premium' => 'is_premium',
+            'additionalnotes' => 'notes',
         ];
 
         if (isset($aliases[$key])) {
@@ -176,7 +196,7 @@ class MappingEngine
         return $result === null ? (string) $value : $result;
     }
 
-    /** Map WHMCS status words onto PNLCS's active/inactive/closed. */
+    /** Map WHMCS status words (client and domain) onto PNLCS statuses. */
     protected function statusValue(mixed $value): string
     {
         $map = [
@@ -184,6 +204,15 @@ class MappingEngine
             'inactive' => 'inactive',
             'suspended' => 'inactive',
             'closed' => 'closed',
+            'pending' => 'pending',
+            'pending registration' => 'pending',
+            'pending transfer' => 'pending',
+            'expired' => 'expired',
+            'cancelled' => 'cancelled',
+            'fraud' => 'fraud',
+            'transferred away' => 'transferred_away',
+            'grace' => 'grace',
+            'redemption' => 'redemption',
         ];
 
         $normalized = strtolower(trim((string) $value));

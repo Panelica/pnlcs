@@ -135,9 +135,18 @@ class WhmcsConnector
     }
 
     /**
+     * Like each(), but attaches the owning client's email as `client_email`
+     * (looked up through the row's `userid` in tblclients).
+     */
+    public function eachWithClientEmail(string $table, string $prefix, int $size, callable $callback): int
+    {
+        return $this->iterate($table, $size, $callback, $prefix, null, true);
+    }
+
+    /**
      * @param  list<array{id: int, name: string}>  $customFields
      */
-    protected function iterate(string $table, int $size, callable $callback, ?string $prefix = null, ?array $customFields = null): int
+    protected function iterate(string $table, int $size, callable $callback, ?string $prefix = null, ?array $customFields = null, bool $clientEmail = false): int
     {
         $size = max(1, min($size, 1000));
         $order = $this->orderColumn($table);
@@ -160,6 +169,10 @@ class WhmcsConnector
 
             if ($prefix !== null && $customFields !== null && $customFields !== []) {
                 $this->enrichRows($rows, $prefix, $customFields);
+            }
+
+            if ($clientEmail) {
+                $this->enrichWithClientEmail($rows, $prefix ?? '');
             }
 
             foreach ($rows as $row) {
@@ -196,6 +209,58 @@ class WhmcsConnector
             }
         }
         unset($row);
+    }
+
+    /**
+     * Attach the owning client's email as `client_email` to each row, by
+     * following the row's `userid` to tblclients.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     */
+    public function enrichWithClientEmail(array &$rows, string $prefix): void
+    {
+        if ($rows === []) {
+            return;
+        }
+
+        $userIds = array_values(array_filter(array_map(fn (array $row) => (int) ($row['userid'] ?? 0), $rows)));
+        $emails = $this->clientEmails($prefix, $userIds);
+
+        foreach ($rows as &$row) {
+            $userId = (int) ($row['userid'] ?? 0);
+            $row['client_email'] = $emails[$userId] ?? null;
+        }
+        unset($row);
+    }
+
+    /**
+     * Emails of a set of WHMCS clients, keyed by client id.
+     *
+     * @param  list<int>  $userIds
+     * @return array<int, string>
+     */
+    public function clientEmails(string $prefix, array $userIds): array
+    {
+        $userIds = array_values(array_filter(array_map('intval', $userIds)));
+        if ($userIds === []) {
+            return [];
+        }
+
+        $table = $this->quoteIdentifier($prefix.'clients');
+        $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+        $stmt = $this->pdo->prepare(sprintf(
+            'SELECT id, email FROM %s WHERE id IN (%s)',
+            $table,
+            $placeholders
+        ));
+        $stmt->execute($userIds);
+
+        $result = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $result[(int) $row['id']] = $row['email'];
+        }
+
+        return $result;
     }
 
     /**

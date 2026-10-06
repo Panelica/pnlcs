@@ -7,6 +7,7 @@ use App\Models\WhmcsImportConnection;
 use App\Models\WhmcsImportLog;
 use App\Models\WhmcsImportProfile;
 use App\Services\WhmcsImport\ClientImporter;
+use App\Services\WhmcsImport\DomainImporter;
 use App\Services\WhmcsImport\ImportValidator;
 use App\Services\WhmcsImport\MappingEngine;
 use App\Services\WhmcsImport\SchemaReader;
@@ -21,6 +22,7 @@ class WhmcsImportController extends Controller
         protected MappingEngine $engine,
         protected ImportValidator $validator,
         protected ClientImporter $importer,
+        protected DomainImporter $domainImporter,
     ) {}
 
     public function index()
@@ -87,14 +89,14 @@ class WhmcsImportController extends Controller
             return $data;
         }
 
-        $connector = $data['connector'];
-        $sourceTable = $data['sourceTable'];
+        $config = $this->targetConfig($data['target']);
         $mapping = $data['mapping'];
+        $matchKey = $request->input('match_key') ?: $config['default_match_key'];
 
-        $data['errors'] = $this->validateMapping($data, $mapping, $request->input('match_key') ?: 'email', $request->input('import_mode', 'add'));
+        $data['errors'] = $this->validateMapping($data, $mapping, $matchKey, $request->input('import_mode', 'add'), $config['required_fields']);
 
-        $rows = $connector->rows($sourceTable, 10);
-        $connector->enrichRows($rows, $data['prefix'], $data['customFields']);
+        $rows = $data['connector']->rows($data['sourceTable'], 10);
+        $this->enrichRows($data, $rows);
         $data['preview'] = array_map(function (array $row) use ($mapping) {
             return [
                 'source' => $row,
@@ -113,23 +115,33 @@ class WhmcsImportController extends Controller
             return $data;
         }
 
+        $config = $this->targetConfig($data['target']);
         $mapping = $data['mapping'];
-        $matchKey = $request->input('match_key') ?: 'email';
+        $matchKey = $request->input('match_key') ?: $config['default_match_key'];
         $importMode = $request->input('import_mode', 'add');
 
-        $errors = $this->validateMapping($data, $mapping, $matchKey, $importMode);
+        $errors = $this->validateMapping($data, $mapping, $matchKey, $importMode, $config['required_fields']);
         if ($errors !== []) {
             $data['errors'] = $errors;
 
             return view('admin.whmcs-import.mapper', $data)->with('error', __('whmcs_import.validation.fix_errors'));
         }
 
-        $summary = $this->importer->run(
-            fn ($callback) => $data['connector']->eachEnriched($data['sourceTable'], $data['prefix'], $data['customFields'], 500, $callback),
-            $mapping,
-            $importMode,
-            $matchKey,
-        );
+        if ($data['target'] === 'domains') {
+            $summary = $this->domainImporter->run(
+                fn ($callback) => $data['connector']->eachWithClientEmail($data['sourceTable'], $data['prefix'], 500, $callback),
+                $mapping,
+                $importMode,
+                $matchKey,
+            );
+        } else {
+            $summary = $this->importer->run(
+                fn ($callback) => $data['connector']->eachEnriched($data['sourceTable'], $data['prefix'], $data['customFields'], 500, $callback),
+                $mapping,
+                $importMode,
+                $matchKey,
+            );
+        }
 
         $log = WhmcsImportLog::create([
             'source' => 'WHMCS',
@@ -156,16 +168,17 @@ class WhmcsImportController extends Controller
         $request->validate(['profile_name' => 'required|string|max:255']);
 
         $mapping = $this->parseMapping($request);
+        $sourceTable = $request->input('source_table', $connection->prefix.'clients');
 
         WhmcsImportProfile::create([
             'connection_id' => $connection->id,
             'name' => $request->string('profile_name')->toString(),
-            'source_table' => $request->input('source_table', $connection->prefix.'clients'),
-            'target' => 'clients',
+            'source_table' => $sourceTable,
+            'target' => $this->targetForTable($sourceTable, $connection->prefix),
             'mapping' => $mapping['columns'],
             'constants' => $mapping['constants'],
             'transforms' => $mapping['transforms'],
-            'match_key' => $request->input('match_key') ?: 'email',
+            'match_key' => $request->input('match_key') ?: null,
             'import_mode' => $request->input('import_mode', 'add'),
         ]);
 
@@ -204,14 +217,16 @@ class WhmcsImportController extends Controller
             $sourceTable = $tables[0] ?? '';
         }
 
+        $target = $this->targetForTable($sourceTable, $connection->prefix);
+        $config = $this->targetConfig($target);
+
         $sourceColumns = $connector->columns($sourceTable);
-        $targetFields = $this->schema->clientTargetFields();
 
         // WHMCS keeps PESEL/NIP & co. in custom fields, not in tblclients. They
         // join the source list under `custom:{name}` so the operator can map
         // them exactly like a real column.
         $customFields = [];
-        if ($sourceTable === $connection->prefix.'clients') {
+        if ($target === 'clients') {
             $customFields = $this->schema->whmcsCustomFields($connector, $connection->prefix);
             foreach ($customFields as $field) {
                 $sourceColumns[] = ['name' => 'custom:'.$field['name'], 'type' => 'custom field'];
@@ -232,7 +247,7 @@ class WhmcsImportController extends Controller
             // (e.g. CSA) maps onto it; nothing else can guess that here.
             if ($suggestion === null && str_starts_with($column['name'], 'custom:')) {
                 $name = substr($column['name'], strlen('custom:'));
-                if (in_array('custom_field:'.$name, $targetFields, true)) {
+                if (in_array('custom_field:'.$name, $config['target_fields'], true)) {
                     $suggestion = 'custom_field:'.$name;
                 }
             }
@@ -261,21 +276,67 @@ class WhmcsImportController extends Controller
             'connector' => $connector,
             'tables' => $tables,
             'sourceTable' => $sourceTable,
+            'target' => $target,
             'sourceColumns' => $sourceColumns,
             'customFields' => $customFields,
             'prefix' => $connection->prefix,
-            'targetFields' => $targetFields,
+            'targetFields' => $config['target_fields'],
             'suggestions' => $suggestions,
             'profiles' => WhmcsImportProfile::orderBy('name')->get(),
             'profile' => $profile,
             'mapping' => $mapping,
             'selected' => $selected,
-            'matchKey' => $request->input('match_key') ?: ($profile?->match_key ?: 'email'),
+            'matchKey' => $request->input('match_key') ?: ($profile?->match_key ?: $config['default_match_key']),
             'importMode' => $request->input('import_mode', $profile?->import_mode ?? 'add'),
             'totalCount' => $connector->count($sourceTable),
             'errors' => [],
             'preview' => null,
         ];
+    }
+
+    /** @return 'clients'|'domains' */
+    protected function targetForTable(string $sourceTable, string $prefix): string
+    {
+        $table = str_starts_with($sourceTable, $prefix) ? substr($sourceTable, strlen($prefix)) : $sourceTable;
+
+        return $table === 'domains' ? 'domains' : 'clients';
+    }
+
+    /**
+     * @return array{target_fields: list<string>, required_fields: list<string>, default_match_key: string}
+     */
+    protected function targetConfig(string $target): array
+    {
+        if ($target === 'domains') {
+            return [
+                'target_fields' => $this->schema->domainTargetFields(),
+                'required_fields' => ['domain'],
+                'default_match_key' => 'domain',
+            ];
+        }
+
+        return [
+            'target_fields' => $this->schema->clientTargetFields(),
+            'required_fields' => ['first_name', 'last_name', 'email'],
+            'default_match_key' => 'email',
+        ];
+    }
+
+    /**
+     * Attach the target-specific extra data to a set of source rows.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  list<array<string, mixed>>  $rows
+     */
+    protected function enrichRows(array $data, array &$rows): void
+    {
+        if ($data['target'] === 'domains') {
+            $data['connector']->enrichWithClientEmail($rows, $data['prefix']);
+
+            return;
+        }
+
+        $data['connector']->enrichRows($rows, $data['prefix'], $data['customFields']);
     }
 
     /** @return array{columns: array<string, string>, constants: array<string, string>, transforms: array<string, array{pattern: string, replacement: string}>} */
@@ -331,13 +392,14 @@ class WhmcsImportController extends Controller
     /**
      * @param  array<string, mixed>  $data
      * @param  array{columns: array<string, string>, constants: array<string, string>}  $mapping
+     * @param  list<string>  $requiredFields
      * @return list<string>
      */
-    protected function validateMapping(array $data, array $mapping, ?string $matchKey, string $importMode): array
+    protected function validateMapping(array $data, array $mapping, ?string $matchKey, string $importMode, array $requiredFields = ['first_name', 'last_name', 'email']): array
     {
         $sourceColumns = array_column($data['sourceColumns'], 'name');
 
-        return $this->validator->mapping($mapping, $data['targetFields'], $sourceColumns, $matchKey, $importMode);
+        return $this->validator->mapping($mapping, $data['targetFields'], $sourceColumns, $matchKey, $importMode, $requiredFields);
     }
 
     /** @return array<string, mixed> */

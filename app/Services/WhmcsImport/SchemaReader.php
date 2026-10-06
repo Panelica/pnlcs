@@ -4,6 +4,7 @@ namespace App\Services\WhmcsImport;
 
 use App\Models\Client;
 use App\Models\CustomField;
+use App\Models\Domain;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -75,5 +76,26 @@ class SchemaReader
     public function clientColumns(): array
     {
         return Schema::getColumnListing((new Client)->getTable());
+    }
+
+    /**
+     * The PNLCS domain fields an import may write to. `client_id` is filled by
+     * the importer itself (matched by email), so it is not offered as a target.
+     *
+     * @return list<string>
+     */
+    public function domainTargetFields(): array
+    {
+        $fields = (new Domain)->getFillable();
+
+        return array_values(array_diff($fields, [
+            'client_id',
+            'order_id',
+            'epp_code',
+            'last_sync_at',
+            'last_sync_status',
+            'renewal_reminder_stage',
+            'renewal_reminder_sent_at',
+        ]));
     }
 }
