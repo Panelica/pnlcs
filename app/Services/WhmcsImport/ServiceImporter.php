@@ -74,12 +74,21 @@ class ServiceImporter
 
             $serverId = (int) ($row['server'] ?? 0);
             if ($serverId > 0) {
+                $hostname = trim((string) ($row['server_hostname'] ?? ''));
                 $serverName = trim((string) ($row['server_name'] ?? ''));
-                $server = $serverName !== '' ? Server::where('name', $serverName)->first() : null;
+
+                $server = null;
+                if ($hostname !== '') {
+                    $server = Server::where('hostname', $hostname)->first();
+                }
+                if ($server === null && $serverName !== '') {
+                    $server = Server::where('name', $serverName)->first();
+                }
+
                 if ($server !== null) {
                     $target['server_id'] = $server->id;
                 } else {
-                    $summary['skipped_details'][] = $this->error($row, __('whmcs_import.validation.server_not_found', ['name' => $serverName ?: (string) $serverId]));
+                    $summary['skipped_details'][] = $this->error($row, __('whmcs_import.validation.server_not_found', ['name' => $serverName ?: $hostname ?: (string) $serverId]));
                 }
             }
 

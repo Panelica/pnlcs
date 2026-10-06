@@ -286,35 +286,39 @@ class WhmcsConnector
         $emails = $this->clientEmails($prefix, $userIds);
 
         $productIds = array_values(array_filter(array_map(fn (array $row) => (int) ($row['packageid'] ?? 0), $rows)));
-        $products = $this->names($prefix.'products', $productIds);
+        $products = $this->columnValues($prefix.'products', $productIds, 'name');
 
         $serverIds = array_values(array_filter(array_map(fn (array $row) => (int) ($row['server'] ?? 0), $rows)));
-        $servers = $this->names($prefix.'servers', $serverIds);
+        $servers = $this->columnValues($prefix.'servers', $serverIds, 'name');
+        $serverHostnames = $this->columnValues($prefix.'servers', $serverIds, 'hostname');
 
         foreach ($rows as &$row) {
             $row['client_email'] = $emails[(int) ($row['userid'] ?? 0)] ?? null;
             $row['product_name'] = $products[(int) ($row['packageid'] ?? 0)] ?? null;
             $row['server_name'] = $servers[(int) ($row['server'] ?? 0)] ?? null;
+            $row['server_hostname'] = $serverHostnames[(int) ($row['server'] ?? 0)] ?? null;
         }
         unset($row);
     }
 
     /**
-     * Names of a set of rows (id => name) from a WHMCS table.
+     * A column of a set of rows (id => value) from a WHMCS table.
      *
      * @param  list<int>  $ids
      * @return array<int, string>
      */
-    public function names(string $table, array $ids): array
+    public function columnValues(string $table, array $ids, string $column): array
     {
         $ids = array_values(array_filter(array_map('intval', $ids)));
         if ($ids === []) {
             return [];
         }
 
+        $quoted = $this->quoteIdentifier($column);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $stmt = $this->pdo->prepare(sprintf(
-            'SELECT id, name FROM %s WHERE id IN (%s)',
+            'SELECT id, %s AS col_value FROM %s WHERE id IN (%s)',
+            $quoted,
             $this->quoteIdentifier($table),
             $placeholders
         ));
@@ -322,7 +326,7 @@ class WhmcsConnector
 
         $result = [];
         foreach ($stmt->fetchAll() as $row) {
-            $result[(int) $row['id']] = $row['name'];
+            $result[(int) $row['id']] = $row['col_value'];
         }
 
         return $result;
