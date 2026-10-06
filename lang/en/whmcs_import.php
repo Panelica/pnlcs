@@ -49,6 +49,7 @@ return [
     'import_type' => 'Import type',
     'target_clients' => 'Clients',
     'target_domains' => 'Domains',
+    'target_services' => 'Services',
     'domains_client_hint' => 'Each domain is linked to the PNLCS client whose email matches the WHMCS owner (matched through tblclients).',
 
     'preview_button' => 'Preview',
@@ -105,5 +106,7 @@ return [
         'country_too_long' => 'Country must be an ISO 2-letter code, got ":value".',
         'invalid_regex' => 'Invalid regular expression for field ":field".',
         'client_not_found' => 'No PNLCS client with email ":email".',
+        'product_not_found' => 'Product ":name" not found in PNLCS.',
+        'server_not_found' => 'Server ":name" not found in PNLCS.',
     ],
 ];

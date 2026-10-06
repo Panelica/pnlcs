@@ -131,7 +131,7 @@ class WhmcsConnector
      */
     public function eachEnriched(string $table, string $prefix, array $customFields, int $size, callable $callback): int
     {
-        return $this->iterate($table, $size, $callback, $prefix, $customFields);
+        return $this->iterate($table, $size, $callback, fn (array &$rows) => $this->enrichRows($rows, $prefix, $customFields));
     }
 
     /**
@@ -140,13 +140,24 @@ class WhmcsConnector
      */
     public function eachWithClientEmail(string $table, string $prefix, int $size, callable $callback): int
     {
-        return $this->iterate($table, $size, $callback, $prefix, null, true);
+        return $this->iterate($table, $size, $callback, fn (array &$rows) => $this->enrichWithClientEmail($rows, $prefix));
     }
 
     /**
-     * @param  list<array{id: int, name: string}>  $customFields
+     * Like each(), but attaches `client_email`, `product_name` and `server_name`
+     * to each row (through `userid`, `packageid` and `server`).
      */
-    protected function iterate(string $table, int $size, callable $callback, ?string $prefix = null, ?array $customFields = null, bool $clientEmail = false): int
+    public function eachForServices(string $table, string $prefix, int $size, callable $callback): int
+    {
+        return $this->iterate($table, $size, $callback, fn (array &$rows) => $this->enrichWithServiceReferences($rows, $prefix));
+    }
+
+    /**
+     * Iterate every row of a table in bounded chunks, ordered by the primary
+     * key when one is found (WHMCS tables carry an `id`). The optional enricher
+     * receives each chunk before the rows are handed out. Returns rows seen.
+     */
+    protected function iterate(string $table, int $size, callable $callback, ?callable $enricher = null): int
     {
         $size = max(1, min($size, 1000));
         $order = $this->orderColumn($table);
@@ -167,12 +178,8 @@ class WhmcsConnector
 
             $rows = $stmt->fetchAll();
 
-            if ($prefix !== null && $customFields !== null && $customFields !== []) {
-                $this->enrichRows($rows, $prefix, $customFields);
-            }
-
-            if ($clientEmail) {
-                $this->enrichWithClientEmail($rows, $prefix ?? '');
+            if ($enricher !== null) {
+                $enricher($rows);
             }
 
             foreach ($rows as $row) {
@@ -258,6 +265,64 @@ class WhmcsConnector
         $result = [];
         foreach ($stmt->fetchAll() as $row) {
             $result[(int) $row['id']] = $row['email'];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Attach `client_email`, `product_name` and `server_name` to service rows,
+     * following `userid`/`packageid`/`server` through the WHMCS reference tables.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     */
+    public function enrichWithServiceReferences(array &$rows, string $prefix): void
+    {
+        if ($rows === []) {
+            return;
+        }
+
+        $userIds = array_values(array_filter(array_map(fn (array $row) => (int) ($row['userid'] ?? 0), $rows)));
+        $emails = $this->clientEmails($prefix, $userIds);
+
+        $productIds = array_values(array_filter(array_map(fn (array $row) => (int) ($row['packageid'] ?? 0), $rows)));
+        $products = $this->names($prefix.'products', $productIds);
+
+        $serverIds = array_values(array_filter(array_map(fn (array $row) => (int) ($row['server'] ?? 0), $rows)));
+        $servers = $this->names($prefix.'servers', $serverIds);
+
+        foreach ($rows as &$row) {
+            $row['client_email'] = $emails[(int) ($row['userid'] ?? 0)] ?? null;
+            $row['product_name'] = $products[(int) ($row['packageid'] ?? 0)] ?? null;
+            $row['server_name'] = $servers[(int) ($row['server'] ?? 0)] ?? null;
+        }
+        unset($row);
+    }
+
+    /**
+     * Names of a set of rows (id => name) from a WHMCS table.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, string>
+     */
+    public function names(string $table, array $ids): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $ids)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare(sprintf(
+            'SELECT id, name FROM %s WHERE id IN (%s)',
+            $this->quoteIdentifier($table),
+            $placeholders
+        ));
+        $stmt->execute($ids);
+
+        $result = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $result[(int) $row['id']] = $row['name'];
         }
 
         return $result;

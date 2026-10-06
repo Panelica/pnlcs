@@ -11,6 +11,7 @@ use App\Services\WhmcsImport\DomainImporter;
 use App\Services\WhmcsImport\ImportValidator;
 use App\Services\WhmcsImport\MappingEngine;
 use App\Services\WhmcsImport\SchemaReader;
+use App\Services\WhmcsImport\ServiceImporter;
 use App\Services\WhmcsImport\WhmcsConnector;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class WhmcsImportController extends Controller
         protected ImportValidator $validator,
         protected ClientImporter $importer,
         protected DomainImporter $domainImporter,
+        protected ServiceImporter $serviceImporter,
     ) {}
 
     public function index()
@@ -130,6 +132,13 @@ class WhmcsImportController extends Controller
         if ($data['target'] === 'domains') {
             $summary = $this->domainImporter->run(
                 fn ($callback) => $data['connector']->eachWithClientEmail($data['sourceTable'], $data['prefix'], 500, $callback),
+                $mapping,
+                $importMode,
+                $matchKey,
+            );
+        } elseif ($data['target'] === 'services') {
+            $summary = $this->serviceImporter->run(
+                fn ($callback) => $data['connector']->eachForServices($data['sourceTable'], $data['prefix'], 500, $callback),
                 $mapping,
                 $importMode,
                 $matchKey,
@@ -295,12 +304,16 @@ class WhmcsImportController extends Controller
         ];
     }
 
-    /** @return 'clients'|'domains' */
+    /** @return 'clients'|'domains'|'services' */
     protected function targetForTable(string $sourceTable, string $prefix): string
     {
         $table = str_starts_with($sourceTable, $prefix) ? substr($sourceTable, strlen($prefix)) : $sourceTable;
 
-        return $table === 'domains' ? 'domains' : 'clients';
+        return match ($table) {
+            'domains' => 'domains',
+            'hosting' => 'services',
+            default => 'clients',
+        };
     }
 
     /**
@@ -328,6 +341,14 @@ class WhmcsImportController extends Controller
             ];
         }
 
+        if ($target === 'services') {
+            return [
+                'target_fields' => $this->schema->serviceTargetFields(),
+                'required_fields' => [],
+                'default_match_key' => 'domain',
+            ];
+        }
+
         return [
             'target_fields' => $this->schema->clientTargetFields(),
             'required_fields' => ['first_name', 'last_name', 'email'],
@@ -345,6 +366,12 @@ class WhmcsImportController extends Controller
     {
         if ($data['target'] === 'domains') {
             $data['connector']->enrichWithClientEmail($rows, $data['prefix']);
+
+            return;
+        }
+
+        if ($data['target'] === 'services') {
+            $data['connector']->enrichWithServiceReferences($rows, $data['prefix']);
 
             return;
         }

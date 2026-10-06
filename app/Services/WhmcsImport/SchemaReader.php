@@ -5,6 +5,7 @@ namespace App\Services\WhmcsImport;
 use App\Models\Client;
 use App\Models\CustomField;
 use App\Models\Domain;
+use App\Models\Service;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -96,6 +97,29 @@ class SchemaReader
             'last_sync_status',
             'renewal_reminder_stage',
             'renewal_reminder_sent_at',
+        ]));
+    }
+
+    /**
+     * The PNLCS service fields an import may write to. `client_id`, `product_id`
+     * and `server_id` are resolved by the importer (email/name lookups), and the
+     * WHMCS password is its own encrypted blob that PNLCS cannot reuse.
+     *
+     * @return list<string>
+     */
+    public function serviceTargetFields(): array
+    {
+        $fields = (new Service)->getFillable();
+
+        return array_values(array_diff($fields, [
+            'client_id',
+            'order_id',
+            'product_id',
+            'server_id',
+            'password',
+            'module_data',
+            'auto_renew',
+            'override_auto_suspend_date',
         ]));
     }
 }

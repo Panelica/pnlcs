@@ -39,6 +39,7 @@
                 <select class="form-control" onchange="location.href='{{ route('admin.whmcs-import.mapper', $connection) }}?table='+this.value">
                     <option value="{{ $prefix }}clients" @selected($target === 'clients')>{{ __('whmcs_import.target_clients') }}</option>
                     <option value="{{ $prefix }}domains" @selected($target === 'domains')>{{ __('whmcs_import.target_domains') }}</option>
+                    <option value="{{ $prefix }}hosting" @selected($target === 'services')>{{ __('whmcs_import.target_services') }}</option>
                 </select>
             </div>
             <div class="form-group">

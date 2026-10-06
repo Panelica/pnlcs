@@ -31,6 +31,7 @@ class MappingEngine
     {
         $this->register('status', fn ($value) => $this->statusValue($value));
         $this->register('type', fn ($value) => strtolower(trim((string) $value)));
+        $this->register('billing_cycle', fn ($value) => $this->cycleValue($value));
     }
 
     /**
@@ -106,6 +107,19 @@ class MappingEngine
             'idprotection' => 'id_protection',
             'is_premium' => 'is_premium',
             'additionalnotes' => 'notes',
+            'notes' => 'notes',
+            'username' => 'username',
+            'billingcycle' => 'billing_cycle',
+            'billing_cycle' => 'billing_cycle',
+            'regdate' => 'registration_date',
+            'qty' => 'qty',
+            'amount' => 'amount',
+            'termination_date' => 'termination_date',
+            'suspendreason' => 'suspension_reason',
+            'diskusage' => 'disk_usage',
+            'disklimit' => 'disk_limit',
+            'bwusage' => 'bw_usage',
+            'bwlimit' => 'bw_limit',
         ];
 
         if (isset($aliases[$key])) {
@@ -196,13 +210,13 @@ class MappingEngine
         return $result === null ? (string) $value : $result;
     }
 
-    /** Map WHMCS status words (client and domain) onto PNLCS statuses. */
+    /** Map WHMCS status words (client, domain and service) onto PNLCS statuses. */
     protected function statusValue(mixed $value): string
     {
         $map = [
             'active' => 'active',
             'inactive' => 'inactive',
-            'suspended' => 'inactive',
+            'suspended' => 'suspended',
             'closed' => 'closed',
             'pending' => 'pending',
             'pending registration' => 'pending',
@@ -213,6 +227,26 @@ class MappingEngine
             'transferred away' => 'transferred_away',
             'grace' => 'grace',
             'redemption' => 'redemption',
+            'terminated' => 'terminated',
+            'completed' => 'completed',
+        ];
+
+        $normalized = strtolower(trim((string) $value));
+
+        return $map[$normalized] ?? $normalized;
+    }
+
+    /** Map WHMCS billing-cycle words onto PNLCS cycle names. */
+    protected function cycleValue(mixed $value): string
+    {
+        $map = [
+            'monthly' => 'monthly',
+            'quarterly' => 'quarterly',
+            'semi-annually' => 'semiannually',
+            'semiannually' => 'semiannually',
+            'annually' => 'annually',
+            'biennially' => 'biennially',
+            'triennially' => 'triennially',
         ];
 
         $normalized = strtolower(trim((string) $value));

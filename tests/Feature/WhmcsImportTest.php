@@ -338,6 +338,66 @@ test('the domain importer skips a domain whose owner email is unknown', function
         ->and($summary['error_details'][0]['error'])->toContain('ghost@example.com');
 });
 
+test('the schema reader exposes PNLCS service fields as targets', function () {
+    $fields = (new SchemaReader)->serviceTargetFields();
+
+    expect($fields)->toContain('domain', 'username', 'billing_cycle', 'amount')
+        ->and($fields)->not->toContain('client_id', 'product_id', 'server_id', 'password');
+});
+
+test('the mapper normalizes WHMCS billing cycles and service statuses', function () {
+    $engine = new MappingEngine;
+
+    expect($engine->apply(['billingcycle' => 'Annually'], ['columns' => ['billingcycle' => 'billing_cycle']])['billing_cycle'])->toBe('annually')
+        ->and($engine->apply(['billingcycle' => 'Semi-Annually'], ['columns' => ['billingcycle' => 'billing_cycle']])['billing_cycle'])->toBe('semiannually')
+        ->and($engine->apply(['domainstatus' => 'Suspended'], ['columns' => ['domainstatus' => 'status']])['status'])->toBe('suspended')
+        ->and($engine->apply(['domainstatus' => 'Terminated'], ['columns' => ['domainstatus' => 'status']])['status'])->toBe('terminated');
+});
+
+test('the service importer resolves client, product and server and imports', function () {
+    $client = Client::factory()->create(['email' => 'owner@example.com']);
+    $product = \App\Models\Product::create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
+    $server = \App\Models\Server::create(['name' => 'HestiaCP 00']);
+
+    $importer = app(\App\Services\WhmcsImport\ServiceImporter::class);
+
+    $summary = $importer->run(
+        fn ($cb) => $cb([
+            'id' => 21, 'userid' => 12, 'packageid' => 17, 'server' => 6,
+            'domain' => 'sektorsztuki.pl', 'domainstatus' => 'Active', 'billingcycle' => 'Annually',
+            'client_email' => 'owner@example.com', 'product_name' => 'Hosting Pro', 'server_name' => 'HestiaCP 00',
+        ]),
+        ['columns' => ['domain' => 'domain', 'domainstatus' => 'status', 'billingcycle' => 'billing_cycle'], 'constants' => []],
+        'add',
+        'domain',
+    );
+
+    expect($summary['added'])->toBe(1)
+        ->and($summary['errors'])->toBe(0);
+
+    $service = \App\Models\Service::where('domain', 'sektorsztuki.pl')->first();
+    expect($service)->not->toBeNull()
+        ->and($service->client_id)->toBe($client->id)
+        ->and($service->product_id)->toBe($product->id)
+        ->and($service->server_id)->toBe($server->id)
+        ->and($service->status->value)->toBe('active')
+        ->and($service->billing_cycle)->toBe('annually');
+});
+
+test('the service importer skips a service whose client email is unknown', function () {
+    $importer = app(\App\Services\WhmcsImport\ServiceImporter::class);
+
+    $summary = $importer->run(
+        fn ($cb) => $cb(['id' => 1, 'userid' => 5, 'domain' => 'x.pl', 'client_email' => 'ghost@example.com']),
+        ['columns' => ['domain' => 'domain'], 'constants' => []],
+        'add',
+        'domain',
+    );
+
+    expect($summary['added'])->toBe(0)
+        ->and($summary['errors'])->toBe(1);
+});
+
 test('the whmcs import index page is behind manage_settings', function () {
     $this->actingAs(whmcsImportAdmin(), 'admin')
         ->get(route('admin.whmcs-import.index'))
