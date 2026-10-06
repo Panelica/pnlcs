@@ -2521,6 +2521,7 @@ return [
         'next_due' => 'Next Due',
         'no_module' => 'No server module configured for this product.',
         'no_services' => 'No services found.',
+        'no_ssl_order' => 'No SSL order has been created for this service yet.',
         'none_assigned' => 'None assigned',
         'none_label' => 'None',
         'notes' => 'Notes',

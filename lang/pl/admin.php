@@ -2521,6 +2521,7 @@ return [
         'next_due' => 'Następny termin',
         'no_module' => 'Brak skonfigurowanego modułu serwera dla tego produktu.',
         'no_services' => 'Nie znaleziono usług.',
+        'no_ssl_order' => 'Nie utworzono jeszcze zamówienia SSL dla tej usługi.',
         'none_assigned' => 'Nie przypisano',
         'none_label' => 'Brak',
         'notes' => 'Notatki',
