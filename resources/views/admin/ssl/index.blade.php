@@ -5,6 +5,10 @@
 @section("content")
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">{{ __('admin.ssl.title') }}</h1>
+    <form method="POST" action="{{ route('admin.ssl.import') }}" onsubmit="return confirm('{{ __('admin.ssl.import_confirm') }}');">
+        @csrf
+        <button type="submit" class="btn btn-outline-primary">{{ __('admin.ssl.import_remote') }}</button>
+    </form>
 </div>
 
 {{-- Filters --}}
