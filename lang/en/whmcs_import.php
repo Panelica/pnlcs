@@ -46,6 +46,7 @@ return [
     'transform_replacement' => 'Replace with',
     'suggested' => 'suggested',
     'total_rows' => 'Rows to import: :count',
+    'import_type' => 'Import type',
     'target_clients' => 'Clients',
     'target_domains' => 'Domains',
     'domains_client_hint' => 'Each domain is linked to the PNLCS client whose email matches the WHMCS owner (matched through tblclients).',

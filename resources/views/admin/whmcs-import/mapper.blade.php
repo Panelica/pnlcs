@@ -35,6 +35,13 @@
         <div style="padding:16px;border-bottom:1px solid #e5e7eb;font-weight:600;">{{ __('whmcs_import.connection_title') }}</div>
         <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
             <div class="form-group">
+                <label class="form-label">{{ __('whmcs_import.import_type') }}</label>
+                <select class="form-control" onchange="location.href='{{ route('admin.whmcs-import.mapper', $connection) }}?table='+this.value">
+                    <option value="{{ $prefix }}clients" @selected($target === 'clients')>{{ __('whmcs_import.target_clients') }}</option>
+                    <option value="{{ $prefix }}domains" @selected($target === 'domains')>{{ __('whmcs_import.target_domains') }}</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label class="form-label">{{ __('whmcs_import.source_table') }}</label>
                 <select name="source_table" class="form-control" onchange="this.form.action='{{ route('admin.whmcs-import.mapper', $connection) }}';this.form.method='GET';this.form.submit()">
                     @foreach($tables as $table)

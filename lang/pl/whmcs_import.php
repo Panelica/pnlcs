@@ -46,6 +46,7 @@ return [
     'transform_replacement' => 'Zamień na',
     'suggested' => 'podpowiedź',
     'total_rows' => 'Rekordów do importu: :count',
+    'import_type' => 'Typ importu',
     'target_clients' => 'Klienci',
     'target_domains' => 'Domeny',
     'domains_client_hint' => 'Każda domena zostanie przypisana do klienta PNLCS, którego email zgadza się z właścicielem w WHMCS (dopasowanie przez tblclients).',

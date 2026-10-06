@@ -91,7 +91,7 @@ class WhmcsImportController extends Controller
 
         $config = $this->targetConfig($data['target']);
         $mapping = $data['mapping'];
-        $matchKey = $request->input('match_key') ?: $config['default_match_key'];
+        $matchKey = $this->resolveMatchKey($request->input('match_key'), $config);
 
         $data['errors'] = $this->validateMapping($data, $mapping, $matchKey, $request->input('import_mode', 'add'), $config['required_fields']);
 
@@ -117,7 +117,7 @@ class WhmcsImportController extends Controller
 
         $config = $this->targetConfig($data['target']);
         $mapping = $data['mapping'];
-        $matchKey = $request->input('match_key') ?: $config['default_match_key'];
+        $matchKey = $this->resolveMatchKey($request->input('match_key'), $config);
         $importMode = $request->input('import_mode', 'add');
 
         $errors = $this->validateMapping($data, $mapping, $matchKey, $importMode, $config['required_fields']);
@@ -286,7 +286,7 @@ class WhmcsImportController extends Controller
             'profile' => $profile,
             'mapping' => $mapping,
             'selected' => $selected,
-            'matchKey' => $request->input('match_key') ?: ($profile?->match_key ?: $config['default_match_key']),
+            'matchKey' => $this->resolveMatchKey($request->input('match_key'), $config, $profile?->match_key),
             'importMode' => $request->input('import_mode', $profile?->import_mode ?? 'add'),
             'totalCount' => $connector->count($sourceTable),
             'errors' => [],
@@ -300,6 +300,18 @@ class WhmcsImportController extends Controller
         $table = str_starts_with($sourceTable, $prefix) ? substr($sourceTable, strlen($prefix)) : $sourceTable;
 
         return $table === 'domains' ? 'domains' : 'clients';
+    }
+
+    /**
+     * The match key for the current target, resetting a stale value from the
+     * other target (e.g. `email` carried over from the clients mapper when the
+     * source table is switched to domains).
+     */
+    protected function resolveMatchKey(?string $key, array $config, ?string $profileKey = null): string
+    {
+        $key = $key ?: ($profileKey ?: $config['default_match_key']);
+
+        return in_array($key, $config['target_fields'], true) ? $key : $config['default_match_key'];
     }
 
     /**
