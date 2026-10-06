@@ -180,13 +180,28 @@ class ServiceController extends Controller
         // so the account is resized too; if the server refuses, nothing is
         // changed. Without an account (pending, terminated, or no module) the
         // record is all there is.
-        if ($newProduct && $service->product?->server_type && in_array($service->status, [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)) {
-            $result = $this->provisioning->changePackage($service, $newProduct);
-            if (! ($result['success'] ?? false)) {
-                return back()->withInput()->with('error', __('admin.services.package_change_failed', ['message' => $result['message'] ?? '']));
+        if ($newProduct) {
+            $currentType = strtolower((string) ($service->server?->type ?? $service->product?->server_type ?? ''));
+            $newType = strtolower((string) ($newProduct->server_type ?? ''));
+
+            // Moving to a different server module: the account must be recreated
+            // on a server of the new module, so drop the old binding (and its
+            // account data) and let provisioning pick a fresh server.
+            if ($newType !== '' && $newType !== $currentType) {
+                $service->server_id = null;
+                $service->module_data = null;
+                $service->username = null;
+                $service->password = null;
+                $service->status = ServiceStatus::Pending->value;
+                $service->product_id = $newProduct->id;
+            } elseif ($currentType !== '' && in_array($service->status, [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)) {
+                $result = $this->provisioning->changePackage($service, $newProduct);
+                if (! ($result['success'] ?? false)) {
+                    return back()->withInput()->with('error', __('admin.services.package_change_failed', ['message' => $result['message'] ?? '']));
+                }
+            } else {
+                $service->product_id = $newProduct->id;
             }
-        } elseif ($newProduct) {
-            $service->product_id = $newProduct->id;
         }
 
         $service->fill([
