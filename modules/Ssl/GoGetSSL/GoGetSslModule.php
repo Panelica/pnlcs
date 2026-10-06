@@ -159,6 +159,50 @@ class GoGetSslModule extends AbstractSslModule
         }
     }
 
+    /**
+     * Every order on the GoGetSSL account, so certificates that were issued
+     * before this panel existed (or through another tool) can be imported.
+     *
+     * @return array<int, array{remote_id: string, domain: string, status: string, valid_from: string|null, valid_till: string|null}>
+     */
+    public function listRemoteOrders(): array
+    {
+        try {
+            $this->authenticate();
+            $response = $this->apiGet('/orders/');
+            $orders = $response['orders'] ?? $response;
+            if (! is_array($orders)) {
+                return [];
+            }
+
+            return array_map(
+                fn (array $o) => [
+                    'remote_id' => (string) ($o['order_id'] ?? ''),
+                    'domain' => (string) ($o['common_name'] ?? ''),
+                    'status' => (string) ($o['status'] ?? ''),
+                    'valid_from' => isset($o['valid_from']) ? (string) $o['valid_from'] : null,
+                    'valid_till' => isset($o['valid_till']) ? (string) $o['valid_till'] : null,
+                ],
+                array_values(array_filter($orders, 'is_array'))
+            );
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /** Map a remote GoGetSSL status word onto the panel's SslOrder status. */
+    public function mapRemoteStatus(string $status): string
+    {
+        return match ($status) {
+            'active', 'issued' => 'Completed',
+            'cancelled', 'rejected' => 'Cancelled',
+            'expired' => 'Expired',
+            'revoked' => 'Revoked',
+            'processing', 'pending' => 'Awaiting Issuance',
+            default => $status,
+        };
+    }
+
     public function renewCertificate(SslOrder $order): array
     {
         try {
