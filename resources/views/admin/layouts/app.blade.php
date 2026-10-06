@@ -61,7 +61,7 @@
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-plus"></i>{{ __('common.actions.add_new') }}</a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ route('admin.clients.create') }}"><i class="fas fa-user"></i> {{ __('admin.nav.new_client') }}</a></li>
-                    <li><a href="{{ route('admin.orders.index') }}"><i class="fas fa-cube"></i> {{ __('admin.nav.new_order') }}</a></li>
+                    <li><a href="{{ route('admin.orders.create') }}"><i class="fas fa-cube"></i> {{ __('admin.nav.new_order') }}</a></li>
                     <li><a href="{{ route('admin.invoices.create') }}"><i class="fas fa-file-invoice"></i> {{ __('admin.nav.new_invoice') }}</a></li>
                     <li><a href="{{ route('admin.quotes.create') }}"><i class="fas fa-file-signature"></i> {{ __('admin.nav.new_quote') }}</a></li>
                     <li><a href="{{ route('admin.tickets.create') }}"><i class="fas fa-life-ring"></i> {{ __('admin.nav.new_ticket') }}</a></li>

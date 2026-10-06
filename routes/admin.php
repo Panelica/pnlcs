@@ -132,6 +132,11 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     Route::middleware('admin.permission:list_orders')->group(function () {
         Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
     });
+    // Before orders/{order}, which would otherwise take "create" for an id.
+    Route::middleware('admin.permission:manage_orders')->group(function () {
+        Route::get('orders/create', [OrderController::class, 'create'])->name('orders.create');
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
+    });
     Route::middleware('admin.permission:view_orders')->group(function () {
         Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
     });

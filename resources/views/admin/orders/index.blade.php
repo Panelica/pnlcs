@@ -2,8 +2,11 @@
 @section("title", __("admin.orders.title"))
 @section("content")
 
-<div class="page-header">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>{{ __('admin.orders.title') }}</h1>
+    @if(auth('admin')->user()?->hasPermission('manage_orders'))
+    <a href="{{ route('admin.orders.create') }}" class="btn btn-primary btn-sm">{{ __('admin.orders.new_title') }}</a>
+    @endif
 </div>
 
 <!-- Status Filter Tabs -->

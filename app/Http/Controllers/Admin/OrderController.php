@@ -30,6 +30,88 @@ class OrderController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
+    /**
+     * Place an order for a customer.
+     *
+     * Staff could accept, cancel and delete orders but not raise one: a sale
+     * agreed on the phone meant logging in as the customer, or the API. The
+     * order goes through OrderService exactly as the shop's and the API's do,
+     * so the invoice, the confirmation mail and the provisioning are the same.
+     */
+    public function create(Request $request): View
+    {
+        $client = $request->filled('client') ? $this->findClient((string) $request->input('client')) : null;
+
+        return view('admin.orders.create', [
+            'client' => $client,
+            'products' => \App\Models\Product::with('group:id,name', 'pricing')
+                ->where('hidden', false)->where('retired', false)
+                ->orderBy('group_id')->orderBy('name')->get(),
+            'gateways' => app(\App\Services\Module\ModuleRegistry::class)->usableGateways(),
+            'cycles' => ['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'],
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $v = $request->validate([
+            'client' => 'required|string|max:255',
+            'product_id' => 'required|exists:products,id',
+            'billing_cycle' => 'required|in:monthly,quarterly,semiannually,annually,biennially,triennially',
+            'domain' => 'nullable|string|max:255',
+            'price' => 'nullable|numeric|min:0',
+            'payment_method' => ['required', 'string', function ($attribute, $value, $fail) {
+                if (! in_array((string) $value, app(\App\Services\Module\ModuleRegistry::class)->usableGateways(), true)) {
+                    $fail(__('admin.orders.new_gateway_unusable'));
+                }
+            }],
+            'promo_code' => 'nullable|string|max:255',
+            'accept' => 'nullable|boolean',
+        ]);
+
+        $client = $this->findClient($v['client']);
+        if (! $client) {
+            return back()->withInput()->withErrors(['client' => __('admin.orders.new_client_unknown')]);
+        }
+
+        // The shop-currency price, as the cart takes it: amounts are booked in
+        // the shop currency, and the invoice adds the customer's own currency
+        // as a stamp at the day's rate (Invoice::booted). A cycle the product
+        // is not sold on is refused rather than billed at nothing, unless
+        // staff set the price themselves.
+        $product = \App\Models\Product::findOrFail($v['product_id']);
+        $listed = $product->priceFor($v['billing_cycle']);
+        $price = isset($v['price']) && $v['price'] !== '' ? (float) $v['price'] : $listed;
+        if ($price === null) {
+            return back()->withInput()->withErrors(['billing_cycle' => __('client.cart.cycle_unavailable')]);
+        }
+
+        $order = $this->orderService->processOrder($client, [[
+            'type' => 'service',
+            'product_id' => $product->id,
+            'domain' => trim((string) ($v['domain'] ?? '')),
+            'billing_cycle' => $v['billing_cycle'],
+            'amount' => (float) $price,
+        ]], (string) $v['payment_method'], $v['promo_code'] ?? null);
+
+        \App\Models\ActivityLog::log('Order '.$order->order_num.' placed by staff', auth('admin')->user()?->username, $client->id, $order->invoice_id);
+
+        // Accepting here is the same as the Accept button: services are set
+        // up whatever the product's own setting, the invoice stays as it is.
+        if ($request->boolean('accept')) {
+            $order = $this->orderService->acceptOrder($order->fresh(), manual: true);
+        }
+
+        return redirect()->route('admin.orders.show', $order)->with('success', __('admin.orders.new_placed', ['number' => $order->order_num]));
+    }
+
+    private function findClient(string $input): ?\App\Models\Client
+    {
+        $input = trim($input);
+
+        return ctype_digit($input) ? \App\Models\Client::find((int) $input) : \App\Models\Client::where('email', $input)->first();
+    }
+
     public function show(Order $order): View
     {
         $order->load('client', 'services', 'domains', 'invoice');
