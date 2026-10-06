@@ -18,10 +18,10 @@
     <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.products.product_details') }}</strong></div>
         <div class="card-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;" x-data="{ type: '{{ old('type', 'hosting') }}' }">
                 <div class="form-group"><label class="form-label">{{ __('admin.products.product_name') }} <span style="color:#d9534f;">*</span></label><input type="text" name="name" value="{{ old('name') }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.product_group') }} <span style="color:#d9534f;">*</span></label><select name="group_id" required class="form-control">@foreach($groups as $g)<option value="{{ $g->id }}">{{ $g->name }}</option>@endforeach</select></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.products.product_type') }} <span style="color:#d9534f;">*</span></label><select name="type" class="form-control"><option value="hosting">{{ __('admin.products.type_hosting') }}</option><option value="reseller">{{ __('admin.products.type_reseller') }}</option><option value="vps">{{ __('admin.products.type_vps') }}</option><option value="ssl">{{ __('admin.products.type_ssl') }}</option><option value="other">{{ __('admin.products.type_other') }}</option></select></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.products.product_type') }} <span style="color:#d9534f;">*</span></label><select name="type" x-model="type" class="form-control"><option value="hosting">{{ __('admin.products.type_hosting') }}</option><option value="reseller">{{ __('admin.products.type_reseller') }}</option><option value="vps">{{ __('admin.products.type_vps') }}</option><option value="ssl">{{ __('admin.products.type_ssl') }}</option><option value="other">{{ __('admin.products.type_other') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.payment_type') }} <span style="color:#d9534f;">*</span></label><select name="pay_type" class="form-control"><option value="recurring">{{ __('admin.products.pay_recurring') }}</option><option value="onetime">{{ __('admin.products.pay_onetime') }}</option><option value="free">{{ __('admin.products.pay_free') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.auto_setup') }}</label>
                     <select name="auto_setup" class="form-control">
@@ -30,7 +30,7 @@
                         <option value="manual">{{ __('admin.products.auto_setup_manual') }}</option>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">{{ __('admin.products.server_module') }}</label>
+                <div class="form-group" x-show="type !== 'ssl'"><label class="form-label">{{ __('admin.products.server_module') }}</label>
                     <select name="server_type" class="form-control">
                         <option value="">{{ __('admin.products.server_module_none') }}</option>
                         @foreach($serverModules as $key => $label)
@@ -38,6 +38,14 @@
                         @endforeach
                     </select>
                     <div style="color:#777;font-size:12px;margin-top:4px;">{{ __('admin.products.server_module_hint') }}</div>
+                </div>
+                <div class="form-group" x-show="type === 'ssl'" x-cloak><label class="form-label">{{ __('admin.products.ssl_module') }}</label>
+                    <select name="ssl_module" class="form-control">
+                        <option value="">{{ __('admin.products.ssl_none') }}</option>
+                        @foreach($sslModules as $sslKey => $sslLabel)
+                        <option value="{{ $sslKey }}" @selected(old('ssl_module') === $sslKey)>{{ $sslLabel }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.products.server_group') }}</label>
                     <select name="server_group_id" class="form-control">

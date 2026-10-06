@@ -29,6 +29,7 @@ class ProductCreator
             'pay_type' => 'required|in:free,onetime,recurring',
             'auto_setup' => 'nullable|in:order,payment,manual',
             'server_type' => ['nullable', Rule::in(array_keys(app(ModuleRegistry::class)->serverModuleNames()))],
+            'ssl_module' => 'nullable|string|max:100',
             'server_group_id' => 'nullable|exists:server_groups,id',
             // A price is a number, or -1 for "not sold on this cycle". Anything
             // else used to go straight to the database and come back as an error page.

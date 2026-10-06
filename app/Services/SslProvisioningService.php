@@ -192,4 +192,70 @@ class SslProvisioningService
             Log::warning("Failed to send SSL issued email for order #{$order->id}: {$e->getMessage()}");
         }
     }
+
+    /**
+     * Import certificates that already exist at the provider into the panel, so
+     * they can be renewed and revoked here. Each remote order is matched to a
+     * service by domain (common name); an order with no matching service is
+     * skipped, since an SSL order must belong to a client.
+     *
+     * @return array{imported: int, updated: int, skipped: int}
+     */
+    public function importRemoteOrders(string $moduleName): array
+    {
+        $module = $this->registry->getSslModule($moduleName);
+        if (! $module || ! method_exists($module, 'listRemoteOrders')) {
+            return ['imported' => 0, 'updated' => 0, 'skipped' => 0];
+        }
+
+        $orders = $module->listRemoteOrders();
+
+        $imported = 0;
+        $updated = 0;
+        $skipped = 0;
+
+        foreach ($orders as $remote) {
+            $domain = trim((string) ($remote['domain'] ?? ''));
+            $remoteId = (string) ($remote['remote_id'] ?? '');
+            if ($domain === '' || $remoteId === '') {
+                $skipped++;
+
+                continue;
+            }
+
+            // A certificate can only be attached to a client, so an order whose
+            // domain is not a service here is skipped until the service exists.
+            $service = \App\Models\Service::where('domain', $domain)->first();
+            if (! $service) {
+                $skipped++;
+
+                continue;
+            }
+
+            $status = method_exists($module, 'mapRemoteStatus')
+                ? $module->mapRemoteStatus((string) ($remote['status'] ?? ''))
+                : (string) ($remote['status'] ?? '');
+
+            $data = [
+                'remote_id' => $remoteId,
+                'module' => $moduleName,
+                'domain' => $domain,
+                'status' => $status,
+                'crt_expires' => ($remote['valid_till'] ?? null) ?: null,
+                'service_id' => $service->id,
+                'client_id' => $service->client_id,
+            ];
+
+            $existing = SslOrder::where('remote_id', $remoteId)->first();
+            if ($existing) {
+                $existing->update($data);
+                $updated++;
+            } else {
+                SslOrder::create($data);
+                $imported++;
+            }
+        }
+
+        return ['imported' => $imported, 'updated' => $updated, 'skipped' => $skipped];
+    }
 }

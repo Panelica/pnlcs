@@ -58,6 +58,17 @@ class SslOrderController extends Controller
         return redirect()->route('admin.ssl.show', $sslOrder)->with('error', $result['message']);
     }
 
+    /** Import certificates that already exist at the provider into the panel. */
+    public function importRemote()
+    {
+        $result = $this->sslService->importRemoteOrders('gogetssl');
+
+        return back()->with('success', __('admin.ssl.import_done', [
+            'imported' => $result['imported'],
+            'updated' => $result['updated'],
+        ]));
+    }
+
     public function downloadCert(SslOrder $sslOrder)
     {
         $result = $this->sslService->downloadCertificate($sslOrder);
