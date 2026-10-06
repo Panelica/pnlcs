@@ -6,11 +6,15 @@ use App\Models\Client;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
 use App\Models\Domain;
+use App\Models\Product;
+use App\Models\Server;
+use App\Models\Service;
 use App\Services\WhmcsImport\ClientImporter;
 use App\Services\WhmcsImport\DomainImporter;
 use App\Services\WhmcsImport\ImportValidator;
 use App\Services\WhmcsImport\MappingEngine;
 use App\Services\WhmcsImport\SchemaReader;
+use App\Services\WhmcsImport\ServiceImporter;
 
 function whmcsImportAdmin(): Admin
 {
@@ -356,10 +360,10 @@ test('the mapper normalizes WHMCS billing cycles and service statuses', function
 
 test('the service importer resolves client, product and server and imports', function () {
     $client = Client::factory()->create(['email' => 'owner@example.com']);
-    $product = \App\Models\Product::create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
-    $server = \App\Models\Server::create(['name' => 'HestiaCP 00']);
+    $product = Product::create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
+    $server = Server::create(['name' => 'HestiaCP 00']);
 
-    $importer = app(\App\Services\WhmcsImport\ServiceImporter::class);
+    $importer = app(ServiceImporter::class);
 
     $summary = $importer->run(
         fn ($cb) => $cb([
@@ -375,7 +379,7 @@ test('the service importer resolves client, product and server and imports', fun
     expect($summary['added'])->toBe(1)
         ->and($summary['errors'])->toBe(0);
 
-    $service = \App\Models\Service::where('domain', 'sektorsztuki.pl')->first();
+    $service = Service::where('domain', 'sektorsztuki.pl')->first();
     expect($service)->not->toBeNull()
         ->and($service->client_id)->toBe($client->id)
         ->and($service->product_id)->toBe($product->id)
@@ -385,7 +389,7 @@ test('the service importer resolves client, product and server and imports', fun
 });
 
 test('the service importer skips a service whose client email is unknown', function () {
-    $importer = app(\App\Services\WhmcsImport\ServiceImporter::class);
+    $importer = app(ServiceImporter::class);
 
     $summary = $importer->run(
         fn ($cb) => $cb(['id' => 1, 'userid' => 5, 'domain' => 'x.pl', 'client_email' => 'ghost@example.com']),
