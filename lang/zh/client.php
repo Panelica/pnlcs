@@ -695,6 +695,8 @@ return [
     'invoices.issued' => '开具日期',
     'invoices.network_error' => '网络错误：',
     'invoices.network_error_only' => '无法连接到支付服务商，请检查网络后重试。',
+    'invoices.payment_maybe_taken' => '您的付款可能已经完成。再次尝试之前请刷新发票。',
+    'invoices.payment_reload' => '刷新发票',
     'invoices.no_payment_methods' => '当前没有启用的付款方式，请联系技术支持完成付款。',
     'invoices.not_configured' => '尚未配置。',
     'invoices.page_subtitle' => '查看和支付账户发票。',

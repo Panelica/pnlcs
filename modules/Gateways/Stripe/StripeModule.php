@@ -432,6 +432,11 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         $setupJs      = $js(__("messages.error.payment_failed"));
         $confirmJs    = $js(__("messages.error.payment_failed"));
         $networkJs    = $js(__("client.invoices.network_error_only"));
+        // Once Stripe has taken the payment, a failure further on must not
+        // read as "try again": the card has been charged.
+        $takenJs      = $js(__("client.invoices.payment_maybe_taken"));
+        $reloadJs     = $js(__("client.invoices.payment_reload"));
+        $invoiceUrl   = json_encode(url("/client/invoices/{$invoiceId}"), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
 
         return <<<HTML
 <div class="my-3">
@@ -464,6 +469,26 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
     card.on("change", function(e) {
         document.getElementById("stripe-card-errors").textContent = e.error ? e.error.message : "";
     });
+
+    var taken = false;
+
+    // After the payment: say so, keep the button off, and offer a reload of
+    // the invoice, which shows it paid once the webhook has recorded it.
+    function settled(message) {
+        var btn = document.getElementById("stripe-submit-btn");
+        btn.disabled = true;
+        btn.textContent = {$payJs};
+        var box = document.getElementById("stripe-message");
+        box.textContent = "";
+        var div = document.createElement("div");
+        div.className = "alert alert-warning";
+        div.appendChild(document.createTextNode(message + " "));
+        var a = document.createElement("a");
+        a.href = {$invoiceUrl};
+        a.textContent = {$reloadJs};
+        div.appendChild(a);
+        box.appendChild(div);
+    }
 
     function failed(message) {
         var btn = document.getElementById("stripe-submit-btn");
@@ -513,29 +538,41 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             if (!result) return;
             if (result.error) {
                 failed(result.error.message);
-            } else if (result.paymentIntent.status === "succeeded") {
-                fetch("{$confirmUrl}", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]") ? document.querySelector("meta[name=csrf-token]").content : ""
-                    },
-                    body: JSON.stringify({ payment_intent_id: result.paymentIntent.id })
-                })
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (res.success) {
-                        window.location.href = res.redirect_url || "/client/invoices/{$invoiceId}?payment=success";
-                    } else {
-                        document.getElementById("stripe-message").innerHTML = "<div class=\"alert alert-danger\">" + (res.message || {$confirmJs}) + "</div>";
-                        btn.disabled = false;
-                        btn.textContent = {$payJs};
-                    }
-                });
+                return;
             }
+            // From here Stripe has the payment, or is finishing it. The
+            // button stays off whatever happens next: an error now means
+            // "check the invoice", never "pay again".
+            taken = true;
+            if (!result.paymentIntent || result.paymentIntent.status !== "succeeded") {
+                settled({$takenJs});
+                return;
+            }
+            // Returned, so a failed or non-JSON answer reaches the catch
+            // below instead of leaving the button on "Processing" for good.
+            return fetch("{$confirmUrl}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]") ? document.querySelector("meta[name=csrf-token]").content : ""
+                },
+                body: JSON.stringify({ payment_intent_id: result.paymentIntent.id })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.success) {
+                    window.location.href = res.redirect_url || "/client/invoices/{$invoiceId}?payment=success";
+                } else {
+                    settled({$takenJs});
+                }
+            });
         })
         .catch(function(err) {
-            failed({$networkJs});
+            if (taken) {
+                settled({$takenJs});
+            } else {
+                failed({$networkJs});
+            }
         });
     });
 })();

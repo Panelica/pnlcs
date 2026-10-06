@@ -55,3 +55,19 @@ test('the intent asked for at payment is the amount the form was set up with', f
     Http::assertSent(fn ($request) => $request['amount'] == 1250 && $request['currency'] === 'eur' && str_contains($request->body(), 'payment_method_types%5B%5D=card'));
     expect($form)->toContain('amount: 1250,');
 });
+
+test('after Stripe has the payment, a failed confirm says to check the invoice and keeps the button off', function () {
+    // The confirm request used to be left out of the promise chain: a 500 or a
+    // non-JSON answer never reached the catch, the button stayed on
+    // "Processing" and nothing was said, with the card already charged.
+    $form = speForm(['source_currency' => 'EUR'], 'tr');
+
+    expect($form)
+        ->toContain('return fetch(')
+        ->toContain('taken = true;')
+        ->toContain('if (taken) {')
+        ->toContain('function settled(message)')
+        ->toContain(json_encode(__('client.invoices.payment_maybe_taken'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT))
+        ->not->toContain('.innerHTML = "<div class=\"alert alert-danger\">" + (res.message');
+    expect(__('client.invoices.payment_maybe_taken'))->toContain('faturayı yenileyin');
+});
