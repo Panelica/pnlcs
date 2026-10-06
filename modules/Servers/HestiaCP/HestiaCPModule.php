@@ -23,6 +23,32 @@ class HestiaCPModule extends AbstractServerModule
         ];
     }
 
+    /**
+     * The hosting packages (plans) this server offers, for the product form to
+     * pick one by name. Reads v-list-user-packages, whose keys are the plan names.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        $result = $this->call($server, 'v-list-user-packages', ['arg1' => 'json'], json: true);
+
+        if (! $result['success'] || ! is_array($result['raw'])) {
+            return [];
+        }
+
+        $packages = [];
+        foreach ($result['raw'] as $name => $package) {
+            if (is_array($package)) {
+                $packages[$name] = ['id' => $name, 'name' => $name];
+            }
+        }
+
+        ksort($packages);
+
+        return array_values($packages);
+    }
+
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 8083;
