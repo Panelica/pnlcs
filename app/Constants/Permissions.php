@@ -45,6 +45,9 @@ class Permissions
     const MANAGE_SETTINGS = 'manage_settings';
     const VIEW_ACTIVITY_LOG = 'view_activity_log';
     const VIEW_SYSTEM = 'view_system';
+    // Applying a PNLCS update: replaces the application's own code. Only full
+    // administrators have it unless a role is given it explicitly.
+    const MANAGE_UPDATES = 'manage_updates';
     const LIST_QUOTES = 'list_quotes';
     const MANAGE_QUOTES = 'manage_quotes';
     const LIST_PROJECTS = 'list_projects';
@@ -61,7 +64,7 @@ class Permissions
             'Domains' => [self::LIST_DOMAINS, self::MANAGE_DOMAINS],
             'Tickets' => [self::LIST_TICKETS, self::VIEW_TICKETS, self::REPLY_TICKETS, self::MANAGE_TICKETS],
             'Configuration' => [self::MANAGE_STAFF, self::MANAGE_ROLES, self::MANAGE_CURRENCIES, self::MANAGE_TAX, self::MANAGE_SERVERS, self::MANAGE_GATEWAYS, self::MANAGE_REGISTRARS, self::MANAGE_PROMOTIONS, self::MANAGE_EMAIL_TEMPLATES, self::MANAGE_TICKET_CONFIG, self::MANAGE_ANNOUNCEMENTS, self::MANAGE_KB, self::MANAGE_SECURITY, self::MANAGE_AFFILIATES],
-            'Reports & System' => [self::VIEW_REPORTS, self::MANAGE_SETTINGS, self::VIEW_ACTIVITY_LOG, self::VIEW_SYSTEM],
+            'Reports & System' => [self::VIEW_REPORTS, self::MANAGE_SETTINGS, self::VIEW_ACTIVITY_LOG, self::VIEW_SYSTEM, self::MANAGE_UPDATES],
             'Quotes & Projects' => [self::LIST_QUOTES, self::MANAGE_QUOTES, self::LIST_PROJECTS, self::MANAGE_PROJECTS],
         ];
     }

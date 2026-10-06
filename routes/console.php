@@ -110,3 +110,10 @@ Schedule::command('pnlcs:prune-logs')->daily()->at('03:45')->withoutOverlapping(
 // DailyCronJob, as WHMCS has it: once a day, for addons that need a daily
 // task without a scheduler entry of their own.
 Schedule::call(fn () => run_hook('DailyCronJob'))->dailyAt('00:10')->name('hook:DailyCronJob')->withoutOverlapping();
+
+// PNLCS updates (Setup -> Updates). A daily look for a newer release - only a
+// look, nothing is applied without an administrator - and, every minute, the
+// update or check an administrator asked for there: the admin area cannot run
+// a twenty-minute job inside a web request.
+Schedule::command('pnlcs:update-check')->dailyAt('05:10')->withoutOverlapping();
+Schedule::command('pnlcs:update --from-request')->everyMinute()->withoutOverlapping(120)->runInBackground();

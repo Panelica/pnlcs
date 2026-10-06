@@ -66,6 +66,12 @@ class NotificationService
             // The registrar prepayment is at the floor; renewals start being
             // refused one at a time from here.
             'registrar.balance_low',
+            // PNLCS itself: a new release on the chosen channel, an update
+            // that went through, and one that did not (rolled back, refused,
+            // or - worst - left in maintenance because rolling back failed).
+            'update.available',
+            'update.completed',
+            'update.failed',
         ],
     ];
 

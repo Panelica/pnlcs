@@ -383,6 +383,18 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::delete('promotions/{promotion}', [ConfigController::class, 'destroyPromotion'])->name('promotions.destroy');
         });
 
+        // PNLCS updates — manage_updates (full administrators unless a role is given it)
+        Route::middleware('admin.permission:manage_updates')->group(function () {
+            Route::get('updates', [\App\Http\Controllers\Admin\UpdateController::class, 'index'])->name('updates');
+            Route::get('updates/status', [\App\Http\Controllers\Admin\UpdateController::class, 'status'])->name('updates.status');
+            Route::get('updates/merged', [\App\Http\Controllers\Admin\UpdateController::class, 'merged'])->name('updates.merged');
+            Route::post('updates/channel', [\App\Http\Controllers\Admin\UpdateController::class, 'channel'])->name('updates.channel');
+            Route::post('updates/check', [\App\Http\Controllers\Admin\UpdateController::class, 'check'])->middleware('throttle:10,1')->name('updates.check');
+            Route::post('updates/prepare', [\App\Http\Controllers\Admin\UpdateController::class, 'prepare'])->name('updates.prepare');
+            Route::post('updates/apply', [\App\Http\Controllers\Admin\UpdateController::class, 'apply'])->name('updates.apply');
+            Route::post('updates/resolve', [\App\Http\Controllers\Admin\UpdateController::class, 'resolve'])->name('updates.resolve');
+        });
+
         // Every installed module and its on/off switch — manage_settings
         Route::middleware('admin.permission:manage_settings')->group(function () {
             Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules');

@@ -50,7 +50,7 @@ A high-level architecture overview lives in `docs/`. Read those before adding ne
 
 ### Prerequisites
 
-- PHP 8.3+ (CLI)
+- PHP 8.4+ (CLI)
 - MySQL 8 (or MariaDB 10.11+)
 - Redis 7 (sessions / cache / queues)
 - Node.js 22+ and npm 10+
@@ -115,7 +115,8 @@ Both are CI-enforced — please run them locally before pushing.
 ### Database
 
 - Every schema change is a **migration**
-- Migrations must be reversible (`up()` and `down()`)
+- Migrations must be reversible (`up()` and `down()`), additive, and safe to run twice
+- A migration never changes data the operator changed: seeded rows are updated only while they are still the shipped version (see [RELEASING.md](./RELEASING.md#migrations))
 - New tables: snake_case, plural (`invoices`, `payment_methods`)
 - Foreign keys explicit, on-delete behaviour explicit
 - Don't write raw SQL in models — use Eloquent or query builder
@@ -140,6 +141,7 @@ PNLCS ships 30 locales. To add or fix translations:
 
 - Locale files live under `lang/{code}/`
 - Add the key in `lang/en/...` first (English is canonical)
+- Every new key must also exist in `tr`, `de`, `pl` and `zh`, in the same key order as English; the parity tests fail otherwise. If you cannot write one of them, say so in the PR and a maintainer will add it
 - Provide the corresponding entry in your target locale
 - For new locales, open an issue first so we can coordinate flag, RTL handling, and seed scripts
 
@@ -167,7 +169,7 @@ If you're contributing a new gateway / registrar / server, please:
 
 - Branch off `main`. Name: `fix/short-description`, `feat/short-description`, `docs/short-description`.
 - Commit messages: short imperative subject, optional body. We loosely follow Conventional Commits but don't reject PRs over format alone.
-- Squash before merge — one PR usually = one final commit.
+- Keep a pull request to one subject. Unrelated fixes go in their own pull requests, even when you found them along the way: a question about one part should not hold back the others.
 
 Example:
 
@@ -193,7 +195,10 @@ Before opening a PR, please confirm:
 - [ ] `php artisan test` passes
 - [ ] I've added or updated tests for my change
 - [ ] I've updated documentation (`docs/`, `README.md`, `.env.example`) where relevant
-- [ ] I've added or updated translation keys in `lang/en/`
+- [ ] I've added translation keys in `lang/en/` and in `tr`, `de`, `pl`, `zh` (or said in the PR which ones I could not write)
+- [ ] No text is written straight into a view; every string goes through `__()`
+- [ ] My test fails on `main` without my change and passes with it
+- [ ] Nothing in my change writes to the operator's space (`.env`, `storage/`, their own themes, modules and hooks) — see [RELEASING.md](./RELEASING.md#the-user-space-contract)
 - [ ] My PR description explains **what changed and why** (not just "fixes bug")
 - [ ] I've linked the issue this PR addresses (e.g. `Closes #123`)
 
@@ -205,7 +210,9 @@ Smaller, focused PRs get reviewed faster than large ones.
 
 - A maintainer will review within ~5 business days
 - Expect feedback — even good PRs usually need small iterations
-- Once approved, a maintainer will squash-merge
+- A maintainer may add a small follow-up commit on top (a test, a translation, an edge case) instead of sending the PR back, and will say so in the review
+- Once approved, a maintainer merges it as it is, so your commits keep your name
+- Merging does not ship it: your change reaches installations with the next release, through the steps in [RELEASING.md](./RELEASING.md)
 - Your contribution will be credited in the next changelog entry
 
 ---

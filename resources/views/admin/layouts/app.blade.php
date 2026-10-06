@@ -255,6 +255,10 @@
                     <li><a href="{{ route('admin.config.ticket-spam') }}">{{ __('admin.nav.ticket_spam_filter') }}</a></li>
                     <li><a href="{{ route('admin.config.addons') }}">{{ __('admin.nav.product_addons') }}</a></li>
                     <li><a href="{{ route('admin.config.bundles') }}">{{ __('admin.nav.product_bundles') }}</a></li>
+                    @if(auth('admin')->user()?->hasPermission('manage_updates'))
+                    <li class="divider"></li>
+                    <li><a href="{{ route('admin.config.updates') }}"><i class="fas fa-cloud-download-alt"></i> {{ __('admin.nav.updates') }}</a></li>
+                    @endif
                 </ul>
             </li>
 
