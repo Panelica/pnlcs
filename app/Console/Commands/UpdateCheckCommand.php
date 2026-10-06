@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Services\NotificationService;
 use App\Services\Updates\Installation;
 use App\Services\Updates\ReleaseIndex;
+use App\Services\Updates\UpdateRunner;
 use App\Services\Updates\UpdateState;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -21,8 +22,14 @@ class UpdateCheckCommand extends Command
 
     protected $description = 'Check whether a newer PNLCS release is published on the chosen channel';
 
-    public function handle(ReleaseIndex $index, Installation $installation, UpdateState $state): int
+    public function handle(ReleaseIndex $index, Installation $installation, UpdateState $state, UpdateRunner $runner): int
     {
+        if ($unfinished = $runner->unfinished()) {
+            $this->error("An update to {$unfinished['to']} did not finish. Run: php artisan pnlcs:update-rollback");
+
+            return self::FAILURE;
+        }
+
         $channel = Setting::get('update_channel', ReleaseIndex::STABLE);
 
         try {

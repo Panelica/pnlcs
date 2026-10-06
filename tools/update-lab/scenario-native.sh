@@ -92,6 +92,7 @@ else
     if [ "$VARIANT" = crash ]; then
         [ $CODE -ne 0 ] && ok "the update process died part way (simulated)" || bad "crash simulation did not stop the update"
         art pnlcs:update --yes --resolve public/robots.txt=mine >"$DIR/blocked.out" 2>&1 && bad "a new update started over an unfinished one" || ok "a new update refuses while a run is unfinished"
+        grep -q "did not finish" "$DIR/blocked.out" && ok "it says the last update did not finish" || bad "no unfinished-run message"
         art pnlcs:update-rollback >"$DIR/rollback.out" 2>&1 && ok "pnlcs:update-rollback finishes the job" || bad "rollback command failed"
         php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
     else

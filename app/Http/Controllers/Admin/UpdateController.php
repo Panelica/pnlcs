@@ -150,7 +150,7 @@ class UpdateController extends Controller
 
     private function request(string $action, array $extra = [])
     {
-        if ($this->state->isLocked() || $this->state->read('request.json')) {
+        if ($this->state->isLocked() || $this->state->read('request.json') || app(UpdateRunner::class)->unfinished()) {
             return back()->with('error', __('admin.updates.busy'));
         }
 

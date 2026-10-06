@@ -45,6 +45,17 @@ class UpdateCommand extends Command
 
         $runner->onOutput(fn (string $line) => $this->output->isVerbose() ? $this->line("  {$line}") : null);
 
+        // Before anything else: an update that stopped part way leaves the new
+        // files with the old database, and the installation then reports the
+        // new version. Nothing may be checked or applied on top of that.
+        if ($unfinished = $runner->unfinished()) {
+            $this->error("The update to {$unfinished['to']} (run {$unfinished['id']}) stopped during \"{$unfinished['phase']}\" and did not finish.");
+            $this->error('Put everything back first: php artisan pnlcs:update-rollback');
+            $state->status('error', 'check', ['message' => "The update to {$unfinished['to']} did not finish. Run: php artisan pnlcs:update-rollback"]);
+
+            return self::FAILURE;
+        }
+
         try {
             $channel = $request['channel'] ?? $this->option('channel') ?: Setting::get('update_channel', ReleaseIndex::STABLE);
             $wanted = $request['version'] ?? $this->argument('version');
