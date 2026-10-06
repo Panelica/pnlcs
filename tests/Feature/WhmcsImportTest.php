@@ -5,7 +5,9 @@ use App\Models\AdminRole;
 use App\Models\Client;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
+use App\Models\Domain;
 use App\Services\WhmcsImport\ClientImporter;
+use App\Services\WhmcsImport\DomainImporter;
 use App\Services\WhmcsImport\ImportValidator;
 use App\Services\WhmcsImport\MappingEngine;
 use App\Services\WhmcsImport\SchemaReader;
@@ -303,7 +305,7 @@ test('the mapper normalizes WHMCS domain status words', function () {
 test('the domain importer links the domain to the client matched by email', function () {
     $client = Client::factory()->create(['email' => 'owner@example.com']);
 
-    $importer = app(\App\Services\WhmcsImport\DomainImporter::class);
+    $importer = app(DomainImporter::class);
 
     $summary = $importer->run(
         fn ($cb) => $cb(['id' => 1, 'userid' => 5, 'domain' => 'example.com', 'status' => 'Active', 'client_email' => 'owner@example.com']),
@@ -315,14 +317,14 @@ test('the domain importer links the domain to the client matched by email', func
     expect($summary['added'])->toBe(1)
         ->and($summary['errors'])->toBe(0);
 
-    $domain = \App\Models\Domain::where('domain', 'example.com')->first();
+    $domain = Domain::where('domain', 'example.com')->first();
     expect($domain)->not->toBeNull()
         ->and($domain->client_id)->toBe($client->id)
         ->and($domain->status->value)->toBe('active');
 });
 
 test('the domain importer skips a domain whose owner email is unknown', function () {
-    $importer = app(\App\Services\WhmcsImport\DomainImporter::class);
+    $importer = app(DomainImporter::class);
 
     $summary = $importer->run(
         fn ($cb) => $cb(['id' => 1, 'userid' => 5, 'domain' => 'example.com', 'client_email' => 'ghost@example.com']),

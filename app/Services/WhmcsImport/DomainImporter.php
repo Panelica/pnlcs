@@ -45,7 +45,7 @@ class DomainImporter
         $rows(function (array $row) use ($mapping, $importMode, $matchKey, $required, $statuses, &$summary) {
             $summary['total']++;
 
-            $target = $this->engine->apply($row, $mapping);
+            $target = $this->normalizeDates($this->engine->apply($row, $mapping));
 
             $email = trim((string) ($row['client_email'] ?? ''));
             $client = $email !== '' ? Client::where('email', $email)->first() : null;
@@ -99,6 +99,26 @@ class DomainImporter
 
         return $value !== null && $value !== ''
             && Domain::where($matchKey, $value)->exists();
+    }
+
+    /**
+     * WHMCS writes an empty date as MySQL's zero date "0000-00-00", which
+     * Eloquent's date cast turns into an out-of-range datetime that the column
+     * rejects. Blank and zero dates become null so they are stored as "unknown".
+     *
+     * @param  array<string, mixed>  $target
+     * @return array<string, mixed>
+     */
+    protected function normalizeDates(array $target): array
+    {
+        foreach (['registration_date', 'expiry_date', 'next_due_date'] as $field) {
+            $value = (string) ($target[$field] ?? '');
+            if ($value === '' || str_starts_with($value, '0000-00-00') || str_starts_with($value, '-0001-')) {
+                $target[$field] = null;
+            }
+        }
+
+        return $target;
     }
 
     /**
