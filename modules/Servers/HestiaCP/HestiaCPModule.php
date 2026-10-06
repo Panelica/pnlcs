@@ -23,11 +23,37 @@ class HestiaCPModule extends AbstractServerModule
         ];
     }
 
+    /**
+     * The hosting packages (plans) this server offers, for the product form to
+     * pick one by name. Reads v-list-user-packages, whose keys are the plan names.
+     *
+     * @return array<int, array{id: string, name: string}>
+     */
+    public function listPackages(Server $server): array
+    {
+        $result = $this->call($server, 'v-list-user-packages', ['arg1' => 'json'], json: true);
+
+        if (! $result['success'] || ! is_array($result['raw'])) {
+            return [];
+        }
+
+        $packages = [];
+        foreach ($result['raw'] as $name => $package) {
+            if (is_array($package)) {
+                $packages[$name] = ['id' => $name, 'name' => $name];
+            }
+        }
+
+        ksort($packages);
+
+        return array_values($packages);
+    }
+
     private function baseUrl(Server $server): string
     {
         $port = $server->port ?: 8083;
 
-        return "https://{$this->serverHost($server)}:{$port}/api";
+        return "https://{$this->serverHost($server)}:{$port}/api/";
     }
 
     /**
@@ -40,14 +66,23 @@ class HestiaCPModule extends AbstractServerModule
     {
         $url = $this->baseUrl($server);
         $username = $server->username ?: 'admin';
-        $password = $server->access_hash ?: ($server->password ?? '');
 
         $postData = array_merge([
-            'user' => $username,
-            'password' => $password,
             'returncode' => $json ? 'no' : 'yes',
             'cmd' => $command,
         ], $params);
+
+        // HestiaCP v1.4+ authenticates with an access key: `access_hash` holds
+        // the Access Key ID and Secret Key joined by a colon (ID:Secret), as
+        // printed by `v-add-access-key`. Fall back to the deprecated admin
+        // user/password form for installs that still use it.
+        $accessHash = trim((string) $server->access_hash);
+        if ($accessHash !== '') {
+            $postData['hash'] = $accessHash;
+        } else {
+            $postData['user'] = $username;
+            $postData['password'] = (string) ($server->password ?? '');
+        }
 
         try {
             $response = Http::asForm()
@@ -350,6 +385,40 @@ class HestiaCPModule extends AbstractServerModule
         }
 
         return ['updated' => $updated, 'errors' => $errors];
+    }
+
+    /**
+     * Live disk and bandwidth for one account, shown on the customer's service
+     * page. Reads v-list-user for the service's HestiaCP username.
+     */
+    public function liveUsage(Service $service): array
+    {
+        $server = $this->getServer($service);
+        $username = strtolower((string) ($this->getModuleData($service)['hestia_username'] ?? $service->username ?? ''));
+        if (! $server || $username === '') {
+            return ['available' => false];
+        }
+
+        $out = ['available' => true, 'disk' => null, 'bandwidth' => null, 'cpu' => null, 'ram' => null, 'domains' => []];
+
+        $result = $this->call($server, 'v-list-user', ['arg1' => $username, 'arg2' => 'json'], json: true);
+        if (! $result['success'] || ! is_array($result['raw'])) {
+            return $out;
+        }
+
+        $account = $result['raw'][$username] ?? null;
+        if (! is_array($account)) {
+            return $out;
+        }
+
+        $quota = $account['DISK_QUOTA'] ?? null;
+        $out['disk'] = [
+            'used_mb' => (int) ($account['U_DISK'] ?? 0),
+            'quota_mb' => is_numeric($quota) ? (int) $quota : 0,
+        ];
+        $out['bandwidth'] = ['used_mb' => (int) ($account['U_BANDWIDTH'] ?? 0)];
+
+        return $out;
     }
 
     public function testConnection(Server $server): bool

@@ -642,3 +642,30 @@ if (! function_exists('inline_markup')) {
         return InlineMarkup::render($value);
     }
 }
+
+if (! function_exists('mb_fmt')) {
+    /**
+     * A size in megabytes, written with the largest unit that reads sensibly:
+     * 512 MB stays "512 MB", 1997 MB becomes "1.9 GB", 2 097 152 MB "2 TB".
+     */
+    function mb_fmt(float|int|string|null $mb): string
+    {
+        $mb = (int) $mb;
+
+        if ($mb < 0) {
+            return '0 MB';
+        }
+
+        $trim = fn (string $n) => rtrim(rtrim($n, '0'), '.');
+
+        if ($mb >= 1048576) {
+            return $trim(number_format($mb / 1048576, 1, '.', '')).' TB';
+        }
+
+        if ($mb >= 1024) {
+            return $trim(number_format($mb / 1024, 1, '.', '')).' GB';
+        }
+
+        return $mb.' MB';
+    }
+}
