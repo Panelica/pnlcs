@@ -270,6 +270,7 @@ class ProductController extends Controller
             // Without these the form could not say how the product is set up,
             // and a product with no module is sold and never provisioned.
             'serverModules' => app(ModuleRegistry::class)->serverModuleNames(),
+            'sslModules' => app(ModuleRegistry::class)->sslModuleNames(),
             'serverGroups' => ServerGroup::orderBy('name')->get(),
             'packageList' => ['packages' => [], 'error' => null],
         ]);
