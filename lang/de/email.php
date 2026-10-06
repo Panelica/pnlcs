@@ -299,4 +299,27 @@ return [
         'action' => 'Meine Domains öffnen',
         'not_expected' => 'Wenn Sie das nicht erwartet haben, können Sie es ignorieren oder ablehnen.',
     ],
+    'password_reset' => [
+        'subject' => 'Setzen Sie Ihr :company-Passwort zurück',
+        'requested' => 'Wir haben eine Anfrage erhalten, das Passwort für Ihr Konto (:email) zurückzusetzen.',
+        'choose' => 'Klicken Sie auf die Schaltfläche unten, um ein neues Passwort festzulegen. Dieser Link ist 60 Minuten gültig.',
+        'action' => 'Passwort zurücksetzen',
+        'fallback' => 'Falls die Schaltfläche nicht funktioniert, kopieren Sie diese Adresse in Ihren Browser:',
+        'ignore' => 'Wenn Sie kein Zurücksetzen angefordert haben, können Sie diese E-Mail ignorieren – Ihr Passwort bleibt unverändert.',
+    ],
+    'new_device_login' => [
+        'subject' => 'Neue Anmeldung bei Ihrem :company-Konto',
+        'intro' => 'Bei Ihrem Konto hat sich jemand von einem Gerät angemeldet, das wir noch nicht kennen.',
+        'when' => 'Zeitpunkt',
+        'device' => 'Gerät',
+        'ip' => 'IP-Adresse',
+        'was_you' => 'Wenn Sie das waren, müssen Sie nichts tun.',
+        'not_you' => 'Wenn nicht, ändern Sie Ihr Passwort und melden Sie die Sitzungen ab, die Sie nicht kennen:',
+    ],
+    'login_email_changed' => [
+        'subject' => 'Die Anmeldeadresse Ihres :company-Kontos wurde geändert',
+        'changed' => 'Die Adresse, mit der Sie sich bei Ihrem Konto anmelden, wurde von :old in :new geändert.',
+        'how' => 'Die Änderung wurde in einer angemeldeten Sitzung vorgenommen und mit dem Kontopasswort bestätigt.',
+        'not_you' => 'Wenn Sie das nicht waren, wenden Sie sich sofort an uns – wer die Änderung vorgenommen hat, kann jetzt Links zum Zurücksetzen des Passworts für das Konto erhalten.',
+    ],
 ];

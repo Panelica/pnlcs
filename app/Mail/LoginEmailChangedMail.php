@@ -31,7 +31,7 @@ class LoginEmailChangedMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'The sign-in address on your '.company_name().' account was changed');
+        return new Envelope(subject: __('email.login_email_changed.subject', ['company' => company_name()]));
     }
 
     public function content(): Content

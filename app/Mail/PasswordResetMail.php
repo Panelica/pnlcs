@@ -46,9 +46,7 @@ class PasswordResetMail extends Mailable
 
     public function envelope(): Envelope
     {
-        $companyName = company_name();
-
-        return new Envelope(subject: "Reset your {$companyName} password");
+        return new Envelope(subject: __('email.password_reset.subject', ['company' => company_name()]));
     }
 
     public function content(): Content
