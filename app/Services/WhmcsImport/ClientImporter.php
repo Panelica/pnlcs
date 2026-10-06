@@ -43,9 +43,10 @@ class ClientImporter
             $summary['total']++;
 
             $target = $this->engine->apply($row, $mapping);
+            $this->fillMissingNames($target);
 
             $creating = ! $this->clientExists($matchKey, $target);
-            $problem = $this->validator->record($target, $creating);
+            $problem = $this->validator->record($target, $creating, ['email']);
             if ($problem !== null) {
                 $summary['errors']++;
                 $summary['error_details'][] = $this->error($row, $problem);
@@ -86,6 +87,24 @@ class ClientImporter
 
         return $value !== null && $value !== ''
             && Client::where($matchKey, $value)->exists();
+    }
+
+    /**
+     * A company stored with no personal name still has an identity — the
+     * company name. Fill the non-null name columns from it (or a placeholder)
+     * instead of dropping the client.
+     */
+    protected function fillMissingNames(array &$target): void
+    {
+        $company = trim((string) ($target['company_name'] ?? ''));
+
+        if (trim((string) ($target['first_name'] ?? '')) === '') {
+            $target['first_name'] = $company !== '' ? $company : '-';
+        }
+
+        if (trim((string) ($target['last_name'] ?? '')) === '') {
+            $target['last_name'] = '';
+        }
     }
 
     /**
