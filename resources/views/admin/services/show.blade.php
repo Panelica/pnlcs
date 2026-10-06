@@ -57,7 +57,7 @@
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
                 <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.services.server') }}</td><td style="padding:5px 0;font-weight:600;">{{ $service->server->name ?? __('admin.services.none_assigned') }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.module') }}</td><td style="padding:5px 0;">{{ $service->product?->server_type ?? __('admin.services.none_label') }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.module') }}</td><td style="padding:5px 0;">{{ $service->product?->server_type ?? ($service->product?->ssl_module ?? __('admin.services.none_label')) }}</td></tr>
                 @if($service->suspension_date)
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.suspended') }}</td><td style="padding:5px 0;color:#d9534f;">{{ $service->suspension_date->format(date_fmt()) }}</td></tr>
                 @endif
@@ -161,8 +161,15 @@
 <div class="card" style="margin-bottom:15px;">
     <div class="card-header"><strong>{{ __('admin.services.module_actions') }}</strong></div>
     <div class="card-body">
-        @if(!$service->product?->server_type)
+        @if(!$service->product?->server_type && !$service->product?->ssl_module)
         <p style="font-size:13px;color:#999;">{{ __('admin.services.no_module') }}</p>
+        @elseif($service->product?->ssl_module)
+        <p style="font-size:13px;margin-bottom:8px;">{{ __('admin.products.ssl_module') }}: <span style="font-family:monospace;">{{ $service->product->ssl_module }}</span></p>
+        @if($service->sslOrder)
+            <a href="{{ route('admin.ssl.show', $service->sslOrder) }}" class="btn btn-default btn-sm">{{ __('admin.ssl.order_details') }}</a>
+        @else
+            <p style="font-size:13px;color:#999;">{{ __('admin.services.no_ssl_order') }}</p>
+        @endif
         @else
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             {{-- Only while there is something to create. An active service with
