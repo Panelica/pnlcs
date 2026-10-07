@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Ugyldig regulært uttrykk for feltet ":field".',
         'client_not_found' => 'Ingen PNLCS-kunde med e-posten ":email".',
         'product_not_found' => 'Produktet ":name" ble ikke funnet i PNLCS.',
+        'product_id_not_found' => 'Kartlagt produkt-id ":id" finnes ikke i PNLCS.',
         'server_not_found' => 'Serveren ":name" ble ikke funnet i PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Database og pålogging',
     'no_connections' => 'Ingen lagrede tilkoblinger ennå.',
     'mapped_count' => ':count av :total felt tilordnet',
+    'product_mapping' => 'Produktkartlegging',
+    'whmcs_product' => 'WHMCS-produkt',
+    'pnlcs_product' => 'PNLCS-produkt',
+    'product_mapping_hint' => 'Kartlegg WHMCS-produkter til PNLCS-produkter. "Match etter navn" knytter til PNLCS-produktet med samme navn, eller importerer uten produkt hvis det mangler.',
+    'product_match_by_name' => 'Match etter navn',
+    'note_services_header' => 'WHMCS-tjenester:',
 ];

@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'عبارت باقاعده نامعتبر برای فیلد «:field».',
         'client_not_found' => 'هیچ مشتری PNLCS با ایمیل «:email» نیست.',
         'product_not_found' => 'محصول «:name» در PNLCS پیدا نشد.',
+        'product_id_not_found' => 'شناسه محصول نگاشت‌شده «:id» در PNLCS وجود ندارد.',
         'server_not_found' => 'سرور «:name» در PNLCS پیدا نشد.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'پایگاه داده و ورود',
     'no_connections' => 'هنوز اتصال ذخیره‌شده‌ای نیست.',
     'mapped_count' => ':count از :total فیلد نگاشت شد',
+    'product_mapping' => 'نگاشت محصولات',
+    'whmcs_product' => 'محصول WHMCS',
+    'pnlcs_product' => 'محصول PNLCS',
+    'product_mapping_hint' => 'محصولات WHMCS را به محصولات PNLCS نگاشت کنید. «مطابقت با نام» به محصول همنام PNLCS پیوند می‌دهد یا در صورت نبود آن، بدون محصول وارد می‌کند.',
+    'product_match_by_name' => 'مطابقت با نام',
+    'note_services_header' => 'خدمات WHMCS:',
 ];

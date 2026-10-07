@@ -111,6 +111,7 @@ return [
         'invalid_regex' => 'Ungültiger regulärer Ausdruck für Feld ":field".',
         'client_not_found' => 'Kein PNLCS-Kunde mit E-Mail ":email".',
         'product_not_found' => 'Produkt ":name" in PNLCS nicht gefunden.',
+        'product_id_not_found' => 'Zugeordnete Produkt-ID ":id" existiert nicht in PNLCS.',
         'server_not_found' => 'Server ":name" in PNLCS nicht gefunden.',
     ],
 
@@ -126,4 +127,10 @@ return [
     'section_database' => 'Datenbank und Anmeldung',
     'no_connections' => 'Noch keine gespeicherten Verbindungen.',
     'mapped_count' => ':count von :total Feldern zugeordnet',
+    'product_mapping' => 'Produktzuordnung',
+    'whmcs_product' => 'WHMCS-Produkt',
+    'pnlcs_product' => 'PNLCS-Produkt',
+    'product_mapping_hint' => 'Ordnen Sie WHMCS-Produkte PNLCS-Produkten zu. „Nach Name zuordnen" verknüpft mit dem gleichnamigen PNLCS-Produkt oder importiert ohne Produkt, wenn es keines gibt.',
+    'product_match_by_name' => 'Nach Name zuordnen',
+    'note_services_header' => 'WHMCS-Dienste:',
 ];

@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Expressió regular no vàlida per al camp «:field».',
         'client_not_found' => 'Cap client de PNLCS amb el correu «:email».',
         'product_not_found' => 'No s\'ha trobat el producte «:name» a PNLCS.',
+        'product_id_not_found' => 'L\'id de producte assignat ":id" no existeix a PNLCS.',
         'server_not_found' => 'No s\'ha trobat el servidor «:name» a PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Base de dades i accés',
     'no_connections' => 'Encara no hi ha connexions desades.',
     'mapped_count' => ':count de :total camps mapats',
+    'product_mapping' => 'Assignació de productes',
+    'whmcs_product' => 'Producte WHMCS',
+    'pnlcs_product' => 'Producte PNLCS',
+    'product_mapping_hint' => 'Assigneu els productes WHMCS als productes PNLCS. «Coincideix per nom» l\'enllaça amb el producte PNLCS del mateix nom o l\'importa sense producte si no n\'hi ha.',
+    'product_match_by_name' => 'Coincideix per nom',
+    'note_services_header' => 'Serveis WHMCS:',
 ];

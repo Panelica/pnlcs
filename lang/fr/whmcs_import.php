@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Expression régulière invalide pour le champ « :field ».',
         'client_not_found' => 'Aucun client PNLCS avec l\'e-mail « :email ».',
         'product_not_found' => 'Produit « :name » introuvable dans PNLCS.',
+        'product_id_not_found' => 'L’id de produit associé « :id » n’existe pas dans PNLCS.',
         'server_not_found' => 'Serveur « :name » introuvable dans PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Base de données et identifiants',
     'no_connections' => 'Aucune connexion enregistrée pour l\'instant.',
     'mapped_count' => ':count champs associés sur :total',
+    'product_mapping' => 'Correspondance des produits',
+    'whmcs_product' => 'Produit WHMCS',
+    'pnlcs_product' => 'Produit PNLCS',
+    'product_mapping_hint' => 'Associez les produits WHMCS aux produits PNLCS. « Correspondre par nom » les lie au produit PNLCS du même nom, ou les importe sans produit s’il n’existe pas.',
+    'product_match_by_name' => 'Correspondre par nom',
+    'note_services_header' => 'Services WHMCS :',
 ];

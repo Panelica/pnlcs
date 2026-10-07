@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Ogiltigt reguljärt uttryck för fältet ":field".',
         'client_not_found' => 'Ingen PNLCS-kund med e-posten ":email".',
         'product_not_found' => 'Produkten ":name" hittades inte i PNLCS.',
+        'product_id_not_found' => 'Mappat produkt-id ":id" finns inte i PNLCS.',
         'server_not_found' => 'Servern ":name" hittades inte i PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Databas och inloggning',
     'no_connections' => 'Inga sparade anslutningar ännu.',
     'mapped_count' => ':count av :total fält mappade',
+    'product_mapping' => 'Produktmappning',
+    'whmcs_product' => 'WHMCS-produkt',
+    'pnlcs_product' => 'PNLCS-produkt',
+    'product_mapping_hint' => 'Mappa WHMCS-produkter till PNLCS-produkter. "Matcha efter namn" länkar till PNLCS-produkten med samma namn, eller importerar utan produkt om den saknas.',
+    'product_match_by_name' => 'Matcha efter namn',
+    'note_services_header' => 'WHMCS-tjänster:',
 ];

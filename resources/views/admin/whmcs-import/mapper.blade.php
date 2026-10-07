@@ -186,6 +186,41 @@
             </div>
         </details>
 
+        @if($target === 'services' && count($whmcsProducts))
+        <details class="wi-fold" open>
+            <summary><span class="wi-card__icon" style="width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--wi-soft);color:var(--wi-primary);"><i class="fas fa-cubes"></i></span>{{ __('whmcs_import.product_mapping') }}<i class="fas fa-chevron-down wi-chev"></i></summary>
+            <div class="wi-fold__body">
+                <p class="wi-fold__hint">{{ __('whmcs_import.product_mapping_hint') }}</p>
+                <div style="overflow-x:auto;">
+                    <table class="wi-table">
+                        <thead><tr>
+                            <th>{{ __('whmcs_import.whmcs_product') }}</th>
+                            <th>{{ __('whmcs_import.pnlcs_product') }}</th>
+                        </tr></thead>
+                        <tbody>
+                        @foreach($whmcsProducts as $wp)
+                            <tr>
+                                <td><span class="wi-tag">{{ $wp['name'] }}</span><span class="wi-type">{{ $wp['type'] }}</span></td>
+                                <td>
+                                    {{-- Keyed by the WHMCS product id: a name
+                                         containing brackets would corrupt a
+                                         key built from the name. --}}
+                                    <select name="product_mapping[{{ $wp['id'] }}]">
+                                        <option value="">{{ __('whmcs_import.product_match_by_name') }}</option>
+                                        @foreach($pnlcsProducts as $p)
+                                        <option value="{{ $p->id }}" @selected(($productMap[$wp['id']] ?? null) === $p->id)>{{ $p->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+        @endif
+
         <div class="wi-bar">
             <button type="submit" class="btn wi-btn-outline"><i class="fas fa-eye"></i> {{ __('whmcs_import.preview_button') }}</button>
             <button type="submit" formaction="{{ route('admin.whmcs-import.import', $connection) }}" class="btn btn-primary"><i class="fas fa-file-import"></i> {{ __('whmcs_import.import_button') }}</button>

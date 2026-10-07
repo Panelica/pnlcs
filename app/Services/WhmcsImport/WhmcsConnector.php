@@ -355,6 +355,26 @@ class WhmcsConnector
     }
 
     /**
+     * The WHMCS product catalogue (id, name, type), for the services mapper's
+     * product mapping screen.
+     *
+     * @return list<array{id: int, name: string, type: string}>
+     */
+    public function products(string $prefix): array
+    {
+        $stmt = $this->pdo->prepare(sprintf(
+            'SELECT id, name, type FROM %s ORDER BY name',
+            $this->quoteIdentifier($prefix.'products')
+        ));
+        $stmt->execute();
+
+        return array_map(
+            fn (array $row) => ['id' => (int) $row['id'], 'name' => (string) $row['name'], 'type' => (string) $row['type']],
+            $stmt->fetchAll()
+        );
+    }
+
+    /**
      * Custom-field values for a set of client ids.
      *
      * @param  list<int>  $ids

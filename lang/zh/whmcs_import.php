@@ -111,6 +111,7 @@ return [
         'invalid_regex' => '字段 ":field" 的正则表达式无效。',
         'client_not_found' => '没有邮箱为 ":email" 的 PNLCS 客户。',
         'product_not_found' => '在 PNLCS 中未找到产品 ":name"。',
+        'product_id_not_found' => '映射的产品 id “:id” 在 PNLCS 中不存在。',
         'server_not_found' => '在 PNLCS 中未找到服务器 ":name"。',
     ],
 
@@ -126,4 +127,10 @@ return [
     'section_database' => '数据库与登录',
     'no_connections' => '尚无已保存的连接。',
     'mapped_count' => '已映射 :count / :total 个字段',
+    'product_mapping' => '产品映射',
+    'whmcs_product' => 'WHMCS 产品',
+    'pnlcs_product' => 'PNLCS 产品',
+    'product_mapping_hint' => '将 WHMCS 产品映射到 PNLCS 产品。选择“按名称匹配”将关联同名 PNLCS 产品，没有同名产品时则不关联产品导入。',
+    'product_match_by_name' => '按名称匹配',
+    'note_services_header' => 'WHMCS 服务：',
 ];

@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Neplatný regulární výraz pro pole „:field“.',
         'client_not_found' => 'Žádný klient PNLCS s e-mailem „:email“.',
         'product_not_found' => 'Produkt „:name“ nebyl v PNLCS nalezen.',
+        'product_id_not_found' => 'Namapované id produktu ":id" v PNLCS neexistuje.',
         'server_not_found' => 'Server „:name“ nebyl v PNLCS nalezen.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Databáze a přihlášení',
     'no_connections' => 'Zatím žádná uložená připojení.',
     'mapped_count' => 'Namapováno :count z :total polí',
+    'product_mapping' => 'Mapování produktů',
+    'whmcs_product' => 'Produkt WHMCS',
+    'pnlcs_product' => 'Produkt PNLCS',
+    'product_mapping_hint' => 'Namapujte produkty WHMCS na produkty PNLCS. „Přiřadit podle názvu" propojí s produktem PNLCS stejného názvu, jinak importuje bez produktu.',
+    'product_match_by_name' => 'Přiřadit podle názvu',
+    'note_services_header' => 'Služby WHMCS:',
 ];

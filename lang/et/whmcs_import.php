@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Vigane regulaaravaldis väljale ":field".',
         'client_not_found' => 'Pole PNLCS-i klienti e-postiga ":email".',
         'product_not_found' => 'Toodet ":name" PNLCS-ist ei leitud.',
+        'product_id_not_found' => 'Vastendatud toote-id ":id" puudub PNLCS-is.',
         'server_not_found' => 'Serverit ":name" PNLCS-ist ei leitud.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Andmebaas ja sisselogimine',
     'no_connections' => 'Salvestatud ühendusi veel pole.',
     'mapped_count' => 'Vastendatud :count / :total välja',
+    'product_mapping' => 'Toodete vastendamine',
+    'whmcs_product' => 'WHMCS-i toode',
+    'pnlcs_product' => 'PNLCS-i toode',
+    'product_mapping_hint' => 'Vastendage WHMCS-i tooted PNLCS-i toodetega. „Vasta nimi järgi" seob samanimelise PNLCS-i tootega või impordib ilma tooteta, kui seda pole.',
+    'product_match_by_name' => 'Vasta nimi järgi',
+    'note_services_header' => 'WHMCS-i teenused:',
 ];

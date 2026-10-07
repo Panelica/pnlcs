@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Неправильний регулярний вираз для поля «:field».',
         'client_not_found' => 'Немає клієнта PNLCS з e-mail «:email».',
         'product_not_found' => 'Продукт «:name» не знайдено в PNLCS.',
+        'product_id_not_found' => 'Зіставлений id продукту ":id" не існує в PNLCS.',
         'server_not_found' => 'Сервер «:name» не знайдено в PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'База даних і вхід',
     'no_connections' => 'Збережених підключень поки немає.',
     'mapped_count' => 'Зіставлено полів: :count з :total',
+    'product_mapping' => 'Зіставлення продуктів',
+    'whmcs_product' => 'Продукт WHMCS',
+    'pnlcs_product' => 'Продукт PNLCS',
+    'product_mapping_hint' => 'Зіставте продукти WHMCS із продуктами PNLCS. «Зіставити за назвою» пов’язує з продуктом PNLCS з тією ж назвою, інакше імпортує без продукту.',
+    'product_match_by_name' => 'Зіставити за назвою',
+    'note_services_header' => 'Послуги WHMCS:',
 ];

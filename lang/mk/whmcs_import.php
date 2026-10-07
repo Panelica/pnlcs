@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Неважечки регуларен израз за полето „:field“.',
         'client_not_found' => 'Нема PNLCS клиент со е-пошта „:email“.',
         'product_not_found' => 'Производот „:name“ не е пронајден во PNLCS.',
+        'product_id_not_found' => 'Мапираниот id на производ ":id" не постои во PNLCS.',
         'server_not_found' => 'Серверот „:name“ не е пронајден во PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'База на податоци и најава',
     'no_connections' => 'Сè уште нема зачувани врски.',
     'mapped_count' => 'Мапирани :count од :total полиња',
+    'product_mapping' => 'Мапирање на производи',
+    'whmcs_product' => 'WHMCS производ',
+    'pnlcs_product' => 'PNLCS производ',
+    'product_mapping_hint' => 'Мапирајте ги WHMCS производите со PNLCS производите. „Спои по име" поврзува со истоимениот PNLCS производ или увезува без производ ако нема.',
+    'product_match_by_name' => 'Спои по име',
+    'note_services_header' => 'WHMCS услуги:',
 ];

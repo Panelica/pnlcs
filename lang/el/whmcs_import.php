@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Μη έγκυρη κανονική έκφραση για το πεδίο «:field».',
         'client_not_found' => 'Κανένας πελάτης PNLCS με email «:email».',
         'product_not_found' => 'Το προϊόν «:name» δεν βρέθηκε στο PNLCS.',
+        'product_id_not_found' => 'Το αντιστοιχισμένο id προϊόντος ":id" δεν υπάρχει στο PNLCS.',
         'server_not_found' => 'Ο διακομιστής «:name» δεν βρέθηκε στο PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Βάση δεδομένων και σύνδεση',
     'no_connections' => 'Δεν υπάρχουν ακόμη αποθηκευμένες συνδέσεις.',
     'mapped_count' => 'Αντιστοιχίστηκαν :count από :total πεδία',
+    'product_mapping' => 'Αντιστοίχιση προϊόντων',
+    'whmcs_product' => 'Προϊόν WHMCS',
+    'pnlcs_product' => 'Προϊόν PNLCS',
+    'product_mapping_hint' => 'Αντιστοιχίστε τα προϊόντα WHMCS με τα προϊόντα PNLCS. Η «Αντιστοίχιση κατά όνομα» συνδέει με το ομώνυμο προϊόν PNLCS ή εισάγει χωρίς προϊόν αν δεν υπάρχει.',
+    'product_match_by_name' => 'Αντιστοίχιση κατά όνομα',
+    'note_services_header' => 'Υπηρεσίες WHMCS:',
 ];

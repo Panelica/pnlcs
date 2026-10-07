@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Expresie regulată invalidă pentru câmpul „:field”.',
         'client_not_found' => 'Niciun client PNLCS cu e-mailul „:email”.',
         'product_not_found' => 'Produsul „:name” nu a fost găsit în PNLCS.',
+        'product_id_not_found' => 'Id-ul de produs mapat ":id" nu există în PNLCS.',
         'server_not_found' => 'Serverul „:name” nu a fost găsit în PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'Bază de date și autentificare',
     'no_connections' => 'Încă nu există conexiuni salvate.',
     'mapped_count' => ':count din :total câmpuri mapate',
+    'product_mapping' => 'Maparea produselor',
+    'whmcs_product' => 'Produs WHMCS',
+    'pnlcs_product' => 'Produs PNLCS',
+    'product_mapping_hint' => 'Mapați produsele WHMCS la produsele PNLCS. „Potrivește după nume" leagă de produsul PNLCS cu același nume sau importă fără produs dacă nu există.',
+    'product_match_by_name' => 'Potrivește după nume',
+    'note_services_header' => 'Servicii WHMCS:',
 ];

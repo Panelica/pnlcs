@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'تعبير نمطي غير صالح للحقل ":field".',
         'client_not_found' => 'لا يوجد عميل PNLCS بالبريد الإلكتروني ":email".',
         'product_not_found' => 'لم يُعثر على المنتج ":name" في PNLCS.',
+        'product_id_not_found' => 'معرّف المنتج المعيّن ":id" غير موجود في PNLCS.',
         'server_not_found' => 'لم يُعثر على الخادم ":name" في PNLCS.',
     ],
 
@@ -118,4 +119,10 @@ return [
     'section_database' => 'قاعدة البيانات وتسجيل الدخول',
     'no_connections' => 'لا توجد اتصالات محفوظة بعد.',
     'mapped_count' => 'تمت مطابقة :count من :total حقلًا',
+    'product_mapping' => 'ربط المنتجات',
+    'whmcs_product' => 'منتج WHMCS',
+    'pnlcs_product' => 'منتج PNLCS',
+    'product_mapping_hint' => 'اربط منتجات WHMCS بمنتجات PNLCS. «مطابقة بالاسم» تربط بمنتج PNLCS الذي يحمل الاسم نفسه، أو تستورد بدون منتج إذا لم يوجد.',
+    'product_match_by_name' => 'مطابقة بالاسم',
+    'note_services_header' => 'خدمات WHMCS:',
 ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\WhmcsImportConnection;
 use App\Models\WhmcsImportLog;
 use App\Models\WhmcsImportProfile;
@@ -142,6 +143,7 @@ class WhmcsImportController extends Controller
                 $mapping,
                 $importMode,
                 $matchKey,
+                $this->parseProductMapping($request),
             );
         } else {
             $summary = $this->importer->run(
@@ -188,6 +190,7 @@ class WhmcsImportController extends Controller
             'mapping' => $mapping['columns'],
             'constants' => $mapping['constants'],
             'transforms' => $mapping['transforms'],
+            'product_mapping' => $this->parseProductMapping($request),
             'match_key' => $request->input('match_key') ?: null,
             'import_mode' => $request->input('import_mode', 'add'),
         ]);
@@ -281,6 +284,18 @@ class WhmcsImportController extends Controller
             }
         }
 
+        // The services mapper may map WHMCS products to PNLCS products by name.
+        $whmcsProducts = [];
+        $pnlcsProducts = collect();
+        if ($target === 'services') {
+            try {
+                $whmcsProducts = $connector->products($connection->prefix);
+            } catch (\Throwable) {
+                $whmcsProducts = [];
+            }
+            $pnlcsProducts = Product::orderBy('name')->get(['id', 'name']);
+        }
+
         return [
             'connection' => $connection,
             'connector' => $connector,
@@ -296,6 +311,9 @@ class WhmcsImportController extends Controller
             'profile' => $profile,
             'mapping' => $mapping,
             'selected' => $selected,
+            'whmcsProducts' => $whmcsProducts,
+            'pnlcsProducts' => $pnlcsProducts,
+            'productMap' => $this->productMapFromRequest($request, $profile),
             'matchKey' => $this->resolveMatchKey($request->input('match_key'), $config, $profile?->match_key),
             'importMode' => $request->input('import_mode', $profile?->import_mode ?? 'add'),
             'totalCount' => $connector->count($sourceTable),
@@ -427,6 +445,37 @@ class WhmcsImportController extends Controller
         }
 
         return ['columns' => [], 'constants' => [], 'transforms' => []];
+    }
+
+    /**
+     * The WHMCS product id → PNLCS product id map, from the request or a saved
+     * profile. Keyed by the WHMCS product id so a name containing brackets
+     * cannot corrupt the form. An empty value means "leave unmatched".
+     *
+     * @return array<string, int>
+     */
+    protected function productMapFromRequest(Request $request, ?WhmcsImportProfile $profile): array
+    {
+        if ($request->isMethod('post')) {
+            return $this->parseProductMapping($request);
+        }
+
+        return $profile?->product_mapping ?? [];
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    protected function parseProductMapping(Request $request): array
+    {
+        $map = [];
+        foreach ($request->input('product_mapping', []) as $name => $id) {
+            if (is_string($id) && $id !== '') {
+                $map[(string) $name] = (int) $id;
+            }
+        }
+
+        return $map;
     }
 
     /**
