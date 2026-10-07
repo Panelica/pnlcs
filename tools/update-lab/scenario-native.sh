@@ -3,7 +3,11 @@
 # release A installed from its package, customised the way an operator would,
 # then updated to B. Every promise in RELEASING.md is checked with snapshots.
 #
-#   scenario-native.sh good|bad-migration|bad-view|crash|operator-down|notmp [<name>]
+#   scenario-native.sh good|bad-migration|bad-view|crash|operator-down|notmp|beta [<name>]
+#
+# beta: B published as a beta (pre-release). The stable channel does not see
+# it; the beta channel updates to it; then the same commit is promoted to the
+# stable release B, and the beta installation updates to that.
 #
 # notmp: the system temporary directory cannot be written (a hosting account's
 # cron: /tmp owned by root); the check and the update still work.
@@ -22,6 +26,7 @@ DIR="$WORK/$NAME"; APP="$DIR/pnlcs"; LOG="$DIR/scenario.log"
 DB_HOST="${LAB_DB_HOST:-127.0.0.1}"; DB_PORT="${LAB_DB_PORT:-33061}"; DB_USER="${LAB_DB_USER:-root}"; DB_PASS="${LAB_DB_PASS:-testroot}"
 DB="pnlcs_lab_$(echo "$NAME" | tr -c 'a-z0-9\n' '_')"
 INDEX_VARIANT="$VARIANT"; case "$VARIANT" in crash|operator-down|notmp) INDEX_VARIANT=good ;; esac
+CHAN=(); [ "$VARIANT" = beta ] && CHAN=(--channel=beta)
 PASS=0; FAIL=0
 ok()   { echo "PASS  $*"; PASS=$((PASS+1)); }
 bad()  { echo "FAIL  $*"; FAIL=$((FAIL+1)); }
@@ -58,9 +63,14 @@ php "$LAB/customise.php" "$APP" >>"$LOG" 2>&1 || { echo "FAIL  customise"; exit 
 art config:cache >>"$LOG" 2>&1
 php "$LAB/snapshot.php" "$APP" > "$DIR/before.json"
 
+if [ "$VARIANT" = beta ]; then
+    art pnlcs:update --check --channel=stable >"$DIR/stable.out" 2>&1; CODE=$?
+    [ $CODE -eq 0 ] && grep -q "up to date on the stable channel" "$DIR/stable.out" && ok "the stable channel does not offer the beta" || bad "stable channel saw the beta (exit $CODE): $(tail -1 "$DIR/stable.out")"
+fi
+
 echo "== check: must find the robots.txt conflict and change nothing"
 NOTMP=(); [ "$VARIANT" = notmp ] && NOTMP=(env TMPDIR=/proc)
-(cd "$APP" && "${NOTMP[@]}" php artisan pnlcs:update --check) >"$DIR/check.out" 2>&1; CODE=$?
+(cd "$APP" && "${NOTMP[@]}" php artisan pnlcs:update --check "${CHAN[@]}") >"$DIR/check.out" 2>&1; CODE=$?
 [ $CODE -eq 2 ] && ok "check refuses on a conflict (exit 2)" || bad "check exit $CODE"
 grep -q "conflict  public/robots.txt" "$DIR/check.out" && ok "the conflict is public/robots.txt" || bad "robots.txt conflict not reported"
 grep -q "merged    resources/views/admin/layouts/app.blade.php" "$DIR/check.out" && ok "the admin layout edit is reported as merged" || bad "admin layout merge not reported"
@@ -69,7 +79,7 @@ php "$LAB/snapshot.php" "$APP" > "$DIR/after-check.json"
 check "a check changes nothing" php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-check.json"
 
 echo "== update without a decision: refused, nothing changed"
-art pnlcs:update --yes >"$DIR/refused.out" 2>&1; CODE=$?
+art pnlcs:update --yes "${CHAN[@]}" >"$DIR/refused.out" 2>&1; CODE=$?
 [ $CODE -eq 2 ] && ok "update refuses while a conflict is undecided" || bad "undecided update exit $CODE"
 php "$LAB/snapshot.php" "$APP" > "$DIR/after-refused.json"
 check "a refused update changes nothing" php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-refused.json"
@@ -82,12 +92,13 @@ fi
 EXTRA_ENV=()
 [ "$VARIANT" = crash ] && EXTRA_ENV=(env PNLCS_UPDATE_LAB_KILL_AT=migrating)
 [ "$VARIANT" = notmp ] && EXTRA_ENV=(env TMPDIR=/proc)
-(cd "$APP" && "${EXTRA_ENV[@]}" php artisan pnlcs:update --yes --resolve public/robots.txt=mine -v) >"$DIR/update.out" 2>&1; CODE=$?
+(cd "$APP" && "${EXTRA_ENV[@]}" php artisan pnlcs:update --yes --resolve public/robots.txt=mine -v "${CHAN[@]}") >"$DIR/update.out" 2>&1; CODE=$?
 php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
 
-if [ "$VARIANT" = good ] || [ "$VARIANT" = operator-down ] || [ "$VARIANT" = notmp ]; then
+if [ "$VARIANT" = good ] || [ "$VARIANT" = operator-down ] || [ "$VARIANT" = notmp ] || [ "$VARIANT" = beta ]; then
+    EXPECT="${LAB_B}"; [ "$VARIANT" = beta ] && EXPECT="${LAB_BETA}"
     [ $CODE -eq 0 ] && ok "update succeeds" || bad "update exit $CODE"
-    [ "$(cat "$APP/VERSION")" = "${LAB_B}" ] && ok "VERSION is ${LAB_B}" || bad "VERSION is $(cat "$APP/VERSION")"
+    [ "$(cat "$APP/VERSION")" = "$EXPECT" ] && ok "VERSION is $EXPECT" || bad "VERSION is $(cat "$APP/VERSION")"
     for f in .env themes/acme/theme.json themes/acme/views/sections/footer.blade.php themes/acme/assets/site.css modules/Servers/LabMine/pnlcs.json modules/Servers/LabMine/README.md app/Hooks/lab-operator.php storage/app/public/logo.png public/robots.txt; do
         php -r '$a=json_decode(file_get_contents($argv[1]),true)["files"];$b=json_decode(file_get_contents($argv[2]),true)["files"]; exit(($a[$argv[3]]??"x")===($b[$argv[3]]??"y")?0:1);' "$DIR/before.json" "$DIR/after.json" "$f" \
             && ok "kept byte for byte: $f" || bad "changed: $f"
@@ -106,6 +117,13 @@ if [ "$VARIANT" = good ] || [ "$VARIANT" = operator-down ] || [ "$VARIANT" = not
     fi
     check "health after update" art pnlcs:update-health
     grep -q '"result": "updated"' "$APP/storage/app/pnlcs-update/history.json" && ok "history records the update" || bad "history"
+    if [ "$VARIANT" = beta ]; then
+        echo "== the beta's commit is promoted to the stable release"
+        sed -i "s#index-beta.json#index-promoted.json#" "$APP/.env"; art config:cache >>"$LOG" 2>&1
+        art pnlcs:update --yes --channel=beta --resolve public/robots.txt=mine >"$DIR/promoted.out" 2>&1 && ok "the beta installation updates to the stable release" || bad "promotion update: $(tail -2 "$DIR/promoted.out")"
+        [ "$(cat "$APP/VERSION")" = "${LAB_B}" ] && ok "VERSION is ${LAB_B}" || bad "VERSION is $(cat "$APP/VERSION")"
+        check "health after the promotion" art pnlcs:update-health
+    fi
 else
     if [ "$VARIANT" = crash ]; then
         [ $CODE -ne 0 ] && ok "the update process died part way (simulated)" || bad "crash simulation did not stop the update"

@@ -15,7 +15,7 @@ A="${LAB_VERSION_A:-$BASE}"; B="${LAB_VERSION_B:-$(echo "$A" | awk -F. '{print $
 mkdir -p "$WORK/releases"
 # The scenarios read the two versions from here (a git clone of HEAD says
 # VERSION X.Y.Z-dev, so the lab releases must be X.Y.Z and above).
-printf 'LAB_A=%s\nLAB_B=%s\n' "$A" "$B" > "$WORK/versions.env"
+printf 'LAB_A=%s\nLAB_B=%s\nLAB_BETA=%s\n' "$A" "$B" "$B-beta.1" > "$WORK/versions.env"
 
 KEY="$WORK/lab-key.pem"
 [ -f "$KEY" ] || (umask 077; openssl ecparam -name prime256v1 -genkey -noout -out "$KEY")
@@ -37,6 +37,9 @@ for kind in good bad-migration bad-view; do
     git -C "$SRC" -c user.name=lab -c user.email=lab@example.com commit -q -m "lab release $B ($kind)"
     REF="$(git -C "$SRC" rev-parse HEAD)"
     rm -rf "$WORK/releases/B-$kind"; build "$REF" "$B" "$WORK/releases/B-$kind"
+    # The beta of B, from the same commit: a stable release is always the
+    # promoted beta (RELEASING.md).
+    if [ "$kind" = good ]; then rm -rf "$WORK/releases/B-beta"; build "$REF" "$B-beta.1" "$WORK/releases/B-beta"; fi
     git -C "$REPO" worktree remove --force "$SRC"
 
     python3 - "$WORK" "$A" "$B" "$kind" <<'PY'
@@ -49,6 +52,11 @@ def release(version, folder, pre=False):
             "html_url": None, "published_at": None,
             "assets": [{"name": n, "browser_download_url": f"file://{base}/{n}"} for n in names]}
 json.dump([release(b, f"B-{kind}"), release(a, "A")], open(f"{work}/index-{kind}.json", "w"), indent=2)
+if kind == "good":
+    beta = f"{b}-beta.1"
+    # The beta published alone (a pre-release), then the same commit promoted.
+    json.dump([release(beta, "B-beta", True), release(a, "A")], open(f"{work}/index-beta.json", "w"), indent=2)
+    json.dump([release(b, "B-good"), release(beta, "B-beta", True), release(a, "A")], open(f"{work}/index-promoted.json", "w"), indent=2)
 PY
 done
 
