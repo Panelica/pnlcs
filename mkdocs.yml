@@ -132,6 +132,7 @@ nav:
       - Hooks: developer/hooks.md
       - Themes: developer/themes.md
       - Translations: developer/translations.md
+      - Releases & Updates: developer/releasing.md
       - Contributing: developer/contributing.md
   - Troubleshooting:
       - Common Issues: troubleshooting/common-issues.md

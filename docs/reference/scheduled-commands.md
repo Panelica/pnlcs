@@ -57,6 +57,8 @@ Times are the server's time zone.
 | `pnlcs:ticket-escalation` | every 15 minutes | Applies your ticket escalation rules |
 | `pnlcs:db-backup` | daily 04:30 | Backs up the database ([Backups](../install/backups.md)) |
 | `pnlcs:prune-logs` | daily 03:45 | Deletes old rows from log and history tables (`retention_*_days` settings) |
+| `pnlcs:update-check` | daily 05:10 | Looks for a newer PNLCS release on the chosen channel and says so; installs nothing ([Updating](../install/updating.md)) |
+| `pnlcs:update --from-request` | every minute | Runs the check or update an administrator asked for on **Setup → Updates**; does nothing otherwise |
 | `queue:work` | every minute | Sends queued mail and runs queued jobs, then stops |
 
 ## The queue

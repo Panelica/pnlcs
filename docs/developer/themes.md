@@ -36,6 +36,9 @@ themes/
 
 - `slug`: lower-case letters, digits, `-` and `_`, starting with a letter or
   digit, at most 50 characters. It is the folder name.
+- `requires` (optional): `{"pnlcs": ">=1.3 <2"}`, the PNLCS versions the
+  theme works with. An update outside it does not start until the operator
+  updates the theme.
 - `colors`: applied as the active colour set when the theme is activated.
   Colours you leave out come from the Starter theme, so a theme can set only
   the few it changes. Look at `themes/starter/theme.json` for the full list of
@@ -76,6 +79,11 @@ deleted.
 
 ## Keeping your theme through updates
 
-Built-in themes are part of PNLCS and are overwritten by updates; a theme with
-its own slug is not. Build yours under your own slug rather than editing a
-built-in one.
+Built-in themes are part of PNLCS and are updated with it; a theme with its
+own slug is never touched. Build yours under your own slug rather than editing
+a built-in one. (Edits to a built-in theme are not lost either: the updater
+merges them with the new version or asks you, like any change to a core file.)
+
+When an update changes a view your theme replaces, **Setup → Updates** lists it
+before you update: your copy keeps showing, without the change. New built-in
+themes take the `pnlcs-` prefix, so they never take a slug of yours.

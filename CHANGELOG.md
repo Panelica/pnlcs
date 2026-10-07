@@ -2,6 +2,53 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## Unreleased (1.3.0) — Releases, channels and an updater that never harms an installation
+
+### Added
+
+- **Releases on two channels.** PNLCS now ships as signed releases: stable, and
+  beta about a week earlier. Installations are updated only from releases,
+  never from the code under development. The rules every release follows are
+  in [RELEASING.md](RELEASING.md).
+- **Setup → Updates**, and `php artisan pnlcs:update`. An update downloads the
+  release, checks its signature, and compares it with the installation before
+  it changes anything:
+  - your own themes, modules, hook files, `.env`, uploads and data are never
+    touched;
+  - your changes to PNLCS's own files are merged with the new version, or
+    kept when the new version leaves the file alone;
+  - when a change of yours and the new version clash, the update does not
+    start: you choose, per file, the new version (yours is kept aside), yours,
+    or a file you merged by hand;
+  - the site is in maintenance for the few seconds the update takes; the
+    database is snapshotted first, and if a migration, the new code or the
+    health check after it fails, every file and the database are put back
+    and the site comes back on its previous version;
+  - an update cut off by a crash is rolled back with
+    `php artisan pnlcs:update-rollback` (in Docker, by the container's next
+    start), and nothing else runs until it is.
+- A daily check tells administrators when a release is available
+  (`update.available` in **Setup → Notification Channels**), and the results
+  of updates are notified too (`update.completed`, `update.failed`).
+- Modules and themes can state the PNLCS versions they work with
+  (`"requires": {"pnlcs": ">=1.3 <2"}`); an update outside the range waits.
+- A new permission, `manage_updates`, held by full administrators.
+
+### Docker image 1.5
+
+- The first start installs the newest signed release instead of cloning the
+  development branch; dependencies and assets come built.
+- `update.sh` and `AUTO_UPDATE=1` use the updater. Earlier images reset the
+  code to the development branch and discarded changes made inside the
+  container; recreate the container on 1.5 before updating.
+- A code volume that holds an installation is never wiped, with or without a
+  `.git` folder; an update cut off by a restart is rolled back on start.
+
+### For theme and module authors
+
+- New built-in themes, modules and hook files take the `pnlcs-` prefix, so they
+  never land on a name you use.
+
 ## 2026-09-25 — A domain ordered with hosting is checked, priced and registered
 
 Reported in GitHub issue #48.
