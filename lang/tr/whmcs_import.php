@@ -111,6 +111,7 @@ return [
         'invalid_regex' => '":field" alanı için geçersiz düzenli ifade.',
         'client_not_found' => '":email" e-postalı PNLCS müşterisi yok.',
         'product_not_found' => 'PNLCS\'de ":name" ürünü bulunamadı.',
+        'product_id_not_found' => 'Eşlenen ürün kimliği ":id" PNLCS içinde mevcut değil.',
         'server_not_found' => 'PNLCS\'de ":name" sunucusu bulunamadı.',
     ],
 
@@ -127,7 +128,9 @@ return [
     'no_connections' => 'Henüz kayıtlı bağlantı yok.',
     'mapped_count' => ':total alanın :count tanesi eşlendi',
     'product_mapping' => 'Ürün Eşleme',
-    'product_mapping_hint' => 'WHMCS ürünlerini adına göre PNLCS ürünleriyle eşleyin. Eşlenmeyen ürünler ürün olmadan içe aktarılır.',
-    'product_unmatched' => 'Eşlenmemiş (ürün yok)',
+    'whmcs_product' => 'WHMCS ürünü',
+    'pnlcs_product' => 'PNLCS ürünü',
+    'product_mapping_hint' => 'WHMCS ürünlerini PNLCS ürünleriyle eşleyin. "Ada göre eşle", aynı ada sahip PNLCS ürünüyle bağlar veya yoksa ürün olmadan içe aktarır.',
+    'product_match_by_name' => 'Ada göre eşle',
     'note_services_header' => 'WHMCS hizmetleri:',
 ];

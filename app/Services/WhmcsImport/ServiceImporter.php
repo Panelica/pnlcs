@@ -29,6 +29,7 @@ class ServiceImporter
     /**
      * @param  callable(callable(array<string, mixed>): void): void  $rows  yields each service row (enriched with `client_email`, `product_name`, `server_name`) to its callback
      * @param  array<string, mixed>  $mapping  ['columns' => ..., 'constants' => ...]
+     * @param  array<string, int>  $productMap  WHMCS product id (from `packageid`) => PNLCS product id
      * @return array{total: int, added: int, updated: int, skipped: int, errors: int, error_details: list<array<string, mixed>>, skipped_details: list<array<string, mixed>>}
      */
     public function run(
@@ -50,9 +51,15 @@ class ServiceImporter
 
         $statuses = array_map(fn (ServiceStatus $s) => $s->value, ServiceStatus::cases());
 
+        // Resolve products once per run: an explicit mapping wins, otherwise
+        // the name. The valid-id set also catches a mapping whose product has
+        // since been deleted.
+        $productsByName = Product::pluck('id', 'name');
+        $validProductIds = Product::pluck('id')->flip();
+
         $linesByClient = [];
 
-        $rows(function (array $row) use ($mapping, $importMode, $matchKey, $productMap, $statuses, &$summary, &$linesByClient) {
+        $rows(function (array $row) use ($mapping, $importMode, $matchKey, $productMap, $productsByName, $validProductIds, $statuses, &$summary, &$linesByClient) {
             $summary['total']++;
 
             $target = $this->normalizeDates($this->engine->apply($row, $mapping));
@@ -74,19 +81,24 @@ class ServiceImporter
 
             $productName = trim((string) ($row['product_name'] ?? ''));
             if ($productName !== '') {
-                // The source product name is part of the service identity, so
-                // two unmapped products on the same domain stay distinct.
+                // The source product name is always part of the service
+                // identity, so two products on one domain stay apart.
                 $target['whmcs_product_name'] = $productName;
 
-                // An explicit WHMCS → PNLCS product mapping wins; otherwise the
-                // importer falls back to matching the product by name.
-                $mappedId = $productMap[$productName] ?? null;
+                // An explicit WHMCS → PNLCS product mapping (keyed by the WHMCS
+                // product id) wins; otherwise the importer falls back to
+                // matching the product by name.
+                $mappedId = $productMap[(string) ($row['packageid'] ?? '')] ?? null;
                 if ($mappedId !== null) {
-                    $target['product_id'] = (int) $mappedId;
+                    if ($validProductIds->has((int) $mappedId)) {
+                        $target['product_id'] = (int) $mappedId;
+                    } else {
+                        $summary['skipped_details'][] = $this->error($row, __('whmcs_import.validation.product_id_not_found', ['id' => $mappedId]));
+                    }
                 } else {
-                    $product = Product::where('name', $productName)->first();
-                    if ($product !== null) {
-                        $target['product_id'] = $product->id;
+                    $productId = $productsByName[$productName] ?? null;
+                    if ($productId !== null) {
+                        $target['product_id'] = $productId;
                     } else {
                         $summary['skipped_details'][] = $this->error($row, __('whmcs_import.validation.product_not_found', ['name' => $productName]));
                     }
@@ -152,10 +164,10 @@ class ServiceImporter
     }
 
     /**
-     * A service is identified by its match key and client. When the product is
-     * unmapped, the WHMCS product name joins the identity too, so two unmapped
-     * products on the same domain — e.g. hosting and e-mail — stay apart. A
-     * mapped product is stable, so it is matched by the key and client alone.
+     * A service is identified by its match key, client and WHMCS product name
+     * together. The product name keeps two products on one domain — e.g.
+     * hosting and e-mail — apart, whether or not they are mapped to a PNLCS
+     * product.
      */
     protected function findExisting(?string $matchKey, array $target): ?Service
     {
@@ -166,7 +178,9 @@ class ServiceImporter
 
     /**
      * The base query for a service's identity, without the client constraint:
-     * the match key, plus the WHMCS product name when the product is unmapped.
+     * the match key plus the WHMCS product name. A row with no source product
+     * name matches services imported before this rule (where the column is
+     * null).
      *
      * @return Builder|null null when the match key cannot be resolved
      */
@@ -183,13 +197,11 @@ class ServiceImporter
 
         $query = Service::where($matchKey, $value);
 
-        if (($target['product_id'] ?? null) === null) {
-            $name = $target['whmcs_product_name'] ?? null;
-            if ($name === null || $name === '') {
-                $query->whereNull('whmcs_product_name');
-            } else {
-                $query->where('whmcs_product_name', $name);
-            }
+        $name = $target['whmcs_product_name'] ?? null;
+        if ($name === null || $name === '') {
+            $query->whereNull('whmcs_product_name');
+        } else {
+            $query->where('whmcs_product_name', $name);
         }
 
         return $query;

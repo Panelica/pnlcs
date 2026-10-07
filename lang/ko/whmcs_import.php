@@ -103,6 +103,7 @@ return [
         'invalid_regex' => '":field" 필드의 정규식이 잘못되었습니다.',
         'client_not_found' => '이메일이 ":email"인 PNLCS 고객이 없습니다.',
         'product_not_found' => 'PNLCS에서 상품 ":name"을(를) 찾을 수 없습니다.',
+        'product_id_not_found' => '매핑된 제품 id ":id"가 PNLCS에 없습니다.',
         'server_not_found' => 'PNLCS에서 서버 ":name"을(를) 찾을 수 없습니다.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => '아직 저장된 연결이 없습니다.',
     'mapped_count' => ':total개 중 :count개 필드 매핑됨',
     'product_mapping' => '제품 매핑',
-    'product_mapping_hint' => 'WHMCS 제품을 이름으로 PNLCS 제품에 매핑합니다. 매핑되지 않은 제품은 제품 없이 가져옵니다.',
-    'product_unmatched' => '매핑 안 됨 (제품 없음)',
+    'whmcs_product' => 'WHMCS 제품',
+    'pnlcs_product' => 'PNLCS 제품',
+    'product_mapping_hint' => 'WHMCS 제품을 PNLCS 제품에 매핑합니다. "이름으로 일치"는 같은 이름의 PNLCS 제품에 연결하거나, 없으면 제품 없이 가져옵니다.',
+    'product_match_by_name' => '이름으로 일치',
     'note_services_header' => 'WHMCS 서비스:',
 ];

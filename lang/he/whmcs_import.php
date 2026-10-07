@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'ביטוי רגולרי לא תקין לשדה ":field".',
         'client_not_found' => 'אין לקוח PNLCS עם הדוא"ל ":email".',
         'product_not_found' => 'המוצר ":name" לא נמצא ב-PNLCS.',
+        'product_id_not_found' => 'מזהה המוצר הממופה ":id" אינו קיים ב-PNLCS.',
         'server_not_found' => 'השרת ":name" לא נמצא ב-PNLCS.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => 'אין עדיין חיבורים שמורים.',
     'mapped_count' => 'מופו :count מתוך :total שדות',
     'product_mapping' => 'מיפוי מוצרים',
-    'product_mapping_hint' => 'מפה מוצרי WHMCS למוצרי PNLCS לפי שם. מוצרים לא ממופים מיובאים ללא מוצר.',
-    'product_unmatched' => 'לא ממופה (ללא מוצר)',
+    'whmcs_product' => 'מוצר WHMCS',
+    'pnlcs_product' => 'מוצר PNLCS',
+    'product_mapping_hint' => 'מפה מוצרי WHMCS למוצרי PNLCS. "התאמה לפי שם" מקשרת למוצר PNLCS בעל אותו שם, או מייבאת ללא מוצר אם אין כזה.',
+    'product_match_by_name' => 'התאמה לפי שם',
     'note_services_header' => 'שירותי WHMCS:',
 ];

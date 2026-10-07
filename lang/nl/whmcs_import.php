@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Ongeldige reguliere expressie voor veld ":field".',
         'client_not_found' => 'Geen PNLCS-klant met e-mailadres ":email".',
         'product_not_found' => 'Product ":name" niet gevonden in PNLCS.',
+        'product_id_not_found' => 'Gekoppelde product-id ":id" bestaat niet in PNLCS.',
         'server_not_found' => 'Server ":name" niet gevonden in PNLCS.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => 'Nog geen opgeslagen verbindingen.',
     'mapped_count' => ':count van :total velden gekoppeld',
     'product_mapping' => 'Productkoppeling',
-    'product_mapping_hint' => 'Koppel WHMCS-producten op naam aan PNLCS-producten. Niet-gekoppelde producten worden zonder product geïmporteerd.',
-    'product_unmatched' => 'Niet gekoppeld (geen product)',
+    'whmcs_product' => 'WHMCS-product',
+    'pnlcs_product' => 'PNLCS-product',
+    'product_mapping_hint' => 'Koppel WHMCS-producten aan PNLCS-producten. "Koppel op naam" verbindt met het gelijknamige PNLCS-product, of importeert zonder product als dat er niet is.',
+    'product_match_by_name' => 'Koppel op naam',
     'note_services_header' => 'WHMCS-diensten:',
 ];

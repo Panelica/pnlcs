@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Неверное регулярное выражение для поля «:field».',
         'client_not_found' => 'Нет клиента PNLCS с e-mail «:email».',
         'product_not_found' => 'Продукт «:name» не найден в PNLCS.',
+        'product_id_not_found' => 'Сопоставленный id продукта ":id" не существует в PNLCS.',
         'server_not_found' => 'Сервер «:name» не найден в PNLCS.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => 'Сохранённых подключений пока нет.',
     'mapped_count' => 'Сопоставлено полей: :count из :total',
     'product_mapping' => 'Сопоставление продуктов',
-    'product_mapping_hint' => 'Сопоставьте продукты WHMCS с продуктами PNLCS по названию. Несопоставленные продукты импортируются без продукта.',
-    'product_unmatched' => 'Не сопоставлено (без продукта)',
+    'whmcs_product' => 'Продукт WHMCS',
+    'pnlcs_product' => 'Продукт PNLCS',
+    'product_mapping_hint' => 'Сопоставьте продукты WHMCS с продуктами PNLCS. «Сопоставить по названию» связывает с продуктом PNLCS с тем же названием, иначе импортирует без продукта.',
+    'product_match_by_name' => 'Сопоставить по названию',
     'note_services_header' => 'Услуги WHMCS:',
 ];

@@ -448,8 +448,9 @@ class WhmcsImportController extends Controller
     }
 
     /**
-     * The WHMCS product name → PNLCS product id map, from the request or a
-     * saved profile. An empty value means "leave unmatched" and is dropped.
+     * The WHMCS product id → PNLCS product id map, from the request or a saved
+     * profile. Keyed by the WHMCS product id so a name containing brackets
+     * cannot corrupt the form. An empty value means "leave unmatched".
      *
      * @return array<string, int>
      */

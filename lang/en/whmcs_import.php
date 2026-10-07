@@ -111,6 +111,7 @@ return [
         'invalid_regex' => 'Invalid regular expression for field ":field".',
         'client_not_found' => 'No PNLCS client with email ":email".',
         'product_not_found' => 'Product ":name" not found in PNLCS.',
+        'product_id_not_found' => 'Mapped product id ":id" does not exist in PNLCS.',
         'server_not_found' => 'Server ":name" not found in PNLCS.',
     ],
 
@@ -127,7 +128,9 @@ return [
     'no_connections' => 'No saved connections yet.',
     'mapped_count' => ':count of :total fields mapped',
     'product_mapping' => 'Product mapping',
-    'product_mapping_hint' => 'Map WHMCS products to PNLCS products by name. Products left unmatched are imported without a product.',
-    'product_unmatched' => 'Unmatched (no product)',
+    'whmcs_product' => 'WHMCS product',
+    'pnlcs_product' => 'PNLCS product',
+    'product_mapping_hint' => 'Map WHMCS products to PNLCS products. "Match by name" links to the PNLCS product with the same name, or imports without a product when there is none.',
+    'product_match_by_name' => 'Match by name',
     'note_services_header' => 'WHMCS services:',
 ];

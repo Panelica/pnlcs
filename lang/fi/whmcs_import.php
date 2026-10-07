@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Virheellinen säännöllinen lauseke kentälle ":field".',
         'client_not_found' => 'Ei PNLCS-asiakasta sähköpostilla ":email".',
         'product_not_found' => 'Tuotetta ":name" ei löytynyt PNLCS:stä.',
+        'product_id_not_found' => 'Yhdistettyä tuote-id:tä ":id" ei ole PNLCS:ssä.',
         'server_not_found' => 'Palvelinta ":name" ei löytynyt PNLCS:stä.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => 'Ei vielä tallennettuja yhteyksiä.',
     'mapped_count' => ':count / :total kenttää kohdistettu',
     'product_mapping' => 'Tuotekartoitus',
-    'product_mapping_hint' => 'Yhdistä WHMCS-tuotteet PNLCS-tuotteisiin nimen perusteella. Yhdistämättömät tuotteet tuodaan ilman tuotetta.',
-    'product_unmatched' => 'Yhdistämätön (ei tuotetta)',
+    'whmcs_product' => 'WHMCS-tuote',
+    'pnlcs_product' => 'PNLCS-tuote',
+    'product_mapping_hint' => 'Yhdistä WHMCS-tuotteet PNLCS-tuotteisiin. "Yhdistä nimen mukaan" linkittää samannimiseen PNLCS-tuotteeseen tai tuo ilman tuotetta, jos sellaista ei ole.',
+    'product_match_by_name' => 'Yhdistä nimen mukaan',
     'note_services_header' => 'WHMCS-palvelut:',
 ];

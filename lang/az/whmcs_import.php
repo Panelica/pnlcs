@@ -103,6 +103,7 @@ return [
         'invalid_regex' => '":field" sahəsi üçün yanlış müntəzəm ifadə.',
         'client_not_found' => '":email" e-poçtlu PNLCS müştərisi yoxdur.',
         'product_not_found' => '":name" məhsulu PNLCS-də tapılmadı.',
+        'product_id_not_found' => 'Xəritələnmiş məhsul id-si ":id" PNLCS-də mövcud deyil.',
         'server_not_found' => '":name" serveri PNLCS-də tapılmadı.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => 'Hələ saxlanılmış bağlantı yoxdur.',
     'mapped_count' => ':total sahədən :count uyğunlaşdırılıb',
     'product_mapping' => 'Məhsul xəritələnməsi',
-    'product_mapping_hint' => 'WHMCS məhsullarını adına görə PNLCS məhsulları ilə xəritələyin. Xəritələnməmiş məhsullar məhsulsuz idxal edilir.',
-    'product_unmatched' => 'Xəritələnməmiş (məhsulsuz)',
+    'whmcs_product' => 'WHMCS məhsulu',
+    'pnlcs_product' => 'PNLCS məhsulu',
+    'product_mapping_hint' => 'WHMCS məhsullarını PNLCS məhsulları ilə xəritələyin. "Ada görə uyğunlaşdır" eyniadlı PNLCS məhsulu ilə bağlayır və ya yoxdursa məhsulsuz idxal edir.',
+    'product_match_by_name' => 'Ada görə uyğunlaşdır',
     'note_services_header' => 'WHMCS xidmətləri:',
 ];

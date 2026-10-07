@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Neispravan regularni izraz za polje ":field".',
         'client_not_found' => 'Nema PNLCS klijenta s e-adresom ":email".',
         'product_not_found' => 'Proizvod ":name" nije pronađen u PNLCS-u.',
+        'product_id_not_found' => 'Mapirani id proizvoda ":id" ne postoji u PNLCS-u.',
         'server_not_found' => 'Poslužitelj ":name" nije pronađen u PNLCS-u.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => 'Još nema spremljenih veza.',
     'mapped_count' => 'Mapirano :count od :total polja',
     'product_mapping' => 'Mapiranje proizvoda',
-    'product_mapping_hint' => 'Mapirajte WHMCS proizvode na PNLCS proizvode po nazivu. Nemapirani proizvodi uvoze se bez proizvoda.',
-    'product_unmatched' => 'Nemapirano (bez proizvoda)',
+    'whmcs_product' => 'WHMCS proizvod',
+    'pnlcs_product' => 'PNLCS proizvod',
+    'product_mapping_hint' => 'Mapirajte WHMCS proizvode na PNLCS proizvode. „Spoji po nazivu" povezuje s istoimenim PNLCS proizvodom ili uvozi bez proizvoda ako ga nema.',
+    'product_match_by_name' => 'Spoji po nazivu',
     'note_services_header' => 'WHMCS usluge:',
 ];

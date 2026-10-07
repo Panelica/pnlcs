@@ -194,18 +194,21 @@
                 <div style="overflow-x:auto;">
                     <table class="wi-table">
                         <thead><tr>
-                            <th>{{ __('whmcs_import.source_column') }}</th>
-                            <th>{{ __('whmcs_import.target_field') }}</th>
+                            <th>{{ __('whmcs_import.whmcs_product') }}</th>
+                            <th>{{ __('whmcs_import.pnlcs_product') }}</th>
                         </tr></thead>
                         <tbody>
                         @foreach($whmcsProducts as $wp)
                             <tr>
                                 <td><span class="wi-tag">{{ $wp['name'] }}</span><span class="wi-type">{{ $wp['type'] }}</span></td>
                                 <td>
-                                    <select name="product_mapping[{{ $wp['name'] }}]">
-                                        <option value="">{{ __('whmcs_import.product_unmatched') }}</option>
+                                    {{-- Keyed by the WHMCS product id: a name
+                                         containing brackets would corrupt a
+                                         key built from the name. --}}
+                                    <select name="product_mapping[{{ $wp['id'] }}]">
+                                        <option value="">{{ __('whmcs_import.product_match_by_name') }}</option>
                                         @foreach($pnlcsProducts as $p)
-                                        <option value="{{ $p->id }}" @selected(($productMap[$wp['name']] ?? null) === $p->id)>{{ $p->name }}</option>
+                                        <option value="{{ $p->id }}" @selected(($productMap[$wp['id']] ?? null) === $p->id)>{{ $p->name }}</option>
                                         @endforeach
                                     </select>
                                 </td>

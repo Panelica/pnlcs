@@ -103,6 +103,7 @@ return [
         'invalid_regex' => 'Érvénytelen reguláris kifejezés a(z) „:field” mezőhöz.',
         'client_not_found' => 'Nincs PNLCS-ügyfél „:email” e-mail-címmel.',
         'product_not_found' => 'A(z) „:name” termék nem található a PNLCS-ben.',
+        'product_id_not_found' => 'A leképezett termék-id ":id" nem létezik a PNLCS-ben.',
         'server_not_found' => 'A(z) „:name” szerver nem található a PNLCS-ben.',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => 'Még nincs mentett kapcsolat.',
     'mapped_count' => ':total mezőből :count megfeleltetve',
     'product_mapping' => 'Termékleképezés',
-    'product_mapping_hint' => 'Képezze le a WHMCS-termékeket a PNLCS-termékekre név alapján. A nem leképezett termékek termék nélkül importálódnak.',
-    'product_unmatched' => 'Nem leképezve (nincs termék)',
+    'whmcs_product' => 'WHMCS-termék',
+    'pnlcs_product' => 'PNLCS-termék',
+    'product_mapping_hint' => 'Képezze le a WHMCS-termékeket PNLCS-termékekre. Az „Egyeztetés név alapján" az azonos nevű PNLCS-termékhez köti, vagy termék nélkül importál, ha nincs ilyen.',
+    'product_match_by_name' => 'Egyeztetés név alapján',
     'note_services_header' => 'WHMCS-szolgáltatások:',
 ];

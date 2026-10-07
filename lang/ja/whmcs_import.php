@@ -103,6 +103,7 @@ return [
         'invalid_regex' => '項目「:field」の正規表現が正しくありません。',
         'client_not_found' => 'メールアドレス「:email」の PNLCS 顧客はいません。',
         'product_not_found' => '商品「:name」が PNLCS に見つかりません。',
+        'product_id_not_found' => '対応付けた商品 id ":id" は PNLCS に存在しません。',
         'server_not_found' => 'サーバー「:name」が PNLCS に見つかりません。',
     ],
 
@@ -119,7 +120,9 @@ return [
     'no_connections' => '保存済みの接続はまだありません。',
     'mapped_count' => ':total 項目中 :count 項目を対応付け済み',
     'product_mapping' => '商品マッピング',
-    'product_mapping_hint' => 'WHMCS の商品を名前で PNLCS の商品に対応付けます。対応付けられなかった商品は商品なしでインポートされます。',
-    'product_unmatched' => '未対応（商品なし）',
+    'whmcs_product' => 'WHMCS 商品',
+    'pnlcs_product' => 'PNLCS 商品',
+    'product_mapping_hint' => 'WHMCS の商品を PNLCS の商品に対応付けます。「名前で一致」は同名の PNLCS 商品に紐づけ、存在しない場合は商品なしでインポートします。',
+    'product_match_by_name' => '名前で一致',
     'note_services_header' => 'WHMCS サービス:',
 ];

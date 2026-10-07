@@ -111,6 +111,7 @@ return [
         'invalid_regex' => 'Nieprawidłowe wyrażenie regularne dla pola ":field".',
         'client_not_found' => 'Brak klienta PNLCS z adresem email ":email".',
         'product_not_found' => 'Produkt ":name" nie znaleziony w PNLCS.',
+        'product_id_not_found' => 'Zmapowany produkt o id ":id" nie istnieje w PNLCS.',
         'server_not_found' => 'Serwer ":name" nie znaleziony w PNLCS.',
     ],
 
@@ -127,7 +128,9 @@ return [
     'no_connections' => 'Brak zapisanych połączeń.',
     'mapped_count' => 'Przypisano :count z :total pól',
     'product_mapping' => 'Mapowanie produktów',
-    'product_mapping_hint' => 'Zmapuj produkty WHMCS na produkty PNLCS po nazwie. Produkty niezmapowane zostaną zaimportowane bez produktu.',
-    'product_unmatched' => 'Bez mapowania (bez produktu)',
+    'whmcs_product' => 'Produkt WHMCS',
+    'pnlcs_product' => 'Produkt PNLCS',
+    'product_mapping_hint' => 'Zmapuj produkty WHMCS na produkty PNLCS. „Dopasuj po nazwie" łączy z produktem PNLCS o tej samej nazwie, a gdy go nie ma — importuje bez produktu.',
+    'product_match_by_name' => 'Dopasuj po nazwie',
     'note_services_header' => 'Usługi WHMCS:',
 ];
