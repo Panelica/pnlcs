@@ -3592,5 +3592,6 @@ return [
             'error' => 'Denetim tamamlanamadı. Hiçbir şey değiştirilmedi.',
         ],
         'elapsed' => 'Geçen süre',
+        'last_result' => 'Son sonuç',
     ],
 ];

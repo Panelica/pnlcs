@@ -3594,5 +3594,6 @@ return [
             'error' => 'The check could not finish. Nothing was changed.',
         ],
         'elapsed' => 'Elapsed',
+        'last_result' => 'Last result',
     ],
 ];

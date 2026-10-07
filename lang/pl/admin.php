@@ -3592,5 +3592,6 @@ return [
             'error' => 'Sprawdzanie nie mogło się zakończyć. Nic nie zostało zmienione.',
         ],
         'elapsed' => 'Upłynęło',
+        'last_result' => 'Ostatni wynik',
     ],
 ];

@@ -3588,5 +3588,6 @@ return [
             'error' => 'Die Prüfung konnte nicht abgeschlossen werden. Es wurde nichts geändert.',
         ],
         'elapsed' => 'Dauer',
+        'last_result' => 'Letztes Ergebnis',
     ],
 ];

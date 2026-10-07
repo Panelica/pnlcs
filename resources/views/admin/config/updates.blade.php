@@ -26,11 +26,13 @@
     .upd-progress__bar{height:10px;border-radius:999px;background:#e9edf2;overflow:hidden}
     .upd-progress__fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--theme-primary,#1a4d80),var(--theme-accent,#337ab7));transition:width .6s ease;background-size:200% 100%;animation:upd-flow 2s linear infinite}
     @keyframes upd-flow{from{background-position:200% 0}to{background-position:0 0}}
-    .upd-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 16px;list-style:none;margin:14px 0 0;padding:0}
-    .upd-step{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--pn-muted,#999)}
-    .upd-step__icon{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
-    .upd-step--done{color:#2e7d32}.upd-step--done .upd-step__icon{background:#e3f4e5}
-    .upd-step--current{color:inherit;font-weight:600}.upd-step--current .upd-step__icon{color:var(--theme-primary,#1a4d80)}
+    .upd-steps{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(var(--rows,4),auto);grid-auto-flow:column;column-gap:32px}
+    .upd-step{position:relative;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--pn-muted,#999);padding:5px 0}
+    .upd-step__icon{position:relative;z-index:1;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;background:#fff;border:2px solid #d6dbe2}
+    .upd-step--done{color:#2e7d32}.upd-step--done .upd-step__icon{background:#2e7d32;border-color:#2e7d32;color:#fff}
+    .upd-step--current{color:inherit;font-weight:600}.upd-step--current .upd-step__icon{border-color:var(--theme-primary,#1a4d80);color:var(--theme-primary,#1a4d80)}
+    .upd-step--pending .upd-step__icon i{display:none !important}
+    @media (max-width:700px){.upd-steps{grid-template-columns:1fr;grid-template-rows:none;grid-auto-flow:row}}
     .upd-top__label{display:block;font-size:12px;font-weight:600;color:var(--pn-muted,#777);margin:0 0 6px;line-height:16px;height:16px}
     .upd-top__control{display:flex;gap:8px;align-items:center;height:36px}
     .upd-top__control select,.upd-top__control .btn{height:36px;box-sizing:border-box;margin:0}
@@ -122,7 +124,7 @@
     ];
 @endphp
 <div class="card" style="margin-bottom:16px;" id="update-progress" data-status-url="{{ route('admin.config.updates.status') }}" data-active="{{ $active ? '1' : '0' }}">
-    <div class="card-header"><strong>{{ __('admin.updates.progress') }}</strong></div>
+    <div class="card-header"><strong>{{ $active ? __('admin.updates.progress') : __('admin.updates.last_result') }}</strong></div>
     <div class="card-body">
         @if($active)
         <div x-data="updateProgress(@js($progress))" x-init="start()">
@@ -133,13 +135,12 @@
             <div class="upd-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="percent()">
                 <div class="upd-progress__fill" :style="'width:' + percent() + '%'"></div>
             </div>
-            <ol class="upd-steps">
+            <ol class="upd-steps" :style="'--rows:' + Math.ceil(steps().length / 2)">
                 <template x-for="(step, i) in steps()" :key="step">
                     <li :class="'upd-step upd-step--' + stepState(i)">
                         <span class="upd-step__icon">
                             <i class="fas fa-check" x-show="stepState(i) === 'done'"></i>
                             <i class="fas fa-circle-notch fa-spin" x-show="stepState(i) === 'current'"></i>
-                            <i class="far fa-circle" x-show="stepState(i) === 'pending'"></i>
                         </span>
                         <span x-text="labels.step[step] || step"></span>
                     </li>
@@ -176,7 +177,7 @@
         </details>
         @endif
         <div class="upd-row">
-            <form method="POST" action="{{ route('admin.config.updates.apply') }}" class="upd-row" onsubmit="return pnConfirm(event, @js(__('admin.updates.apply_confirm')))">
+            <form method="POST" action="{{ route('admin.config.updates.apply') }}" class="upd-row" onsubmit="return pnConfirm(event, @js(__('admin.updates.apply_confirm')), {confirmText: @js(__('admin.updates.apply'))})">
                 @csrf
                 @if($onlyMajor)
                 <label class="upd-choice"><input type="checkbox" name="allow_major" value="1" required> <span>{{ __('admin.updates.allow_major') }}</span></label>
@@ -275,7 +276,7 @@
                 </div>
             @endforeach
             <div class="upd-row">
-                <button type="submit" name="then" value="apply" class="btn btn-success" @disabled($active) onclick="return pnConfirm(event, @js(__('admin.updates.apply_confirm')))"><i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.save_and_update') }}</button>
+                <button type="submit" name="then" value="apply" class="btn btn-success" @disabled($active) onclick="return pnConfirm(event, @js(__('admin.updates.apply_confirm')), {confirmText: @js(__('admin.updates.save_and_update'))})"><i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.save_and_update') }}</button>
                 <button type="submit" class="btn btn-default">{{ __('admin.updates.save_choices') }}</button>
             </div>
         </form>
