@@ -3493,7 +3493,7 @@ return [
         'col_result' => 'Sonuç',
         'cli_hint' => 'Aynısı komut satırından, web sunucusu kullanıcısıyla: :command',
         'progress' => 'İlerleme',
-        'unfinished' => 'Bir güncelleme tamamlanmadı; site bakım modunda olabilir. Her şeyi eski haline getirmek için şunu web sunucusu kullanıcısıyla çalıştırın: :command',
+        'unfinished' => 'Bir güncelleme tamamlanmadı; site bakım modunda olabilir. Zamanlayıcı her şeyi bir dakika içinde kendiliğinden eski haline getirir; hemen yapmak için şunu web sunucusu kullanıcısıyla çalıştırın: :command',
         'status' => [
             'preparing' => 'Hazırlanıyor',
             'queued' => 'Başlaması bekleniyor',
@@ -3588,7 +3588,7 @@ return [
             'refused' => 'Güncelleme başlamadı ve hiçbir şey değiştirilmedi. Karar vermeniz gerekenler aşağıda.',
             'rolled_back' => ':version sürümüne güncelleme başarısız oldu ve her şey eski haline getirildi. Site önceki sürümle çalışıyor.',
             'failed' => ':version sürümüne güncelleme başlatılamadı. Hiçbir şey değiştirilmedi.',
-            'rollback_failed' => 'Güncellemeyi geri alma başarısız oldu. Site bakım modunda: sunucuda php artisan pnlcs:update-rollback komutunu çalıştırın.',
+            'rollback_failed' => 'Güncellemeyi geri alma başarısız oldu. Site bakım modunda kalır; geri alma 5, 10, 20 ve 40 dakika sonra, ardından saatte bir kendiliğinden yeniden denenir. Hemen denemek için sunucuda php artisan pnlcs:update-rollback komutunu çalıştırın.',
             'error' => 'Denetim tamamlanamadı. Hiçbir şey değiştirilmedi.',
         ],
         'elapsed' => 'Geçen süre',

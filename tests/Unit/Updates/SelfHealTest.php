@@ -62,3 +62,56 @@ test('a finished or refused run with no maintenance left needs nothing', functio
 
     expect($runner->healAbandoned())->toBe(['healed' => false]);
 })->with(['done', 'rolled_back', 'refused', 'failed_before_changes']);
+
+/** A run whose files step had replaced app/Probe.php ("new"; "old" is in the backup). */
+function failedRollbackSetup(array $extra): array
+{
+    $run = ['id' => 'r1', 'from' => '1.0.0', 'to' => '1.0.1', 'phase' => 'rollback_failed', 'rollback_from' => 'files', 'was_down' => false] + $extra;
+    [$root, $state, $runner] = healSetup($run, null);
+    $dir = $state->path('runs/r1');
+    mkdir("{$dir}/backup/app", 0777, true);
+    mkdir("{$root}/app", 0777, true);
+    file_put_contents("{$root}/app/Probe.php", 'new');
+    file_put_contents("{$dir}/backup/app/Probe.php", 'old');
+    file_put_contents("{$dir}/journal.jsonl", json_encode(['op' => 'write', 'path' => 'app/Probe.php', 'existed' => true])."\n");
+    file_put_contents("{$dir}/plan.json", json_encode(['root' => $root, 'run_dir' => $dir, 'new_root' => "{$dir}/new", 'actions' => []]));
+    copy(resource_path('updater/apply.php'), "{$dir}/apply.php");
+
+    return [$root, $state, $runner];
+}
+
+test('a rollback that failed is redone in full when it is tried again - the files too', function () {
+    [$root, $state, $runner] = failedRollbackSetup(['rollback_attempts' => 1, 'rollback_failed_at' => now()->subHour()->toIso8601String()]);
+
+    expect($runner->healAbandoned())->toMatchArray(['healed' => true, 'action' => 'rolled_back'])
+        ->and(file_get_contents("{$root}/app/Probe.php"))->toBe('old')
+        ->and($state->read('current-run.json')['phase'])->toBe('rolled_back');
+});
+
+test('a failed rollback is tried again after a pause, not every minute', function () {
+    [$root, $state, $runner] = failedRollbackSetup(['rollback_attempts' => 2, 'rollback_failed_at' => now()->subMinutes(9)->toIso8601String()]);
+
+    // The second attempt failed 9 minutes ago: the next one is due after 10.
+    expect($runner->healAbandoned())->toBe(['healed' => false])
+        ->and(file_get_contents("{$root}/app/Probe.php"))->toBe('new');
+
+    $this->travel(2)->minutes();
+    expect($runner->healAbandoned()['healed'])->toBeTrue()
+        ->and(file_get_contents("{$root}/app/Probe.php"))->toBe('old');
+});
+
+test('the operator is told once when rolling back fails, not at every attempt', function () {
+    [$root, $state, $runner] = failedRollbackSetup(['rollback_attempts' => 1, 'rollback_failed_at' => now()->subHour()->toIso8601String()]);
+    // The applier cannot run: every attempt fails.
+    file_put_contents($state->path('runs/r1/apply.php'), '<?php exit(1);');
+
+    expect(fn () => $runner->rollbackUnfinished())->toThrow(RuntimeException::class);
+    $this->travel(2)->hours();
+    expect(fn () => $runner->rollbackUnfinished())->toThrow(RuntimeException::class);
+
+    $run = $state->read('current-run.json');
+    expect($run['phase'])->toBe('rollback_failed')
+        ->and($run['rollback_attempts'])->toBe(3)
+        ->and($state->history())->toHaveCount(0)
+        ->and($state->read('status.json')['state'] ?? null)->toBe('rollback_failed');
+});

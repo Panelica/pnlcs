@@ -3495,7 +3495,7 @@ return [
         'col_result' => 'Result',
         'cli_hint' => 'The same from the command line, as the web server user: :command',
         'progress' => 'Progress',
-        'unfinished' => 'An update did not finish, and the site may be in maintenance. Run this as the web server user to put everything back: :command',
+        'unfinished' => 'An update did not finish, and the site may be in maintenance. The scheduler puts everything back by itself within a minute; to do it now, run this as the web server user: :command',
         'status' => [
             'preparing' => 'Preparing',
             'queued' => 'Waiting to start',
@@ -3590,7 +3590,7 @@ return [
             'refused' => 'The update did not start and nothing was changed. See below what needs a decision.',
             'rolled_back' => 'The update to :version failed, and everything was put back as it was. The site runs the previous version.',
             'failed' => 'The update to :version could not start. Nothing was changed.',
-            'rollback_failed' => 'Rolling back the update failed. The site is in maintenance: run php artisan pnlcs:update-rollback on the server.',
+            'rollback_failed' => 'Rolling back the update failed. The site stays in maintenance and it is tried again by itself after 5, 10, 20 and 40 minutes, then every hour. To try now: php artisan pnlcs:update-rollback on the server.',
             'error' => 'The check could not finish. Nothing was changed.',
         ],
         'elapsed' => 'Elapsed',

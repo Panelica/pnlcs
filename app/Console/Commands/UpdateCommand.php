@@ -64,6 +64,7 @@ class UpdateCommand extends Command
 
             if ($release === null) {
                 $this->info($wanted ? "Release {$wanted} is not published." : 'PNLCS '.($installation->version() ?? '').' is up to date on the '.$channel.' channel.');
+                $this->requestFailed($state, $request, "Release {$wanted} is not published.");
 
                 return $wanted ? self::FAILURE : self::SUCCESS;
             }
@@ -102,8 +103,22 @@ class UpdateCommand extends Command
             };
         } catch (Throwable $e) {
             $this->error($e->getMessage());
+            $this->requestFailed($state, $request, $e->getMessage());
 
             return self::FAILURE;
+        }
+    }
+
+    /**
+     * A request from the admin area that stopped before the updater took it
+     * over (the release list unreachable, the release withdrawn): the page
+     * says so instead of showing it queued for ever. A status the updater
+     * wrote itself is left as it is.
+     */
+    private function requestFailed(UpdateState $state, ?array $request, string $message): void
+    {
+        if ($request !== null && ($state->read('status.json')['state'] ?? null) === 'queued') {
+            $state->status('error', 'check', ['message' => $message, 'version' => $request['version'] ?? null]);
         }
     }
 

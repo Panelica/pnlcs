@@ -3489,7 +3489,7 @@ return [
         'col_result' => 'Ergebnis',
         'cli_hint' => 'Dasselbe auf der Kommandozeile, als Benutzer des Webservers: :command',
         'progress' => 'Fortschritt',
-        'unfinished' => 'Ein Update wurde nicht abgeschlossen, die Website ist möglicherweise im Wartungsmodus. Führen Sie als Benutzer des Webservers aus, um alles wiederherzustellen: :command',
+        'unfinished' => 'Ein Update wurde nicht abgeschlossen, die Website ist möglicherweise im Wartungsmodus. Der Scheduler stellt innerhalb einer Minute selbst alles wieder her; um es sofort zu tun, führen Sie als Benutzer des Webservers aus: :command',
         'status' => [
             'preparing' => 'Wird vorbereitet',
             'queued' => 'Wartet auf den Start',
@@ -3584,7 +3584,7 @@ return [
             'refused' => 'Das Update hat nicht begonnen, es wurde nichts geändert. Unten steht, was eine Entscheidung braucht.',
             'rolled_back' => 'Das Update auf :version ist fehlgeschlagen, und alles wurde wiederhergestellt. Die Website läuft mit der vorherigen Version.',
             'failed' => 'Das Update auf :version konnte nicht starten. Es wurde nichts geändert.',
-            'rollback_failed' => 'Das Zurücksetzen ist fehlgeschlagen. Die Website ist im Wartungsmodus: Führen Sie auf dem Server php artisan pnlcs:update-rollback aus.',
+            'rollback_failed' => 'Das Zurücksetzen ist fehlgeschlagen. Die Website bleibt im Wartungsmodus, und es wird nach 5, 10, 20 und 40 Minuten, danach stündlich, von selbst erneut versucht. Sofort versuchen: php artisan pnlcs:update-rollback auf dem Server.',
             'error' => 'Die Prüfung konnte nicht abgeschlossen werden. Es wurde nichts geändert.',
         ],
         'elapsed' => 'Dauer',

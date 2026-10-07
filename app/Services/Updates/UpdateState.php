@@ -69,16 +69,39 @@ class UpdateState
         return is_array($data) ? $data : null;
     }
 
-    /** @param array<string, mixed> $data */
+    /**
+     * Replaces the record whole or not at all: the self-healing reads these
+     * to know an update stopped part way, so a write that cannot be made (a
+     * full disk, a value that is no JSON) throws and leaves the old record.
+     *
+     * @param  array<string, mixed>  $data
+     */
     public function write(string $file, array $data): void
     {
         $full = $this->path($file);
         if (! is_dir(dirname($full))) {
             mkdir(dirname($full), 0750, true);
         }
-        $tmp = $full.'.tmp';
-        file_put_contents($tmp, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-        rename($tmp, $full);
+
+        try {
+            // Text from a database or a process may not be valid UTF-8.
+            $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new RuntimeException("Cannot record {$file}: ".$e->getMessage(), 0, $e);
+        }
+
+        // A name of its own: two processes writing at once never share it.
+        $tmp = $full.'.'.getmypid().'.'.bin2hex(random_bytes(4)).'.tmp';
+        $handle = @fopen($tmp, 'xb');
+        $written = $handle !== false ? @fwrite($handle, $json) : false;
+        $synced = $handle !== false && @fflush($handle) && @fsync($handle);
+        if ($handle !== false) {
+            fclose($handle);
+        }
+        if ($written !== strlen($json) || ! $synced || ! @rename($tmp, $full)) {
+            @unlink($tmp);
+            throw new RuntimeException("Cannot record {$file} in ".dirname($full).' (is the disk full?)');
+        }
     }
 
     /**

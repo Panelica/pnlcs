@@ -97,7 +97,7 @@ www env PNLCS_UPDATE_LAB_KILL_AT=migrating php artisan pnlcs:update --yes --reso
 [ "$(http /admin/login)" = 503 ] && ok "visitors get the maintenance page, not a half-updated site" || bad "site state after the crash"
 www php artisan pnlcs:update --yes > "$DIR/blocked3.out" 2>&1 && bad "an update ran over the unfinished one" || ok "updates refuse while one is unfinished"
 vm systemctl start "$CRON_SERVICE"
-HEALED=0; for i in $(seq 1 36); do sleep 5; if vm grep -q '"phase": "rolled_back"' $APP/storage/app/pnlcs-update/current-run.json 2>/dev/null; then HEALED=$((i*5)); break; fi; done
+HEALED=0; for i in $(seq 1 36); do sleep 5; if vm "grep -q '\"phase\": \"rolled_back\"' $APP/storage/app/pnlcs-update/current-run.json" 2>/dev/null; then HEALED=$((i*5)); break; fi; done
 [ $HEALED -gt 0 ] && ok "the scheduler healed it by itself (${HEALED} s after cron came back)" || bad "no self-healing within 3 minutes"
 snap "$DIR/after3.json"
 php "$LAB/compare.php" "$DIR/before3.json" "$DIR/after3.json" "${IGNORE[@]}" > "$DIR/compare3.out" 2>&1 && ok "every file and every table as before" || { bad "differs"; head "$DIR/compare3.out"; }

@@ -3493,7 +3493,7 @@ return [
         'col_result' => '结果',
         'cli_hint' => '也可在命令行中以 Web 服务器用户身份执行：:command',
         'progress' => '进度',
-        'unfinished' => '有一次更新未完成，网站可能处于维护模式。请以 Web 服务器用户身份运行以下命令将一切恢复原状：:command',
+        'unfinished' => '有一次更新未完成，网站可能处于维护模式。计划任务会在一分钟内自动将一切恢复原状；如需立即恢复，请以 Web 服务器用户身份运行：:command',
         'status' => [
             'preparing' => '准备中',
             'queued' => '等待开始',
@@ -3588,7 +3588,7 @@ return [
             'refused' => '更新未开始，未做任何更改。需要您决定的事项见下方。',
             'rolled_back' => '更新到 :version 失败，一切已恢复原状。网站运行的是之前的版本。',
             'failed' => '无法开始更新到 :version。未做任何更改。',
-            'rollback_failed' => '回滚更新失败。网站处于维护模式：请在服务器上运行 php artisan pnlcs:update-rollback。',
+            'rollback_failed' => '回滚更新失败。网站保持维护模式，系统会在 5、10、20、40 分钟后自动重试，之后每小时重试一次。如需立即重试，请在服务器上运行 php artisan pnlcs:update-rollback。',
             'error' => '检查未能完成。未做任何更改。',
         ],
         'elapsed' => '已用时间',

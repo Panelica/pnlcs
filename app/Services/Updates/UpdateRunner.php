@@ -276,18 +276,21 @@ class UpdateRunner
     private function rollback(array $run): void
     {
         $this->status('rolling_back', 'files', ['run' => $run['id']]);
-        $phase = $run['phase'];
+        // The phase the update stopped in. A rollback that was itself cut off
+        // or failed is redone from the start - the applier's rollback and the
+        // database restore are both safe to repeat - never only its last step.
+        $from = $run['rollback_from'] ?? $run['phase'];
 
         try {
-            if (in_array($phase, ['files', 'migrating', 'caches', 'health', 'rolling_back'], true)) {
+            if (in_array($from, ['files', 'migrating', 'caches', 'health', 'rolling_back'], true)) {
                 $run['phase'] = 'rolling_back';
-                $run['rollback_from'] ??= $phase;
+                $run['rollback_from'] = $from;
                 $this->saveRun($run);
                 $this->php(["{$this->runDir}/apply.php", 'rollback', "{$this->runDir}/plan.json"], 900);
             }
 
             // Migrations may have run (part way) from the moment they started.
-            if (in_array($run['rollback_from'] ?? $phase, ['migrating', 'caches', 'health'], true)) {
+            if (in_array($from, ['migrating', 'caches', 'health'], true)) {
                 $this->status('rolling_back', 'database', ['run' => $run['id']]);
                 $this->database->restore("{$this->runDir}/database.sql.gz");
             }
@@ -295,10 +298,20 @@ class UpdateRunner
         } catch (Throwable $e) {
             // The site stays in maintenance: a half-restored site must not be
             // served. Everything needed to finish by hand is in the run.
+            // The self-healing tries again later (healAbandoned); the operator
+            // is told once, not at every attempt.
             $run['phase'] = 'rollback_failed';
             $run['rollback_error'] = $e->getMessage();
+            $run['rollback_attempts'] = ($run['rollback_attempts'] ?? 0) + 1;
+            $run['rollback_failed_at'] = now()->toIso8601String();
             $this->saveRun($run);
-            $this->finish($run, 'rollback_failed', 'Rolling back failed: '.$e->getMessage().'. The site is in maintenance. Run `php artisan pnlcs:update-rollback` again; the run directory is '.$this->runDir);
+            $message = 'Rolling back failed: '.$e->getMessage().'. The site is in maintenance. It is tried again by itself; to try now, run `php artisan pnlcs:update-rollback`. The run directory is '.$this->runDir;
+            if ($run['rollback_attempts'] === 1) {
+                $this->finish($run, 'rollback_failed', $message);
+            } else {
+                $this->status('rollback_failed', 'finished', ['message' => $message, 'run' => $run['id'], 'version' => $run['to']]);
+                $this->log("Attempt {$run['rollback_attempts']}: ".$message);
+            }
 
             throw $e;
         }
@@ -461,13 +474,27 @@ class UpdateRunner
             return ['healed' => false];
         }
 
-        if ($this->unfinished() === null) {
+        if ($this->unfinished() === null || ! $this->rollbackDue($run)) {
             return ['healed' => false];
         }
 
         $result = $this->rollbackUnfinished();
 
         return ['healed' => $result['rolled_back'], 'run' => $run['id'], 'action' => 'rolled_back'];
+    }
+
+    /**
+     * A rollback that failed (a full disk, a database that was down) is tried
+     * again after 5, 10, 20, 40 minutes, then every hour - not every minute.
+     */
+    private function rollbackDue(array $run): bool
+    {
+        if (($run['phase'] ?? '') !== 'rollback_failed' || ! isset($run['rollback_failed_at'])) {
+            return true;
+        }
+        $wait = min(5 * 2 ** max(0, (int) ($run['rollback_attempts'] ?? 1) - 1), 60);
+
+        return now()->greaterThanOrEqualTo(\Illuminate\Support\Carbon::parse($run['rollback_failed_at'])->addMinutes($wait));
     }
 
     /** The report as it is stored and shown: the merged texts live in their own files. */
@@ -547,12 +574,18 @@ class UpdateRunner
 
     private function finish(array $run, string $result, string $message, ?array $report = null): void
     {
-        $this->state->addHistory([
-            'run' => $run['id'], 'from' => $run['from'], 'to' => $run['to'], 'by' => $run['by'] ?? null,
-            'result' => $result, 'message' => $message, 'at' => now()->toIso8601String(),
-            'merged' => $report['plan']['merged'] ?? [], 'kept' => $report['plan']['kept'] ?? [], 'resolved' => $report['plan']['resolved'] ?? [],
-        ]);
-        $this->status($result, 'finished', ['message' => $message, 'run' => $run['id'], 'version' => $run['to']]);
+        // The outcome is already recorded in the run; the history and the
+        // status only report it, and a full disk must not turn it into another.
+        try {
+            $this->state->addHistory([
+                'run' => $run['id'], 'from' => $run['from'], 'to' => $run['to'], 'by' => $run['by'] ?? null,
+                'result' => $result, 'message' => $message, 'at' => now()->toIso8601String(),
+                'merged' => $report['plan']['merged'] ?? [], 'kept' => $report['plan']['kept'] ?? [], 'resolved' => $report['plan']['resolved'] ?? [],
+            ]);
+            $this->status($result, 'finished', ['message' => $message, 'run' => $run['id'], 'version' => $run['to']]);
+        } catch (Throwable $e) {
+            $this->log('Could not record the outcome: '.$e->getMessage());
+        }
 
         try {
             Log::log($result === 'updated' ? 'info' : 'error', 'PNLCS update: '.$message, ['run' => $run['id']]);
@@ -571,8 +604,10 @@ class UpdateRunner
         if ($line === '') {
             return;
         }
+        // A log line that cannot be written (a full disk) never stops an
+        // update or, worse, its rollback.
         if ($this->runDir !== null && is_dir($this->runDir)) {
-            file_put_contents("{$this->runDir}/update.log", '['.now()->format('H:i:s')."] {$line}\n", FILE_APPEND);
+            @file_put_contents("{$this->runDir}/update.log", '['.now()->format('H:i:s')."] {$line}\n", FILE_APPEND);
         }
         if ($this->output) {
             ($this->output)($line);

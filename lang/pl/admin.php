@@ -3493,7 +3493,7 @@ return [
         'col_result' => 'Wynik',
         'cli_hint' => 'To samo z wiersza poleceń, jako użytkownik serwera WWW: :command',
         'progress' => 'Postęp',
-        'unfinished' => 'Aktualizacja nie została ukończona, a strona może być w trybie konserwacji. Aby przywrócić wszystko, uruchom jako użytkownik serwera WWW: :command',
+        'unfinished' => 'Aktualizacja nie została ukończona, a strona może być w trybie konserwacji. Harmonogram sam przywróci wszystko w ciągu minuty; aby zrobić to od razu, uruchom jako użytkownik serwera WWW: :command',
         'status' => [
             'preparing' => 'Przygotowanie',
             'queued' => 'Oczekuje na rozpoczęcie',
@@ -3588,7 +3588,7 @@ return [
             'refused' => 'Aktualizacja nie rozpoczęła się i nic nie zostało zmienione. Poniżej znajdziesz, co wymaga decyzji.',
             'rolled_back' => 'Aktualizacja do :version nie powiodła się i wszystko przywrócono. Strona działa na poprzedniej wersji.',
             'failed' => 'Nie udało się rozpocząć aktualizacji do :version. Nic nie zostało zmienione.',
-            'rollback_failed' => 'Wycofanie aktualizacji nie powiodło się. Strona jest w trybie konserwacji: uruchom na serwerze php artisan pnlcs:update-rollback.',
+            'rollback_failed' => 'Wycofanie aktualizacji nie powiodło się. Strona pozostaje w trybie konserwacji, a wycofanie jest ponawiane samo po 5, 10, 20 i 40 minutach, potem co godzinę. Aby spróbować od razu: php artisan pnlcs:update-rollback na serwerze.',
             'error' => 'Sprawdzanie nie mogło się zakończyć. Nic nie zostało zmienione.',
         ],
         'elapsed' => 'Upłynęło',

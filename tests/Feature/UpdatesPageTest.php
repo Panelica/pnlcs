@@ -226,3 +226,33 @@ test('the administrator who starts an update can watch it through maintenance', 
         ->and($cookie)->not->toBeNull()
         ->and(MaintenanceModeBypassCookie::isValid($cookie->getValue(), $secret))->toBeTrue();
 });
+
+test('a requested update that cannot even begin says why instead of staying queued', function (array $request) {
+    $state = updatesState();
+    config(['updates.index_url' => 'file:///nonexistent/pnlcs-index.json']);
+    app()->forgetInstance(\App\Services\Updates\ReleaseIndex::class);
+    $state->write('request.json', $request);
+    $state->status('queued', 'download', ['version' => '9.9.9', 'action' => $request['action']]);
+
+    $this->artisan('pnlcs:update', ['--from-request' => true])->assertExitCode(1);
+
+    $status = $state->read('status.json');
+    expect($status['state'])->toBe('error')
+        ->and($status['message'] ?? '')->not->toBe('')
+        ->and($state->read('request.json'))->toBeNull();
+})->with([
+    'apply' => [['action' => 'apply', 'version' => '9.9.9', 'by' => 'admin']],
+    'check' => [['action' => 'prepare', 'version' => '9.9.9', 'by' => 'admin']],
+]);
+
+test('the scheduled update work is held back by nothing a crash could leave behind', function (string $command) {
+    $event = collect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())
+        ->first(fn ($e) => str_contains((string) $e->command, $command));
+
+    // The updater's own lock is released by the system when its process dies;
+    // the scheduler's overlap lock would stay in the cache for hours, and
+    // where only the scheduler may start the update (SELinux) hold it back.
+    expect($event)->not->toBeNull()
+        ->and($event->withoutOverlapping)->toBeFalse()
+        ->and($event->evenInMaintenanceMode)->toBeTrue();
+})->with(['pnlcs:update --from-request', 'pnlcs:update-rollback --abandoned']);
