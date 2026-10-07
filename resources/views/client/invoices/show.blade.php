@@ -310,9 +310,9 @@ function stripePayNow(id) {
         method: "POST",
         headers: {"Content-Type": "application/json","X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]")?.content || ""}
     }).then(r => r.json()).then(d => {
-        if (d.success) { alert("{{ __('client.invoices.payment_intent') }} " + d.client_secret); }
-        else { alert("{{ __('client.invoices.payment_error') }} " + (d.message || "{{ __('client.invoices.unknown_error') }}")); }
-    }).catch(e => alert("{{ __('client.invoices.network_error') }} " + e.message));
+        if (d.success) { pnDialog.alert(@js(__('client.invoices.payment_intent')) + ' ' + d.client_secret, { icon: 'info' }); }
+        else { pnDialog.alert(@js(__('client.invoices.payment_error')) + ' ' + (d.message || @js(__('client.invoices.unknown_error'))), { icon: 'error' }); }
+    }).catch(e => pnDialog.alert(@js(__('client.invoices.network_error')) + ' ' + e.message, { icon: 'error' }));
 }
 </script>
 @endsection

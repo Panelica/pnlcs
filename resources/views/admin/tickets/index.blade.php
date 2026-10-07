@@ -98,12 +98,10 @@ document.getElementById('ticket-bulk-delete').addEventListener('click', function
     var count = document.querySelectorAll('.ticket-row-checkbox:checked').length;
     if (count === 0) {
         e.preventDefault();
-        alert(@js(__('admin.tickets.select_none')));
+        pnDialog.alert(@js(__('admin.tickets.select_none')), { icon: 'warning' });
         return;
     }
-    if (! confirm(@js(__('admin.tickets.bulk_delete_confirm')).replace(':count', count))) {
-        e.preventDefault();
-    }
+    return pnConfirm(e, @js(__('admin.tickets.bulk_delete_confirm')).replace(':count', count), { danger: true });
 });
 </script>
 @endif

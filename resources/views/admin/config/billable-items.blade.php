@@ -27,7 +27,7 @@
             <td>{{ money_fmt($item->amount) }}</td>
             <td style="text-transform:capitalize;">{{ $item->type ?? 'standard' }}</td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.billable-items.destroy', $item) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.billable_items.confirm_delete") }}')">
+                <form method="POST" action="{{ route('admin.config.billable-items.destroy', $item) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.billable_items.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

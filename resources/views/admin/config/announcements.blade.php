@@ -28,7 +28,7 @@
             <td><span class="badge-{{ $ann->published ? 'active' : 'draft' }}">{{ $ann->published ? __('admin.announcements.status_published') : __('admin.announcements.status_draft') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" onclick="openModal('edit-ann-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.announcements.destroy', $ann) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.announcements.confirm_delete") }}')">
+                <form method="POST" action="{{ route('admin.config.announcements.destroy', $ann) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.announcements.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

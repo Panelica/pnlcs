@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
     @endif
     {!! hook_output('AdminAreaHeadOutput', ['admin' => auth('admin')->user()]) !!}
+    @include('partials.dialog-boot')
 </head>
 <body>
 

@@ -8,6 +8,9 @@ export default defineConfig({
             input: [
                 "resources/css/app.css",
                 "resources/js/app.js",
+                // Dialogs on their own, for layouts that do not load app.js
+                // (the Flavor theme).
+                "resources/js/dialogs.js",
             ],
             refresh: true,
         }),

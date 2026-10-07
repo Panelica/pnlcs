@@ -322,4 +322,8 @@ return [
     'table.title' => 'Başlık',
     'table.total' => 'Toplam',
     'yes' => 'Evet',
+    'dialog' => [
+        'ok' => 'Tamam',
+        'confirm_title' => 'Emin misiniz?',
+    ],
 ];

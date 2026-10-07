@@ -16,7 +16,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             @php $statusBtns = ['active', 'suspended', 'terminated', 'pending', 'cancelled']; @endphp
             @foreach($statusBtns as $btn)
-            <form method="POST" action="{{ route('admin.services.status', $service) }}" style="display:inline-block;text-align:center;" onsubmit="return confirm('{{ __('admin.services.confirm_status', ['status' => ucfirst($btn)]) }}')">
+            <form method="POST" action="{{ route('admin.services.status', $service) }}" style="display:inline-block;text-align:center;" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_status', ['status' => ucfirst($btn)])))">
                 @csrf @method('PUT')
                 <input type="hidden" name="status" value="{{ $btn }}">
                 @if($service->status === $btn)
@@ -27,7 +27,7 @@
             </form>
             @endforeach
             <span style="width:1px;height:36px;background:#ddd;display:inline-block;margin:0 8px;"></span>
-            <form method="POST" action="{{ route('admin.services.destroy', $service) }}" style="display:inline-block;text-align:center;" onsubmit="return confirm('{{ __('admin.services.confirm_delete') }}')">
+            <form method="POST" action="{{ route('admin.services.destroy', $service) }}" style="display:inline-block;text-align:center;" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_delete')))">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.services.delete') }}</button>
             </form>
@@ -176,17 +176,17 @@
                  an account already provisioned made this button a trap: pressing
                  it again just produced "domain already exists" errors. --}}
             @unless(strtolower((string) $service->status) === 'active' && (string) $service->username !== '')
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'create']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_create') }}')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'create']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_create')))">
                 @csrf <button type="submit" class="btn btn-success btn-sm">{{ __('admin.services.create_account') }}</button>
             </form>
             @endunless
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'suspend']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_suspend') }}')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'suspend']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_suspend')))">
                 @csrf <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.services.suspend') }}</button>
             </form>
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'unsuspend']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_unsuspend') }}')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'unsuspend']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_unsuspend')))">
                 @csrf <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.services.unsuspend') }}</button>
             </form>
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'terminate']) }}" onsubmit="return confirm('{{ __('admin.services.confirm_terminate') }}')">
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'terminate']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_terminate')))">
                 @csrf <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.services.terminate') }}</button>
             </form>
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'changepassword']) }}" style="display:flex;gap:4px;">

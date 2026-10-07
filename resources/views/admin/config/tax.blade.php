@@ -22,7 +22,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick='openEditTax({{ json_encode(['country'=>$g->country, 'state'=>$g->state, 'rates'=>$g->rules->map(fn($r)=>['name'=>$r->name,'rate'=>(float)$r->tax_rate,'is_default'=>(bool)$r->is_default])->values()]) }})'>{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.tax.destroy', ['country' => $g->country === '' ? '@global' : $g->country, 'state' => $g->state === '' ? null : $g->state]) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.tax.confirm_delete') }}')">
+                <form method="POST" action="{{ route('admin.config.tax.destroy', ['country' => $g->country === '' ? '@global' : $g->country, 'state' => $g->state === '' ? null : $g->state]) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.tax.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

@@ -322,4 +322,8 @@ return [
     'table.title' => '标题',
     'table.total' => '合计',
     'yes' => '是',
+    'dialog' => [
+        'ok' => '确定',
+        'confirm_title' => '确定吗？',
+    ],
 ];

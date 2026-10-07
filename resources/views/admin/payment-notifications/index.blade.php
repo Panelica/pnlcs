@@ -85,7 +85,7 @@
                 <td>
                     @if($pn->status === 'pending')
                     <form method="POST" action="{{ route('admin.payment-notifications.approve', $pn) }}" style="display:inline;"
-                          onsubmit="return confirm('{{ __('admin.payment_notifications.approve_confirm') }}');">
+                          onsubmit="return pnConfirm(event, @js(__('admin.payment_notifications.approve_confirm')));">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-success">{{ __('admin.payment_notifications.approve') }}</button>
                     </form>

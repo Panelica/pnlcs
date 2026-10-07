@@ -276,9 +276,12 @@
     el('ai-start').addEventListener('click', function () {
         var mode = document.querySelector('input[name="ai_mode"]:checked').value;
         if (! counts[mode]) { el('ai-run').style.display = ''; status(text.nothing); return; }
-        if (mode === 'all' && ! confirm(text.confirmAll)) { return; }
-        el('ai-log').innerHTML = '';
-        begin({mode: mode, cursor: null, total: counts[mode], processed: 0, translated: 0, skipped: 0, done: false});
+        var go = function () {
+            el('ai-log').innerHTML = '';
+            begin({mode: mode, cursor: null, total: counts[mode], processed: 0, translated: 0, skipped: 0, done: false});
+        };
+        if (mode === 'all') { pnDialog.confirm(text.confirmAll).then(function (yes) { if (yes) { go(); } }); return; }
+        go();
     });
     el('ai-resume').addEventListener('click', function () { if (run) { begin(run); } });
     el('ai-stop').addEventListener('click', function () { if (run) { run.stop = true; } });

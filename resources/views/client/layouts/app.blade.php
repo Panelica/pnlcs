@@ -354,6 +354,7 @@
     <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
     @endif
     {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
+    @include('partials.dialog-boot')
 </head>
 <body>
 @if(session('impersonating_admin_id'))

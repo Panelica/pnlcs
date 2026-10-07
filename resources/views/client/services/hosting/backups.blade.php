@@ -108,7 +108,7 @@
                              instead of streaming it through billing. SSO puts the customer
                              one click away. --}}
                         <a href="{{ route('client.services.login', $service) }}" target="_blank" rel="noopener" class="bk-act" title="{{ __('client.hosting.backups.download_hint') }}"><i class="ri-download-2-line"></i></a>
-                        <form method="POST" action="{{ route('client.services.backups.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.backups.delete_confirm') }}')">
+                        <form method="POST" action="{{ route('client.services.backups.destroy', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.backups.delete_confirm')))">
                             @csrf<input type="hidden" name="filename" value="{{ $b['filename'] }}">
                             <button type="submit" class="bk-act danger" title="{{ __('client.hosting.backups.delete') }}"><i class="ri-delete-bin-line"></i></button>
                         </form>

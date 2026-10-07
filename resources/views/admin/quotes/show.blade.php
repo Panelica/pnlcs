@@ -104,7 +104,7 @@
                     @csrf<button type="submit" class="btn btn-primary btn-sm" style="width:100%;">{{ __('admin.quotes.convert_to_invoice') }}</button>
                 </form>
                 @endif
-                <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return confirm('{{ __('admin.quotes.confirm_delete') }}')">
+                <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return pnConfirm(event, @js(__('admin.quotes.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-default btn-sm" style="width:100%;color:#d9534f;">{{ __('admin.quotes.delete_quote') }}</button>
                 </form>

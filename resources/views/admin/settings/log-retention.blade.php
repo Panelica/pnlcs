@@ -24,7 +24,7 @@
             <td style="font-size:12px;">{{ $r['oldest'] ? \Illuminate\Support\Carbon::parse($r['oldest'])->timezone(display_tz())->format(date_fmt()) : '—' }}</td>
             <td><input type="number" name="days[{{ $r['table'] }}]" form="retention-form" value="{{ $r['days'] }}" min="0" max="3650" class="form-control input-sm" style="width:100px;display:inline-block;"> <small style="color:#777;">{{ __('admin.log_retention.default', ['days' => $r['default']]) }}</small></td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.settings.log-retention.prune') }}" style="margin:0;" onsubmit="return confirm('{{ __('admin.log_retention.confirm_prune') }}')">
+                <form method="POST" action="{{ route('admin.settings.log-retention.prune') }}" style="margin:0;" onsubmit="return pnConfirm(event, @js(__('admin.log_retention.confirm_prune')))">
                     @csrf
                     <input type="hidden" name="table" value="{{ $r['table'] }}">
                     <button type="submit" class="btn btn-default btn-xs" @disabled($r['days'] === 0)>{{ __('admin.log_retention.prune_now') }}</button>

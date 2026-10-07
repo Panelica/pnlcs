@@ -57,7 +57,7 @@
                      the webhook secret, and this attribute is readable by
                      anyone who can view the page source. --}}
                 <button type="button" class="btn btn-default btn-xs" onclick="editProvider({{ $provider->id }}, {{ json_encode($provider->editorPayload()) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.notification-providers.destroy', $provider->id) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.notifications.confirm_delete_provider') }}')">
+                <form method="POST" action="{{ route('admin.config.notification-providers.destroy', $provider->id) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.notifications.confirm_delete_provider')))">
                     @csrf @method("DELETE")
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>
@@ -104,7 +104,7 @@
                     @endif
                 </td>
                 <td style="text-align:right;">
-                    <form method="POST" action="{{ route('admin.config.notification-rules.destroy', $rule->id) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.notifications.confirm_delete_rule') }}')">
+                    <form method="POST" action="{{ route('admin.config.notification-rules.destroy', $rule->id) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.notifications.confirm_delete_rule')))">
                         @csrf @method("DELETE")
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                     </form>

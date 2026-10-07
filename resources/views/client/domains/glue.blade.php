@@ -25,7 +25,7 @@
                 <td style="font-family:monospace;">{{ $h['host'] }}</td>
                 <td style="font-family:monospace;font-size:12px;">{{ implode(', ', $h['ips']) }}</td>
                 <td style="text-align:right;">
-                    <form method="POST" action="{{ route('client.domains.glue.delete', $domain) }}" onsubmit="return confirm('{{ __('client.domains.glue_confirm_delete') }}')" style="display:inline;">
+                    <form method="POST" action="{{ route('client.domains.glue.delete', $domain) }}" onsubmit="return pnConfirm(event, @js(__('client.domains.glue_confirm_delete')))" style="display:inline;">
                         @csrf @method('DELETE')
                         <input type="hidden" name="host" value="{{ $h['host'] }}">
                         <button type="submit" class="btn btn-outline btn-xs">{{ __('common.actions.delete') }}</button>

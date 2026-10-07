@@ -49,7 +49,7 @@
                         @if($task->notes)<p style="margin:3px 0 0;font-size:12px;color:#999;">{{ $task->notes }}</p>@endif
                         @if($task->due_date)<p style="margin:3px 0 0;font-size:11px;color:#aaa;">Due: {{ \Carbon\Carbon::parse($task->due_date)->format(date_fmt()) }}</p>@endif
                     </div>
-                    <form method="POST" action="{{ route('admin.projects.tasks.destroy', [$project, $task]) }}" onsubmit="return confirm('{{ __('admin.projects.confirm_delete_task') }}')">
+                    <form method="POST" action="{{ route('admin.projects.tasks.destroy', [$project, $task]) }}" onsubmit="return pnConfirm(event, @js(__('admin.projects.confirm_delete_task')))">
                         @csrf @method('DELETE')
                         <button type="submit" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:14px;padding:0;">&times;</button>
                     </form>
@@ -122,7 +122,7 @@
             <div class="panel-heading panel-primary">{{ __('admin.projects.actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
                 <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-sm" style="width:100%;text-align:center;">{{ __('admin.projects.edit_project') }}</a>
-                <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('{{ __('admin.projects.confirm_delete_project') }}')">
+                <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return pnConfirm(event, @js(__('admin.projects.confirm_delete_project')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">{{ __('admin.projects.delete_project') }}</button>
                 </form>

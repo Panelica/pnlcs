@@ -30,7 +30,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditDept({{ json_encode(['id'=>$dept->id,'name'=>$dept->name,'email'=>$dept->email,'description'=>$dept->description,'hidden'=>$dept->hidden,'import_active'=>$dept->import_active,'import_protocol'=>$dept->import_protocol,'import_host'=>$dept->import_host,'import_port'=>$dept->import_port,'import_encryption'=>$dept->import_encryption,'import_username'=>$dept->import_username,'import_folder'=>$dept->import_folder,'import_delete'=>$dept->import_delete,'import_allow_unknown'=>$dept->import_allow_unknown]) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.ticket-departments.destroy', $dept) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.ticket_departments.confirm_delete') }}')">
+                <form method="POST" action="{{ route('admin.config.ticket-departments.destroy', $dept) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.ticket_departments.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

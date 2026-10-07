@@ -9,7 +9,7 @@
     </h1>
     <div style="display:flex;gap:6px;align-items:center;">
         @if(auth('admin')->user()?->hasPermission('manage_tickets'))
-        <form method="POST" action="{{ route('admin.tickets.destroy', $ticket) }}" style="margin:0;" onsubmit="return confirm(@js(__('admin.tickets.delete_confirm')))">
+        <form method="POST" action="{{ route('admin.tickets.destroy', $ticket) }}" style="margin:0;" onsubmit="return pnConfirm(event, @js(__('admin.tickets.delete_confirm')))">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> {{ __('admin.tickets.delete') }}</button>
         </form>
@@ -168,7 +168,7 @@
             <strong style="font-size:12px;">{{ $note->admin }}</strong>
             <span style="font-size:11px;color:#8a6d3b;display:flex;align-items:center;gap:8px;">{{ $note->created_at->timezone(display_tz())->format(datetime_fmt()) }}
                 @if($note->admin === auth('admin')->user()?->username)
-                <form method="POST" action="{{ route('admin.tickets.notes.destroy', [$ticket, $note]) }}" style="margin:0;" onsubmit="return confirm('{{ __('admin.tickets.note_confirm_delete') }}')">@csrf @method('DELETE')<button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.delete') }}</button></form>
+                <form method="POST" action="{{ route('admin.tickets.notes.destroy', [$ticket, $note]) }}" style="margin:0;" onsubmit="return pnConfirm(event, @js(__('admin.tickets.note_confirm_delete')))">@csrf @method('DELETE')<button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.delete') }}</button></form>
                 @endif
             </span>
         </div>

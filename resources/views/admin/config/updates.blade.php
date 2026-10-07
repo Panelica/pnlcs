@@ -176,7 +176,7 @@
         </details>
         @endif
         <div class="upd-row">
-            <form method="POST" action="{{ route('admin.config.updates.apply') }}" class="upd-row" onsubmit="return confirm(@js(__('admin.updates.apply_confirm')))">
+            <form method="POST" action="{{ route('admin.config.updates.apply') }}" class="upd-row" onsubmit="return pnConfirm(event, @js(__('admin.updates.apply_confirm')))">
                 @csrf
                 @if($onlyMajor)
                 <label class="upd-choice"><input type="checkbox" name="allow_major" value="1" required> <span>{{ __('admin.updates.allow_major') }}</span></label>
@@ -275,7 +275,7 @@
                 </div>
             @endforeach
             <div class="upd-row">
-                <button type="submit" name="then" value="apply" class="btn btn-success" @disabled($active) onclick="return confirm(@js(__('admin.updates.apply_confirm')))"><i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.save_and_update') }}</button>
+                <button type="submit" name="then" value="apply" class="btn btn-success" @disabled($active) onclick="return pnConfirm(event, @js(__('admin.updates.apply_confirm')))"><i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.save_and_update') }}</button>
                 <button type="submit" class="btn btn-default">{{ __('admin.updates.save_choices') }}</button>
             </div>
         </form>

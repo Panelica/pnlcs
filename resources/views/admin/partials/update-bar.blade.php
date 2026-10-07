@@ -39,7 +39,7 @@
         <span class="pn-update-bar__actions">
             <a href="{{ route('admin.config.updates') }}" class="btn btn-primary btn-sm">{{ __('admin.updates.bar_open') }}</a>
             <button type="button" class="btn btn-default btn-sm" @click="hide()">{{ __('admin.updates.bar_hide') }}</button>
-            <form method="POST" action="{{ route('admin.config.updates.bar') }}" onsubmit="return confirm(@js(__('admin.updates.bar_off_confirm')))">
+            <form method="POST" action="{{ route('admin.config.updates.bar') }}" onsubmit="return pnConfirm(event, @js(__('admin.updates.bar_off_confirm')))">
                 @csrf
                 <input type="hidden" name="show" value="0">
                 <button type="submit" class="btn btn-default btn-sm">{{ __('admin.updates.bar_off') }}</button>

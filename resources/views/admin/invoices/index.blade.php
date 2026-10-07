@@ -129,7 +129,7 @@ document.querySelectorAll('#bulk-form button[data-action]').forEach(function (bt
         var selected = document.querySelectorAll('.row-checkbox:checked');
         if (selected.length === 0) {
             e.preventDefault();
-            alert("{{ __('admin.invoices.select_none') }}");
+            pnDialog.alert(@js(__('admin.invoices.select_none')), { icon: 'warning' });
             return;
         }
         document.getElementById('bulk-action').value = this.getAttribute('data-action');

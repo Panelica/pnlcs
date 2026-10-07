@@ -151,7 +151,7 @@
                             </form>
                             <a href="{{ route('admin.settings.appearance.theme.download', $slug) }}" class="btn btn-sm btn-default" title="Download ZIP"><i class="fas fa-download"></i></a>
                             @if(!$themeInfo->isBuiltin)
-                            <form action="{{ route('admin.settings.appearance.theme.delete', $slug) }}" method="POST" onsubmit="return confirm('Delete theme {{ $themeInfo->name }}?');">
+                            <form action="{{ route('admin.settings.appearance.theme.delete', $slug) }}" method="POST" onsubmit="return pnConfirm(event, @js($themeInfo->name), {title: @js(__('admin.appearance.confirm_delete_theme')), danger: true});">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
                             </form>

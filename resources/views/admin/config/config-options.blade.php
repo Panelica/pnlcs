@@ -24,7 +24,7 @@
         </div>
         <div style="display:flex;gap:6px;">
             <button type="button" onclick="event.stopPropagation(); document.getElementById('modal-edit-group-{{ $group->id }}').style.display='flex'" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
-            <form method="POST" action="{{ route('admin.config.config-option-groups.destroy', $group->id) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.config_options.confirm_delete_group") }} {{ $group->name }} and all its options?')">
+            <form method="POST" action="{{ route('admin.config.config-option-groups.destroy', $group->id) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.config_options.delete_group_cascade', ['name' => $group->name])), {title: @js(__('admin.config_options.confirm_delete_group')), danger: true})">
                 @csrf @method("DELETE")
                 <button type="submit" class="btn btn-danger btn-xs" onclick="event.stopPropagation();">{{ __('common.actions.delete') }}</button>
             </form>
@@ -67,7 +67,7 @@
                     @foreach($option->subs as $sub)
                     <span style="display:inline-flex;align-items:center;gap:4px;background:#f0f0f0;padding:2px 8px;border-radius:3px;font-size:12px;margin:1px;">
                         {{ $sub->option_name }}
-                        <form method="POST" action="{{ route('admin.config.config-option-subs.destroy', $sub->id) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.config_options.confirm_delete_sub") }}')">
+                        <form method="POST" action="{{ route('admin.config.config-option-subs.destroy', $sub->id) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.config_options.confirm_delete_sub')))">
                             @csrf @method("DELETE")
                             <button type="submit" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:11px;padding:0;">&times;</button>
                         </form>
@@ -77,7 +77,7 @@
                 </td>
                 <td style="text-align:right;white-space:nowrap;">
                     <button type="button" onclick="document.getElementById('modal-add-sub-{{ $option->id }}').style.display='flex'" class="btn btn-success btn-xs">+ {{ __('admin.config_options.add_sub') }}</button>
-                    <form method="POST" action="{{ route('admin.config.config-options.destroy', $option->id) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.config_options.confirm_delete_option") }} {{ $option->option_name }}?')">
+                    <form method="POST" action="{{ route('admin.config.config-options.destroy', $option->id) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js($option->option_name), {title: @js(__('admin.config_options.confirm_delete_option')), danger: true})">
                         @csrf @method("DELETE")
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                     </form>

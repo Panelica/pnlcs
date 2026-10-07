@@ -24,7 +24,7 @@
             <td>{{ $group->discount_percent ?? 0 }}%</td>
             <td style="text-align:right;">
                 <button type="button" onclick="openModal('edit-group-{{ $group->id }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route("admin.config.client-groups.destroy", $group) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.client_groups.confirm_delete") }}')">@csrf @method("DELETE")<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
+                <form method="POST" action="{{ route("admin.config.client-groups.destroy", $group) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.client_groups.confirm_delete')))">@csrf @method("DELETE")<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
             </td>
         </tr>
         @endforeach

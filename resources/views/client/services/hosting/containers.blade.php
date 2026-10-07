@@ -383,7 +383,7 @@
                         <button type="submit" class="ct-act" title="{{ __('client.hosting.containers.start') }}"><i class="ri-play-line"></i></button>
                     </form>
                     @endif
-                    <form method="POST" action="{{ route('client.services.containers.destroy', $service) }}" onsubmit="return confirm('{{ $components ? __('client.hosting.containers.delete_confirm_stack', ['count' => count($components)]) : __('client.hosting.containers.delete_confirm') }}')">@csrf
+                    <form method="POST" action="{{ route('client.services.containers.destroy', $service) }}" onsubmit="return pnConfirm(event, @js($components ? __('client.hosting.containers.delete_confirm_stack', ['count' => count($components)]) : __('client.hosting.containers.delete_confirm')), {danger: true})">@csrf
                         <input type="hidden" name="container_id" value="{{ $c['id'] }}">
                         <button type="submit" class="ct-act danger" title="{{ __('client.hosting.containers.delete') }}"><i class="ri-delete-bin-line"></i></button>
                     </form>

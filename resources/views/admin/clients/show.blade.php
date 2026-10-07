@@ -6,7 +6,7 @@
     <div style="display:flex;gap:6px;align-items:center;">
                 <form method="POST" action="{{ route('admin.clients.impersonate', $client) }}" style="display:inline;">
             @csrf
-            <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('{{ __('admin.clients.confirm_login_as') }}')">
+            <button type="submit" class="btn btn-warning btn-sm" onclick="return pnConfirm(event, @js(__('admin.clients.confirm_login_as')))">
                 {{ __('admin.clients.login_as_client') }}
             </button>
         </form>
@@ -16,7 +16,7 @@
             <button type="submit" class="btn btn-default btn-sm">{{ __('admin.clients.personal_data') }}</button>
         </form>
         <a href="{{ route('admin.clients.index') }}" class="btn btn-default btn-sm">{{ __('common.actions.close') }}</a>
-        <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.clients.confirm_delete') }}')">
+        <form method="POST" action="{{ route('admin.clients.destroy', $client) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.clients.confirm_delete')))">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.delete') }}</button>
         </form>
@@ -644,14 +644,16 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
         });
 
         del.addEventListener('click', function () {
-            if (!confirm(@json(__('admin.confirm_delete')))) return;
-            post(card.getAttribute('data-delete-url'), 'DELETE', {})
-                .then(function (d) {
-                    if (d && d.success) {
-                        card.remove();
-                    }
-                })
-                .catch(function () {});
+            pnDialog.confirm(@js(__('admin.confirm_delete')), { danger: true }).then(function (yes) {
+                if (!yes) return;
+                post(card.getAttribute('data-delete-url'), 'DELETE', {})
+                    .then(function (d) {
+                        if (d && d.success) {
+                            card.remove();
+                        }
+                    })
+                    .catch(function () {});
+            });
         });
     });
 })();

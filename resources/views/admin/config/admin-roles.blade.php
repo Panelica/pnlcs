@@ -21,7 +21,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditRole({{ json_encode(['id'=>$role->id,'name'=>$role->name,'description'=>$role->description,'is_full_admin'=>(bool) $role->is_full_admin,'permissions'=>$role->permissions ?? []]) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.admin-roles.destroy', $role) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.admin_roles.confirm_delete") }} {{ $role->name }}?')">
+                <form method="POST" action="{{ route('admin.config.admin-roles.destroy', $role) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js($role->name), {title: @js(__('admin.admin_roles.confirm_delete')), danger: true})">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

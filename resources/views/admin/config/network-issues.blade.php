@@ -22,7 +22,7 @@
             <td><span class="badge-{{ $issue->status === 'resolved' ? 'active' : 'open' }}">{{ $issue->status === 'resolved' ? __('admin.network_issues.resolved') : __('admin.network_issues.active') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs" onclick="document.getElementById('modal-edit-ni-{{ $issue->id }}').style.display='flex'">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.network-issues.destroy', $issue) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.network_issues.confirm_delete') }}')">
+                <form method="POST" action="{{ route('admin.config.network-issues.destroy', $issue) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.network_issues.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

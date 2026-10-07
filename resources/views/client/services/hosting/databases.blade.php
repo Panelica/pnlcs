@@ -103,7 +103,7 @@
                             <button type="submit" class="db-btn" style="width:100%;justify-content:center">{{ __('client.hosting.databases.add_user') }}</button>
                         </form></div>
                     </details>
-                    <form method="POST" action="{{ route('client.services.databases.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.databases.delete_db_confirm') }}')">
+                    <form method="POST" action="{{ route('client.services.databases.destroy', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.databases.delete_db_confirm')))">
                         @csrf<input type="hidden" name="domain_id" value="{{ $g['domain_id'] }}"><input type="hidden" name="database_name" value="{{ $dbName }}">
                         <button type="submit" class="db-act danger" title="{{ __('client.hosting.databases.delete') }}"><i class="ri-delete-bin-line"></i></button>
                     </form>
@@ -125,7 +125,7 @@
                             </form></div>
                         </details>
                         @unless($u['is_primary'])
-                        <form method="POST" action="{{ route('client.services.databases.users.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.databases.delete_user_confirm') }}')">
+                        <form method="POST" action="{{ route('client.services.databases.users.destroy', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.databases.delete_user_confirm')))">
                             @csrf<input type="hidden" name="user_id" value="{{ $u['id'] }}">
                             <button type="submit" class="db-act danger" title="{{ __('client.hosting.databases.delete') }}"><i class="ri-delete-bin-line"></i></button>
                         </form>
