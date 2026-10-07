@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Uyğunlaşdırmanın adı',
     'profile_saved' => 'Uyğunlaşdırma saxlanıldı.',
     'profile_deleted' => 'Uyğunlaşdırma silindi.',
+    'delete_profile_confirm' => 'Bu uyğunlaşdırma silinsin?',
     'import_done' => 'İdxal başa çatdı.',
     'preview_title' => 'Önizləmə (:count qeyd)',
     'validation_title' => 'Tapılan problemlər',

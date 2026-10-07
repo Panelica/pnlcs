@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Nom del mapatge',
     'profile_saved' => 'Mapatge desat.',
     'profile_deleted' => 'Mapatge suprimit.',
+    'delete_profile_confirm' => 'Voleu suprimir aquest mapatge?',
     'import_done' => 'Importació acabada.',
     'preview_title' => 'Previsualització (:count registres)',
     'validation_title' => 'Problemes trobats',

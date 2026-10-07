@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Numele mapării',
     'profile_saved' => 'Mapare salvată.',
     'profile_deleted' => 'Mapare ștearsă.',
+    'delete_profile_confirm' => 'Ștergeți această mapare?',
     'import_done' => 'Import încheiat.',
     'preview_title' => 'Previzualizare (:count înregistrări)',
     'validation_title' => 'Probleme găsite',

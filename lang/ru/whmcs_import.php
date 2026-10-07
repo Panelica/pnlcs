@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Название сопоставления',
     'profile_saved' => 'Сопоставление сохранено.',
     'profile_deleted' => 'Сопоставление удалено.',
+    'delete_profile_confirm' => 'Удалить это сопоставление?',
     'import_done' => 'Импорт завершён.',
     'preview_title' => 'Предпросмотр (записей: :count)',
     'validation_title' => 'Найденные проблемы',

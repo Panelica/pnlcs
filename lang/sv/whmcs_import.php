@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Mappningens namn',
     'profile_saved' => 'Mappningen sparades.',
     'profile_deleted' => 'Mappningen togs bort.',
+    'delete_profile_confirm' => 'Ta bort den här mappningen?',
     'import_done' => 'Importen är klar.',
     'preview_title' => 'Förhandsvisning (:count poster)',
     'validation_title' => 'Hittade problem',

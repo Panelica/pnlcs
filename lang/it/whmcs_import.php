@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Nome della mappatura',
     'profile_saved' => 'Mappatura salvata.',
     'profile_deleted' => 'Mappatura eliminata.',
+    'delete_profile_confirm' => 'Eliminare questa mappatura?',
     'import_done' => 'Importazione completata.',
     'preview_title' => 'Anteprima (:count record)',
     'validation_title' => 'Problemi rilevati',

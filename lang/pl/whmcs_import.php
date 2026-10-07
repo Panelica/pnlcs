@@ -60,6 +60,7 @@ return [
     'profile_name' => 'Nazwa mapowania',
     'profile_saved' => 'Zapisano mapowanie.',
     'profile_deleted' => 'Usunięto mapowanie.',
+    'delete_profile_confirm' => 'Usunąć to mapowanie?',
     'import_done' => 'Import zakończony.',
 
     'preview_title' => 'Podgląd (:count rekordów)',

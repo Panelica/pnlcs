@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Назва зіставлення',
     'profile_saved' => 'Зіставлення збережено.',
     'profile_deleted' => 'Зіставлення видалено.',
+    'delete_profile_confirm' => 'Видалити це зіставлення?',
     'import_done' => 'Імпорт завершено.',
     'preview_title' => 'Попередній перегляд (записів: :count)',
     'validation_title' => 'Знайдені проблеми',

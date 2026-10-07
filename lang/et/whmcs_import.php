@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Vastenduse nimi',
     'profile_saved' => 'Vastendus salvestatud.',
     'profile_deleted' => 'Vastendus kustutatud.',
+    'delete_profile_confirm' => 'Kas kustutada see vastendus?',
     'import_done' => 'Import lõpetatud.',
     'preview_title' => 'Eelvaade (kirjeid: :count)',
     'validation_title' => 'Leitud probleemid',

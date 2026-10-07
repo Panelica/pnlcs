@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Naziv mapiranja',
     'profile_saved' => 'Mapiranje je spremljeno.',
     'profile_deleted' => 'Mapiranje je izbrisano.',
+    'delete_profile_confirm' => 'Izbrisati ovo mapiranje?',
     'import_done' => 'Uvoz je završen.',
     'preview_title' => 'Pregled (zapisa: :count)',
     'validation_title' => 'Pronađeni problemi',

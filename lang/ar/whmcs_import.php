@@ -55,6 +55,7 @@ return [
     'profile_name' => 'اسم المطابقة',
     'profile_saved' => 'تم حفظ المطابقة.',
     'profile_deleted' => 'تم حذف المطابقة.',
+    'delete_profile_confirm' => 'هل تريد حذف هذه المطابقة؟',
     'import_done' => 'انتهى الاستيراد.',
     'preview_title' => 'معاينة (:count سجل)',
     'validation_title' => 'مشكلات تم العثور عليها',

@@ -55,6 +55,7 @@ return [
     'profile_name' => '対応付けの名前',
     'profile_saved' => '対応付けを保存しました。',
     'profile_deleted' => '対応付けを削除しました。',
+    'delete_profile_confirm' => 'この対応付けを削除しますか？',
     'import_done' => 'インポートが完了しました。',
     'preview_title' => 'プレビュー（:count 件）',
     'validation_title' => '見つかった問題',

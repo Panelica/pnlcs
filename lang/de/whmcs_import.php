@@ -60,6 +60,7 @@ return [
     'profile_name' => 'Name der Zuordnung',
     'profile_saved' => 'Zuordnung gespeichert.',
     'profile_deleted' => 'Zuordnung gelöscht.',
+    'delete_profile_confirm' => 'Diese Zuordnung löschen?',
     'import_done' => 'Import abgeschlossen.',
 
     'preview_title' => 'Vorschau (:count Datensätze)',

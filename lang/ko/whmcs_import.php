@@ -55,6 +55,7 @@ return [
     'profile_name' => '매핑 이름',
     'profile_saved' => '매핑을 저장했습니다.',
     'profile_deleted' => '매핑을 삭제했습니다.',
+    'delete_profile_confirm' => '이 매핑을 삭제할까요?',
     'import_done' => '가져오기를 마쳤습니다.',
     'preview_title' => '미리 보기 (:count건)',
     'validation_title' => '발견된 문제',

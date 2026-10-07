@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Tilknytningens navn',
     'profile_saved' => 'Tilknytningen er gemt.',
     'profile_deleted' => 'Tilknytningen er slettet.',
+    'delete_profile_confirm' => 'Slet denne tilknytning?',
     'import_done' => 'Importen er færdig.',
     'preview_title' => 'Forhåndsvisning (:count poster)',
     'validation_title' => 'Fundne problemer',

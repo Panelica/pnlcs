@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Nombre del mapeo',
     'profile_saved' => 'Mapeo guardado.',
     'profile_deleted' => 'Mapeo eliminado.',
+    'delete_profile_confirm' => '¿Eliminar este mapeo?',
     'import_done' => 'Importación terminada.',
     'preview_title' => 'Vista previa (:count registros)',
     'validation_title' => 'Problemas encontrados',

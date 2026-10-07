@@ -97,7 +97,7 @@
                     @if($profile->connection_id)
                         <a href="{{ route('admin.whmcs-import.mapper', ['connection' => $profile->connection_id, 'profile' => $profile->id]) }}" class="btn btn-secondary btn-sm">{{ __('whmcs_import.apply_profile') }}</a>
                     @endif
-                    <form method="POST" action="{{ route('admin.whmcs-import.profile.destroy', $profile) }}" style="display:inline;" onsubmit="return confirm('{{ __('common.actions.delete') }}?');">
+                    <form method="POST" action="{{ route('admin.whmcs-import.profile.destroy', $profile) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('whmcs_import.delete_profile_confirm')))">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-sm" style="color:#b91c1c;">&times;</button>

@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Име на мапирањето',
     'profile_saved' => 'Мапирањето е зачувано.',
     'profile_deleted' => 'Мапирањето е избришано.',
+    'delete_profile_confirm' => 'Да се избрише ова мапирање?',
     'import_done' => 'Увозот заврши.',
     'preview_title' => 'Преглед (записи: :count)',
     'validation_title' => 'Пронајдени проблеми',

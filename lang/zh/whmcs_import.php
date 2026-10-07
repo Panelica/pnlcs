@@ -60,6 +60,7 @@ return [
     'profile_name' => '映射名称',
     'profile_saved' => '映射已保存。',
     'profile_deleted' => '映射已删除。',
+    'delete_profile_confirm' => '删除此映射？',
     'import_done' => '导入完成。',
 
     'preview_title' => '预览（:count 条记录）',

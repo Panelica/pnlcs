@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Όνομα αντιστοίχισης',
     'profile_saved' => 'Η αντιστοίχιση αποθηκεύτηκε.',
     'profile_deleted' => 'Η αντιστοίχιση διαγράφηκε.',
+    'delete_profile_confirm' => 'Διαγραφή αυτής της αντιστοίχισης;',
     'import_done' => 'Η εισαγωγή ολοκληρώθηκε.',
     'preview_title' => 'Προεπισκόπηση (:count εγγραφές)',
     'validation_title' => 'Προβλήματα που βρέθηκαν',

@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Nom de la correspondance',
     'profile_saved' => 'Correspondance enregistrée.',
     'profile_deleted' => 'Correspondance supprimée.',
+    'delete_profile_confirm' => 'Supprimer cette correspondance ?',
     'import_done' => 'Importation terminée.',
     'preview_title' => 'Aperçu (:count enregistrements)',
     'validation_title' => 'Problèmes détectés',

@@ -55,6 +55,7 @@ return [
     'profile_name' => 'نام نگاشت',
     'profile_saved' => 'نگاشت ذخیره شد.',
     'profile_deleted' => 'نگاشت حذف شد.',
+    'delete_profile_confirm' => 'این نگاشت حذف شود؟',
     'import_done' => 'درون‌ریزی تمام شد.',
     'preview_title' => 'پیش‌نمایش (:count رکورد)',
     'validation_title' => 'مشکلات یافت‌شده',

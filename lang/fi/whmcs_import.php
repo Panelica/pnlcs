@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Vastaavuuksien nimi',
     'profile_saved' => 'Vastaavuudet tallennettu.',
     'profile_deleted' => 'Vastaavuudet poistettu.',
+    'delete_profile_confirm' => 'Poistetaanko nämä vastaavuudet?',
     'import_done' => 'Tuonti valmis.',
     'preview_title' => 'Esikatselu (tietueita: :count)',
     'validation_title' => 'Löydetyt ongelmat',

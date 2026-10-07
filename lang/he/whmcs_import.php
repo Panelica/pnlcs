@@ -55,6 +55,7 @@ return [
     'profile_name' => 'שם המיפוי',
     'profile_saved' => 'המיפוי נשמר.',
     'profile_deleted' => 'המיפוי נמחק.',
+    'delete_profile_confirm' => 'למחוק את המיפוי הזה?',
     'import_done' => 'הייבוא הסתיים.',
     'preview_title' => 'תצוגה מקדימה (:count רשומות)',
     'validation_title' => 'בעיות שנמצאו',

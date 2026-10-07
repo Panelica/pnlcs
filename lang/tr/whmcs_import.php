@@ -60,6 +60,7 @@ return [
     'profile_name' => 'Eşleme Adı',
     'profile_saved' => 'Eşleme kaydedildi.',
     'profile_deleted' => 'Eşleme silindi.',
+    'delete_profile_confirm' => 'Bu eşleme silinsin mi?',
     'import_done' => 'İçe aktarma tamamlandı.',
 
     'preview_title' => 'Önizleme (:count kayıt)',

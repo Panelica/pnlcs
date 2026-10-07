@@ -60,6 +60,7 @@ return [
     'profile_name' => 'Mapping name',
     'profile_saved' => 'Mapping saved.',
     'profile_deleted' => 'Mapping deleted.',
+    'delete_profile_confirm' => 'Delete this mapping?',
     'import_done' => 'Import finished.',
 
     'preview_title' => 'Preview (:count records)',

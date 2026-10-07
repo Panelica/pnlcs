@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Navn på tilordningen',
     'profile_saved' => 'Tilordningen er lagret.',
     'profile_deleted' => 'Tilordningen er slettet.',
+    'delete_profile_confirm' => 'Slette denne tilordningen?',
     'import_done' => 'Importen er fullført.',
     'preview_title' => 'Forhåndsvisning (:count poster)',
     'validation_title' => 'Funnet problemer',

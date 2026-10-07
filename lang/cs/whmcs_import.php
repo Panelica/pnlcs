@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Název mapování',
     'profile_saved' => 'Mapování uloženo.',
     'profile_deleted' => 'Mapování smazáno.',
+    'delete_profile_confirm' => 'Smazat toto mapování?',
     'import_done' => 'Import dokončen.',
     'preview_title' => 'Náhled (záznamů: :count)',
     'validation_title' => 'Nalezené problémy',

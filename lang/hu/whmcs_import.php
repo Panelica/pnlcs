@@ -55,6 +55,7 @@ return [
     'profile_name' => 'A megfeleltetés neve',
     'profile_saved' => 'A megfeleltetés mentve.',
     'profile_deleted' => 'A megfeleltetés törölve.',
+    'delete_profile_confirm' => 'Törli ezt a megfeleltetést?',
     'import_done' => 'Az importálás befejeződött.',
     'preview_title' => 'Előnézet (:count rekord)',
     'validation_title' => 'Talált problémák',

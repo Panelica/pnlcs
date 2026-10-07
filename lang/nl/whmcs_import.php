@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Naam van de koppeling',
     'profile_saved' => 'Koppeling opgeslagen.',
     'profile_deleted' => 'Koppeling verwijderd.',
+    'delete_profile_confirm' => 'Deze koppeling verwijderen?',
     'import_done' => 'Import voltooid.',
     'preview_title' => 'Voorbeeld (:count records)',
     'validation_title' => 'Gevonden problemen',

@@ -55,6 +55,7 @@ return [
     'profile_name' => 'Nome do mapeamento',
     'profile_saved' => 'Mapeamento salvo.',
     'profile_deleted' => 'Mapeamento excluído.',
+    'delete_profile_confirm' => 'Excluir este mapeamento?',
     'import_done' => 'Importação concluída.',
     'preview_title' => 'Pré-visualização (:count registros)',
     'validation_title' => 'Problemas encontrados',
