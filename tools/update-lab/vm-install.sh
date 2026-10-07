@@ -11,7 +11,7 @@
 set -euo pipefail
 VARIANT="${1:?variant}"; HOST="${2:-$(hostname -I | awk '{print $1}')}"; MODE="${3:-package}"
 LAB=/opt/lab; APP=/var/www/pnlcs
-eval "$(/opt/lab/vm-stack.sh)"
+FACTS="$(/opt/lab/vm-stack.sh | tail -1)"; case "$FACTS" in WEB_USER=*) eval "$FACTS" ;; *) echo "the stack could not be installed" >&2; exit 1 ;; esac
 as_web() { runuser -u "$WEB_USER" -- env HOME=/tmp/pnlcs-home COMPOSER_HOME=/tmp/pnlcs-home/composer "$@"; }
 DB="$(command -v mariadb || command -v mysql)"
 

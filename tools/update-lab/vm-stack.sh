@@ -9,7 +9,8 @@ set -euo pipefail
 . /etc/os-release
 FAMILY=debian; case "$ID" in almalinux|rocky|rhel|centos) FAMILY=rhel ;; esac
 
-if [ ! -f /root/.pnlcs-lab-stack ]; then
+# Everything the installs print goes to stderr: stdout is only the facts line.
+if [ ! -f /root/.pnlcs-lab-stack ]; then {
   if [ "$FAMILY" = debian ]; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -q
@@ -38,7 +39,7 @@ if [ ! -f /root/.pnlcs-lab-stack ]; then
   fi
   command -v composer >/dev/null || { curl -sS https://getcomposer.org/installer | php -- --quiet && mv composer.phar /usr/local/bin/composer; }
   touch /root/.pnlcs-lab-stack
-fi
+} >&2; fi
 
 if [ "$FAMILY" = debian ]; then
   echo "WEB_USER=www-data FPM_SOCK=/run/php/php8.4-fpm.sock FPM_SERVICE=php8.4-fpm CRON_SERVICE=cron NGINX_CONF=/etc/nginx/sites-available/pnlcs"
