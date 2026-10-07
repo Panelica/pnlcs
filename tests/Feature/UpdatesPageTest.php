@@ -2,7 +2,11 @@
 
 use App\Models\Admin;
 use App\Models\AdminRole;
+use App\Models\Setting;
+use App\Services\Updates\UpdateBar;
 use App\Services\Updates\UpdateState;
+use App\Services\Updates\Version;
+use Illuminate\Http\UploadedFile;
 
 /**
  * Setup -> Updates: who may use it, and that it only ever asks the scheduler
@@ -142,7 +146,7 @@ test('a file that still has conflict markers is refused, and nothing is saved', 
 test('an uploaded file is saved as the decision', function () {
     $state = updatesState();
     updatesConflict($state);
-    $upload = \Illuminate\Http\UploadedFile::fake()->createWithContent('robots.txt', "User-agent: *\nDisallow: /both\n");
+    $upload = UploadedFile::fake()->createWithContent('robots.txt', "User-agent: *\nDisallow: /both\n");
 
     $this->actingAs(updatesAdmin(), 'admin')
         ->post(route('admin.config.updates.resolve'), ['choice' => ['edited'], 'file' => [$upload]])
@@ -158,7 +162,7 @@ test('the update bar shows on admin pages while a newer release waits', function
 
     $this->actingAs($admin, 'admin')->get(route('admin.dashboard'))
         ->assertOk()
-        ->assertSee(__('admin.updates.bar_available', ['version' => '99.0.0', 'installed' => (string) \App\Services\Updates\Version::installed()]))
+        ->assertSee(__('admin.updates.bar_available', ['version' => '99.0.0', 'installed' => (string) Version::installed()]))
         ->assertSee(__('admin.updates.bar_hide'))
         ->assertSee(__('admin.updates.bar_off'));
 });
@@ -182,7 +186,7 @@ test('an update that did not finish is shown even with the bar turned off', func
     $state = updatesState();
     $state->write('current-run.json', ['id' => 'x', 'to' => '99.0.0', 'phase' => 'migrating']);
     $admin = updatesAdmin();
-    \App\Models\Setting::set(\App\Services\Updates\UpdateBar::settingKey($admin), '1', 'updates');
+    Setting::set(UpdateBar::settingKey($admin), '1', 'updates');
 
     $this->actingAs($admin, 'admin')->get(route('admin.dashboard'))
         ->assertOk()
