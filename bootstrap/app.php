@@ -38,6 +38,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // "light", nothing worth protecting.
         $middleware->encryptCookies(except: ['pnlcs_theme']);
 
+        // A file merged by hand on Setup -> Updates is saved exactly as typed:
+        // trimming would drop its last line break and change the file.
+        $middleware->trimStrings(except: ['resolved_text.*']);
+
         // Behind Panelica reverse proxy (Docker): trust the forwarded scheme
         // and host so asset()/route()/Vite URLs match the domain the request
         // actually arrived on, whatever it is. Without this a page served over

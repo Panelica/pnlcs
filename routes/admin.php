@@ -393,6 +393,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('updates/prepare', [\App\Http\Controllers\Admin\UpdateController::class, 'prepare'])->name('updates.prepare');
             Route::post('updates/apply', [\App\Http\Controllers\Admin\UpdateController::class, 'apply'])->name('updates.apply');
             Route::post('updates/resolve', [\App\Http\Controllers\Admin\UpdateController::class, 'resolve'])->name('updates.resolve');
+            Route::post('updates/bar', [\App\Http\Controllers\Admin\UpdateController::class, 'bar'])->name('updates.bar');
         });
 
         // Every installed module and its on/off switch — manage_settings

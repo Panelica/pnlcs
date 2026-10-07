@@ -61,7 +61,12 @@ echo "$HTML" > "$DIR/report.html"; grep -q "acme replaces views" <<< "$HTML" && 
 grep -q "Update now" <<< "$HTML" && bad "Update now offered while a conflict is open" || ok "no Update now while the conflict is open"
 grep -q "<<<<<<< your version" <<< "$(curl -s -b "$JAR" "$URL/admin/config/updates/merged?path=public/robots.txt")" && ok "the merged file downloads, with conflict markers" || bad "merged download"
 
-[ "$(post /admin/config/updates/resolve --data-urlencode 'choice[0]=mine')" = 302 ] && ok "decision saved: keep mine" || bad "resolve"
+# A file still holding conflict markers is refused; the clean edit is kept.
+post /admin/config/updates/resolve --data-urlencode 'choice[0]=edited' --data-urlencode $'resolved_text[0]=<<<<<<< your version\nx\n=======\n>>>>>>> new version\n' >/dev/null
+grep -q "conflict markers" <<< "$(page /admin/config/updates)" && ok "an edit that still has markers is refused" || bad "markers not refused"
+EDITED=$'User-agent: *\nDisallow: /operator-private\n# merged by hand on the page\n'
+HTML="$(page /admin/config/updates)"; TOKEN="$(token <<< "$HTML")"
+[ "$(post /admin/config/updates/resolve --data-urlencode 'choice[0]=edited' --data-urlencode "resolved_text[0]=$EDITED")" = 302 ] && ok "decision saved: the file edited on the page" || bad "resolve"
 [ "$(post /admin/config/updates/prepare)" = 302 ] || bad "second prepare"
 wait_state "ready|error" || bad "second check did not run"
 HTML="$(page /admin/config/updates)"; TOKEN="$(echo "$HTML" | token)"
@@ -75,7 +80,7 @@ grep -q '"state":"updated"' <<< "$STATUS" && ok "status endpoint: updated" || ba
 HTML="$(page /admin/config/updates)"
 grep -q '1.3.1</div>' <<< "$HTML" && ok "the page now shows 1.3.1 installed" || bad "installed version on page"
 grep -q ">Updated<" <<< "$HTML" && ok "the history lists the update" || bad "history"
-[ "$(docker exec "$CT" cat $APP/public/robots.txt | grep -c operator-private)" = 1 ] && ok "robots.txt kept as the operator wrote it" || bad "robots.txt"
+[ "$(docker exec "$CT" sha256sum $APP/public/robots.txt | cut -d' ' -f1)" = "$(printf '%s' "$EDITED" | sha256sum | cut -d' ' -f1)" ] && ok "robots.txt is exactly the file edited on the page" || bad "robots.txt"
 
 echo "== ui: $PASS passed, $FAIL failed (log: $LOG)"
 [ "${LAB_KEEP:-0}" = 1 ] || { docker rm -f "$CT" >/dev/null 2>&1; docker volume rm "$VOL" >/dev/null 2>&1; }
