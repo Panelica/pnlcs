@@ -41,7 +41,7 @@
                     </td>
                     <td style="text-align:right;">
                         @if(! $login->pivot->owner && $login->id !== auth()->id())
-                        <form method="POST" action="{{ route('client.account.users.destroy', $login) }}" style="margin:0;" onsubmit="return confirm('{{ __('client.account_users.confirm_remove') }}')">
+                        <form method="POST" action="{{ route('client.account.users.destroy', $login) }}" style="margin:0;" onsubmit="return pnConfirm(event, @js(__('client.account_users.confirm_remove')))">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">{{ __('client.account_users.remove') }}</button>
                         </form>

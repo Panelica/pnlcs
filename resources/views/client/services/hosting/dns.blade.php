@@ -131,7 +131,7 @@
                     @else
                     <div class="dz-acts">
                         <button type="button" class="dz-act" title="{{ __('client.hosting.dns.edit') }}" onclick="dzEdit('{{ $rid }}', true)"><i class="ri-pencil-line"></i></button>
-                        <form method="POST" action="{{ route('client.services.dns.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.dns.delete_confirm') }}')">
+                        <form method="POST" action="{{ route('client.services.dns.destroy', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.dns.delete_confirm')))">
                             @csrf<input type="hidden" name="record_id" value="{{ $r['id'] }}">
                             <button type="submit" class="dz-act danger" title="{{ __('client.hosting.dns.delete') }}"><i class="ri-delete-bin-line"></i></button>
                         </form>

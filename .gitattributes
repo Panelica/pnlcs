@@ -9,3 +9,15 @@
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+
+# Left out of release packages (tools/release/build-package.sh builds them with
+# git archive): what develops and documents PNLCS, not what runs it.
+/tests export-ignore
+/tools export-ignore
+/docs export-ignore
+/overrides export-ignore
+/mkdocs.yml export-ignore
+/phpunit.xml export-ignore
+/phpunit.testing.xml export-ignore
+/phpstan.neon export-ignore
+/pint.json export-ignore

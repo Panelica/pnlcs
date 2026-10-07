@@ -42,7 +42,7 @@
             <td><span class="badge {{ $cred->active ? 'badge-active' : 'badge-suspended' }}">{{ $cred->active ? __('common.status.active') : __('common.status.disabled') }}</span></td>
             <td style="text-align:right;white-space:nowrap;">
                 <button type="button" class="btn btn-default btn-xs" onclick="document.getElementById('modal-edit-api-{{ $cred->id }}').style.display='flex'">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $cred) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.api_credentials.confirm_revoke") }}')">
+                <form method="POST" action="{{ route('admin.config.api-credentials.destroy', $cred) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.api_credentials.confirm_revoke')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.api_credentials.revoke') }}</button>
                 </form>

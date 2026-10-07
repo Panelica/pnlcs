@@ -12,6 +12,7 @@
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.0.0",
+        "sweetalert2": "^11.26.25",
         "tailwindcss": "^4.2.2",
         "vite": "^8.0.0"
     }

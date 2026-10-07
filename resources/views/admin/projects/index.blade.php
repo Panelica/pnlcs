@@ -48,7 +48,7 @@
                     <div style="display:flex;gap:6px;">
                         <a href="{{ route('admin.projects.show', $project) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                         <a href="{{ route('admin.projects.edit', $project) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
-                        <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return confirm('{{ __('admin.projects.confirm_delete') }}')" style="display:inline;">
+                        <form method="POST" action="{{ route('admin.projects.destroy', $project) }}" onsubmit="return pnConfirm(event, @js(__('admin.projects.confirm_delete')))" style="display:inline;">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.projects.del') }}</button>
                         </form>

@@ -110,3 +110,20 @@ Schedule::command('pnlcs:prune-logs')->daily()->at('03:45')->withoutOverlapping(
 // DailyCronJob, as WHMCS has it: once a day, for addons that need a daily
 // task without a scheduler entry of their own.
 Schedule::call(fn () => run_hook('DailyCronJob'))->dailyAt('00:10')->name('hook:DailyCronJob')->withoutOverlapping();
+
+// PNLCS updates (Setup -> Updates). A daily look for a newer release - only a
+// look, nothing is applied without an administrator - and, every minute, the
+// update or check an administrator asked for there: the admin area cannot run
+// a twenty-minute job inside a web request.
+Schedule::command('pnlcs:update-check')->dailyAt('05:10')->withoutOverlapping();
+// Even in maintenance mode: an operator may put the site down to update it.
+Schedule::command('pnlcs:update --from-request')->everyMinute()->evenInMaintenanceMode()->runInBackground();
+// Self-healing: an update whose process died (killed, server restarted, PHP-FPM
+// restarted under it) is rolled back, and a finished one left in maintenance is
+// brought back up. Even in maintenance mode - that is exactly when it matters.
+Schedule::command('pnlcs:update-rollback --abandoned')->everyMinute()->evenInMaintenanceMode();
+// Neither uses withoutOverlapping(): its lock lives in the cache and outlives a
+// process that dies, which is exactly the case these exist for. One update at
+// a time is the updater's own file lock, released by the system when its
+// process dies, and a request is claimed by exactly one process.
+

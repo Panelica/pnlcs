@@ -108,7 +108,7 @@
                             <button type="submit" class="ft-btn" style="width:100%;justify-content:center">{{ __('client.hosting.ftp.save') }}</button>
                         </form></div>
                     </details>
-                    <form method="POST" action="{{ route('client.services.ftp.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.ftp.delete_confirm') }}')">
+                    <form method="POST" action="{{ route('client.services.ftp.destroy', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.ftp.delete_confirm')))">
                         @csrf<input type="hidden" name="ftp_id" value="{{ $f['id'] }}">
                         <button type="submit" class="ft-act danger" title="{{ __('client.hosting.ftp.delete') }}"><i class="ri-delete-bin-line"></i></button>
                     </form>

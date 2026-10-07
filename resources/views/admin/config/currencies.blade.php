@@ -67,7 +67,7 @@
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->is_default]) }})">{{ __('common.actions.edit') }}</button>
                 @if(!$currency->is_default)
-                <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.currencies.confirm_delete") }} {{ $currency->code }}?')">
+                <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js($currency->code), {title: @js(__('admin.currencies.confirm_delete')), danger: true})">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

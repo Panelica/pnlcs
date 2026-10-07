@@ -71,7 +71,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick='openEditCatalog({{ json_encode(['id'=>$p->id,'name'=>$p->name,'price'=>(float)$p->price,'unit'=>$p->unit,'tax_label'=>$p->tax_label]) }})'>{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.products.catalog.destroy', $p) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.products.confirm_delete_product_service') }}')">
+                <form method="POST" action="{{ route('admin.products.catalog.destroy', $p) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.products.confirm_delete_product_service')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

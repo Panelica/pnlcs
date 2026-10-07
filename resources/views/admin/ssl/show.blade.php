@@ -170,13 +170,13 @@
                     <form method="POST" action="{{ route('admin.ssl.action', $order) }}">
                         @csrf
                         <input type="hidden" name="action" value="renew">
-                        <button type="submit" class="btn btn-success w-100" onclick="return confirm('Are you sure you want to renew this certificate?')">{{ __('admin.ssl.renew') }}</button>
+                        <button type="submit" class="btn btn-success w-100" onclick="return pnConfirm(event, @js(__('admin.ssl.confirm_renew')))">{{ __('admin.ssl.renew') }}</button>
                     </form>
                     <form method="POST" action="{{ route('admin.ssl.action', $order) }}">
                         @csrf
                         <input type="hidden" name="action" value="reissue">
                         <input type="hidden" name="csr" value="{{ $order->csr }}">
-                        <button type="submit" class="btn btn-info w-100" onclick="return confirm('Are you sure you want to reissue this certificate?')">{{ __('admin.ssl.reissue') }}</button>
+                        <button type="submit" class="btn btn-info w-100" onclick="return pnConfirm(event, @js(__('admin.ssl.confirm_reissue')))">{{ __('admin.ssl.reissue') }}</button>
                     </form>
                 @endif
 
@@ -184,7 +184,7 @@
                     <form method="POST" action="{{ route('admin.ssl.action', $order) }}">
                         @csrf
                         <input type="hidden" name="action" value="revoke">
-                        <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Are you sure you want to revoke this certificate?')">{{ __('admin.ssl.revoke_certificate') }}</button>
+                        <button type="submit" class="btn btn-danger w-100" onclick="return pnConfirm(event, @js(__('admin.ssl.confirm_revoke')), {danger: true})">{{ __('admin.ssl.revoke_certificate') }}</button>
                     </form>
                 @endif
             </div>

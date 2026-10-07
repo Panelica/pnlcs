@@ -27,7 +27,7 @@
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs"
                     onclick="openEditField({{ json_encode(['id'=>$field->id,'field_name'=>$field->field_name,'field_type'=>$field->field_type,'description'=>$field->description,'field_options'=>$field->field_options,'regex'=>$field->regex,'required'=>(bool)$field->required,'admin_only'=>(bool)$field->admin_only,'show_on_invoice'=>(bool)$field->show_on_invoice,'show_on_order'=>(bool)$field->show_on_order,'sort_order'=>$field->sort_order]) }})">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.custom-fields.destroy', $field) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.custom_fields.confirm_delete') }}')">
+                <form method="POST" action="{{ route('admin.config.custom-fields.destroy', $field) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.custom_fields.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

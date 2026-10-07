@@ -32,7 +32,7 @@
             <td><span class="badge-{{ $promo->isValid() ? 'active' : 'suspended' }}">{{ $promo->isValid() ? __('common.status.active') : __('common.status.inactive') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" class="btn btn-default btn-xs" onclick="document.getElementById('modal-edit-promo-{{ $promo->id }}').style.display='flex'">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.promotions.destroy', $promo) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.promotions.confirm_delete') }}')">
+                <form method="POST" action="{{ route('admin.config.promotions.destroy', $promo) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.promotions.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

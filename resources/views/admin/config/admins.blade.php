@@ -43,7 +43,7 @@
                     <div style="display:flex;gap:6px;justify-content:flex-end;">
                         <button type="button" onclick="openModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
                         @if($admin->id !== auth('admin')->id())
-                        <form method="POST" action="{{ route('admin.config.admins.destroy', $admin) }}" onsubmit="return confirm('{{ __("admin.admins.confirm_delete") }} {{ $admin->full_name }}?')" style="display:inline;">
+                        <form method="POST" action="{{ route('admin.config.admins.destroy', $admin) }}" onsubmit="return pnConfirm(event, @js($admin->full_name), {title: @js(__('admin.admins.confirm_delete')), danger: true})" style="display:inline;">
                             @csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                         </form>
                         @endif

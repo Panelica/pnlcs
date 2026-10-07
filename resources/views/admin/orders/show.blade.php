@@ -118,21 +118,21 @@
                 @endif
 
                 @if(! in_array(strtolower($order->status), ['cancelled', 'fraud']))
-                <form method="POST" action="{{ route('admin.orders.cancel', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_cancel') }}')">
+                <form method="POST" action="{{ route('admin.orders.cancel', $order) }}" onsubmit="return pnConfirm(event, @js(__('admin.orders.confirm_cancel')))">
                     @csrf
                     <button type="submit" class="btn btn-warning btn-sm" style="width:100%;">{{ __('admin.orders.cancel_order') }}</button>
                 </form>
                 @endif
 
                 @if(strtolower($order->status) !== 'fraud')
-                <form method="POST" action="{{ route('admin.orders.fraud', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_fraud') }}')">
+                <form method="POST" action="{{ route('admin.orders.fraud', $order) }}" onsubmit="return pnConfirm(event, @js(__('admin.orders.confirm_fraud')))">
                     @csrf
                     <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">{{ __('common.actions.mark_fraud') }}</button>
                 </form>
                 @endif
 
                 @if(in_array(strtolower($order->status), ['cancelled', 'fraud', 'pending']))
-                <form method="POST" action="{{ route('admin.orders.delete', $order) }}" onsubmit="return confirm('{{ __('admin.orders.confirm_delete') }}')">
+                <form method="POST" action="{{ route('admin.orders.delete', $order) }}" onsubmit="return pnConfirm(event, @js(__('admin.orders.confirm_delete')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-default btn-sm" style="width:100%;color:#d9534f;">{{ __('admin.orders.delete_order') }}</button>
                 </form>

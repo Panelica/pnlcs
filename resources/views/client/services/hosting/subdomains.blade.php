@@ -90,7 +90,7 @@
                 <td>@if($s['ssl'])<span class="sd-ssl"><i class="ri-lock-line" style="font-size:10px"></i> SSL</span>@else<span class="sd-meta">—</span>@endif</td>
                 <td><span class="sd-tag" style="{{ strtolower($s['status'])==='active'?'background:rgba(16,185,129,.12);color:#059669;border-color:transparent':'' }}">{{ $s['status'] ?: 'active' }}</span></td>
                 <td style="text-align:right">
-                    <form method="POST" action="{{ route('client.services.subdomains.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.subdomains.delete_confirm') }}')">
+                    <form method="POST" action="{{ route('client.services.subdomains.destroy', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.subdomains.delete_confirm')))">
                         @csrf<input type="hidden" name="subdomain_id" value="{{ $s['id'] }}">
                         <button type="submit" class="sd-act" title="{{ __('client.hosting.subdomains.delete') }}"><i class="ri-delete-bin-line"></i></button>
                     </form>

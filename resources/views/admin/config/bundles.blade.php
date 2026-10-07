@@ -55,7 +55,7 @@
                 @endif
             </td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.bundles.destroy', $bundle->id) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.bundles.confirm_delete") }}')">
+                <form method="POST" action="{{ route('admin.config.bundles.destroy', $bundle->id) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.bundles.confirm_delete')))">
                     @csrf @method("DELETE")
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

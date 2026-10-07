@@ -8,6 +8,7 @@ use App\Http\Middleware\BlockBannedIp;
 use App\Http\Middleware\CheckAdminPermission;
 use App\Http\Middleware\MaintenanceMode;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\ResetOpcacheAfterUpdate;
 use App\Http\Middleware\SetDisplayCurrency;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TwoFactorVerify;
@@ -36,7 +37,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // light and flashed dark after a script ran - and the theme attribute
         // the server renders was a lie. Unencrypted: it holds "dark" or
         // "light", nothing worth protecting.
-        $middleware->encryptCookies(except: ['pnlcs_theme']);
+        // laravel_maintenance: the maintenance bypass cookie Setup -> Updates
+        // gives the administrator who starts an update. It is checked before
+        // cookies are decrypted, and is signed with the maintenance secret.
+        $middleware->encryptCookies(except: ['pnlcs_theme', 'laravel_maintenance']);
+
+        // A file merged by hand on Setup -> Updates is saved exactly as typed:
+        // trimming would drop its last line break and change the file.
+        $middleware->trimStrings(except: ['resolved_text.*']);
 
         // Behind Panelica reverse proxy (Docker): trust the forwarded scheme
         // and host so asset()/route()/Vite URLs match the domain the request
@@ -44,6 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // https emits http asset URLs and the browser blocks them as mixed
         // content. This is domain-agnostic: no per-domain APP_URL to maintain.
         $middleware->trustProxies(at: '*');
+        $middleware->prepend(ResetOpcacheAfterUpdate::class);
         $middleware->prependToGroup('web', RedirectToInstaller::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', SetLocale::class);

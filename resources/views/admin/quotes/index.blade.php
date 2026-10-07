@@ -38,7 +38,7 @@
                     <div style="display:flex;gap:4px;">
                         <a href="{{ route('admin.quotes.show', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                         <a href="{{ route('admin.quotes.edit', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
-                        <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return confirm('{{ __('admin.quotes.confirm_delete') }}')" style="display:inline;">
+                        <form method="POST" action="{{ route('admin.quotes.destroy', $quote) }}" onsubmit="return pnConfirm(event, @js(__('admin.quotes.confirm_delete')))" style="display:inline;">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.quotes.del') }}</button>
                         </form>

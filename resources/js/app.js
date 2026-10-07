@@ -6,6 +6,7 @@
 // the invoice builder, both quote builders and the product editor - rendered
 // their line items inside a <template x-for> that produced nothing.
 import Alpine from 'alpinejs';
+import './dialogs';
 
 window.Alpine = Alpine;
 

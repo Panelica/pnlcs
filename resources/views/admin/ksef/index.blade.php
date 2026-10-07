@@ -54,7 +54,7 @@
                         </form>
                         @endif
                         @if(in_array($r->status, ['sent', 'accepted'], true))
-                        <form method="POST" action="{{ route('admin.ksef.mark-corrected', $r) }}" style="display:inline;margin:0;" onsubmit="return confirm('{{ __('messages.ksef.confirm_corrected') }}');">
+                        <form method="POST" action="{{ route('admin.ksef.mark-corrected', $r) }}" style="display:inline;margin:0;" onsubmit="return pnConfirm(event, @js(__('messages.ksef.confirm_corrected')));">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline" style="font-size:12px;padding:3px 10px;">{{ __('messages.ksef.mark_corrected') }}</button>
                         </form>

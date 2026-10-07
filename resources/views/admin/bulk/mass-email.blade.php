@@ -79,7 +79,7 @@
             </div>
         </div>
         <div style="padding:12px 16px;border-top:1px solid #eee;text-align:right;">
-            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('{{ __('admin.bulk.confirm_send') }}')">{{ __('admin.bulk.send_mass_email') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm" onclick="return pnConfirm(event, @js(__('admin.bulk.confirm_send')))">{{ __('admin.bulk.send_mass_email') }}</button>
         </div>
     </form>
 </div>
@@ -109,7 +109,7 @@
             <div class="form-group" style="margin-top:12px;"><label class="form-label">{{ __('admin.bulk.due_date') }}</label><input type="date" name="due_date" required class="form-control"></div>
         </div>
         <div style="padding:12px 16px;border-top:1px solid #eee;text-align:right;">
-            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('{{ __('admin.bulk.confirm_invoice') }}')">{{ __('admin.bulk.create_bulk_invoices') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm" onclick="return pnConfirm(event, @js(__('admin.bulk.confirm_invoice')))">{{ __('admin.bulk.create_bulk_invoices') }}</button>
         </div>
     </form>
 </div>
@@ -144,7 +144,7 @@
             </div>
         </div>
         <div style="padding:12px 16px;border-top:1px solid #eee;text-align:right;">
-            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('{{ __('admin.bulk.confirm_service_update') }}')">{{ __('admin.bulk.update_services') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm" onclick="return pnConfirm(event, @js(__('admin.bulk.confirm_service_update')))">{{ __('admin.bulk.update_services') }}</button>
         </div>
     </form>
 </div>

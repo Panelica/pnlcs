@@ -32,7 +32,7 @@
             <td><span class="badge-{{ $art->private ? 'draft' : 'active' }}">{{ $art->private ? __('admin.knowledge_base.draft') : __('admin.knowledge_base.published') }}</span></td>
             <td style="text-align:right;">
                 <button type="button" onclick="openModal('edit-art-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
-                <form method="POST" action="{{ route('admin.config.knowledge-base.articles.destroy', $art) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.knowledge_base.confirm_delete_article') }}')">
+                <form method="POST" action="{{ route('admin.config.knowledge-base.articles.destroy', $art) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.knowledge_base.confirm_delete_article')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

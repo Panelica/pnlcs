@@ -70,7 +70,7 @@
                     </td>
                     <td>
                         <button type="button" class="btn btn-outline btn-xs" onclick="openModal('edit-contact-{{ $contact->id }}')">{{ __('common.actions.edit') }}</button>
-                        <form method="POST" action="{{ route('client.account.contacts.destroy', $contact) }}" style="display:inline;" onsubmit="return confirm('{{ __("client.contacts.confirm_remove") }}')">
+                        <form method="POST" action="{{ route('client.account.contacts.destroy', $contact) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('client.contacts.confirm_remove')))">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.remove') }}</button>

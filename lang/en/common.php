@@ -322,4 +322,8 @@ return [
     'table.title' => 'Title',
     'table.total' => 'Total',
     'yes' => 'Yes',
+    'dialog' => [
+        'ok' => 'OK',
+        'confirm_title' => 'Are you sure?',
+    ],
 ];

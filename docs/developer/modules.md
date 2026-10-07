@@ -37,6 +37,7 @@ above is `Modules\Gateways\AcmePay\AcmePayModule`.
 | `name` | yes | Unique key, stored on invoices, products and settings. Lower-case, no spaces. |
 | `type` | yes | `gateway`, `server`, `registrar` or `ssl` |
 | `class` | yes | Fully qualified class name of the module |
+| `requires` | no | `{"pnlcs": ">=1.3 <2"}`: the PNLCS versions the module works with. An update to a version outside it does not start until the operator updates the module, disables it, or chooses to go ahead |
 | `version`, `display_name`, `description`, `author` | no | Informational |
 
 Two rules are enforced when the manifest is read, so a broken module cannot

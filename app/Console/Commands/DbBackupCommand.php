@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Setting;
 use App\Services\NotificationService;
+use App\Support\SqlDump;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
@@ -127,58 +128,13 @@ class DbBackupCommand extends Command
 
 
     /**
-     * A dump produced by PHP itself: schema and rows, INSERTs in batches,
-     * gzip-compressed - restorable by piping into the standard client. Used
-     * when no dump binary exists on this machine.
+     * A dump produced by PHP itself (App\Support\SqlDump), restorable by
+     * piping into the standard client. Used when no dump binary exists on this
+     * machine.
      */
     private function phpDump(string $file): bool
     {
-        $gz = gzopen($file, 'wb6');
-        if ($gz === false) {
-            return false;
-        }
-
-        try {
-            $pdo = \Illuminate\Support\Facades\DB::connection()->getPdo();
-            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=0;\nSET NAMES utf8mb4;\n\n");
-
-            $tables = array_map('current', $pdo->query('SHOW TABLES')->fetchAll(\PDO::FETCH_NUM));
-            foreach ($tables as $table) {
-                $qt = '`'.str_replace('`', '``', $table).'`';
-                $create = $pdo->query("SHOW CREATE TABLE {$qt}")->fetch(\PDO::FETCH_NUM)[1];
-                gzwrite($gz, "DROP TABLE IF EXISTS {$qt};\n{$create};\n\n");
-
-                $stmt = $pdo->query("SELECT * FROM {$qt}");
-                $batch = [];
-                while ($row = $stmt->fetch(\PDO::FETCH_NUM)) {
-                    $vals = array_map(fn ($v) => $v === null ? 'NULL' : $pdo->quote((string) $v), $row);
-                    $batch[] = '('.implode(',', $vals).')';
-                    if (count($batch) >= 200) {
-                        gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
-                        $batch = [];
-                    }
-                }
-                if ($batch) {
-                    gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
-                }
-                gzwrite($gz, "\n");
-            }
-
-            // The same trailer mysqldump writes. A dump cut off by a full disk
-            // or a killed process is otherwise indistinguishable from a whole
-            // one, and this line is what a restore checks for first.
-            gzwrite($gz, "SET FOREIGN_KEY_CHECKS=1;\n\n-- Dump completed on ".now()->format('Y-m-d H:i:s')."\n");
-        } catch (\Throwable $e) {
-            gzclose($gz);
-            @unlink($file);
-            \Illuminate\Support\Facades\Log::error('PHP dump failed', ['error' => $e->getMessage()]);
-
-            return false;
-        }
-
-        gzclose($gz);
-
-        return is_file($file) && filesize($file) > 512;
+        return SqlDump::dump($file);
     }
 
     private function findMysqldump(): ?string

@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="{{ asset('css/rtl.css') }}">
     @endif
     {!! hook_output('AdminAreaHeadOutput', ['admin' => auth('admin')->user()]) !!}
+    @include('partials.dialog-boot')
 </head>
 <body>
 
@@ -255,6 +256,10 @@
                     <li><a href="{{ route('admin.config.ticket-spam') }}">{{ __('admin.nav.ticket_spam_filter') }}</a></li>
                     <li><a href="{{ route('admin.config.addons') }}">{{ __('admin.nav.product_addons') }}</a></li>
                     <li><a href="{{ route('admin.config.bundles') }}">{{ __('admin.nav.product_bundles') }}</a></li>
+                    @if(auth('admin')->user()?->hasPermission('manage_updates'))
+                    <li class="divider"></li>
+                    <li><a href="{{ route('admin.config.updates') }}"><i class="fas fa-cloud-download-alt"></i> {{ __('admin.nav.updates') }}</a></li>
+                    @endif
                 </ul>
             </li>
 
@@ -472,6 +477,9 @@
             <li><a href="{{ route('admin.config.addons') }}" @if($routeName === 'admin.config.addons') class="active" @endif>{{ __('admin.nav.product_addons') }}</a></li>
                     <li><a href="/admin/config/addons/modules">{{ __('admin.nav.addon_modules') }}</a></li>
             <li><a href="{{ route('admin.config.bundles') }}" @if($routeName === 'admin.config.bundles') class="active" @endif>{{ __('admin.nav.product_bundles') }}</a></li>
+            @if(auth('admin')->user()?->hasPermission('manage_updates'))
+            <li><a href="{{ route('admin.config.updates') }}" @if($routeName === 'admin.config.updates') class="active" @endif><i class="fas fa-cloud-download-alt"></i> {{ __('admin.nav.updates') }}</a></li>
+            @endif
         </ul>
 
     {{-- ── Logs Sidebar ── --}}
@@ -567,6 +575,7 @@
     </div>
 </div>
 
+@include('admin.partials.update-bar')
 @vite(["resources/js/app.js"])
 <button class="sidebar-toggle-btn" id="sidebarToggle" title="{{ __('admin.nav.toggle_sidebar') }}" onclick="toggleSidebar()">&#9776;</button>
 <script>

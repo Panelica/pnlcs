@@ -16,7 +16,7 @@
             @forelse($categories as $category)
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;">
                 <span>{{ $category->name }} <span style="color:#999;">({{ $category->replies->count() }})</span></span>
-                <form method="POST" action="{{ route('admin.config.predefined-replies.categories.destroy', $category) }}" style="margin:0;" onsubmit="return confirm('{{ __('admin.predefined.confirm_delete_category') }}')">@csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
+                <form method="POST" action="{{ route('admin.config.predefined-replies.categories.destroy', $category) }}" style="margin:0;" onsubmit="return pnConfirm(event, @js(__('admin.predefined.confirm_delete_category')))">@csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
             </div>
             @empty
             <p style="color:#999;font-size:13px;margin:0 0 8px;">{{ __('admin.predefined.no_categories') }}</p>
@@ -63,7 +63,7 @@
                             <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save') }}</button>
                         </div>
                     </form>
-                    <form method="POST" action="{{ route('admin.config.predefined-replies.destroy', $reply) }}" style="margin-top:6px;" onsubmit="return confirm('{{ __('admin.predefined.confirm_delete_reply') }}')">@csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
+                    <form method="POST" action="{{ route('admin.config.predefined-replies.destroy', $reply) }}" style="margin-top:6px;" onsubmit="return pnConfirm(event, @js(__('admin.predefined.confirm_delete_reply')))">@csrf @method('DELETE')<button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button></form>
                 </div>
             </details>
             @endforeach

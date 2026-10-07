@@ -361,7 +361,8 @@
             ok.textContent = o.ok || T.confirm;
             ok.disabled = needWord;
             input.oninput = function () { ok.disabled = needWord && input.value.trim().toLowerCase() !== String(o.word).toLowerCase(); };
-            if (typeof dlg.showModal !== 'function') { resolve(window.confirm(o.text) ? (needWord ? o.word : true) : false); return; }
+            // A browser without <dialog> asks through the panel's dialogs instead.
+            if (typeof dlg.showModal !== 'function') { window.pnDialog.confirm(o.text, { danger: o.danger !== false }).then(function (yes) { resolve(yes ? (needWord ? o.word : true) : false); }); return; }
             dlg.onclose = function () { resolve(dlg.returnValue === 'ok' ? (needWord ? input.value.trim() : true) : false); };
             dlg.returnValue = '';
             dlg.showModal();

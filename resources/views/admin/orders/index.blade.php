@@ -93,11 +93,10 @@ document.querySelectorAll('#order-bulk-form button[data-action]').forEach(functi
     btn.addEventListener('click', function (e) {
         if (document.querySelectorAll('.order-row-checkbox:checked').length === 0) {
             e.preventDefault();
-            alert(@json(__('admin.orders.select_none')));
+            pnDialog.alert(@js(__('admin.orders.select_none')), { icon: 'warning' });
             return;
         }
-        if (this.getAttribute('data-action') === 'cancel' && !confirm(@json(__('admin.orders.confirm_cancel')))) {
-            e.preventDefault();
+        if (this.getAttribute('data-action') === 'cancel' && !pnConfirm(e, @js(__('admin.orders.confirm_cancel')), { danger: true })) {
             return;
         }
         document.getElementById('order-bulk-action').value = this.getAttribute('data-action');

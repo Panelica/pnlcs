@@ -5,7 +5,7 @@
     <h1>{{ __('admin.products.edit_product') }}: {{ $product->name }}</h1>
     <div style="display:flex;gap:6px;">
         <a href="{{ route('admin.products.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.products.back') }}</a>
-        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('{{ __('admin.products.confirm_delete') }}')">
+        <form method="POST" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return pnConfirm(event, @js(__('admin.products.confirm_delete')))">
             @csrf @method('DELETE')
             <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.products.delete_product') }}</button>
         </form>
@@ -249,7 +249,7 @@
                 <td>{{ $field->field_name }}@if($field->required) *@endif @if($field->admin_only)<span style="color:#999;font-size:12px;">({{ __('admin.products.fields_admin_only') }})</span>@endif</td>
                 <td>{{ $field->field_type }}</td>
                 <td style="text-align:right;">
-                    <form method="POST" action="{{ route('admin.products.fields.destroy', [$product, $field]) }}" onsubmit="return confirm('{{ __('admin.products.fields_confirm_delete') }}')">
+                    <form method="POST" action="{{ route('admin.products.fields.destroy', [$product, $field]) }}" onsubmit="return pnConfirm(event, @js(__('admin.products.fields_confirm_delete')))">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                     </form>

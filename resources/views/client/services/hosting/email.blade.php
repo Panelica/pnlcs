@@ -121,7 +121,7 @@
                             </form>
                         </div>
                     </details>
-                    <form method="POST" action="{{ route('client.services.emails.destroy', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.email.delete_confirm') }}')">
+                    <form method="POST" action="{{ route('client.services.emails.destroy', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.email.delete_confirm')))">
                         @csrf<input type="hidden" name="email_id" value="{{ $mail['id'] }}">
                         <button type="submit" class="em-act danger" title="{{ __('client.hosting.email.delete') }}"><i class="ri-delete-bin-line"></i></button>
                     </form>

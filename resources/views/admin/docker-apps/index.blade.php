@@ -54,12 +54,12 @@
                  realistic starting point; this takes every link the panel still
                  has and reports what could not be fetched. --}}
             <form method="POST" action="{{ route('admin.docker-apps.import') }}" style="margin:0;"
-                  onsubmit="return confirm(@js(__('admin.docker_apps.import_confirm')))">
+                  onsubmit="return pnConfirm(event, @js(__('admin.docker_apps.import_confirm')))">
                 @csrf
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.docker_apps.import_missing') }}</button>
             </form>
             <form method="POST" action="{{ route('admin.docker-apps.import') }}" style="margin:0;"
-                  onsubmit="return confirm(@js(__('admin.docker_apps.import_overwrite_confirm')))">
+                  onsubmit="return pnConfirm(event, @js(__('admin.docker_apps.import_overwrite_confirm')))">
                 @csrf
                 <input type="hidden" name="overwrite" value="1">
                 <button type="submit" class="btn btn-default btn-sm">{{ __('admin.docker_apps.import_overwrite') }}</button>
@@ -112,7 +112,7 @@
 
         @if($url)
         <form method="POST" action="{{ route('admin.docker-apps.destroy') }}" class="da-row"
-              onsubmit="return confirm(@js(__('admin.docker_apps.remove_confirm')))">
+              onsubmit="return pnConfirm(event, @js(__('admin.docker_apps.remove_confirm')))">
             @csrf
             <input type="hidden" name="slug" value="{{ $t['slug'] }}">
             <button type="submit" class="da-del" style="flex:1">{{ __('admin.docker_apps.remove') }}</button>

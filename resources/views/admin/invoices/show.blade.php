@@ -13,7 +13,7 @@
         <button type="button" class="btn btn-warning btn-sm" onclick="document.getElementById('refund-form').style.display=document.getElementById('refund-form').style.display==='none'?'block':'none'">{{ __('admin.invoices.refund_btn') }}</button>
         @endif
         @if(!in_array($st, ['paid', 'cancelled', 'refunded']))
-        <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.invoices.confirm_cancel') }}')">
+        <form method="POST" action="{{ route('admin.invoices.cancel', $invoice) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.invoices.confirm_cancel')))">
             @csrf
             <button type="submit" class="btn btn-danger btn-sm">{{ __('common.actions.cancel') }}</button>
         </form>
@@ -23,7 +23,7 @@
             <button type="submit" class="btn btn-default btn-sm">{{ __('admin.invoices.send') }}</button>
         </form>
         @if(!empty($canChargeNow))
-        <form method="POST" action="{{ route('admin.invoices.charge-now', $invoice) }}" style="display:inline;" onsubmit="return confirm(@js(__('admin.invoices.charge_now_confirm')))">
+        <form method="POST" action="{{ route('admin.invoices.charge-now', $invoice) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.invoices.charge_now_confirm')))">
             @csrf
             <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.invoices.charge_now') }}</button>
         </form>
@@ -59,7 +59,7 @@
             <li>{{ $chargeReview->last_message }}</li>
             @endif
         </ul>
-        <form method="POST" action="{{ route('admin.invoices.charge-review.release', $invoice) }}" onsubmit="return confirm('{{ __('admin.invoices.charge_review_confirm') }}')">
+        <form method="POST" action="{{ route('admin.invoices.charge-review.release', $invoice) }}" onsubmit="return pnConfirm(event, @js(__('admin.invoices.charge_review_confirm')))">
             @csrf
             <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.invoices.charge_review_release') }}</button>
             <small class="text-muted" style="margin-left:8px;">{{ __('admin.invoices.charge_review_release_hint') }}</small>
@@ -73,7 +73,7 @@
     <div class="card">
         <div class="card-header"><strong>{{ __('admin.invoices.refund_invoice') }}</strong></div>
         <div class="card-body">
-            <form method="POST" action="{{ route('admin.invoices.refund', $invoice) }}" onsubmit="return confirm('{{ __('admin.invoices.confirm_refund') }}')">
+            <form method="POST" action="{{ route('admin.invoices.refund', $invoice) }}" onsubmit="return pnConfirm(event, @js(__('admin.invoices.confirm_refund')))">
                 @csrf
                 <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
                     <div class="form-group" style="margin:0;flex:1;min-width:140px;">
@@ -182,7 +182,7 @@
                     <td><input type="number" form="item-form-{{ $item->id }}" name="tax_rate" value="{{ $effectiveRate > 0 ? rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') : '' }}" step="0.01" min="0" max="100" placeholder="0" class="inv-inline inv-num" data-enter-submit></td>
                     <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
                     <td style="text-align:center;">
-                        <form method="POST" action="{{ route('admin.invoices.items.destroy', [$invoice, $item]) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.invoices.confirm_delete_item') }}')">
+                        <form method="POST" action="{{ route('admin.invoices.items.destroy', [$invoice, $item]) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.invoices.confirm_delete_item')))">
                             @csrf @method('DELETE')
                             <button type="submit" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:16px;padding:0 2px;" title="{{ __('admin.invoices.delete_item') }}">&times;</button>
                         </form>

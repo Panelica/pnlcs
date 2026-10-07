@@ -2,6 +2,229 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.3.0 — 2026-10-07
+
+The first release since **1.2.0** (2026-07-10). Everything in this file from
+here down to 1.2.0 ships in it: the dated sections below give the detail of
+each piece of work; this entry is the whole picture.
+
+### Upgrading from 1.2.0
+
+- **Update now if you run 1.2.0 with the API switched on.** In 1.2.0 an API
+  request that carried a valid identifier but no secret was accepted. This was
+  fixed on 2026-07-11, and 1.3.0 is the first release with the fix.
+- 1.2.0 has no updater, so this one update is made by hand, once: follow
+  [Updating by hand](docs/install/updating.md#updating-by-hand-before-13)
+  and check out `v1.3.0`. From 1.3.0 on, **Setup → Updates** (or
+  `php artisan pnlcs:update`) does it, keeping your changes.
+- Every one of the 138 new migrations adds; none edits or deletes an earlier
+  one. The few that change existing data are listed under *Database changes*.
+- Take a backup first ([Backups](docs/install/backups.md)).
+
+### What is new since 1.2.0
+
+**Updates and releases**
+- Signed releases on a **stable** and a **beta** channel; installations are
+  updated only from releases. The rules are in [RELEASING.md](RELEASING.md).
+- **Setup → Updates** and `php artisan pnlcs:update`: an update checks the
+  release's signature and compares it with your installation before it changes
+  anything. Your themes, modules, hook files, `.env`, uploads and data are never
+  touched; your edits to PNLCS's own files are merged or kept; a clash is shown
+  to you, file by file, and edited right on the page or uploaded. The site is
+  in maintenance for the seconds it takes, the database is snapshotted first,
+  and any failure puts every file and the database back.
+- **It heals itself.** An update cut off by a crash, a restart or a killed
+  process is rolled back by the scheduler within a minute, with no one acting.
+- A progress card shows each step as it happens; a bar at the bottom of the
+  admin pages says when a release is available (hide it, or turn it off).
+
+**Dialogs**
+- One dialog system for the whole panel: every confirmation and notice is a
+  styled, translated dialog. No browser `alert()` or `confirm()` is left.
+
+**Security** (detail in *2026-07* and *2026-09-23* below)
+- The API authentication bypass of 1.2.0 is closed; API secrets are stored as
+  hashes and compared in constant time; credentials can be limited to IP
+  addresses; gateway and registrar secrets and EPP codes are encrypted at rest.
+- Broken access control on admin routes, an SSL client-area IDOR and payment
+  forgery on Stripe and Razorpay are fixed; login throttling is per account.
+- An audit of every API endpoint and of the MCP server: secrets no longer leave
+  the API, every action answers to the right permission.
+- Optional reCAPTCHA on sign-up, sign-in, password reset, the contact form and
+  the ticket form; sign-in history and an optional mail on a new device;
+  staff 2FA recovery codes work and the backup codes are shown once.
+
+**Billing and payments**
+- A redesigned tax model (VAT by country and the buyer's tax identity), a
+  second billing currency, and customers choosing the currency prices and
+  invoices are shown in.
+- Collecting due invoices with a stored card (Stripe, iyzico, PayPal), safe to
+  run twice; staff charge a stored card for one invoice on demand.
+- The Stripe pay form is the Payment Element, with Apple Pay and Google Pay,
+  in the customer's language.
+- New gateways: **Tpay** and **iyzico**; proforma invoices; KSeF (Poland) and
+  late fees; customer-group discounts, promotion rules, product requirements on
+  codes, stock control and product addons that can be sold.
+- Customers pay several invoices in one go, pay from their balance, renew early
+  and change a service's billing cycle or options; staff add and remove credit.
+- Domain renewal invoicing with the registrar's renewal call, prorated
+  upgrades and downgrades, and many fixes to invoices, refunds, commissions,
+  reports and reminders from the July audit.
+
+**Domains**
+- Customers manage nameservers (including glue records), WHOIS privacy and the
+  WHOIS contact, restore a domain from redemption, renew several on one
+  invoice, and give a domain to another client account; staff move domains
+  between accounts and edit privacy, contact and glue on the admin page.
+- A domain ordered with hosting is checked, priced and registered; a free
+  domain with hosting; "set up on my hosting" from a domain's page.
+- The **Openprovider** registrar module; DomainNameAPI fixes (bulk search,
+  renewals, nameservers, privacy read-back, dialling codes); WHOIS for
+  second-level names and `.tr`; events and hooks for registration, renewal,
+  transfer and expiry; a registrar balance on the dashboard.
+
+**Hosting with Panelica**
+- Self-service tools in the client area: email, files (upload, drag and drop),
+  databases, FTP, subdomains, cron jobs, DNS zone editing and backups, with a
+  live dashboard of the account's usage.
+- Managed resource plans, live usage graphs and one-click sign-in to the panel;
+  **Live Servers** for staff.
+- An **app catalogue** sold as one product, any app: customers pick and run
+  containerised apps, served on their own domain, with a shell from the card.
+
+**Proxmox VE**
+- Selling VPS on Proxmox end to end: one VPS panel for customer and staff,
+  order options, an image library and a step-by-step guide; customers give SSH
+  keys when ordering or reinstalling.
+
+**Store and client area**
+- Guests shop and open the account at the payment step; the invoicing address
+  is asked where the account is opened; email address confirmation (existing
+  accounts are treated as confirmed).
+- Sign in with **Google** and **GitHub**; the account owner invites and manages
+  the account's users; contacts receive the emails they were added for.
+- Marketing email consent with proof; personal data exported as one JSON file;
+  the client area works on phones; country-aware billing identity fields.
+- Order questions (a product's own custom fields), downloads limited to owners
+  of particular products, private files with a download record, and a
+  product's files on its service page.
+
+**Tickets**
+- Customers close and rate tickets; staff open tickets for customers, change
+  status, priority, department and assignee from the ticket page, keep internal
+  notes, use predefined replies, delete tickets, and inactive tickets close by
+  themselves.
+
+**Admin**
+- Staff place an order for a customer; accept or cancel several orders at once;
+  edit a service's record; to-do tasks for staff; mass mail recipients picked by
+  product, server, status, group or domain.
+- Search for invoices, services, domains, tickets, orders, menu pages and
+  settings from the admin bar; how long each log is kept, set from the panel.
+- **Setup → Modules** with an on/off switch for every module; fraud screening
+  (MaxMind minFraud, FraudLabs Pro); phone verification through Twilio Verify
+  or any SMS provider an addon installs; Telegram as a notification channel;
+  configurable suspension grace and opt-in auto-termination.
+
+**Extensibility**
+- Addons bring their own service provider, menu entries, settings and
+  `upgrade()`; modules are found by their manifest; new hooks (output hooks for
+  the head, footer and service page; `EmailPreSend`, `InvoiceCancelled`,
+  `ClientEdit`, `ClientDelete`, `ShoppingCartValidateCheckout`, `DailyCronJob`,
+  `DownloadRequested`, `ServiceUnsuspended`, domain lifecycle hooks); a
+  callback route for gateways without one of their own.
+
+**API and MCP**
+- All 171 API actions work and are documented; client SSO, invitations and
+  per-login permissions; one error shape. `pnlcs-mcp`, a Model Context
+  Protocol server, checked against the API reference.
+
+**Languages and documentation**
+- Complete German, Polish and Simplified Chinese; a full Turkish review; a
+  language can be translated with AI from the panel.
+- A full documentation site (installation, guides, developer, API, MCP,
+  troubleshooting, FAQ) and a knowledge base that ships with the product.
+
+### Database changes
+
+All 138 migrations add tables, columns or rows. These also change existing data:
+
+- `hash_api_credential_secrets`: API secrets are stored as SHA-256 digests.
+  Clients keep sending their secret; it cannot be read back from the database.
+- `encrypt_gateway_registrar_secrets`, `encrypt_epp_code_on_domains`: these
+  values are encrypted with `APP_KEY`. Keep your `.env`.
+- `rebuild_tax_rules`: `tax_rules.level` is replaced by `is_default`; the old
+  catch-all rule becomes the default, so tax keeps applying.
+- `extend_docker_apps_for_selling`: `docker_app_logos` is renamed
+  `docker_apps`.
+- `treat_existing_accounts_as_verified`: accounts that existed before email
+  confirmation are marked confirmed, so no customer is locked out.
+- `email_templates_multilingual`, `change_phone_prefix_length_to_4`,
+  `add_google_login_to_users`: columns are widened or made nullable.
+
+### For theme and module authors
+
+- Modules and themes can state the PNLCS versions they work with
+  (`"requires": {"pnlcs": ">=1.3 <2"}`); an update outside the range waits.
+- New built-in themes, modules and hook files take the `pnlcs-` prefix.
+- New hooks and addon capabilities: see *Extensibility* above and
+  [Hooks](docs/developer/hooks.md).
+- Confirmations use `pnConfirm(event, message)` / `pnDialog`; never the
+  browser's `confirm()` (a test fails on it).
+
+### Views a theme may override that changed
+
+264 files under `resources/views` changed since 1.2.0. If your theme replaces
+any of them, compare your copy: the updater lists, for your installation,
+exactly the ones your active theme overrides.
+
+### Updates in detail
+
+#### Added
+
+- **Releases on two channels.** PNLCS now ships as signed releases: stable, and
+  beta about a week earlier. Installations are updated only from releases,
+  never from the code under development. The rules every release follows are
+  in [RELEASING.md](RELEASING.md).
+- **Setup → Updates**, and `php artisan pnlcs:update`. An update downloads the
+  release, checks its signature, and compares it with the installation before
+  it changes anything:
+  - your own themes, modules, hook files, `.env`, uploads and data are never
+    touched;
+  - your changes to PNLCS's own files are merged with the new version, or
+    kept when the new version leaves the file alone;
+  - when a change of yours and the new version clash, the update does not
+    start: you choose, per file, the new version (yours is kept aside), yours,
+    or a file you merged by hand;
+  - the site is in maintenance for the few seconds the update takes; the
+    database is snapshotted first, and if a migration, the new code or the
+    health check after it fails, every file and the database are put back
+    and the site comes back on its previous version;
+  - an update cut off by a crash is rolled back with
+    `php artisan pnlcs:update-rollback` (in Docker, by the container's next
+    start), and nothing else runs until it is.
+- A daily check tells administrators when a release is available
+  (`update.available` in **Setup → Notification Channels**), and the results
+  of updates are notified too (`update.completed`, `update.failed`).
+- Modules and themes can state the PNLCS versions they work with
+  (`"requires": {"pnlcs": ">=1.3 <2"}`); an update outside the range waits.
+- A new permission, `manage_updates`, held by full administrators.
+
+#### Docker image 1.5 (published on Docker Hub separately)
+
+- The first start installs the newest signed release instead of cloning the
+  development branch; dependencies and assets come built.
+- `update.sh` and `AUTO_UPDATE=1` use the updater. Earlier images reset the
+  code to the development branch and discarded changes made inside the
+  container; recreate the container on 1.5 before updating.
+- A code volume that holds an installation is never wiped, with or without a
+  `.git` folder; an update cut off by a restart is rolled back on start.
+
+#### For theme and module authors
+
+- New built-in themes, modules and hook files take the `pnlcs-` prefix, so they
+  never land on a name you use.
+
 ## 2026-09-25 — A domain ordered with hosting is checked, priced and registered
 
 Reported in GitHub issue #48.

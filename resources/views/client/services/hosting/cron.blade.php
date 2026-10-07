@@ -162,7 +162,7 @@
                     <div class="cr-acts">
                         <form method="POST" action="{{ route('client.services.cron.run', $service) }}">@csrf<input type="hidden" name="cron_id" value="{{ $j['id'] }}"><button type="submit" class="cr-act" title="{{ __('client.hosting.cron.run_now') }}"><i class="ri-play-line"></i></button></form>
                         <form method="POST" action="{{ route('client.services.cron.toggle', $service) }}">@csrf<input type="hidden" name="cron_id" value="{{ $j['id'] }}"><button type="submit" class="cr-act" title="{{ $j['enabled'] ? __('client.hosting.cron.disable') : __('client.hosting.cron.enable') }}"><i class="{{ $j['enabled'] ? 'ri-pause-line' : 'ri-play-circle-line' }}"></i></button></form>
-                        <form method="POST" action="{{ route('client.services.cron.destroy', $service) }}" onsubmit="return confirm('{{ __('client.hosting.cron.delete_confirm') }}')">@csrf<input type="hidden" name="cron_id" value="{{ $j['id'] }}"><button type="submit" class="cr-act danger" title="{{ __('client.hosting.cron.delete') }}"><i class="ri-delete-bin-line"></i></button></form>
+                        <form method="POST" action="{{ route('client.services.cron.destroy', $service) }}" onsubmit="return pnConfirm(event, @js(__('client.hosting.cron.delete_confirm')))">@csrf<input type="hidden" name="cron_id" value="{{ $j['id'] }}"><button type="submit" class="cr-act danger" title="{{ __('client.hosting.cron.delete') }}"><i class="ri-delete-bin-line"></i></button></form>
                     </div>
                 </td>
             </tr>

@@ -27,7 +27,7 @@
             <td style="font-size:13px;">{{ $ban->reason ?: '&mdash;' }}</td>
             <td style="font-size:12px;">{{ $ban->created_at->format(date_fmt()) }}</td>
             <td style="text-align:right;">
-                <form method="POST" action="{{ route('admin.config.banned-emails.destroy', $ban) }}" style="display:inline;" onsubmit="return confirm('{{ __("admin.banned_emails.confirm_remove") }}')">
+                <form method="POST" action="{{ route('admin.config.banned-emails.destroy', $ban) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.banned_emails.confirm_remove')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.remove') }}</button>
                 </form>

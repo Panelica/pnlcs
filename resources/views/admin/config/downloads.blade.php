@@ -35,7 +35,7 @@
                     <button type="submit" class="btn btn-primary btn-xs">{{ __('common.actions.save') }}</button>
                 </form>
             </details>
-            <form method="POST" action="{{ route('admin.config.downloads.categories.destroy', $category) }}" onsubmit="return confirm('{{ __('admin.downloads.confirm_delete_category') }}')">
+            <form method="POST" action="{{ route('admin.config.downloads.categories.destroy', $category) }}" onsubmit="return pnConfirm(event, @js(__('admin.downloads.confirm_delete_category')))">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-danger btn-xs">{{ __('admin.downloads.delete_category') }}</button>
             </form>
@@ -56,7 +56,7 @@
             <td><span class="badge-{{ $dl->hidden ? 'draft' : 'active' }}">{{ $dl->hidden ? __('admin.downloads.draft') : __('admin.downloads.published') }}</span></td>
             <td style="text-align:right;white-space:nowrap;">
                 <a href="{{ route('admin.config.downloads.edit', $dl) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
-                <form method="POST" action="{{ route('admin.config.downloads.destroy', $dl) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.downloads.confirm_delete_download') }}')">
+                <form method="POST" action="{{ route('admin.config.downloads.destroy', $dl) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.downloads.confirm_delete_download')))">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
                 </form>

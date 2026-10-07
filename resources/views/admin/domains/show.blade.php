@@ -32,12 +32,12 @@
             @csrf
             <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.domains.sync') }}</button>
         </form>
-        <form method="POST" action="{{ route('admin.domains.renew', $domain) }}" style="display:flex;gap:4px;align-items:center;" onsubmit="return confirm('{{ __('admin.domains.confirm_renew') }}')">
+        <form method="POST" action="{{ route('admin.domains.renew', $domain) }}" style="display:flex;gap:4px;align-items:center;" onsubmit="return pnConfirm(event, @js(__('admin.domains.confirm_renew')))">
             @csrf
             <input type="number" name="years" value="1" min="1" max="10" class="form-control" style="width:70px;font-size:13px;padding:2px 6px;">
             <button type="submit" class="btn btn-success btn-sm">{{ __('admin.domains.renew') }}</button>
         </form>
-        <form method="POST" action="{{ route('admin.domains.lock', $domain) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.domains.confirm_lock') }}')">
+        <form method="POST" action="{{ route('admin.domains.lock', $domain) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.domains.confirm_lock')))">
             @csrf
             <button type="submit" class="btn btn-{{ $locked ? 'warning' : 'default' }} btn-sm">
                 {{ $locked ? __('admin.domains.unlock') : __('admin.domains.lock') }}
@@ -49,7 +49,7 @@
         </form>
         <a href="{{ route('admin.domains.epp', $domain) }}" class="btn btn-default btn-sm">{{ __('admin.domains.get_epp_code') }}</a>
         @if($canTogglePrivacy)
-        <form method="POST" action="{{ route('admin.domains.privacy', $domain) }}" style="display:inline;" onsubmit="return confirm('{{ __('admin.domains.confirm_privacy') }}')">
+        <form method="POST" action="{{ route('admin.domains.privacy', $domain) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.domains.confirm_privacy')))">
             @csrf
             <button type="submit" class="btn btn-default btn-sm">{{ $domain->id_protection ? __('admin.domains.privacy_disable') : __('admin.domains.privacy_enable') }}</button>
         </form>
@@ -121,7 +121,7 @@
     <summary class="card-header" style="cursor:pointer;"><strong>{{ __('admin.domains.move_title') }}</strong></summary>
     <div class="card-body">
         <p style="font-size:12px;color:#777;margin-top:0;">{{ __('admin.domains.move_hint') }}</p>
-        <form method="POST" action="{{ route('admin.domains.move', $domain) }}" style="display:flex;gap:6px;align-items:flex-start;" onsubmit="return confirm('{{ __('admin.domains.move_confirm') }}')">
+        <form method="POST" action="{{ route('admin.domains.move', $domain) }}" style="display:flex;gap:6px;align-items:flex-start;" onsubmit="return pnConfirm(event, @js(__('admin.domains.move_confirm')))">
             @csrf
             <div>
                 <input type="text" name="client" value="{{ old('client') }}" required class="form-control input-sm" style="width:260px;" aria-label="{{ __('admin.domains.move_client') }}" placeholder="{{ __('admin.domains.move_client') }}">

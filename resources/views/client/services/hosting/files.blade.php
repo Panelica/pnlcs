@@ -144,7 +144,7 @@
                             <input type="text" name="new_name" required maxlength="255" class="fm-inp" value="{{ $e['name'] }}"><button type="submit" class="fm-go">{{ __('client.hosting.files.rename') }}</button>
                         </form></div>
                     </details>
-                    <form method="POST" action="{{ route('client.services.files.delete', $service) }}" style="display:inline" onsubmit="return confirm('{{ __('client.hosting.files.delete_confirm') }}')">@csrf<input type="hidden" name="paths[]" value="{{ $e['path'] }}">
+                    <form method="POST" action="{{ route('client.services.files.delete', $service) }}" style="display:inline" onsubmit="return pnConfirm(event, @js(__('client.hosting.files.delete_confirm')))">@csrf<input type="hidden" name="paths[]" value="{{ $e['path'] }}">
                         <button type="submit" class="fm-act danger" title="{{ __('client.hosting.files.delete') }}"><i class="ri-delete-bin-line"></i></button>
                     </form>
                 </td>

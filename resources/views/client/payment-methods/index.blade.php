@@ -82,7 +82,7 @@
                             </form>
                             @endif
                             <form method="POST" action="{{ route('client.payment-methods.destroy', $method) }}"
-                                  onsubmit="return confirm('{{ __('client.payment_methods.remove_confirm') }}')">
+                                  onsubmit="return pnConfirm(event, @js(__('client.payment_methods.remove_confirm')))">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
