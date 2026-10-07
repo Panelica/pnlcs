@@ -7,7 +7,9 @@ use App\Services\Updates\FileSets\FileSet;
 use App\Services\Updates\FileSets\PackageFileSet;
 use App\Support\SqlDump;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -410,10 +412,10 @@ class UpdateRunner
     /** Classes the rollback path needs, loaded while the old files are still on disk. */
     private function preload(): void
     {
-        foreach ([SqlDump::class, DatabaseSnapshot::class, NotificationService::class, Process::class, \Symfony\Component\Process\Exception\ProcessFailedException::class, \Illuminate\Support\Facades\Schema::class] as $class) {
+        foreach ([SqlDump::class, DatabaseSnapshot::class, NotificationService::class, Process::class, ProcessFailedException::class, Schema::class] as $class) {
             class_exists($class);
         }
-        \Illuminate\Support\Facades\Schema::getConnection();
+        Schema::getConnection();
     }
 
     private function artisan(array $args, int $timeout = 120): void

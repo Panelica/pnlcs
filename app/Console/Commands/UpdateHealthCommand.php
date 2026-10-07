@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
+use Illuminate\Console\Command;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Foundation\Http\MaintenanceModeBypassCookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Console\Command;
 use Throwable;
 
 /**
