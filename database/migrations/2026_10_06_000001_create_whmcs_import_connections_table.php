@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Can run twice without harm (RELEASING.md).
+        if (Schema::hasTable('whmcs_import_connections')) {
+            return;
+        }
+
         Schema::create('whmcs_import_connections', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();

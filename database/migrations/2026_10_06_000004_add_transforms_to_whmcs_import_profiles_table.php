@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Can run twice without harm (RELEASING.md).
+        if (Schema::hasColumn('whmcs_import_profiles', 'transforms')) {
+            return;
+        }
+
         Schema::table('whmcs_import_profiles', function (Blueprint $table) {
             $table->json('transforms')->nullable()->after('constants');
         });

@@ -8,6 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Can run twice without harm (RELEASING.md).
+        if (Schema::hasColumn('whmcs_import_logs', 'skipped_details')) {
+            return;
+        }
+
         Schema::table('whmcs_import_logs', function (Blueprint $table) {
             $table->json('skipped_details')->nullable()->after('error_details');
         });
