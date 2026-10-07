@@ -5,6 +5,9 @@ namespace App\Services\WhmcsImport;
 use App\Models\Client;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
+use App\Models\User;
+use App\Services\PasswordResetSender;
+use Illuminate\Support\Str;
 
 /**
  * Runs the clients import. Read-only on the source, writes only to PNLCS, and
@@ -152,6 +155,7 @@ class ClientImporter
 
         $client = Client::create($columns);
         $this->storeCustomValues($client, $customValues);
+        $this->createLoginUser($client);
 
         return [$client, true, null];
     }
@@ -200,6 +204,46 @@ class ClientImporter
                 ['field_id' => $field->id, 'rel_id' => $client->id],
                 ['value' => (string) $value],
             );
+        }
+    }
+
+    /**
+     * The client area signs in as a User, not as a Client. Give an imported
+     * client a login (an existing one when the address already has one) and, for
+     * a fresh one, a reset link so the customer can choose their own password.
+     */
+    protected function createLoginUser(Client $client): void
+    {
+        $email = trim((string) $client->email);
+        if ($email === '') {
+            return;
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if ($user === null) {
+            $user = User::create([
+                'first_name' => $client->first_name,
+                'last_name' => $client->last_name,
+                'email' => $email,
+                // A placeholder hash: the reset link is the customer's way in.
+                'password' => Str::random(32),
+                'is_active' => true,
+            ]);
+
+            $client->users()->attach($user->id, ['owner' => true]);
+
+            try {
+                app(PasswordResetSender::class)->send($email);
+            } catch (\Throwable $e) {
+                // A reset mail that cannot be sent must not lose the import.
+            }
+
+            return;
+        }
+
+        if (! $client->users()->where('users.id', $user->id)->exists()) {
+            $client->users()->attach($user->id, ['owner' => false]);
         }
     }
 

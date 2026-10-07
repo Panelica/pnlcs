@@ -178,13 +178,13 @@
                         <div style="font-weight:600;margin-bottom:10px;color:#1a4d80;">{{ $heading }}</div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
                             <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:12px;">
-                                <div style="font-size:11px;text-transform:uppercase;color:#999;margin-bottom:6px;">WHMCS</div>
+                                <div style="font-size:11px;text-transform:uppercase;color:#999;margin-bottom:6px;">{{ __('whmcs_import.preview_source') }}</div>
                                 @foreach($mapping['columns'] as $src => $tgt)
                                     <div style="font-size:13px;line-height:1.6;"><strong>{{ $src }}:</strong> {{ $record['source'][$src] ?? '' }}</div>
                                 @endforeach
                             </div>
                             <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:12px;">
-                                <div style="font-size:11px;text-transform:uppercase;color:#0c4a6e;margin-bottom:6px;">PNLCS</div>
+                                <div style="font-size:11px;text-transform:uppercase;color:#0c4a6e;margin-bottom:6px;">{{ __('whmcs_import.preview_target') }}</div>
                                 @foreach($record['target'] as $field => $value)
                                     @php $tLabel = str_starts_with($field, 'custom_field:') ? substr($field, 13).' ('.__('whmcs_import.custom_field').')' : $field; @endphp
                                     <div style="font-size:13px;line-height:1.6;"><strong>{{ $tLabel }}:</strong> {{ $value }}</div>
