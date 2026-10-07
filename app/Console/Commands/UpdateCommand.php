@@ -35,12 +35,13 @@ class UpdateCommand extends Command
 
         $request = null;
         if ($this->option('from-request')) {
-            $request = $state->read('request.json');
+            // Claimed before it runs: a request that fails is not retried every
+            // minute, and the scheduler and the process the admin area started
+            // never both run it.
+            $request = $state->claim('request.json');
             if ($request === null) {
                 return self::SUCCESS;
             }
-            // Taken before it runs: a request that fails is not retried every minute.
-            $state->forget('request.json');
         }
 
         $runner->onOutput(fn (string $line) => $this->output->isVerbose() ? $this->line("  {$line}") : null);

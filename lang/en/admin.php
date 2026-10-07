@@ -3573,5 +3573,18 @@ return [
             'beta' => 'beta',
         ],
         'mode_git' => 'Installed from git',
+        'check_only' => 'Only check (changes nothing)',
+        'save_and_update' => 'Save and update',
+        'apply_hint' => 'The update checks everything first. If one of your changes clashes with the new version, nothing is changed and the clash is shown here for you to decide.',
+        'progress_hint' => 'This usually takes less than a minute. The page refreshes by itself.',
+        'details' => 'Details',
+        'done' => [
+            'updated' => 'PNLCS :version is installed. Everything you changed was kept.',
+            'refused' => 'The update did not start and nothing was changed. See below what needs a decision.',
+            'rolled_back' => 'The update to :version failed, and everything was put back as it was. The site runs the previous version.',
+            'failed' => 'The update to :version could not start. Nothing was changed.',
+            'rollback_failed' => 'Rolling back the update failed. The site is in maintenance: run php artisan pnlcs:update-rollback on the server.',
+            'error' => 'The check could not finish. Nothing was changed.',
+        ],
     ],
 ];

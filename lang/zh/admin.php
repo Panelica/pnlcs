@@ -3571,5 +3571,18 @@ return [
             'beta' => '测试',
         ],
         'mode_git' => '通过 git 安装',
+        'check_only' => '仅检查（不做任何更改）',
+        'save_and_update' => '保存并更新',
+        'apply_hint' => '更新会先检查所有内容。如果您的某项更改与新版本冲突，不会做任何更改，冲突会显示在此处供您决定。',
+        'progress_hint' => '这通常不到一分钟。页面会自动刷新。',
+        'details' => '详细信息',
+        'done' => [
+            'updated' => 'PNLCS :version 已安装。您所做的所有更改均已保留。',
+            'refused' => '更新未开始，未做任何更改。需要您决定的事项见下方。',
+            'rolled_back' => '更新到 :version 失败，一切已恢复原状。网站运行的是之前的版本。',
+            'failed' => '无法开始更新到 :version。未做任何更改。',
+            'rollback_failed' => '回滚更新失败。网站处于维护模式：请在服务器上运行 php artisan pnlcs:update-rollback。',
+            'error' => '检查未能完成。未做任何更改。',
+        ],
     ],
 ];

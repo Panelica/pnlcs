@@ -95,13 +95,28 @@
 @endif
 
 @if($status && ($active || in_array($status['state'] ?? '', ['updated', 'refused', 'rolled_back', 'failed', 'rollback_failed', 'error'], true)))
+@php
+    $finalState = $status['state'] ?? '';
+    $summary = in_array($finalState, ['updated', 'refused', 'rolled_back', 'failed', 'rollback_failed', 'error'], true) ? __('admin.updates.done.'.$finalState, ['version' => $status['version'] ?? '']) : null;
+    $tone = ['updated' => 'alert-success', 'refused' => 'alert-warning', 'rolled_back' => 'alert-warning', 'failed' => 'alert-danger', 'rollback_failed' => 'alert-danger', 'error' => 'alert-danger'][$finalState] ?? 'alert-info';
+@endphp
 <div class="card" style="margin-bottom:16px;" id="update-progress" data-status-url="{{ route('admin.config.updates.status') }}" data-active="{{ $active ? '1' : '0' }}">
     <div class="card-header"><strong>{{ __('admin.updates.progress') }}</strong></div>
     <div class="card-body">
-        <div style="font-weight:600;" data-status-state>{{ __('admin.updates.status.'.($status['state'] ?? 'queued')) }}</div>
-        <div class="upd-muted" style="font-size:13px;" data-status-step>{{ __('admin.updates.step.'.($status['step'] ?? 'download')) }}</div>
+        @if($active)
+        <div class="upd-row">
+            <i class="fas fa-circle-notch fa-spin" style="font-size:18px;color:var(--theme-primary,#1a4d80);"></i>
+            <div>
+                <div style="font-weight:600;" data-status-state>{{ __('admin.updates.status.'.($status['state'] ?? 'queued')) }}</div>
+                <div class="upd-muted" style="font-size:13px;" data-status-step>{{ __('admin.updates.step.'.($status['step'] ?? 'download')) }}</div>
+            </div>
+        </div>
+        <div class="upd-muted" style="font-size:12px;margin-top:8px;">{{ __('admin.updates.progress_hint') }}</div>
+        @else
+        <div class="alert {{ $tone }}" style="margin:0;">{{ $summary }}</div>
         @if(! empty($status['message']))
-        <div style="font-size:13px;margin-top:8px;overflow-wrap:anywhere;">{{ $status['message'] }}</div>
+        <details style="margin-top:8px;"><summary class="upd-muted" style="cursor:pointer;font-size:12px;">{{ __('admin.updates.details') }}</summary><div style="font-size:12px;margin-top:6px;overflow-wrap:anywhere;font-family:monospace;">{{ $status['message'] }}</div></details>
+        @endif
         @endif
         @if($late)
         <div class="alert alert-warning" style="margin:12px 0 0;">{{ __('admin.updates.scheduler_late', ['command' => 'php artisan pnlcs:update --from-request']) }}</div>
@@ -125,11 +140,20 @@
             <div style="white-space:pre-wrap;font-size:13px;margin-top:8px;max-height:360px;overflow:auto;">{{ $release['notes'] }}</div>
         </details>
         @endif
-        <form method="POST" action="{{ route('admin.config.updates.prepare') }}" class="upd-row">
-            @csrf
-            <button type="submit" class="btn btn-primary btn-sm" @disabled($active)>{{ __('admin.updates.prepare') }}</button>
-            <span class="upd-muted" style="font-size:13px;flex:1 1 240px;">{{ __('admin.updates.prepare_hint') }}</span>
-        </form>
+        <div class="upd-row">
+            <form method="POST" action="{{ route('admin.config.updates.apply') }}" class="upd-row" onsubmit="return confirm(@js(__('admin.updates.apply_confirm')))">
+                @csrf
+                @if($onlyMajor)
+                <label class="upd-choice"><input type="checkbox" name="allow_major" value="1" required> <span>{{ __('admin.updates.allow_major') }}</span></label>
+                @endif
+                <button type="submit" class="btn btn-success" @disabled($active)><i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.apply') }}</button>
+            </form>
+            <form method="POST" action="{{ route('admin.config.updates.prepare') }}">
+                @csrf
+                <button type="submit" class="btn btn-default" @disabled($active)>{{ __('admin.updates.check_only') }}</button>
+            </form>
+        </div>
+        <p class="upd-muted" style="font-size:13px;margin:10px 0 0;">{{ __('admin.updates.apply_hint') }}</p>
     </div>
 </div>
 @endif
@@ -215,17 +239,10 @@
                     @endif
                 </div>
             @endforeach
-            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.updates.save_choices') }}</button>
-        </form>
-        @endif
-
-        @if($report['ok'] || $onlyMajor)
-        <form method="POST" action="{{ route('admin.config.updates.apply') }}" class="upd-row" style="margin-top:16px;" onsubmit="return confirm(@js(__('admin.updates.apply_confirm')))">
-            @csrf
-            @if($onlyMajor)
-            <label class="upd-choice"><input type="checkbox" name="allow_major" value="1" required> <span>{{ __('admin.updates.allow_major') }}</span></label>
-            @endif
-            <button type="submit" class="btn btn-success btn-sm" @disabled($active)>{{ __('admin.updates.apply') }}</button>
+            <div class="upd-row">
+                <button type="submit" name="then" value="apply" class="btn btn-success" @disabled($active) onclick="return confirm(@js(__('admin.updates.apply_confirm')))"><i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.save_and_update') }}</button>
+                <button type="submit" class="btn btn-default">{{ __('admin.updates.save_choices') }}</button>
+            </div>
         </form>
         @endif
     </div>

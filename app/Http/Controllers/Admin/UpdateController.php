@@ -14,6 +14,8 @@ use App\Services\Updates\UpdateState;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Validation\Rule;
+use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\Process;
 
 /**
  * Setup -> Updates. Shows what is installed and what is published, and asks
@@ -163,6 +165,10 @@ class UpdateController extends Controller
 
         ActivityLog::log("Update {$version}: conflict decisions saved", auth('admin')->user()?->username);
 
+        if ($request->input('then') === 'apply') {
+            return $this->request('apply');
+        }
+
         return back()->with('success', __('admin.updates.choices_saved'));
     }
 
@@ -234,10 +240,34 @@ class UpdateController extends Controller
             'by' => $admin ? "{$admin->username} (admin area)" : 'admin area',
             'requested_at' => now()->toIso8601String(),
         ] + $extra);
-        $this->state->status('queued', $action === 'apply' ? 'maintenance' : 'download', ['version' => $version]);
+        $this->state->status('queued', 'download', ['version' => $version]);
 
         ActivityLog::log("Update {$version}: {$action} requested", $admin?->username);
+        $this->startNow();
 
-        return back()->with('success', __('admin.updates.queued'));
+        return back();
+    }
+
+    /**
+     * Starts the requested work at once, in its own process, instead of at the
+     * scheduler's next minute. Where a hosting account forbids starting
+     * processes, nothing is lost: the scheduler picks the request up.
+     */
+    private function startNow(): void
+    {
+        if (app()->runningUnitTests()) {
+            return;
+        }
+
+        try {
+            $php = (new PhpExecutableFinder)->find(false);
+            if ($php === false) {
+                return;
+            }
+            $command = sprintf('cd %s && nohup %s artisan pnlcs:update --from-request > /dev/null 2>&1 &', escapeshellarg(base_path()), escapeshellarg($php));
+            Process::fromShellCommandline($command, base_path(), null, null, 10)->run();
+        } catch (\Throwable) {
+            // The scheduler runs it within a minute.
+        }
     }
 }

@@ -3571,5 +3571,18 @@ return [
             'beta' => 'beta sürüm',
         ],
         'mode_git' => 'git ile kurulmuş',
+        'check_only' => 'Yalnız denetle (hiçbir şey değiştirmez)',
+        'save_and_update' => 'Kaydet ve güncelle',
+        'apply_hint' => 'Güncelleme önce her şeyi denetler. Değişikliklerinizden biri yeni sürümle çakışırsa hiçbir şey değiştirilmez ve çakışma karar vermeniz için burada gösterilir.',
+        'progress_hint' => 'Bu genellikle bir dakikadan kısa sürer. Sayfa kendiliğinden yenilenir.',
+        'details' => 'Ayrıntılar',
+        'done' => [
+            'updated' => 'PNLCS :version kuruldu. Değiştirdiğiniz her şey korundu.',
+            'refused' => 'Güncelleme başlamadı ve hiçbir şey değiştirilmedi. Karar vermeniz gerekenler aşağıda.',
+            'rolled_back' => ':version sürümüne güncelleme başarısız oldu ve her şey eski haline getirildi. Site önceki sürümle çalışıyor.',
+            'failed' => ':version sürümüne güncelleme başlatılamadı. Hiçbir şey değiştirilmedi.',
+            'rollback_failed' => 'Güncellemeyi geri alma başarısız oldu. Site bakım modunda: sunucuda php artisan pnlcs:update-rollback komutunu çalıştırın.',
+            'error' => 'Denetim tamamlanamadı. Hiçbir şey değiştirilmedi.',
+        ],
     ],
 ];

@@ -81,6 +81,28 @@ class UpdateState
         rename($tmp, $full);
     }
 
+    /**
+     * Takes a file for this process alone: of two processes that claim it at
+     * once (the request started right away and the scheduler's minute), only
+     * one gets it.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function claim(string $file): ?array
+    {
+        $full = $this->path($file);
+        $claimed = $full.'.'.getmypid().'.'.bin2hex(random_bytes(4));
+
+        if (! @rename($full, $claimed)) {
+            return null;
+        }
+
+        $data = json_decode((string) file_get_contents($claimed), true);
+        @unlink($claimed);
+
+        return is_array($data) ? $data : null;
+    }
+
     public function forget(string $file): void
     {
         @unlink($this->path($file));

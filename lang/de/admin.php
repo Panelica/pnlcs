@@ -3567,5 +3567,18 @@ return [
             'beta' => 'Beta-Kanal',
         ],
         'mode_git' => 'Mit git installiert',
+        'check_only' => 'Nur prüfen (ändert nichts)',
+        'save_and_update' => 'Speichern und aktualisieren',
+        'apply_hint' => 'Das Update prüft zuerst alles. Steht eine Ihrer Änderungen im Konflikt mit der neuen Version, wird nichts geändert und der Konflikt hier zur Entscheidung angezeigt.',
+        'progress_hint' => 'Das dauert meist weniger als eine Minute. Die Seite aktualisiert sich von selbst.',
+        'details' => 'Einzelheiten',
+        'done' => [
+            'updated' => 'PNLCS :version ist installiert. Alles, was Sie geändert haben, blieb erhalten.',
+            'refused' => 'Das Update hat nicht begonnen, es wurde nichts geändert. Unten steht, was eine Entscheidung braucht.',
+            'rolled_back' => 'Das Update auf :version ist fehlgeschlagen, und alles wurde wiederhergestellt. Die Website läuft mit der vorherigen Version.',
+            'failed' => 'Das Update auf :version konnte nicht starten. Es wurde nichts geändert.',
+            'rollback_failed' => 'Das Zurücksetzen ist fehlgeschlagen. Die Website ist im Wartungsmodus: Führen Sie auf dem Server php artisan pnlcs:update-rollback aus.',
+            'error' => 'Die Prüfung konnte nicht abgeschlossen werden. Es wurde nichts geändert.',
+        ],
     ],
 ];

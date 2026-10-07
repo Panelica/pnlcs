@@ -62,7 +62,7 @@ test('asking for an update only leaves a request for the scheduler', function ()
 
     $this->actingAs(updatesAdmin(), 'admin')
         ->post(route('admin.config.updates.apply'))
-        ->assertSessionHas('success', __('admin.updates.queued'));
+        ->assertRedirect();
 
     $request = $state->read('request.json');
     expect($request['action'])->toBe('apply')
@@ -191,4 +191,24 @@ test('an update that did not finish is shown even with the bar turned off', func
     $this->actingAs($admin, 'admin')->get(route('admin.dashboard'))
         ->assertOk()
         ->assertSee(__('admin.updates.bar_unfinished', ['version' => '99.0.0']));
+});
+
+test('saving the decisions can start the update straight away', function () {
+    $state = updatesState();
+    updatesConflict($state);
+
+    $this->actingAs(updatesAdmin(), 'admin')
+        ->post(route('admin.config.updates.resolve'), ['choice' => ['mine'], 'then' => 'apply'])
+        ->assertRedirect();
+
+    expect($state->resolutions('9.9.9'))->toBe(['public/robots.txt' => 'mine'])
+        ->and($state->read('request.json')['action'])->toBe('apply');
+});
+
+test('of two processes that claim a request, only one gets it', function () {
+    $state = updatesState();
+    $state->write('request.json', ['action' => 'apply', 'version' => '9.9.9']);
+
+    expect($state->claim('request.json'))->toBe(['action' => 'apply', 'version' => '9.9.9'])
+        ->and($state->claim('request.json'))->toBeNull();
 });

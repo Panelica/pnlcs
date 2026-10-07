@@ -3571,5 +3571,18 @@ return [
             'beta' => 'testowy',
         ],
         'mode_git' => 'Zainstalowany przez git',
+        'check_only' => 'Tylko sprawdź (nic nie zmienia)',
+        'save_and_update' => 'Zapisz i aktualizuj',
+        'apply_hint' => 'Aktualizacja najpierw wszystko sprawdza. Jeśli któraś z twoich zmian koliduje z nową wersją, nic nie jest zmieniane, a konflikt jest pokazywany tutaj do decyzji.',
+        'progress_hint' => 'Zwykle trwa to krócej niż minutę. Strona odświeży się sama.',
+        'details' => 'Szczegóły',
+        'done' => [
+            'updated' => 'Zainstalowano PNLCS :version. Wszystkie twoje zmiany zostały zachowane.',
+            'refused' => 'Aktualizacja nie rozpoczęła się i nic nie zostało zmienione. Poniżej znajdziesz, co wymaga decyzji.',
+            'rolled_back' => 'Aktualizacja do :version nie powiodła się i wszystko przywrócono. Strona działa na poprzedniej wersji.',
+            'failed' => 'Nie udało się rozpocząć aktualizacji do :version. Nic nie zostało zmienione.',
+            'rollback_failed' => 'Wycofanie aktualizacji nie powiodło się. Strona jest w trybie konserwacji: uruchom na serwerze php artisan pnlcs:update-rollback.',
+            'error' => 'Sprawdzanie nie mogło się zakończyć. Nic nie zostało zmienione.',
+        ],
     ],
 ];
