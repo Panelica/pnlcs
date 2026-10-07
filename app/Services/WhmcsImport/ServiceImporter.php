@@ -4,9 +4,11 @@ namespace App\Services\WhmcsImport;
 
 use App\Enums\ServiceStatus;
 use App\Models\Client;
+use App\Models\ClientNote;
 use App\Models\Product;
 use App\Models\Server;
 use App\Models\Service;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
 /**
@@ -34,6 +36,7 @@ class ServiceImporter
         array $mapping,
         string $importMode,
         ?string $matchKey,
+        array $productMap = [],
     ): array {
         $summary = [
             'total' => 0,
@@ -47,7 +50,9 @@ class ServiceImporter
 
         $statuses = array_map(fn (ServiceStatus $s) => $s->value, ServiceStatus::cases());
 
-        $rows(function (array $row) use ($mapping, $importMode, $matchKey, $statuses, &$summary) {
+        $linesByClient = [];
+
+        $rows(function (array $row) use ($mapping, $importMode, $matchKey, $productMap, $statuses, &$summary, &$linesByClient) {
             $summary['total']++;
 
             $target = $this->normalizeDates($this->engine->apply($row, $mapping));
@@ -63,13 +68,28 @@ class ServiceImporter
 
             $target['client_id'] = $client->id;
 
+            // Keep the source line so the operator can verify the import
+            // against the WHMCS database.
+            $linesByClient[$client->id][] = $this->sourceLine($row);
+
             $productName = trim((string) ($row['product_name'] ?? ''));
             if ($productName !== '') {
-                $product = Product::where('name', $productName)->first();
-                if ($product !== null) {
-                    $target['product_id'] = $product->id;
+                // The source product name is part of the service identity, so
+                // two unmapped products on the same domain stay distinct.
+                $target['whmcs_product_name'] = $productName;
+
+                // An explicit WHMCS → PNLCS product mapping wins; otherwise the
+                // importer falls back to matching the product by name.
+                $mappedId = $productMap[$productName] ?? null;
+                if ($mappedId !== null) {
+                    $target['product_id'] = (int) $mappedId;
                 } else {
-                    $summary['skipped_details'][] = $this->error($row, __('whmcs_import.validation.product_not_found', ['name' => $productName]));
+                    $product = Product::where('name', $productName)->first();
+                    if ($product !== null) {
+                        $target['product_id'] = $product->id;
+                    } else {
+                        $summary['skipped_details'][] = $this->error($row, __('whmcs_import.validation.product_not_found', ['name' => $productName]));
+                    }
                 }
             }
 
@@ -121,19 +141,75 @@ class ServiceImporter
             $wasCreated ? $summary['added']++ : $summary['updated']++;
         });
 
+        $this->writeSourceNotes($linesByClient);
+
         return $summary;
     }
 
     protected function serviceExists(?string $matchKey, array $target): bool
+    {
+        return $this->findExisting($matchKey, $target) !== null;
+    }
+
+    /**
+     * A service is identified by its match key and client. When the product is
+     * unmapped, the WHMCS product name joins the identity too, so two unmapped
+     * products on the same domain — e.g. hosting and e-mail — stay apart. A
+     * mapped product is stable, so it is matched by the key and client alone.
+     */
+    protected function findExisting(?string $matchKey, array $target): ?Service
+    {
+        $query = $this->scope($matchKey, $target);
+
+        return $query === null ? null : $query->where('client_id', $target['client_id'])->first();
+    }
+
+    /**
+     * The base query for a service's identity, without the client constraint:
+     * the match key, plus the WHMCS product name when the product is unmapped.
+     *
+     * @return Builder|null null when the match key cannot be resolved
+     */
+    protected function scope(?string $matchKey, array $target): ?Builder
+    {
+        if ($matchKey === null || $matchKey === '') {
+            return null;
+        }
+
+        $value = $target[$matchKey] ?? null;
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $query = Service::where($matchKey, $value);
+
+        if (($target['product_id'] ?? null) === null) {
+            $name = $target['whmcs_product_name'] ?? null;
+            if ($name === null || $name === '') {
+                $query->whereNull('whmcs_product_name');
+            } else {
+                $query->where('whmcs_product_name', $name);
+            }
+        }
+
+        return $query;
+    }
+
+    /** Whether the match key already belongs to a different client. */
+    protected function keyTakenByOtherClient(?string $matchKey, array $target): bool
     {
         if ($matchKey === null || $matchKey === '') {
             return false;
         }
 
         $value = $target[$matchKey] ?? null;
+        if ($value === null || $value === '') {
+            return false;
+        }
 
-        return $value !== null && $value !== ''
-            && Service::where($matchKey, $value)->exists();
+        return Service::where($matchKey, $value)
+            ->where('client_id', '!=', $target['client_id'])
+            ->exists();
     }
 
     /**
@@ -141,17 +217,12 @@ class ServiceImporter
      */
     protected function persist(array $target, ?string $matchKey, string $importMode): array
     {
-        $existing = null;
-        if ($matchKey !== null && $matchKey !== '') {
-            $value = $target[$matchKey] ?? null;
-            if ($value !== null && $value !== '') {
-                // Only the client's own record is ever matched. A record with
-                // the same key that belongs to someone else is never taken over.
-                $existing = Service::where($matchKey, $value)->where('client_id', $target['client_id'])->first();
-                if ($existing === null && Service::where($matchKey, $value)->exists()) {
-                    return [null, false, __('whmcs_import.log.skip_other_client')];
-                }
-            }
+        $existing = $this->findExisting($matchKey, $target);
+
+        // Only the client's own record is ever matched. A record with the same
+        // key that belongs to someone else is never taken over.
+        if ($existing === null && $this->keyTakenByOtherClient($matchKey, $target)) {
+            return [null, false, __('whmcs_import.log.skip_other_client')];
         }
 
         if ($existing !== null) {
@@ -161,7 +232,7 @@ class ServiceImporter
 
             // An update never changes who owns the service, nor the product
             // and server a live account is provisioned on.
-            $existing->update(Arr::except($target, ['client_id', 'product_id', 'server_id']));
+            $existing->update(Arr::except($target, ['client_id', 'product_id', 'whmcs_product_name', 'server_id']));
 
             return [$existing, false, null];
         }
@@ -173,6 +244,48 @@ class ServiceImporter
         $service = Service::create($target);
 
         return [$service, true, null];
+    }
+
+    /**
+     * A human-readable line describing a WHMCS source service, used in the
+     * client note that helps the operator verify the import.
+     */
+    protected function sourceLine(array $row): string
+    {
+        return sprintf(
+            'id=%s domain=%s product=%s status=%s cycle=%s amount=%s',
+            $row['id'] ?? '',
+            $row['domain'] ?? '',
+            $row['product_name'] ?? '',
+            $row['domainstatus'] ?? '',
+            $row['billingcycle'] ?? '',
+            $row['amount'] ?? '',
+        );
+    }
+
+    /**
+     * Write one note per client listing their WHMCS services, so the operator
+     * can verify the import against the source database. Re-running the same
+     * import does not duplicate an identical note.
+     *
+     * @param  array<int, list<string>>  $linesByClient
+     */
+    protected function writeSourceNotes(array $linesByClient): void
+    {
+        foreach ($linesByClient as $clientId => $lines) {
+            $note = __('whmcs_import.note_services_header')."\n".implode("\n", $lines);
+
+            if (ClientNote::where('client_id', $clientId)->where('note', $note)->exists()) {
+                continue;
+            }
+
+            ClientNote::create([
+                'client_id' => $clientId,
+                'admin' => 'WHMCS Import',
+                'note' => $note,
+                'sticky' => false,
+            ]);
+        }
     }
 
     /**

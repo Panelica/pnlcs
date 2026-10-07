@@ -10,7 +10,7 @@ class Service extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['client_id', 'order_id', 'product_id', 'server_id', 'domain', 'payment_method', 'qty', 'first_payment_amount', 'amount', 'billing_cycle', 'next_due_date', 'registration_date', 'status', 'username', 'password', 'disk_usage', 'disk_limit', 'bw_usage', 'bw_limit', 'suspension_date', 'suspension_reason', 'termination_date', 'notes', 'module_data', 'auto_renew', 'override_auto_suspend_date'];
+    protected $fillable = ['client_id', 'order_id', 'product_id', 'whmcs_product_name', 'server_id', 'domain', 'payment_method', 'qty', 'first_payment_amount', 'amount', 'billing_cycle', 'next_due_date', 'registration_date', 'status', 'username', 'password', 'disk_usage', 'disk_limit', 'bw_usage', 'bw_limit', 'suspension_date', 'suspension_reason', 'termination_date', 'notes', 'module_data', 'auto_renew', 'override_auto_suspend_date'];
 
     protected $hidden = ['password'];
 

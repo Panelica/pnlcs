@@ -101,9 +101,10 @@ class SchemaReader
     }
 
     /**
-     * The PNLCS service fields an import may write to. `client_id`, `product_id`
-     * and `server_id` are resolved by the importer (email/name lookups), and the
-     * WHMCS password is its own encrypted blob that PNLCS cannot reuse.
+     * The PNLCS service fields an import may write to. `client_id`, `product_id`,
+     * `whmcs_product_name` and `server_id` are resolved by the importer (email/
+     * name lookups), and the WHMCS password is its own encrypted blob that PNLCS
+     * cannot reuse.
      *
      * @return list<string>
      */
@@ -115,6 +116,7 @@ class SchemaReader
             'client_id',
             'order_id',
             'product_id',
+            'whmcs_product_name',
             'server_id',
             'password',
             'module_data',
