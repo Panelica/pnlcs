@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Produkten ":name" hittades inte i PNLCS.',
         'server_not_found' => 'Servern ":name" hittades inte i PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Anslut',
+        'map' => 'Mappa fälten',
+        'import' => 'Importera data',
+    ],
+    'badge_read_only' => 'Endast läsning',
+    'badge_preview' => 'Förhandsvisning före import',
+    'badge_logged' => 'Varje post loggas',
+    'section_server' => 'Serveradress',
+    'section_database' => 'Databas och inloggning',
+    'no_connections' => 'Inga sparade anslutningar ännu.',
+    'mapped_count' => ':count av :total fält mappade',
 ];

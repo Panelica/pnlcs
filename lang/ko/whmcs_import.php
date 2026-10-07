@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'PNLCS에서 상품 ":name"을(를) 찾을 수 없습니다.',
         'server_not_found' => 'PNLCS에서 서버 ":name"을(를) 찾을 수 없습니다.',
     ],
+
+    'steps' => [
+        'connect' => '연결',
+        'map' => '필드 매핑',
+        'import' => '데이터 가져오기',
+    ],
+    'badge_read_only' => '읽기 전용',
+    'badge_preview' => '가져오기 전 미리 보기',
+    'badge_logged' => '모든 레코드 기록',
+    'section_server' => '서버 주소',
+    'section_database' => '데이터베이스와 로그인',
+    'no_connections' => '아직 저장된 연결이 없습니다.',
+    'mapped_count' => ':total개 중 :count개 필드 매핑됨',
 ];

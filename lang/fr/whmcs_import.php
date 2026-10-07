@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Produit « :name » introuvable dans PNLCS.',
         'server_not_found' => 'Serveur « :name » introuvable dans PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Se connecter',
+        'map' => 'Associer les champs',
+        'import' => 'Importer les données',
+    ],
+    'badge_read_only' => 'Lecture seule',
+    'badge_preview' => 'Aperçu avant import',
+    'badge_logged' => 'Chaque enregistrement journalisé',
+    'section_server' => 'Adresse du serveur',
+    'section_database' => 'Base de données et identifiants',
+    'no_connections' => 'Aucune connexion enregistrée pour l\'instant.',
+    'mapped_count' => ':count champs associés sur :total',
 ];

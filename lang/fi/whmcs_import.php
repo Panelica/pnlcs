@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Tuotetta ":name" ei löytynyt PNLCS:stä.',
         'server_not_found' => 'Palvelinta ":name" ei löytynyt PNLCS:stä.',
     ],
+
+    'steps' => [
+        'connect' => 'Yhdistä',
+        'map' => 'Kohdista kentät',
+        'import' => 'Tuo tiedot',
+    ],
+    'badge_read_only' => 'Vain luku',
+    'badge_preview' => 'Esikatselu ennen tuontia',
+    'badge_logged' => 'Jokainen tietue kirjataan',
+    'section_server' => 'Palvelimen osoite',
+    'section_database' => 'Tietokanta ja kirjautuminen',
+    'no_connections' => 'Ei vielä tallennettuja yhteyksiä.',
+    'mapped_count' => ':count / :total kenttää kohdistettu',
 ];

@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'لم يُعثر على المنتج ":name" في PNLCS.',
         'server_not_found' => 'لم يُعثر على الخادم ":name" في PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'الاتصال',
+        'map' => 'مطابقة الحقول',
+        'import' => 'استيراد البيانات',
+    ],
+    'badge_read_only' => 'للقراءة فقط',
+    'badge_preview' => 'معاينة قبل الاستيراد',
+    'badge_logged' => 'كل سجل موثّق',
+    'section_server' => 'عنوان الخادم',
+    'section_database' => 'قاعدة البيانات وتسجيل الدخول',
+    'no_connections' => 'لا توجد اتصالات محفوظة بعد.',
+    'mapped_count' => 'تمت مطابقة :count من :total حقلًا',
 ];

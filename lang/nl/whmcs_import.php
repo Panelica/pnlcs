@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Product ":name" niet gevonden in PNLCS.',
         'server_not_found' => 'Server ":name" niet gevonden in PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Verbinden',
+        'map' => 'Velden koppelen',
+        'import' => 'Gegevens importeren',
+    ],
+    'badge_read_only' => 'Alleen lezen',
+    'badge_preview' => 'Voorbeeld vóór import',
+    'badge_logged' => 'Elk record gelogd',
+    'section_server' => 'Serveradres',
+    'section_database' => 'Database en inloggen',
+    'no_connections' => 'Nog geen opgeslagen verbindingen.',
+    'mapped_count' => ':count van :total velden gekoppeld',
 ];

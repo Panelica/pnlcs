@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Продукт «:name» не знайдено в PNLCS.',
         'server_not_found' => 'Сервер «:name» не знайдено в PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Підключення',
+        'map' => 'Зіставлення полів',
+        'import' => 'Імпорт даних',
+    ],
+    'badge_read_only' => 'Лише читання',
+    'badge_preview' => 'Попередній перегляд перед імпортом',
+    'badge_logged' => 'Кожен запис у журналі',
+    'section_server' => 'Адреса сервера',
+    'section_database' => 'База даних і вхід',
+    'no_connections' => 'Збережених підключень поки немає.',
+    'mapped_count' => 'Зіставлено полів: :count з :total',
 ];

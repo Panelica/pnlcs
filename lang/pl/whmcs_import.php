@@ -113,4 +113,17 @@ return [
         'product_not_found' => 'Produkt ":name" nie znaleziony w PNLCS.',
         'server_not_found' => 'Serwer ":name" nie znaleziony w PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Połącz',
+        'map' => 'Przypisz pola',
+        'import' => 'Importuj dane',
+    ],
+    'badge_read_only' => 'Tylko do odczytu',
+    'badge_preview' => 'Podgląd przed importem',
+    'badge_logged' => 'Każdy rekord w dzienniku',
+    'section_server' => 'Adres serwera',
+    'section_database' => 'Baza danych i logowanie',
+    'no_connections' => 'Brak zapisanych połączeń.',
+    'mapped_count' => 'Przypisano :count z :total pól',
 ];

@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'No s\'ha trobat el producte «:name» a PNLCS.',
         'server_not_found' => 'No s\'ha trobat el servidor «:name» a PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Connecta',
+        'map' => 'Mapa els camps',
+        'import' => 'Importa les dades',
+    ],
+    'badge_read_only' => 'Només lectura',
+    'badge_preview' => 'Previsualització abans d\'importar',
+    'badge_logged' => 'Cada registre queda anotat',
+    'section_server' => 'Adreça del servidor',
+    'section_database' => 'Base de dades i accés',
+    'no_connections' => 'Encara no hi ha connexions desades.',
+    'mapped_count' => ':count de :total camps mapats',
 ];

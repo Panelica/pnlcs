@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Prodotto ":name" non trovato in PNLCS.',
         'server_not_found' => 'Server ":name" non trovato in PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Connetti',
+        'map' => 'Mappa i campi',
+        'import' => 'Importa i dati',
+    ],
+    'badge_read_only' => 'Sola lettura',
+    'badge_preview' => 'Anteprima prima dell\'importazione',
+    'badge_logged' => 'Ogni record registrato',
+    'section_server' => 'Indirizzo del server',
+    'section_database' => 'Database e accesso',
+    'no_connections' => 'Ancora nessuna connessione salvata.',
+    'mapped_count' => ':count campi su :total mappati',
 ];

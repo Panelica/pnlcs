@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Proizvod ":name" nije pronađen u PNLCS-u.',
         'server_not_found' => 'Poslužitelj ":name" nije pronađen u PNLCS-u.',
     ],
+
+    'steps' => [
+        'connect' => 'Poveži',
+        'map' => 'Mapiraj polja',
+        'import' => 'Uvezi podatke',
+    ],
+    'badge_read_only' => 'Samo za čitanje',
+    'badge_preview' => 'Pregled prije uvoza',
+    'badge_logged' => 'Svaki zapis u zapisniku',
+    'section_server' => 'Adresa poslužitelja',
+    'section_database' => 'Baza podataka i prijava',
+    'no_connections' => 'Još nema spremljenih veza.',
+    'mapped_count' => 'Mapirano :count od :total polja',
 ];

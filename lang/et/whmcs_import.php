@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Toodet ":name" PNLCS-ist ei leitud.',
         'server_not_found' => 'Serverit ":name" PNLCS-ist ei leitud.',
     ],
+
+    'steps' => [
+        'connect' => 'Ühenda',
+        'map' => 'Vastenda väljad',
+        'import' => 'Impordi andmed',
+    ],
+    'badge_read_only' => 'Ainult lugemiseks',
+    'badge_preview' => 'Eelvaade enne importi',
+    'badge_logged' => 'Iga kirje logitakse',
+    'section_server' => 'Serveri aadress',
+    'section_database' => 'Andmebaas ja sisselogimine',
+    'no_connections' => 'Salvestatud ühendusi veel pole.',
+    'mapped_count' => 'Vastendatud :count / :total välja',
 ];

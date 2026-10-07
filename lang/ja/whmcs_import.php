@@ -105,4 +105,17 @@ return [
         'product_not_found' => '商品「:name」が PNLCS に見つかりません。',
         'server_not_found' => 'サーバー「:name」が PNLCS に見つかりません。',
     ],
+
+    'steps' => [
+        'connect' => '接続',
+        'map' => '項目の対応付け',
+        'import' => 'データのインポート',
+    ],
+    'badge_read_only' => '読み取り専用',
+    'badge_preview' => 'インポート前にプレビュー',
+    'badge_logged' => 'すべてのレコードを記録',
+    'section_server' => 'サーバーのアドレス',
+    'section_database' => 'データベースとログイン',
+    'no_connections' => '保存済みの接続はまだありません。',
+    'mapped_count' => ':total 項目中 :count 項目を対応付け済み',
 ];

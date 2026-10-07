@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'محصول «:name» در PNLCS پیدا نشد.',
         'server_not_found' => 'سرور «:name» در PNLCS پیدا نشد.',
     ],
+
+    'steps' => [
+        'connect' => 'اتصال',
+        'map' => 'نگاشت فیلدها',
+        'import' => 'درون‌ریزی داده‌ها',
+    ],
+    'badge_read_only' => 'فقط خواندنی',
+    'badge_preview' => 'پیش‌نمایش پیش از درون‌ریزی',
+    'badge_logged' => 'ثبت هر رکورد',
+    'section_server' => 'نشانی سرور',
+    'section_database' => 'پایگاه داده و ورود',
+    'no_connections' => 'هنوز اتصال ذخیره‌شده‌ای نیست.',
+    'mapped_count' => ':count از :total فیلد نگاشت شد',
 ];

@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Produsul „:name” nu a fost găsit în PNLCS.',
         'server_not_found' => 'Serverul „:name” nu a fost găsit în PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Conectare',
+        'map' => 'Maparea câmpurilor',
+        'import' => 'Importul datelor',
+    ],
+    'badge_read_only' => 'Doar citire',
+    'badge_preview' => 'Previzualizare înainte de import',
+    'badge_logged' => 'Fiecare înregistrare jurnalizată',
+    'section_server' => 'Adresa serverului',
+    'section_database' => 'Bază de date și autentificare',
+    'no_connections' => 'Încă nu există conexiuni salvate.',
+    'mapped_count' => ':count din :total câmpuri mapate',
 ];

@@ -113,4 +113,17 @@ return [
         'product_not_found' => 'Product ":name" not found in PNLCS.',
         'server_not_found' => 'Server ":name" not found in PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Connect',
+        'map' => 'Map the fields',
+        'import' => 'Import the data',
+    ],
+    'badge_read_only' => 'Read only',
+    'badge_preview' => 'Preview before importing',
+    'badge_logged' => 'Every record logged',
+    'section_server' => 'Server address',
+    'section_database' => 'Database and sign-in',
+    'no_connections' => 'No saved connections yet.',
+    'mapped_count' => ':count of :total fields mapped',
 ];

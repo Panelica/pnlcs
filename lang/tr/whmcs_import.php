@@ -113,4 +113,17 @@ return [
         'product_not_found' => 'PNLCS\'de ":name" ürünü bulunamadı.',
         'server_not_found' => 'PNLCS\'de ":name" sunucusu bulunamadı.',
     ],
+
+    'steps' => [
+        'connect' => 'Bağlan',
+        'map' => 'Alanları eşle',
+        'import' => 'Verileri aktar',
+    ],
+    'badge_read_only' => 'Salt okunur',
+    'badge_preview' => 'Önce önizleme',
+    'badge_logged' => 'Her kayıt günlükte',
+    'section_server' => 'Sunucu adresi',
+    'section_database' => 'Veritabanı ve giriş',
+    'no_connections' => 'Henüz kayıtlı bağlantı yok.',
+    'mapped_count' => ':total alanın :count tanesi eşlendi',
 ];

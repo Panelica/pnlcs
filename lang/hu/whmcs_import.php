@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'A(z) „:name” termék nem található a PNLCS-ben.',
         'server_not_found' => 'A(z) „:name” szerver nem található a PNLCS-ben.',
     ],
+
+    'steps' => [
+        'connect' => 'Csatlakozás',
+        'map' => 'Mezők megfeleltetése',
+        'import' => 'Adatok importálása',
+    ],
+    'badge_read_only' => 'Csak olvasás',
+    'badge_preview' => 'Előnézet importálás előtt',
+    'badge_logged' => 'Minden rekord naplózva',
+    'section_server' => 'Kiszolgáló címe',
+    'section_database' => 'Adatbázis és bejelentkezés',
+    'no_connections' => 'Még nincs mentett kapcsolat.',
+    'mapped_count' => ':total mezőből :count megfeleltetve',
 ];

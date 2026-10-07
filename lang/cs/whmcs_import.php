@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Produkt „:name“ nebyl v PNLCS nalezen.',
         'server_not_found' => 'Server „:name“ nebyl v PNLCS nalezen.',
     ],
+
+    'steps' => [
+        'connect' => 'Připojit',
+        'map' => 'Namapovat pole',
+        'import' => 'Importovat data',
+    ],
+    'badge_read_only' => 'Jen pro čtení',
+    'badge_preview' => 'Náhled před importem',
+    'badge_logged' => 'Každý záznam v protokolu',
+    'section_server' => 'Adresa serveru',
+    'section_database' => 'Databáze a přihlášení',
+    'no_connections' => 'Zatím žádná uložená připojení.',
+    'mapped_count' => 'Namapováno :count z :total polí',
 ];

@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Производот „:name“ не е пронајден во PNLCS.',
         'server_not_found' => 'Серверот „:name“ не е пронајден во PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Поврзи',
+        'map' => 'Мапирај полиња',
+        'import' => 'Увези податоци',
+    ],
+    'badge_read_only' => 'Само за читање',
+    'badge_preview' => 'Преглед пред увоз',
+    'badge_logged' => 'Секој запис во дневник',
+    'section_server' => 'Адреса на серверот',
+    'section_database' => 'База на податоци и најава',
+    'no_connections' => 'Сè уште нема зачувани врски.',
+    'mapped_count' => 'Мапирани :count од :total полиња',
 ];

@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'המוצר ":name" לא נמצא ב-PNLCS.',
         'server_not_found' => 'השרת ":name" לא נמצא ב-PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'התחברות',
+        'map' => 'מיפוי השדות',
+        'import' => 'ייבוא הנתונים',
+    ],
+    'badge_read_only' => 'קריאה בלבד',
+    'badge_preview' => 'תצוגה מקדימה לפני ייבוא',
+    'badge_logged' => 'כל רשומה מתועדת',
+    'section_server' => 'כתובת השרת',
+    'section_database' => 'מסד נתונים והתחברות',
+    'no_connections' => 'אין עדיין חיבורים שמורים.',
+    'mapped_count' => 'מופו :count מתוך :total שדות',
 ];

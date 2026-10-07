@@ -113,4 +113,17 @@ return [
         'product_not_found' => '在 PNLCS 中未找到产品 ":name"。',
         'server_not_found' => '在 PNLCS 中未找到服务器 ":name"。',
     ],
+
+    'steps' => [
+        'connect' => '连接',
+        'map' => '映射字段',
+        'import' => '导入数据',
+    ],
+    'badge_read_only' => '只读',
+    'badge_preview' => '导入前预览',
+    'badge_logged' => '每条记录均有日志',
+    'section_server' => '服务器地址',
+    'section_database' => '数据库与登录',
+    'no_connections' => '尚无已保存的连接。',
+    'mapped_count' => '已映射 :count / :total 个字段',
 ];

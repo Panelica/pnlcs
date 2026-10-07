@@ -105,4 +105,17 @@ return [
         'product_not_found' => '":name" məhsulu PNLCS-də tapılmadı.',
         'server_not_found' => '":name" serveri PNLCS-də tapılmadı.',
     ],
+
+    'steps' => [
+        'connect' => 'Qoşul',
+        'map' => 'Sahələri uyğunlaşdır',
+        'import' => 'Məlumatları idxal et',
+    ],
+    'badge_read_only' => 'Yalnız oxuma',
+    'badge_preview' => 'İdxaldan əvvəl önizləmə',
+    'badge_logged' => 'Hər qeyd jurnalda',
+    'section_server' => 'Server ünvanı',
+    'section_database' => 'Verilənlər bazası və giriş',
+    'no_connections' => 'Hələ saxlanılmış bağlantı yoxdur.',
+    'mapped_count' => ':total sahədən :count uyğunlaşdırılıb',
 ];

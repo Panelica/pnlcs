@@ -105,4 +105,17 @@ return [
         'product_not_found' => 'Produktet ":name" blev ikke fundet i PNLCS.',
         'server_not_found' => 'Serveren ":name" blev ikke fundet i PNLCS.',
     ],
+
+    'steps' => [
+        'connect' => 'Forbind',
+        'map' => 'Tilknyt felterne',
+        'import' => 'Importér data',
+    ],
+    'badge_read_only' => 'Kun læsning',
+    'badge_preview' => 'Forhåndsvisning før import',
+    'badge_logged' => 'Hver post logges',
+    'section_server' => 'Serveradresse',
+    'section_database' => 'Database og login',
+    'no_connections' => 'Ingen gemte forbindelser endnu.',
+    'mapped_count' => ':count af :total felter tilknyttet',
 ];
