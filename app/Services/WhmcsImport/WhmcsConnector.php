@@ -35,6 +35,8 @@ class WhmcsConnector
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
                 PDO::ATTR_STRINGIFY_FETCHES => false,
+                // A wrong host fails in seconds, not after the system's TCP timeout.
+                PDO::ATTR_TIMEOUT => 10,
             ]);
         } catch (\PDOException $e) {
             throw new RuntimeException($e->getMessage(), 0, $e);

@@ -446,9 +446,11 @@ class WhmcsImportController extends Controller
     protected function connectionRules(Request $request): array
     {
         return $request->validate([
-            'host' => 'required|string|max:255',
+            // Letters, digits, dots and dashes only: a ';' would add parameters
+            // to the connection string (unix_socket=, and so on).
+            'host' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9._-]+$/'],
             'port' => 'required|integer|min:1|max:65535',
-            'database' => 'required|string|max:255',
+            'database' => ['required', 'string', 'max:255', 'regex:/^[A-Za-z0-9_$-]+$/'],
             'username' => 'required|string|max:255',
             'password' => 'nullable|string',
             'prefix' => 'nullable|string|max:64',
