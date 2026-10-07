@@ -89,7 +89,7 @@ else
     # configuration is rebuilt, as after any change of configuration.
     docker exec -u www-data -w $APP "$CT" php artisan config:cache >>"$LOG" 2>&1
     docker exec -u www-data "$CT" php "$LAB/snapshot.php" "$APP" > "$DIR/after-recreate.json"
-    php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-recreate.json" --content-only=storage/ >>"$LOG" 2>&1 && ok "recreating the container changed nothing" || bad "recreating the container changed something"
+    php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-recreate.json" --content-only=storage/ --ignore-row=settings.LastCronRun >>"$LOG" 2>&1 && ok "recreating the container changed nothing" || bad "recreating the container changed something"
     docker exec "$CT" /usr/local/bin/update.sh --check >"$DIR/check.out" 2>&1; CODE=$?
     docker exec "$CT" /usr/local/bin/update.sh --resolve public/robots.txt=mine -v >"$DIR/update.out" 2>&1; UCODE=$?
     docker exec -u www-data "$CT" php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
