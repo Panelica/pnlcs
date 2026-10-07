@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Builds the update lab's releases from HEAD, signed with a lab key that is
 # generated here and never leaves .work/:
-#   A = 1.3.0  HEAD as it is
-#   B = 1.3.1  HEAD + synthetic-change.sh, in three variants:
+#   A = the version in VERSION, without -dev (main 1.4.0-dev -> 1.4.0), HEAD as it is
+#   B = A with the patch number raised (1.4.1): HEAD + synthetic-change.sh, in three variants:
 #              good, bad-migration (a migration that fails), bad-view (a page that fails)
 # and one release index per variant (index-<variant>.json, the GitHub
 # Releases shape, with file:// links) for PNLCS_UPDATE_INDEX_URL.
@@ -10,8 +10,12 @@ set -euo pipefail
 LAB="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(git -C "$LAB" rev-parse --show-toplevel)"
 WORK="$LAB/.work"
-A="${LAB_VERSION_A:-1.3.0}"; B="${LAB_VERSION_B:-1.3.1}"
+BASE="$(sed 's/-.*//' "$REPO/VERSION")"
+A="${LAB_VERSION_A:-$BASE}"; B="${LAB_VERSION_B:-$(echo "$A" | awk -F. '{print $1"."$2"."$3+1}')}"
 mkdir -p "$WORK/releases"
+# The scenarios read the two versions from here (a git clone of HEAD says
+# VERSION X.Y.Z-dev, so the lab releases must be X.Y.Z and above).
+printf 'LAB_A=%s\nLAB_B=%s\n' "$A" "$B" > "$WORK/versions.env"
 
 KEY="$WORK/lab-key.pem"
 [ -f "$KEY" ] || (umask 077; openssl ecparam -name prime256v1 -genkey -noout -out "$KEY")

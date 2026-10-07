@@ -24,10 +24,10 @@ create databases in (`LAB_DB_HOST`, `LAB_DB_PORT`, `LAB_DB_USER`,
 
 | Release | Content |
 |---|---|
-| A `1.3.0` | `HEAD` as it is |
-| B `1.3.1` good | `HEAD` + `synthetic-change.sh`: changes `public/robots.txt` where the operator also writes, the bottom of the admin layout (the operator edits its top), the footer view (the operator's theme overrides it); adds a file and a migration, removes a file |
-| B `1.3.1` bad-migration | the same, with a migration that creates a table and then fails |
-| B `1.3.1` bad-view | the same, with the admin login page throwing when rendered |
+| A (`VERSION` without `-dev`, e.g. `1.4.0`) | `HEAD` as it is |
+| B (A with the patch raised, e.g. `1.4.1`) good | `HEAD` + `synthetic-change.sh`: changes `public/robots.txt` where the operator also writes, the bottom of the admin layout (the operator edits its top), the footer view (the operator's theme overrides it); adds a file and a migration, removes a file |
+| B bad-migration | the same, with a migration that creates a table and then fails |
+| B bad-view | the same, with the admin login page throwing when rendered |
 
 ## The scenarios
 

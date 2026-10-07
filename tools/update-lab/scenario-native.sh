@@ -17,6 +17,7 @@
 set -uo pipefail
 VARIANT="${1:?variant}"; NAME="${2:-native-$VARIANT}"
 LAB="$(cd "$(dirname "$0")" && pwd)"; WORK="$LAB/.work"
+. "$WORK/versions.env"   # LAB_A, LAB_B (make-releases.sh)
 DIR="$WORK/$NAME"; APP="$DIR/pnlcs"; LOG="$DIR/scenario.log"
 DB_HOST="${LAB_DB_HOST:-127.0.0.1}"; DB_PORT="${LAB_DB_PORT:-33061}"; DB_USER="${LAB_DB_USER:-root}"; DB_PASS="${LAB_DB_PASS:-testroot}"
 DB="pnlcs_lab_$(echo "$NAME" | tr -c 'a-z0-9\n' '_')"
@@ -28,8 +29,8 @@ check() { local name="$1"; shift; if "$@" >>"$LOG" 2>&1; then ok "$name"; else b
 art()  { (cd "$APP" && php artisan "$@"); }
 
 rm -rf "$DIR"; mkdir -p "$DIR"; : > "$LOG"
-echo "== $NAME: install 1.3.0 from its package"
-tar -xzf "$WORK/releases/A/pnlcs-1.3.0.tar.gz" -C "$DIR"
+echo "== $NAME: install ${LAB_A} from its package"
+tar -xzf "$WORK/releases/A/pnlcs-${LAB_A}.tar.gz" -C "$DIR"
 php -r '$p=new PDO("mysql:host=$argv[1];port=$argv[2]",$argv[3],$argv[4]); $p->exec("DROP DATABASE IF EXISTS `$argv[5]`"); $p->exec("CREATE DATABASE `$argv[5]` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");' "$DB_HOST" "$DB_PORT" "$DB_USER" "$DB_PASS" "$DB"
 cp "$APP/.env.example" "$APP/.env"
 python3 - "$APP/.env" <<PY
@@ -50,7 +51,7 @@ art migrate --force >>"$LOG" 2>&1 || { echo "FAIL  install migrate"; exit 1; }
 art db:seed --force >>"$LOG" 2>&1
 date -Iseconds > "$APP/storage/installed.lock"
 art config:cache >>"$LOG" 2>&1; art route:cache >>"$LOG" 2>&1
-check "installed 1.3.0 is healthy" art pnlcs:update-health
+check "installed ${LAB_A} is healthy" art pnlcs:update-health
 
 echo "== customise"
 php "$LAB/customise.php" "$APP" >>"$LOG" 2>&1 || { echo "FAIL  customise"; exit 1; }
@@ -86,7 +87,7 @@ php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
 
 if [ "$VARIANT" = good ] || [ "$VARIANT" = operator-down ] || [ "$VARIANT" = notmp ]; then
     [ $CODE -eq 0 ] && ok "update succeeds" || bad "update exit $CODE"
-    [ "$(cat "$APP/VERSION")" = "1.3.1" ] && ok "VERSION is 1.3.1" || bad "VERSION is $(cat "$APP/VERSION")"
+    [ "$(cat "$APP/VERSION")" = "${LAB_B}" ] && ok "VERSION is ${LAB_B}" || bad "VERSION is $(cat "$APP/VERSION")"
     for f in .env themes/acme/theme.json themes/acme/views/sections/footer.blade.php themes/acme/assets/site.css modules/Servers/LabMine/pnlcs.json modules/Servers/LabMine/README.md app/Hooks/lab-operator.php storage/app/public/logo.png public/robots.txt; do
         php -r '$a=json_decode(file_get_contents($argv[1]),true)["files"];$b=json_decode(file_get_contents($argv[2]),true)["files"]; exit(($a[$argv[3]]??"x")===($b[$argv[3]]??"y")?0:1);' "$DIR/before.json" "$DIR/after.json" "$f" \
             && ok "kept byte for byte: $f" || bad "changed: $f"
@@ -117,7 +118,7 @@ else
         grep -q "rolled back" "$DIR/update.out" && ok "output says it was rolled back" || bad "no rollback message"
     fi
     check "files and database are exactly as before" php "$LAB/compare.php" "$DIR/before.json" "$DIR/after.json"
-    [ "$(cat "$APP/VERSION")" = "1.3.0" ] && ok "VERSION is still 1.3.0" || bad "VERSION is $(cat "$APP/VERSION")"
+    [ "$(cat "$APP/VERSION")" = "${LAB_A}" ] && ok "VERSION is still ${LAB_A}" || bad "VERSION is $(cat "$APP/VERSION")"
     check "site is up (no maintenance file)" test ! -f "$APP/storage/framework/down"
     check "health after rollback" art pnlcs:update-health
 fi

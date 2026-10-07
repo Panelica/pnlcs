@@ -11,6 +11,7 @@
 set -euo pipefail
 VARIANT="${1:?variant}"; HOST="${2:-$(hostname -I | awk '{print $1}')}"; MODE="${3:-package}"
 LAB=/opt/lab; APP=/var/www/pnlcs
+. "$LAB/versions.env"   # LAB_A, LAB_B
 FACTS="$(/opt/lab/vm-stack.sh | tail -1)"; case "$FACTS" in WEB_USER=*) eval "$FACTS" ;; *) echo "the stack could not be installed" >&2; exit 1 ;; esac
 as_web() { runuser -u "$WEB_USER" -- env HOME=/tmp/pnlcs-home COMPOSER_HOME=/tmp/pnlcs-home/composer "$@"; }
 DB="$(command -v mariadb || command -v mysql)"
@@ -31,7 +32,7 @@ if [ "$MODE" = git ]; then
   as_web npm ci --no-audit --no-fund --silent
   as_web npm run build --silent >/dev/null
 else
-  tar -xzf "$LAB/releases/A/pnlcs-1.3.0.tar.gz" -C /var/www
+  tar -xzf "$LAB/releases/A/pnlcs-${LAB_A}.tar.gz" -C /var/www
   chown -R "$WEB_USER:$WEB_USER" "$APP"
   cd "$APP"
 fi

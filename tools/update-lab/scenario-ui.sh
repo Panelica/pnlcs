@@ -8,6 +8,7 @@
 set -uo pipefail
 IMAGE="${1:-pnlcs-runtime:1.5-candidate}"; PORT="${2:-18091}"
 LAB="$(cd "$(dirname "$0")" && pwd)"; WORK="$LAB/.work"
+. "$WORK/versions.env"   # LAB_A, LAB_B (make-releases.sh)
 NAME="ui"; DIR="$WORK/$NAME"; LOG="$DIR/scenario.log"; CT="pnlcs-lab-ui"; VOL="pnlcs_lab_ui"; APP=/var/www/pnlcs
 DB_PORT="${LAB_DB_PORT:-33061}"; DB_USER="${LAB_DB_USER:-root}"; DB_PASS="${LAB_DB_PASS:-testroot}"; DB="pnlcs_lab_ui"
 URL="http://127.0.0.1:$PORT"; JAR="$DIR/cookies"
@@ -31,7 +32,7 @@ rm -rf "$DIR"; mkdir -p "$DIR"; : > "$LOG"
 php -r '$p=new PDO("mysql:host=127.0.0.1;port=$argv[1]",$argv[2],$argv[3]); $p->exec("DROP DATABASE IF EXISTS `$argv[4]`"); $p->exec("CREATE DATABASE `$argv[4]` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");' "$DB_PORT" "$DB_USER" "$DB_PASS" "$DB"
 docker run -d --name "$CT" --add-host=host.docker.internal:host-gateway -p "$PORT:80" -v "$LAB:$LAB:ro" -v "$VOL:$APP" \
     -e DB_HOST=host.docker.internal -e DB_PORT="$DB_PORT" -e DB_DATABASE="$DB" -e DB_USERNAME="$DB_USER" -e DB_PASSWORD="$DB_PASS" \
-    -e APP_URL="${LAB_APP_URL:-$URL}" -e PNLCS_VERSION=1.3.0 \
+    -e APP_URL="${LAB_APP_URL:-$URL}" -e PNLCS_VERSION=${LAB_A} \
     -e PNLCS_UPDATE_INDEX_URL="file://$WORK/index-good.json" -e PNLCS_UPDATE_PUBLIC_KEY="$(base64 -w0 "$WORK/lab-key.pub")" \
     "$IMAGE" >>"$LOG" 2>&1
 for i in $(seq 1 90); do docker logs "$CT" > "$DIR/.logs" 2>&1; grep -q "Handing off" "$DIR/.logs" && break; sleep 2; done
@@ -44,12 +45,12 @@ TOKEN="$(page /admin/login | token)"
 CODE="$(post /admin/login --data-urlencode username=admin --data-urlencode password=admin123)"
 [ "$CODE" = 302 ] && ok "admin signs in" || bad "sign-in answered $CODE"
 HTML="$(page /admin/config/updates)"; TOKEN="$(echo "$HTML" | token)"
-grep -q "Installed version" <<< "$HTML" && grep -q "1.3.0" <<< "$HTML" && ok "Setup -> Updates shows 1.3.0" || bad "updates page"
+grep -q "Installed version" <<< "$HTML" && grep -q "${LAB_A}" <<< "$HTML" && ok "Setup -> Updates shows ${LAB_A}" || bad "updates page"
 grep -q 'admin/config/updates"' <<< "$HTML" && ok "the Setup menu links to Updates" || bad "no menu link"
 
 [ "$(post /admin/config/updates/check)" = 302 ] && ok "check for updates" || bad "check"
 HTML="$(page /admin/config/updates)"; TOKEN="$(echo "$HTML" | token)"
-grep -q "PNLCS 1.3.1 is available" <<< "$HTML" && ok "1.3.1 is offered, with its notes" || bad "1.3.1 not offered"
+grep -q "PNLCS ${LAB_B} is available" <<< "$HTML" && ok "${LAB_B} is offered, with its notes" || bad "${LAB_B} not offered"
 
 [ "$(post /admin/config/updates/prepare)" = 302 ] && ok "check this update (queued for the scheduler)" || bad "prepare"
 page /admin/config/updates > "$DIR/queued.html"; grep -Eq "Waiting to start|Preparing" "$DIR/queued.html" && ok "the page shows the request waiting or running" || bad "no queued state"
@@ -61,8 +62,8 @@ echo "$HTML" > "$DIR/report.html"; grep -q "acme replaces views" <<< "$HTML" && 
 # "Update now" with the conflict still open: refused, nothing changed.
 [ "$(post /admin/config/updates/apply)" = 302 ] || bad "apply with an open conflict"
 wait_state "refused|updated|rolled_back|error" || bad "the refused update did not finish"
-docker exec "$CT" grep -q '"state": "refused"' $APP/storage/app/pnlcs-update/status.json && [ "$(docker exec "$CT" cat $APP/VERSION)" = 1.3.0 ] \
-    && ok "Update now with an open conflict is refused; still 1.3.0" || bad "an update ran over an open conflict"
+docker exec "$CT" grep -q '"state": "refused"' $APP/storage/app/pnlcs-update/status.json && [ "$(docker exec "$CT" cat $APP/VERSION)" = ${LAB_A} ] \
+    && ok "Update now with an open conflict is refused; still ${LAB_A}" || bad "an update ran over an open conflict"
 grep -q "The update did not start and nothing was changed" <<< "$(page /admin/config/updates)" && ok "the page says why, in words" || bad "no refusal summary"
 HTML="$(page /admin/config/updates)"; TOKEN="$(token <<< "$HTML")"
 grep -q "<<<<<<< your version" <<< "$(curl -s -b "$JAR" "$URL/admin/config/updates/merged?path=public/robots.txt")" && ok "the merged file downloads, with conflict markers" || bad "merged download"
@@ -84,7 +85,7 @@ docker exec "$CT" cat $APP/storage/app/pnlcs-update/status.json >>"$LOG"
 STATUS="$(curl -s -b "$JAR" "$URL/admin/config/updates/status")"
 grep -q '"state":"updated"' <<< "$STATUS" && ok "status endpoint: updated" || bad "status: $STATUS"
 HTML="$(page /admin/config/updates)"
-grep -q 'data-installed>1.3.1<' <<< "$HTML" && ok "the page now shows 1.3.1 installed" || bad "installed version on page"
+grep -q "data-installed>${LAB_B}<" <<< "$HTML" && ok "the page now shows ${LAB_B} installed" || bad "installed version on page"
 grep -q ">Updated<" <<< "$HTML" && ok "the history lists the update" || bad "history"
 [ "$(docker exec "$CT" sha256sum $APP/public/robots.txt | cut -d' ' -f1)" = "$(printf '%s' "$EDITED" | sha256sum | cut -d' ' -f1)" ] && ok "robots.txt is exactly the file edited on the page" || bad "robots.txt"
 

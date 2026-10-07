@@ -16,6 +16,7 @@
 #    updated from the admin area, the conflict edited on the page
 set -uo pipefail
 LAB="$(cd "$(dirname "$0")" && pwd)"; WORK="$LAB/.work"; REPO="$(git -C "$LAB" rev-parse --show-toplevel)"
+. "$WORK/versions.env"   # LAB_A, LAB_B (make-releases.sh)
 IP="${LAB_VM_IP:?LAB_VM_IP}"; PASSWD="${LAB_VM_PASS:?LAB_VM_PASS}"
 DIR="$WORK/vm-$IP"; mkdir -p "$DIR"; APP=/var/www/pnlcs
 PASS=0; FAIL=0
@@ -30,12 +31,12 @@ vm "mkdir -p /opt/lab/releases && chmod 755 /opt/lab"
 for d in A B-good B-bad-migration; do put -r "$WORK/releases/$d" "root@$IP:/opt/lab/releases/"; done
 for v in good bad-migration; do sed "s#file://$WORK/#file:///opt/lab/#g" "$WORK/index-$v.json" > "$DIR/index-$v.json"; done
 # The git installation is a clone of the commit release A was built from.
-A_COMMIT="$(php -r 'echo json_decode(file_get_contents($argv[1]), true)["commit"] ?? "";' "$WORK/releases/A/pnlcs-1.3.0/.pnlcs-release.json" 2>/dev/null)"
-[ -n "$A_COMMIT" ] || A_COMMIT="$(tar -xzOf "$WORK/releases/A/pnlcs-1.3.0.tar.gz" pnlcs/.pnlcs-release.json | php -r 'echo json_decode(stream_get_contents(STDIN), true)["commit"] ?? "";')"
+A_COMMIT="$(php -r 'echo json_decode(file_get_contents($argv[1]), true)["commit"] ?? "";' "$WORK/releases/A/pnlcs-${LAB_A}/.pnlcs-release.json" 2>/dev/null)"
+[ -n "$A_COMMIT" ] || A_COMMIT="$(tar -xzOf "$WORK/releases/A/pnlcs-${LAB_A}.tar.gz" pnlcs/.pnlcs-release.json | php -r 'echo json_decode(stream_get_contents(STDIN), true)["commit"] ?? "";')"
 rm -f "$DIR/repo.bundle"
 git -C "$REPO" branch -f lab-main "$A_COMMIT" >/dev/null && git -C "$REPO" bundle create -q "$DIR/repo.bundle" lab-main; git -C "$REPO" branch -D lab-main >/dev/null 2>&1
 [ -s "$DIR/repo.bundle" ] || { echo "no git bundle of $A_COMMIT"; exit 1; }
-put "$DIR/index-good.json" "$DIR/index-bad-migration.json" "$DIR/repo.bundle" "$WORK/lab-key.pub" "$LAB/customise.php" "$LAB/snapshot.php" "$LAB/compare.php" "$LAB/vm-install.sh" "$LAB/vm-stack.sh" "root@$IP:/opt/lab/"
+put "$DIR/index-good.json" "$DIR/index-bad-migration.json" "$DIR/repo.bundle" "$WORK/lab-key.pub" "$LAB/customise.php" "$LAB/snapshot.php" "$LAB/compare.php" "$LAB/vm-install.sh" "$LAB/vm-stack.sh" "$WORK/versions.env" "root@$IP:/opt/lab/"
 vm "chmod -R a+rX /opt/lab && chmod +x /opt/lab/vm-install.sh /opt/lab/vm-stack.sh"
 
 echo "== $IP: the stack (docs/install/native.md step 0)"
@@ -60,17 +61,17 @@ refresh() { T="$(curl -s --max-time 30 -b "$JAR" -c "$JAR" "http://$IP/admin/con
 signin() { rm -f "$JAR"; T="$(curl -s --max-time 30 -b "$JAR" -c "$JAR" "http://$IP/admin/login" | tok)"; [ "$(post /admin/login --data-urlencode username=admin --data-urlencode password=admin123)" = 302 ]; }
 
 echo "== 1. command line"
-vm /opt/lab/vm-install.sh good "$IP" package > "$DIR/install1.log" 2>&1 && ok "1.3.0 installed from its package" || bad "install (see $DIR/install1.log)"
+vm /opt/lab/vm-install.sh good "$IP" package > "$DIR/install1.log" 2>&1 && ok "${LAB_A} installed from its package" || bad "install (see $DIR/install1.log)"
 [ "$(http /admin/login)" = 200 ] && ok "nginx + PHP-FPM serve the admin login" || bad "admin login over HTTP"
 customise; snap "$DIR/before1.json"
 www php artisan pnlcs:update --check > "$DIR/check1.out" 2>&1; [ $? -eq 2 ] && ok "check refuses on the conflict" || bad "check exit ($(tail -2 "$DIR/check1.out"))"
 grep -q "conflict  public/robots.txt" "$DIR/check1.out" && ok "the conflict is robots.txt" || bad "robots conflict"
 www php artisan pnlcs:update --yes --resolve public/robots.txt=mine > "$DIR/update1.out" 2>&1; [ $? -eq 0 ] && ok "update succeeds" || bad "update exit ($(tail -3 "$DIR/update1.out"))"
-[ "$(vm cat $APP/VERSION)" = 1.3.1 ] && ok "VERSION 1.3.1" || bad "VERSION"
+[ "$(vm cat $APP/VERSION)" = ${LAB_B} ] && ok "VERSION ${LAB_B}" || bad "VERSION"
 snap "$DIR/after1.json"
 for f in "${KEPT[@]}" public/robots.txt; do same "$DIR/before1.json" "$DIR/after1.json" "$f" && ok "kept: $f" || bad "changed: $f"; done
 [ "$(vm stat -c %U $APP/app/Support/LabProbe.php)" = "$WEB_USER" ] && ok "new files belong to $WEB_USER" || bad "file owner"
-[ "$(http /admin/login)" = 200 ] && [ "$(http /)" = 200 ] && ok "nginx + PHP-FPM serve 1.3.1" || bad "HTTP after update"
+[ "$(http /admin/login)" = 200 ] && [ "$(http /)" = 200 ] && ok "nginx + PHP-FPM serve ${LAB_B}" || bad "HTTP after update"
 
 echo "== 2. admin area, a release whose migration fails"
 vm /opt/lab/vm-install.sh bad-migration "$IP" package > "$DIR/install2.log" 2>&1 || bad "reinstall"
@@ -86,7 +87,7 @@ wait_state "rolled_back|updated|refused|failed|rollback_failed|error"
 grep -q '"state": "rolled_back"' <<< "$S" && ok "the migration failed and it was rolled back by itself" || bad "state: $S"
 snap "$DIR/after2.json"
 php "$LAB/compare.php" "$DIR/before2.json" "$DIR/after2.json" "${IGNORE[@]}" > "$DIR/compare2.out" 2>&1 && ok "every file and every table as before" || { bad "differs"; head "$DIR/compare2.out"; }
-[ "$(vm cat $APP/VERSION)" = 1.3.0 ] && [ "$(http /admin/login)" = 200 ] && ok "1.3.0, site up" || bad "after rollback"
+[ "$(vm cat $APP/VERSION)" = ${LAB_A} ] && [ "$(http /admin/login)" = 200 ] && ok "${LAB_A}, site up" || bad "after rollback"
 
 echo "== 3. crash during the migrations, nobody acts"
 vm /opt/lab/vm-install.sh good "$IP" package > "$DIR/install3.log" 2>&1 || bad "reinstall"
@@ -116,13 +117,13 @@ EDITED=$'User-agent: *\nDisallow: /operator-private\n# merged by hand on the pag
 refresh; [ "$(post /admin/config/updates/resolve --data-urlencode 'choice[0]=edited' --data-urlencode "resolved_text[0]=$EDITED" --data-urlencode then=apply)" = 302 ] && ok "Save and update" || bad "save and update"
 wait_state "updated|rolled_back|refused|failed|rollback_failed|error"
 grep -q '"state": "updated"' <<< "$S" && ok "updated" || bad "state: $S"
-[ "$(vm cat $APP/VERSION)" = 1.3.1 ] && ok "VERSION 1.3.1" || bad "VERSION"
+[ "$(vm cat $APP/VERSION)" = ${LAB_B} ] && ok "VERSION ${LAB_B}" || bad "VERSION"
 [ "$(vm sha256sum $APP/public/robots.txt | cut -d' ' -f1)" = "$(printf '%s' "$EDITED" | sha256sum | cut -d' ' -f1)" ] && ok "robots.txt is exactly the text edited on the page" || bad "robots.txt"
 vm test -d $APP/.git && ok ".git left in place" || bad ".git"
 vm test -f $APP/tests/Pest.php && ok "tests/ left in place (a release leaves it out, so an update never removes it)" || bad "tests/ removed"
 snap "$DIR/after4.json"
 for f in "${KEPT[@]}"; do same "$DIR/before4.json" "$DIR/after4.json" "$f" && ok "kept: $f" || bad "changed: $f"; done
-[ "$(http /admin/login)" = 200 ] && [ "$(http /)" = 200 ] && ok "site serves 1.3.1" || bad "HTTP after update"
+[ "$(http /admin/login)" = 200 ] && [ "$(http /)" = 200 ] && ok "site serves ${LAB_B}" || bad "HTTP after update"
 
 echo "== vm $IP ($OS): $PASS passed, $FAIL failed"
 [ $FAIL -eq 0 ]

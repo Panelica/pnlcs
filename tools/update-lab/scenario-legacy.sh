@@ -11,9 +11,10 @@
 set -uo pipefail
 MODE="${1:?native|docker}"; NEW_IMAGE="${2:-pnlcs-runtime:1.5-candidate}"; OLD_IMAGE="${LAB_OLD_IMAGE:-panelica/pnlcs-runtime:1.4}"
 LAB="$(cd "$(dirname "$0")" && pwd)"; WORK="$LAB/.work"; REPO="$(git -C "$LAB" rev-parse --show-toplevel)"
+. "$WORK/versions.env"   # LAB_A, LAB_B (make-releases.sh)
 NAME="legacy-$MODE"; DIR="$WORK/$NAME"; LOG="$DIR/scenario.log"; CT="pnlcs-lab-legacy"; VOL="pnlcs_lab_legacy"
 DB_PORT="${LAB_DB_PORT:-33061}"; DB_USER="${LAB_DB_USER:-root}"; DB_PASS="${LAB_DB_PASS:-testroot}"; DB="pnlcs_lab_legacy_$MODE"
-A_COMMIT="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["commit"])' "$WORK/releases/A/pnlcs-1.3.0.release.json")"
+A_COMMIT="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["commit"])' "$WORK/releases/A/pnlcs-${LAB_A}.release.json")"
 PASS=0; FAIL=0
 ok()   { echo "PASS  $*"; PASS=$((PASS+1)); }
 bad()  { echo "FAIL  $*"; FAIL=$((FAIL+1)); }
@@ -30,7 +31,7 @@ if [ "$MODE" = native ]; then
     git clone -q --branch main "$DIR/origin.git" "$APP"
     # composer install + npm run build, as the old guide had the operator do
     # (taken from release A, built from the same lock files, to save minutes).
-    tar -xzf "$WORK/releases/A/pnlcs-1.3.0.tar.gz" -C "$DIR" pnlcs/vendor pnlcs/public/build 2>/dev/null || { mkdir -p "$DIR/x"; tar -xzf "$WORK/releases/A/pnlcs-1.3.0.tar.gz" -C "$DIR/x"; cp -a "$DIR/x/pnlcs/vendor" "$DIR/x/pnlcs/public/build" -t "$APP/" ; }
+    tar -xzf "$WORK/releases/A/pnlcs-${LAB_A}.tar.gz" -C "$DIR" pnlcs/vendor pnlcs/public/build 2>/dev/null || { mkdir -p "$DIR/x"; tar -xzf "$WORK/releases/A/pnlcs-${LAB_A}.tar.gz" -C "$DIR/x"; cp -a "$DIR/x/pnlcs/vendor" "$DIR/x/pnlcs/public/build" -t "$APP/" ; }
     [ -d "$APP/vendor" ] || cp -a "$DIR/x/pnlcs/vendor" "$APP/vendor"
     cp "$APP/.env.example" "$APP/.env"
     python3 - "$APP/.env" "$DB" "$DB_PORT" "$DB_USER" "$DB_PASS" "$WORK" "$KEY_B64" <<'PY'
@@ -102,7 +103,7 @@ grep -q "set up with git" "$DIR/check.out" && ok "check explains this is a git i
 grep -q "conflict  public/robots.txt" "$DIR/check.out" && ok "robots.txt conflict found against the cloned commit" || bad "robots conflict"
 grep -q "merged    resources/views/admin/layouts/app.blade.php" "$DIR/check.out" && ok "admin layout edit merges" || bad "layout merge"
 [ $UCODE -eq 0 ] && ok "update succeeds" || { bad "update exit $UCODE"; tail -20 "$DIR/update.out"; }
-[ "$VERSION_NOW" = "1.3.1" ] && ok "VERSION is 1.3.1" || bad "VERSION is $VERSION_NOW"
+[ "$VERSION_NOW" = "${LAB_B}" ] && ok "VERSION is ${LAB_B}" || bad "VERSION is $VERSION_NOW"
 [ "$HAS_MANIFEST" = 1 ] && ok "now a release installation (manifest at the root)" || bad "no manifest"
 [ "$GIT_KEPT" = 1 ] && ok ".git is left where it was" || bad ".git removed"
 [ "$TESTS_KEPT" = 1 ] && ok "tests/ is left where it was (a release leaves it out, an update never removes it)" || bad "tests/ removed"
