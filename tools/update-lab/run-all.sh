@@ -20,6 +20,10 @@ for v in good bad-migration bad-view crash; do run "native-$v" "$LAB/scenario-na
 for v in good bad-migration bad-view crash; do run "docker-$v" "$LAB/scenario-docker.sh" "$v" "$IMAGE" || FAILED=1; done
 run legacy-native "$LAB/scenario-legacy.sh" native || FAILED=1
 run legacy-docker "$LAB/scenario-legacy.sh" docker "$IMAGE" || FAILED=1
+run ui "$LAB/scenario-ui.sh" "$IMAGE" || FAILED=1
+# A real server (nginx + PHP-FPM + MariaDB + cron), when one is given:
+# LAB_VM_IP / LAB_VM_PASS of a fresh Debian or Ubuntu test machine.
+if [ -n "${LAB_VM_IP:-}" ]; then run vm "$LAB/scenario-vm.sh" || FAILED=1; else RESULTS+=("vm                       skipped (no LAB_VM_IP)"); fi
 
 printf '%s\n' "${RESULTS[@]}"
 [ $FAILED = 0 ] && echo "ALL GREEN" || echo "NOT GREEN: see $LAB/.work/<scenario>.out"

@@ -47,3 +47,11 @@ every table (`CHECKSUM TABLE`); `compare.php` compares two fingerprints.
 | `scenario-docker.sh ...` | the same four, inside the 1.5 image: the first start installs the signed release (no git clone), `update.sh` updates, nginx and PHP-FPM serve the new version; after a crash, restarting the container rolls back by itself |
 | `scenario-legacy.sh native` | an installation cloned with git before releases existed is compared with its commit, its changes kept, and becomes a release installation (`.git` left alone) |
 | `scenario-legacy.sh docker` | a container set up by image 1.4 (a clone of main), recreated on image 1.5 with the same volume: nothing is wiped or re-cloned, and the update keeps every change |
+| `scenario-ui.sh` | the admin-area path in the 1.5 image, driven over HTTP as a browser would: Setup -> Updates, check (run by the container's scheduler), the conflict shown, the merged file downloaded, "keep mine", update, the new version and the history shown |
+| `scenario-vm.sh` | a real server set up by `docs/install/native.md` (nginx, PHP-FPM, MariaDB, cron; `LAB_VM_IP`, `LAB_VM_PASS`): the command-line update; a failing release requested from Setup -> Updates and run by cron, rolled back; a crash, with the site in maintenance until `pnlcs:update-rollback` |
+
+A difference the running application makes by itself while a scenario waits
+for the scheduler - the activity log, the scheduler's own run log and its
+`LastCronRun` heartbeat - is left out of the comparison by name
+(`compare.php --ignore-table`, `--ignore-row`); everything else must match.
+

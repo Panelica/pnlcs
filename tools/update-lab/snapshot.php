@@ -44,4 +44,11 @@ foreach ($tables as $table) {
     $checksums[$table] = $pdo->query('CHECKSUM TABLE `'.$table.'`')->fetch(PDO::FETCH_NUM)[1];
 }
 
-echo json_encode(['files' => $files, 'tables' => $checksums], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+// Row by row for the settings table, so a difference names the setting.
+$rows = [];
+foreach ($pdo->query('SELECT `setting`, `value` FROM `settings`') as $row) {
+    $rows['settings.'.$row['setting']] = sha1((string) $row['value']);
+}
+ksort($rows);
+
+echo json_encode(['files' => $files, 'tables' => $checksums, 'rows' => $rows], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
