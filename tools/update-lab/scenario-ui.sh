@@ -78,7 +78,7 @@ docker exec "$CT" cat $APP/storage/app/pnlcs-update/status.json >>"$LOG"
 STATUS="$(curl -s -b "$JAR" "$URL/admin/config/updates/status")"
 grep -q '"state":"updated"' <<< "$STATUS" && ok "status endpoint: updated" || bad "status: $STATUS"
 HTML="$(page /admin/config/updates)"
-grep -q '1.3.1</div>' <<< "$HTML" && ok "the page now shows 1.3.1 installed" || bad "installed version on page"
+grep -q 'data-installed>1.3.1<' <<< "$HTML" && ok "the page now shows 1.3.1 installed" || bad "installed version on page"
 grep -q ">Updated<" <<< "$HTML" && ok "the history lists the update" || bad "history"
 [ "$(docker exec "$CT" sha256sum $APP/public/robots.txt | cut -d' ' -f1)" = "$(printf '%s' "$EDITED" | sha256sum | cut -d' ' -f1)" ] && ok "robots.txt is exactly the file edited on the page" || bad "robots.txt"
 
