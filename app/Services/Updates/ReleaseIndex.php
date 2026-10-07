@@ -21,6 +21,34 @@ class ReleaseIndex
 
     public function __construct(private readonly ?string $url = null) {}
 
+    /**
+     * What went wrong reaching a release server, in a sentence the admin area
+     * can show: never the body of the answer.
+     */
+    public static function describeFailure(\Throwable $e, string $url): string
+    {
+        $host = parse_url($url, PHP_URL_HOST) ?: $url;
+
+        if ($e instanceof \Illuminate\Http\Client\RequestException) {
+            $response = $e->response;
+            if (in_array($response->status(), [403, 429], true) && $response->header('X-RateLimit-Remaining') === '0') {
+                $reset = (int) $response->header('X-RateLimit-Reset');
+
+                return "{$host} refused: this server's address has used up its limit of requests"
+                    .($reset > 0 ? ' until '.\Illuminate\Support\Carbon::createFromTimestamp($reset)->format('H:i').' UTC' : '')
+                    .'. Try again then.';
+            }
+
+            return "{$host} answered with HTTP status {$response->status()}.";
+        }
+
+        if ($e instanceof \Illuminate\Http\Client\ConnectionException) {
+            return "{$host} could not be reached: ".mb_strimwidth($e->getMessage(), 0, 160, '...');
+        }
+
+        return mb_strimwidth($e->getMessage(), 0, 200, '...');
+    }
+
     /** @return array<int, Release> newest first */
     public function releases(): array
     {
@@ -29,9 +57,13 @@ class ReleaseIndex
         }
 
         $url = $this->url ?? (string) config('updates.index_url');
-        $json = str_starts_with($url, 'file://')
-            ? json_decode((string) @file_get_contents(substr($url, 7)), true)
-            : Http::timeout(20)->withHeaders(['Accept' => 'application/vnd.github+json'])->get($url)->throw()->json();
+        try {
+            $json = str_starts_with($url, 'file://')
+                ? json_decode((string) @file_get_contents(substr($url, 7)), true)
+                : Http::timeout(20)->withHeaders(['Accept' => 'application/vnd.github+json'])->get($url)->throw()->json();
+        } catch (\Throwable $e) {
+            throw new RuntimeException(self::describeFailure($e, $url), 0, $e);
+        }
 
         if (! is_array($json)) {
             throw new RuntimeException('The release index could not be read.');

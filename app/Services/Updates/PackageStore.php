@@ -61,7 +61,13 @@ class PackageStore
                 throw new RuntimeException("Cannot read {$url}.");
             }
         } else {
-            Http::timeout(600)->sink($part)->get($url)->throw();
+            try {
+                Http::connectTimeout(30)->timeout(1800)->sink($part)->get($url)->throw();
+            } catch (\Throwable $e) {
+                @unlink($part);
+
+                throw new RuntimeException('Downloading the package failed: '.ReleaseIndex::describeFailure($e, $url), 0, $e);
+            }
         }
 
         try {
@@ -143,6 +149,10 @@ class PackageStore
             return $content;
         }
 
-        return Http::timeout(60)->get($url)->throw()->body();
+        try {
+            return Http::connectTimeout(30)->timeout(120)->get($url)->throw()->body();
+        } catch (\Throwable $e) {
+            throw new RuntimeException(ReleaseIndex::describeFailure($e, $url), 0, $e);
+        }
     }
 }

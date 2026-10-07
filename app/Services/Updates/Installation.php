@@ -68,7 +68,7 @@ class Installation
         return match ($this->mode()) {
             self::PACKAGE => $this->packageBaseline($workDir),
             self::GIT => new GitFileSet($this->root()),
-            default => throw new RuntimeException('This installation was neither installed from a release package nor cloned with git, so there is no record of which files it was installed with.'),
+            default => throw new RuntimeException('This installation was neither installed from a release package nor cloned with git, so there is no record of which files it was installed with. Make it a git installation of the version you have (docs: Updating, "Installations made before releases").'),
         };
     }
 

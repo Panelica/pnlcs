@@ -34,16 +34,21 @@ until an administrator asks for it. How releases are made and tested:
 2. **Conflicts.** If you changed a file that the new version changes in the
    same place, the update does not start. For each such file choose: use the
    new version (yours is kept in `storage/app/pnlcs-update/set-aside`), keep
-   yours, or download both merged with conflict markers, edit, and upload the
-   result. Then check again.
+   yours, or edit the merged text - right on the page, or download it, edit it
+   and upload the result. **Save and update** saves your choices and starts
+   the update; a text that still has conflict markers is not accepted.
 3. **Update now.** The site goes into maintenance for the few seconds it takes,
    a snapshot of the database is taken, the files are written, migrations run,
    and the new version is checked (database, migrations, the home page and both
    login pages with your theme). If any step fails, every file and the database
    are put back as they were and the site comes back on the version it had.
 
-The work is done by the scheduler (`php artisan schedule:run`, the cron line
-from installation): it starts within a minute of the click.
+The work starts right after the click, in a process of its own, and the page
+shows each step as it happens. Where the server does not let PHP start one
+(SELinux enforcing, some hosting accounts) the scheduler
+(`php artisan schedule:run`, the cron line from installation) starts it within
+a minute. While the site is in maintenance you keep the admin area; visitors
+see the maintenance page.
 
 ## Updating from the command line
 
@@ -57,12 +62,19 @@ php artisan pnlcs:update --resolve public/robots.txt=mine   # a conflict decisio
 ```
 
 If an update was cut off (the process was killed, the server lost power), the
-site stays in maintenance and every update command refuses to run until you
-put everything back:
+site stays in maintenance and no other update runs. Within a minute the
+scheduler notices that the update's process is gone and puts every file and
+the database back, then brings the site up on the version it had (in Docker,
+the container does it when it starts). To do it at once:
 
 ```bash
 php artisan pnlcs:update-rollback
 ```
+
+If putting everything back fails too (a full disk, a database that is down),
+the site stays in maintenance - a half-restored site is never served - and it
+is tried again after 5, 10, 20 and 40 minutes, then every hour. You are
+notified once. Everything needed is in `storage/app/pnlcs-update/runs/`.
 
 ## Docker
 
@@ -84,6 +96,22 @@ An installation cloned with git and never updated by the updater is compared
 with the commit it was cloned at, so your changes to it are kept just the same.
 From that update on it is a release installation; keep using the updater, not
 `git pull`. The `.git` folder is left where it is.
+
+An installation that has neither a `.pnlcs-release.json` file nor a `.git`
+folder (copied from a ZIP download) has no record of the files it was
+installed with, so the updater cannot tell your changes from the release's and
+does not start. Make it a git installation of the version you downloaded,
+without changing a file - only `.git` is added:
+
+```bash
+git init && git remote add origin https://github.com/Panelica/pnlcs.git
+git fetch --tags origin && git reset v1.3.0      # the version you downloaded
+git status                                       # your changes
+```
+
+`git status` also lists `docs/`, `tests/` and a few other folders as deleted:
+downloads and release packages leave them out, and the updater leaves them out
+too.
 
 If your installation is older than the first release with the updater (1.3),
 bring it to that release once by hand with the steps below, checking out the

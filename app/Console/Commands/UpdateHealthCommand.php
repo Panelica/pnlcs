@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Foundation\MaintenanceMode;
 use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Foundation\Http\MaintenanceModeBypassCookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -43,14 +43,26 @@ class UpdateHealthCommand extends Command
             $failures[] = 'migrations: '.$e->getMessage();
         }
 
-        $cookies = [];
-        $down = storage_path('framework/down');
-        if (is_file($down)) {
-            $data = json_decode((string) file_get_contents($down), true);
-            if (! empty($data['secret'])) {
-                $cookies['laravel_maintenance'] = MaintenanceModeBypassCookie::create($data['secret'])->getValue();
+        // The site is in maintenance while this runs - the update's, or the
+        // operator's own, which may have no bypass secret. In this process only,
+        // the pages are asked for as if it were not, so what is checked is the
+        // new version and not the maintenance page.
+        app()->instance(MaintenanceMode::class, new class implements MaintenanceMode
+        {
+            public function activate(array $payload): void {}
+
+            public function deactivate(): void {}
+
+            public function active(): bool
+            {
+                return false;
             }
-        }
+
+            public function data(): array
+            {
+                return [];
+            }
+        });
 
         $url = parse_url((string) config('app.url')) ?: [];
         $server = ['HTTP_HOST' => $url['host'] ?? 'localhost', 'HTTPS' => ($url['scheme'] ?? 'http') === 'https' ? 'on' : 'off', 'SERVER_PORT' => $url['port'] ?? (($url['scheme'] ?? 'http') === 'https' ? 443 : 80)];
@@ -58,7 +70,7 @@ class UpdateHealthCommand extends Command
 
         foreach (['/', '/client/login', '/admin/login'] as $uri) {
             try {
-                $request = Request::create($uri, 'GET', [], $cookies, [], $server);
+                $request = Request::create($uri, 'GET', [], [], [], $server);
                 $response = $kernel->handle($request);
                 $status = $response->getStatusCode();
                 if ($status >= 500) {

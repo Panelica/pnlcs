@@ -3,7 +3,11 @@
 # release A installed from its package, customised the way an operator would,
 # then updated to B. Every promise in RELEASING.md is checked with snapshots.
 #
-#   scenario-native.sh good|bad-migration|bad-view|crash [<name>]
+#   scenario-native.sh good|bad-migration|bad-view|crash|operator-down [<name>]
+#
+# operator-down: the operator has put the site in maintenance themselves
+# (`artisan down`, no bypass secret); the update runs, checks the new version
+# and leaves the site in their maintenance.
 #
 # Needs: make-releases.sh run first; a MySQL reachable with LAB_DB_* (default:
 # the test database container on 127.0.0.1:33061, root/testroot).
@@ -13,7 +17,7 @@ LAB="$(cd "$(dirname "$0")" && pwd)"; WORK="$LAB/.work"
 DIR="$WORK/$NAME"; APP="$DIR/pnlcs"; LOG="$DIR/scenario.log"
 DB_HOST="${LAB_DB_HOST:-127.0.0.1}"; DB_PORT="${LAB_DB_PORT:-33061}"; DB_USER="${LAB_DB_USER:-root}"; DB_PASS="${LAB_DB_PASS:-testroot}"
 DB="pnlcs_lab_$(echo "$NAME" | tr -c 'a-z0-9\n' '_')"
-INDEX_VARIANT="$VARIANT"; [ "$VARIANT" = crash ] && INDEX_VARIANT=good
+INDEX_VARIANT="$VARIANT"; case "$VARIANT" in crash|operator-down) INDEX_VARIANT=good ;; esac
 PASS=0; FAIL=0
 ok()   { echo "PASS  $*"; PASS=$((PASS+1)); }
 bad()  { echo "FAIL  $*"; FAIL=$((FAIL+1)); }
@@ -66,12 +70,16 @@ php "$LAB/snapshot.php" "$APP" > "$DIR/after-refused.json"
 check "a refused update changes nothing" php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-refused.json"
 
 echo "== update with the decision: keep mine"
+if [ "$VARIANT" = operator-down ]; then
+    art down --retry=30 >>"$LOG" 2>&1
+    DOWN_BEFORE="$(cat "$APP/storage/framework/down")"
+fi
 EXTRA_ENV=()
 [ "$VARIANT" = crash ] && EXTRA_ENV=(env PNLCS_UPDATE_LAB_KILL_AT=migrating)
 (cd "$APP" && "${EXTRA_ENV[@]}" php artisan pnlcs:update --yes --resolve public/robots.txt=mine -v) >"$DIR/update.out" 2>&1; CODE=$?
 php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
 
-if [ "$VARIANT" = good ]; then
+if [ "$VARIANT" = good ] || [ "$VARIANT" = operator-down ]; then
     [ $CODE -eq 0 ] && ok "update succeeds" || bad "update exit $CODE"
     [ "$(cat "$APP/VERSION")" = "1.3.1" ] && ok "VERSION is 1.3.1" || bad "VERSION is $(cat "$APP/VERSION")"
     for f in .env themes/acme/theme.json themes/acme/views/sections/footer.blade.php themes/acme/assets/site.css modules/Servers/LabMine/pnlcs.json modules/Servers/LabMine/README.md app/Hooks/lab-operator.php storage/app/public/logo.png public/robots.txt; do
@@ -85,7 +93,11 @@ if [ "$VARIANT" = good ]; then
     check "lab_probe migration ran" php -r '$p=new PDO("mysql:host=$argv[1];port=$argv[2];dbname=$argv[5]",$argv[3],$argv[4]); exit($p->query("SHOW TABLES LIKE \"lab_probe\"")->rowCount()===1?0:1);' "$DB_HOST" "$DB_PORT" "$DB_USER" "$DB_PASS" "$DB"
     php -r '$p=new PDO("mysql:host=$argv[1];port=$argv[2];dbname=$argv[5]",$argv[3],$argv[4]); $t=$p->query("SELECT message FROM email_templates WHERE custom=1")->fetchColumn(); $d=$p->query("SELECT value FROM dynamic_translations WHERE `key`=\"lab_operator\"")->fetchColumn(); exit($t==="Operator wording" && $d==="Operator translation"?0:1);' "$DB_HOST" "$DB_PORT" "$DB_USER" "$DB_PASS" "$DB" \
         && ok "operator's email template and translation kept" || bad "operator's database rows changed"
-    check "site is up (no maintenance file)" test ! -f "$APP/storage/framework/down"
+    if [ "$VARIANT" = operator-down ]; then
+        [ "$(cat "$APP/storage/framework/down" 2>/dev/null)" = "$DOWN_BEFORE" ] && ok "the operator's maintenance is left exactly as it was" || bad "the operator's maintenance was changed"
+    else
+        check "site is up (no maintenance file)" test ! -f "$APP/storage/framework/down"
+    fi
     check "health after update" art pnlcs:update-health
     grep -q '"result": "updated"' "$APP/storage/app/pnlcs-update/history.json" && ok "history records the update" || bad "history"
 else

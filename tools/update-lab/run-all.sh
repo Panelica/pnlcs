@@ -16,7 +16,7 @@ RESULTS=()
 run() { local name="$1"; shift; "$@" > "$LAB/.work/$name.out" 2>&1; local code=$?; RESULTS+=("$(printf '%-24s %s' "$name" "$(tail -1 "$LAB/.work/$name.out" | grep -o '[0-9]* passed, [0-9]* failed' || echo 'did not finish')")"); return $code; }
 
 FAILED=0
-for v in good bad-migration bad-view crash; do run "native-$v" "$LAB/scenario-native.sh" "$v" || FAILED=1; done
+for v in good bad-migration bad-view crash operator-down; do run "native-$v" "$LAB/scenario-native.sh" "$v" || FAILED=1; done
 for v in good bad-migration bad-view crash; do run "docker-$v" "$LAB/scenario-docker.sh" "$v" "$IMAGE" || FAILED=1; done
 run legacy-native "$LAB/scenario-legacy.sh" native || FAILED=1
 run legacy-docker "$LAB/scenario-legacy.sh" docker "$IMAGE" || FAILED=1
