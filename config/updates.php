@@ -26,7 +26,8 @@ PEM,
     // history. Inside storage/, which no update ever writes to.
     'path' => storage_path('app/pnlcs-update'),
 
-    // Finished runs keep their file backups and database snapshot this long,
-    // for `pnlcs:update-rollback --last`.
+    // Finished runs keep their file backups and database snapshot this long.
+    // No command rolls back a finished update; the run directory holds what is
+    // needed to do it by hand (`php <run>/apply.php rollback <run>/plan.json`).
     'keep_runs_days' => 14,
 ];
