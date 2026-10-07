@@ -15,6 +15,7 @@ use App\Services\WhmcsImport\ImportValidator;
 use App\Services\WhmcsImport\MappingEngine;
 use App\Services\WhmcsImport\SchemaReader;
 use App\Services\WhmcsImport\ServiceImporter;
+use Illuminate\Support\Facades\Mail;
 
 function whmcsImportAdmin(): Admin
 {
@@ -324,7 +325,7 @@ test('the domain importer links the domain to the client matched by email', func
     $domain = Domain::where('domain', 'example.com')->first();
     expect($domain)->not->toBeNull()
         ->and($domain->client_id)->toBe($client->id)
-        ->and($domain->status->value)->toBe('active');
+        ->and($domain->status)->toBe('active');
 });
 
 test('the domain importer skips a domain whose owner email is unknown', function () {
@@ -360,8 +361,8 @@ test('the mapper normalizes WHMCS billing cycles and service statuses', function
 
 test('the service importer resolves client, product and server and imports', function () {
     $client = Client::factory()->create(['email' => 'owner@example.com']);
-    $product = Product::create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
-    $server = Server::create(['name' => 'HestiaCP 00']);
+    $product = Product::factory()->create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
+    $server = Server::factory()->create(['name' => 'HestiaCP 00']);
 
     $importer = app(ServiceImporter::class);
 
@@ -384,7 +385,7 @@ test('the service importer resolves client, product and server and imports', fun
         ->and($service->client_id)->toBe($client->id)
         ->and($service->product_id)->toBe($product->id)
         ->and($service->server_id)->toBe($server->id)
-        ->and($service->status->value)->toBe('active')
+        ->and($service->status)->toBe('active')
         ->and($service->billing_cycle)->toBe('annually');
 });
 
@@ -458,3 +459,71 @@ test('the whmcs import index page is behind manage_settings', function () {
         ->assertOk()
         ->assertSee(__('whmcs_import.title'), false);
 });
+
+test('updating never moves a domain to another client', function () {
+    $alice = Client::factory()->create(['email' => 'alice@example.com']);
+    Client::factory()->create(['email' => 'bob@example.com']);
+    Domain::create(['client_id' => $alice->id, 'domain' => 'shop.example.com', 'type' => 'register', 'status' => 'active']);
+
+    $summary = app(DomainImporter::class)->run(
+        fn ($cb) => $cb(['id' => 9, 'userid' => 3, 'domain' => 'shop.example.com', 'status' => 'Active', 'client_email' => 'bob@example.com']),
+        ['columns' => ['domain' => 'domain', 'status' => 'status'], 'constants' => []],
+        'add_update',
+        'domain',
+    );
+
+    expect(Domain::where('domain', 'shop.example.com')->sole()->client_id)->toBe($alice->id)
+        ->and($summary['skipped'])->toBe(1)
+        ->and($summary['skipped_details'][0]['error'])->toBe(__('whmcs_import.log.skip_other_client'));
+});
+
+test('updating never moves a service, nor its product or server', function () {
+    $alice = Client::factory()->create(['email' => 'alice@example.com']);
+    $product = Product::factory()->create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
+    $other = Product::factory()->create(['type' => 'hostingaccount', 'name' => 'Hosting Max']);
+    $service = Service::factory()->create(['client_id' => $alice->id, 'product_id' => $product->id, 'domain' => 'alice.example.com', 'billing_cycle' => 'monthly']);
+    Client::factory()->create(['email' => 'bob@example.com']);
+
+    $row = ['id' => 3, 'domain' => 'alice.example.com', 'billingcycle' => 'Annually', 'product_name' => 'Hosting Max'];
+    $mapping = ['columns' => ['domain' => 'domain', 'billingcycle' => 'billing_cycle'], 'constants' => []];
+
+    // Another client's row with the same domain is skipped.
+    $skipped = app(ServiceImporter::class)->run(fn ($cb) => $cb($row + ['client_email' => 'bob@example.com']), $mapping, 'add_update', 'domain');
+    // The owner's row updates the record but not what it runs on.
+    $updated = app(ServiceImporter::class)->run(fn ($cb) => $cb($row + ['client_email' => 'alice@example.com']), $mapping, 'add_update', 'domain');
+
+    $service->refresh();
+    expect($skipped['skipped'])->toBe(1)
+        ->and($updated['updated'])->toBe(1)
+        ->and($service->client_id)->toBe($alice->id)
+        ->and($service->product_id)->toBe($product->id)
+        ->and($service->billing_cycle)->toBe('annually')
+        ->and($other->id)->not->toBe($service->product_id);
+});
+
+test('importing clients sends no mail; their logins are ready for "Forgot password"', function () {
+    Mail::fake();
+
+    app(ClientImporter::class)->run(
+        function ($cb) {
+            foreach (range(1, 3) as $i) {
+                $cb(['id' => $i, 'firstname' => 'C'.$i, 'lastname' => 'X', 'email' => "c{$i}@example.com"]);
+            }
+        },
+        ['columns' => ['firstname' => 'first_name', 'lastname' => 'last_name', 'email' => 'email'], 'constants' => []],
+        'add',
+        'email',
+    );
+
+    Mail::assertNothingSent();
+    expect(\App\Models\User::whereIn('email', ['c1@example.com', 'c2@example.com', 'c3@example.com'])->count())->toBe(3);
+});
+
+test('a connection host or database name cannot carry extra connection parameters', function (string $field, string $value) {
+    $this->actingAs(whmcsImportAdmin(), 'admin')
+        ->post(route('admin.whmcs-import.connection.store'), ['host' => 'db.example.com', 'port' => 3306, 'database' => 'whmcs', 'username' => 'u', $field => $value])
+        ->assertSessionHasErrors($field);
+})->with([
+    'host' => ['host', 'db.example.com;unix_socket=/var/run/mysqld/mysqld.sock'],
+    'database' => ['database', 'whmcs;host=10.0.0.1'],
+]);
