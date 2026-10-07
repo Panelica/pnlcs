@@ -3,7 +3,10 @@
 # release A installed from its package, customised the way an operator would,
 # then updated to B. Every promise in RELEASING.md is checked with snapshots.
 #
-#   scenario-native.sh good|bad-migration|bad-view|crash|operator-down [<name>]
+#   scenario-native.sh good|bad-migration|bad-view|crash|operator-down|notmp [<name>]
+#
+# notmp: the system temporary directory cannot be written (a hosting account's
+# cron: /tmp owned by root); the check and the update still work.
 #
 # operator-down: the operator has put the site in maintenance themselves
 # (`artisan down`, no bypass secret); the update runs, checks the new version
@@ -17,7 +20,7 @@ LAB="$(cd "$(dirname "$0")" && pwd)"; WORK="$LAB/.work"
 DIR="$WORK/$NAME"; APP="$DIR/pnlcs"; LOG="$DIR/scenario.log"
 DB_HOST="${LAB_DB_HOST:-127.0.0.1}"; DB_PORT="${LAB_DB_PORT:-33061}"; DB_USER="${LAB_DB_USER:-root}"; DB_PASS="${LAB_DB_PASS:-testroot}"
 DB="pnlcs_lab_$(echo "$NAME" | tr -c 'a-z0-9\n' '_')"
-INDEX_VARIANT="$VARIANT"; case "$VARIANT" in crash|operator-down) INDEX_VARIANT=good ;; esac
+INDEX_VARIANT="$VARIANT"; case "$VARIANT" in crash|operator-down|notmp) INDEX_VARIANT=good ;; esac
 PASS=0; FAIL=0
 ok()   { echo "PASS  $*"; PASS=$((PASS+1)); }
 bad()  { echo "FAIL  $*"; FAIL=$((FAIL+1)); }
@@ -55,7 +58,8 @@ art config:cache >>"$LOG" 2>&1
 php "$LAB/snapshot.php" "$APP" > "$DIR/before.json"
 
 echo "== check: must find the robots.txt conflict and change nothing"
-art pnlcs:update --check >"$DIR/check.out" 2>&1; CODE=$?
+NOTMP=(); [ "$VARIANT" = notmp ] && NOTMP=(env TMPDIR=/proc)
+(cd "$APP" && "${NOTMP[@]}" php artisan pnlcs:update --check) >"$DIR/check.out" 2>&1; CODE=$?
 [ $CODE -eq 2 ] && ok "check refuses on a conflict (exit 2)" || bad "check exit $CODE"
 grep -q "conflict  public/robots.txt" "$DIR/check.out" && ok "the conflict is public/robots.txt" || bad "robots.txt conflict not reported"
 grep -q "merged    resources/views/admin/layouts/app.blade.php" "$DIR/check.out" && ok "the admin layout edit is reported as merged" || bad "admin layout merge not reported"
@@ -76,10 +80,11 @@ if [ "$VARIANT" = operator-down ]; then
 fi
 EXTRA_ENV=()
 [ "$VARIANT" = crash ] && EXTRA_ENV=(env PNLCS_UPDATE_LAB_KILL_AT=migrating)
+[ "$VARIANT" = notmp ] && EXTRA_ENV=(env TMPDIR=/proc)
 (cd "$APP" && "${EXTRA_ENV[@]}" php artisan pnlcs:update --yes --resolve public/robots.txt=mine -v) >"$DIR/update.out" 2>&1; CODE=$?
 php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
 
-if [ "$VARIANT" = good ] || [ "$VARIANT" = operator-down ]; then
+if [ "$VARIANT" = good ] || [ "$VARIANT" = operator-down ] || [ "$VARIANT" = notmp ]; then
     [ $CODE -eq 0 ] && ok "update succeeds" || bad "update exit $CODE"
     [ "$(cat "$APP/VERSION")" = "1.3.1" ] && ok "VERSION is 1.3.1" || bad "VERSION is $(cat "$APP/VERSION")"
     for f in .env themes/acme/theme.json themes/acme/views/sections/footer.blade.php themes/acme/assets/site.css modules/Servers/LabMine/pnlcs.json modules/Servers/LabMine/README.md app/Hooks/lab-operator.php storage/app/public/logo.png public/robots.txt; do

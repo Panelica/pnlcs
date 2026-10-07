@@ -5,7 +5,6 @@ namespace App\Services\Updates;
 use App\Services\Updates\FileSets\PackageFileSet;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
-use Symfony\Component\Process\Process;
 
 /**
  * Downloads, verifies and unpacks release packages, and keeps the installed
@@ -110,10 +109,9 @@ class PackageStore
             mkdir($destination, 0750, true);
         }
 
-        $process = new Process(['tar', '-xzf', $file, '-C', $destination, '--no-same-owner'], null, null, null, 900);
-        $process->run();
-        if (! $process->isSuccessful()) {
-            throw new RuntimeException('Unpacking failed: '.trim($process->getErrorOutput()));
+        $run = Shell::run(['tar', '-xzf', $file, '-C', $destination, '--no-same-owner'], null, null, 900);
+        if ($run['code'] !== 0) {
+            throw new RuntimeException('Unpacking failed: '.trim($run['err']));
         }
 
         $set = new PackageFileSet("{$destination}/pnlcs");

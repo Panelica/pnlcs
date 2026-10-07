@@ -52,8 +52,11 @@ PY
     run php artisan pnlcs:update-health >>"$LOG" 2>&1 && ok "the git-cloned installation works" || bad "git install health"
     php "$LAB/customise.php" "$APP" >>"$LOG" 2>&1; run php artisan config:cache >>"$LOG" 2>&1
     php "$LAB/snapshot.php" "$APP" > "$DIR/before.json"
-    run php artisan pnlcs:update --check >"$DIR/check.out" 2>&1; CODE=$?
-    run php artisan pnlcs:update --yes --resolve public/robots.txt=mine -v >"$DIR/update.out" 2>&1; UCODE=$?
+    # As under a hosting account's cron: the system temporary directory cannot
+    # be written (/tmp owned by root there; /proc here, which not even root can).
+    run env TMPDIR=/proc php artisan pnlcs:update --check >"$DIR/check.out" 2>&1; CODE=$?
+    run env TMPDIR=/proc php artisan pnlcs:update --yes --resolve public/robots.txt=mine -v >"$DIR/update.out" 2>&1; UCODE=$?
+    TESTS_KEPT=$([ -f "$APP/tests/Pest.php" ] && echo 1 || echo 0)
     php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
     VERSION_NOW="$(cat "$APP/VERSION")"; HAS_MANIFEST=$([ -f "$APP/.pnlcs-release.json" ] && echo 1 || echo 0); GIT_KEPT=$([ -d "$APP/.git" ] && echo 1 || echo 0)
     HEALTH() { run php artisan pnlcs:update-health; }
@@ -90,6 +93,7 @@ else
     docker exec "$CT" /usr/local/bin/update.sh --resolve public/robots.txt=mine -v >"$DIR/update.out" 2>&1; UCODE=$?
     docker exec -u www-data "$CT" php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
     VERSION_NOW="$(docker exec "$CT" cat $APP/VERSION)"; HAS_MANIFEST=$(docker exec "$CT" test -f $APP/.pnlcs-release.json && echo 1 || echo 0); GIT_KEPT=$(docker exec "$CT" test -d $APP/.git && echo 1 || echo 0)
+    TESTS_KEPT=$(docker exec "$CT" test -f $APP/tests/Pest.php && echo 1 || echo 0)
     HEALTH() { docker exec -u www-data -w $APP "$CT" php artisan pnlcs:update-health; }
 fi
 
@@ -101,6 +105,7 @@ grep -q "merged    resources/views/admin/layouts/app.blade.php" "$DIR/check.out"
 [ "$VERSION_NOW" = "1.3.1" ] && ok "VERSION is 1.3.1" || bad "VERSION is $VERSION_NOW"
 [ "$HAS_MANIFEST" = 1 ] && ok "now a release installation (manifest at the root)" || bad "no manifest"
 [ "$GIT_KEPT" = 1 ] && ok ".git is left where it was" || bad ".git removed"
+[ "$TESTS_KEPT" = 1 ] && ok "tests/ is left where it was (a release leaves it out, an update never removes it)" || bad "tests/ removed"
 for f in .env themes/acme/theme.json themes/acme/views/sections/footer.blade.php modules/Servers/LabMine/pnlcs.json app/Hooks/lab-operator.php storage/app/public/logo.png public/robots.txt; do
     php -r '$a=json_decode(file_get_contents($argv[1]),true)["files"];$b=json_decode(file_get_contents($argv[2]),true)["files"]; $x=fn($v)=>preg_replace("/^[0-7]+:/","",(string)$v); exit($x($a[$argv[3]]??"x")===$x($b[$argv[3]]??"y")?0:1);' "$DIR/before.json" "$DIR/after.json" "$f" \
         && ok "kept: $f" || bad "changed: $f"

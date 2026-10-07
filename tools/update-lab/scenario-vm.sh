@@ -119,6 +119,7 @@ grep -q '"state": "updated"' <<< "$S" && ok "updated" || bad "state: $S"
 [ "$(vm cat $APP/VERSION)" = 1.3.1 ] && ok "VERSION 1.3.1" || bad "VERSION"
 [ "$(vm sha256sum $APP/public/robots.txt | cut -d' ' -f1)" = "$(printf '%s' "$EDITED" | sha256sum | cut -d' ' -f1)" ] && ok "robots.txt is exactly the text edited on the page" || bad "robots.txt"
 vm test -d $APP/.git && ok ".git left in place" || bad ".git"
+vm test -f $APP/tests/Pest.php && ok "tests/ left in place (a release leaves it out, so an update never removes it)" || bad "tests/ removed"
 snap "$DIR/after4.json"
 for f in "${KEPT[@]}"; do same "$DIR/before4.json" "$DIR/after4.json" "$f" && ok "kept: $f" || bad "changed: $f"; done
 [ "$(http /admin/login)" = 200 ] && [ "$(http /)" = 200 ] && ok "site serves 1.3.1" || bad "HTTP after update"

@@ -3,7 +3,6 @@
 namespace App\Services\Updates;
 
 use Symfony\Component\Process\ExecutableFinder;
-use Symfony\Component\Process\Process;
 
 /**
  * Carries the operator's change to a file over to the new version of it, the
@@ -40,21 +39,20 @@ class ThreeWayMerge
             file_put_contents("{$dir}/base", $base);
             file_put_contents("{$dir}/theirs", $theirs);
 
-            $process = new Process([
+            $run = Shell::run([
                 'git', 'merge-file', '-p',
                 '-L', 'your version', '-L', 'installed version', '-L', 'new version',
                 "{$dir}/ours", "{$dir}/base", "{$dir}/theirs",
-            ], null, null, null, 60);
-            $process->run();
+            ], null, null, 60);
 
             // The exit code is the number of conflicts; above 127 is an error.
-            $code = (int) $process->getExitCode();
+            $code = $run['code'];
 
             if ($code > 127) {
                 return ['clean' => false, 'content' => $ours];
             }
 
-            return ['clean' => $code === 0, 'content' => $process->getOutput()];
+            return ['clean' => $code === 0, 'content' => $run['out']];
         } finally {
             foreach (['ours', 'base', 'theirs'] as $f) {
                 @unlink("{$dir}/{$f}");

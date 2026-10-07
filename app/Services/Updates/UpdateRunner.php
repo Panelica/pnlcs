@@ -524,9 +524,10 @@ class UpdateRunner
     /** Classes the rollback path needs, loaded while the old files are still on disk. */
     private function preload(): void
     {
-        foreach ([SqlDump::class, DatabaseSnapshot::class, NotificationService::class, Process::class, ProcessFailedException::class, Schema::class] as $class) {
+        foreach ([SqlDump::class, DatabaseSnapshot::class, NotificationService::class, Shell::class, Process::class, ProcessFailedException::class, Schema::class] as $class) {
             class_exists($class);
         }
+        Shell::tempDir();
         Schema::getConnection();
     }
 
@@ -546,13 +547,13 @@ class UpdateRunner
 
     private function php(array $args, int $timeout): void
     {
-        $process = new Process(array_merge([PHP_BINARY], $args), $this->installation->root(), null, null, $timeout);
-        $process->run(function ($type, $buffer) {
+        $run = Shell::run(array_merge([PHP_BINARY], $args), $this->installation->root(), null, $timeout, function ($type, $buffer) {
             $this->log(rtrim($buffer));
         });
 
-        if (! $process->isSuccessful()) {
-            throw new RuntimeException(basename((string) ($args[0] ?? 'php')).' '.($args[1] ?? '').' failed: '.trim($process->getErrorOutput() ?: $process->getOutput()));
+        if ($run['code'] !== 0) {
+            $output = trim($run['err'] ?: $run['out']);
+            throw new RuntimeException(basename((string) ($args[0] ?? 'php')).' '.($args[1] ?? '').' failed: '.mb_substr($output, -2000));
         }
     }
 
