@@ -115,6 +115,7 @@
     $progress = [
         'status' => $status,
         'statusUrl' => route('admin.config.updates.status'),
+        'now' => now()->toIso8601String(),
         'labels' => ['state' => __('admin.updates.status'), 'step' => __('admin.updates.step')],
         'steps' => [
             'apply' => ['download', 'check', 'maintenance', 'database', 'files', 'migrate', 'caches', 'health'],
@@ -132,6 +133,7 @@
                 <span class="upd-progress__state"><i class="fas fa-circle-notch fa-spin"></i> <span x-text="stateLabel()"></span></span>
                 <span class="upd-muted"><span>{{ __('admin.updates.elapsed') }}</span> <span x-text="elapsed"></span></span>
             </div>
+            <div class="upd-muted" style="font-size:12px;margin:-4px 0 6px;" x-show="offline" x-cloak><i class="fas fa-plug"></i> {{ __('admin.updates.reconnecting') }}</div>
             <div class="upd-progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="percent()">
                 <div class="upd-progress__fill" :style="'width:' + percent() + '%'"></div>
             </div>
@@ -336,6 +338,11 @@ function updateProgress(init) {
         status: init.status || {},
         labels: init.labels,
         elapsed: '0:00',
+        // The server's clock, not the browser's: the elapsed time is right
+        // even when the two differ.
+        skew: (Date.parse(init.now) - Date.now()) || 0,
+        failures: 0,
+        offline: false,
         steps() {
             var s = this.status;
             if (s.state === 'rolling_back') { return init.steps.rolling_back; }
@@ -359,7 +366,7 @@ function updateProgress(init) {
         tick() {
             var start = Date.parse(this.status.started_at || this.status.updated_at || '');
             if (isNaN(start)) { return; }
-            var sec = Math.max(0, Math.floor((Date.now() - start) / 1000));
+            var sec = Math.max(0, Math.floor((Date.now() + this.skew - start) / 1000));
             this.elapsed = Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
         },
         start() {
@@ -370,14 +377,23 @@ function updateProgress(init) {
                 fetch(init.statusUrl, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
                     .then(function (r) { return r.ok ? r.json() : null; })
                     .then(function (data) {
-                        if (data && data.status) { self.status = data.status; }
+                        if (!data) { throw new Error('no status'); }
+                        self.failures = 0;
+                        self.offline = false;
+                        if (data.now) { self.skew = (Date.parse(data.now) - Date.now()) || self.skew; }
+                        if (data.status) { self.status = data.status; }
                         if (data && !data.running && !data.request && done.indexOf((data.status || {}).state) !== -1) {
                             return window.location.reload();
                         }
                         setTimeout(poll, 2000);
                     })
-                    // While the site is in maintenance the request fails; keep asking.
-                    .catch(function () { setTimeout(poll, 3000); });
+                    // While the site is in maintenance or PHP restarts, a request
+                    // can fail; keep asking, and say so when it lasts.
+                    .catch(function () {
+                        self.failures++;
+                        self.offline = self.failures >= 3;
+                        setTimeout(poll, 3000);
+                    });
             })();
         },
     };

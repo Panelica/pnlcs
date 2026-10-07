@@ -3592,6 +3592,7 @@ return [
             'error' => 'Denetim tamamlanamadı. Hiçbir şey değiştirilmedi.',
         ],
         'elapsed' => 'Geçen süre',
+        'reconnecting' => 'Sunucudan henüz yanıt yok, yeniden deneniyor...',
         'last_result' => 'Son sonuç',
     ],
 ];

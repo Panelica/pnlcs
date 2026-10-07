@@ -85,7 +85,10 @@ test('a rollback that failed is redone in full when it is tried again - the file
 
     expect($runner->healAbandoned())->toMatchArray(['healed' => true, 'action' => 'rolled_back'])
         ->and(file_get_contents("{$root}/app/Probe.php"))->toBe('old')
-        ->and($state->read('current-run.json')['phase'])->toBe('rolled_back');
+        ->and($state->read('current-run.json')['phase'])->toBe('rolled_back')
+        // PHP-FPM may hold the new code the administrator's pages loaded
+        // during the update: the next request clears it.
+        ->and(is_file($state->path('opcache-reset-pending')))->toBeTrue();
 });
 
 test('a failed rollback is tried again after a pause, not every minute', function () {

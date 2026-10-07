@@ -3594,6 +3594,7 @@ return [
             'error' => 'The check could not finish. Nothing was changed.',
         ],
         'elapsed' => 'Elapsed',
+        'reconnecting' => 'No answer from the server yet, still trying...',
         'last_result' => 'Last result',
     ],
 ];

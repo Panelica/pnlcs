@@ -3592,6 +3592,7 @@ return [
             'error' => '检查未能完成。未做任何更改。',
         ],
         'elapsed' => '已用时间',
+        'reconnecting' => '服务器暂未响应，正在重试...',
         'last_result' => '最近结果',
     ],
 ];

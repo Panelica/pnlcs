@@ -3588,6 +3588,7 @@ return [
             'error' => 'Die Prüfung konnte nicht abgeschlossen werden. Es wurde nichts geändert.',
         ],
         'elapsed' => 'Dauer',
+        'reconnecting' => 'Noch keine Antwort vom Server, neuer Versuch läuft...',
         'last_result' => 'Letztes Ergebnis',
     ],
 ];

@@ -210,18 +210,11 @@ class UpdateController extends Controller
 
     public function status()
     {
-        // After an update PHP-FPM may still hold the old compiled code; this
-        // request runs inside FPM, so it can clear it (UpdateRunner leaves the flag).
-        $flag = $this->state->path('opcache-reset-pending');
-        if (is_file($flag) && function_exists('opcache_reset')) {
-            opcache_reset();
-            @unlink($flag);
-        }
-
         return response()->json([
             'status' => $this->state->read('status.json'),
             'request' => $this->state->read('request.json'),
             'running' => $this->state->isLocked(),
+            'now' => now()->toIso8601String(),
         ]);
     }
 

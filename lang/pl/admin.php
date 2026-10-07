@@ -3592,6 +3592,7 @@ return [
             'error' => 'Sprawdzanie nie mogło się zakończyć. Nic nie zostało zmienione.',
         ],
         'elapsed' => 'Upłynęło',
+        'reconnecting' => 'Serwer jeszcze nie odpowiada, ponawianie...',
         'last_result' => 'Ostatni wynik',
     ],
 ];

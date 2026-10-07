@@ -8,6 +8,7 @@ use App\Http\Middleware\BlockBannedIp;
 use App\Http\Middleware\CheckAdminPermission;
 use App\Http\Middleware\MaintenanceMode;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\ResetOpcacheAfterUpdate;
 use App\Http\Middleware\SetDisplayCurrency;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\TwoFactorVerify;
@@ -51,6 +52,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // https emits http asset URLs and the browser blocks them as mixed
         // content. This is domain-agnostic: no per-domain APP_URL to maintain.
         $middleware->trustProxies(at: '*');
+        $middleware->prepend(ResetOpcacheAfterUpdate::class);
         $middleware->prependToGroup('web', RedirectToInstaller::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', SetLocale::class);

@@ -257,8 +257,8 @@ class UpdateRunner
 
         $this->liftMaintenance($run);
         $this->quietly(['queue:restart']);
-        // PHP-FPM may keep the old compiled code for a while; the next page
-        // the admin opens resets its cache (UpdateController::status).
+        // PHP-FPM may keep the old compiled code for a while; the next request
+        // it serves resets its cache (ResetOpcacheAfterUpdate).
         @touch($this->state->path('opcache-reset-pending'));
         $this->state->forget('report.json');
         $this->packages->prune(array_filter([$from, $to], fn ($v) => Version::parse($v) !== null));
@@ -319,6 +319,9 @@ class UpdateRunner
         $run['phase'] = 'rolled_back';
         $run['finished_at'] = now()->toIso8601String();
         $this->saveRun($run);
+        // The administrator's pages may have loaded new code into PHP-FPM's
+        // cache during the update; the next request clears it.
+        @touch($this->state->path('opcache-reset-pending'));
 
         // Files and database are back. The caches are only caches: a failure
         // to rebuild them is logged and never keeps the site down.

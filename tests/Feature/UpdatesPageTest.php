@@ -256,3 +256,12 @@ test('the scheduled update work is held back by nothing a crash could leave behi
         ->and($event->withoutOverlapping)->toBeFalse()
         ->and($event->evenInMaintenanceMode)->toBeTrue();
 })->with(['pnlcs:update --from-request', 'pnlcs:update-rollback --abandoned']);
+
+test('after an update the first page anyone opens clears the old compiled code, not only the updates page', function (string $uri) {
+    $state = updatesState();
+    touch($state->path('opcache-reset-pending'));
+
+    $this->get($uri);
+
+    expect(is_file($state->path('opcache-reset-pending')))->toBeFalse();
+})->with(['/', '/client/login', '/up']);
