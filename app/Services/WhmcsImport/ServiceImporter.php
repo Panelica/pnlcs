@@ -172,8 +172,39 @@ class ServiceImporter
     protected function findExisting(?string $matchKey, array $target): ?Service
     {
         $query = $this->scope($matchKey, $target);
+        if ($query === null) {
+            return null;
+        }
 
-        return $query === null ? null : $query->where('client_id', $target['client_id'])->first();
+        return $query->where('client_id', $target['client_id'])->first()
+            ?? $this->importedWithoutProductName($matchKey, $target);
+    }
+
+    /**
+     * A service imported before the WHMCS product name was recorded (1.4.0)
+     * has no name to match on, and a re-import would add a copy of it. It is
+     * taken as this row's service when it is the only such service of the
+     * client under the key and runs the same product - so hosting is never
+     * matched to an e-mail row on the same domain.
+     */
+    protected function importedWithoutProductName(string $matchKey, array $target): ?Service
+    {
+        $name = $target['whmcs_product_name'] ?? null;
+        if ($name === null || $name === '') {
+            return null;
+        }
+
+        $query = Service::where($matchKey, $target[$matchKey])
+            ->where('client_id', $target['client_id'])
+            ->whereNull('whmcs_product_name');
+
+        isset($target['product_id'])
+            ? $query->where('product_id', $target['product_id'])
+            : $query->whereNull('product_id');
+
+        $candidates = $query->limit(2)->get();
+
+        return $candidates->count() === 1 ? $candidates->first() : null;
     }
 
     /**
@@ -243,8 +274,15 @@ class ServiceImporter
             }
 
             // An update never changes who owns the service, nor the product
-            // and server a live account is provisioned on.
-            $existing->update(Arr::except($target, ['client_id', 'product_id', 'whmcs_product_name', 'server_id']));
+            // and server a live account is provisioned on. The WHMCS product
+            // name is part of the identity and stays as it is - except on a
+            // service imported before it was recorded, which gets it now so the
+            // next run matches it directly.
+            $except = ['client_id', 'product_id', 'server_id'];
+            if ($existing->whmcs_product_name !== null) {
+                $except[] = 'whmcs_product_name';
+            }
+            $existing->update(Arr::except($target, $except));
 
             return [$existing, false, null];
         }

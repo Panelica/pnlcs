@@ -539,6 +539,54 @@ test('two services on one domain stay apart, mapped or not', function () {
         ->and(Service::where('domain', 'b.example.com')->where('product_id', $email->id)->count())->toBe(1);
 });
 
+test('a service imported before the product name was recorded is updated on a re-import, not copied', function () {
+    $client = Client::factory()->create(['email' => 'owner@example.com']);
+    $hosting = Product::factory()->create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
+    // As the 1.4.0 importer left it: product found by name, no WHMCS product name.
+    $old = Service::factory()->create([
+        'client_id' => $client->id, 'product_id' => $hosting->id, 'domain' => 'a.example.com',
+        'amount' => 50, 'billing_cycle' => 'monthly', 'whmcs_product_name' => null,
+    ]);
+
+    $importer = app(ServiceImporter::class);
+    $mapping = ['columns' => ['domain' => 'domain', 'amount' => 'amount', 'billingcycle' => 'billing_cycle'], 'constants' => []];
+    $row = ['id' => 1, 'packageid' => 11, 'domain' => 'a.example.com', 'amount' => '60.00', 'billingcycle' => 'Annually', 'client_email' => 'owner@example.com', 'product_name' => 'Hosting Pro'];
+
+    $first = $importer->run(fn ($cb) => $cb($row), $mapping, 'add_update', 'domain');
+    $second = $importer->run(fn ($cb) => $cb($row), $mapping, 'add_update', 'domain');
+
+    $old->refresh();
+    expect($first['updated'])->toBe(1)->and($first['added'])->toBe(0)
+        ->and($second['updated'])->toBe(1)->and($second['added'])->toBe(0)
+        ->and(Service::where('domain', 'a.example.com')->count())->toBe(1)
+        ->and((float) $old->amount)->toBe(60.0)
+        ->and($old->billing_cycle)->toBe('annually')
+        // Recorded now, so the next run matches it by name.
+        ->and($old->whmcs_product_name)->toBe('Hosting Pro');
+});
+
+test('a service imported before the product name was recorded is never taken by another product', function () {
+    $client = Client::factory()->create(['email' => 'owner@example.com']);
+    $hosting = Product::factory()->create(['type' => 'hostingaccount', 'name' => 'Hosting Pro']);
+    $old = Service::factory()->create([
+        'client_id' => $client->id, 'product_id' => $hosting->id, 'domain' => 'a.example.com',
+        'amount' => 50, 'billing_cycle' => 'monthly', 'whmcs_product_name' => null,
+    ]);
+
+    // An e-mail service on the same domain: no PNLCS product of that name.
+    $summary = app(ServiceImporter::class)->run(
+        fn ($cb) => $cb(['id' => 2, 'packageid' => 12, 'domain' => 'a.example.com', 'amount' => '5.00', 'client_email' => 'owner@example.com', 'product_name' => 'Email']),
+        ['columns' => ['domain' => 'domain', 'amount' => 'amount'], 'constants' => []],
+        'add_update', 'domain',
+    );
+
+    $old->refresh();
+    expect($summary['added'])->toBe(1)->and($summary['updated'])->toBe(0)
+        ->and(Service::where('domain', 'a.example.com')->count())->toBe(2)
+        ->and((float) $old->amount)->toBe(50.0)
+        ->and($old->whmcs_product_name)->toBeNull();
+});
+
 test('a mapped product id that does not exist is reported and left unlinked', function () {
     Client::factory()->create(['email' => 'owner@example.com']);
 
