@@ -118,4 +118,8 @@ return [
     'section_database' => 'Andmebaas ja sisselogimine',
     'no_connections' => 'Salvestatud ühendusi veel pole.',
     'mapped_count' => 'Vastendatud :count / :total välja',
+    'product_mapping' => 'Toodete vastendamine',
+    'product_mapping_hint' => 'Vastendage WHMCS-i tooted PNLCS-i toodetega nime järgi. Vastendamata tooted imporditakse ilma tooteta.',
+    'product_unmatched' => 'Vastendamata (ilma tooteta)',
+    'note_services_header' => 'WHMCS-i teenused:',
 ];

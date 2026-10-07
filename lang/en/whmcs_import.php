@@ -126,4 +126,8 @@ return [
     'section_database' => 'Database and sign-in',
     'no_connections' => 'No saved connections yet.',
     'mapped_count' => ':count of :total fields mapped',
+    'product_mapping' => 'Product mapping',
+    'product_mapping_hint' => 'Map WHMCS products to PNLCS products by name. Products left unmatched are imported without a product.',
+    'product_unmatched' => 'Unmatched (no product)',
+    'note_services_header' => 'WHMCS services:',
 ];

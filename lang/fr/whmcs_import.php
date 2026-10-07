@@ -118,4 +118,8 @@ return [
     'section_database' => 'Base de données et identifiants',
     'no_connections' => 'Aucune connexion enregistrée pour l\'instant.',
     'mapped_count' => ':count champs associés sur :total',
+    'product_mapping' => 'Correspondance des produits',
+    'product_mapping_hint' => 'Associez les produits WHMCS aux produits PNLCS par nom. Les produits non associés sont importés sans produit.',
+    'product_unmatched' => 'Non associé (sans produit)',
+    'note_services_header' => 'Services WHMCS :',
 ];

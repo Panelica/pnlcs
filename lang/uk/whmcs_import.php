@@ -118,4 +118,8 @@ return [
     'section_database' => 'База даних і вхід',
     'no_connections' => 'Збережених підключень поки немає.',
     'mapped_count' => 'Зіставлено полів: :count з :total',
+    'product_mapping' => 'Зіставлення продуктів',
+    'product_mapping_hint' => 'Зіставте продукти WHMCS із продуктами PNLCS за назвою. Незіставлені продукти імпортуються без продукту.',
+    'product_unmatched' => 'Не зіставлено (без продукту)',
+    'note_services_header' => 'Послуги WHMCS:',
 ];

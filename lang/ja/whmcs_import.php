@@ -118,4 +118,8 @@ return [
     'section_database' => 'データベースとログイン',
     'no_connections' => '保存済みの接続はまだありません。',
     'mapped_count' => ':total 項目中 :count 項目を対応付け済み',
+    'product_mapping' => '商品マッピング',
+    'product_mapping_hint' => 'WHMCS の商品を名前で PNLCS の商品に対応付けます。対応付けられなかった商品は商品なしでインポートされます。',
+    'product_unmatched' => '未対応（商品なし）',
+    'note_services_header' => 'WHMCS サービス:',
 ];

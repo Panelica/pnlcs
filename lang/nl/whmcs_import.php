@@ -118,4 +118,8 @@ return [
     'section_database' => 'Database en inloggen',
     'no_connections' => 'Nog geen opgeslagen verbindingen.',
     'mapped_count' => ':count van :total velden gekoppeld',
+    'product_mapping' => 'Productkoppeling',
+    'product_mapping_hint' => 'Koppel WHMCS-producten op naam aan PNLCS-producten. Niet-gekoppelde producten worden zonder product geïmporteerd.',
+    'product_unmatched' => 'Niet gekoppeld (geen product)',
+    'note_services_header' => 'WHMCS-diensten:',
 ];

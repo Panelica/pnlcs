@@ -118,4 +118,8 @@ return [
     'section_database' => 'Adatbázis és bejelentkezés',
     'no_connections' => 'Még nincs mentett kapcsolat.',
     'mapped_count' => ':total mezőből :count megfeleltetve',
+    'product_mapping' => 'Termékleképezés',
+    'product_mapping_hint' => 'Képezze le a WHMCS-termékeket a PNLCS-termékekre név alapján. A nem leképezett termékek termék nélkül importálódnak.',
+    'product_unmatched' => 'Nem leképezve (nincs termék)',
+    'note_services_header' => 'WHMCS-szolgáltatások:',
 ];

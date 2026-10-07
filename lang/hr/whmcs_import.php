@@ -118,4 +118,8 @@ return [
     'section_database' => 'Baza podataka i prijava',
     'no_connections' => 'Još nema spremljenih veza.',
     'mapped_count' => 'Mapirano :count od :total polja',
+    'product_mapping' => 'Mapiranje proizvoda',
+    'product_mapping_hint' => 'Mapirajte WHMCS proizvode na PNLCS proizvode po nazivu. Nemapirani proizvodi uvoze se bez proizvoda.',
+    'product_unmatched' => 'Nemapirano (bez proizvoda)',
+    'note_services_header' => 'WHMCS usluge:',
 ];

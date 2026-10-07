@@ -118,4 +118,8 @@ return [
     'section_database' => 'Databáze a přihlášení',
     'no_connections' => 'Zatím žádná uložená připojení.',
     'mapped_count' => 'Namapováno :count z :total polí',
+    'product_mapping' => 'Mapování produktů',
+    'product_mapping_hint' => 'Namapujte produkty WHMCS na produkty PNLCS podle názvu. Nenamapované produkty se importují bez produktu.',
+    'product_unmatched' => 'Nenamapováno (bez produktu)',
+    'note_services_header' => 'Služby WHMCS:',
 ];

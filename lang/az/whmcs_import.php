@@ -118,4 +118,8 @@ return [
     'section_database' => 'Verilənlər bazası və giriş',
     'no_connections' => 'Hələ saxlanılmış bağlantı yoxdur.',
     'mapped_count' => ':total sahədən :count uyğunlaşdırılıb',
+    'product_mapping' => 'Məhsul xəritələnməsi',
+    'product_mapping_hint' => 'WHMCS məhsullarını adına görə PNLCS məhsulları ilə xəritələyin. Xəritələnməmiş məhsullar məhsulsuz idxal edilir.',
+    'product_unmatched' => 'Xəritələnməmiş (məhsulsuz)',
+    'note_services_header' => 'WHMCS xidmətləri:',
 ];

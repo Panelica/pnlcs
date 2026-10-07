@@ -126,4 +126,8 @@ return [
     'section_database' => '数据库与登录',
     'no_connections' => '尚无已保存的连接。',
     'mapped_count' => '已映射 :count / :total 个字段',
+    'product_mapping' => '产品映射',
+    'product_mapping_hint' => '按名称将 WHMCS 产品映射到 PNLCS 产品。未映射的产品将不带产品导入。',
+    'product_unmatched' => '未映射（无产品）',
+    'note_services_header' => 'WHMCS 服务：',
 ];

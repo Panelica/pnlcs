@@ -118,4 +118,8 @@ return [
     'section_database' => 'Tietokanta ja kirjautuminen',
     'no_connections' => 'Ei vielä tallennettuja yhteyksiä.',
     'mapped_count' => ':count / :total kenttää kohdistettu',
+    'product_mapping' => 'Tuotekartoitus',
+    'product_mapping_hint' => 'Yhdistä WHMCS-tuotteet PNLCS-tuotteisiin nimen perusteella. Yhdistämättömät tuotteet tuodaan ilman tuotetta.',
+    'product_unmatched' => 'Yhdistämätön (ei tuotetta)',
+    'note_services_header' => 'WHMCS-palvelut:',
 ];

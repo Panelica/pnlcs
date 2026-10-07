@@ -118,4 +118,8 @@ return [
     'section_database' => 'Bază de date și autentificare',
     'no_connections' => 'Încă nu există conexiuni salvate.',
     'mapped_count' => ':count din :total câmpuri mapate',
+    'product_mapping' => 'Maparea produselor',
+    'product_mapping_hint' => 'Mapează produsele WHMCS la produsele PNLCS după nume. Produsele nemapate sunt importate fără produs.',
+    'product_unmatched' => 'Nemapat (fără produs)',
+    'note_services_header' => 'Servicii WHMCS:',
 ];

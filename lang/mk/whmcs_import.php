@@ -118,4 +118,8 @@ return [
     'section_database' => 'База на податоци и најава',
     'no_connections' => 'Сè уште нема зачувани врски.',
     'mapped_count' => 'Мапирани :count од :total полиња',
+    'product_mapping' => 'Мапирање на производи',
+    'product_mapping_hint' => 'Мапирајте ги WHMCS производите со PNLCS производите по име. Немапираните производи се увезуваат без производ.',
+    'product_unmatched' => 'Немапирано (без производ)',
+    'note_services_header' => 'WHMCS услуги:',
 ];

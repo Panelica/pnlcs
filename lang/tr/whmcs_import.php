@@ -126,4 +126,8 @@ return [
     'section_database' => 'Veritabanı ve giriş',
     'no_connections' => 'Henüz kayıtlı bağlantı yok.',
     'mapped_count' => ':total alanın :count tanesi eşlendi',
+    'product_mapping' => 'Ürün Eşleme',
+    'product_mapping_hint' => 'WHMCS ürünlerini adına göre PNLCS ürünleriyle eşleyin. Eşlenmeyen ürünler ürün olmadan içe aktarılır.',
+    'product_unmatched' => 'Eşlenmemiş (ürün yok)',
+    'note_services_header' => 'WHMCS hizmetleri:',
 ];

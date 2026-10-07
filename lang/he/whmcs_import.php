@@ -118,4 +118,8 @@ return [
     'section_database' => 'מסד נתונים והתחברות',
     'no_connections' => 'אין עדיין חיבורים שמורים.',
     'mapped_count' => 'מופו :count מתוך :total שדות',
+    'product_mapping' => 'מיפוי מוצרים',
+    'product_mapping_hint' => 'מפה מוצרי WHMCS למוצרי PNLCS לפי שם. מוצרים לא ממופים מיובאים ללא מוצר.',
+    'product_unmatched' => 'לא ממופה (ללא מוצר)',
+    'note_services_header' => 'שירותי WHMCS:',
 ];

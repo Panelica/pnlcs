@@ -118,4 +118,8 @@ return [
     'section_database' => 'قاعدة البيانات وتسجيل الدخول',
     'no_connections' => 'لا توجد اتصالات محفوظة بعد.',
     'mapped_count' => 'تمت مطابقة :count من :total حقلًا',
+    'product_mapping' => 'ربط المنتجات',
+    'product_mapping_hint' => 'اربط منتجات WHMCS بمنتجات PNLCS حسب الاسم. تُستورد المنتجات غير المرتبطة بدون منتج.',
+    'product_unmatched' => 'غير مرتبط (بدون منتج)',
+    'note_services_header' => 'خدمات WHMCS:',
 ];

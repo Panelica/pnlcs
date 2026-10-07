@@ -126,4 +126,8 @@ return [
     'section_database' => 'Baza danych i logowanie',
     'no_connections' => 'Brak zapisanych połączeń.',
     'mapped_count' => 'Przypisano :count z :total pól',
+    'product_mapping' => 'Mapowanie produktów',
+    'product_mapping_hint' => 'Zmapuj produkty WHMCS na produkty PNLCS po nazwie. Produkty niezmapowane zostaną zaimportowane bez produktu.',
+    'product_unmatched' => 'Bez mapowania (bez produktu)',
+    'note_services_header' => 'Usługi WHMCS:',
 ];

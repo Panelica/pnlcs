@@ -118,4 +118,8 @@ return [
     'section_database' => '데이터베이스와 로그인',
     'no_connections' => '아직 저장된 연결이 없습니다.',
     'mapped_count' => ':total개 중 :count개 필드 매핑됨',
+    'product_mapping' => '제품 매핑',
+    'product_mapping_hint' => 'WHMCS 제품을 이름으로 PNLCS 제품에 매핑합니다. 매핑되지 않은 제품은 제품 없이 가져옵니다.',
+    'product_unmatched' => '매핑 안 됨 (제품 없음)',
+    'note_services_header' => 'WHMCS 서비스:',
 ];

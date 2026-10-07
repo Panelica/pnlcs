@@ -126,4 +126,8 @@ return [
     'section_database' => 'Datenbank und Anmeldung',
     'no_connections' => 'Noch keine gespeicherten Verbindungen.',
     'mapped_count' => ':count von :total Feldern zugeordnet',
+    'product_mapping' => 'Produktzuordnung',
+    'product_mapping_hint' => 'Ordnen Sie WHMCS-Produkte namentlich PNLCS-Produkten zu. Nicht zugeordnete Produkte werden ohne Produkt importiert.',
+    'product_unmatched' => 'Nicht zugeordnet (ohne Produkt)',
+    'note_services_header' => 'WHMCS-Dienste:',
 ];

@@ -118,4 +118,8 @@ return [
     'section_database' => 'پایگاه داده و ورود',
     'no_connections' => 'هنوز اتصال ذخیره‌شده‌ای نیست.',
     'mapped_count' => ':count از :total فیلد نگاشت شد',
+    'product_mapping' => 'نگاشت محصولات',
+    'product_mapping_hint' => 'محصولات WHMCS را بر اساس نام به محصولات PNLCS نگاشت کنید. محصولات بدون نگاشت بدون محصول وارد می‌شوند.',
+    'product_unmatched' => 'بدون نگاشت (بدون محصول)',
+    'note_services_header' => 'خدمات WHMCS:',
 ];

@@ -118,4 +118,8 @@ return [
     'section_database' => 'Databas och inloggning',
     'no_connections' => 'Inga sparade anslutningar ännu.',
     'mapped_count' => ':count av :total fält mappade',
+    'product_mapping' => 'Produktmappning',
+    'product_mapping_hint' => 'Mappa WHMCS-produkter till PNLCS-produkter efter namn. Omappade produkter importeras utan produkt.',
+    'product_unmatched' => 'Omappad (ingen produkt)',
+    'note_services_header' => 'WHMCS-tjänster:',
 ];

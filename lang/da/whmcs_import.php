@@ -118,4 +118,8 @@ return [
     'section_database' => 'Database og login',
     'no_connections' => 'Ingen gemte forbindelser endnu.',
     'mapped_count' => ':count af :total felter tilknyttet',
+    'product_mapping' => 'Produktkortlægning',
+    'product_mapping_hint' => 'Kortlæg WHMCS-produkter til PNLCS-produkter efter navn. Ikke-kortlagte produkter importeres uden produkt.',
+    'product_unmatched' => 'Ikke kortlagt (intet produkt)',
+    'note_services_header' => 'WHMCS-tjenester:',
 ];

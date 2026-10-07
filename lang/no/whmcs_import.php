@@ -118,4 +118,8 @@ return [
     'section_database' => 'Database og pålogging',
     'no_connections' => 'Ingen lagrede tilkoblinger ennå.',
     'mapped_count' => ':count av :total felt tilordnet',
+    'product_mapping' => 'Produktkartlegging',
+    'product_mapping_hint' => 'Kartlegg WHMCS-produkter til PNLCS-produkter etter navn. Ikke-kartlagte produkter importeres uten produkt.',
+    'product_unmatched' => 'Ikke kartlagt (ingen produkt)',
+    'note_services_header' => 'WHMCS-tjenester:',
 ];

@@ -118,4 +118,8 @@ return [
     'section_database' => 'Database e accesso',
     'no_connections' => 'Ancora nessuna connessione salvata.',
     'mapped_count' => ':count campi su :total mappati',
+    'product_mapping' => 'Associazione prodotti',
+    'product_mapping_hint' => 'Associa i prodotti WHMCS ai prodotti PNLCS per nome. I prodotti non associati vengono importati senza prodotto.',
+    'product_unmatched' => 'Non associato (nessun prodotto)',
+    'note_services_header' => 'Servizi WHMCS:',
 ];

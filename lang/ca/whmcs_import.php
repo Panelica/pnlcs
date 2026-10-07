@@ -118,4 +118,8 @@ return [
     'section_database' => 'Base de dades i accés',
     'no_connections' => 'Encara no hi ha connexions desades.',
     'mapped_count' => ':count de :total camps mapats',
+    'product_mapping' => 'Assignació de productes',
+    'product_mapping_hint' => 'Assigneu els productes WHMCS als productes PNLCS per nom. Els productes sense assignar s\'importen sense producte.',
+    'product_unmatched' => 'Sense assignar (sense producte)',
+    'note_services_header' => 'Serveis WHMCS:',
 ];
