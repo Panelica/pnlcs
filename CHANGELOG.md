@@ -2,6 +2,43 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.5.0-beta.1 — 2026-10-07
+
+A beta: offered only to installations on the **beta** channel (**Setup →
+Updates → Update channel**). After seven days without a regression the same
+commit becomes 1.5.0 for everyone.
+
+### Changed
+
+- **The WHMCS import screens are redesigned.** A header that says what the
+  importer promises (read only, preview before importing, every record
+  logged) and the three steps; the connection form in groups and saved
+  connections as cards; the import type as tabs; a count of the fields mapped;
+  the preview, run and save buttons in a bar that stays in reach; the preview
+  side by side; the log as coloured totals. Right to left and on phones, in
+  every language.
+
+### For developers
+
+- The beta channel is covered end to end: tests for which channel offers
+  which release, and an update lab scenario in which the stable channel does
+  not see a beta, the beta channel updates to it, and then to the stable
+  release made from the same commit.
+
+### Database changes
+
+- None.
+
+### For theme and module authors
+
+- Nothing changed for modules, themes or hooks.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/whmcs-import/index.blade.php`,
+  `mapper.blade.php` and `log.blade.php`; new: `_styles.blade.php` and
+  `_steps.blade.php` in the same folder.
+
 ## 1.4.0 — 2026-10-07
 
 ### Added
