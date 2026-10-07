@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\SslOrderController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TranslationController;
 use App\Http\Controllers\Admin\WhoisController;
+use App\Http\Controllers\Admin\WhmcsImportController;
 use App\Http\Middleware\AdminTwoFactorVerify;
 use Illuminate\Support\Facades\Route;
 
@@ -667,6 +668,19 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // WHOIS Lookup — no permission required
     Route::get('whois', [WhoisController::class, 'index'])->name('whois.index');
     Route::post('whois', [WhoisController::class, 'lookup'])->name('whois.lookup');
+
+    // WHMCS Import — manage_settings
+    Route::middleware('admin.permission:manage_settings')->prefix('whmcs-import')->name('whmcs-import.')->group(function () {
+        Route::get('/', [WhmcsImportController::class, 'index'])->name('index');
+        Route::post('connection', [WhmcsImportController::class, 'saveConnection'])->name('connection.store');
+        Route::post('connection/test', [WhmcsImportController::class, 'testConnection'])->name('connection.test');
+        Route::get('mapper/{connection}', [WhmcsImportController::class, 'mapper'])->name('mapper');
+        Route::post('mapper/{connection}/preview', [WhmcsImportController::class, 'preview'])->name('preview');
+        Route::post('mapper/{connection}/import', [WhmcsImportController::class, 'import'])->name('import');
+        Route::post('mapper/{connection}/profile', [WhmcsImportController::class, 'saveProfile'])->name('profile.store');
+        Route::delete('profiles/{profile}', [WhmcsImportController::class, 'deleteProfile'])->name('profile.destroy');
+        Route::get('logs/{log}', [WhmcsImportController::class, 'showLog'])->name('log.show');
+    });
 
     // Bulk Actions — need respective permissions
     Route::middleware('admin.permission:manage_email_templates')->group(function () {
