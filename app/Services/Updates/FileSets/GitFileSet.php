@@ -70,7 +70,7 @@ final class GitFileSet implements FileSet
      */
     private function readBlobs(array $blobs): array
     {
-        $process = new Process(['git', '-C', $this->root, 'cat-file', '--batch'], null, null, implode("\n", array_values($blobs))."\n", 600);
+        $process = new Process(['git', '-c', 'safe.directory=*', '-C', $this->root, 'cat-file', '--batch'], null, null, implode("\n", array_values($blobs))."\n", 600);
         $process->mustRun();
         $output = $process->getOutput();
 
@@ -95,7 +95,10 @@ final class GitFileSet implements FileSet
     /** @param array<int, string> $args */
     private function git(array $args): string
     {
-        $process = new Process(array_merge(['git', '-C', $this->root], $args), null, null, null, 120);
+        // safe.directory: the clone often belongs to another user than the one
+        // updating (root cloned it, www-data runs it), and git then refuses to
+        // read it at all ("dubious ownership"). Reading is all that is done here.
+        $process = new Process(array_merge(['git', '-c', 'safe.directory=*', '-C', $this->root], $args), null, null, null, 120);
         $process->run();
 
         if (! $process->isSuccessful()) {

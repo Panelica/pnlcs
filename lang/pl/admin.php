@@ -3537,6 +3537,8 @@ return [
             'theme_requires' => 'Motyw :name deklaruje działanie z PNLCS :constraint, a nie z :to. Najpierw zaktualizuj motyw.',
             'conflicts' => 'Zmienione przez ciebie pliki w konflikcie z nową wersją: :count.',
             'theme_overrides_changed' => 'Twój motyw :theme zastępuje widoki, które zmieniły się w tym wydaniu, i nadal pokazuje ich własną kopię: :views',
+            'php_function' => 'Funkcja PHP :name jest wyłączona (disable_functions). Aktualizator potrzebuje jej do uruchamiania tar, git i artisan.',
+            'disk_unknown' => 'Na tym serwerze nie można odczytać wolnego miejsca na dysku; potrzeba około :needed_mb MB. Zapełnienie dysku podczas aktualizacji jest wycofywane jak każdy inny błąd.',
         ],
         'history_result' => [
             'updated' => 'Zaktualizowano',

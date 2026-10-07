@@ -15,6 +15,9 @@ use RuntimeException;
  */
 class SqlDump
 {
+    /** An INSERT is cut at about this size, well under any max_allowed_packet. */
+    private const BATCH_BYTES = 1048576;
+
     /** The tables a dump holds (views are left out: they hold no data of their own). */
     public static function tables(): array
     {
@@ -40,18 +43,33 @@ class SqlDump
                 $create = $pdo->query("SHOW CREATE TABLE {$qt}")->fetch(PDO::FETCH_NUM)[1];
                 gzwrite($gz, "DROP TABLE IF EXISTS {$qt};\n{$create};\n\n");
 
-                $stmt = $pdo->query("SELECT * FROM {$qt}");
-                $batch = [];
-                while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-                    $vals = array_map(fn ($v) => $v === null ? 'NULL' : $pdo->quote((string) $v), $row);
-                    $batch[] = '('.implode(',', $vals).')';
-                    if (count($batch) >= 200) {
-                        gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
-                        $batch = [];
+                // Rows are streamed, not buffered: a table with millions of rows
+                // would otherwise be held in memory whole. Statements are cut by
+                // size, so a batch of large rows stays under the server's
+                // max_allowed_packet (16 MB by default on MariaDB).
+                $buffered = $pdo->getAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY);
+                $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+                try {
+                    $stmt = $pdo->query("SELECT * FROM {$qt}");
+                    $batch = [];
+                    $bytes = 0;
+                    while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+                        $vals = array_map(fn ($v) => $v === null ? 'NULL' : $pdo->quote((string) $v), $row);
+                        $tuple = '('.implode(',', $vals).')';
+                        $batch[] = $tuple;
+                        $bytes += strlen($tuple);
+                        if (count($batch) >= 500 || $bytes >= self::BATCH_BYTES) {
+                            gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
+                            $batch = [];
+                            $bytes = 0;
+                        }
                     }
-                }
-                if ($batch) {
-                    gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
+                    $stmt->closeCursor();
+                    if ($batch) {
+                        gzwrite($gz, "INSERT INTO {$qt} VALUES\n".implode(",\n", $batch).";\n");
+                    }
+                } finally {
+                    $pdo->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, $buffered);
                 }
                 gzwrite($gz, "\n");
             }

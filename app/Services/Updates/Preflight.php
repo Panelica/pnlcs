@@ -4,6 +4,7 @@ namespace App\Services\Updates;
 
 use App\Services\ThemeManager;
 use App\Services\Updates\FileSets\FileSet;
+use App\Services\Updates\FileSets\GitFileSet;
 use App\Services\Updates\FileSets\PackageFileSet;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Process\ExecutableFinder;
@@ -54,8 +55,13 @@ class Preflight
         if ($from !== null && $to->major > $from->major && ! $allowMajor) {
             $this->block('major_version', ['from' => (string) $from, 'to' => (string) $to]);
         }
-        if ($installation->mode() === Installation::GIT) {
-            $this->warn('git_install', ['commit' => substr((string) trim((string) @shell_exec('git -C '.escapeshellarg($root).' rev-parse HEAD 2>/dev/null')), 0, 12)]);
+        if ($base instanceof GitFileSet) {
+            try {
+                $commit = substr($base->commit(), 0, 12);
+            } catch (\Throwable) {
+                $commit = '?';
+            }
+            $this->warn('git_install', ['commit' => $commit]);
         }
 
         $this->requirements($statement['requires'] ?? [], (int) ($statement['size'] ?? 0), $root);
@@ -106,6 +112,13 @@ class Preflight
             }
         }
 
+        // Hosting accounts often switch functions off in disable_functions. The
+        // updater starts tar, git and artisan through proc_open.
+        $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+        if (! function_exists('proc_open') || in_array('proc_open', $disabled, true)) {
+            $this->block('php_function', ['name' => 'proc_open']);
+        }
+
         $finder = new ExecutableFinder;
         if ($finder->find('tar') === null) {
             $this->block('tool_missing', ['tool' => 'tar']);
@@ -127,9 +140,13 @@ class Preflight
         // Unpacked new and base versions, the old vendor kept for rollback, and
         // the database snapshot: about four times the package, plus the data.
         $neededMb = max(300, $packageMb * 12 + $databaseMb);
-        $freeMb = (int) floor((@disk_free_space($root) ?: 0) / 1048576);
-        if ($freeMb < $neededMb) {
-            $this->block('disk_space', ['needed_mb' => $neededMb, 'free_mb' => $freeMb]);
+        $free = function_exists('disk_free_space') && ! in_array('disk_free_space', $disabled, true) ? @disk_free_space($root) : false;
+        if ($free === false) {
+            // Unknown is not "none": the update goes ahead, and a disk that fills
+            // up on the way is rolled back like any other failure.
+            $this->warn('disk_unknown', ['needed_mb' => $neededMb]);
+        } elseif ((int) floor($free / 1048576) < $neededMb) {
+            $this->block('disk_space', ['needed_mb' => $neededMb, 'free_mb' => (int) floor($free / 1048576)]);
         }
     }
 

@@ -3533,6 +3533,8 @@ return [
             'theme_requires' => 'Das Theme :name gibt an, mit PNLCS :constraint zu funktionieren, nicht mit :to. Aktualisieren Sie zuerst das Theme.',
             'conflicts' => ':count von Ihnen geänderte Datei(en) stehen im Konflikt mit der neuen Version.',
             'theme_overrides_changed' => 'Ihr Theme :theme ersetzt Ansichten, die sich in dieser Version geändert haben, und zeigt weiter seine eigene Kopie davon: :views',
+            'php_function' => 'Die PHP-Funktion :name ist abgeschaltet (disable_functions). Der Updater braucht sie, um tar, git und artisan auszuführen.',
+            'disk_unknown' => 'Der freie Speicherplatz kann auf diesem Server nicht gelesen werden; etwa :needed_mb MB werden benötigt. Läuft der Speicher während des Updates voll, wird wie bei jedem anderen Fehler zurückgesetzt.',
         ],
         'history_result' => [
             'updated' => 'Aktualisiert',

@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Services\Updates\UpdateBar;
 use App\Services\Updates\UpdateState;
 use App\Services\Updates\Version;
+use Illuminate\Foundation\Http\MaintenanceModeBypassCookie;
 use Illuminate\Http\UploadedFile;
 
 /**
@@ -211,4 +212,17 @@ test('of two processes that claim a request, only one gets it', function () {
 
     expect($state->claim('request.json'))->toBe(['action' => 'apply', 'version' => '9.9.9'])
         ->and($state->claim('request.json'))->toBeNull();
+});
+
+test('the administrator who starts an update can watch it through maintenance', function () {
+    $state = updatesState();
+    $state->write('latest.json', ['latest' => ['version' => '9.9.9']]);
+
+    $response = $this->actingAs(updatesAdmin(), 'admin')->post(route('admin.config.updates.apply'));
+
+    $secret = $state->read('request.json')['maintenance_secret'];
+    $cookie = collect($response->headers->getCookies())->first(fn ($c) => $c->getName() === 'laravel_maintenance');
+    expect($secret)->toMatch('/^[0-9a-f]{32}$/')
+        ->and($cookie)->not->toBeNull()
+        ->and(MaintenanceModeBypassCookie::isValid($cookie->getValue(), $secret))->toBeTrue();
 });

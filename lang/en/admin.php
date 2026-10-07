@@ -3539,6 +3539,8 @@ return [
             'theme_requires' => 'The theme :name says it works with PNLCS :constraint, not with :to. Update the theme first.',
             'conflicts' => ':count file(s) you changed conflict with the new version.',
             'theme_overrides_changed' => 'Your theme :theme replaces views that changed in this release and keeps showing its own copy of them: :views',
+            'php_function' => 'The PHP function :name is switched off (disable_functions). The updater needs it to run tar, git and artisan.',
+            'disk_unknown' => 'The free disk space cannot be read on this server; about :needed_mb MB is needed. A disk that fills up during the update is rolled back like any other failure.',
         ],
         'history_result' => [
             'updated' => 'Updated',

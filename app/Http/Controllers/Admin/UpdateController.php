@@ -11,6 +11,7 @@ use App\Services\Updates\UpdateBar;
 use App\Services\Updates\UpdatePlan;
 use App\Services\Updates\UpdateRunner;
 use App\Services\Updates\UpdateState;
+use Illuminate\Foundation\Http\MaintenanceModeBypassCookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Validation\Rule;
@@ -234,18 +235,23 @@ class UpdateController extends Controller
         abort_unless($version, 404);
 
         $admin = auth('admin')->user();
+        // The administrator who starts an update keeps watching it while the
+        // site is in maintenance: their browser gets the bypass cookie of the
+        // maintenance the update will put the site in; visitors do not.
+        $secret = bin2hex(random_bytes(16));
         $this->state->write('request.json', [
             'action' => $action,
             'version' => $version,
             'by' => $admin ? "{$admin->username} (admin area)" : 'admin area',
             'requested_at' => now()->toIso8601String(),
+            'maintenance_secret' => $secret,
         ] + $extra);
-        $this->state->status('queued', 'download', ['version' => $version]);
+        $this->state->status('queued', 'download', ['version' => $version, 'action' => $action]);
 
         ActivityLog::log("Update {$version}: {$action} requested", $admin?->username);
         $this->startNow();
 
-        return back();
+        return back()->withCookie(MaintenanceModeBypassCookie::create($secret));
     }
 
     /**
@@ -256,6 +262,13 @@ class UpdateController extends Controller
     private function startNow(): void
     {
         if (app()->runningUnitTests()) {
+            return;
+        }
+
+        // Under SELinux enforcing a process started by PHP-FPM keeps the web
+        // server's confinement and may not write the application's files; the
+        // scheduler's cron job may. There, the request waits for the scheduler.
+        if (trim((string) @file_get_contents('/sys/fs/selinux/enforce')) === '1') {
             return;
         }
 

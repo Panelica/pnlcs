@@ -3537,6 +3537,8 @@ return [
             'theme_requires' => '主题 :name 声明适用于 PNLCS :constraint，而不适用于 :to。请先更新该主题。',
             'conflicts' => '您修改过的 :count 个文件与新版本冲突。',
             'theme_overrides_changed' => '您的主题 :theme 替换了本版本中有变化的视图，并继续显示它自己的副本：:views',
+            'php_function' => 'PHP 函数 :name 已被禁用（disable_functions）。更新程序需要它来运行 tar、git 和 artisan。',
+            'disk_unknown' => '无法在此服务器上读取可用磁盘空间；大约需要 :needed_mb MB。更新期间磁盘写满时，会像其他失败一样回滚。',
         ],
         'history_result' => [
             'updated' => '已更新',

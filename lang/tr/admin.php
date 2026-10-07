@@ -3537,6 +3537,8 @@ return [
             'theme_requires' => ':name teması PNLCS :constraint ile çalıştığını söylüyor, :to ile değil. Önce temayı güncelleyin.',
             'conflicts' => 'Değiştirdiğiniz :count dosya yeni sürümle çakışıyor.',
             'theme_overrides_changed' => ':theme temanız bu sürümde değişen sayfaların yerine kendi kopyalarını göstermeye devam ediyor: :views',
+            'php_function' => ':name PHP fonksiyonu sunucunun PHP ayarlarında kapatılmış. Güncelleyici tar, git ve artisan komutlarını çalıştırmak için ona ihtiyaç duyar.',
+            'disk_unknown' => 'Bu sunucuda boş disk alanı okunamıyor; yaklaşık :needed_mb MB gerekiyor. Güncelleme sırasında dolan disk, diğer hatalar gibi geri alınır.',
         ],
         'history_result' => [
             'updated' => 'Güncellendi',

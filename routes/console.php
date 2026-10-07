@@ -117,3 +117,7 @@ Schedule::call(fn () => run_hook('DailyCronJob'))->dailyAt('00:10')->name('hook:
 // a twenty-minute job inside a web request.
 Schedule::command('pnlcs:update-check')->dailyAt('05:10')->withoutOverlapping();
 Schedule::command('pnlcs:update --from-request')->everyMinute()->withoutOverlapping(120)->runInBackground();
+// Self-healing: an update whose process died (killed, server restarted, PHP-FPM
+// restarted under it) is rolled back, and a finished one left in maintenance is
+// brought back up. Even in maintenance mode - that is exactly when it matters.
+Schedule::command('pnlcs:update-rollback --abandoned')->everyMinute()->evenInMaintenanceMode()->withoutOverlapping(30);

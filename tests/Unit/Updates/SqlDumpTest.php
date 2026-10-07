@@ -70,3 +70,31 @@ test('a dump cut off before its end is never restored', function () {
 
     unlink($file);
 });
+
+test('rows larger than a batch are restored whole, and big tables are cut into several statements', function () {
+    $table = 'sqldump_big_'.bin2hex(random_bytes(4));
+    Schema::create($table, function ($t) {
+        $t->id();
+        $t->longText('body');
+    });
+    $big = str_repeat('x', 700000);
+    for ($i = 0; $i < 4; $i++) {
+        DB::table($table)->insert(['body' => $big.$i]);
+    }
+
+    $file = storage_path('framework/testing/'.$table.'.sql.gz');
+    expect(SqlDump::dump($file, [$table]))->toBeTrue();
+    $gz = gzopen($file, 'rb');
+    $inserts = count(array_filter(iterator_to_array(SqlDump::statements($gz), false), fn ($s) => str_starts_with($s, 'INSERT')));
+    gzclose($gz);
+
+    DB::table($table)->delete();
+    SqlDump::restore($file);
+
+    expect($inserts)->toBeGreaterThan(1)
+        ->and(DB::table($table)->count())->toBe(4)
+        ->and(DB::table($table)->where('body', $big.'3')->exists())->toBeTrue();
+
+    Schema::drop($table);
+    unlink($file);
+});

@@ -111,7 +111,15 @@ class UpdateState
     /** What the admin area shows while an update is prepared or applied. */
     public function status(string $state, string $step, array $extra = []): void
     {
-        $this->write('status.json', ['state' => $state, 'step' => $step, 'updated_at' => now()->toIso8601String()] + $extra);
+        // The time the work began, kept across its steps, so the admin area can
+        // show how long it has been running.
+        $previous = $this->read('status.json');
+        $working = ['queued', 'preparing', 'applying', 'rolling_back'];
+        $startedAt = $previous !== null && in_array($previous['state'] ?? '', $working, true) && isset($previous['started_at'])
+            ? $previous['started_at']
+            : now()->toIso8601String();
+
+        $this->write('status.json', ['state' => $state, 'step' => $step, 'updated_at' => now()->toIso8601String(), 'started_at' => $startedAt] + $extra);
     }
 
     /** @param array<string, mixed> $entry */

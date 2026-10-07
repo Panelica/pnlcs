@@ -92,7 +92,7 @@ class UpdateCommand extends Command
             }
 
             $by = $request['by'] ?? 'command line ('.(function_exists('posix_getpwuid') ? (posix_getpwuid(posix_geteuid())['name'] ?? '?') : '?').')';
-            $result = $runner->apply($release, $by, $resolutions, $allowMajor, $ignore);
+            $result = $runner->apply($release, $by, $resolutions, $allowMajor, $ignore, $request['maintenance_secret'] ?? null);
             $this->report($result['report'] ?? []);
 
             return match ($result['result']) {

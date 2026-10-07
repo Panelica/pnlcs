@@ -36,6 +36,9 @@ class UpdateRunner
 
     private ?string $runDir = null;
 
+    /** The maintenance bypass secret the admin area gave the administrator's browser. */
+    private ?string $maintenanceSecret = null;
+
     public function __construct(
         private readonly Installation $installation,
         private readonly ReleaseIndex $index,
@@ -78,11 +81,11 @@ class UpdateRunner
         try {
             $id = 'check-'.now()->format('Ymd-His');
             $work = $this->state->path("work/{$id}");
-            $this->status('preparing', 'download', ['version' => (string) $release->version]);
+            $this->status('preparing', 'download', ['version' => (string) $release->version, 'action' => 'prepare']);
 
             [$base, $new, $statement] = $this->unpack($release, $work);
 
-            $this->status('preparing', 'check', ['version' => (string) $release->version]);
+            $this->status('preparing', 'check', ['version' => (string) $release->version, 'action' => 'prepare']);
             $report = $this->preflight->run($this->installation, $base, $new, $statement, $this->planner,
                 $resolutions + $this->state->resolutions((string) $release->version), $allowMajor, $ignoreRequires);
 
@@ -107,8 +110,10 @@ class UpdateRunner
      * @param  array<int, string>  $ignoreRequires
      * @return array<string, mixed>
      */
-    public function apply(Release $release, string $by, array $resolutions = [], bool $allowMajor = false, array $ignoreRequires = []): array
+    public function apply(Release $release, string $by, array $resolutions = [], bool $allowMajor = false, array $ignoreRequires = [], ?string $maintenanceSecret = null): array
     {
+        $this->maintenanceSecret = $maintenanceSecret !== null && preg_match('/^[0-9a-f]{32}$/', $maintenanceSecret) ? $maintenanceSecret : null;
+
         $this->state->acquireLock();
 
         try {
@@ -154,15 +159,18 @@ class UpdateRunner
         mkdir($this->runDir, 0750, true);
 
         $run = ['id' => $id, 'from' => $from, 'to' => $to, 'by' => $by, 'phase' => 'preparing', 'started_at' => now()->toIso8601String(),
-            'root' => $this->installation->root(), 'config_cached' => is_file($this->installation->root().'/bootstrap/cache/config.php')];
+            'root' => $this->installation->root(), 'config_cached' => is_file($this->installation->root().'/bootstrap/cache/config.php'),
+            // A site the operator had put in maintenance stays in it: the
+            // update neither puts it down again nor brings it up.
+            'was_down' => is_file($this->installation->root().'/storage/framework/down')];
         $this->saveRun($run);
         $this->log("Updating {$from} -> {$to}");
 
         try {
-            $this->status('applying', 'download', ['version' => $to, 'run' => $id]);
+            $this->status('applying', 'download', ['version' => $to, 'run' => $id, 'action' => 'apply']);
             [$base, $new, $statement] = $this->unpack($release, $this->runDir);
 
-            $this->status('applying', 'check', ['version' => $to, 'run' => $id]);
+            $this->status('applying', 'check', ['version' => $to, 'run' => $id, 'action' => 'apply']);
             $report = $this->preflight->run($this->installation, $base, $new, $statement, $this->planner,
                 $resolutions + $this->state->resolutions($to), $allowMajor, $ignoreRequires);
             /** @var UpdatePlan $plan */
@@ -198,35 +206,37 @@ class UpdateRunner
         $this->preload();
 
         try {
-            $this->status('applying', 'maintenance', ['version' => $to, 'run' => $id]);
-            $run['maintenance_secret'] = bin2hex(random_bytes(16));
+            $this->status('applying', 'maintenance', ['version' => $to, 'run' => $id, 'action' => 'apply']);
+            $run['maintenance_secret'] = $this->maintenanceSecret ?? bin2hex(random_bytes(16));
             $run['phase'] = 'maintenance';
             $this->saveRun($run);
-            $this->artisan(['down', '--retry=60', '--secret='.$run['maintenance_secret']]);
+            if (! $run['was_down']) {
+                $this->artisan(['down', '--retry=60', '--secret='.$run['maintenance_secret']]);
+            }
 
-            $this->status('applying', 'database', ['version' => $to, 'run' => $id]);
+            $this->status('applying', 'database', ['version' => $to, 'run' => $id, 'action' => 'apply']);
             $this->database->take("{$this->runDir}/database.sql.gz");
             $run['phase'] = 'snapshot';
             $this->saveRun($run);
 
-            $this->status('applying', 'files', ['version' => $to, 'run' => $id]);
+            $this->status('applying', 'files', ['version' => $to, 'run' => $id, 'action' => 'apply']);
             copy(resource_path('updater/apply.php'), "{$this->runDir}/apply.php");
             $run['phase'] = 'files';
             $this->saveRun($run);
             $this->php(["{$this->runDir}/apply.php", 'apply', $applierPlan], 900);
 
-            $this->status('applying', 'migrate', ['version' => $to, 'run' => $id]);
+            $this->status('applying', 'migrate', ['version' => $to, 'run' => $id, 'action' => 'apply']);
             $run['phase'] = 'migrating';
             $this->saveRun($run);
             $this->artisan(['migrate', '--force', '--no-interaction'], 1800);
             $this->artisan(['pnlcs:addons-upgrade', '--no-interaction'], 900);
 
-            $this->status('applying', 'caches', ['version' => $to, 'run' => $id]);
+            $this->status('applying', 'caches', ['version' => $to, 'run' => $id, 'action' => 'apply']);
             $run['phase'] = 'caches';
             $this->saveRun($run);
             $this->rebuildCaches($run['config_cached']);
 
-            $this->status('applying', 'health', ['version' => $to, 'run' => $id]);
+            $this->status('applying', 'health', ['version' => $to, 'run' => $id, 'action' => 'apply']);
             $run['phase'] = 'health';
             $this->saveRun($run);
             $this->artisan(['pnlcs:update-health'], 300);
@@ -238,15 +248,18 @@ class UpdateRunner
             return ['result' => 'rolled_back', 'error' => $e->getMessage(), 'report' => $report];
         }
 
-        $this->artisan(['up']);
+        // The update is complete from here: files, database and the health
+        // check are behind it. Recorded before the site comes back, so that a
+        // crash from now on is never taken for an update to roll back.
+        $run['phase'] = 'done';
+        $run['finished_at'] = now()->toIso8601String();
+        $this->saveRun($run);
+
+        $this->liftMaintenance($run);
         $this->quietly(['queue:restart']);
         // PHP-FPM may keep the old compiled code for a while; the next page
         // the admin opens resets its cache (UpdateController::status).
         @touch($this->state->path('opcache-reset-pending'));
-
-        $run['phase'] = 'done';
-        $run['finished_at'] = now()->toIso8601String();
-        $this->saveRun($run);
         $this->state->forget('report.json');
         $this->packages->prune(array_filter([$from, $to], fn ($v) => Version::parse($v) !== null));
         $this->removeUnpacked();
@@ -264,7 +277,6 @@ class UpdateRunner
     {
         $this->status('rolling_back', 'files', ['run' => $run['id']]);
         $phase = $run['phase'];
-        $root = $run['root'];
 
         try {
             if (in_array($phase, ['files', 'migrating', 'caches', 'health', 'rolling_back'], true)) {
@@ -280,11 +292,6 @@ class UpdateRunner
                 $this->database->restore("{$this->runDir}/database.sql.gz");
             }
 
-            $this->rebuildCaches((bool) ($run['config_cached'] ?? false));
-
-            if (is_file($root.'/storage/framework/down')) {
-                $this->artisan(['up']);
-            }
         } catch (Throwable $e) {
             // The site stays in maintenance: a half-restored site must not be
             // served. Everything needed to finish by hand is in the run.
@@ -299,6 +306,16 @@ class UpdateRunner
         $run['phase'] = 'rolled_back';
         $run['finished_at'] = now()->toIso8601String();
         $this->saveRun($run);
+
+        // Files and database are back. The caches are only caches: a failure
+        // to rebuild them is logged and never keeps the site down.
+        try {
+            $this->rebuildCaches((bool) ($run['config_cached'] ?? false));
+        } catch (Throwable $e) {
+            $this->log('Rebuilding the caches after the rollback failed (the site runs without them): '.$e->getMessage());
+            $this->quietly(['optimize:clear']);
+        }
+        $this->liftMaintenance($run);
         $this->removeUnpacked();
         $this->finish($run, 'rolled_back', 'The update failed and was rolled back: '.($run['error'] ?? 'stopped part way').'. The site runs '.$run['from'].' as before.');
     }
@@ -386,6 +403,71 @@ class UpdateRunner
                 file_put_contents($file, $conflict['merged']);
             }
         }
+    }
+
+    /**
+     * Brings the site back out of the maintenance the update put it in. Never
+     * throws: when `artisan up` cannot run, the maintenance file is removed
+     * directly. A site the operator had put down before the update stays down.
+     */
+    private function liftMaintenance(array $run): void
+    {
+        if ($run['was_down'] ?? false) {
+            return;
+        }
+
+        $down = $this->installation->root().'/storage/framework/down';
+        try {
+            $this->artisan(['up']);
+        } catch (Throwable $e) {
+            $this->log('`artisan up` failed, removing the maintenance file directly: '.$e->getMessage());
+        }
+        if (is_file($down)) {
+            @unlink($down);
+            @unlink($this->installation->root().'/storage/framework/maintenance.php');
+        }
+    }
+
+    /**
+     * Self-healing, run by the scheduler every minute (even in maintenance) and
+     * by the Docker image on start: an update whose process is gone - killed,
+     * the server restarted, PHP-FPM restarted under it - is rolled back without
+     * anyone having to act, and a finished update whose process died before it
+     * lifted maintenance has its site brought back.
+     *
+     * Does nothing while an update is running (the lock is held) or when there
+     * is nothing to heal.
+     *
+     * @return array{healed: bool, run?: string, action?: string}
+     */
+    public function healAbandoned(): array
+    {
+        $run = $this->state->read('current-run.json');
+        if ($run === null || $this->state->isLocked()) {
+            return ['healed' => false];
+        }
+
+        if (($run['phase'] ?? '') === 'done') {
+            $down = $this->installation->root().'/storage/framework/down';
+            $data = is_file($down) ? json_decode((string) file_get_contents($down), true) : null;
+            if (! ($run['was_down'] ?? false) && is_array($data) && ($data['secret'] ?? null) === ($run['maintenance_secret'] ?? false)) {
+                $this->runDir = $this->state->path("runs/{$run['id']}");
+                $this->liftMaintenance($run);
+                $this->log('Self-heal: the update had finished; its maintenance was lifted.');
+
+                return ['healed' => true, 'run' => $run['id'], 'action' => 'lifted'];
+            }
+
+            return ['healed' => false];
+        }
+
+        if ($this->unfinished() === null) {
+            return ['healed' => false];
+        }
+
+        $result = $this->rollbackUnfinished();
+
+        return ['healed' => $result['rolled_back'], 'run' => $run['id'], 'action' => 'rolled_back'];
     }
 
     /** The report as it is stored and shown: the merged texts live in their own files. */
