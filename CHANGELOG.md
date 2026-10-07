@@ -2,6 +2,65 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.4.0 — 2026-10-07
+
+### Added
+
+- **Import from WHMCS** (**Setup → Import WHMCS**, for staff with the
+  `manage_settings` permission). Connect to an existing WHMCS database - it is
+  only read, nothing in it is ever changed - and bring clients (with their
+  custom fields), domains and services over through a field mapper: a preview
+  of every record, fixed values, regex transforms, saved mappings, three modes
+  (add new, add and update, update only) and a log of every record added,
+  updated, skipped or rejected, with the reason.
+  - Imported clients get a login. Nothing is mailed during an import: the
+    customer chooses a password with "Forgot password" when they arrive, so the
+    import can run before the move is announced.
+  - An update never moves a domain or a service to another client, and never
+    changes the product and server a live service runs on.
+  - In every shipped language.
+
+  **Thank you, [@hedon77](https://github.com/hedon77)**, for starting the
+  importer and building it - and for everything else you keep contributing to
+  PNLCS.
+
+### Fixed
+
+- **Updates in a hosting account.** Under a hosting account's cron (Panelica,
+  cPanel and others) the system temporary directory is often not writable, and
+  the check of a git installation stopped with "Unable to create temporary
+  file". The updater no longer needs it.
+- **A git installation's first update** no longer plans to remove `tests/`,
+  `docs/`, `tools/` and the other paths a release package leaves out; they
+  stay where they are.
+
+### Updating from 1.3.0
+
+- **Setup → Updates**, or `php artisan pnlcs:update`.
+- Running PNLCS 1.3.0 inside a hosting account, and the check stops with
+  "Unable to create temporary file"? Run this one update with a temporary
+  directory of your own; 1.4.0 needs nothing of the kind afterwards:
+
+  ```bash
+  mkdir -p ~/tmp && TMPDIR=~/tmp php artisan pnlcs:update
+  ```
+
+- Docker: image `panelica/pnlcs-runtime:1.5` (`docker exec pnlcs /usr/local/bin/update.sh`).
+
+### Database changes
+
+- Three new tables: `whmcs_import_connections` (the WHMCS database password is
+  encrypted with `APP_KEY`), `whmcs_import_profiles` and `whmcs_import_logs`.
+  No existing table or row is changed.
+
+### For theme and module authors
+
+- Nothing changed for modules, themes or hooks.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/layouts/app.blade.php` (the Import WHMCS menu entry).
+
 ## 1.3.0 — 2026-10-07
 
 The first release since **1.2.0** (2026-07-10). Everything in this file from
