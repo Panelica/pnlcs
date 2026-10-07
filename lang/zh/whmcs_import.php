@@ -85,6 +85,7 @@ return [
         'no_skipped' => '没有跳过的记录。',
         'skip_exists' => '已存在',
         'skip_not_found' => '未找到（更新模式）',
+        'skip_other_client' => '属于其他客户，保持不变',
     ],
     'log_date' => '日期',
     'log_total' => '已获取',

@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Product;
 use App\Models\Server;
 use App\Models\Service;
+use Illuminate\Support\Arr;
 
 /**
  * Imports WHMCS hosting services. The mapping works like the other importers,
@@ -144,7 +145,12 @@ class ServiceImporter
         if ($matchKey !== null && $matchKey !== '') {
             $value = $target[$matchKey] ?? null;
             if ($value !== null && $value !== '') {
-                $existing = Service::where($matchKey, $value)->first();
+                // Only the client's own record is ever matched. A record with
+                // the same key that belongs to someone else is never taken over.
+                $existing = Service::where($matchKey, $value)->where('client_id', $target['client_id'])->first();
+                if ($existing === null && Service::where($matchKey, $value)->exists()) {
+                    return [null, false, __('whmcs_import.log.skip_other_client')];
+                }
             }
         }
 
@@ -153,7 +159,9 @@ class ServiceImporter
                 return [null, false, __('whmcs_import.log.skip_exists')];
             }
 
-            $existing->update($target);
+            // An update never changes who owns the service, nor the product
+            // and server a live account is provisioned on.
+            $existing->update(Arr::except($target, ['client_id', 'product_id', 'server_id']));
 
             return [$existing, false, null];
         }

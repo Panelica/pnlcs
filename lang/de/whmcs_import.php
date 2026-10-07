@@ -85,6 +85,7 @@ return [
         'no_skipped' => 'Keine übersprungenen Datensätze.',
         'skip_exists' => 'existiert bereits',
         'skip_not_found' => 'nicht gefunden (Aktualisierungsmodus)',
+        'skip_other_client' => 'gehört einem anderen Kunden, unverändert gelassen',
     ],
     'log_date' => 'Datum',
     'log_total' => 'Abgerufen',

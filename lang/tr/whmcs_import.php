@@ -85,6 +85,7 @@ return [
         'no_skipped' => 'Atlanan kayıt yok.',
         'skip_exists' => 'zaten mevcut',
         'skip_not_found' => 'bulunamadı (güncelleme modu)',
+        'skip_other_client' => 'başka bir müşteriye ait, olduğu gibi bırakıldı',
     ],
     'log_date' => 'Tarih',
     'log_total' => 'Alınan',

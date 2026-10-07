@@ -5,6 +5,7 @@ namespace App\Services\WhmcsImport;
 use App\Enums\DomainStatus;
 use App\Models\Client;
 use App\Models\Domain;
+use Illuminate\Support\Arr;
 
 /**
  * Imports WHMCS domains. The mapping works exactly like the clients importer,
@@ -132,7 +133,12 @@ class DomainImporter
         if ($matchKey !== null && $matchKey !== '') {
             $value = $target[$matchKey] ?? null;
             if ($value !== null && $value !== '') {
-                $existing = Domain::where($matchKey, $value)->first();
+                // Only the client's own record is ever matched. A record with
+                // the same key that belongs to someone else is never taken over.
+                $existing = Domain::where($matchKey, $value)->where('client_id', $target['client_id'])->first();
+                if ($existing === null && Domain::where($matchKey, $value)->exists()) {
+                    return [null, false, __('whmcs_import.log.skip_other_client')];
+                }
             }
         }
 
@@ -141,7 +147,8 @@ class DomainImporter
                 return [null, false, __('whmcs_import.log.skip_exists')];
             }
 
-            $existing->update($target);
+            // An update never changes who owns the record.
+            $existing->update(Arr::except($target, ['client_id']));
 
             return [$existing, false, null];
         }

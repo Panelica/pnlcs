@@ -85,6 +85,7 @@ return [
         'no_skipped' => 'Brak pominiętych rekordów.',
         'skip_exists' => 'już istnieje',
         'skip_not_found' => 'nie znaleziono (tryb aktualizacji)',
+        'skip_other_client' => 'należy do innego klienta, pozostawiono bez zmian',
     ],
     'log_date' => 'Data',
     'log_total' => 'Pobrano',

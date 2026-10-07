@@ -85,6 +85,7 @@ return [
         'no_skipped' => 'No skipped records.',
         'skip_exists' => 'already exists',
         'skip_not_found' => 'not found (update mode)',
+        'skip_other_client' => 'belongs to another client, left as it is',
     ],
     'log_date' => 'Date',
     'log_total' => 'Fetched',
