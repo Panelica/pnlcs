@@ -6,7 +6,6 @@ use App\Models\Client;
 use App\Models\CustomField;
 use App\Models\CustomFieldValue;
 use App\Models\User;
-use App\Services\PasswordResetSender;
 use Illuminate\Support\Str;
 
 /**
@@ -209,8 +208,9 @@ class ClientImporter
 
     /**
      * The client area signs in as a User, not as a Client. Give an imported
-     * client a login (an existing one when the address already has one) and, for
-     * a fresh one, a reset link so the customer can choose their own password.
+     * client a login (an existing one when the address already has one). The
+     * import sends nothing: an operator imports before announcing the move, and
+     * the customer chooses a password with "Forgot password" when they arrive.
      */
     protected function createLoginUser(Client $client): void
     {
@@ -226,18 +226,12 @@ class ClientImporter
                 'first_name' => $client->first_name,
                 'last_name' => $client->last_name,
                 'email' => $email,
-                // A placeholder hash: the reset link is the customer's way in.
+                // A random password nobody knows: "Forgot password" is the way in.
                 'password' => Str::random(32),
                 'is_active' => true,
             ]);
 
             $client->users()->attach($user->id, ['owner' => true]);
-
-            try {
-                app(PasswordResetSender::class)->send($email);
-            } catch (\Throwable $e) {
-                // A reset mail that cannot be sent must not lose the import.
-            }
 
             return;
         }
