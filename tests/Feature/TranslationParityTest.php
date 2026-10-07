@@ -142,16 +142,20 @@ function localeValues(string $locale): array
 // real words, and in these languages the real word is the English one -
 // GoGetSSL everywhere; German Status, Registrar, Domains, Optional and
 // "Details (optional)"; Polish Status.
+// Raised 2026-10-07 by exactly these, from the import screen (#148), all
+// written the same in English: the names WHMCS and PNLCS on the preview
+// columns (every language); German Name, Host, Port and Domains; Polish
+// Import, Host, Port, Email and "WHMCS ID"; Chinese "WHMCS ID".
 const UNTRANSLATED_VALUE_BUDGET = [
-    'tr' => 34,
+    'tr' => 36,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
     // German hosting writes Domain, Domains and Registrar, not Domäne or
     // Standesbeamter. Those 25 labels are the whole of the raise.
-    'de' => 130,
-    'pl' => 71,
-    'zh' => 21,
+    'de' => 136,
+    'pl' => 79,
+    'zh' => 24,
 ];
 
 test('a complete language is translated, not merely present', function () {
@@ -668,6 +672,9 @@ function turkishBareCompoundHead(string $value): ?string
         // and Modül: participle or adjective + noun, or not a compound at all.
         'Görünen Ad', 'Vadesi Geçmiş', 'Yerel Değer', 'Ana Değer', 'En Fazla Kullanım',
         'Birim Fiyat', 'Sunucu & Modül',
+        // Added 2026-10-07 with the import screen: 'İçe Aktarma Modu' is
+        // marked like 'Bakım Modu'; 'Sabit Değer' is adjective + noun.
+        'İçe Aktarma Modu', 'Sabit Değer',
     ];
 
     if (preg_match('/[.!?:,;]/u', $value) || in_array($value, $correct, true)) {
