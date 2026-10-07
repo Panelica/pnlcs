@@ -154,12 +154,16 @@ What a maintainer does with every pull request, ours and contributed alike.
 
 1. Pick the version by the rules above. Update `CHANGELOG.md`.
 2. Tag the commit: `git tag -a vX.Y.Z-beta.N`.
-3. Build and sign: `tools/release/build-package.sh vX.Y.Z-beta.N`.
+3. Build and sign from the tag:
+   `tools/release/build-package.sh X.Y.Z-beta.N --ref vX.Y.Z-beta.N --key <release key>`.
 4. Run the update lab against the package. All scenarios green.
 5. Apply it to ring 0 with the updater itself, never by hand.
-6. Publish the GitHub (pre-)release with the package, its release statement
-   and signature.
-7. Seven days later, without a regression: tag the same commit `vX.Y.Z`, build,
+6. Create the GitHub (pre-)release as a draft, upload the package, its release
+   statement and signature, check that the uploaded files are byte for byte the
+   built ones, and only then publish it: updaters never see a release without
+   its files.
+7. After publishing, set `VERSION` on `main` to the next version with `-dev`.
+8. Seven days later, without a regression: tag the same commit `vX.Y.Z`, build,
    sign, run the lab, publish.
 
 Publishing a release, a Docker image or a tag is always an explicit decision of
