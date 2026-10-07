@@ -10,6 +10,7 @@ use App\Models\Domain;
 use App\Models\Product;
 use App\Models\Server;
 use App\Models\Service;
+use App\Models\User;
 use App\Services\WhmcsImport\ClientImporter;
 use App\Services\WhmcsImport\DomainImporter;
 use App\Services\WhmcsImport\ImportValidator;
@@ -580,7 +581,7 @@ test('importing clients sends no mail; their logins are ready for "Forgot passwo
     );
 
     Mail::assertNothingSent();
-    expect(\App\Models\User::whereIn('email', ['c1@example.com', 'c2@example.com', 'c3@example.com'])->count())->toBe(3);
+    expect(User::whereIn('email', ['c1@example.com', 'c2@example.com', 'c3@example.com'])->count())->toBe(3);
 });
 
 test('a connection host or database name cannot carry extra connection parameters', function (string $field, string $value) {
