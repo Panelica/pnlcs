@@ -21,8 +21,8 @@ for v in good bad-migration bad-view crash; do run "docker-$v" "$LAB/scenario-do
 run legacy-native "$LAB/scenario-legacy.sh" native || FAILED=1
 run legacy-docker "$LAB/scenario-legacy.sh" docker "$IMAGE" || FAILED=1
 run ui "$LAB/scenario-ui.sh" "$IMAGE" || FAILED=1
-# A real server (nginx + PHP-FPM + MariaDB + cron), when one is given:
-# LAB_VM_IP / LAB_VM_PASS of a fresh Debian or Ubuntu test machine.
+# A real server (nginx + PHP-FPM + MySQL/MariaDB + cron), when one is given:
+# LAB_VM_IP / LAB_VM_PASS of a fresh Debian, Ubuntu, AlmaLinux or Rocky machine.
 if [ -n "${LAB_VM_IP:-}" ]; then run vm "$LAB/scenario-vm.sh" || FAILED=1; else RESULTS+=("vm                       skipped (no LAB_VM_IP)"); fi
 
 printf '%s\n' "${RESULTS[@]}"

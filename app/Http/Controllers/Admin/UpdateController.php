@@ -266,7 +266,10 @@ class UpdateController extends Controller
         }
 
         try {
-            $php = (new PhpExecutableFinder)->find(false);
+            // The command-line PHP of the version serving this page: where
+            // several are installed (Debian, Ubuntu), plain `php` may be another.
+            $versioned = PHP_BINDIR.'/php'.PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;
+            $php = is_executable($versioned) ? $versioned : (new PhpExecutableFinder)->find(false);
             if ($php === false) {
                 return;
             }
