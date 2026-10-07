@@ -58,7 +58,13 @@ HTML="$(page /admin/config/updates)"; TOKEN="$(echo "$HTML" | token)"
 grep -q "public/robots.txt" <<< "$HTML" && grep -q "Conflicts with your changes (1)" <<< "$HTML" && ok "the conflict is shown" || bad "conflict not shown"
 grep -q "Merged with the new version (1)" <<< "$HTML" && ok "the merged admin layout is listed" || bad "merge not listed"
 echo "$HTML" > "$DIR/report.html"; grep -q "acme replaces views" <<< "$HTML" && ok "the theme warning is shown" || bad "no theme warning"
-grep -q "Update now" <<< "$HTML" && bad "Update now offered while a conflict is open" || ok "no Update now while the conflict is open"
+# "Update now" with the conflict still open: refused, nothing changed.
+[ "$(post /admin/config/updates/apply)" = 302 ] || bad "apply with an open conflict"
+wait_state "refused|updated|rolled_back|error" || bad "the refused update did not finish"
+docker exec "$CT" grep -q '"state": "refused"' $APP/storage/app/pnlcs-update/status.json && [ "$(docker exec "$CT" cat $APP/VERSION)" = 1.3.0 ] \
+    && ok "Update now with an open conflict is refused; still 1.3.0" || bad "an update ran over an open conflict"
+grep -q "The update did not start and nothing was changed" <<< "$(page /admin/config/updates)" && ok "the page says why, in words" || bad "no refusal summary"
+HTML="$(page /admin/config/updates)"; TOKEN="$(token <<< "$HTML")"
 grep -q "<<<<<<< your version" <<< "$(curl -s -b "$JAR" "$URL/admin/config/updates/merged?path=public/robots.txt")" && ok "the merged file downloads, with conflict markers" || bad "merged download"
 
 # A file still holding conflict markers is refused; the clean edit is kept.
