@@ -20,7 +20,7 @@ if [ -d "$APP" ]; then mv "$APP" "/var/www/.pnlcs-old-$(date +%s%N)"; fi
 find /var/www -maxdepth 1 -name '.pnlcs-old-*' -exec rm -r {} + 2>/dev/null || true
 mkdir -p /var/www /tmp/pnlcs-home && chown "$WEB_USER" /tmp/pnlcs-home
 "$DB" -e "DROP DATABASE IF EXISTS pnlcs; CREATE DATABASE pnlcs CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-          CREATE USER IF NOT EXISTS 'pnlcs'@'localhost' IDENTIFIED BY 'Lab-password-1'; GRANT ALL ON pnlcs.* TO 'pnlcs'@'localhost'; FLUSH PRIVILEGES;"
+          CREATE USER IF NOT EXISTS 'pnlcs'@'localhost' IDENTIFIED BY 'Lab-password-1'; ALTER USER 'pnlcs'@'localhost' IDENTIFIED BY 'Lab-password-1'; GRANT ALL ON pnlcs.* TO 'pnlcs'@'localhost'; FLUSH PRIVILEGES;"
 
 if [ "$MODE" = git ]; then
   git clone -q --branch lab-main "$LAB/repo.bundle" "$APP"
