@@ -71,13 +71,49 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
 
     {{-- Column 1 --}}
     <div>
+        {{-- Client information and billing identity in one place. The trade
+             title, tax office, tax or national number and address sit together,
+             copyable in one click. A gap is pointed out here, before the
+             invoice is written, not while. --}}
+        @php
+            $identityType = $client->client_type;
+            $identityGaps = $client->missingBillingIdentity();
+            $copyLines = [$client->full_name];
+            if ($identityType) {
+                $copyLines[] = __('admin.clients.billing_type').': '.__('admin.clients.billing_type_'.($identityType === 'company' ? 'company' : 'individual'));
+            }
+            if ($identityType === 'company') {
+                $copyLines[] = __('admin.clients.company').': '.($client->company_name ?: '');
+                $copyLines[] = __('admin.clients.billing_tax_office').': '.($client->tax_office ?: '');
+                $copyLines[] = __('common.form.tax_id').': '.($client->tax_id ?: '');
+            }
+            if ($identityType === 'individual') {
+                $copyLines[] = __('admin.clients.billing_national_id').': '.($client->national_id ?: '');
+            }
+            $copyLines[] = trim(($client->address1 ?: '').' '.($client->city ?: '').' '.($client->postcode ?: '').' '.($client->country ?: ''));
+            $copyLines[] = $client->full_phone;
+            $copyLines[] = $client->email;
+            $copyText = implode("\n", array_filter($copyLines));
+        @endphp
         <div class="panel">
             <div class="panel-heading panel-primary">{{ __('admin.clients.client_information') }}</div>
             <div class="panel-body">
+                @if($identityGaps)
+                    <div style="padding:8px 10px;background:#fcf8e3;border:1px solid #faebcc;border-radius:4px;color:#8a6d3b;font-size:12px;margin-bottom:10px;">
+                        {{ __('admin.clients.billing_missing', ['fields' => implode(', ', \App\Support\BillingIdentity::labels($identityGaps))]) }}
+                    </div>
+                @endif
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
                     <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.clients.name') }}</td><td style="padding:5px 0;font-weight:600;">{{ $client->full_name }}</td></tr>
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_type') }}</td><td style="padding:5px 0;">{{ $identityType ? __('admin.clients.billing_type_'.($identityType === 'company' ? 'company' : 'individual')) : '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.company') }}</td><td style="padding:5px 0;">{{ $client->company_name ?: '-' }}</td></tr>
+                    @if($identityType === 'company')
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_tax_office') }}</td><td style="padding:5px 0;">{{ $client->tax_office ?: '-' }}</td></tr>
+                    @endif
                     <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.tax_id') }}</td><td style="padding:5px 0;">{{ $client->tax_id ?: '-' }}</td></tr>
+                    @if($identityType === 'individual')
+                    <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.billing_national_id') }}</td><td style="padding:5px 0;">{{ $client->national_id ?: '-' }}</td></tr>
+                    @endif
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.email') }}</td><td style="padding:5px 0;"><a href="mailto:{{ $client->email }}" style="color:#337ab7;">{{ $client->email }}</a></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('common.form.billing_email') }}</td><td style="padding:5px 0;">@if($client->billing_email)<a href="mailto:{{ $client->billing_email }}" style="color:#337ab7;">{{ $client->billing_email }}</a>@else - @endif</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.phone') }}</td><td style="padding:5px 0;">{{ $client->full_phone ?: '-' }}</td></tr>
@@ -85,6 +121,11 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.country') }}</td><td style="padding:5px 0;">{{ $client->country ?: '-' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.registered') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                 </table>
+                <textarea id="billing-identity-copy" readonly style="width:100%;margin-top:10px;font-family:monospace;font-size:12px;border:1px solid #ddd;border-radius:4px;padding:8px;resize:vertical;" rows="5">{{ $copyText }}</textarea>
+                {{-- If the copy button is refused clipboard access the text is
+                     selectable above anyway; the button is a convenience. --}}
+                <button type="button" class="btn btn-default btn-sm" style="margin-top:6px;" data-billing-copy>{{ __('admin.clients.billing_copy') }}</button>
+                <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm" style="margin-top:6px;">{{ __('admin.clients.edit_client') }}</a>
             </div>
         </div>
         @if($customFields->isNotEmpty())
@@ -119,54 +160,6 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.total_invoices') }}</td><td style="padding:5px 0;font-weight:600;">{{ $invoiceCount }}</td></tr>
                     <tr style="border-top:1px solid #eee;"><td style="padding:8px 0 5px;color:#777;">{{ __('admin.clients.credit_balance') }}</td><td style="padding:8px 0 5px;font-weight:600;color:#5cb85c;">{{ money_fmt($client->credit) }}</td></tr>
                 </table>
-            </div>
-        </div>
-        {{-- The billing identity. While invoices are issued by hand the trade
-             title, tax office, tax or national number and address sit in one
-             place, copyable in one click - not collected from five screens.
-             A gap is pointed out here, because it has to be noticed before
-             the invoice is written, not while. --}}
-        @php
-            $identityType = $client->client_type;
-            $identityRows = array_filter([
-                __('admin.clients.billing_type') => $identityType
-                    ? __('admin.clients.billing_type_'.($identityType === 'company' ? 'company' : 'individual'))
-                    : null,
-                __('admin.clients.company') => $identityType === 'company' ? $client->company_name : null,
-                __('admin.clients.billing_tax_office') => $identityType === 'company' ? $client->tax_office : null,
-                __('common.form.tax_id') => $identityType === 'company' ? $client->tax_id : null,
-                __('admin.clients.billing_national_id') => $identityType === 'individual' ? $client->national_id : null,
-            ]);
-            $identityGaps = $client->missingBillingIdentity();
-            $copyLines = [$client->full_name];
-            foreach ($identityRows as $label => $value) {
-                $copyLines[] = $label.': '.$value;
-            }
-            $copyLines[] = trim(($client->address1 ?: '').' '.($client->city ?: '').' '.($client->postcode ?: '').' '.($client->country ?: ''));
-            $copyLines[] = $client->full_phone;
-            $copyLines[] = $client->email;
-            $copyText = implode("\n", array_filter($copyLines));
-        @endphp
-        <div class="panel" style="margin-top:10px;">
-            <div class="panel-heading panel-primary">{{ __('admin.clients.billing_identity') }}</div>
-            <div class="panel-body">
-                @if($identityGaps)
-                    <div style="padding:8px 10px;background:#fcf8e3;border:1px solid #faebcc;border-radius:4px;color:#8a6d3b;font-size:12px;margin-bottom:10px;">
-                        {{ __('admin.clients.billing_missing', ['fields' => implode(', ', \App\Support\BillingIdentity::labels($identityGaps))]) }}
-                    </div>
-                @endif
-                <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    @forelse($identityRows as $label => $value)
-                    <tr><td style="padding:5px 0;color:#777;width:40%;">{{ $label }}</td><td style="padding:5px 0;font-weight:600;">{{ $value }}</td></tr>
-                    @empty
-                    <tr><td style="padding:5px 0;color:#777;" colspan="2">{{ __('admin.clients.billing_not_set') }}</td></tr>
-                    @endforelse
-                </table>
-                <textarea id="billing-identity-copy" readonly style="width:100%;margin-top:10px;font-family:monospace;font-size:12px;border:1px solid #ddd;border-radius:4px;padding:8px;resize:vertical;" rows="5">{{ $copyText }}</textarea>
-                {{-- If the copy button is refused clipboard access the text is
-                     selectable above anyway; the button is a convenience. --}}
-                <button type="button" class="btn btn-default btn-sm" style="margin-top:6px;" data-billing-copy>{{ __('admin.clients.billing_copy') }}</button>
-                <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-default btn-sm" style="margin-top:6px;">{{ __('admin.clients.edit_client') }}</a>
             </div>
         </div>
         <div class="panel" style="margin-top:10px;">
