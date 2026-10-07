@@ -3570,5 +3570,6 @@ return [
             'stable' => '稳定',
             'beta' => '测试',
         ],
+        'mode_git' => '通过 git 安装',
     ],
 ];

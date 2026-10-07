@@ -3566,5 +3566,6 @@ return [
             'stable' => 'stabil',
             'beta' => 'Beta-Kanal',
         ],
+        'mode_git' => 'Mit git installiert',
     ],
 ];

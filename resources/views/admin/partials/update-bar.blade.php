@@ -9,9 +9,10 @@
     .pn-update-bar__text{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 280px}
     .pn-update-bar__actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
     .pn-update-bar__actions form{margin:0}
-    .pn-update-pill{position:fixed;right:16px;bottom:16px;z-index:1990;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+    .pn-update-pill{position:fixed;right:16px;bottom:16px;z-index:1990}
+    .pn-update-pill .btn{box-shadow:0 2px 8px rgba(0,0,0,.2)}
     .pn-update-spacer{height:56px}
-    @media (max-width:600px){.pn-update-spacer{height:96px}}
+    @media (max-width:600px){.pn-update-spacer{height:130px}}
 </style>
 @if($updateBar['kind'] === 'unfinished')
 <div class="pn-update-spacer"></div>
@@ -45,9 +46,13 @@
             </form>
         </span>
     </div>
-    <button type="button" class="btn btn-primary btn-sm pn-update-pill" x-show="hidden" x-cloak @click="show()">
-        <i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.bar_pill', ['version' => $updateBar['version']]) }}
-    </button>
+    {{-- x-show sits on a wrapper: the admin stylesheet forces .btn to display
+         with !important, which no x-show on the button itself can override. --}}
+    <div class="pn-update-pill" x-show="hidden" x-cloak>
+        <button type="button" class="btn btn-primary btn-sm" @click="show()">
+            <i class="fas fa-cloud-download-alt"></i> {{ __('admin.updates.bar_pill', ['version' => $updateBar['version']]) }}
+        </button>
+    </div>
 </div>
 @endif
 @endif

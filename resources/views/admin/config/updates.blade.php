@@ -19,12 +19,17 @@
 <style>
     .upd-hint{font-size:13px;color:var(--pn-muted,#777);margin:-6px 0 16px}
     .upd-hint code{background:rgba(0,0,0,.05);padding:1px 6px;border-radius:3px;font-size:12px}
-    .upd-top{display:grid;grid-template-columns:minmax(150px,1fr) minmax(0,2fr) auto;gap:16px 24px;align-items:end}
-    .upd-top__version{font-size:24px;font-weight:700;line-height:1.2}
+    .upd-top{display:grid;grid-template-columns:1fr 2fr 1fr;gap:16px 24px}
+    .upd-top__label{display:block;font-size:12px;font-weight:600;color:var(--pn-muted,#777);margin:0 0 6px;line-height:16px;height:16px}
+    .upd-top__control{display:flex;gap:8px;align-items:center;height:36px}
+    .upd-top__control select,.upd-top__control .btn{height:36px;box-sizing:border-box;margin:0}
+    .upd-top__control select{flex:1 1 auto;min-width:0}
+    .upd-top__version{font-size:24px;font-weight:700;line-height:36px}
+    .upd-top__note{font-size:12px;color:var(--pn-muted,#777);margin-top:6px;line-height:16px;min-height:16px}
+    .upd-top__end{justify-content:flex-end}
+    .upd-top__end-note{text-align:right}
     .upd-muted{font-size:12px;color:var(--pn-muted,#777)}
-    .upd-channel{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
-    .upd-channel .form-group{margin:0;flex:1 1 220px;min-width:0}
-    .upd-channel select{width:100%}
+    @media (max-width:900px){.upd-top{grid-template-columns:1fr}.upd-top__end{justify-content:flex-start}.upd-top__end-note{text-align:left}.upd-top__label:empty,.upd-top__note:empty{display:none}.upd-top__control{height:auto;flex-wrap:wrap}}
     .upd-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
     .upd-section-title{font-size:14px;font-weight:600;margin:16px 0 6px}
     .upd-list{margin:0 0 8px;padding-left:18px;font-size:13px}
@@ -41,7 +46,7 @@
     .upd-upload{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12px}
     .upd-upload input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
     .upd-upload__name{color:var(--pn-muted,#777);overflow-wrap:anywhere}
-    @media (max-width:900px){.upd-top{grid-template-columns:1fr}}
+    .upd-upload .btn{white-space:normal !important;max-width:100%;text-align:left !important}
 </style>
 
 <div class="page-header">
@@ -56,24 +61,29 @@
 <div class="card" style="margin-bottom:16px;">
     <div class="card-body upd-top">
         <div>
-            <div class="upd-muted">{{ __('admin.updates.installed') }}</div>
-            <div class="upd-top__version" data-installed>{{ $installed }}</div>
-            <div class="upd-muted">{{ isset($latest['checked_at']) ? __('admin.updates.last_checked', ['when' => $when($latest['checked_at'])]) : __('admin.updates.never_checked') }}</div>
+            <span class="upd-top__label">{{ __('admin.updates.installed') }}</span>
+            <div class="upd-top__control"><span class="upd-top__version" data-installed>{{ $installed }}</span></div>
+            <div class="upd-top__note">{{ $mode === 'git' ? __('admin.updates.mode_git') : '' }}</div>
         </div>
-        <form method="POST" action="{{ route('admin.config.updates.channel') }}" class="upd-channel">
+        <form method="POST" action="{{ route('admin.config.updates.channel') }}">
             @csrf
-            <div class="form-group">
-                <label class="form-label" for="update-channel">{{ __('admin.updates.channel') }}</label>
+            <label class="upd-top__label" for="update-channel">{{ __('admin.updates.channel') }}</label>
+            <div class="upd-top__control">
                 <select name="channel" id="update-channel" class="form-control">
                     <option value="stable" @selected($channel === 'stable')>{{ __('admin.updates.channel_stable') }}</option>
                     <option value="beta" @selected($channel === 'beta')>{{ __('admin.updates.channel_beta') }}</option>
                 </select>
+                <button type="submit" class="btn btn-default">{{ __('admin.updates.save_channel') }}</button>
             </div>
-            <button type="submit" class="btn btn-default btn-sm">{{ __('admin.updates.save_channel') }}</button>
+            <div class="upd-top__note"></div>
         </form>
         <form method="POST" action="{{ route('admin.config.updates.check') }}">
             @csrf
-            <button type="submit" class="btn btn-primary btn-sm" @disabled($active)>{{ __('admin.updates.check_now') }}</button>
+            <span class="upd-top__label"></span>
+            <div class="upd-top__control upd-top__end">
+                <button type="submit" class="btn btn-primary" @disabled($active)>{{ __('admin.updates.check_now') }}</button>
+            </div>
+            <div class="upd-top__note upd-top__end-note">{{ isset($latest['checked_at']) ? __('admin.updates.last_checked', ['when' => $when($latest['checked_at'])]) : __('admin.updates.never_checked') }}</div>
         </form>
     </div>
 </div>

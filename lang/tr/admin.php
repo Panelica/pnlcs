@@ -3570,5 +3570,6 @@ return [
             'stable' => 'kararlı',
             'beta' => 'beta sürüm',
         ],
+        'mode_git' => 'git ile kurulmuş',
     ],
 ];

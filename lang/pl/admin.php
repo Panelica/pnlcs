@@ -3570,5 +3570,6 @@ return [
             'stable' => 'stabilny',
             'beta' => 'testowy',
         ],
+        'mode_git' => 'Zainstalowany przez git',
     ],
 ];
