@@ -409,11 +409,13 @@ class ConfigController extends Controller
             'code' => 'required|string|max:3|unique:currencies',
             'prefix' => 'nullable|string|max:10',
             'suffix' => 'nullable|string|max:10',
+            'format' => 'nullable|integer|in:'.implode(',', array_keys(Currency::FORMATS)),
             'rate' => 'required|numeric|min:0.00001',
         ]);
         // DB columns are NOT NULL — convert null to empty string
         $v['prefix'] = $v['prefix'] ?? '';
         $v['suffix'] = $v['suffix'] ?? '';
+        $v['format'] = (int) ($v['format'] ?? 1);
         Currency::create($v);
 
         return back()->with('success', __('messages.success.currency_created'));
@@ -425,11 +427,13 @@ class ConfigController extends Controller
             'code' => 'required|string|max:3|unique:currencies,code,'.$currency->id,
             'prefix' => 'nullable|string|max:10',
             'suffix' => 'nullable|string|max:10',
+            'format' => 'nullable|integer|in:'.implode(',', array_keys(Currency::FORMATS)),
             'rate' => 'required|numeric|min:0.00001',
         ]);
         // DB columns are NOT NULL — convert null to empty string
         $v['prefix'] = $v['prefix'] ?? '';
         $v['suffix'] = $v['suffix'] ?? '';
+        $v['format'] = (int) ($v['format'] ?? 1);
         $currency->update($v);
 
         return back()->with('success', __('messages.success.currency_updated'));
