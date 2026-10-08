@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use App\Contracts\ChecksAvailabilityInBulk;
+use App\Models\DomainPricing;
 use App\Models\Setting;
 use App\Services\Module\ModuleRegistry;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use App\Models\DomainPricing;
 
 /**
  * Is a domain name free to register?
@@ -20,7 +21,7 @@ use App\Models\DomainPricing;
 class DomainAvailability
 {
     /** Cached TLD registrar assignments for this service instance. */
-    private ?\Illuminate\Support\Collection $registrarPricing = null;
+    private ?Collection $registrarPricing = null;
 
     /**
      * Port-43 WHOIS servers, by the part of the name after the first dot, or by
@@ -254,10 +255,14 @@ class DomainAvailability
             ->get(['extension', 'auto_registrar'])
             ->sortByDesc(fn ($row) => strlen($row->extension));
 
-        $pricing = $this->registrarPricing->first(fn ($row) =>
-            strlen($domain) > strlen($row->extension)
-            && str_ends_with($domain, strtolower($row->extension))
-        );
+        // On a label boundary: an extension saved without its leading dot
+        // ("com") must not claim every name ending in those letters
+        // (example.telecom).
+        $pricing = $this->registrarPricing->first(function ($row) use ($domain) {
+            $suffix = '.'.ltrim(strtolower(trim((string) $row->extension)), '.');
+
+            return $suffix !== '.' && strlen($domain) > strlen($suffix) && str_ends_with($domain, $suffix);
+        });
 
         $assigned = strtolower(trim((string) ($pricing?->auto_registrar ?? '')));
 
