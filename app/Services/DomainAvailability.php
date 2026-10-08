@@ -6,6 +6,7 @@ use App\Contracts\ChecksAvailabilityInBulk;
 use App\Models\Setting;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Facades\Log;
+use App\Models\DomainPricing;
 
 /**
  * Is a domain name free to register?
@@ -18,6 +19,9 @@ use Illuminate\Support\Facades\Log;
  */
 class DomainAvailability
 {
+    /** Cached TLD registrar assignments for this service instance. */
+    private ?\Illuminate\Support\Collection $registrarPricing = null;
+
     /**
      * Port-43 WHOIS servers, by the part of the name after the first dot, or by
      * the last label when that longer suffix is not listed (com.tr → tr,
@@ -107,39 +111,64 @@ class DomainAvailability
      */
     public function checkMany(array $domains): array
     {
-        $domains = array_values(array_unique(array_map(fn ($d) => strtolower(trim($d)), $domains)));
+        $domains = array_values(array_unique(
+            array_map(fn ($d) => strtolower(trim($d)), $domains)
+        ));
 
-        $module = $this->registrarModule();
-        if (! $module instanceof ChecksAvailabilityInBulk) {
-            $results = [];
-            foreach ($domains as $domain) {
-                $results[$domain] = $this->check($domain);
-            }
-
-            return $results;
+        if ($domains === []) {
+            return [];
         }
 
-        try {
-            $answers = $module->checkAvailabilityBulk($domains);
-        } catch (\Throwable $e) {
-            Log::warning('Registrar bulk availability check failed; falling back to WHOIS', [
-                'domains' => $domains,
-                'message' => $e->getMessage(),
-            ]);
-            $answers = [];
+        // Group by the registrar assigned to each TLD.
+        $groups = [];
+        foreach ($domains as $domain) {
+            $groups[$this->registrarName($domain)][] = $domain;
         }
 
         $results = [];
-        foreach ($domains as $domain) {
-            $result = isset($answers[$domain])
-                ? ['available' => (bool) $answers[$domain]['available'], 'checked' => true]
-                : $this->checkWithWhois($domain);
 
-            $results[$domain] = [
-                'domain' => $domain,
-                'available' => (bool) $result['available'],
-                'checked' => (bool) $result['checked'],
-            ];
+        foreach ($groups as $registrar => $names) {
+            $answers = [];
+
+            $module = $registrar === 'manual'
+                ? null
+                : $this->registrarModule($names[0]);
+
+            // Preserve bulk checks for capable registrars.
+            if ($module instanceof ChecksAvailabilityInBulk) {
+                try {
+                    $answers = $module->checkAvailabilityBulk($names);
+                } catch (\Throwable $e) {
+                    Log::warning('Bulk availability failed', [
+                        'registrar' => $registrar,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            foreach ($names as $domain) {
+                if (
+                    isset($answers[$domain]) &&
+                    is_array($answers[$domain]) &&
+                    array_key_exists('available', $answers[$domain]) &&
+                    empty($answers[$domain]['error'])
+                ) {
+                    $results[$domain] = [
+                        'domain' => $domain,
+                        'available' => (bool) $answers[$domain]['available'],
+                        'checked' => true,
+                    ];
+                } elseif ($module instanceof ChecksAvailabilityInBulk) {
+                    $whois = $this->checkWithWhois($domain);
+                    $results[$domain] = [
+                        'domain' => $domain,
+                        'available' => (bool) $whois['available'],
+                        'checked' => (bool) $whois['checked'],
+                    ];
+                } else {
+                    $results[$domain] = $this->check($domain);
+                }
+            }
         }
 
         return $results;
@@ -164,9 +193,9 @@ class DomainAvailability
     }
 
     /** The configured registrar module, or null when there is none to ask. */
-    private function registrarModule(): ?object
+    private function registrarModule(string $domain): ?object
     {
-        $name = (string) Setting::get('default_registrar', 'domainnameapi');
+        $name = $this->registrarName($domain);
         if ($name === '' || $name === 'manual') {
             return null;
         }
@@ -192,7 +221,7 @@ class DomainAvailability
      */
     private function checkWithRegistrar(string $domain): ?array
     {
-        $module = $this->registrarModule();
+        $module = $this->registrarModule($domain);
         if (! $module) {
             return null;
         }
@@ -215,5 +244,25 @@ class DomainAvailability
 
             return null;
         }
+    }
+
+    private function registrarName(string $domain): string
+    {
+        $domain = strtolower(trim($domain));
+
+        $this->registrarPricing ??= DomainPricing::where('enabled', true)
+            ->get(['extension', 'auto_registrar'])
+            ->sortByDesc(fn ($row) => strlen($row->extension));
+
+        $pricing = $this->registrarPricing->first(fn ($row) =>
+            strlen($domain) > strlen($row->extension)
+            && str_ends_with($domain, strtolower($row->extension))
+        );
+
+        $assigned = strtolower(trim((string) ($pricing?->auto_registrar ?? '')));
+
+        return in_array($assigned, ['', 'manual'], true)
+            ? strtolower(trim((string) Setting::get('default_registrar', 'domainnameapi')))
+            : $assigned;
     }
 }
