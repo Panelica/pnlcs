@@ -154,3 +154,21 @@ test('the language switcher links to the page in the other language, and the cho
 test('switched off, the language switcher keeps today\'s ?lang link', function () {
     expect(LocaleUrl::switchTo('tr', \Illuminate\Http\Request::create('http://localhost/client/login?x=1')))->toBe('http://localhost/client/login?x=1&lang=tr');
 });
+
+test('an administrator switches it on and off on the languages screen', function () {
+    $admin = \App\Models\Admin::factory()->create(['role_id' => \App\Models\AdminRole::factory()->fullAdmin()->create()->id]);
+
+    $this->actingAs($admin, 'admin')->get(route('admin.config.languages.index'))
+        ->assertOk()->assertSee('name="locale_urls"', false);
+
+    $this->actingAs($admin, 'admin')->post(route('admin.config.languages.url-setting'), ['locale_urls' => '1'])->assertSessionHasNoErrors();
+    expect(Setting::get(LocaleUrl::SETTING))->toBe('1')->and(LocaleUrl::enabled())->toBeTrue();
+    // as a visitor (acting as staff makes the admin guard the default one)
+    app('auth')->forgetGuards();
+    $this->get('/tr/client/login')->assertOk();
+
+    $this->actingAs($admin, 'admin')->post(route('admin.config.languages.url-setting'), ['locale_urls' => '0']);
+    expect(LocaleUrl::enabled())->toBeFalse();
+    app('auth')->forgetGuards();
+    $this->get('/tr/client/login')->assertNotFound();
+});

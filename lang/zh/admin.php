@@ -881,6 +881,8 @@ return [
     'config.languages.ai_settings_hint' => '各语言编辑器中的“使用 AI 翻译”会使用这些设置。已保存的密钥不会再次显示；如需保留，请将此字段留空。',
     'config.languages.clear_cache' => '清除缓存',
     'config.languages.default_language' => '默认语言',
+    'config.languages.locale_urls' => '在网址中显示语言',
+    'config.languages.locale_urls_hint' => '默认语言保留当前网址；其他每种启用的语言都以其代码作为前缀，例如 :example 变为 /en/client/store。搜索引擎可以分别收录每种语言，分享的链接会以复制时的语言打开。',
     'config.languages.inactive_enabled_on_save' => '保存后将启用',
     'config.languages.direction' => '文字方向',
     'config.languages.flag' => '国旗图标',

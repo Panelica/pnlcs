@@ -143,6 +143,20 @@
         </form>
     </div>
 </div>
+<div class="card" style="margin-top:16px;">
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.config.languages.url-setting') }}">
+            @csrf
+            <label style="display:flex;align-items:center;gap:8px;font-weight:600;cursor:pointer;">
+                <input type="hidden" name="locale_urls" value="0">
+                <input type="checkbox" name="locale_urls" value="1" {{ \App\Support\LocaleUrl::enabled() ? 'checked' : '' }}>
+                {{ __('admin.config.languages.locale_urls') }}
+            </label>
+            <p style="margin:6px 0 12px;font-size:13px;color:#666;max-width:720px;">{{ __('admin.config.languages.locale_urls_hint', ['example' => url('/client/store')]) }}</p>
+            <button type="submit" class="btn btn-primary">{{ __('common.actions.save_changes') }}</button>
+        </form>
+    </div>
+</div>
 </div>
 
 <script>
