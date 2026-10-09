@@ -611,7 +611,7 @@ return [
         'subtitle' => 'Laden Sie Ihr Kontoguthaben auf.',
         'title' => 'Geld hinzufügen',
     ],
-    'funds.amount_range' => 'Mindestens 5,00 $ · Maximal 10.000,00 $',
+    'funds.amount_range' => 'Mindestens :min · Maximal :max',
     'funds.available_credit_desc' => 'Verfügbar zur Verwendung auf Rechnungen und Bestellungen',
     'funds.bank_transfer' => 'Banküberweisung',
     'funds.current_credit' => 'Girokontokredit',

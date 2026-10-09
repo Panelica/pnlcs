@@ -17,9 +17,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Since 2026-10-09 those texts ship in lang/en, lang/tr, lang/de, lang/pl and
  * lang/zh, and 2026_10_09_000001 removes the database copies. What this file
- * holds now: no English text lives only in the database again, the complete
- * languages keep English's placeholders, and the list of texts written the same
- * as English on purpose is exact.
+ * holds now: no English text lives only in the database again, and the list of
+ * texts written the same as English on purpose is exact.
  */
 
 const COMPLETE_LOCALES = ['tr', 'de', 'pl', 'zh'];
@@ -84,42 +83,8 @@ test('a Turkish page counts in Turkish', function () {
     }
 });
 
-/*
- * A placeholder that does not survive translation is a broken string: Laravel
- * leaves ":count" on the page, or drops the number entirely.
- */
-test('the complete languages keep the placeholders English declares', function () {
-    $repository = app(OfficialTranslationRepository::class);
-    $english = $repository->forLocale('en');
-
-    $placeholders = function (string $value): array {
-        // ":run" inside "artisan schedule:run" is part of a command example,
-        // not a placeholder; Laravel only replaces what it is given.
-        preg_match_all('/(?<![a-zA-Z0-9]):([a-zA-Z_]+)/', $value, $matches);
-        $found = array_unique($matches[1]);
-        sort($found);
-
-        return $found;
-    };
-
-    $broken = [];
-    foreach (COMPLETE_LOCALES as $locale) {
-        $translated = $repository->forLocale($locale);
-        foreach ($english as $group => $keys) {
-            foreach ($keys as $key => $value) {
-                if (! isset($translated[$group][$key])) {
-                    continue;   // TranslationParityTest owns missing keys
-                }
-                $want = $placeholders((string) $value);
-                if (array_diff($want, $placeholders((string) $translated[$group][$key]))) {
-                    $broken[] = "{$locale} {$group}.{$key} expects :".implode(' :', $want);
-                }
-            }
-        }
-    }
-
-    expect($broken)->toBe([]);
-});
+// Placeholders and markup are checked for every language, complete or not,
+// in tests/Feature/TranslationSafetyTest.php.
 
 /*
  * The texts a complete language writes exactly as English does are listed one
@@ -155,6 +120,18 @@ test('the list of texts written the same as English is exact', function () {
         }
         foreach (array_diff($list[$locale] ?? [], $identical) as $key) {
             $problems[] = "{$locale} {$key} is listed but no longer the same as English: remove it from the list";
+        }
+    }
+
+    // A community language may list its own (docs/developer/translations.md);
+    // it is not required to, but a line that is no longer true still goes.
+    foreach (array_diff(array_keys($list), COMPLETE_LOCALES) as $locale) {
+        $translated = $repository->forLocale($locale);
+        foreach ($list[$locale] as $fullKey) {
+            [$group, $key] = explode('.', $fullKey, 2);
+            if (($translated[$group][$key] ?? null) !== ($english[$group][$key] ?? false)) {
+                $problems[] = "{$locale} {$fullKey} is listed but no longer the same as English: remove it from the list";
+            }
         }
     }
 

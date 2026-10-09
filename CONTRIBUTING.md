@@ -142,7 +142,10 @@ PNLCS ships 30 locales. To add or fix translations:
 - Locale files live under `lang/{code}/`
 - Add the key in `lang/en/...` first (English is canonical)
 - Every new key must also exist in `tr`, `de`, `pl` and `zh`, in the same key order as English; the parity tests fail otherwise. If you cannot write one of them, say so in the PR and a maintainer will add it
+- The other 25 languages are community languages: a key they do not have shows in English, so a new key does not have to be written in them
+- Every language must keep the English placeholders (`:name`) and exactly its HTML tags; `php artisan test --filter=Translation` checks it
 - Provide the corresponding entry in your target locale
+- The full guide, including texts that stay the same as English: [docs/developer/translations.md](docs/developer/translations.md)
 - For new locales, open an issue first so we can coordinate flag, RTL handling, and seed scripts
 
 Do not hand-edit machine-translated files unless you're a fluent speaker.

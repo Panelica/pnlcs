@@ -611,7 +611,7 @@ return [
         'subtitle' => '为账户余额充值。',
         'title' => '充值',
     ],
-    'funds.amount_range' => '最低 $5.00，最高 $10,000.00',
+    'funds.amount_range' => '最低 :min，最高 :max',
     'funds.available_credit_desc' => '可用于支付发票和订单。',
     'funds.bank_transfer' => '银行转账',
     'funds.current_credit' => '当前账户余额',

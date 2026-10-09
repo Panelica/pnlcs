@@ -3,14 +3,18 @@
 /*
  * Every language against English.
  *
- * Twenty-six of the thirty languages sit at exactly the same 2,921 keys, which
- * is what it looks like when a set of files is generated once and never touched
- * again. Chasing all of it down in one go is not realistic, so this test does
- * the next best thing: it writes today's gap down and fails when a gap grows.
+ * Two kinds of language ship. The complete ones - Turkish, German, Polish and
+ * Chinese - are held to every English key, and a new English text has to be
+ * written in all of them before it is merged. The other twenty-five are the
+ * community's: they are translated as people contribute, and a key they do
+ * not have yet shows in English (fallback_locale), never as a raw key.
  *
- * That means an English string added tomorrow cannot quietly widen the hole in
- * twenty-eight languages. Translate it, or lower the number here on purpose.
- * The numbers may only ever go down.
+ * Until 2026-10-09 the community languages were held to a budget that could
+ * only go down. That punished progress: the moment someone turned a stub file
+ * into a real translation, every English text added after it broke the build
+ * for that language until somebody wrote it in twenty-five languages. They are
+ * reported now, not enforced; what is enforced for them is that what they do
+ * say is safe to show (placeholders, markup, no blank lines, a loadable file).
  */
 
 /** @return array<string, true> every key in a locale, flattened to "file.dotted.key" */
@@ -38,47 +42,38 @@ function localeKeys(string $locale): array
     return $keys;
 }
 
-// Measured 2026-08-20. Lower these as translations land; never raise them.
-const TRANSLATION_GAP_BUDGET = [
-    'pl' => 0,
-    'zh' => 0,
-    'tr' => 0,
+/** Shipped complete; every English key must exist in them. */
+const TRANSLATION_COMPLETE_LANGUAGES = [
+    'tr', 'pl', 'zh',
     // German: complete since Dirk Mehmke's translation, 2026-09-23.
-    'de' => 0,
-    // The twenty-five that were generated together and left behind.
-    // Raised 2026-10-09 from 984 by exactly the twelve home page texts of the
-    // apps section (sections.apps.eyebrow, step1..3, ...): they lived only in
-    // English database rows, so these languages already showed them in
-    // English; moving them into lang/en made the gap visible, not wider.
-    'ar' => 996, 'az' => 996, 'ca' => 996, 'cs' => 996, 'da' => 996,
-    'el' => 996, 'es' => 996, 'et' => 996, 'fa' => 996, 'fi' => 996, 'fr' => 996,
-    'he' => 996, 'hr' => 996, 'hu' => 996, 'it' => 996, 'ja' => 996, 'ko' => 996,
-    'mk' => 996, 'nl' => 996, 'no' => 996, 'pt-br' => 996, 'ro' => 996,
-    'ru' => 996, 'sv' => 996, 'uk' => 996,
+    'de',
 ];
 
-test('no language falls further behind English than it already is', function () {
+/** Translated by the community: reported, never a reason to fail the build. */
+const TRANSLATION_COMMUNITY_LANGUAGES = [
+    'ar', 'az', 'ca', 'cs', 'da', 'el', 'es', 'et', 'fa', 'fi', 'fr', 'he', 'hr',
+    'hu', 'it', 'ja', 'ko', 'mk', 'nl', 'no', 'pt-br', 'ro', 'ru', 'sv', 'uk',
+];
+
+test('the community languages are reported, not enforced', function () {
     $english = localeKeys('en');
     expect($english)->not->toBeEmpty();
 
-    $worse = [];
-    foreach (array_keys(TRANSLATION_GAP_BUDGET) as $locale) {
-        $missing = count(array_diff_key($english, localeKeys($locale)));
-        $budget = TRANSLATION_GAP_BUDGET[$locale];
-        if ($missing > $budget) {
-            $worse[] = sprintf('%s is missing %d keys, budget %d', $locale, $missing, $budget);
-        }
+    $report = sprintf("\n  Community languages, keys still in English (of %d):\n", count($english));
+    foreach (TRANSLATION_COMMUNITY_LANGUAGES as $locale) {
+        $report .= sprintf("    %-6s %5d\n", $locale, count(array_diff_key($english, localeKeys($locale))));
     }
 
-    expect($worse)->toBe([], "Translate the new strings, or lower the budget deliberately:\n".implode("\n", $worse));
+    fwrite(STDOUT, $report);
 });
 
 test('every shipped language is accounted for', function () {
     $shipped = array_map('basename', glob(base_path('lang/*'), GLOB_ONLYDIR));
-    $tracked = array_merge(['en'], array_keys(TRANSLATION_GAP_BUDGET));
+    $tracked = array_merge(['en'], TRANSLATION_COMPLETE_LANGUAGES, TRANSLATION_COMMUNITY_LANGUAGES);
 
-    // A language added without a budget line would never be checked again.
-    expect(array_values(array_diff($shipped, $tracked)))->toBe([]);
+    // A language added to neither list would never be checked again.
+    expect(array_values(array_diff($shipped, $tracked)))->toBe([])
+        ->and(array_intersect(TRANSLATION_COMPLETE_LANGUAGES, TRANSLATION_COMMUNITY_LANGUAGES))->toBe([]);
 });
 
 test('the complete languages stay complete', function () {
@@ -88,8 +83,9 @@ test('the complete languages stay complete', function () {
     // says nothing about what is on that line, which is the next three tests'
     // job. Keeping the two apart is deliberate: a missing key and an English
     // value are different faults with different fixes.
-    foreach (['pl', 'zh', 'tr', 'de'] as $locale) {
-        expect(count(array_diff_key(localeKeys('en'), localeKeys($locale))))->toBe(0);
+    foreach (TRANSLATION_COMPLETE_LANGUAGES as $locale) {
+        $missing = array_keys(array_diff_key(localeKeys('en'), localeKeys($locale)));
+        expect($missing)->toBe([], "{$locale} is a complete language; write these in it:\n".implode("\n", array_slice($missing, 0, 30)));
     }
 });
 
@@ -485,7 +481,7 @@ test('no shipped translation is blank', function () {
     $english = localeValues('en');
 
     $blank = [];
-    foreach (array_merge(['en'], array_keys(TRANSLATION_GAP_BUDGET)) as $locale) {
+    foreach (array_merge(['en'], TRANSLATION_COMPLETE_LANGUAGES, TRANSLATION_COMMUNITY_LANGUAGES) as $locale) {
         foreach (localeValues($locale) as $key => $value) {
             if (trim($value) === '' && trim($english[$key] ?? '') !== '') {
                 $blank[] = $locale.'.'.$key;
