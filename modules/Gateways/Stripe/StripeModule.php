@@ -400,7 +400,9 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
     public function getPaymentForm(Invoice $invoice): string
     {
         $publishableKey = $this->getSetting("publishable_key") ?? "";
-        $amount         = number_format($invoice->amountDue(), 2, ".", "");
+        // The amount with its currency sign, in the currency it is charged
+        // in: "Pay 12.00" did not say whether that was euros or lira.
+        $amount         = invoice_money_fmt($invoice->amountDue(), $invoice);
         $invoiceId      = (int) $invoice->id;
 
         if (!$publishableKey) {
