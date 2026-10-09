@@ -65,7 +65,7 @@
                 </form>
                 @endunless
                 <button type="button" class="btn btn-default btn-xs"
-                    onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'rate'=>$currency->rate,'default'=>$currency->is_default]) }})">{{ __('common.actions.edit') }}</button>
+                    onclick="openEditCurrency({{ json_encode(['id'=>$currency->id,'code'=>$currency->code,'prefix'=>$currency->prefix,'suffix'=>$currency->suffix,'format'=>(int) $currency->format,'rate'=>$currency->rate,'default'=>$currency->is_default]) }})">{{ __('common.actions.edit') }}</button>
                 @if(!$currency->is_default)
                 <form method="POST" action="{{ route('admin.config.currencies.destroy', $currency) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js($currency->code), {title: @js(__('admin.currencies.confirm_delete')), danger: true})">
                     @csrf @method('DELETE')
@@ -94,6 +94,7 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.exchange_rate') }}</label><input type="number" name="rate" step="0.000001" required value="1" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.prefix_symbol') }}</label><input type="text" name="prefix" class="form-control" placeholder="$"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.suffix') }}</label><input type="text" name="suffix" class="form-control"></div>
+                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.currencies.number_format') }}</label><select name="format" class="form-control">@foreach(array_keys(\App\Models\Currency::FORMATS) as $f)<option value="{{ $f }}">{{ (new \App\Models\Currency(['format' => $f]))->number(1234.56) }}</option>@endforeach</select></div>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -119,6 +120,7 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.exchange_rate') }}</label><input type="number" name="rate" id="ec-rate" step="0.000001" required class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.prefix') }}</label><input type="text" name="prefix" id="ec-prefix" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.currencies.suffix') }}</label><input type="text" name="suffix" id="ec-suffix" class="form-control"></div>
+                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.currencies.number_format') }}</label><select name="format" id="ec-format" class="form-control">@foreach(array_keys(\App\Models\Currency::FORMATS) as $f)<option value="{{ $f }}">{{ (new \App\Models\Currency(['format' => $f]))->number(1234.56) }}</option>@endforeach</select></div>
                     <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="default" value="1" id="ec-default"> {{ __('admin.currencies.set_as_default') }}</label></div>
                 </div>
             </div>
@@ -137,6 +139,7 @@ function openEditCurrency(d) {
     document.getElementById('ec-rate').value = d.rate;
     document.getElementById('ec-prefix').value = d.prefix || '';
     document.getElementById('ec-suffix').value = d.suffix || '';
+    document.getElementById('ec-format').value = String(d.format || 1);
     document.getElementById('ec-default').checked = !!d.default;
     document.getElementById('modal-edit-currency').style.display = 'flex';
 }

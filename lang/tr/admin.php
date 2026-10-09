@@ -981,6 +981,7 @@ return [
     'currencies.rate' => 'Oran',
     'currencies.set_as_default' => 'Varsayılan Yap',
     'currencies.suffix' => 'Son Ek',
+    'currencies.number_format' => 'Sayı biçimi',
     'currencies.title' => 'Para Birimleri',
     'currencies.settings_title' => 'Müşteri para birimi ve döviz kurları',
     'currencies.customer_choice' => 'Müşteriler kendi para birimini seçebilsin',

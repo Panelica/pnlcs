@@ -991,6 +991,7 @@ return [
     'currencies.rate' => '汇率',
     'currencies.set_as_default' => '设为默认',
     'currencies.suffix' => '后缀',
+    'currencies.number_format' => '数字格式',
     'currencies.title' => '货币',
     'currencies.settings_title' => '客户货币与汇率',
     'currencies.customer_choice' => '允许客户选择自己的货币',

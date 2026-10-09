@@ -991,6 +991,7 @@ return [
     'currencies.rate' => 'Rate',
     'currencies.set_as_default' => 'Set as Default',
     'currencies.suffix' => 'Suffix',
+    'currencies.number_format' => 'Number format',
     'currencies.title' => 'Currencies',
     'currencies.settings_title' => 'Customer currency and exchange rates',
     'currencies.customer_choice' => 'Let customers choose their currency',

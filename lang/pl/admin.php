@@ -991,6 +991,7 @@ return [
     'currencies.rate' => 'Kurs',
     'currencies.set_as_default' => 'Ustaw jako domyślną',
     'currencies.suffix' => 'Sufiks',
+    'currencies.number_format' => 'Format liczb',
     'currencies.title' => 'Waluty',
     'currencies.settings_title' => 'Waluta klienta i kursy walut',
     'currencies.customer_choice' => 'Pozwól klientom wybrać walutę',

@@ -14,8 +14,6 @@ if (! function_exists('money_fmt')) {
      */
     function money_fmt(float|int|string|null $amount): string
     {
-        $value = number_format((float) $amount, 2);
-
         // Wrapped in an array: the container cannot resolve a bare null.
         if (! app()->bound('pnlcs.currency')) {
             try {
@@ -28,8 +26,8 @@ if (! function_exists('money_fmt')) {
         $currency = app('pnlcs.currency')['currency'] ?? null;
 
         return $currency
-            ? $currency->prefix.$value.$currency->suffix
-            : '$'.$value;
+            ? $currency->prefix.$currency->number($amount).$currency->suffix
+            : '$'.number_format((float) $amount, 2);
     }
 }
 if (! function_exists('payment_method_label')) {
@@ -340,7 +338,7 @@ if (! function_exists('display_money_fmt')) {
             $suffix = ' '.strtoupper((string) $currency->code);
         }
 
-        return $prefix.number_format(display_price($amount), 2).$suffix;
+        return $prefix.$currency->number(display_price($amount)).$suffix;
     }
 }
 
@@ -362,7 +360,11 @@ if (! function_exists('display_currency_affixes')) {
             $suffix = ' '.strtoupper((string) $currency->code);
         }
 
-        return ['prefix' => $prefix, 'suffix' => $suffix];
+        // The page's own script writes running totals; it needs the same
+        // decimal mark and thousands separator the server writes with.
+        [$decimal, $thousands] = \App\Models\Currency::FORMATS[(int) ($currency->format ?? 1)] ?? \App\Models\Currency::FORMATS[1];
+
+        return ['prefix' => $prefix, 'suffix' => $suffix, 'decimal' => $decimal, 'thousands' => $thousands];
     }
 }
 
@@ -428,11 +430,12 @@ if (! function_exists('invoice_money_fmt')) {
         }
 
         $currency = $cache[$code];
-        $value = number_format((float) $amount, 2);
 
         if (! $currency) {
-            return $value.' '.$code;
+            return number_format((float) $amount, 2).' '.$code;
         }
+
+        $value = $currency->number($amount);
 
         $prefix = $currency->prefix ?? '';
         $suffix = $currency->suffix ?? '';
@@ -469,7 +472,7 @@ if (! function_exists('billing_money_fmt')) {
             $suffix = ' '.$invoice->billing_currency;
         }
 
-        return $prefix.number_format($converted, 2).$suffix;
+        return $prefix.($currency ? $currency->number($converted) : number_format($converted, 2)).$suffix;
     }
 }
 
