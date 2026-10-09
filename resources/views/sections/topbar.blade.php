@@ -23,7 +23,7 @@
                     </summary>
                     <div class="top-bar__language-menu">
                         @foreach($activeLanguages as $language)
-                            <a href="{{ request()->fullUrlWithQuery(['lang' => $language->code]) }}" class="top-bar__language-option {{ $language->code === ($currentLocale ?? app()->getLocale()) ? 'top-bar__language-option--active' : '' }}">
+                            <a href="{{ \App\Support\LocaleUrl::switchTo($language->code) }}" class="top-bar__language-option {{ $language->code === ($currentLocale ?? app()->getLocale()) ? 'top-bar__language-option--active' : '' }}">
                                 {{ $language->native_name }}
                             </a>
                         @endforeach

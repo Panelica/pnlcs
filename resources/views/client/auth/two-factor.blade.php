@@ -18,6 +18,7 @@
         .alert { background:#fee; border:1px solid #fcc; color:#c00; padding:10px; border-radius:6px; margin-bottom:16px; font-size:13px; }
     </style>
     {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
+    @include('partials.locale-alternates')
 </head>
 <body>
 <div class="card">

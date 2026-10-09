@@ -122,3 +122,35 @@ test('a form on a prefixed page posts to a prefixed address that works', functio
         ->assertRedirect()
         ->assertSessionHasErrors();
 });
+
+test('every page names its address in each language for search engines', function () {
+    localeUrlsOn();
+
+    $root = rtrim(url('/'), '/');
+
+    $this->get('/tr/client/login')
+        ->assertSee('<link rel="alternate" hreflang="en" href="'.$root.'/client/login">', false)
+        ->assertSee('<link rel="alternate" hreflang="tr" href="'.$root.'/tr/client/login">', false)
+        ->assertSee('<link rel="alternate" hreflang="x-default" href="'.$root.'/client/login">', false)
+        ->assertSee('<link rel="canonical" href="'.$root.'/tr/client/login">', false);
+});
+
+test('switched off, pages carry no language links', function () {
+    $this->get('/client/login')->assertOk()->assertDontSee('hreflang', false);
+});
+
+test('the language switcher links to the page in the other language, and the choice is remembered', function () {
+    localeUrlsOn();
+
+    expect(LocaleUrl::switchTo('tr', \Illuminate\Http\Request::create('http://localhost/client/login')))->toBe(rtrim(url('/'), '/').'/tr/client/login?lang=tr');
+
+    // following it: the page in Turkish at its own address, without ?lang
+    $this->get('/tr/client/login?lang=tr')->assertRedirect('/tr/client/login');
+    // and back to the default language
+    $this->withSession(['locale' => 'tr'])->get('/client/login?lang=en')->assertRedirect('/client/login');
+    $this->get('/client/login')->assertOk()->assertSee('lang="en"', false);
+});
+
+test('switched off, the language switcher keeps today\'s ?lang link', function () {
+    expect(LocaleUrl::switchTo('tr', \Illuminate\Http\Request::create('http://localhost/client/login?x=1')))->toBe('http://localhost/client/login?x=1&lang=tr');
+});

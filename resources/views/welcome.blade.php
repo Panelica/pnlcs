@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="{{ $activeThemeAssets }}/css/theme.css">
     @endif
     {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
+    @include('partials.locale-alternates')
 </head>
 <body x-data="{ mobileMenu: false }">
 

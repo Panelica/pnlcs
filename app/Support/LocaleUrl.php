@@ -117,9 +117,29 @@ class LocaleUrl
         $locale = strtolower($locale);
         $prefixed = $locale !== self::defaultLocale() && in_array($locale, self::prefixed(), true);
 
-        $url = rtrim($request->root(), '/').($prefixed ? '/'.$locale.($path === '/' ? '' : $path) : $path);
+        // the root links are made with (a configured domain wins over the request's)
+        $root = rtrim(url()->formatRoot(url()->formatScheme()), '/');
+        $url = $root.($prefixed ? '/'.$locale.($path === '/' ? '' : $path) : $path);
 
         return $query ? $url.'?'.http_build_query($query) : $url;
+    }
+
+    /**
+     * A language switcher's link: with the setting on, the page at that
+     * language's address; ?lang makes it the visitor's choice (SetLocale then
+     * drops it from the address). With the setting off, today's ?lang link.
+     */
+    public static function switchTo(string $locale, ?Request $request = null): string
+    {
+        $request ??= request();
+
+        if (! self::enabled()) {
+            return $request->fullUrlWithQuery(['lang' => $locale]);
+        }
+
+        $url = self::current($locale, $request);
+
+        return $url.(str_contains($url, '?') ? '&' : '?').'lang='.rawurlencode($locale);
     }
 
     private static function memo(): array
