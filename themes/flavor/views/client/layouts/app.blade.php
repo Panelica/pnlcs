@@ -271,6 +271,7 @@
     </style>
     @yield("styles")
     @include('partials.dialog-boot')
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
 </head>
 <body>
 
@@ -507,6 +508,7 @@ document.addEventListener("click", function(e) {
     }
 });
 </script>
+{!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
 </body>
 </html>
 <script>

@@ -93,3 +93,18 @@ test('staff set it on the general settings', function () {
     expect(Setting::get('TrackingGtmId'))->toBe('GTM-XYZ9876')
         ->and(Setting::get('TrackingHeadCode'))->toBe('<meta name="v" content="1">');
 });
+
+test('a theme that brings its own layouts carries the codes and the bar too', function () {
+    // flavor replaces both the home page and the client layout; the hook
+    // points that print the codes must be in its layouts as well.
+    Setting::set('TrackingGtmId', 'GTM-ABC1234', 'general');
+    app('view')->prependLocation(base_path('themes/flavor/views'));
+    app('view')->getFinder()->flush();
+
+    foreach ([route('client.contact'), '/'] as $url) {
+        $html = $this->get($url)->assertOk()->getContent();
+
+        expect($html)->toContain("'GTM-ABC1234'")
+            ->and($html)->toContain('id="pnlcs-consent"');
+    }
+});
