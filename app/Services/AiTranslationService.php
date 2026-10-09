@@ -7,6 +7,7 @@ use App\Models\Language;
 use App\Models\Setting;
 use App\Translation\OfficialTranslationRepository;
 use App\Translation\TranslationCacheManager;
+use App\Translation\TranslationCoverage;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -22,8 +23,9 @@ use Illuminate\Support\Facades\Http;
  * again in the same run.
  *
  * Two modes:
- *  - missing: only keys the language has no text for, in its files or in
- *    the database. Nothing the operator or the project wrote is touched.
+ *  - missing: only keys the language does not say in its own words - no
+ *    text at all, or still the English one (TranslationCoverage). A text
+ *    that differs from English is never touched.
  *  - all: every key, from the English source, overwriting what is there.
  *    For a language whose existing text cannot be trusted.
  *
@@ -43,7 +45,10 @@ class AiTranslationService
 
     public const DEFAULT_MODEL = 'gpt-4o-mini';
 
-    public function __construct(private OfficialTranslationRepository $official) {}
+    public function __construct(
+        private OfficialTranslationRepository $official,
+        private TranslationCoverage $coverage,
+    ) {}
 
     public function configured(): bool
     {
@@ -75,7 +80,7 @@ class AiTranslationService
         }
 
         if ($mode === 'missing') {
-            foreach ($this->existing($locale) as $fullKey => $_) {
+            foreach ($this->coverage->translated($locale) as $fullKey => $_) {
                 unset($english[$fullKey]);
             }
         }
@@ -128,7 +133,10 @@ class AiTranslationService
 
             // The same words the language file already ships need no
             // override - one would only hide the file's later improvements.
-            if (($shipped[$group][$key] ?? null) === $value) {
+            // Except the English text given back: kept, marked as machine
+            // translated, so "translate missing" knows it was answered and
+            // does not ask about it again (TranslationCoverage).
+            if (($shipped[$group][$key] ?? null) === $value && $value !== $source) {
                 DynamicTranslation::where(['language' => $language->code, 'group' => $group, 'key' => $key])->delete();
             } else {
                 DynamicTranslation::updateOrCreate(
@@ -172,27 +180,6 @@ class AiTranslationService
     }
 
     /** @return array<string, true> keys that already have text in this language */
-    private function existing(string $locale): array
-    {
-        $have = [];
-        foreach ($this->official->forLocale($locale) as $group => $keys) {
-            foreach ($keys as $key => $value) {
-                if (trim($value) !== '') {
-                    $have[$group.'.'.$key] = true;
-                }
-            }
-        }
-
-        DynamicTranslation::where('language', $locale)
-            ->whereNotNull('value')->where('value', '!=', '')
-            ->get(['group', 'key'])
-            ->each(function ($row) use (&$have) {
-                $have[$row->group.'.'.$row->key] = true;
-            });
-
-        return $have;
-    }
-
     /**
      * @param  array<string, string>  $items  "group.key" => English
      * @return array<string, mixed>

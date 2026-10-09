@@ -8,6 +8,7 @@ use App\Models\Language;
 use App\Models\Setting;
 use App\Services\AiTranslationService;
 use App\Translation\OfficialTranslationRepository;
+use App\Translation\TranslationCoverage;
 use App\Translation\TranslationCacheManager;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,47 +16,16 @@ use Illuminate\Validation\Rule;
 
 class TranslationController extends Controller
 {
-    public function index(OfficialTranslationRepository $officialTranslations)
+    public function index(TranslationCoverage $coverage)
     {
         $languages = Language::orderBy('sort_order')->get();
 
-        $english = $officialTranslations->forLocale('en');
-        $totalKeys = array_sum(array_map('count', $english));
-        $englishKeys = [];
-        foreach ($english as $group => $keys) {
-            foreach ($keys as $key => $_value) {
-                $englishKeys[$group.'.'.$key] = true;
-            }
-        }
+        // A text counts as translated only when it is not simply the English
+        // one (TranslationCoverage): a language full of English used to show
+        // a high percentage.
+        $totalKeys = count($coverage->english());
         foreach ($languages as $lang) {
-            if ($lang->code === 'en') {
-                $lang->translation_progress = 100;
-            } else {
-                $official = $officialTranslations->forLocale($lang->code);
-                $translatedKeys = [];
-                foreach ($english as $group => $keys) {
-                    foreach ($keys as $key => $_value) {
-                        if (trim($official[$group][$key] ?? '') !== '') {
-                            $translatedKeys[$group.'.'.$key] = true;
-                        }
-                    }
-                }
-
-                DynamicTranslation::where('language', $lang->code)
-                    ->whereNotNull('value')
-                    ->where('value', '!=', '')
-                    ->get(['group', 'key'])
-                    ->each(function ($row) use (&$translatedKeys, $englishKeys) {
-                        $key = $row->group.'.'.$row->key;
-                        if (isset($englishKeys[$key])) {
-                            $translatedKeys[$key] = true;
-                        }
-                    });
-
-                $lang->translation_progress = $totalKeys > 0
-                    ? round((count($translatedKeys) / $totalKeys) * 100, 1)
-                    : 0;
-            }
+            $lang->translation_progress = $lang->code === 'en' ? 100 : $coverage->percent($lang->code);
             $lang->save();
         }
 
