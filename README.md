@@ -1791,6 +1791,12 @@ to get the fastest community response.
 - **WHMCS** — for inspiring much of the data model and workflow
 - Every contributor who opens an issue or a pull request
 
+### Translators
+
+PNLCS ships in 30 languages, and most of them are completed by the people who
+use them. Everyone whose translation is merged is listed here, by language,
+for good. To join them, see [Translations](docs/developer/translations.md).
+
 ---
 
 ## License

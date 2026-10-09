@@ -107,13 +107,15 @@ to be written in it as well.
 Either way works:
 
 - **A pull request** changing `lang/<code>/*.php`. Your name stays on it in
-  the project history. The translation tests must pass:
+  the project history, and you are listed under **Translators** in the
+  [README](https://github.com/Panelica/pnlcs#translators). The translation tests must pass:
   `php artisan test --filter=Translation`.
 - **An export from your own install.** On **Setup → Languages → Translate →
   Export JSON**, translate the file, and send it to
   [info@panelica.com](mailto:info@panelica.com) or attach it to a
   [GitHub issue](https://github.com/Panelica/pnlcs/issues). We review it,
-  merge it and credit you by name.
+  merge it and credit you by name, in the changelog and under
+  **Translators** in the README.
 
 ## From an install into the files
 
