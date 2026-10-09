@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('home');
 
+// For search engines: the public pages, and robots.txt pointing at them.
+Route::get('sitemap.xml', [App\Http\Controllers\SitemapController::class, 'sitemap'])->name('sitemap');
+Route::get('robots.txt', [App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
+
 // ===== Install Wizard (gated by EnsureNotInstalled — 404 once admins exist) =====
 Route::middleware(['web', EnsureNotInstalled::class])->prefix('install')->group(function () {
     Route::get('/',                  [InstallController::class, 'index']);
