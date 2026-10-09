@@ -19,6 +19,7 @@
     @if(!empty($activeThemeAssets))
     <link rel="stylesheet" href="{{ $activeThemeAssets }}/css/theme.css">
     @endif
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
 </head>
 <body x-data="{ mobileMenu: false }">
 
@@ -70,5 +71,6 @@
     </script>
 
     {{-- NO Three.js globe — Flavor uses CSS particles instead --}}
+    {!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
 </body>
 </html>

@@ -574,6 +574,11 @@ return [
         'all_rights_reserved' => 'All rights reserved.',
     ],
     'footer.all_rights_reserved' => 'All rights reserved.',
+    'consent.text' => 'We use the cookies the site needs to work. With your permission we also use analytics and advertising cookies to measure visits and improve our ads.',
+    'consent.accept' => 'Accept',
+    'consent.reject' => 'Necessary cookies only',
+    'consent.more' => 'Details',
+    'consent.label' => 'Cookie preferences',
     'footer.brand' => 'PNLCS',
     'form' => [
         'client_type' => 'Customer type',
