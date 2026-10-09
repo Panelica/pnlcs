@@ -109,6 +109,8 @@ class SettingController extends Controller
         // law in some places.
         'CompanyLegalName', 'TaxOffice', 'MersisNo', 'TradeRegistryNo', 'Postcode', 'State', 'AbuseEmail', 'DpoEmail',
         'AboutText', 'KnowledgeBaseEnabled',
+        // Tag Manager, the operator's own code and the consent bar (App\Support\Tracking).
+        'TrackingGtmId', 'TrackingConsent', 'TrackingPolicyUrl', 'TrackingHeadCode', 'TrackingFooterCode',
         // Billing in a second currency, with an official rate source.
         'BillingCurrency', 'OfficialRateProvider', 'TcmbRateKind', 'PaymentReferencePrefix',
         // Orders from these addresses are accepted without payment (testing).

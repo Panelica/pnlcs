@@ -573,6 +573,11 @@ return [
         'all_rights_reserved' => 'Tüm hakları saklıdır.',
     ],
     'footer.all_rights_reserved' => 'Tüm hakları saklıdır.',
+    'consent.text' => 'Siteyi çalıştırmak için gerekli çerezleri kullanıyoruz. İzin verirseniz ziyaretinizi ölçmek ve reklamlarımızı iyileştirmek için analitik ve reklam çerezleri de kullanırız.',
+    'consent.accept' => 'Kabul et',
+    'consent.reject' => 'Yalnız gerekli çerezler',
+    'consent.more' => 'Ayrıntılar',
+    'consent.label' => 'Çerez tercihleri',
     'footer.brand' => 'PNLCS',
     'form' => [
         'client_type' => 'Müşteri türü',

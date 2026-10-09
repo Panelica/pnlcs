@@ -573,6 +573,11 @@ return [
         'all_rights_reserved' => '保留所有权利。',
     ],
     'footer.all_rights_reserved' => '保留所有权利。',
+    'consent.text' => '我们使用网站运行所需的 Cookie。经您同意，我们还会使用分析和广告 Cookie 来统计访问并改进广告。',
+    'consent.accept' => '接受',
+    'consent.reject' => '仅必要 Cookie',
+    'consent.more' => '详情',
+    'consent.label' => 'Cookie 偏好',
     'footer.brand' => 'PNLCS',
     'form' => [
         'client_type' => '客户类型',

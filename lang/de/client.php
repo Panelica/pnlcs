@@ -573,6 +573,11 @@ return [
         'all_rights_reserved' => 'Alle Rechte vorbehalten. · Alle Preise Netto zzgl. MwSt.',
     ],
     'footer.all_rights_reserved' => 'Alle Rechte vorbehalten. · Alle Preise Netto zzgl. MwSt.',
+    'consent.text' => 'Wir verwenden die Cookies, die die Website zum Funktionieren braucht. Mit Ihrer Zustimmung verwenden wir auch Analyse- und Werbe-Cookies, um Besuche zu messen und unsere Werbung zu verbessern.',
+    'consent.accept' => 'Akzeptieren',
+    'consent.reject' => 'Nur notwendige Cookies',
+    'consent.more' => 'Mehr erfahren',
+    'consent.label' => 'Cookie-Einstellungen',
     'footer.brand' => 'PNLCS',
     'form' => [
         'client_type' => 'Kundentyp',

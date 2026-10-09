@@ -328,6 +328,24 @@
         </div>
     </div>
 
+    {{-- Tag Manager, the operator's own code and the cookie consent bar (App\Support\Tracking). --}}
+    <div class="card" id="settings-tracking_section" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.tracking_section') }}</strong></div>
+        <div class="card-body">
+            <div style="display:grid;grid-template-columns:1fr 2fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.tracking_gtm_id') }}</label><input type="text" name="TrackingGtmId" value="{{ $settings['TrackingGtmId'] ?? '' }}" class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.tracking_gtm_hint') }}</div></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.tracking_policy_url') }}</label><input type="text" name="TrackingPolicyUrl" value="{{ $settings['TrackingPolicyUrl'] ?? '' }}" class="form-control"></div>
+            </div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:4px;">
+                <input type="hidden" name="TrackingConsent" value="0"><input type="checkbox" name="TrackingConsent" value="1" {{ ($settings['TrackingConsent'] ?? '1') !== '0' ? 'checked' : '' }}>
+                {{ __('admin.settings.tracking_consent') }}
+            </label>
+            <div style="font-size:12px;color:#777;margin-bottom:12px;">{{ __('admin.settings.tracking_consent_hint') }}</div>
+            <div class="form-group"><label class="form-label">{{ __('admin.settings.tracking_head_code') }}</label><textarea name="TrackingHeadCode" rows="3" class="form-control" style="font-family:monospace;">{{ $settings['TrackingHeadCode'] ?? '' }}</textarea></div>
+            <div class="form-group"><label class="form-label">{{ __('admin.settings.tracking_footer_code') }}</label><textarea name="TrackingFooterCode" rows="3" class="form-control" style="font-family:monospace;">{{ $settings['TrackingFooterCode'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.tracking_code_hint') }}</div></div>
+        </div>
+    </div>
+
     {{-- Billing in a second currency. The shop keeps pricing in its own
          currency; each invoice freezes the rate it was struck at, and names
          the source when there is an official one to name. --}}

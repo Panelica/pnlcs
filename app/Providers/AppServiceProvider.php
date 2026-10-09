@@ -61,6 +61,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->useConfiguredDomainForConsoleLinks();
 
+        // Tracking codes and the cookie consent bar (Setup > General): on every
+        // client page and theme that prints these hook points, never in the
+        // admin area. Nothing is added until the operator sets something.
+        add_hook('ClientAreaHeadOutput', 0, fn () => \App\Support\Tracking::head());
+        add_hook('ClientAreaFooterOutput', 0, fn () => \App\Support\Tracking::footer());
+
         // How many times the API will let someone try.
         //
         // The admin login form allows ten attempts a minute. The API accepts
