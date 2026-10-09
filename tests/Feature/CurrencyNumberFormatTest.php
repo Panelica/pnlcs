@@ -110,3 +110,14 @@ test('a currency saved without a format gets the default one', function () {
 
     expect(Currency::where('code', 'GBP')->value('format'))->toBe(1);
 });
+
+test('the cart page script writes running totals with the same separators', function () {
+    nfShop(1);
+    expect(display_currency_affixes())->toMatchArray(['prefix' => '€', 'decimal' => '.', 'thousands' => ',']);
+
+    $try = Currency::updateOrCreate(['code' => 'TRY'], ['prefix' => '₺', 'suffix' => '', 'format' => 2, 'rate' => 50, 'is_default' => false]);
+    Setting::set(CustomerCurrency::SETTING, '1');
+    CustomerCurrency::bind($try);
+
+    expect(display_currency_affixes())->toMatchArray(['prefix' => '₺', 'decimal' => ',', 'thousands' => '.']);
+});

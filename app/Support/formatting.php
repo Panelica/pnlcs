@@ -360,7 +360,11 @@ if (! function_exists('display_currency_affixes')) {
             $suffix = ' '.strtoupper((string) $currency->code);
         }
 
-        return ['prefix' => $prefix, 'suffix' => $suffix];
+        // The page's own script writes running totals; it needs the same
+        // decimal mark and thousands separator the server writes with.
+        [$decimal, $thousands] = \App\Models\Currency::FORMATS[(int) ($currency->format ?? 1)] ?? \App\Models\Currency::FORMATS[1];
+
+        return ['prefix' => $prefix, 'suffix' => $suffix, 'decimal' => $decimal, 'thousands' => $thousands];
     }
 }
 

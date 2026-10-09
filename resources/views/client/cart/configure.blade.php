@@ -339,7 +339,7 @@
 // that cycle, plus a domain being bought with it.
 (function () {
     var cur = @json(display_currency_affixes());
-    function money(n) { return cur.prefix + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + cur.suffix; }
+    function money(n) { var p = Number(n).toFixed(2).split('.'); return cur.prefix + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, cur.thousands) + cur.decimal + p[1] + cur.suffix; }
     function esc(t) { return String(t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); }
     function priceOf(el, cycle) {
         try { var p = JSON.parse(el.getAttribute('data-prices') || '{}'); if (cycle in p) { return Number(p[cycle]) || 0; } } catch (e) {}
@@ -396,7 +396,7 @@ document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
     var texts = { checking: @json(__('client.cart.domain_checking')), unchecked: @json(__('client.cart.domain_unchecked')) };
     var domainPrice = 0, timer = null, seq = 0;
     function option() { var r = document.querySelector('input[name=domain_option]:checked'); return r ? r.value : 'own'; }
-    function money(n) { return cur.prefix + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + cur.suffix; }
+    function money(n) { var p = Number(n).toFixed(2).split('.'); return cur.prefix + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, cur.thousands) + cur.decimal + p[1] + cur.suffix; }
     function show(text, color, price, formatted) {
         domainPrice = price; window.pnlcsDomainPrice = price;
         status.textContent = text; status.style.color = color;
