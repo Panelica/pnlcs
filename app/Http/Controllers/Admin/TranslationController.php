@@ -88,6 +88,19 @@ class TranslationController extends Controller
         return back()->with('success', __('messages.success.settings_saved'));
     }
 
+    /**
+     * Language in the address (App\Support\LocaleUrl): the default language
+     * keeps today's addresses, every other active language gets its code in
+     * front (/en/client/store).
+     */
+    public function updateUrlSetting(Request $request)
+    {
+        Setting::set(\App\Support\LocaleUrl::SETTING, $request->boolean('locale_urls') ? '1' : '0', 'language');
+        \App\Support\LocaleUrl::forget();
+
+        return back()->with('success', __('messages.success.settings_saved'));
+    }
+
     public function translations(string $locale, OfficialTranslationRepository $officialTranslations, AiTranslationService $ai)
     {
         $language = Language::where('code', $locale)->firstOrFail();

@@ -9,7 +9,7 @@
     </button>
     <div class="pn-dropdown" style="right:0;left:auto;min-width:160px;">
         @foreach($activeLanguages as $lang)
-        <a href="?lang={{ $lang->code }}" style="{{ $lang->code === $currentLocale ? 'background:var(--primary-light);color:var(--primary);' : '' }}">
+        <a href="{{ \App\Support\LocaleUrl::switchTo($lang->code) }}" style="{{ $lang->code === $currentLocale ? 'background:var(--primary-light);color:var(--primary);' : '' }}">
             @if($lang->flag_code)
             <img src="https://flagcdn.com/16x12/{{ $lang->flag_code }}.png" alt="" style="border-radius:1px;">
             @endif

@@ -3,6 +3,7 @@
 use App\Http\Middleware\AdminAuthenticate;
 use App\Http\Middleware\AdminTwoFactorVerify;
 use App\Http\Middleware\AffiliateTracking;
+use App\Http\Middleware\LocaleUrlPrefix;
 use App\Http\Middleware\ApiKeyAuth;
 use App\Http\Middleware\BlockBannedIp;
 use App\Http\Middleware\CheckAdminPermission;
@@ -53,6 +54,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // content. This is domain-agnostic: no per-domain APP_URL to maintain.
         $middleware->trustProxies(at: '*');
         $middleware->prepend(ResetOpcacheAfterUpdate::class);
+        // Language in the address: /en/... is routed as /... with English
+        // chosen (LocaleUrl). Before routing, after the proxy is trusted.
+        $middleware->append(LocaleUrlPrefix::class);
         $middleware->prependToGroup('web', RedirectToInstaller::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', SetLocale::class);

@@ -12,6 +12,7 @@
         p { color:var(--muted, #666); font-size:14px; line-height:1.5; }
         button { padding:12px 20px; background:#405189; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer; }
     </style>
+    @include('partials.locale-alternates')
 </head>
 <body>
 <div class="card">

@@ -67,6 +67,20 @@ class AppServiceProvider extends ServiceProvider
         add_hook('ClientAreaHeadOutput', 0, fn () => \App\Support\Tracking::head());
         add_hook('ClientAreaFooterOutput', 0, fn () => \App\Support\Tracking::footer());
 
+        // Language in the address (Setup > Languages): links made on a page,
+        // or in an e-mail, in another language carry its prefix. Off by default.
+        // Set on the URL generator whenever it is made, without making it here:
+        // resolving it during boot would change when the container builds it.
+        $format = fn ($url) => $url->formatPathUsing(fn ($path, $route = null) => \App\Support\LocaleUrl::formatPath($path, $route));
+        $this->app->afterResolving('url', $format);
+        if ($this->app->resolved('url')) {
+            $format($this->app->make('url'));
+        }
+        // A queue worker lives for hours: each job reads the setting afresh,
+        // so a mail sent after it is switched off carries no prefix that no
+        // longer opens.
+        \Illuminate\Support\Facades\Queue::before(fn () => \App\Support\LocaleUrl::forget());
+
         // How many times the API will let someone try.
         //
         // The admin login form allows ten attempts a minute. The API accepts

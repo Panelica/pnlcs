@@ -31,6 +31,7 @@
         .field-note { font-size: 12px; color: #999; margin-top: 3px; }
     </style>
     {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
+    @include('partials.locale-alternates')
 </head>
 <body>
 <div class="register-box">

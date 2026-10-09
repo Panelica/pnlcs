@@ -709,6 +709,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('/', [TranslationController::class, 'index'])->name('index');
         Route::post('/toggle/{language}', [TranslationController::class, 'toggle'])->name('toggle');
         Route::post('/set-default', [TranslationController::class, 'setDefault'])->name('set-default');
+        Route::post('/url-setting', [TranslationController::class, 'updateUrlSetting'])->name('url-setting');
         Route::get('/translations/{locale}', [TranslationController::class, 'translations'])->name('translations');
         Route::post('/translations/{locale}/save', [TranslationController::class, 'saveTranslation'])->name('save');
         Route::post('/translations/{locale}/bulk-save', [TranslationController::class, 'bulkSave'])->name('bulk-save');

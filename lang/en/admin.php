@@ -881,6 +881,8 @@ return [
     'config.languages.ai_settings_hint' => 'Used by "Translate with AI" in each language\'s editor. The saved key is never shown again; leave the field empty to keep it.',
     'config.languages.clear_cache' => 'Clear Cache',
     'config.languages.default_language' => 'Default Language',
+    'config.languages.locale_urls' => 'Show the language in the address',
+    'config.languages.locale_urls_hint' => 'The default language keeps today\'s addresses; every other active language is served under its code, for example :example becomes /en/client/store. Search engines can then index each language, and a shared link opens in the language it was copied in.',
     'config.languages.inactive_enabled_on_save' => 'switched on when saved',
     'config.languages.direction' => 'Direction',
     'config.languages.flag' => 'Flag',

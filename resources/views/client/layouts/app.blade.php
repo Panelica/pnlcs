@@ -356,6 +356,7 @@
     @endif
     {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
     @include('partials.dialog-boot')
+    @include('partials.locale-alternates')
 </head>
 <body>
 @if(session('impersonating_admin_id'))

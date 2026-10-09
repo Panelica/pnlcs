@@ -17,7 +17,11 @@
     {{-- Crawlable: several payment providers verify that the terms and privacy
          pages are publicly indexable before approving a merchant account. --}}
     <meta name="robots" content="index, follow">
+    @if(\App\Support\LocaleUrl::enabled())
+    @include('partials.locale-alternates')
+    @else
     <link rel="canonical" href="{{ url()->current() }}">
+    @endif
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">

@@ -881,6 +881,8 @@ return [
     'config.languages.ai_settings_hint' => 'Z tych ustawień korzysta funkcja „Przetłumacz przez AI” w edytorze każdego języka. Zapisany klucz nie jest ponownie wyświetlany; pozostaw pole puste, aby go zachować.',
     'config.languages.clear_cache' => 'Wyczyść pamięć podręczną',
     'config.languages.default_language' => 'Język domyślny',
+    'config.languages.locale_urls' => 'Pokazuj język w adresie',
+    'config.languages.locale_urls_hint' => 'Język domyślny zachowuje obecne adresy; każdy inny aktywny język jest dostępny pod swoim kodem, na przykład :example staje się /en/client/store. Wyszukiwarki mogą wtedy indeksować każdy język, a udostępniony link otwiera się w języku, w którym został skopiowany.',
     'config.languages.inactive_enabled_on_save' => 'zostanie włączony po zapisaniu',
     'config.languages.direction' => 'Kierunek',
     'config.languages.flag' => 'Flaga',

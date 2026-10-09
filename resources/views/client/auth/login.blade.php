@@ -36,6 +36,7 @@
         .register-link a { color: var(--theme-accent, #337ab7); font-weight: 500; text-decoration: none; }
     </style>
     {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
+    @include('partials.locale-alternates')
 </head>
 <body>
 <div class="login-box">

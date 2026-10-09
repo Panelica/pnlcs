@@ -881,6 +881,8 @@ return [
     'config.languages.ai_settings_hint' => '„Mit KI übersetzen“ im Editor jeder Sprache verwendet diese Einstellungen. Der gespeicherte Schlüssel wird nie wieder angezeigt; lassen Sie das Feld leer, um ihn zu behalten.',
     'config.languages.clear_cache' => 'Cache leeren',
     'config.languages.default_language' => 'Standardsprache',
+    'config.languages.locale_urls' => 'Sprache in der Adresse anzeigen',
+    'config.languages.locale_urls_hint' => 'Die Standardsprache behält die heutigen Adressen; jede weitere aktive Sprache erscheint unter ihrem Code, zum Beispiel wird :example zu /en/client/store. So können Suchmaschinen jede Sprache indexieren, und ein geteilter Link öffnet sich in der Sprache, in der er kopiert wurde.',
     'config.languages.inactive_enabled_on_save' => 'wird beim Speichern aktiviert',
     'config.languages.direction' => 'Richtung',
     'config.languages.flag' => 'Flagge',

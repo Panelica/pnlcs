@@ -871,6 +871,8 @@ return [
     'config.languages.ai_settings_hint' => 'Her dilin düzenleyicisindeki "Yapay zekâ ile çevir" bu ayarları kullanır. Kayıtlı anahtar bir daha gösterilmez; korumak için alanı boş bırakın.',
     'config.languages.clear_cache' => 'Önbelleği Temizle',
     'config.languages.default_language' => 'Varsayılan Dil',
+    'config.languages.locale_urls' => 'Dili adreste göster',
+    'config.languages.locale_urls_hint' => 'Varsayılan dil bugünkü adreslerini korur; diğer her etkin dil adresin başında kendi koduyla sunulur: :example gibi bir adres İngilizcede /en/ ile başlar. Arama motorları her dili ayrı dizine alabilir, paylaşılan bir bağlantı kopyalandığı dilde açılır.',
     'config.languages.inactive_enabled_on_save' => 'kaydedince etkinleşir',
     'config.languages.direction' => 'Yön',
     'config.languages.flag' => 'Bayrak',
