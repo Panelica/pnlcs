@@ -3194,6 +3194,7 @@ return [
     'settings.seo_share_image_hint' => 'Pokazywany, gdy link do Twojej strony zostanie udostępniony na WhatsApp, LinkedIn lub X. 1200×630 sprawdza się wszędzie. Puste: Twoje logo.',
     'settings.seo_twitter' => 'Konto X (Twitter)',
     'settings.robots_txt_hint' => 'Puste: każda strona może być indeksowana. Na końcu dodawany jest adres mapy strony (:sitemap); zawiera ona Twoje publiczne strony i aktualizuje się sama.',
+    'settings.robots_txt_static' => 'Serwer WWW odpowiada na /robots.txt plikiem :path, więc powyższy tekst nie jest używany. Usuń ten plik, aby zarządzać robots.txt tutaj.',
     'settings.about_text_hint' => 'Zwykły tekst, akapity oddzielone pustą linią. Wyświetlany na',
     'settings.knowledge_base_enabled' => 'Pokazuj klientom bazę wiedzy',
     'settings.billing_currency_section' => 'Waluta rozliczeń',

@@ -3194,6 +3194,7 @@ return [
     'settings.seo_share_image_hint' => 'Shown when a link to your site is shared on WhatsApp, LinkedIn or X. 1200×630 works everywhere. Empty: your logo.',
     'settings.seo_twitter' => 'X (Twitter) account',
     'settings.robots_txt_hint' => 'Empty: every page may be indexed. The address of your sitemap (:sitemap) is added at the end; it lists your public pages and is updated by itself.',
+    'settings.robots_txt_static' => 'Your web server answers /robots.txt with the file :path, so the text above is not used. Remove that file to manage robots.txt here.',
     'settings.about_text_hint' => 'Plain text, paragraphs separated by a blank line. Shown on',
     'settings.knowledge_base_enabled' => 'Show the knowledge base to customers',
     'settings.billing_currency_section' => 'Billing currency',

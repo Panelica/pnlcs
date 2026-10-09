@@ -68,3 +68,15 @@ test('robots.txt is the operator\'s text, with the sitemap added', function () {
     $this->get('/robots.txt')
         ->assertSee("Disallow: /client/cart\n\nSitemap: ".route('sitemap'), false);
 });
+
+test('the shipped public/robots.txt stays, so an update never trips over an edited one', function () {
+    // Operators edit public/robots.txt; a release that dropped it would stop
+    // their next update on a "removed in the new version" conflict. The web
+    // server keeps answering with the file, and the settings say so.
+    expect(is_file(public_path('robots.txt')))->toBeTrue();
+
+    $admin = \App\Models\Admin::factory()->create(['role_id' => \App\Models\AdminRole::factory()->fullAdmin()->create()->id]);
+    $this->actingAs($admin, 'admin')->get(route('admin.settings.general'))
+        ->assertOk()
+        ->assertSee(__('admin.settings.robots_txt_static', ['path' => 'public/robots.txt']), false);
+});

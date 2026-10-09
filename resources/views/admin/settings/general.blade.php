@@ -337,7 +337,7 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_share_image') }}</label><input type="text" name="SeoShareImage" value="{{ $settings['SeoShareImage'] ?? '' }}"  class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.seo_share_image_hint') }}</div></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_twitter') }}</label><input type="text" name="SeoTwitter" value="{{ $settings['SeoTwitter'] ?? '' }}" class="form-control" placeholder="@"></div>
             </div>
-            <div class="form-group"><label class="form-label">robots.txt</label><textarea name="RobotsTxt" rows="3" class="form-control" style="font-family:monospace;">{{ $settings['RobotsTxt'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.robots_txt_hint', ['sitemap' => route('sitemap')]) }}</div></div>
+            <div class="form-group"><label class="form-label">robots.txt</label><textarea name="RobotsTxt" rows="3" class="form-control" style="font-family:monospace;">{{ $settings['RobotsTxt'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.robots_txt_hint', ['sitemap' => route('sitemap')]) }}</div>@if(is_file(public_path('robots.txt')))<div style="font-size:12px;color:#8a6d3b;margin-top:4px;">{{ __('admin.settings.robots_txt_static', ['path' => 'public/robots.txt']) }}</div>@endif</div>
         </div>
     </div>
 

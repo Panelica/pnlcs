@@ -3169,6 +3169,7 @@ return [
     'settings.seo_share_image_hint' => 'Sitenize bir bağlantı WhatsApp, LinkedIn ya da X\'te paylaşılınca görünür. 1200×630 her yerde iyi görünür. Boşsa logonuz.',
     'settings.seo_twitter' => 'X (Twitter) hesabı',
     'settings.robots_txt_hint' => 'Boşsa her sayfa dizine alınabilir. Sonuna site haritanızın adresi (:sitemap) eklenir; herkese açık sayfalarınızı listeler ve kendiliğinden güncellenir.',
+    'settings.robots_txt_static' => ':path dosyası sunucunuzda duruyor ve /robots.txt adresine o dosya yanıt veriyor; yukarıdaki metin kullanılmıyor. robots.txt\'yi buradan yönetmek için o dosyayı kaldırın.',
     'settings.about_text_hint' => 'Düz metin, paragraflar boş satırla ayrılır. Şurada gösterilir:',
     'settings.knowledge_base_enabled' => 'Bilgi bankasını müşterilere göster',
     'settings.billing_currency_section' => 'Tahsilat para birimi',

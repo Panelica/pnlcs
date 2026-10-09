@@ -3193,6 +3193,7 @@ return [
     'settings.seo_share_image_hint' => 'Erscheint, wenn ein Link zu Ihrer Seite auf WhatsApp, LinkedIn oder X geteilt wird. 1200×630 passt überall. Leer: Ihr Logo.',
     'settings.seo_twitter' => 'X-(Twitter-)Konto',
     'settings.robots_txt_hint' => 'Leer: Jede Seite darf indexiert werden. Am Ende wird die Adresse Ihrer Sitemap (:sitemap) angefügt; sie listet Ihre öffentlichen Seiten und aktualisiert sich selbst.',
+    'settings.robots_txt_static' => 'Ihr Webserver beantwortet /robots.txt mit der Datei :path, daher wird der Text oben nicht verwendet. Entfernen Sie diese Datei, um robots.txt hier zu verwalten.',
     'settings.about_text_hint' => 'Einfacher Text, durch eine Leerzeile getrennte Absätze. Angezeigt auf',
     'settings.knowledge_base_enabled' => 'Zeigen Sie den Kunden die Wissensdatenbank',
     'settings.billing_currency_section' => 'Rechnungswährung',

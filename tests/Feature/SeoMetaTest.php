@@ -98,3 +98,13 @@ test('staff set the description, the image and the account on the general settin
         ->and(Setting::get('SeoShareImage'))->toBe('https://cdn.example.com/s.png')
         ->and(Setting::get('SeoTwitter'))->toBe('@shop');
 });
+
+test('a theme that brings its own home page carries the sharing tags too', function () {
+    app('view')->prependLocation(base_path('themes/flavor/views'));
+    app('view')->getFinder()->flush();
+
+    $html = $this->get('/')->assertOk()->getContent();
+
+    expect($html)->toContain('<meta property="og:title"')
+        ->and(substr_count($html, '<meta name="description"'))->toBe(1);
+});
