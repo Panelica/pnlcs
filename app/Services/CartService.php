@@ -442,6 +442,32 @@ class CartService
             && trim((string) ($item['domain'] ?? '')) !== '';
     }
 
+    /**
+     * Apply the code a promotion link left in the session (PromoLink), once
+     * the cart holds something it is for. A code the customer typed is never
+     * replaced, and one that does not fit yet waits for the product it is
+     * for.
+     */
+    public function applyPendingPromo(Cart $cart): void
+    {
+        $code = session(\App\Http\Middleware\PromoLink::SESSION);
+        $data = $this->getData($cart);
+
+        if (! is_string($code) || empty($data['items'])) {
+            return;
+        }
+
+        if (! empty($data['promo_code'])) {
+            session()->forget(\App\Http\Middleware\PromoLink::SESSION);
+
+            return;
+        }
+
+        if ($this->applyPromoCode($cart, $code)['success']) {
+            session()->forget(\App\Http\Middleware\PromoLink::SESSION);
+        }
+    }
+
     public function applyPromoCode(Cart $cart, string $code): array
     {
         $promo = Promotion::where('code', $code)->first();
