@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Language;
 use App\Models\Setting;
+use App\Support\LocaleUrl;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -25,10 +26,19 @@ class SetLocale
 
         app()->setLocale($locale);
 
-        // Persist to session/cookie
-        if ($request->has('lang')) {
+        // Persist to session/cookie: a language picked with ?lang, or read
+        // from the address (LocaleUrl), is the visitor's choice from now on.
+        if ($request->has('lang') || $request->attributes->has('url_locale')) {
             session(['locale' => $locale]);
             cookie()->queue('pnlcs_locale', $locale, 43200); // 30 days
+        }
+
+        // Language in the address: a page asked for at the address of another
+        // language goes to its own. This is how a visitor who picked English
+        // and follows a plain "/client/..." link, or comes back from a login,
+        // lands on /en/... again.
+        if ($redirect = $this->toLocaleAddress($request, $locale)) {
+            return $redirect;
         }
 
         // Share with all views
@@ -51,6 +61,11 @@ class SetLocale
         // 1. Query param ?lang=xx
         if ($request->has('lang') && strlen($request->query('lang')) >= 2) {
             return $request->query('lang');
+        }
+
+        // 1b. The language in the address (LocaleUrlPrefix)
+        if ($request->attributes->has('url_locale')) {
+            return (string) $request->attributes->get('url_locale');
         }
 
         // 2. Session
@@ -95,6 +110,14 @@ class SetLocale
             return $locale;
         }
 
+        // With the language in the address, an address without a prefix is
+        // the default language unless the visitor chose otherwise (the steps
+        // above). Guessing from the browser here would send search engines
+        // away from every default-language page.
+        if (LocaleUrl::enabled()) {
+            return $this->getDefaultLocale();
+        }
+
         // 6. Ziyaretcinin ulkesi ve tarayici dili.
         //
         // Eskiden burada yalniz Accept-Language okunuyordu ve donen deger
@@ -111,6 +134,38 @@ class SetLocale
 
         // 7. Default from settings
         return $this->getDefaultLocale();
+    }
+
+    /**
+     * The address of this page in the language being shown, when the visitor
+     * is at another one. Only for a page a visitor reads: GET, not an API or
+     * JSON call, not the admin area or a gateway, not a signed link (its
+     * signature is checked against the address it was sent to).
+     */
+    protected function toLocaleAddress(Request $request, string $locale)
+    {
+        if (! LocaleUrl::enabled() || ! $request->isMethod('GET') || $request->expectsJson() || $request->ajax()) {
+            return null;
+        }
+        if (LocaleUrl::excluded($request->path())) {
+            return null;
+        }
+        $route = $request->route();
+        if ($route && collect($route->gatherMiddleware())->contains(fn ($m) => is_string($m) && str_starts_with($m, 'signed'))) {
+            return null;
+        }
+
+        $locale = strtolower($locale);
+        $want = in_array($locale, LocaleUrl::prefixed(), true) ? $locale : null;
+        $have = $request->attributes->get('url_locale');
+
+        if ($want === $have && ! $request->has('lang')) {
+            return null;
+        }
+
+        $target = LocaleUrl::current($locale, $request);
+
+        return $target === $request->fullUrl() ? null : redirect()->to($target, 302);
     }
 
     /**

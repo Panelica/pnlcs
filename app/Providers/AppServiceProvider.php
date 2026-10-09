@@ -61,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->useConfiguredDomainForConsoleLinks();
 
+        // Language in the address (Setup > Languages): links made on a page,
+        // or in an e-mail, in another language carry its prefix. Off by default.
+        \Illuminate\Support\Facades\URL::formatPathUsing(fn ($path, $route = null) => \App\Support\LocaleUrl::formatPath($path, $route));
+
         // How many times the API will let someone try.
         //
         // The admin login form allows ten attempts a minute. The API accepts
