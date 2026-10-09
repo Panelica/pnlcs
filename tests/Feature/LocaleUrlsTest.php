@@ -205,3 +205,15 @@ test('a queued job reads the setting afresh, so a long-running worker follows it
 
     expect(LocaleUrl::enabled())->toBeFalse();
 });
+
+test('the sitemap and robots.txt keep one address, and a shared page names its own', function () {
+    localeUrlsOn();
+
+    $this->withSession(['locale' => 'tr'])->get('/sitemap.xml')->assertOk();
+    $this->withSession(['locale' => 'tr'])->get('/robots.txt')->assertOk()->assertSee('Sitemap: '.rtrim((string) config('app.url'), '/').'/sitemap.xml', false);
+    app()->setLocale('tr');
+    expect(route('sitemap'))->not->toContain('/tr/');
+
+    $root = rtrim((string) config('app.url'), '/');
+    $this->get('/tr/client/login')->assertOk()->assertSee('<meta property="og:url" content="'.$root.'/tr/client/login">', false);
+});

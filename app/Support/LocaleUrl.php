@@ -34,7 +34,7 @@ class LocaleUrl
     public const SETTING = 'LocaleUrls';
 
     /** First path segments that are never prefixed: not pages a visitor reads in a language. */
-    public const EXCLUDED = ['admin', 'api', 'gateway', 'install', 'up', 'build', 'storage', 'themes', 'img', 'images', 'branding', 'vendor', 'livewire'];
+    public const EXCLUDED = ['admin', 'api', 'gateway', 'install', 'up', 'build', 'storage', 'themes', 'img', 'images', 'branding', 'vendor', 'livewire', 'sitemap.xml', 'robots.txt'];
 
     private const MEMO = 'pnlcs.locale_url';
 
