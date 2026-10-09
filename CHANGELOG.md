@@ -2,6 +2,126 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.5.0-beta.2 — 2026-10-10
+
+A beta: offered only to installations on the **beta** channel (**Setup →
+Updates → Update channel**). It contains everything in 1.5.0-beta.1. After
+seven days without a regression the same commit becomes 1.5.0 for everyone.
+
+### Added
+
+- **Product mapping in the WHMCS importer.** The services mapper maps each
+  WHMCS product to a PNLCS product; an unmapped one is still matched by name.
+  Two services on the same domain (hosting and e-mail, a VPS and its
+  maintenance) are imported as two services, and each client gets a note
+  listing their WHMCS services, so the result can be checked against the
+  source. A re-import updates the services 1.4.0 imported instead of copying
+  them. Thank you, [@hedon77](https://github.com/hedon77).
+- **The language in the address**, off by default (**Setup → Languages →
+  Settings**). The default language keeps today's addresses; every other
+  active language is served under its code (`/en/client/store`), so search
+  engines can index every language and a shared link opens in the language it
+  was copied in. Social sign-in and the e-mail confirmation link keep their
+  own addresses. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Search engines and link previews** (**Setup → General → Search engines
+  and sharing**): a description on every client-facing page, Open Graph and X
+  card tags so a shared link shows a title, text and image, and a sitemap at
+  `/sitemap.xml` that updates itself. `/robots.txt` can be edited there once
+  the shipped `public/robots.txt` file is removed; while the file is there,
+  the web server answers with it as before. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Tracking codes and a cookie consent bar** (**Setup → General → Tracking
+  and cookie consent**): a Google Tag Manager container with Google Consent
+  Mode v2, so ads and analytics wait for the visitor's consent, a consent bar
+  where "necessary cookies only" is as easy as "accept", and code for the
+  head and the end of every page. Nothing is added to a page until something
+  is set. Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **A number format per currency** (**Setup → Currencies**): `1,234.56`,
+  `1.234,56`, `1 234,56` or `1234.56`. Every currency keeps `1,234.56` until
+  you choose otherwise; the cart's running totals follow the format too.
+  Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **A promotion code in a link**: any page opened with `?promo=CODE` (or
+  `?promocode=CODE`, as WHMCS links write it) remembers the code, and the cart
+  applies it once it holds a product the code is for. Every promotion rule
+  still applies, and a code the customer typed is never replaced. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+
+### Changed
+
+- **Translations.** The progress under **Setup → Languages** counts a text as
+  translated only when it is no longer the English text, and **Translate
+  missing** now also translates texts still in English (names that stay the
+  same, such as Stripe, are not sent again). About 460 texts of the client
+  hosting pages, the e-mail setup guide, the SSL page and the home page's apps
+  section were missing in German, Polish and Chinese; they are translated,
+  with a few German machine-translation mistakes corrected. English, Turkish,
+  German, Polish and Chinese are complete; a text a community language does
+  not have yet shows in English.
+- **Domain availability** is checked through the registrar assigned to each
+  domain extension, with the default registrar's bulk check kept for the
+  rest. Thank you, [@terbora-core](https://github.com/terbora-core).
+- **The client page** shows the client's information and billing identity in
+  one panel. Thank you, [@hedon77](https://github.com/hedon77).
+
+### Fixed
+
+- **Invoices:** the "All" tab and the "All invoices" menu entry list paid and
+  unpaid invoices; the list still opens on Unpaid. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Stripe:** the pay button names the currency ("Pay €12.00 by card"); the
+  amount sent to Stripe is unchanged. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+
+### For developers
+
+- Every language file is checked before it ships: it loads, keeps every
+  placeholder the English text declares, and carries exactly the English
+  markup. The community languages are reported, not enforced, so adding an
+  English text no longer requires writing it in 25 languages.
+  [Translations](docs/developer/translations.md) explains what is checked,
+  texts that stay the same as English and how a language becomes complete;
+  translators are credited in the README.
+
+### Database changes
+
+- `whmcs_import_profiles.product_mapping` (JSON, nullable) and
+  `services.whmcs_product_name` (string, nullable): new columns.
+- `2026_10_09_000001_drop_translation_rows_now_shipped_in_files`: the texts
+  above used to be delivered as rows of `dynamic_translations`; they now ship
+  in the language files, and a row that says exactly what the file says is
+  removed (it would hide later corrections to the file). A text you changed
+  yourself is different from the file and stays. What the pages show does
+  not change.
+
+### For theme and module authors
+
+- New hook point `SitemapUrls`: return addresses (strings, or
+  `['loc' => ..., 'lastmod' => ...]`) to add your public pages to the sitemap.
+- Client layouts should print `ClientAreaHeadOutput` and
+  `ClientAreaFooterOutput` (the tracking codes and the consent bar use them);
+  the flavor theme now does.
+- New view partials: `partials/seo-meta`, `partials/locale-alternates`,
+  `partials/consent-bar`, and the `sitemap` view.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/clients/show.blade.php`,
+  `admin/config/currencies.blade.php`, `admin/config/languages/index.blade.php`,
+  `admin/invoices/index.blade.php`, `admin/layouts/app.blade.php`,
+  `admin/settings/general.blade.php`, `admin/whmcs-import/mapper.blade.php`.
+- `resources/views/client/announcements/show.blade.php`,
+  `client/auth/forgot-password.blade.php`, `client/auth/invite.blade.php`,
+  `client/auth/login.blade.php`, `client/auth/register.blade.php`,
+  `client/auth/reset-password.blade.php`, `client/auth/two-factor.blade.php`,
+  `client/cart/configure.blade.php`, `client/kb/show.blade.php`,
+  `client/layouts/app.blade.php`,
+  `client/layouts/partials/language-selector.blade.php`,
+  `client/unsubscribe.blade.php`.
+- `resources/views/legal/layout.blade.php`, `sections/topbar.blade.php`,
+  `welcome.blade.php`; `themes/flavor/views/client/layouts/app.blade.php`,
+  `themes/flavor/views/welcome.blade.php`.
+
 ## 1.5.0-beta.1 — 2026-10-07
 
 A beta: offered only to installations on the **beta** channel (**Setup →
