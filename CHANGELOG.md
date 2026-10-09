@@ -72,6 +72,9 @@ seven days without a regression the same commit becomes 1.5.0 for everyone.
 - **Stripe:** the pay button names the currency ("Pay €12.00 by card"); the
   amount sent to Stripe is unchanged. Thank you,
   [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Updates:** clicking **Update now** right after a check finished could be
+  refused with "the updater is busy" - the page said "ready" while the
+  updater was still cleaning up. The page now says so only once it is done.
 
 ### For developers
 
