@@ -109,6 +109,8 @@ class SettingController extends Controller
         // law in some places.
         'CompanyLegalName', 'TaxOffice', 'MersisNo', 'TradeRegistryNo', 'Postcode', 'State', 'AbuseEmail', 'DpoEmail',
         'AboutText', 'KnowledgeBaseEnabled',
+        // What search engines and link previews read (App\Support\Seo).
+        'SeoDescription', 'SeoShareImage', 'SeoTwitter',
         // Billing in a second currency, with an official rate source.
         'BillingCurrency', 'OfficialRateProvider', 'TcmbRateKind', 'PaymentReferencePrefix',
         // Orders from these addresses are accepted without payment (testing).

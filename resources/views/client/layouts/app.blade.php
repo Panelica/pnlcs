@@ -12,6 +12,7 @@
          client area. --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", __("client.my_account")) - {{ company_name() }}</title>
+    @include('partials.seo-meta', ['title' => trim($__env->yieldContent('title', e(__('client.my_account')))).' - '.company_name(), 'description' => trim($__env->yieldContent('meta_description')) ?: null, 'type' => trim($__env->yieldContent('og_type')) ?: 'website'])
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

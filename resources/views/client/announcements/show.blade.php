@@ -1,5 +1,7 @@
 @extends("client.layouts.app")
 @section("title", $announcement->title)
+@section("meta_description", \Illuminate\Support\Str::limit(trim(strip_tags((string) $announcement->announcement)), 300))
+@section("og_type", "article")
 @section("content")
 
 <a href="{{ route("client.announcements.index") }}" class="pn-back">
