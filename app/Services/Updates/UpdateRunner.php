@@ -92,6 +92,11 @@ class UpdateRunner
             $this->saveConflictFiles($report, "preflight/{$release->version}");
             $report = $this->publicReport($report, $release);
             $this->state->write('report.json', $report);
+            // The unpacked releases go before "ready" is written. Removing two
+            // full trees takes seconds, and the lock is held until then: the
+            // page showed "ready" with Update now, and an operator who clicked
+            // it at once was told the updater was busy.
+            $this->removeDirectory($this->state->path('work'));
             $this->status('ready', 'checked', ['version' => (string) $release->version, 'ok' => $report['ok']]);
 
             return $report;
@@ -578,6 +583,21 @@ class UpdateRunner
 
     private function finish(array $run, string $result, string $message, ?array $report = null): void
     {
+        // The notification first: it may send mail, and the lock is held until
+        // this returns. The status written last is what the page reads, so
+        // once it says the update is over, the next request is not refused as
+        // "busy" by a lock still held for the mail.
+        try {
+            Log::log($result === 'updated' ? 'info' : 'error', 'PNLCS update: '.$message, ['run' => $run['id']]);
+            app(NotificationService::class)->dispatch($result === 'updated' ? 'update.completed' : 'update.failed', [
+                'event_type' => $result === 'updated' ? 'update.completed' : 'update.failed',
+                'subject' => $result === 'updated' ? "PNLCS updated to {$run['to']}" : "PNLCS update to {$run['to']}: {$result}",
+                'message' => $message,
+            ]);
+        } catch (Throwable) {
+            // A notification that cannot be sent must not change the outcome.
+        }
+
         // The outcome is already recorded in the run; the history and the
         // status only report it, and a full disk must not turn it into another.
         try {
@@ -589,17 +609,6 @@ class UpdateRunner
             $this->status($result, 'finished', ['message' => $message, 'run' => $run['id'], 'version' => $run['to']]);
         } catch (Throwable $e) {
             $this->log('Could not record the outcome: '.$e->getMessage());
-        }
-
-        try {
-            Log::log($result === 'updated' ? 'info' : 'error', 'PNLCS update: '.$message, ['run' => $run['id']]);
-            app(NotificationService::class)->dispatch($result === 'updated' ? 'update.completed' : 'update.failed', [
-                'event_type' => $result === 'updated' ? 'update.completed' : 'update.failed',
-                'subject' => $result === 'updated' ? "PNLCS updated to {$run['to']}" : "PNLCS update to {$run['to']}: {$result}",
-                'message' => $message,
-            ]);
-        } catch (Throwable) {
-            // A notification that cannot be sent must not change the outcome.
         }
     }
 
