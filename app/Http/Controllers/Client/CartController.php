@@ -79,6 +79,7 @@ class CartController extends Controller
     {
         $clientId = $this->optionalClientId();
         $cart = $this->cartService->getOrCreateCart($clientId);
+        $this->cartService->applyPendingPromo($cart);
         $totals = $this->cartService->calculateTotal($cart);
         $currency = Currency::getDefault();
 
@@ -311,6 +312,7 @@ class CartController extends Controller
         }
 
         $cart = $this->cartService->getOrCreateCart($clientId);
+        $this->cartService->applyPendingPromo($cart);
         $totals = $this->cartService->calculateTotal($cart);
 
         if (empty($totals['items'])) {

@@ -59,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(LocaleUrlPrefix::class);
         $middleware->prependToGroup('web', RedirectToInstaller::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\PromoLink::class);
         $middleware->appendToGroup('web', SetLocale::class);
         // After the session has started and the locale is set: which currency
         // the page shows prices in (CustomerCurrency).
