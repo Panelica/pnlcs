@@ -63,7 +63,13 @@ class AppServiceProvider extends ServiceProvider
 
         // Language in the address (Setup > Languages): links made on a page,
         // or in an e-mail, in another language carry its prefix. Off by default.
-        \Illuminate\Support\Facades\URL::formatPathUsing(fn ($path, $route = null) => \App\Support\LocaleUrl::formatPath($path, $route));
+        // Set on the URL generator whenever it is made, without making it here:
+        // resolving it during boot would change when the container builds it.
+        $format = fn ($url) => $url->formatPathUsing(fn ($path, $route = null) => \App\Support\LocaleUrl::formatPath($path, $route));
+        $this->app->afterResolving('url', $format);
+        if ($this->app->resolved('url')) {
+            $format($this->app->make('url'));
+        }
 
         // How many times the API will let someone try.
         //
