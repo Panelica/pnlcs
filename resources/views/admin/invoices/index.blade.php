@@ -13,7 +13,7 @@
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
     @foreach([
-        "" => __('common.form.all'),
+        "all" => __('common.form.all'),
         "unpaid" => __('admin.invoices.filter_unpaid'),
         {{-- Was missing: an invoice moves here when the customer files a
              transfer notification, and it showed under no tab at all - an
@@ -31,7 +31,7 @@
              tab. --}}
         ? [\App\Http\Controllers\Admin\InvoiceController::CHARGE_REVIEW_FILTER => __('admin.invoices.filter_charge_review')]
         : []) as $val => $label)
-    @php $isActive = (request("status","unpaid") == $val); @endphp
+    @php $isActive = (request("status","unpaid") === $val); @endphp
     <a href="{{ route("admin.invoices.index", ["status" => $val]) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
         {{ $label }}

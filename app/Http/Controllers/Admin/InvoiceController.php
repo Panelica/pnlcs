@@ -47,6 +47,12 @@ class InvoiceController extends Controller
         // The list opens on the Unpaid view (which includes overdue invoices).
         $status = (string) $request->input('status', 'unpaid');
 
+        // "All" is asked for by name. An empty status cannot carry it: the
+        // URL generator leaves it out, so a link to it opened on Unpaid.
+        if ($status === 'all') {
+            $status = '';
+        }
+
         if ($status === 'unpaid') {
             $query->whereIn('status', ['unpaid', 'overdue']);
         } elseif ($status === self::CHARGE_REVIEW_FILTER) {

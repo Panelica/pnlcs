@@ -364,7 +364,7 @@
     @elseif($segment === 'invoices' || $segment === 'quotes' || $segment === 'affiliates' || $segment === 'ksef' || $routeName === 'admin.config.transactions' || $routeName === 'admin.config.billable-items')
         <div class="sidebar-header"><i class="fas fa-money-bill-wave"></i> {{ __('admin.nav.billing') }}</div>
         <ul class="menu">
-            <li><a href="{{ route('admin.invoices.index') }}" @if($routeName === 'admin.invoices.index' && !request()->has('status')) class="active" @endif>{{ __('admin.sidebar.all_invoices') }}</a></li>
+            <li><a href="{{ route('admin.invoices.index', ['status' => 'all']) }}" @if(request()->get('status') === 'all') class="active" @endif>{{ __('admin.sidebar.all_invoices') }}</a></li>
             <li><a href="{{ route('admin.invoices.index', ['status' => 'paid']) }}" @if(request()->get('status') === 'paid') class="active" @endif>{{ __('admin.sidebar.paid') }}</a></li>
             <li><a href="{{ route('admin.invoices.index', ['status' => 'unpaid']) }}" @if(request()->get('status') === 'unpaid') class="active" @endif>{{ __('admin.sidebar.unpaid') }} @if(($sidebarCounts->unpaid_invoices ?? 0) > 0)<span class="sb-badge sb-badge-warning">{{ $sidebarCounts->unpaid_invoices }}</span>@endif</a></li>
             <li><a href="{{ route('admin.invoices.index', ['status' => 'overdue']) }}" @if(request()->get('status') === 'overdue') class="active" @endif>{{ __('admin.sidebar.overdue') }} @if(($sidebarCounts->overdue_invoices ?? 0) > 0)<span class="sb-badge">{{ $sidebarCounts->overdue_invoices }}</span>@endif</a></li>
