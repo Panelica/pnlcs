@@ -70,6 +70,10 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->resolved('url')) {
             $format($this->app->make('url'));
         }
+        // A queue worker lives for hours: each job reads the setting afresh,
+        // so a mail sent after it is switched off carries no prefix that no
+        // longer opens.
+        \Illuminate\Support\Facades\Queue::before(fn () => \App\Support\LocaleUrl::forget());
 
         // How many times the API will let someone try.
         //

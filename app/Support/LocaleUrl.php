@@ -66,11 +66,29 @@ class LocaleUrl
         app()->forgetInstance(self::MEMO);
     }
 
+    /**
+     * Pages whose address is fixed from outside: social sign-in, whose
+     * callback is registered with Google and GitHub as it is, and the e-mail
+     * confirmation link, whose signature is checked against the address
+     * without a prefix. They keep the address they were made with.
+     */
+    public const FIXED = ['client/auth', 'client/email/verify'];
+
     public static function excluded(string $path): bool
     {
-        $first = strtolower(explode('/', ltrim($path, '/'), 2)[0]);
+        $path = strtolower(trim($path, '/'));
 
-        return in_array($first, self::EXCLUDED, true);
+        if (in_array(explode('/', $path, 2)[0], self::EXCLUDED, true)) {
+            return true;
+        }
+
+        foreach (self::FIXED as $fixed) {
+            if ($path === $fixed || str_starts_with($path, $fixed.'/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** The language a prefixed path starts with, if it is one of ours. */

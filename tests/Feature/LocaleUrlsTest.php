@@ -172,3 +172,36 @@ test('an administrator switches it on and off on the languages screen', function
     app('auth')->forgetGuards();
     $this->get('/tr/client/login')->assertNotFound();
 });
+
+test('the e-mail confirmation link sent in another language still confirms', function () {
+    // Its signature is checked against the address without a prefix.
+    localeUrlsOn();
+    $user = \App\Models\User::factory()->create(['email_verified_at' => null]);
+
+    app()->setLocale('tr');
+    $url = \App\Http\Controllers\Client\EmailVerificationController::verificationUrl($user);
+    expect($url)->not->toContain('/tr/');
+
+    $this->withSession(['locale' => 'tr'])->get($url)->assertRedirect();
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+});
+
+test('social sign-in keeps the callback address registered with Google and GitHub', function () {
+    localeUrlsOn();
+    app()->setLocale('tr');
+
+    expect(route('client.social.google.callback'))->not->toContain('/tr/')
+        ->and(route('client.social.github.callback'))->not->toContain('/tr/');
+});
+
+test('a queued job reads the setting afresh, so a long-running worker follows it', function () {
+    localeUrlsOn();
+    expect(LocaleUrl::enabled())->toBeTrue();
+
+    Setting::set(LocaleUrl::SETTING, '0', 'language');
+    $job = \Mockery::mock(\Illuminate\Contracts\Queue\Job::class)->shouldIgnoreMissing();
+    $job->allows('payload')->andReturn([]);
+    event(new \Illuminate\Queue\Events\JobProcessing('sync', $job));
+
+    expect(LocaleUrl::enabled())->toBeFalse();
+});
