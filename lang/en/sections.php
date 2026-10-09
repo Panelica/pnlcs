@@ -2,13 +2,13 @@
 
 return [
     'apps' => [
-        'title' => 'One-click apps on your hosting',
-        'subtitle' => 'Install WordPress, n8n, databases and :count more with one click - each running inside your own account.',
-        'and_more' => 'and :count more',
-        'cta' => 'Browse hosting plans',
-        'point_isolation' => 'Real isolation: your apps, your resources',
-        'point_oneclick' => 'One click to install, running in seconds',
-        'point_included' => 'Included in your plan, no extra licence',
+        'title' => 'Run the apps you want, on hosting that keeps them apart',
+        'subtitle' => 'WordPress, n8n, databases, dashboards - :count applications, installed in one click and running inside your own account limits.',
+        'and_more' => '+ :count more in the catalogue',
+        'cta' => 'See the plans',
+        'point_isolation' => 'Every app runs in your own kernel-enforced slice. Nobody else\'s traffic can eat your memory, and yours cannot escape into theirs.',
+        'point_oneclick' => 'Pick an app, give it a name, and point one of your domains at it. No compose files, no server to rent, no SSH.',
+        'point_included' => 'The catalogue comes with the plan. Run one app or fill the plan - the price is the resources, not the number of apps.',
     ],
 
     'cta' => [
@@ -146,4 +146,16 @@ return [
         'title' => 'VPS Server Plans',
         'visual_title' => 'Cloud VPS',
     ],
+    'apps.cta_learn' => 'How it works',
+    'apps.eyebrow' => 'Included with every plan',
+    'apps.featured' => 'Popular choice',
+    'apps.point_included_t' => 'No licence, no per-app fee',
+    'apps.point_isolation_t' => 'Real isolation, not shared roulette',
+    'apps.point_oneclick_t' => 'One click, then it is yours',
+    'apps.step1' => 'Plans differ by memory, CPU and disk. That is your budget for everything you run.',
+    'apps.step1_t' => 'Choose a plan',
+    'apps.step2' => 'Search the catalogue, check what each app needs, and install it from your control panel.',
+    'apps.step2_t' => 'Install what you need',
+    'apps.step3' => 'Point one of your domains at the app and it is live, with certificates handled for you.',
+    'apps.step3_t' => 'Put it on your domain',
 ];

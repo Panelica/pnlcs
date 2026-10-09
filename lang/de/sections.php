@@ -156,4 +156,5 @@ return [
     'apps.step2' => 'Durchsuchen Sie den Katalog, prüfen Sie, was die einzelnen Apps benötigen, und installieren Sie sie über Ihr Control Panel.',
     'apps.step2_t' => 'Installieren Sie, was Sie brauchen',
     'apps.step3' => 'Richten Sie eine Ihrer Domains auf die App – sie ist sofort live, und die Zertifikate werden für Sie verwaltet.',
+    'apps.step3_t' => 'Auf Ihre Domain legen',
 ];

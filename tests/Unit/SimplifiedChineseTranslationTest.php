@@ -104,6 +104,8 @@ test('simplified Chinese does not contain raw keys or unnecessary English senten
     $allowedEnglish = [
         'ID', 'Laravel', 'PHP', 'PHP Mail', 'PNLCS', 'PayPal', 'SLA', 'SMTP',
         'Stripe', 'Nginx + PHP-FPM',
+        // A command written out for the customer to type, the same everywhere.
+        '/usr/local/bin/php ~/{domain}/public_html/artisan schedule:run',
     ];
 
     $walk = function (array $values, string $group, string $prefix = '') use (&$walk, $allowedEnglish): void {

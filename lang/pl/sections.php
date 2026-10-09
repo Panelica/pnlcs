@@ -2,13 +2,13 @@
 
 return [
     'apps' => [
-        'title' => 'Aplikacje jednym kliknięciem na Twoim hostingu',
-        'subtitle' => 'Zainstaluj WordPress, n8n, bazy danych i :count więcej jednym kliknięciem — każda działa we własnym koncie.',
-        'and_more' => 'i :count więcej',
-        'cta' => 'Przeglądaj plany hostingowe',
-        'point_isolation' => 'Prawdziwa izolacja: Twoje aplikacje, Twoje zasoby',
-        'point_oneclick' => 'Instalacja jednym kliknięciem, działa w kilka sekund',
-        'point_included' => 'W cenie planu, bez dodatkowej licencji',
+        'title' => 'Uruchamiaj aplikacje, których chcesz, na hostingu, który trzyma je osobno',
+        'subtitle' => 'WordPress, n8n, bazy danych, panele - :count aplikacji, instalowanych jednym kliknięciem i działających w limitach Twojego własnego konta.',
+        'and_more' => '+ :count więcej w katalogu',
+        'cta' => 'Zobacz plany',
+        'point_isolation' => 'Każda aplikacja działa we własnym wydzielonym przez jądro wycinku. Ruch innych nie zje Twojej pamięci, a Twój nie wydostanie się do nich.',
+        'point_oneclick' => 'Wybierz aplikację, nadaj jej nazwę i skieruj na nią jedną ze swoich domen. Bez plików compose, bez wynajmowania serwera, bez SSH.',
+        'point_included' => 'Katalog jest w cenie planu. Uruchom jedną aplikację albo wypełnij cały plan - płacisz za zasoby, nie za liczbę aplikacji.',
     ],
     'cta' => [
         'button' => 'Zacznij teraz',
@@ -145,4 +145,16 @@ return [
         'title' => 'Plany Serwerów VPS',
         'visual_title' => 'VPS w chmurze',
     ],
+    'apps.cta_learn' => 'Jak to działa',
+    'apps.eyebrow' => 'W cenie każdego planu',
+    'apps.featured' => 'Popularny wybór',
+    'apps.point_included_t' => 'Bez licencji, bez opłat za aplikację',
+    'apps.point_isolation_t' => 'Prawdziwa izolacja, a nie współdzielona ruletka',
+    'apps.point_oneclick_t' => 'Jedno kliknięcie i jest Twoja',
+    'apps.step1' => 'Plany różnią się pamięcią, procesorem i dyskiem. To Twój budżet na wszystko, co uruchamiasz.',
+    'apps.step1_t' => 'Wybierz plan',
+    'apps.step2' => 'Przeszukaj katalog, sprawdź, czego potrzebuje każda aplikacja, i zainstaluj ją z panelu sterowania.',
+    'apps.step2_t' => 'Zainstaluj to, czego potrzebujesz',
+    'apps.step3' => 'Skieruj jedną ze swoich domen na aplikację, a będzie dostępna online, z certyfikatami obsłużonymi za Ciebie.',
+    'apps.step3_t' => 'Umieść ją na swojej domenie',
 ];

@@ -2,13 +2,13 @@
 
 return [
     'apps' => [
-        'title' => 'Hostinginizde tek tıkla uygulamalar',
-        'subtitle' => 'WordPress, n8n, veritabanları ve :count uygulama daha - hepsi kendi hesabınızın içinde çalışır.',
-        'and_more' => 've :count uygulama daha',
-        'cta' => 'Hosting paketlerine göz atın',
-        'point_isolation' => 'Gerçek izolasyon: sizin uygulamalarınız, sizin kaynaklarınız',
-        'point_oneclick' => 'Tek tıkla kurulum, saniyeler içinde hazır',
-        'point_included' => 'Paketinize dahil, ek lisans yok',
+        'title' => 'İstediğiniz uygulamaları, onları birbirinden ayıran bir hostingde çalıştırın',
+        'subtitle' => 'WordPress, n8n, veritabanları, panolar - tek tıkla kurulan ve kendi hesap sınırlarınızın içinde çalışan :count uygulama.',
+        'and_more' => '+ katalogda :count uygulama daha',
+        'cta' => 'Paketleri inceleyin',
+        'point_isolation' => 'Her uygulama, çekirdek tarafından güvence altına alınan kendi kaynak diliminizde çalışır. Başkasının trafiği sizin belleğinizi tüketemez, sizinki de onlarınkine taşamaz.',
+        'point_oneclick' => 'Bir uygulama seçin, adını verin ve alan adlarınızdan birini ona yönlendirin. Compose dosyası yok, kiralanacak sunucu yok, SSH yok.',
+        'point_included' => 'Katalog paketle birlikte gelir. İster tek uygulama çalıştırın ister paketi doldurun; ücretini ödediğiniz kaynaklardır, uygulama sayısı değil.',
     ],
     'cta' => [
         'button' => 'Hemen Başlayın',
@@ -145,4 +145,16 @@ return [
         'title' => 'VPS Sunucu Paketleri',
         'visual_title' => 'Bulut VPS',
     ],
+    'apps.cta_learn' => 'Nasıl çalışır',
+    'apps.eyebrow' => 'Her pakete dahil',
+    'apps.featured' => 'Popüler seçim',
+    'apps.point_included_t' => 'Lisans yok, uygulama başına ücret yok',
+    'apps.point_isolation_t' => 'Gerçek izolasyon, paylaşımlı sunucu kumarı değil',
+    'apps.point_oneclick_t' => 'Tek tık, gerisi sizin',
+    'apps.step1' => 'Paketler bellek, CPU ve disk bakımından ayrışır. Çalıştıracağınız her şeyin bütçesi budur.',
+    'apps.step1_t' => 'Bir paket seçin',
+    'apps.step2' => 'Katalogda arayın, uygulamanın neye ihtiyaç duyduğuna bakın ve kontrol panelinizden kurun.',
+    'apps.step2_t' => 'İhtiyacınız olanı kurun',
+    'apps.step3' => 'Alan adlarınızdan birini uygulamaya yönlendirin; sertifikası sizin için halledilmiş olarak yayına girer.',
+    'apps.step3_t' => 'Alan adınızda yayınlayın',
 ];

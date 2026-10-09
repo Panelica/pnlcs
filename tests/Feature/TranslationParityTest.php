@@ -46,11 +46,15 @@ const TRANSLATION_GAP_BUDGET = [
     // German: complete since Dirk Mehmke's translation, 2026-09-23.
     'de' => 0,
     // The twenty-five that were generated together and left behind.
-    'ar' => 984, 'az' => 984, 'ca' => 984, 'cs' => 984, 'da' => 984,
-    'el' => 984, 'es' => 984, 'et' => 984, 'fa' => 984, 'fi' => 984, 'fr' => 984,
-    'he' => 984, 'hr' => 984, 'hu' => 984, 'it' => 984, 'ja' => 984, 'ko' => 984,
-    'mk' => 984, 'nl' => 984, 'no' => 984, 'pt-br' => 984, 'ro' => 984,
-    'ru' => 984, 'sv' => 984, 'uk' => 984,
+    // Raised 2026-10-09 from 984 by exactly the twelve home page texts of the
+    // apps section (sections.apps.eyebrow, step1..3, ...): they lived only in
+    // English database rows, so these languages already showed them in
+    // English; moving them into lang/en made the gap visible, not wider.
+    'ar' => 996, 'az' => 996, 'ca' => 996, 'cs' => 996, 'da' => 996,
+    'el' => 996, 'es' => 996, 'et' => 996, 'fa' => 996, 'fi' => 996, 'fr' => 996,
+    'he' => 996, 'hr' => 996, 'hu' => 996, 'it' => 996, 'ja' => 996, 'ko' => 996,
+    'mk' => 996, 'nl' => 996, 'no' => 996, 'pt-br' => 996, 'ro' => 996,
+    'ru' => 996, 'sv' => 996, 'uk' => 996,
 ];
 
 test('no language falls further behind English than it already is', function () {
@@ -146,16 +150,25 @@ function localeValues(string $locale): array
 // written the same in English: the names WHMCS and PNLCS on the preview
 // columns (every language); German Name, Host, Port and Domains; Polish
 // Import, Host, Port, Email and "WHMCS ID"; Chinese "WHMCS ID".
+// Raised 2026-10-09 by exactly these, all written the same in English: 459
+// texts of the client hosting pages, the mail setup and SSL guides and the
+// apps section, which lived only in migration-seeded database rows, moved into
+// lang/en, lang/tr, lang/de, lang/pl and lang/zh. The ones every language
+// keeps - Port, Terminal, phpMyAdmin, TTL, PHP, Laravel, Node.js, Python,
+// ":value vCPU", the cron command example; German Domain, Name, Server,
+// Version, Zone, Apps, Subdomain(s); Polish Host, Min, ":value RAM"; Chinese
+// CPU and the "my-blog" example. Each one is named in
+// database/data/same_as_english.php.
 const UNTRANSLATED_VALUE_BUDGET = [
-    'tr' => 36,
+    'tr' => 50,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
     // German hosting writes Domain, Domains and Registrar, not Domäne or
     // Standesbeamter. Those 25 labels are the whole of the raise.
-    'de' => 136,
-    'pl' => 79,
-    'zh' => 24,
+    'de' => 170,
+    'pl' => 93,
+    'zh' => 34,
 ];
 
 test('a complete language is translated, not merely present', function () {
@@ -307,6 +320,12 @@ test('no Turkish string carries an English word left behind by a machine pass', 
 
     $offenders = [];
     foreach (localeLines('tr') as $where => $value) {
+        // A command or a path written out for the customer to type
+        // ('/usr/local/bin/php ~/{domain}/public_html/artisan ...') is the
+        // same in every language; there is nothing in it to translate.
+        if (str_starts_with(ltrim($value), '/')) {
+            continue;
+        }
         foreach (translationWords($value) as $word) {
             // A word carrying a Turkish letter is Turkish; only a run of plain
             // ASCII letters can be an English leftover. Matching whole words
@@ -665,6 +684,7 @@ function turkishBareCompoundHead(string $value): ?string
         'Temel Adres', 'Alt Bilgi', 'Yeni Durum', 'İndirim Türü', 'Yapılacaklar Listesi',
         'Ek Süre', 'Yayınlanabilir Anahtar', 'Test (Sandbox) Modu', 'Gizli Anahtar',
         'Başarısız Durum', 'Bekleyen Durum', 'Gönderilen Durum', 'Genel Ayarlar',
+        'Yeni Dosya',
         'Yeni Grup', 'Doldurma Türü', 'En Fazla Hesap', 'Bakım Modu', 'Alan Türü',
         'Uzun Metin', 'Son Tarih', 'İptal Türü', 'Sertifika Türü', 'Özel Anahtar',
         'Web Sunucusu Türü', 'Açık Adres', 'Ana Sayfa', 'Komisyon Türü',

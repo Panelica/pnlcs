@@ -2,13 +2,13 @@
 
 return [
     'apps' => [
-        'title' => '一键安装的应用',
-        'subtitle' => '一键安装 WordPress、n8n、数据库等 :count 款应用，每个都在您自己的账户内运行。',
-        'and_more' => '还有 :count 款',
-        'cta' => '查看主机套餐',
-        'point_isolation' => '真正的隔离：您的应用，您的资源',
-        'point_oneclick' => '一键安装，数秒内运行',
-        'point_included' => '套餐已包含，无需额外授权',
+        'title' => '运行您想要的应用，主机让它们彼此隔离',
+        'subtitle' => 'WordPress、n8n、数据库、仪表板——:count 款应用，一键安装，在您自己账户的限额内运行。',
+        'and_more' => '+ 目录中还有 :count 款',
+        'cta' => '查看套餐',
+        'point_isolation' => '每个应用都运行在由内核强制隔离的独立分区中。别人的流量吃不掉您的内存，您的也不会影响到他们。',
+        'point_oneclick' => '选择一个应用，给它起个名字，再把您的一个域名指向它。无需 compose 文件，无需租用服务器，无需 SSH。',
+        'point_included' => '目录随套餐提供。运行一个应用或用满整个套餐——价格取决于资源，而非应用数量。',
     ],
     'cta' => [
         'button' => '立即开始',
@@ -145,4 +145,16 @@ return [
         'title' => 'VPS 服务器方案',
         'visual_title' => '云 VPS',
     ],
+    'apps.cta_learn' => '工作原理',
+    'apps.eyebrow' => '每个套餐均包含',
+    'apps.featured' => '热门之选',
+    'apps.point_included_t' => '无需许可证，不按应用收费',
+    'apps.point_isolation_t' => '真正的隔离，而非共享碰运气',
+    'apps.point_oneclick_t' => '一键安装，即刻拥有',
+    'apps.step1' => '套餐的区别在于内存、CPU 和磁盘。这就是您运行所有内容的预算。',
+    'apps.step1_t' => '选择套餐',
+    'apps.step2' => '搜索目录，查看每个应用的需求，然后在控制面板中安装。',
+    'apps.step2_t' => '安装您需要的应用',
+    'apps.step3' => '将您的一个域名指向该应用，它就会上线，证书也会为您处理好。',
+    'apps.step3_t' => '放到您的域名上',
 ];
