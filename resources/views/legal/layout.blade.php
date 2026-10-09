@@ -13,7 +13,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('legal-title') — {{ $brandName ?? company_name() }}</title>
-    <meta name="description" content="@yield('legal-description')">
+    @include('partials.seo-meta', ['title' => trim($__env->yieldContent('legal-title')).' — '.($brandName ?? company_name()), 'description' => trim($__env->yieldContent('legal-description')) ?: null])
     {{-- Crawlable: several payment providers verify that the terms and privacy
          pages are publicly indexable before approving a merchant account. --}}
     <meta name="robots" content="index, follow">

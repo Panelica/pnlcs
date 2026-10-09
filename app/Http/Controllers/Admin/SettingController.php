@@ -111,6 +111,8 @@ class SettingController extends Controller
         'AboutText', 'KnowledgeBaseEnabled',
         // Tag Manager, the operator's own code and the consent bar (App\Support\Tracking).
         'TrackingGtmId', 'TrackingConsent', 'TrackingPolicyUrl', 'TrackingHeadCode', 'TrackingFooterCode',
+        // What search engines and link previews read (App\Support\Seo).
+        'SeoDescription', 'SeoShareImage', 'SeoTwitter', 'RobotsTxt',
         // Billing in a second currency, with an official rate source.
         'BillingCurrency', 'OfficialRateProvider', 'TcmbRateKind', 'PaymentReferencePrefix',
         // Orders from these addresses are accepted without payment (testing).

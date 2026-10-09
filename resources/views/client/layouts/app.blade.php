@@ -12,6 +12,7 @@
          client area. --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield("title", __("client.my_account")) - {{ company_name() }}</title>
+    @include('partials.seo-meta')
     @vite(["resources/css/app.css", "resources/js/app.js"])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

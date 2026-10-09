@@ -346,6 +346,19 @@
         </div>
     </div>
 
+    {{-- What search engines and shared links show (App\Support\Seo). --}}
+    <div class="card" id="settings-seo_section" style="margin-bottom:15px;">
+        <div class="card-header"><strong>{{ __('admin.settings.seo_section') }}</strong></div>
+        <div class="card-body">
+            <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_description') }}</label><textarea name="SeoDescription" rows="2" maxlength="300" class="form-control">{{ $settings['SeoDescription'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.seo_description_hint') }}</div></div>
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_share_image') }}</label><input type="text" name="SeoShareImage" value="{{ $settings['SeoShareImage'] ?? '' }}"  class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.seo_share_image_hint') }}</div></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_twitter') }}</label><input type="text" name="SeoTwitter" value="{{ $settings['SeoTwitter'] ?? '' }}" class="form-control" placeholder="@"></div>
+            </div>
+            <div class="form-group"><label class="form-label">robots.txt</label><textarea name="RobotsTxt" rows="3" class="form-control" style="font-family:monospace;">{{ $settings['RobotsTxt'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.robots_txt_hint', ['sitemap' => route('sitemap')]) }}</div>@if(is_file(public_path('robots.txt')))<div style="font-size:12px;color:#8a6d3b;margin-top:4px;">{{ __('admin.settings.robots_txt_static', ['path' => 'public/robots.txt']) }}</div>@endif</div>
+        </div>
+    </div>
+
     {{-- Billing in a second currency. The shop keeps pricing in its own
          currency; each invoice freezes the rate it was struck at, and names
          the source when there is an official one to name. --}}

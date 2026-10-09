@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ __('client.auth.login_title') }} - {{ company_name() }}</title>
+    @include('partials.seo-meta', ['title' => __('client.auth.login_title').' - '.company_name()])
     @vite(['resources/css/app.css'])
     @if(!empty($customFavicon))
     <link rel="icon" href="{{ $customFavicon }}" type="image/png">
