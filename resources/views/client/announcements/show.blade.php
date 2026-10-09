@@ -1,6 +1,6 @@
 @extends("client.layouts.app")
 @section("title", $announcement->title)
-@section("meta_description", \Illuminate\Support\Str::limit(trim(strip_tags((string) $announcement->announcement)), 300))
+@section("meta_description"){{ \Illuminate\Support\Str::limit(trim(strip_tags((string) $announcement->announcement)), 300) }}@endsection
 @section("og_type", "article")
 @section("content")
 

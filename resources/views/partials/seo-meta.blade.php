@@ -1,8 +1,13 @@
 {{-- What search engines and link previews read about this page (App\Support\Seo).
      Pass 'title' (the page title as the browser shows it) and, when the page has
      one, 'description'; otherwise the shop's description from Setup > General.
-     The address shared is the page's own (canonical comes from the layout). --}}
+     The address shared is the page's own (canonical comes from the layout).
+     Without parameters (the client layout) it reads the page's sections:
+     title, meta_description, og_type. --}}
 @php
+    $title ??= trim($__env->yieldContent('title', e(__('client.my_account')))).' - '.company_name();
+    $description ??= trim($__env->yieldContent('meta_description')) ?: null;
+    $type ??= trim($__env->yieldContent('og_type')) ?: 'website';
     $seoDescription = \App\Support\Seo::description($description ?? null);
     $seoImage = \App\Support\Seo::image();
     $seoTwitter = \App\Support\Seo::twitter();
