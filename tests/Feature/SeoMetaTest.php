@@ -108,3 +108,27 @@ test('a theme that brings its own home page carries the sharing tags too', funct
     expect($html)->toContain('<meta property="og:title"')
         ->and(substr_count($html, '<meta name="description"'))->toBe(1);
 });
+
+test('a page that writes its own sharing tags and language versions gets none from the layout', function () {
+    Setting::set('SeoDescription', 'Shop description.', 'general');
+    Setting::set(\App\Support\LocaleUrl::SETTING, '1', 'language');
+    \App\Support\LocaleUrl::forget();
+    $dir = storage_path('framework/testing/seo-own-'.bin2hex(random_bytes(4)));
+    if (! is_dir($dir)) {
+        mkdir($dir, 0777, true);
+    }
+    file_put_contents($dir.'/own.blade.php', "@extends('client.layouts.app')\n@section('title', 'A post')\n@section('seo_own', '1')\n@section('styles')<meta property=\"og:title\" content=\"The post's own\">@endsection\n@section('content')\nBody\n@endsection\n");
+    file_put_contents($dir.'/plain.blade.php', "@extends('client.layouts.app')\n@section('title', 'A page')\n@section('content')\nBody\n@endsection\n");
+    view()->addLocation($dir);
+
+    \Illuminate\Support\Facades\Route::middleware('web')->get('seo-own-test/{v}', fn (string $v) => view($v));
+    $own = $this->get('/seo-own-test/own')->assertOk()->getContent();
+    $plain = $this->get('/seo-own-test/plain')->assertOk()->getContent();
+
+    expect(substr_count($own, 'property="og:title"'))->toBe(1)
+        ->and($own)->toContain("The post's own")
+        ->and($own)->not->toContain('Shop description.')
+        ->and($own)->not->toContain('hreflang="x-default"')
+        ->and(substr_count($plain, 'property="og:title"'))->toBe(1)
+        ->and($plain)->toContain('Shop description.');
+});
