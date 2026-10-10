@@ -43,6 +43,28 @@ class Seo
         return preg_match('/^\w{1,30}$/', $handle) ? '@'.$handle : '';
     }
 
+    /**
+     * The shop as schema.org describes an organization, for the home page:
+     * its name, address, logo and the profiles that are its own (sameAs).
+     * Search engines read this to connect the shop to its profiles.
+     *
+     * @return array<string, mixed>
+     */
+    public static function organization(): array
+    {
+        $logo = self::setting('custom_logo_path');
+        $root = rtrim(url()->formatRoot(url()->formatScheme()), '/');
+
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'Organization',
+            'name' => company_name(),
+            'url' => $root.'/',
+            'logo' => $logo === '' ? null : (preg_match('#^https?://#i', $logo) ? $logo : $root.'/'.ltrim($logo, '/')),
+            'sameAs' => array_values(SocialProfiles::all()) ?: null,
+        ]);
+    }
+
     /** The page language as Open Graph writes it: en_GB is not needed, a language is enough. */
     public static function ogLocale(): string
     {

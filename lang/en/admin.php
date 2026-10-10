@@ -3204,6 +3204,8 @@ return [
     'settings.seo_share_image' => 'Image for shared links',
     'settings.seo_share_image_hint' => 'Shown when a link to your site is shared on WhatsApp, LinkedIn or X. 1200×630 works everywhere. Empty: your logo.',
     'settings.seo_twitter' => 'X (Twitter) account',
+    'settings.social_profiles' => 'Social media profiles',
+    'settings.social_profiles_hint' => 'The full address of each profile. Your theme shows them, and the home page tells search engines they are yours.',
     'settings.robots_txt_hint' => 'Empty: every page may be indexed. The address of your sitemap (:sitemap) is added at the end; it lists your public pages and is updated by itself.',
     'settings.robots_txt_static' => 'Your web server answers /robots.txt with the file :path, so the text above is not used. Remove that file to manage robots.txt here.',
     'settings.about_text_hint' => 'Plain text, paragraphs separated by a blank line. Shown on',

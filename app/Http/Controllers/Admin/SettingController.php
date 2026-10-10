@@ -113,6 +113,8 @@ class SettingController extends Controller
         'TrackingGtmId', 'TrackingConsent', 'TrackingPolicyUrl', 'TrackingHeadCode', 'TrackingFooterCode',
         // What search engines and link previews read (App\Support\Seo).
         'SeoDescription', 'SeoShareImage', 'SeoTwitter', 'RobotsTxt',
+        // The shop's social media profiles (App\Support\SocialProfiles).
+        'SocialX', 'SocialFacebook', 'SocialInstagram', 'SocialLinkedin', 'SocialYoutube', 'SocialTiktok', 'SocialThreads', 'SocialMedium',
         // Billing in a second currency, with an official rate source.
         'BillingCurrency', 'OfficialRateProvider', 'TcmbRateKind', 'PaymentReferencePrefix',
         // Orders from these addresses are accepted without payment (testing).

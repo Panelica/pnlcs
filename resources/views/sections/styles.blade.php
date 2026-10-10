@@ -468,6 +468,9 @@
         .footer__desc { font-size: 14px; line-height: 1.7; margin-bottom: 20px; }
         .footer__contact-item { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 10px; }
         .footer__contact-item i { color: var(--theme-welcome-accent, #10b981); font-size: 16px; width: 20px; text-align: center; }
+        .footer__social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+        .footer__social a { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: rgba(255,255,255,.06); color: inherit; font-size: 17px; text-decoration: none; }
+        .footer__social a:hover { color: var(--theme-welcome-accent, #10b981); background: rgba(255,255,255,.1); }
         .footer__col-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
         .footer__link { display: block; font-size: 14px; margin-bottom: 10px; transition: color 0.2s; }
         .footer__link:hover { color: #fff; }

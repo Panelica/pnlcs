@@ -672,3 +672,17 @@ if (! function_exists('mb_fmt')) {
         return $mb.' MB';
     }
 }
+
+if (! function_exists('social_profiles')) {
+    /**
+     * The shop's social media profiles for a theme to show: network => address
+     * (x, facebook, instagram, linkedin, youtube, tiktok, threads, medium), only
+     * the ones set. Setup > General > Search engines and sharing.
+     *
+     * @return array<string, string>
+     */
+    function social_profiles(): array
+    {
+        return \App\Support\SocialProfiles::all();
+    }
+}
