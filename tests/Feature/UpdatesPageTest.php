@@ -265,3 +265,23 @@ test('after an update the first page anyone opens clears the old compiled code, 
 
     expect(is_file($state->path('opcache-reset-pending')))->toBeFalse();
 })->with(['/', '/client/login', '/up']);
+
+test('a request that was picked up but never reported back says so after a few minutes, and can be asked again', function () {
+    $state = updatesState();
+    $state->write('latest.json', ['checked_at' => now()->toIso8601String(), 'channel' => 'stable', 'latest' => [
+        'version' => '9.9.9', 'tag' => 'v9.9.9', 'pre_release' => false, 'notes' => 'Notes', 'published_at' => null, 'url' => null,
+    ]]);
+    $lost = __('admin.updates.request_lost', ['command' => 'php artisan pnlcs:update --check']);
+
+    // Just picked up: still in progress, no warning
+    $state->write('status.json', ['state' => 'queued', 'step' => 'download', 'version' => '9.9.9', 'action' => 'prepare', 'updated_at' => now()->toIso8601String(), 'started_at' => now()->toIso8601String()]);
+    $this->actingAs(updatesAdmin(), 'admin')->get(route('admin.config.updates'))->assertOk()->assertDontSee($lost);
+
+    // Minutes later, nothing running and nothing waiting: the process ended without a word
+    $state->write('status.json', ['state' => 'queued', 'step' => 'download', 'version' => '9.9.9', 'action' => 'prepare', 'updated_at' => now()->subMinutes(10)->toIso8601String(), 'started_at' => now()->subMinutes(10)->toIso8601String()]);
+    $this->actingAs(updatesAdmin(), 'admin')->get(route('admin.config.updates'))->assertOk()->assertSee($lost);
+
+    // and the check can be asked for again
+    $this->actingAs(updatesAdmin(), 'admin')->post(route('admin.config.updates.prepare'))->assertRedirect()->assertSessionMissing('error');
+    expect($state->read('request.json')['action'] ?? null)->toBe('prepare');
+});
