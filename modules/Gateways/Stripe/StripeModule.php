@@ -34,6 +34,8 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             ["name" => "publishable_key", "label" => "Publishable Key",         "type" => "text", "required" => true],
             ["name" => "secret_key",      "label" => "Secret Key",              "type" => "password", "required" => true],
             ["name" => "webhook_secret",  "label" => "Webhook Signing Secret",  "type" => "password"],
+            ["name" => "charge_billing_currency", "label" => "Charge in the invoice's billing currency", "type" => "yesno", "default" => "0",
+                "description" => "An invoice billed in another currency (Setup > Currencies) is charged in that currency, at the rate on the invoice, so the customer's statement shows the amount they saw. The payment is still recorded in the shop currency."],
         ];
     }
 
@@ -68,6 +70,16 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // to the shop, which is exactly what this line did for everyone before.
         $currency = strtolower($params["currency"] ?? ($invoice->source_currency ?: shop_currency_code()));
 
+        // With "charge in the billing currency" on, an invoice billed in
+        // another currency is charged in it, at the invoice's own rate. The
+        // intent carries the figures it stands for (metadata), so what comes
+        // back is recorded in the invoice's currency, not in lira read as euros.
+        $plan = isset($params["currency"]) ? null : $this->billingCharge($invoice, $amount);
+        $sourceAmount = $amount;
+        if ($plan !== null) {
+            [$currency, $amount] = [$plan["currency"], $plan["amount"]];
+        }
+
         // Converted with the very currency this request carries, three lines
         // down, so the figure and the unit it is counted in cannot come apart.
         // A hundred yen is a hundred, not ten thousand.
@@ -91,7 +103,11 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
                 "description"                 => "Invoice #" . ($invoice->invoice_num ?? $invoice->id),
                 "metadata[invoice_id]"        => $invoice->id,
                 "metadata[invoice_num]"       => $invoice->invoice_num ?? $invoice->id,
-            ]);
+            ] + ($plan === null ? [] : [
+                "metadata[source_currency]"   => $plan["source_currency"],
+                "metadata[source_amount]"     => number_format($sourceAmount, 2, ".", ""),
+                "metadata[rate]"              => (string) $plan["rate"],
+            ]));
 
         if (!$response->successful()) {
             $error = $response->json("error.message", "Unknown error");
@@ -368,6 +384,30 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
     }
 
     /**
+     * The charge for an invoice billed in another currency, when the operator
+     * chose to charge in it: the billing currency, the amount at the invoice's
+     * own rate (frozen the day it was raised), and what that stands for.
+     * Null when the setting is off or the invoice has no conversion.
+     *
+     * @return array{currency: string, amount: float, rate: float, source_currency: string}|null
+     */
+    private function billingCharge(Invoice $invoice, float $amount): ?array
+    {
+        if ($this->getSetting("charge_billing_currency") !== "1" || ! has_billing_conversion($invoice)) {
+            return null;
+        }
+
+        $rate = (float) $invoice->exchange_rate;
+
+        return [
+            "currency"        => strtolower((string) $invoice->billing_currency),
+            "amount"          => round($amount * $rate, 2),
+            "rate"            => $rate,
+            "source_currency" => strtolower((string) ($invoice->source_currency ?: shop_currency_code())),
+        ];
+    }
+
+    /**
      * What a succeeded intent pays, in the invoice's currency. An intent taken
      * in the billing currency (billingCharge()) is read back through the rate
      * it was made with: in full it is exactly the amount it stood for, so no
@@ -488,7 +528,14 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // and unit, that capture() asks Stripe for. Stripe refuses the confirm
         // when the two disagree, so they are worked out by the same code.
         $currency     = strtolower($invoice->source_currency ?: shop_currency_code());
-        $minorAmount  = $this->minorUnits((float) $invoice->amountDue(), $currency);
+        $due          = (float) $invoice->amountDue();
+        // Charged in the billing currency when the operator chose so: the
+        // same plan capture() makes, so the two agree to the cent.
+        if ($plan = $this->billingCharge($invoice, $due)) {
+            [$currency, $due] = [$plan["currency"], $plan["amount"]];
+            $amount = billing_money_fmt($invoice->amountDue(), $invoice);
+        }
+        $minorAmount  = $this->minorUnits($due, $currency);
         $currencyJs   = json_encode($currency);
         $localeJs     = json_encode(str_replace("_", "-", app()->getLocale()));
         $returnUrl    = json_encode(url("/client/invoices/{$invoiceId}"), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
