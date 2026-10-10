@@ -30,6 +30,7 @@ class ModuleRegistry
      */
     private const DISPLAY_NAMES = [
         'cpanel' => 'cPanel/WHM',
+        'aapanel' => 'aaPanel',
         'directadmin' => 'DirectAdmin',
         'hestiacp' => 'HestiaCP',
         'proxmox' => 'Proxmox VE',
@@ -229,7 +230,7 @@ class ModuleRegistry
     public function serverCredentialRequirement(?string $type): string
     {
         return match (self::key((string) $type)) {
-            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr' => 'token',
+            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr', 'aapanel' => 'token',
             'directadmin', 'hestiacp' => 'either',
             default => 'none',
         };

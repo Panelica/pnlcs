@@ -134,7 +134,7 @@ portal itself**, with every action fenced to their own account. See
 [Hosting Management from Inside Billing](#hosting-management-from-inside-billing).
 
 **Not only Panelica.** PNLCS is control-panel agnostic — you can connect and
-provision on **cPanel, Plesk, DirectAdmin, HestiaCP, Proxmox, and Vultr** too,
+provision on **cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel, Proxmox, and Vultr** too,
 right alongside your Panelica servers. Mix and match panels in a single install;
 Panelica is simply where PNLCS feels most at home.
 

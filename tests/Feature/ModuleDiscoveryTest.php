@@ -90,7 +90,7 @@ test('a manifest whose class is not the type it claims is ignored', function () 
 });
 
 test('the built-in manifests register nothing on their own', function () {
-    // Ten built-in modules ship pnlcs.json files without a "class"; discovery
+    // Eleven built-in modules ship pnlcs.json files without a "class"; discovery
     // must leave the registry exactly as the core's own list builds it.
     $registry = freshRegistry();
 
@@ -100,7 +100,7 @@ test('the built-in manifests register nothing on their own', function () {
         }
     }
 
-    expect($registry->getServerModules())->toEqualCanonicalizing(['custom', 'panelica', 'cpanel', 'plesk', 'directadmin', 'proxmox', 'hestiacp', 'vultr'])
+    expect($registry->getServerModules())->toEqualCanonicalizing(['custom', 'panelica', 'cpanel', 'plesk', 'directadmin', 'proxmox', 'hestiacp', 'aapanel', 'vultr'])
         ->and($registry->getGatewayModules())->toEqualCanonicalizing(['banktransfer', 'stripe', 'paypal', 'authorize', 'mollie', 'razorpay', 'tpay', 'iyzico'])
         ->and($registry->getRegistrarModules())->toEqualCanonicalizing(['namecheap', 'resellerclub', 'openprovider', 'enom', 'manual', 'hrd', 'domainnameapi'])
         ->and($registry->getSslModules())->toEqual(['gogetssl']);
