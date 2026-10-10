@@ -18,7 +18,7 @@
                 <div class="form-group" style="flex:1;min-width:240px;margin:0;">
                     <label class="form-label">{{ __('admin.whois.domain_name') }}</label>
                     <input type="text" name="domain" value="{{ $domain ?? '' }}" class="form-control"
-                        placeholder="e.g. google.com, github.io" required autofocus
+                        placeholder="{{ __('admin.whois.domain_placeholder') }}" required autofocus
                         style="font-family:monospace;font-size:15px;">
                 </div>
                 <button type="submit" class="btn btn-primary">
@@ -37,7 +37,7 @@
 @if(!empty($result['parsed']))
 <div class="card" style="margin-bottom:24px;">
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-weight:600;"><i class="fas fa-info-circle" style="margin-right:6px;color:#1a4d80;"></i> Domain Information: {{ $result['domain'] }}</span>
+        <span style="font-weight:600;"><i class="fas fa-info-circle" style="margin-right:6px;color:#1a4d80;"></i> {{ __('admin.whois.domain_information') }}: {{ $result['domain'] }}</span>
         @if($result['available'] ?? false)
         <span class="badge-active">{{ __('admin.whois.available') }}</span>
         @else
@@ -65,7 +65,7 @@
 
 <div class="card">
     <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-weight:600;"><i class="fas fa-terminal" style="margin-right:6px;color:#64748b;"></i> Raw WHOIS Response</span>
+        <span style="font-weight:600;"><i class="fas fa-terminal" style="margin-right:6px;color:#64748b;"></i> {{ __('admin.whois.raw_response') }}</span>
         <span style="font-size:12px;color:#94a3b8;font-family:monospace;">{{ $result['server'] ?? '' }}</span>
     </div>
     <div class="card-body" style="padding:0;">

@@ -3670,4 +3670,6 @@ return [
     'domains.total_count' => '共 :count 个',
     'domains.expiry_soon' => '（即将）',
     'domains.expiry_past' => '（已过期）',
+    'ticket_spam.content_placeholder' => '例如 @spammail.com 或 casino',
+    'whois.domain_placeholder' => '例如 google.com、github.io',
 ];

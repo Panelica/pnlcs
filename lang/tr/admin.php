@@ -3670,4 +3670,6 @@ return [
     'domains.total_count' => 'toplam :count',
     'domains.expiry_soon' => '(yakında)',
     'domains.expiry_past' => '(süresi doldu)',
+    'ticket_spam.content_placeholder' => 'örn. @spammail.com ya da casino',
+    'whois.domain_placeholder' => 'örn. google.com, github.io',
 ];

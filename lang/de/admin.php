@@ -3666,4 +3666,6 @@ return [
     'domains.total_count' => 'insgesamt :count',
     'domains.expiry_soon' => '(bald)',
     'domains.expiry_past' => '(abgelaufen)',
+    'ticket_spam.content_placeholder' => 'z. B. @spammail.com oder casino',
+    'whois.domain_placeholder' => 'z. B. google.com, github.io',
 ];

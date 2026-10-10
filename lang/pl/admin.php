@@ -3670,4 +3670,6 @@ return [
     'domains.total_count' => 'łącznie :count',
     'domains.expiry_soon' => '(wkrótce)',
     'domains.expiry_past' => '(wygasła)',
+    'ticket_spam.content_placeholder' => 'np. @spammail.com lub casino',
+    'whois.domain_placeholder' => 'np. google.com, github.io',
 ];
