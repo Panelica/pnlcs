@@ -123,3 +123,34 @@ test('a refund in euros goes back in lira: in full exactly what was taken, in pa
     Http::assertSent(fn ($r) => str_ends_with($r->url(), '/v1/refunds') && $r['amount'] === 40000);
     Http::assertSent(fn ($r) => str_ends_with($r->url(), '/v1/refunds') && $r['amount'] === 10000);
 });
+
+test('a renewal charged from a stored card is charged in lira too, and reported in euros', function () {
+    sbcConfigured();
+    $invoice = sbcInvoice();
+    $card = \App\Models\PaymentMethod::create([
+        'client_id' => $invoice->client_id, 'gateway_name' => 'stripe', 'payment_type' => 'cc',
+        'remote_token' => 'pm_1', 'gateway_customer_id' => 'cus_1', 'last_four' => '4242', 'expiry_date' => '2030-07',
+    ]);
+    Http::fake(['*' => Http::response(['id' => 'pi_renew', 'status' => 'succeeded', 'amount_received' => 40000, 'currency' => 'try'], 200)]);
+
+    $result = app(StripeModule::class)->chargeStoredMethod($invoice, $card, 10.0, ['idempotency_key' => 'k1']);
+
+    expect($result['status'])->toBe('succeeded')->and((float) $result['amount'])->toBe(10.0);
+    Http::assertSent(fn ($r) => $r['currency'] === 'try' && $r['amount'] === 40000 && $r['off_session'] === 'true'
+        && $r['metadata[source_currency]'] === 'eur' && $r['metadata[rate]'] === '40');
+});
+
+test('switched off, a renewal is charged in the shop currency as before', function () {
+    sbcConfigured(false);
+    $invoice = sbcInvoice();
+    $card = \App\Models\PaymentMethod::create([
+        'client_id' => $invoice->client_id, 'gateway_name' => 'stripe', 'payment_type' => 'cc',
+        'remote_token' => 'pm_1', 'gateway_customer_id' => 'cus_1', 'last_four' => '4242', 'expiry_date' => '2030-07',
+    ]);
+    Http::fake(['*' => Http::response(['id' => 'pi_renew', 'status' => 'succeeded', 'amount_received' => 1000, 'currency' => 'eur'], 200)]);
+
+    $result = app(StripeModule::class)->chargeStoredMethod($invoice, $card, 10.0, ['idempotency_key' => 'k2']);
+
+    expect((float) $result['amount'])->toBe(10.0);
+    Http::assertSent(fn ($r) => $r['currency'] === 'eur' && $r['amount'] === 1000 && ! isset($r['metadata[rate]']));
+});
