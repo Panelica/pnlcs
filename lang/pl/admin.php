@@ -3618,4 +3618,10 @@ return [
         'reconnecting' => 'Serwer jeszcze nie odpowiada, ponawianie...',
         'last_result' => 'Ostatni wynik',
     ],
+    'servers.name_placeholder' => 'np. Panelica PROD',
+    'servers.hostname_placeholder' => 'np. server1.panelica.com',
+    'servers.ip_placeholder' => 'np. 138.201.59.57',
+    'servers.username_placeholder' => 'np. root',
+    'servers.keep_secret' => 'Zostaw puste, aby nie zmieniać',
+    'servers.keep_password' => '(zostaw puste, aby zachować)',
 ];

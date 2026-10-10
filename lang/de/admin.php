@@ -3614,4 +3614,10 @@ return [
         'reconnecting' => 'Noch keine Antwort vom Server, neuer Versuch läuft...',
         'last_result' => 'Letztes Ergebnis',
     ],
+    'servers.name_placeholder' => 'z. B. Panelica PROD',
+    'servers.hostname_placeholder' => 'z. B. server1.panelica.com',
+    'servers.ip_placeholder' => 'z. B. 138.201.59.57',
+    'servers.username_placeholder' => 'z. B. root',
+    'servers.keep_secret' => 'Leer lassen, um nichts zu ändern',
+    'servers.keep_password' => '(leer lassen, um es zu behalten)',
 ];

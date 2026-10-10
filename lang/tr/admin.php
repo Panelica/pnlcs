@@ -3618,4 +3618,10 @@ return [
         'reconnecting' => 'Sunucudan henüz yanıt yok, yeniden deneniyor...',
         'last_result' => 'Son sonuç',
     ],
+    'servers.name_placeholder' => 'örn. Panelica PROD',
+    'servers.hostname_placeholder' => 'örn. panel.alanadiniz.com',
+    'servers.ip_placeholder' => 'örn. 138.201.59.57',
+    'servers.username_placeholder' => 'örn. root',
+    'servers.keep_secret' => 'Değiştirmemek için boş bırakın',
+    'servers.keep_password' => '(değiştirmemek için boş bırakın)',
 ];

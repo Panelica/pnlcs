@@ -108,9 +108,9 @@
                      says which two, in the words the other panel used. --}}
                 <div data-role="type-hint" style="display:none;margin-bottom:14px;padding:10px 12px;border-radius:6px;background:#eef4ff;border:1px solid #c7d8f8;font-size:13px;line-height:1.55;"></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.servers.server_name') }} *</label><input type="text" name="name" required class="form-control" placeholder="e.g. Panelica PROD"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.servers.hostname') }} *</label><input type="text" name="hostname" required class="form-control" placeholder="e.g. server1.panelica.com"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.servers.ip_address') }}</label><input type="text" name="ip_address" class="form-control" placeholder="e.g. 138.201.59.57"></div>
+                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.servers.server_name') }} *</label><input type="text" name="name" required class="form-control" placeholder="{{ __('admin.servers.name_placeholder') }}"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.servers.hostname') }} *</label><input type="text" name="hostname" required class="form-control" placeholder="{{ __('admin.servers.hostname_placeholder') }}"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.servers.ip_address') }}</label><input type="text" name="ip_address" class="form-control" placeholder="{{ __('admin.servers.ip_placeholder') }}"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.server_type') }}</label>
                         <select name="type" class="form-control" onchange="serverTypeTuning(this, '')">
                             @foreach($serverTypes as $typeKey => $typeLabel)
@@ -119,7 +119,7 @@
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.port') }}</label><input type="number" name="port" value="8443" class="form-control" data-role="port"></div>
-                    <div class="form-group" data-role="username-group"><label class="form-label" data-role="username-label">{{ __('common.form.username') }}</label><input type="text" name="username" class="form-control" data-role="username" placeholder="e.g. root"></div>
+                    <div class="form-group" data-role="username-group"><label class="form-label" data-role="username-label">{{ __('common.form.username') }}</label><input type="text" name="username" class="form-control" data-role="username" placeholder="{{ __('admin.servers.username_placeholder') }}"></div>
                     <div class="form-group"><label class="form-label" data-role="password-label">{{ __('admin.servers.password_api_token') }}</label><input type="password" name="password" class="form-control" data-role="password" placeholder=""></div>
                     <div class="form-group" data-role="hash-group"><label class="form-label" data-role="hash-label">{{ __('admin.servers.access_hash') }}</label><textarea name="access_hash" rows="2" class="form-control" data-role="hash" placeholder=""></textarea></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.max_accounts') }}</label><input type="number" name="max_accounts" value="500" min="0" class="form-control"></div>
@@ -183,8 +183,8 @@
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.port') }}</label><input type="number" id="edit-port" name="port" class="form-control"></div>
                     <div class="form-group" data-role="edit-username-group"><label class="form-label" data-role="edit-username-label">{{ __('common.form.username') }}</label><input type="text" id="edit-username" name="username" class="form-control" data-role="edit-username"></div>
-                    <div class="form-group"><label class="form-label" data-role="edit-password-label">{{ __('common.form.new_password') }}<small style="color:#999;">(leave blank to keep)</small></label><input type="password" name="password" class="form-control" placeholder="Leave blank to keep unchanged"></div>
-                    <div class="form-group" data-role="edit-hash-group"><label class="form-label" data-role="edit-hash-label">{{ __('admin.servers.access_hash') }}</label><textarea name="access_hash" rows="2" class="form-control" placeholder="Leave blank to keep unchanged"></textarea></div>
+                    <div class="form-group"><label class="form-label" data-role="edit-password-label">{{ __('common.form.new_password') }}<small style="color:#999;">{{ __('admin.servers.keep_password') }}</small></label><input type="password" name="password" class="form-control" placeholder="{{ __('admin.servers.keep_secret') }}"></div>
+                    <div class="form-group" data-role="edit-hash-group"><label class="form-label" data-role="edit-hash-label">{{ __('admin.servers.access_hash') }}</label><textarea name="access_hash" rows="2" class="form-control" placeholder="{{ __('admin.servers.keep_secret') }}"></textarea></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.max_accounts') }}</label><input type="number" id="edit-max-accounts" name="max_accounts" min="0" class="form-control"></div>
                 </div>
                 <div data-role="edit-pve-group" style="display:none;margin-top:15px;padding-top:15px;border-top:1px solid #eee;">

@@ -3618,4 +3618,10 @@ return [
         'reconnecting' => '服务器暂未响应，正在重试...',
         'last_result' => '最近结果',
     ],
+    'servers.name_placeholder' => '例如 Panelica PROD',
+    'servers.hostname_placeholder' => '例如 server1.panelica.com',
+    'servers.ip_placeholder' => '例如 138.201.59.57',
+    'servers.username_placeholder' => '例如 root',
+    'servers.keep_secret' => '留空则保持不变',
+    'servers.keep_password' => '（留空则保留）',
 ];
