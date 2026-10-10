@@ -11,6 +11,7 @@ class AaPanelClient
     private const ACTIONS = [
         'get_service_info', 'get_account_list', 'get_package_list',
         'get_disk_list', 'create_account', 'modify_account', 'remove_account',
+        'get_account_temp_login_token',
     ];
 
     public function __construct(private Server $server) {}
@@ -27,13 +28,15 @@ class AaPanelClient
         $url = $this->endpoint($action);
         $parameters = $this->signed($parameters);
         try {
-            $response = Http::asForm()->acceptJson()
+            // aaPanel serves its API with a self-signed certificate by default,
+            // so it is not verified, as for every other panel module.
+            $response = Http::asForm()->acceptJson()->withoutVerifying()
                 ->connectTimeout(10)->timeout(30)
-                ->withOptions(['allow_redirects' => false, 'verify' => true])
+                ->withOptions(['allow_redirects' => false])
                 ->post($url, $parameters);
         } catch (\Throwable) {
             // Never expose transport exceptions containing credentials or retry a write.
-            throw new AaPanelException('aaPanel connection failed. Check HTTPS, certificate trust, port and the API IP whitelist. The remote outcome may be unknown.', true);
+            throw new AaPanelException('aaPanel connection failed. Check the address, the HTTPS port and the API IP whitelist. The remote outcome may be unknown.', true);
         }
 
         return $this->decode($response);
@@ -81,10 +84,26 @@ class AaPanelClient
         }
         $data = $response->json();
         if (! is_array($data) || ! in_array($data['status'] ?? null, [0, '0'], true)) {
-            throw new AaPanelException('aaPanel rejected the request or returned an invalid response. Check its Account logs and API permissions.', ! is_array($data) || ! in_array($data['status'] ?? null, [-1, '-1', false], true));
+            throw new AaPanelException($this->refusal($data), ! is_array($data) || ! in_array($data['status'] ?? null, [-1, '-1', false], true));
         }
 
         return $data;
+    }
+
+    /**
+     * Why aaPanel said no, in its own words: a wrong key answers "Secret key
+     * verification failed", Sub aaPanel without a Pro licence "unauthorized".
+     */
+    private function refusal(mixed $data): string
+    {
+        $reason = is_array($data) && is_scalar($data['msg'] ?? null) ? trim(strip_tags((string) $data['msg'])) : '';
+        if (str_contains(strtolower($reason), 'unauthorized')) {
+            return 'Sub aaPanel is not licensed on this panel (aaPanel Pro is required).';
+        }
+
+        return $reason === ''
+            ? 'aaPanel returned an invalid response. Check its Account logs and API permissions.'
+            : 'aaPanel refused the request: '.mb_substr($reason, 0, 200);
     }
 
     public function assertReady(): void
@@ -133,6 +152,11 @@ class AaPanelClient
     private function listPage(array $body): array
     {
         $message = $body['message'] ?? null;
+        // An empty list comes back as "message": null (measured on Sub aaPanel
+        // 3.0.4 with no accounts yet), not as an empty list.
+        if ($message === null) {
+            return [[], 0];
+        }
         $rows = is_array($message) ? ($message['list'] ?? null) : null;
         if (! is_array($rows) || ! array_is_list($rows) || count($rows) > 100) {
             throw new AaPanelException('aaPanel returned an invalid list. No account changes were made.');
