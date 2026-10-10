@@ -84,8 +84,8 @@
 <div class="pn-card-header"><span class="pn-card-title">{{ __('client.tickets.before_submit') }}</span></div>
 <div class="pn-card-body" style="font-size:13px;color:var(--muted)">
 <p style="margin-bottom:12px">{{ __('client.tickets.check_resources') }}</p>
-<a href="/client/knowledgebase" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:600;margin-bottom:8px">{{ __('client.nav.knowledge_base') }}</a>
-<a href="/client/announcements" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:600;margin-bottom:8px">{{ __('client.nav.announcements') }}</a>
+<a href="{{ url('/client/knowledgebase') }}" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:600;margin-bottom:8px">{{ __('client.nav.knowledge_base') }}</a>
+<a href="{{ url('/client/announcements') }}" style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--primary-light);border-radius:8px;color:var(--primary);text-decoration:none;font-weight:600;margin-bottom:8px">{{ __('client.nav.announcements') }}</a>
 </div>
 </div>
 <div class="pn-card" style="margin-top:16px">
