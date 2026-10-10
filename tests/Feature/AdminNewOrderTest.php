@@ -27,7 +27,7 @@ function noProduct(float $monthly = 10.0): Product
 {
     $product = Product::factory()->create(['group_id' => ProductGroup::factory()->create()->id, 'type' => 'other', 'server_type' => null, 'hidden' => false, 'retired' => false, 'tax' => false]);
     Pricing::where('rel_id', $product->id)->where('type', 'product')->delete();
-    Pricing::create(['type' => 'product', 'rel_id' => $product->id, 'currency_id' => \App\Models\Currency::getDefault()?->id ?? \App\Models\Currency::factory()->create(['is_default' => true])->id,
+    Pricing::create(['type' => 'product', 'rel_id' => $product->id, 'currency_id' => \App\Models\Currency::getDefault()?->id ?? \App\Models\Currency::factory()->default()->create()->id,
         'monthly' => $monthly, 'quarterly' => -1, 'semiannually' => -1, 'annually' => -1, 'biennially' => -1, 'triennially' => -1]);
 
     return $product;
