@@ -142,10 +142,14 @@ test('switched off, pages carry no language links', function () {
 test('the language switcher links to the page in the other language, and the choice is remembered', function () {
     localeUrlsOn();
 
-    expect(LocaleUrl::switchTo('tr', \Illuminate\Http\Request::create('http://localhost/client/login')))->toBe(rtrim(url('/'), '/').'/tr/client/login?lang=tr');
+    $root = rtrim(url()->formatRoot(url()->formatScheme()), '/');
+    // to a prefixed language: its address alone, no ?lang
+    expect(LocaleUrl::switchTo('tr', \Illuminate\Http\Request::create('http://localhost/client/login?x=1')))->toBe($root.'/tr/client/login?x=1')
+        // back to the default language: ?lang, so an earlier choice does not send the visitor on
+        ->and(LocaleUrl::switchTo('en', \Illuminate\Http\Request::create('http://localhost/client/login')))->toBe($root.'/client/login?lang=en');
 
-    // following it: the page in Turkish at its own address, without ?lang
-    $this->get('/tr/client/login?lang=tr')->assertRedirect('/tr/client/login');
+    // following it: the page in Turkish at its own address, and the choice is kept
+    $this->get('/tr/client/login')->assertOk()->assertSee('lang="tr"', false)->assertSessionHas('locale', 'tr');
     // and back to the default language
     $this->withSession(['locale' => 'tr'])->get('/client/login?lang=en')->assertRedirect('/client/login');
     $this->get('/client/login')->assertOk()->assertSee('lang="en"', false);
