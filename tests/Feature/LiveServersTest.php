@@ -73,6 +73,18 @@ test('log in sends the browser to the panel\'s own single-use login url', functi
     expect(ActivityLog::where('description', 'like', 'Live Servers: logged in to%')->exists())->toBeTrue();
 });
 
+test('the operator is sent to the panel by its hostname, not the internal address the panel answers with', function () {
+    $server = liveServersPanelica();
+    Http::fake([
+        'panel.example.test:8443/api/external/v1/me' => Http::response(['status' => 'success', 'data' => ['user_id' => 'root-uuid-1']]),
+        'panel.example.test:8443/api/external/v1/accounts/root-uuid-1/sso-login' => Http::response(['status' => 'success', 'data' => ['url' => 'https://10.0.0.12:8443/auto-login?token=abc']]),
+    ]);
+
+    $this->actingAs(liveAdmin(), 'admin')
+        ->post(route('admin.live-servers.login', $server))
+        ->assertRedirect('https://panel.example.test:8443/auto-login?token=abc');
+});
+
 test('a key the panel will not identify gives a readable error, not a redirect', function () {
     $server = liveServersPanelica();
     Http::fake(['*' => Http::response(['status' => 'error'], 401)]);

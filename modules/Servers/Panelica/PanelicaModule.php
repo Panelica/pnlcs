@@ -937,7 +937,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
                 return ['success' => false, 'message' => __('admin.live_servers.error_no_url')];
             }
 
-            return ['success' => true, 'message' => '', 'url' => $url];
+            return ['success' => true, 'message' => '', 'url' => $this->browserPanelUrl($server, $url)];
         } catch (\Throwable $e) {
             Log::warning('PanelicaModule::operatorLogin unreachable', ['server' => $server->id, 'error' => $e->getMessage()]);
 
@@ -971,7 +971,36 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, 'Panel did not return a login URL.');
         }
 
-        return $this->buildResult(true, 'SSO URL issued.', ['url' => $url]);
+        return $this->buildResult(true, 'SSO URL issued.', ['url' => $this->browserPanelUrl($server, $url)]);
+    }
+
+    /**
+     * A login URL the panel minted, pointed at the address a browser can open.
+     *
+     * The panel builds the URL from the address it listens on. Behind NAT or a
+     * private network that is an internal IP (https://10.0.0.12:8443/...), which
+     * the customer's browser cannot reach. The server's hostname is the name the
+     * operator gave PNLCS for the panel, the one webmail and phpMyAdmin links
+     * already use, so the URL keeps its path and token and takes that host and
+     * port instead. Without a hostname, or when the server is known only by its
+     * IP, the URL is left as the panel sent it.
+     */
+    private function browserPanelUrl(Server $server, string $url): string
+    {
+        $host = trim((string) $server->hostname);
+        if ($host === '' || filter_var($host, FILTER_VALIDATE_IP)) {
+            return $url;
+        }
+
+        $parts = parse_url($url);
+        if (! is_array($parts) || strtolower((string) ($parts['scheme'] ?? '')) !== 'https' || empty($parts['host'])) {
+            return $url;
+        }
+
+        return 'https://'.$host.':'.$server->port
+            .($parts['path'] ?? '/')
+            .(isset($parts['query']) ? '?'.$parts['query'] : '')
+            .(isset($parts['fragment']) ? '#'.$parts['fragment'] : '');
     }
 
     // -------------------------------------------------------------------------
