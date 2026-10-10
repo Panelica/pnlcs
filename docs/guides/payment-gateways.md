@@ -51,6 +51,16 @@ also re-checked with PayPal directly before an invoice is marked paid.
 
 Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
+**Charge in the invoice's billing currency** (off by default). When customers
+are billed in another currency (**Setup → Currencies**), Stripe can charge the
+card in that currency, at the rate on the invoice, instead of in the shop
+currency. The customer's statement then shows the amount on their invoice,
+not one their bank converted. The payment is still recorded in the shop
+currency, and a refund goes back in the currency the card was charged in.
+Stripe must support the currency for your account, and it converts the payout
+to your account's currency at its own rate. Renewals charged automatically
+from a stored card stay in the shop currency.
+
 ## PayPal
 
 1. Create an app on the [PayPal Developer](https://developer.paypal.com) portal
