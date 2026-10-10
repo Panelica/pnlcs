@@ -3620,4 +3620,7 @@ return [
     'servers.username_placeholder' => 'z. B. root',
     'servers.keep_secret' => 'Leer lassen, um nichts zu ändern',
     'servers.keep_password' => '(leer lassen, um es zu behalten)',
+    'notifications.name_placeholder' => 'z. B. Slack-Benachrichtigungen',
+    'notifications.secret_placeholder' => 'Gemeinsames Geheimnis zur Prüfung',
+    'notifications.channel_email' => 'E-Mail',
 ];

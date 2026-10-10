@@ -3624,4 +3624,7 @@ return [
     'servers.username_placeholder' => '例如 root',
     'servers.keep_secret' => '留空则保持不变',
     'servers.keep_password' => '（留空则保留）',
+    'notifications.name_placeholder' => '例如 Slack 提醒',
+    'notifications.secret_placeholder' => '用于验证的共享密钥',
+    'notifications.channel_email' => '电子邮件',
 ];

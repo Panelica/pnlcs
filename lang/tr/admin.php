@@ -3624,4 +3624,7 @@ return [
     'servers.username_placeholder' => 'örn. root',
     'servers.keep_secret' => 'Değiştirmemek için boş bırakın',
     'servers.keep_password' => '(değiştirmemek için boş bırakın)',
+    'notifications.name_placeholder' => 'örn. Slack uyarıları',
+    'notifications.secret_placeholder' => 'Doğrulama için paylaşılan gizli anahtar',
+    'notifications.channel_email' => 'E-posta',
 ];

@@ -3626,4 +3626,7 @@ return [
     'servers.username_placeholder' => 'e.g. root',
     'servers.keep_secret' => 'Leave blank to keep unchanged',
     'servers.keep_password' => '(leave blank to keep)',
+    'notifications.name_placeholder' => 'e.g. Slack Alerts',
+    'notifications.secret_placeholder' => 'Shared secret for verification',
+    'notifications.channel_email' => 'Email',
 ];
