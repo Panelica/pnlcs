@@ -3204,6 +3204,8 @@ return [
     'settings.seo_share_image' => '分享链接的图片',
     'settings.seo_share_image_hint' => '在 WhatsApp、LinkedIn 或 X 上分享您网站的链接时显示。1200×630 适用于所有平台。留空则使用您的徽标。',
     'settings.seo_twitter' => 'X（Twitter）账号',
+    'settings.social_profiles' => '社交媒体账号',
+    'settings.social_profiles_hint' => '每个账号的完整地址。主题会显示它们，首页会告诉搜索引擎这些账号属于您。',
     'settings.robots_txt_hint' => '留空：所有页面均可被收录。末尾会自动加上您的站点地图地址（:sitemap）；它列出您的公开页面并自动更新。',
     'settings.robots_txt_static' => '您的网站服务器正在用文件 :path 响应 /robots.txt，因此上面的文本不会生效。删除该文件即可在此管理 robots.txt。',
     'settings.about_text_hint' => '纯文本，段落以空行分隔。显示于',
