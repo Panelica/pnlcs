@@ -19,7 +19,8 @@ test('nothing is shown or named until a profile is set', function () {
 
     $html = $this->get('/')->assertOk()->getContent();
 
-    expect($html)->not->toContain('class="footer__social"')->and($html)->not->toContain('"sameAs"');
+    expect($html)->not->toContain('class="footer__social"')->and($html)->not->toContain('"sameAs"')
+        ->and($html)->not->toContain('"@type":"Organization"');
 });
 
 test('only web addresses count, in the networks\' order', function () {

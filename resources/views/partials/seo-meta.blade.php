@@ -5,9 +5,9 @@
      Without parameters (the client layout) it reads the page's sections:
      title, meta_description, og_type. A page that writes these tags itself
      (an addon's blog, with its own image, dates and language versions)
-     sets @section('seo_own', '1') and gets none of them from here. The home
-     page also names the shop to search engines: schema.org Organization, with
-     its social profiles as sameAs. --}}
+     sets @section('seo_own', '1') and gets none of them from here. Once a
+     social profile is set, the home page also names the shop to search
+     engines: schema.org Organization, with its profiles as sameAs. --}}
 @unless($__env->hasSection('seo_own'))
 @php
     $title ??= trim($__env->yieldContent('title', e(__('client.my_account')))).' - '.company_name();
@@ -36,7 +36,7 @@
 @if($seoTwitter !== '')
 <meta name="twitter:site" content="{{ $seoTwitter }}">
 @endif
-@if(request()->routeIs('home'))
+@if(request()->routeIs('home') && \App\Support\SocialProfiles::all())
 <script type="application/ld+json">{!! json_encode(\App\Support\Seo::organization(), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) !!}</script>
 @endif
 @endunless
