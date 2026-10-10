@@ -72,7 +72,7 @@
                     @csrf
                     <input type="file" name="logo" accept="image/png,image/jpeg,image/svg+xml,image/webp" class="form-control" style="margin-bottom:8px;">
                     <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> {{ __('admin.appearance.upload_logo') }}</button>
-                    <span style="font-size:11px; color:#999; margin-left:6px;">PNG, JPG, SVG, WebP. Max 2MB.</span>
+                    <span style="font-size:11px; color:#999; margin-left:6px;">{{ __('admin.appearance.logo_formats') }}</span>
                 </form>
             </div>
         </div>
@@ -95,7 +95,7 @@
                     @csrf
                     <input type="file" name="favicon" accept="image/png,image/x-icon,image/svg+xml" class="form-control" style="margin-bottom:8px;">
                     <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-upload"></i> {{ __('admin.appearance.upload_favicon') }}</button>
-                    <span style="font-size:11px; color:#999; margin-left:6px;">PNG, ICO, SVG. Max 512KB.</span>
+                    <span style="font-size:11px; color:#999; margin-left:6px;">{{ __('admin.appearance.favicon_formats') }}</span>
                 </form>
             </div>
         </div>
@@ -128,7 +128,7 @@
 
                     <div class="theme-card__body">
                         <h3 style="font-size:16px; font-weight:700; margin-bottom:4px;">{{ $themeInfo->name }}</h3>
-                        <p style="font-size:12px; color:#777; margin-bottom:4px;">v{{ $themeInfo->version }} by {{ $themeInfo->author }}</p>
+                        <p style="font-size:12px; color:#777; margin-bottom:4px;">{{ __('admin.appearance.theme_by', ['version' => $themeInfo->version, 'author' => $themeInfo->author]) }}</p>
                         <p style="font-size:12px; color:#999; margin-bottom:14px; line-height:1.5;">{{ Str::limit($themeInfo->description, 80) }}</p>
 
                         @if(!empty($themeInfo->colors))
@@ -149,7 +149,7 @@
                                 <button type="submit" class="btn btn-sm btn-primary" style="width:100%;">
                                     <i class="fas fa-check"></i>{{ __('common.actions.activate') }}</button>
                             </form>
-                            <a href="{{ route('admin.settings.appearance.theme.download', $slug) }}" class="btn btn-sm btn-default" title="Download ZIP"><i class="fas fa-download"></i></a>
+                            <a href="{{ route('admin.settings.appearance.theme.download', $slug) }}" class="btn btn-sm btn-default" title="{{ __('admin.appearance.download_zip') }}"><i class="fas fa-download"></i></a>
                             @if(!$themeInfo->isBuiltin)
                             <form action="{{ route('admin.settings.appearance.theme.delete', $slug) }}" method="POST" onsubmit="return pnConfirm(event, @js($themeInfo->name), {title: @js(__('admin.appearance.confirm_delete_theme')), danger: true});">
                                 @csrf @method('DELETE')
@@ -201,7 +201,7 @@
                 @foreach($presets as $key => $preset)
                 <div style="border:2px solid {{ $activePreset === $key ? '#337ab7' : '#e5e7eb' }}; border-radius:8px; padding:20px; position:relative; transition:all 0.2s; {{ $activePreset === $key ? 'box-shadow:0 0 0 3px rgba(51,122,183,0.2);' : '' }}">
                     @if($activePreset === $key)
-                    <span style="position:absolute; top:8px; right:8px; background:#337ab7; color:#fff; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700;">ACTIVE</span>
+                    <span style="position:absolute; top:8px; right:8px; background:#337ab7; color:#fff; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:700; text-transform:uppercase;">{{ __('admin.appearance.active_badge') }}</span>
                     @endif
                     <h3 style="font-size:16px; font-weight:700; margin-bottom:4px;">{{ $preset['name'] }}</h3>
                     <p style="font-size:12px; color:#777; margin-bottom:14px;">{{ $preset['description'] }}</p>
@@ -227,7 +227,7 @@
 
     {{-- CUSTOM COLORS (Collapsible Groups) --}}
     <div class="card">
-        <div class="card-header">{{ __('admin.appearance.custom_colors_tokens') }} ({{ count($tokenLabels) }} tokens)</div>
+        <div class="card-header">{{ __('admin.appearance.custom_colors_tokens') }} ({{ __('admin.appearance.tokens_count', ['count' => count($tokenLabels)]) }})</div>
         <div class="card-body">
             <p style="margin-bottom:16px; color:#666; font-size:13px;">{{ __('admin.appearance.custom_tokens_description') }}</p>
             <form action="{{ route('admin.settings.appearance.update') }}" method="POST" id="customColorForm">
@@ -237,7 +237,7 @@
                 @foreach($tokenGroups as $groupName => $keys)
                 <details style="margin-bottom:12px; border:1px solid #e5e7eb; border-radius:8px;" {{ $groupName === 'Colors' ? 'open' : '' }}>
                     <summary style="padding:12px 16px; font-weight:700; font-size:14px; cursor:pointer; background:#f9fafb; border-radius:8px;">
-                        {{ $groupName }} ({{ count($keys) }} tokens)
+                        {{ $groupName }} ({{ __('admin.appearance.tokens_count', ['count' => count($keys)]) }})
                     </summary>
                     <div style="padding:16px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
                         @foreach($keys as $key)
@@ -298,7 +298,7 @@
                     <div style="border-radius:6px; overflow:hidden; border:1px solid #ddd;">
                         <div id="prev-hero" style="background:linear-gradient(135deg, {{ $activeColors['hero_bg_start'] }}, {{ $activeColors['hero_bg_mid'] }}, {{ $activeColors['hero_bg_end'] }}); padding:28px; text-align:center;">
                             <div style="color:#fff; font-size:18px; font-weight:800; margin-bottom:8px;">{{ __("admin.appearance.preview_your_website") }}</div>
-                            <div id="prev-cta" style="display:inline-block; padding:6px 18px; background:{{ $activeColors['welcome_accent'] }}; color:#fff; border-radius:6px; font-size:11px; font-weight:700;">Get Started</div>
+                            <div id="prev-cta" style="display:inline-block; padding:6px 18px; background:{{ $activeColors['welcome_accent'] }}; color:#fff; border-radius:6px; font-size:11px; font-weight:700;">{{ __('admin.appearance.preview_cta') }}</div>
                         </div>
                         <div style="padding:12px; background:#fff;">
                             <div id="prev-table-header" style="background:{{ $activeColors['table_header_bg'] }}; color:#fff; padding:4px 10px; font-size:11px; font-weight:600; border-radius:3px;">{{ __("admin.appearance.preview_table_header") }}</div>
@@ -378,7 +378,7 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
                     <div>
                         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('common.form.company_name') }}</label>
-                        <input type="text" name="company_name" value="{{ $whitelabel['company_name'] }}" class="form-control" placeholder="e.g. MyHosting">
+                        <input type="text" name="company_name" value="{{ $whitelabel['company_name'] }}" class="form-control" placeholder="{{ __('admin.appearance.company_placeholder') }}">
                         <span style="font-size:11px; color:#999;">{{ __('admin.appearance.replaces_hint') }}</span>
                     </div>
                     <div>
@@ -391,7 +391,7 @@
                     </div>
                     <div>
                         <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px;">{{ __('admin.appearance.copyright_text') }}</label>
-                        <input type="text" name="copyright" value="{{ $whitelabel['copyright'] }}" class="form-control" placeholder="e.g. MyHosting LLC">
+                        <input type="text" name="copyright" value="{{ $whitelabel['copyright'] }}" class="form-control" placeholder="{{ __('admin.appearance.copyright_placeholder') }}">
                         <span style="font-size:11px; color:#999;">{{ __('admin.appearance.copyright_hint') }}</span>
                     </div>
                 </div>
@@ -428,7 +428,7 @@
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px;">
                     <p style="font-size:13px; font-weight:600; margin-bottom:8px;">{{ __('admin.appearance.how_it_works') }}</p>
                     <ul style="font-size:12px; color:#666; padding-left:20px; margin:0;">
-                        <li>A moon/sun icon toggle appears in the navigation bar</li>
+                        <li>{{ __('admin.appearance.dark_toggle_note') }}</li>
                         <li>{{ __("admin.appearance.darkmode_bullet_1") }}</li>
                         <li>{{ __("admin.appearance.darkmode_bullet_2") }}</li>
                         <li>{{ __("admin.appearance.darkmode_bullet_3") }}</li>

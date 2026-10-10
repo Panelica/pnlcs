@@ -574,7 +574,7 @@
                     {{-- Not "Your Company Name": that placeholder made this look like a
                          fourth place to type the company name. It is the sender line
                          on outgoing mail, nothing more. --}}
-                    <input type="text" name="EmailFromName" value="{{ $settings['EmailFromName'] ?? '' }}" class="form-control" placeholder="e.g. MyHosting Billing">
+                    <input type="text" name="EmailFromName" value="{{ $settings['EmailFromName'] ?? '' }}" class="form-control" placeholder="{{ __('admin.settings.from_name_placeholder') }}">
                 </div>
             </div>
 
@@ -605,7 +605,7 @@
                         <select name="SMTPSecurity" class="form-control">
                             <option value="tls" {{ ($settings['SMTPSecurity'] ?? 'tls') === 'tls' ? 'selected' : '' }}>TLS (STARTTLS)</option>
                             <option value="ssl" {{ ($settings['SMTPSecurity'] ?? '') === 'ssl' ? 'selected' : '' }}>SSL</option>
-                            <option value="none" {{ ($settings['SMTPSecurity'] ?? '') === 'none' ? 'selected' : '' }}>None</option>
+                            <option value="none" {{ ($settings['SMTPSecurity'] ?? '') === 'none' ? 'selected' : '' }}>{{ __('admin.settings.smtp_security_none') }}</option>
                         </select>
                     </div>
                 </div>
