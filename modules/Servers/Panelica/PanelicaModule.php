@@ -928,8 +928,8 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
                 return ['success' => false, 'message' => __('admin.live_servers.error_key_owner')];
             }
 
-            $resp = $this->post($server, "/v1/accounts/{$userId}/sso-login", [], 15);
-            $url = $resp->successful() ? (string) ($resp->json('data.url') ?? '') : '';
+            $resp = $this->requestLogin($server, $userId, 15);
+            $url = $resp->successful() ? (string) ($this->loginUrlFrom($server, $resp) ?? '') : '';
 
             if ($url === '' || ! preg_match('#^https://#i', $url)) {
                 Log::warning('PanelicaModule::operatorLogin got no login URL', ['server' => $server->id, 'status' => $resp->status()]);
@@ -960,18 +960,100 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, 'No panel account is linked to this service.');
         }
 
-        $resp = $this->post($server, "/v1/accounts/{$userId}/sso-login", []);
+        $resp = $this->requestLogin($server, (string) $userId);
         if (! $resp->successful()) {
             Log::error('PanelicaModule::ssoLogin failed', ['user_id' => $userId, 'body' => $resp->body()]);
 
             return $this->buildResult(false, 'Could not create a panel login session.');
         }
-        $url = $resp->json('data.url') ?? $resp->json('url') ?? $resp->json('data.login_url') ?? null;
+        $url = $this->loginUrlFrom($server, $resp);
         if (! $url) {
             return $this->buildResult(false, 'Panel did not return a login URL.');
         }
 
         return $this->buildResult(true, 'SSO URL issued.', ['url' => $url]);
+    }
+
+    /** Ask the panel for a one-time login link, preferring its host-name address. */
+    private function requestLogin(Server $server, string $userId, int $timeout = 30): Response
+    {
+        return $this->post($server, "/v1/accounts/{$userId}/sso-login", ['prefer' => 'panel_hostname'], $timeout);
+    }
+
+    /**
+     * The login link to send the browser to.
+     *
+     * Newer panels list every address they know for themselves in data.urls
+     * (panel_hostname / panel_ip, the trusted certificate first) and put the
+     * best one in data.url. The link is taken from that list: the host-name
+     * entry whose host is this server's hostname, then any host-name entry,
+     * then data.url. The panel builds these from its own configuration, so the
+     * one-time token only goes to an address the panel itself gave.
+     *
+     * Older panels return a single URL; see browserPanelUrl() for those.
+     */
+    private function loginUrlFrom(Server $server, Response $resp): ?string
+    {
+        $urls = $resp->json('data.urls');
+        if (is_array($urls) && $urls !== []) {
+            $mine = strtolower(trim((string) $server->hostname));
+            $named = array_values(array_filter($urls, fn ($u) => is_array($u)
+                && ($u['type'] ?? '') === 'panel_hostname'
+                && preg_match('#^https://#i', (string) ($u['url'] ?? ''))));
+
+            foreach ($named as $u) {
+                if ($mine !== '' && strtolower((string) parse_url((string) $u['url'], PHP_URL_HOST)) === $mine) {
+                    return (string) $u['url'];
+                }
+            }
+            if ($named !== []) {
+                return (string) $named[0]['url'];
+            }
+
+            $best = (string) ($resp->json('data.url') ?? '');
+
+            return $best !== '' ? $best : null;
+        }
+
+        $single = $resp->json('data.url') ?? $resp->json('url') ?? $resp->json('data.login_url') ?? null;
+
+        return $single ? $this->browserPanelUrl($server, (string) $single) : null;
+    }
+
+    /**
+     * An older panel's single login URL, pointed at an address a browser can open.
+     *
+     * The panel builds the URL from the address it listens on. Behind NAT or a
+     * private network that is an internal IP (https://10.0.0.12:8443/...), which
+     * the customer's browser cannot reach. Only then, when the URL's host is a
+     * private, loopback or link-local address, it keeps its path and token and
+     * takes the server's hostname and port: the name the webmail and phpMyAdmin
+     * links already use. A public address or a host name from the panel is used
+     * as it is, and so is every URL when the server has no hostname.
+     */
+    private function browserPanelUrl(Server $server, string $url): string
+    {
+        $host = trim((string) $server->hostname);
+        if ($host === '' || filter_var($host, FILTER_VALIDATE_IP)) {
+            return $url;
+        }
+
+        $parts = parse_url($url);
+        if (! is_array($parts) || strtolower((string) ($parts['scheme'] ?? '')) !== 'https' || empty($parts['host'])) {
+            return $url;
+        }
+
+        $minted = trim((string) $parts['host'], '[]');
+        $internal = filter_var($minted, FILTER_VALIDATE_IP)
+            && ! filter_var($minted, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+        if (! $internal) {
+            return $url;
+        }
+
+        return 'https://'.$host.':'.$server->port
+            .($parts['path'] ?? '/')
+            .(isset($parts['query']) ? '?'.$parts['query'] : '')
+            .(isset($parts['fragment']) ? '#'.$parts['fragment'] : '');
     }
 
     // -------------------------------------------------------------------------

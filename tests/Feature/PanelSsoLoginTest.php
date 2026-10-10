@@ -105,3 +105,65 @@ it('does not bind a never provisioned service to a server when the usage graph i
     Http::assertNothingSent();
     expect($service->fresh()->server_id)->toBeNull();
 });
+
+it('sends the customer to the panel by its hostname when the panel answers with an internal address', function () {
+    // Behind NAT the panel builds the login URL from the address it listens on.
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://10.0.0.12:8443/auto-login?token=xyz#home']], 200)]);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=xyz#home');
+});
+
+it('leaves the panel login URL alone when the server has no hostname', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://10.0.0.1:8443/auto-login?token=xyz']], 200)]);
+    [$user, $service] = ssoService();
+    $service->server->update(['hostname' => '']);
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://10.0.0.1:8443/auto-login?token=xyz');
+});
+
+it('asks the panel for its host-name link and takes it from the list a newer panel returns', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => [
+        'url' => 'https://203.0.113.10:8443/auto-login?token=best',
+        'urls' => [
+            ['type' => 'panel_ip', 'url' => 'https://203.0.113.10:8443/auto-login?token=ip', 'trusted_certificate' => false],
+            ['type' => 'panel_hostname', 'url' => 'https://other.test:8443/auto-login?token=other', 'trusted_certificate' => true],
+            ['type' => 'panel_hostname', 'url' => 'https://panel.test:8443/auto-login?token=mine', 'trusted_certificate' => true],
+        ],
+    ]], 200)]);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=mine');
+
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/sso-login') && $r['prefer'] === 'panel_hostname');
+});
+
+it('takes the panel\'s best link when its list has no host-name entry', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => [
+        'url' => 'https://203.0.113.10:8443/auto-login?token=best',
+        'urls' => [['type' => 'panel_ip', 'url' => 'https://203.0.113.10:8443/auto-login?token=best', 'trusted_certificate' => false]],
+    ]], 200)]);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://203.0.113.10:8443/auto-login?token=best');
+});
+
+it('leaves an older panel\'s single URL alone when its address is public or a name', function (string $url) {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => $url]], 200)]);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect($url);
+})->with([
+    'public address' => 'https://203.0.113.10:8443/auto-login?token=xyz',
+    'another name' => 'https://panel.example.net:8443/auto-login?token=xyz',
+]);
