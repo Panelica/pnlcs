@@ -59,7 +59,7 @@ not one their bank converted. The payment is still recorded in the shop
 currency, and a refund goes back in the currency the card was charged in.
 Stripe must support the currency for your account, and it converts the payout
 to your account's currency at its own rate. Renewals charged automatically
-from a stored card stay in the shop currency.
+from a stored card follow the same setting.
 
 ## PayPal
 

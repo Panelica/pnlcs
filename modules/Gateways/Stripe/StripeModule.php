@@ -1251,6 +1251,13 @@ HTML;
         }
 
         $currency     = strtolower($params["currency"] ?? shop_currency_code());
+        // A renewal of an invoice billed in another currency is charged in it,
+        // like the payment form (billingCharge()), when the operator chose so.
+        $plan         = isset($params["currency"]) ? null : $this->billingCharge($invoice, $amount);
+        $sourceAmount = $amount;
+        if ($plan !== null) {
+            [$currency, $amount] = [$plan["currency"], $plan["amount"]];
+        }
         $minorAmount  = $this->minorUnits($amount, $currency);
 
         if ($minorAmount <= 0) {
@@ -1318,7 +1325,11 @@ HTML;
                     "description"            => "Invoice #" . ($invoice->invoice_num ?? $invoice->id),
                     "metadata[invoice_id]"   => $invoice->id,
                     "metadata[invoice_num]"  => $invoice->invoice_num ?? $invoice->id,
-                ]);
+                ] + ($plan === null ? [] : [
+                    "metadata[source_currency]" => $plan["source_currency"],
+                    "metadata[source_amount]"   => number_format($sourceAmount, 2, ".", ""),
+                    "metadata[rate]"            => (string) $plan["rate"],
+                ]));
         } catch (ConnectionException $e) {
             // Nothing is decided here. A dropped connection is one of the
             // shapes of "we do not know", not a second kind of answer, and the
@@ -1403,7 +1414,11 @@ HTML;
                     // Read back through the same conversion it was sent
                     // through, so that what is reported is what was taken
                     // whatever the shop sells in.
-                    "amount"         => $this->majorUnits((int) ($intent["amount_received"] ?? $minorAmount), $currency),
+                    "amount"         => $plan === null
+                        ? $this->majorUnits((int) ($intent["amount_received"] ?? $minorAmount), $currency)
+                        // what was taken in the billing currency, recorded in the invoice's
+                        : $this->recordedAmount(["amount_received" => $intent["amount_received"] ?? $minorAmount, "currency" => $currency,
+                            "metadata" => ["source_currency" => $plan["source_currency"], "source_amount" => number_format($sourceAmount, 2, ".", ""), "rate" => (string) $plan["rate"]]]),
                 ];
             }
 
