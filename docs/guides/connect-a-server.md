@@ -23,6 +23,12 @@ Servers**.
     - **API Key:** the `pk_live_...` key, and **API Secret:** the `sk_live_...`
       secret. Create them in the Panelica panel under **Settings → API Keys**;
       the secret is shown only once there.
+    - **Mail:** customers' mail apps are told `mail.<their domain>`. When a
+      domain gets its first mailbox, PNLCS asks the panel for that domain's
+      mail certificate if it has none. The key needs the SSL permission for
+      that. A domain whose DNS is elsewhere needs `mail.`, `autoconfig.` and
+      `autodiscover.` pointed at the server before the certificate can be
+      issued.
 
 === "cPanel / WHM"
     - **Port:** 2087. **Username:** the WHM account, usually `root`.
