@@ -21,7 +21,7 @@
                 <div class="hosting-plans__promo-icon"><i class="{{ $promoIcon }}"></i></div>
                 <h3>{{ $promoTitle }}</h3>
                 <p>{{ $promoText }}</p>
-                <a href="/client/store" class="hosting-plans__promo-btn">{{ $promoCta }} <i class="ri-arrow-right-line"></i></a>
+                <a href="{{ url('/client/store') }}" class="hosting-plans__promo-btn">{{ $promoCta }} <i class="ri-arrow-right-line"></i></a>
             </div>
             {{-- Plan cards --}}
             {{-- values() so $idx is 0,1,2: the collection keeps its original keys after
@@ -69,7 +69,7 @@
                     @endforeach
                 </div>
                 <div class="plan-card__cp"><i class="ri-dashboard-line"></i> {{ __('sections.hosting.control_panel') }}</div>
-                <a href="/client/store/configure/{{ $product->slug }}" class="plan-card__btn {{ $isPopular ? 'plan-card__btn--primary' : 'plan-card__btn--outline' }}">
+                <a href="{{ url('/client/store/configure') }}/{{ $product->slug }}" class="plan-card__btn {{ $isPopular ? 'plan-card__btn--primary' : 'plan-card__btn--outline' }}">
                     {{ __('sections.hosting.get_started') }} <i class="ri-arrow-right-line"></i>
                 </a>
             </div>
