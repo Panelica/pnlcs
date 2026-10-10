@@ -363,6 +363,37 @@ class AaPanelModule extends AbstractServerModule
     }
 
     /**
+     * One-click sign-in to the customer's own Sub aaPanel (Login to panel).
+     *
+     * aaPanel mints a single-use token for the account and says where its
+     * login page is (login_url); the link is that page with the token, as the
+     * panel's own billing integration builds it. The address comes from the
+     * panel, never from the server record here.
+     *
+     * @return array<string, mixed>
+     */
+    public function ssoLogin(Service $service): array
+    {
+        try {
+            [$api, $account] = $this->accountContext($service);
+            $login = $api->request('get_account_temp_login_token', ['account_id' => $account['account_id']])['message'] ?? null;
+            $token = is_array($login) && is_scalar($login['token'] ?? null) ? (string) $login['token'] : '';
+            $page = is_array($login) && is_string($login['login_url'] ?? null) ? $login['login_url'] : '';
+            if ($token === '' || ! preg_match('#^https?://[^\s"<>]+$#i', $page)) {
+                throw new AaPanelException('aaPanel did not return a login link for this account.');
+            }
+
+            return $this->buildResult(true, 'aaPanel login link issued.', [
+                'url' => $page.(str_contains($page, '?') ? '&' : '?').'token='.rawurlencode($token),
+            ]);
+        } catch (AaPanelException $e) {
+            return $this->buildResult(false, $e->getMessage());
+        } catch (\Throwable) {
+            return $this->buildResult(false, 'aaPanel login link could not be created.');
+        }
+    }
+
+    /**
      * @return array{updated: int, errors: int}
      */
     public function usageUpdate(Server $server): array
