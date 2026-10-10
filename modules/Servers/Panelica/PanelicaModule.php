@@ -3203,7 +3203,53 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the mailbox.'));
         }
 
+        $this->ensureMailCertificate($server, $domainId);
+
         return $this->buildResult(true, 'Mailbox created.', ['email' => $localPart.'@'.$domains[$domainId]]);
+    }
+
+    /**
+     * Ask the panel for the domain's mail certificate if it has none.
+     *
+     * The panel serves IMAP, POP3 and SMTP with a certificate per domain,
+     * picked by SNI, for mail.<domain> (with autoconfig., autodiscover. and
+     * webmail.). It does not issue one by itself when the domain gets its first
+     * mailbox: the domain stays "missing" and mail clients are shown the
+     * server's self-signed certificate. So the first mailbox asks for it.
+     *
+     * Each issue request gets a new certificate even when one is active, and
+     * certificate authorities limit how many a domain may have per week, so
+     * the status is read first and only a missing or failed certificate is
+     * requested. Renewal stays with the panel. Nothing here can fail the
+     * mailbox: a refusal or an unreachable panel is logged and the mailbox
+     * stands.
+     */
+    private function ensureMailCertificate(Server $server, string $domainId): void
+    {
+        try {
+            $status = $this->get($server, "/v1/ssl/domains/{$domainId}/mail");
+            if (! $status->successful()) {
+                Log::warning('PanelicaModule: could not read the mail certificate status', ['domain_id' => $domainId, 'status' => $status->status()]);
+
+                return;
+            }
+
+            $state = strtolower((string) ($status->json('data.status') ?? $status->json('status') ?? ''));
+            if (! in_array($state, ['missing', 'failed'], true)) {
+                return;
+            }
+
+            $issue = $this->post($server, "/v1/ssl/domains/{$domainId}/mail/issue", [], 15);
+            if (! $issue->successful()) {
+                Log::warning('PanelicaModule: the mail certificate was not issued', [
+                    'domain_id' => $domainId,
+                    'status' => $issue->status(),
+                    'error' => $this->apiMessage($issue, ''),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PanelicaModule: mail certificate request failed', ['domain_id' => $domainId, 'error' => $e->getMessage()]);
+        }
     }
 
     /**
