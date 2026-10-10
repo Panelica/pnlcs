@@ -3672,4 +3672,7 @@ return [
     'domains.expiry_past' => '（已过期）',
     'ticket_spam.content_placeholder' => '例如 @spammail.com 或 casino',
     'whois.domain_placeholder' => '例如 google.com、github.io',
+    'projects.created_on' => '创建于 :date',
+    'projects.progress_pct' => '进度 :pct%',
+    'projects.due_on' => '截止：:date',
 ];

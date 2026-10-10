@@ -3672,4 +3672,7 @@ return [
     'domains.expiry_past' => '(wygasła)',
     'ticket_spam.content_placeholder' => 'np. @spammail.com lub casino',
     'whois.domain_placeholder' => 'np. google.com, github.io',
+    'projects.created_on' => 'Utworzono :date',
+    'projects.progress_pct' => 'Postęp :pct%',
+    'projects.due_on' => 'Termin: :date',
 ];

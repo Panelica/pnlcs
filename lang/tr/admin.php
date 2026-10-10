@@ -3672,4 +3672,7 @@ return [
     'domains.expiry_past' => '(süresi doldu)',
     'ticket_spam.content_placeholder' => 'örn. @spammail.com ya da casino',
     'whois.domain_placeholder' => 'örn. google.com, github.io',
+    'projects.created_on' => ':date tarihinde oluşturuldu',
+    'projects.progress_pct' => '%:pct ilerleme',
+    'projects.due_on' => 'Bitiş: :date',
 ];

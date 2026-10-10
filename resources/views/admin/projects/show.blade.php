@@ -4,7 +4,7 @@
 <div class="page-header">
     <div>
         <h1>{{ $project->title }}</h1>
-        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $project->client?->full_name ?? 'N/A' }} &bull; Created {{ $project->created_at->format(date_fmt()) }}</div>
+        <div style="font-size:13px;color:#777;margin-top:3px;">{{ $project->client?->full_name ?? 'N/A' }} &bull; {{ __('admin.projects.created_on', ['date' => $project->created_at->format(date_fmt())]) }}</div>
     </div>
     <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.projects.back') }}</a>
 </div>
@@ -25,7 +25,7 @@
                 <div style="height:14px;border-radius:3px;background:#337ab7;width:{{ $pct }}%;"></div>
             </div>
         </div>
-        <div class="stat-label">{{ $pct }}% Progress</div>
+        <div class="stat-label">{{ __('admin.projects.progress_pct', ['pct' => $pct]) }}</div>
     </div>
     <div class="stat-card"><div class="stat-value" style="font-size:16px;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format(date_fmt()) : '—' }}</div><div class="stat-label">{{ __('admin.projects.due_date_label') }}</div></div>
 </div>
@@ -47,7 +47,7 @@
                     <div style="flex:1;">
                         <p style="margin:0;font-size:13px;{{ $task->completed ? 'text-decoration:line-through;color:#999;' : '' }}">{{ $task->task }}</p>
                         @if($task->notes)<p style="margin:3px 0 0;font-size:12px;color:#999;">{{ $task->notes }}</p>@endif
-                        @if($task->due_date)<p style="margin:3px 0 0;font-size:11px;color:#aaa;">Due: {{ \Carbon\Carbon::parse($task->due_date)->format(date_fmt()) }}</p>@endif
+                        @if($task->due_date)<p style="margin:3px 0 0;font-size:11px;color:#aaa;">{{ __('admin.projects.due_on', ['date' => \Carbon\Carbon::parse($task->due_date)->format(date_fmt())]) }}</p>@endif
                     </div>
                     <form method="POST" action="{{ route('admin.projects.tasks.destroy', [$project, $task]) }}" onsubmit="return pnConfirm(event, @js(__('admin.projects.confirm_delete_task')))">
                         @csrf @method('DELETE')

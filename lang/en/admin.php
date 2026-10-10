@@ -3674,4 +3674,7 @@ return [
     'domains.expiry_past' => '(expired)',
     'ticket_spam.content_placeholder' => 'e.g. @spammail.com or casino',
     'whois.domain_placeholder' => 'e.g. google.com, github.io',
+    'projects.created_on' => 'Created :date',
+    'projects.progress_pct' => ':pct% Progress',
+    'projects.due_on' => 'Due: :date',
 ];
