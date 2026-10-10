@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<ruleset name="AapanelQuality">
-    <description>Supplemental anonymous-function dispatch using upstream PHPCS logic unchanged.</description>
-    <rule ref="AapanelQuality.Metrics.ClosureComplexity"/>
-</ruleset>
