@@ -30,6 +30,7 @@
                 <div class="footer__contact-item"><i class="ri-mail-line"></i> {{ $bEmail }}</div>
                 <div class="footer__contact-item"><i class="ri-customer-service-line"></i> {{ $bSupportEmail }}</div>
                 <div class="footer__contact-item"><i class="ri-global-line"></i> {{ $bWebsite }}</div>
+                @include('partials.social-links')
             </div>
             <div>
                 <div class="footer__col-title">{{ __('sections.footer.col_domains') }}</div>
