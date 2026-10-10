@@ -14,19 +14,19 @@
                 <div class="main-nav__item">
                     <span class="main-nav__link">{{ __('sections.nav.domains') }} <i class="ri-arrow-down-s-line"></i></span>
                     <div class="main-nav__dropdown">
-                        <a href="/client/domain-search" class="main-nav__dropdown-link"><i class="ri-search-line"></i> {{ __('sections.nav.domain_search') }}</a>
-                        <a href="/client/domain-search" class="main-nav__dropdown-link"><i class="ri-exchange-line"></i> {{ __('sections.nav.domain_transfer') }}</a>
-                        <a href="/client/domain-search" class="main-nav__dropdown-link"><i class="ri-file-search-line"></i> {{ __('sections.nav.whois_lookup') }}</a>
+                        <a href="{{ url('/client/domain-search') }}" class="main-nav__dropdown-link"><i class="ri-search-line"></i> {{ __('sections.nav.domain_search') }}</a>
+                        <a href="{{ url('/client/domain-search') }}" class="main-nav__dropdown-link"><i class="ri-exchange-line"></i> {{ __('sections.nav.domain_transfer') }}</a>
+                        <a href="{{ url('/client/domain-search') }}" class="main-nav__dropdown-link"><i class="ri-file-search-line"></i> {{ __('sections.nav.whois_lookup') }}</a>
                     </div>
                 </div>
                 <div class="main-nav__item">
                     <span class="main-nav__link">{{ __('sections.nav.hosting') }} <i class="ri-arrow-down-s-line"></i></span>
                     <div class="main-nav__mega" style="min-width: 480px;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                            <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-server-line"></i> {{ __('sections.nav.shared_hosting') }}</a>
-                            <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-wordpress-line"></i> {{ __('sections.nav.wordpress_hosting') }}</a>
-                            <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-building-line"></i> {{ __('sections.nav.business_hosting') }}</a>
-                            <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-group-line"></i> {{ __('sections.nav.reseller_hosting') }}</a>
+                            <a href="{{ url('/client/store') }}" class="main-nav__dropdown-link"><i class="ri-server-line"></i> {{ __('sections.nav.shared_hosting') }}</a>
+                            <a href="{{ url('/client/store') }}" class="main-nav__dropdown-link"><i class="ri-wordpress-line"></i> {{ __('sections.nav.wordpress_hosting') }}</a>
+                            <a href="{{ url('/client/store') }}" class="main-nav__dropdown-link"><i class="ri-building-line"></i> {{ __('sections.nav.business_hosting') }}</a>
+                            <a href="{{ url('/client/store') }}" class="main-nav__dropdown-link"><i class="ri-group-line"></i> {{ __('sections.nav.reseller_hosting') }}</a>
                             {{-- Only when the app section is actually being
                                  shown: the menu should not point at a shop
                                  window that is switched off. --}}
@@ -43,16 +43,16 @@
                 <div class="main-nav__item">
                     <span class="main-nav__link">{{ __('sections.nav.servers') }} <i class="ri-arrow-down-s-line"></i></span>
                     <div class="main-nav__dropdown">
-                        <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-cloud-line"></i> {{ __('sections.nav.vps_server') }}</a>
-                        <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-hard-drive-2-line"></i> {{ __('sections.nav.vds_server') }}</a>
-                        <a href="/client/store" class="main-nav__dropdown-link"><i class="ri-server-line"></i> {{ __('sections.nav.dedicated_server') }}</a>
+                        <a href="{{ url('/client/store') }}" class="main-nav__dropdown-link"><i class="ri-cloud-line"></i> {{ __('sections.nav.vps_server') }}</a>
+                        <a href="{{ url('/client/store') }}" class="main-nav__dropdown-link"><i class="ri-hard-drive-2-line"></i> {{ __('sections.nav.vds_server') }}</a>
+                        <a href="{{ url('/client/store') }}" class="main-nav__dropdown-link"><i class="ri-server-line"></i> {{ __('sections.nav.dedicated_server') }}</a>
                     </div>
                 </div>
                 <div class="main-nav__item">
-                    <a href="/client/knowledgebase" class="main-nav__link">{{ __('sections.nav.knowledge_base') }}</a>
+                    <a href="{{ url('/client/knowledgebase') }}" class="main-nav__link">{{ __('sections.nav.knowledge_base') }}</a>
                 </div>
                 <div class="main-nav__item">
-                    <a href="/client/store" class="main-nav__link">{{ __('sections.nav.store') }}</a>
+                    <a href="{{ url('/client/store') }}" class="main-nav__link">{{ __('sections.nav.store') }}</a>
                 </div>
             </div>
 
@@ -63,7 +63,7 @@
                     <i class="ri-moon-line" id="darkIcon"></i>
                 </button>
                 @endif
-                <a href="/client/cart" class="main-nav__cart"><i class="ri-shopping-cart-2-line"></i></a>
+                <a href="{{ url('/client/cart') }}" class="main-nav__cart"><i class="ri-shopping-cart-2-line"></i></a>
                 <a href="{{ route('client.login') }}" class="main-nav__login">{{ __('common.actions.login') }}</a>
                 <button class="main-nav__hamburger" @click="mobileMenu = !mobileMenu"><i class="ri-menu-line"></i></button>
             </div>
@@ -71,11 +71,11 @@
     </div>
 
     <div class="main-nav__mobile-menu" x-show="mobileMenu" x-transition @click.away="mobileMenu = false" style="display: none;">
-        <a href="/client/domain-search">{{ __('sections.nav.domain_search') }}</a>
-        <a href="/client/store">{{ __('sections.nav.hosting_plans') }}</a>
-        <a href="/client/store">{{ __('sections.nav.vps_server') }}</a>
-        <a href="/client/knowledgebase">{{ __('sections.nav.knowledge_base') }}</a>
-        <a href="/client/contact">{{ __('sections.nav.contact') }}</a>
+        <a href="{{ url('/client/domain-search') }}">{{ __('sections.nav.domain_search') }}</a>
+        <a href="{{ url('/client/store') }}">{{ __('sections.nav.hosting_plans') }}</a>
+        <a href="{{ url('/client/store') }}">{{ __('sections.nav.vps_server') }}</a>
+        <a href="{{ url('/client/knowledgebase') }}">{{ __('sections.nav.knowledge_base') }}</a>
+        <a href="{{ url('/client/contact') }}">{{ __('sections.nav.contact') }}</a>
         <a href="{{ route('client.login') }}">{{ __('common.actions.login') }}</a>
         <a href="{{ route('client.register') }}">{{ __('sections.nav.sign_up') }}</a>
     </div>

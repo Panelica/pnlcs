@@ -43,7 +43,7 @@
                     <a href="{{ $ctaUrl }}" class="btn-accent" style="font-size: 16px; padding: 16px 36px;">
                         {{ $ctaText }} <i class="ri-arrow-right-line"></i>
                     </a>
-                    <a href="/client/store" class="btn-outline" style="font-size: 14px; padding: 14px 28px; border-color: rgba(255,255,255,0.2); color:#fff;">
+                    <a href="{{ url('/client/store') }}" class="btn-outline" style="font-size: 14px; padding: 14px 28px; border-color: rgba(255,255,255,0.2); color:#fff;">
                         View Plans
                     </a>
                 </div>

@@ -5,9 +5,9 @@
             <div class="top-bar__left">
                 <a href="mailto:{{ $brandEmail ?? 'info@panelica.com' }}" class="top-bar__item"><i class="ri-mail-line"></i> {{ $brandEmail ?? 'info@panelica.com' }}</a>
                 <div class="top-bar__divider"></div>
-                <a href="/client/contact" class="top-bar__item"><i class="ri-headphone-line"></i> {{ __('sections.topbar.contact') }}</a>
+                <a href="{{ url('/client/contact') }}" class="top-bar__item"><i class="ri-headphone-line"></i> {{ __('sections.topbar.contact') }}</a>
                 <div class="top-bar__divider"></div>
-                <a href="/client/tickets/create" class="top-bar__item"><i class="ri-ticket-line"></i> {{ __('sections.topbar.support_ticket') }}</a>
+                <a href="{{ url('/client/tickets/create') }}" class="top-bar__item"><i class="ri-ticket-line"></i> {{ __('sections.topbar.support_ticket') }}</a>
                 <div class="top-bar__divider"></div>
                 <a href="{{ $brandUrl ?? 'https://www.panelica.com' }}/blog" class="top-bar__item"><i class="ri-article-line"></i> {{ __('sections.topbar.blog') }}</a>
             </div>

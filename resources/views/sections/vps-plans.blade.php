@@ -59,7 +59,7 @@
                     @else
                         <div class="vps-card__price">{{ __('client.store.contact_us') }}</div>
                     @endif
-                    <a href="/client/store/configure/{{ $product->slug }}" class="vps-card__btn">{{ __('sections.vps.configure') }} <i class="ri-arrow-right-line"></i></a>
+                    <a href="{{ url('/client/store/configure') }}/{{ $product->slug }}" class="vps-card__btn">{{ __('sections.vps.configure') }} <i class="ri-arrow-right-line"></i></a>
                 </div>
                 @empty
                 {{-- No VPS products --}}
