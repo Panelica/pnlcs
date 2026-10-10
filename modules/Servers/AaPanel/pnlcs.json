@@ -1,8 +1,1 @@
-{
-  "name": "aapanel",
-  "type": "server",
-  "class": "Modules\\Servers\\AaPanel\\AaPanelModule",
-  "version": "1.0.0",
-  "description": "aaPanel Sub account provisioning and lifecycle management",
-  "author": {"name": "PNLCS"}
-}
+{"name":"aaPanel","type":"server","version":"1.0.0","description":"aaPanel server module (Sub aaPanel accounts)","author":{"name":"PNLCS"}}

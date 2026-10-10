@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Contracts\RequiresProvisioningLock;
 use App\Contracts\ServerModuleInterface;
 use App\Enums\ServiceStatus;
 use App\Events\ServiceActivated;
@@ -11,17 +10,14 @@ use App\Events\ServiceTerminated;
 use App\Events\ServiceUnsuspended;
 use App\Models\ModuleQueue;
 use App\Models\Product;
-use App\Models\Server;
 use App\Models\Service;
 use App\Services\Module\ModuleRegistry;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class ProvisioningService
 {
     public function __construct(private ModuleRegistry $registry) {}
 
-    /** @return array<string, mixed> */
     public function createAccount(Service $service, bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
@@ -30,39 +26,36 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
-        return $this->withLifecycleLock($service, $module, function () use ($service, $module, $queueOnFail): array {
-            run_hook('PreModuleCreate', ['service' => $service]);
+        run_hook('PreModuleCreate', ['service' => $service]);
 
-            try {
-                $result = $module->create($service);
+        try {
+            $result = $module->create($service);
 
-                if ($result['success'] ?? false) {
-                    $service->status = ServiceStatus::Active->value;
-                    $service->registration_date = $service->registration_date ?? now();
-                    $this->saveLifecycleState($service, $module);
-                    $this->settleQueue($service, 'create');
-                    run_hook('AfterModuleCreate', ['service' => $service, 'result' => $result]);
-                    event(new ServiceActivated($service));
-                } elseif ($queueOnFail) {
-                    $this->enqueueRetry($service, 'create', $result['message'] ?? 'Module create failed');
-                }
-
-                return $result;
-            } catch (\Throwable $e) {
-                Log::error('ProvisioningService::createAccount failed', [
-                    'service_id' => $service->id,
-                    'error' => $e->getMessage(),
-                ]);
-                if ($queueOnFail) {
-                    $this->enqueueRetry($service, 'create', $e->getMessage());
-                }
-
-                return ['success' => false, 'message' => $e->getMessage()];
+            if ($result['success'] ?? false) {
+                $service->status = ServiceStatus::Active->value;
+                $service->registration_date = $service->registration_date ?? now();
+                $service->save();
+                $this->settleQueue($service, 'create');
+                run_hook('AfterModuleCreate', ['service' => $service, 'result' => $result]);
+                event(new ServiceActivated($service));
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'create', $result['message'] ?? 'Module create failed');
             }
-        });
+
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::createAccount failed', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'create', $e->getMessage());
+            }
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
-    /** @return array<string, mixed> */
     public function suspendAccount(Service $service, string $reason = '', bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
@@ -71,40 +64,37 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
-        return $this->withLifecycleLock($service, $module, function () use ($service, $module, $reason, $queueOnFail): array {
-            run_hook('PreModuleSuspend', ['service' => $service, 'reason' => $reason]);
+        run_hook('PreModuleSuspend', ['service' => $service, 'reason' => $reason]);
 
-            try {
-                $result = $module->suspend($service, $reason);
+        try {
+            $result = $module->suspend($service, $reason);
 
-                if ($result['success'] ?? false) {
-                    $service->status = ServiceStatus::Suspended->value;
-                    $service->suspension_date = now();
-                    $service->suspension_reason = $reason;
-                    $this->saveLifecycleState($service, $module);
-                    $this->settleQueue($service, 'suspend');
-                    run_hook('AfterModuleSuspend', ['service' => $service, 'reason' => $reason]);
-                    event(new ServiceSuspended($service, $reason));
-                } elseif ($queueOnFail) {
-                    $this->enqueueRetry($service, 'suspend', $result['message'] ?? 'Module suspend failed', ['reason' => $reason]);
-                }
-
-                return $result;
-            } catch (\Throwable $e) {
-                Log::error('ProvisioningService::suspendAccount failed', [
-                    'service_id' => $service->id,
-                    'error' => $e->getMessage(),
-                ]);
-                if ($queueOnFail) {
-                    $this->enqueueRetry($service, 'suspend', $e->getMessage(), ['reason' => $reason]);
-                }
-
-                return ['success' => false, 'message' => $e->getMessage()];
+            if ($result['success'] ?? false) {
+                $service->status = ServiceStatus::Suspended->value;
+                $service->suspension_date = now();
+                $service->suspension_reason = $reason;
+                $service->save();
+                $this->settleQueue($service, 'suspend');
+                run_hook('AfterModuleSuspend', ['service' => $service, 'reason' => $reason]);
+                event(new ServiceSuspended($service, $reason));
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'suspend', $result['message'] ?? 'Module suspend failed', ['reason' => $reason]);
             }
-        });
+
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::suspendAccount failed', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'suspend', $e->getMessage(), ['reason' => $reason]);
+            }
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
-    /** @return array<string, mixed> */
     public function unsuspendAccount(Service $service, bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
@@ -113,40 +103,37 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
-        return $this->withLifecycleLock($service, $module, function () use ($service, $module, $queueOnFail): array {
-            run_hook('PreModuleUnsuspend', ['service' => $service]);
+        run_hook('PreModuleUnsuspend', ['service' => $service]);
 
-            try {
-                $result = $module->unsuspend($service);
+        try {
+            $result = $module->unsuspend($service);
 
-                if ($result['success'] ?? false) {
-                    $service->status = ServiceStatus::Active->value;
-                    $service->suspension_date = null;
-                    $service->suspension_reason = null;
-                    $this->saveLifecycleState($service, $module);
-                    $this->settleQueue($service, 'unsuspend');
-                    run_hook('AfterModuleUnsuspend', ['service' => $service]);
-                    event(new ServiceUnsuspended($service));
-                } elseif ($queueOnFail) {
-                    $this->enqueueRetry($service, 'unsuspend', $result['message'] ?? 'Module unsuspend failed');
-                }
-
-                return $result;
-            } catch (\Throwable $e) {
-                Log::error('ProvisioningService::unsuspendAccount failed', [
-                    'service_id' => $service->id,
-                    'error' => $e->getMessage(),
-                ]);
-                if ($queueOnFail) {
-                    $this->enqueueRetry($service, 'unsuspend', $e->getMessage());
-                }
-
-                return ['success' => false, 'message' => $e->getMessage()];
+            if ($result['success'] ?? false) {
+                $service->status = ServiceStatus::Active->value;
+                $service->suspension_date = null;
+                $service->suspension_reason = null;
+                $service->save();
+                $this->settleQueue($service, 'unsuspend');
+                run_hook('AfterModuleUnsuspend', ['service' => $service]);
+                event(new ServiceUnsuspended($service));
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'unsuspend', $result['message'] ?? 'Module unsuspend failed');
             }
-        });
+
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::unsuspendAccount failed', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'unsuspend', $e->getMessage());
+            }
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
-    /** @return array<string, mixed> */
     public function terminateAccount(Service $service, bool $queueOnFail = true): array
     {
         $module = $this->getModuleForService($service);
@@ -155,39 +142,36 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
-        return $this->withLifecycleLock($service, $module, function () use ($service, $module, $queueOnFail): array {
-            run_hook('PreModuleTerminate', ['service' => $service]);
+        run_hook('PreModuleTerminate', ['service' => $service]);
 
-            try {
-                $result = $module->terminate($service);
+        try {
+            $result = $module->terminate($service);
 
-                if ($result['success'] ?? false) {
-                    $service->status = ServiceStatus::Terminated->value;
-                    $service->termination_date = now();
-                    $this->saveLifecycleState($service, $module);
-                    $this->settleQueue($service, 'terminate');
-                    run_hook('AfterModuleTerminate', ['service' => $service]);
-                    event(new ServiceTerminated($service));
-                } elseif ($queueOnFail) {
-                    $this->enqueueRetry($service, 'terminate', $result['message'] ?? 'Module terminate failed');
-                }
-
-                return $result;
-            } catch (\Throwable $e) {
-                Log::error('ProvisioningService::terminateAccount failed', [
-                    'service_id' => $service->id,
-                    'error' => $e->getMessage(),
-                ]);
-                if ($queueOnFail) {
-                    $this->enqueueRetry($service, 'terminate', $e->getMessage());
-                }
-
-                return ['success' => false, 'message' => $e->getMessage()];
+            if ($result['success'] ?? false) {
+                $service->status = ServiceStatus::Terminated->value;
+                $service->termination_date = now();
+                $service->save();
+                $this->settleQueue($service, 'terminate');
+                run_hook('AfterModuleTerminate', ['service' => $service]);
+                event(new ServiceTerminated($service));
+            } elseif ($queueOnFail) {
+                $this->enqueueRetry($service, 'terminate', $result['message'] ?? 'Module terminate failed');
             }
-        });
+
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::terminateAccount failed', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
+            if ($queueOnFail) {
+                $this->enqueueRetry($service, 'terminate', $e->getMessage());
+            }
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
-    /** @return array<string, mixed> */
     public function changePassword(Service $service, string $newPassword): array
     {
         $module = $this->getModuleForService($service);
@@ -196,29 +180,26 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
-        return $this->withLifecycleLock($service, $module, function () use ($service, $module, $newPassword): array {
-            try {
-                $result = $module->changePassword($service, $newPassword);
+        try {
+            $result = $module->changePassword($service, $newPassword);
 
-                if ($result['success'] ?? false) {
-                    $service->password = $newPassword;
-                    $this->saveLifecycleState($service, $module);
-                    run_hook('AfterModulePassword', ['service' => $service]);
-                }
-
-                return $result;
-            } catch (\Throwable $e) {
-                Log::error('ProvisioningService::changePassword failed', [
-                    'service_id' => $service->id,
-                    'error' => $e->getMessage(),
-                ]);
-
-                return ['success' => false, 'message' => $e->getMessage()];
+            if ($result['success'] ?? false) {
+                $service->password = $newPassword;
+                $service->save();
+                run_hook('AfterModulePassword', ['service' => $service]);
             }
-        });
+
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::changePassword failed', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
 
-    /** @return array<string, mixed> */
     public function changePackage(Service $service, Product $newProduct): array
     {
         $module = $this->getModuleForService($service);
@@ -227,74 +208,23 @@ class ProvisioningService
             return ['success' => false, 'message' => __('messages.error.no_server_module_configured')];
         }
 
-        return $this->withLifecycleLock($service, $module, function () use ($service, $module, $newProduct): array {
-            try {
-                $result = $module->changePackage($service, $newProduct->toArray());
-
-                if ($result['success'] ?? false) {
-                    $service->product_id = $newProduct->id;
-                    $this->saveLifecycleState($service, $module);
-                    run_hook('AfterModuleChangePackage', ['service' => $service, 'newProduct' => $newProduct]);
-                }
-
-                return $result;
-            } catch (\Throwable $e) {
-                Log::error('ProvisioningService::changePackage failed', [
-                    'service_id' => $service->id,
-                    'error' => $e->getMessage(),
-                ]);
-
-                return ['success' => false, 'message' => $e->getMessage()];
-            }
-        });
-    }
-
-    /**
-     * Opt-in serialization includes the local commit, not only the remote call.
-     * A separate key keeps the adapter's own lock non-reentrant. Contention is
-     * nonblocking, so hooks cannot deadlock by invoking provisioning recursively.
-     *
-     * @param  callable(): array<string, mixed>  $callback
-     * @return array<string, mixed>
-     */
-    private function withLifecycleLock(Service $service, ServerModuleInterface $module, callable $callback): array
-    {
-        if (! $module instanceof RequiresProvisioningLock) {
-            return $callback();
-        }
-        if (! $service->exists || ! $service->id) {
-            return ['success' => false, 'message' => 'Save the hosting service before provisioning.'];
-        }
-
         try {
-            // The aaPanel adapter permits at most 78 sequential 30-second HTTP
-            // calls in one action (39 minutes). This two-hour lease also covers
-            // local persistence and ordinary synchronous hooks/queue updates.
-            // Operators must bound worker/hook execution below this lease;
-            // it is crash recovery, not an exactly-once delivery guarantee.
-            $result = Cache::lock('provisioning:service:'.$service->id, 7200)->get(function () use ($service, $module, $callback): array {
-                $service->refresh();
-                $current = $this->getModuleForService($service);
-                if ($current === null || $current::class !== $module::class) {
-                    return ['success' => false, 'message' => 'The service module changed. Reload the service before retrying.'];
-                }
+            $result = $module->changePackage($service, $newProduct->toArray());
 
-                return $callback();
-            });
+            if ($result['success'] ?? false) {
+                $service->product_id = $newProduct->id;
+                $service->save();
+                run_hook('AfterModuleChangePackage', ['service' => $service, 'newProduct' => $newProduct]);
+            }
 
-            return $result === false
-                ? ['success' => false, 'message' => 'Another provisioning action is already running for this service. Retry after it finishes.']
-                : $result;
-        } catch (\Throwable) {
-            return ['success' => false, 'message' => 'Provisioning could not finish locally. Review the service and its remote outcome before retrying.'];
-        }
-    }
+            return $result;
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::changePackage failed', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
 
-    private function saveLifecycleState(Service $service, ServerModuleInterface $module): void
-    {
-        $saved = $service->save();
-        if (! $saved && $module instanceof RequiresProvisioningLock) {
-            throw new \RuntimeException('The local service state could not be saved. Reconcile the remote outcome before retrying.');
+            return ['success' => false, 'message' => $e->getMessage()];
         }
     }
 
@@ -370,7 +300,6 @@ class ProvisioningService
         }
     }
 
-    /** @param array<string, mixed> $payload */
     private function enqueueRetry(Service $service, string $action, string $error, array $payload = []): void
     {
         run_hook('ModuleActionFailed', ['service' => $service, 'action' => $action, 'error' => $error]);
@@ -388,7 +317,19 @@ class ProvisioningService
             $permanent = self::willNeverSucceed($error);
 
             if ($existing) {
-                $this->updateRetry($existing, $permanent, $error, $payload);
+                $reopened = ! $permanent && $existing->status === 'failed';
+
+                $existing->update([
+                    'last_error' => $error,
+                    // Given up on before, but the work is still wanted: let it
+                    // try again rather than leaving the row dead. A server that
+                    // was unreachable last night may answer tonight. Something
+                    // that cannot come right is left alone.
+                    'status' => $permanent ? 'failed' : 'pending',
+                    'attempts' => $reopened ? 0 : $existing->attempts,
+                    'next_attempt_at' => $reopened ? now()->addMinutes(5) : $existing->next_attempt_at,
+                    'payload' => $payload ?: $existing->payload,
+                ]);
 
                 return;
             }
@@ -432,24 +373,6 @@ class ProvisioningService
         }
     }
 
-    /** @param array<string, mixed> $payload */
-    private function updateRetry(ModuleQueue $existing, bool $permanent, string $error, array $payload): void
-    {
-        $reopened = ! $permanent && $existing->status === 'failed';
-
-        $existing->update([
-            'last_error' => $error,
-            // Given up on before, but the work is still wanted: let it
-            // try again rather than leaving the row dead. A server that
-            // was unreachable last night may answer tonight. Something
-            // that cannot come right is left alone.
-            'status' => $permanent ? 'failed' : 'pending',
-            'attempts' => $reopened ? 0 : $existing->attempts,
-            'next_attempt_at' => $reopened ? now()->addMinutes(5) : $existing->next_attempt_at,
-            'payload' => $payload ?: $existing->payload,
-        ]);
-    }
-
     /**
      * Public resolver — which server module would handle this service.
      */
@@ -462,12 +385,7 @@ class ProvisioningService
     {
         $service->loadMissing('product', 'server');
 
-        /** @var Server|null $server */
-        $server = $service->getRelationValue('server');
-        /** @var Product|null $product */
-        $product = $service->getRelationValue('product');
-        $serverType = $server !== null ? $server->type : null;
-        $serverType ??= $product !== null ? $product->server_type : null;
+        $serverType = $service->server?->type ?? $service->product?->server_type ?? null;
 
         if (! $serverType) {
             return null;

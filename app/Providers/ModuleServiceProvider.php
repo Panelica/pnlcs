@@ -44,6 +44,8 @@ class ModuleServiceProvider extends ServiceProvider
 
             // HestiaCP module
             $registry->registerServer("hestiacp", \Modules\Servers\HestiaCP\HestiaCPModule::class);
+            // aaPanel module (Sub aaPanel accounts)
+            $registry->registerServer("aapanel", \Modules\Servers\AaPanel\AaPanelModule::class);
             // Vultr VPS module
             $registry->registerServer("vultr", \Modules\Servers\Vultr\VultrModule::class);
 

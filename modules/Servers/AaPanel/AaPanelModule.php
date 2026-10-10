@@ -2,7 +2,6 @@
 
 namespace Modules\Servers\AaPanel;
 
-use App\Contracts\RequiresProvisioningLock;
 use App\Models\Client;
 use App\Models\Server;
 use App\Models\Service;
@@ -10,7 +9,7 @@ use Illuminate\Support\Facades\Cache;
 use Modules\Servers\AbstractServerModule;
 
 /** Provision Sub aaPanel accounts, not websites on the administrator's account. */
-class AaPanelModule extends AbstractServerModule implements RequiresProvisioningLock
+class AaPanelModule extends AbstractServerModule
 {
     private const LIMITS = ['disk_space_quota', 'monthly_bandwidth_limit', 'max_site_limit', 'max_database', 'php_start_children', 'php_max_children'];
 
