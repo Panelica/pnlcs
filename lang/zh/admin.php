@@ -3663,4 +3663,6 @@ return [
     'ticket_escalation.reply_placeholder' => '留空则不自动回复',
     'bundles.item_badge' => '项目 #:id（:type）',
     'bundles.min_two' => '（至少 2 个）',
+    'promotions.unlimited_hint' => '（0 = 不限）',
+    'promotions.optional_hint' => '（可选）',
 ];

@@ -3659,4 +3659,6 @@ return [
     'ticket_escalation.reply_placeholder' => 'Leer lassen für keine automatische Antwort',
     'bundles.item_badge' => 'Position #:id (:type)',
     'bundles.min_two' => '(mind. 2)',
+    'promotions.unlimited_hint' => '(0 = unbegrenzt)',
+    'promotions.optional_hint' => '(nicht erforderlich)',
 ];

@@ -3663,4 +3663,6 @@ return [
     'ticket_escalation.reply_placeholder' => 'Otomatik yanıt istemiyorsanız boş bırakın',
     'bundles.item_badge' => 'Kalem #:id (:type)',
     'bundles.min_two' => '(en az 2)',
+    'promotions.unlimited_hint' => '(0 = sınırsız)',
+    'promotions.optional_hint' => '(isteğe bağlı)',
 ];

@@ -3663,4 +3663,6 @@ return [
     'ticket_escalation.reply_placeholder' => 'Zostaw puste, aby nie wysyłać automatycznej odpowiedzi',
     'bundles.item_badge' => 'Pozycja #:id (:type)',
     'bundles.min_two' => '(min. 2)',
+    'promotions.unlimited_hint' => '(0 = bez limitu)',
+    'promotions.optional_hint' => '(opcjonalnie)',
 ];

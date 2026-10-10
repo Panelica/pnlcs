@@ -3665,4 +3665,6 @@ return [
     'ticket_escalation.reply_placeholder' => 'Leave empty for no auto-reply',
     'bundles.item_badge' => 'Item #:id (:type)',
     'bundles.min_two' => '(min 2)',
+    'promotions.unlimited_hint' => '(0 = unlimited)',
+    'promotions.optional_hint' => '(optional)',
 ];
