@@ -22,16 +22,16 @@
             </div>
             <div>
                 <div class="footer__col-title">Products</div>
-                <a href="/client/store" class="footer__link">Shared Hosting</a>
-                <a href="/client/store" class="footer__link">VPS Server</a>
-                <a href="/client/domain-search" class="footer__link">Domain Search</a>
-                <a href="/client/store" class="footer__link">SSL Certificates</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">Shared Hosting</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">VPS Server</a>
+                <a href="{{ url('/client/domain-search') }}" class="footer__link">Domain Search</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">SSL Certificates</a>
             </div>
             <div>
                 <div class="footer__col-title">Company</div>
-                <a href="/client/knowledgebase" class="footer__link">Knowledge Base</a>
-                <a href="/client/announcements" class="footer__link">Announcements</a>
-                <a href="/client/contact" class="footer__link">Contact</a>
+                <a href="{{ url('/client/knowledgebase') }}" class="footer__link">Knowledge Base</a>
+                <a href="{{ url('/client/announcements') }}" class="footer__link">Announcements</a>
+                <a href="{{ url('/client/contact') }}" class="footer__link">Contact</a>
                 <a href="{{ $bUrl }}" class="footer__link">About Us</a>
             </div>
         </div>
