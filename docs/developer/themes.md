@@ -95,6 +95,13 @@ sections:
 A theme that replaces the client layout keeps these two includes in its
 `<head>`.
 
+The shop's social media profiles (**Setup → General → Search engines and
+sharing**) are in `social_profiles()`: network => address, only the ones set,
+for `x`, `facebook`, `instagram`, `linkedin`, `youtube`, `tiktok`, `threads`
+and `medium`. `@include('partials.social-links')` draws them as icon links,
+or a theme draws its own. The home page also names them to search engines
+(schema.org `Organization`, `sameAs`) through `partials.seo-meta`.
+
 ## Keeping your theme through updates
 
 Built-in themes are part of PNLCS and are updated with it; a theme with its
