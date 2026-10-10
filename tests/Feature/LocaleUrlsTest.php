@@ -217,3 +217,15 @@ test('the sitemap and robots.txt keep one address, and a shared page names its o
     $root = rtrim((string) config('app.url'), '/');
     $this->get('/tr/client/login')->assertOk()->assertSee('<meta property="og:url" content="'.$root.'/tr/client/login">', false);
 });
+
+test('a file at the root keeps one address in every language', function () {
+    localeUrlsOn();
+    \Illuminate\Support\Facades\Route::middleware('web')->get('sw-test.js', fn () => response('ok', 200, ['Content-Type' => 'text/javascript']));
+
+    // A visitor reading Turkish: no redirect to /tr/sw-test.js, and links to it carry no prefix
+    $this->withSession(['locale' => 'tr'])->get('/sw-test.js')->assertOk()->assertSee('ok');
+    app()->setLocale('tr');
+    expect(url('sw-test.js'))->not->toContain('/tr/')
+        ->and(LocaleUrl::excluded('sw-test.js'))->toBeTrue()
+        ->and(LocaleUrl::excluded('blog/rss.xml'))->toBeFalse();
+});

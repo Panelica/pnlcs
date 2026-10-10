@@ -82,6 +82,13 @@ class LocaleUrl
             return true;
         }
 
+        // A file at the root (sw.js, manifest.json, llms.txt, a verification
+        // file): one address for every language. Sending it to /en/... broke
+        // a service worker's registration, which refuses a redirect.
+        if ($path !== '' && ! str_contains($path, '/') && str_contains($path, '.')) {
+            return true;
+        }
+
         foreach (self::FIXED as $fixed) {
             if ($path === $fixed || str_starts_with($path, $fixed.'/')) {
                 return true;
