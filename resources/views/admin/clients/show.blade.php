@@ -197,7 +197,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                     </div>
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
                         <label style="font-size:13px;display:flex;align-items:center;gap:4px;cursor:pointer;">
-                            <input type="checkbox" name="sticky" value="1"> Sticky
+                            <input type="checkbox" name="sticky" value="1"> {{ __('admin.clients.sticky') }}
                         </label>
                         <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.clients.add_note') }}</button>
                     </div>
@@ -273,11 +273,11 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 <div class="form-group">
                     <label class="form-label">{{ __('common.table.status') }} <span style="color:#d9534f;">*</span></label>
                     <select name="status" class="form-control" required>
-                        <option value="active" @selected(old('status','active')=='active')>Active</option>
-                        <option value="pending" @selected(old('status')=='pending')>Pending</option>
-                        <option value="suspended" @selected(old('status')=='suspended')>Suspended</option>
-                        <option value="cancelled" @selected(old('status')=='cancelled')>Cancelled</option>
-                        <option value="terminated" @selected(old('status')=='terminated')>Terminated</option>
+                        <option value="active" @selected(old('status','active')=='active')>{{ __('common.status.active') }}</option>
+                        <option value="pending" @selected(old('status')=='pending')>{{ __('common.status.pending') }}</option>
+                        <option value="suspended" @selected(old('status')=='suspended')>{{ __('common.status.suspended') }}</option>
+                        <option value="cancelled" @selected(old('status')=='cancelled')>{{ __('common.status.cancelled') }}</option>
+                        <option value="terminated" @selected(old('status')=='terminated')>{{ __('common.status.terminated') }}</option>
                     </select>
                 </div>
             </div>
@@ -435,11 +435,11 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
                 <div class="form-group">
                     <label class="form-label">{{ __('common.table.status') }} <span style="color:#d9534f;">*</span></label>
                     <select name="status" class="form-control" required>
-                        <option value="active" @selected(old('status','active')=='active')>Active</option>
-                        <option value="grace" @selected(old('status')=='grace')>Grace</option>
-                        <option value="pending" @selected(old('status')=='pending')>Pending</option>
-                        <option value="expired" @selected(old('status')=='expired')>Expired</option>
-                        <option value="cancelled" @selected(old('status')=='cancelled')>Cancelled</option>
+                        <option value="active" @selected(old('status','active')=='active')>{{ __('common.status.active') }}</option>
+                        <option value="grace" @selected(old('status')=='grace')>{{ __('admin.domain_pricing.grace') }}</option>
+                        <option value="pending" @selected(old('status')=='pending')>{{ __('common.status.pending') }}</option>
+                        <option value="expired" @selected(old('status')=='expired')>{{ __('common.status.expired') }}</option>
+                        <option value="cancelled" @selected(old('status')=='cancelled')>{{ __('common.status.cancelled') }}</option>
                     </select>
                 </div>
             </div>

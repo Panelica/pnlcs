@@ -4,7 +4,7 @@
 
 <div class="page-header">
     <h1>{{ __('admin.domains.title') }}</h1>
-    <span style="font-size:13px;color:#666;">{{ $domains->total() }} total · <a href="{{ route('admin.domains.searches') }}">{{ __('admin.domain_searches.title') }}</a></span>
+    <span style="font-size:13px;color:#666;">{{ __('admin.domains.total_count', ['count' => $domains->total()]) }} · <a href="{{ route('admin.domains.searches') }}">{{ __('admin.domain_searches.title') }}</a></span>
 </div>
 
 <!-- Filter Bar -->
@@ -92,8 +92,8 @@
                 <td style="color:#666;">{{ $domain->registration_date?->format(date_fmt()) ?? "-" }}</td>
                 <td style="color:{{ $expired ? "#c43c35" : ($expirySoon ? "#d68100" : "#666") }};font-weight:{{ ($expired || $expirySoon) ? "600" : "400" }};">
                     {{ $domain->expiry_date?->format(date_fmt()) ?? "-" }}
-                    @if($expirySoon) <small style="font-size:11px;">(soon)</small> @endif
-                    @if($expired) <small style="font-size:11px;">(expired)</small> @endif
+                    @if($expirySoon) <small style="font-size:11px;">{{ __('admin.domains.expiry_soon') }}</small> @endif
+                    @if($expired) <small style="font-size:11px;">{{ __('admin.domains.expiry_past') }}</small> @endif
                 </td>
                 <td><span class="badge {{ $badgeClass }}">{{ ucfirst($domain->status ?? "") }}</span></td>
                 <td>

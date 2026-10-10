@@ -27,7 +27,7 @@
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.invoices.select_client') }} <span style="color:#d9534f;">*</span></label>
                         <select name="client_id" required class="form-control" @change="setClient($event.target.value)">
-                            <option value="">— Choose a client —</option>
+                            <option value="">{{ __('admin.invoices.choose_client') }}</option>
                             @foreach($clients as $client)
                             <option value="{{ $client->id }}" data-rate="{{ $client->billing_tax_rate }}" data-label="{{ $client->billing_tax_label }}" data-rates="{{ $client->billing_tax_rates->toJson() }}" {{ old('client_id', $selectedClient?->id) == $client->id ? 'selected' : '' }}>
                                 {{ $client->display_name }} ({{ $client->email }})

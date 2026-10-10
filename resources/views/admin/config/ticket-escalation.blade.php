@@ -17,7 +17,7 @@
         @foreach($rules as $rule)
         <tr>
             <td style="font-weight:600;">{{ $rule->name }}</td>
-            <td>{{ $rule->time_elapsed }} min</td>
+            <td>{{ __('admin.ticket_escalation.minutes', ['count' => $rule->time_elapsed]) }}</td>
             <td>
                 @php
                     $deptNames = [];
@@ -98,7 +98,7 @@
                         </div>
                         <div class="form-group" style="margin-top:12px;">
                             <label class="form-label">{{ __('admin.ticket_escalation.auto_reply_message') }}</label>
-                            <textarea name="add_reply" class="form-control" rows="2" placeholder="Leave empty for no auto-reply">{{ $rule->add_reply }}</textarea>
+                            <textarea name="add_reply" class="form-control" rows="2" placeholder="{{ __('admin.ticket_escalation.reply_placeholder') }}">{{ $rule->add_reply }}</textarea>
                         </div>
                         <div class="form-group" style="margin-top:12px;">
                             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="notify" value="1" {{ $rule->notify ? "checked" : "" }}> {{ __('admin.ticket_escalation.send_notification') }}</label>
@@ -133,7 +133,7 @@
         <form method="POST" action="{{ route('admin.config.ticket-escalation.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.rule_name') }}</label><input type="text" name="name" required class="form-control" placeholder="e.g. High Priority - 1 Hour"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.rule_name') }}</label><input type="text" name="name" required class="form-control" placeholder="{{ __('admin.ticket_escalation.name_placeholder') }}"></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
                     <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.time_threshold_minutes') }}</label><input type="number" name="time_elapsed" required min="1" value="60" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.ticket_escalation.new_priority') }}</label>
@@ -166,7 +166,7 @@
                 </div>
                 <div class="form-group" style="margin-top:12px;">
                     <label class="form-label">{{ __('admin.ticket_escalation.auto_reply_message') }}</label>
-                    <textarea name="add_reply" class="form-control" rows="2" placeholder="Leave empty for no auto-reply"></textarea>
+                    <textarea name="add_reply" class="form-control" rows="2" placeholder="{{ __('admin.ticket_escalation.reply_placeholder') }}"></textarea>
                 </div>
                 <div class="form-group" style="margin-top:12px;">
                     <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="notify" value="1"> {{ __('admin.ticket_escalation.send_notification') }}</label>

@@ -29,7 +29,7 @@
             <td style="font-weight:600;">{{ $provider->name }}</td>
             <td>
                 @if($provider->type === 'email')
-                    <span class="badge badge-active"><i class="fas fa-envelope"></i> Email</span>
+                    <span class="badge badge-active"><i class="fas fa-envelope"></i> {{ __('admin.notifications.channel_email') }}</span>
                 @elseif($provider->type === 'slack')
                     <span class="badge badge-pending"><i class="fab fa-slack"></i> Slack</span>
                 @elseif($provider->type === 'telegram')
@@ -128,10 +128,10 @@
         <form method="POST" action="{{ route('admin.config.notification-providers.store') }}">
             @csrf
             <div style="padding:20px;">
-                <div class="form-group"><label class="form-label">{{ __('admin.notifications.provider_name') }} *</label><input type="text" name="name" required class="form-control" placeholder="e.g. Slack Alerts"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.notifications.provider_name') }} *</label><input type="text" name="name" required class="form-control" placeholder="{{ __('admin.notifications.name_placeholder') }}"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.notifications.type') }} *</label>
                     <select name="type" required class="form-control" onchange="toggleProviderFields(this.value, 'add')">
-                        <option value="email">Email</option>
+                        <option value="email">{{ __('admin.notifications.channel_email') }}</option>
                         <option value="slack">Slack</option>
                         <option value="webhook">Webhook</option>
                         <option value="telegram">Telegram</option>
@@ -143,7 +143,7 @@
                 </div>
                 <div id="add-webhook-fields" style="display:none;">
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.webhook_url') }}</label><input type="url" name="settings[url]" class="form-control" placeholder="https://example.com/webhook"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.notifications.secret_optional') }}</label><input type="text" name="settings[secret]" class="form-control" placeholder="Shared secret for verification"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.notifications.secret_optional') }}</label><input type="text" name="settings[secret]" class="form-control" placeholder="{{ __('admin.notifications.secret_placeholder') }}"></div>
                 </div>
                 <div id="add-telegram-fields" style="display:none;">
                     <div class="form-group"><label class="form-label">{{ __('admin.notifications.telegram_token') }}</label>
@@ -179,7 +179,7 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.notifications.provider_name') }} *</label><input type="text" name="name" id="edit-prov-name" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.notifications.type') }} *</label>
                     <select name="type" id="edit-prov-type" required class="form-control" onchange="toggleProviderFields(this.value, 'edit')">
-                        <option value="email">Email</option>
+                        <option value="email">{{ __('admin.notifications.channel_email') }}</option>
                         <option value="slack">Slack</option>
                         <option value="webhook">Webhook</option>
                         <option value="telegram">Telegram</option>

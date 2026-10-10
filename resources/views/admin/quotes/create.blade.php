@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-header">
     <h1>{{ __('admin.quotes.create_quote') }}</h1>
-    <a href="{{ route('admin.quotes.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
+    <a href="{{ route('admin.quotes.index') }}" class="btn btn-default btn-sm">&larr; {{ __('common.actions.back') }}</a>
 </div>
 @if($errors->any())
 <div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">
@@ -36,7 +36,7 @@
             <div class="card" style="margin-bottom:15px;">
                 <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
                     <strong>{{ __('admin.quotes.line_items') }}</strong>
-                    <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ Add Item</button>
+                    <button type="button" @click="addItem()" class="btn btn-default btn-xs">+ {{ __('admin.invoices.add_item') }}</button>
                 </div>
                 <div class="card-body" style="padding:0;">
                     <table style="width:100%;border-collapse:collapse;font-size:13px;">
@@ -61,7 +61,7 @@
                                     <td style="padding:6px 4px;text-align:center;"><button type="button" @click="removeItem(index)" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:16px;">&times;</button></td>
                                 </tr>
                             </template>
-                            <tr x-show="items.length===0"><td colspan="7" style="text-align:center;color:#999;padding:20px;font-size:13px;">No items. Click "+ Add Item".</td></tr>
+                            <tr x-show="items.length===0"><td colspan="7" style="text-align:center;color:#999;padding:20px;font-size:13px;">{{ __('admin.quotes.no_items') }}</td></tr>
                         </tbody>
                         <tfoot style="border-top:2px solid #aaa;">
                             <tr><td colspan="5" style="padding:8px 10px;text-align:right;font-weight:600;">{{ __('admin.quotes.subtotal') }}</td><td style="padding:8px;text-align:right;font-weight:600;font-family:monospace;" x-text="'$' + subtotal().toFixed(2)"></td><td></td></tr>

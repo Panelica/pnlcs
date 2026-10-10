@@ -51,7 +51,7 @@
     <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-tld').style.display='none'"></div>
     <div style="position:relative;background:#fff;border-radius:4px;width:540px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
         <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
-            <h4 style="margin:0;font-size:16px;" id="tld-modal-title">Add TLD</h4>
+            <h4 style="margin:0;font-size:16px;" id="tld-modal-title">{{ __('admin.domain_pricing.add_tld') }}</h4>
             <button type="button" onclick="document.getElementById('modal-tld').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
         </div>
         <form method="POST" id="tld-form" action="">

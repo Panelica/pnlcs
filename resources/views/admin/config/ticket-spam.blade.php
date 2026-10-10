@@ -100,7 +100,7 @@
                     </select>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.ticket_spam.content') }} *</label>
-                    <input type="text" name="content" required class="form-control" placeholder="e.g. @spammail.com or casino">
+                    <input type="text" name="content" required class="form-control" placeholder="{{ __('admin.ticket_spam.content_placeholder') }}">
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
