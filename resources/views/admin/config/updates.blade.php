@@ -391,6 +391,13 @@ function updateProgress(init) {
                         if (data && !data.running && !data.request && done.indexOf((data.status || {}).state) !== -1) {
                             return window.location.reload();
                         }
+                        // Picked up, then nothing for five minutes: the page says the
+                        // request was lost and gives the buttons back (see $lost).
+                        var st = data.status || {};
+                        if (!data.running && !data.request && st.state === 'queued' && st.updated_at && data.now
+                            && Date.parse(data.now) - Date.parse(st.updated_at) > 5 * 60 * 1000) {
+                            return window.location.reload();
+                        }
                         setTimeout(poll, 2000);
                     })
                     // While the site is in maintenance or PHP restarts, a request
