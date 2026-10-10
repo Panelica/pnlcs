@@ -3657,4 +3657,5 @@ return [
     'appearance.company_placeholder' => '例如 MyHosting',
     'appearance.copyright_placeholder' => '例如 MyHosting 有限公司',
     'appearance.dark_toggle_note' => '导航栏中会出现月亮/太阳图标切换按钮',
+    'invoices.choose_client' => '— 选择客户 —',
 ];

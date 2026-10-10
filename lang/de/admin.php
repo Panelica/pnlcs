@@ -3653,4 +3653,5 @@ return [
     'appearance.company_placeholder' => 'z. B. MeinHosting',
     'appearance.copyright_placeholder' => 'z. B. MeinHosting GmbH',
     'appearance.dark_toggle_note' => 'In der Navigationsleiste erscheint ein Mond/Sonne-Schalter',
+    'invoices.choose_client' => '— Kunden wählen —',
 ];

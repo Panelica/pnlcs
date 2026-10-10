@@ -3657,4 +3657,5 @@ return [
     'appearance.company_placeholder' => 'örn. Hostingim',
     'appearance.copyright_placeholder' => 'örn. Hostingim Ltd. Şti.',
     'appearance.dark_toggle_note' => 'Menü çubuğunda ay/güneş simgeli bir düğme çıkar',
+    'invoices.choose_client' => '— Müşteri seçin —',
 ];

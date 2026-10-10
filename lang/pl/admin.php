@@ -3657,4 +3657,5 @@ return [
     'appearance.company_placeholder' => 'np. MójHosting',
     'appearance.copyright_placeholder' => 'np. MójHosting sp. z o.o.',
     'appearance.dark_toggle_note' => 'Na pasku nawigacji pojawia się przełącznik z ikoną księżyca/słońca',
+    'invoices.choose_client' => '— Wybierz klienta —',
 ];

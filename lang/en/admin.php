@@ -3659,4 +3659,5 @@ return [
     'appearance.company_placeholder' => 'e.g. MyHosting',
     'appearance.copyright_placeholder' => 'e.g. MyHosting LLC',
     'appearance.dark_toggle_note' => 'A moon/sun icon toggle appears in the navigation bar',
+    'invoices.choose_client' => '— Choose a client —',
 ];
