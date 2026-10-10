@@ -147,7 +147,6 @@ return [
         'email.common.domain_label',
         'email.common.name_label',
         'email.common.partner',
-        'email.common.service',
         'email.common.status_label',
         'messages.company_lookup.status',
         'messages.ksef.status',
