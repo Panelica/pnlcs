@@ -151,8 +151,9 @@ class LocaleUrl
 
     /**
      * A language switcher's link: with the setting on, the page at that
-     * language's address; ?lang makes it the visitor's choice (SetLocale then
-     * drops it from the address). With the setting off, today's ?lang link.
+     * language's address, plain for a prefixed language, with ?lang for the
+     * default one (SetLocale then drops it from the address). With the
+     * setting off, today's ?lang link.
      */
     public static function switchTo(string $locale, ?Request $request = null): string
     {
@@ -163,6 +164,13 @@ class LocaleUrl
         }
 
         $url = self::current($locale, $request);
+
+        // A prefixed language is chosen by its address alone (SetLocale keeps
+        // it). Only the way back to the default language needs ?lang: without
+        // it, a visitor who chose another language would be sent on to it.
+        if (in_array(strtolower($locale), self::prefixed(), true)) {
+            return $url;
+        }
 
         return $url.(str_contains($url, '?') ? '&' : '?').'lang='.rawurlencode($locale);
     }
