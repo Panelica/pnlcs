@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'password_label' => 'Password',
-    'password_unused' => 'Not used by aaPanel',
-    'api_key' => 'API Key',
-    'api_key_hint' => 'aaPanel Settings → API → API secret key',
-    'server_hint' => 'aaPanel: use the main panel hostname and HTTPS port (often 8888). Paste its API secret key in API Key and whitelist the PNLCS server IP. Sub aaPanel must be installed, licensed and running. Use a trusted TLS certificate. Customer accounts use existing resource packages; DNS and websites are managed in Sub aaPanel.',
+    'password_label' => 'Passwort',
+    'password_unused' => 'Wird von aaPanel nicht verwendet',
+    'api_key' => 'API-Schlüssel',
+    'api_key_hint' => 'aaPanel Einstellungen → API → API-Geheimschlüssel',
+    'server_hint' => 'aaPanel: Geben Sie den Hostnamen und den HTTPS-Port des Panels ein. Fügen Sie den API-Geheimschlüssel in das Feld API-Schlüssel ein und setzen Sie die IP-Adresse des PNLCS-Servers auf die API-Freigabeliste von aaPanel. Der Dienst Account (Sub aaPanel) muss installiert sein und laufen; Sub aaPanel erfordert aaPanel Pro. Kundenkonten verwenden die in aaPanel vorhandenen Ressourcenpakete; DNS und Websites werden in Sub aaPanel verwaltet.',
 ];
