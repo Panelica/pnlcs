@@ -134,6 +134,32 @@ order and layout stay as they are, so the diff shows just the changed texts.
 A key the file does not have yet is added at its end. Use `--group=admin` for
 one file. Then run the translation tests, commit and open a pull request.
 
+## Email templates
+
+The email templates (**Setup → Email Templates**) are database rows, one set
+per language, which the operator edits. A language starts from the set PNLCS
+ships for it in `database/data/email_templates/<code>.php`, template name =>
+subject and message; a language without that file starts from the English
+set. German and Polish are shipped today.
+
+```php
+return [
+    'Invoice Created' => [
+        'subject' => 'Neue Rechnung #{invoice_num} – {CompanyName}',
+        'message' => "Guten Tag {client_name},\n\n...",
+    ],
+];
+```
+
+- Keep exactly the English template's merge fields (`{client_name}`,
+  `{invoice_num}` ...); `{CompanyName}` may be added, every email has it.
+  `tests/Feature/ShippedEmailTemplatesTest.php` checks this.
+- The subject line of a template goes out with every email, so a template
+  translation is what gives a customer's email a subject in their language.
+- An install that already has the language gets a new template translation
+  by migration, and only where the row is still the English text: anything
+  the operator changed stays.
+
 ## A new language
 
 Open an issue first: a language is added to the list the installer seeds and

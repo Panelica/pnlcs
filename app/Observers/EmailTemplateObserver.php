@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\EmailTemplate;
 use App\Models\Language;
+use App\Translation\ShippedEmailTemplates;
 
 /**
  * Keeps the non-English template sets in step with English.
@@ -11,7 +12,8 @@ use App\Models\Language;
  * A template written in English is the canonical copy. The moment one is
  * created, an untranslated (custom=false) copy carrying the English wording is
  * added to every other language so the email-templates screen can show it
- * flagged "Translate" instead of it simply never appearing.
+ * flagged "Translate" instead of it simply never appearing; a language PNLCS
+ * ships a translation of that template for gets the translation.
  */
 class EmailTemplateObserver
 {
@@ -34,12 +36,14 @@ class EmailTemplateObserver
     private function propagate(EmailTemplate $en): void
     {
         foreach ($this->otherLanguages() as $code) {
+            $shipped = ShippedEmailTemplates::for($code)[$en->name] ?? null;
+
             EmailTemplate::updateOrCreate(
                 ['name' => $en->name, 'language' => $code],
                 [
                     'type' => $en->type,
-                    'subject' => $en->subject,
-                    'message' => $en->message,
+                    'subject' => $shipped['subject'] ?? $en->subject,
+                    'message' => $shipped['message'] ?? $en->message,
                     'custom' => false,
                     'disabled' => false,
                     'plaintext' => $en->plaintext ?? false,
