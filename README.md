@@ -1,8 +1,3 @@
-<p align="center">
-  <a href="https://pnlcs.com/"><b>pnlcs.com</b></a> ·
-  <a href="https://docs.pnlcs.com/"><b>docs.pnlcs.com</b></a>
-</p>
-
 <h1 align="center">PNLCS</h1>
 
 <p align="center">
@@ -13,48 +8,29 @@
 </p>
 
 <p align="center">
-  Built with <b>Laravel 13</b> · <b>PHP 8.4+</b> · <b>MySQL 8</b> · <b>Alpine.js</b> · <b>Tailwind CSS 4</b>
-</p>
-
-<p align="center">
   <a href="https://github.com/Panelica/pnlcs/blob/main/LICENSE"><img src="https://img.shields.io/github/license/Panelica/pnlcs?color=blue" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel" alt="Laravel 13">
   <img src="https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php&logoColor=white" alt="PHP 8.4+">
   <img src="https://img.shields.io/badge/MySQL-8.0%2B-4479A1?logo=mysql&logoColor=white" alt="MySQL 8.0+">
+  <a href="https://hub.docker.com/r/panelica/pnlcs-runtime"><img src="https://img.shields.io/docker/pulls/panelica/pnlcs-runtime?logo=docker&label=Docker%20Pulls" alt="Docker Pulls"></a>
   <a href="https://github.com/Panelica/pnlcs/stargazers"><img src="https://img.shields.io/github/stars/Panelica/pnlcs?style=social" alt="Stars"></a>
 </p>
 
 <p align="center">
-  <a href="https://docs.pnlcs.com/"><img src="https://img.shields.io/badge/%F0%9F%93%96%20Documentation-docs.pnlcs.com-0EA5E9?style=for-the-badge&logoColor=white" alt="Documentation — docs.pnlcs.com" height="36"></a>
+  <a href="https://pnlcs.com/"><img src="https://img.shields.io/badge/Website-pnlcs.com-4051A9?style=for-the-badge" alt="Website — pnlcs.com"></a>
+  <a href="https://hosting.panelica.com/"><img src="https://img.shields.io/badge/Live%20Demo-hosting.panelica.com-22C55E?style=for-the-badge" alt="Live Demo — hosting.panelica.com"></a>
+  <a href="https://docs.pnlcs.com/"><img src="https://img.shields.io/badge/Documentation-docs.pnlcs.com-0EA5E9?style=for-the-badge" alt="Documentation — docs.pnlcs.com"></a>
 </p>
 
 <p align="center">
-  <a href="https://pnlcs.com/"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Website-pnlcs.com-4051A9?style=for-the-badge&logoColor=white" alt="Website — pnlcs.com"></a>
-  <a href="https://hosting.panelica.com/"><img src="https://img.shields.io/badge/%F0%9F%9A%80%20Live%20Demo-hosting.panelica.com-22C55E?style=for-the-badge&logoColor=white" alt="Live Demo — hosting.panelica.com"></a>
-</p>
-
-<p align="center">
-  <b>👉 Try the live demo: <a href="https://hosting.panelica.com/">hosting.panelica.com</a></b><br>
-  <b>📖 Read the documentation: <a href="https://docs.pnlcs.com/">docs.pnlcs.com</a></b> — user guide, the full API reference and the MCP server
-</p>
-
-<p align="center">
-  <a href="https://pnlcs.com/"><b>Website</b></a> ·
-  <a href="https://hosting.panelica.com/"><b>Live Demo</b></a> ·
-  <a href="https://docs.pnlcs.com/"><b>Documentation</b></a> ·
-  <a href="#quick-start-with-docker">Docker</a> ·
-  <a href="#installation">Installation</a> ·
+  <a href="#quick-start-with-docker">Quick Start</a> ·
+  <a href="#self-hosted-installation-without-docker">Installation</a> ·
   <a href="#first-steps-after-installation">First Steps</a> ·
-  <a href="#screenshots">Screenshots</a> ·
+  <a href="#hosting-billing-features">Features</a> ·
+  <a href="#modules--servers-payment-gateways--domain-registrars">Modules</a> ·
   <a href="#selling-vps-on-proxmox-ve">Proxmox VPS</a> ·
-  <a href="#features">Features</a> ·
-  <a href="#modules">Modules</a> ·
+  <a href="#screenshots--admin-panel--client-portal">Screenshots</a> ·
   <a href="#contributing">Contributing</a>
-</p>
-
-<p align="center">
-  <a href="https://hub.docker.com/r/panelica/pnlcs-runtime"><img src="https://img.shields.io/docker/pulls/panelica/pnlcs-runtime?logo=docker&label=Docker%20Pulls" alt="Docker Pulls"></a>
-  <a href="https://hub.docker.com/r/panelica/pnlcs-runtime"><img src="https://img.shields.io/badge/Docker%20Hub-panelica%2Fpnlcs--runtime-2496ED?logo=docker&logoColor=white" alt="Docker Hub"></a>
 </p>
 
 ---
@@ -73,10 +49,10 @@ and module ecosystem (servers, gateways, registrars, SSL providers) are
 deliberately familiar. The difference is that PNLCS is **MIT-licensed**,
 **self-hosted**, and free to fork, study, and extend.
 
-This project is built and maintained by the **Panelica Server Management
-Panel** team in our spare time, alongside our main product. We wanted an
-open, self-hosted billing system that integrates natively with Panelica and
-plays nicely with other control panels too — so we built one.
+PNLCS is built and maintained by the team behind the **Panelica** server
+management panel, and our own hosting sales run on it. We wanted an open,
+self-hosted billing system that integrates natively with Panelica and works
+with other control panels too — so we built one.
 
 **What works well today:**
 
@@ -90,18 +66,18 @@ plays nicely with other control panels too — so we built one.
 
 **What needs your help:**
 
-- **cPanel / Plesk / DirectAdmin server modules** — code is in
-  place but we have not tested them end-to-end. If you run one of these,
-  please try it out and open an issue (or even better, a pull request)
-  telling us what you found.
+- **cPanel / Plesk / DirectAdmin / HestiaCP / Vultr server modules** —
+  covered by automated tests, but we have not run them end-to-end against
+  live servers. If you run one of these, please try it out and open an issue
+  (or even better, a pull request) telling us what you found.
+- **aaPanel server module** — needs a run on a panel licensed for aaPanel
+  Pro (Sub aaPanel is a Pro feature).
 - **PayPal / Authorize.Net / Bank Transfer gateways** — same story.
 - **Enom domain registrar** — API integration exists, needs real-world
   verification.
 - General bug reports, typos, translation improvements.
 
-We read every issue, but because this is a side project our response time
-isn't always same-day. If you can include reproduction steps or a patch,
-it helps us enormously.
+We read every issue. Reproduction steps or a patch help us move fast.
 
 ---
 
@@ -156,7 +132,7 @@ Panelica is simply where PNLCS feels most at home.
 *WordPress-style theme system with 16 built-in themes, logo/favicon upload, dark mode toggle, and homepage builder*
 
 ![Servers Configuration](docs/screenshots/admin-servers.png)
-*Server module management — connect Panelica, cPanel, Plesk, DirectAdmin, Proxmox, or custom servers*
+*Server module management — connect Panelica, cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel, Proxmox, Vultr or custom servers*
 
 ![Support Tickets](docs/screenshots/admin-tickets.png)
 *Ticket system with departments, priority routing, internal notes, and escalation rules*
@@ -242,15 +218,20 @@ marked before it is chosen, not after it fails*
 ### 🌐 Internationalization
 
 - **30 locales**, English active by default
-- **2,232 translation keys** for the core UI
-- **In-browser editor** — edit strings without touching files
-- **AI-assisted bulk translate** for missing keys
-- **Export / import** JSON per locale
+- **Complete in English, Turkish, German, Polish and Simplified Chinese**;
+  the other languages are community translations and show English for any
+  text they do not have yet
+- **In-browser editor** — your edits override the shipped texts and survive updates
+- **AI-assisted bulk translate** for missing texts
+- **Export / import** JSON per locale — see the
+  [translation guide](docs/developer/translations.md) to contribute a language
 
 ### 🎨 Theme System
 
-- **16 built-in themes** (Arctic, Aurora, Coral, Ember, Flavor, Forest,
-  Midnight, Mint, Neon, Ocean, Panelica, Royal, Slate, Starter, Sunset, Terra)
+- **16 built-in themes** — colour presets on the shared layout (Arctic,
+  Aurora, Coral, Ember, Flavor, Forest, Midnight, Mint, Neon, Ocean, Panelica,
+  Royal, Slate, Starter, Sunset, Terra); Aurora and Flavor also bring their
+  own page layout
 - **WordPress-style** install / activate / delete workflow
 - **Homepage builder** with reorderable sections
 - **Per-site white-label** options (logo, favicon, footer copyright)
@@ -1235,7 +1216,8 @@ messages are not written to the log either.
 
 **Setup → Servers**
 
-- Add your Panelica / cPanel / Plesk / DirectAdmin server
+- Add your server: Panelica, cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel,
+  Proxmox VE or Vultr
 - Test the API connection from the server edit page
 - Assign servers to **server groups** if you have multiple
 
@@ -1289,19 +1271,11 @@ messages are not written to the log either.
 
 ---
 
-## Upgrading
-
-See [Updating](#updating) — Docker, self-hosted and hosting-panel installs
-each have their own short procedure there. Always back up the database before
-applying new migrations.
-
----
-
 ## Modules — Servers, Payment Gateways & Domain Registrars
 
 PNLCS ships with modular **server**, **gateway**, **registrar**, and **SSL
 provider** integrations under the `modules/` directory. Add control-panel
-servers (cPanel, Plesk, DirectAdmin, Proxmox, HestiaCP, Vultr, Panelica),
+servers (cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel, Proxmox, Vultr, Panelica),
 configure payment gateways (Stripe, PayPal, iyzico, Authorize.Net, Razorpay,
 Mollie, Tpay, bank transfer), and connect domain registrars (Enom, Namecheap,
 ResellerClub, OpenProvider, HRD, DomainNameAPI) — and add your own modules without touching
@@ -1326,6 +1300,7 @@ a statement that the integration has been run against a live provider account.
 | DirectAdmin   | Server    | Covered         |
 | Proxmox       | Server    | Covered         |
 | HestiaCP      | Server    | Covered         |
+| aaPanel       | Server    | Covered         |
 | Vultr         | Server    | Covered         |
 | Custom        | Server    | None yet        |
 | Stripe        | Gateway   | Covered         |
@@ -1524,19 +1499,6 @@ Client-by-client setup lives in [`mcp/README.md`](mcp/README.md).
 
 ---
 
-## Internationalization
-
-All UI strings live in the database (`dynamic_translations` table) and
-flat PHP files under `lang/<locale>/`. Translations are editable from the
-admin panel under **Setup → Languages**. Exporting
-to JSON, importing, and AI-assisted batch translation are supported out
-of the box.
-
-If your language isn't covered yet, you can either submit a PR against
-the seeder or use the admin UI's export/import flow.
-
----
-
 ## Security
 
 - All admin routes require authentication via the `admin.auth` middleware
@@ -1547,7 +1509,7 @@ the seeder or use the admin UI's export/import flow.
 - Eloquent ORM everywhere (no raw SQL concatenation)
 
 Please report security issues privately to **security@panelica.com** rather
-than opening a public GitHub issue.
+than opening a public GitHub issue; see [SECURITY.md](SECURITY.md).
 
 ---
 
@@ -1596,6 +1558,7 @@ Checkout must run over **HTTPS**.
 | **Mollie** | Mollie API Key, Test Mode on/off |
 | **Razorpay** | Key ID, Key Secret |
 | **Authorize.Net** | API Login ID, Transaction Key |
+| **iyzico** (Turkey) | API key, Secret key, Sandbox on/off, instalments offered |
 | **Tpay** (Poland) | Open API Client ID + Secret, security code |
 | **Bank Transfer** | Your bank/account details — shown to the client, confirmed by hand |
 
