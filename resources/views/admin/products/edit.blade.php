@@ -114,18 +114,18 @@
     @php $cfg = is_string($product->config_options) ? (json_decode($product->config_options, true) ?: []) : ($product->config_options ?? []); @endphp
     @include('admin.products.partials.proxmox')
     <div class="card" data-module-card="panelica" style="margin-bottom:15px;">
-        <div class="card-header"><strong>Panelica Resources</strong> <span style="font-size:11px;color:#888;">&mdash; enforced cgroups/quota limits (full panel parity)</span></div>
+        <div class="card-header"><strong>{{ __('admin.products.panelica_resources') }}</strong> <span style="font-size:11px;color:#888;">&mdash; {{ __('admin.products.panelica_resources_hint') }}</span></div>
         <div class="card-body">
             <input type="hidden" name="res_section" value="1">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;">
                 <input type="checkbox" name="res_managed" value="1" {{ !empty($cfg['res_managed']) ? 'checked' : '' }}>
-                <strong>Managed mode</strong> &mdash; build a matching panel plan from the limits below on provisioning
+                <strong>{{ __('admin.products.managed_mode') }}</strong> &mdash; {{ __('admin.products.managed_mode_hint') }}
             </label>
             <div class="form-group" style="margin-bottom:14px;">
-                <label class="form-label" style="font-size:12px;">Or use an existing panel plan ID (leave managed unchecked)</label>
+                <label class="form-label" style="font-size:12px;">{{ __('admin.products.existing_plan') }}</label>
                 @if(!empty($panelicaPlans))
                 <select name="panelica_plan_id" class="form-control" style="font-size:12px;">
-                    <option value="">&mdash; none (use managed limits below) &mdash;</option>
+                    <option value="">&mdash; {{ __('admin.products.no_plan') }} &mdash;</option>
                     @foreach($panelicaPlans as $pl)
                     <option value="{{ $pl['id'] ?? '' }}" {{ (string)($cfg['panelica_plan_id'] ?? '') === (string)($pl['id'] ?? '') ? 'selected' : '' }}>{{ $pl['name'] ?? ($pl['id'] ?? 'plan') }}</option>
                     @endforeach
@@ -135,10 +135,10 @@
                 @endif
             </div>
             <div class="form-group" style="margin-bottom:14px;">
-                <label class="form-label" style="font-size:12px;">App Hosting &mdash; install this app on provisioning and serve it on the customer's domain</label>
+                <label class="form-label" style="font-size:12px;">{{ __('admin.products.app_hosting') }} &mdash; {{ __('admin.products.app_hosting_hint') }}</label>
                 @if(!empty($panelicaTemplates))
                 <select name="panelica_app_template" class="form-control" style="font-size:12px;">
-                    <option value="">&mdash; none (regular web hosting) &mdash;</option>
+                    <option value="">&mdash; {{ __('admin.products.no_app') }} &mdash;</option>
                     @foreach($panelicaTemplates as $tpl)
                     <option value="{{ $tpl['slug'] }}" {{ (string)($cfg['panelica_app_template'] ?? '') === $tpl['slug'] ? 'selected' : '' }}>{{ $tpl['name'] }}</option>
                     @endforeach
@@ -146,17 +146,17 @@
                 @else
                 <input type="text" name="panelica_app_template" value="{{ $cfg['panelica_app_template'] ?? '' }}" class="form-control" style="font-size:12px;" placeholder="wordpress">
                 @endif
-                <div style="font-size:11px;color:#888;margin-top:4px;">Needs Max Containers of at least 1 below. If the app cannot be installed the order fails and the account is rolled back.</div>
+                <div style="font-size:11px;color:#888;margin-top:4px;">{{ __('admin.products.app_needs_containers') }}</div>
             </div>
             {{-- Selling ninety-eight apps as ninety-eight products does not
                  scale, so one product can let the customer pick instead. --}}
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;">
                 <input type="checkbox" name="panelica_app_choose" value="1" {{ !empty($cfg['panelica_app_choose']) ? 'checked' : '' }}>
-                <strong>Customer picks the app</strong> &mdash; the order form shows the app catalogue instead of installing a fixed one
+                <strong>{{ __('admin.products.customer_picks_app') }}</strong> &mdash; {{ __('admin.products.customer_picks_app_hint') }}
             </label>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px;">
                 <input type="checkbox" name="panelica_container_plan" value="1" {{ !empty($cfg['panelica_container_plan']) ? 'checked' : '' }}>
-                <strong>Container plan</strong> &mdash; sells container resources, not a website: provisions without a domain and shows only the Apps tab
+                <strong>{{ __('admin.products.container_plan') }}</strong> &mdash; {{ __('admin.products.container_plan_hint') }}
             </label>
             @php $numFields = [
                 'res_cpu_percent'=>['CPU Limit (%) &mdash; 100 = 1 core',100],'res_memory_mb'=>['RAM (MB)',1024],
@@ -178,13 +178,13 @@
                 </div>
                 @endforeach
                 <div>
-                    <label class="form-label" style="font-size:11px;">SSH Access</label>
+                    <label class="form-label" style="font-size:11px;">{{ __('admin.products.ssh_access') }}</label>
                     <select name="res_ssh_level" class="form-control" style="font-size:12px;">
                         @foreach(['none','jailed','full'] as $o)<option value="{{ $o }}" {{ ($cfg['res_ssh_level'] ?? 'none')===$o?'selected':'' }}>{{ ucfirst($o) }}</option>@endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="form-label" style="font-size:11px;">Quota Mode</label>
+                    <label class="form-label" style="font-size:11px;">{{ __('admin.products.quota_mode') }}</label>
                     <select name="res_quota_mode" class="form-control" style="font-size:12px;">
                         @foreach(['strict','monitor','oversell'] as $o)<option value="{{ $o }}" {{ ($cfg['res_quota_mode'] ?? 'strict')===$o?'selected':'' }}>{{ ucfirst($o) }}</option>@endforeach
                     </select>
@@ -192,15 +192,15 @@
                 <div>
                     <label class="form-label" style="font-size:11px;">ModSecurity</label>
                     <select name="res_modsec" class="form-control" style="font-size:12px;">
-                        <option value="on" {{ ($cfg['res_modsec'] ?? 'on')!=='off'?'selected':'' }}>On</option>
-                        <option value="off" {{ ($cfg['res_modsec'] ?? 'on')==='off'?'selected':'' }}>Off</option>
+                        <option value="on" {{ ($cfg['res_modsec'] ?? 'on')!=='off'?'selected':'' }}>{{ __('admin.products.on') }}</option>
+                        <option value="off" {{ ($cfg['res_modsec'] ?? 'on')==='off'?'selected':'' }}>{{ __('admin.products.off') }}</option>
                     </select>
                 </div>
                 <div>
-                    <label class="form-label" style="font-size:11px;">Backups</label>
+                    <label class="form-label" style="font-size:11px;">{{ __('admin.products.backups') }}</label>
                     <select name="res_backup" class="form-control" style="font-size:12px;">
-                        <option value="on" {{ ($cfg['res_backup'] ?? 'on')!=='off'?'selected':'' }}>On</option>
-                        <option value="off" {{ ($cfg['res_backup'] ?? 'on')==='off'?'selected':'' }}>Off</option>
+                        <option value="on" {{ ($cfg['res_backup'] ?? 'on')!=='off'?'selected':'' }}>{{ __('admin.products.on') }}</option>
+                        <option value="off" {{ ($cfg['res_backup'] ?? 'on')==='off'?'selected':'' }}>{{ __('admin.products.off') }}</option>
                     </select>
                 </div>
             </div>
