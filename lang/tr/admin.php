@@ -3661,4 +3661,6 @@ return [
     'ticket_escalation.minutes' => ':count dk',
     'ticket_escalation.name_placeholder' => 'örn. Yüksek öncelik - 1 saat',
     'ticket_escalation.reply_placeholder' => 'Otomatik yanıt istemiyorsanız boş bırakın',
+    'bundles.item_badge' => 'Kalem #:id (:type)',
+    'bundles.min_two' => '(en az 2)',
 ];

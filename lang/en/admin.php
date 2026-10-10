@@ -3663,4 +3663,6 @@ return [
     'ticket_escalation.minutes' => ':count min',
     'ticket_escalation.name_placeholder' => 'e.g. High Priority - 1 Hour',
     'ticket_escalation.reply_placeholder' => 'Leave empty for no auto-reply',
+    'bundles.item_badge' => 'Item #:id (:type)',
+    'bundles.min_two' => '(min 2)',
 ];

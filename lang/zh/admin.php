@@ -3661,4 +3661,6 @@ return [
     'ticket_escalation.minutes' => ':count 分钟',
     'ticket_escalation.name_placeholder' => '例如 高优先级 - 1 小时',
     'ticket_escalation.reply_placeholder' => '留空则不自动回复',
+    'bundles.item_badge' => '项目 #:id（:type）',
+    'bundles.min_two' => '（至少 2 个）',
 ];

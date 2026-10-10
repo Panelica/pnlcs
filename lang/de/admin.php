@@ -3657,4 +3657,6 @@ return [
     'ticket_escalation.minutes' => ':count Min.',
     'ticket_escalation.name_placeholder' => 'z. B. Hohe Priorität - 1 Stunde',
     'ticket_escalation.reply_placeholder' => 'Leer lassen für keine automatische Antwort',
+    'bundles.item_badge' => 'Position #:id (:type)',
+    'bundles.min_two' => '(mind. 2)',
 ];

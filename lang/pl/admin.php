@@ -3661,4 +3661,6 @@ return [
     'ticket_escalation.minutes' => ':count min.',
     'ticket_escalation.name_placeholder' => 'np. Wysoki priorytet - 1 godzina',
     'ticket_escalation.reply_placeholder' => 'Zostaw puste, aby nie wysyłać automatycznej odpowiedzi',
+    'bundles.item_badge' => 'Pozycja #:id (:type)',
+    'bundles.min_two' => '(min. 2)',
 ];

@@ -33,7 +33,7 @@
                     @if($item->product)
                         <span class="badge badge-open" style="margin-bottom:2px;">{{ $item->product->name }}{{ $item->qty > 1 ? ' x'.$item->qty : '' }}</span>
                     @else
-                        <span class="badge badge-pending" style="margin-bottom:2px;">Item #{{ $item->item_id }} ({{ $item->item_type }})</span>
+                        <span class="badge badge-pending" style="margin-bottom:2px;">{{ __('admin.bundles.item_badge', ['id' => $item->item_id, 'type' => $item->item_type]) }}</span>
                     @endif
                 @endforeach
                 @if($bundle->items->isEmpty())
@@ -85,7 +85,7 @@
                         <label class="form-label">{{ __('admin.bundles.discount_type') }} *</label>
                         <select name="discount_type" required class="form-control">
                             <option value="percentage">{{ __('admin.bundles.percentage') }}</option>
-                            <option value="fixed">Fixed Amount ($)</option>
+                            <option value="fixed">{{ __('admin.bundles.fixed_amount') }}</option>
                         </select>
                     </div>
                     <div class="form-group" style="flex:1;">
@@ -94,7 +94,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">{{ __('admin.bundles.select_products') }} * (min 2)</label>
+                    <label class="form-label">{{ __('admin.bundles.select_products') }} * {{ __('admin.bundles.min_two') }}</label>
                     <div style="max-height:200px;overflow-y:auto;border:1px solid #ddd;border-radius:4px;padding:8px;">
                         @foreach($products as $product)
                         <label style="display:block;padding:4px 0;font-size:13px;cursor:pointer;">
