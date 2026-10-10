@@ -3482,6 +3482,7 @@ return [
         'apply_confirm' => 'PNLCS güncellenirken site bakım moduna alınır. Önce veritabanının anlık görüntüsü alınır; bir şey ters giderse her şey eski haline getirilir. Devam edilsin mi?',
         'queued' => 'İstek alındı. Zamanlayıcı bir sonraki çalışmasında, bir dakika içinde başlar.',
         'scheduler_late' => 'Hâlâ zamanlayıcı bekleniyor. Birkaç dakika içinde bir şey olmazsa PNLCS cron görevinin çalıştığını denetleyin ya da şunu web sunucusu kullanıcısıyla çalıştırın: :command',
+        'request_lost' => 'İstek alındı ama sonuç gelmedi: onu çalıştıran işlem rapor vermeden sona erdi (durduruldu, bellek yetmedi ya da ölümcül bir hata). Nedenini görmek için şunu web sunucusu kullanıcısıyla çalıştırın: :command. Ardından yeniden başlatabilirsiniz.',
         'busy' => 'Zaten bir güncelleme çalışıyor.',
         'report_title' => ':version sürümüne güncellemeden önce',
         'report_ok' => 'Engel yok. Değişiklikleriniz aşağıda listelendiği gibi korunur.',

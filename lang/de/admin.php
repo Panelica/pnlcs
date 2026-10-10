@@ -3478,6 +3478,7 @@ return [
         'apply_confirm' => 'Während PNLCS aktualisiert wird, ist die Website im Wartungsmodus. Zuerst wird ein Abbild der Datenbank erstellt; geht etwas schief, wird alles wiederhergestellt. Fortfahren?',
         'queued' => 'Angefordert. Es startet innerhalb einer Minute, beim nächsten Lauf des Schedulers.',
         'scheduler_late' => 'Es wird noch auf den Scheduler gewartet. Passiert innerhalb weniger Minuten nichts, prüfen Sie, ob der Cronjob von PNLCS läuft, oder führen Sie als Benutzer des Webservers aus: :command',
+        'request_lost' => 'Die Anfrage wurde übernommen, aber es kam kein Ergebnis zurück: Der Prozess endete ohne Rückmeldung (gestoppt, Speicher erschöpft oder ein schwerer Fehler). Führen Sie als Webserver-Benutzer aus, um den Grund zu sehen: :command. Danach können Sie es erneut starten.',
         'busy' => 'Es läuft bereits ein Update.',
         'report_title' => 'Vor dem Update auf :version',
         'report_ok' => 'Nichts steht im Weg. Ihre Änderungen bleiben wie unten aufgeführt erhalten.',
