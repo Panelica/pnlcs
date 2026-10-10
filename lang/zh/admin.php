@@ -3658,4 +3658,7 @@ return [
     'appearance.copyright_placeholder' => '例如 MyHosting 有限公司',
     'appearance.dark_toggle_note' => '导航栏中会出现月亮/太阳图标切换按钮',
     'invoices.choose_client' => '— 选择客户 —',
+    'ticket_escalation.minutes' => ':count 分钟',
+    'ticket_escalation.name_placeholder' => '例如 高优先级 - 1 小时',
+    'ticket_escalation.reply_placeholder' => '留空则不自动回复',
 ];

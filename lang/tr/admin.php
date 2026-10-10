@@ -3658,4 +3658,7 @@ return [
     'appearance.copyright_placeholder' => 'örn. Hostingim Ltd. Şti.',
     'appearance.dark_toggle_note' => 'Menü çubuğunda ay/güneş simgeli bir düğme çıkar',
     'invoices.choose_client' => '— Müşteri seçin —',
+    'ticket_escalation.minutes' => ':count dk',
+    'ticket_escalation.name_placeholder' => 'örn. Yüksek öncelik - 1 saat',
+    'ticket_escalation.reply_placeholder' => 'Otomatik yanıt istemiyorsanız boş bırakın',
 ];

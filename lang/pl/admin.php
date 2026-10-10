@@ -3658,4 +3658,7 @@ return [
     'appearance.copyright_placeholder' => 'np. MójHosting sp. z o.o.',
     'appearance.dark_toggle_note' => 'Na pasku nawigacji pojawia się przełącznik z ikoną księżyca/słońca',
     'invoices.choose_client' => '— Wybierz klienta —',
+    'ticket_escalation.minutes' => ':count min.',
+    'ticket_escalation.name_placeholder' => 'np. Wysoki priorytet - 1 godzina',
+    'ticket_escalation.reply_placeholder' => 'Zostaw puste, aby nie wysyłać automatycznej odpowiedzi',
 ];

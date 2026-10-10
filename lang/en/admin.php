@@ -3660,4 +3660,7 @@ return [
     'appearance.copyright_placeholder' => 'e.g. MyHosting LLC',
     'appearance.dark_toggle_note' => 'A moon/sun icon toggle appears in the navigation bar',
     'invoices.choose_client' => '— Choose a client —',
+    'ticket_escalation.minutes' => ':count min',
+    'ticket_escalation.name_placeholder' => 'e.g. High Priority - 1 Hour',
+    'ticket_escalation.reply_placeholder' => 'Leave empty for no auto-reply',
 ];

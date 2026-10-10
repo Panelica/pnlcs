@@ -3654,4 +3654,7 @@ return [
     'appearance.copyright_placeholder' => 'z. B. MeinHosting GmbH',
     'appearance.dark_toggle_note' => 'In der Navigationsleiste erscheint ein Mond/Sonne-Schalter',
     'invoices.choose_client' => '— Kunden wählen —',
+    'ticket_escalation.minutes' => ':count Min.',
+    'ticket_escalation.name_placeholder' => 'z. B. Hohe Priorität - 1 Stunde',
+    'ticket_escalation.reply_placeholder' => 'Leer lassen für keine automatische Antwort',
 ];
