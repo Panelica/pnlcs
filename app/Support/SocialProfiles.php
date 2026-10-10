@@ -25,6 +25,9 @@ class SocialProfiles
         'medium' => 'SocialMedium',
     ];
 
+    /** The networks' own names (brands, the same in every language). */
+    public const NAMES = ['x' => 'X', 'facebook' => 'Facebook', 'instagram' => 'Instagram', 'linkedin' => 'LinkedIn', 'youtube' => 'YouTube', 'tiktok' => 'TikTok', 'threads' => 'Threads', 'medium' => 'Medium'];
+
     /** @return array<string, string> network => address, only the ones set to a web address */
     public static function all(): array
     {

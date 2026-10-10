@@ -355,6 +355,13 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_share_image') }}</label><input type="text" name="SeoShareImage" value="{{ $settings['SeoShareImage'] ?? '' }}"  class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.seo_share_image_hint') }}</div></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_twitter') }}</label><input type="text" name="SeoTwitter" value="{{ $settings['SeoTwitter'] ?? '' }}" class="form-control" placeholder="@"></div>
             </div>
+            {{-- The shop's social media profiles (App\Support\SocialProfiles): themes show them, the home page names them to search engines. --}}
+            <div class="form-group" style="margin-bottom:6px;"><label class="form-label">{{ __('admin.settings.social_profiles') }}</label><div style="font-size:12px;color:#777;">{{ __('admin.settings.social_profiles_hint') }}</div></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 15px;margin-bottom:15px;">
+                @foreach(\App\Support\SocialProfiles::NETWORKS as $network => $key)
+                <div><label class="form-label" style="font-weight:400;">{{ \App\Support\SocialProfiles::NAMES[$network] }}</label><input type="url" name="{{ $key }}" value="{{ $settings[$key] ?? '' }}" class="form-control"></div>
+                @endforeach
+            </div>
             <div class="form-group"><label class="form-label">robots.txt</label><textarea name="RobotsTxt" rows="3" class="form-control" style="font-family:monospace;">{{ $settings['RobotsTxt'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.robots_txt_hint', ['sitemap' => route('sitemap')]) }}</div>@if(is_file(public_path('robots.txt')))<div style="font-size:12px;color:#8a6d3b;margin-top:4px;">{{ __('admin.settings.robots_txt_static', ['path' => 'public/robots.txt']) }}</div>@endif</div>
         </div>
     </div>
