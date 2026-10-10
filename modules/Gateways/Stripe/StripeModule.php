@@ -120,6 +120,19 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
 
         $minorAmount = $this->minorUnits($amount, $this->refundCurrency($transactionId));
 
+        // A payment taken in the invoice's billing currency is refunded in it:
+        // Stripe refunds in the intent's currency, and the amount asked for is
+        // in the invoice's. The intent says which, and at what rate. Asked only
+        // for an invoice billed in another currency; every other refund sends
+        // what it always sent.
+        if (str_starts_with($transactionId, "pi_") && $this->billedInAnotherCurrency($transactionId)) {
+            $intent = Http::withToken($secretKey)->get("https://api.stripe.com/v1/payment_intents/{$transactionId}");
+            $converted = $intent->successful() ? $this->billedMinorAmount($intent->json() ?? [], $amount) : null;
+            if ($converted !== null) {
+                $minorAmount = $converted;
+            }
+        }
+
         // No idempotency key on a refund, and this is the one place where going
         // without is safer than guessing at one.
         //
@@ -352,6 +365,65 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         }
 
         return $minorAmount / 100;
+    }
+
+    /**
+     * What a succeeded intent pays, in the invoice's currency. An intent taken
+     * in the billing currency (billingCharge()) is read back through the rate
+     * it was made with: in full it is exactly the amount it stood for, so no
+     * cent is lost to rounding there and back; a part is converted.
+     */
+    private function recordedAmount(array $intent): int|float
+    {
+        $received = $this->reportedMajorUnits($intent["amount_received"] ?? 0, $intent["currency"] ?? null);
+        $meta = $intent["metadata"] ?? [];
+        $source = strtolower((string) ($meta["source_currency"] ?? ""));
+        $rate = (float) ($meta["rate"] ?? 0);
+
+        if ($source === "" || $rate <= 0 || $source === strtolower((string) ($intent["currency"] ?? ""))) {
+            return $received;
+        }
+
+        $sourceAmount = (float) ($meta["source_amount"] ?? 0);
+        if ($sourceAmount > 0 && (int) ($intent["amount_received"] ?? 0) >= $this->minorUnits(round($sourceAmount * $rate, 2), (string) $intent["currency"])) {
+            return $sourceAmount;
+        }
+
+        return round($received / $rate, 2);
+    }
+
+    /**
+     * A refund of an amount in the invoice's currency, in the minor units of
+     * the billing currency the intent was taken in. The whole amount refunds
+     * exactly what was received; never more than that. Null for an intent
+     * taken in the invoice's own currency.
+     */
+    private function billedMinorAmount(array $intent, float $amount): ?int
+    {
+        $meta = $intent["metadata"] ?? [];
+        $source = strtolower((string) ($meta["source_currency"] ?? ""));
+        $rate = (float) ($meta["rate"] ?? 0);
+        $currency = strtolower((string) ($intent["currency"] ?? ""));
+
+        if ($source === "" || $rate <= 0 || $currency === "" || $source === $currency) {
+            return null;
+        }
+
+        $received = (int) ($intent["amount_received"] ?? 0);
+        $sourceAmount = (float) ($meta["source_amount"] ?? 0);
+        $minor = $sourceAmount > 0 && abs($amount - $sourceAmount) < 0.005
+            ? $received
+            : $this->minorUnits(round($amount * $rate, 2), $currency);
+
+        return $received > 0 ? min($minor, $received) : $minor;
+    }
+
+    /** Whether the invoice a transaction paid was billed in a currency other than its own. */
+    private function billedInAnotherCurrency(string $transactionId): bool
+    {
+        $invoice = Transaction::query()->where("transaction_id", $transactionId)->whereNotNull("invoice_id")->latest("id")->first()?->invoice;
+
+        return $invoice !== null && has_billing_conversion($invoice);
     }
 
     /**
@@ -698,7 +770,7 @@ HTML;
             "transaction_id" => $intent["id"] ?? $intentId,
             // Stripe's own figure, in Stripe's own units, read back through the
             // currency Stripe put on the intent it came from.
-            "amount"         => $this->reportedMajorUnits((int) ($intent["amount_received"] ?? 0), $intent["currency"] ?? null),
+            "amount"         => $this->recordedAmount($intent),
         ];
     }
 
@@ -2164,7 +2236,7 @@ HTML;
         // says it was collected in. A yen payment reports 5000 and means 5000;
         // dividing it by a hundred credited the invoice with fifty and left the
         // books agreeing with a charge that was a hundred times too big.
-        $amount = $this->reportedMajorUnits($intentObj["amount_received"] ?? 0, $intentObj["currency"] ?? null);
+        $amount = $this->recordedAmount($intentObj);
 
         Log::info("Stripe webhook: payment_intent.succeeded", [
             "intent_id"  => $intentId,
