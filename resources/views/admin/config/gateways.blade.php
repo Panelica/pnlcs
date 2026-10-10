@@ -60,6 +60,9 @@
                         @else
                             <input type="text" name="settings[{{ $key }}]" value="{{ $value }}" class="form-control">
                         @endif
+                        @if(! empty($field['description']))
+                        <small style="display:block;color:#666;margin-top:4px;">{{ $field['description'] }}</small>
+                        @endif
                     </div>
                 @empty
                     <div class="form-group">

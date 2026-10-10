@@ -90,7 +90,8 @@ public function getConfigFields(): array
 ```
 
 Field types: `text`, `password` (never echoed back into the page), `textarea`,
-`select` (with `options`) and `yesno`. A gateway reads its saved values from
+`select` (with `options`) and `yesno`. A gateway field can carry a
+`description`, a sentence shown under it on the settings page. A gateway reads its saved values from
 `App\Models\GatewaySettings` (`gateway` = your `name`, `setting` = the field
 `name`); the Mollie and Tpay modules show the pattern in a few lines.
 
