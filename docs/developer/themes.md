@@ -77,6 +77,24 @@ Then activate it on **Setup → Appearance**. A theme with the slug of a
 built-in theme cannot be installed over it, and the active theme cannot be
 deleted.
 
+## Page descriptions and link previews
+
+The client layout prints a page's description, its Open Graph and X (Twitter)
+card tags (`partials.seo-meta`), and, with the language in the address on, its
+address in each language (`partials.locale-alternates`). A page tunes them with
+sections:
+
+- `@section('title', ...)`: the title shared links show.
+- `@section('meta_description', ...)`: its own description, instead of the
+  shop's one from **Setup → General**.
+- `@section('og_type', 'article')`: an article rather than a website.
+- `@section('seo_own', '1')`: the page writes all of these tags itself (a
+  blog with its own image, dates and language versions, for example) and the
+  layout prints none of them, so a shared link is not described twice.
+
+A theme that replaces the client layout keeps these two includes in its
+`<head>`.
+
 ## Keeping your theme through updates
 
 Built-in themes are part of PNLCS and are updated with it; a theme with its
