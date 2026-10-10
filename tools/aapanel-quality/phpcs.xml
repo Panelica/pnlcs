@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<ruleset name="AaPanelComplexityGate">
+    <description>PHPCS 4.0.4 stock McCabe metric, maximum 10, complete audited scope.</description>
+    <arg name="extensions" value="php"/>
+    <file>../../modules/Servers/AaPanel</file>
+    <file>../../app/Contracts/RequiresProvisioningLock.php</file>
+    <file>../../app/Services/ProvisioningService.php</file>
+    <file>../../app/Services/Module/ModuleRegistry.php</file>
+    <file>../../tests/Feature/AaPanelModuleTest.php</file>
+    <file>../../tests/Feature/AaPanelSetupTest.php</file>
+    <file>../../tests/Feature/AaPanelProvisioningLockTest.php</file>
+    <file>./AapanelQuality</file>
+    <rule ref="Generic.Metrics.CyclomaticComplexity">
+        <properties>
+            <property name="complexity" value="10"/>
+            <property name="absoluteComplexity" value="10"/>
+        </properties>
+    </rule>
+</ruleset>
