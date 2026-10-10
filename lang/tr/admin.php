@@ -3665,4 +3665,9 @@ return [
     'bundles.min_two' => '(en az 2)',
     'promotions.unlimited_hint' => '(0 = sınırsız)',
     'promotions.optional_hint' => '(isteğe bağlı)',
+    'domains.period_years' => ':count yıl',
+    'domains.per_year' => ':amount/yıl',
+    'domains.total_count' => 'toplam :count',
+    'domains.expiry_soon' => '(yakında)',
+    'domains.expiry_past' => '(süresi doldu)',
 ];

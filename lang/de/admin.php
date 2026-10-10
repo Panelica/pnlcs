@@ -3661,4 +3661,9 @@ return [
     'bundles.min_two' => '(mind. 2)',
     'promotions.unlimited_hint' => '(0 = unbegrenzt)',
     'promotions.optional_hint' => '(nicht erforderlich)',
+    'domains.period_years' => ':count Jahr(e)',
+    'domains.per_year' => ':amount/Jahr',
+    'domains.total_count' => 'insgesamt :count',
+    'domains.expiry_soon' => '(bald)',
+    'domains.expiry_past' => '(abgelaufen)',
 ];

@@ -94,7 +94,7 @@
                         -
                     @endif
                 </td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.period') }}</td><td style="padding:5px 0;">{{ $domain->registration_period }} year(s)</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.period') }}</td><td style="padding:5px 0;">{{ __('admin.domains.period_years', ['count' => $domain->registration_period]) }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.type') }}</td><td style="padding:5px 0;">{{ $domain->type }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.registrar_lock') }}</td><td style="padding:5px 0;">{{ $locked === null ? '-' : ($locked ? __('admin.domains.enabled') : __('admin.domains.disabled')) }}</td></tr>
                 @if($domain->order_id)
@@ -108,7 +108,7 @@
         <div class="panel-body">
             <table style="width:100%;font-size:13px;border-collapse:collapse;">
                 <tr><td style="padding:5px 0;color:#777;width:45%;">{{ __('admin.domains.first_payment') }}</td><td style="padding:5px 0;font-weight:700;">{{ money_fmt($domain->first_payment_amount) }}</td></tr>
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.recurring_amount') }}</td><td style="padding:5px 0;font-weight:700;">{{ money_fmt($domain->recurring_amount) }}/year</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.recurring_amount') }}</td><td style="padding:5px 0;font-weight:700;">{{ __('admin.domains.per_year', ['amount' => money_fmt($domain->recurring_amount)]) }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.payment_method') }}</td><td style="padding:5px 0;">{{ $domain->payment_method ? payment_method_label((string) $domain->payment_method) : '-' }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.domains.premium') }}</td><td style="padding:5px 0;">{{ $domain->is_premium ? 'Yes' : 'No' }}</td></tr>
             </table>

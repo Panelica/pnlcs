@@ -3665,4 +3665,9 @@ return [
     'bundles.min_two' => '（至少 2 个）',
     'promotions.unlimited_hint' => '（0 = 不限）',
     'promotions.optional_hint' => '（可选）',
+    'domains.period_years' => ':count 年',
+    'domains.per_year' => ':amount/年',
+    'domains.total_count' => '共 :count 个',
+    'domains.expiry_soon' => '（即将）',
+    'domains.expiry_past' => '（已过期）',
 ];
