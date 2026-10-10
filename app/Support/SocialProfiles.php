@@ -31,13 +31,17 @@ class SocialProfiles
     /** @return array<string, string> network => address, only the ones set to a web address */
     public static function all(): array
     {
+        // One query for the eight settings: the home page asks three times
+        // (footer, Organization check, Organization data).
+        try {
+            $values = Setting::whereIn('setting', array_values(self::NETWORKS))->pluck('value', 'setting');
+        } catch (Throwable) {
+            return [];
+        }
+
         $out = [];
         foreach (self::NETWORKS as $network => $key) {
-            try {
-                $url = trim((string) Setting::get($key, ''));
-            } catch (Throwable) {
-                $url = '';
-            }
+            $url = trim((string) ($values[$key] ?? ''));
             if (preg_match('#^https?://[^\s"<>]+$#i', $url)) {
                 $out[$network] = $url;
             }
