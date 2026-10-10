@@ -3484,6 +3484,7 @@ return [
         'apply_confirm' => 'The site goes into maintenance while PNLCS updates. A snapshot of the database is taken first, and if anything goes wrong everything is put back as it was. Continue?',
         'queued' => 'Requested. It starts within a minute, when the scheduler next runs.',
         'scheduler_late' => 'Still waiting for the scheduler. If nothing happens within a few minutes, check that the PNLCS cron job runs, or run this as the web server user: :command',
+        'request_lost' => 'The request was picked up, but no result came back: the process that ran it ended without reporting (stopped, out of memory or a fatal error). Run this as the web server user to see why: :command. You can then start it again.',
         'busy' => 'An update is already running.',
         'report_title' => 'Before updating to :version',
         'report_ok' => 'Nothing stands in the way. Your changes are kept as listed below.',

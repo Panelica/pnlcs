@@ -10,7 +10,11 @@
     };
     $when = fn (?string $iso) => $iso ? \Illuminate\Support\Carbon::parse($iso)->timezone(config('app.timezone'))->format(date_fmt().' H:i') : '';
     $release = $latest['latest'] ?? null;
-    $active = ($request !== null) || $running || in_array($status['state'] ?? '', ['queued', 'preparing', 'applying', 'rolling_back'], true);
+    // Picked up (no request left, nothing running) but still "queued" minutes later: the process that took it ended
+    // without a word (killed, out of memory, a fatal error). Said so, and the buttons are back, instead of waiting for ever.
+    $lost = $request === null && ! $running && ($status['state'] ?? '') === 'queued'
+        && ! empty($status['updated_at']) && \Illuminate\Support\Carbon::parse($status['updated_at'])->lt(now()->subMinutes(5));
+    $active = ! $lost && (($request !== null) || $running || in_array($status['state'] ?? '', ['queued', 'preparing', 'applying', 'rolling_back'], true));
     $late = $request && \Illuminate\Support\Carbon::parse($request['requested_at'])->lt(now()->subMinutes(2));
     $blockingCodes = array_column($report['blocking'] ?? [], 'code');
     $onlyMajor = $blockingCodes === ['major_version'];
@@ -107,11 +111,13 @@
 <div class="alert alert-success" style="margin-bottom:16px;">{{ __('admin.updates.up_to_date', ['version' => $installed, 'channel' => __('admin.updates.channel_name.'.($latest['channel'] ?? $channel))]) }}</div>
 @endif
 
-@if($status && ($active || in_array($status['state'] ?? '', ['updated', 'refused', 'rolled_back', 'failed', 'rollback_failed', 'error'], true)))
+@if($status && ($active || $lost || in_array($status['state'] ?? '', ['updated', 'refused', 'rolled_back', 'failed', 'rollback_failed', 'error'], true)))
 @php
-    $finalState = $status['state'] ?? '';
-    $summary = in_array($finalState, ['updated', 'refused', 'rolled_back', 'failed', 'rollback_failed', 'error'], true) ? __('admin.updates.done.'.$finalState, ['version' => $status['version'] ?? '']) : null;
-    $tone = ['updated' => 'alert-success', 'refused' => 'alert-warning', 'rolled_back' => 'alert-warning', 'failed' => 'alert-danger', 'rollback_failed' => 'alert-danger', 'error' => 'alert-danger'][$finalState] ?? 'alert-info';
+    $finalState = $lost ? 'lost' : ($status['state'] ?? '');
+    $summary = $lost
+        ? __('admin.updates.request_lost', ['command' => 'php artisan pnlcs:update --check'])
+        : (in_array($finalState, ['updated', 'refused', 'rolled_back', 'failed', 'rollback_failed', 'error'], true) ? __('admin.updates.done.'.$finalState, ['version' => $status['version'] ?? '']) : null);
+    $tone = ['updated' => 'alert-success', 'refused' => 'alert-warning', 'rolled_back' => 'alert-warning', 'failed' => 'alert-danger', 'rollback_failed' => 'alert-danger', 'error' => 'alert-danger', 'lost' => 'alert-danger'][$finalState] ?? 'alert-info';
     $progress = [
         'status' => $status,
         'statusUrl' => route('admin.config.updates.status'),

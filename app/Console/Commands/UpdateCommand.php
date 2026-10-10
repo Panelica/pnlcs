@@ -42,6 +42,15 @@ class UpdateCommand extends Command
             if ($request === null) {
                 return self::SUCCESS;
             }
+            // A fatal error (memory, a time limit) ends the process past every
+            // catch: the page would show the request queued for ever. What the
+            // error said goes on the page instead.
+            register_shutdown_function(function () use ($state, $request) {
+                $error = error_get_last();
+                if ($error !== null && in_array($error['type'], [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE], true)) {
+                    $this->requestFailed($state, $request, $error['message']);
+                }
+            });
         }
 
         $runner->onOutput(fn (string $line) => $this->output->isVerbose() ? $this->line("  {$line}") : null);

@@ -3482,6 +3482,7 @@ return [
         'apply_confirm' => 'Podczas aktualizacji PNLCS strona przechodzi w tryb konserwacji. Najpierw wykonywana jest kopia bazy danych, a jeśli coś pójdzie nie tak, wszystko wraca do poprzedniego stanu. Kontynuować?',
         'queued' => 'Zlecono. Rozpocznie się w ciągu minuty, przy następnym uruchomieniu harmonogramu.',
         'scheduler_late' => 'Wciąż oczekiwanie na harmonogram. Jeśli w ciągu kilku minut nic się nie stanie, sprawdź, czy działa zadanie cron PNLCS, albo uruchom jako użytkownik serwera WWW: :command',
+        'request_lost' => 'Żądanie zostało przyjęte, ale nie wrócił żaden wynik: proces zakończył się bez raportu (zatrzymany, brak pamięci lub błąd krytyczny). Uruchom jako użytkownik serwera WWW, aby zobaczyć przyczynę: :command. Potem możesz uruchomić je ponownie.',
         'busy' => 'Aktualizacja już trwa.',
         'report_title' => 'Przed aktualizacją do :version',
         'report_ok' => 'Nic nie stoi na przeszkodzie. Twoje zmiany zostaną zachowane, jak opisano poniżej.',
