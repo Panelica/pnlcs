@@ -1819,3 +1819,7 @@ Released under the **MIT License**. See [`LICENSE`](LICENSE) for details.
     CloudLinux alternative · Panelica hosting control panel
   </sub>
 </p>
+
+### aaPanel hosting integration
+
+Sub aaPanel customer-account provisioning is available through the `aapanel` server module. See [setup, supported operations and recovery](docs/modules/aapanel.md). Requires an installed/running licensed Sub aaPanel component and existing resource packages.

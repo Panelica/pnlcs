@@ -79,7 +79,7 @@
                 @if(strtolower((string) $server->type) === 'proxmox')
                 <a href="{{ route('admin.config.servers.images', $server) }}" class="btn btn-default btn-xs">{{ __('proxmox.images.button') }}</a>
                 @endif
-                <button type="button" class="btn btn-default btn-xs" onclick="editServer({{ $server->id }},{{ json_encode($server->name) }},{{ json_encode($server->hostname) }},{{ json_encode($server->ip_address) }},{{ json_encode($server->type) }},{{ (int)($server->port ?? 8443) }},{{ json_encode($server->username) }},{{ (int)($server->max_accounts ?? 500) }},{{ json_encode($server->nameserver1 ?? '') }},{{ json_encode($server->nameserver2 ?? '') }},{{ $server->active ? 'true' : 'false' }},{{ json_encode((object) ($server->settings ?? [])) }})">{{ __('common.actions.edit') }}</button>
+                <button type="button" class="btn btn-default btn-xs" onclick="editServer({{ $server->id }},{{ json_encode($server->name) }},{{ json_encode($server->hostname) }},{{ json_encode($server->ip_address) }},{{ json_encode($server->type) }},{{ json_encode($server->port) }},{{ json_encode($server->username) }},{{ (int)($server->max_accounts ?? 500) }},{{ json_encode($server->nameserver1 ?? '') }},{{ json_encode($server->nameserver2 ?? '') }},{{ $server->active ? 'true' : 'false' }},{{ json_encode((object) ($server->settings ?? [])) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.servers.destroy', $server) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.servers.confirm_delete')))">
                     @csrf @method("DELETE")
                     <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
@@ -256,6 +256,12 @@ const SERVER_TYPE_TUNING = {
         hashLabel: 'Access Hash', hashPlaceholder: 'Not used by DirectAdmin',
         hint: '<strong>DirectAdmin:</strong> username is the admin account with its password or a login key, on port 2222.',
     },
+    aapanel: {
+        port: 8888, username: false, nameservers: false,
+        passwordLabel: @json(__('aapanel.password_label')), passwordPlaceholder: @json(__('aapanel.password_unused')),
+        hashLabel: @json(__('aapanel.api_key')), hashPlaceholder: @json(__('aapanel.api_key_hint')),
+        hint: @json(__('aapanel.server_hint')),
+    },
     hestiacp: {
         port: 8083, username: true,
         passwordLabel: 'Admin Password', passwordPlaceholder: 'HestiaCP admin password — legacy login only',
@@ -278,6 +284,11 @@ const SERVER_TYPE_TUNING = {
     cyberpanel: { port: 8090, username: true, passwordLabel: 'Password', passwordPlaceholder: '', hashLabel: 'Access Hash', hashPlaceholder: '', hint: '' },
     custom: { port: 8443, username: true, passwordLabel: 'Password / API Token', passwordPlaceholder: '', hashLabel: 'Access Hash / API Key', hashPlaceholder: '', hint: '' },
 };
+
+function serverPort(type, port) {
+    const tuning = SERVER_TYPE_TUNING[type] || SERVER_TYPE_TUNING.custom;
+    return port || tuning.port;
+}
 
 function serverTypeTuning(selectEl, prefix) {
     const t = SERVER_TYPE_TUNING[selectEl.value] || SERVER_TYPE_TUNING.custom;
@@ -352,7 +363,7 @@ function editServer(id, name, hostname, ip, type, port, username, maxAccounts, n
     document.getElementById('edit-name').value = name || '';
     document.getElementById('edit-hostname').value = hostname || '';
     document.getElementById('edit-ip').value = ip || '';
-    document.getElementById('edit-port').value = port || 8443;
+    document.getElementById('edit-port').value = serverPort(type, port);
     document.getElementById('edit-username').value = username || '';
     document.getElementById('edit-max-accounts').value = maxAccounts || 500;
     document.getElementById('edit-ns1').value = ns1 || '';

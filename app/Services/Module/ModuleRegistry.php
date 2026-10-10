@@ -12,12 +12,16 @@ use App\Models\Setting;
 
 class ModuleRegistry
 {
+    /** @var array<string, string> */
     protected array $serverModules = [];
 
+    /** @var array<string, string> */
     protected array $gatewayModules = [];
 
+    /** @var array<string, string> */
     protected array $registrarModules = [];
 
+    /** @var array<string, string> */
     protected array $sslModules = [];
 
     /** @var array<string, array<string, string>> type => key => manifest path, for modules found by discovery */
@@ -30,6 +34,7 @@ class ModuleRegistry
      */
     private const DISPLAY_NAMES = [
         'cpanel' => 'cPanel/WHM',
+        'aapanel' => 'aaPanel',
         'directadmin' => 'DirectAdmin',
         'hestiacp' => 'HestiaCP',
         'proxmox' => 'Proxmox VE',
@@ -83,6 +88,7 @@ class ModuleRegistry
             'gateway' => $this->registerGateway($name, $class),
             'registrar' => $this->registerRegistrar($name, $class),
             'ssl' => $this->registerSsl($name, $class),
+            default => throw new \UnhandledMatchError,
         };
 
         $this->discovered[$type][self::key($name)] = $manifestPath;
@@ -229,7 +235,7 @@ class ModuleRegistry
     public function serverCredentialRequirement(?string $type): string
     {
         return match (self::key((string) $type)) {
-            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr' => 'token',
+            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr', 'aapanel' => 'token',
             'directadmin', 'hestiacp' => 'either',
             default => 'none',
         };
@@ -382,21 +388,25 @@ class ModuleRegistry
         return $this->getSslModule($name);
     }
 
+    /** @return list<string> */
     public function getServerModules(): array
     {
         return array_keys($this->serverModules);
     }
 
+    /** @return list<string> */
     public function getGatewayModules(): array
     {
         return array_keys($this->gatewayModules);
     }
 
+    /** @return list<string> */
     public function getRegistrarModules(): array
     {
         return array_keys($this->registrarModules);
     }
 
+    /** @return list<string> */
     public function getSslModules(): array
     {
         return array_keys($this->sslModules);
