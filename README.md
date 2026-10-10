@@ -1797,7 +1797,9 @@ PNLCS ships in 30 languages, and most of them are completed by the people who
 use them. Everyone whose translation is merged is listed here, by language,
 for good. To join them, see [Translations](docs/developer/translations.md).
 
-- **German**: Dejan Wolf (WHOST, Austria)
+- **Chinese (Simplified)**: [@Harry326485](https://github.com/Harry326485)
+- **German**: Dirk Mehmke; Dejan Wolf (WHOST, Austria)
+- **Polish**: Grzegorz ([@hedon77](https://github.com/hedon77))
 
 ---
 
