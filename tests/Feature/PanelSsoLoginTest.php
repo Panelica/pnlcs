@@ -105,3 +105,23 @@ it('does not bind a never provisioned service to a server when the usage graph i
     Http::assertNothingSent();
     expect($service->fresh()->server_id)->toBeNull();
 });
+
+it('sends the customer to the panel by its hostname when the panel answers with an internal address', function () {
+    // Behind NAT the panel builds the login URL from the address it listens on.
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://10.0.0.12:8443/auto-login?token=xyz#home']], 200)]);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=xyz#home');
+});
+
+it('leaves the panel login URL alone when the server has no hostname', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://10.0.0.1:8443/auto-login?token=xyz']], 200)]);
+    [$user, $service] = ssoService();
+    $service->server->update(['hostname' => '']);
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://10.0.0.1:8443/auto-login?token=xyz');
+});
