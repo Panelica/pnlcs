@@ -3526,16 +3526,27 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
      * Hostname the customer's mail client connects to (IMAP/POP3/SMTP).
      *
      * The mailbox lives on the same machine as the panel, but clients must not
-     * be told the panel's own hostname: the mail certificate is issued for
-     * mail.<domain>, so any other name shows up as a certificate warning in
-     * Outlook and iOS. Derived from the server hostname by replacing its first
-     * label, which is how the panel names its mail endpoint.
+     * be told the panel's own hostname: the panel issues each domain's mail
+     * certificate for mail.<that domain> and serves it by SNI, so any other
+     * name shows up as a certificate warning in Outlook and iOS. That is the
+     * customer's own domain, mail.<the service's domain>.
+     *
+     * A service without a domain falls back to the server hostname with its
+     * first label replaced.
      */
     public function mailHostname(Service $service): ?string
     {
         $server = $this->getServer($service);
         if (! $server) {
             return null;
+        }
+
+        $own = strtolower(trim((string) $service->domain));
+        if (str_starts_with($own, 'www.')) {
+            $own = substr($own, 4);
+        }
+        if ($own !== '' && ! filter_var($own, FILTER_VALIDATE_IP) && preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$/', $own)) {
+            return 'mail.'.$own;
         }
 
         $host = trim((string) $server->hostname);
