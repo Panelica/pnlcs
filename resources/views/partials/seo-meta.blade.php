@@ -3,7 +3,10 @@
      one, 'description'; otherwise the shop's description from Setup > General.
      The address shared is the page's own (canonical comes from the layout).
      Without parameters (the client layout) it reads the page's sections:
-     title, meta_description, og_type. --}}
+     title, meta_description, og_type. A page that writes these tags itself
+     (an addon's blog, with its own image, dates and language versions)
+     sets @section('seo_own', '1') and gets none of them from here. --}}
+@unless($__env->hasSection('seo_own'))
 @php
     $title ??= trim($__env->yieldContent('title', e(__('client.my_account')))).' - '.company_name();
     $description ??= trim($__env->yieldContent('meta_description')) ?: null;
@@ -31,3 +34,4 @@
 @if($seoTwitter !== '')
 <meta name="twitter:site" content="{{ $seoTwitter }}">
 @endif
+@endunless
