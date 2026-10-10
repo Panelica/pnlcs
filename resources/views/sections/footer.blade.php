@@ -34,26 +34,26 @@
             </div>
             <div>
                 <div class="footer__col-title">{{ __('sections.footer.col_domains') }}</div>
-                <a href="/client/domain-search" class="footer__link">{{ __('sections.footer.domain_search') }}</a>
-                <a href="/client/domain-search" class="footer__link">{{ __('sections.footer.domain_transfer') }}</a>
-                <a href="/client/domain-search" class="footer__link">{{ __('sections.footer.whois_lookup') }}</a>
+                <a href="{{ url('/client/domain-search') }}" class="footer__link">{{ __('sections.footer.domain_search') }}</a>
+                <a href="{{ url('/client/domain-search') }}" class="footer__link">{{ __('sections.footer.domain_transfer') }}</a>
+                <a href="{{ url('/client/domain-search') }}" class="footer__link">{{ __('sections.footer.whois_lookup') }}</a>
             </div>
             <div>
                 <div class="footer__col-title">{{ __('sections.footer.col_hosting') }}</div>
-                <a href="/client/store" class="footer__link">{{ __('sections.footer.shared_hosting') }}</a>
-                <a href="/client/store" class="footer__link">{{ __('sections.footer.wordpress_hosting') }}</a>
-                <a href="/client/store" class="footer__link">{{ __('sections.footer.business_hosting') }}</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">{{ __('sections.footer.shared_hosting') }}</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">{{ __('sections.footer.wordpress_hosting') }}</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">{{ __('sections.footer.business_hosting') }}</a>
                 <a href="{{ route('pages.mail-setup') }}" class="footer__link">{{ __('sections.footer.mail_setup') }}</a>
-                <a href="/client/store" class="footer__link">{{ __('sections.footer.reseller_hosting') }}</a>
-                <a href="/client/store" class="footer__link">{{ __('sections.footer.vps_server') }}</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">{{ __('sections.footer.reseller_hosting') }}</a>
+                <a href="{{ url('/client/store') }}" class="footer__link">{{ __('sections.footer.vps_server') }}</a>
             </div>
             <div>
                 <div class="footer__col-title">{{ __('sections.footer.col_support') }}</div>
                 @if(kb_enabled())
-                <a href="/client/knowledgebase" class="footer__link">{{ __('sections.footer.knowledge_base') }}</a>
+                <a href="{{ url('/client/knowledgebase') }}" class="footer__link">{{ __('sections.footer.knowledge_base') }}</a>
                 @endif
-                <a href="/client/announcements" class="footer__link">{{ __('sections.footer.announcements') }}</a>
-                <a href="/client/contact" class="footer__link">{{ __('sections.footer.contact_us') }}</a>
+                <a href="{{ url('/client/announcements') }}" class="footer__link">{{ __('sections.footer.announcements') }}</a>
+                <a href="{{ url('/client/contact') }}" class="footer__link">{{ __('sections.footer.contact_us') }}</a>
                 <a href="{{ $bUrl }}" class="footer__link">{{ $bWebsite }}</a>
                 <a href="{{ $bUrl }}/blog" class="footer__link">{{ __('sections.footer.blog') }}</a>
                 @if(! branding_removed())
