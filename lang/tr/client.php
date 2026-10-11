@@ -1867,4 +1867,10 @@ return [
     'store.res_domains' => '{1} 1 web sitesi|[2,*] :count web sitesi',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Uygulamalar bu sınırların içinde çalışır ve sınırları paylaşır. Aynı anda kaç uygulama çalıştırabileceğiniz aslında bir bellek sorusudur: küçük uygulamalar birkaç yüz MB, büyükler bir gigabayt veya daha fazlasını ister.',
+    'cart.free_subdomain' => 'Bizden ücretsiz alt alan adı',
+    'cart.subdomain_placeholder' => 'adiniz',
+    'cart.subdomain_parent_invalid' => 'Sunulan alan adlarından birini seçin.',
+    'cart.subdomain_invalid' => 'Yalnız harf, rakam ve tire kullanın; nokta olmasın.',
+    'cart.subdomain_reserved' => ':name ayrılmış bir ad. Başka bir ad seçin.',
+    'cart.subdomain_taken' => ':name zaten kullanımda. Başka bir ad seçin.',
 ];

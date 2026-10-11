@@ -1868,4 +1868,10 @@ return [
     'store.res_domains' => '{1} 1 website|[2,*] :count websites',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Apps run inside these limits and share them. How many you can run at once is really a question of memory: small apps need a few hundred MB, larger ones a gigabyte or more.',
+    'cart.free_subdomain' => 'Free subdomain from us',
+    'cart.subdomain_placeholder' => 'yourname',
+    'cart.subdomain_parent_invalid' => 'Choose one of the offered domains.',
+    'cart.subdomain_invalid' => 'Use letters, numbers and hyphens only, without dots.',
+    'cart.subdomain_reserved' => ':name is reserved. Choose another name.',
+    'cart.subdomain_taken' => ':name is already in use. Choose another name.',
 ];

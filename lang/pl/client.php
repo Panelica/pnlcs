@@ -1868,4 +1868,10 @@ return [
     'store.res_domains' => '{1} 1 strona internetowa|[2,4] :count strony internetowe|[5,*] :count stron internetowych',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Aplikacje działają w ramach tych limitów i je współdzielą. To, ile możesz uruchomić naraz, zależy w praktyce od pamięci: małe aplikacje potrzebują kilkuset MB, większe gigabajta lub więcej.',
+    'cart.free_subdomain' => 'Darmowa subdomena od nas',
+    'cart.subdomain_placeholder' => 'twojanazwa',
+    'cart.subdomain_parent_invalid' => 'Wybierz jedną z oferowanych domen.',
+    'cart.subdomain_invalid' => 'Używaj tylko liter, cyfr i myślników, bez kropek.',
+    'cart.subdomain_reserved' => ':name jest zarezerwowana. Wybierz inną nazwę.',
+    'cart.subdomain_taken' => ':name jest już używana. Wybierz inną nazwę.',
 ];

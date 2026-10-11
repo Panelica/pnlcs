@@ -1867,4 +1867,10 @@ return [
     'pages.ssl.renewal_p2' => 'Bei manchen Anbietern installieren <em>Sie</em> das Zertifikat und erneuern <em>Sie</em> es alle 90 Tage – oft, indem Sie einen DNS-Eintrag hinzufügen und auf die Prüfung warten. An dem Tag, an dem Sie es vergessen, sehen Ihre Besucher eine Sicherheitswarnung.',
     'pages.ssl.renewal_p3' => 'Hier gibt es diesen Schritt nicht. Weder Ausstellung noch Erneuerung verlangen etwas von Ihnen; Sie müssen sich nicht einmal anmelden.',
     'pages.ssl.title' => 'SSL-Zertifikate',
+    'cart.free_subdomain' => 'Kostenlose Subdomain von uns',
+    'cart.subdomain_placeholder' => 'ihrname',
+    'cart.subdomain_parent_invalid' => 'Wählen Sie eine der angebotenen Domains.',
+    'cart.subdomain_invalid' => 'Nur Buchstaben, Ziffern und Bindestriche, ohne Punkte.',
+    'cart.subdomain_reserved' => ':name ist reserviert. Wählen Sie einen anderen Namen.',
+    'cart.subdomain_taken' => ':name wird bereits verwendet. Wählen Sie einen anderen Namen.',
 ];

@@ -1867,4 +1867,10 @@ return [
     'store.res_domains' => '{1} 1 个网站|[2,*] :count 个网站',
     'store.res_memory' => ':value 内存',
     'store.res_shared_note' => '应用在这些限额内运行并共享它们。能同时运行多少个，其实取决于内存：小型应用需要几百 MB，较大的需要 1 GB 或更多。',
+    'cart.free_subdomain' => '我们提供的免费子域名',
+    'cart.subdomain_placeholder' => 'mingzi',
+    'cart.subdomain_parent_invalid' => '请选择提供的域名之一。',
+    'cart.subdomain_invalid' => '只能使用字母、数字和连字符，不能包含点。',
+    'cart.subdomain_reserved' => ':name 已被保留，请选择其他名称。',
+    'cart.subdomain_taken' => ':name 已被使用，请选择其他名称。',
 ];

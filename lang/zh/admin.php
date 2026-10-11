@@ -3676,4 +3676,8 @@ return [
     'projects.created_on' => '创建于 :date',
     'projects.progress_pct' => '进度 :pct%',
     'projects.due_on' => '截止：:date',
+    'settings.free_subdomains' => '免费子域名的上级域名',
+    'settings.free_subdomains_hint' => '每行一个，例如 example-sites.com。主机订单可以使用其下的名称（yourname.example-sites.com）。留空则不提供此选项。',
+    'settings.disallowed_subdomains' => '任何人不可使用的名称',
+    'settings.disallowed_subdomains_hint' => '用逗号或换行分隔。留空时使用：:names',
 ];
