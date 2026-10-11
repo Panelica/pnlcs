@@ -267,9 +267,24 @@
                         <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
                             <input type="radio" name="domain_option" value="own" @checked(old('domain_option') === 'own')> {{ __('client.cart.use_own_domain') }}
                         </label>
+                        @php($freeSubdomains = \App\Support\FreeSubdomains::parents())
+                        @if($freeSubdomains)
+                        <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
+                            <input type="radio" name="domain_option" value="subdomain" @checked(old('domain_option') === 'subdomain')> {{ __('client.cart.free_subdomain') }}
+                        </label>
+                        @endif
                     </div>
                     <div class="form-group">
-                        <input type="text" name="domain" id="domainInput" class="form-control" placeholder="yourdomain.com" value="{{ old('domain') }}" autocomplete="off">
+                        <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" name="domain" id="domainInput" class="form-control" placeholder="yourdomain.com" data-subdomain-placeholder="{{ __('client.cart.subdomain_placeholder') }}" value="{{ old('domain') }}" autocomplete="off">
+                        @if($freeSubdomains)
+                        <select name="subdomain_parent" id="subdomainParent" class="form-control" style="width:auto;" aria-label="{{ __('client.cart.free_subdomain') }}" @if(old('domain_option') !== 'subdomain') hidden @endif>
+                            @foreach($freeSubdomains as $parent)
+                            <option value="{{ $parent }}" @selected(old('subdomain_parent') === $parent)>.{{ $parent }}</option>
+                            @endforeach
+                        </select>
+                        @endif
+                        </div>
                         @error('domain')<div class="text-sm" style="color:var(--danger);margin-top:6px;">{{ $message }}</div>@enderror
                         {{-- Whether the name can be had and what it costs: a new
                              domain or a transfer is bought with the hosting. --}}
@@ -406,7 +421,12 @@ document.querySelectorAll('input[name=billing_cycle]').forEach(function(radio) {
     function quote() {
         var opt = option(), name = input.value.trim(), mine = ++seq;
         epp.hidden = opt !== 'transfer';
-        if (opt === 'own' || name.indexOf('.') < 1) { show('', '', 0); return; }
+        // A free subdomain: the first label here, one of the shop's domains beside it.
+        var parent = document.getElementById('subdomainParent');
+        if (parent) { parent.hidden = opt !== 'subdomain'; }
+        input.dataset.placeholder = input.dataset.placeholder || input.placeholder;
+        input.placeholder = opt === 'subdomain' ? input.dataset.subdomainPlaceholder : input.dataset.placeholder;
+        if (opt === 'own' || opt === 'subdomain' || name.indexOf('.') < 1) { show('', '', 0); return; }
         status.textContent = texts.checking; status.style.color = 'var(--muted)';
         fetch(@json(route('client.cart.domain-quote')), {
             method: 'POST',
