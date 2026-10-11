@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductAddon;
 use App\Models\Promotion;
 use App\Models\Service;
+use App\Support\FreeSubdomains;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
@@ -157,7 +158,7 @@ class CartService
         // A register/transfer intent must survive into the order — fold it into
         // the notes so it reaches the provisioned service (OrderService copies
         // item notes onto the service record).
-        if ($domainOption && $domainOption !== 'own' && $domain) {
+        if (in_array($domainOption, ['register', 'transfer'], true) && $domain) {
             $intent = "[Domain {$domainOption} requested: {$domain}]";
             $notes = trim(($notes ? $notes."\n" : '').$intent);
         }
@@ -700,6 +701,13 @@ class CartService
                 ];
 
                 continue;
+            }
+
+            // A free subdomain was free when it went into the cart; another
+            // order may have taken it since.
+            $domain = (string) ($item['domain'] ?? '');
+            if ($domain !== '' && FreeSubdomains::parentOf($domain) !== null && FreeSubdomains::taken($domain)) {
+                throw ValidationException::withMessages(['domain' => __('client.cart.subdomain_taken', ['name' => $domain])]);
             }
 
             $items[] = [

@@ -17,6 +17,7 @@ use App\Services\ConfigOptionService;
 use App\Models\DockerApp;
 use App\Models\Server;
 use App\Services\Module\ModuleRegistry;
+use App\Support\FreeSubdomains;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -92,7 +93,8 @@ class CartController extends Controller
             'product_id' => 'required|integer|exists:products,id',
             'billing_cycle' => 'required|string|in:monthly,quarterly,semiannually,annually,biennially,triennially',
             'domain' => 'nullable|string|max:255',
-            'domain_option' => 'nullable|string|in:register,transfer,own',
+            'domain_option' => 'nullable|string|in:register,transfer,own,subdomain',
+            'subdomain_parent' => 'nullable|string|max:253',
             'notes' => 'nullable|string|max:2000',
             'config_options' => 'nullable|array',
             'addons' => 'nullable|array',
@@ -140,6 +142,20 @@ class CartController extends Controller
         // The same reading the search box gives it: a customer pastes an
         // address, and it used to be stored exactly as pasted.
         $domain = Domain::normalise($request->domain) ?: null;
+
+        // A free subdomain: the customer gives the first label and picks one of
+        // the shop's domains. A name under those domains typed as the
+        // customer's own goes through the same checks, so www.<shop domain>
+        // cannot be ordered either way.
+        if ($request->input('domain_option') === 'subdomain' && $domain !== null) {
+            $parent = ltrim(strtolower(trim((string) $request->input('subdomain_parent'))), '.');
+            $domain = str_ends_with($domain, '.'.$parent) ? $domain : $domain.'.'.$parent;
+        }
+        if ($domain !== null && ($request->input('domain_option') === 'subdomain' || FreeSubdomains::parentOf($domain) !== null)) {
+            if ($problem = FreeSubdomains::problem($domain)) {
+                throw ValidationException::withMessages(['domain' => $problem]);
+            }
+        }
 
         // "Register a new domain" and "Transfer" are purchases of their own.
         // They used to be a note on the service - never checked, priced,
