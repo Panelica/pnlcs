@@ -37,7 +37,7 @@
     {{-- Logo --}}
     <a href="{{ route('admin.dashboard') }}" class="logo">
         @if(!empty($customLogo))
-            <img src="{{ $customLogo }}" alt="Logo" style="max-height:30px; vertical-align:middle;">
+            <img src="{{ $customLogo }}" alt="{{ __('admin.appearance.logo') }}" style="max-height:30px; vertical-align:middle;">
         @else
             {{ company_name() }}
         @endif

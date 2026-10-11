@@ -80,7 +80,7 @@
 </div>
 
 <div style="margin-top:12px;font-size:12px;color:var(--pn-muted);">
-    Showing {{ count($rows) }} row(s) &middot; Generated {{ now()->format('Y-m-d H:i') }}
+    {{ __('admin.reports.footer', ['count' => count($rows), 'date' => now()->format('Y-m-d H:i')]) }}
 </div>
 
 @endsection

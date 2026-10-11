@@ -50,7 +50,7 @@
             @csrf
             <div style="padding:20px;">
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><input type="text" name="description" required class="form-control"></div>
-                <div class="form-group"><label class="form-label">Amount ($)</label><input type="number" name="amount" step="0.01" required class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.billable_items.amount') }}</label><input type="number" name="amount" step="0.01" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.table.client') }}</label>
                     <select name="client_id" required class="form-control">
                         @foreach($clients ?? [] as $c)

@@ -4,7 +4,7 @@
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
     <h1>{{ __('admin.products.create_product') }}</h1>
-    <a href="{{ route('admin.products.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
+    <a href="{{ route('admin.products.index') }}" class="btn btn-default btn-sm">&larr; {{ __('common.actions.back') }}</a>
 </div>
 
 @if($errors->any())

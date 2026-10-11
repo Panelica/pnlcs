@@ -1,9 +1,9 @@
 @extends('admin.layouts.app')
-@section('title', 'Invoice #' . $invoice->invoice_num)
+@section('title', __('admin.search.invoice_title', ['num' => $invoice->invoice_num]))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Invoice #{{ $invoice->invoice_num }} <span class="badge-{{ strtolower($invoice->status) }}" style="font-size:14px;vertical-align:middle;">{{ invoice_status_label($invoice->status) }}</span></h1>
+    <h1>{{ __('admin.search.invoice_title', ['num' => $invoice->invoice_num]) }} <span class="badge-{{ strtolower($invoice->status) }}" style="font-size:14px;vertical-align:middle;">{{ invoice_status_label($invoice->status) }}</span></h1>
     @php $st = strtolower((string) $invoice->status); @endphp
     <div style="display:flex;gap:6px;align-items:center;">
         @if(in_array($st, ['unpaid', 'overdue', 'partially_paid', 'payment_pending']))
@@ -294,7 +294,7 @@
             <div class="panel-heading panel-primary">{{ __('admin.invoices.actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
                 @if($st === 'paid')
-                <div style="padding:8px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:3px;text-align:center;color:#3c763d;font-size:13px;">&#10003; Paid on {{ $invoice->date_paid?->timezone(display_tz())->format(datetime_fmt()) }}</div>
+                <div style="padding:8px;background:#dff0d8;border:1px solid #d6e9c6;border-radius:3px;text-align:center;color:#3c763d;font-size:13px;">&#10003; {{ __('admin.invoices.paid_on_date', ['date' => $invoice->date_paid?->timezone(display_tz())->format(datetime_fmt())]) }}</div>
                 @endif
                 @if($st === 'cancelled')
                 <div style="padding:8px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;text-align:center;color:#777;font-size:13px;">{{ __('admin.invoices.invoice_cancelled') }}</div>

@@ -59,7 +59,7 @@
                         </select>
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('admin.custom_fields.sort_order') }}</label><input type="number" name="sort_order" value="0" min="0" class="form-control"></div>
-                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.custom_fields.field_options') }}</label><textarea name="field_options" rows="3" class="form-control" placeholder="Option 1&#10;Option 2"></textarea><small style="color:#777;font-size:12px;">{{ __('admin.custom_fields.field_options_hint') }}</small></div>
+                    <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.custom_fields.field_options') }}</label><textarea name="field_options" rows="3" class="form-control" placeholder="{{ __('admin.custom_fields.options_placeholder') }}"></textarea><small style="color:#777;font-size:12px;">{{ __('admin.custom_fields.field_options_hint') }}</small></div>
                     <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.custom_fields.regex') }}</label><input type="text" name="regex" class="form-control" placeholder="/\d{10}/"></div>
                     <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.custom_fields.description') }}</label><input type="text" name="description" class="form-control"></div>
                 </div>
