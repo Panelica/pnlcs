@@ -3669,6 +3669,13 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return null;
         }
 
+        // The panel can give a domain a mail host of its own; its certificate
+        // status says which name the certificate is for.
+        $named = strtolower(trim((string) ($this->mailCertificate($service)['hostname'] ?? '')));
+        if ($named !== '' && preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$/', $named)) {
+            return $named;
+        }
+
         $own = strtolower(trim((string) $service->domain));
         if (str_starts_with($own, 'www.')) {
             $own = substr($own, 4);
@@ -3686,6 +3693,44 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $domain = count($labels) >= 3 ? implode('.', array_slice($labels, 1)) : $host;
 
         return 'mail.'.$domain;
+    }
+
+    /** @var array<int, array{status: string, hostname: string, last_error: string}|null> */
+    private array $mailCertificates = [];
+
+    /**
+     * The service domain's mail certificate as the panel reports it
+     * (GET /v1/ssl/domains/{id}/mail): its status, the host name it is for
+     * and the last error. Null when the panel cannot say. Read once per
+     * service per request: the email page and the welcome email both ask.
+     *
+     * @return array{status: string, hostname: string, last_error: string}|null
+     */
+    public function mailCertificate(Service $service): ?array
+    {
+        if (array_key_exists($service->id, $this->mailCertificates)) {
+            return $this->mailCertificates[$service->id];
+        }
+
+        $server = $this->getServer($service);
+        $domainId = (string) ($this->getModuleData($service)['panelica_domain_id'] ?? '');
+        $cert = null;
+        if ($server && $domainId !== '') {
+            try {
+                $resp = $this->get($server, "/v1/ssl/domains/{$domainId}/mail");
+                if ($resp->successful() && is_array($resp->json('data'))) {
+                    $cert = [
+                        'status' => strtolower((string) $resp->json('data.status')),
+                        'hostname' => (string) ($resp->json('data.hostname') ?? ''),
+                        'last_error' => (string) ($resp->json('data.last_error') ?? ''),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning('PanelicaModule: mail certificate status unavailable', ['service' => $service->id, 'error' => $e->getMessage()]);
+            }
+        }
+
+        return $this->mailCertificates[$service->id] = $cert;
     }
 
     /**
