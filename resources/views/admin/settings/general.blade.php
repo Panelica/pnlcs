@@ -632,6 +632,19 @@
                 @endfor
             </div>
             <div style="font-size:12px;color:#777;">{{ __('admin.settings.default_nameservers_hint') }}</div>
+            {{-- Free subdomains (App\Support\FreeSubdomains): names under the shop's own domains a hosting order can take. --}}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:18px;">
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.free_subdomains') }}</label>
+                    <textarea name="FreeSubdomains" rows="3" class="form-control" style="font-family:monospace;font-size:12px;">{{ $settings['FreeSubdomains'] ?? '' }}</textarea>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.free_subdomains_hint') }}</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('admin.settings.disallowed_subdomains') }}</label>
+                    <textarea name="DisallowedSubdomainPrefixes" rows="3" class="form-control" style="font-family:monospace;font-size:12px;">{{ $settings['DisallowedSubdomainPrefixes'] ?? '' }}</textarea>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.disallowed_subdomains_hint', ['names' => implode(', ', \App\Support\FreeSubdomains::DEFAULT_DISALLOWED)]) }}</div>
+                </div>
+            </div>
         </div>
     </div>
 
