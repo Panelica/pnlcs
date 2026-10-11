@@ -8,7 +8,7 @@
         <p>{{ __('admin.auth.scan_qr_desc') }}</p>
 
         <div style="text-align:center;margin:20px 0;">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($qrUrl) }}" alt="QR Code" style="border:4px solid #f0f0f0;border-radius:8px;">
+            <img src="{{ $qrImage }}" width="200" height="200" alt="QR Code" style="border:4px solid #f0f0f0;border-radius:8px;">
         </div>
 
         <p style="text-align:center;font-size:13px;color:#888;">{{ __('admin.auth.enter_manually') }}</p>
