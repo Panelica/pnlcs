@@ -134,6 +134,33 @@
     @endif
 </div>
 
+@if(!empty($mailDns))
+{{-- The mail certificate could not be issued: the domain's DNS is elsewhere
+     and these names do not point at the server yet. --}}
+<div class="em-card em-dns" role="status">
+    <div class="em-card-h"><i class="ri-error-warning-line" style="color:var(--warning,#d97706);margin-right:6px"></i>{{ __('client.hosting.email.dns_title') }}</div>
+    <div class="em-set-note">{{ __('client.hosting.email.dns_note', ['host' => $mailDns['host']]) }}</div>
+    <div style="overflow-x:auto" class="em-set">
+        <table class="em-set-table">
+            <thead><tr><th>{{ __('client.hosting.email.dns_name') }}</th><th>{{ __('client.hosting.email.dns_type') }}</th><th>{{ __('client.hosting.email.dns_value') }}</th></tr></thead>
+            <tbody>
+                @foreach($mailDns['records'] as $rec)
+                <tr>
+                    <td><button type="button" class="em-copy" data-copy="{{ $rec['name'] }}"><i class="ri-file-copy-line"></i>{{ $rec['name'] }}</button></td>
+                    <td>{{ $rec['type'] }}</td>
+                    <td><button type="button" class="em-copy" data-copy="{{ $rec['value'] }}"><i class="ri-file-copy-line"></i>{{ $rec['value'] }}</button></td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    <div class="em-set-note" style="padding-top:12px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <span>{{ __('client.hosting.email.dns_after') }}</span>
+        <form method="POST" action="{{ route('client.services.emails.certificate', $service) }}">@csrf<button type="submit" class="em-btn">{{ __('client.hosting.email.dns_retry') }}</button></form>
+    </div>
+</div>
+@endif
+
 @if(!empty($mailHost))
 {{-- Mail client settings. This was the most common support request: the
      customer created the mailbox and then did not know what to type into

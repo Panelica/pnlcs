@@ -168,6 +168,7 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('services/{service}/emails', [ServiceController::class, 'emails'])->name('services.emails');
         Route::post('services/{service}/emails', [ServiceController::class, 'storeEmail'])->name('services.emails.store');
         Route::post('services/{service}/emails/delete', [ServiceController::class, 'destroyEmail'])->name('services.emails.destroy');
+        Route::post('services/{service}/emails/certificate', [ServiceController::class, 'retryMailCertificate'])->middleware('throttle:3,10')->name('services.emails.certificate');
         Route::post('services/{service}/emails/password', [ServiceController::class, 'updateEmailPassword'])->name('services.emails.password');
         Route::get('services/{service}/ftp', [ServiceController::class, 'ftp'])->name('services.ftp');
         Route::post('services/{service}/ftp', [ServiceController::class, 'storeFtp'])->name('services.ftp.store');

@@ -473,8 +473,11 @@ class ServiceController extends Controller
         // Shown on the page so the customer does not have to open a ticket to
         // learn where their mail client should connect.
         $mailHost = method_exists($module, 'mailHostname') ? $module->mailHostname($service) : null;
+        // The records to add when the mail certificate could not be issued
+        // because the domain's DNS is elsewhere.
+        $mailDns = $emails && method_exists($module, 'mailDnsHelp') ? $module->mailDnsHelp($service) : null;
 
-        return view('client.services.hosting.email', compact('service', 'emails', 'domains', 'webmailUrl', 'mailHost'));
+        return view('client.services.hosting.email', compact('service', 'emails', 'domains', 'webmailUrl', 'mailHost', 'mailDns'));
     }
 
     public function storeEmail(Request $request, Service $service)
@@ -502,6 +505,22 @@ class ServiceController extends Controller
         );
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    /** Ask for the mail certificate again once the DNS records are in place. */
+    public function retryMailCertificate(Service $service)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $module = $this->hostingModule($service, 'emails');
+        if (! $module || ! method_exists($module, 'retryMailCertificate')) {
+            return back()->with('error', __('client.hosting.unavailable'));
+        }
+        if (! $module->retryMailCertificate($service)) {
+            return back()->with('error', __('client.hosting.email.dns_not_requested'));
+        }
+
+        return back()->with('success', __('client.hosting.email.dns_requested'));
     }
 
     public function destroyEmail(Request $request, Service $service)

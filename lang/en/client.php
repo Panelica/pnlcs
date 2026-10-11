@@ -1868,4 +1868,13 @@ return [
     'store.res_domains' => '{1} 1 website|[2,*] :count websites',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Apps run inside these limits and share them. How many you can run at once is really a question of memory: small apps need a few hundred MB, larger ones a gigabyte or more.',
+    'hosting.email.dns_title' => 'Your mail certificate is waiting for DNS records',
+    'hosting.email.dns_note' => 'Your domain\'s DNS is managed elsewhere, so the secure certificate for :host could not be issued. Until it is, mail apps may warn that the connection is not secure. Add these records where your DNS is managed:',
+    'hosting.email.dns_name' => 'Name',
+    'hosting.email.dns_type' => 'Type',
+    'hosting.email.dns_value' => 'Points to',
+    'hosting.email.dns_retry' => 'Request the certificate again',
+    'hosting.email.dns_requested' => 'The certificate was requested. It usually arrives within a few minutes.',
+    'hosting.email.dns_not_requested' => 'The certificate could not be requested just now. Try again in a few minutes.',
+    'hosting.email.dns_after' => 'Once the records are in place, ask for the certificate again. DNS changes can take a few hours to spread.',
 ];

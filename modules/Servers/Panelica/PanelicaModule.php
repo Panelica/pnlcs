@@ -3305,20 +3305,24 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
      * requested. Renewal stays with the panel. Nothing here can fail the
      * mailbox: a refusal or an unreachable panel is logged and the mailbox
      * stands.
+     *
+     * Returns whether the certificate is in place or on its way: false when
+     * the status could not be read or the panel did not take the request (it
+     * refuses a new one for a few minutes after a failed attempt).
      */
-    private function ensureMailCertificate(Server $server, string $domainId): void
+    private function ensureMailCertificate(Server $server, string $domainId): bool
     {
         try {
             $status = $this->get($server, "/v1/ssl/domains/{$domainId}/mail");
             if (! $status->successful()) {
                 Log::warning('PanelicaModule: could not read the mail certificate status', ['domain_id' => $domainId, 'status' => $status->status()]);
 
-                return;
+                return false;
             }
 
             $state = strtolower((string) ($status->json('data.status') ?? $status->json('status') ?? ''));
             if (! in_array($state, ['missing', 'failed'], true)) {
-                return;
+                return true;
             }
 
             $issue = $this->post($server, "/v1/ssl/domains/{$domainId}/mail/issue", [], 15);
@@ -3328,9 +3332,15 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
                     'status' => $issue->status(),
                     'error' => $this->apiMessage($issue, ''),
                 ]);
+
+                return false;
             }
+
+            return true;
         } catch (\Throwable $e) {
             Log::warning('PanelicaModule: mail certificate request failed', ['domain_id' => $domainId, 'error' => $e->getMessage()]);
+
+            return false;
         }
     }
 
@@ -3669,6 +3679,13 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return null;
         }
 
+        // The panel can give a domain a mail host of its own; its certificate
+        // status says which name the certificate is for.
+        $named = strtolower(trim((string) ($this->mailCertificate($service)['hostname'] ?? '')));
+        if ($named !== '' && preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$/', $named)) {
+            return $named;
+        }
+
         $own = strtolower(trim((string) $service->domain));
         if (str_starts_with($own, 'www.')) {
             $own = substr($own, 4);
@@ -3686,6 +3703,116 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $domain = count($labels) >= 3 ? implode('.', array_slice($labels, 1)) : $host;
 
         return 'mail.'.$domain;
+    }
+
+    /** @var array<int, array{status: string, hostname: string, last_error: string}|null> */
+    private array $mailCertificates = [];
+
+    /**
+     * The service domain's mail certificate as the panel reports it
+     * (GET /v1/ssl/domains/{id}/mail): its status, the host name it is for
+     * and the last error. Null when the panel cannot say. Read once per
+     * service per request: the email page and the welcome email both ask.
+     *
+     * @return array{status: string, hostname: string, last_error: string}|null
+     */
+    public function mailCertificate(Service $service): ?array
+    {
+        if (array_key_exists($service->id, $this->mailCertificates)) {
+            return $this->mailCertificates[$service->id];
+        }
+
+        $server = $this->getServer($service);
+        $domainId = (string) ($this->getModuleData($service)['panelica_domain_id'] ?? '');
+        $cert = null;
+        if ($server && $domainId !== '') {
+            try {
+                $resp = $this->get($server, "/v1/ssl/domains/{$domainId}/mail");
+                if ($resp->successful() && is_array($resp->json('data'))) {
+                    $cert = [
+                        'status' => strtolower((string) $resp->json('data.status')),
+                        'hostname' => (string) ($resp->json('data.hostname') ?? ''),
+                        'last_error' => (string) ($resp->json('data.last_error') ?? ''),
+                    ];
+                }
+            } catch (\Throwable $e) {
+                Log::warning('PanelicaModule: mail certificate status unavailable', ['service' => $service->id, 'error' => $e->getMessage()]);
+            }
+        }
+
+        return $this->mailCertificates[$service->id] = $cert;
+    }
+
+    /**
+     * Ask the panel again for the service domain's mail certificate, after the
+     * customer has added the DNS records. Only a missing or failed certificate
+     * is requested (see ensureMailCertificate()). False when the panel did not
+     * take the request, so the customer is not told it was made.
+     */
+    public function retryMailCertificate(Service $service): bool
+    {
+        $server = $this->getServer($service);
+        $domainId = (string) ($this->getModuleData($service)['panelica_domain_id'] ?? '');
+        if (! $server || $domainId === '') {
+            return false;
+        }
+        $taken = $this->ensureMailCertificate($server, $domainId);
+        unset($this->mailCertificates[$service->id]);
+
+        return $taken;
+    }
+
+    /**
+     * What the customer has to add to their DNS when the mail certificate
+     * could not be issued, or null when nothing is needed.
+     *
+     * The certificate is for the domain's mail host name (mail.<domain>
+     * unless the panel was given another) and for webmail., autoconfig. and
+     * autodiscover. under the domain. Older panels check every one of them;
+     * newer ones leave out a name that does not resolve, but still fail on one
+     * that points somewhere else. So all of them are listed, the mail host
+     * only when it is under the customer's domain: one outside it is the
+     * operator's to point. They are given as CNAMEs to the server's hostname,
+     * which follows the server if its address changes; a server known only by
+     * its address gets A records.
+     *
+     * @return array{host: string, records: list<array{name: string, type: string, value: string}>}|null
+     */
+    public function mailDnsHelp(Service $service): ?array
+    {
+        $cert = $this->mailCertificate($service);
+        $server = $this->getServer($service);
+        $domain = strtolower(trim((string) $service->domain));
+        if (str_starts_with($domain, 'www.')) {
+            $domain = substr($domain, 4);
+        }
+        if (! $cert || $cert['status'] !== 'failed' || ! $server || $domain === ''
+            || filter_var($domain, FILTER_VALIDATE_IP) || ! preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}$/', $domain)) {
+            return null;
+        }
+
+        $host = trim((string) $server->hostname);
+        $ip = trim((string) $server->ip_address);
+        if ($host !== '' && ! filter_var($host, FILTER_VALIDATE_IP)) {
+            [$type, $value] = ['CNAME', $host];
+        } elseif ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            [$type, $value] = ['A', $ip];
+        } else {
+            return null;
+        }
+
+        $mailHost = $this->mailHostname($service) ?? 'mail.'.$domain;
+        $names = str_ends_with($mailHost, '.'.$domain) ? [$mailHost] : [];
+        foreach (['webmail', 'autoconfig', 'autodiscover'] as $label) {
+            $names[] = $label.'.'.$domain;
+        }
+
+        $records = [];
+        foreach (array_unique($names) as $name) {
+            $records[] = ['name' => $name, 'type' => $type, 'value' => $value];
+        }
+
+        return ['host' => $mailHost, 'records' => $records];
     }
 
     /**

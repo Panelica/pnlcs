@@ -1867,4 +1867,13 @@ return [
     'store.res_domains' => '{1} 1 个网站|[2,*] :count 个网站',
     'store.res_memory' => ':value 内存',
     'store.res_shared_note' => '应用在这些限额内运行并共享它们。能同时运行多少个，其实取决于内存：小型应用需要几百 MB，较大的需要 1 GB 或更多。',
+    'hosting.email.dns_title' => '您的邮件证书正在等待 DNS 记录',
+    'hosting.email.dns_note' => '您的域名 DNS 由其他地方管理，因此无法为 :host 签发安全证书。在签发之前，邮件应用可能会提示连接不安全。请在管理 DNS 的地方添加以下记录：',
+    'hosting.email.dns_name' => '名称',
+    'hosting.email.dns_type' => '类型',
+    'hosting.email.dns_value' => '指向',
+    'hosting.email.dns_retry' => '重新申请证书',
+    'hosting.email.dns_requested' => '已申请证书，通常几分钟内即可完成。',
+    'hosting.email.dns_not_requested' => '暂时无法申请证书，请几分钟后重试。',
+    'hosting.email.dns_after' => '添加记录后，请重新申请证书。DNS 更改可能需要几个小时才能生效。',
 ];
