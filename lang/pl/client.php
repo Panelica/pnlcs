@@ -1868,4 +1868,12 @@ return [
     'store.res_domains' => '{1} 1 strona internetowa|[2,4] :count strony internetowe|[5,*] :count stron internetowych',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Aplikacje działają w ramach tych limitów i je współdzielą. To, ile możesz uruchomić naraz, zależy w praktyce od pamięci: małe aplikacje potrzebują kilkuset MB, większe gigabajta lub więcej.',
+    'hosting.email.dns_title' => 'Certyfikat poczty czeka na rekordy DNS',
+    'hosting.email.dns_note' => 'DNS Twojej domeny jest zarządzany gdzie indziej, dlatego certyfikat bezpieczeństwa dla :host nie mógł zostać wystawiony. Do tego czasu programy pocztowe mogą ostrzegać, że połączenie nie jest bezpieczne. Dodaj te rekordy tam, gdzie zarządzasz DNS:',
+    'hosting.email.dns_name' => 'Nazwa',
+    'hosting.email.dns_type' => 'Typ',
+    'hosting.email.dns_value' => 'Wskazuje na',
+    'hosting.email.dns_retry' => 'Zamów certyfikat ponownie',
+    'hosting.email.dns_requested' => 'Certyfikat został zamówiony. Zwykle pojawia się w ciągu kilku minut.',
+    'hosting.email.dns_after' => 'Po dodaniu rekordów zamów certyfikat ponownie. Zmiany DNS mogą potrwać kilka godzin.',
 ];

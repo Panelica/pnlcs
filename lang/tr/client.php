@@ -1867,4 +1867,12 @@ return [
     'store.res_domains' => '{1} 1 web sitesi|[2,*] :count web sitesi',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Uygulamalar bu sınırların içinde çalışır ve sınırları paylaşır. Aynı anda kaç uygulama çalıştırabileceğiniz aslında bir bellek sorusudur: küçük uygulamalar birkaç yüz MB, büyükler bir gigabayt veya daha fazlasını ister.',
+    'hosting.email.dns_title' => 'E-posta sertifikanız DNS kayıtlarını bekliyor',
+    'hosting.email.dns_note' => 'Alan adınızın DNS\'i başka bir yerde yönetiliyor, bu yüzden :host için güvenlik sertifikası alınamadı. Alınana kadar e-posta uygulamaları bağlantının güvenli olmadığı uyarısı gösterebilir. DNS\'inizi yönettiğiniz yere şu kayıtları ekleyin:',
+    'hosting.email.dns_name' => 'Ad',
+    'hosting.email.dns_type' => 'Tür',
+    'hosting.email.dns_value' => 'Hedef',
+    'hosting.email.dns_retry' => 'Sertifikayı yeniden iste',
+    'hosting.email.dns_requested' => 'Sertifika istendi. Genellikle birkaç dakika içinde gelir.',
+    'hosting.email.dns_after' => 'Kayıtları ekledikten sonra sertifikayı yeniden isteyin. DNS değişikliklerinin yayılması birkaç saat sürebilir.',
 ];

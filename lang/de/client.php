@@ -1867,4 +1867,12 @@ return [
     'pages.ssl.renewal_p2' => 'Bei manchen Anbietern installieren <em>Sie</em> das Zertifikat und erneuern <em>Sie</em> es alle 90 Tage – oft, indem Sie einen DNS-Eintrag hinzufügen und auf die Prüfung warten. An dem Tag, an dem Sie es vergessen, sehen Ihre Besucher eine Sicherheitswarnung.',
     'pages.ssl.renewal_p3' => 'Hier gibt es diesen Schritt nicht. Weder Ausstellung noch Erneuerung verlangen etwas von Ihnen; Sie müssen sich nicht einmal anmelden.',
     'pages.ssl.title' => 'SSL-Zertifikate',
+    'hosting.email.dns_title' => 'Ihr Mail-Zertifikat wartet auf DNS-Einträge',
+    'hosting.email.dns_note' => 'Die DNS Ihrer Domain wird anderswo verwaltet, daher konnte das Sicherheitszertifikat für :host nicht ausgestellt werden. Bis dahin können Mail-Apps warnen, dass die Verbindung nicht sicher ist. Fügen Sie dort, wo Ihre DNS verwaltet wird, diese Einträge hinzu:',
+    'hosting.email.dns_name' => 'Eintrag',
+    'hosting.email.dns_type' => 'Typ',
+    'hosting.email.dns_value' => 'Ziel',
+    'hosting.email.dns_retry' => 'Zertifikat erneut anfordern',
+    'hosting.email.dns_requested' => 'Das Zertifikat wurde angefordert. Es kommt meist innerhalb weniger Minuten.',
+    'hosting.email.dns_after' => 'Sobald die Einträge gesetzt sind, fordern Sie das Zertifikat erneut an. DNS-Änderungen können einige Stunden dauern.',
 ];
