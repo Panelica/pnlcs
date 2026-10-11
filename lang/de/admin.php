@@ -3672,4 +3672,8 @@ return [
     'projects.created_on' => 'Erstellt am :date',
     'projects.progress_pct' => ':pct % Fortschritt',
     'projects.due_on' => 'Fällig: :date',
+    'invoices.paid_on_date' => 'Bezahlt am :date',
+    'quotes.title_num' => 'Angebot #:num',
+    'ssl.title_num' => 'SSL-Bestellung #:num',
+    'ssl.service_status' => 'Dienststatus: :status',
 ];

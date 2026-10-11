@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>Order #{{ $order->order_num }} <span class="badge-{{ strtolower($order->status) }}" style="font-size:14px;vertical-align:middle;">{{ ucfirst($order->status) }}</span></h1>
+    <h1>{{ __('admin.search.order_title', ['num' => $order->order_num]) }} <span class="badge-{{ strtolower($order->status) }}" style="font-size:14px;vertical-align:middle;">{{ ucfirst($order->status) }}</span></h1>
     <a href="{{ route('admin.orders.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.orders.back') }}</a>
 </div>
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:15px;">

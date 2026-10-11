@@ -1,10 +1,10 @@
 @extends("admin.layouts.app")
 
-@section("title", "SSL Order #" . $order->id)
+@section("title", __('admin.ssl.title_num', ['num' => $order->id]))
 
 @section("content")
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">SSL Order #{{ $order->id }}</h1>
+    <h1 class="h3 mb-0">{{ __('admin.ssl.title_num', ['num' => $order->id]) }}</h1>
     <a href="{{ route('admin.ssl.index') }}" class="btn btn-secondary">{{ __('admin.ssl.back_to_list') }}</a>
 </div>
 
@@ -139,7 +139,7 @@
             <div class="card-header"><h5 class="mb-0">{{ __('admin.ssl.related_service') }}</h5></div>
             <div class="card-body">
                 <p class="mb-1"><strong>{{ $order->service->product?->name ?? 'Service #' . $order->service_id }}</strong></p>
-                <p class="mb-0 text-muted">Status: {{ $order->service->status }}</p>
+                <p class="mb-0 text-muted">{{ __('admin.ssl.service_status', ['status' => $order->service->status]) }}</p>
                 <a href="{{ route('admin.services.show', $order->service_id) }}" class="btn btn-sm btn-outline-primary mt-2">{{ __('admin.ssl.view_service') }}</a>
             </div>
         </div>

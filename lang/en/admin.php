@@ -3678,4 +3678,8 @@ return [
     'projects.created_on' => 'Created :date',
     'projects.progress_pct' => ':pct% Progress',
     'projects.due_on' => 'Due: :date',
+    'invoices.paid_on_date' => 'Paid on :date',
+    'quotes.title_num' => 'Quote #:num',
+    'ssl.title_num' => 'SSL Order #:num',
+    'ssl.service_status' => 'Status: :status',
 ];

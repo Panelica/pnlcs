@@ -3676,4 +3676,8 @@ return [
     'projects.created_on' => ':date tarihinde oluşturuldu',
     'projects.progress_pct' => '%:pct ilerleme',
     'projects.due_on' => 'Bitiş: :date',
+    'invoices.paid_on_date' => ':date tarihinde ödendi',
+    'quotes.title_num' => 'Teklif #:num',
+    'ssl.title_num' => 'SSL siparişi #:num',
+    'ssl.service_status' => 'Durum: :status',
 ];

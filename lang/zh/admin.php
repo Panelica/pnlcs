@@ -3676,4 +3676,8 @@ return [
     'projects.created_on' => '创建于 :date',
     'projects.progress_pct' => '进度 :pct%',
     'projects.due_on' => '截止：:date',
+    'invoices.paid_on_date' => '已于 :date 付款',
+    'quotes.title_num' => '报价单 #:num',
+    'ssl.title_num' => 'SSL 订单 #:num',
+    'ssl.service_status' => '状态：:status',
 ];

@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-header">
     <div>
-        <h1>Quote #{{ $quote->id }}</h1>
+        <h1>{{ __('admin.quotes.title_num', ['num' => $quote->id]) }}</h1>
         <div style="font-size:13px;color:#777;margin-top:3px;">{{ $quote->client?->full_name ?? 'N/A' }} &bull; {{ \Carbon\Carbon::parse($quote->date)->format(date_fmt()) }}</div>
     </div>
     <a href="{{ route('admin.quotes.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.quotes.back') }}</a>
