@@ -3,7 +3,7 @@
 @section('content')
 <div class="page-header">
     <h1>{{ __('admin.projects.create_project') }}</h1>
-    <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; Back</a>
+    <a href="{{ route('admin.projects.index') }}" class="btn btn-default btn-sm">&larr; {{ __('common.actions.back') }}</a>
 </div>
 @if($errors->any())
 <div style="padding:10px 15px;background:#f2dede;border:1px solid #ebccd1;border-radius:4px;color:#a94442;margin-bottom:15px;font-size:13px;">
