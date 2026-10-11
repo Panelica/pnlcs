@@ -3734,6 +3734,66 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     }
 
     /**
+     * Ask the panel again for the service domain's mail certificate, after the
+     * customer has added the DNS records. Only a missing or failed certificate
+     * is requested (see ensureMailCertificate()).
+     */
+    public function retryMailCertificate(Service $service): bool
+    {
+        $server = $this->getServer($service);
+        $domainId = (string) ($this->getModuleData($service)['panelica_domain_id'] ?? '');
+        if (! $server || $domainId === '') {
+            return false;
+        }
+        $this->ensureMailCertificate($server, $domainId);
+        unset($this->mailCertificates[$service->id]);
+
+        return true;
+    }
+
+    /**
+     * What the customer has to add to their DNS when the mail certificate
+     * could not be issued, or null when nothing is needed.
+     *
+     * Issuing fails when the domain's DNS is somewhere else and mail.,
+     * autoconfig. and autodiscover. do not point at the server: the
+     * certificate covers all three and each is checked. They are given as
+     * CNAMEs to the server's hostname, which follows the server if its address
+     * changes; a server known only by its address gets A records.
+     *
+     * @return array{host: string, records: list<array{name: string, type: string, value: string}>}|null
+     */
+    public function mailDnsHelp(Service $service): ?array
+    {
+        $cert = $this->mailCertificate($service);
+        $server = $this->getServer($service);
+        $domain = strtolower(trim((string) $service->domain));
+        if (str_starts_with($domain, 'www.')) {
+            $domain = substr($domain, 4);
+        }
+        if (! $cert || $cert['status'] !== 'failed' || ! $server || $domain === '') {
+            return null;
+        }
+
+        $host = trim((string) $server->hostname);
+        $ip = trim((string) $server->ip_address);
+        if ($host !== '' && ! filter_var($host, FILTER_VALIDATE_IP)) {
+            [$type, $value] = ['CNAME', $host];
+        } elseif ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            [$type, $value] = ['A', $ip];
+        } else {
+            return null;
+        }
+
+        $records = [];
+        foreach (['mail', 'autoconfig', 'autodiscover'] as $label) {
+            $records[] = ['name' => $label.'.'.$domain, 'type' => $type, 'value' => $value];
+        }
+
+        return ['host' => 'mail.'.$domain, 'records' => $records];
+    }
+
+    /**
      * URL of the panel's phpMyAdmin (served at /databases/phpmyadmin on the panel
      * HTTPS port). The customer signs in there with any of their database users.
      */
