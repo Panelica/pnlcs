@@ -1867,4 +1867,5 @@ return [
     'store.res_domains' => '{1} 1 web sitesi|[2,*] :count web sitesi',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Uygulamalar bu sınırların içinde çalışır ve sınırları paylaşır. Aynı anda kaç uygulama çalıştırabileceğiniz aslında bir bellek sorusudur: küçük uygulamalar birkaç yüz MB, büyükler bir gigabayt veya daha fazlasını ister.',
+    'hosting.panel_unreachable' => 'Barındırma kontrol paneli şu an yanıt vermiyor. Lütfen birkaç dakika sonra yeniden deneyin.',
 ];

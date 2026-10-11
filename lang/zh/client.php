@@ -1867,4 +1867,5 @@ return [
     'store.res_domains' => '{1} 1 个网站|[2,*] :count 个网站',
     'store.res_memory' => ':value 内存',
     'store.res_shared_note' => '应用在这些限额内运行并共享它们。能同时运行多少个，其实取决于内存：小型应用需要几百 MB，较大的需要 1 GB 或更多。',
+    'hosting.panel_unreachable' => '主机控制面板目前没有响应，请几分钟后再试。',
 ];

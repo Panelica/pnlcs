@@ -1867,4 +1867,5 @@ return [
     'pages.ssl.renewal_p2' => 'Bei manchen Anbietern installieren <em>Sie</em> das Zertifikat und erneuern <em>Sie</em> es alle 90 Tage – oft, indem Sie einen DNS-Eintrag hinzufügen und auf die Prüfung warten. An dem Tag, an dem Sie es vergessen, sehen Ihre Besucher eine Sicherheitswarnung.',
     'pages.ssl.renewal_p3' => 'Hier gibt es diesen Schritt nicht. Weder Ausstellung noch Erneuerung verlangen etwas von Ihnen; Sie müssen sich nicht einmal anmelden.',
     'pages.ssl.title' => 'SSL-Zertifikate',
+    'hosting.panel_unreachable' => 'Das Hosting-Control-Panel antwortet gerade nicht. Bitte versuchen Sie es in ein paar Minuten erneut.',
 ];

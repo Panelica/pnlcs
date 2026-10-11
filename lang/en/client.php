@@ -1868,4 +1868,5 @@ return [
     'store.res_domains' => '{1} 1 website|[2,*] :count websites',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Apps run inside these limits and share them. How many you can run at once is really a question of memory: small apps need a few hundred MB, larger ones a gigabyte or more.',
+    'hosting.panel_unreachable' => 'The hosting control panel is not answering right now. Please try again in a few minutes.',
 ];

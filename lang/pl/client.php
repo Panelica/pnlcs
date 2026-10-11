@@ -1868,4 +1868,5 @@ return [
     'store.res_domains' => '{1} 1 strona internetowa|[2,4] :count strony internetowe|[5,*] :count stron internetowych',
     'store.res_memory' => ':value RAM',
     'store.res_shared_note' => 'Aplikacje działają w ramach tych limitów i je współdzielą. To, ile możesz uruchomić naraz, zależy w praktyce od pamięci: małe aplikacje potrzebują kilkuset MB, większe gigabajta lub więcej.',
+    'hosting.panel_unreachable' => 'Panel sterowania hostingiem w tej chwili nie odpowiada. Spróbuj ponownie za kilka minut.',
 ];
