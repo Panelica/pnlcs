@@ -139,7 +139,10 @@ test('the order form offers the option only when domains are set', function () {
 
     Setting::set('FreeSubdomains', '');
     $this->actingAs(subdomainBuyer())->get(route('client.store.configure', $product))
-        ->assertOk()->assertDontSee('value="subdomain"', false);
+        ->assertOk()->assertDontSee('value="subdomain"', false)
+        // Nothing of it is left on the page: the field and its script are the ones they were.
+        ->assertDontSee('subdomain', false)
+        ->assertSee('<input type="text" name="domain" id="domainInput" class="form-control" placeholder="yourdomain.com" value="" autocomplete="off">', false);
 });
 
 test('staff set the domains and the reserved names on the general settings', function () {
