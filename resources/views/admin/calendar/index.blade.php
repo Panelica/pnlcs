@@ -63,7 +63,7 @@
                                 </div>
                             @endforeach
                             @if($dayEvents->count() > 3)
-                                <div style="font-size:9px;color:#999;">+{{ $dayEvents->count() - 3 }} more</div>
+                                <div style="font-size:9px;color:#999;">{{ __('admin.calendar.more', ['count' => $dayEvents->count() - 3]) }}</div>
                             @endif
                         </td>
                         @php $day++; @endphp

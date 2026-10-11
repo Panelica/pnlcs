@@ -41,7 +41,7 @@
                     <div style="background:#e9e9e9;border-radius:3px;height:10px;margin-bottom:3px;">
                         <div style="height:10px;border-radius:3px;background:#337ab7;width:{{ $pct }}%;"></div>
                     </div>
-                    <span style="font-size:11px;color:#777;">{{ $done }}/{{ $total }} tasks</span>
+                    <span style="font-size:11px;color:#777;">{{ __('admin.projects.tasks_count', ['done' => $done, 'total' => $total]) }}</span>
                 </td>
                 <td style="font-size:12px;color:#777;">{{ $project->due_date ? \Carbon\Carbon::parse($project->due_date)->format(date_fmt()) : '-' }}</td>
                 <td>

@@ -3680,4 +3680,10 @@ return [
     'quotes.title_num' => 'Oferta #:num',
     'ssl.title_num' => 'Zamówienie SSL #:num',
     'ssl.service_status' => 'Stan usługi: :status',
+    'calendar.more' => '+:count więcej',
+    'projects.tasks_count' => ':done/:total zadań',
+    'reports.footer' => 'Wyświetlono :count wierszy · Wygenerowano :date',
+    'logs.action_placeholder' => 'np. create, terminate...',
+    'custom_fields.options_placeholder' => "Opcja 1\nOpcja 2",
+    'affiliates.title_named' => 'Partner: :name',
 ];

@@ -19,7 +19,7 @@
                     @foreach($modules as $mod)<option value="{{ $mod }}" {{ request('module')===$mod?'selected':'' }}>{{ ucfirst($mod) }}</option>@endforeach
                 </select>
             </div>
-            <div><label class="form-label">{{ __('admin.logs.action') }}</label><input type="text" name="action" value="{{ request('action') }}" placeholder="e.g. create, terminate..." class="form-control" style="width:160px;"></div>
+            <div><label class="form-label">{{ __('admin.logs.action') }}</label><input type="text" name="action" value="{{ request('action') }}" placeholder="{{ __('admin.logs.action_placeholder') }}" class="form-control" style="width:160px;"></div>
             <div style="display:flex;gap:6px;">
                 <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.filter') }}</button>
                 <a href="{{ route('admin.logs.module') }}" class="btn btn-default btn-sm">{{ __('common.actions.clear') }}</a>

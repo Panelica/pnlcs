@@ -3682,4 +3682,10 @@ return [
     'quotes.title_num' => 'Quote #:num',
     'ssl.title_num' => 'SSL Order #:num',
     'ssl.service_status' => 'Status: :status',
+    'calendar.more' => '+:count more',
+    'projects.tasks_count' => ':done/:total tasks',
+    'reports.footer' => 'Showing :count row(s) · Generated :date',
+    'logs.action_placeholder' => 'e.g. create, terminate...',
+    'custom_fields.options_placeholder' => "Option 1\nOption 2",
+    'affiliates.title_named' => 'Affiliate: :name',
 ];

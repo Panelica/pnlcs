@@ -3680,4 +3680,10 @@ return [
     'quotes.title_num' => 'Teklif #:num',
     'ssl.title_num' => 'SSL siparişi #:num',
     'ssl.service_status' => 'Durum: :status',
+    'calendar.more' => '+:count daha',
+    'projects.tasks_count' => ':done/:total görev',
+    'reports.footer' => ':count satır gösteriliyor · Oluşturulma :date',
+    'logs.action_placeholder' => 'örn. create, terminate...',
+    'custom_fields.options_placeholder' => "Seçenek 1\nSeçenek 2",
+    'affiliates.title_named' => 'Satış ortağı: :name',
 ];

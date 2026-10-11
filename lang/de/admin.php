@@ -3676,4 +3676,10 @@ return [
     'quotes.title_num' => 'Angebot #:num',
     'ssl.title_num' => 'SSL-Bestellung #:num',
     'ssl.service_status' => 'Dienststatus: :status',
+    'calendar.more' => '+:count weitere',
+    'projects.tasks_count' => ':done/:total Aufgaben',
+    'reports.footer' => ':count Zeile(n) · Erstellt :date',
+    'logs.action_placeholder' => 'z. B. create, terminate...',
+    'custom_fields.options_placeholder' => "Auswahl 1\nAuswahl 2",
+    'affiliates.title_named' => 'Partner: :name',
 ];

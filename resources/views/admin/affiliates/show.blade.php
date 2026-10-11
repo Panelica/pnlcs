@@ -2,7 +2,7 @@
 @section('title', __('admin.affiliates.title_show') . ' - ' . ($affiliate->client?->first_name ?? '') . ' ' . ($affiliate->client?->last_name ?? ''))
 @section('content')
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
-    <h1>Affiliate: {{ $affiliate->client?->first_name }} {{ $affiliate->client?->last_name }}</h1>
+    <h1>{{ __('admin.affiliates.title_named', ['name' => trim(($affiliate->client?->first_name ?? '').' '.($affiliate->client?->last_name ?? ''))]) }}</h1>
     <a href="{{ route('admin.affiliates.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.affiliates.back') }}</a>
 </div>
 
