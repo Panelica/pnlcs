@@ -86,11 +86,17 @@
 <div class="card" style="margin-top:15px;">
     <div class="card-header"><strong>{{ __('admin.automation.cron_configuration') }}</strong></div>
     <div class="card-body">
-        <p style="font-size:13px;color:#555;">{{ __('admin.automation.cron_instruction') }}</p>
-        <div style="background:#f5f5f5;padding:12px;border-radius:4px;font-family:monospace;font-size:12px;color:#333;margin:10px 0;">
-            * * * * * cd {{ base_path() }} && php artisan schedule:run >> /dev/null 2>&1
-        </div>
-        <p style="font-size:12px;color:#999;margin-top:8px;">{{ __('admin.automation.cron_explanation') }}</p>
+        @if(app(\App\Services\ScheduleStatusService::class)->schedulerRunsInContainer())
+            {{-- The Docker image runs the scheduler itself; a host cron line
+                 with the container's path in it can only mislead. --}}
+            <p style="font-size:13px;color:#555;margin:0;">{{ __('admin.automation.container_scheduler') }}</p>
+        @else
+            <p style="font-size:13px;color:#555;">{{ __('admin.automation.cron_instruction') }}</p>
+            <div style="background:#f5f5f5;padding:12px;border-radius:4px;font-family:monospace;font-size:12px;color:#333;margin:10px 0;">
+                * * * * * cd {{ base_path() }} && php artisan schedule:run >> /dev/null 2>&1
+            </div>
+            <p style="font-size:12px;color:#999;margin-top:8px;">{{ __('admin.automation.cron_explanation') }}</p>
+        @endif
     </div>
 </div>
 

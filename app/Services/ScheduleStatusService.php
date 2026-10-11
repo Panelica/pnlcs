@@ -19,6 +19,32 @@ use Illuminate\Support\Carbon;
 class ScheduleStatusService
 {
     /**
+     * @param  string  $supervisorConfig  Where the PNLCS Docker image keeps its
+     *                                    supervisor config; tests point it elsewhere.
+     */
+    public function __construct(private string $supervisorConfig = '/etc/supervisord.conf')
+    {
+    }
+
+    /**
+     * Whether the scheduler already runs inside this container.
+     *
+     * The PNLCS Docker image (pnlcs-runtime) runs `artisan schedule:run` every
+     * minute under supervisor. The automation screen still told such operators
+     * to add a host cron line, with the container's own path in it, which no
+     * host can run. Reading the supervisor config is the proof: an image that
+     * does not run the scheduler keeps the cron instructions.
+     */
+    public function schedulerRunsInContainer(): bool
+    {
+        if (! is_file($this->supervisorConfig) || ! is_readable($this->supervisorConfig)) {
+            return false;
+        }
+
+        return str_contains((string) file_get_contents($this->supervisorConfig), 'artisan schedule:run');
+    }
+
+    /**
      * Every scheduled task, newest trouble first.
      *
      * @return array<int, array<string, mixed>>

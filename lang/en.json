@@ -67,7 +67,7 @@
     "admin.automation.cc_expiry": "Credit Card Expiry Notices",
     "admin.automation.cc_expiry_desc": "Notify clients about expiring cards",
     "admin.automation.cron_configuration": "Cron Configuration",
-    "admin.automation.cron_explanation": "The cron command should be set up on your server to run every 5 minutes. Laravel scheduler will then handle the individual task frequencies.",
+    "admin.automation.cron_explanation": "The cron line runs every minute; the Laravel scheduler then decides which tasks are due.",
     "admin.automation.cron_instruction": "Add the following cron job to enable automation:",
     "admin.automation.cron_job_status": "Cron Job Status",
     "admin.automation.daily": "Daily",
