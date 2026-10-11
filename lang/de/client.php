@@ -1874,5 +1874,6 @@ return [
     'hosting.email.dns_value' => 'Ziel',
     'hosting.email.dns_retry' => 'Zertifikat erneut anfordern',
     'hosting.email.dns_requested' => 'Das Zertifikat wurde angefordert. Es kommt meist innerhalb weniger Minuten.',
+    'hosting.email.dns_not_requested' => 'Das Zertifikat konnte gerade nicht angefordert werden. Versuchen Sie es in einigen Minuten erneut.',
     'hosting.email.dns_after' => 'Sobald die Einträge gesetzt sind, fordern Sie das Zertifikat erneut an. DNS-Änderungen können einige Stunden dauern.',
 ];

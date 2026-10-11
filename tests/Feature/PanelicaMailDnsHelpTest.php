@@ -36,15 +36,17 @@ function dnsHelpService(array $server = [], string $domain = 'shop.example.com')
 }
 
 /** The panel, with the domain's mail certificate in the given state. */
-function fakeCertPanel(?array $cert): void
+function fakeCertPanel(?array $cert, int $issueStatus = 202): void
 {
-    Http::fake(function (Request $request) use ($cert) {
+    Http::fake(function (Request $request) use ($cert, $issueStatus) {
         $url = $request->url();
         if (str_ends_with($url, '/v1/ssl/domains/dom-1/mail') && $request->method() === 'GET') {
             return $cert === null ? Http::response(['status' => 'error'], 404) : Http::response(['status' => 'success', 'data' => $cert]);
         }
         if (str_ends_with($url, '/v1/ssl/domains/dom-1/mail/issue')) {
-            return Http::response(['status' => 'success', 'data' => ['status' => 'pending']], 202);
+            return $issueStatus === 202
+                ? Http::response(['status' => 'success', 'data' => ['status' => 'pending']], 202)
+                : Http::response(['status' => 'error', 'error' => 'refused'], $issueStatus);
         }
         if (str_contains($url, '/v1/accounts/acct-1/domains')) {
             return Http::response(['data' => [['id' => 'dom-1', 'domain_name' => 'shop.example.com']]]);
@@ -79,6 +81,7 @@ test('a failed certificate asks for CNAMEs to the server\'s hostname', function 
         'host' => 'mail.shop.example.com',
         'records' => [
             ['name' => 'mail.shop.example.com', 'type' => 'CNAME', 'value' => 's1.example.net'],
+            ['name' => 'webmail.shop.example.com', 'type' => 'CNAME', 'value' => 's1.example.net'],
             ['name' => 'autoconfig.shop.example.com', 'type' => 'CNAME', 'value' => 's1.example.net'],
             ['name' => 'autodiscover.shop.example.com', 'type' => 'CNAME', 'value' => 's1.example.net'],
         ],
@@ -92,6 +95,30 @@ test('a server known only by a public address gets A records, a private one gets
 
     expect((new PanelicaModule)->mailDnsHelp($public)['records'][0])->toBe(['name' => 'mail.shop.example.com', 'type' => 'A', 'value' => '203.0.113.7'])
         ->and((new PanelicaModule)->mailDnsHelp($private))->toBeNull();
+});
+
+test('a mail host name the panel gave under the domain is listed instead of mail.', function () {
+    fakeCertPanel(['status' => 'failed', 'hostname' => 'post.shop.example.com']);
+    [, $service] = dnsHelpService();
+
+    $help = (new PanelicaModule)->mailDnsHelp($service);
+
+    expect($help['host'])->toBe('post.shop.example.com')
+        ->and(array_column($help['records'], 'name'))->toBe([
+            'post.shop.example.com', 'webmail.shop.example.com', 'autoconfig.shop.example.com', 'autodiscover.shop.example.com',
+        ]);
+});
+
+test('a mail host name outside the customer\'s domain is not theirs to point', function () {
+    fakeCertPanel(['status' => 'failed', 'hostname' => 'mail.hosting.example.net']);
+    [, $service] = dnsHelpService();
+
+    $help = (new PanelicaModule)->mailDnsHelp($service);
+
+    expect($help['host'])->toBe('mail.hosting.example.net')
+        ->and(array_column($help['records'], 'name'))->toBe([
+            'webmail.shop.example.com', 'autoconfig.shop.example.com', 'autodiscover.shop.example.com',
+        ]);
 });
 
 test('nothing is asked while the certificate is fine or on its way', function (string $status) {
@@ -135,3 +162,18 @@ test('the owner can ask for the certificate again, nobody else can', function ()
     $other->clients()->attach(Client::factory()->create()->id);
     $this->actingAs($other)->post(route('client.services.emails.certificate', $service))->assertForbidden();
 });
+
+test('the customer is not told the certificate was requested when the panel did not take it', function (?array $cert, int $issueStatus) {
+    fakeCertPanel($cert, $issueStatus);
+    [$user, $service] = dnsHelpService();
+
+    $this->actingAs($user)->from(route('client.services.emails', $service))
+        ->post(route('client.services.emails.certificate', $service))
+        ->assertRedirect(route('client.services.emails', $service))
+        ->assertSessionHas('error', __('client.hosting.email.dns_not_requested'))
+        ->assertSessionMissing('success');
+})->with([
+    'refused for a few minutes after a failure' => [['status' => 'failed'], 429],
+    'refused' => [['status' => 'failed'], 500],
+    'status unreadable' => [null, 202],
+]);

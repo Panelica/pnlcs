@@ -1875,5 +1875,6 @@ return [
     'hosting.email.dns_value' => 'Wskazuje na',
     'hosting.email.dns_retry' => 'Zamów certyfikat ponownie',
     'hosting.email.dns_requested' => 'Certyfikat został zamówiony. Zwykle pojawia się w ciągu kilku minut.',
+    'hosting.email.dns_not_requested' => 'Nie udało się teraz zamówić certyfikatu. Spróbuj ponownie za kilka minut.',
     'hosting.email.dns_after' => 'Po dodaniu rekordów zamów certyfikat ponownie. Zmiany DNS mogą potrwać kilka godzin.',
 ];

@@ -1874,5 +1874,6 @@ return [
     'hosting.email.dns_value' => 'Hedef',
     'hosting.email.dns_retry' => 'Sertifikayı yeniden iste',
     'hosting.email.dns_requested' => 'Sertifika istendi. Genellikle birkaç dakika içinde gelir.',
+    'hosting.email.dns_not_requested' => 'Sertifika şu anda istenemedi. Birkaç dakika sonra yeniden deneyin.',
     'hosting.email.dns_after' => 'Kayıtları ekledikten sonra sertifikayı yeniden isteyin. DNS değişikliklerinin yayılması birkaç saat sürebilir.',
 ];

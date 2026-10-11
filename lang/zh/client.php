@@ -1874,5 +1874,6 @@ return [
     'hosting.email.dns_value' => '指向',
     'hosting.email.dns_retry' => '重新申请证书',
     'hosting.email.dns_requested' => '已申请证书，通常几分钟内即可完成。',
+    'hosting.email.dns_not_requested' => '暂时无法申请证书，请几分钟后重试。',
     'hosting.email.dns_after' => '添加记录后，请重新申请证书。DNS 更改可能需要几个小时才能生效。',
 ];

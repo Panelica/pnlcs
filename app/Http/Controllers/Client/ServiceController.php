@@ -513,8 +513,11 @@ class ServiceController extends Controller
         abort_if($service->client_id !== $this->getClientId(), 403);
 
         $module = $this->hostingModule($service, 'emails');
-        if (! $module || ! method_exists($module, 'retryMailCertificate') || ! $module->retryMailCertificate($service)) {
+        if (! $module || ! method_exists($module, 'retryMailCertificate')) {
             return back()->with('error', __('client.hosting.unavailable'));
+        }
+        if (! $module->retryMailCertificate($service)) {
+            return back()->with('error', __('client.hosting.email.dns_not_requested'));
         }
 
         return back()->with('success', __('client.hosting.email.dns_requested'));

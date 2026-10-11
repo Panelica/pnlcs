@@ -1875,5 +1875,6 @@ return [
     'hosting.email.dns_value' => 'Points to',
     'hosting.email.dns_retry' => 'Request the certificate again',
     'hosting.email.dns_requested' => 'The certificate was requested. It usually arrives within a few minutes.',
+    'hosting.email.dns_not_requested' => 'The certificate could not be requested just now. Try again in a few minutes.',
     'hosting.email.dns_after' => 'Once the records are in place, ask for the certificate again. DNS changes can take a few hours to spread.',
 ];
