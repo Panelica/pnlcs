@@ -11,6 +11,7 @@ use App\Models\GatewaySettings;
 use App\Models\Invoice;
 use App\Models\GatewayCustomer;
 use App\Models\PaymentMethod;
+use App\Models\Transaction;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -167,12 +168,22 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
      * the callback has to turn the amount iyzico actually took back into the
      * shop currency with the same number it started from.
      *
+     * An invoice billed in lira (Setup > Currencies, the invoice's billing
+     * stamp) already says what it comes to: its rate was frozen the day it was
+     * raised, and the lira figure on the invoice is that rate times the amount.
+     * That rate is used, so the customer is charged the lira the invoice shows
+     * rather than today's conversion of it.
+     *
      * @return array{amount: float, rate: float}
      */
-    private function tryPrice(float $amount): array
+    private function tryPrice(float $amount, ?Invoice $invoice = null): array
     {
         if (shop_currency_code() === 'TRY') {
             return ['amount' => round($amount, 2), 'rate' => 1.0];
+        }
+
+        if ($frozen = $this->invoiceLiraRate($invoice)) {
+            return ['amount' => round($amount * $frozen, 2), 'rate' => $frozen];
         }
 
         $rate = (float) (Currency::where('code', 'TRY')->value('rate') ?: 0);
@@ -181,6 +192,17 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             'amount' => $rate > 0 ? round($amount * $rate, 2) : round($amount, 2),
             'rate' => $rate > 0 ? $rate : 1.0,
         ];
+    }
+
+    /** The rate an invoice billed in lira was raised at, or null when it is not billed in lira. */
+    private function invoiceLiraRate(?Invoice $invoice): ?float
+    {
+        if (! $invoice || ! has_billing_conversion($invoice) || strtoupper((string) $invoice->billing_currency) !== 'TRY') {
+            return null;
+        }
+        $rate = (float) $invoice->exchange_rate;
+
+        return $rate > 0 ? $rate : null;
     }
 
     /** iyzico wants amounts as text with a dot separator. */
@@ -344,7 +366,7 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             return ['success' => false, 'message' => __('messages.iyzico.nothing_due')];
         }
 
-        $lira = $this->tryPrice($amount);
+        $lira = $this->tryPrice($amount, $invoice);
         $price = $this->money($lira['amount']);
 
         // One basket line on purpose: on a partly paid invoice the line items
@@ -525,9 +547,14 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         }
 
         $paidPrice = (float) ($detail['paidPrice'] ?? 0);
-        $rate = (float) (Currency::where('code', 'TRY')->value('rate') ?: 1);
+        // The rate the payment was taken at: the invoice's own when it was
+        // billed in lira, so a refund of what was paid gives back the lira
+        // that were taken, not today's conversion of the amount.
+        $invoice = Transaction::query()->where('transaction_id', $transactionId)->whereNotNull('invoice_id')->latest('id')->first()?->invoice;
+        $rate = $this->invoiceLiraRate($invoice) ?? (float) (Currency::where('code', 'TRY')->value('rate') ?: 1);
         $asked = $amount > 0 ? round($amount * ($rate > 0 ? $rate : 1), 2) : $paidPrice;
-        $refund = min($asked, $paidPrice);
+        // Within a cent of everything taken is everything taken: no kuruş left behind by rounding.
+        $refund = abs($asked - $paidPrice) < 0.01 ? $paidPrice : min($asked, $paidPrice);
 
         if ($refund <= 0) {
             return ['success' => false, 'message' => __('messages.iyzico.nothing_to_refund')];
@@ -1347,7 +1374,7 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // this same attempt correct.
         $shopCurrency = strtoupper((string) shop_currency_code());
 
-        if ($shopCurrency !== 'TRY' && (float) (Currency::where('code', 'TRY')->value('rate') ?: 0) <= 0) {
+        if ($shopCurrency !== 'TRY' && ! $this->invoiceLiraRate($invoice) && (float) (Currency::where('code', 'TRY')->value('rate') ?: 0) <= 0) {
             Log::error('iyzico: refused an unattended charge because there is no TRY rate to convert it with', [
                 'invoice' => $invoice->id,
                 'shop_currency' => $shopCurrency,
@@ -1356,7 +1383,7 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             return $this->nothingWasSent($isReplay, __('messages.iyzico.autocharge.no_try_rate'), true);
         }
 
-        $lira = $this->tryPrice($amount);
+        $lira = $this->tryPrice($amount, $invoice);
 
         if ($lira['amount'] <= 0) {
             return $this->nothingWasSent($isReplay, __('messages.iyzico.nothing_due'));
