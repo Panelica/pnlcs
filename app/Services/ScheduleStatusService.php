@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ScheduledTaskRun;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Carbon;
 
 /**
@@ -54,7 +55,7 @@ class ScheduleStatusService
         $runs = ScheduledTaskRun::all()->keyBy('command');
         $rows = [];
 
-        foreach (app(Schedule::class)->events() as $event) {
+        foreach ($this->schedule()->events() as $event) {
             $summary = $event->getSummaryForDisplay();
             $key = ScheduledTaskRun::key($summary);
             $run = $runs->get($key);
@@ -79,6 +80,23 @@ class ScheduleStatusService
         usort($rows, fn ($a, $b) => [$rank[$a['state']], $a['label']] <=> [$rank[$b['state']], $b['label']]);
 
         return $rows;
+    }
+
+    /**
+     * The schedule, with its tasks registered.
+     *
+     * The tasks are defined in routes/console.php, which Laravel loads only
+     * when the console kernel boots. On a web request nothing had loaded it,
+     * so this screen read an empty schedule and showed no tasks at all on
+     * every installation - the tests never saw it because they run under the
+     * console kernel. Booting the console kernel loads the file once; under
+     * artisan it is already loaded and this is a no-op.
+     */
+    private function schedule(): Schedule
+    {
+        app(ConsoleKernel::class)->bootstrap();
+
+        return app(Schedule::class);
     }
 
     /** @return array<string, int> */

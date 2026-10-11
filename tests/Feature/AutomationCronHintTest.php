@@ -58,3 +58,25 @@ it('describes the cron line as running every minute in every language', function
             ->not->toBe('admin.automation.container_scheduler');
     }
 });
+
+// The tasks live in routes/console.php, which only the console kernel loads.
+// A web request never booted it, so the screen listed no tasks at all on
+// every installation ("Healthy 0", empty table). Tests run under the console
+// kernel, so this one starts from what a web request has: a schedule nobody
+// has filled and a console kernel that has not loaded its routes.
+it('lists the scheduled tasks on a web request, where the console kernel never loaded them', function () {
+    $this->app->forgetInstance(\Illuminate\Console\Scheduling\Schedule::class);
+    $this->app->forgetInstance(\Illuminate\Contracts\Console\Kernel::class);
+    // The facade routes/console.php calls would otherwise keep writing to the
+    // schedule the test kernel filled.
+    \Illuminate\Support\Facades\Schedule::clearResolvedInstance(\Illuminate\Console\Scheduling\Schedule::class);
+
+    expect(app(\Illuminate\Console\Scheduling\Schedule::class)->events())->toBe([]);
+
+    $tasks = app(ScheduleStatusService::class)->tasks();
+    $commands = array_column($tasks, 'command');
+
+    expect($tasks)->not->toBeEmpty()
+        ->and($commands)->toContain('pnlcs:auto-suspend', 'pnlcs:unsuspend-on-payment')
+        ->and(count(app(ScheduleStatusService::class)->tasks()))->toBe(count($tasks));
+});
