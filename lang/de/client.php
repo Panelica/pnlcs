@@ -1876,4 +1876,5 @@ return [
     'hosting.email.dns_requested' => 'Das Zertifikat wurde angefordert. Es kommt meist innerhalb weniger Minuten.',
     'hosting.email.dns_not_requested' => 'Das Zertifikat konnte gerade nicht angefordert werden. Versuchen Sie es in einigen Minuten erneut.',
     'hosting.email.dns_after' => 'Sobald die Einträge gesetzt sind, fordern Sie das Zertifikat erneut an. DNS-Änderungen können einige Stunden dauern.',
+    'hosting.panel_unreachable' => 'Das Hosting-Control-Panel antwortet gerade nicht. Bitte versuchen Sie es in ein paar Minuten erneut.',
 ];

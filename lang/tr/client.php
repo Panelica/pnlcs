@@ -1876,4 +1876,5 @@ return [
     'hosting.email.dns_requested' => 'Sertifika istendi. Genellikle birkaç dakika içinde gelir.',
     'hosting.email.dns_not_requested' => 'Sertifika şu anda istenemedi. Birkaç dakika sonra yeniden deneyin.',
     'hosting.email.dns_after' => 'Kayıtları ekledikten sonra sertifikayı yeniden isteyin. DNS değişikliklerinin yayılması birkaç saat sürebilir.',
+    'hosting.panel_unreachable' => 'Barındırma kontrol paneli şu an yanıt vermiyor. Lütfen birkaç dakika sonra yeniden deneyin.',
 ];

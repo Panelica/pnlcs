@@ -129,6 +129,27 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->json(['result' => 'error', 'message' => $message], $e->getStatusCode(), $e->getHeaders());
         });
 
+        // A hosting panel that does not answer. The customer's hosting tabs
+        // (email, DNS, files, databases, ...) all ask the panel first, and an
+        // unreachable panel threw past them as a 500. The customer is taken to
+        // the service page with a message instead, or back to the form they
+        // sent. The service page itself is left to fail as before, so this can
+        // never send a request in a circle.
+        $exceptions->render(function (Illuminate\Http\Client\ConnectionException $e, $request) {
+            if ($request->expectsJson() || ! $request->routeIs('client.services.*') || $request->routeIs('client.services.show')) {
+                return null;
+            }
+            Illuminate\Support\Facades\Log::warning('Hosting panel unreachable', ['route' => $request->route()?->getName(), 'error' => $e->getMessage()]);
+            $message = __('client.hosting.panel_unreachable');
+            $service = $request->route('service');
+
+            if ($request->isMethod('GET') && $service) {
+                return redirect()->route('client.services.show', $service)->with('error', $message);
+            }
+
+            return back()->withInput($request->except(['password', 'password_confirmation']))->with('error', $message);
+        });
+
         // Model binding failure (ör. /admin/clients/999 — client yok)
         // → İlgili listeleme sayfasına flash mesajla döndür, generic 404 yerine
         $exceptions->render(function (NotFoundHttpException $e, $request) {
