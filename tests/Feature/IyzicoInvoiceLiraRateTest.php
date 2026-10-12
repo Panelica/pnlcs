@@ -89,3 +89,21 @@ test('refunding what was paid gives back the lira that were taken', function (fl
     'in full' => [10.0, 400.0],
     'a part, at the invoice\'s rate' => [2.5, 100.0],
 ]);
+
+test('a payment taken at the stored rate before this change is refunded what it took', function (float $asked, float $expected) {
+    liraShop(42.0);
+    $invoice = liraInvoice();
+    // Charged at the stored rate (42) although the invoice says 40: ₺420 for €10.
+    Transaction::create(['client_id' => $invoice->client_id, 'invoice_id' => $invoice->id, 'gateway' => 'iyzico', 'transaction_id' => 'pay_old', 'amount_in' => 10.0, 'date' => now()]);
+    Http::fakeSequence()
+        ->push(['status' => 'success', 'paidPrice' => 420.0, 'currency' => 'TRY', 'itemTransactions' => [['paymentTransactionId' => 'ptx_1']]], 200)
+        ->push(['status' => 'success', 'paymentId' => 'r1'], 200);
+
+    $result = (new IyzicoModule)->refund('pay_old', $asked);
+
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/payment/refund') && $r['price'] === number_format($expected, 2, '.', ''));
+    expect($result['amount'])->toEqual($expected);
+})->with([
+    'in full' => [10.0, 420.0],
+    'a part, in proportion' => [2.5, 105.0],
+]);
