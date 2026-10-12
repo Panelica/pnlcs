@@ -547,11 +547,17 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         }
 
         $paidPrice = (float) ($detail['paidPrice'] ?? 0);
-        // The rate the payment was taken at: the invoice's own when it was
-        // billed in lira, so a refund of what was paid gives back the lira
-        // that were taken, not today's conversion of the amount.
-        $invoice = Transaction::query()->where('transaction_id', $transactionId)->whereNotNull('invoice_id')->latest('id')->first()?->invoice;
-        $rate = $this->invoiceLiraRate($invoice) ?? (float) (Currency::where('code', 'TRY')->value('rate') ?: 1);
+        // The rate the payment was actually taken at: the lira iyzico took
+        // against what was recorded for it. That holds for a payment charged
+        // at the invoice's rate and for one charged at the stored rate before
+        // there was such a thing, so a refund gives back what was taken and a
+        // part stays in proportion. Without a recorded payment, the invoice's
+        // own rate, then the stored one.
+        $transaction = Transaction::query()->where('transaction_id', $transactionId)->whereNotNull('invoice_id')->latest('id')->first();
+        $recorded = (float) ($transaction?->amount_in ?? 0);
+        $rate = $recorded > 0 && $paidPrice > 0
+            ? $paidPrice / $recorded
+            : ($this->invoiceLiraRate($transaction?->invoice) ?? (float) (Currency::where('code', 'TRY')->value('rate') ?: 1));
         $asked = $amount > 0 ? round($amount * ($rate > 0 ? $rate : 1), 2) : $paidPrice;
         // Within a cent of everything taken is everything taken: no kuruş left behind by rounding.
         $refund = abs($asked - $paidPrice) < 0.01 ? $paidPrice : min($asked, $paidPrice);
