@@ -10,6 +10,7 @@ use App\Models\GatewaySettings;
 use App\Models\GatewayVaultSession;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
+use App\Models\Transaction;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -41,6 +42,8 @@ class PayPalModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             ["name" => "client_id",     "label" => "Client ID",      "type" => "text", "required" => true],
             ["name" => "client_secret", "label" => "Client Secret",  "type" => "password", "required" => true],
             ["name" => "sandbox",       "label" => "Sandbox Mode",   "type" => "select", "options" => ["0" => "Live", "1" => "Sandbox"]],
+            ["name" => "charge_billing_currency", "label" => "Charge in the invoice's billing currency", "type" => "yesno", "default" => "0",
+                "description" => "An invoice billed in another currency (Setup > Currencies) is charged in that currency, at the rate on the invoice, so the customer pays the amount they saw. The payment is still recorded in the shop currency. A currency PayPal does not take is charged in the shop currency. Your PayPal account must accept payments in those currencies (Payment receiving preferences), or they wait as pending."],
         ];
     }
 
@@ -77,6 +80,16 @@ class PayPalModule implements GatewayModuleInterface, TokenizableGatewayInterfac
      * processor gets its own table, read off its own documentation.
      */
     private const NON_DECIMAL_CURRENCIES = ["HUF", "JPY", "TWD"];
+
+    /**
+     * The currencies an invoice's billing currency may be charged in: PayPal's
+     * list (https://developer.paypal.com/api/rest/reference/currency-codes/,
+     * fetched 2026-10-12) without BRL, CNY and MYR, which it takes "for
+     * in-country PayPal accounts only". Any other billing currency is charged
+     * in the shop currency, as with the setting off.
+     */
+    private const BILLING_CURRENCIES = ["AUD", "CAD", "CHF", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "ILS", "JPY",
+        "MXN", "NOK", "NZD", "PHP", "PLN", "RUB", "SEK", "SGD", "THB", "TWD", "USD"];
 
     /**
      * An amount in the form PayPal wants to be told about it in.
@@ -240,6 +253,11 @@ class PayPalModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         }
 
         $currency = $this->currencyCode($params["currency"] ?? shop_currency_code());
+        $value    = $this->amountValue($amount, $currency);
+        // In the invoice's billing currency when the operator chose so.
+        if (!isset($params["currency"]) && ($charge = $this->billingCharge($invoice, $amount))) {
+            [$currency, $value] = [$charge["currency"], $charge["value"]];
+        }
 
         $response = Http::withToken($accessToken)
             ->post($this->getBaseUrl() . "/v2/checkout/orders", [
@@ -249,7 +267,7 @@ class PayPalModule implements GatewayModuleInterface, TokenizableGatewayInterfac
                     "description"  => "Invoice #" . ($invoice->invoice_num ?? $invoice->id),
                     "amount"       => [
                         "currency_code" => $currency,
-                        "value"         => $this->amountValue($amount, $currency),
+                        "value"         => $value,
                     ],
                 ]],
                 "application_context" => [
@@ -345,11 +363,18 @@ class PayPalModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         }
 
         $currency = $this->currencyCode(shop_currency_code());
+        $value    = $this->amountValue($amount, $currency);
+        // A capture taken in the invoice's billing currency is refunded in it.
+        // Looked up only for such invoices, so every other refund sends what it
+        // always sent.
+        if ($billed = $this->billedRefund($accessToken, $transactionId, $amount)) {
+            [$currency, $value] = $billed;
+        }
 
         $response = Http::withToken($accessToken)
             ->post($this->getBaseUrl() . "/v2/payments/captures/{$transactionId}/refund", [
                 "amount" => [
-                    "value"         => $this->amountValue($amount, $currency),
+                    "value"         => $value,
                     "currency_code" => $currency,
                 ],
             ]);
@@ -384,6 +409,11 @@ class PayPalModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // shaped the same way it would from this server: PayPal refuses a
         // decimal in HUF, JPY or TWD wherever the order is created.
         $amount    = $this->amountValue((float) $invoice->amountDue(), $currency);
+        // In the invoice's billing currency when the operator chose so; the
+        // capture is then held to that currency (verifyInvoiceCapture()).
+        if ($charge = $this->billingCharge($invoice, (float) $invoice->amountDue())) {
+            [$currency, $amount] = [$charge["currency"], $charge["value"]];
+        }
         $display   = money_fmt($invoice->total);
 
         if (!$clientId) {
@@ -490,6 +520,105 @@ HTML;
         ];
     }
 
+    /**
+     * verifyCapture() for a capture that pays this invoice: held to the
+     * currency the invoice is charged in, and its amount given in the
+     * invoice's own currency.
+     *
+     * @return array{success: bool, message?: string, amount?: float, currency?: string, invoice_ref?: ?string}
+     */
+    public function verifyInvoiceCapture(Invoice $invoice, string $captureId): array
+    {
+        $verified = $this->verifyCapture($captureId, $this->captureCurrency($invoice));
+        if ($verified["success"] ?? false) {
+            $verified["amount"] = $this->recordedAmount($invoice, (float) $verified["amount"], (string) $verified["currency"]);
+        }
+
+        return $verified;
+    }
+
+    /** The currency a payment of this invoice is charged in. */
+    public function captureCurrency(Invoice $invoice): string
+    {
+        return $this->billingCharge($invoice, 0.0)["currency"] ?? $this->currencyCode(shop_currency_code());
+    }
+
+    /**
+     * The charge for an invoice billed in another currency, when the operator
+     * chose to charge in it: the billing currency and the amount at the
+     * invoice's own rate (frozen the day it was raised), shaped for PayPal.
+     * Null when the setting is off, the invoice has no conversion, or PayPal
+     * does not take the currency.
+     *
+     * Nothing about the conversion is written on the order. The browser builds
+     * it, so nothing on it could be believed; what it is worth is worked out
+     * again from the invoice when it is captured, and from the recorded payment
+     * when it is refunded.
+     *
+     * @return array{currency: string, value: string, rate: float}|null
+     */
+    private function billingCharge(Invoice $invoice, float $amount): ?array
+    {
+        $currency = $this->currencyCode($invoice->billing_currency);
+        if ($this->getSetting("charge_billing_currency") !== "1" || !has_billing_conversion($invoice)
+            || !in_array($currency, self::BILLING_CURRENCIES, true)) {
+            return null;
+        }
+        $rate = (float) $invoice->exchange_rate;
+
+        return ["currency" => $currency, "value" => $this->amountValue($amount * $rate, $currency), "rate" => $rate];
+    }
+
+    /**
+     * What a capture is worth in the invoice's currency. One in the billing
+     * currency for exactly what was due is the amount due; any other amount in
+     * it is converted back at the invoice's rate.
+     */
+    private function recordedAmount(Invoice $invoice, float $value, string $currency): float
+    {
+        $due    = (float) $invoice->amountDue();
+        $charge = $this->billingCharge($invoice, $due);
+        if (!$charge || $this->currencyCode($currency) !== $charge["currency"] || $charge["rate"] <= 0) {
+            return $value;
+        }
+        if ($due > 0 && abs($value - (float) $charge["value"]) < 0.005) {
+            return round($due, 2);
+        }
+
+        return round($value / $charge["rate"], 2);
+    }
+
+    /**
+     * A refund of an amount in the invoice's currency, in the currency the
+     * capture was taken in: [currency, value]. Converted at the rate the payment
+     * was actually taken at, what was taken against what was recorded for it,
+     * so the whole recorded amount gives back exactly what was taken, a part
+     * stays in proportion, and never more than was taken. Null for a capture in
+     * the shop currency, or one this shop has no record of.
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    private function billedRefund(string $accessToken, string $captureId, float $amount): ?array
+    {
+        $transaction = Transaction::query()->where("transaction_id", $captureId)->whereNotNull("invoice_id")->latest("id")->first();
+        $invoice     = $transaction?->invoice;
+        $recorded    = (float) ($transaction?->amount_in ?? 0);
+        if (!$invoice || $recorded <= 0 || !has_billing_conversion($invoice)) {
+            return null;
+        }
+
+        $capture = Http::withToken($accessToken)->get($this->getBaseUrl() . "/v2/payments/captures/" . urlencode($captureId));
+        $currency = $this->currencyCode($capture->json("amount.currency_code"));
+        $taken    = $this->amountFromValue($capture->json("amount.value", 0));
+        if (!$capture->successful() || $currency === "" || $currency === $this->currencyCode(shop_currency_code()) || $taken <= 0) {
+            return null;
+        }
+
+        $value = abs($amount - $recorded) < 0.005 ? $taken : min($taken, $amount * $taken / $recorded);
+
+        return [$currency, $this->amountValue($value, $currency)];
+    }
+
     public function processWebhook(array $data): array
     {
         $eventType = $data["event_type"] ?? "";
@@ -506,8 +635,10 @@ HTML;
             return ["success" => false, "message" => "Missing capture ID or invoice reference."];
         }
 
-        // Never trust the webhook body — confirm the capture with PayPal.
-        $verified = $this->verifyCapture($captureId);
+        // Never trust the webhook body — confirm the capture with PayPal, in
+        // the currency that invoice is charged in.
+        $invoice  = Invoice::find((int) str_replace("INV-", "", (string) $invoiceRef));
+        $verified = $invoice ? $this->verifyInvoiceCapture($invoice, $captureId) : $this->verifyCapture($captureId);
         if (!($verified["success"] ?? false)) {
             Log::warning("PayPal webhook rejected — capture not verified", [
                 "capture_id" => $captureId,
@@ -1124,6 +1255,11 @@ HTML;
 
         $currency = $this->currencyCode($params["currency"] ?? shop_currency_code());
         $value    = $this->amountValue($amount, $currency);
+        // Charged like the payment form, in the invoice's billing currency
+        // when the operator chose so.
+        if (!isset($params["currency"]) && ($charge = $this->billingCharge($invoice, $amount))) {
+            [$currency, $value] = [$charge["currency"], $charge["value"]];
+        }
 
         if ($this->amountFromValue($value) <= 0) {
             return $this->nothingWasSent($isReplay, "Nothing left to charge on this invoice.");
@@ -1382,7 +1518,11 @@ HTML;
             // Read out of PayPal's own answer rather than out of what was
             // asked for, and through the same conversion it went out under, so
             // that what is reported is what was taken.
-            "amount"         => $this->amountFromValue($capture["amount"]["value"] ?? $this->amountValue(0.0, $currency)),
+            // A capture in the invoice's billing currency is reported in the
+            // invoice's own.
+            "amount"         => $this->recordedAmount($invoice,
+                $this->amountFromValue($capture["amount"]["value"] ?? $this->amountValue(0.0, $currency)),
+                (string) ($capture["amount"]["currency_code"] ?? $currency)),
         ];
     }
 

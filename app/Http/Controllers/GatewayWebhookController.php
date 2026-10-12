@@ -81,7 +81,11 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => false, "message" => "PayPal module not available."]);
         }
 
-        $verified = $module->verifyCapture($captureId);
+        // Held to the currency this invoice is charged in, with the amount in
+        // the invoice's own currency.
+        $verified = method_exists($module, "verifyInvoiceCapture")
+            ? $module->verifyInvoiceCapture($invoice, $captureId)
+            : $module->verifyCapture($captureId);
         if (!($verified["success"] ?? false)) {
             Log::warning("PayPal capture rejected", ["invoice" => $invoice->id, "reason" => $verified["message"] ?? "unknown"]);
             $this->notifyPaymentFailed($invoice, "paypal", (string) ($verified["message"] ?? "unknown"));
