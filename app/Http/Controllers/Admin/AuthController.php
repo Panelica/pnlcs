@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\TwoFactorService;
+use App\Support\QrCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -129,6 +130,8 @@ class AuthController extends Controller
             return view('admin.auth.enable-two-factor', [
                 'secret' => $secret,
                 'qrUrl' => $qrUrl,
+                // Drawn here: the address carries the secret and must not go to a QR service.
+                'qrImage' => QrCode::dataUri($qrUrl),
             ]);
         }
 

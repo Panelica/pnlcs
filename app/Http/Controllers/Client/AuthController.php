@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\AffiliateService;
 use App\Services\LoginRecorder;
 use App\Services\TwoFactorService;
+use App\Support\QrCode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -180,6 +181,8 @@ class AuthController extends Controller
             return view('client.auth.enable-two-factor', [
                 'secret' => $secret,
                 'qrUrl' => $qrUrl,
+                // Drawn here: the address carries the secret and must not go to a QR service.
+                'qrImage' => QrCode::dataUri($qrUrl),
             ]);
         }
 
