@@ -169,12 +169,18 @@
                 'res_max_containers'=>['Max Containers',0],'res_network_mbit'=>['Network (Mbit/s)',0],
                 'res_php_memory_mb'=>['PHP Memory (MB)',256],'res_php_exec'=>['PHP Exec (s)',30],
                 'res_php_upload'=>['PHP Upload (MB)',64],
-            ]; @endphp
+            ];
+            // The panel's defaults are filled in only for a Panelica product. On
+            // a product without a module they were saved with every edit nobody
+            // made, and the price list then offered "1 GB RAM, 1 vCPU, 5 GB" for
+            // a product that has none of it. Left empty, Panelica applies the
+            // same defaults itself.
+            $resDefaults = strtolower((string) $product->server_type) === 'panelica'; @endphp
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
                 @foreach($numFields as $k => $meta)
                 <div>
                     <label class="form-label" style="font-size:11px;">{!! $meta[0] !!}</label>
-                    <input type="number" name="{{ $k }}" value="{{ $cfg[$k] ?? $meta[1] }}" class="form-control" style="font-size:12px;">
+                    <input type="number" name="{{ $k }}" value="{{ $cfg[$k] ?? ($resDefaults ? $meta[1] : '') }}" placeholder="{{ $meta[1] }}" class="form-control" style="font-size:12px;">
                 </div>
                 @endforeach
                 <div>
