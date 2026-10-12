@@ -15,7 +15,7 @@ gateway, fill in its keys, save and enable it.
 | Gateway | Fields | Webhook |
 |---|---|---|
 | **Stripe** | Publishable Key, Secret Key, Webhook Signing Secret | `/gateway/stripe/webhook` |
-| **PayPal** | PayPal Email, Client ID, Client Secret, Sandbox Mode | `/gateway/paypal/webhook` |
+| **PayPal** | PayPal Email, Client ID, Client Secret, Sandbox Mode, Charge in the invoice's billing currency | `/gateway/paypal/webhook` |
 | **Authorize.Net** | API Login ID, Transaction Key, Client Key (Accept.js), Test Mode | `/gateway/authorize/webhook` |
 | **Mollie** | Mollie API Key, Test Mode, Charge in the invoice's billing currency | `/gateway/mollie/webhook` |
 | **Razorpay** | Key ID, Key Secret, Webhook Secret, Test Mode | `/gateway/razorpay/webhook` |
@@ -82,6 +82,15 @@ others, not TRY).
 2. Fill them in under **Setup → Payment Gateways → PayPal**, choose sandbox or
    live, and enable it.
 3. Point a PayPal webhook at `https://example.com/gateway/paypal/webhook`.
+
+**Charge in the invoice's billing currency** works as it does for Stripe: an
+invoice billed in another currency is charged in that currency at the rate on
+the invoice, by the PayPal buttons and by automatic renewals, recorded in the
+shop currency, and refunded in the currency it was paid in. PayPal must take
+the currency (it takes PLN, GBP, CHF, USD and others, not TRY), and your PayPal
+account must accept payments in it under **Payment receiving preferences**;
+otherwise they wait as pending and the invoice stays unpaid until you accept
+them.
 
 ## Bank Transfer
 
