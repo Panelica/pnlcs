@@ -13,6 +13,17 @@ class MollieModule implements GatewayModuleInterface
 {
     protected string $apiUrl = 'https://api.mollie.com/v2';
 
+    /**
+     * The currencies Mollie takes payments in, and the ones written without
+     * decimals (https://docs.mollie.com/docs/multicurrency, fetched 2026-10-12).
+     * A billing currency not on the list is not offered to Mollie: the invoice
+     * is charged in the shop currency instead, as it is with the option off.
+     */
+    private const CURRENCIES = ['AED', 'AUD', 'BRL', 'CAD', 'CHF', 'CZK', 'DKK', 'EUR', 'GBP', 'HKD', 'HUF', 'ILS', 'ISK', 'JPY',
+        'MXN', 'MYR', 'NOK', 'NZD', 'PHP', 'PLN', 'RON', 'RUB', 'SEK', 'SGD', 'THB', 'TWD', 'USD', 'ZAR'];
+
+    private const ZERO_DECIMAL = ['ISK', 'JPY'];
+
     public function getModuleName(): string
     {
         return 'Mollie';
@@ -29,7 +40,7 @@ class MollieModule implements GatewayModuleInterface
             ['name' => 'api_key', 'label' => 'Mollie API Key', 'type' => 'password', 'required' => true],
             ['name' => 'test_mode', 'label' => 'Test Mode', 'type' => 'yesno', 'default' => '1'],
             ['name' => 'charge_billing_currency', 'label' => "Charge in the invoice's billing currency", 'type' => 'yesno', 'default' => '0',
-                'description' => "An invoice billed in another currency (Setup > Currencies) is charged in that currency, at the rate on the invoice, so the customer's statement shows the amount they saw. The payment is still recorded in the shop currency. The currency must be one Mollie accepts."],
+                'description' => "An invoice billed in another currency (Setup > Currencies) is charged in that currency, at the rate on the invoice, so the customer's statement shows the amount they saw. The payment is still recorded in the shop currency. A currency Mollie does not take is charged in the shop currency."],
         ];
     }
 
@@ -43,6 +54,19 @@ class MollieModule implements GatewayModuleInterface
         return $this->getSetting('api_key') ?? '';
     }
 
+    private function decimals(string $currency): int
+    {
+        return in_array(strtoupper($currency), self::ZERO_DECIMAL, true) ? 0 : 2;
+    }
+
+    /** An amount the way Mollie wants it written: a string with the currency's own number of decimals. */
+    private function amountValue(float $amount, string $currency): string
+    {
+        $d = $this->decimals($currency);
+
+        return number_format(round($amount, $d), $d, '.', '');
+    }
+
     public function capture(Invoice $invoice, float $amount, array $params = []): array
     {
         $apiKey = $this->getApiKey();
@@ -51,7 +75,7 @@ class MollieModule implements GatewayModuleInterface
         }
 
         $currency = strtoupper($params['currency'] ?? shop_currency_code());
-        $value = round($amount, 2);
+        $value = round($amount, $this->decimals($currency));
         $metadata = [];
         // Charged in the invoice's billing currency when the operator chose to:
         // the amount at the invoice's own rate, with what it stands for written
@@ -69,7 +93,7 @@ class MollieModule implements GatewayModuleInterface
             ->post("{$this->apiUrl}/payments", [
                 'amount' => [
                     'currency' => $currency,
-                    'value' => number_format($value, 2, '.', ''),
+                    'value' => $this->amountValue($value, $currency),
                 ],
                 'description' => "Invoice #{$invoiceNum}",
                 'redirectUrl' => $redirectUrl,
@@ -103,8 +127,8 @@ class MollieModule implements GatewayModuleInterface
             return ['success' => false, 'message' => 'Mollie API key not configured.'];
         }
 
-        $currency = shop_currency_code();
-        $value = round($amount, 2);
+        $currency = strtoupper(shop_currency_code());
+        $value = round($amount, $this->decimals($currency));
         // A payment taken in the invoice's billing currency is refunded in it:
         // the amount asked for is in the shop currency, converted at the rate
         // the payment was made with. Everything that was paid gives back exactly
@@ -121,7 +145,7 @@ class MollieModule implements GatewayModuleInterface
             ->post("{$this->apiUrl}/payments/{$transactionId}/refunds", [
                 'amount' => [
                     'currency' => $currency,
-                    'value' => number_format($value, 2, '.', ''),
+                    'value' => $this->amountValue($value, $currency),
                 ],
             ]);
 
@@ -216,14 +240,16 @@ HTML;
      */
     private function billingCharge(Invoice $invoice, float $amount): ?array
     {
-        if ($this->getSetting('charge_billing_currency') !== '1' || ! has_billing_conversion($invoice)) {
+        $currency = strtoupper((string) $invoice->billing_currency);
+        if ($this->getSetting('charge_billing_currency') !== '1' || ! has_billing_conversion($invoice)
+            || ! in_array($currency, self::CURRENCIES, true)) {
             return null;
         }
         $rate = (float) $invoice->exchange_rate;
 
         return [
-            'currency' => strtoupper((string) $invoice->billing_currency),
-            'amount' => round($amount * $rate, 2),
+            'currency' => $currency,
+            'amount' => round($amount * $rate, $this->decimals($currency)),
             'rate' => $rate,
             'source_currency' => strtoupper((string) ($invoice->source_currency ?: shop_currency_code())),
         ];
@@ -246,7 +272,7 @@ HTML;
         }
 
         $sourceAmount = (float) ($meta['source_amount'] ?? 0);
-        if ($sourceAmount > 0 && $value + 0.005 >= round($sourceAmount * $rate, 2)) {
+        if ($sourceAmount > 0 && $value + 0.005 >= round($sourceAmount * $rate, $this->decimals((string) ($payment['amount']['currency'] ?? '')))) {
             return $sourceAmount;
         }
 
@@ -272,7 +298,7 @@ HTML;
 
         $taken = (float) ($payment['amount']['value'] ?? 0);
         $sourceAmount = (float) ($meta['source_amount'] ?? 0);
-        $value = $sourceAmount > 0 && abs($amount - $sourceAmount) < 0.005 ? $taken : round($amount * $rate, 2);
+        $value = $sourceAmount > 0 && abs($amount - $sourceAmount) < 0.005 ? $taken : round($amount * $rate, $this->decimals($currency));
 
         return [$currency, $taken > 0 ? min($value, $taken) : $value];
     }
