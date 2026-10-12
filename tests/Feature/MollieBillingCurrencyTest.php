@@ -119,3 +119,31 @@ test('a refund for an invoice in the shop currency sends what it always sent', f
     Http::assertSentCount(1);
     Http::assertSent(fn (Request $r) => $r['amount'] === ['currency' => 'EUR', 'value' => '10.00']);
 });
+
+test('a billing currency Mollie does not take is charged in the shop currency instead', function () {
+    mollieShop();
+    $invoice = Invoice::factory()->create([
+        'client_id' => Client::factory()->create()->id, 'status' => 'unpaid', 'total' => 10.0,
+        'source_currency' => 'EUR', 'billing_currency' => 'TRY', 'exchange_rate' => 40,
+    ]);
+    Http::fake(['*' => Http::response(['id' => 'tr_1'], 201)]);
+
+    (new MollieModule)->capture($invoice, 10.0);
+    expect((new MollieModule)->getPaymentForm($invoice))->toContain(e(invoice_money_fmt(10.0, $invoice)));
+
+    Http::assertSent(fn (Request $r) => $r['amount'] === ['currency' => 'EUR', 'value' => '10.00'] && ! isset($r['metadata']['rate']));
+});
+
+test('a currency without minor units is written without decimals', function () {
+    mollieShop();
+    Currency::updateOrCreate(['code' => 'JPY'], ['prefix' => '¥', 'suffix' => '', 'rate' => 162.5, 'is_default' => false]);
+    $invoice = Invoice::factory()->create([
+        'client_id' => Client::factory()->create()->id, 'status' => 'unpaid', 'total' => 10.0,
+        'source_currency' => 'EUR', 'billing_currency' => 'JPY', 'exchange_rate' => 162.5,
+    ]);
+    Http::fake(['*' => Http::response(['id' => 'tr_1'], 201)]);
+
+    (new MollieModule)->capture($invoice, 10.0);
+
+    Http::assertSent(fn (Request $r) => $r['amount'] === ['currency' => 'JPY', 'value' => '1625']);
+});
