@@ -431,8 +431,11 @@ class ProductController extends Controller
         }
 
         // Panelica managed resources -> merged into config_options (preserves
-        // feature text f1..f7 and any other existing keys).
-        if ($request->boolean('res_section')) {
+        // feature text f1..f7 and any other existing keys). Not for a product
+        // of another panel: the form disables the card there, and a request
+        // that still carries it must not give a cPanel or Proxmox product
+        // Panelica limits.
+        if ($request->boolean('res_section') && in_array(strtolower((string) $product->server_type), ['', 'custom', 'panelica'], true)) {
             $config = is_string($product->config_options)
                 ? (json_decode($product->config_options, true) ?: [])
                 : ($product->config_options ?? []);
