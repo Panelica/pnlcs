@@ -441,9 +441,15 @@ HTML;
      * untrusted — anyone can POST a fake PAYMENT.CAPTURE.COMPLETED. We
      * re-fetch the capture from PayPal and only trust its status/amount.
      *
+     * The currency is checked as well as the status. The order behind a
+     * capture is built in the browser, so its currency is the browser's to
+     * choose: a capture of 100 in a cheaper currency must not be credited as
+     * 100 in the shop's. A capture in any currency but $expectedCurrency
+     * (the shop's, unless the caller says otherwise) is refused.
+     *
      * @return array{success: bool, message?: string, amount?: float, currency?: string, invoice_ref?: ?string}
      */
-    public function verifyCapture(string $captureId): array
+    public function verifyCapture(string $captureId, ?string $expectedCurrency = null): array
     {
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
@@ -464,6 +470,16 @@ HTML;
         $status = $response->json("status");
         if ($status !== "COMPLETED") {
             return ["success" => false, "message" => "Capture status is '{$status}', not COMPLETED."];
+        }
+
+        $currency = $this->currencyCode($response->json("amount.currency_code"));
+        $expected = $this->currencyCode($expectedCurrency ?? shop_currency_code());
+        if ($currency !== $expected) {
+            Log::warning("PayPal: capture in an unexpected currency refused", [
+                "capture_id" => $captureId, "currency" => $currency, "expected" => $expected,
+            ]);
+
+            return ["success" => false, "message" => "Capture is in {$currency}, not {$expected}."];
         }
 
         return [
