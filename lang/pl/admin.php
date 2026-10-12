@@ -3686,4 +3686,8 @@ return [
     'logs.action_placeholder' => 'np. create, terminate...',
     'custom_fields.options_placeholder' => "Opcja 1\nOpcja 2",
     'affiliates.title_named' => 'Partner: :name',
+    'settings.free_subdomains' => 'Domeny dla darmowych subdomen',
+    'settings.free_subdomains_hint' => 'Jedna w wierszu, np. example-sites.com. Zamówienia hostingu mogą wtedy otrzymać nazwę pod nią (twojanazwa.example-sites.com). Puste: opcja nie jest oferowana.',
+    'settings.disallowed_subdomains' => 'Nazwy, których nikt nie może zająć',
+    'settings.disallowed_subdomains_hint' => 'Oddzielone przecinkami lub wierszami. Puste oznacza: :names',
 ];

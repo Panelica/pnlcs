@@ -124,6 +124,9 @@ class SettingController extends Controller
         // Which endings the domain search suggests next to the one searched,
         // in order, and how many (DomainSearchController).
         'DomainSuggestionTlds', 'DomainSuggestionCount',
+        // Names under the shop's own domains a hosting order can take, and the
+        // first labels nobody may take (App\Support\FreeSubdomains).
+        'FreeSubdomains', 'DisallowedSubdomainPrefixes',
         // Paying renewal invoices with a card the customer has already stored.
         // Off by default; read through App\Support\AutoCharge so the screen
         // and the code cannot disagree about what a blank setting means.

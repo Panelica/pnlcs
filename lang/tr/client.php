@@ -1877,4 +1877,10 @@ return [
     'hosting.email.dns_not_requested' => 'Sertifika şu anda istenemedi. Birkaç dakika sonra yeniden deneyin.',
     'hosting.email.dns_after' => 'Kayıtları ekledikten sonra sertifikayı yeniden isteyin. DNS değişikliklerinin yayılması birkaç saat sürebilir.',
     'hosting.panel_unreachable' => 'Barındırma kontrol paneli şu an yanıt vermiyor. Lütfen birkaç dakika sonra yeniden deneyin.',
+    'cart.free_subdomain' => 'Bizden ücretsiz alt alan adı',
+    'cart.subdomain_placeholder' => 'adiniz',
+    'cart.subdomain_parent_invalid' => 'Sunulan alan adlarından birini seçin.',
+    'cart.subdomain_invalid' => 'Yalnız harf, rakam ve tire kullanın; nokta olmasın.',
+    'cart.subdomain_reserved' => ':name ayrılmış bir ad. Başka bir ad seçin.',
+    'cart.subdomain_taken' => ':name zaten kullanımda. Başka bir ad seçin.',
 ];

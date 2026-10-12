@@ -3686,4 +3686,8 @@ return [
     'logs.action_placeholder' => 'örn. create, terminate...',
     'custom_fields.options_placeholder' => "Seçenek 1\nSeçenek 2",
     'affiliates.title_named' => 'Satış ortağı: :name',
+    'settings.free_subdomains' => 'Ücretsiz alt alan adı için alan adları',
+    'settings.free_subdomains_hint' => 'Her satıra bir tane, örneğin example-sites.com. Hosting siparişleri bunların altında bir ad alabilir (adiniz.example-sites.com). Boşsa seçenek gösterilmez.',
+    'settings.disallowed_subdomains' => 'Kimsenin alamayacağı adlar',
+    'settings.disallowed_subdomains_hint' => 'Virgül ya da satırla ayırın. Boşsa şunlar kullanılır: :names',
 ];

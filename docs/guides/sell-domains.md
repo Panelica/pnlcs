@@ -44,6 +44,26 @@ yet: billing works exactly the same, and the registration step is yours.
   same order.
 - A transfer asks for the EPP (auth) code from the current registrar.
 
+### Free subdomains
+
+A hosting order can also take a name under one of your own domains, such as
+`yourname.example-sites.com`, instead of a domain of its own. This suits trial
+plans and customers who have not chosen a domain yet.
+
+- **Offer it:** in **Setup → General → Domains**, list the domains under
+  **Free subdomain domains**, one per line. The order form then shows **Free
+  subdomain from us**: the customer types the first part and picks the domain.
+- **Point the domains at your server:** a wildcard DNS record
+  (`*.example-sites.com`) pointing at the hosting server is the usual way.
+- **Names nobody may take:** **Names nobody may take** lists the first parts
+  kept back (`www`, `mail`, `admin`, your own hosts). Left empty, a built-in
+  list is used.
+- **Rules:**
+  - only one label is accepted (`yourname`, not `a.yourname`);
+  - a name another live service already has is refused, and is checked again
+    when the order is placed;
+  - the same rules apply when a customer types such a name as their own domain.
+
 ## What customers can do with their domains
 
 In the client area, on each domain's page:

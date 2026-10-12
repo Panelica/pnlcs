@@ -3688,4 +3688,8 @@ return [
     'logs.action_placeholder' => 'e.g. create, terminate...',
     'custom_fields.options_placeholder' => "Option 1\nOption 2",
     'affiliates.title_named' => 'Affiliate: :name',
+    'settings.free_subdomains' => 'Free subdomain domains',
+    'settings.free_subdomains_hint' => 'One per line, e.g. example-sites.com. Hosting orders can then take a name under them (yourname.example-sites.com). Empty: the option is not offered.',
+    'settings.disallowed_subdomains' => 'Names nobody may take',
+    'settings.disallowed_subdomains_hint' => 'Separated by commas or lines. Empty uses: :names',
 ];

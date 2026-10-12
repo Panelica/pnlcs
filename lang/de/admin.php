@@ -3682,4 +3682,8 @@ return [
     'logs.action_placeholder' => 'z. B. create, terminate...',
     'custom_fields.options_placeholder' => "Auswahl 1\nAuswahl 2",
     'affiliates.title_named' => 'Partner: :name',
+    'settings.free_subdomains' => 'Domains für kostenlose Subdomains',
+    'settings.free_subdomains_hint' => 'Eine pro Zeile, z. B. example-sites.com. Hosting-Bestellungen können dann einen Namen darunter erhalten (ihrname.example-sites.com). Leer: Die Option wird nicht angeboten.',
+    'settings.disallowed_subdomains' => 'Namen, die niemand erhalten darf',
+    'settings.disallowed_subdomains_hint' => 'Durch Kommas oder Zeilen getrennt. Leer bedeutet: :names',
 ];

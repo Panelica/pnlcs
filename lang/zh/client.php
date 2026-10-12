@@ -1877,4 +1877,10 @@ return [
     'hosting.email.dns_not_requested' => '暂时无法申请证书，请几分钟后重试。',
     'hosting.email.dns_after' => '添加记录后，请重新申请证书。DNS 更改可能需要几个小时才能生效。',
     'hosting.panel_unreachable' => '主机控制面板目前没有响应，请几分钟后再试。',
+    'cart.free_subdomain' => '我们提供的免费子域名',
+    'cart.subdomain_placeholder' => 'mingzi',
+    'cart.subdomain_parent_invalid' => '请选择提供的域名之一。',
+    'cart.subdomain_invalid' => '只能使用字母、数字和连字符，不能包含点。',
+    'cart.subdomain_reserved' => ':name 已被保留，请选择其他名称。',
+    'cart.subdomain_taken' => ':name 已被使用，请选择其他名称。',
 ];
