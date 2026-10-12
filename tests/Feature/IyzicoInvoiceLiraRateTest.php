@@ -107,3 +107,20 @@ test('a payment taken at the stored rate before this change is refunded what it 
     'in full' => [10.0, 420.0],
     'a part, in proportion' => [2.5, 105.0],
 ]);
+
+test('a second part refund still converts at the rate the payment was taken at', function () {
+    liraShop(42.0);
+    $invoice = liraInvoice();
+    $payment = Transaction::create(['client_id' => $invoice->client_id, 'invoice_id' => $invoice->id, 'gateway' => 'iyzico', 'transaction_id' => 'pay_old', 'amount_in' => 10.0, 'date' => now()]);
+    // The first part refund, written the way PaymentService writes it: iyzico
+    // answers a refund with the payment's id, so it carries the same one.
+    Transaction::create(['client_id' => $invoice->client_id, 'invoice_id' => $invoice->id, 'gateway' => 'iyzico', 'transaction_id' => 'pay_old', 'amount_in' => 0, 'amount_out' => 2.5, 'refund_id' => $payment->id, 'date' => now()]);
+    Http::fakeSequence()
+        ->push(['status' => 'success', 'paidPrice' => 420.0, 'currency' => 'TRY', 'itemTransactions' => [['paymentTransactionId' => 'ptx_1']]], 200)
+        ->push(['status' => 'success', 'paymentId' => 'pay_old'], 200);
+
+    $result = (new IyzicoModule)->refund('pay_old', 2.5);
+
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/payment/refund') && $r['price'] === '105.00');
+    expect($result['amount'])->toEqual(105.0);
+});

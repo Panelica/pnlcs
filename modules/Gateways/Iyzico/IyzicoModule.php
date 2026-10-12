@@ -553,7 +553,17 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // there was such a thing, so a refund gives back what was taken and a
         // part stays in proportion. Without a recorded payment, the invoice's
         // own rate, then the stored one.
-        $transaction = Transaction::query()->where('transaction_id', $transactionId)->whereNotNull('invoice_id')->latest('id')->first();
+        //
+        // The payment's own row, not a refund's: iyzico answers a refund with
+        // the payment's id, so an earlier refund is recorded under the same
+        // transaction_id with nothing in amount_in. Reading that row sent a
+        // second part refund back to the invoice's rate.
+        $transaction = Transaction::query()
+            ->where('transaction_id', $transactionId)
+            ->whereNotNull('invoice_id')
+            ->where('amount_in', '>', 0)
+            ->latest('id')
+            ->first();
         $recorded = (float) ($transaction?->amount_in ?? 0);
         $rate = $recorded > 0 && $paidPrice > 0
             ? $paidPrice / $recorded
