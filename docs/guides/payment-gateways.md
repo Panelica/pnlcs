@@ -89,8 +89,11 @@ the invoice, by the PayPal buttons and by automatic renewals, recorded in the
 shop currency, and refunded in the currency it was paid in. PayPal must take
 the currency (it takes PLN, GBP, CHF, USD and others, not TRY), and your PayPal
 account must accept payments in it under **Payment receiving preferences**;
-otherwise they wait as pending and the invoice stays unpaid until you accept
-them.
+otherwise they wait as pending, the customer is told the payment did not go
+through, and once you accept one in PayPal you record it on the invoice
+yourself. A payment in the shop currency is still taken at face value, and
+anything paid above what the invoice owed is converted at today's rate, not
+the invoice's.
 
 ## Bank Transfer
 

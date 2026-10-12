@@ -128,11 +128,51 @@ test('a part paid in zloty is converted back at the invoice\'s rate', function (
     expect($verified['success'])->toBeTrue()->and($verified['amount'])->toBe(5.0);
 });
 
-test('with the option on, a capture in euros for a zloty invoice is refused', function () {
+test('with the option on, a capture in euros still pays the invoice at face value', function () {
+    // A pay page opened before the option was switched on built its order in
+    // euros; the customer has paid, and euros are the invoice's own currency.
     ppbShop();
     ppbCapture('10.00', 'EUR');
+    $invoice = ppbInvoice();
 
-    expect((new PayPalModule)->verifyInvoiceCapture(ppbInvoice(), 'CAP-EUR')['success'])->toBeFalse();
+    $this->actingAs(ppbPayer($invoice))->postJson("/gateway/paypal/capture/{$invoice->id}", ['capture_id' => 'CAP-EUR'])
+        ->assertJson(['success' => true]);
+
+    expect($invoice->fresh()->status)->toBe('paid')
+        ->and((float) Transaction::where('invoice_id', $invoice->id)->value('amount_in'))->toBe(10.0);
+});
+
+test('with the option on, a capture in any third currency is refused', function () {
+    ppbShop();
+    ppbCapture('10.00', 'USD');
+
+    expect((new PayPalModule)->verifyInvoiceCapture(ppbInvoice(), 'CAP-USD')['success'])->toBeFalse();
+});
+
+test('the invoice\'s rate covers what was due; zloty above it is converted at today\'s rate', function () {
+    // The buttons build the order in the browser, so its amount is the
+    // browser's to choose. zł43.00 was due (€10.00 at 4.30); zł43.00 more is
+    // worth what zloty are worth today (4.35), not what they were worth then.
+    ppbShop();
+    ppbCapture('86.00');
+
+    $verified = (new PayPalModule)->verifyInvoiceCapture(ppbInvoice(), 'CAP-DOUBLE');
+
+    expect($verified['success'])->toBeTrue()->and($verified['amount'])->toBe(round(10 + 43 / 4.35, 2));
+});
+
+test('zloty paid on an old, settled invoice become credit at today\'s rate, not at that invoice\'s', function () {
+    ppbShop();
+    $invoice = ppbInvoice('PLN', 4.0);
+    Transaction::create(['client_id' => $invoice->client_id, 'invoice_id' => $invoice->id, 'gateway' => 'paypal', 'transaction_id' => 'CAP-OLD', 'amount_in' => 10.0, 'date' => now()]);
+    $invoice->update(['status' => 'paid']);
+    $before = (float) $invoice->client->credit;
+    ppbCapture('435.00');
+
+    $this->actingAs(ppbPayer($invoice))->postJson("/gateway/paypal/capture/{$invoice->id}", ['capture_id' => 'CAP-NEW'])
+        ->assertJson(['success' => true]);
+
+    expect((float) $invoice->client->fresh()->credit - $before)->toBe(100.0);
 });
 
 test('with the option off, a capture in zloty is refused as before', function () {
@@ -174,6 +214,29 @@ test('an unattended charge goes out in zloty and settles in euros', function () 
     expect(ppbOrder()['purchase_units'][0]['amount'])->toBe(['currency_code' => 'PLN', 'value' => '43.00'])
         ->and($result['success'])->toBeTrue()
         ->and($result['amount'])->toBe(10.0);
+});
+
+test('a renewal answered after the option was switched off is still read at the invoice\'s rate', function () {
+    // Sent in zloty while the option was on, with no answer heard; the option
+    // was then switched off. The replay goes out under the same
+    // PayPal-Request-Id, and PayPal answers it out of the first request's
+    // record: a capture of zł43.00, which is €10.00 and not €43.00.
+    ppbShop(false);
+    $invoice = ppbInvoice();
+    $method = PaymentMethod::create([
+        'client_id' => $invoice->client_id, 'gateway_name' => 'paypal', 'payment_type' => 'paypal', 'description' => 'PayPal',
+        'remote_token' => 'vault-1', 'gateway_customer_id' => 'cust-1', 'status' => PaymentMethod::STATUS_ACTIVE,
+    ]);
+    Http::fake([
+        '*/v1/oauth2/token' => Http::response(['access_token' => 'tok'], 200),
+        '*/v2/checkout/orders' => Http::response(['id' => 'ORDER-1', 'status' => 'COMPLETED', 'purchase_units' => [[
+            'payments' => ['captures' => [['id' => 'CAP-AUTO', 'status' => 'COMPLETED', 'amount' => ['currency_code' => 'PLN', 'value' => '43.00']]]],
+        ]]], 201),
+    ]);
+
+    $result = (new PayPalModule)->chargeStoredMethod($invoice, $method, 10.0, ['replay' => true, 'idempotency_key' => 'k']);
+
+    expect($result['success'])->toBeTrue()->and($result['amount'])->toBe(10.0);
 });
 
 test('a refund of a zloty capture is sent in zloty at the rate it was taken at', function (float $asked, string $sent) {

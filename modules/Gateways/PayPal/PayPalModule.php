@@ -5,12 +5,14 @@ namespace Modules\Gateways\PayPal;
 use App\Contracts\GatewayModuleInterface;
 use App\Contracts\TokenizableGatewayInterface;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\GatewayCustomer;
 use App\Models\GatewaySettings;
 use App\Models\GatewayVaultSession;
 use App\Models\Invoice;
 use App\Models\PaymentMethod;
 use App\Models\Transaction;
+use App\Support\CustomerCurrency;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -475,11 +477,11 @@ HTML;
      * capture is built in the browser, so its currency is the browser's to
      * choose: a capture of 100 in a cheaper currency must not be credited as
      * 100 in the shop's. A capture in any currency but $expectedCurrency
-     * (the shop's, unless the caller says otherwise) is refused.
+     * (the shop's, unless the caller names one or several) is refused.
      *
      * @return array{success: bool, message?: string, amount?: float, currency?: string, invoice_ref?: ?string}
      */
-    public function verifyCapture(string $captureId, ?string $expectedCurrency = null): array
+    public function verifyCapture(string $captureId, string|array|null $expectedCurrency = null): array
     {
         $accessToken = $this->getAccessToken();
         if (!$accessToken) {
@@ -503,13 +505,13 @@ HTML;
         }
 
         $currency = $this->currencyCode($response->json("amount.currency_code"));
-        $expected = $this->currencyCode($expectedCurrency ?? shop_currency_code());
-        if ($currency !== $expected) {
+        $expected = array_map(fn ($code) => $this->currencyCode($code), (array) ($expectedCurrency ?? shop_currency_code()));
+        if (!in_array($currency, $expected, true)) {
             Log::warning("PayPal: capture in an unexpected currency refused", [
-                "capture_id" => $captureId, "currency" => $currency, "expected" => $expected,
+                "capture_id" => $captureId, "currency" => $currency, "expected" => implode(", ", $expected),
             ]);
 
-            return ["success" => false, "message" => "Capture is in {$currency}, not {$expected}."];
+            return ["success" => false, "message" => "Capture is in {$currency}, not " . implode(" or ", $expected) . "."];
         }
 
         return [
@@ -522,14 +524,19 @@ HTML;
 
     /**
      * verifyCapture() for a capture that pays this invoice: held to the
-     * currency the invoice is charged in, and its amount given in the
-     * invoice's own currency.
+     * currency the invoice is charged in or to the shop currency, and its
+     * amount given in the invoice's own currency.
+     *
+     * The shop currency stays good with the option on. A pay page opened
+     * before the option was switched on built its order in it, the customer
+     * has paid, and it is worth what it says.
      *
      * @return array{success: bool, message?: string, amount?: float, currency?: string, invoice_ref?: ?string}
      */
     public function verifyInvoiceCapture(Invoice $invoice, string $captureId): array
     {
-        $verified = $this->verifyCapture($captureId, $this->captureCurrency($invoice));
+        $accepted = array_unique([$this->captureCurrency($invoice), $this->currencyCode(shop_currency_code())]);
+        $verified = $this->verifyCapture($captureId, $accepted);
         if ($verified["success"] ?? false) {
             $verified["amount"] = $this->recordedAmount($invoice, (float) $verified["amount"], (string) $verified["currency"]);
         }
@@ -570,22 +577,40 @@ HTML;
     }
 
     /**
-     * What a capture is worth in the invoice's currency. One in the billing
-     * currency for exactly what was due is the amount due; any other amount in
-     * it is converted back at the invoice's rate.
+     * What a capture is worth in the invoice's currency.
+     *
+     * Decided by the currency the capture is in, not by the setting. A renewal
+     * sent in the billing currency while the option was on can be answered on
+     * its replay after the option was switched off, out of PayPal's record of
+     * the first request, and zloty are not euros either way.
+     *
+     * The invoice's rate covers what the invoice still owed: a capture of
+     * exactly that is the amount due, a smaller one is converted back at it.
+     * Anything above it is converted at today's rate (Setup > Currencies). The
+     * buttons build the order in the browser, so its amount is the browser's
+     * to choose, and an old invoice's rate is not a rate to buy credit at.
      */
     private function recordedAmount(Invoice $invoice, float $value, string $currency): float
     {
-        $due    = (float) $invoice->amountDue();
-        $charge = $this->billingCharge($invoice, $due);
-        if (!$charge || $this->currencyCode($currency) !== $charge["currency"] || $charge["rate"] <= 0) {
+        $currency = $this->currencyCode($currency);
+        $rate     = (float) $invoice->exchange_rate;
+        if ($rate <= 0 || !has_billing_conversion($invoice) || $currency !== $this->currencyCode($invoice->billing_currency)) {
             return $value;
         }
-        if ($due > 0 && abs($value - (float) $charge["value"]) < 0.005) {
+
+        $due  = (float) $invoice->amountDue();
+        $owed = (float) $this->amountValue($due * $rate, $currency);
+        if ($due > 0 && abs($value - $owed) < 0.005) {
             return round($due, 2);
         }
+        if ($value < $owed) {
+            return round($value / $rate, 2);
+        }
 
-        return round($value / $charge["rate"], 2);
+        $today     = Currency::where("code", $currency)->first();
+        $todayRate = $today ? CustomerCurrency::rateOf($today) : 0.0;
+
+        return round($due + ($value - $owed) / ($todayRate > 0 ? $todayRate : $rate), 2);
     }
 
     /**
