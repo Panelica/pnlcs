@@ -14,8 +14,8 @@ use App\Models\ServerGroup;
 use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Services\Module\ModuleRegistry;
+use App\Support\UniqueSlug;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
@@ -62,7 +62,7 @@ class ProductController extends Controller
     public function storeGroup(Request $request)
     {
         $validated = $request->validate(['name' => 'required|string|max:255', 'headline' => 'nullable|string', 'tagline' => 'nullable|string']);
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = UniqueSlug::for(ProductGroup::class, $validated['name'], 'group');
         ProductGroup::create($validated);
 
         return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_group_created'));

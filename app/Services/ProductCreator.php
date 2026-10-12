@@ -6,7 +6,7 @@ use App\Models\Currency;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Services\Module\ModuleRegistry;
-use Illuminate\Support\Str;
+use App\Support\UniqueSlug;
 use Illuminate\Validation\Rule;
 
 /**
@@ -50,7 +50,7 @@ class ProductCreator
         if (array_key_exists('auto_setup', $validated) && $validated['auto_setup'] === null) {
             unset($validated['auto_setup']);
         }
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = UniqueSlug::for(Product::class, $validated['name'], 'product');
 
         // The plan lives on the panel; the product records which one it sells.
         if ($packageName !== null && $packageName !== '') {
