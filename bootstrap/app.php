@@ -135,19 +135,27 @@ return Application::configure(basePath: dirname(__DIR__))
         // the service page with a message instead, or back to the form they
         // sent. The service page itself is left to fail as before, so this can
         // never send a request in a circle.
+        //
+        // A form the panel received but did not answer in time (a container
+        // being deployed, a backup) may still be carried out there. Telling the
+        // customer to try again could do it twice, so they are asked to look
+        // first. A page that was only being read has nothing to repeat. The
+        // file editor's content is not kept: the editor reads the file from
+        // the panel again.
         $exceptions->render(function (Illuminate\Http\Client\ConnectionException $e, $request) {
             if ($request->expectsJson() || ! $request->routeIs('client.services.*') || $request->routeIs('client.services.show')) {
                 return null;
             }
-            Illuminate\Support\Facades\Log::warning('Hosting panel unreachable', ['route' => $request->route()?->getName(), 'error' => $e->getMessage()]);
-            $message = __('client.hosting.panel_unreachable');
+            $sent = App\Support\ConnectionFailure::requestWasSent($e);
+            Illuminate\Support\Facades\Log::warning('Hosting panel unreachable', ['route' => $request->route()?->getName(), 'request_sent' => $sent, 'error' => $e->getMessage()]);
+            $message = __($sent && ! $request->isMethod('GET') ? 'client.hosting.panel_no_answer_in_time' : 'client.hosting.panel_unreachable');
             $service = $request->route('service');
 
             if ($request->isMethod('GET') && $service) {
                 return redirect()->route('client.services.show', $service)->with('error', $message);
             }
 
-            return back()->withInput($request->except(['password', 'password_confirmation']))->with('error', $message);
+            return back()->withInput($request->except(['password', 'password_confirmation', 'content']))->with('error', $message);
         });
 
         // Model binding failure (ör. /admin/clients/999 — client yok)

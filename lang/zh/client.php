@@ -1877,6 +1877,7 @@ return [
     'hosting.email.dns_not_requested' => '暂时无法申请证书，请几分钟后重试。',
     'hosting.email.dns_after' => '添加记录后，请重新申请证书。DNS 更改可能需要几个小时才能生效。',
     'hosting.panel_unreachable' => '主机控制面板目前没有响应，请几分钟后再试。',
+    'hosting.panel_no_answer_in_time' => '主机控制面板未能及时响应。您的操作可能仍会完成，请一分钟后在此查看，再决定是否重试。',
     'cart.free_subdomain' => '我们提供的免费子域名',
     'cart.subdomain_placeholder' => 'mingzi',
     'cart.subdomain_parent_invalid' => '请选择提供的域名之一。',

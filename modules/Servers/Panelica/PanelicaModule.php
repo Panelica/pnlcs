@@ -11,8 +11,16 @@ use Modules\Servers\AbstractServerModule;
 
 class PanelicaModule extends AbstractServerModule implements \App\Contracts\HostsAccountDomains
 {
-    /** Seconds to wait for the panel to accept a connection: a panel that is down should not hold a page for long. */
-    private const CONNECT_TIMEOUT = 5;
+    /**
+     * Seconds to wait for the panel to accept a connection. A customer's page
+     * gives up after five, so a panel that is down does not hold it. The
+     * scheduler, the queue and staff screens wait ten, Laravel's default, so a
+     * slow network does not fail an account that is being set up or suspended
+     * (those calls are queued and retried when they fail).
+     */
+    private const CONNECT_TIMEOUT_PAGE = 5;
+
+    private const CONNECT_TIMEOUT = 10;
 
     /** Installing an app pulls images; a multi-container template takes minutes. */
     private const DEPLOY_TIMEOUT = 300;
@@ -20,6 +28,12 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     public function getModuleName(): string
     {
         return 'panelica';
+    }
+
+    /** Five seconds while a customer waits on a page of their own, ten everywhere else. */
+    private function connectTimeout(): int
+    {
+        return request()->routeIs('client.*') ? self::CONNECT_TIMEOUT_PAGE : self::CONNECT_TIMEOUT;
     }
 
     public function getConfigFields(): array
@@ -68,7 +82,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $headers = $this->buildHeaders($server, 'GET', $path, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->get($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$path);
     }
 
     /**
@@ -145,7 +159,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'POST', $path, $body);
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->timeout($timeout)->withBody($body, 'application/json')->post($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->timeout($timeout)->withBody($body, 'application/json')->post($this->baseUrl($server).$path);
     }
 
     private function patch(Server $server, string $path, array $payload): Response
@@ -153,14 +167,14 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'PATCH', $path, $body);
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->withBody($body, 'application/json')->patch($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->patch($this->baseUrl($server).$path);
     }
 
     private function delete(Server $server, string $path): Response
     {
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->delete($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
     }
 
     // -------------------------------------------------------------------------
@@ -2988,7 +3002,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $qs = http_build_query(['database_name' => $databaseName], '', '&', PHP_QUERY_RFC3986);
         $path = "/v1/domains/{$domainId}/databases?{$qs}";
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
-        $resp = Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->delete($this->baseUrl($server).$path);
+        $resp = Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the database.'));
         }
@@ -3430,7 +3444,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $fullPath = $basePath.($qs !== '' ? '?'.$qs : '');
         $headers = $this->buildHeaders($server, 'GET', $fullPath, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->get($this->baseUrl($server).$fullPath);
+        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$fullPath);
     }
 
     private function put(Server $server, string $path, array $payload): Response
@@ -3438,7 +3452,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'PUT', $path, $body);
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->withBody($body, 'application/json')->put($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->put($this->baseUrl($server).$path);
     }
 
     /** DELETE carrying a JSON body. The panel excludes the DELETE body from the signature. */
@@ -3447,7 +3461,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout(self::CONNECT_TIMEOUT)->withBody($body, 'application/json')->delete($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->delete($this->baseUrl($server).$path);
     }
 
     /** The account's home directory - the root of everything the file tab shows. */

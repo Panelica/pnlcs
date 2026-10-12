@@ -1877,6 +1877,7 @@ return [
     'hosting.email.dns_not_requested' => 'Das Zertifikat konnte gerade nicht angefordert werden. Versuchen Sie es in einigen Minuten erneut.',
     'hosting.email.dns_after' => 'Sobald die Einträge gesetzt sind, fordern Sie das Zertifikat erneut an. DNS-Änderungen können einige Stunden dauern.',
     'hosting.panel_unreachable' => 'Das Hosting-Control-Panel antwortet gerade nicht. Bitte versuchen Sie es in ein paar Minuten erneut.',
+    'hosting.panel_no_answer_in_time' => 'Das Hosting-Control-Panel hat nicht rechtzeitig geantwortet. Ihr Auftrag wird dort möglicherweise trotzdem ausgeführt. Bitte prüfen Sie dies hier in einer Minute, bevor Sie es erneut versuchen.',
     'cart.free_subdomain' => 'Kostenlose Subdomain von uns',
     'cart.subdomain_placeholder' => 'ihrname',
     'cart.subdomain_parent_invalid' => 'Wählen Sie eine der angebotenen Domains.',

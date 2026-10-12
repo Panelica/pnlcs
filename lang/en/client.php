@@ -1878,6 +1878,7 @@ return [
     'hosting.email.dns_not_requested' => 'The certificate could not be requested just now. Try again in a few minutes.',
     'hosting.email.dns_after' => 'Once the records are in place, ask for the certificate again. DNS changes can take a few hours to spread.',
     'hosting.panel_unreachable' => 'The hosting control panel is not answering right now. Please try again in a few minutes.',
+    'hosting.panel_no_answer_in_time' => 'The hosting control panel did not answer in time. What you asked for may still be done there, so check here in a minute before you try again.',
     'cart.free_subdomain' => 'Free subdomain from us',
     'cart.subdomain_placeholder' => 'yourname',
     'cart.subdomain_parent_invalid' => 'Choose one of the offered domains.',
