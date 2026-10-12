@@ -17,7 +17,7 @@ gateway, fill in its keys, save and enable it.
 | **Stripe** | Publishable Key, Secret Key, Webhook Signing Secret | `/gateway/stripe/webhook` |
 | **PayPal** | PayPal Email, Client ID, Client Secret, Sandbox Mode | `/gateway/paypal/webhook` |
 | **Authorize.Net** | API Login ID, Transaction Key, Client Key (Accept.js), Test Mode | `/gateway/authorize/webhook` |
-| **Mollie** | Mollie API Key, Test Mode | `/gateway/mollie/webhook` |
+| **Mollie** | Mollie API Key, Test Mode, Charge in the invoice's billing currency | `/gateway/mollie/webhook` |
 | **Razorpay** | Key ID, Key Secret, Webhook Secret, Test Mode | `/gateway/razorpay/webhook` |
 | **Tpay** (Poland) | Open API Client ID, Open API Client Secret, Security Code, Sandbox Mode | `/gateway/tpay/webhook` |
 | **iyzico** (Turkey) | API key, Secret key, Sandbox, Instalments offered, Payment group, Let the customer store their card | none: the result comes back with the customer from iyzico's page |
@@ -60,6 +60,20 @@ currency, and a refund goes back in the currency the card was charged in.
 Stripe must support the currency for your account, and it converts the payout
 to your account's currency at its own rate. Renewals charged automatically
 from a stored card follow the same setting.
+
+## Mollie
+
+1. In the [Mollie dashboard](https://my.mollie.com), copy an **API key** (test
+   key first).
+2. Paste it into **Setup → Payment Gateways → Mollie** and enable it. Mollie
+   calls `https://example.com/gateway/mollie/webhook` by itself; there is
+   nothing to register.
+
+**Charge in the invoice's billing currency** works as it does for Stripe: an
+invoice billed in another currency is charged in that currency at the rate on
+the invoice, recorded in the shop currency, and refunded in the currency it was
+paid in. Mollie must accept the currency (it takes PLN, GBP, CHF, USD and
+others, not TRY).
 
 ## PayPal
 
