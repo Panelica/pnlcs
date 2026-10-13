@@ -125,7 +125,7 @@ return [
         'monitoring' => 'Monitoreo y Alertas',
         'php_versions' => 'Versiones de PHP',
         'support' => 'Soporte 24/7',
-        'uptime' => 'Uptime',
+        'uptime' => 'Disponibilidad',
     ],
     'testimonials' => [
         'subtitle' => 'Recomendado por miles de empresas en todo el mundo',
@@ -144,7 +144,7 @@ return [
         'popular' => 'Popular',
         'subtitle' => 'Acceso root completo, recursos dedicados y despliegue instantáneo',
         'title' => 'Planes de Servidor VPS',
-        'visual_title' => 'Cloud VPS',
+        'visual_title' => 'VPS en la nube',
     ],
     'apps.cta_learn' => 'Como funciona',
     'apps.eyebrow' => 'Incluido con cada plan',
