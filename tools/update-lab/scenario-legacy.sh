@@ -89,7 +89,12 @@ else
     # configuration is rebuilt, as after any change of configuration.
     docker exec -u www-data -w $APP "$CT" php artisan config:cache >>"$LOG" 2>&1
     docker exec -u www-data "$CT" php "$LAB/snapshot.php" "$APP" > "$DIR/after-recreate.json"
-    php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-recreate.json" --content-only=storage/ --ignore-row=settings.LastCronRun >>"$LOG" 2>&1 && ok "recreating the container changed nothing" || bad "recreating the container changed something"
+    # The container's scheduler runs every minute in both images: its run log
+    # and heartbeat change on their own while the container is recreated
+    # (the same three the VM scenario leaves out).
+    php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-recreate.json" --content-only=storage/ \
+        --ignore-table=activity_logs --ignore-table=scheduled_task_runs --ignore-row=settings.LastCronRun >>"$LOG" 2>&1 \
+        && ok "recreating the container changed nothing" || bad "recreating the container changed something"
     docker exec "$CT" /usr/local/bin/update.sh --check >"$DIR/check.out" 2>&1; CODE=$?
     docker exec "$CT" /usr/local/bin/update.sh --resolve public/robots.txt=mine -v >"$DIR/update.out" 2>&1; UCODE=$?
     docker exec -u www-data "$CT" php "$LAB/snapshot.php" "$APP" > "$DIR/after.json"
