@@ -47,6 +47,13 @@
                         </option>
                     @endforeach
                 </select>
+                @php
+                    // Only active languages are offered here. The menu path is the
+                    // sidebar's own labels, a link for an admin who may open it.
+                    $languagesMenu = __('admin.nav.setup').' → '.__('admin.nav.languages');
+                    [$hintBefore, $hintAfter] = array_pad(explode(':menu', __('admin.settings.language_active_only'), 2), 2, '');
+                @endphp
+                <small class="language-active-hint" style="color:#999;display:block;margin-top:4px;">{{ $hintBefore }}@if($admin->role?->hasPermission('manage_settings'))<a href="{{ route('admin.config.languages.index') }}">{{ $languagesMenu }}</a>@else{{ $languagesMenu }}@endif{{ $hintAfter }}</small>
             </div>
         </div>
     </div>

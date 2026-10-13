@@ -2647,6 +2647,7 @@ return [
         'my_account' => 'My Account',
         'my_account_title' => 'My Account',
         'language_unavailable' => 'Choose an active language.',
+        'language_active_only' => 'Only the languages active under :menu are listed here.',
         'php_mail' => 'PHP Mail',
         'profile_information' => 'Profile information',
         'request_failed' => 'Request failed',

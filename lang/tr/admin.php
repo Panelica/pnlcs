@@ -2622,6 +2622,7 @@ return [
         'my_account' => 'Hesabım',
         'my_account_title' => 'Hesabım',
         'language_unavailable' => 'Aktif bir dil seçin.',
+        'language_active_only' => 'Burada yalnızca :menu sayfasında aktif olan diller listelenir.',
         'php_mail' => 'PHP Posta',
         'profile_information' => 'Profil bilgileri',
         'request_failed' => 'İstek başarısız oldu',
