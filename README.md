@@ -1763,6 +1763,7 @@ for good. To join them, see [Translations](docs/developer/translations.md).
 - **Chinese (Simplified)**: [@Harry326485](https://github.com/Harry326485)
 - **German**: Dirk Mehmke; Dejan Wolf (WHOST, Austria)
 - **Polish**: Grzegorz ([@hedon77](https://github.com/hedon77))
+- **Spanish**: [@wmedia](https://github.com/wmedia)
 
 ---
 
