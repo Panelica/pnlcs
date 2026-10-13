@@ -2,6 +2,180 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.5.0 — 2026-10-13
+
+The stable release, offered to every installation. It contains everything in
+1.5.0-beta.1 and 1.5.0-beta.2 (below), and the changes listed here, which
+were made after 1.5.0-beta.2.
+
+### Added
+
+- **Charge in the invoice's billing currency** for Stripe, Mollie and PayPal,
+  off by default (each gateway's settings under **Setup → Payment
+  Gateways**). A customer billed in their own currency (**Setup →
+  Currencies**) is charged the amount the invoice shows, at the invoice's own
+  rate, instead of the shop currency converted by their bank. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Free subdomains for hosting orders** (**Setup → General → Domains**): a
+  hosting order can take a name under one of the shop's own domains, such as
+  `yourname.example-sites.com`, instead of a domain of its own. Reserved
+  names (`www`, `mail`, `ns1`, `autodiscover`, `admin` and more, or your own
+  list) and names another service already has are refused. The parent domains
+  need a wildcard DNS record; see [Selling domains](docs/guides/sell-domains.md).
+  Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **The shop's social media profiles** (**Setup → General → Search engines
+  and sharing**): X, Facebook, Instagram, LinkedIn, YouTube, TikTok, Threads
+  and Medium. The default home page footer links to them and the home page
+  names them to search engines; nothing is added until a profile is set.
+  Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **aaPanel server module** for Sub aaPanel accounts: create, suspend,
+  unsuspend, terminate, password and package changes, disk and bandwidth
+  usage, and **Login to panel**. It needs aaPanel Pro with Sub aaPanel
+  installed; see [aaPanel hosting accounts](docs/modules/aapanel.md). The
+  connection test, the package list and an unlicensed panel's refusal were
+  checked on aaPanel 8.0.6 with Sub aaPanel 3.0.4; account changes have not
+  yet been run against a licensed panel. Thank you,
+  [@Alex9001](https://github.com/Alex9001).
+- **Panelica mail certificate help:** when the certificate for a customer's
+  mail host could not be issued, their email page lists the DNS records it
+  needs and offers to try again. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Spanish** has every text of the language files, addressing the reader as
+  "usted". Thank you, [@wmedia](https://github.com/wmedia).
+- **German** client area and email texts, and all 32 email templates, from
+  Dejan Wolf (WHOST, Austria), in the formal "Sie" the German translation
+  uses.
+
+### Changed
+
+- **Email templates in a new language** start from the templates shipped for
+  it (German and Polish) instead of copies of the English ones.
+- **Panelica mail host:** mail apps are told `mail.<customer's domain>`, the
+  name the panel's certificate is for, or the host name the panel gives the
+  certificate; before, they were told a name built from the server's
+  hostname. The first mailbox of a domain asks the panel for that
+  certificate when it has none. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Panelica "Login to panel"** opens the panel by the server's host name
+  when the panel runs behind NAT, instead of an internal address the browser
+  cannot reach. Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **The language in the address:** links in the core views and the flavor
+  and aurora themes carry the page's language, so no redirect is needed; the
+  language switcher adds `?lang` only on the way back to the default
+  language; a file at the root (`/sw.js`, `/manifest.json`, a verification
+  file) keeps one address in every language. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Admin screens:** about 100 texts on 37 admin screens that showed English
+  in every language are translated. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Updates:** when an update stops because the container runs an older
+  `panelica/pnlcs-runtime` image, the page and `pnlcs:update` also say how
+  Panelica replaces it (Docker Manager → **Update to** the new tag).
+
+### Fixed
+
+- **iyzico:** an invoice billed in lira is charged the lira amount the
+  invoice shows, not today's conversion of it. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Hosting tabs:** when the hosting control panel does not answer, the
+  customer gets a message instead of a "Server Error" page; after a form the
+  panel may already have carried out, they are told to check before trying
+  again. Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Products:** a product or product group named like an existing one gets
+  an address of its own (`vps-s-2`) and can be ordered; before, its order
+  link opened the other product or gave a 404, and a second group with the
+  same name could not be saved. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Products:** saving a product that has no module no longer gives it
+  Panelica's default limits, so the price list no longer shows resources
+  nobody chose. Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Automation status:** the page lists the scheduled tasks (it showed none),
+  and on the Docker image it says the scheduler already runs inside the
+  container instead of asking for a host cron line. The cron note says
+  "every minute", which is what the line does.
+- **Updates:** a check or update request that the scheduler picked up but
+  that never finished no longer leaves the page waiting for ever; it says the
+  request was lost, also on a page that was kept open. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Search engines and sharing:** a page that writes its own sharing tags,
+  such as a blog post, no longer gets a second set from the layout. Thank
+  you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+
+### Security
+
+- **PayPal:** a capture is credited only in the currency the shop charges in,
+  or the invoice's billing currency when that option is on. Before, a capture
+  of 100 in a currency worth far less than the shop's (100 HUF against a
+  100.00 USD invoice) could mark the invoice paid. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Two-factor setup** draws its QR code on the server. The setup address,
+  which carries the shared secret, is no longer sent to an outside QR
+  service. Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+
+### Database changes
+
+- `2026_10_10_000001_ship_translated_email_templates`: a German or Polish
+  email template that you have not made your own and that is still exactly
+  the English text gets the shipped translation, its subject and its message
+  each on their own. A field you wrote yourself stays.
+- `2026_10_12_000001_give_products_with_a_shared_slug_their_own`: a product
+  whose slug is empty or already used by an older product gets one of its own
+  (`vps-s-2`, `vps-s-3`), so its order address changes; the oldest keeps its
+  slug, and every other product is untouched.
+
+### For theme and module authors
+
+- `social_profiles()` returns the profiles that are set (network => address);
+  the new partial `partials/social-links` draws them as icon links.
+- A page that writes its own sharing tags sets `@section('seo_own', '1')`;
+  the layout then prints neither `partials/seo-meta` nor
+  `partials/locale-alternates` for it. [Themes](docs/developer/themes.md)
+  lists the sections the layout reads.
+- Write links as `url('/path')`, not as plain paths, so they keep the page's
+  language when the language is in the address.
+- The two-factor setup views receive `$qrImage`, an SVG data URI; `$qrUrl`
+  is still passed, so an overriding view keeps working until it switches.
+- New server module `aapanel` (`modules/Servers/AaPanel`).
+
+### Views a theme may override that changed
+
+- `resources/views/admin/affiliates/show.blade.php`,
+  `admin/auth/enable-two-factor.blade.php`, `admin/calendar/index.blade.php`,
+  `admin/clients/edit.blade.php`, `admin/clients/show.blade.php`,
+  `admin/config/addon-output.blade.php`, `admin/config/automation.blade.php`,
+  `admin/config/billable-items.blade.php`, `admin/config/bundles.blade.php`,
+  `admin/config/custom-fields.blade.php`,
+  `admin/config/domain-pricing.blade.php`, `admin/config/gateways.blade.php`,
+  `admin/config/notifications.blade.php`, `admin/config/promotions.blade.php`,
+  `admin/config/servers.blade.php`, `admin/config/ticket-escalation.blade.php`,
+  `admin/config/ticket-spam.blade.php`, `admin/config/updates.blade.php`,
+  `admin/domains/index.blade.php`, `admin/domains/show.blade.php`,
+  `admin/invoices/create.blade.php`, `admin/invoices/show.blade.php`,
+  `admin/layouts/app.blade.php`, `admin/logs/module.blade.php`,
+  `admin/orders/show.blade.php`, `admin/products/create.blade.php`,
+  `admin/products/create-group.blade.php`, `admin/products/edit.blade.php`,
+  `admin/projects/create.blade.php`, `admin/projects/edit.blade.php`,
+  `admin/projects/index.blade.php`, `admin/projects/show.blade.php`,
+  `admin/quotes/create.blade.php`, `admin/quotes/edit.blade.php`,
+  `admin/quotes/show.blade.php`, `admin/reports/show.blade.php`,
+  `admin/settings/appearance.blade.php`, `admin/settings/general.blade.php`,
+  `admin/ssl/show.blade.php`, `admin/whois.blade.php`.
+- `resources/views/client/auth/enable-two-factor.blade.php`,
+  `client/cart/configure.blade.php`, `client/layouts/app.blade.php`,
+  `client/services/hosting/email.blade.php`,
+  `client/services/show.blade.php`, `client/tickets/create.blade.php`.
+- `resources/views/errors/403.blade.php`, `errors/404.blade.php`,
+  `errors/500.blade.php`, `partials/locale-alternates.blade.php`,
+  `partials/seo-meta.blade.php`, `sections/domain-search.blade.php`,
+  `sections/footer.blade.php`, `sections/hosting-plans.blade.php`,
+  `sections/navigation.blade.php`, `sections/styles.blade.php`,
+  `sections/topbar.blade.php`, `sections/vps-plans.blade.php`.
+- `themes/aurora/views/sections/hero.blade.php`,
+  `themes/aurora/views/sections/navigation.blade.php`,
+  `themes/flavor/views/client/layouts/app.blade.php`,
+  `themes/flavor/views/sections/footer.blade.php`,
+  `themes/flavor/views/sections/navigation.blade.php`.
+
 ## 1.5.0-beta.2 — 2026-10-10
 
 A beta: offered only to installations on the **beta** channel (**Setup →
