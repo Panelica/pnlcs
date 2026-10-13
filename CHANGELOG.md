@@ -2,6 +2,22 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.5.1-beta.1 — 2026-10-13
+
+A beta: offered only to installations on the **beta** channel (**Setup →
+Updates → Update channel**). It contains everything in 1.5.0.
+
+### Fixed
+
+- **Spanish showed about 98%** under **Setup → Languages** although it has
+  every text: 110 texts were the same as in English. 70 of them are written
+  that way in Spanish too (Total, General, Error, Manual, PayPal, Laravel)
+  and are now listed as such, as for German, Polish, Turkish and Chinese;
+  the other 40 were still English and are translated ("Weak", "Resolved",
+  "Default", "Balance", "Qty" and others). Spanish shows 100%.
+- **Spanish:** nine messages called a quote "Cita" (an appointment); they
+  say "Cotización", as the menus and pages do.
+
 ## 1.5.0 — 2026-10-13
 
 The stable release, offered to every installation. It contains everything in
