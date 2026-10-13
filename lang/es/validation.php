@@ -6,7 +6,7 @@ return [
     'attributes' => [
     ],
     'confirmed' => 'La confirmación del campo :attribute no coincide.',
-    'email' => 'Por favor, introduce una dirección de email válida.',
+    'email' => 'Por favor, introduzca una dirección de email válida.',
     'max' => [
         'numeric' => 'El campo :attribute no debe ser mayor que :max.',
         'string' => 'El campo :attribute no debe tener más de :max caracteres.',

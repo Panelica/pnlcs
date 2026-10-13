@@ -83,7 +83,7 @@ return [
     'confirm' => [
         'delete_confirm' => 'Sí, eliminar',
         'delete_text' => 'Esta acción no se puede deshacer.',
-        'delete_title' => '¿Estás seguro?',
+        'delete_title' => '¿Está seguro?',
     ],
     'empty' => [
         'no_data' => 'No hay datos disponibles.',
@@ -156,9 +156,9 @@ return [
     'form.street_address' => 'Dirección',
     'form.state' => 'Estado o región',
     'form.tax_id' => 'Identificación fiscal / número de IVA',
-    'form.tax_id_hint' => 'Solo para empresas. Se imprimirá en tus facturas.',
+    'form.tax_id_hint' => 'Solo para empresas. Se imprimirá en sus facturas.',
     'form.billing_address' => 'Dirección de facturación',
-    'form.billing_address_hint' => 'Esta es la dirección a la que se emiten tus facturas.',
+    'form.billing_address_hint' => 'Esta es la dirección a la que se emiten sus facturas.',
     'form.street_address_placeholder' => 'Calle, apartado postal, etc.',
     'form.subject' => 'Asunto',
     'loading' => 'Cargando...',
@@ -185,14 +185,14 @@ return [
     'no' => 'No',
     'none' => 'Ninguno',
     'placeholder' => [
-        'enter_domain' => 'Introduce el nombre de dominio',
-        'enter_email' => 'Introduce la dirección de correo electrónico',
-        'enter_name' => 'Introduce el nombre',
-        'enter_password' => 'Introduce la contraseña',
+        'enter_domain' => 'Introduzca el nombre de dominio',
+        'enter_email' => 'Introduzca la dirección de correo electrónico',
+        'enter_name' => 'Introduzca el nombre',
+        'enter_password' => 'Introduzca la contraseña',
         'promo_code' => 'Código promocional',
         'search' => 'Buscar...',
         'search_clients' => 'Nombre, correo electrónico, empresa...',
-        'type_message' => 'Escribe tu mensaje...',
+        'type_message' => 'Escriba su mensaje...',
     ],
     'priority' => [
         'high' => 'Alta',
@@ -324,6 +324,6 @@ return [
     'yes' => 'Sí',
     'dialog' => [
         'ok' => 'Aceptar',
-        'confirm_title' => '¿Estás seguro?',
+        'confirm_title' => '¿Está seguro?',
     ],
 ];
