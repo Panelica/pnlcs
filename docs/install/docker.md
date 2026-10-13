@@ -76,3 +76,8 @@ docker pull panelica/pnlcs-runtime:1.5
 docker stop pnlcs && docker rm pnlcs
 docker run -d --name pnlcs ... panelica/pnlcs-runtime:1.5   # the same run command as before
 ```
+
+**Installed with Panelica:** in Panelica's **Docker Manager**, click **Update to
+1.5** on the PNLCS container, or choose **Update Image** and enter
+`panelica/pnlcs-runtime:1.5`. Panelica pulls the image and recreates the
+container with the same volumes.

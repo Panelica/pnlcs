@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\UpdateCommand;
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Setting;
@@ -284,4 +285,40 @@ test('a request that was picked up but never reported back says so after a few m
     // and the check can be asked for again
     $this->actingAs(updatesAdmin(), 'admin')->post(route('admin.config.updates.prepare'))->assertRedirect()->assertSessionMissing('error');
     expect($state->read('request.json')['action'] ?? null)->toBe('prepare');
+});
+
+/** A report that stops at one blocking issue. */
+function updatesBlockedBy(UpdateState $state, string $code, array $params): void
+{
+    $state->write('latest.json', ['latest' => ['version' => '9.9.9', 'pre_release' => false]]);
+    $state->write('report.json', ['to' => '9.9.9', 'ok' => false, 'warnings' => [], 'conflicts' => [], 'plan' => ['write' => 0, 'delete' => 0],
+        'blocking' => [['code' => $code, 'params' => $params]]]);
+}
+
+test('a container on an older runtime image is told how Panelica replaces the image', function () {
+    $state = updatesState();
+    updatesBlockedBy($state, 'runtime_image', ['required' => '1.5', 'current' => '1.4']);
+
+    $this->actingAs(updatesAdmin(), 'admin')
+        ->get(route('admin.config.updates'))
+        ->assertOk()
+        ->assertSee(__('admin.updates.issue.runtime_image', ['required' => '1.5', 'current' => '1.4']))
+        ->assertSee(__('admin.updates.issue.runtime_image_panelica', ['required' => '1.5']));
+});
+
+test('another blocking issue gets no Panelica line', function () {
+    $state = updatesState();
+    updatesBlockedBy($state, 'php_version', ['required' => '8.4.0', 'current' => '8.3.0']);
+
+    $this->actingAs(updatesAdmin(), 'admin')
+        ->get(route('admin.config.updates'))
+        ->assertOk()
+        ->assertSee(__('admin.updates.issue.php_version', ['required' => '8.4.0', 'current' => '8.3.0']))
+        ->assertDontSee(__('admin.updates.issue.runtime_image_panelica', ['required' => '8.4.0']));
+});
+
+test('the command line says the same under the same issue', function () {
+    expect(UpdateCommand::hint(['code' => 'runtime_image', 'params' => ['required' => '1.5', 'current' => '1.4']]))
+        ->toBe(__('admin.updates.issue.runtime_image_panelica', ['required' => '1.5']))
+        ->and(UpdateCommand::hint(['code' => 'php_version', 'params' => ['required' => '8.4.0']]))->toBeNull();
 });

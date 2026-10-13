@@ -3557,6 +3557,7 @@ return [
             'php_version' => '需要 PHP :required 或更高版本；此服务器运行的是 :current。',
             'php_extension' => '需要 PHP 扩展 :name。',
             'runtime_image' => '此版本需要 Docker 镜像 panelica/pnlcs-runtime :required 或更高版本；此容器运行的是 :current。请拉取新镜像并重新创建容器（数据保留在卷中），然后再更新。',
+            'runtime_image_panelica' => '如果此容器由 Panelica 运行：在 Docker 管理器中点击该容器上的“更新到 :required”，或选择“更新镜像”并输入标签 :required。容器会使用新镜像并保留其卷重新创建，您的数据会保留。',
             'tool_missing' => '需要 :tool 命令。',
             'no_git_merge' => '未安装 git，因此您修改过的文件无法自动合并：每个文件都会显示为冲突。',
             'run_as_owner' => '请以 PNLCS 文件的所有者 :owner 身份运行更新。由其他用户写入的文件，Web 服务器之后将无法更新。',

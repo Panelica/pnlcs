@@ -88,7 +88,9 @@ the middle of an update rolls it back by itself before it starts serving.
 Images before **1.5** reset the code to the development branch on every update
 and discarded changes made inside the container; pull
 `panelica/pnlcs-runtime:1.5` and recreate the container with the same volumes
-([Docker](docker.md)) before you update.
+([Docker](docker.md)) before you update. Installed with Panelica: in its
+**Docker Manager**, click **Update to 1.5** on the container (or choose
+**Update Image** and enter the tag `1.5`); the volumes stay.
 
 ## Installations made before releases (git clone)
 

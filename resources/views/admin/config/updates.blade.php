@@ -211,7 +211,7 @@
         @if(! empty($report['blocking']))
         <div class="upd-section-title">{{ __('admin.updates.blocking') }}</div>
         <ul class="upd-list">
-            @foreach($report['blocking'] as $issue)<li style="color:var(--pn-danger, #d9534f);">{{ $describe($issue) }}</li>@endforeach
+            @foreach($report['blocking'] as $issue)<li style="color:var(--pn-danger, #d9534f);">{{ $describe($issue) }}@if(($hint = \App\Console\Commands\UpdateCommand::hint($issue)) !== null)<div class="upd-hint" style="margin:4px 0 0">{{ $hint }}</div>@endif</li>@endforeach
         </ul>
         @endif
 

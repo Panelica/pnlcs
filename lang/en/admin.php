@@ -3559,6 +3559,7 @@ return [
             'php_version' => 'PHP :required or newer is needed; this server runs :current.',
             'php_extension' => 'The PHP extension :name is needed.',
             'runtime_image' => 'This release needs the Docker image panelica/pnlcs-runtime :required or newer; this container runs :current. Pull the new image and recreate the container (your data stays on its volumes), then update.',
+            'runtime_image_panelica' => 'If Panelica runs this container: in Docker Manager, click “Update to :required” on it, or choose Update Image and enter the tag :required. The container is recreated on the new image with its volumes, so your data stays.',
             'tool_missing' => 'The :tool command is needed.',
             'no_git_merge' => 'git is not installed, so files you changed cannot be merged automatically: each one is shown as a conflict.',
             'run_as_owner' => 'Run the update as :owner, the owner of the PNLCS files. Files written by another user could not be updated by the web server afterwards.',

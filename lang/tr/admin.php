@@ -3557,6 +3557,7 @@ return [
             'php_version' => 'PHP :required veya daha yenisi gerekiyor; bu sunucuda :current çalışıyor.',
             'php_extension' => ':name PHP eklentisi gerekiyor.',
             'runtime_image' => 'Bu sürüm panelica/pnlcs-runtime Docker imajının :required veya daha yeni sürümünü gerektiriyor; bu konteyner :current çalıştırıyor. Yeni imajı çekip konteyneri yeniden oluşturun (verileriniz birimlerinde kalır), sonra güncelleyin.',
+            'runtime_image_panelica' => 'Bu konteyneri Panelica çalıştırıyorsa: Docker Yöneticisi\'nde konteynerin üzerindeki “:required sürümüne güncelle” düğmesine basın ya da Image Güncelle\'yi seçip :required etiketini girin. Konteyner yeni imajla, birimleriyle birlikte yeniden oluşturulur; verileriniz kalır.',
             'tool_missing' => ':tool komutu gerekiyor.',
             'no_git_merge' => 'git kurulu değil, bu yüzden değiştirdiğiniz dosyalar otomatik birleştirilemez: her biri çakışma olarak gösterilir.',
             'run_as_owner' => 'Güncellemeyi PNLCS dosyalarının sahibi olan :owner kullanıcısıyla çalıştırın. Başka bir kullanıcının yazdığı dosyaları web sunucusu daha sonra güncelleyemez.',

@@ -139,6 +139,9 @@ class UpdateCommand extends Command
 
         foreach ($report['blocking'] ?? [] as $issue) {
             $this->error('  ✗ '.self::describe($issue));
+            if (($hint = self::hint($issue)) !== null) {
+                $this->line('    '.$hint);
+            }
         }
         foreach ($report['warnings'] ?? [] as $issue) {
             $this->warn('  ! '.self::describe($issue));
@@ -164,5 +167,21 @@ class UpdateCommand extends Command
         $params = array_map(fn ($v) => is_array($v) ? implode(', ', $v) : (string) $v, $issue['params'] ?? []);
 
         return __('admin.updates.issue.'.$issue['code'], $params);
+    }
+
+    /**
+     * The way out of an issue, where there is one more to say. A container
+     * that needs a newer runtime image: most run under Panelica, whose Docker
+     * Manager replaces the image with the volumes kept.
+     *
+     * @param  array{code: string, params: array<string, mixed>}  $issue
+     */
+    public static function hint(array $issue): ?string
+    {
+        if (($issue['code'] ?? '') !== 'runtime_image') {
+            return null;
+        }
+
+        return __('admin.updates.issue.runtime_image_panelica', ['required' => (string) ($issue['params']['required'] ?? '')]);
     }
 }
