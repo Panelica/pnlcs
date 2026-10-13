@@ -33,8 +33,17 @@ Every release, and the updater that applies it, keeps these:
     against the previous version, or raises the minimum PHP. Announced at least
     one minor release earlier, with the old way still working in between.
 - A beta is tagged `vX.Y.Z-beta.N` and published as a GitHub pre-release.
-- The `VERSION` file on `main` holds the next version with `-dev`
-  (`1.5.0-dev`). The release build writes the real number into the package.
+- **A maintainer decides only the kind of release, beta or stable. The number
+  follows from what changed since the last stable release**, by the rules
+  above: fixes only is the next PATCH, anything else the next MINOR. A major
+  release is always the maintainer's explicit decision. The betas of a version
+  are numbered from 1 (`1.6.0-beta.1`, `1.6.0-beta.2`); when a feature lands
+  after a PATCH beta, the next beta is of the next MINOR, from `beta.1`.
+- The `VERSION` file on `main` holds the version being worked toward, with
+  `-dev`: after `X.Y.Z` is released it becomes `X.Y.(Z+1)-dev`, and once a beta
+  of a higher version is out, that version with `-dev`. A copy of `main`
+  installed with git is then never taken for older than the last release. The
+  release build writes the real number into the package.
 
 ## Channels and the release rhythm
 
@@ -43,16 +52,16 @@ Every release, and the updater that applies it, keeps these:
 | `beta` | betas and stable releases | operators who opt in on **Setup → Updates** |
 | `stable` | stable releases only | everyone else (the default) |
 
-1. **Weekly beta.** When `main` has changed since the last beta, a beta is cut
-   once a week.
-2. **Ring 0 first.** Every beta is applied to our own installations before it
-   is published to the beta channel.
-3. **Promotion.** A beta that has run for **at least 7 days** on ring 0 and the
-   beta channel without a regression becomes the stable release, **from the same
-   commit**. If anything had to change, that is a new beta and the 7 days start
-   again.
+1. **Betas** are cut from `main` when a maintainer decides, and are offered on
+   the beta channel only.
+2. **Stable releases** are cut from `main` when a maintainer decides. What had
+   time on the beta channel and what did not is said in the release notes.
+   Every gate below holds for both, and for every release.
+3. **Ring 0 first.** Every release is applied to our own installations with
+   the updater (**Setup → Updates**) right after it is published; a problem
+   there withdraws it (5).
 4. **Security fixes** go out as a patch release as soon as they pass the gates.
-   The waiting time may be shortened; the gates may not.
+   The gates are never shortened.
 5. **Withdrawal.** A release found to be harmful is turned back into a draft on
    GitHub. Updaters no longer see it, and the next release supersedes it.
 6. **Major releases are never applied automatically**, on any channel.
@@ -68,6 +77,10 @@ releases.
 - [ ] The update lab is green: every supported starting version updates to this
       one, with the customisation scenarios, on Docker and on a native install
       ([tools/update-lab](tools/update-lab/README.md)).
+- [ ] The real package updates the last stable release on the stable channel
+      and the last beta on the beta channel: each installed from its published
+      package in the published Docker image, the signature checked with the
+      key built into the application, the new version healthy afterwards.
 - [ ] `CHANGELOG.md` has the entry, in plain English, with the sections that
       apply: *Database changes*, *For theme and module authors*, and *Views a
       theme may override that changed* (the updater lists the last one per
@@ -152,19 +165,21 @@ What a maintainer does with every pull request, ours and contributed alike.
 
 ## Cutting a release (maintainers)
 
-1. Pick the version by the rules above. Update `CHANGELOG.md`.
-2. Tag the commit: `git tag -a vX.Y.Z-beta.N`.
+1. Take the number from the rules above and write the `CHANGELOG.md` entry. A
+   stable release's entry says which of its changes were in a beta, and its
+   GitHub release notes carry the betas' notes too.
+2. Tag the commit: `git tag -a vX.Y.Z` (a beta: `vX.Y.Z-beta.N`).
 3. Build and sign from the tag:
-   `tools/release/build-package.sh X.Y.Z-beta.N --ref vX.Y.Z-beta.N --key <release key>`.
-4. Run the update lab against the package. All scenarios green.
-5. Apply it to ring 0 with the updater itself, never by hand.
-6. Create the GitHub (pre-)release as a draft, upload the package, its release
-   statement and signature, check that the uploaded files are byte for byte the
-   built ones, and only then publish it: updaters never see a release without
-   its files.
-7. After publishing, set `VERSION` on `main` to the next version with `-dev`.
-8. Seven days later, without a regression: tag the same commit `vX.Y.Z`, build,
-   sign, run the lab, publish.
+   `tools/release/build-package.sh <version> --ref v<version> --key <release key>`.
+4. Run the gates on that commit and that package: the full suite, the update
+   lab, and the real-package update from the last stable release and the last
+   beta. All green.
+5. Create the GitHub release as a draft (a pre-release for a beta), upload the
+   package, its release statement and signature, check that the uploaded files
+   are byte for byte the built ones, and only then publish it: updaters never
+   see a release without its files.
+6. Apply it to ring 0 with the updater itself, never by hand.
+7. Set `VERSION` on `main` by the rule above.
 
 Publishing a release, a Docker image or a tag is always an explicit decision of
 a maintainer, made for that release.

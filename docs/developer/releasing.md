@@ -1,8 +1,8 @@
 # Releases and updates
 
 How PNLCS reaches installations, and what every release promises them. The
-full rules - versions, the weekly rhythm, the gates a release passes, how
-pull requests are reviewed - are in
+full rules - versions, betas and stable releases, the gates a release passes,
+how pull requests are reviewed - are in
 [RELEASING.md](https://github.com/Panelica/pnlcs/blob/main/RELEASING.md).
 
 ## The four promises
@@ -20,9 +20,9 @@ pull requests are reviewed - are in
 
 - Releases are `MAJOR.MINOR.PATCH`, betas `MAJOR.MINOR.PATCH-beta.N`.
   Installations only ever receive tagged releases, never `main`.
-- **Stable** gets stable releases; **beta** gets betas too, about a week
-  earlier. A beta becomes stable, from the same commit, after at least seven
-  days without a regression.
+- **Stable** gets stable releases; **beta** gets betas too, before the stable
+  release that follows them. Every release, beta or stable, passes the same
+  gates, and the release notes say which changes had time on the beta channel.
 - A new **major** version (`2.0`) may break modules, themes or hooks written
   for the previous one; it is announced a minor release ahead and never
   applied automatically.
