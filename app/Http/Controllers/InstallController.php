@@ -9,9 +9,7 @@ use App\Models\Language;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 /**
@@ -79,12 +77,13 @@ class InstallController extends Controller
     // ─── Step 2: Database ───────────────────────────────────────────────
     public function database()
     {
-        // If migrations already applied (Docker case), skip DB step.
-        try {
-            if (Schema::hasTable('migrations')) {
-                return redirect('/install/admin');
-            }
-        } catch (\Throwable $e) { /* DB not configured yet */
+        // Tables already there (Docker, install.sh, a run that was cut off):
+        // a finished set goes on to the administrator, an unfinished one
+        // carries on where it stopped. Seeing only a migrations table used to
+        // send a half-built database on to the next step.
+        $status = $this->migrationStatus();
+        if ($status !== null && $status['ran'] > 0) {
+            return redirect($status['pending'] === 0 ? '/install/admin' : '/install/database/migrate');
         }
 
         return view('install.database', [
@@ -105,6 +104,16 @@ class InstallController extends Controller
             'password' => 'nullable|string|max:255',
         ]);
 
+        $error = $this->connectionError($data);
+
+        return $error === null
+            ? response()->json(['ok' => true, 'message' => 'Connection successful.'])
+            : response()->json(['ok' => false, 'message' => $error], 422);
+    }
+
+    /** @param  array<string, mixed>  $data  null when these settings connect, otherwise why not */
+    private function connectionError(array $data): ?string
+    {
         try {
             $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s', $data['host'], (int) $data['port'], $data['database']);
             $pdo = new \PDO($dsn, $data['username'], $data['password'] ?? '', [
@@ -113,9 +122,9 @@ class InstallController extends Controller
             ]);
             $pdo->query('SELECT 1');
 
-            return response()->json(['ok' => true, 'message' => 'Connection successful.']);
+            return null;
         } catch (\Throwable $e) {
-            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+            return $e->getMessage();
         }
     }
 
@@ -129,6 +138,14 @@ class InstallController extends Controller
             'password' => 'nullable|string|max:255',
         ]);
 
+        // Settings that do not connect are not written: a wrong password used
+        // to land in .env first and fail afterwards.
+        $error = $this->connectionError($data);
+        if ($error !== null) {
+            return back()->withInput($request->except('password'))
+                ->withErrors(['database' => __('install.db_connect_failed', ['message' => $error])]);
+        }
+
         $this->writeEnv([
             'DB_CONNECTION' => 'mysql',
             'DB_HOST' => $data['host'],
@@ -137,25 +154,99 @@ class InstallController extends Controller
             'DB_USERNAME' => $data['username'],
             'DB_PASSWORD' => $data['password'] ?? '',
         ]);
-
-        // Reload config + reset connection so artisan migrate uses new creds.
         Artisan::call('config:clear');
-        DB::purge('mysql');
-        config([
-            'database.connections.mysql.host' => $data['host'],
-            'database.connections.mysql.port' => (int) $data['port'],
-            'database.connections.mysql.database' => $data['database'],
-            'database.connections.mysql.username' => $data['username'],
-            'database.connections.mysql.password' => $data['password'] ?? '',
-        ]);
 
-        try {
-            Artisan::call('migrate', ['--force' => true, '--no-interaction' => true]);
-        } catch (\Throwable $e) {
-            return back()->withInput()->withErrors(['migrate' => 'Migration failed: '.$e->getMessage()]);
+        // The tables are made by the next page, a few at a time.
+        return redirect('/install/database/migrate');
+    }
+
+    /** One request runs migrations for about this long, then reports back. */
+    private const MIGRATE_SECONDS = 10;
+
+    /**
+     * The tables are created over several short requests. As one request the
+     * ~180 migrations took 20 seconds on one test machine and over a minute on
+     * another, while nginx and Apache wait 60 seconds for PHP by default: on a
+     * slow host the page could be cut off with the migrations still running.
+     */
+    public function migrate(): \Illuminate\Http\RedirectResponse|\Illuminate\Contracts\View\View
+    {
+        $status = $this->migrationStatus();
+        if ($status === null) {
+            return redirect('/install/database');
+        }
+        if ($status['pending'] === 0 && $status['ran'] > 0) {
+            return redirect('/install/admin');
         }
 
-        return redirect('/install/admin');
+        return view('install.migrate', $status);
+    }
+
+    public function runMigrations(): \Illuminate\Http\JsonResponse
+    {
+        @set_time_limit(0);
+        ignore_user_abort(true);
+
+        // Two tabs, or a retry while a cut-off request is still running, must
+        // not run the same migration twice.
+        $lock = @fopen(storage_path('framework/cache/install-migrate.lock'), 'c');
+        if ($lock === false) {
+            // Reported, not treated as "busy": the page would wait forever.
+            return response()->json(['ok' => false, 'done' => false, 'message' => error_get_last()['message'] ?? 'storage/framework/cache is not writable'], 500);
+        }
+        if (! flock($lock, LOCK_EX | LOCK_NB)) {
+            fclose($lock);
+
+            return response()->json(['ok' => true, 'busy' => true, 'done' => false] + ($this->migrationStatus() ?? []));
+        }
+
+        try {
+            $migrator = app('migrator');
+            $repository = $migrator->getRepository();
+            if (! $repository->repositoryExists()) {
+                $repository->createRepository();
+            }
+            $pending = array_diff_key($migrator->getMigrationFiles($this->migrationPaths()), array_flip($repository->getRan()));
+            $migrator->requireFiles($pending);
+
+            $started = microtime(true);
+            foreach ($pending as $file) {
+                $migrator->runPending([$file]);
+                if (microtime(true) - $started >= self::MIGRATE_SECONDS) {
+                    break;
+                }
+            }
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'done' => false, 'message' => $e->getMessage()] + ($this->migrationStatus() ?? []), 500);
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
+
+        $status = $this->migrationStatus() ?? ['ran' => 0, 'pending' => 1, 'total' => 1];
+
+        return response()->json(['ok' => true, 'busy' => false, 'done' => $status['pending'] === 0] + $status);
+    }
+
+    /** @return array{ran: int, pending: int, total: int}|null null while the database cannot be reached */
+    private function migrationStatus(): ?array
+    {
+        try {
+            $migrator = app('migrator');
+            $files = $migrator->getMigrationFiles($this->migrationPaths());
+            $ran = $migrator->getRepository()->repositoryExists() ? $migrator->getRepository()->getRan() : [];
+            $pending = count(array_diff_key($files, array_flip($ran)));
+
+            return ['ran' => count($files) - $pending, 'pending' => $pending, 'total' => count($files)];
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /** @return list<string> where `php artisan migrate` looks */
+    private function migrationPaths(): array
+    {
+        return array_merge([database_path('migrations')], app('migrator')->paths());
     }
 
     // ─── Step 3: Admin account ──────────────────────────────────────────
@@ -188,6 +279,10 @@ class InstallController extends Controller
         // chose just below, so a second run no longer recognises it and would
         // create "admin" / "admin123" all over again.
         if (! $request->session()->get('install.seeded')) {
+            // About ten seconds on a fresh database; a slow host must not
+            // stop it halfway.
+            @set_time_limit(0);
+            ignore_user_abort(true);
             try {
                 Artisan::call('db:seed', ['--force' => true, '--no-interaction' => true]);
                 $request->session()->put('install.seeded', true);
@@ -295,6 +390,9 @@ class InstallController extends Controller
     {
         return view('install.finish', [
             'username' => session('install.admin_username', 'admin'),
+            // This page stays open after the install; only the session that
+            // installed sees the server path in the cron line.
+            'path' => session('install.admin_id') ? base_path() : '/path/to/pnlcs',
         ]);
     }
 

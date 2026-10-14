@@ -6,8 +6,9 @@ a web server are available. Pick the way that fits you:
 | Way | Best for | Time |
 |---|---|---|
 | [Docker](docker.md) | Trying PNLCS, or running it as one container | About 5 minutes |
-| [On your own server](native.md) | A VPS or dedicated server you control (Ubuntu, Debian, AlmaLinux, Rocky) | About 30 minutes |
-| [Inside a hosting-panel account](hosting-panel.md) | A server that already runs Panelica, cPanel or a similar panel | About 20 minutes |
+| [One command](native.md#one-command) | A fresh VPS or dedicated server (Ubuntu 22.04/24.04, Debian 12/13, AlmaLinux 9, Rocky Linux 9) | About 10 minutes |
+| [On your own server, step by step](native.md#step-by-step) | A server you set up by hand | About 30 minutes |
+| [Inside a hosting-panel account](hosting-panel.md) | Panelica, cPanel or a similar panel - by uploading the release package, no command line needed | About 15 minutes |
 
 Before you start, check the [requirements](requirements.md).
 

@@ -18,6 +18,8 @@ Route::middleware(['web', EnsureNotInstalled::class])->prefix('install')->group(
     Route::get('/database',          [InstallController::class, 'database']);
     Route::post('/database/test',    [InstallController::class, 'testDatabase']);
     Route::post('/database',         [InstallController::class, 'saveDatabase']);
+    Route::get('/database/migrate',  [InstallController::class, 'migrate']);
+    Route::post('/database/migrate', [InstallController::class, 'runMigrations']);
     Route::get('/admin',             [InstallController::class, 'admin']);
     Route::post('/admin',            [InstallController::class, 'saveAdmin']);
     Route::get('/app',               [InstallController::class, 'app']);

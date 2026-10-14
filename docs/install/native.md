@@ -1,5 +1,48 @@
 # Install on your own server
 
+## One command
+
+On a fresh Ubuntu 22.04 or 24.04, Debian 12 or 13, AlmaLinux 9 or Rocky Linux
+9 server, one command does the server work of this page (everything but
+HTTPS, and the administrator account you create in the wizard):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Panelica/pnlcs/main/install.sh | sudo bash -s -- --domain billing.example.com
+```
+
+It installs nginx, PHP 8.4 and MySQL or MariaDB, downloads the latest release
+and checks its signature against the PNLCS release key, creates the database,
+and sets up nginx, the scheduler, the firewall and (on AlmaLinux and Rocky)
+SELinux. It ends by printing the address of the install wizard, where you
+create your administrator account. Leave out `--domain` to use the server's IP
+address.
+
+- It stops before changing anything if `/var/www/pnlcs`, the database or the
+  nginx site already exists: it never touches an installation.
+- The database password is in `/root/pnlcs-install.txt` (readable by root
+  only), the full log in `/var/log/pnlcs-install.log`.
+- `--db-password` (with `--db-name`, `--db-user`, `--db-host`) uses a database
+  you created instead of installing a database server; `--version` installs
+  another release; `--help` lists every option.
+- HTTPS is not set up for you: follow [step 15](#15-turn-on-https) once the
+  domain points at the server.
+
+Run on freshly created servers, from the command to signing in as the
+administrator:
+
+| System | PHP | Database | Result |
+|---|---|---|---|
+| Ubuntu 22.04 LTS | 8.4 (ondrej PPA) | MySQL 8.0 | installed, wizard completed, scheduler runs |
+| Ubuntu 24.04 LTS | 8.4 (ondrej PPA) | MySQL 8.0 | installed, wizard completed, scheduler runs |
+| Debian 12 | 8.4 (sury) | MariaDB 10.11 | installed, wizard completed, scheduler runs |
+| Debian 13 | 8.4 (Debian) | MariaDB 11.8 | installed, wizard completed, scheduler runs |
+| AlmaLinux 9 | 8.4 (Remi) | MySQL 8.0 | installed with SELinux enforcing (no denials), wizard completed, scheduler runs |
+| Rocky Linux 9 | 8.4 (Remi) | MySQL 8.0 | installed with SELinux enforcing (no denials), wizard completed, scheduler runs |
+
+The rest of this page is the same installation done by hand.
+
+## Step by step
+
 A plain Laravel installation: PHP-FPM 8.4, MySQL or MariaDB, and Nginx. Every
 command below was run, in this order, on freshly created servers:
 

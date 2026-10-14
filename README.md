@@ -482,32 +482,37 @@ payments.
 
 The fastest way to try PNLCS is the official Docker image
 [**`panelica/pnlcs-runtime`**](https://hub.docker.com/r/panelica/pnlcs-runtime).
-It bundles PHP-FPM 8.4 + nginx + Node.js 20 + supervisor and clones the latest
-code from this repository on first start. No manual `composer install` or
-`npm run build` — the entrypoint handles everything.
+It bundles PHP-FPM 8.4 + nginx + supervisor, and on its first start installs
+the newest **stable release**: a signed package, verified before it is
+unpacked, with its PHP dependencies and frontend already built.
 
 ```bash
 docker network create pnlcs-net
 
 docker run -d --name pnlcs-db --network pnlcs-net \
-  -e MYSQL_ROOT_PASSWORD=changeme \
-  -e MYSQL_DATABASE=pnlcs -e MYSQL_USER=pnlcs -e MYSQL_PASSWORD=changeme \
+  -v pnlcs_db:/var/lib/mysql \
+  -e MYSQL_ROOT_PASSWORD=choose-a-root-password \
+  -e MYSQL_DATABASE=pnlcs -e MYSQL_USER=pnlcs -e MYSQL_PASSWORD=choose-a-password \
   mariadb:11
 
 docker run -d --name pnlcs --network pnlcs-net -p 8090:80 \
+  -v pnlcs_app:/var/www/pnlcs \
   -e DB_HOST=pnlcs-db -e DB_DATABASE=pnlcs \
-  -e DB_USERNAME=pnlcs -e DB_PASSWORD=changeme \
+  -e DB_USERNAME=pnlcs -e DB_PASSWORD=choose-a-password \
   -e APP_URL=http://localhost:8090 \
-  panelica/pnlcs-runtime:1.4
+  panelica/pnlcs-runtime:1.5
 ```
 
-Wait 3–5 minutes for the first start (composer install + npm build), then
-visit **http://localhost:8090/install** to run the in-app install wizard.
-The wizard guides you through requirements check, admin account creation
-(you choose username + password), and application settings — then locks
-itself permanently.
+The two named volumes keep your database and your installation (with its
+`.env` and uploaded files) when the container is replaced. The first start
+takes about a minute; then visit **http://localhost:8090/install** to run the
+in-app install wizard. It checks the requirements, creates the administrator
+with the username and password you choose, and closes itself for good. The
+container runs the scheduler and a queue worker itself: there is no cron line
+to add.
 
-To pull the latest code from this repo into a running container:
+To update to the newest release later (your changes are kept, and an update
+that is interrupted rolls itself back):
 
 ```bash
 docker exec pnlcs /usr/local/bin/update.sh
@@ -520,6 +525,34 @@ production deployment notes:**
 ---
 
 ## Self-Hosted Installation (without Docker)
+
+### One command
+
+On a fresh Ubuntu 22.04/24.04, Debian 12/13, AlmaLinux 9 or Rocky Linux 9
+server:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Panelica/pnlcs/main/install.sh | sudo bash -s -- --domain billing.example.com
+```
+
+It installs nginx, PHP 8.4 and MySQL or MariaDB, downloads the newest release
+and verifies its signature, creates the database, and sets up nginx, the
+scheduler, the firewall and SELinux. Then it prints the address of the install
+wizard, where you create your administrator account. It never touches an
+existing installation. Options and details:
+[docs/install/native.md](docs/install/native.md#one-command).
+
+### Upload the release package (no command line)
+
+On shared hosting, or any panel with a file manager: download
+`pnlcs-X.Y.Z.tar.gz` from the
+[latest release](https://github.com/Panelica/pnlcs/releases/latest), extract
+it next to the webroot, point the domain's document root at `pnlcs/public`
+and open the site. The install wizard starts by itself: it writes `.env`,
+asks for the database, creates the tables, then your administrator account.
+Details: [docs/install/hosting-panel.md](docs/install/hosting-panel.md).
+
+### Step by step
 
 This is a plain Laravel install on your own server: PHP-FPM, MySQL or MariaDB,
 and Nginx. Every command below was run, in this order, on freshly created

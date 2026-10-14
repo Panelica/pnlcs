@@ -16,6 +16,14 @@
             </ul>
         </div>
 
+        <div class="bg-amber-50 border border-amber-200 rounded p-4 max-w-md mx-auto mb-6 text-left text-sm">
+            <div class="text-amber-900 font-semibold mb-1">{{ __('install.cron_title') }}</div>
+            <p class="text-amber-900 mb-2">{{ __('install.cron_intro') }}</p>
+            <code class="block bg-white border border-amber-200 rounded px-2 py-1.5 text-xs break-all select-all">* * * * * cd {{ $path }} && php artisan schedule:run >> /dev/null 2>&1</code>
+            <p class="text-amber-800 mt-2 text-xs">{{ __('install.cron_php') }}</p>
+            <p class="text-amber-800 mt-1 text-xs">{{ __('install.cron_note') }}</p>
+        </div>
+
         <a href="/admin/login" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
             Go to Admin Login →
         </a>

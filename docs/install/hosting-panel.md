@@ -1,5 +1,31 @@
 # Install inside a hosting-panel account
 
+## Without a command line: upload the release package
+
+A panel's file manager is enough:
+
+1. Create the domain and set its **PHP version to 8.4**. Create a MySQL
+   database and a user for it in the panel.
+2. Download `pnlcs-X.Y.Z.tar.gz` from the
+   [latest release](https://github.com/Panelica/pnlcs/releases/latest). It
+   carries everything PNLCS needs to run, `vendor/` and the built assets: no
+   Composer and no Node.
+3. Upload it **next to** the webroot (`~/example.com/`, not inside
+   `public_html`) and extract it there: you get a `pnlcs` folder.
+4. Point the domain's document root at `pnlcs/public`, in the panel's domain
+   settings or with the same-owner symlink from the command-line steps below.
+5. Open `https://example.com/`: the install wizard starts by itself. It
+   writes `.env`, asks for the database, creates the tables with a progress
+   bar (a minute or two), then your administrator account and the site
+   settings.
+6. The wizard's last page shows one cron line: add it as a cron job for the
+   account.
+
+The `pnlcs` folder must be writable by the user the site's PHP runs as; on
+panels that run PHP as the account user, an upload already is.
+
+## With a command line
+
 If the server runs a control panel, you do not need root or any of step 0 -
 the panel already carries PHP, MySQL and (on Panelica) Node. This is the
 exact shape our own production installs use:
