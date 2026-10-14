@@ -1890,4 +1890,5 @@ return [
     'announcements.date_at_time' => ':date at :time',
     'services.tool_soon' => 'Soon',
     'ssl.csr_paste_here' => 'Paste your CSR here...',
+    'marketing.mail_greeting' => 'Hello :name,',
 ];

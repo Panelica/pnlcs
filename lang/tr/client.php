@@ -1889,4 +1889,5 @@ return [
     'announcements.date_at_time' => ':date, saat :time',
     'services.tool_soon' => 'Yakında',
     'ssl.csr_paste_here' => 'CSR\'nizi buraya yapıştırın...',
+    'marketing.mail_greeting' => 'Merhaba :name,',
 ];

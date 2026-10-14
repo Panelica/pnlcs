@@ -1889,4 +1889,5 @@ return [
     'announcements.date_at_time' => ':date :time',
     'services.tool_soon' => '即将推出',
     'ssl.csr_paste_here' => '在此粘贴您的 CSR...',
+    'marketing.mail_greeting' => ':name，您好：',
 ];

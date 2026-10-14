@@ -1889,4 +1889,5 @@ return [
     'announcements.date_at_time' => ':date um :time',
     'services.tool_soon' => 'Bald',
     'ssl.csr_paste_here' => 'Fügen Sie Ihre CSR hier ein...',
+    'marketing.mail_greeting' => 'Hallo :name,',
 ];

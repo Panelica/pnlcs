@@ -209,7 +209,6 @@ const HARDCODED_VIEW_TEXT_BUDGET = [
     'resources/views/client/services/hosting/subdomains.blade.php' => 5,
     'resources/views/client/services/show.blade.php' => 1,
     'resources/views/client/ssl/configure.blade.php' => 2,
-    'resources/views/emails/bulk-mass.blade.php' => 1,
     'resources/views/emails/login-email-changed.blade.php' => 3,
     'resources/views/emails/new-device-login.blade.php' => 6,
     'resources/views/emails/password-reset.blade.php' => 5,
@@ -227,7 +226,7 @@ const HARDCODED_VIEW_TEXT_BUDGET = [
     'resources/views/pages/mail-setup.blade.php' => 14,
     'resources/views/pdf/invoice.blade.php' => 1,
     'resources/views/sections/footer.blade.php' => 6,
-    'resources/views/sections/navigation.blade.php' => 2,
+    'resources/views/sections/navigation.blade.php' => 1,
 ];
 
 test('no view gains hardcoded text', function () {
