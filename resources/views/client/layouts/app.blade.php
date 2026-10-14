@@ -370,7 +370,7 @@
 
 <nav class="pn-navbar">
     <div class="pn-navbar-inner">
-        <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="Logo" style="max-height:32px;max-width:100%;">@else <span class="pn-brand-text">{{ company_name() }}</span> <span class="pn-brand-dot"></span>@endif</a>
+        <a href="{{ route("client.home") }}" class="pn-brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="{{ company_name() }}" style="max-height:32px;max-width:100%;">@else <span class="pn-brand-text">{{ company_name() }}</span> <span class="pn-brand-dot"></span>@endif</a>
 
         <div class="pn-nav">
             <div class="pn-nav-item">

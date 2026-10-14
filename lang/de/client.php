@@ -1884,4 +1884,6 @@ return [
     'cart.subdomain_invalid' => 'Nur Buchstaben, Ziffern und Bindestriche, ohne Punkte.',
     'cart.subdomain_reserved' => ':name ist reserviert. Wählen Sie einen anderen Namen.',
     'cart.subdomain_taken' => ':name wird bereits verwendet. Wählen Sie einen anderen Namen.',
+    'payment_methods.card_ending' => 'endet auf :last4',
+    'auth.qr_code_alt' => 'QR-Code für Ihre Authenticator-App',
 ];

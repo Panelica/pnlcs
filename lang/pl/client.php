@@ -1885,4 +1885,6 @@ return [
     'cart.subdomain_invalid' => 'Używaj tylko liter, cyfr i myślników, bez kropek.',
     'cart.subdomain_reserved' => ':name jest zarezerwowana. Wybierz inną nazwę.',
     'cart.subdomain_taken' => ':name jest już używana. Wybierz inną nazwę.',
+    'payment_methods.card_ending' => 'kończy się na :last4',
+    'auth.qr_code_alt' => 'Kod QR dla aplikacji uwierzytelniającej',
 ];

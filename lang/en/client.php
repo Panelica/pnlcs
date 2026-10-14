@@ -1885,4 +1885,6 @@ return [
     'cart.subdomain_invalid' => 'Use letters, numbers and hyphens only, without dots.',
     'cart.subdomain_reserved' => ':name is reserved. Choose another name.',
     'cart.subdomain_taken' => ':name is already in use. Choose another name.',
+    'payment_methods.card_ending' => 'ending :last4',
+    'auth.qr_code_alt' => 'QR code for your authenticator app',
 ];
