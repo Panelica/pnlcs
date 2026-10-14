@@ -1886,4 +1886,7 @@ return [
     'cart.subdomain_taken' => ':name wird bereits verwendet. Wählen Sie einen anderen Namen.',
     'payment_methods.card_ending' => 'endet auf :last4',
     'auth.qr_code_alt' => 'QR-Code für Ihre Authenticator-App',
+    'announcements.date_at_time' => ':date um :time',
+    'services.tool_soon' => 'Bald',
+    'ssl.csr_paste_here' => 'Fügen Sie Ihre CSR hier ein...',
 ];

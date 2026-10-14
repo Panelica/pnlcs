@@ -1886,4 +1886,7 @@ return [
     'cart.subdomain_taken' => ':name zaten kullanımda. Başka bir ad seçin.',
     'payment_methods.card_ending' => 'sonu :last4',
     'auth.qr_code_alt' => 'Doğrulama uygulamanız için QR kodu',
+    'announcements.date_at_time' => ':date, saat :time',
+    'services.tool_soon' => 'Yakında',
+    'ssl.csr_paste_here' => 'CSR\'nizi buraya yapıştırın...',
 ];

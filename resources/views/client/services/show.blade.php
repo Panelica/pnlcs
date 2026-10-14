@@ -161,7 +161,7 @@
         </a>
         @else
         <div class="sv-app soon">
-            <span class="sv-soon">Soon</span>
+            <span class="sv-soon">{{ __('client.services.tool_soon') }}</span>
             <span class="sv-aic" style="background:{{ $t['c'] }}1a;color:{{ $t['c'] }}"><i class="{{ $t['ic'] }}"></i></span>
             <div><div class="sv-aname">{{ $t['name'] }}</div><div class="sv-adesc">{{ $t['desc'] }}</div></div>
         </div>

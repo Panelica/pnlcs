@@ -1887,4 +1887,7 @@ return [
     'cart.subdomain_taken' => ':name is already in use. Choose another name.',
     'payment_methods.card_ending' => 'ending :last4',
     'auth.qr_code_alt' => 'QR code for your authenticator app',
+    'announcements.date_at_time' => ':date at :time',
+    'services.tool_soon' => 'Soon',
+    'ssl.csr_paste_here' => 'Paste your CSR here...',
 ];
