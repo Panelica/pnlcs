@@ -2,6 +2,89 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.6.0-beta.1 — 2026-10-15
+
+A beta: offered only to installations on the **beta** channel (**Setup →
+Updates → Update channel**). It contains everything in 1.5.0 and in
+1.5.1-beta.1. The next stable release is 1.6.0, with 1.5.1-beta.1's fixes
+in it; there will be no 1.5.1.
+
+### Added
+
+- **One command on a fresh server.** On Ubuntu 22.04 or 24.04, Debian 12 or
+  13, AlmaLinux 9 or Rocky Linux 9,
+  `curl -fsSL https://raw.githubusercontent.com/Panelica/pnlcs/main/install.sh | sudo bash -s -- --domain billing.example.com`
+  installs nginx, PHP 8.4 and MySQL or MariaDB, downloads the newest release
+  and checks its signature, creates the database, and sets up nginx, the
+  scheduler, the firewall and SELinux; then the install wizard asks for your
+  administrator account. It stops before changing anything on a server that
+  already has PNLCS. See [Install on your own server](docs/install/native.md#one-command).
+- **Installing without a command line.** The release package, extracted on a
+  web host and opened in the browser, starts the install wizard, which writes
+  `.env` itself. A copy that is already set up is never touched. See
+  [Inside a hosting-panel account](docs/install/hosting-panel.md).
+- **The install wizard in five languages**: English, Turkish, German, Polish
+  and Chinese. It opens in the browser's language when it is one of them,
+  has a language switch at the top, and offers the language it was run in as
+  the default on its last step. Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+
+### Changed
+
+- **Install wizard, database step:** the settings are tried before they are
+  saved, so a wrong password comes back on the form with the database's
+  reason instead of being written to `.env`. The tables are then created on a
+  page of their own with a progress bar, a few seconds at a time, so a web
+  server's 60-second limit can no longer cut the step off. A step that was
+  interrupted carries on where it stopped, and a database whose tables were
+  only half made is no longer taken for a finished one.
+- **The wizard's last page** shows the cron line the scheduler needs, with the
+  installation's own path.
+- **Client area, public pages and emails:** the last English texts a
+  customer could read are translated: a stored card's last digits, the
+  two-factor QR code's text, the logo's text (now the company's name), an
+  announcement's date and time, the "Soon" badge on a service's tools, the
+  CSR field's hint, the dark-mode button and a mass email's greeting. Thank
+  you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **My Account** says that only the languages active under **Setup →
+  Languages** are offered there, with a link to that page.
+- **Spanish** has every new text of this release.
+- **The README's Docker quick start** uses image 1.5, with named volumes for
+  the database and the installation.
+
+### Fixed
+
+- **An uploaded release package** answered the install wizard's first page
+  with an error ("No application encryption key has been specified"): the
+  package has no `.env`.
+
+### Database changes
+
+- None.
+
+### For theme and module authors
+
+- New view `install/migrate`, the progress page of the database step.
+  `install/finish` receives `$path`: the installation's directory, or
+  `/path/to/pnlcs` for anyone but the installer. `install/app` receives
+  `$locales`, the languages offered as the default (code => name).
+- The wizard's routes run the new `App\Http\Middleware\InstallLocale`, which
+  sets the wizard's language; every other page keeps `SetLocale`.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/settings/my-account.blade.php`.
+- `resources/views/client/account/payment_methods.blade.php`,
+  `client/announcements/show.blade.php`,
+  `client/auth/enable-two-factor.blade.php`, `client/auth/login.blade.php`,
+  `client/layouts/app.blade.php`, `client/services/show.blade.php`,
+  `client/ssl/configure.blade.php`.
+- `resources/views/emails/bulk-mass.blade.php`,
+  `sections/navigation.blade.php`.
+- `resources/views/install/admin.blade.php`, `install/app.blade.php`,
+  `install/database.blade.php`, `install/finish.blade.php`,
+  `install/layout.blade.php`, `install/requirements.blade.php`.
+
 ## 1.5.1-beta.1 — 2026-10-13
 
 A beta: offered only to installations on the **beta** channel (**Setup →
