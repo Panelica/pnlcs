@@ -1923,4 +1923,10 @@ El enlace es válido durante :days días. Si no esperaba esta invitación, puede
     'cart.subdomain_invalid' => 'Use solo letras, números y guiones, sin puntos.',
     'cart.subdomain_reserved' => ':name está reservado. Elija otro nombre.',
     'cart.subdomain_taken' => ':name ya está en uso. Elija otro nombre.',
+    'payment_methods.card_ending' => 'terminada en :last4',
+    'auth.qr_code_alt' => 'Código QR para su aplicación de autenticación',
+    'announcements.date_at_time' => ':date a las :time',
+    'services.tool_soon' => 'Próximamente',
+    'ssl.csr_paste_here' => 'Pegue aquí su CSR...',
+    'marketing.mail_greeting' => 'Hola :name,',
 ];
