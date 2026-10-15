@@ -3,6 +3,7 @@
 use App\Http\Controllers\GatewayWebhookController;
 use App\Http\Controllers\InstallController;
 use App\Http\Middleware\EnsureNotInstalled;
+use App\Http\Middleware\InstallLocale;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [App\Http\Controllers\WelcomeController::class, 'index'])->name('home');
@@ -12,7 +13,7 @@ Route::get('sitemap.xml', [App\Http\Controllers\SitemapController::class, 'sitem
 Route::get('robots.txt', [App\Http\Controllers\SitemapController::class, 'robots'])->name('robots');
 
 // ===== Install Wizard (gated by EnsureNotInstalled — 404 once admins exist) =====
-Route::middleware(['web', EnsureNotInstalled::class])->prefix('install')->group(function () {
+Route::middleware(['web', EnsureNotInstalled::class, InstallLocale::class])->prefix('install')->group(function () {
     Route::get('/',                  [InstallController::class, 'index']);
     Route::get('/requirements',      [InstallController::class, 'requirements']);
     Route::get('/database',          [InstallController::class, 'database']);
@@ -29,7 +30,7 @@ Route::middleware(['web', EnsureNotInstalled::class])->prefix('install')->group(
 // Finish page is intentionally OUTSIDE the gating middleware so users can land
 // on it after the lock file is written. It only displays a success message and
 // a link to /admin/login — no sensitive data and no actions.
-Route::middleware('web')->get('/install/finish', [InstallController::class, 'finish']);
+Route::middleware(['web', InstallLocale::class])->get('/install/finish', [InstallController::class, 'finish']);
 
 // ===== Gateway Webhooks (no CSRF — verified by signature) =====
 Route::withoutMiddleware([\Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class])->group(function () {

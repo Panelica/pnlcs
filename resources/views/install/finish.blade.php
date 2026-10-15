@@ -1,18 +1,18 @@
 @extends('install.layout', ['step' => 'finish'])
-@section('title', 'Done')
+@section('title', __('install.done_page_title'))
 @section('content')
     <div class="text-center py-6">
         <div class="w-16 h-16 mx-auto rounded-full bg-green-100 text-green-600 flex items-center justify-center text-3xl mb-4">✓</div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Installation Complete</h2>
-        <p class="text-slate-600 mb-6">PNLCS is ready. The install wizard has been disabled.</p>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">{{ __('install.done_title') }}</h2>
+        <p class="text-slate-600 mb-6">{{ __('install.done_intro') }}</p>
 
         <div class="bg-slate-50 border border-slate-200 rounded p-4 max-w-md mx-auto mb-6 text-left text-sm">
-            <div class="text-slate-700 font-semibold mb-1">Next steps:</div>
+            <div class="text-slate-700 font-semibold mb-1">{{ __('install.next_steps') }}</div>
             <ul class="text-slate-600 space-y-1">
-                <li>1. Login as <code class="bg-white px-2 py-0.5 rounded border border-slate-200">{{ $username }}</code></li>
-                <li>2. Configure SMTP for email delivery</li>
-                <li>3. Set up at least one payment gateway</li>
-                <li>4. Add server &amp; registrar plugins</li>
+                <li>{{ trans_markup('install.next_login', ['username' => $username]) }}</li>
+                <li>{{ __('install.next_smtp') }}</li>
+                <li>{{ __('install.next_gateway') }}</li>
+                <li>{{ __('install.next_modules') }}</li>
             </ul>
         </div>
 
@@ -25,7 +25,7 @@
         </div>
 
         <a href="/admin/login" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700">
-            Go to Admin Login →
+            {{ __('install.go_login') }}
         </a>
     </div>
 @endsection
