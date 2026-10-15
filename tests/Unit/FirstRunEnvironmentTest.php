@@ -23,13 +23,38 @@ function firstRunDir(?string $env = null, bool $installed = false): string
     return $dir;
 }
 
+/**
+ * Runs $test as in a web request whose environment carries no APP_KEY: the
+ * test process itself has one (the application under test is booted).
+ */
+function withoutEnvironmentKey(Closure $test): void
+{
+    $before = [getenv('APP_KEY'), $_ENV['APP_KEY'] ?? null, $_SERVER['APP_KEY'] ?? null];
+    putenv('APP_KEY');
+    unset($_ENV['APP_KEY'], $_SERVER['APP_KEY']);
+
+    try {
+        $test();
+    } finally {
+        putenv($before[0] === false ? 'APP_KEY' : 'APP_KEY='.$before[0]);
+        if ($before[1] !== null) {
+            $_ENV['APP_KEY'] = $before[1];
+        }
+        if ($before[2] !== null) {
+            $_SERVER['APP_KEY'] = $before[2];
+        }
+    }
+}
+
 afterEach(function () {
     foreach (glob(storage_path('framework/testing/first-run-*')) ?: [] as $dir) {
         @chmod($dir, 0777);
-        foreach (['/.env', '/.env.example', '/storage/installed.lock'] as $file) {
+        foreach (['/.env', '/.env.example', '/storage/installed.lock', '/bootstrap/cache/config.php'] as $file) {
             @unlink($dir.$file);
         }
         @rmdir($dir.'/storage');
+        @rmdir($dir.'/bootstrap/cache');
+        @rmdir($dir.'/bootstrap');
         @rmdir($dir);
     }
 });
@@ -37,7 +62,7 @@ afterEach(function () {
 test('an uploaded copy gets a .env with a key on its first web request', function () {
     $dir = firstRunDir();
 
-    FirstRunEnvironment::prepare($dir, 'fpm-fcgi');
+    withoutEnvironmentKey(fn () => FirstRunEnvironment::prepare($dir, 'fpm-fcgi'));
 
     $env = (string) file_get_contents($dir.'/.env');
     expect($env)->toMatch('/^APP_KEY=base64:[A-Za-z0-9+\/]{43}=$/m')
@@ -50,7 +75,7 @@ test('a .env copied by hand without a key gets one and keeps everything else', f
     foreach (["APP_KEY=\n", "APP_KEY=\"\"\n", "APP_KEY=''\n", "# no key line\n"] as $keyLine) {
         $dir = firstRunDir("APP_NAME=\"My Host\"\n{$keyLine}DB_PASSWORD=\"s3cret#1\"\n");
 
-        FirstRunEnvironment::prepare($dir, 'apache2handler');
+        withoutEnvironmentKey(fn () => FirstRunEnvironment::prepare($dir, 'apache2handler'));
 
         $env = (string) file_get_contents($dir.'/.env');
         expect($env)->toMatch('/^APP_KEY=base64:[A-Za-z0-9+\/]{43}=$/m')
@@ -64,7 +89,7 @@ test('a .env that has a key is never changed', function () {
     $env = 'APP_KEY=base64:'.base64_encode(str_repeat('k', 32))."\nDB_PASSWORD=x\n";
     $dir = firstRunDir($env);
 
-    FirstRunEnvironment::prepare($dir, 'fpm-fcgi');
+    withoutEnvironmentKey(fn () => FirstRunEnvironment::prepare($dir, 'fpm-fcgi'));
 
     expect(file_get_contents($dir.'/.env'))->toBe($env);
 });
@@ -72,19 +97,65 @@ test('a .env that has a key is never changed', function () {
 test('an installed copy is never changed, even with no key', function () {
     $dir = firstRunDir("APP_KEY=\n", installed: true);
 
-    FirstRunEnvironment::prepare($dir, 'fpm-fcgi');
+    withoutEnvironmentKey(fn () => FirstRunEnvironment::prepare($dir, 'fpm-fcgi'));
 
     expect(file_get_contents($dir.'/.env'))->toBe("APP_KEY=\n");
 
     $bare = firstRunDir(installed: true);
-    FirstRunEnvironment::prepare($bare, 'fpm-fcgi');
+    withoutEnvironmentKey(fn () => FirstRunEnvironment::prepare($bare, 'fpm-fcgi'));
     expect(file_exists($bare.'/.env'))->toBeFalse();
+});
+
+test('a key in the real environment means the copy already runs: nothing is written', function () {
+    // An installation without the lock (an old one, a restored database)
+    // whose key comes from the server's environment. A second key written to
+    // .env would take over the day that variable is gone, and nothing
+    // encrypted with the first could be read again.
+    $dir = firstRunDir("APP_KEY=\n");
+    $bare = firstRunDir();
+    $before = [getenv('APP_KEY'), $_SERVER['APP_KEY'] ?? null];
+    putenv('APP_KEY=base64:'.base64_encode(str_repeat('e', 32)));
+
+    try {
+        FirstRunEnvironment::prepare($dir, 'fpm-fcgi');
+        FirstRunEnvironment::prepare($bare, 'fpm-fcgi');
+    } finally {
+        putenv($before[0] === false ? 'APP_KEY' : 'APP_KEY='.$before[0]);
+    }
+
+    expect(file_get_contents($dir.'/.env'))->toBe("APP_KEY=\n")
+        ->and(file_exists($bare.'/.env'))->toBeFalse();
+
+    withoutEnvironmentKey(function () use ($dir) {
+        $_SERVER['APP_KEY'] = 'base64:'.base64_encode(str_repeat('s', 32));
+        FirstRunEnvironment::prepare($dir, 'fpm-fcgi');
+    });
+    expect(file_get_contents($dir.'/.env'))->toBe("APP_KEY=\n");
+});
+
+test('a cached configuration means the copy already runs: nothing is written', function () {
+    // The key is in bootstrap/cache/config.php; a new one in .env would take
+    // over at the next config:clear. Release packages ship without that file.
+    $dir = firstRunDir("APP_KEY=\n");
+    $bare = firstRunDir();
+    foreach ([$dir, $bare] as $copy) {
+        mkdir($copy.'/bootstrap/cache', 0777, true);
+        file_put_contents($copy.'/bootstrap/cache/config.php', "<?php return [];\n");
+    }
+
+    withoutEnvironmentKey(function () use ($dir, $bare) {
+        FirstRunEnvironment::prepare($dir, 'fpm-fcgi');
+        FirstRunEnvironment::prepare($bare, 'fpm-fcgi');
+    });
+
+    expect(file_get_contents($dir.'/.env'))->toBe("APP_KEY=\n")
+        ->and(file_exists($bare.'/.env'))->toBeFalse();
 });
 
 test('the command line is left alone', function () {
     $dir = firstRunDir();
 
-    FirstRunEnvironment::prepare($dir, 'cli');
+    withoutEnvironmentKey(fn () => FirstRunEnvironment::prepare($dir, 'cli'));
 
     expect(file_exists($dir.'/.env'))->toBeFalse();
 });
@@ -98,6 +169,8 @@ test('a folder it cannot write to gets a key for this request only', function ()
     $before = [getenv('APP_KEY'), $_ENV['APP_KEY'] ?? null, $_SERVER['APP_KEY'] ?? null];
 
     try {
+        putenv('APP_KEY');
+        unset($_ENV['APP_KEY'], $_SERVER['APP_KEY']);
         FirstRunEnvironment::prepare($dir, 'fpm-fcgi');
 
         expect(file_exists($dir.'/.env'))->toBeFalse()
