@@ -14,7 +14,7 @@
         <p style="margin-bottom:16px;">{{ __('client.auth.scan_qr_code') }}</p>
 
         <div style="text-align:center;margin:20px 0;">
-            <img src="{{ $qrImage }}" width="200" height="200" alt="QR Code" style="border:4px solid var(--border,#eee);border-radius:8px;">
+            <img src="{{ $qrImage }}" width="200" height="200" alt="{{ __('client.auth.qr_code_alt') }}" style="border:4px solid var(--border,#eee);border-radius:8px;">
         </div>
 
         <p style="text-align:center;font-size:13px;color:var(--muted);">{{ __('client.auth.or_enter_manually') }}</p>

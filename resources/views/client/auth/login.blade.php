@@ -42,7 +42,7 @@
 <div class="login-box">
     <div class="login-logo">
         @if(!empty($customLogo))
-            <img src="{{ $customLogo }}" alt="Logo" style="max-height:48px; margin-bottom:8px;">
+            <img src="{{ $customLogo }}" alt="{{ company_name() }}" style="max-height:48px; margin-bottom:8px;">
         @else
             <h1>{{ company_name() }}</h1>
         @endif

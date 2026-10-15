@@ -1884,4 +1884,10 @@ return [
     'cart.subdomain_invalid' => 'Yalnız harf, rakam ve tire kullanın; nokta olmasın.',
     'cart.subdomain_reserved' => ':name ayrılmış bir ad. Başka bir ad seçin.',
     'cart.subdomain_taken' => ':name zaten kullanımda. Başka bir ad seçin.',
+    'payment_methods.card_ending' => 'sonu :last4',
+    'auth.qr_code_alt' => 'Doğrulama uygulamanız için QR kodu',
+    'announcements.date_at_time' => ':date, saat :time',
+    'services.tool_soon' => 'Yakında',
+    'ssl.csr_paste_here' => 'CSR\'nizi buraya yapıştırın...',
+    'marketing.mail_greeting' => 'Merhaba :name,',
 ];

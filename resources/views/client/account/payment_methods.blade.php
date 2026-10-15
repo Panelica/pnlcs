@@ -8,7 +8,7 @@
         <div style='border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center'>
             <div>
                 <strong>{{ $pm->type ?? 'Card' }}</strong>
-                <span style='color:var(--muted);margin-left:8px'>ending {{ $pm->last_four ?? '****' }}</span>
+                <span style='color:var(--muted);margin-left:8px'>{{ __('client.payment_methods.card_ending', ['last4' => $pm->last_four ?? '****']) }}</span>
             </div>
         </div>
         @endforeach

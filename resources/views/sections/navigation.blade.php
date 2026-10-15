@@ -58,7 +58,7 @@
 
             <div class="main-nav__right">
                 @if($darkModeEnabled ?? false)
-                <button onclick="toggleDarkMode()" class="dark-toggle" title="Toggle dark mode" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:18px;cursor:pointer;padding:8px;transition:color 0.2s;">
+                <button onclick="toggleDarkMode()" class="dark-toggle" title="{{ __('client.toggle_dark_mode') }}" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:18px;cursor:pointer;padding:8px;transition:color 0.2s;">
                     <i class="ri-sun-line" id="lightIcon" style="display:none;"></i>
                     <i class="ri-moon-line" id="darkIcon"></i>
                 </button>

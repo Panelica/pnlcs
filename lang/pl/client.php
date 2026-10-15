@@ -1885,4 +1885,10 @@ return [
     'cart.subdomain_invalid' => 'Używaj tylko liter, cyfr i myślników, bez kropek.',
     'cart.subdomain_reserved' => ':name jest zarezerwowana. Wybierz inną nazwę.',
     'cart.subdomain_taken' => ':name jest już używana. Wybierz inną nazwę.',
+    'payment_methods.card_ending' => 'kończy się na :last4',
+    'auth.qr_code_alt' => 'Kod QR dla aplikacji uwierzytelniającej',
+    'announcements.date_at_time' => ':date o :time',
+    'services.tool_soon' => 'Wkrótce',
+    'ssl.csr_paste_here' => 'Wklej tutaj swój CSR...',
+    'marketing.mail_greeting' => 'Witaj :name,',
 ];

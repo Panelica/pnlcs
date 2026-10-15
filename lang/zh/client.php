@@ -1884,4 +1884,10 @@ return [
     'cart.subdomain_invalid' => '只能使用字母、数字和连字符，不能包含点。',
     'cart.subdomain_reserved' => ':name 已被保留，请选择其他名称。',
     'cart.subdomain_taken' => ':name 已被使用，请选择其他名称。',
+    'payment_methods.card_ending' => '尾号 :last4',
+    'auth.qr_code_alt' => '用于身份验证器应用的二维码',
+    'announcements.date_at_time' => ':date :time',
+    'services.tool_soon' => '即将推出',
+    'ssl.csr_paste_here' => '在此粘贴您的 CSR...',
+    'marketing.mail_greeting' => ':name，您好：',
 ];

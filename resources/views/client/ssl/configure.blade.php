@@ -32,7 +32,7 @@
             <div class="mb-3">
                 <label class="form-label">{{ __('client.ssl.csr') }} <span class="text-danger">*</span></label>
                 <textarea name="csr" class="form-control font-monospace" rows="8" required
-                    placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;Paste your CSR here...&#10;-----END CERTIFICATE REQUEST-----"
+                    placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;{{ __('client.ssl.csr_paste_here') }}&#10;-----END CERTIFICATE REQUEST-----"
                     x-model="csr" @blur="decodeCsr()">{{ old('csr') }}</textarea>
                 <small class="text-muted">{{ __('client.ssl.csr_hint') }}</small>
             </div>
