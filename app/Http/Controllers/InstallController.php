@@ -32,6 +32,12 @@ class InstallController extends Controller
         'mbstring', 'openssl', 'pdo_mysql', 'tokenizer', 'xml', 'zip',
     ];
 
+    /** The languages offered as the default on the last step, with the name each gives itself. */
+    private const LOCALES = [
+        'en' => 'English', 'tr' => 'Türkçe', 'de' => 'Deutsch', 'fr' => 'Français', 'es' => 'Español', 'it' => 'Italiano',
+        'ru' => 'Русский', 'pt-br' => 'Português (BR)', 'nl' => 'Nederlands', 'pl' => 'Polski', 'cs' => 'Čeština', 'zh' => '简体中文',
+    ];
+
     public function index()
     {
         return redirect('/install/requirements');
@@ -107,7 +113,7 @@ class InstallController extends Controller
         $error = $this->connectionError($data);
 
         return $error === null
-            ? response()->json(['ok' => true, 'message' => 'Connection successful.'])
+            ? response()->json(['ok' => true, 'message' => __('install.db_connection_ok')])
             : response()->json(['ok' => false, 'message' => $error], 422);
     }
 
@@ -342,7 +348,9 @@ class InstallController extends Controller
         return view('install.app', [
             'app_url' => config('app.url', 'http://localhost'),
             'app_name' => config('app.name', 'PNLCS'),
-            'app_locale' => config('app.locale', 'en'),
+            // The language the wizard was run in is the likely default.
+            'app_locale' => app()->getLocale(),
+            'locales' => self::LOCALES,
         ]);
     }
 
@@ -351,7 +359,7 @@ class InstallController extends Controller
         $data = $request->validate([
             'app_url' => 'required|url|max:255',
             'app_name' => 'required|string|max:64',
-            'app_locale' => ['required', Rule::in(['en', 'tr', 'de', 'fr', 'es', 'it', 'ru', 'pt-br', 'nl', 'pl', 'cs', 'zh'])],
+            'app_locale' => ['required', Rule::in(array_keys(self::LOCALES))],
         ]);
 
         $this->writeEnv([

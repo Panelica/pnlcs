@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Install') — PNLCS</title>
+    <title>@yield('title', __('install.page_title')) — PNLCS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; }
@@ -13,19 +13,20 @@
 <body class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-10 px-4">
     <div class="max-w-3xl mx-auto">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-900">PNLCS Install Wizard</h1>
-            <p class="text-slate-600 mt-2">Open-source hosting billing platform</p>
+            <h1 class="text-3xl font-bold text-slate-900">{{ __('install.wizard_title') }}</h1>
+            <p class="text-slate-600 mt-2">{{ __('install.tagline') }}</p>
+            <nav class="mt-3 text-xs text-slate-500" aria-label="{{ __('install.language') }}">@foreach(\App\Http\Middleware\InstallLocale::LANGUAGES as $code => $name)@if(! $loop->first) · @endif @if(app()->getLocale() === $code)<strong class="text-slate-800">{{ $name }}</strong>@else<a href="?lang={{ $code }}" class="hover:text-slate-800" hreflang="{{ $code }}" lang="{{ $code }}">{{ $name }}</a>@endif @endforeach</nav>
         </div>
 
         <!-- Steps -->
         <ol class="flex items-center justify-between mb-8 max-w-xl mx-auto">
             @php
                 $steps = [
-                    ['key' => 'requirements', 'label' => 'Requirements'],
-                    ['key' => 'database',     'label' => 'Database'],
-                    ['key' => 'admin',        'label' => 'Admin'],
-                    ['key' => 'app',          'label' => 'App'],
-                    ['key' => 'finish',       'label' => 'Finish'],
+                    ['key' => 'requirements', 'label' => __('install.step_requirements')],
+                    ['key' => 'database',     'label' => __('install.step_database')],
+                    ['key' => 'admin',        'label' => __('install.step_admin')],
+                    ['key' => 'app',          'label' => __('install.step_app')],
+                    ['key' => 'finish',       'label' => __('install.step_finish')],
                 ];
                 $current = $step ?? 'requirements';
                 $currentIdx = collect($steps)->search(fn($s) => $s['key'] === $current);
