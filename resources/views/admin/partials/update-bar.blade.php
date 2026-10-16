@@ -34,7 +34,7 @@
         <span class="pn-update-bar__text">
             <i class="fas fa-cloud-download-alt"></i>
             <span>{{ __('admin.updates.bar_available', ['version' => $updateBar['version'], 'installed' => $updateBar['installed']]) }}</span>
-            @if($updateBar['pre_release'])<span class="badge badge-warning">{{ __('admin.updates.beta_badge') }}</span>@endif
+            @if($updateBar['pre_release'])<span class="badge badge-pending">{{ __('admin.updates.beta_badge') }}</span>@endif
         </span>
         <span class="pn-update-bar__actions">
             <a href="{{ route('admin.config.updates') }}" class="btn btn-primary btn-sm">{{ __('admin.updates.bar_open') }}</a>

@@ -350,3 +350,18 @@ test('a page left open from before the update cannot ask for the installed relea
 
     expect($state->read('request.json'))->toBeNull();
 });
+
+test('the beta badge uses a badge style the admin stylesheet has', function () {
+    $state = updatesState();
+    $state->write('latest.json', ['checked_at' => now()->toIso8601String(), 'channel' => 'beta', 'latest' => [
+        'version' => '9.9.9-beta.1', 'tag' => 'v9.9.9-beta.1', 'pre_release' => true, 'notes' => 'Notes', 'published_at' => null, 'url' => null,
+    ]]);
+
+    $this->actingAs(updatesAdmin(), 'admin')
+        ->get(route('admin.config.updates'))
+        ->assertOk()
+        ->assertSee('class="badge badge-pending"', false)
+        ->assertDontSee('badge-warning', false);
+
+    expect(file_get_contents(resource_path('css/app.css')))->toContain('.badge-pending');
+});
