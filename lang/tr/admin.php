@@ -3692,4 +3692,6 @@ return [
     'settings.free_subdomains_hint' => 'Her satıra bir tane, örneğin example-sites.com. Hosting siparişleri bunların altında bir ad alabilir (adiniz.example-sites.com). Boşsa seçenek gösterilmez.',
     'settings.disallowed_subdomains' => 'Kimsenin alamayacağı adlar',
     'settings.disallowed_subdomains_hint' => 'Virgül ya da satırla ayırın. Boşsa şunlar kullanılır: :names',
+    'settings.test_email_mail_off' => 'Deneme e-postası gönderilmedi: giden e-posta bu sayfada kapalı.',
+    'settings.test_email_cancelled' => 'Deneme e-postası gönderilmedi: bir e-posta kancası onu iptal etti.',
 ];

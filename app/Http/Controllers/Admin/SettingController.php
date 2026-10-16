@@ -218,11 +218,23 @@ class SettingController extends Controller
         $fromName = $settings['EmailFromName'] ?? 'PNLCS';
 
         try {
-            Mail::raw(__('messages.email.test_body'), function ($message) use ($toAddress, $fromAddress, $fromName) {
+            $sent = Mail::raw(__('messages.email.test_body'), function ($message) use ($toAddress, $fromAddress, $fromName) {
                 $message->to($toAddress)
                          ->subject(__('messages.email.test_subject'))
                          ->from($fromAddress, $fromName);
             });
+
+            // A MessageSending listener may cancel the send (mail switched off
+            // on this page, a mail hook); the mailer then returns null. The
+            // button used to report it as sent.
+            if ($sent === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => \App\Listeners\SuppressMailWhenDisabled::isOn($settings['MailEnabled'] ?? null)
+                        ? __('admin.settings.test_email_cancelled')
+                        : __('admin.settings.test_email_mail_off'),
+                ]);
+            }
 
             return response()->json([
                 'success' => true,

@@ -3692,4 +3692,6 @@ return [
     'settings.free_subdomains_hint' => '每行一个，例如 example-sites.com。主机订单可以使用其下的名称（yourname.example-sites.com）。留空则不提供此选项。',
     'settings.disallowed_subdomains' => '任何人不可使用的名称',
     'settings.disallowed_subdomains_hint' => '用逗号或换行分隔。留空时使用：:names',
+    'settings.test_email_mail_off' => '测试邮件未发送：此页面已关闭外发邮件。',
+    'settings.test_email_cancelled' => '测试邮件未发送：某个邮件钩子取消了它。',
 ];

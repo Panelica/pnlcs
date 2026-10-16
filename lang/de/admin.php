@@ -3688,4 +3688,6 @@ return [
     'settings.free_subdomains_hint' => 'Eine pro Zeile, z. B. example-sites.com. Hosting-Bestellungen können dann einen Namen darunter erhalten (ihrname.example-sites.com). Leer: Die Option wird nicht angeboten.',
     'settings.disallowed_subdomains' => 'Namen, die niemand erhalten darf',
     'settings.disallowed_subdomains_hint' => 'Durch Kommas oder Zeilen getrennt. Leer bedeutet: :names',
+    'settings.test_email_mail_off' => 'Die Test-E-Mail wurde nicht gesendet: Ausgehende E-Mails sind auf dieser Seite ausgeschaltet.',
+    'settings.test_email_cancelled' => 'Die Test-E-Mail wurde nicht gesendet: Ein E-Mail-Hook hat sie abgebrochen.',
 ];

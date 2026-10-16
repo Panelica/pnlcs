@@ -113,3 +113,27 @@ test('the settings page shows the switch off only when it was turned off', funct
     'off' => ['0', false],
     'false' => ['false', false],
 ]);
+
+test('the test button says so when mail is switched off, instead of reporting it sent', function () {
+    Setting::set('MailEnabled', '0', 'general');
+    Setting::set('SystemEmailAddress', 'owner@example.test', 'general');
+    config(['mail.default' => 'array']);
+
+    $this->actingAs(mailSwitchAdmin(), 'admin')
+        ->post(route('admin.settings.test-email'))
+        ->assertOk()
+        ->assertJson(['success' => false, 'message' => __('admin.settings.test_email_mail_off')]);
+
+    expect(app('mailer')->getSymfonyTransport()->messages())->toHaveCount(0);
+});
+
+test('the test button still reports a test email that went out', function () {
+    Setting::where('setting', 'MailEnabled')->delete();
+    Setting::set('SystemEmailAddress', 'owner@example.test', 'general');
+    config(['mail.default' => 'array']);
+
+    $this->actingAs(mailSwitchAdmin(), 'admin')
+        ->post(route('admin.settings.test-email'))
+        ->assertOk()
+        ->assertJson(['success' => true]);
+});
