@@ -173,7 +173,7 @@
 <div class="card" style="margin-bottom:16px;">
     <div class="card-header upd-row" style="justify-content:space-between;">
         <strong>{{ __('admin.updates.available', ['version' => $release['version']]) }}
-            @if($release['pre_release'])<span class="badge badge-warning" style="margin-left:6px;">{{ __('admin.updates.beta_badge') }}</span>@endif
+            @if($release['pre_release'])<span class="badge badge-pending" style="margin-left:6px;">{{ __('admin.updates.beta_badge') }}</span>@endif
         </strong>
         @if(! empty($release['url']))<a href="{{ $release['url'] }}" target="_blank" rel="noopener" class="btn btn-default btn-xs">{{ __('admin.updates.view_release') }}</a>@endif
     </div>

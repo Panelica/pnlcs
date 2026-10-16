@@ -11,6 +11,7 @@ use App\Services\Updates\UpdateBar;
 use App\Services\Updates\UpdatePlan;
 use App\Services\Updates\UpdateRunner;
 use App\Services\Updates\UpdateState;
+use App\Services\Updates\Version;
 use Illuminate\Foundation\Http\MaintenanceModeBypassCookie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -32,7 +33,7 @@ class UpdateController extends Controller
 
     public function index(Installation $installation, UpdateRunner $runner, UpdateBar $bar)
     {
-        $latest = $this->state->read('latest.json');
+        $latest = $this->latest($installation);
         $report = $this->state->read('report.json');
         $target = $latest['latest']['version'] ?? null;
 
@@ -218,14 +219,36 @@ class UpdateController extends Controller
         ]);
     }
 
+    /**
+     * What the last check found, without a release that is installed by now.
+     * The check runs once a day: after an update the page kept offering the
+     * version it had just installed until the next one. The update bar already
+     * leaves such a release out.
+     */
+    private function latest(Installation $installation): ?array
+    {
+        $latest = $this->state->read('latest.json');
+        $offered = Version::parse((string) ($latest['latest']['version'] ?? ''));
+        $installed = $installation->version();
+
+        if ($offered !== null && $installed !== null && ! $offered->greaterThan($installed)) {
+            $latest['latest'] = null;
+        }
+
+        return $latest;
+    }
+
     private function request(string $action, array $extra = [])
     {
         if ($this->state->isLocked() || $this->state->read('request.json') || app(UpdateRunner::class)->unfinished()) {
             return back()->with('error', __('admin.updates.busy'));
         }
 
-        $version = $this->state->read('latest.json')['latest']['version'] ?? null;
-        abort_unless($version, 404);
+        $version = $this->latest(app(Installation::class))['latest']['version'] ?? null;
+        if ($version === null) {
+            // A page opened before the update finished still has the button.
+            return redirect()->route('admin.config.updates');
+        }
 
         $admin = auth('admin')->user();
         // The administrator who starts an update keeps watching it while the
