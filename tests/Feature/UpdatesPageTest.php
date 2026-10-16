@@ -322,3 +322,31 @@ test('the command line says the same under the same issue', function () {
         ->toBe(__('admin.updates.issue.runtime_image_panelica', ['required' => '1.5']))
         ->and(UpdateCommand::hint(['code' => 'php_version', 'params' => ['required' => '8.4.0']]))->toBeNull();
 });
+
+test('a release installed since the last check is no longer offered on the page', function () {
+    $state = updatesState();
+    $installed = (string) Version::installed();
+    $state->write('latest.json', ['checked_at' => now()->toIso8601String(), 'channel' => 'beta', 'latest' => [
+        'version' => $installed, 'tag' => 'v'.$installed, 'pre_release' => true, 'notes' => 'Notes', 'published_at' => null, 'url' => null,
+    ]]);
+
+    $this->actingAs(updatesAdmin(), 'admin')
+        ->get(route('admin.config.updates'))
+        ->assertOk()
+        ->assertDontSee(route('admin.config.updates.apply'))
+        ->assertSee(__('admin.updates.up_to_date', ['version' => $installed, 'channel' => __('admin.updates.channel_name.beta')]));
+});
+
+test('a page left open from before the update cannot ask for the installed release again', function () {
+    $state = updatesState();
+    $installed = (string) Version::installed();
+    $state->write('latest.json', ['checked_at' => now()->toIso8601String(), 'channel' => 'stable', 'latest' => [
+        'version' => $installed, 'tag' => 'v'.$installed, 'pre_release' => false, 'notes' => 'Notes', 'published_at' => null, 'url' => null,
+    ]]);
+
+    $this->actingAs(updatesAdmin(), 'admin')
+        ->post(route('admin.config.updates.apply'))
+        ->assertRedirect(route('admin.config.updates'));
+
+    expect($state->read('request.json'))->toBeNull();
+});
