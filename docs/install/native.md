@@ -319,7 +319,8 @@ pn php artisan optimize
 SELinux is enforcing on AlmaLinux and Rocky. Without these lines every page
 answers **500**: PHP-FPM may not write to `storage/`, and may not connect to
 the database. We measured exactly those two denials in the audit log of a
-clean AlmaLinux 9 server.
+clean AlmaLinux 9 server. The mail lines below came from a clean Rocky Linux 9
+server with Postfix, sending the test email with PHP mail.
 
 ```bash
 sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/pnlcs/storage(/.*)?"
@@ -329,7 +330,23 @@ sudo restorecon -R /var/www/pnlcs
 
 sudo setsebool -P httpd_can_network_connect_db 1   # PHP → MySQL/MariaDB
 sudo setsebool -P httpd_can_network_connect 1      # PHP → payment gateways, server and registrar APIs, SMTP
+sudo setsebool -P httpd_can_sendmail 1             # PHP mail: the local sendmail (Postfix)
 ```
+
+With **PHP mail** (Setup → General → Mail) the mail goes to the local
+`sendmail`. Laravel's default `sendmail -bs` has Postfix start its own SMTP
+daemon, which SELinux does not allow from a web request even with
+`httpd_can_sendmail`; set this in `.env` so sendmail reads the message as it
+is (the one-command installer does both):
+
+```bash
+MAIL_SENDMAIL_PATH="/usr/sbin/sendmail -t -i"
+```
+
+Without them the test email on that page fails with *Connection to "process
+/usr/sbin/sendmail -bs -i" has been closed unexpectedly*. Mail sent by the
+scheduler is not confined and goes out either way, so the failure shows only
+on what a web request sends.
 
 Do not switch SELinux off to make the errors go away — these rules give the
 application exactly what it needs and nothing more.

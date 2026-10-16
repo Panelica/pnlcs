@@ -277,6 +277,12 @@ install_app() {
 
     if [ -n "$DOMAIN" ]; then APP_URL="http://$DOMAIN"; else APP_URL="http://$(server_ip)"; fi
     as_web cp .env.example .env
+    # "PHP mail" (Setup -> General -> Mail, the default there) hands mail to
+    # sendmail. Laravel's default `sendmail -bs` makes Postfix start its smtpd,
+    # which SELinux does not let a web request do; `-t` takes the message as it
+    # is. See configure_selinux.
+    local mail_env=()
+    if [ "$FAMILY" = rhel ]; then mail_env=("MAIL_SENDMAIL_PATH=/usr/sbin/sendmail -t -i"); fi
     # Written as the install wizard writes them (app/Support/EnvWriter.php): a
     # value that is not a plain word is quoted, so a --db-password with a space
     # or a # in it survives.
@@ -289,7 +295,7 @@ install_app() {
         }
         file_put_contents(".env", App\Support\EnvWriter::apply(file_get_contents(".env"), $values));' \
         APP_ENV=production APP_DEBUG=false "APP_URL=$APP_URL" DB_CONNECTION=mysql "DB_HOST=$DB_HOST" "DB_PORT=$DB_PORT" \
-        "DB_DATABASE=$DB_NAME" "DB_USERNAME=$DB_USER" "DB_PASSWORD=$DB_PASSWORD"
+        "DB_DATABASE=$DB_NAME" "DB_USERNAME=$DB_USER" "DB_PASSWORD=$DB_PASSWORD" ${mail_env[@]+"${mail_env[@]}"}
     chmod 640 .env
 
     say "Creating the database tables (a minute or two)"
@@ -356,13 +362,16 @@ NGINX
 
 configure_selinux() {
     [ "$FAMILY" = rhel ] && command -v getenforce >/dev/null && [ "$(getenforce)" = Enforcing ] || return 0
-    say "SELinux: letting PHP-FPM write storage/ and reach the database and the network"
+    say "SELinux: letting PHP-FPM write storage/, reach the database and the network, and send mail"
     run semanage fcontext -a -t httpd_sys_rw_content_t "$APP_DIR/storage(/.*)?" || true
     run semanage fcontext -a -t httpd_sys_rw_content_t "$APP_DIR/bootstrap/cache(/.*)?" || true
     run semanage fcontext -a -t httpd_sys_rw_content_t "$APP_DIR/\.env" || true
     run restorecon -R "$APP_DIR"
     run setsebool -P httpd_can_network_connect_db 1
     run setsebool -P httpd_can_network_connect 1
+    # PHP mail: without it the test email on Setup -> General fails with
+    # "Connection to process /usr/sbin/sendmail ... closed unexpectedly".
+    run setsebool -P httpd_can_sendmail 1
 }
 
 # Invoices, reminders, suspensions, queued mail: all started by the scheduler.
