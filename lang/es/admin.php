@@ -3694,4 +3694,6 @@ return [
     'settings.free_subdomains_hint' => 'Uno por línea, p. ej. example-sites.com. Las órdenes de hosting pueden then tomar un nombre bajo ellos (yourname.example-sites.com). Vacío: la opción no se ofrece.',
     'settings.disallowed_subdomains' => 'Nombres que nadie puede tomar',
     'settings.disallowed_subdomains_hint' => 'Separados por comas o líneas. Vacío usa: :names',
+    'settings.test_email_mail_off' => 'El correo electrónico de prueba no se envió: los correos electrónicos salientes están desactivados en esta página.',
+    'settings.test_email_cancelled' => 'El correo electrónico de prueba no se envió: un hook de correo lo canceló.',
 ];
