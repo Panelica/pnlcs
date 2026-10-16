@@ -3692,4 +3692,6 @@ return [
     'settings.free_subdomains_hint' => 'Jedna w wierszu, np. example-sites.com. Zamówienia hostingu mogą wtedy otrzymać nazwę pod nią (twojanazwa.example-sites.com). Puste: opcja nie jest oferowana.',
     'settings.disallowed_subdomains' => 'Nazwy, których nikt nie może zająć',
     'settings.disallowed_subdomains_hint' => 'Oddzielone przecinkami lub wierszami. Puste oznacza: :names',
+    'settings.test_email_mail_off' => 'Testowy e-mail nie został wysłany: wysyłanie e-maili jest wyłączone na tej stronie.',
+    'settings.test_email_cancelled' => 'Testowy e-mail nie został wysłany: anulował go hook poczty.',
 ];

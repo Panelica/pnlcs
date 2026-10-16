@@ -557,7 +557,7 @@
                     <label class="form-label">{{ __('admin.settings.enable_email_sending') }}</label>
                     <div style="padding-top:8px;">
                         <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
-                            <input type="hidden" name="MailEnabled" value="0"><input type="checkbox" name="MailEnabled" value="1" {{ !empty($settings['MailEnabled']) && $settings['MailEnabled'] == '1' ? 'checked' : '' }}>
+                            <input type="hidden" name="MailEnabled" value="0"><input type="checkbox" name="MailEnabled" value="1" @checked(\App\Listeners\SuppressMailWhenDisabled::isOn($settings['MailEnabled'] ?? null))>
                             {{ __('admin.settings.enable_outgoing_emails') }}
                         </label>
                     </div>
