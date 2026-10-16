@@ -51,6 +51,17 @@ class SuppressMailWhenDisabled
             return true;
         }
 
+        return self::isOn($value);
+    }
+
+    /**
+     * Whether a stored MailEnabled value lets mail go: anything but an explicit
+     * "off". The settings page draws its checkbox from this too; it used to
+     * tick it only for '1', so on a fresh install the box looked off, and the
+     * first save of the page wrote '0' and stopped every email.
+     */
+    public static function isOn(mixed $value): bool
+    {
         if ($value === null || $value === '') {
             return true;
         }
