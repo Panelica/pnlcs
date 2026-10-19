@@ -9,6 +9,7 @@ use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Services\BillingCycleHelper;
 use App\Services\DomainService;
+use App\Services\ProvisioningService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -61,6 +62,48 @@ class RenewOnPaymentListener
         ]);
 
         Log::info("RenewOnPayment: service #{$service->id} advanced to {$service->next_due_date}");
+
+        $this->renewOnServer($service);
+    }
+
+    /**
+     * Tell the service's module about the paid period, when it has to know.
+     *
+     * A hosting account runs until it is suspended, so advancing the due date
+     * is the whole renewal. Something bought per period from someone else - a
+     * software license from a vendor, a resold service - lapses at the vendor
+     * unless that period is bought there too, and only after the customer has
+     * paid. A server module that offers renew(Service): array is called here,
+     * after the date has moved; WHMCS calls its modules' Renew the same way.
+     * A refusal is logged and raised (ModuleActionFailed) for staff: the
+     * customer has paid and the vendor side needs a person.
+     */
+    private function renewOnServer(Service $service): void
+    {
+        if (in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true)) {
+            return;
+        }
+
+        $module = app(ProvisioningService::class)->resolveModule($service);
+        if (! $module || ! method_exists($module, 'renew')) {
+            return;
+        }
+
+        try {
+            $result = (array) $module->renew($service);
+        } catch (\Throwable $e) {
+            $result = ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if ($result['success'] ?? false) {
+            Log::info("RenewOnPayment: service #{$service->id} renewed on its server module.");
+
+            return;
+        }
+
+        $error = (string) ($result['message'] ?? 'no reason given');
+        Log::error("RenewOnPayment: the module would not renew service #{$service->id}: {$error}");
+        run_hook('ModuleActionFailed', ['service' => $service, 'action' => 'renew', 'error' => $error]);
     }
 
     /**
