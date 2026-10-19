@@ -759,6 +759,7 @@ return [
     'kb.no' => 'No',
     'kb.no_articles' => 'Todavía no hay artículos.',
     'kb.no_articles_available' => 'Todavía no hay artículos de base de conocimientos disponibles.',
+    'kb.no_results' => 'Ningún artículo coincide con su búsqueda.',
     'kb.noted' => 'Notas',
     'kb.page_subtitle' => 'Examine nuestros guías y tutoriales para sacar el máximo provecho de su alojamiento.',
     'kb.page_title' => 'Base de conocimientos',
