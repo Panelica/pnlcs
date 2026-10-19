@@ -1029,7 +1029,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
             $best = (string) ($resp->json('data.url') ?? '');
 
-            return $best !== '' ? $best : null;
+            return $best !== '' ? $this->browserPanelUrl($server, $best) : null;
         }
 
         $single = $resp->json('data.url') ?? $resp->json('url') ?? $resp->json('data.login_url') ?? null;
@@ -1040,13 +1040,20 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     /**
      * An older panel's single login URL, pointed at an address a browser can open.
      *
-     * The panel builds the URL from the address it listens on. Behind NAT or a
-     * private network that is an internal IP (https://10.0.0.12:8443/...), which
-     * the customer's browser cannot reach. Only then, when the URL's host is a
-     * private, loopback or link-local address, it keeps its path and token and
-     * takes the server's hostname and port: the name the webmail and phpMyAdmin
-     * links already use. A public address or a host name from the panel is used
-     * as it is, and so is every URL when the server has no hostname.
+     * The panel builds the URL from the address it listens on, so the host is
+     * an IP. Behind NAT or a private network that is an internal IP
+     * (https://10.0.0.12:8443/...), which the customer's browser cannot reach.
+     * A public IP is reachable but carries no trusted certificate (they are
+     * issued for names), so the browser stops at a privacy warning before the
+     * token is ever used. In both cases the URL keeps its path, token and
+     * fragment and takes the server's hostname and port: the name the webmail
+     * and phpMyAdmin links already use, and the one the panel's certificate is
+     * for.
+     *
+     * A public IP is swapped only when the hostname resolves to that same IP,
+     * so the one-time token never goes to another machine. A host name from
+     * the panel is used as it is, and so is every URL when the server has no
+     * hostname.
      */
     private function browserPanelUrl(Server $server, string $url): string
     {
@@ -1061,9 +1068,13 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         }
 
         $minted = trim((string) $parts['host'], '[]');
-        $internal = filter_var($minted, FILTER_VALIDATE_IP)
-            && ! filter_var($minted, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
-        if (! $internal) {
+        if (! filter_var($minted, FILTER_VALIDATE_IP)) {
+            return $url;
+        }
+        $internal = ! filter_var($minted, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+        // Compared as binary addresses: an IPv6 address has many spellings.
+        $resolves = in_array(inet_pton($minted), array_map(fn ($a) => @inet_pton($a), $this->addressesOf($host)), true);
+        if (! $internal && ! $resolves) {
             return $url;
         }
 
@@ -1071,6 +1082,20 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             .($parts['path'] ?? '/')
             .(isset($parts['query']) ? '?'.$parts['query'] : '')
             .(isset($parts['fragment']) ? '#'.$parts['fragment'] : '');
+    }
+
+    /**
+     * The IPv4 and IPv6 addresses a host name resolves to (empty when it does
+     * not resolve). Protected so a test can answer without DNS.
+     *
+     * @return array<int, string>
+     */
+    protected function addressesOf(string $host): array
+    {
+        $v4 = @gethostbynamel($host) ?: [];
+        $v6 = array_column(@dns_get_record($host, DNS_AAAA) ?: [], 'ipv6');
+
+        return array_values(array_unique(array_merge($v4, $v6)));
     }
 
     // -------------------------------------------------------------------------
