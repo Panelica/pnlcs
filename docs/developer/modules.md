@@ -62,6 +62,12 @@ out `name`, `type` or `class` is skipped silently.
 | `registrar` | `App\Contracts\RegistrarModuleInterface` | `register`, `transfer`, `renew`, `getNameservers`, `saveNameservers`, `getEPPCode`, `getLockStatus`, `toggleLock`, `checkAvailability`, `getConfigFields`, `getModuleName` |
 | `ssl` | `App\Contracts\SslModuleInterface` | `purchaseCertificate`, `getCertificateStatus`, `renewCertificate`, `revokeCertificate`, `reissueCertificate`, `resendValidationEmail`, `changeValidationMethod`, `getApproverEmails`, `getWebServerTypes`, `getCertificateTypes`, `decodeCsr`, `generateCsr`, `testConnection`, `getConfigFields`, `getModuleName` |
 
+A server module that sells something bought per period from someone else (a
+software license, a resold service) can also offer `renew(Service $service): array`.
+It is called after a renewal invoice for the service is paid, once the due date
+has moved, so the period is bought from the vendor only when the customer has
+paid. A refusal is logged and raised as `ModuleActionFailed` (action `renew`).
+
 A gateway that can store a card and charge it later (automatic payment) also
 implements `App\Contracts\TokenizableGatewayInterface` (`beginVaulting`,
 `confirmVaulting`, `detachStoredMethod`, `chargeStoredMethod`); the Stripe,
