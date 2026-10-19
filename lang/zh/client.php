@@ -738,6 +738,7 @@ return [
     'kb.no' => '否',
     'kb.no_articles' => '暂无文章。',
     'kb.no_articles_available' => '知识库中暂时没有文章。',
+    'kb.no_results' => '没有与您的搜索匹配的文章。',
     'kb.noted' => '已记录',
     'kb.page_subtitle' => '浏览指南和教程，充分利用您的主机服务。',
     'kb.page_title' => '知识库',

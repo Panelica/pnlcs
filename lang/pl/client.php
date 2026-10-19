@@ -739,6 +739,7 @@ return [
     'kb.no' => 'Nie',
     'kb.no_articles' => 'Brak artykułów.',
     'kb.no_articles_available' => 'Brak artykułów w bazie wiedzy.',
+    'kb.no_results' => 'Żaden artykuł nie pasuje do wyszukiwania.',
     'kb.noted' => 'Zanotowano',
     'kb.page_subtitle' => 'Przeglądaj nasze poradniki i instrukcje, aby w pełni wykorzystać swój hosting.',
     'kb.page_title' => 'Baza wiedzy',

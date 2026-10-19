@@ -54,7 +54,7 @@
     </div>
 @empty
     <div class="pn-card" style="grid-column:1/-1;padding:48px 24px;text-align:center">
-        <p class="text-muted">{{ __('client.kb.no_articles_available') }}</p>
+        <p class="text-muted">{{ ($searchQuery ?? '') !== '' ? __('client.kb.no_results') : __('client.kb.no_articles_available') }}</p>
     </div>
 @endforelse
 </div>
