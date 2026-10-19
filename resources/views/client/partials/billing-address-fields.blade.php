@@ -46,8 +46,9 @@
 {{-- A seller bound by the Turkish invoicing rules needs the buyer's phone,
      and checkout required it (CartController::validateBillingAddress) without
      ever asking for it: no guest could finish an order. Reported by ENA
-     Hosting. A page with a phone field of its own passes showPhone=false. --}}
-@if(\App\Support\BillingIdentity::turkish() && ($showPhone ?? true))
+     Hosting. A page with a phone field of its own passes showPhone=false.
+     Checkout passes needsPhone: a cart that registers a domain needs it too. --}}
+@if(($needsPhone ?? \App\Support\BillingIdentity::turkish()) && ($showPhone ?? true))
 <div class="form-group">
     <label class="form-label" for="phone_number">{{ __('client.form.phone') }}<span class="req" style="color:#c43c35;">*</span></label>
     <input type="text" id="phone_number" name="phone_number" value="{{ old('phone_number', $addr?->phone_number) }}" required maxlength="30" inputmode="tel" autocomplete="tel" class="form-control">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Enums\ClientStatus;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
+use App\Models\Cart;
 use App\Models\Client;
 use App\Models\Currency;
 use App\Models\Domain;
@@ -338,14 +339,15 @@ class CartController extends Controller
 
         $currency = Currency::getDefault();
         $paymentMethods = $this->getAvailablePaymentMethods();
-        $needsBillingAddress = $this->needsBillingAddress($client);
+        $needsPhone = $this->needsPhone($cart);
+        $needsBillingAddress = $this->needsBillingAddress($client, $needsPhone);
         $countries = \App\Support\Countries::all();
         // The account is opened on this page, so this is where the fields
         // flagged "show on order form" are asked. The flag was saved on the
         // admin screen and read by nothing.
         $orderFields = $clientId ? collect() : \App\Models\CustomField::orderFields()->get();
 
-        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'client', 'needsBillingAddress', 'countries', 'orderFields'));
+        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'client', 'needsBillingAddress', 'needsPhone', 'countries', 'orderFields'));
     }
 
     public function processCheckout(Request $request)
@@ -394,7 +396,7 @@ class CartController extends Controller
                 return back()->withErrors(['email' => __('auth.email_not_accepted')])->withInput();
             }
 
-            $billing = $this->validateBillingAddress($request);
+            $billing = $this->validateBillingAddress($request, $this->needsPhone($this->cartService->getOrCreateCart(null)));
 
             $orderFields = \App\Models\CustomField::orderFields()->get();
             [$fieldRules, $fieldNames] = \App\Models\CustomField::rulesFor($orderFields);
@@ -423,9 +425,10 @@ class CartController extends Controller
             $client = $newClient;
         } else {
             $client = $this->currentClient();
+            $needsPhone = $this->needsPhone($this->cartService->getOrCreateCart($clientId));
 
-            if ($this->needsBillingAddress($client)) {
-                $billing = $this->validateBillingAddress($request);
+            if ($this->needsBillingAddress($client, $needsPhone)) {
+                $billing = $this->validateBillingAddress($request, $needsPhone);
 
                 if ($client) {
                     $client->fill($billing)->save();
@@ -540,7 +543,7 @@ class CartController extends Controller
      *
      * @return array<string, mixed>
      */
-    private function validateBillingAddress(Request $request): array
+    private function validateBillingAddress(Request $request, bool $needsPhone = false): array
     {
         $rules = [
             'address1' => 'required|string|max:255',
@@ -569,12 +572,32 @@ class CartController extends Controller
             ]);
         }
 
+        // A registry will not take a domain without the registrant's phone:
+        // the order was paid and the registration then refused (HTTP 400 from
+        // DomainNameAPI), leaving the domain pending with nobody told why.
+        if ($needsPhone) {
+            $rules['phone_number'] = 'required|string|max:30';
+        }
+
         return $request->validate($rules);
     }
 
-    private function needsBillingAddress(?Client $client): bool
+    /**
+     * Whether checkout must ask for a phone number: the Turkish invoicing
+     * rules ask it of every buyer, and a registry asks it of every registrant.
+     */
+    private function needsPhone(Cart $cart): bool
+    {
+        return \App\Support\BillingIdentity::turkish() || $this->cartService->hasDomainOrder($cart);
+    }
+
+    private function needsBillingAddress(?Client $client, bool $needsPhone = false): bool
     {
         if (! $client) {
+            return true;
+        }
+
+        if ($needsPhone && trim((string) $client->phone_number) === '') {
             return true;
         }
 

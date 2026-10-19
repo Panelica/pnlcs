@@ -260,6 +260,23 @@ class CartService
     }
 
     /**
+     * Whether the cart registers or transfers a domain.
+     *
+     * Registries need a telephone number for the registrant (ICANN requires
+     * one for every gTLD contact), so checkout asks for it when this is true.
+     */
+    public function hasDomainOrder(Cart $cart): bool
+    {
+        foreach ($this->getData($cart)['items'] ?? [] as $item) {
+            if (($item['type'] ?? '') === 'domain') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Add a domain registration/transfer to the cart.
      */
     public function addDomain(Cart $cart, string $domain, string $type = 'register', int $years = 1, ?string $eppCode = null): Cart
