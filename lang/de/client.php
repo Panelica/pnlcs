@@ -738,6 +738,7 @@ return [
     'kb.no' => 'Nein',
     'kb.no_articles' => 'Noch keine Artikel vorhanden.',
     'kb.no_articles_available' => 'Derzeit sind keine Wissensartikel verfügbar.',
+    'kb.no_results' => 'Kein Artikel passt zu Ihrer Suche.',
     'kb.noted' => 'Vermerkt',
     'kb.page_subtitle' => 'Entdecken Sie unsere Anleitungen und Tutorials, um Ihr Hosting optimal zu nutzen.',
     'kb.page_title' => 'Wissensdatenbank',

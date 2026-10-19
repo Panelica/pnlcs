@@ -739,6 +739,7 @@ return [
     'kb.no' => 'No',
     'kb.no_articles' => 'No articles yet.',
     'kb.no_articles_available' => 'No knowledge base articles available yet.',
+    'kb.no_results' => 'No article matches your search.',
     'kb.noted' => 'Noted',
     'kb.page_subtitle' => 'Browse our guides and tutorials to get the most out of your hosting.',
     'kb.page_title' => 'Knowledge Base',

@@ -738,6 +738,7 @@ return [
     'kb.no' => 'Hayır',
     'kb.no_articles' => 'Henüz makale yok.',
     'kb.no_articles_available' => 'Bilgi bankasında henüz makale yok.',
+    'kb.no_results' => 'Aramanızla eşleşen makale yok.',
     'kb.noted' => 'Not alındı',
     'kb.page_subtitle' => 'Hostinginizden en iyi verimi almak için rehberlerimize göz atın.',
     'kb.page_title' => 'Bilgi Bankası',
