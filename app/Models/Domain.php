@@ -88,6 +88,18 @@ class Domain extends Model
         return trim($domain, '.');
     }
 
+    /**
+     * A paid registration still waiting for its registrar: pending, not a
+     * transfer (that needs the EPP code, started by hand), and naming a
+     * registrar to send it to.
+     */
+    public function awaitsRegistration(): bool
+    {
+        return strtolower((string) $this->status) === \App\Enums\DomainStatus::Pending->value
+            && strtolower((string) $this->type) !== 'transfer'
+            && trim((string) $this->registrar) !== '';
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);

@@ -32,6 +32,13 @@
             @csrf
             <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.domains.sync') }}</button>
         </form>
+        @if($domain->awaitsRegistration())
+        {{-- A paid domain the registrar has not registered yet: try again once the cause is put right. --}}
+        <form method="POST" action="{{ route('admin.domains.register', $domain) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.domains.confirm_register_retry')))">
+            @csrf
+            <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.domains.register_retry') }}</button>
+        </form>
+        @endif
         <form method="POST" action="{{ route('admin.domains.renew', $domain) }}" style="display:flex;gap:4px;align-items:center;" onsubmit="return pnConfirm(event, @js(__('admin.domains.confirm_renew')))">
             @csrf
             <input type="number" name="years" value="1" min="1" max="10" class="form-control" style="width:70px;font-size:13px;padding:2px 6px;">

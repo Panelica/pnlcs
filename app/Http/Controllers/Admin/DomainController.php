@@ -251,6 +251,25 @@ class DomainController extends Controller
         return back()->with('success', __('admin.domains.renewed', ['domain' => $domain->domain]));
     }
 
+    /**
+     * Send a paid domain whose registration did not go through to its
+     * registrar again, once whatever stopped it has been put right.
+     */
+    public function retryRegistration(Domain $domain)
+    {
+        if (! $domain->awaitsRegistration()) {
+            return back()->with('error', __('admin.domains.register_retry_unavailable'));
+        }
+
+        $reason = app(\App\Services\OrderService::class)->retryDomainRegistration($domain);
+
+        if ($reason !== null) {
+            return back()->with('error', __('admin.domains.register_retry_failed', ['reason' => $reason]));
+        }
+
+        return back()->with('success', __('admin.domains.register_retried', ['domain' => $domain->domain]));
+    }
+
     public function updateNameservers(Request $request, Domain $domain)
     {
         $request->validate([

@@ -766,8 +766,11 @@ class OrderService
      * A transfer cannot be started from here - it needs an EPP code, which the
      * order does not collect - so those are recorded as before and flagged for
      * somebody to start by hand.
+     *
+     * Returns why the registration did not happen, or null when it did (or
+     * when there was nothing to send).
      */
-    private function registerOrderedDomain(Order $order, Domain $domain): void
+    private function registerOrderedDomain(?Order $order, Domain $domain): ?string
     {
         $registrar = app(ModuleRegistry::class)
             ->getRegistrarModule((string) $domain->registrar);
@@ -777,7 +780,7 @@ class OrderService
         if ($isTransfer) {
             $this->transferOrderedDomain($domain, $registrar);
 
-            return;
+            return null;
         }
 
         if (! $registrar) {
@@ -794,7 +797,7 @@ class OrderService
             if ($named === '') {
                 $domain->update(['status' => DomainStatus::Active->value]);
 
-                return;
+                return null;
             }
 
             $domain->update(['status' => DomainStatus::Pending->value]);
@@ -813,10 +816,15 @@ class OrderService
                 Log::error('Domain registration alert failed: '.$e->getMessage());
             }
 
-            return;
+            $reason = "registrar module '{$named}' is not available";
+            $this->registrationFailedHook($domain, $reason);
+
+            return $reason;
         }
 
-        $client = $order->client;
+        // A retry from the admin screen may be for a domain added without an
+        // order; its own account is the registrant then.
+        $client = $order?->client ?? $domain->client;
 
         $params = array_filter([
             'firstname' => $client?->first_name,
@@ -846,12 +854,13 @@ class OrderService
             }
             event(new \App\Events\DomainRegistered($domain));
 
-            return;
+            return null;
         }
 
         $reason = (string) ($result['message'] ?? 'no reason given');
 
         Log::error("Domain registration failed for {$domain->domain}: {$reason}");
+        $this->registrationFailedHook($domain, $reason);
 
         try {
             app(NotificationService::class)->dispatch('domain.registration_failed', [
@@ -864,6 +873,38 @@ class OrderService
         } catch (\Throwable $e) {
             Log::error('Domain registration alert failed: '.$e->getMessage());
         }
+
+        return $reason;
+    }
+
+    /**
+     * Send a paid domain to its registrar again, from the admin domain page.
+     *
+     * A refused registration left the domain pending with no way to try again
+     * once the cause was put right (a missing phone number, a registrar
+     * balance, a module switched off): the payment was taken and only the
+     * database could move it on.
+     *
+     * Returns why it was not registered, or null when it now is.
+     */
+    public function retryDomainRegistration(Domain $domain): ?string
+    {
+        $order = $domain->order_id ? Order::find($domain->order_id) : null;
+
+        return $this->registerOrderedDomain($order, $domain);
+    }
+
+    /**
+     * AfterRegistrarRegistrationFailed, as WHMCS names it: an addon can raise
+     * the alarm in its own way (a staff notification, a ticket).
+     */
+    private function registrationFailedHook(Domain $domain, string $reason): void
+    {
+        run_hook('AfterRegistrarRegistrationFailed', [
+            'domain' => $domain,
+            'domainid' => $domain->id,
+            'error' => $reason,
+        ]);
     }
 
     /**

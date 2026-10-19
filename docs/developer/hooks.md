@@ -90,6 +90,7 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 | `DailyCronJob` | — | once a day (00:10, scheduler) |
 | `DownloadRequested` | download, clientId, user | a customer asks for a download, after the access check; return `['abort' => 'reason']` to refuse (403) or `['path' => '/absolute/file', 'name' => 'file.zip']` to hand over that file instead |
 | `DomainRegistered` (also `AfterRegistrarRegistration`) | domain | the registrar registered an ordered domain |
+| `AfterRegistrarRegistrationFailed` | domain, domainid, error | a paid domain's registration was refused, or its registrar module is not available (at payment, or a retry from the admin domain page) |
 | `DomainRenewed` (also `AfterRegistrarRenewal`) | domain, years | a renewal went through at the registrar, or was recorded for a domain with no registrar module |
 | `DomainTransferStarted` (also `AfterRegistrarTransfer`) | domain | the registrar accepted a transfer request (it completes days later at the registry) |
 | `DomainExpired` | domain, status | the daily domain sync moved a domain past its expiry date to `grace`, `redemption` or `expired` |
