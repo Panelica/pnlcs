@@ -53,6 +53,36 @@ if (! function_exists('payment_method_label')) {
         return ucwords(str_replace('_', ' ', $method));
     }
 }
+if (! function_exists('status_label')) {
+    /**
+     * A stored status as the label the reader sees, in their language.
+     *
+     * Services, domains, orders, tickets, quotes, certificates and to-dos keep
+     * their status as an English word ('terminated', 'Customer-Reply',
+     * 'Awaiting Configuration'), and the admin screens printed it with
+     * ucfirst(): a Turkish admin read "Terminated" next to every cancelled
+     * VPS. The label comes from common.status.*; the stored word is matched
+     * in any case and with spaces, hyphens or underscores, and a status with
+     * no translation yet is shown as before.
+     */
+    function status_label(\BackedEnum|string|null $status): string
+    {
+        $status = $status instanceof \BackedEnum ? (string) $status->value : (string) $status;
+        $word = strtolower(trim($status));
+
+        if ($word === '') {
+            return '';
+        }
+
+        foreach (array_unique([$word, str_replace(' ', '_', $word), str_replace([' ', '_'], '-', $word), str_replace([' ', '-'], '_', $word)]) as $candidate) {
+            if (Lang::has('common.status.'.$candidate)) {
+                return Lang::get('common.status.'.$candidate);
+            }
+        }
+
+        return ucfirst(str_replace(['_', '-'], ' ', $status));
+    }
+}
 if (! function_exists('invoice_status_label')) {
     /**
      * An invoice status key as the customer-facing label.
@@ -64,19 +94,7 @@ if (! function_exists('invoice_status_label')) {
      */
     function invoice_status_label(?string $status): string
     {
-        $status = strtolower((string) $status);
-
-        if ($status === '') {
-            return '';
-        }
-
-        $key = 'common.status.'.$status;
-
-        if (Lang::has($key)) {
-            return Lang::get($key);
-        }
-
-        return ucfirst(str_replace('_', ' ', $status));
+        return status_label($status);
     }
 }
 if (! function_exists('currency_symbol')) {

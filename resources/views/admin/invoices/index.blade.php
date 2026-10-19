@@ -86,7 +86,7 @@
                     ? __('common.status.unpaid') . '/' . __('common.status.overdue')
                     : (__('common.status.' . $statusKey) !== 'common.status.' . $statusKey
                         ? __('common.status.' . $statusKey)
-                        : ucfirst($invoice->status ?? ""));
+                        : status_label($invoice->status ?? ""));
                 $badgeStyle = $statusKey === "overdue"
                     ? "background:#fff3cd !important;color:#856404 !important;"
                     : "";

@@ -68,7 +68,7 @@
                             —
                         @endif
                     </td>
-                    <td><span class="badge {{ $order->getStatusBadgeClass() }}">{{ $order->status }}</span></td>
+                    <td><span class="badge {{ $order->getStatusBadgeClass() }}">{{ status_label($order->status) }}</span></td>
                     <td>{{ $order->order_date?->format(date_fmt()) ?: $order->created_at->format(date_fmt()) }}</td>
                     <td>
                         @if($order->crt_expires)

@@ -33,7 +33,7 @@
                 <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->date)->format(date_fmt()) }}</td>
                 <td style="font-size:12px;color:#777;">{{ \Carbon\Carbon::parse($quote->valid_until)->format(date_fmt()) }}</td>
                 <td style="text-align:right;font-weight:600;">{{ money_fmt($quote->total) }}</td>
-                <td><span class="{{ $badgeClass }}">{{ $quote->status }}</span></td>
+                <td><span class="{{ $badgeClass }}">{{ status_label($quote->status) }}</span></td>
                 <td>
                     <div style="display:flex;gap:4px;">
                         <a href="{{ route('admin.quotes.show', $quote) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>

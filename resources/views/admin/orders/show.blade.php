@@ -3,7 +3,7 @@
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>{{ __('admin.search.order_title', ['num' => $order->order_num]) }} <span class="badge-{{ strtolower($order->status) }}" style="font-size:14px;vertical-align:middle;">{{ ucfirst($order->status) }}</span></h1>
+    <h1>{{ __('admin.search.order_title', ['num' => $order->order_num]) }} <span class="badge-{{ strtolower($order->status) }}" style="font-size:14px;vertical-align:middle;">{{ status_label($order->status) }}</span></h1>
     <a href="{{ route('admin.orders.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.orders.back') }}</a>
 </div>
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:15px;">
@@ -48,7 +48,7 @@
                     </td>
                     <td>{{ $svc->billing_cycle }}</td>
                     <td style="text-align:right;font-family:monospace;">{{ money_fmt($svc->amount) }}</td>
-                    <td><span class="badge-{{ strtolower($svc->status) }}">{{ ucfirst($svc->status) }}</span></td>
+                    <td><span class="badge-{{ strtolower($svc->status) }}">{{ status_label($svc->status) }}</span></td>
                 </tr>
                 @endforeach
                 </tbody>
@@ -67,7 +67,7 @@
                     <td style="font-family:monospace;font-weight:600;">{{ $dom->domain }}</td>
                     <td style="text-transform:capitalize;">{{ $dom->type }}</td>
                     <td>{{ $dom->expiry_date?->format(date_fmt()) ?? '&mdash;' }}</td>
-                    <td><span class="badge-{{ strtolower($dom->status) }}">{{ ucfirst($dom->status) }}</span></td>
+                    <td><span class="badge-{{ strtolower($dom->status) }}">{{ status_label($dom->status) }}</span></td>
                 </tr>
                 @endforeach
                 </tbody>

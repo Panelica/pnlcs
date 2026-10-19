@@ -5,7 +5,7 @@
     <h1>
         {{ $service->product?->name ?? 'Service #'.$service->id }}
         @if($service->domain) &mdash; <span style="font-family:monospace;font-size:18px;">{{ $service->domain }}</span>@endif
-        <span class="badge-{{ strtolower($service->status) }}" style="font-size:13px;vertical-align:middle;margin-left:8px;">{{ ucfirst($service->status) }}</span>
+        <span class="badge-{{ strtolower($service->status) }}" style="font-size:13px;vertical-align:middle;margin-left:8px;">{{ status_label($service->status) }}</span>
     </h1>
     <a href="{{ route('admin.services.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.services.back') }}</a>
 </div>
@@ -287,7 +287,7 @@
                 <td>{{ number_format((float) $addon->amount, 2) }}</td>
                 <td style="text-transform:capitalize;">{{ $addon->billing_cycle }}</td>
                 <td>{{ $addon->next_due_date?->format(date_fmt()) ?? '-' }}</td>
-                <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ $addon->status }}</span></td>
+                <td><span class="badge badge-{{ strtolower($addon->status) }}">{{ status_label($addon->status) }}</span></td>
                 <td style="text-align:right;">
                     @if(in_array(strtolower($addon->status), ['active', 'pending'], true))
                     <form method="POST" action="{{ route('admin.services.addons.cancel', [$service, $addon]) }}" style="display:inline;">

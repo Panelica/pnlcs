@@ -15,7 +15,7 @@
             <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
                 <strong>{{ __('admin.quotes.line_items') }}</strong>
                 @php $badgeClass = match($quote->status) { 'Accepted'=>'badge-active', 'Sent'=>'badge-open', 'Declined'=>'badge-cancelled', default=>'badge-draft' }; @endphp
-                <span class="{{ $badgeClass }}">{{ $quote->status }}</span>
+                <span class="{{ $badgeClass }}">{{ status_label($quote->status) }}</span>
             </div>
             <table class="data-table">
                 <thead><tr>
