@@ -104,6 +104,9 @@ test('a customer goes from signup to termination through the real endpoints', fu
         'email' => 'ayse@example.com',
         'password' => 'Secret123!', 'password_confirmation' => 'Secret123!',
         'address1' => '1 Test Street', 'city' => 'Istanbul', 'postcode' => '34000', 'country' => 'TR',
+        // The order below registers a domain, and a registry needs the
+        // registrant's phone: without one checkout asks for it first.
+        'phone_number' => '+90 532 000 00 00',
         'tos' => '1',
     ])->assertRedirect();
 
