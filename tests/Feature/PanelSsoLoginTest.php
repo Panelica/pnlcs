@@ -228,3 +228,20 @@ it('takes the name for a newer panel\'s best link too when it is the name\'s IP'
         ->get(route('client.services.login', $service))
         ->assertRedirect('https://panel.test:8443/auto-login?token=best');
 });
+
+it('does not look the name up when the panel answers with an internal address', function () {
+    // An internal address is swapped for the name either way; asking DNS
+    // first only adds its delay (and its time-out) to every sign-in.
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://10.0.0.12:8443/auto-login?token=xyz']], 200)]);
+    app()->bind(\Modules\Servers\Panelica\PanelicaModule::class, fn () => new class extends \Modules\Servers\Panelica\PanelicaModule {
+        protected function addressesOf(string $host): array
+        {
+            throw new \RuntimeException('DNS asked for '.$host);
+        }
+    });
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=xyz');
+});

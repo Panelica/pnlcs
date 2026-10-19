@@ -1072,9 +1072,11 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $url;
         }
         $internal = ! filter_var($minted, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
-        // Compared as binary addresses: an IPv6 address has many spellings.
-        $resolves = in_array(inet_pton($minted), array_map(fn ($a) => @inet_pton($a), $this->addressesOf($host)), true);
-        if (! $internal && ! $resolves) {
+        // A public IP only when the name is that IP: the DNS lookup is left
+        // out for an internal address, which is swapped either way. Compared
+        // as binary addresses: an IPv6 address has many spellings.
+        if (! $internal
+            && ! in_array(inet_pton($minted), array_map(fn ($a) => @inet_pton($a), $this->addressesOf($host)), true)) {
             return $url;
         }
 
