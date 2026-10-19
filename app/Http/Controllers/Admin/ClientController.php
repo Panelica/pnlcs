@@ -212,6 +212,16 @@ class ClientController extends Controller
             ->whereIn('status', ['unpaid', 'overdue', 'partially_paid', 'payment_pending', 'collections'])
             ->get()
             ->sum(fn ($invoice) => $payments->balance($invoice));
+        // The billing summary's counts. The view read $invoiceSummary and
+        // nothing ever set it, so every client showed 0 paid, 0 unpaid and
+        // 0 overdue invoices whatever they had.
+        $byStatus = $client->invoices()->excludeSettledProformas()
+            ->selectRaw('LOWER(status) as s, COUNT(*) as c')->groupBy('s')->pluck('c', 's');
+        $data['invoiceSummary'] = [
+            'paid' => (int) ($byStatus['paid'] ?? 0),
+            'unpaid' => (int) collect(['unpaid', 'partially_paid', 'payment_pending'])->sum(fn ($st) => $byStatus[$st] ?? 0),
+            'overdue' => (int) ($byStatus['overdue'] ?? 0),
+        ];
 
         switch ($tab) {
             case 'services':
