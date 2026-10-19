@@ -90,7 +90,7 @@
             </select>
         </div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="article" rows="8" class="form-control" required></textarea></div>
-        @include('admin.config.partials.kb-translations', ['languages' => $translationLanguages ?? collect(), 'model' => null,
+        @include('admin.partials.translation-fields', ['languages' => $translationLanguages ?? collect(), 'model' => null,
             'fields' => ['title' => [__('common.form.title'), 'input'], 'article' => [__('admin.knowledge_base.content'), 'textarea']]])
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -119,7 +119,7 @@
             </select>
         </div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="article" rows="8" class="form-control" required>{{ $art->article }}</textarea></div>
-        @include('admin.config.partials.kb-translations', ['languages' => $translationLanguages ?? collect(), 'model' => $art,
+        @include('admin.partials.translation-fields', ['languages' => $translationLanguages ?? collect(), 'model' => $art,
             'fields' => ['title' => [__('common.form.title'), 'input'], 'article' => [__('admin.knowledge_base.content'), 'textarea']]])
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -142,7 +142,7 @@
         @csrf @method('PUT')
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category_name') }}</label><input type="text" name="name" value="{{ $cat->name }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control">{{ $cat->description }}</textarea></div>
-        @include('admin.config.partials.kb-translations', ['languages' => $translationLanguages ?? collect(), 'model' => $cat,
+        @include('admin.partials.translation-fields', ['languages' => $translationLanguages ?? collect(), 'model' => $cat,
             'fields' => ['name' => [__('admin.knowledge_base.category_name'), 'input'], 'description' => [__('common.form.description'), 'textarea']]])
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('edit-cat-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>

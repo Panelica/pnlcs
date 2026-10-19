@@ -1502,8 +1502,6 @@ return [
     'knowledge_base.edit_category' => 'Kategoriyi düzenle',
     'knowledge_base.category_updated' => 'Kategori güncellendi.',
     'knowledge_base.translations' => 'Çeviriler',
-    'knowledge_base.translations_hint' => 'Başka dildeki ziyaretçiler için. Başlığı boş bırakırsanız onlara yukarıdaki metin gösterilir.',
-    'knowledge_base.translated' => 'Çevrildi',
     'logs' => [
         'admin_user' => 'Yönetici kullanıcı',
         'date_label' => 'Tarih',

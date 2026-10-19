@@ -122,3 +122,16 @@ test('deleting an article removes its translations', function () {
 
     expect(KbArticleTranslation::count())->toBe(0);
 });
+
+test('the admin page offers the other languages on the article and category forms', function () {
+    // The knowledge base forms use the shared translation fields (#203).
+    kbLanguages();
+    $article = kbTranslatedArticle();
+
+    $this->actingAs(Admin::factory()->create(), 'admin')->get(route('admin.config.knowledge-base'))->assertOk()
+        ->assertSee('translations[tr][title]', false)->assertSee('translations[tr][article]', false)
+        ->assertSee('translations[tr][name]', false)->assertSee('translations[tr][description]', false)
+        ->assertSee('value="Destek talebi açmak"', false)->assertSee('value="Başlarken"', false)
+        ->assertSee(__('admin.content_translations.hint'))
+        ->assertDontSee('translations[en][title]', false);
+});

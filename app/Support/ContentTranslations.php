@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 /**
- * Translations of content an operator writes (an announcement): the record's
- * own text is the default language's, and a translation row holds another
- * active language's.
+ * Translations of content an operator writes (announcements, knowledge base
+ * articles and categories): the record's own text is the default language's,
+ * and a translation row holds another active language's.
  */
 class ContentTranslations
 {

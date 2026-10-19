@@ -1517,8 +1517,6 @@ return [
 	'knowledge_base.edit_category' => 'Editar categoría',
 	'knowledge_base.category_updated' => 'Categoría actualizada.',
 	'knowledge_base.translations' => 'Traducciones',
-	'knowledge_base.translations_hint' => 'Para los visitantes en otro idioma. Deje el título vacío para mostrarles el texto de arriba.',
-	'knowledge_base.translated' => 'Traducido',
 	'logs' => [
 		'admin_user' => 'Usuario administrador',
 		'date_label' => 'Fecha',

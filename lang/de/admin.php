@@ -1520,8 +1520,6 @@ return [
     'knowledge_base.edit_category' => 'Kategorie bearbeiten',
     'knowledge_base.category_updated' => 'Kategorie aktualisiert.',
     'knowledge_base.translations' => 'Übersetzungen',
-    'knowledge_base.translations_hint' => 'Für Besucher in einer anderen Sprache. Lassen Sie den Titel leer, um ihnen den Text oben anzuzeigen.',
-    'knowledge_base.translated' => 'Übersetzt',
     'logs' => [
         'admin_user' => 'Admin-Benutzer',
         'date_label' => 'Datum',
