@@ -67,3 +67,28 @@ test('the daily cancellation run gives the unit back', function () {
     expect($service->fresh()->status)->toBeIn(['terminated', 'cancelled'])
         ->and($service->product->fresh()->stock_qty)->toBe(1);
 });
+
+test('terminating a service that is already terminated or cancelled gives nothing back again', function (string $status) {
+    // The admin page offers Terminate whatever the status, and several modules
+    // (Custom, aaPanel, Proxmox "already removed") answer a second terminate
+    // with success: the unit went back twice and the product oversold.
+    $product = Product::factory()->create([
+        'group_id' => ProductGroup::factory()->create()->id,
+        'server_type' => 'custom', 'stock_control' => true, 'stock_qty' => 0,
+    ]);
+    $client = Client::factory()->create();
+    $order = Order::factory()->create(['client_id' => $client->id, 'status' => 'active']);
+    $service = Service::factory()->active()->create(['client_id' => $client->id, 'order_id' => $order->id, 'product_id' => $product->id]);
+    $provisioning = app(\App\Services\ProvisioningService::class);
+
+    expect($provisioning->terminateAccount($service->fresh(['product']))['success'])->toBeTrue()
+        ->and($product->fresh()->stock_qty)->toBe(1);
+
+    $service->update(['status' => $status]);
+    $events = [];
+    \Illuminate\Support\Facades\Event::listen(ServiceTerminated::class, function ($e) use (&$events) { $events[] = $e; });
+
+    expect($provisioning->terminateAccount($service->fresh(['product']))['success'])->toBeTrue()
+        ->and($product->fresh()->stock_qty)->toBe(1)
+        ->and($events)->toBe([]);
+})->with(['terminated', 'cancelled']);

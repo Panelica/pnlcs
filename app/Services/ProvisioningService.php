@@ -144,6 +144,15 @@ class ProvisioningService
 
         run_hook('PreModuleTerminate', ['service' => $service]);
 
+        // Read before the module runs: some modules mark the service
+        // terminated themselves. The admin page offers Terminate whatever the
+        // status, and several modules answer a second terminate with success
+        // (Custom, aaPanel, Proxmox "already removed"); the event then ran
+        // again and handed a stock unit back twice and mailed the customer
+        // twice. A service already ended does not end again.
+        $alreadyEnded = in_array(strtolower((string) $service->status),
+            [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value], true);
+
         try {
             $result = $module->terminate($service);
 
@@ -153,7 +162,9 @@ class ProvisioningService
                 $service->save();
                 $this->settleQueue($service, 'terminate');
                 run_hook('AfterModuleTerminate', ['service' => $service]);
-                event(new ServiceTerminated($service));
+                if (! $alreadyEnded) {
+                    event(new ServiceTerminated($service));
+                }
             } elseif ($queueOnFail) {
                 $this->enqueueRetry($service, 'terminate', $result['message'] ?? 'Module terminate failed');
             }
