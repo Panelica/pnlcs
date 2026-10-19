@@ -11,7 +11,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
         @php $badgeClass = match(strtolower($domain->status)) { 'active'=>'badge-active', 'pending'=>'badge-pending', 'expired'=>'badge-overdue', 'grace'=>'badge-pending', 'redemption'=>'badge-overdue', default=>'badge-cancelled' }; @endphp
-        <span class="{{ $badgeClass }}">{{ ucfirst($domain->status) }}</span>
+        <span class="{{ $badgeClass }}">{{ status_label($domain->status) }}</span>
         <a href="{{ route('admin.domains.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.domains.back') }}</a>
     </div>
 </div>

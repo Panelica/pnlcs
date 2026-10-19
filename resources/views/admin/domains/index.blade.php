@@ -95,7 +95,7 @@
                     @if($expirySoon) <small style="font-size:11px;">{{ __('admin.domains.expiry_soon') }}</small> @endif
                     @if($expired) <small style="font-size:11px;">{{ __('admin.domains.expiry_past') }}</small> @endif
                 </td>
-                <td><span class="badge {{ $badgeClass }}">{{ ucfirst($domain->status ?? "") }}</span></td>
+                <td><span class="badge {{ $badgeClass }}">{{ status_label($domain->status ?? "") }}</span></td>
                 <td>
                     <a href="{{ route("admin.domains.show", $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                 </td>

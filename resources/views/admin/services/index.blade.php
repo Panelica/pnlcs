@@ -57,7 +57,7 @@
                 <td style="color:#666;">{{ ucfirst($service->billing_cycle ?? "-") }}</td>
                 <td style="text-align:right;font-weight:500;">{{ money_fmt($service->amount) }}</td>
                 <td style="color:#666;">{{ $service->next_due_date?->format(date_fmt()) ?? "-" }}</td>
-                <td><span class="badge {{ $badgeClass }}">{{ ucfirst($service->status ?? "") }}</span></td>
+                <td><span class="badge {{ $badgeClass }}">{{ status_label($service->status ?? "") }}</span></td>
                 <td>
                     <a href="{{ route("admin.services.show", $service) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
                 </td>

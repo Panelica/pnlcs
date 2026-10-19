@@ -32,7 +32,7 @@
                     </div>
                     <div class="col-md-3">
                         <label class="text-muted small">{{ __('admin.ssl.status') }}</label>
-                        <p class="mb-0"><span class="badge {{ $order->getStatusBadgeClass() }}">{{ $order->status }}</span></p>
+                        <p class="mb-0"><span class="badge {{ $order->getStatusBadgeClass() }}">{{ status_label($order->status) }}</span></p>
                     </div>
                 </div>
                 <div class="row mb-3">

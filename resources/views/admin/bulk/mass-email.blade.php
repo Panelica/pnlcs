@@ -128,7 +128,7 @@
                     </label>
                     @foreach($services as $svc)
                     <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:2px;cursor:pointer;">
-                        <input type="checkbox" name="service_ids[]" value="{{ $svc->id }}"> #{{ $svc->id }} - {{ $svc->domain ?? "N/A" }} ({{ $svc->client?->first_name }} {{ $svc->client?->last_name }}) <span class="badge badge-{{ $svc->status === "active" ? "active" : "suspended" }}" style="font-size:10px;">{{ $svc->status }}</span>
+                        <input type="checkbox" name="service_ids[]" value="{{ $svc->id }}"> #{{ $svc->id }} - {{ $svc->domain ?? "N/A" }} ({{ $svc->client?->first_name }} {{ $svc->client?->last_name }}) <span class="badge badge-{{ $svc->status === "active" ? "active" : "suspended" }}" style="font-size:10px;">{{ status_label($svc->status) }}</span>
                     </label>
                     @endforeach
                 </div>

@@ -28,7 +28,7 @@
     <div class="card-body" style="padding:10px 15px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:8px;">
             <strong style="font-size:13px;">{{ __('admin.clients.status') }}:</strong>
-            <span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span>
+            <span class="badge-{{ strtolower($client->status->value) }}">{{ status_label($client->status->value) }}</span>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
             <strong style="font-size:13px;">{{ __('admin.clients.credit_balance') }}:</strong>
@@ -166,7 +166,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <div class="panel-heading panel-primary">{{ __('admin.clients.other_info') }}</div>
             <div class="panel-body">
                 <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <tr><td style="padding:5px 0;color:#777;width:50%;">{{ __('admin.clients.status') }}</td><td style="padding:5px 0;"><span class="badge-{{ strtolower($client->status->value) }}">{{ ucfirst($client->status->value) }}</span></td></tr>
+                    <tr><td style="padding:5px 0;color:#777;width:50%;">{{ __('admin.clients.status') }}</td><td style="padding:5px 0;"><span class="badge-{{ strtolower($client->status->value) }}">{{ status_label($client->status->value) }}</span></td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.tax_exempt') }}</td><td style="padding:5px 0;">{{ $client->tax_exempt ? 'Yes' : 'No' }}</td></tr>
                     <tr><td style="padding:5px 0;color:#777;">{{ __('admin.clients.created') }}</td><td style="padding:5px 0;">{{ $client->created_at->format(date_fmt()) }}</td></tr>
                     @php($consent = \App\Models\MarketingConsent::where('client_id', $client->id)->first())
@@ -378,7 +378,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <td>{{ $service->billing_cycle }}</td>
             <td>{{ money_fmt($service->amount) }}</td>
             <td>{{ $service->next_due_date?->format(date_fmt()) ?? '-' }}</td>
-            <td><span class="badge-{{ strtolower($service->status) }}">{{ ucfirst($service->status) }}</span></td>
+            <td><span class="badge-{{ strtolower($service->status) }}">{{ status_label($service->status) }}</span></td>
         </tr>
         @endforeach
         </tbody>
@@ -464,7 +464,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <td>{{ $domain->registrar ?? '-' }}</td>
             <td>{{ $domain->registration_date?->format(date_fmt()) ?? '-' }}</td>
             <td>{{ $domain->expiry_date?->format(date_fmt()) ?? '-' }}</td>
-            <td><span class="badge-{{ strtolower($domain->status) }}">{{ ucfirst($domain->status) }}</span></td>
+            <td><span class="badge-{{ strtolower($domain->status) }}">{{ status_label($domain->status) }}</span></td>
             <td style="text-align:right;">
                 <a href="{{ route('admin.domains.show', $domain) }}" class="btn btn-default btn-xs">{{ __('common.actions.view') }}</a>
             </td>
@@ -518,7 +518,7 @@ $tabs = ['summary'=>__('admin.clients.tab_summary'),'services'=>__('admin.client
             <td><a href="{{ route('admin.tickets.show', $ticket) }}" style="color:#337ab7;">{{ $ticket->title }}</a></td>
             <td><span style="font-size:11px;">{{ ucfirst($ticket->priority) }}</span></td>
             <td style="font-size:12px;">{{ $ticket->last_reply?->diffForHumans() ?? '-' }}</td>
-            <td><span class="badge-{{ strtolower($ticket->status) }}">{{ ucfirst($ticket->status) }}</span></td>
+            <td><span class="badge-{{ strtolower($ticket->status) }}">{{ status_label($ticket->status) }}</span></td>
         </tr>
         @endforeach
         </tbody>
