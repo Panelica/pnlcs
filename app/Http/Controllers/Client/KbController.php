@@ -30,11 +30,16 @@ class KbController extends Controller
         // came back whole, whatever was typed.
         $searchQuery = trim(mb_substr((string) $request->query('q', ''), 0, 100));
         $like = $searchQuery !== '' ? '%'.addcslashes($searchQuery, '\\%_').'%' : null;
+        // A visitor reads the article in their language where it is
+        // translated, so the search looks at that text as well.
+        $locale = app()->getLocale();
+        $matches = fn ($q) => $q->where(fn ($w) => $w->where('title', 'like', $like)->orWhere('article', 'like', $like));
 
         $categories = KbCategory::where('hidden', false)
             ->whereNull('parent_id')
             ->with(['articles' => fn ($q) => $q->where('private', false)
-                ->when($like, fn ($q) => $q->where(fn ($w) => $w->where('title', 'like', $like)->orWhere('article', 'like', $like))),
+                ->when($like, fn ($q) => $q->where(fn ($w) => $matches($w)
+                    ->orWhereHas('translations', fn ($t) => $matches($t->where('language', $locale))))),
                 'articles.translations', 'translations'])
             ->orderBy('sort_order')
             ->get()

@@ -52,3 +52,21 @@ test('without a search the page lists every published article', function () {
     $this->get(route('client.kb.index'))->assertOk()
         ->assertSee('Opening a ticket')->assertSee('How invoices work')->assertDontSee('Draft about invoices');
 });
+
+test('a search finds an article by the translation the visitor reads', function () {
+    // A Turkish visitor reads the Turkish text (#201), so that is what they
+    // search; a translation into another language is not searched for them.
+    kbSearchArticles();
+    \App\Models\Language::updateOrCreate(['code' => 'en'], ['name' => 'English', 'native_name' => 'English', 'is_active' => true, 'is_default' => true]);
+    \App\Models\Language::updateOrCreate(['code' => 'tr'], ['name' => 'Turkish', 'native_name' => 'Türkçe', 'is_active' => true, 'is_default' => false]);
+    \App\Models\Language::updateOrCreate(['code' => 'de'], ['name' => 'German', 'native_name' => 'Deutsch', 'is_active' => true, 'is_default' => false]);
+    $ticket = KbArticle::where('title', 'Opening a ticket')->first();
+    \App\Models\KbArticleTranslation::create(['kb_article_id' => $ticket->id, 'language' => 'tr', 'title' => 'Destek talebi açmak', 'article' => 'Talep formunu kullanın.']);
+    \App\Models\KbArticleTranslation::create(['kb_article_id' => $ticket->id, 'language' => 'de', 'title' => 'Ein Ticket eröffnen', 'article' => 'Nutzen Sie das Formular.']);
+
+    $this->get(route('client.kb.index', ['q' => 'talep', 'lang' => 'tr']))->assertOk()
+        ->assertSee('Destek talebi açmak')->assertDontSee('How invoices work');
+
+    $this->get(route('client.kb.index', ['q' => 'Formular', 'lang' => 'tr']))->assertOk()
+        ->assertSee(__('client.kb.no_results', [], 'tr'))->assertDontSee('Destek talebi açmak');
+});
