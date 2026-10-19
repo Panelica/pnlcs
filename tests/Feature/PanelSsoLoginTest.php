@@ -156,7 +156,7 @@ it('takes the panel\'s best link when its list has no host-name entry', function
         ->assertRedirect('https://203.0.113.10:8443/auto-login?token=best');
 });
 
-it('leaves an older panel\'s single URL alone when its address is public or a name', function (string $url) {
+it('leaves an older panel\'s single URL alone when its address is not the server name\'s', function (string $url) {
     Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => $url]], 200)]);
     [$user, $service] = ssoService();
 
@@ -164,6 +164,67 @@ it('leaves an older panel\'s single URL alone when its address is public or a na
         ->get(route('client.services.login', $service))
         ->assertRedirect($url);
 })->with([
-    'public address' => 'https://203.0.113.10:8443/auto-login?token=xyz',
+    'public address the name does not resolve to' => 'https://203.0.113.10:8443/auto-login?token=xyz',
     'another name' => 'https://panel.example.net:8443/auto-login?token=xyz',
 ]);
+
+/*
+ * A public IP carries no trusted certificate, so the browser stopped at a
+ * privacy warning: the panel's link was https://65.109.65.203:8443/... while
+ * its certificate is for the server's name. The name is used when it resolves
+ * to the same IP, so the token still goes to the panel that minted it.
+ */
+function ssoResolving(array $addresses): void
+{
+    app()->bind(\Modules\Servers\Panelica\PanelicaModule::class, fn () => new class($addresses) extends \Modules\Servers\Panelica\PanelicaModule {
+        public function __construct(private array $answer) {}
+
+        protected function addressesOf(string $host): array
+        {
+            return $this->answer;
+        }
+    });
+}
+
+it('sends the customer to the panel by name when its public IP is that name\'s address', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://203.0.113.10:8443/auto-login?token=xyz#home']], 200)]);
+    ssoResolving(['203.0.113.10']);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=xyz#home');
+});
+
+it('matches an IPv6 address however it is written', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://[2001:db8:0:0::10]:8443/auto-login?token=xyz']], 200)]);
+    ssoResolving(['2001:db8::10']);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=xyz');
+});
+
+it('keeps the public IP when the name points somewhere else', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => ['url' => 'https://203.0.113.10:8443/auto-login?token=xyz']], 200)]);
+    ssoResolving(['198.51.100.7']);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://203.0.113.10:8443/auto-login?token=xyz');
+});
+
+it('takes the name for a newer panel\'s best link too when it is the name\'s IP', function () {
+    Http::fake(['*/v1/accounts/*/sso-login' => Http::response(['data' => [
+        'url' => 'https://203.0.113.10:8443/auto-login?token=best',
+        'urls' => [['type' => 'panel_ip', 'url' => 'https://203.0.113.10:8443/auto-login?token=best', 'trusted_certificate' => false]],
+    ]], 200)]);
+    ssoResolving(['203.0.113.10']);
+    [$user, $service] = ssoService();
+
+    $this->actingAs($user)
+        ->get(route('client.services.login', $service))
+        ->assertRedirect('https://panel.test:8443/auto-login?token=best');
+});
