@@ -74,6 +74,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi('api');
         $middleware->appendToGroup('api', ApiKeyAuth::class);
         $middleware->alias([
+            // Counted per route, not one counter per user for every route.
+            'throttle' => \App\Http\Middleware\ThrottleRequests::class,
             'banned.ip' => BlockBannedIp::class,
             'admin.auth' => AdminAuthenticate::class,
             'admin.2fa' => AdminTwoFactorVerify::class,
