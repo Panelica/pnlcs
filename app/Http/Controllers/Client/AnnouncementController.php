@@ -17,9 +17,12 @@ class AnnouncementController extends Controller
 
         $announcements = Announcement::where('published', true)
             ->when($category, fn ($q) => $q->where('category', $category))
+            ->with('translations')
             ->orderBy('created_at', 'desc')
             ->paginate(15)
-            ->withQueryString();
+            ->withQueryString()
+            // In the reader's language where a translation is written.
+            ->through(fn (Announcement $a) => $a->inLocale());
 
         return view('client.announcements.index', compact('announcements', 'categories', 'category'));
     }
@@ -27,6 +30,7 @@ class AnnouncementController extends Controller
     public function show(Announcement $announcement)
     {
         abort_if(! $announcement->published, 404);
+        $announcement = $announcement->inLocale();
 
         return view('client.announcements.show', compact('announcement'));
     }
@@ -38,7 +42,8 @@ class AnnouncementController extends Controller
      */
     public function rss()
     {
-        $items = Announcement::where('published', true)->orderBy('created_at', 'desc')->limit(20)->get();
+        $items = Announcement::where('published', true)->with('translations')->orderBy('created_at', 'desc')->limit(20)->get()
+            ->map(fn (Announcement $a) => $a->inLocale());
         $company = (string) Setting::get('CompanyName', config('app.name'));
 
         $esc = fn (?string $text) => htmlspecialchars((string) $text, ENT_XML1 | ENT_QUOTES, 'UTF-8');

@@ -961,10 +961,18 @@ class ConfigController extends Controller
 
     // ===== ANNOUNCEMENTS =====
 
+    /** The translations an announcement form may send, language => title and text. */
+    private const ANNOUNCEMENT_TRANSLATION_RULES = [
+        'translations' => 'nullable|array',
+        'translations.*.title' => 'nullable|string|max:255',
+        'translations.*.announcement' => 'nullable|string',
+    ];
+
     public function announcements()
     {
         return view('admin.config.announcements', [
-            'announcements' => Announcement::orderBy('id', 'desc')->get(),
+            'announcements' => Announcement::with('translations')->orderBy('id', 'desc')->get(),
+            'translationLanguages' => \App\Support\ContentTranslations::languages(),
             'categories' => Announcement::whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
         ]);
     }
@@ -976,13 +984,15 @@ class ConfigController extends Controller
         if (! $request->filled('announcement') && $request->filled('body')) {
             $request->merge(['announcement' => $request->input('body')]);
         }
-        $v = $request->validate(['title' => 'required', 'category' => 'nullable|string|max:60', 'announcement' => 'required|string', 'published' => 'boolean']);
-        Announcement::create([
+        $v = $request->validate(['title' => 'required', 'category' => 'nullable|string|max:60', 'announcement' => 'required|string', 'published' => 'boolean']
+            + self::ANNOUNCEMENT_TRANSLATION_RULES);
+        $announcement = Announcement::create([
             'title' => $v['title'],
             'category' => $v['category'] ?? null,
             'announcement' => $v['announcement'],
             'published' => $request->boolean('published'),
         ]);
+        \App\Support\ContentTranslations::save($announcement->translations(), (array) ($v['translations'] ?? []), ['title', 'announcement']);
 
         return back()->with('success', __('messages.success.announcement_published'));
     }
@@ -1585,9 +1595,13 @@ class ConfigController extends Controller
     // Announcements
     public function updateAnnouncement(Request $request, Announcement $announcement)
     {
-        $v = $request->validate(['title' => 'required', 'category' => 'nullable|string|max:60', 'published' => 'boolean']);
+        $v = $request->validate(['title' => 'required', 'category' => 'nullable|string|max:60', 'published' => 'boolean']
+            + self::ANNOUNCEMENT_TRANSLATION_RULES);
+        $translations = (array) ($v['translations'] ?? []);
+        unset($v['translations']);
         $v['announcement'] = $request->body ?? $request->announcement ?? $announcement->announcement;
         $announcement->update($v);
+        \App\Support\ContentTranslations::save($announcement->translations(), $translations, ['title', 'announcement']);
 
         return back()->with('success', __('messages.success.announcement_updated'));
     }
