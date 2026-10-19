@@ -16,6 +16,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Can run twice without harm (RELEASING.md).
+        if (Schema::hasTable('announcement_translations')) {
+            return;
+        }
+
         Schema::create('announcement_translations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('announcement_id')->constrained('announcements')->cascadeOnDelete();
