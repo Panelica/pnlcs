@@ -701,14 +701,14 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
 
         $data = $this->getModuleData($service);
         $userId = $data['panelica_user_id'] ?? null;
 
         if (! $userId) {
-            return $this->buildResult(false, 'Panelica user ID not found in service notes.');
+            return $this->buildResult(false, __('panelica.no_user_id'));
         }
 
         $resp = $this->post($server, "/v1/accounts/{$userId}/change-password", ['new_password' => $newPassword]);
@@ -716,11 +716,11 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         if (! $resp->successful()) {
             $msg = $resp->json('message') ?? $resp->body();
 
-            return $this->buildResult(false, "Password change failed: {$msg}");
+            return $this->buildResult(false, __('panelica.password_change_failed', ['error' => $msg]));
         }
 
         $service->update(['password' => $newPassword]);
-        $result = $this->buildResult(true, 'Password changed successfully.');
+        $result = $this->buildResult(true, __('panelica.password_changed'));
         $this->logAction($service, 'changePassword', $result);
 
         return $result;
@@ -970,25 +970,25 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         $userId = $this->getModuleData($service)['panelica_user_id'] ?? null;
         if (! $userId) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
 
         $resp = $this->requestLogin($server, (string) $userId);
         if (! $resp->successful()) {
             Log::error('PanelicaModule::ssoLogin failed', ['user_id' => $userId, 'body' => $resp->body()]);
 
-            return $this->buildResult(false, 'Could not create a panel login session.');
+            return $this->buildResult(false, __('panelica.sso_session_failed'));
         }
         $url = $this->loginUrlFrom($server, $resp);
         if (! $url) {
-            return $this->buildResult(false, 'Panel did not return a login URL.');
+            return $this->buildResult(false, __('panelica.sso_no_url'));
         }
 
-        return $this->buildResult(true, 'SSO URL issued.', ['url' => $url]);
+        return $this->buildResult(true, __('panelica.sso_issued'), ['url' => $url]);
     }
 
     /** Ask the panel for a one-time login link, preferring its host-name address. */
@@ -1264,18 +1264,18 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! $this->backupPolicy($service)['enabled']) {
-            return $this->buildResult(false, 'Backups are not included in your current plan.');
+            return $this->buildResult(false, __('panelica.backups_not_in_plan'));
         }
         $domains = $this->accountDomains($service);
         if ($domains === []) {
-            return $this->buildResult(false, 'There are no domains to back up yet.');
+            return $this->buildResult(false, __('panelica.nothing_to_back_up'));
         }
         if ($domainId !== null && $domainId !== '') {
             if (! isset($domains[$domainId])) {
-                return $this->buildResult(false, 'That domain does not belong to this service.');
+                return $this->buildResult(false, __('panelica.domain_not_owned'));
             }
             $ids = [$domainId];
         } else {
@@ -1291,20 +1291,20 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not start the backup.'));
         }
 
-        return $this->buildResult(true, 'Backup created.');
+        return $this->buildResult(true, __('panelica.backup_created'));
     }
 
     public function deleteBackup(Service $service, string $filename): array
     {
         if ($filename === '' || ! $this->ownsBackup($service, $filename)) {
-            return $this->buildResult(false, 'That backup does not belong to this service.');
+            return $this->buildResult(false, __('panelica.backup_not_owned'));
         }
         $resp = $this->delete($this->getServer($service), '/v1/backups/'.rawurlencode($filename));
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the backup.'));
         }
 
-        return $this->buildResult(true, 'Backup deleted.');
+        return $this->buildResult(true, __('panelica.backup_deleted'));
     }
 
     // -------------------------------------------------------------------------
@@ -1654,29 +1654,29 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $server = $this->getServer($service);
         $accountId = $this->linkedAccountId($service);
         if (! $server || ! $accountId) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         $slug = trim($slug);
         if ($slug === '' || ! preg_match('/^[a-z0-9][a-z0-9._-]*$/i', $slug)) {
-            return $this->buildResult(false, 'Choose an app to install.');
+            return $this->buildResult(false, __('panelica.choose_app'));
         }
         $policy = $this->containerPolicy($service);
         if (! $policy['enabled']) {
-            return $this->buildResult(false, 'Containers are not included in your current plan.');
+            return $this->buildResult(false, __('panelica.containers_not_in_plan'));
         }
         if (! $policy['can_create']) {
-            return $this->buildResult(false, 'You have reached your plan\'s container limit.');
+            return $this->buildResult(false, __('panelica.container_limit'));
         }
         // Only offer what the plan actually allows: the panel refuses anything else,
         // and failing here gives the customer a sentence instead of a 500.
         $allowed = array_column($this->containerTemplates($service), 'slug');
         if ($allowed !== [] && ! in_array($slug, $allowed, true)) {
-            return $this->buildResult(false, 'That app is not available on your plan.');
+            return $this->buildResult(false, __('panelica.app_not_in_plan'));
         }
 
         $name = strtolower(trim($name));
         if ($name !== '' && ! preg_match('/^[a-z0-9][a-z0-9-]{0,40}$/', $name)) {
-            return $this->buildResult(false, 'Use letters, numbers and hyphens for the name.');
+            return $this->buildResult(false, __('panelica.app_name_invalid'));
         }
         // A name is required by the panel, so an empty box means "name it after
         // the app" rather than a validation error the customer cannot act on.
@@ -1691,7 +1691,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         try {
             $resp = $this->post($server, '/v1/docker/templates/'.rawurlencode($slug).'/deploy', $payload, timeout: self::DEPLOY_TIMEOUT);
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return $this->buildResult(false, 'The install is taking longer than expected and is still running on the server. Check back in a few minutes.');
+            return $this->buildResult(false, __('panelica.install_still_running'));
         }
         if ($resp->status() === 403) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Your plan does not allow this.'));
@@ -1705,7 +1705,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         // running app and no idea what to open or what password it made.
         $this->rememberAppAccess($service, $slug, $resp->json('data') ?? []);
 
-        return $this->buildResult(true, 'App installed.');
+        return $this->buildResult(true, __('panelica.app_installed'));
     }
 
     /**
@@ -1721,13 +1721,13 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $server = $this->getServer($service);
         $accountId = $this->linkedAccountId($service);
         if (! $server || ! $accountId) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! $this->ownsContainer($service, $containerId)) {
-            return $this->buildResult(false, 'That app does not belong to this service.');
+            return $this->buildResult(false, __('panelica.app_not_owned'));
         }
         if (! $this->ownsDomain($service, $domainId)) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
 
         $resp = $this->post($server, '/v1/docker/domains/link', [
@@ -1746,7 +1746,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $msg);
         }
 
-        return $this->buildResult(true, 'Domain is now serving this app.');
+        return $this->buildResult(true, __('panelica.domain_linked'));
     }
 
     /** Stop serving an app on a domain and give the domain back to normal hosting. */
@@ -1755,10 +1755,10 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $server = $this->getServer($service);
         $accountId = $this->linkedAccountId($service);
         if (! $server || ! $accountId) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! $this->ownsDomain($service, $domainId)) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
 
         $resp = $this->post($server, '/v1/docker/domains/unlink', [
@@ -1767,7 +1767,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         ]);
 
         return $resp->successful()
-            ? $this->buildResult(true, 'Domain no longer serves this app.')
+            ? $this->buildResult(true, __('panelica.domain_unlinked'))
             : $this->buildResult(false, $this->apiMessage($resp, 'Could not unlink the domain.'));
     }
 
@@ -1996,12 +1996,12 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     public function containerAction(Service $service, string $id, string $action): array
     {
         if (! in_array($action, ['start', 'stop', 'restart'], true)) {
-            return $this->buildResult(false, 'Unsupported action.');
+            return $this->buildResult(false, __('panelica.unsupported_action'));
         }
         $all = $this->containers($service);
         $target = collect($all)->firstWhere('id', $id);
         if (! $target) {
-            return $this->buildResult(false, 'That container does not belong to this service.');
+            return $this->buildResult(false, __('panelica.container_not_owned'));
         }
 
         // A stacked app is one thing to the customer: starting or stopping it
@@ -2021,7 +2021,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             }
         }
 
-        return $this->buildResult(true, 'Done.');
+        return $this->buildResult(true, __('panelica.done'));
     }
 
     public function deleteContainer(Service $service, string $id): array
@@ -2029,7 +2029,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $all = $this->containers($service);
         $target = collect($all)->firstWhere('id', $id);
         if (! $target) {
-            return $this->buildResult(false, 'That container does not belong to this service.');
+            return $this->buildResult(false, __('panelica.container_not_owned'));
         }
 
         // A helper (mysql, redis) is part of an app, not a thing of its own.
@@ -2068,7 +2068,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         \App\Models\DockerAppCredential::where('service_id', $service->id)
             ->whereIn('container_id', $removed)->delete();
 
-        return $this->buildResult(true, 'App removed.');
+        return $this->buildResult(true, __('panelica.app_removed'));
     }
 
     /**
@@ -2188,22 +2188,22 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! isset($this->accountDomains($service)[$domainId])) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
         $type = strtoupper(trim($type));
         if (! in_array($type, $this->dnsRecordTypes(), true)) {
-            return $this->buildResult(false, 'Unsupported record type.');
+            return $this->buildResult(false, __('panelica.unsupported_record_type'));
         }
         $name = trim($name) === '' ? '@' : trim($name);
         $content = trim($content);
         if ($content === '') {
-            return $this->buildResult(false, 'Record value is required.');
+            return $this->buildResult(false, __('panelica.record_value_required'));
         }
         if ($this->isProtectedDnsRecord($type, $name)) {
-            return $this->buildResult(false, 'That record is managed by the hosting platform and cannot be changed here.');
+            return $this->buildResult(false, __('panelica.dns_record_managed_change'));
         }
 
         $payload = ['type' => $type, 'name' => $name, 'content' => $content];
@@ -2219,7 +2219,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the DNS record.'));
         }
 
-        return $this->buildResult(true, 'DNS record created.');
+        return $this->buildResult(true, __('panelica.dns_created'));
     }
 
     /**
@@ -2231,21 +2231,21 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $record = $this->findOwnDnsRecord($service, $id);
         if (! $record) {
-            return $this->buildResult(false, 'That DNS record does not belong to this service.');
+            return $this->buildResult(false, __('panelica.dns_not_owned'));
         }
         if ($record['protected']) {
-            return $this->buildResult(false, 'That record is managed by the hosting platform and cannot be changed here.');
+            return $this->buildResult(false, __('panelica.dns_record_managed_change'));
         }
         $name = trim($name) === '' ? '@' : trim($name);
         $content = trim($content);
         if ($content === '') {
-            return $this->buildResult(false, 'Record value is required.');
+            return $this->buildResult(false, __('panelica.record_value_required'));
         }
         // The panel's update endpoint accepts a new name, so renaming an ordinary
         // record INTO a managed one (blog A -> www A) would walk straight around
         // the protection. Judge the destination, not just the source.
         if ($this->isProtectedDnsRecord($record['type'], $name)) {
-            return $this->buildResult(false, 'That name is managed by the hosting platform and cannot be used here.');
+            return $this->buildResult(false, __('panelica.dns_name_managed'));
         }
 
         $payload = ['name' => $name, 'content' => $content];
@@ -2261,24 +2261,24 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the DNS record.'));
         }
 
-        return $this->buildResult(true, 'DNS record updated.');
+        return $this->buildResult(true, __('panelica.dns_updated'));
     }
 
     public function deleteDnsRecord(Service $service, string $id): array
     {
         $record = $this->findOwnDnsRecord($service, $id);
         if (! $record) {
-            return $this->buildResult(false, 'That DNS record does not belong to this service.');
+            return $this->buildResult(false, __('panelica.dns_not_owned'));
         }
         if ($record['protected']) {
-            return $this->buildResult(false, 'That record is managed by the hosting platform and cannot be deleted here.');
+            return $this->buildResult(false, __('panelica.dns_record_managed_delete'));
         }
         $resp = $this->delete($this->getServer($service), "/v1/dns/records/{$id}");
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the DNS record.'));
         }
 
-        return $this->buildResult(true, 'DNS record deleted.');
+        return $this->buildResult(true, __('panelica.dns_deleted'));
     }
 
     /**
@@ -2380,17 +2380,17 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! isset($this->accountDomains($service)[$domainId])) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
         $name = strtolower(trim($name));
         if ($name === '' || ! preg_match('/^[a-z0-9-]+$/', $name)) {
-            return $this->buildResult(false, 'Enter a valid subdomain name (letters, numbers, hyphens).');
+            return $this->buildResult(false, __('panelica.subdomain_name_invalid'));
         }
         if (! $this->subdomainPolicy($service)['can_create']) {
-            return $this->buildResult(false, 'You have reached your plan\'s subdomain limit.');
+            return $this->buildResult(false, __('panelica.subdomain_limit'));
         }
 
         $payload = ['subdomain_name' => $name, 'ssl_enabled' => $ssl];
@@ -2413,21 +2413,21 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the subdomain.'));
         }
 
-        return $this->buildResult(true, 'Subdomain created.');
+        return $this->buildResult(true, __('panelica.subdomain_created'));
     }
 
     public function deleteSubdomain(Service $service, string $id): array
     {
         $server = $this->getServer($service);
         if (! $server || ! $this->ownsSubdomain($service, $id)) {
-            return $this->buildResult(false, 'That subdomain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.subdomain_not_owned'));
         }
         $resp = $this->delete($server, "/v1/subdomains/{$id}");
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the subdomain.'));
         }
 
-        return $this->buildResult(true, 'Subdomain deleted.');
+        return $this->buildResult(true, __('panelica.subdomain_deleted'));
     }
 
     /** @var array<string, array<string, mixed>|null> plan row per account, for this request */
@@ -2592,22 +2592,22 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! isset($this->accountDomains($service)[$domainId])) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
         $taskName = trim($taskName);
         $command = trim($command);
         if ($taskName === '' || $command === '') {
-            return $this->buildResult(false, 'Task name and command are required.');
+            return $this->buildResult(false, __('panelica.cron_fields_required'));
         }
         $policy = $this->cronPolicy($service);
         if (! $policy['enabled']) {
-            return $this->buildResult(false, 'Your plan does not include cron jobs.');
+            return $this->buildResult(false, __('panelica.cron_not_in_plan'));
         }
         if (! $policy['can_create']) {
-            return $this->buildResult(false, 'You have reached your plan\'s cron job limit.');
+            return $this->buildResult(false, __('panelica.cron_limit'));
         }
 
         $payload = [
@@ -2636,46 +2636,46 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the cron job.'));
         }
 
-        return $this->buildResult(true, 'Cron job created.');
+        return $this->buildResult(true, __('panelica.cron_created'));
     }
 
     public function toggleCronJob(Service $service, string $id): array
     {
         if (! $this->ownsCronJob($service, $id)) {
-            return $this->buildResult(false, 'That cron job does not belong to this service.');
+            return $this->buildResult(false, __('panelica.cron_not_owned'));
         }
         $resp = $this->post($this->getServer($service), "/v1/cron-jobs/{$id}/toggle", []);
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not toggle the cron job.'));
         }
 
-        return $this->buildResult(true, 'Cron job updated.');
+        return $this->buildResult(true, __('panelica.cron_updated'));
     }
 
     public function runCronJob(Service $service, string $id): array
     {
         if (! $this->ownsCronJob($service, $id)) {
-            return $this->buildResult(false, 'That cron job does not belong to this service.');
+            return $this->buildResult(false, __('panelica.cron_not_owned'));
         }
         $resp = $this->post($this->getServer($service), "/v1/cron-jobs/{$id}/run", []);
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not run the cron job.'));
         }
 
-        return $this->buildResult(true, 'Cron job executed.', ['output' => (string) ($resp->json('data.output') ?? '')]);
+        return $this->buildResult(true, __('panelica.cron_executed'), ['output' => (string) ($resp->json('data.output') ?? '')]);
     }
 
     public function deleteCronJob(Service $service, string $id): array
     {
         if (! $this->ownsCronJob($service, $id)) {
-            return $this->buildResult(false, 'That cron job does not belong to this service.');
+            return $this->buildResult(false, __('panelica.cron_not_owned'));
         }
         $resp = $this->delete($this->getServer($service), "/v1/cron-jobs/{$id}");
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the cron job.'));
         }
 
-        return $this->buildResult(true, 'Cron job deleted.');
+        return $this->buildResult(true, __('panelica.cron_deleted'));
     }
 
     private function ownsCronJob(Service $service, string $id): bool
@@ -2820,14 +2820,14 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $server = $this->getServer($service);
         $accountId = $this->linkedAccountId($service);
         if (! $server || ! $accountId) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
         if (! $this->ftpPolicy($service)['can_create']) {
-            return $this->buildResult(false, 'Your plan does not allow creating more FTP accounts.');
+            return $this->buildResult(false, __('panelica.ftp_limit'));
         }
         $username = strtolower(trim($username));
         if ($username === '' || ! preg_match('/^[a-z0-9._-]+$/', $username)) {
-            return $this->buildResult(false, 'Enter a valid FTP username.');
+            return $this->buildResult(false, __('panelica.ftp_username_invalid'));
         }
 
         $payload = [
@@ -2855,35 +2855,35 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the FTP account.'));
         }
 
-        return $this->buildResult(true, 'FTP account created.');
+        return $this->buildResult(true, __('panelica.ftp_created'));
     }
 
     public function deleteFtpAccount(Service $service, string $id): array
     {
         $server = $this->getServer($service);
         if (! $server || ! $this->ownsFtp($service, $id)) {
-            return $this->buildResult(false, 'That FTP account does not belong to this service.');
+            return $this->buildResult(false, __('panelica.ftp_not_owned'));
         }
         $resp = $this->delete($server, "/v1/ftp-accounts/{$id}");
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the FTP account.'));
         }
 
-        return $this->buildResult(true, 'FTP account deleted.');
+        return $this->buildResult(true, __('panelica.ftp_deleted'));
     }
 
     public function changeFtpPassword(Service $service, string $id, string $password): array
     {
         $server = $this->getServer($service);
         if (! $server || ! $this->ownsFtp($service, $id)) {
-            return $this->buildResult(false, 'That FTP account does not belong to this service.');
+            return $this->buildResult(false, __('panelica.ftp_not_owned'));
         }
         $resp = $this->post($server, "/v1/ftp-accounts/{$id}/change-password", ['password' => $password]);
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the FTP password.'));
         }
 
-        return $this->buildResult(true, 'FTP password updated.');
+        return $this->buildResult(true, __('panelica.ftp_password_updated'));
     }
 
     /** FTP connection host for the customer (the panel hostname). */
@@ -2958,13 +2958,13 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! isset($this->accountDomains($service)[$domainId])) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
         if (! $this->validIdentifier($dbName) || ! $this->validIdentifier($dbUser)) {
-            return $this->buildResult(false, 'Database and user names may use letters, numbers and underscores only (max 32).');
+            return $this->buildResult(false, __('panelica.database_name_invalid'));
         }
 
         $resp = $this->post($server, "/v1/domains/{$domainId}/databases", [
@@ -2973,30 +2973,30 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             'password' => $password,
         ]);
         if ($resp->status() === 404) {
-            return $this->buildResult(false, 'Database creation is not available on this server yet.');
+            return $this->buildResult(false, __('panelica.database_create_unavailable'));
         }
         if ($resp->status() === 403) {
-            return $this->buildResult(false, 'Your plan\'s database limit has been reached.');
+            return $this->buildResult(false, __('panelica.database_limit'));
         }
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the database.'));
         }
 
-        return $this->buildResult(true, 'Database created.');
+        return $this->buildResult(true, __('panelica.database_created'));
     }
 
     public function deleteDatabase(Service $service, string $domainId, string $databaseName): array
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! isset($this->accountDomains($service)[$domainId])) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
         // Fence the name to a database that actually appears under this account.
         if (! $this->ownsDatabase($service, $domainId, $databaseName)) {
-            return $this->buildResult(false, 'That database does not belong to this service.');
+            return $this->buildResult(false, __('panelica.database_not_owned'));
         }
 
         $qs = http_build_query(['database_name' => $databaseName], '', '&', PHP_QUERY_RFC3986);
@@ -3007,20 +3007,20 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the database.'));
         }
 
-        return $this->buildResult(true, 'Database deleted.');
+        return $this->buildResult(true, __('panelica.database_deleted'));
     }
 
     public function createDatabaseUser(Service $service, string $domainId, string $username, string $password, string $role): array
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! isset($this->accountDomains($service)[$domainId])) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
         if (! $this->validIdentifier($username)) {
-            return $this->buildResult(false, 'User name may use letters, numbers and underscores only (max 32).');
+            return $this->buildResult(false, __('panelica.database_user_name_invalid'));
         }
         $role = in_array($role, ['read', 'readWrite', 'dbAdmin', 'dbOwner'], true) ? $role : 'readWrite';
 
@@ -3034,35 +3034,35 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the database user.'));
         }
 
-        return $this->buildResult(true, 'Database user created.');
+        return $this->buildResult(true, __('panelica.database_user_created'));
     }
 
     public function deleteDatabaseUser(Service $service, string $userId): array
     {
         $server = $this->getServer($service);
         if (! $server || ! $this->ownsDatabaseUser($service, $userId)) {
-            return $this->buildResult(false, 'That database user does not belong to this service.');
+            return $this->buildResult(false, __('panelica.database_user_not_owned'));
         }
         $resp = $this->delete($server, "/v1/mysql-users/{$userId}");
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the database user.'));
         }
 
-        return $this->buildResult(true, 'Database user deleted.');
+        return $this->buildResult(true, __('panelica.database_user_deleted'));
     }
 
     public function changeDatabaseUserPassword(Service $service, string $userId, string $password): array
     {
         $server = $this->getServer($service);
         if (! $server || ! $this->ownsDatabaseUser($service, $userId)) {
-            return $this->buildResult(false, 'That database user does not belong to this service.');
+            return $this->buildResult(false, __('panelica.database_user_not_owned'));
         }
         $resp = $this->post($server, "/v1/mysql-users/{$userId}/change-password", ['password' => $password]);
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the password.'));
         }
 
-        return $this->buildResult(true, 'Password updated.');
+        return $this->buildResult(true, __('panelica.password_updated'));
     }
 
     private function validIdentifier(string $s): bool
@@ -3171,17 +3171,17 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $accountId = $this->linkedAccountId($service);
 
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server is set for this service.');
+            return $this->buildResult(false, __('panelica.no_server_for_service'));
         }
         if (! $accountId) {
-            return $this->buildResult(false, 'This service is not linked to a Panelica account.');
+            return $this->buildResult(false, __('panelica.not_linked'));
         }
 
         $domain = strtolower(trim($domain));
 
         foreach ($this->accountDomains($service) as $id => $name) {
             if (strcasecmp($name, $domain) === 0) {
-                return $this->buildResult(true, 'The domain is already on the account.', ['domain_id' => $id, 'already' => true]);
+                return $this->buildResult(true, __('panelica.domain_already_on_account'), ['domain_id' => $id, 'already' => true]);
             }
         }
 
@@ -3211,7 +3211,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
         $body = $resp->json();
 
-        return $this->buildResult(true, 'Domain created on the panel.', ['domain_id' => $body['data']['id'] ?? $body['id'] ?? null]);
+        return $this->buildResult(true, __('panelica.domain_created'), ['domain_id' => $body['data']['id'] ?? $body['id'] ?? null]);
     }
 
     /**
@@ -3270,17 +3270,17 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
 
         $domains = $this->accountDomains($service);
         if (! isset($domains[$domainId])) {
-            return $this->buildResult(false, 'That domain does not belong to this service.');
+            return $this->buildResult(false, __('panelica.domain_not_owned'));
         }
 
         $localPart = strtolower(trim($localPart));
         if ($localPart === '' || ! preg_match('/^[a-z0-9._%+\-]+$/', $localPart)) {
-            return $this->buildResult(false, 'Enter a valid mailbox name.');
+            return $this->buildResult(false, __('panelica.mailbox_name_invalid'));
         }
 
         $payload = [
@@ -3294,7 +3294,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
         $resp = $this->post($server, '/v1/email-accounts', $payload);
         if ($resp->status() === 403) {
-            return $this->buildResult(false, 'Your plan\'s mailbox limit has been reached.');
+            return $this->buildResult(false, __('panelica.mailbox_limit'));
         }
         if (! $resp->successful()) {
             Log::error('PanelicaModule::createEmail failed', ['status' => $resp->status(), 'body' => $resp->body()]);
@@ -3304,7 +3304,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
         $this->ensureMailCertificate($server, $domainId);
 
-        return $this->buildResult(true, 'Mailbox created.', ['email' => $localPart.'@'.$domains[$domainId]]);
+        return $this->buildResult(true, __('panelica.mailbox_created'), ['email' => $localPart.'@'.$domains[$domainId]]);
     }
 
     /**
@@ -3370,10 +3370,10 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! $this->ownsEmail($service, $emailId)) {
-            return $this->buildResult(false, 'That mailbox does not belong to this service.');
+            return $this->buildResult(false, __('panelica.mailbox_not_owned'));
         }
 
         $resp = $this->delete($server, "/v1/email-accounts/{$emailId}");
@@ -3381,7 +3381,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the mailbox.'));
         }
 
-        return $this->buildResult(true, 'Mailbox deleted.');
+        return $this->buildResult(true, __('panelica.mailbox_deleted'));
     }
 
     /**
@@ -3391,10 +3391,10 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $server = $this->getServer($service);
         if (! $server) {
-            return $this->buildResult(false, 'No Panelica server configured.');
+            return $this->buildResult(false, __('panelica.no_server'));
         }
         if (! $this->ownsEmail($service, $emailId)) {
-            return $this->buildResult(false, 'That mailbox does not belong to this service.');
+            return $this->buildResult(false, __('panelica.mailbox_not_owned'));
         }
 
         $resp = $this->post($server, "/v1/email-accounts/{$emailId}/change-password", ['password' => $password]);
@@ -3402,7 +3402,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not update the mailbox password.'));
         }
 
-        return $this->buildResult(true, 'Mailbox password updated.');
+        return $this->buildResult(true, __('panelica.mailbox_password_updated'));
     }
 
     /** Whether emailId is one of this account's own mailboxes (domain-fenced). */
@@ -3509,7 +3509,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         [$server, $accountId] = $this->fileContext($service);
         if (! $server) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
 
         $resp = $this->getWithQuery($server, '/v1/files/content', ['user_id' => $accountId, 'path' => $path]);
@@ -3526,7 +3526,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         [$server, $accountId] = $this->fileContext($service);
         if (! $server) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
 
         $resp = $this->put($server, '/v1/files/content', ['user_id' => $accountId, 'path' => $path, 'content' => $content]);
@@ -3534,7 +3534,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not save the file.'));
         }
 
-        return $this->buildResult(true, 'File saved.');
+        return $this->buildResult(true, __('panelica.file_saved'));
     }
 
     /** Create a folder ($type='folder') or an empty text file ($type='file') in $path. */
@@ -3542,11 +3542,11 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         [$server, $accountId] = $this->fileContext($service);
         if (! $server) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
         $name = trim($name);
         if ($name === '' || str_contains($name, '/') || str_contains($name, "\0") || $name === '.' || $name === '..') {
-            return $this->buildResult(false, 'Enter a valid name.');
+            return $this->buildResult(false, __('panelica.name_invalid'));
         }
         $type = $type === 'folder' ? 'folder' : 'file';
 
@@ -3568,11 +3568,11 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         [$server, $accountId] = $this->fileContext($service);
         if (! $server) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
         $newName = trim($newName);
         if ($newName === '' || str_contains($newName, '/') || str_contains($newName, "\0") || $newName === '.' || $newName === '..') {
-            return $this->buildResult(false, 'Enter a valid name.');
+            return $this->buildResult(false, __('panelica.name_invalid'));
         }
 
         $resp = $this->patch($server, '/v1/files/rename', ['user_id' => $accountId, 'path' => $path, 'new_name' => $newName]);
@@ -3580,7 +3580,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not rename that item.'));
         }
 
-        return $this->buildResult(true, 'Renamed.');
+        return $this->buildResult(true, __('panelica.renamed'));
     }
 
     /** Move one or more paths to trash (or permanently). Paths are fenced to home by the panel. */
@@ -3588,11 +3588,11 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         [$server, $accountId] = $this->fileContext($service);
         if (! $server) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
         $paths = array_values(array_filter(array_map('strval', $paths), fn ($p) => $p !== ''));
         if ($paths === []) {
-            return $this->buildResult(false, 'Nothing to delete.');
+            return $this->buildResult(false, __('panelica.nothing_to_delete'));
         }
 
         $resp = $this->deleteWithBody($server, '/v1/files', ['user_id' => $accountId, 'paths' => $paths, 'permanent' => $permanent]);
@@ -3600,7 +3600,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete.'));
         }
 
-        return $this->buildResult(true, 'Deleted.');
+        return $this->buildResult(true, __('panelica.deleted'));
     }
 
     /**
@@ -3614,7 +3614,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         [$server, $accountId] = $this->fileContext($service);
         if (! $server) {
-            return $this->buildResult(false, 'No panel account is linked to this service.');
+            return $this->buildResult(false, __('panelica.no_panel_account'));
         }
 
         $path = '/v1/files/upload';
@@ -3635,7 +3635,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             ]);
 
         if ($resp->status() === 404) {
-            return $this->buildResult(false, 'File upload is not available on this server yet.');
+            return $this->buildResult(false, __('panelica.upload_unavailable'));
         }
         if (! $resp->successful()) {
             Log::error('PanelicaModule::uploadFile failed', ['status' => $resp->status(), 'body' => $resp->body()]);
@@ -3643,7 +3643,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not upload the file.'));
         }
 
-        return $this->buildResult(true, 'File uploaded.');
+        return $this->buildResult(true, __('panelica.file_uploaded'));
     }
 
     /** Raw download response for the controller to stream. Null when unavailable. */
