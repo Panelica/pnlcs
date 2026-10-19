@@ -91,6 +91,8 @@ class EventServiceProvider extends ServiceProvider
         ],
         ServiceTerminated::class => [
             [SendNotificationListener::class, 'handleServiceTerminated'],
+            // The unit goes back on the shelf of a stock-controlled product.
+            \App\Listeners\RestockOnTermination::class,
             LogActivityListener::class,
         ],
         \App\Events\DomainRegistered::class => [LogActivityListener::class],
