@@ -52,6 +52,8 @@
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.category') }}</label><input type="text" name="category" maxlength="60" list="announcement-categories" class="form-control" placeholder="{{ __('admin.announcements.category_hint') }}"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required></textarea></div>
+        @include('admin.partials.translation-fields', ['languages' => $translationLanguages ?? collect(), 'model' => null,
+            'fields' => ['title' => [__('common.form.title'), 'input'], 'announcement' => [__('admin.announcements.content'), 'textarea']]])
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="checkbox" name="published" value="1" checked>
@@ -72,6 +74,8 @@
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $ann->title }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.category') }}</label><input type="text" name="category" value="{{ $ann->category }}" maxlength="60" list="announcement-categories" class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.announcements.content') }}</label><textarea name="body" rows="6" class="form-control" required>{{ $ann->announcement }}</textarea></div>
+        @include('admin.partials.translation-fields', ['languages' => $translationLanguages ?? collect(), 'model' => $ann,
+            'fields' => ['title' => [__('common.form.title'), 'input'], 'announcement' => [__('admin.announcements.content'), 'textarea']]])
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="hidden" name="published" value="0">
