@@ -210,7 +210,10 @@ test('the cursor carries a run on from where it stopped, to the end', function (
 
     $cursor = null;
     $seen = 0;
-    for ($i = 0; $i < 200; $i++) {
+    // Enough batches for every missing text, with room to spare: a fixed 200
+    // ran out once the English files passed 6000 texts.
+    $runs = intdiv($total, AiTranslationService::BATCH_SIZE) + 10;
+    for ($i = 0; $i < $runs; $i++) {
         $r = batch($this, 'fr', 'missing', $cursor)->assertOk()->json();
         $seen += count($r['items']) + count($r['skipped']);
         $cursor = $r['cursor'];

@@ -145,3 +145,14 @@ it('shows the backups tab and forbids other clients', function () use ($MINE) {
     $this->actingAs($intruder)->post(route('client.services.backups.store', $s), [])->assertForbidden();
     $this->actingAs($intruder)->post(route('client.services.backups.destroy', $s), ['filename' => 'mine.tar.gz'])->assertForbidden();
 });
+
+// The messages the hosting tools show customers were fixed English strings:
+// a Turkish customer read "Backup created." on a Turkish page.
+it('tells the customer in their own language', function () {
+    fakeBackupApi(true, []);
+    [$u, $s] = bkService(bkServer());
+    app()->setLocale('tr');
+
+    expect((new PanelicaModule)->createBackup($s)['message'])->toBe('Yedek oluşturuldu.');
+
+});
