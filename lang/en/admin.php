@@ -1508,6 +1508,12 @@ return [
     'knowledge_base.uncategorized' => 'Uncategorized',
     'knowledge_base.uncategorized_option' => '— Uncategorized —',
     'knowledge_base.views' => 'Views',
+    'knowledge_base.categories' => 'Categories',
+    'knowledge_base.edit_category' => 'Edit Category',
+    'knowledge_base.category_updated' => 'Category updated.',
+    'knowledge_base.translations' => 'Translations',
+    'knowledge_base.translations_hint' => 'For visitors in another language. Leave the title empty to show them the text above.',
+    'knowledge_base.translated' => 'Translated',
     'logs' => [
         'admin_user' => 'Admin user',
         'date_label' => 'Date',

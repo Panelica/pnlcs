@@ -1002,15 +1002,57 @@ class ConfigController extends Controller
     public function knowledgeBase()
     {
         return view('admin.config.knowledge-base', [
-            'categories' => KbCategory::orderBy('name')->get(),
-            'articles' => KbArticle::with('category')->orderByDesc('id')->get(),
+            'categories' => KbCategory::with('translations')->orderBy('name')->get(),
+            'articles' => KbArticle::with('category', 'translations')->orderByDesc('id')->get(),
+            'translationLanguages' => $this->kbTranslationLanguages(),
         ]);
+    }
+
+    /**
+     * The languages a knowledge base text can be translated into: every
+     * active language but the default one, whose text is the article's own.
+     */
+    private function kbTranslationLanguages()
+    {
+        return \App\Models\Language::active()
+            ->where('code', '!=', \App\Support\LocaleUrl::defaultLocale())
+            ->orderBy('sort_order')->get();
+    }
+
+    /**
+     * Save the translations sent with an article or category form, keyed by
+     * language: filled in → kept, left empty → removed, so a visitor in that
+     * language falls back to the default text.
+     *
+     * @param  array<string, string>  $fields  form field => column; the first is the one that must be filled
+     */
+    private function saveKbTranslations(\Illuminate\Database\Eloquent\Relations\HasMany $relation, array $sent, array $fields): void
+    {
+        $codes = $this->kbTranslationLanguages()->pluck('code')->all();
+        $required = array_key_first($fields);
+        // A fresh query each time: where() on the relation itself would pile up.
+        $rows = fn () => $relation->getRelated()->newQuery()->where($relation->getForeignKeyName(), $relation->getParentKey());
+
+        foreach ($codes as $code) {
+            $row = (array) ($sent[$code] ?? []);
+            if (trim((string) ($row[$required] ?? '')) === '') {
+                $rows()->where('language', $code)->delete();
+
+                continue;
+            }
+            $values = [];
+            foreach ($fields as $field => $column) {
+                $values[$column] = isset($row[$field]) ? (string) $row[$field] : null;
+            }
+            $rows()->updateOrCreate(['language' => $code], $values + [$relation->getForeignKeyName() => $relation->getParentKey()]);
+        }
     }
 
     public function storeKbArticle(Request $request)
     {
         $v = $this->validateKbArticle($request);
-        KbArticle::create($v);
+        $article = KbArticle::create($v);
+        $this->saveKbTranslations($article->translations(), (array) $request->input('translations', []), ['title' => 'title', 'article' => 'article']);
 
         return back()->with('success', __('messages.success.article_created'));
     }
@@ -1022,7 +1064,11 @@ class ConfigController extends Controller
             'title' => 'required|string',
             'article' => 'required|string',
             'published' => 'boolean',
+            'translations' => 'nullable|array',
+            'translations.*.title' => 'nullable|string|max:255',
+            'translations.*.article' => 'nullable|string',
         ]);
+        unset($v['translations']);
         // kb_articles has a "private" column; the form speaks in "published".
         $v['private'] = ! $request->boolean('published');
         unset($v['published']);
@@ -1561,9 +1607,29 @@ class ConfigController extends Controller
         return back()->with('success', __('messages.success.category_created'));
     }
 
+    /**
+     * A category could be added and never changed: a typo in its name, or a
+     * name in the wrong language, stayed for good.
+     */
+    public function updateKbCategory(Request $request, KbCategory $category)
+    {
+        $v = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'translations' => 'nullable|array',
+            'translations.*.name' => 'nullable|string|max:255',
+            'translations.*.description' => 'nullable|string',
+        ]);
+        $category->update(['name' => $v['name'], 'description' => $v['description'] ?? null]);
+        $this->saveKbTranslations($category->translations(), (array) ($v['translations'] ?? []), ['name' => 'name', 'description' => 'description']);
+
+        return back()->with('success', __('admin.knowledge_base.category_updated'));
+    }
+
     public function updateKbArticle(Request $request, KbArticle $article)
     {
         $article->update($this->validateKbArticle($request));
+        $this->saveKbTranslations($article->translations(), (array) $request->input('translations', []), ['title' => 'title', 'article' => 'article']);
 
         return back()->with('success', __('messages.success.article_updated'));
     }

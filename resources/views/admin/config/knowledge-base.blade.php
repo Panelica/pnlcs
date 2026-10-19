@@ -47,6 +47,24 @@
     @endif
 </div>
 
+@if(($categories ?? collect())->isNotEmpty())
+<div class="card" style="margin-top:15px;">
+    <div class="card-header"><strong>{{ __('admin.knowledge_base.categories') }}</strong></div>
+    <table class="data-table">
+        <thead><tr><th>{{ __('admin.knowledge_base.category_name') }}</th><th>{{ __('admin.knowledge_base.translations') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <tbody>
+        @foreach($categories as $cat)
+        <tr>
+            <td style="font-weight:600;">{{ $cat->name }}</td>
+            <td>{{ $cat->translations->pluck('language')->implode(', ') ?: '—' }}</td>
+            <td style="text-align:right;"><button type="button" onclick="openModal('edit-cat-{{ $loop->index }}')" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button></td>
+        </tr>
+        @endforeach
+        </tbody>
+    </table>
+</div>
+@endif
+
 <x-modal name="add-kb-cat" title="{{ __('admin.knowledge_base.add_kb_category') }}" maxWidth="sm">
     <form method="POST" action="{{ route('admin.config.knowledge-base.categories.store') }}">
         @csrf
@@ -72,6 +90,8 @@
             </select>
         </div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="article" rows="8" class="form-control" required></textarea></div>
+        @include('admin.config.partials.kb-translations', ['languages' => $translationLanguages ?? collect(), 'model' => null,
+            'fields' => ['title' => [__('common.form.title'), 'input'], 'article' => [__('admin.knowledge_base.content'), 'textarea']]])
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="checkbox" name="published" value="1" checked>
@@ -99,6 +119,8 @@
             </select>
         </div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.content') }}</label><textarea name="article" rows="8" class="form-control" required>{{ $art->article }}</textarea></div>
+        @include('admin.config.partials.kb-translations', ['languages' => $translationLanguages ?? collect(), 'model' => $art,
+            'fields' => ['title' => [__('common.form.title'), 'input'], 'article' => [__('admin.knowledge_base.content'), 'textarea']]])
         <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                 <input type="hidden" name="published" value="0">
@@ -108,6 +130,22 @@
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('edit-art-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
+        </div>
+    </form>
+</x-modal>
+@endforeach
+
+@foreach($categories ?? [] as $cat)
+<x-modal name="edit-cat-{{ $loop->index }}" title="{{ __('admin.knowledge_base.edit_category') }}" maxWidth="lg">
+    <form method="POST" action="{{ route('admin.config.knowledge-base.categories.update', $cat) }}">
+        @csrf @method('PUT')
+        <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category_name') }}</label><input type="text" name="name" value="{{ $cat->name }}" required class="form-control"></div>
+        <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="2" class="form-control">{{ $cat->description }}</textarea></div>
+        @include('admin.config.partials.kb-translations', ['languages' => $translationLanguages ?? collect(), 'model' => $cat,
+            'fields' => ['name' => [__('admin.knowledge_base.category_name'), 'input'], 'description' => [__('common.form.description'), 'textarea']]])
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+            <button type="button" onclick="closeModal('edit-cat-{{ $loop->index }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
         </div>
     </form>

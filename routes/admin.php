@@ -489,6 +489,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::middleware('admin.permission:manage_kb')->group(function () {
             Route::get('knowledge-base', [ConfigController::class, 'knowledgeBase'])->name('knowledge-base');
             Route::post('knowledge-base/categories', [ConfigController::class, 'storeKbCategory'])->name('knowledge-base.categories.store');
+            Route::put('knowledge-base/categories/{category}', [ConfigController::class, 'updateKbCategory'])->name('knowledge-base.categories.update');
             Route::post('knowledge-base/articles', [ConfigController::class, 'storeKbArticle'])->name('knowledge-base.articles.store');
             Route::put('knowledge-base/articles/{article}', [ConfigController::class, 'updateKbArticle'])->name('knowledge-base.articles.update');
             Route::delete('knowledge-base/articles/{article}', [ConfigController::class, 'destroyKbArticle'])->name('knowledge-base.articles.destroy');

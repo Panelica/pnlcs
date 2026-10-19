@@ -28,9 +28,11 @@ class KbController extends Controller
     {
         $categories = KbCategory::where('hidden', false)
             ->whereNull('parent_id')
-            ->with(['articles' => fn ($q) => $q->where('private', false)])
+            ->with(['articles' => fn ($q) => $q->where('private', false), 'articles.translations', 'translations'])
             ->orderBy('sort_order')
-            ->get();
+            ->get()
+            // In the visitor's language where a translation is written.
+            ->map(fn (KbCategory $c) => $c->inLocale());
 
         return view('client.kb.index', compact('categories'));
     }
@@ -40,6 +42,7 @@ class KbController extends Controller
         abort_if((bool) $article->private, 404);
 
         $article->increment('views');
+        $article = $article->load(['translations', 'category.translations'])->inLocale();
 
         return view('client.kb.show', compact('article'));
     }

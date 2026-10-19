@@ -1508,6 +1508,12 @@ return [
     'knowledge_base.uncategorized' => '未分类',
     'knowledge_base.uncategorized_option' => '— 未分类 —',
     'knowledge_base.views' => '浏览次数',
+    'knowledge_base.categories' => '分类',
+    'knowledge_base.edit_category' => '编辑分类',
+    'knowledge_base.category_updated' => '分类已更新。',
+    'knowledge_base.translations' => '翻译',
+    'knowledge_base.translations_hint' => '供其他语言的访客使用。标题留空则向他们显示上方的文本。',
+    'knowledge_base.translated' => '已翻译',
     'logs' => [
         'admin_user' => '管理员',
         'date_label' => '日期',
