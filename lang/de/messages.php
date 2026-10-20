@@ -18,6 +18,7 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
     ],
     'stripe' => [
         'processing' => 'Wird verarbeitet…',
+        'save_card' => 'Diese Karte speichern und meine künftigen Rechnungen automatisch damit bezahlen. Ich kann das auf der Seite Zahlungsmethoden abschalten oder die Karte entfernen.',
     ],
     'iyzico' => [
         'page_title' => 'Sichere Zahlung',

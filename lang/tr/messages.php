@@ -18,6 +18,7 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     ],
     'stripe' => [
         'processing' => 'İşleniyor…',
+        'save_card' => 'Bu kartı sakla ve sonraki faturalarımı bu karttan otomatik öde. Bunu ödeme yöntemleri sayfasından kapatabilir ya da kartı kaldırabilirim.',
     ],
     'iyzico' => [
         'page_title' => 'Güvenli ödeme',

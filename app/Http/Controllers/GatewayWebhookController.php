@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ChargeAttemptState;
+use App\Models\ActivityLog;
 use App\Models\Invoice;
 use App\Models\InvoiceChargeAttempt;
 use App\Services\Module\ModuleRegistry;
@@ -116,7 +117,12 @@ class GatewayWebhookController extends Controller
         // No currency override: the module charges in the currency the shop
         // sells in. A hard-coded "usd" here once charged a GBP shop's
         // customers in dollars while the module's own test stayed green.
-        $result = $module->capture($invoice, $invoice->amountDue());
+        //
+        // "Keep this card" is honoured only while automatic payment is on:
+        // that is the only thing a stored card is for, and the card-add page
+        // is closed for the same reason when it is off.
+        $params = AutoCharge::enabled() && $request->boolean("save_card") ? ["save_card" => true] : [];
+        $result = $module->capture($invoice, $invoice->amountDue(), $params);
         return response()->json($result);
     }
 
@@ -211,6 +217,25 @@ class GatewayWebhookController extends Controller
         }
 
         $this->recordTransaction($invoice, "stripe", $verified["transaction_id"] ?? $paymentIntentId, (float) ($verified["amount"] ?? $invoice->total));
+
+        // The tick on the pay form is the customer's agreement to be charged
+        // automatically, recorded the way the card-add page records its own:
+        // in the client's file, with the moment and the address it came from.
+        // An account that had switched automatic payment off has just switched
+        // it back on, in writing.
+        if (($verified["card_saved"] ?? false) === true && ($client = $invoice->client)) {
+            ActivityLog::log(
+                "Client #{$client->id} stored the card that paid invoice #{$invoice->id} with stripe and agreed to automatic payment of their invoices",
+                $client->display_name ?: ('client #'.$client->id),
+                $client->id,
+            );
+
+            if (! $client->auto_charge) {
+                $client->update(["auto_charge" => true]);
+            }
+
+            session()->flash("success", __("client.payment_methods.card_stored"));
+        }
 
         return response()->json([
             "success"      => true,
