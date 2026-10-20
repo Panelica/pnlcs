@@ -155,16 +155,21 @@ function localeValues(string $locale): array
 // Version, Zone, Apps, Subdomain(s); Polish Host, Min, ":value RAM"; Chinese
 // CPU and the "my-blog" example. Each one is named in
 // database/data/same_as_english.php.
+// Raised 2026-10-20 by exactly these, from the admin reports' words
+// (lang/*/reports.php), written the same in English: ID in every language;
+// Turkish Net; German Code, Domain, Limit (MB), Registrar, Server, Status,
+// Support, Tag, Tickets; Polish Limit (MB), Status, Tag. Each one is named in
+// database/data/same_as_english.php.
 const UNTRANSLATED_VALUE_BUDGET = [
-    'tr' => 50,
+    'tr' => 51,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
     // German hosting writes Domain, Domains and Registrar, not Domäne or
     // Standesbeamter. Those 25 labels are the whole of the raise.
-    'de' => 170,
-    'pl' => 93,
-    'zh' => 34,
+    'de' => 180,
+    'pl' => 97,
+    'zh' => 35,
 ];
 
 test('a complete language is translated, not merely present', function () {

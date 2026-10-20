@@ -1,11 +1,11 @@
 @extends("admin.layouts.app")
-@section("title", $title)
+@section("title", report_text($title))
 @section("content")
 
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
     <div>
-        <h4 style="margin:0;">{{ $title }}</h4>
-        <p style="font-size:13px;color:var(--pn-muted);margin:4px 0 0;">{{ $description ?? '' }}</p>
+        <h4 style="margin:0;">{{ report_text($title) }}</h4>
+        <p style="font-size:13px;color:var(--pn-muted);margin:4px 0 0;">{{ report_text($description ?? '') }}</p>
     </div>
     <div style="display:flex;gap:8px;">
         @if($canExport && count($rows) > 0)
@@ -39,7 +39,7 @@
             <thead>
                 <tr>
                     @foreach($columns as $col)
-                    <th style="padding:10px 14px;background:var(--pn-primary);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">{{ $col }}</th>
+                    <th style="padding:10px 14px;background:var(--pn-primary);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;">{{ report_text($col) }}</th>
                     @endforeach
                 </tr>
             </thead>
@@ -47,12 +47,13 @@
                 @foreach($rows as $row)
                 <tr>
                     @php $values = is_object($row) ? array_values((array)$row) : array_values($row); @endphp
-                    @foreach($values as $val)
+                    @foreach($values as $i => $val)
                     <td style="padding:8px 14px;border-bottom:1px solid var(--pn-border);white-space:nowrap;">
                         @if(is_numeric($val) && $val > 100 && !str_contains((string)$val, '-'))
                             {{ number_format((float)$val, 2) }}
                         @else
-                            {{ $val }}
+                            {{-- Only a label the report wrote itself (a metric's name, a status word), never a name or a tag. --}}
+                            {{ is_string($val) && in_array($columns[$i] ?? '', ['Metric', 'Status'], true) ? report_text($val) : $val }}
                         @endif
                     </td>
                     @endforeach
@@ -64,7 +65,7 @@
                 <tr style="font-weight:700;background:var(--pn-body-bg);">
                     @foreach($totals as $t)
                     <td style="padding:10px 14px;border-top:2px solid var(--pn-border);">
-                        @if(is_numeric($t) && $t > 100){{ number_format((float)$t, 2) }}@else{{ $t }}@endif
+                        @if(is_numeric($t) && $t > 100){{ number_format((float)$t, 2) }}@else{{ is_string($t) ? report_text($t) : $t }}@endif
                     </td>
                     @endforeach
                 </tr>

@@ -83,6 +83,24 @@ if (! function_exists('status_label')) {
         return ucfirst(str_replace(['_', '-'], ' ', $status));
     }
 }
+if (! function_exists('report_text')) {
+    /**
+     * A report's title, description, category or column name in the admin's
+     * language.
+     *
+     * Report classes return English words, and a report's URL is made from its
+     * title, so they stay as they are; the word is looked up in reports.* at
+     * the point it is shown. A word with no translation (a third-party report)
+     * is shown as written.
+     */
+    function report_text(mixed $text): string
+    {
+        $text = (string) $text;
+        $key = trim((string) preg_replace('/[^a-z0-9]+/', '_', strtolower($text)), '_');
+
+        return $key !== '' && Lang::has('reports.'.$key) ? Lang::get('reports.'.$key) : $text;
+    }
+}
 if (! function_exists('invoice_status_label')) {
     /**
      * An invoice status key as the customer-facing label.

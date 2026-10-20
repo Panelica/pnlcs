@@ -68,7 +68,7 @@ class ReportController extends Controller
 
         return response()->streamDownload(function () use ($columns, $rows) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, array_map('csv_cell', $columns));
+            fputcsv($handle, array_map(fn ($c) => csv_cell(report_text($c)), $columns));
             foreach ($rows as $row) {
                 $rowArray = is_object($row) ? (array) $row : $row;
                 fputcsv($handle, array_map('csv_cell', array_values($rowArray)));
