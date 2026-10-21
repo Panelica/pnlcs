@@ -2,6 +2,61 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.6.0 — 2026-10-21
+
+The stable release, offered to every installation. It contains everything in
+1.5.1-beta.1, 1.6.0-beta.1, 1.6.0-beta.2 and 1.6.0-beta.3 (below), and the
+changes listed here, which were made after 1.6.0-beta.3. There is no 1.5.1:
+its fixes are in this release.
+
+### Changed
+
+- **The Panelica Licenses page is "Panelica" in the admin menu.** Not yet
+  connected, the page explains how selling works and starts where somebody
+  without a partner key starts: **Apply to become a partner** opens the
+  partner application at Panelica; once approved, you create an API key in
+  the partner portal and connect it under **Already a Panelica partner?**.
+  See [Sell Panelica Licenses](docs/guides/sell-panelica-licenses.md).
+
+### Fixed
+
+- **A customer can change their email address on My Profile again.** Typing
+  a new address never opened the current password field, and the field could
+  not be typed into, so the change could not be saved; broken since 1.3.0
+  (#210). Thank you, [@dualarrow](https://github.com/dualarrow), for the
+  clear report.
+- **Add funds** shows the amount in the shop's currency while the customer
+  types; the conversion never ran since it was added in 1.3.0.
+
+### Security
+
+- **A refused new password no longer changes the sign-in address.** When a
+  customer changed their email address and set a password they had used
+  recently in the same save, the password was refused but the new address
+  was kept, without asking the new address to be verified and without
+  telling the old one. Nothing is saved now until every check has passed.
+
+### Database changes
+
+None besides those of the betas below.
+
+### For theme and module authors
+
+- A view that extends a layout keeps everything inside its sections. Markup
+  written after the last `@endsection` is printed before the layout's
+  `<!DOCTYPE html>`: the page opens in quirks mode and its scripts run before
+  the page exists. A test now checks the core, theme and module views.
+
+### Views a theme may override that changed
+
+- `resources/views/client/account/profile.blade.php` (its scripts are in the
+  `scripts` section). A theme with its own copy of this view should move the
+  scripts after `@endsection` into `@section("scripts")`, or its customers
+  cannot change their email address.
+- `resources/views/client/funds/index.blade.php` (the same).
+- `resources/views/admin/panelica-licenses/index.blade.php` (the partner
+  application comes first when no partner account is connected).
+
 ## 1.6.0-beta.3 — 2026-10-21
 
 A beta: offered only to installations on the **beta** channel (**Setup →
