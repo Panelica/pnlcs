@@ -44,7 +44,7 @@ Credentials and options stay on each type's own page:
 
 | Type | Modules |
 |---|---|
-| Servers | Panelica, cPanel, Plesk, DirectAdmin, HestiaCP, Proxmox, Vultr, Custom |
+| Servers | Panelica, Panelica Licenses ([guide](sell-panelica-licenses.md)), cPanel, Plesk, DirectAdmin, HestiaCP, Proxmox, Vultr, Custom |
 | Payment gateways | Stripe, PayPal, Authorize.Net, Mollie, Razorpay, Tpay, iyzico, Bank Transfer |
 | Registrars | Namecheap, ResellerClub, OpenProvider, Enom, HRD, DomainNameAPI, Manual |
 | SSL | GoGetSSL |

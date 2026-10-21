@@ -48,6 +48,8 @@ class ModuleServiceProvider extends ServiceProvider
             $registry->registerServer("aapanel", \Modules\Servers\AaPanel\AaPanelModule::class);
             // Vultr VPS module
             $registry->registerServer("vultr", \Modules\Servers\Vultr\VultrModule::class);
+            // Panelica licenses, sold with a Panelica partner account
+            $registry->registerServer('panelicalicense', \Modules\Servers\PanelicaLicense\PanelicaLicenseModule::class);
 
             // Namecheap Registrar
             $registry->registerRegistrar("namecheap", \Modules\Registrars\Namecheap\NamecheapRegistrar::class);

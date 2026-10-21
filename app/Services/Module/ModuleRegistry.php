@@ -35,6 +35,7 @@ class ModuleRegistry
         'hestiacp' => 'HestiaCP',
         'proxmox' => 'Proxmox VE',
         'gogetssl' => 'GoGetSSL',
+        'panelicalicense' => 'Panelica Licenses',
     ];
 
     /** The interface each module type must implement, keyed by manifest type. */
@@ -230,7 +231,7 @@ class ModuleRegistry
     public function serverCredentialRequirement(?string $type): string
     {
         return match (self::key((string) $type)) {
-            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr', 'aapanel' => 'token',
+            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr', 'aapanel', 'panelicalicense' => 'token',
             'directadmin', 'hestiacp' => 'either',
             default => 'none',
         };

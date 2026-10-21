@@ -90,6 +90,7 @@ nav:
       - Modules: guides/modules.md
       - Sell Domains: guides/sell-domains.md
       - Sell Docker Apps: guides/sell-docker-apps.md
+      - Sell Panelica Licenses: guides/sell-panelica-licenses.md
       - Sell VPS on Proxmox VE:
           - Overview: guides/sell-vps-on-proxmox.md
           - 1. Prepare Proxmox: guides/proxmox/prepare-proxmox.md

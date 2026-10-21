@@ -7,6 +7,7 @@ return [
     App\Providers\AddonServiceProvider::class,
     Modules\Ksef\KsefServiceProvider::class,
     Modules\CompanyLookup\CompanyLookupServiceProvider::class,
+    Modules\Servers\PanelicaLicense\PanelicaLicenseServiceProvider::class,
     App\Providers\MailConfigProvider::class,
     App\Providers\EventServiceProvider::class,
     App\Providers\HookServiceProvider::class,

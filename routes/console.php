@@ -95,6 +95,10 @@ Schedule::command('pnlcs:proxmox-tasks')->everyMinute()->withoutOverlapping(10);
 // Module queue — retry failed provisioning actions every 5 minutes
 Schedule::command('pnlcs:module-queue')->everyFiveMinutes()->withoutOverlapping();
 
+// Panelica licenses: find the servers customers installed with their link and
+// buy the license (nothing to do, one query, while no service is waiting).
+Schedule::command('pnlcs:panelica-licenses')->everyFiveMinutes()->withoutOverlapping(10);
+
 // Support mailbox import (IMAP/POP3 → tickets) — every 5 minutes
 Schedule::command('pnlcs:mail-import')->everyFiveMinutes()->withoutOverlapping();
 
