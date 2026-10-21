@@ -751,6 +751,8 @@ return [
 		'unpaid' => 'No pagado',
 		'unpaid_invoices' => 'Facturas impagas',
 		'view_search' => 'Ver/Buscar Clientes',
+		'login_email_taken' => 'Otro cliente ya inicia sesión con esta dirección de correo electrónico.',
+		'updated_login_moved' => 'Cliente actualizado. El cliente ahora inicia sesión con :email; se ha pedido a esa dirección que se confirme y se ha avisado a la anterior.',
 	],
 	'clients.action' => 'Acción',
 	'clients.active' => 'Activo',

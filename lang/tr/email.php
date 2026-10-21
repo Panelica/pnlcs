@@ -321,5 +321,7 @@ return [
         'changed' => 'Hesabınıza giriş için kullanılan e-posta adresi :old adresinden :new adresine değiştirildi.',
         'how' => 'Değişiklik açık bir oturumdan yapıldı ve hesap parolasıyla onaylandı.',
         'not_you' => 'Bu değişikliği siz yapmadıysanız hemen bizimle iletişime geçin: değişikliği yapan kişi artık bu hesabın parola sıfırlama bağlantılarını alabilir.',
+        'how_staff' => 'Değişiklik hesabınızda ekibimiz tarafından yapıldı.',
+        'not_you_staff' => 'Bu değişikliği siz istemediyseniz hemen bizimle iletişime geçin.',
     ],
 ];

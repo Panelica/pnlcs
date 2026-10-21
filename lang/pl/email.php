@@ -322,5 +322,7 @@ return [
         'changed' => 'Adres używany do logowania na Twoje konto został zmieniony z :old na :new.',
         'how' => 'Zmiany dokonano w zalogowanej sesji i potwierdzono hasłem do konta.',
         'not_you' => 'Jeśli to nie Ty, skontaktuj się z nami natychmiast — osoba, która dokonała zmiany, może teraz otrzymywać linki do resetowania hasła do tego konta.',
+        'how_staff' => 'Zmiany na Twoim koncie dokonał nasz zespół.',
+        'not_you_staff' => 'Jeśli nie prosiłeś o tę zmianę, skontaktuj się z nami natychmiast.',
     ],
 ];

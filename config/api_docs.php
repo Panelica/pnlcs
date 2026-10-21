@@ -390,7 +390,7 @@ return [
             '*clientid' => ['integer', 'The client.'],
             'firstname' => ['string', 'Cannot be empty.'],
             'lastname' => ['string', 'Cannot be empty.'],
-            'email' => ['email', 'Must not belong to another client.'],
+            'email' => ['email', 'Must not belong to another client. The login that signed in with the old address moves with it.'],
             'companyname' => ['string', 'Company name.'],
             'address1' => ['string', 'Street address.'],
             'city' => ['string', 'City.'],
@@ -401,8 +401,8 @@ return [
             'status' => ['string', 'active, inactive or closed.'],
         ],
         'returns' => ['clientid' => 'integer'],
-        'errors' => [404 => 'No such client.'],
-        'notes' => 'Only the fields you send are changed.',
+        'errors' => [404 => 'No such client.', 422 => 'The address belongs to another client, or another login already signs in with it; or an unknown status.'],
+        'notes' => 'Only the fields you send are changed. A new email address is the account\'s sign-in address too: the login that signed in with the old address moves to the new one, which is asked to confirm itself, and the old address is told. Other logins on the account keep their own address.',
     ],
     'deleteclient' => [
         'section' => 'clients',
@@ -521,6 +521,7 @@ return [
         ],
         'returns' => ['userid' => 'integer'],
         'errors' => [404 => 'No such login.'],
+        'notes' => 'A new email address is asked to confirm itself, and the old address is told that the sign-in address changed.',
     ],
     'deleteuserclient' => [
         'section' => 'clients',

@@ -577,15 +577,38 @@ class ClientController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        // An optional new login password (blank leaves it unchanged).
-        if (! empty($validated['password'])) {
-            $this->setClientPassword($client, $validated['password']);
+        // The customer who signs in with the account's address moves with it
+        // (#210). Checked before anything is saved: another login already on
+        // the new address would make the move fail half way. A password for an
+        // account with no login yet opens one on the new address, so that
+        // address must be free too.
+        $login = \App\Services\ClientLoginEmail::loginToMove($client, (string) $client->email, $validated['email']);
+        $opensLogin = ! empty($validated['password']) && ! $client->users()->exists();
+        if (($login && \App\Services\ClientLoginEmail::takenByAnother($login, $validated['email']))
+            || ($opensLogin && User::where('email', $validated['email'])->exists())) {
+            return back()->withInput($request->except(['password', 'password_confirmation']))
+                ->withErrors(['email' => __('admin.clients.login_email_taken')]);
         }
 
+        $password = $validated['password'] ?? null;
         unset($validated['password'], $validated['password_confirmation']);
 
         $client->update($validated);
         $this->saveCustomFieldValues($client, $request);
+
+        // An optional new login password (blank leaves it unchanged). After the
+        // update: a login opened here takes the account's new address, not the
+        // one it had before this save.
+        if (! empty($password)) {
+            $this->setClientPassword($client, $password);
+        }
+
+        if ($login) {
+            \App\Services\ClientLoginEmail::move($login, $validated['email']);
+
+            return redirect()->route('admin.clients.show', $client)
+                ->with('success', __('admin.clients.updated_login_moved', ['email' => $validated['email']]));
+        }
 
         return redirect()->route('admin.clients.show', $client)->with('success', __('messages.success.client_updated'));
     }

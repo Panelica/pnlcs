@@ -321,5 +321,7 @@ return [
         'changed' => 'La dirección que usa para iniciar sesión en su cuenta se ha cambiado de :old a :new.',
         'how' => 'El cambio se hizo desde una sesión iniciada y se confirmó con la contraseña de la cuenta.',
         'not_you' => 'Si no fue usted, contacte con nosotros de inmediato. Quien haya hecho el cambio podrá recibir los enlaces para restablecer la contraseña de la cuenta.',
+        'how_staff' => 'El cambio lo hizo nuestro equipo en su cuenta.',
+        'not_you_staff' => 'Si usted no pidió este cambio, contacte con nosotros de inmediato.',
     ],
 ];

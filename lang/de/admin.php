@@ -751,6 +751,8 @@ return [
         'unpaid' => 'Unbezahlt',
         'unpaid_invoices' => 'Unbezahlte Rechnungen',
         'view_search' => 'Kunden anzeigen/suchen',
+        'login_email_taken' => 'Mit dieser E-Mail-Adresse meldet sich bereits ein anderer Kunde an.',
+        'updated_login_moved' => 'Kunde aktualisiert. Der Kunde meldet sich jetzt mit :email an; diese Adresse wurde um Bestätigung gebeten und die bisherige wurde informiert.',
     ],
     'clients.action' => 'Aktion',
     'clients.active' => 'Aktiv',

@@ -796,7 +796,7 @@ Update an existing client's details.
 | `clientid` | integer | yes | The client. |
 | `firstname` | string | no | Cannot be empty. |
 | `lastname` | string | no | Cannot be empty. |
-| `email` | email | no | Must not belong to another client. |
+| `email` | email | no | Must not belong to another client. The login that signed in with the old address moves with it. |
 | `companyname` | string | no | Company name. |
 | `address1` | string | no | Street address. |
 | `city` | string | no | City. |
@@ -818,9 +818,10 @@ Update an existing client's details.
 | Status | When |
 |---|---|
 | 404 | No such client. |
+| 422 | The address belongs to another client, or another login already signs in with it; or an unknown status. |
 
 !!! note
-    Only the fields you send are changed.
+    Only the fields you send are changed. A new email address is the account's sign-in address too: the login that signed in with the old address moves to the new one, which is asked to confirm itself, and the old address is told. Other logins on the account keep their own address.
 
 **Example**
 
@@ -900,6 +901,9 @@ Update a client-area login.
 | Status | When |
 |---|---|
 | 404 | No such login. |
+
+!!! note
+    A new email address is asked to confirm itself, and the old address is told that the sign-in address changed.
 
 **Example**
 

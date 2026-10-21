@@ -321,5 +321,7 @@ return [
         'changed' => 'Die Adresse, mit der Sie sich bei Ihrem Konto anmelden, wurde von :old in :new geändert.',
         'how' => 'Die Änderung wurde in einer angemeldeten Sitzung vorgenommen und mit dem Kontopasswort bestätigt.',
         'not_you' => 'Wenn Sie das nicht waren, wenden Sie sich sofort an uns – wer die Änderung vorgenommen hat, kann jetzt Links zum Zurücksetzen des Passworts für das Konto erhalten.',
+        'how_staff' => 'Die Änderung wurde von unserem Team an Ihrem Konto vorgenommen.',
+        'not_you_staff' => 'Wenn Sie diese Änderung nicht veranlasst haben, wenden Sie sich sofort an uns.',
     ],
 ];

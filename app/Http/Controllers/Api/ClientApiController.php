@@ -12,6 +12,7 @@ use App\Models\Credit;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\ClientLoginEmail;
 
 class ClientApiController extends BaseApiController
 {
@@ -128,12 +129,24 @@ class ClientApiController extends BaseApiController
             'country' => 'sometimes|nullable|string|size:2',
         ]);
 
+        // The login that signs in with the account's address moves with it,
+        // as on the admin screen (#210); refused before anything is saved when
+        // somebody else already signs in with the new address.
+        $login = $request->has('email') ? ClientLoginEmail::loginToMove($client, (string) $client->email, (string) $request->email) : null;
+        if ($login && ClientLoginEmail::takenByAnother($login, (string) $request->email)) {
+            return $this->error('Another login already uses this email address.', 422);
+        }
+
         foreach (['first_name' => 'firstname', 'last_name' => 'lastname', 'email' => 'email', 'company_name' => 'companyname', 'address1' => 'address1', 'city' => 'city', 'state' => 'state', 'postcode' => 'postcode', 'country' => 'country', 'phone_number' => 'phonenumber', 'status' => 'status'] as $db => $api) {
             if ($request->has($api)) {
                 $client->$db = $request->$api;
             }
         }
         $client->save();
+
+        if ($login) {
+            ClientLoginEmail::move($login, (string) $request->email);
+        }
 
         return $this->success(['clientid' => $client->id]);
     }
@@ -312,7 +325,7 @@ class ClientApiController extends BaseApiController
             'last_name' => 'sometimes|required|string|max:255',
             'password' => 'sometimes|nullable|string|min:8',
         ]);
-        foreach (['email', 'first_name', 'last_name'] as $f) {
+        foreach (['first_name', 'last_name'] as $f) {
             if ($request->has($f)) {
                 $user->$f = $request->$f;
             }
@@ -321,6 +334,17 @@ class ClientApiController extends BaseApiController
             $user->password = bcrypt($request->password);
         }
         $user->save();
+
+        // A new sign-in address is treated as everywhere else: it proves itself
+        // before it is trusted, and the address losing the login is told. It
+        // used to change with neither.
+        if ($request->has('email')) {
+            if (strcasecmp((string) $request->email, (string) $user->email) !== 0) {
+                ClientLoginEmail::move($user, (string) $request->email);
+            } else {
+                $user->forceFill(['email' => $request->email])->save();
+            }
+        }
 
         return $this->success(['userid' => $user->id]);
     }

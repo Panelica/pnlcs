@@ -742,6 +742,8 @@ return [
         'unpaid' => 'Ödenmemiş',
         'unpaid_invoices' => 'Ödenmemiş Faturalar',
         'view_search' => 'Müşterileri Görüntüle/Ara',
+        'login_email_taken' => 'Bu e-posta adresiyle zaten başka bir müşteri giriş yapıyor.',
+        'updated_login_moved' => 'Müşteri güncellendi. Müşteri artık :email ile giriş yapıyor; bu adresten onay istendi ve önceki adrese bilgi verildi.',
     ],
     'clients.action' => 'İşlem',
     'clients.active' => 'Aktif',

@@ -6885,7 +6885,7 @@
                 "tags": [
                     "Clients"
                 ],
-                "description": "Only the fields you send are changed. Permission: edit_clients.",
+                "description": "Only the fields you send are changed. A new email address is the account's sign-in address too: the login that signed in with the old address moves to the new one, which is asked to confirm itself, and the old address is told. Other logins on the account keep their own address. Permission: edit_clients.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -6914,6 +6914,16 @@
                     },
                     "404": {
                         "description": "No such client.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "The address belongs to another client, or another login already signs in with it; or an unknown status.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -7667,7 +7677,7 @@
                 "tags": [
                     "Clients"
                 ],
-                "description": "Permission: edit_clients.",
+                "description": "A new email address is asked to confirm itself, and the old address is told that the sign-in address changed. Permission: edit_clients.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -9623,7 +9633,7 @@
                     "email": {
                         "type": "string",
                         "format": "email",
-                        "description": "Must not belong to another client."
+                        "description": "Must not belong to another client. The login that signed in with the old address moves with it."
                     },
                     "companyname": {
                         "type": "string",

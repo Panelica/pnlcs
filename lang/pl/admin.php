@@ -751,6 +751,8 @@ return [
         'unpaid' => 'Nieopłacone',
         'unpaid_invoices' => 'Nieopłacone faktury',
         'view_search' => 'Podgląd/wyszukiwanie klientów',
+        'login_email_taken' => 'Inny klient loguje się już tym adresem e-mail.',
+        'updated_login_moved' => 'Klient zaktualizowany. Klient loguje się teraz adresem :email; poproszono ten adres o potwierdzenie, a poprzedni adres został powiadomiony.',
     ],
     'clients.action' => 'Akcja',
     'clients.active' => 'Aktywny',

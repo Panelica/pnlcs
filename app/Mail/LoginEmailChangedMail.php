@@ -24,7 +24,10 @@ class LoginEmailChangedMail extends Mailable implements ShouldQueue
 
     public function __construct(
         public string $previousEmail,
-        public string $newEmail
+        public string $newEmail,
+        // Changed by staff on the account (#210), not by the customer with
+        // their password: the mail says so.
+        public bool $byStaff = false,
     ) {
         $this->localizeTo($this->newEmail);
     }
@@ -41,6 +44,7 @@ class LoginEmailChangedMail extends Mailable implements ShouldQueue
             with: [
                 'previousEmail' => $this->previousEmail,
                 'newEmail' => $this->newEmail,
+                'byStaff' => $this->byStaff,
                 'companyName' => company_name(),
             ],
         );

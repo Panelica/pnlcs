@@ -13,6 +13,23 @@ person who signs in to the client area. They are separate on purpose:
 The login that opened the account (by registering, or created with the
 account) is its **owner**. The owner can do everything, always.
 
+## Changing the email address
+
+A customer changes the address they sign in with on **My Profile**, confirmed
+with their current password; the account's address changes with it.
+
+When you change an account's email address on its edit page (or with the
+API's [updateclient](../api/clients.md#updateclient)), the login that signed in
+with the old address moves to the new one, so the customer signs in with the
+address you entered. Either way:
+
+- the new address is asked to confirm itself, as at sign-up;
+- the old address is told that the sign-in address changed;
+- a login on another address (an invited accountant, a login imported from
+  WHMCS with its own address) keeps it;
+- an address another login already signs in with is refused, and nothing is
+  changed.
+
 ## Other logins and what they may do
 
 Each other login on an account has a set of **permissions**. A login without a

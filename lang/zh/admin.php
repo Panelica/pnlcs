@@ -751,6 +751,8 @@ return [
         'unpaid' => '未付款',
         'unpaid_invoices' => '未付款发票',
         'view_search' => '查看/搜索客户',
+        'login_email_taken' => '已有其他客户使用此电子邮件地址登录。',
+        'updated_login_moved' => '客户已更新。客户现在使用 :email 登录；已请求该地址确认，并已通知之前的地址。',
     ],
     'clients.action' => '操作',
     'clients.active' => '已启用',

@@ -5,9 +5,9 @@
 
 <p>{{ __('email.login_email_changed.changed', ['old' => $previousEmail, 'new' => $newEmail]) }}</p>
 
-<p>{{ __('email.login_email_changed.how') }}</p>
+<p>{{ ($byStaff ?? false) ? __('email.login_email_changed.how_staff') : __('email.login_email_changed.how') }}</p>
 
-<p style="font-size:13px;color:#666;">{{ __('email.login_email_changed.not_you') }}</p>
+<p style="font-size:13px;color:#666;">{{ ($byStaff ?? false) ? __('email.login_email_changed.not_you_staff') : __('email.login_email_changed.not_you') }}</p>
 
 <p style="color:#888;font-size:12px;margin-top:30px;">{{ $companyName }}</p>
 </body></html>

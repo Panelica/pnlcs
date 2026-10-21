@@ -751,6 +751,8 @@ return [
         'unpaid' => 'Unpaid',
         'unpaid_invoices' => 'Unpaid Invoices',
         'view_search' => 'View/Search Clients',
+        'login_email_taken' => 'Another customer already signs in with this email address.',
+        'updated_login_moved' => 'Client updated. The customer now signs in with :email; that address has been asked to confirm itself and the previous one has been told.',
     ],
     'clients.action' => 'Action',
     'clients.active' => 'Active',

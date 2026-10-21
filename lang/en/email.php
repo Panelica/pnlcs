@@ -322,5 +322,7 @@ return [
         'changed' => 'The address used to sign in to your account has been changed from :old to :new.',
         'how' => 'The change was made from a signed-in session and confirmed with the account password.',
         'not_you' => 'If this was not you, contact us straight away — whoever made the change can now receive password reset links for the account.',
+        'how_staff' => 'The change was made on your account by our staff.',
+        'not_you_staff' => 'If you did not ask for this change, contact us straight away.',
     ],
 ];
