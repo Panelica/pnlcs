@@ -94,9 +94,31 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // browser would be handed a secret that can no longer take the money.
         // Nothing is lost without one: an unconfirmed payment intent costs
         // nothing and expires on its own.
+        // The customer ticked "keep this card" on the pay form. The intent is
+        // then made for a Stripe customer with setup_future_usage, so the card
+        // that pays it stays attached and can pay the next invoice unattended:
+        // "Use off_session if your customer may or may not be present in your
+        // checkout flow" (https://docs.stripe.com/api/payment_intents/create,
+        // fetched 2026-10-20). The form has told the Payment Element the same,
+        // and Stripe refuses the confirm when the two differ, so a customer
+        // that cannot be made is a failed intent, not a quietly unsaved card.
+        $saving = [];
+        if (($params["save_card"] ?? false) === true) {
+            $customer = $invoice->client ? $this->resolveCustomer($invoice->client, $secretKey) : ["success" => false, "message" => "Invoice has no client."];
+            if (!($customer["success"] ?? false)) {
+                return ["success" => false, "message" => $customer["message"] ?? "Stripe customer could not be created."];
+            }
+            $saving = [
+                "customer"            => $customer["customer_id"],
+                "setup_future_usage"  => "off_session",
+                "metadata[client_id]" => $invoice->client_id,
+                "metadata[save_card]" => "1",
+            ];
+        }
+
         $response = Http::asForm()
             ->withToken($secretKey)
-            ->post("https://api.stripe.com/v1/payment_intents", [
+            ->post("https://api.stripe.com/v1/payment_intents", $saving + [
                 "amount"                      => $minorAmount,
                 "currency"                    => $currency,
                 "payment_method_types[]"      => "card",
@@ -559,10 +581,27 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         $reloadJs     = $js(__("client.invoices.payment_reload"));
         $invoiceUrl   = json_encode(url("/client/invoices/{$invoiceId}"), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
 
+        // "Keep this card for my next invoices", offered while automatic
+        // payment is on. Without it a card that paid by hand was gone
+        // afterwards, and the renewal it could have paid waited for the
+        // customer instead. Unticked by default: it is an agreement to be
+        // charged later, and an agreement is given, not assumed.
+        $saveHtml = "";
+        if (\App\Support\AutoCharge::enabled()) {
+            $saveLabel = htmlspecialchars(__("messages.stripe.save_card"), ENT_QUOTES, "UTF-8");
+            $saveHtml  = <<<SAVE
+    <div class="form-check mt-3">
+        <input class="form-check-input" type="checkbox" id="stripe-save-card" value="1">
+        <label class="form-check-label small" for="stripe-save-card">{$saveLabel}</label>
+    </div>
+SAVE;
+        }
+
         return <<<HTML
 <div class="my-3">
     <div id="stripe-card-element" class="form-control p-3" style="min-height:42px;"></div>
     <div id="stripe-card-errors" class="text-danger mt-1 small"></div>
+{$saveHtml}
     <button id="stripe-submit-btn" class="btn btn-primary mt-3 w-100" type="button">
         {$payHtml}
     </button>
@@ -590,6 +629,16 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
     card.on("change", function(e) {
         document.getElementById("stripe-card-errors").textContent = e.error ? e.error.message : "";
     });
+
+    // The element has to be told the card is being kept, or Stripe refuses
+    // the confirm: its setupFutureUsage must match the intent's. It also
+    // shows Stripe's own line about future charges while the box is ticked.
+    var save = document.getElementById("stripe-save-card");
+    if (save) {
+        save.addEventListener("change", function() {
+            elements.update({ setupFutureUsage: save.checked ? "off_session" : null });
+        });
+    }
 
     var taken = false;
 
@@ -636,7 +685,8 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
                 headers: {
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]") ? document.querySelector("meta[name=csrf-token]").content : ""
-                }
+                },
+                body: JSON.stringify({ save_card: !!(save && save.checked) })
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {
@@ -818,7 +868,7 @@ HTML;
             // Stripe's own figure, in Stripe's own units, read back through the
             // currency Stripe put on the intent it came from.
             "amount"         => $this->recordedAmount($intent),
-        ];
+        ] + ($this->keepPaidCard($intent) ? ["card_saved" => true] : []);
     }
 
     /**
@@ -2306,6 +2356,10 @@ HTML;
             "amount"     => $amount,
         ]);
 
+        // The browser's confirm normally stores the card first; this is for
+        // the customer who closed the tab before it ran.
+        $this->keepPaidCard($intentObj);
+
         return [
             "success"        => true,
             "transaction_id" => $intentId,
@@ -2416,7 +2470,91 @@ HTML;
             return ["success" => true, "message" => "Setup intent carried nothing to store."];
         }
 
-        $card    = $this->fetchCardDetails((string) $paymentMethodId);
+        $this->storeCard($clientId, (string) $paymentMethodId, $customerId, $this->fetchCardDetails((string) $paymentMethodId));
+
+        Log::info("Stripe webhook: card stored", [
+            "client"       => $clientId,
+            "setup_intent" => $setupIntent["id"] ?? null,
+        ]);
+
+        return [
+            "success"     => true,
+            "message"     => "Stored card confirmed.",
+            "gateway"     => "stripe",
+            "client_id"   => $clientId,
+            "customer_id" => $customerId,
+        ];
+    }
+
+    /**
+     * Keep the card that just paid an invoice, when the customer asked to.
+     *
+     * Only an intent this module made with "keep this card" ticked counts:
+     * capture() writes save_card and client_id into its metadata and attaches
+     * it to the client's Stripe customer, so an intent without them (an
+     * ordinary payment, an unattended charge of a card already stored) stores
+     * nothing. Both the confirm and the webhook come here, and the write is
+     * keyed on the card's token, so whichever arrives second changes nothing.
+     *
+     * A failure is logged and swallowed rather than thrown. The payment beside
+     * it is what matters on this path, and the card can still be added on the
+     * payment methods page; the customer must not be told their payment failed
+     * because the card could not be described.
+     */
+    private function keepPaidCard(array $intent): bool
+    {
+        $clientId        = (int) ($intent["metadata"]["client_id"] ?? 0);
+        $paymentMethod   = $intent["payment_method"] ?? null;
+        $paymentMethodId = is_array($paymentMethod) ? ($paymentMethod["id"] ?? null) : $paymentMethod;
+        $customerId      = $intent["customer"] ?? null;
+
+        if (($intent["metadata"]["save_card"] ?? null) !== "1" || !$clientId || !is_string($paymentMethodId) || $paymentMethodId === "" || !is_string($customerId) || $customerId === "") {
+            return false;
+        }
+
+        try {
+            $card = is_array($paymentMethod) ? $this->cardDetails($paymentMethod) : $this->fetchCardDetails($paymentMethodId);
+            $this->storeCard($clientId, $paymentMethodId, $customerId, $card);
+        } catch (\Throwable $e) {
+            Log::warning("Stripe: the card that paid could not be stored", [
+                "client"         => $clientId,
+                "intent"         => $intent["id"] ?? null,
+                "payment_method" => $paymentMethodId,
+                "error"          => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Write a card Stripe holds for a customer as this client's stored card.
+     *
+     * The one write behind a finished card setup and a payment that kept its
+     * card. A card paid with twice is a new token at Stripe each time, so the
+     * same card already on file (same brand, last four and expiry) is not
+     * written a second time; the token on file still charges it.
+     */
+    private function storeCard(int $clientId, string $paymentMethodId, ?string $customerId, array $card): void
+    {
+        if (isset($card["last4"], $card["exp_month"], $card["exp_year"])) {
+            $sameCard = PaymentMethod::where("client_id", $clientId)
+                ->where("gateway_name", "stripe")
+                ->where("remote_token", "!=", $paymentMethodId)
+                ->where("status", PaymentMethod::STATUS_ACTIVE)
+                ->where("last_four", $card["last4"])
+                ->where("exp_month", $card["exp_month"])
+                ->where("exp_year", $card["exp_year"])
+                ->when(isset($card["brand"]), fn ($query) => $query->where("card_brand", $card["brand"]))
+                ->exists();
+
+            if ($sameCard) {
+                return;
+            }
+        }
+
         $columns = $this->cardColumns($card) + [
             // 'cc' rather than 'card': it is what the monthly expiry alert
             // looks for, and a stored card whose owner is never warned it is
@@ -2430,14 +2568,16 @@ HTML;
             $columns["description"] = trim("Stripe " . ucfirst((string) $card["brand"]));
         }
 
-        // Nothing is caught around this on purpose. Stripe has the card either
-        // way, and swallowing a failed write leaves the customer with a card at
-        // Stripe that this system has no row for — the renewal it was stored
-        // for still fails, and nothing anywhere says why. A deadlock or a lost
-        // connection is a transient fault, so the honest answer is to let the
-        // delivery fail: the event stays claimed and unstamped, Stripe
-        // redelivers for up to three days (https://docs.stripe.com/webhooks),
-        // and the next delivery writes the row the first one could not.
+        // Nothing is caught around this on purpose; the card-setup webhook
+        // relies on it. Stripe has the card either way, and swallowing a
+        // failed write leaves the customer with a card at Stripe that this
+        // system has no row for — the renewal it was stored for still fails,
+        // and nothing anywhere says why. A deadlock or a lost connection is a
+        // transient fault, so the honest answer there is to let the delivery
+        // fail: the event stays claimed and unstamped, Stripe redelivers for up
+        // to three days (https://docs.stripe.com/webhooks), and the next
+        // delivery writes the row the first one could not. keepPaidCard()
+        // catches instead, because a payment rides on its delivery.
         $stored = PaymentMethod::updateOrCreate(
             [
                 "client_id"    => $clientId,
@@ -2463,19 +2603,6 @@ HTML;
         if (is_string($customerId) && $customerId !== "") {
             GatewayCustomer::remember("stripe", $clientId, $customerId);
         }
-
-        Log::info("Stripe webhook: card stored", [
-            "client"       => $clientId,
-            "setup_intent" => $setupIntent["id"] ?? null,
-        ]);
-
-        return [
-            "success"     => true,
-            "message"     => "Stored card confirmed.",
-            "gateway"     => "stripe",
-            "client_id"   => $clientId,
-            "customer_id" => $customerId,
-        ];
     }
 
     /**
