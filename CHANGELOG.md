@@ -2,6 +2,57 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.6.0-beta.3 — 2026-10-21
+
+A beta: offered only to installations on the **beta** channel (**Setup →
+Updates → Update channel**). It contains everything in 1.6.0-beta.2.
+
+### Added
+
+- **Your own install link on the Panelica Licenses page.** A general install
+  command at your own address (`curl -sSL https://<your site>/setup | bash`)
+  to publish on your website: it runs your Panelica partner install link
+  without showing it, and the server it installs is yours at Panelica. The
+  link's code at Panelica can be changed on the same page; the next install
+  uses the new code at once. See
+  [Sell Panelica Licenses](docs/guides/sell-panelica-licenses.md).
+- **Servers installed with your link** and **Your licenses at Panelica** on
+  the Panelica Licenses page: every server Central saw installed with your
+  link (whether it was tied to you, its license, the order it belongs to) and
+  every license of your partner account, sold from this site or not, with the
+  service here it belongs to.
+
+### Changed
+
+- **Sold from this site** is the new name of the Panelica Licenses page's list
+  of the licenses sold here, beside the new list of every license of the
+  partner account.
+
+### Fixed
+
+- **Check installs now** on the Panelica Licenses page no longer answers with
+  a server error.
+- **Switching the Panelica Licenses module off** under **Setup → Modules**
+  now hides its menu entry and page, stops the install commands and the
+  five-minute job. Before, the module kept working.
+
+### Database changes
+
+None.
+
+### For theme and module authors
+
+- `Modules\Servers\PanelicaLicense\PanelicaLicenseModule::enabled()` tells
+  whether the module is switched on.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/layouts/app.blade.php` (the Panelica Licenses menu
+  entry is left out while the module is switched off).
+- `resources/views/admin/panelica-licenses/index.blade.php` (receives `$link`,
+  `$generalCommand`, `$installs`, `$centralLicenses`, `$serviceByLicense` and
+  `$serviceByRef`).
+
 ## 1.6.0-beta.2 — 2026-10-21
 
 A beta: offered only to installations on the **beta** channel (**Setup →
