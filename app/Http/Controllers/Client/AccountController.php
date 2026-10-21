@@ -136,6 +136,15 @@ class AccountController extends Controller
             }
         }
 
+        // Before anything is saved: a new password refused here used to come
+        // after the new sign-in address was already stored, which then
+        // skipped its verification and the warning to the old address.
+        if ($changingPassword && \App\Support\PasswordHistory::isReused($user, $request->new_password)) {
+            return back()->withInput($request->except(['current_password', 'new_password', 'new_password_confirmation']))->withErrors([
+                'new_password' => __('client.password.recently_used', ['count' => \App\Support\PasswordHistory::KEEP]),
+            ]);
+        }
+
         $user->update([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -143,12 +152,6 @@ class AccountController extends Controller
         ]);
 
         if ($changingPassword) {
-            if (\App\Support\PasswordHistory::isReused($user, $request->new_password)) {
-                return back()->withErrors([
-                    'new_password' => __('client.password.recently_used', ['count' => \App\Support\PasswordHistory::KEEP]),
-                ]);
-            }
-
             $previousHash = (string) $user->password;
             $user->update(['password' => Hash::make($request->new_password)]);
             \App\Support\PasswordHistory::remember($user, $previousHash);

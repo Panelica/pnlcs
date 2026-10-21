@@ -202,6 +202,11 @@
 
 @endsection
 
+{{-- The page's scripts. Outside a section they were printed before the
+     layout's <!DOCTYPE>: the page opened in quirks mode and they ran before
+     the form existed, so the current password field never opened and stayed
+     read-only (#210). Both client layouts print the "scripts" section. --}}
+@section("scripts")
 {{--
      Musteri turu secimi. Alpine yerine duz JS: musteri paneli iskeletinde
      Alpine yuklu degil ve x-cloak ile gizlenen iki blok bir daha hic
@@ -311,3 +316,4 @@
     );
 })();
 </script>
+@endsection

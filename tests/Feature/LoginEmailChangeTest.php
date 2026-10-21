@@ -126,3 +126,31 @@ test('a new login address has to be verified again before it is trusted', functi
     expect($user->fresh()->email_verified_at)->toBeNull();
     Mail::assertSent(\App\Mail\EmailVerificationMail::class, fn ($m) => $m->hasTo('moved@example.test'));
 });
+
+test('a refused new password leaves the login address as it was, not changed without its checks', function () {
+    // The address was saved before the new password was looked at: a
+    // password refused as recently used still moved the account to the new
+    // address, with the old verification kept and the old address told
+    // nothing. Found while looking into #210.
+    Mail::fake();
+    $user = User::factory()->create([
+        'email' => 'owner@example.test',
+        'password' => Hash::make('Current-Passw0rd'),
+        'email_verified_at' => now(),
+    ]);
+    $client = Client::factory()->create(['email' => 'owner@example.test']);
+    $user->clients()->attach($client->id);
+
+    $this->actingAs($user)
+        ->put(route('client.account.update'), profileFields([
+            'email' => 'new@example.test',
+            'current_password' => 'Current-Passw0rd',
+            'new_password' => 'Current-Passw0rd',
+            'new_password_confirmation' => 'Current-Passw0rd',
+        ]))->assertSessionHasErrors('new_password');
+
+    expect($user->fresh()->email)->toBe('owner@example.test')
+        ->and($user->fresh()->email_verified_at)->not->toBeNull()
+        ->and($client->fresh()->email)->toBe('owner@example.test');
+    Mail::assertNothingSent();
+});

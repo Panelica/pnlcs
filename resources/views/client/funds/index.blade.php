@@ -122,6 +122,8 @@
     </div>
 </div>
 
+@endsection
+
 @section("scripts")
 <script>
 function setAmount(v, btn) {
@@ -131,9 +133,6 @@ function setAmount(v, btn) {
     btn.classList.add("selected");
 }
 </script>
-@endsection
-
-@endsection
 
 <script>
 (function () {
@@ -160,3 +159,4 @@ function setAmount(v, btn) {
     window.updateConversion();
 })();
 </script>
+@endsection
