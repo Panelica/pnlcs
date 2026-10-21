@@ -20,6 +20,7 @@ Es posible que el acceso a la API no funcione. Mientras no se pueda leer el sald
     'stripe' =>
     [
         'processing' => 'Procesando...',
+        'save_card' => 'Guardar esta tarjeta y pagar con ella automáticamente mis próximas facturas. Puedo desactivarlo o eliminar la tarjeta en la página de métodos de pago.',
     ],
     'iyzico' =>
     [
