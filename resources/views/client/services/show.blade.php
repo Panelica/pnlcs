@@ -144,6 +144,11 @@
 </div>
 @endif
 
+{{-- The service's module's own section (ModuleScreens::clientPanel). --}}
+@if(! empty($modulePanel))
+{{ $modulePanel }}
+@endif
+
 @if(!empty($vpsFeatures))
 @include('client.services.partials.vps')
 @endif
@@ -204,6 +209,7 @@
                 </form></span></li>
         </ul>
     </div>
+    @if($showServerDetails ?? true)
     <div class="sv-panel">
         <div class="sv-ph">{{ __('client.services.server_info') }}</div>
         <ul class="sv-dl">
@@ -216,6 +222,7 @@
             @endif
         </ul>
     </div>
+    @endif
 </div>
 
 @if($service->addons && $service->addons->count())

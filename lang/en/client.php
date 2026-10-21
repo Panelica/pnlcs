@@ -942,6 +942,7 @@ return [
     'services.cancellation_already_requested' => 'A cancellation has already been requested for this service.',
     'services.addon_cancel' => 'Cancel',
     'services.addon_cancel_confirm' => 'Cancel this addon? The service itself keeps running.',
+    'services.module_function_failed' => 'That did not work. Please try again in a moment, or contact support.',
     'services.addon_cancelled' => 'Addon cancelled. It will not be billed again.',
     'services.addon_order' => 'Order',
     'services.addon_ordered' => 'Addon ordered. It starts once the invoice is paid.',

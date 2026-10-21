@@ -966,6 +966,7 @@ return [
     'services.cancellation_already_requested' => 'Ya se ha solicitado una cancelación para este servicio.',
     'services.addon_cancel' => 'Cancelar',
     'services.addon_cancel_confirm' => '¿Cancelar este addon? El servicio en sí sigue funcionando.',
+    'services.module_function_failed' => 'No ha funcionado. Inténtelo de nuevo en un momento o póngase en contacto con soporte.',
     'services.addon_cancelled' => 'Addon canceló. No volverá a ser facturado.',
     'services.addon_order' => 'Orden',
     'services.addon_ordered' => 'Addon ordenó. Comienza una vez que se paga la factura.',

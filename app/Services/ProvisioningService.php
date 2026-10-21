@@ -211,6 +211,47 @@ class ProvisioningService
         }
     }
 
+    /**
+     * Buy the period the customer has just paid for at the service's vendor,
+     * for a module that sells something bought per period (renew()). Null when
+     * the module has no such thing to buy.
+     *
+     * A refusal goes to the retry queue: the customer has paid, and a vendor
+     * that said no for want of balance says yes once the balance is topped up.
+     * A later success does not settle an older entry, unlike the other
+     * actions: each paid period is bought once, so a period still waiting is
+     * not the same work as the one that just went through.
+     */
+    public function renewAccount(Service $service, bool $queueOnFail = true): ?array
+    {
+        $module = $this->getModuleForService($service);
+
+        if (! $module || ! method_exists($module, 'renew')) {
+            return null;
+        }
+
+        // A queued period for a service that has since ended is not bought.
+        if (in_array(strtolower((string) $service->status), [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value, 'fraud'], true)) {
+            return ['success' => true, 'message' => 'The service has ended; there is nothing to renew.'];
+        }
+
+        try {
+            $result = (array) $module->renew($service);
+        } catch (\Throwable $e) {
+            Log::error('ProvisioningService::renewAccount failed', [
+                'service_id' => $service->id,
+                'error' => $e->getMessage(),
+            ]);
+            $result = ['success' => false, 'message' => $e->getMessage()];
+        }
+
+        if (! ($result['success'] ?? false) && $queueOnFail) {
+            $this->enqueueRetry($service, 'renew', (string) ($result['message'] ?? 'Module renew failed'));
+        }
+
+        return $result;
+    }
+
     public function changePackage(Service $service, Product $newProduct): array
     {
         $module = $this->getModuleForService($service);

@@ -942,6 +942,7 @@ return [
     'services.cancellation_already_requested' => 'Dla tej usługi został już złożony wniosek o anulowanie.',
     'services.addon_cancel' => 'Anuluj',
     'services.addon_cancel_confirm' => 'Anulować ten moduł dodatkowy? Sama usługa pozostanie aktywna.',
+    'services.module_function_failed' => 'Nie udało się. Spróbuj ponownie za chwilę lub skontaktuj się z pomocą techniczną.',
     'services.addon_cancelled' => 'Moduł dodatkowy został anulowany. Nie będzie już obciążany opłatami.',
     'services.addon_order' => 'Zamów',
     'services.addon_ordered' => 'Moduł dodatkowy zamówiony. Zostanie uruchomiony po opłaceniu faktury.',

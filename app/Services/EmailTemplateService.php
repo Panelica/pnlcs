@@ -184,7 +184,11 @@ class EmailTemplateService
                     'service_product' => $model->product->name ?? '',
                     // The templates say {product_name}.
                     'product_name' => $model->product->name ?? '',
-                ],
+                ] + ($model instanceof \App\Models\Service
+                    // What the service's module has to say: a license key, an
+                    // install command. The fields above win a name clash.
+                    ? \App\Services\Module\ModuleScreens::for($model)->mergeFields()
+                    : []),
                 // An SSL order is not a shop order: it has no order number and
                 // no total, and reading those off it would put "#" and "0.00"
                 // into the customer's subject line.

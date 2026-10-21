@@ -941,6 +941,7 @@ return [
     'services.cancellation_already_requested' => 'Bu hizmet için zaten bir iptal talep edilmiştir.',
     'services.addon_cancel' => 'İptal Et',
     'services.addon_cancel_confirm' => 'Bu eklenti iptal edilsin mi? Hizmetin kendisi çalışmaya devam eder.',
+    'services.module_function_failed' => 'İşlem tamamlanamadı. Lütfen birazdan tekrar deneyin ya da destek ekibimize yazın.',
     'services.addon_cancelled' => 'Eklenti iptal edildi. Tekrar faturalandırılmayacak.',
     'services.addon_order' => 'Sipariş Ver',
     'services.addon_ordered' => 'Eklenti sipariş edildi. Fatura ödendiğinde başlayacak.',

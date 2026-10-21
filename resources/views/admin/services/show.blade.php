@@ -175,7 +175,10 @@
             {{-- Only while there is something to create. An active service with
                  an account already provisioned made this button a trap: pressing
                  it again just produced "domain already exists" errors. --}}
-            @unless(strtolower((string) $service->status) === 'active' && (string) $service->username !== '')
+            {{-- A module that knows (isProvisioned) answers for itself: a
+                 license has no username, so the old test kept offering Create
+                 on one that was already bought. --}}
+            @unless(($moduleScreen['provisioned'] ?? null) ?? (strtolower((string) $service->status) === 'active' && (string) $service->username !== ''))
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'create']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_create')))">
                 @csrf <button type="submit" class="btn btn-success btn-sm">{{ __('admin.services.create_account') }}</button>
             </form>
@@ -189,16 +192,27 @@
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'terminate']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_terminate')))">
                 @csrf <button type="submit" class="btn btn-danger btn-sm">{{ __('admin.services.terminate') }}</button>
             </form>
+            @if($moduleScreen['change_password'] ?? true)
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'changepassword']) }}" style="display:flex;gap:4px;">
                 @csrf
                 <input type="password" name="password" placeholder="{{ __('admin.services.new_password') }}" required minlength="6" class="form-control" style="width:150px;font-size:13px;">
                 <button type="submit" class="btn btn-default btn-sm">{{ __('admin.services.change_password') }}</button>
             </form>
+            @endif
+            @foreach(($moduleScreen['buttons'] ?? []) as $function => $label)
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, $function]) }}">
+                @csrf <button type="submit" class="btn btn-default btn-sm">{{ $label }}</button>
+            </form>
+            @endforeach
         </div>
         <p style="font-size:11px;color:#999;">{{ __('admin.services.module_label') }}: <span style="font-family:monospace;">{{ $service->product?->server_type }}</span></p>
         @endif
     </div>
 </div>
+
+@if(! empty($moduleScreen['panel']))
+<div style="margin-bottom:15px;">{{ $moduleScreen['panel'] }}</div>
+@endif
 
 @if(strtolower((string) ($service->server?->type ?? $service->product?->server_type)) === 'proxmox')
 @php $pveData = $service->module_data ?? []; @endphp

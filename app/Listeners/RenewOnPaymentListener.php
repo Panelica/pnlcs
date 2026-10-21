@@ -75,8 +75,8 @@ class RenewOnPaymentListener
      * unless that period is bought there too, and only after the customer has
      * paid. A server module that offers renew(Service): array is called here,
      * after the date has moved; WHMCS calls its modules' Renew the same way.
-     * A refusal is logged and raised (ModuleActionFailed) for staff: the
-     * customer has paid and the vendor side needs a person.
+     * A refusal is logged, raised (ModuleActionFailed) for staff and queued
+     * for another try: the customer has paid.
      */
     private function renewOnServer(Service $service): void
     {
@@ -84,15 +84,11 @@ class RenewOnPaymentListener
             return;
         }
 
-        $module = app(ProvisioningService::class)->resolveModule($service);
-        if (! $module || ! method_exists($module, 'renew')) {
+        // A refusal is raised (ModuleActionFailed) and queued for another try
+        // by ProvisioningService::renewAccount().
+        $result = app(ProvisioningService::class)->renewAccount($service);
+        if ($result === null) {
             return;
-        }
-
-        try {
-            $result = (array) $module->renew($service);
-        } catch (\Throwable $e) {
-            $result = ['success' => false, 'message' => $e->getMessage()];
         }
 
         if ($result['success'] ?? false) {
@@ -101,9 +97,7 @@ class RenewOnPaymentListener
             return;
         }
 
-        $error = (string) ($result['message'] ?? 'no reason given');
-        Log::error("RenewOnPayment: the module would not renew service #{$service->id}: {$error}");
-        run_hook('ModuleActionFailed', ['service' => $service, 'action' => 'renew', 'error' => $error]);
+        Log::error("RenewOnPayment: the module would not renew service #{$service->id}: ".($result['message'] ?? 'no reason given'));
     }
 
     /**

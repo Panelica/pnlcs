@@ -142,6 +142,9 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('services/{service}', [ServiceController::class, 'show'])->name('services.show');
         Route::get('services/{service}/login', [ServiceController::class, 'loginToPanel'])->name('services.login');
         Route::get('services/{service}/usage', [ServiceController::class, 'usage'])->name('services.usage');
+        // A button the service's module offers the customer (clientFunctions()).
+        Route::post('services/{service}/module/{function}', [ServiceController::class, 'moduleFunction'])
+            ->where('function', '[A-Za-z][A-Za-z0-9_]{0,63}')->middleware('throttle:10,1')->name('services.module-function');
         // Virtual servers (Proxmox): status and graphs are read often; the
         // rest changes the machine and is rate limited.
         Route::get('services/{service}/vps/status', [\App\Http\Controllers\Client\VpsController::class, 'status'])->middleware('throttle:60,1')->name('services.vps.status');

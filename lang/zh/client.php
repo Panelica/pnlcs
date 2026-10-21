@@ -941,6 +941,7 @@ return [
     'services.cancellation_already_requested' => '此服务已经提交过取消请求。',
     'services.addon_cancel' => '取消',
     'services.addon_cancel_confirm' => '确定取消此附加服务吗？主服务会继续运行。',
+    'services.module_function_failed' => '操作未成功。请稍后重试，或联系支持团队。',
     'services.addon_cancelled' => '附加服务已取消，不会再次计费。',
     'services.addon_order' => '订购',
     'services.addon_ordered' => '附加服务已订购，将在发票支付后启用。',

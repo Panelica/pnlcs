@@ -66,7 +66,10 @@ A server module that sells something bought per period from someone else (a
 software license, a resold service) can also offer `renew(Service $service): array`.
 It is called after a renewal invoice for the service is paid, once the due date
 has moved, so the period is bought from the vendor only when the customer has
-paid. A refusal is logged and raised as `ModuleActionFailed` (action `renew`).
+paid. A refusal is logged, raised as `ModuleActionFailed` (action `renew`) and
+queued: the retry queue (`pnlcs:module-queue`) tries it again, so make
+`renew()` safe to repeat for the same paid period (key it by the service's due
+date, as the Panelica license module does).
 
 A gateway that can store a card and charge it later (automatic payment) also
 implements `App\Contracts\TokenizableGatewayInterface` (`beginVaulting`,
@@ -207,7 +210,19 @@ A module can offer more than its interface requires:
 | `App\Contracts\TokenizableGatewayInterface` (gateways) | store cards at the gateway and charge them for renewals |
 | `App\Contracts\SyncsDomainData` (registrars: `syncDomain`) | read each domain's expiry, status and nameservers in the nightly domain sync |
 | `App\Contracts\HostsAccountDomains` (servers: `accountDomains`, `createAccountDomain`) | offer customers **Set up on my hosting** for their domains ([guide](../guides/sell-domains.md#set-up-on-my-hosting)) |
-| a `customFunctions()` method (servers) returning `method name => label` | run those methods on a service through the API ([modulecustom](../api/services.md#modulecustom)) |
+| a `customFunctions()` method (servers) returning `method name => label` | run those methods on a service through the API ([modulecustom](../api/services.md#modulecustom)), and show them as buttons on the staff service page |
+| `clientFunctions()` (servers), `method name => label` | show those buttons to the customer on their service page; only these can be run from the client area |
+| `clientAreaPanel(Service)` / `adminAreaPanel(Service)` (servers), returning a view | draw the module's own section on the customer's / staff service page |
+| `servicePageHides()` (servers), a list of `server_details`, `change_password` | leave out the server's name and address on the customer's page, or the Change password button on the staff page |
+| `isProvisioned(Service): bool` (servers) | decide whether the staff page offers **Create** (otherwise: an active service with a username has nothing to create) |
+| `emailMergeFields(Service)` (servers), `name => value` | add `{name}` fields to the service's emails; the built-in fields win a clash |
+
+`customFunctions()` and `clientFunctions()` are given the service, so a module
+can offer a button only where it applies; a module that declares no parameter
+is unaffected. A function takes the service and answers like any module
+action. A section or a list that throws is left out and logged, and the page
+still loads. See `App\Services\Module\ModuleScreens`; the Panelica license
+module (`modules/Servers/PanelicaLicense`, [guide](../guides/sell-panelica-licenses.md)) uses all of them.
 
 ## Hooks in a module
 

@@ -16,6 +16,7 @@ use App\Services\ProvisioningService;
 use App\Services\UpgradeService;
 use App\Models\Invoice;
 use App\Services\InvoiceGenerationService;
+use App\Services\Module\ModuleScreens;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
@@ -102,7 +103,32 @@ class ServiceController extends Controller
                 ->filter(fn ($row) => filled($row['value']))->values()
             : collect();
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers'));
+        // What the service's module adds: its own section, and whether the
+        // server it runs on means anything to the customer. A license sold
+        // through a vendor's API has a "server" that is the vendor's address.
+        $screens = ModuleScreens::for($service);
+        $modulePanel = $screens->clientPanel();
+        $showServerDetails = $screens->shows('server_details');
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers', 'modulePanel', 'showServerDetails'));
+    }
+
+    /**
+     * One of the buttons the service's module offers the customer
+     * (clientFunctions()). Anything the module does not list for the customer
+     * is not found, whatever it offers staff.
+     */
+    public function moduleFunction(Service $service, string $function)
+    {
+        abort_if($service->client_id !== $this->getClientId(), 403);
+
+        $result = ModuleScreens::for($service->loadMissing('product', 'server'))->run('client', $function);
+        abort_if($result === null, 404);
+
+        return back()->with(
+            ($result['success'] ?? false) ? 'success' : 'error',
+            (string) ($result['message'] ?? __('client.services.module_function_failed'))
+        );
     }
 
     /** Order an addon for a running service; it starts once its invoice is paid. */

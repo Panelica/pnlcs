@@ -12,6 +12,7 @@ use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Services\AddonService;
 use App\Services\BillingCycleChange;
+use App\Services\Module\ModuleScreens;
 use App\Services\ProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -53,7 +54,16 @@ class ServiceController extends Controller
         // The answers to the product's own questions, asked when it was ordered.
         $productFields = $service->product_id ? \App\Models\CustomField::productFields((int) $service->product_id)->get() : collect();
 
-        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields'));
+        // What the service's module adds to this page (ModuleScreens).
+        $screens = ModuleScreens::for($service);
+        $moduleScreen = [
+            'panel' => $screens->adminPanel(),
+            'buttons' => $screens->adminButtons(),
+            'provisioned' => $screens->isProvisioned(),
+            'change_password' => $screens->shows('change_password'),
+        ];
+
+        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields', 'moduleScreen'));
     }
 
     /**
@@ -115,11 +125,16 @@ class ServiceController extends Controller
                 ?? ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
             'pve_claim' => $this->proxmox($service)?->claim($service, (int) $request->validate(['vmid' => 'required|integer|min:100'])['vmid'])
                 ?? ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
-            default => ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
+            // A button the module itself offers (customFunctions()); its own
+            // message says what happened.
+            default => ModuleScreens::for($service)->run('admin', $action)
+                ?? ['success' => false, 'message' => __('admin.messages.unknown_action', ['action' => $action])],
         };
 
         if ($result['success'] ?? false) {
-            return back()->with('success', str_starts_with($action, 'pve_')
+            $own = str_starts_with($action, 'pve_') || ! in_array($action, ['create', 'suspend', 'unsuspend', 'terminate', 'changepassword'], true);
+
+            return back()->with('success', $own && filled($result['message'] ?? null)
                 ? $result['message']
                 : __('admin.messages.module_action_success', ['action' => ucfirst($action)]));
         }

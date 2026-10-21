@@ -941,6 +941,7 @@ return [
     'services.cancellation_already_requested' => 'Für diesen Dienst wurde bereits eine Kündigung beantragt.',
     'services.addon_cancel' => 'Abbrechen',
     'services.addon_cancel_confirm' => 'Diese Zusatzoption kündigen? Der eigentliche Dienst läuft weiter.',
+    'services.module_function_failed' => 'Das hat nicht funktioniert. Bitte versuchen Sie es gleich noch einmal oder wenden Sie sich an den Support.',
     'services.addon_cancelled' => 'Zusatzoption gekündigt. Sie wird nicht erneut verrechnet.',
     'services.addon_order' => 'Bestellung',
     'services.addon_ordered' => 'Zusatzoption bestellt. Sie wird nach Zahlung der Rechnung aktiviert.',

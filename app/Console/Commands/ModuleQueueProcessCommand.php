@@ -12,7 +12,7 @@ class ModuleQueueProcessCommand extends Command
 {
     protected $signature = 'pnlcs:module-queue {--id= : Process a single queue entry immediately}';
 
-    protected $description = 'Retry failed server module actions (create/suspend/unsuspend/terminate)';
+    protected $description = 'Retry failed server module actions (create/suspend/unsuspend/terminate/renew)';
 
     public function handle(ProvisioningService $provisioning): int
     {
@@ -42,6 +42,8 @@ class ModuleQueueProcessCommand extends Command
                 'suspend' => $provisioning->suspendAccount($service, (string) ($entry->payload['reason'] ?? ''), queueOnFail: false),
                 'unsuspend' => $provisioning->unsuspendAccount($service, queueOnFail: false),
                 'terminate' => $provisioning->terminateAccount($service, queueOnFail: false),
+                'renew' => $provisioning->renewAccount($service, queueOnFail: false)
+                    ?? ['success' => false, 'message' => 'No server module configured to renew this service'],
                 default => ['success' => false, 'message' => "Unknown action '{$entry->action}'"],
             };
 
