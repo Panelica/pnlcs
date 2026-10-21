@@ -4,9 +4,9 @@ namespace Modules\Servers\PanelicaLicense\Http;
 
 use App\Models\Service;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
 use Modules\Servers\PanelicaLicense\CentralClient;
 use Modules\Servers\PanelicaLicense\PanelicaLicenseModule;
+use Modules\Servers\PanelicaLicense\PartnerAccount;
 
 /**
  * GET /setup/{reference}: the customer's own install command.
@@ -40,7 +40,7 @@ class SetupController
 
         $data = $service->module_data ?? [];
 
-        if (! empty($data['ended']) || strtolower((string) $service->status) !== 'active') {
+        if (! PanelicaLicenseModule::enabled() || ! empty($data['ended']) || strtolower((string) $service->status) !== 'active') {
             return $this->refuse(__('panelica_license.script.not_active'));
         }
 
@@ -49,7 +49,7 @@ class SetupController
         }
 
         $client = CentralClient::partner();
-        $code = $client ? $this->partnerCode($client) : null;
+        $code = $client ? PartnerAccount::installCode($client) : null;
         $script = $code ? $client->installScript($code, $reference) : null;
 
         if ($script === null) {
@@ -58,6 +58,28 @@ class SetupController
 
         $service->forceFill(['module_data' => array_merge($data, ['script_fetched_at' => now()->toIso8601String()])])->save();
 
+        return $this->script($script);
+    }
+
+    /**
+     * GET /setup: the partner's general install link at this site's address,
+     * for the partner to publish. A server installed with it is the partner's
+     * (its trial goes to the partner account) but belongs to no order: it
+     * shows on the Panelica Licenses page, and can be tied to a service there.
+     */
+    public function general(): Response
+    {
+        $client = PanelicaLicenseModule::enabled() ? CentralClient::partner() : null;
+        $code = $client ? PartnerAccount::installCode($client) : null;
+        $script = $code ? $client->installScript($code) : null;
+
+        return $script === null
+            ? $this->refuse(__('panelica_license.script.unavailable'))
+            : $this->script($script);
+    }
+
+    private function script(string $script): Response
+    {
         return new Response($script, 200, [
             'Content-Type' => 'text/plain; charset=utf-8',
             'Cache-Control' => 'no-store',
@@ -71,29 +93,6 @@ class SetupController
             ->where('module_data->install_ref', $reference)
             ->whereHas('product', fn ($q) => $q->where('server_type', PanelicaLicenseModule::NAME))
             ->first();
-    }
-
-    /**
-     * The partner's install link code. Kept for ten minutes so a run of
-     * installs does not ask Central each time; a failure is not kept.
-     */
-    private function partnerCode(CentralClient $client): ?string
-    {
-        $key = 'panelica_license:install_code:'.md5($client->baseUrl());
-
-        if ($cached = Cache::get($key)) {
-            return (string) $cached;
-        }
-
-        $link = $client->get('install-link');
-        $code = $link->ok ? (string) ($link->data['code'] ?? '') : '';
-        if ($code === '') {
-            return null;
-        }
-
-        Cache::put($key, $code, now()->addMinutes(10));
-
-        return $code;
     }
 
     /** A script that prints why and stops: piped into bash, it must still be a script. */

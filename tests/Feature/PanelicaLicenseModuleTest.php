@@ -52,6 +52,13 @@ function plCentral(array $over = []): array
             'server_ip' => '203.0.113.7', 'server_hostname' => 'srv1.customer.test',
             'expires_at' => '2027-10-21T10:00:00+00:00', 'last_heartbeat_at' => '2026-10-21T10:05:00+00:00',
         ],
+        // GET licenses: every license of the partner account, as Central lists them.
+        'licenses' => [[
+            'id' => PL_LICENSE, 'license_key' => 'PNLC-AAAA-BBBB-CCCC-DDDD',
+            'customer' => ['id' => 'c1', 'email' => 'owner@customer.test', 'name' => 'Ada Owner'],
+            'plan' => ['id' => PL_PLAN, 'name' => 'Business'], 'billing_cycle' => 'yearly', 'status' => 'active',
+            'server_ip' => '203.0.113.7', 'expires_at' => '2027-10-21T10:00:00+00:00', 'created_at' => '2026-10-21T09:00:00+00:00',
+        ]],
         'convert' => 200,
         'renew' => 200,
         'script' => 200,
@@ -72,9 +79,20 @@ function plFake(array &$central): void
         return match (true) {
             $path === $api.'me' => $ok(['id' => 'r1', 'company_name' => 'Acme Hosting', 'status' => 'approved', 'balance' => 500]),
             $path === $api.'plans' => $ok([['id' => PL_PLAN, 'name' => 'Business', 'reseller_price_monthly' => 8, 'reseller_price_yearly' => 80]]),
+            $path === $api.'install-link' && $request->method() === 'PUT' => (function () use (&$central, $request, $ok, $no) {
+                $code = strtolower(trim((string) ($request->data()['code'] ?? '')));
+                if ($code === 'taken') {
+                    return $no(422, 'This code is already taken.');
+                }
+                $central['link'] = ['code' => $code, 'url' => 'https://www.panelica.com/install/'.$code];
+
+                return $ok($central['link']);
+            })(),
             $path === $api.'install-link' => $central['link'] ? $ok($central['link']) : $no(404, 'Not found'),
-            // 'filter' => false is a Central that does not know ?ref= and lists every install.
-            $path === $api.'installs' => $ok(array_values(array_filter($central['installs'], fn ($i) => ! $central['filter'] || ($i['ref'] ?? null) === ($query['ref'] ?? null))), ['total' => count($central['installs'])]),
+            // Without ?ref= Central lists every install. 'filter' => false is a
+            // Central that does not know ?ref= and lists every install anyway.
+            $path === $api.'installs' => $ok(array_values(array_filter($central['installs'], fn ($i) => ! $central['filter'] || ! array_key_exists('ref', $query) || ($i['ref'] ?? null) === $query['ref'])), ['total' => count($central['installs'])]),
+            $path === $api.'licenses' => $ok($central['licenses'], ['total' => count($central['licenses'])]),
             $path === $api.'licenses/'.PL_LICENSE.'/convert' => $central['convert'] === 200
                 ? $ok(['id' => PL_LICENSE, 'license_key' => 'PNLC-AAAA-BBBB-CCCC-DDDD', 'plan' => ['id' => PL_PLAN, 'name' => 'Business'], 'billing_cycle' => $request->data()['billing_cycle'] ?? null, 'status' => 'active', 'expires_at' => '2027-10-21T10:00:00+00:00', 'charged' => 80])
                 : $no($central['convert'], 'Insufficient balance. Required: $80.00, Available: $3.00'),
@@ -859,4 +877,135 @@ test('licenses already bought are read back from Central, an hour apart', functi
 
     expect(plCalls($central, 'GET', '/licenses/'.PL_LICENSE))->toHaveCount(1)
         ->and($service->fresh()->module_data['license_expires_at'])->toBe('2028-01-01T00:00:00+00:00');
+});
+
+test('"Check installs now" does the work in the web request, not through a console command', function () {
+    // Commands are registered for the console only: in a web request
+    // Artisan::call('pnlcs:panelica-licenses') was "command does not exist",
+    // a 500 on the button (found on the demo site, 1.6.0-beta.2).
+    $central = plCentral();
+    $service = plWaiting($central);
+    $central['installs'] = [plInstall($service)];
+    Artisan::shouldReceive('call')->never();
+
+    $this->actingAs(plStaff(['manage_products']), 'admin')->post(route('admin.panelica-licenses.sync'))
+        ->assertRedirect()->assertSessionHas('success', __('panelica_license.page.synced'));
+
+    expect($service->fresh()->module_data['license_id'] ?? null)->toBe(PL_LICENSE);
+});
+
+test('the page shows the partner account at Panelica: its licenses and the servers installed with its link', function () {
+    $central = plCentral();
+    $service = plLicensed($central);
+    $central['installs'] = [
+        plInstall($service, ['converted_at' => '2026-10-21T09:20:00+00:00']),
+        plInstall($service, ['id' => 'inst-2', 'hostname' => 'srv9.elsewhere.test', 'ip_address' => '198.51.100.9', 'ref' => null,
+            'status' => 'not_linked', 'note' => 'The email used for the trial already has a Panelica account.', 'license' => null]),
+    ];
+    $central['licenses'][] = array_merge($central['licenses'][0], ['id' => 'other-license', 'license_key' => 'PNLC-ZZZZ-YYYY-XXXX-WWWW', 'status' => 'suspended']);
+    $central['calls'] = [];
+
+    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+
+    expect($page)->toContain('srv1.customer.test')
+        ->and($page)->toContain('srv9.elsewhere.test')
+        ->and($page)->toContain(e('The email used for the trial already has a Panelica account.'))
+        ->and($page)->toContain(e(__('panelica_license.install_state.not_linked')))
+        ->and($page)->toContain(e(__('panelica_license.page.general_link')))
+        ->and($page)->toContain('PNLC-ZZZZ-YYYY-XXXX-WWWW')
+        ->and($page)->toContain('owner@customer.test')
+        ->and($page)->toContain(e(__('panelica_license.license_status.suspended')))
+        ->and($page)->toContain('· '.e(__('panelica_license.page.annually')).'</small>')
+        ->and($page)->not->toContain('· yearly')
+        ->and($page)->toContain(e(__('panelica_license.page.licenses_hint', ['shown' => 2, 'total' => 2])))
+        // Both rows of this site's service link to it; the other license has no service here.
+        ->and(substr_count($page, route('admin.services.show', $service).'"'))->toBeGreaterThanOrEqual(3)
+        ->and(plCalls($central, 'GET', '/installs')[0][2])->not->toHaveKey('ref');
+});
+
+test('Central not answering the lists still shows the page, and says so', function () {
+    $central = plCentral();
+    plConnect();
+    Http::fake(function (Request $request) use ($central) {
+        $path = parse_url($request->url(), PHP_URL_PATH);
+        if (str_ends_with($path, '/licenses') || str_ends_with($path, '/installs')) {
+            return Http::response(['success' => false, 'error' => 'Service unavailable', 'code' => 503], 503);
+        }
+
+        return Http::response(['success' => true, 'data' => str_ends_with($path, '/me')
+            ? ['company_name' => 'Acme Hosting', 'status' => 'approved']
+            : (str_ends_with($path, '/install-link') ? $central['link'] : [])], 200);
+    });
+
+    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+
+    expect(substr_count($page, e(__('panelica_license.page.central_error', ['error' => 'Service unavailable']))))->toBe(2);
+});
+
+test('the general install link runs the partner\'s link at this site\'s address, with no order in it', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+
+    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->getContent();
+    expect($page)->toContain(e('curl -sSL '.url('/setup').' | bash'))
+        ->and($page)->toContain('value="acme"')
+        ->and($page)->toContain(e('https://www.panelica.com/install/acme'));
+
+    $body = $this->get('/setup')->assertOk()->assertHeader('Content-Type', 'text/plain; charset=utf-8')->getContent();
+    expect($body)->toStartWith('#!/usr/bin/env bash')
+        ->and($body)->toContain("# for /install/acme\n");
+    expect(collect($central['calls'])->filter(fn ($c) => str_starts_with($c[1], '/install/'))->pluck(1)->all())->toBe(['/install/acme']);
+
+    PartnerAccount::forget();
+    expect($this->get('/setup')->getContent())->toContain('exit 1')->not->toContain('panelica_installer');
+});
+
+test('the install link code is changed at Central from the page, and the next install uses the new one', function () {
+    $central = plCentral();
+    $service = plWaiting($central);
+    $staff = plStaff(['manage_products']);
+
+    expect($this->get('/setup/'.$service->module_data['install_ref'])->getContent())->toContain('/install/acme/');
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.install-code'), ['code' => ' Acme-2026 '])
+        ->assertRedirect()->assertSessionHas('success', __('panelica_license.page.code_saved', ['code' => 'acme-2026']));
+    expect(plCalls($central, 'PUT', '/install-link')[0][3])->toBe(['code' => 'acme-2026']);
+
+    // Not the ten-minute copy of the old code.
+    expect($this->get('/setup/'.$service->module_data['install_ref'])->getContent())->toContain('/install/acme-2026/')
+        ->and($this->get('/setup')->getContent())->toContain("/install/acme-2026\n");
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.install-code'), ['code' => 'taken'])
+        ->assertSessionHas('error', __('panelica_license.page.code_refused', ['error' => 'This code is already taken.']));
+    expect($central['link']['code'])->toBe('acme-2026');
+
+    $this->actingAs(plStaff(['view_services']), 'admin')->post(route('admin.panelica-licenses.install-code'), ['code' => 'mine'])->assertForbidden();
+});
+
+test('switched off under Setup -> Modules: no menu, no page, no install link, no job', function () {
+    $central = plCentral();
+    $service = plWaiting($central);
+    $central['installs'] = [plInstall($service)];
+    $staff = plStaff(['view_services', 'manage_products']);
+    $menu = route('admin.panelica-licenses.index');
+    expect($this->actingAs($staff, 'admin')->get(route('admin.dashboard'))->getContent())->toContain($menu);
+
+    app(ModuleRegistry::class)->switchOff('server', PanelicaLicenseModule::NAME, true);
+    $central['calls'] = [];
+
+    expect($this->actingAs($staff, 'admin')->get(route('admin.dashboard'))->getContent())->not->toContain($menu);
+    $this->actingAs($staff, 'admin')->get($menu)->assertNotFound();
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.sync'))->assertNotFound();
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.install-code'), ['code' => 'x'])->assertNotFound();
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.connect'), ['api_key' => 'rk_x'])->assertNotFound();
+    expect($this->get('/setup/'.$service->module_data['install_ref'])->getContent())->toContain('exit 1')->not->toContain('panelica_installer')
+        ->and($this->get('/setup')->getContent())->toContain('exit 1')->not->toContain('panelica_installer');
+    Artisan::call('pnlcs:panelica-licenses');
+
+    expect($central['calls'])->toBe([])
+        ->and($service->fresh()->module_data['license_id'] ?? null)->toBeNull();
+
+    app(ModuleRegistry::class)->switchOff('server', PanelicaLicenseModule::NAME, false);
+    $this->actingAs($staff, 'admin')->get($menu)->assertOk();
 });

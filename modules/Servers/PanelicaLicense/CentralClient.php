@@ -53,21 +53,27 @@ final class CentralClient
         return $this->send('PATCH', $path, $body);
     }
 
+    public function put(string $path, array $body = []): CentralResponse
+    {
+        return $this->send('PUT', $path, $body);
+    }
+
     /**
-     * The script Central serves at /install/{code}/{ref}: the official
-     * installer, unchanged, plus the report that ties the server to this
-     * order. Null when Central did not answer with that script - an unknown
-     * or disabled code is answered with a redirect to the plain installer,
-     * which would install a server nobody can tie to the order.
+     * The script Central serves at /install/{code}/{ref} (or /install/{code}
+     * for the partner's general link): the official installer, unchanged,
+     * plus the report that ties the server to the partner and to this order.
+     * Null when Central did not answer with that script - an unknown or
+     * disabled code is answered with a redirect to the plain installer, which
+     * would install a server nobody can tie to the partner.
      */
-    public function installScript(string $code, string $ref): ?string
+    public function installScript(string $code, ?string $ref = null): ?string
     {
         try {
             $response = Http::withoutRedirecting()
                 ->timeout(20)
                 ->accept('text/plain')
                 ->withUserAgent('PNLCS')
-                ->get($this->baseUrl().'/install/'.rawurlencode($code).'/'.rawurlencode($ref));
+                ->get($this->baseUrl().'/install/'.rawurlencode($code).($ref !== null ? '/'.rawurlencode($ref) : ''));
         } catch (\Throwable $e) {
             Log::warning('Panelica license: Central did not serve the install script', ['error' => $e->getMessage()]);
 
@@ -114,6 +120,7 @@ final class CentralClient
             $response = match ($method) {
                 'POST' => $request->post($url, $payload),
                 'PATCH' => $request->patch($url, $payload),
+                'PUT' => $request->put($url, $payload),
                 default => $request->get($url, $payload),
             };
         } catch (\Throwable $e) {

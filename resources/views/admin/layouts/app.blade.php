@@ -135,7 +135,7 @@
             </li>
 
             {{-- Selling Panelica licenses with a partner account (modules/Servers/PanelicaLicense) --}}
-            @if(auth('admin')->user()?->hasPermission('manage_products'))
+            @if(auth('admin')->user()?->hasPermission('manage_products') && \Modules\Servers\PanelicaLicense\PanelicaLicenseModule::enabled())
             <li style="float:left; width:auto;">
                 <a href="{{ route('admin.panelica-licenses.index') }}"><i class="fas fa-key"></i> {{ __('panelica_license.page.menu') }}</a>
             </li>

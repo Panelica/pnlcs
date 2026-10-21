@@ -29,9 +29,31 @@ Everything is on one page: **Panelica Licenses** in the admin area's top menu (s
 3. Panelica sells monthly and annual periods only, so the products are priced for those two. A service billed for any other period is refused when it is created.
 4. Optional: add `{service_install_command}` to the product's welcome email.
 
-The same page shows your **partner balance** (with **Top up balance**, which opens your partner portal), how many licenses are sold, waiting for installation or need attention, and every license sold with its customer, key, server and expiry date. **Check installs now** looks for installed servers at once instead of within five minutes. Under **Partner account settings** you can use another key or disconnect: licenses already sold keep working at Panelica, but none is bought or renewed from PNLCS until you connect again.
+The same page shows:
+
+- your **partner balance** (with **Top up balance**, which opens your partner portal) and how many licenses are sold, waiting for installation or need attention;
+- **Your install link** (see below);
+- **Servers installed with your link**, as Central knows them: host name and address, operating system, whether Central tied the server to you (with Central's note when it could not), its license (trial or paid), when it was installed, and the order of this site it belongs to;
+- **Your licenses at Panelica**: every license of your partner account, sold from this site or not, with its customer, plan, state, server and expiry date, and the service here it belongs to;
+- **Sold from this site**: the latest services of these products, with their customer, product, state, key, server and expiry date.
+
+**Check installs now** looks for installed servers at once instead of within five minutes. Under **Partner account settings** you can use another key or disconnect: licenses already sold keep working at Panelica, but none is bought or renewed from PNLCS until you connect again.
 
 There is nothing to add under **Setup → Servers**: nothing runs on a machine of yours.
+
+### Your install link
+
+Besides the command each customer gets for their order, the page gives you a general install command at your own address, to publish on your website:
+
+`curl -sSL https://billing.example.com/setup | bash`
+
+It runs your partner install link at Panelica, unchanged, without showing it. A server installed with it is yours at Panelica (its trial goes to your partner account) but belongs to no order: it shows under **Servers installed with your link**, and you can sell it a plan from your partner portal or tie its license to a service with **Attach license**.
+
+Next to it is the link's **code** at Panelica (the part after `/install/`). Change it there and press **Change code**: the next install, from the general command and from every customer's command, uses the new code at once. Older codes keep working until you disable them in your partner portal. A code Panelica refuses (already taken, reserved, not 4 to 20 lowercase letters, digits and hyphens) is not changed, and the page says why.
+
+### Switching the module off
+
+Under **Setup → Modules** the module can be switched off while no product sells licenses. Switched off, the Panelica Licenses menu entry and page are gone, every install command stops with a message, and nothing is bought or read from Central. Switch it on again to get everything back as it was.
 
 ## What the customer sees
 

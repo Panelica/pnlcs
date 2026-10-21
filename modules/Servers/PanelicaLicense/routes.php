@@ -12,6 +12,11 @@ Route::get('setup/{reference}', SetupController::class)
     ->middleware('throttle:30,1')
     ->name('panelica-license.setup');
 
+// The partner's general install link, at this site's address.
+Route::get('setup', [SetupController::class, 'general'])
+    ->middleware('throttle:30,1')
+    ->name('panelica-license.setup.general');
+
 Route::middleware(['web', 'admin.auth', 'admin.2fa'])
     ->prefix('admin')
     ->name('admin.')
@@ -27,6 +32,7 @@ Route::middleware(['web', 'admin.auth', 'admin.2fa'])
                 Route::post('disconnect', 'disconnect')->name('disconnect');
                 Route::post('products', 'createProduct')->name('products.store');
                 Route::post('sync', 'sync')->middleware('throttle:6,1')->name('sync');
+                Route::post('install-code', 'updateInstallCode')->middleware('throttle:10,1')->name('install-code');
             });
 
         // Staff, with the same rights as the other module actions on a service.

@@ -5,6 +5,7 @@ namespace Modules\Servers\PanelicaLicense;
 use App\Models\ModuleQueue;
 use App\Models\Server;
 use App\Models\Service;
+use App\Services\Module\ModuleRegistry;
 use App\Services\NotificationService;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Log;
@@ -43,6 +44,16 @@ class PanelicaLicenseModule extends AbstractServerModule
     public function getModuleName(): string
     {
         return self::NAME;
+    }
+
+    /**
+     * Switched on under Setup -> Modules. Off, the Panelica Licenses page,
+     * its menu entry and the install links are gone; the switch refuses while
+     * a product sells licenses, so no sold license depends on them.
+     */
+    public static function enabled(): bool
+    {
+        return ! app(ModuleRegistry::class)->isSwitchedOff('server', self::NAME);
     }
 
     public function getConfigFields(): array

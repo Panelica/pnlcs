@@ -9,8 +9,9 @@ use App\Models\Service;
 use App\Services\ProductCreator;
 use App\Support\UniqueSlug;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Modules\Servers\PanelicaLicense\CentralClient;
+use Modules\Servers\PanelicaLicense\CentralResponse;
+use Modules\Servers\PanelicaLicense\LicenseSync;
 use Modules\Servers\PanelicaLicense\PanelicaLicenseModule;
 use Modules\Servers\PanelicaLicense\PartnerAccount;
 
@@ -26,16 +27,26 @@ class LicensesPageController
 
     public function index()
     {
+        $this->guard();
         $module = app(PanelicaLicenseModule::class);
         $account = null;
         $accountError = null;
         $plans = [];
+        $link = null;
+        $centralLicenses = ['rows' => [], 'total' => 0];
+        $installs = ['rows' => [], 'total' => 0];
 
         if ($client = CentralClient::partner()) {
             $me = $client->get('me');
             if ($me->ok) {
                 $account = (array) $me->data;
                 $plans = $module->plans();
+                // What the partner account holds at Panelica, whatever sold it:
+                // its licenses, the servers installed with its link, the link.
+                $answer = $client->get('install-link');
+                $link = $answer->ok ? (array) $answer->data : null;
+                $centralLicenses = $this->listed($client->get('licenses', ['per_page' => 100]));
+                $installs = $this->listed($client->get('installs', ['per_page' => 100]));
             } else {
                 $accountError = $me->error;
             }
@@ -52,6 +63,11 @@ class LicensesPageController
             ->orderByDesc('id')
             ->limit(50)
             ->get();
+
+        // Which service of this site each license and each install belongs to.
+        $all = Service::whereHas('product', fn ($q) => $q->where('server_type', PanelicaLicenseModule::NAME))->get(['id', 'module_data']);
+        $serviceByLicense = $all->filter(fn ($s) => ! empty($s->module_data['license_id']))->mapWithKeys(fn ($s) => [$s->module_data['license_id'] => $s->id]);
+        $serviceByRef = $all->filter(fn ($s) => ! empty($s->module_data['install_ref']))->mapWithKeys(fn ($s) => [$s->module_data['install_ref'] => $s->id]);
 
         $count = ['waiting' => 0, 'licensed' => 0, 'attention' => 0];
         foreach ($services as $service) {
@@ -83,12 +99,63 @@ class LicensesPageController
             'becomePartner' => PartnerAccount::centralUrl().'/partnership',
             'keyExample' => PartnerAccount::KEY_EXAMPLE,
             'defaultCentral' => PartnerAccount::DEFAULT_CENTRAL,
+            'link' => $link,
+            'generalCommand' => 'curl -sSL '.route('panelica-license.setup.general').' | bash',
+            'centralLicenses' => $centralLicenses,
+            'installs' => $installs,
+            'serviceByLicense' => $serviceByLicense,
+            'serviceByRef' => $serviceByRef,
         ]);
+    }
+
+    /**
+     * The partner's install link code at Central (the part after /install/).
+     * The command customers and the general link run stays at this site's
+     * address; Central keeps older codes working until they are disabled in
+     * the partner portal.
+     */
+    public function updateInstallCode(Request $request)
+    {
+        $this->guard();
+        $validated = $request->validate(['code' => ['required', 'string', 'max:40']]);
+
+        $client = CentralClient::partner();
+        if (! $client) {
+            return back()->with('error', __('panelica_license.error.no_account'));
+        }
+
+        $answer = $client->put('install-link', ['code' => strtolower(trim($validated['code']))]);
+        if (! $answer->ok) {
+            return back()->withInput()->with('error', __('panelica_license.page.code_refused', ['error' => $answer->error]));
+        }
+
+        PartnerAccount::forgetInstallCode();
+
+        return back()->with('success', __('panelica_license.page.code_saved', ['code' => (string) ($answer->data['code'] ?? '')]));
+    }
+
+    /** @return array{rows: list<array<string, mixed>>, total: int} */
+    private function listed(CentralResponse $answer): array
+    {
+        if (! $answer->ok) {
+            return ['rows' => [], 'total' => 0, 'error' => $answer->error];
+        }
+
+        $rows = array_values(array_filter((array) $answer->data, 'is_array'));
+
+        return ['rows' => $rows, 'total' => (int) ($answer->meta['total'] ?? count($rows))];
+    }
+
+    /** Switched off under Setup -> Modules: the page is not there. */
+    private function guard(): void
+    {
+        abort_unless(PanelicaLicenseModule::enabled(), 404);
     }
 
     /** Try the key at Central first; only an active partner account is kept. */
     public function connect(Request $request)
     {
+        $this->guard();
         $validated = $request->validate([
             'api_key' => ['required', 'string', 'starts_with:rk_', 'max:200'],
             'central_url' => ['nullable', 'url:http,https', 'max:255'],
@@ -116,6 +183,7 @@ class LicensesPageController
 
     public function disconnect()
     {
+        $this->guard();
         PartnerAccount::forget();
 
         return redirect()->route('admin.panelica-licenses.index')->with('success', __('panelica_license.page.disconnected'));
@@ -129,6 +197,7 @@ class LicensesPageController
      */
     public function createProduct(Request $request)
     {
+        $this->guard();
         $validated = $request->validate([
             'plan_id' => ['required', 'string', 'max:64'],
             'name' => ['required', 'string', 'max:255'],
@@ -173,10 +242,15 @@ class LicensesPageController
         return back()->with('success', __('panelica_license.page.product_created', ['name' => $product->name]));
     }
 
-    /** Look for installed servers and read licenses back now, not in five minutes. */
-    public function sync()
+    /**
+     * Look for installed servers and read licenses back now, not in five
+     * minutes. LicenseSync itself: the command behind the schedule is
+     * registered for the console only, and is not there in a web request.
+     */
+    public function sync(LicenseSync $sync)
     {
-        Artisan::call('pnlcs:panelica-licenses');
+        $this->guard();
+        $sync->run();
 
         return back()->with('success', __('panelica_license.page.synced'));
     }

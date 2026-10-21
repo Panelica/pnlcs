@@ -104,6 +104,31 @@
     </div>
 </div>
 
+{{-- The partner's install link, at this site's address. --}}
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><strong>{{ __('panelica_license.page.link_title') }}</strong></div>
+    <div class="card-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:18px;">
+        <div>
+            <div style="display:flex;gap:6px;align-items:stretch;flex-wrap:wrap;">
+                <code id="pl-general" style="flex:1 1 300px;min-width:0;display:block;background:#0f172a;color:#e2e8f0;padding:9px 11px;border-radius:5px;font-size:12.5px;white-space:nowrap;overflow-x:auto;">{{ $generalCommand }}</code>
+                <button type="button" class="btn btn-default btn-sm" data-pl-copy="pl-general" data-copied="{{ __('panelica_license.client.copied') }}">{{ __('panelica_license.client.copy') }}</button>
+            </div>
+            <p style="font-size:12.5px;{{ $muted }}margin:8px 0 0;">{{ __('panelica_license.page.link_hint') }}</p>
+        </div>
+        <div>
+            @if($link)
+            <form method="POST" action="{{ route('admin.panelica-licenses.install-code') }}" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                @csrf
+                <label for="pl-code" style="font-size:12px;font-weight:600;margin:0;">{{ __('panelica_license.page.link_code') }}</label>
+                <input type="text" id="pl-code" name="code" required maxlength="40" class="form-control" style="width:160px;font-family:monospace;" value="{{ old('code', $link['code'] ?? '') }}">
+                <button type="submit" class="btn btn-default btn-sm">{{ __('panelica_license.page.save_code') }}</button>
+            </form>
+            <p style="font-size:12.5px;{{ $muted }}margin:8px 0 0;">{{ __('panelica_license.page.link_code_hint', ['url' => $link['url'] ?? '']) }}</p>
+            @endif
+        </div>
+    </div>
+</div>
+
 <div class="card" style="margin-bottom:16px;">
     <div class="card-header"><strong>{{ __('panelica_license.page.plans_title') }}</strong><span style="font-weight:400;font-size:12px;{{ $muted }}">{{ __('panelica_license.page.plans_hint') }}</span></div>
     <div style="overflow-x:auto;">
@@ -171,6 +196,77 @@
     @endif
 </div>
 
+{{-- The servers installed with the partner's link, as Central knows them. --}}
+@php
+    $knownStatus = ['active', 'suspended', 'expired', 'cancelled', 'terminated', 'pending'];
+@endphp
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><strong>{{ __('panelica_license.page.servers_title') }}</strong><span style="font-weight:400;font-size:12px;{{ $muted }}">{{ __('panelica_license.page.servers_hint') }}</span></div>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;">
+        <tr>
+            <th style="{{ $th }}">{{ __('panelica_license.field.server') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.page.os') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.field.status') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.admin.license') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.page.installed') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.page.order') }}</th>
+        </tr>
+        @forelse($installs['rows'] as $i)
+        @php
+            $istate = in_array($i['status'] ?? '', ['waiting', 'linked', 'not_linked', 'expired'], true) ? $i['status'] : 'waiting';
+            $lic = is_array($i['license'] ?? null) ? $i['license'] : null;
+            $sid = filled($i['ref'] ?? null) ? ($serviceByRef[$i['ref']] ?? null) : null;
+        @endphp
+        <tr>
+            <td style="{{ $td }}"><strong>{{ $i['hostname'] ?? '—' }}</strong><br><small style="{{ $muted }}font-family:monospace;">{{ $i['ip_address'] ?? '' }}</small></td>
+            <td style="{{ $td }}">{{ $i['os'] ?? '—' }}</td>
+            <td style="{{ $td }}"><span class="pl-badge {{ $istate === 'linked' ? 'ok' : ($istate === 'not_linked' ? 'bad' : 'wait') }}">{{ __('panelica_license.install_state.'.$istate) }}</span>@if(filled($i['note'] ?? null))<br><small style="color:#a12a1f;">{{ $i['note'] }}</small>@endif</td>
+            <td style="{{ $td }}">@if($lic)<span style="font-family:monospace;font-size:12px;">{{ $lic['license_key'] ?? '' }}</span><br><small style="{{ $muted }}">{{ $lic['plan'] ?? '' }} · {{ ! empty($lic['is_trial']) ? __('panelica_license.page.trial') : __('panelica_license.page.paid') }} · {{ __('panelica_license.license_status.'.(in_array($lic['status'] ?? '', $knownStatus, true) ? $lic['status'] : 'unknown')) }}</small>@else — @endif</td>
+            <td style="{{ $td }}white-space:nowrap;">{{ ! empty($i['reported_at']) ? \Illuminate\Support\Carbon::parse($i['reported_at'])->timezone(config('app.timezone'))->format(date_fmt().' H:i') : '—' }}</td>
+            <td style="{{ $td }}">@if($sid)<a href="{{ route('admin.services.show', $sid) }}">#{{ $sid }}</a>@else<span style="{{ $muted }}">{{ __('panelica_license.page.general_link') }}</span>@endif</td>
+        </tr>
+        @empty
+        <tr><td colspan="6" style="{{ $td }}{{ $muted }}">{{ ! empty($installs['error']) ? __('panelica_license.page.central_error', ['error' => $installs['error']]) : __('panelica_license.page.no_servers') }}</td></tr>
+        @endforelse
+    </table>
+    </div>
+</div>
+
+{{-- Every license of the partner account, sold from here or not. --}}
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-header"><strong>{{ __('panelica_license.page.licenses_title') }}</strong><span style="font-weight:400;font-size:12px;{{ $muted }}">{{ __('panelica_license.page.licenses_hint', ['shown' => count($centralLicenses['rows']), 'total' => $centralLicenses['total']]) }}</span></div>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;">
+        <tr>
+            <th style="{{ $th }}">{{ __('panelica_license.field.key') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.page.customer') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.field.plan') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.field.status') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.field.server') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.field.valid_until') }}</th>
+            <th style="{{ $th }}">{{ __('panelica_license.page.on_this_site') }}</th>
+        </tr>
+        @forelse($centralLicenses['rows'] as $l)
+        @php
+            $lsid = $serviceByLicense[$l['id'] ?? ''] ?? null;
+        @endphp
+        <tr>
+            <td style="{{ $td }}font-family:monospace;font-size:12px;">{{ $l['license_key'] ?? '' }}</td>
+            <td style="{{ $td }}">@if(filled($l['customer']['name'] ?? null)){{ $l['customer']['name'] }}<br>@endif<small style="{{ $muted }}">{{ $l['customer']['email'] ?? '' }}</small></td>
+            <td style="{{ $td }}">{{ $l['plan']['name'] ?? '—' }} @if(! empty($l['billing_cycle']))<small style="{{ $muted }}">· {{ match ($l['billing_cycle']) { 'monthly' => __('panelica_license.page.monthly'), 'yearly' => __('panelica_license.page.annually'), default => $l['billing_cycle'] } }}</small>@endif</td>
+            <td style="{{ $td }}"><span class="pl-badge {{ ($l['status'] ?? '') === 'active' ? 'ok' : (($l['status'] ?? '') === 'suspended' ? 'bad' : '') }}">{{ __('panelica_license.license_status.'.(in_array($l['status'] ?? '', $knownStatus, true) ? $l['status'] : 'unknown')) }}</span></td>
+            <td style="{{ $td }}font-family:monospace;font-size:12px;">{{ $l['server_ip'] ?? '—' }}</td>
+            <td style="{{ $td }}white-space:nowrap;">{{ ! empty($l['expires_at']) ? \Illuminate\Support\Carbon::parse($l['expires_at'])->timezone(config('app.timezone'))->format(date_fmt()) : '—' }}</td>
+            <td style="{{ $td }}">@if($lsid)<a href="{{ route('admin.services.show', $lsid) }}">#{{ $lsid }}</a>@else<span style="{{ $muted }}">—</span>@endif</td>
+        </tr>
+        @empty
+        <tr><td colspan="7" style="{{ $td }}{{ $muted }}">{{ ! empty($centralLicenses['error']) ? __('panelica_license.page.central_error', ['error' => $centralLicenses['error']]) : __('panelica_license.page.no_licenses') }}</td></tr>
+        @endforelse
+    </table>
+    </div>
+</div>
+
 <div class="card" style="margin-bottom:16px;">
     <div class="card-header"><strong>{{ __('panelica_license.page.sales_title') }}</strong></div>
     <div style="overflow-x:auto;">
@@ -226,5 +322,14 @@
         </form>
     </div>
 </details>
+<script>
+document.querySelectorAll('[data-pl-copy]').forEach(function (button) {
+    button.addEventListener('click', function () {
+        navigator.clipboard.writeText(document.getElementById(button.dataset.plCopy).innerText).then(function () {
+            button.textContent = button.dataset.copied;
+        });
+    });
+});
+</script>
 @endif
 @endsection
