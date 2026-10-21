@@ -2,6 +2,50 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.6.1 — 2026-10-21
+
+A stable release with fixes, offered to every installation. It contains
+everything in 1.6.0.
+
+### Fixed
+
+- **When staff change an account's email address, the customer signs in
+  with the new one.** On the client's edit page (and with the API's
+  `updateclient`) the client record changed, but the customer kept signing in
+  with the old address and saw it on their profile, and no screen could
+  change it (#210). Now the login that signed in with the old address moves
+  to the new one: the new address is asked to confirm itself, and the old
+  address is told that the change was made by staff. A login on another
+  address (an invited user, a login imported from WHMCS) keeps it, and an
+  address another login already signs in with is refused before anything is
+  saved. See [Client logins](docs/guides/client-logins-and-permissions.md).
+  Thank you again, [@dualarrow](https://github.com/dualarrow).
+- **A password set by staff for an account with no login yet** opens the
+  login on the address the account is saved with, not the one it had before
+  the save.
+
+### Security
+
+- **The API's `updateuser`** changing a login's email address now asks the
+  new address to confirm itself and tells the old address, as the other ways
+  of changing it do. Before, it did neither.
+
+### Database changes
+
+None.
+
+### For theme and module authors
+
+- `App\Services\ClientLoginEmail` moves the login that signs in with an
+  account's address when the address changes.
+- `App\Mail\LoginEmailChangedMail` takes `byStaff` for a change made by
+  staff.
+
+### Views a theme may override that changed
+
+- `resources/views/emails/login-email-changed.blade.php` (receives
+  `$byStaff`).
+
 ## 1.6.0 — 2026-10-21
 
 The stable release, offered to every installation. It contains everything in
