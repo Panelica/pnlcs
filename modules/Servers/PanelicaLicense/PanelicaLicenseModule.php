@@ -14,9 +14,10 @@ use Modules\Servers\AbstractServerModule;
 /**
  * Panelica licenses, sold with a Panelica partner account.
  *
- * The "server" is the partner account at Panelica Central: its address
- * (www.panelica.com) and the partner API key (rk_...). The product's package
- * is the Central plan it sells.
+ * The partner account is set once, on the Panelica Licenses page in the
+ * admin area (PartnerAccount: the partner API key, rk_..., kept encrypted).
+ * There are no server records: nothing runs on a machine of the partner's.
+ * A product's package is the Central plan it sells.
  *
  * HOW A LICENSE IS BOUGHT. Nothing is bought when the order is paid. The
  * customer gets an install command of their own, at this billing site's
@@ -70,8 +71,8 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(true, __('panelica_license.result.already_licensed'));
         }
 
-        $server = $this->getServer($service);
-        if (! $server) {
+        $client = CentralClient::partner();
+        if (! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
 
@@ -86,7 +87,7 @@ class PanelicaLicenseModule extends AbstractServerModule
         // The command must work when the customer runs it, so the partner
         // account and its install link are asked about now; a refusal here
         // goes to the retry queue instead of handing out a dead command.
-        $link = CentralClient::for($server)->get('install-link');
+        $link = $client->get('install-link');
         if (! $link->ok || blank($link->data['code'] ?? null)) {
             return $this->buildResult(false, __('panelica_license.error.central', ['error' => $link->error ?: 'no install link']));
         }
@@ -113,12 +114,12 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(true, __('panelica_license.result.nothing_bought'));
         }
 
-        $server = $this->getServer($service);
-        if (! $server) {
+        $client = CentralClient::partner();
+        if (! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
 
-        $response = CentralClient::for($server)->patch('licenses/'.$data['license_id'].'/suspend', [
+        $response = $client->patch('licenses/'.$data['license_id'].'/suspend', [
             'reason' => Str::limit('Suspended in billing'.($reason !== '' ? ': '.$reason : ''), 250, ''),
         ]);
 
@@ -152,12 +153,11 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(true, __('panelica_license.result.nothing_bought'));
         }
 
-        $server = $this->getServer($service);
-        if (! $server) {
+        $client = CentralClient::partner();
+        if (! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
 
-        $client = CentralClient::for($server);
         $license = $client->get('licenses/'.$data['license_id']);
         if (! $license->ok) {
             return $this->buildResult(false, __('panelica_license.error.central', ['error' => $license->error]));
@@ -194,12 +194,12 @@ class PanelicaLicenseModule extends AbstractServerModule
         $data = $this->getModuleData($service);
 
         if (! empty($data['license_id']) && empty($data['ended'])) {
-            $server = $this->getServer($service);
-            if (! $server) {
+            $client = CentralClient::partner();
+            if (! $client) {
                 return $this->buildResult(false, __('panelica_license.error.no_account'));
             }
 
-            $response = CentralClient::for($server)->patch('licenses/'.$data['license_id'].'/suspend', [
+            $response = $client->patch('licenses/'.$data['license_id'].'/suspend', [
                 'reason' => 'Service terminated in billing',
             ]);
 
@@ -244,12 +244,12 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(true, __('panelica_license.result.plan_later'));
         }
 
-        $server = $this->getServer($service);
-        if (! $server) {
+        $client = CentralClient::partner();
+        if (! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
 
-        $response = CentralClient::for($server)->post(
+        $response = $client->post(
             'licenses/'.$data['license_id'].'/change-plan',
             ['plan_id' => $planId, 'timing' => 'now'],
             $this->idempotencyKey($service, 'plan-'.$planId.'-'.now()->format('YmdH'))
@@ -291,12 +291,10 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(true, __('panelica_license.result.nothing_bought'));
         }
 
-        $server = $this->getServer($service);
-        if (! $server) {
+        $client = CentralClient::partner();
+        if (! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
-
-        $client = CentralClient::for($server);
 
         // Overdue services are suspended here, and so their license at
         // Central; Central renews only an active, expired or non-payment
@@ -357,12 +355,11 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(false, __('panelica_license.error.no_link'));
         }
 
-        $server = $this->getServer($service);
-        if (! $server) {
+        $client = CentralClient::partner();
+        if (! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
 
-        $client = CentralClient::for($server);
         $found = $client->get('installs', ['ref' => $data['install_ref'], 'per_page' => 20]);
         if (! $found->ok) {
             return $this->failed($service, __('panelica_license.error.central', ['error' => $found->error]));
@@ -463,12 +460,12 @@ class PanelicaLicenseModule extends AbstractServerModule
     public function refreshLicense(Service $service, array $extra = []): array
     {
         $data = $this->getModuleData($service);
-        $server = $this->getServer($service);
-        if (empty($data['license_id']) || ! $server) {
+        $client = CentralClient::partner();
+        if (empty($data['license_id']) || ! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
 
-        $license = CentralClient::for($server)->get('licenses/'.$data['license_id']);
+        $license = $client->get('licenses/'.$data['license_id']);
         if (! $license->ok) {
             return $this->failed($service, __('panelica_license.error.central', ['error' => $license->error]));
         }
@@ -528,12 +525,12 @@ class PanelicaLicenseModule extends AbstractServerModule
             return $this->buildResult(false, __('panelica_license.error.link_fixed'));
         }
 
-        $server = $this->getServer($service);
-        if (! $server) {
+        $client = CentralClient::partner();
+        if (! $client) {
             return $this->buildResult(false, __('panelica_license.error.no_account'));
         }
 
-        $license = CentralClient::for($server)->get('licenses/'.$id);
+        $license = $client->get('licenses/'.$id);
         if (! $license->ok) {
             return $this->buildResult(false, __('panelica_license.error.central', ['error' => $license->error]));
         }
@@ -678,62 +675,69 @@ class PanelicaLicenseModule extends AbstractServerModule
     }
 
     // ------------------------------------------------------------------
-    // Partner account
+    // Partner account (the Panelica Licenses page, not a server record)
     // ------------------------------------------------------------------
+
+    /**
+     * Nothing runs on a machine of the partner's: the account is set once on
+     * the Panelica Licenses page, so this module has no server records and
+     * the product form asks it for its plans directly.
+     */
+    public function needsServerRecord(): bool
+    {
+        return false;
+    }
 
     /**
      * The Central plans, for the product form; the partner's own price beside
      * each so the selling price can be set with the margin in view.
      */
-    public function listPackages(Server $server): array
+    public function listPackages(?Server $server = null): array
     {
-        $plans = CentralClient::for($server)->get('plans');
-        if (! $plans->ok) {
+        $client = CentralClient::partner();
+        if (! $client) {
+            throw new \RuntimeException(__('panelica_license.error.no_account'));
+        }
+
+        $answer = $client->get('plans');
+        if (! $answer->ok) {
+            throw new \RuntimeException(__('panelica_license.error.central', ['error' => $answer->error]));
+        }
+
+        $plans = array_values(array_filter((array) $answer->data, fn ($plan) => is_array($plan) && ! empty($plan['id'])));
+
+        return array_map(fn (array $plan) => [
+            'id' => (string) $plan['id'],
+            'name' => __('panelica_license.plan_option', [
+                'name' => (string) ($plan['name'] ?? $plan['id']),
+                'monthly' => number_format((float) ($plan['reseller_price_monthly'] ?? 0), 2),
+                'yearly' => number_format((float) ($plan['reseller_price_yearly'] ?? 0), 2),
+            ]),
+        ], $plans);
+    }
+
+    /** @return list<array<string, mixed>> Central's plans, as it lists them */
+    public function plans(): array
+    {
+        $plans = CentralClient::partner()?->get('plans');
+        if (! $plans || ! $plans->ok) {
             return [];
         }
 
-        $out = [];
-        foreach ((array) $plans->data as $plan) {
-            if (! is_array($plan) || empty($plan['id'])) {
-                continue;
-            }
-
-            $out[] = [
-                'id' => (string) $plan['id'],
-                'name' => __('panelica_license.plan_option', [
-                    'name' => (string) ($plan['name'] ?? $plan['id']),
-                    'monthly' => number_format((float) ($plan['reseller_price_monthly'] ?? 0), 2),
-                    'yearly' => number_format((float) ($plan['reseller_price_yearly'] ?? 0), 2),
-                ]),
-            ];
-        }
-
-        return $out;
+        return array_values(array_filter((array) $plans->data, fn ($plan) => is_array($plan) && ! empty($plan['id'])));
     }
 
-    /** The licenses of this partner account, read back for every service. */
+    /** No server records: licenses are read back by pnlcs:panelica-licenses. */
     public function usageUpdate(Server $server): array
     {
-        $updated = 0;
-        $errors = 0;
-
-        $services = Service::where('server_id', $server->id)
-            ->whereIn('status', ['active', 'suspended'])
-            ->get()
-            ->filter(fn (Service $service) => ! empty($this->getModuleData($service)['license_id']));
-
-        foreach ($services as $service) {
-            ($this->refreshLicense($service)['success'] ?? false) ? $updated++ : $errors++;
-        }
-
-        return ['updated' => $updated, 'errors' => $errors];
+        return ['updated' => 0, 'errors' => 0];
     }
 
-    public function testConnection(Server $server): bool
+    public function testConnection(?Server $server = null): bool
     {
-        $me = CentralClient::for($server)->get('me');
+        $me = CentralClient::partner()?->get('me');
 
-        return $me->ok && in_array((string) ($me->data['status'] ?? ''), ['approved', 'active'], true);
+        return $me && $me->ok && in_array((string) ($me->data['status'] ?? ''), ['approved', 'active'], true);
     }
 
     // ------------------------------------------------------------------

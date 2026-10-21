@@ -161,19 +161,20 @@ function localeValues(string $locale): array
 // Support, Tag, Tickets; Polish Limit (MB), Status, Tag. Each one is named in
 // database/data/same_as_english.php.
 // Raised 2026-10-21 for the Panelica license module (panelica_license.php),
-// by words these languages write the same way: tr +1 (Plan), de +3 (Status,
-// Server, Installation), pl +2 (Plan, Status). Listed in
-// database/data/same_as_english.php as well.
+// by words these languages write the same way: tr +3 (Plan twice, the product
+// name "Panelica :plan"), de +4 (Status, Server, Installation, the product
+// name), pl +4 (Plan twice, Status, the product name), zh +1 (the product
+// name). Listed in database/data/same_as_english.php as well.
 const UNTRANSLATED_VALUE_BUDGET = [
-    'tr' => 52,
+    'tr' => 54,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
     // German hosting writes Domain, Domains and Registrar, not Domäne or
     // Standesbeamter. Those 25 labels are the whole of the raise.
-    'de' => 183,
-    'pl' => 99,
-    'zh' => 35,
+    'de' => 184,
+    'pl' => 101,
+    'zh' => 36,
 ];
 
 test('a complete language is translated, not merely present', function () {

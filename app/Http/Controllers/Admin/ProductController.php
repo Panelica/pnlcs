@@ -97,13 +97,18 @@ class ProductController extends Controller
             return ['packages' => [], 'error' => null];
         }
 
-        $server = Server::where('type', $moduleType)->where('active', true)->first();
+        $registry = app(ModuleRegistry::class);
+        $module = $registry->getServerModule($moduleType);
 
-        if (! $server) {
+        // A module without server records (needsServerRecord(): false) lists
+        // its plans from its own account; it says why when it cannot.
+        $server = $registry->usesServerRecords($moduleType)
+            ? Server::where('type', $moduleType)->where('active', true)->first()
+            : null;
+
+        if (! $server && $registry->usesServerRecords($moduleType)) {
             return ['packages' => [], 'error' => __('admin.products.no_server_for_module')];
         }
-
-        $module = app(ModuleRegistry::class)->getServerModule($moduleType);
 
         if (! $module || ! method_exists($module, 'listPackages')) {
             return ['packages' => [], 'error' => __('admin.products.module_lists_no_packages')];
@@ -112,11 +117,16 @@ class ProductController extends Controller
         try {
             $packages = $module->listPackages($server);
         } catch (\Throwable $e) {
-            return ['packages' => [], 'error' => __('admin.products.package_list_failed', ['error' => $e->getMessage()])];
+            // Without a server there is no server to blame: the module's own words.
+            return ['packages' => [], 'error' => $server
+                ? __('admin.products.package_list_failed', ['error' => $e->getMessage()])
+                : $e->getMessage()];
         }
 
         if ($packages === []) {
-            return ['packages' => [], 'error' => __('admin.products.package_list_empty', ['host' => $server->hostname ?: $server->ip_address])];
+            return ['packages' => [], 'error' => $server
+                ? __('admin.products.package_list_empty', ['host' => $server->hostname ?: $server->ip_address])
+                : __('admin.products.module_lists_no_packages')];
         }
 
         return ['packages' => $packages, 'error' => null];

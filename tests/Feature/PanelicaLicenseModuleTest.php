@@ -5,14 +5,15 @@ use App\Listeners\RenewOnPaymentListener;
 use App\Models\Admin;
 use App\Models\AdminRole;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\ModuleQueue;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductGroup;
-use App\Models\Server;
 use App\Models\Service;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\EmailTemplateService;
 use App\Services\Module\ModuleRegistry;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Modules\Servers\PanelicaLicense\CentralClient;
 use Modules\Servers\PanelicaLicense\PanelicaLicenseModule;
+use Modules\Servers\PanelicaLicense\PartnerAccount;
 
 /*
  * Panelica licenses sold with a Panelica partner account
@@ -101,24 +103,22 @@ function plFake(array &$central): void
     });
 }
 
-function plServer(): Server
+/** The partner account this site sells with (the Panelica Licenses page). */
+function plConnect(?string $central = null): void
 {
-    return Server::factory()->create([
-        'name' => 'Panelica partner', 'type' => 'panelicalicense', 'hostname' => 'www.panelica.com', 'ip_address' => null,
-        'port' => 443, 'access_hash' => 'rk_live_secret_partner_key', 'active' => true, 'max_accounts' => 0,
-    ]);
+    PartnerAccount::save('rk_live_secret_partner_key', $central);
 }
 
-function plService(array $attrs = [], ?Server $server = null): Service
+function plService(array $attrs = []): Service
 {
-    $server ??= plServer();
+    plConnect();
     $product = Product::factory()->create([
         'group_id' => ProductGroup::factory()->create()->id, 'type' => 'other', 'server_type' => 'panelicalicense',
         'config_options' => ['package_name' => PL_PLAN], 'pay_type' => 'recurring',
     ]);
 
     return Service::factory()->create(array_merge([
-        'client_id' => Client::factory()->create()->id, 'product_id' => $product->id, 'server_id' => $server->id,
+        'client_id' => Client::factory()->create()->id, 'product_id' => $product->id, 'server_id' => null,
         'status' => 'active', 'billing_cycle' => 'Annually', 'amount' => 120, 'next_due_date' => '2027-10-21',
         'domain' => null, 'username' => null,
     ], $attrs));
@@ -158,9 +158,9 @@ function plSite(): string
     return 'pnlcs-'.(parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'pnlcs');
 }
 
-function plStaff(): Admin
+function plStaff(array $permissions = ['view_services', 'manage_services']): Admin
 {
-    return Admin::factory()->create(['role_id' => AdminRole::factory()->create(['name' => 'R'.uniqid(), 'permissions' => ['view_services', 'manage_services']])->id]);
+    return Admin::factory()->create(['role_id' => AdminRole::factory()->create(['name' => 'R'.uniqid(), 'permissions' => $permissions])->id]);
 }
 
 function plCustomer(Service $service): User
@@ -173,30 +173,58 @@ function plCustomer(Service $service): User
 
 // ---------------------------------------------------------------------------
 
-test('it is a built-in server module that signs in with the partner API key', function () {
+test('it is a built-in module with no server records: the partner account is set on its own page', function () {
     $registry = app(ModuleRegistry::class);
 
     expect($registry->getServerModule('panelicalicense'))->toBeInstanceOf(PanelicaLicenseModule::class)
         ->and($registry->serverModuleNames())->toHaveKey('panelicalicense', 'Panelica Licenses')
-        ->and($registry->serverCredentialRequirement('panelicalicense'))->toBe('token');
+        ->and($registry->usesServerRecords('panelicalicense'))->toBeFalse()
+        ->and($registry->usesServerRecords('cpanel'))->toBeTrue();
+
+    $servers = $this->actingAs(plStaff(['manage_servers']), 'admin')->get(route('admin.config.servers'))->assertOk()->getContent();
+    expect($servers)->not->toContain('value="panelicalicense"')
+        ->and($servers)->toContain('value="cpanel"');
 });
 
-test('Central is the partner account address: https for the real one, http only for a private test address', function () {
-    $server = plServer();
-    expect(CentralClient::for($server)->baseUrl())->toBe('https://www.panelica.com');
+test('the partner key is kept encrypted, and Central is www.panelica.com unless another address is given', function () {
+    plConnect();
 
-    $server->forceFill(['hostname' => '127.0.0.1', 'port' => 8100])->save();
-    expect(CentralClient::for($server)->baseUrl())->toBe('http://127.0.0.1:8100');
+    expect(PartnerAccount::apiKey())->toBe('rk_live_secret_partner_key')
+        ->and((string) Setting::get('panelica_partner_api_key'))->not->toContain('rk_live')
+        ->and(CentralClient::partner()->baseUrl())->toBe('https://www.panelica.com');
+
+    plConnect('http://127.0.0.1:8100/');
+    expect(CentralClient::partner()->baseUrl())->toBe('http://127.0.0.1:8100');
+
+    PartnerAccount::forget();
+    expect(CentralClient::partner())->toBeNull();
 });
 
-test('the connection test and the package list come from the partner account', function () {
+test('the connection test and the plans come from the partner account', function () {
     $central = plCentral();
     plFake($central);
-    $server = plServer();
+    plConnect();
 
-    expect(plModule()->testConnection($server))->toBeTrue()
-        ->and(plModule()->listPackages($server))->toBe([['id' => PL_PLAN, 'name' => 'Business (your price: $8.00 a month, $80.00 a year)']])
+    expect(plModule()->testConnection())->toBeTrue()
+        ->and(plModule()->listPackages())->toBe([['id' => PL_PLAN, 'name' => 'Business (your price: $8.00 a month, $80.00 a year)']])
         ->and($central['calls'][0][5])->toBe('Bearer rk_live_secret_partner_key');
+
+    PartnerAccount::forget();
+    expect(fn () => plModule()->listPackages())->toThrow(RuntimeException::class, __('panelica_license.error.no_account'));
+});
+
+test('the product form lists the plans without a server record, and says why when it cannot', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+    $staff = plStaff(['list_products', 'manage_products']);
+
+    $this->actingAs($staff, 'admin')->getJson(route('admin.products.packages', ['module' => 'panelicalicense']))
+        ->assertOk()->assertJsonPath('packages.0.id', PL_PLAN)->assertJsonPath('error', null);
+
+    PartnerAccount::forget();
+    $this->actingAs($staff, 'admin')->getJson(route('admin.products.packages', ['module' => 'panelicalicense']))
+        ->assertOk()->assertJsonPath('packages', [])->assertJsonPath('error', __('panelica_license.error.no_account'));
 });
 
 test('a paid order hands out an install link and buys nothing', function () {
@@ -706,4 +734,129 @@ test('the welcome mail can carry the install command and, later, the key', funct
 
     expect($fields['service_install_command'] ?? null)->toBe(plModule()->installCommand($service))
         ->and($fields['service_license_key'] ?? null)->toBe('');
+});
+
+// --- the Panelica Licenses page ------------------------------------------------------
+
+test('the Panelica Licenses page is in the top menu for staff who manage products, and only for them', function () {
+    $menu = route('admin.panelica-licenses.index');
+
+    expect($this->actingAs(plStaff(['view_services', 'manage_products']), 'admin')->get(route('admin.dashboard'))->getContent())->toContain($menu);
+    expect($this->actingAs(plStaff(['view_services']), 'admin')->get(route('admin.dashboard'))->getContent())->not->toContain($menu);
+    $this->actingAs(plStaff(['view_services']), 'admin')->get($menu)->assertForbidden();
+});
+
+test('not connected: the page says what it is and asks for the partner key', function () {
+    $central = plCentral();
+    plFake($central);
+
+    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+
+    expect($page)->toContain(e(__('panelica_license.page.hero_title')))
+        ->and($page)->toContain('name="api_key"')
+        ->and($page)->toContain('https://www.panelica.com/partnership')
+        ->and($central['calls'])->toBe([]);
+});
+
+test('a key Central refuses, or an account that is not active, is not kept', function () {
+    $central = plCentral();
+    Http::fake(['*/api/reseller/v1/me' => Http::sequence()
+        ->push(['success' => false, 'error' => 'Invalid or revoked API key.', 'code' => 401], 401)
+        ->push(['success' => true, 'data' => ['company_name' => 'Acme', 'status' => 'pending']], 200)]);
+    $staff = plStaff(['manage_products']);
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.connect'), ['api_key' => 'rk_wrong'])
+        ->assertSessionHas('error', __('panelica_license.page.connect_failed', ['error' => 'Invalid or revoked API key.']));
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.connect'), ['api_key' => 'rk_pending'])
+        ->assertSessionHas('error', __('panelica_license.page.account_not_active', ['status' => 'pending']));
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.connect'), ['api_key' => 'not-a-partner-key'])
+        ->assertSessionHasErrors('api_key');
+
+    expect(PartnerAccount::connected())->toBeFalse();
+});
+
+test('connected: the account, the plans with cost and list price, and a product made in one click', function () {
+    $central = plCentral();
+    plFake($central);
+    $staff = plStaff(['manage_products', 'list_products']);
+    Currency::query()->update(['is_default' => false]);
+    $usd = Currency::firstOrCreate(['code' => 'USD'], ['prefix' => '$', 'suffix' => '', 'format' => 1, 'rate' => 1]);
+    $usd->forceFill(['is_default' => true, 'rate' => 1])->save();
+    $eur = Currency::updateOrCreate(['code' => 'EUR'], ['prefix' => '€', 'suffix' => '', 'format' => 1, 'rate' => 0.5, 'is_default' => false]);
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.connect'), ['api_key' => 'rk_live_secret_partner_key'])
+        ->assertRedirect(route('admin.panelica-licenses.index'))
+        ->assertSessionHas('success', __('panelica_license.page.connected', ['name' => 'Acme Hosting']));
+    expect(PartnerAccount::apiKey())->toBe('rk_live_secret_partner_key');
+
+    $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    expect($page)->toContain('Acme Hosting')
+        ->and($page)->toContain('Business')
+        ->and($page)->toContain(e(__('panelica_license.page.per_month', ['price' => '$8.00'])))
+        ->and($page)->toContain(e(__('panelica_license.page.create_product')));
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), [
+        'plan_id' => PL_PLAN, 'name' => 'Panelica Business', 'monthly' => '12.00', 'annually' => '120.00',
+    ])->assertSessionHas('success');
+
+    $product = Product::where('name', 'Panelica Business')->firstOrFail();
+    expect($product->server_type)->toBe('panelicalicense')
+        ->and($product->config_options['package_name'])->toBe(PL_PLAN)
+        ->and($product->auto_setup)->toBe('payment')
+        ->and($product->group->slug)->toBe('panelica-licenses')
+        ->and($product->priceFor('monthly', $usd->id))->toBe(12.0)
+        ->and($product->priceFor('annually', $eur->id))->toBe(60.0)
+        ->and($product->priceFor('quarterly', $usd->id))->toBeNull();
+
+    $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->getContent();
+    expect($page)->toContain(route('admin.products.edit', $product))
+        ->and($page)->toContain(e(__('panelica_license.page.per_month', ['price' => $usd->formatAmount(4.0)])));
+});
+
+test('a product needs a price and a plan Central lists', function () {
+    $central = plCentral();
+    plFake($central);
+    plConnect();
+    $staff = plStaff(['manage_products']);
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), ['plan_id' => PL_PLAN, 'name' => 'X'])
+        ->assertSessionHas('error', __('panelica_license.page.price_needed'));
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), ['plan_id' => 'no-such-plan', 'name' => 'X', 'monthly' => 5])
+        ->assertSessionHas('error', __('panelica_license.page.plan_unknown'));
+
+    expect(Product::where('server_type', 'panelicalicense')->where('name', 'X')->exists())->toBeFalse();
+});
+
+test('the sales list shows what was sold, and disconnecting stops buying', function () {
+    $central = plCentral();
+    $service = plLicensed($central);
+    $staff = plStaff(['manage_products']);
+
+    $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->getContent();
+    expect($page)->toContain('PNLC-AAAA-BBBB-CCCC-DDDD')
+        ->and($page)->toContain(route('admin.services.show', $service));
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.disconnect'))->assertSessionHas('success');
+    $central['calls'] = [];
+    Artisan::call('pnlcs:panelica-licenses');
+
+    expect(PartnerAccount::connected())->toBeFalse()
+        ->and($central['calls'])->toBe([])
+        ->and(plModule()->renew($service->fresh())['message'])->toBe(__('panelica_license.error.no_account'));
+});
+
+test('licenses already bought are read back from Central, an hour apart', function () {
+    $central = plCentral();
+    $service = plLicensed($central);
+    $central['license']['expires_at'] = '2028-01-01T00:00:00+00:00';
+    $central['calls'] = [];
+
+    Artisan::call('pnlcs:panelica-licenses');
+    expect(plCalls($central, 'GET', '/licenses/'.PL_LICENSE))->toBe([]);
+
+    $service->forceFill(['module_data' => array_merge($service->fresh()->module_data, ['checked_at' => now()->subHours(2)->toIso8601String()])])->save();
+    Artisan::call('pnlcs:panelica-licenses');
+
+    expect(plCalls($central, 'GET', '/licenses/'.PL_LICENSE))->toHaveCount(1)
+        ->and($service->fresh()->module_data['license_expires_at'])->toBe('2028-01-01T00:00:00+00:00');
 });

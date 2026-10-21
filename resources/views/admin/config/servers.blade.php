@@ -281,12 +281,6 @@ const SERVER_TYPE_TUNING = {
         hashLabel: 'API Key', hashPlaceholder: 'Vultr account → API',
         hint: '',
     },
-    panelicalicense: {
-        port: 443, username: false, nameservers: false,
-        passwordLabel: @json(__('panelica_license.server.password_label')), passwordPlaceholder: @json(__('panelica_license.server.password_unused')),
-        hashLabel: @json(__('panelica_license.server.key_label')), hashPlaceholder: 'rk_...',
-        hint: @json((string) trans_markup('panelica_license.server.hint')),
-    },
     cyberpanel: { port: 8090, username: true, passwordLabel: 'Password', passwordPlaceholder: '', hashLabel: 'Access Hash', hashPlaceholder: '', hint: '' },
     custom: { port: 8443, username: true, passwordLabel: 'Password / API Token', passwordPlaceholder: '', hashLabel: 'Access Hash / API Key', hashPlaceholder: '', hint: '' },
 };

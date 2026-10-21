@@ -134,6 +134,13 @@
                 <a href="{{ route('admin.reports.index') }}"><i class="fas fa-chart-bar"></i> {{ __('admin.nav.reports') }}</a>
             </li>
 
+            {{-- Selling Panelica licenses with a partner account (modules/Servers/PanelicaLicense) --}}
+            @if(auth('admin')->user()?->hasPermission('manage_products'))
+            <li style="float:left; width:auto;">
+                <a href="{{ route('admin.panelica-licenses.index') }}"><i class="fas fa-key"></i> {{ __('panelica_license.page.menu') }}</a>
+            </li>
+            @endif
+
             {{-- Utilities --}}
             <li class="has-dropdown" style="float:left; width:auto; position:relative;">
                 <a href="#" onclick="event.preventDefault();"><i class="fas fa-wrench"></i> {{ __('admin.nav.utilities') }}</a>

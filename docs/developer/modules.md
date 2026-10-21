@@ -216,6 +216,7 @@ A module can offer more than its interface requires:
 | `servicePageHides()` (servers), a list of `server_details`, `change_password` | leave out the server's name and address on the customer's page, or the Change password button on the staff page |
 | `isProvisioned(Service): bool` (servers) | decide whether the staff page offers **Create** (otherwise: an active service with a username has nothing to create) |
 | `emailMergeFields(Service)` (servers), `name => value` | add `{name}` fields to the service's emails; the built-in fields win a clash |
+| `needsServerRecord(): bool` (servers), returning `false` | for a module that sells through an account kept elsewhere: it is not offered on **Setup → Servers**, and the product form asks `listPackages(null)` for its plans (an exception's message is shown as the reason when it cannot list them) |
 
 `customFunctions()` and `clientFunctions()` are given the service, so a module
 can offer a button only where it applies; a module that declares no parameter

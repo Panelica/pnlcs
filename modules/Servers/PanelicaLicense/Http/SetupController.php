@@ -48,9 +48,8 @@ class SetupController
             return $this->refuse(__('panelica_license.script.used'));
         }
 
-        $server = $service->server;
-        $client = $server ? CentralClient::for($server) : null;
-        $code = $client ? $this->partnerCode($server->id, $client) : null;
+        $client = CentralClient::partner();
+        $code = $client ? $this->partnerCode($client) : null;
         $script = $code ? $client->installScript($code, $reference) : null;
 
         if ($script === null) {
@@ -68,9 +67,9 @@ class SetupController
 
     private function serviceFor(string $reference): ?Service
     {
-        return Service::with('server', 'client')
+        return Service::with('client')
             ->where('module_data->install_ref', $reference)
-            ->whereHas('server', fn ($q) => $q->where('type', PanelicaLicenseModule::NAME))
+            ->whereHas('product', fn ($q) => $q->where('server_type', PanelicaLicenseModule::NAME))
             ->first();
     }
 
@@ -78,9 +77,9 @@ class SetupController
      * The partner's install link code. Kept for ten minutes so a run of
      * installs does not ask Central each time; a failure is not kept.
      */
-    private function partnerCode(int $serverId, CentralClient $client): ?string
+    private function partnerCode(CentralClient $client): ?string
     {
-        $key = 'panelica_license:install_code:'.$serverId;
+        $key = 'panelica_license:install_code:'.md5($client->baseUrl());
 
         if ($cached = Cache::get($key)) {
             return (string) $cached;

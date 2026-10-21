@@ -723,7 +723,10 @@ class ConfigController extends Controller
         // has no module, and left out HestiaCP, Proxmox and Vultr, which do.
         // A type an existing server already carries stays choosable, so
         // editing that server does not silently change it.
-        $types = $registry->serverModuleNames();
+        // A module that keeps its account elsewhere (needsServerRecord) is not
+        // a kind of server: the Panelica license module is set up on its own
+        // page.
+        $types = array_filter($registry->serverModuleNames(), fn ($label, $key) => $registry->usesServerRecords($key), ARRAY_FILTER_USE_BOTH);
         $all = $registry->serverModuleNames(true);
         foreach ($servers->pluck('type')->filter()->map(fn ($t) => strtolower((string) $t))->unique() as $type) {
             $types[$type] ??= $all[$type] ?? ucfirst($type);

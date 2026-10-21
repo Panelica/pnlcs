@@ -2,15 +2,13 @@
 
 namespace Modules\Servers\PanelicaLicense;
 
-use App\Models\Server;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Panelica Central's partner API (/api/reseller/v1), signed in with the
- * partner's API key (rk_...), which the server record keeps encrypted in
- * access_hash.
+ * partner's API key (rk_...) from the Panelica Licenses page (PartnerAccount).
  *
  * The key never reaches a log line or a message: errors carry Central's own
  * words and the HTTP status only.
@@ -19,29 +17,25 @@ final class CentralClient
 {
     private const API = '/api/reseller/v1/';
 
-    private function __construct(private Server $server) {}
+    private function __construct(private string $baseUrl, private string $apiKey) {}
 
-    public static function for(Server $server): self
+    /** The partner account this site is connected to, or null when it is not. */
+    public static function partner(): ?self
     {
-        return new self($server);
+        $key = PartnerAccount::apiKey();
+
+        return $key === null ? null : new self(PartnerAccount::centralUrl(), $key);
     }
 
-    /**
-     * https://<hostname>[:port]. A private or loopback address (a Central
-     * someone runs for testing) is spoken to over plain http; the real one is
-     * a public name and always https.
-     */
+    /** A key and address being tried before they are saved. */
+    public static function make(string $baseUrl, string $apiKey): self
+    {
+        return new self(rtrim(trim($baseUrl), '/') ?: PartnerAccount::DEFAULT_CENTRAL, trim($apiKey));
+    }
+
     public function baseUrl(): string
     {
-        $host = trim((string) ($this->server->hostname ?: $this->server->ip_address));
-        $local = $host === 'localhost'
-            || (filter_var($host, FILTER_VALIDATE_IP) && ! filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE));
-        $scheme = $local ? 'http' : 'https';
-        $port = (int) $this->server->port;
-        $default = $scheme === 'https' ? 443 : 80;
-        $hostPart = str_contains($host, ':') && ! str_starts_with($host, '[') ? '['.$host.']' : $host;
-
-        return $scheme.'://'.$hostPart.($port > 0 && $port !== $default ? ':'.$port : '');
+        return $this->baseUrl;
     }
 
     public function get(string $path, array $query = []): CentralResponse
@@ -75,7 +69,7 @@ final class CentralClient
                 ->withUserAgent('PNLCS')
                 ->get($this->baseUrl().'/install/'.rawurlencode($code).'/'.rawurlencode($ref));
         } catch (\Throwable $e) {
-            Log::warning('Panelica license: Central did not serve the install script', ['server_id' => $this->server->id, 'error' => $e->getMessage()]);
+            Log::warning('Panelica license: Central did not serve the install script', ['error' => $e->getMessage()]);
 
             return null;
         }
@@ -83,7 +77,7 @@ final class CentralClient
         $body = (string) $response->body();
 
         if ($response->status() !== 200 || ! str_starts_with($body, '#!') || ! str_contains($body, 'panelica_installer')) {
-            Log::warning('Panelica license: Central did not serve the install script', ['server_id' => $this->server->id, 'status' => $response->status()]);
+            Log::warning('Panelica license: Central did not serve the install script', ['status' => $response->status()]);
 
             return null;
         }
@@ -93,7 +87,7 @@ final class CentralClient
 
     private function request(): PendingRequest
     {
-        return Http::withToken((string) $this->server->access_hash)
+        return Http::withToken($this->apiKey)
             ->acceptJson()
             ->asJson()
             ->withUserAgent('PNLCS')
@@ -105,7 +99,7 @@ final class CentralClient
 
     private function send(string $method, string $path, array $payload = [], ?string $idempotencyKey = null): CentralResponse
     {
-        if (blank($this->server->access_hash)) {
+        if ($this->apiKey === '') {
             return new CentralResponse(false, 0, error: __('panelica_license.error.no_key'));
         }
 
@@ -123,7 +117,7 @@ final class CentralClient
                 default => $request->get($url, $payload),
             };
         } catch (\Throwable $e) {
-            Log::warning('Panelica license: Central could not be reached', ['server_id' => $this->server->id, 'path' => $path, 'error' => $e->getMessage()]);
+            Log::warning('Panelica license: Central could not be reached', ['path' => $path, 'error' => $e->getMessage()]);
 
             return new CentralResponse(false, 0, error: __('panelica_license.error.unreachable'));
         }
@@ -143,7 +137,7 @@ final class CentralClient
             $message = (string) ($json['message'] ?? '');
         }
 
-        Log::info('Panelica license: Central refused', ['server_id' => $this->server->id, 'path' => $path, 'status' => $response->status(), 'error' => $message]);
+        Log::info('Panelica license: Central refused', ['path' => $path, 'status' => $response->status(), 'error' => $message]);
 
         return new CentralResponse(false, $response->status(), $json['data'] ?? null, $message !== '' ? $message : 'HTTP '.$response->status());
     }

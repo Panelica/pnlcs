@@ -17,16 +17,21 @@ You pay Panelica only for licenses that are actually installed: an order nobody 
 
 ## Requirements
 
-- An **approved Panelica partner account** with a **partner API key** (`rk_…`) and enough **balance** for the licenses you sell. Both are in your Panelica partner portal.
+- An **active Panelica partner account** with a **partner API key** (`rk_…`) and enough **balance** for the licenses you sell. Both are in your Panelica partner portal.
 - Your PNLCS site reachable from your customers' servers over HTTPS: the install command is served from it.
 
 ## Configure PNLCS
 
-1. In **Setup → Servers**, add a server of type **Panelica Licenses**: hostname `www.panelica.com`, port `443`, **Max accounts** `0`. Paste the partner API key into **Partner API key**; it is stored encrypted. Username and Password are not used. **Test Connection** passes when the key is accepted and the partner account is active.
-2. Create a product of type **Other**, module **Panelica Licenses**, and choose the **Package**: the list shows Panelica's plans with your price for a month and a year beside each, so you can set your selling price with the margin in view.
-3. Price the product **monthly** and/or **annually** only. Panelica sells no other period; a service billed quarterly, for example, is refused when it is created.
-4. Set **Auto setup** to *As soon as the first payment is received* (the default). With *As soon as the order is placed* the customer gets the install command before paying; the license is still bought only once the order's invoice is paid.
-5. Optional: add `{service_install_command}` to the product's welcome email.
+Everything is on one page: **Panelica Licenses** in the admin area's top menu (staff who may manage products see it).
+
+1. **Connect.** Paste the partner API key (`rk_…`) from your Panelica partner portal and press **Connect**. PNLCS asks Central first and keeps the key, encrypted, only when the partner account is active. Not a partner yet? The page links to the partner programme.
+2. **Create the products.** The page lists Panelica's plans with **your cost** (your partner price) and Panelica's list price beside each. Enter your monthly and/or annual price and press **Create product**: the product goes into a **Panelica Licenses** group in your store, sells that plan, and is set up as soon as the first payment is received. Prices in your other currencies follow their exchange rates. With a USD currency on the site, the page suggests Panelica's list price and shows your margin.
+3. Panelica sells monthly and annual periods only, so the products are priced for those two. A service billed for any other period is refused when it is created.
+4. Optional: add `{service_install_command}` to the product's welcome email.
+
+The same page shows your **partner balance** (with **Top up balance**, which opens your partner portal), how many licenses are sold, waiting for installation or need attention, and every license sold with its customer, key, server and expiry date. **Check installs now** looks for installed servers at once instead of within five minutes. Under **Partner account settings** you can use another key or disconnect: licenses already sold keep working at Panelica, but none is bought or renewed from PNLCS until you connect again.
+
+There is nothing to add under **Setup → Servers**: nothing runs on a machine of yours.
 
 ## What the customer sees
 

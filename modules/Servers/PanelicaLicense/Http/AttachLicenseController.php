@@ -13,7 +13,7 @@ class AttachLicenseController
     {
         $request->validate(['license_id' => ['required', 'string', 'max:64']]);
 
-        abort_unless(strtolower((string) $service->server?->type) === PanelicaLicenseModule::NAME, 404);
+        abort_unless(strtolower((string) $service->product?->server_type) === PanelicaLicenseModule::NAME, 404);
 
         $result = app(PanelicaLicenseModule::class)->attachLicense($service, (string) $request->input('license_id'));
 

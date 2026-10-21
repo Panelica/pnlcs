@@ -231,10 +231,31 @@ class ModuleRegistry
     public function serverCredentialRequirement(?string $type): string
     {
         return match (self::key((string) $type)) {
-            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr', 'aapanel', 'panelicalicense' => 'token',
+            'cpanel', 'panelica', 'plesk', 'proxmox', 'vultr', 'aapanel' => 'token',
             'directadmin', 'hestiacp' => 'either',
             default => 'none',
         };
+    }
+
+    /**
+     * Whether a server module works through server records (Setup -> Servers).
+     * A module that sells through an account kept somewhere else - a license
+     * reseller account - says needsServerRecord(): false; it is then not
+     * offered as a server type, and the product form asks it for its plans
+     * without a server.
+     */
+    public function usesServerRecords(string $name): bool
+    {
+        $class = $this->serverModules[self::key($name)] ?? null;
+        if ($class === null || ! method_exists($class, 'needsServerRecord')) {
+            return true;
+        }
+
+        try {
+            return (bool) app($class)->needsServerRecord();
+        } catch (\Throwable) {
+            return true;
+        }
     }
 
     public function getServerModule(string $name): ?ServerModuleInterface
