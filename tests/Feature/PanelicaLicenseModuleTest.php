@@ -759,20 +759,29 @@ test('the welcome mail can carry the install command and, later, the key', funct
 test('the Panelica Licenses page is in the top menu for staff who manage products, and only for them', function () {
     $menu = route('admin.panelica-licenses.index');
 
-    expect($this->actingAs(plStaff(['view_services', 'manage_products']), 'admin')->get(route('admin.dashboard'))->getContent())->toContain($menu);
+    $dashboard = $this->actingAs(plStaff(['view_services', 'manage_products']), 'admin')->get(route('admin.dashboard'))->getContent();
+    expect($dashboard)->toContain($menu)
+        // The menu says the product's name and nothing more.
+        ->and($dashboard)->toMatch('#<a href="'.preg_quote($menu, '#').'"><i class="fas fa-key"></i> Panelica</a>#');
     expect($this->actingAs(plStaff(['view_services']), 'admin')->get(route('admin.dashboard'))->getContent())->not->toContain($menu);
     $this->actingAs(plStaff(['view_services']), 'admin')->get($menu)->assertForbidden();
 });
 
-test('not connected: the page says what it is and asks for the partner key', function () {
+test('not connected: the page says what it is, asks for a partner application first, then for the key', function () {
     $central = plCentral();
     plFake($central);
 
     $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
 
     expect($page)->toContain(e(__('panelica_license.page.hero_title')))
+        ->and($page)->toContain(e(__('panelica_license.page.hero_step1')))
+        ->and($page)->toContain(e(__('panelica_license.page.hero_step4')))
+        ->and($page)->toMatch('#<a href="https://www.panelica.com/partnership" target="_blank" rel="noopener" class="pl-apply">.*?'.preg_quote(e(__('panelica_license.page.become_partner')), '#').'</a>#s')
+        ->and($page)->toContain(e(__('panelica_license.page.apply_hint')))
+        ->and($page)->toContain(e(__('panelica_license.page.have_account')))
         ->and($page)->toContain('name="api_key"')
-        ->and($page)->toContain('https://www.panelica.com/partnership')
+        // The application comes before the key.
+        ->and(strpos($page, 'class="pl-apply"'))->toBeLessThan(strpos($page, 'name="api_key"'))
         ->and($central['calls'])->toBe([]);
 });
 

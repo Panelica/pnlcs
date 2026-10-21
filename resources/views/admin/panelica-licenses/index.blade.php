@@ -15,7 +15,13 @@
     .pl-steps3{list-style:none;margin:0;padding:0;display:grid;gap:10px}
     .pl-steps3 li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.45}
     .pl-steps3 b{flex:0 0 24px;height:24px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:12px}
+    .pl-how{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;opacity:.85;margin:0 0 10px}
+    .pl-apply-row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin-top:20px}
+    .pl-apply{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#1a4d80;font-weight:700;font-size:15px;padding:11px 20px;border-radius:7px;text-decoration:none}
+    .pl-apply:hover,.pl-apply:focus{background:#eef4fb;color:#123a61;text-decoration:none}
+    .pl-apply-hint{font-size:12.5px;line-height:1.45;opacity:.9;flex:1 1 220px}
     .pl-connect{background:#fff;color:#333;border-radius:8px;padding:18px}
+    .pl-connect h3{margin:0 0 4px;font-size:15px;font-weight:700;color:#1a4d80}
     .pl-connect label{font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px}
     .pl-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
     .pl-stat{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px}
@@ -42,18 +48,27 @@
 </div>
 
 @if(! $connected || ! $account)
-{{-- Not connected (or the key no longer works): what this is, and the key. --}}
+{{-- Not connected (or the key no longer works): what this is, how to become
+     a partner (the first thing somebody without a key needs), and the key. --}}
 <div class="pl-hero">
     <div>
         <h2>{{ __('panelica_license.page.hero_title') }}</h2>
         <p>{{ __('panelica_license.page.hero_text') }}</p>
+        <div class="pl-how">{{ __('panelica_license.page.how_title') }}</div>
         <ol class="pl-steps3">
             <li><b>1</b><span>{{ __('panelica_license.page.hero_step1') }}</span></li>
             <li><b>2</b><span>{{ __('panelica_license.page.hero_step2') }}</span></li>
             <li><b>3</b><span>{{ __('panelica_license.page.hero_step3') }}</span></li>
+            <li><b>4</b><span>{{ __('panelica_license.page.hero_step4') }}</span></li>
         </ol>
+        <div class="pl-apply-row">
+            <a href="{{ $becomePartner }}" target="_blank" rel="noopener" class="pl-apply"><i class="fas fa-handshake"></i> {{ __('panelica_license.page.become_partner') }}</a>
+            <span class="pl-apply-hint">{{ __('panelica_license.page.apply_hint') }}</span>
+        </div>
     </div>
     <div class="pl-connect">
+        <h3>{{ __('panelica_license.page.have_account') }}</h3>
+        <p style="font-size:12.5px;{{ $muted }}margin:0 0 12px;">{{ __('panelica_license.page.have_account_hint') }}</p>
         @if($accountError)
         <div style="margin-bottom:12px;padding:8px 10px;border-radius:5px;background:#fdecea;border:1px solid #f5c2c0;font-size:12.5px;color:#8a1f17;">{{ __('panelica_license.page.key_not_working', ['error' => $accountError]) }}</div>
         @endif
@@ -73,10 +88,6 @@
             </details>
             <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fas fa-plug"></i> {{ __('panelica_license.page.connect') }}</button>
         </form>
-        <p style="font-size:12.5px;margin:12px 0 0;text-align:center;">
-            {{ __('panelica_license.page.no_account') }}
-            <a href="{{ $becomePartner }}" target="_blank" rel="noopener" style="font-weight:600;">{{ __('panelica_license.page.become_partner') }}</a>
-        </p>
     </div>
 </div>
 @else

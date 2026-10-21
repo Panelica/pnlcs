@@ -22,9 +22,11 @@ You pay Panelica only for licenses that are actually installed: an order nobody 
 
 ## Configure PNLCS
 
-Everything is on one page: **Panelica Licenses** in the admin area's top menu (staff who may manage products see it).
+Everything is on one page, **Panelica Licenses**: **Panelica** in the admin area's top menu (staff who may manage products see it).
 
-1. **Connect.** Paste the partner API key (`rk_…`) from your Panelica partner portal and press **Connect**. PNLCS asks Central first and keeps the key, encrypted, only when the partner account is active. Not a partner yet? The page links to the partner programme.
+Not a Panelica partner yet? The page explains how selling works and starts with **Apply to become a partner**, which opens the partner application at Panelica. Panelica reviews the application and contacts you; once you are approved, create an API key in your partner portal and come back to connect it.
+
+1. **Connect.** Paste the partner API key (`rk_…`) from your Panelica partner portal and press **Connect**. PNLCS asks Central first and keeps the key, encrypted, only when the partner account is active.
 2. **Create the products.** The page lists Panelica's plans with **your cost** (your partner price) and Panelica's list price beside each. Enter your monthly and/or annual price and press **Create product**: the product goes into a **Panelica Licenses** group in your store, sells that plan, and is set up as soon as the first payment is received. Prices in your other currencies follow their exchange rates. With a USD currency on the site, the page suggests Panelica's list price and shows your margin.
 3. Panelica sells monthly and annual periods only, so the products are priced for those two. A service billed for any other period is refused when it is created.
 4. Optional: add `{service_install_command}` to the product's welcome email.
@@ -53,7 +55,7 @@ Next to it is the link's **code** at Panelica (the part after `/install/`). Chan
 
 ### Switching the module off
 
-Under **Setup → Modules** the module can be switched off while no product sells licenses. Switched off, the Panelica Licenses menu entry and page are gone, every install command stops with a message, and nothing is bought or read from Central. Switch it on again to get everything back as it was.
+Under **Setup → Modules** the module can be switched off while no product sells licenses. Switched off, the **Panelica** menu entry and the page are gone, every install command stops with a message, and nothing is bought or read from Central. Switch it on again to get everything back as it was.
 
 ## What the customer sees
 
