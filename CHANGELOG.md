@@ -2,6 +2,108 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.6.0-beta.2 — 2026-10-21
+
+A beta: offered only to installations on the **beta** channel (**Setup →
+Updates → Update channel**). It contains everything in 1.6.0-beta.1. Most of
+it came from [@ertugrulkeyvan](https://github.com/ertugrulkeyvan): thank you
+for seventeen pull requests (#193 to #209).
+
+### Added
+
+- **Sell Panelica licenses.** A new **Panelica Licenses** page in the admin
+  area's top menu, for staff who manage products. Connect your Panelica
+  partner account with its API key, create a product for each Panelica plan in
+  one click at your own price (your partner cost, Panelica's list price and
+  your margin are shown beside it), and see your partner balance and every
+  license sold. A customer who buys one gets an install command at your own
+  address (`curl -sSL https://<your site>/setup/<reference> | bash`); once
+  their new panel starts its trial, the license is bought from your partner
+  balance by itself and shown on their service page. Each paid renewal buys
+  the next period; suspending, unsuspending and terminating the service do the
+  same to the license. Nothing is bought for an order nobody installs. See
+  [Sell Panelica Licenses](docs/guides/sell-panelica-licenses.md).
+- **Knowledge base and announcements in more than one language.** Articles,
+  categories and announcements take a translation for every active language;
+  visitors read their own language where one is written, the default text
+  otherwise (#201, #203).
+- **The knowledge base search box searches**, in the visitor's language
+  (#202).
+- **Retry registration** on the admin domain page, for a paid domain the
+  registrar refused (#197).
+- **"Keep this card"** when paying an invoice by card with Stripe while
+  automatic payment is on, so the next invoice can be charged by itself
+  (#209).
+
+### Changed
+
+- **Admin reports** read in the admin's language: titles, descriptions,
+  columns and the CSV header (#208).
+- **Statuses on the admin screens** are shown in the admin's language (#205).
+- **The Panelica module's messages** to customers on the hosting tools are in
+  their language (#199).
+- **A domain order asks for the registrant's phone number** when the account
+  has none, wherever the seller is: registries require one (#196).
+- **Panel sign-in** uses the server's name when the panel gives its public IP
+  and the name points at it, so the browser does not stop at a certificate
+  warning (#200).
+- **Spanish** has every new text of this release.
+
+### Fixed
+
+- **A fresh install's first save of the General settings** no longer turns off
+  every email; the test email button says when an email was not sent (#194).
+- **PHP mail under SELinux** on AlmaLinux and Rocky: the installer sets what
+  sendmail needs (#195).
+- **The Updates page** no longer offers the release already installed, and
+  its beta badge can be read (#193).
+- **A client's billing summary** counts their invoices; it showed 0 for
+  everyone (#198).
+- **Rate limits**: each limited route keeps its own count, so polling the VPS
+  page no longer uses up the Reinstall button's (#204).
+- **A terminated service hands its stock unit back** (#206); a service that
+  had already ended does not end again (no second unit, no second email).
+
+### Database changes
+
+- New tables `kb_article_translations`, `kb_category_translations` and
+  `announcement_translations` (additive; nothing existing changes).
+- Settings `panelica_partner_api_key` (encrypted) and
+  `panelica_partner_central` are written only when a partner account is
+  connected.
+
+### For theme and module authors
+
+- **Server modules may offer more**, all optional (`docs/developer/modules.md`):
+  `renew(Service)` for a paid period at a vendor (#207; a refusal is now also
+  queued and retried); `clientAreaPanel()` / `adminAreaPanel()` for the
+  module's own section on the service pages; `customFunctions()` buttons on
+  the staff page and `clientFunctions()` buttons for the customer (run through
+  the new route `client.services.module-function`); `servicePageHides()`;
+  `isProvisioned()`; `emailMergeFields()`; and `needsServerRecord(): false`
+  for a module that keeps its account elsewhere.
+- New hook `AfterRegistrarRegistrationFailed` (`domain`, `domainid`, `error`)
+  (#197). `ModuleActionFailed` can carry the action `renew`.
+- The `throttle` middleware alias is `App\Http\Middleware\ThrottleRequests`,
+  which counts per route; named limiters such as `throttle:api` are
+  unchanged (#204).
+- New public route `setup/{reference}` (32 letters and digits) for the
+  license install command, and a scheduled command `pnlcs:panelica-licenses`
+  every five minutes that does nothing until a partner account is connected.
+- `App\Support\ContentTranslations` saves translations of operator-written
+  content; `admin/partials/translation-fields` is its form fold.
+- `report_text()`, `status_label()` helpers (#208, #205).
+
+### Views a theme may override that changed
+
+- `resources/views/client/services/show.blade.php` (receives `$modulePanel`
+  and `$showServerDetails`; the server details panel is left out when the
+  module hides it).
+- `resources/views/client/kb/index.blade.php` (receives `$searchQuery`).
+- `resources/views/client/partials/billing-address-fields.blade.php` (reads
+  `$needsPhone` and `$showPhone`).
+- New: `client/services/partials/panelica-license.blade.php`.
+
 ## 1.6.0-beta.1 — 2026-10-15
 
 A beta: offered only to installations on the **beta** channel (**Setup →
