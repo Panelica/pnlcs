@@ -234,24 +234,48 @@ class ThemeService
      *
      * Tokens are printed as CSS custom properties in a <style> block on every
      * layout, so a value has to be one CSS value and nothing more: a colour
-     * token a colour (hex, rgb(), hsl(), a name), any other token plain words,
-     * numbers, units, quotes, commas and brackets (font stacks, shadows). No
-     * semicolons, braces, angle brackets, backslashes or comments, which would
-     * end the declaration, and no url() or @import, which would load something.
+     * token a colour (hex, a name, rgb(), hsl(), oklch(), color-mix(), var()
+     * and the like), any other token words in any script (a font named in
+     * Chinese), numbers, units, quotes, commas, brackets and calc() arithmetic
+     * (font stacks, shadows, sizes). No semicolons, braces, angle brackets,
+     * backslashes or comments, which would end the declaration; no quote or
+     * bracket left open, which would swallow the tokens printed after it; and
+     * no url() or expression(), which would load or run something. The check
+     * runs again when the tokens are printed, so it must not refuse a value
+     * that works: one it refuses disappears from every page.
      */
     public static function isValidTokenValue(string $key, mixed $value): bool
     {
         if (! is_string($value) || $value === '' || strlen($value) > 200) {
             return false;
         }
-        if (in_array($key, self::getColorKeys(), true)) {
-            return (bool) preg_match('/^(#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s\/-]+\)|[a-zA-Z]{3,20})$/', $value);
-        }
-        if (! preg_match('/^[A-Za-z0-9 #%.,()\'"+_-]+$/', $value)) {
+        if (! preg_match('/^[\p{L}\p{N} #%.,()\'"+*\/_-]+$/u', $value)
+            || preg_match('#/\*|\*/|url\s*\(|expression\s*\(#i', $value)
+            || substr_count($value, "'") % 2 !== 0
+            || substr_count($value, '"') % 2 !== 0) {
             return false;
         }
 
-        return ! preg_match('/url\s*\(|expression\s*\(|import/i', $value);
+        $depth = 0;
+        foreach (str_split($value) as $char) {
+            $depth += match ($char) {
+                '(' => 1,
+                ')' => -1,
+                default => 0,
+            };
+            if ($depth < 0) {
+                return false;
+            }
+        }
+        if ($depth !== 0) {
+            return false;
+        }
+
+        if (in_array($key, self::getColorKeys(), true)) {
+            return (bool) preg_match('/^(#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|[a-zA-Z]{3,20}|(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix|var)\([A-Za-z0-9\s.,%\/#()+-]*\))$/', $value);
+        }
+
+        return true;
     }
 
     public static function generateCssVariables(array $colors): string

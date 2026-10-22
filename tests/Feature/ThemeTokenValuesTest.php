@@ -61,6 +61,35 @@ test('a value that is not one CSS value is refused and nothing is saved', functi
     'loading a file' => ['shadow_sm', 'url(https://example.com/x.png)'],
     'comment' => ['spacing_md', '8px /* x */'],
     'backslash' => ['font_family', 'Inter\\'],
+    'bracket left open' => ['shadow_md', '0 4px 15px rgba(0,0,0,0.12'],
+    'bracket closed first' => ['radius_md', '4px) ('],
+    'quote left open' => ['font_family', "'Inter, sans-serif"],
+    'colour function that is not one' => ['primary', 'expression(alert(1))'],
+]);
+
+/*
+ * The check also runs when the tokens are printed, so a value it refuses
+ * disappears from every page of a site that saved it before. Values that work
+ * in CSS stay.
+ */
+test('a value that works in CSS is accepted, saved and printed', function (string $key, string $value) {
+    expect(ThemeService::isValidTokenValue($key, $value))->toBeTrue();
+
+    $this->actingAs(themeStaff(), 'admin')
+        ->post(route('admin.settings.appearance.update'), customTokens([$key => $value]))
+        ->assertSessionHasNoErrors();
+
+    expect(ThemeService::generateCssVariables(json_decode(Setting::get('active_theme'), true)))
+        ->toContain('--theme-'.str_replace('_', '-', $key).': '.$value.';');
+})->with([
+    'calc() with a division' => ['radius_md', 'calc(100% / 3)'],
+    'calc() with a product' => ['spacing_md', 'calc(1rem * 2)'],
+    'font named in Chinese' => ['font_family', "'微软雅黑', sans-serif"],
+    'font name containing "import"' => ['font_family', "'Important Sans', serif"],
+    'oklch() colour' => ['primary', 'oklch(0.6 0.15 250)'],
+    'hsl() with an angle' => ['primary', 'hsl(210deg 50% 40%)'],
+    'color-mix()' => ['primary', 'color-mix(in srgb, #2563eb 80%, white)'],
+    'var()' => ['primary', 'var(--brand)'],
 ]);
 
 test('values stored before the check are left out of the page, not printed', function () {
