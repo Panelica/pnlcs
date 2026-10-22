@@ -4,10 +4,9 @@ Moving from WHMCS to PNLCS? Because PNLCS deliberately mirrors WHMCS concepts,
 the mental model carries straight over — clients, products, orders, invoices,
 services, tickets and modules all mean the same thing.
 
-!!! note "There is no one-click importer yet"
-    PNLCS does not ship an automated WHMCS database importer. This guide
-    describes the practical, low-risk way to move. If you'd like to help build
-    an importer, it's a welcome [contribution](https://github.com/Panelica/pnlcs/issues).
+PNLCS can read your clients, services and domains straight from the WHMCS
+database (**Utilities → Import WHMCS**). Your catalogue, servers and settings
+you set up once by hand; invoices, transactions and tickets are not imported.
 
 ## Recommended approach: run both, cut over gradually
 
@@ -35,7 +34,8 @@ servers — PNLCS just needs to manage them going forward.
 
 ### 4. Bring customers over
 
-For each customer, create a **client** in PNLCS and add their existing
+Import them (next section), or, for a handful of customers, create each
+**client** in PNLCS by hand and add their existing
 **services**: on the client, **Services → Add Service**, with the right product,
 next due date and price. On a Panelica server, **Link to an existing account**
 lists the accounts already on it; pick the customer's, and PNLCS manages that
@@ -53,6 +53,43 @@ Two common patterns:
 
 Update your billing URL, client links and any signup forms to your PNLCS
 install. Redirect the old WHMCS URL if you can.
+
+## Import WHMCS
+
+**Utilities → Import WHMCS** in the admin area (staff with the *manage
+settings* permission) copies records from the WHMCS database into PNLCS.
+
+1. **Connect.** Enter the WHMCS database's host, port, database name, user,
+   password and table prefix (usually `tbl`), and press **Test connection**.
+   PNLCS must be able to reach that MySQL server. The connection is read-only:
+   PNLCS only reads, and the WHMCS database is never changed.
+2. **Map the fields.** Pick the source table: `tblclients` for clients,
+   `tblhosting` for services, `tbldomains` for domains. PNLCS suggests a PNLCS
+   field for each WHMCS field; change, skip or set a constant value where you
+   need to, and save the mapping to reuse it. For services, map each WHMCS
+   product to a PNLCS product, or let it match by name.
+3. **Preview, then import.** The preview shows the records as PNLCS will store
+   them and lists any problems first. Choose **Add new**, **Add and update** or
+   **Update only**, with a match key (by default the email for clients, the
+   domain for services and domains), so running the import again updates
+   instead of copying. Every run is logged with its counts, and with each
+   skipped or failed record and the reason.
+
+Import in this order: **clients, then services and domains**, because a service
+or domain is attached to the PNLCS client with the same email as its WHMCS
+owner. Recreate your products and add your servers first: a service is linked
+to the PNLCS server with the same hostname (or name) as its WHMCS server.
+
+What to know:
+
+- **No email is sent.** Each imported client gets a login with a random
+  password; customers set their own with **Forgot password** when you tell
+  them about the move.
+- **Hosting passwords stay on the servers.** WHMCS encrypts service passwords
+  with its own key, so they are not imported; the accounts on your servers are
+  not touched.
+- **Not imported:** products, invoices, transactions, tickets and settings.
+  Open balances are best settled in WHMCS, or entered as new invoices in PNLCS.
 
 ## Handy facts for planners
 
