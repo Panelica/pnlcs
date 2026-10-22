@@ -2717,6 +2717,7 @@ return [
     'settings.domains_section' => 'Domains',
     'settings.invoices_section' => 'Invoices',
     'settings.invoice_due_days' => 'Default payment due (days)',
+    'settings.invoice_days_before_due' => 'Raise renewal invoices (days before due)',
     'settings.default_nameservers' => 'Default Nameservers',
     'settings.default_nameservers_hint' => 'Used when registering or transferring domains when no other nameservers are supplied.',
     'settings.themes' => 'Themes',

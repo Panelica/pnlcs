@@ -2717,6 +2717,7 @@ return [
     'settings.domains_section' => 'Domeny',
     'settings.invoices_section' => 'Faktury',
     'settings.invoice_due_days' => 'Domyślny termin zapłaty (dni)',
+    'settings.invoice_days_before_due' => 'Wystawiaj faktury odnowienia (dni przed terminem)',
     'settings.default_nameservers' => 'Domyślne serwery DNS',
     'settings.default_nameservers_hint' => 'Używane przy rejestracji i transferze domen, gdy nie podano innych serwerów DNS.',
     'settings.themes' => 'Motywy',

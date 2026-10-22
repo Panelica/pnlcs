@@ -2692,6 +2692,7 @@ return [
     'settings.domains_section' => 'Alan Adları',
     'settings.invoices_section' => 'Faturalar',
     'settings.invoice_due_days' => 'Varsayılan ödeme süresi (gün)',
+    'settings.invoice_days_before_due' => 'Yenileme faturası (vadeden kaç gün önce)',
     'settings.default_nameservers' => 'Varsayılan Ad Sunucuları',
     'settings.default_nameservers_hint' => 'Başka ad sunucusu sağlanmadığında alan adları kaydedilirken veya aktarılırken kullanılır.',
     'settings.themes' => 'Temalar',

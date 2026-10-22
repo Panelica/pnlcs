@@ -2717,6 +2717,7 @@ return [
 	'settings.domains_section' => 'Dominios',
 	'settings.invoices_section' => 'Facturas',
 	'settings.invoice_due_days' => 'Pago predeterminado vencido (días)',
+    'settings.invoice_days_before_due' => 'Emitir facturas de renovación (días antes del vencimiento)',
 	'settings.default_nameservers' => 'Servidores de nombres predeterminados',
 	'settings.default_nameservers_hint' => 'Se utiliza al registrar o transferir dominios cuando no se proporcionan otros servidores de nombres.',
 	'settings.themes' => 'Temas',

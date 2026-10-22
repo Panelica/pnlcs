@@ -497,6 +497,10 @@
                 <input type="number" name="InvoiceDueDays" value="{{ $settings['InvoiceDueDays'] ?? '14' }}" class="form-control" min="0">
             </div>
             <div class="form-group" style="margin-top:10px;max-width:50%;">
+                <label class="form-label" for="invoice-days-before-due">{{ __('admin.settings.invoice_days_before_due') }}</label>
+                <input type="number" id="invoice-days-before-due" name="InvoiceDaysBeforeDue" value="{{ $settings['InvoiceDaysBeforeDue'] ?? '14' }}" class="form-control" min="0" max="365">
+            </div>
+            <div class="form-group" style="margin-top:10px;max-width:50%;">
                 <label class="form-label" for="invoice-number-format">{{ __('admin.settings.invoice_number_format') }}</label>
                 <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">
             </div>

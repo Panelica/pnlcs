@@ -1526,8 +1526,8 @@ class AutoChargeService
      *
      * THE GENERATOR IS THE AUTHORITY ON WHAT MAY BE BILLED, AND THIS HAS TO BE
      * AT LEAST AS STRICT AS THE GENERATOR. InvoiceGenerationService raises
-     * renewals up to fourteen days before they are due
-     * (config billing.invoice_days_before_due) and this collects them up to
+     * renewals up to fourteen days before they are due by default
+     * (setting InvoiceDaysBeforeDue) and this collects them up to
      * three days before (AutoCharge::DEFAULT_DAYS_BEFORE), so there is a
      * fortnight in between during which the customer can change their mind —
      * and every way they have of doing so is a rule the generator applies when
@@ -1778,7 +1778,7 @@ class AutoChargeService
     private function candidates(array $gateways, int $limit): Collection
     {
         // How early a card may be charged. The generator raises renewals up to
-        // fourteen days ahead (config billing.invoice_days_before_due), so
+        // fourteen days ahead by default (setting InvoiceDaysBeforeDue), so
         // charging on sight would take the money a fortnight before the
         // customer expected it; this is the charger's own, later moment.
         $cutoff = now()->addDays(AutoCharge::daysBeforeDue())->endOfDay();
