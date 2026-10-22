@@ -19,7 +19,7 @@ class TicketSpamService
                 continue;
             }
             if (str_contains(strtolower($email), strtolower($pattern))) {
-                Log::info("Ticket spam filter: blocked email matching pattern {}");
+                Log::info("Ticket spam filter: blocked address matching pattern \"{$pattern}\"");
                 return true;
             }
         }
@@ -33,7 +33,7 @@ class TicketSpamService
                 continue;
             }
             if (str_contains($content, $keyword)) {
-                Log::info("Ticket spam filter: blocked content matching keyword {}");
+                Log::info("Ticket spam filter: blocked content matching keyword \"{$keyword}\"");
                 return true;
             }
         }
@@ -45,7 +45,7 @@ class TicketSpamService
                 ->where("created_at", ">=", now()->subHour())
                 ->count();
             if ($recentCount >= $maxPerHour) {
-                Log::info("Ticket spam filter: rate limit exceeded for {} ({$recentCount}/{$maxPerHour})");
+                Log::info("Ticket spam filter: rate limit exceeded ({$recentCount}/{$maxPerHour} in the last hour)");
                 return true;
             }
         }

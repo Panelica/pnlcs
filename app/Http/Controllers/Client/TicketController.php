@@ -80,7 +80,11 @@ class TicketController extends Controller
         }
 
         $spamService = app(TicketSpamService::class);
-        if ($spamService->isSpam($request->input('email', auth()->user()->email), $validated['subject'], $validated['message'])) {
+        // The signed-in customer's own address, which is what the ticket is
+        // opened under. It was read from the request first, so an extra
+        // "email" field put another address through the blocked-sender list
+        // and the per-hour limit.
+        if ($spamService->isSpam((string) auth()->user()->email, $validated['subject'], $validated['message'])) {
             return back()->with('error', __('messages.error.message_flagged_as_spam'));
         }
 
