@@ -1668,6 +1668,7 @@ return [
     'messages.invoice_cancelled' => 'Invoice #:num has been cancelled.',
     'messages.invoice_created' => 'Invoice #:num created successfully.',
     'messages.invoice_marked_paid' => 'Invoice #:num marked as paid.',
+    'messages.no_credit_available' => 'The client has no credit balance to pay this invoice with.',
     'messages.invoices_created' => 'Created :count invoice(s).',
     'messages.bulk_invoice_action' => 'Action applied to :count invoice(s).',
     'messages.module_action_failed' => 'Module action failed.',

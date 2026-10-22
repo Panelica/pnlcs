@@ -1668,6 +1668,7 @@ return [
     'messages.invoice_cancelled' => '发票 #:num 已取消。',
     'messages.invoice_created' => '发票 #:num 已成功创建。',
     'messages.invoice_marked_paid' => '发票 #:num 已标记为已付款。',
+    'messages.no_credit_available' => '该客户没有可用于支付此发票的余额。',
     'messages.invoices_created' => '已创建 :count 张发票。',
     'messages.bulk_invoice_action' => '已对 :count 张账单执行该操作。',
     'messages.module_action_failed' => '模块操作失败。',

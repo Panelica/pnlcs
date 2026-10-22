@@ -1668,6 +1668,7 @@ return [
     'messages.invoice_cancelled' => 'Rechnung Nr. :num wurde storniert.',
     'messages.invoice_created' => 'Rechnung #:num erfolgreich erstellt.',
     'messages.invoice_marked_paid' => 'Rechnung #:num als bezahlt markiert.',
+    'messages.no_credit_available' => 'Der Kunde hat kein Guthaben, mit dem diese Rechnung bezahlt werden kann.',
     'messages.invoices_created' => ':count-Rechnung(en) erstellt.',
     'messages.bulk_invoice_action' => 'Auf :count-Rechnungen angewendete Aktion.',
     'messages.module_action_failed' => 'Die Modulaktion ist fehlgeschlagen.',

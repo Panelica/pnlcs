@@ -1650,6 +1650,7 @@ return [
     'messages.invoice_cancelled' => '#:num numaralı fatura iptal edildi.',
     'messages.invoice_created' => '#:num numaralı fatura başarıyla oluşturuldu.',
     'messages.invoice_marked_paid' => '#:num numaralı fatura ödendi olarak işaretlendi.',
+    'messages.no_credit_available' => 'Müşterinin bu faturayı ödeyecek bakiyesi yok.',
     'messages.invoices_created' => ':count fatura oluşturuldu.',
     'messages.bulk_invoice_action' => ':count fatura için işlem uygulandı.',
     'messages.module_action_failed' => 'Modül işlemi başarısız oldu.',

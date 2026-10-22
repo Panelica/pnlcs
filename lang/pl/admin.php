@@ -1668,6 +1668,7 @@ return [
     'messages.invoice_cancelled' => 'Faktura #:num została anulowana.',
     'messages.invoice_created' => 'Faktura #:num utworzona pomyślnie.',
     'messages.invoice_marked_paid' => 'Faktura #:num oznaczona jako opłacona.',
+    'messages.no_credit_available' => 'Klient nie ma środków na koncie, którymi można opłacić tę fakturę.',
     'messages.invoices_created' => 'Utworzono :count faktur.',
     'messages.bulk_invoice_action' => 'Wykonano akcję na :count fakturach.',
     'messages.module_action_failed' => 'Akcja modułu nieudana.',

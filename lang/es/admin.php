@@ -1668,6 +1668,7 @@ return [
 	'messages.invoice_cancelled' => 'Factura #:num ha sido cancelada.',
 	'messages.invoice_created' => 'Factura #:num creada exitosamente.',
 	'messages.invoice_marked_paid' => 'Factura #:num marcado como pagado.',
+    'messages.no_credit_available' => 'El cliente no tiene saldo a favor para pagar esta factura.',
 	'messages.invoices_created' => 'Creado :count factura(s).',
 	'messages.bulk_invoice_action' => 'Acción aplicada a :count factura(s).',
 	'messages.module_action_failed' => 'La acción del módulo falló.',
