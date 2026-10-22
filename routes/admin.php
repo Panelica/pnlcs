@@ -146,6 +146,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('orders/{order}/accept', [OrderController::class, 'accept'])->name('orders.accept');
         Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('orders/{order}/fraud', [OrderController::class, 'markFraud'])->name('orders.fraud');
+        Route::post('orders/{order}/pending', [OrderController::class, 'reopen'])->name('orders.reopen');
         Route::put('orders/{order}/service/{service}/domain', [OrderController::class, 'updateServiceDomain'])->name('orders.service-domain');
         Route::delete('orders/{order}', [OrderController::class, 'delete'])->name('orders.delete');
     });
