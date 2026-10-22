@@ -30,7 +30,7 @@ return [
     'addons.applicable_products' => 'Anwendbare Produkte',
     'addons.applicable_products_hint' => 'Halten Sie Strg/Befehl gedrückt, um mehrere auszuwählen. Für alle Produkte leer lassen.',
     'addons.pricing' => 'Preise',
-    'addons.pricing_hint' => 'Lassen Sie einen Zyklus auf Null, um das Add-on in diesem Zyklus nicht anzubieten.',
+    'addons.pricing_hint' => '0 bietet das Add-on in diesem Zyklus kostenlos an; -1 bietet es in diesem Zyklus nicht an.',
     'addons.monthly_price' => 'Monatlich',
     'addons.cycle_monthly' => 'Monatlich',
     'addons.cycle_quarterly' => 'Vierteljährlich',

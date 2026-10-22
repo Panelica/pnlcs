@@ -30,7 +30,7 @@ return [
     'addons.applicable_products' => 'Applicable Products',
     'addons.applicable_products_hint' => 'Hold Ctrl/Cmd to select multiple. Leave empty for all products.',
     'addons.pricing' => 'Pricing',
-    'addons.pricing_hint' => 'Leave a cycle at zero to not offer the addon on that cycle.',
+    'addons.pricing_hint' => '0 sells the addon free on that cycle; -1 does not offer it on that cycle.',
     'addons.monthly_price' => 'Monthly',
     'addons.cycle_monthly' => 'Monthly',
     'addons.cycle_quarterly' => 'Quarterly',

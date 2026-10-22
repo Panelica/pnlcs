@@ -27,7 +27,7 @@ return [
     'addons.applicable_products' => 'Geçerli Ürünler',
     'addons.applicable_products_hint' => 'Birden fazla seçmek için Ctrl/Cmd tuşuna basılı tutun. Boş bırakırsanız tüm ürünlerde geçerli olur.',
     'addons.pricing' => 'Fiyatlandırma',
-    'addons.pricing_hint' => 'Eklentiyi bir dönemde sunmamak için o dönemin fiyatını sıfır bırakın.',
+    'addons.pricing_hint' => '0 girilirse eklenti o dönemde ücretsiz satılır; -1 girilirse o dönemde sunulmaz.',
     'addons.monthly_price' => 'Aylık',
     'addons.cycle_monthly' => 'Aylık',
     'addons.cycle_quarterly' => 'Üç Aylık',

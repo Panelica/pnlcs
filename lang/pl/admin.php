@@ -30,7 +30,7 @@ return [
     'addons.applicable_products' => 'Produkty, do których ma zastosowanie',
     'addons.applicable_products_hint' => 'Przytrzymaj Ctrl/Cmd, aby zaznaczyć wiele. Pozostaw puste, aby zastosować do wszystkich produktów.',
     'addons.pricing' => 'Cennik',
-    'addons.pricing_hint' => 'Ustaw cykl na zero, aby nie oferować dodatku w tym cyklu.',
+    'addons.pricing_hint' => '0 oznacza, że dodatek jest w tym cyklu bezpłatny; -1 oznacza, że nie jest w nim oferowany.',
     'addons.monthly_price' => 'Miesięcznie',
     'addons.cycle_monthly' => 'Miesięcznie',
     'addons.cycle_quarterly' => 'Kwartalnie',

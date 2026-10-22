@@ -82,12 +82,12 @@
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.pricing') }}</label>
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="0" name="pricing[monthly]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="0" name="pricing[quarterly]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="0" name="pricing[semiannually]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="0" name="pricing[annually]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="0" name="pricing[biennially]" value="0" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="0" name="pricing[triennially]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="-1" name="pricing[monthly]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="-1" name="pricing[quarterly]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="-1" name="pricing[semiannually]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="-1" name="pricing[annually]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[biennially]" value="0" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[triennially]" value="0" class="form-control"></div>
                     </div>
                     <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.pricing_hint') }}</p>
                 </div>
@@ -131,12 +131,12 @@
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.addons.pricing') }}</label>
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="0" name="pricing[monthly]" value="0" id="edit-addon-price-monthly" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="0" name="pricing[quarterly]" value="0" id="edit-addon-price-quarterly" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="0" name="pricing[semiannually]" value="0" id="edit-addon-price-semiannually" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="0" name="pricing[annually]" value="0" id="edit-addon-price-annually" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="0" name="pricing[biennially]" value="0" id="edit-addon-price-biennially" class="form-control"></div>
-                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="0" name="pricing[triennially]" value="0" id="edit-addon-price-triennially" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_monthly') }}</label><input type="number" step="0.01" min="-1" name="pricing[monthly]" value="0" id="edit-addon-price-monthly" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_quarterly') }}</label><input type="number" step="0.01" min="-1" name="pricing[quarterly]" value="0" id="edit-addon-price-quarterly" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_semiannually') }}</label><input type="number" step="0.01" min="-1" name="pricing[semiannually]" value="0" id="edit-addon-price-semiannually" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_annually') }}</label><input type="number" step="0.01" min="-1" name="pricing[annually]" value="0" id="edit-addon-price-annually" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_biennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[biennially]" value="0" id="edit-addon-price-biennially" class="form-control"></div>
+                        <div><label style="font-size:11px;color:#777;">{{ __('admin.addons.cycle_triennially') }}</label><input type="number" step="0.01" min="-1" name="pricing[triennially]" value="0" id="edit-addon-price-triennially" class="form-control"></div>
                     </div>
                     <p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.addons.pricing_hint') }}</p>
                 </div>
