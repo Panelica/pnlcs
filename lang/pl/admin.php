@@ -99,7 +99,7 @@ return [
     'products.server_module_hint' => 'Który panel tworzy konto, gdy produkt zostanie zakupiony.',
     'products.server_group' => 'Grupa serwerów',
     'products.server_group_any' => 'Dowolny serwer tego typu',
-    'servers.needs_api_token' => 'Serwer :type loguje się za pomocą klucza API. Wypełnij pole klucza API — hasło nie jest używane przez ten moduł.',
+    'servers.needs_api_token' => 'Serwer :type loguje się za pomocą pola :field. Wypełnij pole :field — hasło nie jest używane przez ten moduł.',
     'servers.needs_credentials' => 'Serwer :type wymaga klucza API lub hasła, zanim będzie można go używać.',
     'servers.hostname_unresolved' => 'Zapisano, ale :host nie rozwiązuje się. Połączenia będą używać adresu IP.',
     'servers.hostname_mismatch' => 'Zapisano, ale :host rozwiązuje się na :resolved, a nie :ip. Jedno z dwóch wskazuje na niewłaściwą maszynę.',

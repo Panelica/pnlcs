@@ -99,7 +99,7 @@ return [
     'products.server_module_hint' => 'Welches Panel erstellt das Konto, wenn dieses Produkt gekauft wird?',
     'products.server_group' => 'Servergruppe',
     'products.server_group_any' => 'Jeder Server dieses Typs',
-    'servers.needs_api_token' => 'Ein :type-Server meldet sich mit einem API-Schlüssel an. Füllen Sie das API-Schlüsselfeld aus – das Passwort wird für dieses Modul nicht verwendet.',
+    'servers.needs_api_token' => 'Ein :type-Server meldet sich mit :field an. Füllen Sie das Feld :field aus – das Passwort wird für dieses Modul nicht verwendet.',
     'servers.needs_credentials' => 'Ein :type-Server benötigt entweder einen API-Schlüssel oder ein Passwort, bevor er verwendet werden kann.',
     'servers.hostname_unresolved' => 'Gespeichert, aber :host wird nicht aufgelöst. Für Anrufe wird stattdessen die IP-Adresse verwendet.',
     'servers.hostname_mismatch' => 'Gespeichert, aber :host wird zu :resolved aufgelöst, nicht zu :ip. Einer der beiden Einträge verweist auf den falschen Server.',
