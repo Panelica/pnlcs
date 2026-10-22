@@ -382,7 +382,9 @@ class DirectAdminModule extends AbstractServerModule
         try {
             $resp = $this->http($server)->get("{$this->baseUrl($server)}/CMD_API_SHOW_ALL_USERS");
 
-            return $resp->successful();
+            // Wrong credentials get DirectAdmin's login page with a 200, which
+            // passed as a working connection; parseDA knows that page.
+            return $resp->successful() && (string) ($this->parseDA($resp->body())['error'] ?? '0') === '0';
         } catch (\Throwable $e) {
             Log::warning('DirectAdmin testConnection failed', ['server' => $server->id, 'error' => $e->getMessage()]);
 
