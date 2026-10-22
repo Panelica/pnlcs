@@ -49,7 +49,7 @@ class FraudLabsProClient
         }
         if ((float) $order->amount > 0) {
             $body['amount'] = (float) $order->amount;
-            $body['currency'] = strtoupper((string) ($order->currency ?? 'USD'));
+            $body['currency'] = $order->currencyCode();
         }
 
         try {

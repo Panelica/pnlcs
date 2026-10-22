@@ -61,7 +61,7 @@ class MaxMindMinFraudClient
             }
         }
         if ((float) $order->amount > 0) {
-            $body['order'] = ['amount' => (float) $order->amount, 'currency' => strtoupper((string) ($order->currency ?? 'USD'))];
+            $body['order'] = ['amount' => (float) $order->amount, 'currency' => $order->currencyCode()];
         }
 
         try {
