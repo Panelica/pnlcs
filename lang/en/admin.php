@@ -397,6 +397,7 @@ return [
     'api_docs.toc' => 'Table of Contents',
     'appearance' => [
         'activate_preset' => 'Activate Preset',
+        'invalid_token' => 'The value for :token is not valid. Use a colour, or plain words, numbers and units.',
         'active_badge' => 'Active',
         'built_in_badge' => 'Built-in',
         'copyright_hint' => 'Shown in the footer after © and the year.',

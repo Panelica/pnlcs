@@ -397,6 +397,7 @@ return [
 	'api_docs.toc' => 'Tabla de contenido',
 	'appearance' => [
 		'activate_preset' => 'Activar preestablecido',
+		'invalid_token' => 'El valor de :token no es válido. Use un color, o solo palabras, números y unidades.',
 		'active_badge' => 'Activo',
 		'built_in_badge' => 'Incorporado',
 		'copyright_hint' => 'Se muestra en el pie de página después de © y el año.',

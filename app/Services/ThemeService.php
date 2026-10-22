@@ -229,10 +229,39 @@ class ThemeService
         });
     }
 
+    /**
+     * Whether a value can stand as a theme token.
+     *
+     * Tokens are printed as CSS custom properties in a <style> block on every
+     * layout, so a value has to be one CSS value and nothing more: a colour
+     * token a colour (hex, rgb(), hsl(), a name), any other token plain words,
+     * numbers, units, quotes, commas and brackets (font stacks, shadows). No
+     * semicolons, braces, angle brackets, backslashes or comments, which would
+     * end the declaration, and no url() or @import, which would load something.
+     */
+    public static function isValidTokenValue(string $key, mixed $value): bool
+    {
+        if (! is_string($value) || $value === '' || strlen($value) > 200) {
+            return false;
+        }
+        if (in_array($key, self::getColorKeys(), true)) {
+            return (bool) preg_match('/^(#[0-9a-fA-F]{3,4}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s\/-]+\)|[a-zA-Z]{3,20})$/', $value);
+        }
+        if (! preg_match('/^[A-Za-z0-9 #%.,()\'"+_-]+$/', $value)) {
+            return false;
+        }
+
+        return ! preg_match('/url\s*\(|expression\s*\(|import/i', $value);
+    }
+
     public static function generateCssVariables(array $colors): string
     {
         $vars = [];
         foreach ($colors as $key => $value) {
+            // Values saved before they were checked are left out, not printed.
+            if (! self::isValidTokenValue((string) $key, $value)) {
+                continue;
+            }
             $cssKey = str_replace('_', '-', $key);
             $vars[] = "    --theme-{$cssKey}: {$value};";
         }

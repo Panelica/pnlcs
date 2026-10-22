@@ -397,6 +397,7 @@ return [
     'api_docs.toc' => 'Inhaltsverzeichnis',
     'appearance' => [
         'activate_preset' => 'Voreinstellung aktivieren',
+        'invalid_token' => 'Der Wert für :token ist ungültig. Verwenden Sie eine Farbe oder nur Wörter, Zahlen und Einheiten.',
         'active_badge' => 'Aktiv',
         'built_in_badge' => 'Integriert',
         'copyright_hint' => 'Wird in der Fußzeile nach © und der Jahreszahl angezeigt.',

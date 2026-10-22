@@ -397,6 +397,7 @@ return [
     'api_docs.toc' => 'Spis treści',
     'appearance' => [
         'activate_preset' => 'Aktywuj preset',
+        'invalid_token' => 'Wartość dla :token jest nieprawidłowa. Użyj koloru albo samych słów, liczb i jednostek.',
         'active_badge' => 'Aktywny',
         'built_in_badge' => 'Wbudowany',
         'copyright_hint' => 'Wyświetlane w stopce po © i roku.',
