@@ -2970,7 +2970,7 @@ return [
     'custom_fields.type_textarea' => 'Uzun Metin',
     'terminated' => 'Sonlandırılmış',
     'ticket_departments' => [
-        'email_hint_text' => ' (talep bildirimleri için)',
+        'email_hint_text' => ' (müşterilerin yazdığı adres; gelen e-postaları içe aktarmak için)',
     ],
     'ticket_departments.import_allow_unknown' => 'Bilinmeyen göndericilerden e-posta kabul et (müşteri hesabı olmadan destek talebi açar)',
     'ticket_departments.import_delete' => 'İçe aktarımdan sonra mesajları posta kutusundan sil',
@@ -2989,7 +2989,7 @@ return [
     'ticket_departments.confirm_delete' => 'Bu departman silinsin mi?',
     'ticket_departments.department_name' => 'Departman Adı',
     'ticket_departments.edit_department' => 'Departmanı Düzenle',
-    'ticket_departments.email_hint' => '(talep bildirimleri için)',
+    'ticket_departments.email_hint' => '(müşterilerin yazdığı adres; gelen e-postaları içe aktarmak için)',
     'ticket_departments.hidden_from_clients' => 'Müşteri talep formunda gizli',
     'ticket_departments.hidden_short' => 'Müşteriye gizli',
     'ticket_departments.no_departments' => 'Tanımlı departman yok.',

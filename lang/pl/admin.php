@@ -2995,7 +2995,7 @@ return [
     'custom_fields.type_textarea' => 'Długi tekst',
     'terminated' => 'Zakończony',
     'ticket_departments' => [
-        'email_hint_text' => ' (do powiadomień o zgłoszeniach)',
+        'email_hint_text' => ' (adres, na który piszą klienci; służy do importu ich wiadomości)',
     ],
     'ticket_departments.import_allow_unknown' => 'Akceptuj pocztę od nieznanych nadawców (tworzy zgłoszenie bez konta klienta)',
     'ticket_departments.import_delete' => 'Usuwaj wiadomości ze skrzynki po imporcie',
@@ -3014,7 +3014,7 @@ return [
     'ticket_departments.confirm_delete' => 'Usunąć ten dział?',
     'ticket_departments.department_name' => 'Nazwa działu',
     'ticket_departments.edit_department' => 'Edytuj dział',
-    'ticket_departments.email_hint' => '(dla powiadomień o zgłoszeniach)',
+    'ticket_departments.email_hint' => '(adres, na który piszą klienci; służy do importu ich wiadomości)',
     'ticket_departments.hidden_from_clients' => 'Ukryty w formularzu zgłoszeń klienta',
     'ticket_departments.hidden_short' => 'Ukryty przed klientami',
     'ticket_departments.no_departments' => 'Brak skonfigurowanych działów.',

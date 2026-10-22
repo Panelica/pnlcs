@@ -2995,7 +2995,7 @@ return [
 	'custom_fields.type_textarea' => 'Texto largo',
 	'terminated' => 'Finalizado',
 	'ticket_departments' => [
-		'email_hint_text' => '(para notificaciones de entradas)',
+		'email_hint_text' => ' (la dirección a la que escriben los clientes; se usa para importar su correo)',
 	],
 	'ticket_departments.import_allow_unknown' => 'Aceptar correo de remitentes desconocidos (crea ticket sin una cuenta de cliente)',
 	'ticket_departments.import_delete' => 'Eliminar mensajes del buzón después de la importación',
@@ -3014,7 +3014,7 @@ return [
 	'ticket_departments.confirm_delete' => '¿Eliminar este departamento?',
 	'ticket_departments.department_name' => 'Nombre del departamento',
 	'ticket_departments.edit_department' => 'Editar departamento',
-	'ticket_departments.email_hint' => '(para notificaciones de entradas)',
+	'ticket_departments.email_hint' => '(la dirección a la que escriben los clientes; se usa para importar su correo)',
 	'ticket_departments.hidden_from_clients' => 'Oculto del formulario de ticket del cliente',
 	'ticket_departments.hidden_short' => 'Oculto de los clientes',
 	'ticket_departments.no_departments' => 'No hay departamentos configurados.',

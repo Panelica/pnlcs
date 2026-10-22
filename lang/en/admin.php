@@ -2995,7 +2995,7 @@ return [
     'custom_fields.type_textarea' => 'Long Text',
     'terminated' => 'Terminated',
     'ticket_departments' => [
-        'email_hint_text' => ' (for ticket notifications)',
+        'email_hint_text' => ' (the address customers write to; used to import their mail)',
     ],
     'ticket_departments.import_allow_unknown' => 'Accept mail from unknown senders (creates ticket without a client account)',
     'ticket_departments.import_delete' => 'Delete messages from the mailbox after import',
@@ -3014,7 +3014,7 @@ return [
     'ticket_departments.confirm_delete' => 'Delete this department?',
     'ticket_departments.department_name' => 'Department Name',
     'ticket_departments.edit_department' => 'Edit Department',
-    'ticket_departments.email_hint' => '(for ticket notifications)',
+    'ticket_departments.email_hint' => '(the address customers write to; used to import their mail)',
     'ticket_departments.hidden_from_clients' => 'Hidden from client ticket form',
     'ticket_departments.hidden_short' => 'Hidden from clients',
     'ticket_departments.no_departments' => 'No departments configured.',
