@@ -1446,17 +1446,22 @@ class ConfigController extends Controller
     public function testServerConnection(Server $server)
     {
         $host = $server->hostname ?? $server->ip_address;
-        $port = $server->port ?? match ($server->type) {
-            'panelica' => 8443, 'cpanel' => 2087, 'plesk' => 8443, 'directadmin' => 2222, 'proxmox' => 8006, default => 22
-        };
-        if (empty($host)) {
+        $port = $server->port ?: self::defaultServerPort((string) $server->type);
+        // Vultr is reached at api.vultr.com, never at the record's host:port,
+        // so opening a socket there tested something the module does not use.
+        $apiOnly = strtolower((string) $server->type) === 'vultr';
+        if (empty($host) && ! $apiOnly) {
             return back()->with('error', __('admin.messages.no_hostname'));
         }
         $start = microtime(true);
-        $conn = @fsockopen($host, $port, $errno, $errstr, 5);
+        $errno = 0;
+        $errstr = '';
+        $conn = $apiOnly ? true : @fsockopen($host, $port, $errno, $errstr, 5);
         $elapsed = round((microtime(true) - $start) * 1000);
         if ($conn) {
-            fclose($conn);
+            if (is_resource($conn)) {
+                fclose($conn);
+            }
 
             // The port being open says nothing about the credentials. This
             // used to stop here and report success, so a server that could
@@ -1498,6 +1503,26 @@ class ConfigController extends Controller
         }
 
         return back()->with('error', __('admin.messages.connection_failed', ['host' => $host, 'port' => $port, 'error' => $errstr, 'errno' => $errno, 'elapsed' => $elapsed]));
+    }
+
+    /**
+     * The port a server type answers on when the record has none, the same
+     * defaults the server form fills in. HestiaCP, aaPanel and CyberPanel
+     * were missing, so their test knocked on port 22.
+     */
+    public static function defaultServerPort(string $type): int
+    {
+        return match (strtolower($type)) {
+            'panelica', 'plesk' => 8443,
+            'cpanel' => 2087,
+            'directadmin' => 2222,
+            'proxmox' => 8006,
+            'hestiacp' => 8083,
+            'aapanel' => 8888,
+            'cyberpanel' => 8090,
+            'vultr' => 443,
+            default => 22,
+        };
     }
 
     // Server Groups
