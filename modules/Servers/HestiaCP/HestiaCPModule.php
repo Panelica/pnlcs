@@ -10,6 +10,9 @@ use Modules\Servers\AbstractServerModule;
 
 class HestiaCPModule extends AbstractServerModule
 {
+    /** HestiaCP's exit code for "already exists" (E_EXISTS). */
+    private const E_EXISTS = 4;
+
     public function getModuleName(): string
     {
         return 'hestiacp';
@@ -144,12 +147,21 @@ class HestiaCPModule extends AbstractServerModule
         $package = $this->getRemotePackage($service) ?? 'default';
 
         // v-add-user
-        $result = $this->call($server, 'v-add-user', [
-            'arg1' => $username,
+        $addUser = fn (string $name) => $this->call($server, 'v-add-user', [
+            'arg1' => $name,
             'arg2' => $password,
             'arg3' => $client->email,
             'arg4' => $package,
         ]);
+        $result = $addUser($username);
+
+        // Exit code 4 is HestiaCP's "already exists": a second customer whose
+        // domain starts the same way (example.com, example.net). The name is
+        // made unique with the service id instead of failing the order.
+        if (! $result['success'] && ($result['raw']['exit_code'] ?? null) === self::E_EXISTS) {
+            $username = substr($username, 0, 16 - strlen((string) $service->id) - 1).'s'.$service->id;
+            $result = $addUser($username);
+        }
 
         if (! $result['success']) {
             return $this->buildResult(false, "Account creation failed: {$result['message']}");
@@ -161,8 +173,15 @@ class HestiaCPModule extends AbstractServerModule
             'arg2' => $domain,
         ]);
 
+        // An account without its site is not the service that was sold. It
+        // used to be marked active anyway, with the failure only in the log;
+        // now the half-made user is removed and provisioning fails, so the
+        // usual retry and admin notice apply (as the Plesk module does).
         if (! $domResult['success']) {
-            Log::warning("HestiaCP: user created but domain add failed: {$domResult['message']}");
+            Log::warning("HestiaCP: domain add failed, removing the new user: {$domResult['message']}");
+            $this->call($server, 'v-delete-user', ['arg1' => $username]);
+
+            return $this->buildResult(false, "Domain creation failed: {$domResult['message']}");
         }
 
         $this->setModuleData($service, ['hestia_username' => $username]);
