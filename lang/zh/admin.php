@@ -1486,6 +1486,7 @@ return [
     'invoices.item_updated' => '账单明细已更新。',
     'invoices.item_added' => '已添加明细。',
     'invoices.item_removed' => '已删除明细。',
+    'invoices.items_locked' => '已支付、已取消或已退款的发票不能修改明细。',
     'invoices.delete_item' => '删除明细',
     'invoices.confirm_delete_item' => '确定删除此明细吗？',
     'invoices.send' => '发送',
