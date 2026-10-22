@@ -204,6 +204,8 @@
     </div>
     @if(! $usdRate)
     <div style="padding:8px 12px;font-size:12px;{{ $muted }}border-top:1px solid #f0f0f0;">{{ __('panelica_license.page.no_usd_rate') }}</div>
+    @elseif($usdRateFetched)
+    <div style="padding:8px 12px;font-size:12px;{{ $muted }}border-top:1px solid #f0f0f0;">{{ __('panelica_license.page.market_usd_rate', ['rate' => number_format($usdRateFetched, 4), 'code' => strtoupper((string) $currency->code)]) }}</div>
     @endif
 </div>
 
