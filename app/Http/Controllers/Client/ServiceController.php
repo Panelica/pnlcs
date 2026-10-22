@@ -110,7 +110,14 @@ class ServiceController extends Controller
         $modulePanel = $screens->clientPanel();
         $showServerDetails = $screens->shows('server_details');
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers', 'modulePanel', 'showServerDetails'));
+        // A setup that failed and waits for another try: the customer is told
+        // it is in hand, not left with a bare "Pending" (#212). Not the reason:
+        // that is the server's wording, for staff.
+        $setupDelayed = strtolower((string) $service->status) === 'pending'
+            && \App\Models\ModuleQueue::where('service_id', $service->id)->where('action', 'create')
+                ->whereIn('status', ['pending', 'failed'])->exists();
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers', 'modulePanel', 'showServerDetails', 'setupDelayed'));
     }
 
     /**

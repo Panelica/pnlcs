@@ -10,13 +10,51 @@
     <a href="{{ route('admin.services.index') }}" class="btn btn-default btn-sm">&larr; {{ __('admin.services.back') }}</a>
 </div>
 
+@if($decision = session('server_decision'))
+@php
+    $decisionStatus = (string) ($decision['status'] ?? '');
+    $decisionDelete = ($decision['action'] ?? '') === 'delete';
+    $decisionServer = $service->server?->name ?: ($service->server?->hostname ?: __('admin.services.server_decision_the_server'));
+@endphp
+{{-- Closing the record while its account is still on the server (#212). --}}
+<div class="card" id="server-decision" style="margin-bottom:15px;border:2px solid #d9534f;">
+    <div class="card-header" style="background:#fdf2f2;"><strong style="color:#a12a1f;">{{ __('admin.services.server_decision_title', ['server' => $decisionServer]) }}</strong></div>
+    <div class="card-body">
+        <p style="margin:0 0 6px;font-size:14px;">
+            @if(($decision['state'] ?? '') === 'unknown')
+                {{ __('admin.services.server_decision_unknown', ['server' => $decisionServer]) }}
+            @else
+                {{ __('admin.services.server_decision_live', ['account' => $service->username ?: '-', 'domain' => $service->domain ?: '-', 'server' => $decisionServer]) }}
+            @endif
+        </p>
+        <p style="margin:0 0 14px;font-size:13px;color:#666;">{{ $decisionDelete ? __('admin.services.server_decision_delete_why') : __('admin.services.server_decision_status_why', ['status' => status_label($decisionStatus)]) }}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <form method="POST" action="{{ $decisionDelete ? route('admin.services.destroy', $service) : route('admin.services.status', $service) }}">
+                @csrf @method($decisionDelete ? 'DELETE' : 'PUT')
+                @unless($decisionDelete)<input type="hidden" name="status" value="{{ $decisionStatus }}">@endunless
+                <input type="hidden" name="server" value="terminate">
+                <button type="submit" class="btn btn-danger btn-sm" autofocus>{{ $decisionDelete ? __('admin.services.decision_terminate_delete') : __('admin.services.decision_terminate_status', ['status' => status_label($decisionStatus)]) }}</button>
+            </form>
+            <form method="POST" action="{{ $decisionDelete ? route('admin.services.destroy', $service) : route('admin.services.status', $service) }}">
+                @csrf @method($decisionDelete ? 'DELETE' : 'PUT')
+                @unless($decisionDelete)<input type="hidden" name="status" value="{{ $decisionStatus }}">@endunless
+                <input type="hidden" name="server" value="keep">
+                <button type="submit" class="btn btn-default btn-sm">{{ $decisionDelete ? __('admin.services.decision_keep_delete') : __('admin.services.decision_keep_status', ['status' => status_label($decisionStatus)]) }}</button>
+            </form>
+            <a href="{{ route('admin.services.show', $service) }}" class="btn btn-link btn-sm">{{ __('admin.services.decision_cancel') }}</a>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="card" style="margin-bottom:15px;">
     <div class="card-header"><strong>{{ __('admin.services.manage_status') }}</strong></div>
     <div class="card-body">
+        <p style="margin:0 0 10px;font-size:12.5px;color:#777;">{{ __('admin.services.manage_status_hint', ['actions' => __('admin.services.module_actions')]) }}</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             @php $statusBtns = ['active', 'suspended', 'terminated', 'pending', 'cancelled']; @endphp
             @foreach($statusBtns as $btn)
-            <form method="POST" action="{{ route('admin.services.status', $service) }}" style="display:inline-block;text-align:center;" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_status', ['status' => ucfirst($btn)])))">
+            <form method="POST" action="{{ route('admin.services.status', $service) }}" style="display:inline-block;text-align:center;" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_status', ['status' => status_label($btn)])))">
                 @csrf @method('PUT')
                 <input type="hidden" name="status" value="{{ $btn }}">
                 @if($service->status === $btn)
@@ -171,6 +209,20 @@
             <p style="font-size:13px;color:#999;">{{ __('admin.services.no_ssl_order') }}</p>
         @endif
         @else
+        @if($pendingSetup)
+        {{-- Why the setup has not gone through, which used to show nowhere (#212). --}}
+        <div style="margin-bottom:12px;padding:10px 12px;border-radius:5px;background:#fff4e0;border:1px solid #f0d49b;font-size:13px;color:#7a4b00;">
+            <strong>{{ __('admin.services.setup_pending_title') }}</strong>
+            <span style="display:block;margin-top:3px;font-family:monospace;font-size:12.5px;word-break:break-word;">{{ $pendingSetup->last_error ?: '-' }}</span>
+            <span style="display:block;margin-top:3px;">
+                @if($pendingSetup->status === 'failed')
+                    {{ __('admin.services.setup_gave_up', ['button' => __('admin.services.create_account')]) }}
+                @elseif($pendingSetup->next_attempt_at)
+                    {{ __('admin.services.setup_next_try', ['time' => $pendingSetup->next_attempt_at->timezone(config('app.timezone'))->format(date_fmt().' H:i'), 'button' => __('admin.services.create_account')]) }}
+                @endif
+            </span>
+        </div>
+        @endif
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
             {{-- Only while there is something to create. An active service with
                  an account already provisioned made this button a trap: pressing

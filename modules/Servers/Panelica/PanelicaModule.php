@@ -688,6 +688,81 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         return $this->buildResult(false, "{$action} failed: {$msg}");
     }
 
+    /** How long the questions staff and customers wait on may take, in seconds. */
+    private const CHECK_TIMEOUT = 10;
+
+    /**
+     * Whether the service's account is still on the panel (ModuleScreens
+     * accountOnServer). Staff closing a record whose account is still there
+     * are asked what should happen to it first (#212). Null when the panel
+     * could not be asked; only a 404 counts as gone, as in accountIsGone().
+     */
+    public function accountOnServer(Service $service): ?bool
+    {
+        $userId = (string) ($this->getModuleData($service)['panelica_user_id'] ?? '');
+        if ($userId === '') {
+            return false; // nothing was ever created on a panel for it
+        }
+
+        $service->loadMissing('server');
+        $server = $service->server;
+        if (! $server) {
+            return null;
+        }
+
+        try {
+            $status = $this->quickGet($server, '/v1/accounts/'.rawurlencode($userId))->status();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return match (true) {
+            $status === 404 => false,
+            $status >= 200 && $status < 300 => true,
+            default => null,
+        };
+    }
+
+    /**
+     * Whether a domain is already set up on this panel, asked while the
+     * customer orders so that they hear it then, not from a service stuck in
+     * Pending (#212). Null when the panel could not be asked.
+     */
+    public function domainHostedOn(Server $server, string $domain): ?bool
+    {
+        try {
+            $resp = $this->quickGet($server, '/v1/domains');
+        } catch (\Throwable $e) {
+            Log::warning('PanelicaModule::domainHostedOn could not ask the panel', ['server_id' => $server->id, 'error' => $e->getMessage()]);
+
+            return null;
+        }
+        if (! $resp->successful()) {
+            return null;
+        }
+
+        $needle = strtolower(trim($domain));
+        foreach (($resp->json('data') ?? []) as $d) {
+            $name = strtolower((string) ($d['domain_name'] ?? $d['name'] ?? $d['domain'] ?? ''));
+            if ($name !== '' && $name === $needle) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** A GET that someone is waiting on: short timeouts, so a server that is down cannot hold the page. */
+    private function quickGet(Server $server, string $path): Response
+    {
+        $headers = $this->buildHeaders($server, 'GET', $path, '');
+
+        return Http::withHeaders($headers)->withoutVerifying()
+            ->connectTimeout(min($this->connectTimeout(), self::CHECK_TIMEOUT))
+            ->timeout(self::CHECK_TIMEOUT)
+            ->get($this->baseUrl($server).$path);
+    }
+
     private function accountIsGone(Server $server, string $userId): bool
     {
         try {

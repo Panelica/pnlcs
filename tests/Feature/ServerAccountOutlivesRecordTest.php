@@ -68,7 +68,10 @@ test('a service with a live account cannot simply be deleted from the books', fu
         'role_id' => AdminRole::factory()->create(['name' => 'Ops', 'permissions' => ['list_services', 'manage_services']])->id,
     ]);
 
-    $this->actingAs($admin, 'admin')->delete(route('admin.services.destroy', $service))->assertSessionHas('error');
+    // Staff are asked what happens to the account first (#212); nothing is
+    // deleted or terminated until they answer.
+    $this->actingAs($admin, 'admin')->delete(route('admin.services.destroy', $service))
+        ->assertSessionHas('server_decision', ['action' => 'delete', 'state' => 'live']);
 
     expect(Service::find($service->id))->not->toBeNull()
         ->and(RecordingServerModule::$calls)->not->toContain('terminate');

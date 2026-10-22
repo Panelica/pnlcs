@@ -14,6 +14,7 @@ use App\Services\AddonService;
 use App\Services\BillingCycleChange;
 use App\Services\Module\ModuleScreens;
 use App\Services\ProvisioningService;
+use App\Services\ServerAccount;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -63,7 +64,15 @@ class ServiceController extends Controller
             'change_password' => $screens->shows('change_password'),
         ];
 
-        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields', 'moduleScreen'));
+        // A setup that has not gone through: why, and when it is tried again.
+        // It used to show nowhere; the reason was in the retry queue (#212).
+        $pendingSetup = \App\Models\ModuleQueue::where('service_id', $service->id)
+            ->where('action', 'create')
+            ->whereIn('status', ['pending', 'failed'])
+            ->latest('id')
+            ->first();
+
+        return view('admin.services.show', compact('service', 'availableAddons', 'vpsFeatures', 'reinstallChoices', 'products', 'cycles', 'productFields', 'moduleScreen', 'pendingSetup'));
     }
 
     /**
@@ -241,13 +250,50 @@ class ServiceController extends Controller
         return back()->with('success', __('admin.services.service_saved'));
     }
 
+    /**
+     * The status buttons change the record only. Closing it (Terminated,
+     * Cancelled) while its account is still on the server first asks what
+     * happens to the account: terminated there too (the default), or kept
+     * there on purpose. Otherwise the account kept running unbilled and its
+     * domain could not be ordered again (#212).
+     */
     public function updateStatus(Request $request, Service $service)
     {
         $validated = $request->validate([
             'status' => ['required', Rule::in(array_column(ServiceStatus::cases(), 'value'))],
+            'server' => ['nullable', Rule::in(['terminate', 'keep'])],
         ]);
 
         $status = $validated['status'];
+        $done = __('admin.messages.service_status_updated', ['status' => $status]);
+        $closing = in_array($status, [ServiceStatus::Terminated->value, ServiceStatus::Cancelled->value], true)
+            && $status !== strtolower((string) $service->status);
+
+        if ($closing && ServerAccount::needsDecision($state = ServerAccount::state($service))) {
+            $decision = ['action' => 'status', 'status' => $status, 'state' => $state];
+            $choice = $validated['server'] ?? null;
+
+            if ($choice === null) {
+                return back()->with('server_decision', $decision);
+            }
+
+            if ($choice === 'terminate') {
+                $result = $this->provisioning->terminateAccount($service, queueOnFail: false);
+                if (! ($result['success'] ?? false)) {
+                    return back()->with('error', __('admin.services.server_terminate_failed_status', ['message' => (string) ($result['message'] ?? '')]))
+                        ->with('server_decision', $decision);
+                }
+                // Terminating marked it Terminated; Cancelled is the record's word for it.
+                if ($status === ServiceStatus::Cancelled->value) {
+                    $service->update(['status' => $status]);
+                }
+
+                return back()->with('success', __('admin.services.status_closed_on_server', ['status' => status_label($status)]));
+            }
+
+            ActivityLog::log("Service #{$service->id} marked {$status}; its account on the server was kept", auth('admin')->user()?->username, $service->client_id);
+            $done = __('admin.services.status_kept_on_server', ['status' => status_label($status)]);
+        }
 
         $data = ['status' => $status];
 
@@ -263,23 +309,44 @@ class ServiceController extends Controller
 
         $service->update($data);
 
-        return back()->with('success', __('admin.messages.service_status_updated', ['status' => $status]));
+        return back()->with('success', $done);
     }
 
+    /**
+     * Deleting the row does not delete the account. When the account is (or
+     * may still be) on its server, staff choose first: terminate it there and
+     * delete (the default), or delete the record only and keep the account.
+     * A termination the server refuses deletes nothing (#212).
+     */
     public function destroy(Request $request, Service $service)
     {
-        // Deleting the row does not delete the account: a live one on a
-        // server would carry on running with nothing left to bill it or say
-        // who it belongs to. Terminate first, then delete.
-        $live = in_array(strtolower((string) $service->status), [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)
-            && $this->provisioning->resolveModule($service) !== null;
+        $validated = $request->validate(['server' => ['nullable', Rule::in(['terminate', 'keep'])]]);
+        $done = __('admin.messages.service_deleted');
 
-        if ($live) {
-            return back()->with('error', __('admin.messages.service_live_cannot_delete'));
+        if (ServerAccount::needsDecision($state = ServerAccount::state($service))) {
+            $decision = ['action' => 'delete', 'state' => $state];
+            $choice = $validated['server'] ?? null;
+
+            if ($choice === null) {
+                return back()->with('server_decision', $decision);
+            }
+
+            if ($choice === 'terminate') {
+                $result = $this->provisioning->terminateAccount($service, queueOnFail: false);
+                if (! ($result['success'] ?? false)) {
+                    return back()->with('error', __('admin.services.server_terminate_failed_delete', ['message' => (string) ($result['message'] ?? '')]))
+                        ->with('server_decision', $decision);
+                }
+                $done = __('admin.services.terminated_and_deleted');
+            } else {
+                $service->loadMissing('server');
+                ActivityLog::log("Service #{$service->id} ({$service->domain}) deleted; its account on the server was kept", auth('admin')->user()?->username, $service->client_id);
+                $done = __('admin.services.deleted_kept_on_server', ['server' => (string) ($service->server?->name ?? '')]);
+            }
         }
 
         $service->delete();
 
-        return redirect()->route('admin.services.index')->with('success', __('admin.messages.service_deleted'));
+        return redirect()->route('admin.services.index')->with('success', $done);
     }
 }

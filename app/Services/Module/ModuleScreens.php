@@ -25,6 +25,8 @@ use Illuminate\Support\HtmlString;
  *   clientFunctions(?Service): array      customer buttons, method => label
  *   servicePageHides(): array             'server_details', 'change_password'
  *   isProvisioned(Service): ?bool         whether Create has anything left to do
+ *   accountOnServer(Service): ?bool       whether the account still exists on the server
+ *                                         (null: the server could not be asked just now)
  *   emailMergeFields(Service): array      extra {fields} for the service's mail
  *
  * A function named in customFunctions() or clientFunctions() takes the service
@@ -79,6 +81,20 @@ final class ModuleScreens
     public function isProvisioned(): ?bool
     {
         $answer = $this->ask('isProvisioned', null, [$this->service]);
+
+        return is_bool($answer) ? $answer : null;
+    }
+
+    /** Whether the module can say if the service's account is still on its server. */
+    public function checksAccounts(): bool
+    {
+        return $this->module !== null && method_exists($this->module, 'accountOnServer');
+    }
+
+    /** True/false when the module could ask the server, null when it could not. */
+    public function accountOnServer(): ?bool
+    {
+        $answer = $this->ask('accountOnServer', null, [$this->service]);
 
         return is_bool($answer) ? $answer : null;
     }

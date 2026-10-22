@@ -336,10 +336,10 @@
         :root[data-theme="dark"] .pn-msg { background:#1e293b !important; border-color:var(--border) !important; }
         :root[data-theme="dark"] .pn-msg-head { background:#0f172a !important; }
         :root[data-theme="dark"] .pn-msg-body { color:#cbd5e1 !important; }
-        :root[data-theme="dark"] .pn-alert-info { background:#1e3a5f !important; border-color:#2563eb !important; }
-        :root[data-theme="dark"] .pn-alert-success { background:#14532d !important; border-color:#16a34a !important; }
-        :root[data-theme="dark"] .pn-alert-warning { background:#451a03 !important; border-color:#d97706 !important; }
-        :root[data-theme="dark"] .pn-alert-error, :root[data-theme="dark"] .pn-alert-danger { background:#450a0a !important; border-color:#dc2626 !important; }
+        :root[data-theme="dark"] .pn-alert-info { background:#1e3a5f !important; border-color:#2563eb !important; color:#bfdbfe !important; }
+        :root[data-theme="dark"] .pn-alert-success { background:#14532d !important; border-color:#16a34a !important; color:#86efac !important; }
+        :root[data-theme="dark"] .pn-alert-warning { background:#451a03 !important; border-color:#d97706 !important; color:#fde68a !important; }
+        :root[data-theme="dark"] .pn-alert-error, :root[data-theme="dark"] .pn-alert-danger { background:#450a0a !important; border-color:#dc2626 !important; color:#fca5a5 !important; }
         /* Badges carry fixed light pastels; in the dark they turned into pale
            chips with unreadable text. Deep tones, same meaning. */
         :root[data-theme="dark"] .badge-active, :root[data-theme="dark"] .badge-paid { background:#14532d !important; color:#86efac !important; }

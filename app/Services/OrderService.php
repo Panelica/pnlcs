@@ -309,10 +309,12 @@ class OrderService
      * address as the fallback when no rule is listening. Never allowed to
      * break the order flow: we are already handling a failure.
      */
-    private function notifyProvisioningFailed(Service $svc, string $reason): void
+    private function notifyProvisioningFailed(Service $svc, string $reason, bool $paid = true): void
     {
         $lines = [
-            'Payment received but the service could not be provisioned. It is waiting in "pending".',
+            $paid
+                ? 'Payment received but the service could not be provisioned. It is waiting in "pending".'
+                : 'The order was placed but the service could not be provisioned. It is waiting in "pending".',
             '',
             'Service : #'.$svc->id,
             'Product : '.($svc->product?->name ?? '-'),
@@ -367,6 +369,13 @@ class OrderService
                 Log::info('Setup-on-order provisioning for service #'.$svc->id, [
                     'success' => $result['success'] ?? false,
                 ]);
+
+                // Staff hear about it as they do when a paid order fails: this
+                // path only logged, and the service sat in Pending with nobody
+                // told why (#212).
+                if (! ($result['success'] ?? false)) {
+                    $this->notifyProvisioningFailed($svc, (string) ($result['message'] ?? 'unknown'), paid: false);
+                }
             }
         }
     }

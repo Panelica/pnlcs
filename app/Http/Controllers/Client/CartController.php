@@ -158,6 +158,13 @@ class CartController extends Controller
             }
         }
 
+        // A domain already set up on the servers this order would go to: setup
+        // would refuse it and leave the service in Pending, so the customer
+        // hears it now (#212).
+        if ($domain !== null && ($problem = \App\Services\HostedDomainCheck::problem($product, $domain))) {
+            throw ValidationException::withMessages(['domain' => $problem]);
+        }
+
         // "Register a new domain" and "Transfer" are purchases of their own.
         // They used to be a note on the service - never checked, priced,
         // invoiced or registered (issue #48). The name is checked here, before

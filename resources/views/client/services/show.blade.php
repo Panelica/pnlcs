@@ -92,6 +92,10 @@
 <div class="sv">
 <a href="{{ route('client.services.index') }}" class="sv-back"><i class="ri-arrow-left-line"></i>{{ __('client.services.back_to_services') }}</a>
 
+@if($setupDelayed ?? false)
+<div class="pn-alert pn-alert-warning" role="status">{{ __('client.services.setup_delayed') }}</div>
+@endif
+
 {{-- Hero --}}
 <div class="sv-hero"><div class="sv-hero-in">
     <div class="sv-hrow">

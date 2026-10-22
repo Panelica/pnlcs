@@ -1931,4 +1931,6 @@ El enlace es válido durante :days días. Si no esperaba esta invitación, puede
     'services.tool_soon' => 'Próximamente',
     'ssl.csr_paste_here' => 'Pegue aquí su CSR...',
     'marketing.mail_greeting' => 'Hola :name,',
+    'services.setup_delayed' => 'Todavía no hemos podido terminar de configurar este servicio. Nuestro equipo ya lo sabe y lo completará en breve; no es necesario volver a pedirlo.',
+    'cart.domain_already_hosted' => ':domain ya está configurado en nuestros servidores, así que no se puede volver a pedir. Si es suyo, póngase en contacto con nosotros.',
 ];
