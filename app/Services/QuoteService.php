@@ -183,7 +183,10 @@ class QuoteService
 
         $invoice = app(InvoiceService::class)->createInvoice($quote->client, $items, [
             'due_date' => now()->addDays(30)->toDateString(),
-            'notes' => $quote->notes,
+            // Not $quote->notes: those are the admin's notes, and invoice
+            // notes are printed on the customer's PDF. A reference to the
+            // quote, the way an order's invoice names its order.
+            'notes' => "Quote #{$quote->id}",
         ]);
 
         $quote->update(['status' => 'Accepted']);
