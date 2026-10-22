@@ -443,7 +443,10 @@ class ProxmoxModule extends AbstractServerModule
                 'ciuser' => $plan->ciuser ?: 'root',
                 'cipassword' => $password,
                 'ciupgrade' => $plan->ciupgrade ? 1 : 0,
-                'ipconfig0' => $ip ? "ip={$ip['address']}/{$ip['prefix']},gw={$ip['gateway']}" : 'ip=dhcp',
+                'ipconfig0' => ($ip ? "ip={$ip['address']}/{$ip['prefix']},gw={$ip['gateway']}" : 'ip=dhcp')
+                    // The IPv6 setting is offered for both guest types; only
+                    // containers (lxcNet) applied it.
+                    .($plan->ipv6 === 'auto' ? ',ip6=auto' : ''),
             ];
             if ($plan->nameserver !== '') {
                 $body['nameserver'] = $plan->nameserver;
