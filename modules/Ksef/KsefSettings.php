@@ -24,7 +24,7 @@ final class KsefSettings
         return [
             ['name' => 'nip', 'label' => __('messages.ksef.nip'), 'type' => 'text', 'hint' => __('messages.ksef.nip_hint')],
             ['name' => 'environment', 'label' => __('messages.ksef.environment'), 'type' => 'select', 'options' => ['integration' => 'Integracja', 'demo' => 'Demo', 'prod' => 'Prod'], 'default' => $d['environment']],
-            ['name' => 'private_key', 'label' => __('messages.ksef.private_key'), 'type' => 'textarea', 'hint' => __('messages.ksef.private_key_hint')],
+            ['name' => 'private_key', 'label' => __('messages.ksef.private_key'), 'type' => 'textarea', 'secret' => true, 'hint' => __('messages.ksef.private_key_hint')],
             ['name' => 'private_key_passphrase', 'label' => __('messages.ksef.private_key_passphrase'), 'type' => 'password', 'hint' => __('messages.ksef.private_key_passphrase_hint')],
             ['name' => 'certificate', 'label' => __('messages.ksef.certificate'), 'type' => 'textarea', 'hint' => __('messages.ksef.certificate_hint')],
             ['name' => 'connect_timeout', 'label' => __('messages.ksef.connect_timeout'), 'type' => 'text', 'default' => $d['http']['connect_timeout']],
