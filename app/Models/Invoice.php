@@ -93,11 +93,14 @@ class Invoice extends Model {
             $invoice->exchange_rate = (float) $target->rate;
 
             // Provenance travels with the rate: a bare number on an invoice is
-            // not something a customer can verify.
-            $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
-            $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
-            $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
-            $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
+            // not something a customer can verify. The settings describe the
+            // official lira rate, so they belong on a lira stamp only.
+            if (strtoupper($code) === 'TRY') {
+                $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
+                $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
+                $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
+                $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
+            }
         });
     }
 
