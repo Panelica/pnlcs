@@ -115,8 +115,10 @@ class PleskModule extends AbstractServerModule
     {
         $key = trim((string) $server->access_hash);
 
+        // The XML API (agent.php) takes a secret key in the KEY header;
+        // X-API-Key is the REST API's header, which agent.php does not read.
         $headers = $key !== ''
-            ? ['X-API-Key' => $key]
+            ? ['KEY' => $key]
             : [
                 'HTTP_AUTH_LOGIN' => (string) ($server->username ?: 'admin'),
                 'HTTP_AUTH_PASSWD' => (string) $server->password,
