@@ -48,6 +48,12 @@
                         @foreach(($packageList['packages'] ?? []) as $pkg)
                         <option value="{{ $pkg['id'] }}" @selected(($selectedPackage ?? '') === $pkg['id'])>{{ $pkg['name'] }}</option>
                         @endforeach
+                        {{-- The saved package stays selectable when the panel did not list it
+                             (unreachable, or the plan was renamed there): without it the form
+                             posted "Default" and saving the product wiped the plan. --}}
+                        @if(($selectedPackage ?? '') !== '' && ! collect($packageList['packages'] ?? [])->contains('id', $selectedPackage))
+                        <option value="{{ $selectedPackage }}" selected>{{ $selectedPackage }}</option>
+                        @endif
                     </select>
                     <div id="package-note" style="color:#777;font-size:12px;margin-top:4px;">
                         {{ $packageList['error'] ?? __('admin.products.package_hint') }}
