@@ -2,6 +2,7 @@
 
 namespace Modules\Servers\Panelica;
 
+use App\Enums\ServiceStatus;
 use App\Models\Server;
 use App\Models\Service;
 use Illuminate\Http\Client\Response;
@@ -694,18 +695,30 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     /**
      * Whether the service's account is still on the panel (ModuleScreens
      * accountOnServer). Staff closing a record whose account is still there
-     * are asked what should happen to it first (#212). Null when the panel
-     * could not be asked; only a 404 counts as gone, as in accountIsGone().
+     * are asked what should happen to it first (#212). Null when PNLCS cannot
+     * tell: the panel could not be asked, or the account was never linked;
+     * only a 404 counts as gone, as in accountIsGone().
      */
     public function accountOnServer(Service $service): ?bool
     {
-        $userId = (string) ($this->getModuleData($service)['panelica_user_id'] ?? '');
-        if ($userId === '') {
-            return false; // nothing was ever created on a panel for it
-        }
-
         $service->loadMissing('server');
         $server = $service->server;
+
+        $userId = (string) ($this->getModuleData($service)['panelica_user_id'] ?? '');
+        if ($userId === '') {
+            // Not set up or linked by PNLCS. Pending or closed, there is
+            // nothing on a panel for it. Active or suspended (imported, or
+            // added without linking its account), the account may well be
+            // there under a name PNLCS does not know: its domain on the panel
+            // says it is; nothing else says it is not.
+            if (! in_array(strtolower((string) $service->status), [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)) {
+                return false;
+            }
+            $domain = trim((string) $service->domain);
+
+            return $server && $domain !== '' && $this->domainHostedOn($server, $domain) === true ? true : null;
+        }
+
         if (! $server) {
             return null;
         }

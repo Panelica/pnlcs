@@ -2615,7 +2615,7 @@ return [
     'services.server_decision_title' => '账户仍在 :server 上',
     'services.server_decision_the_server' => '服务器',
     'services.server_decision_live' => ':domain 的账户 :account 仍存在于 :server 上。',
-    'services.server_decision_unknown' => '无法连接 :server 以检查此服务的账户是否仍然存在。它可能仍在那里。',
+    'services.server_decision_unknown' => 'PNLCS 无法在 :server 上检查此服务的账户是否仍然存在：服务器没有响应，或者该服务未关联到那里的账户。它可能仍在那里。',
     'services.server_decision_delete_why' => '在此删除服务不会从服务器上移除账户：它会在无人计费的情况下继续运行，其域名也无法再次订购。',
     'services.server_decision_status_why' => '在此将服务标记为:status不会从服务器上移除账户：它会在无人计费的情况下继续运行，其域名也无法再次订购。',
     'services.decision_terminate_delete' => '在服务器上终止并删除',

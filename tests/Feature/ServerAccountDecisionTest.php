@@ -340,6 +340,63 @@ test('a service never set up on a panel is deleted directly, without asking the 
         ->and($panel['calls'])->toBe([]);
 });
 
+/*
+ * A service PNLCS did not set up (imported, or added without linking its
+ * account) has no account id. Before #212 an active one could not be deleted
+ * at all; it must not now be deleted without a question either.
+ */
+test('an active service not linked to an account, whose domain is on the panel, asks before it is deleted', function () {
+    $panel = p212Panel();
+    p212Fake($panel);
+    $service = p212Service(null, ['module_data' => null]);
+
+    $this->actingAs(p212Admin(), 'admin')->delete(route('admin.services.destroy', $service))
+        ->assertSessionHas('server_decision', ['action' => 'delete', 'state' => 'live']);
+
+    expect(Service::find($service->id))->not->toBeNull()
+        ->and(p212Calls($panel, 'GET'))->toHaveCount(1)
+        ->and(p212Calls($panel, 'GET')[0][1])->toBe('/api/external/v1/domains');
+});
+
+test('an active service not linked to an account, whose domain is not on the panel, still asks: PNLCS cannot tell', function () {
+    $panel = p212Panel(['accounts' => ['u-9' => ['other.example.test']]]);
+    p212Fake($panel);
+    $service = p212Service(null, ['module_data' => null]);
+
+    $this->actingAs(p212Admin(), 'admin')->delete(route('admin.services.destroy', $service))
+        ->assertSessionHas('server_decision', ['action' => 'delete', 'state' => 'unknown']);
+
+    expect(Service::find($service->id))->not->toBeNull();
+});
+
+test('terminating a service not linked to an account changes nothing and asks again; keeping it deletes the record', function () {
+    $panel = p212Panel();
+    p212Fake($panel);
+    $service = p212Service(null, ['module_data' => null]);
+    $admin = p212Admin();
+
+    $this->actingAs($admin, 'admin')->delete(route('admin.services.destroy', $service), ['server' => 'terminate'])
+        ->assertSessionHas('error')
+        ->assertSessionHas('server_decision', ['action' => 'delete', 'state' => 'live']);
+    expect(Service::find($service->id))->not->toBeNull()
+        ->and(p212Calls($panel, 'DELETE'))->toBe([]);
+
+    $this->actingAs($admin, 'admin')->delete(route('admin.services.destroy', $service), ['server' => 'keep'])
+        ->assertSessionHas('success', __('admin.services.deleted_kept_on_server', ['server' => 'Panelica01']));
+    expect(Service::find($service->id))->toBeNull()
+        ->and($panel['accounts'])->toHaveKey('u-1');
+});
+
+test('an active service while the panel cannot be reached says it could not check, not that the account is there', function () {
+    $panel = p212Panel(['down' => true]);
+    p212Fake($panel);
+    $service = p212Service();
+
+    $this->actingAs(p212Admin(), 'admin')->delete(route('admin.services.destroy', $service))
+        ->assertSessionHas('server_decision', ['action' => 'delete', 'state' => 'unknown']);
+    expect(Service::find($service->id))->not->toBeNull();
+});
+
 test('the report, start to end: marked Terminated, deleted, ordered again on the same domain', function () {
     Mail::fake();
     $panel = p212Panel();

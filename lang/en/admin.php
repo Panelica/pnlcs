@@ -2615,7 +2615,7 @@ return [
     'services.server_decision_title' => 'The account is still on :server',
     'services.server_decision_the_server' => 'the server',
     'services.server_decision_live' => 'The account :account for :domain still exists on :server.',
-    'services.server_decision_unknown' => ':server could not be reached to check whether the account for this service still exists. It may still be there.',
+    'services.server_decision_unknown' => 'PNLCS could not check on :server whether the account for this service still exists: the server did not answer, or the service is not linked to an account there. It may still be there.',
     'services.server_decision_delete_why' => 'Deleting the service here does not remove the account from the server: it would keep running with nothing billing it, and its domain could not be ordered again.',
     'services.server_decision_status_why' => 'Marking the service :status here does not remove the account from the server: it would keep running with nothing billing it, and its domain could not be ordered again.',
     'services.decision_terminate_delete' => 'Terminate on the server and delete',

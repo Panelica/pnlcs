@@ -115,7 +115,10 @@ the account:
 Left on the server, an account keeps running with nothing billing it, and its
 domain cannot be ordered again. For Panelica servers PNLCS asks the panel
 whether the account is still there; for other modules an active or suspended
-service is taken to have its account.
+service is taken to have its account. An active or suspended service that is
+not linked to an account on the panel (imported, or added without **Link to an
+existing account**) is asked about too: PNLCS cannot terminate it there, so
+remove the account on the panel yourself, or keep it.
 
 A domain that is already set up on the servers an order would go to is refused
 while the customer orders, with a message asking them to contact you.

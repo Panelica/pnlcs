@@ -2615,7 +2615,7 @@ return [
     'services.server_decision_title' => 'Konto nadal istnieje na :server',
     'services.server_decision_the_server' => 'serwerze',
     'services.server_decision_live' => 'Konto :account dla :domain nadal istnieje na :server.',
-    'services.server_decision_unknown' => 'Nie udało się połączyć z :server, aby sprawdzić, czy konto tej usługi nadal istnieje. Może nadal tam być.',
+    'services.server_decision_unknown' => 'PNLCS nie mógł sprawdzić na :server, czy konto tej usługi nadal istnieje: serwer nie odpowiedział albo usługa nie jest tam powiązana z żadnym kontem. Może nadal tam być.',
     'services.server_decision_delete_why' => 'Usunięcie usługi tutaj nie usuwa konta z serwera: działałoby dalej bez rozliczania, a jego domeny nie dałoby się ponownie zamówić.',
     'services.server_decision_status_why' => 'Oznaczenie usługi tutaj jako :status nie usuwa konta z serwera: działałoby dalej bez rozliczania, a jego domeny nie dałoby się ponownie zamówić.',
     'services.decision_terminate_delete' => 'Zamknij na serwerze i usuń',

@@ -2615,7 +2615,7 @@ return [
     'services.server_decision_title' => 'Das Konto ist noch auf :server',
     'services.server_decision_the_server' => 'dem Server',
     'services.server_decision_live' => 'Das Konto :account für :domain besteht noch auf :server.',
-    'services.server_decision_unknown' => ':server war nicht erreichbar, um zu prüfen, ob das Konto dieses Dienstes noch besteht. Es kann noch vorhanden sein.',
+    'services.server_decision_unknown' => 'PNLCS konnte auf :server nicht prüfen, ob das Konto dieses Dienstes noch besteht: Der Server hat nicht geantwortet, oder der Dienst ist dort mit keinem Konto verknüpft. Es kann noch vorhanden sein.',
     'services.server_decision_delete_why' => 'Das Löschen des Dienstes hier entfernt das Konto nicht vom Server: Es liefe ohne Abrechnung weiter, und seine Domain könnte nicht erneut bestellt werden.',
     'services.server_decision_status_why' => 'Den Dienst hier als :status zu markieren entfernt das Konto nicht vom Server: Es liefe ohne Abrechnung weiter, und seine Domain könnte nicht erneut bestellt werden.',
     'services.decision_terminate_delete' => 'Auf dem Server kündigen und löschen',

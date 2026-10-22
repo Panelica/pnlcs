@@ -2591,7 +2591,7 @@ return [
     'services.server_decision_title' => 'Hesap hâlâ :server üzerinde',
     'services.server_decision_the_server' => 'sunucu',
     'services.server_decision_live' => ':domain için :account hesabı :server üzerinde hâlâ duruyor.',
-    'services.server_decision_unknown' => 'Bu hizmetin hesabının hâlâ durup durmadığını denetlemek için :server sunucusuna ulaşılamadı. Hesap hâlâ orada olabilir.',
+    'services.server_decision_unknown' => 'Bu hizmetin hesabının :server üzerinde hâlâ durup durmadığı denetlenemedi: sunucu yanıt vermedi ya da hizmet oradaki bir hesaba bağlı değil. Hesap hâlâ orada olabilir.',
     'services.server_decision_delete_why' => 'Hizmeti burada silmek hesabı sunucudan kaldırmaz: hesap faturalanmadan çalışmaya devam eder ve alan adı yeniden sipariş edilemez.',
     'services.server_decision_status_why' => 'Hizmeti burada :status olarak işaretlemek hesabı sunucudan kaldırmaz: hesap faturalanmadan çalışmaya devam eder ve alan adı yeniden sipariş edilemez.',
     'services.decision_terminate_delete' => 'Sunucuda sonlandır ve sil',

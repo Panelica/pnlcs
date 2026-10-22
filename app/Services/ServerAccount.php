@@ -25,7 +25,7 @@ final class ServerAccount
     /** The account is on the server. */
     public const LIVE = 'live';
 
-    /** The module could not be asked just now, and the account may be there. */
+    /** The module could not tell (not reachable, or the account was never linked), and the account may be there. */
     public const UNKNOWN = 'unknown';
 
     /** There is nothing on a server to look after. */
@@ -39,19 +39,18 @@ final class ServerAccount
 
         $screens = ModuleScreens::for($service);
         if ($screens->checksAccounts()) {
-            $answer = $screens->accountOnServer();
-            if ($answer !== null) {
-                return $answer ? self::LIVE : self::NONE;
-            }
+            // Asked and not answered: the account may still be there, and
+            // the page says it could not check rather than that it is.
+            return match ($screens->accountOnServer()) {
+                true => self::LIVE,
+                false => self::NONE,
+                null => self::UNKNOWN,
+            };
         }
 
-        if (in_array(strtolower((string) $service->status), [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)) {
-            return self::LIVE;
-        }
-
-        // Asked and not answered: the account the module once created may
-        // still be there.
-        return $screens->checksAccounts() ? self::UNKNOWN : self::NONE;
+        return in_array(strtolower((string) $service->status), [ServiceStatus::Active->value, ServiceStatus::Suspended->value], true)
+            ? self::LIVE
+            : self::NONE;
     }
 
     /** Staff have to decide what happens to the account before the record goes. */

@@ -2615,7 +2615,7 @@ return [
 	'services.server_decision_title' => 'La cuenta sigue en :server',
 	'services.server_decision_the_server' => 'el servidor',
 	'services.server_decision_live' => 'La cuenta :account de :domain sigue existiendo en :server.',
-	'services.server_decision_unknown' => 'No se pudo contactar con :server para comprobar si la cuenta de este servicio sigue existiendo. Puede que siga allí.',
+	'services.server_decision_unknown' => 'PNLCS no pudo comprobar en :server si la cuenta de este servicio sigue existiendo: el servidor no respondió o el servicio no está vinculado a ninguna cuenta allí. Puede que siga allí.',
 	'services.server_decision_delete_why' => 'Eliminar el servicio aquí no quita la cuenta del servidor: seguiría funcionando sin que nadie la facture y su dominio no podría volver a pedirse.',
 	'services.server_decision_status_why' => 'Marcar el servicio aquí como :status no quita la cuenta del servidor: seguiría funcionando sin que nadie la facture y su dominio no podría volver a pedirse.',
 	'services.decision_terminate_delete' => 'Terminar en el servidor y eliminar',
