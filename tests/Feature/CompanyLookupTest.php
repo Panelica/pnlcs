@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AddonSetting;
+use App\Models\Setting;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -274,6 +275,7 @@ test('a successful result is cached and the second call skips the network', func
 
 test('the endpoint returns the normalised shape', function () {
     Cache::flush();
+    Setting::set('addon_company_lookup_active', '1');
     configureKey('gus_api_key', \Modules\CompanyLookup\GusCompanyProvider::class);
     configureKey('ceidg_api_key', \Modules\CompanyLookup\CeidgCompanyProvider::class);
 
@@ -297,8 +299,19 @@ test('the endpoint returns the normalised shape', function () {
 });
 
 test('the endpoint rejects a missing nip', function () {
+    Setting::set('addon_company_lookup_active', '1');
     $this->postJson('/api/company/lookup', [])
         ->assertStatus(422);
+});
+
+test('the endpoint is not there while the addon is switched off, and asks no registry', function () {
+    Cache::flush();
+    configureKey('gus_api_key', \Modules\CompanyLookup\GusCompanyProvider::class);
+    Http::fake();
+    Setting::set('addon_company_lookup_active', '0');
+
+    $this->postJson('/api/company/lookup', ['nip' => '526-104-08-28'])->assertNotFound();
+    Http::assertNothingSent();
 });
 
 test('the CEIDG provider maps a firm found in the register', function () {
