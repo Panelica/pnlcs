@@ -388,6 +388,7 @@ return [
     'api_docs.toc' => 'İçindekiler',
     'appearance' => [
         'activate_preset' => 'Ön ayarı etkinleştir',
+        'invalid_token' => ':token için girilen değer geçerli değil. Bir renk ya da yalnız sözcük, sayı ve birim kullanın.',
         'active_badge' => 'Etkin',
         'built_in_badge' => 'Yerleşik',
         'copyright_hint' => 'Alt bilgide © ve yıldan sonra gösterilir.',

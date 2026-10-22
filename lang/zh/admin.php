@@ -397,6 +397,7 @@ return [
     'api_docs.toc' => '目录',
     'appearance' => [
         'activate_preset' => '启用预设',
+        'invalid_token' => ':token 的值无效。请使用颜色，或仅使用文字、数字和单位。',
         'active_badge' => '已启用',
         'built_in_badge' => '内置',
         'copyright_hint' => '显示在页脚的 © 和年份之后。',

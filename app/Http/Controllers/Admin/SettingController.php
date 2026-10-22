@@ -354,17 +354,25 @@ class SettingController extends Controller
             }
             $colorKeys = ThemeService::getColorKeys();
             $colors = [];
+            $invalid = [];
             foreach ($allKeys as $key) {
                 $val = $request->input("colors.{$key}");
                 if ($val) {
-                    if (in_array($key, $colorKeys) && preg_match('/^#[0-9a-fA-F]{6}$/', $val)) {
-                        $colors[$key] = strtolower($val);
-                    } else {
-                        $colors[$key] = $val;
+                    $val = trim((string) $val);
+                    // Each token becomes one CSS value; anything else is refused
+                    // rather than saved and printed on every page.
+                    if (! ThemeService::isValidTokenValue($key, $val)) {
+                        $invalid["colors.{$key}"] = __('admin.appearance.invalid_token', ['token' => ThemeService::getTokenLabels()[$key] ?? $key]);
+
+                        continue;
                     }
+                    $colors[$key] = in_array($key, $colorKeys) && preg_match('/^#[0-9a-fA-F]{6}$/', $val) ? strtolower($val) : $val;
                 } else {
                     $colors[$key] = $presets['starter']['colors'][$key] ?? '';
                 }
+            }
+            if ($invalid) {
+                return back()->withErrors($invalid)->withInput();
             }
             Setting::set('active_theme_preset', 'custom', 'appearance');
             Setting::set('active_theme', json_encode($colors), 'appearance');
