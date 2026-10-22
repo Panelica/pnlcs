@@ -130,6 +130,7 @@ return [
         'create_product' => 'Crear producto',
         'no_plans' => 'Panelica Central no ofrece planes para esta cuenta.',
         'no_usd_rate' => 'Los precios de Panelica están en dólares estadounidenses. Añada una moneda USD con su tipo de cambio (Configuración, Monedas) para ver precios sugeridos y su margen en su propia moneda.',
+        'market_usd_rate' => 'Los precios sugeridos y los márgenes usan el tipo de cambio de mercado de hoy, 1 USD = :rate :code, consultado una vez al día. Añada una moneda USD (Configuración, Monedas) para usar su propio tipo.',
         'sales_title' => 'Vendidas desde este sitio',
         'customer' => 'Cliente',
         'product' => 'Producto',

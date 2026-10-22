@@ -840,6 +840,84 @@ test('connected: the account, the plans with cost and list price, and a product 
         ->and($page)->toContain(e(__('panelica_license.page.per_month', ['price' => $usd->formatAmount(4.0)])));
 });
 
+/** A euro site with no dollar currency; $rates is what the rate provider answers for 1 USD. */
+function plEuroSite(array &$central, ?array $rates): void
+{
+    Currency::query()->delete();
+    Currency::create(['code' => 'EUR', 'prefix' => '€', 'suffix' => '', 'format' => 1, 'rate' => 1, 'is_default' => true]);
+    Http::fake([
+        'open.er-api.com/*' => function (Request $request) use (&$central, $rates) {
+            $central['rates'][] = $request->url();
+
+            return $rates === null ? Http::response('', 500) : Http::response(['result' => 'success', 'base_code' => 'USD', 'rates' => $rates], 200);
+        },
+        'api.frankfurter.app/*' => function (Request $request) use (&$central) {
+            $central['rates'][] = $request->url();
+
+            return Http::response('', 500);
+        },
+    ]);
+    plFake($central);
+}
+
+test('with no dollar currency the margin is shown at today\'s market rate, looked up once a day', function () {
+    $central = plCentral();
+    plEuroSite($central, ['USD' => 1, 'EUR' => 0.5]);
+    plConnect();
+    $staff = plStaff(['manage_products', 'list_products']);
+    $eur = Currency::where('code', 'EUR')->first();
+
+    $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), [
+        'plan_id' => PL_PLAN, 'name' => 'Panelica Business', 'monthly' => '6.00', 'annually' => '60.00',
+    ])->assertSessionHas('success');
+
+    $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    // Cost $8 a month = €4 at 0.5; sold at €6.
+    expect($page)->toContain(e(__('panelica_license.page.per_month', ['price' => $eur->formatAmount(2.0)])))
+        ->and($page)->toContain(e(__('panelica_license.page.market_usd_rate', ['rate' => '0.5000', 'code' => 'EUR'])))
+        ->and($page)->not->toContain(e(__('panelica_license.page.no_usd_rate')));
+
+    $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->assertOk();
+    expect($central['rates'])->toHaveCount(1)
+        ->and($central['rates'][0])->toContain('/latest/USD');
+});
+
+test('a dollar currency on the site is used instead of the market rate', function () {
+    $central = plCentral();
+    plEuroSite($central, ['USD' => 1, 'EUR' => 0.5]);
+    Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'format' => 1, 'rate' => 1.25, 'is_default' => false]);
+    plConnect();
+
+    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    expect($page)->not->toContain(e(__('panelica_license.page.market_usd_rate', ['rate' => '0.5000', 'code' => 'EUR'])))
+        ->and($page)->not->toContain(e(__('panelica_license.page.no_usd_rate')))
+        ->and($central['rates'] ?? [])->toBe([]);
+});
+
+test('no market rate: the page says to add a dollar currency and does not ask again within the hour', function () {
+    $central = plCentral();
+    plEuroSite($central, null);
+    plConnect();
+    $staff = plStaff(['manage_products']);
+
+    $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    expect($page)->toContain(e(__('panelica_license.page.no_usd_rate')));
+    $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->assertOk();
+    // Both providers once, then nothing.
+    expect($central['rates'])->toHaveCount(2);
+});
+
+test('with automatic rate updates off no market rate is looked up', function () {
+    $central = plCentral();
+    plEuroSite($central, ['USD' => 1, 'EUR' => 0.5]);
+    Setting::set('currency_auto_update', '0');
+    plConnect();
+
+    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    expect($page)->toContain(e(__('panelica_license.page.no_usd_rate')))
+        ->and($central['rates'] ?? [])->toBe([]);
+});
+
 test('a product needs a price and a plan Central lists', function () {
     $central = plCentral();
     plFake($central);

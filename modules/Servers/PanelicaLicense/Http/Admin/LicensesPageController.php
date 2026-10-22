@@ -3,12 +3,15 @@
 namespace Modules\Servers\PanelicaLicense\Http\Admin;
 
 use App\Models\Currency;
+use App\Models\Setting;
 use App\Models\Product;
 use App\Models\ProductGroup;
 use App\Models\Service;
+use App\Services\ExchangeRateService;
 use App\Services\ProductCreator;
 use App\Support\UniqueSlug;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Modules\Servers\PanelicaLicense\CentralClient;
 use Modules\Servers\PanelicaLicense\CentralResponse;
 use Modules\Servers\PanelicaLicense\LicenseSync;
@@ -54,6 +57,10 @@ class LicensesPageController
 
         $currency = Currency::getDefault();
         $usdRate = $this->usdRate($currency);
+        // No dollar currency on the site: today's market rate, for this page
+        // only, and only when there are plans to price.
+        $usdRateFetched = $usdRate === null && $currency && $plans ? $this->marketUsdRate($currency) : null;
+        $usdRate ??= $usdRateFetched;
 
         $products = Product::with('pricing')->where('server_type', PanelicaLicenseModule::NAME)->orderBy('id')->get();
         $productsByPlan = $products->groupBy(fn (Product $product) => (string) (($product->config_options ?? [])['package_name'] ?? ''));
@@ -94,6 +101,7 @@ class LicensesPageController
             'count' => $count,
             'currency' => $currency,
             'usdRate' => $usdRate,
+            'usdRateFetched' => $usdRateFetched,
             'portal' => PartnerAccount::portalUrl(),
             'topUp' => PartnerAccount::portalUrl('customer/reseller/balance'),
             'becomePartner' => PartnerAccount::centralUrl().'/partnership',
@@ -271,5 +279,30 @@ class LicensesPageController
         $usd = Currency::whereRaw('UPPER(code) = ?', ['USD'])->first();
 
         return $usd && (float) $usd->rate > 0 ? 1 / (float) $usd->rate : null;
+    }
+
+    /**
+     * How many units of the default currency one US dollar is at today's
+     * market rate, from the same providers as pnlcs:currency-update. Kept for
+     * a day; a failed lookup is not tried again for an hour, so the page stays
+     * quick while the providers are down. Nothing is asked when the operator
+     * switched automatic rate updates off.
+     */
+    private function marketUsdRate(Currency $default): ?float
+    {
+        if ((string) Setting::get('currency_auto_update', '1') !== '1') {
+            return null;
+        }
+
+        $key = 'panelica_license.usd_rate.'.strtoupper((string) $default->code);
+        $cached = Cache::get($key);
+        if ($cached !== null) {
+            return (float) $cached > 0 ? (float) $cached : null;
+        }
+
+        $rate = app(ExchangeRateService::class)->rate('USD', (string) $default->code, 5);
+        Cache::put($key, $rate ?? 0.0, $rate ? now()->addDay() : now()->addHour());
+
+        return $rate;
     }
 }

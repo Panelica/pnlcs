@@ -4,9 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\Currency;
 use App\Models\Setting;
+use App\Services\ExchangeRateService;
 use App\Services\TcmbRateService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CurrencyUpdateCommand extends Command
@@ -34,7 +34,7 @@ class CurrencyUpdateCommand extends Command
             return self::SUCCESS;
         }
 
-        $rates = $this->fetchRates(strtoupper($base->code));
+        $rates = app(ExchangeRateService::class)->rates($base->code);
         if ($rates === null) {
             Log::error('Currency update: all rate providers failed', ['base' => $base->code]);
             $this->error('All exchange rate providers failed.');
@@ -126,35 +126,5 @@ class CurrencyUpdateCommand extends Command
             $official['bulletin'] ?? '-',
             number_format($official['rate'], 4)
         ));
-    }
-
-    /**
-     * Try providers in order; both are free and keyless.
-     *
-     * @return array<string, float>|null code => rate relative to $base
-     */
-    private function fetchRates(string $base): ?array
-    {
-        // Provider 1: open.er-api.com (170+ currencies)
-        try {
-            $response = Http::timeout(20)->get("https://open.er-api.com/v6/latest/{$base}");
-            if ($response->successful() && ($response->json('result') === 'success') && is_array($response->json('rates'))) {
-                return $response->json('rates');
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Currency update: er-api failed: ' . $e->getMessage());
-        }
-
-        // Provider 2: frankfurter.app (ECB reference rates)
-        try {
-            $response = Http::timeout(20)->get('https://api.frankfurter.app/latest', ['from' => $base]);
-            if ($response->successful() && is_array($response->json('rates'))) {
-                return $response->json('rates');
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Currency update: frankfurter failed: ' . $e->getMessage());
-        }
-
-        return null;
     }
 }

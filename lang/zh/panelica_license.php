@@ -130,6 +130,7 @@ return [
         'create_product' => '创建产品',
         'no_plans' => 'Panelica Central 未为此账户列出任何套餐。',
         'no_usd_rate' => 'Panelica 价格以美元计。添加带汇率的 USD 货币（设置，货币），即可用您自己的货币查看建议价格和利润。',
+        'market_usd_rate' => '建议价格和利润按今日市场汇率计算：1 USD = :rate :code，每天检查一次。添加 USD 货币（设置，货币）即可使用您自己的汇率。',
         'sales_title' => '本站售出',
         'customer' => '客户',
         'product' => '产品',
