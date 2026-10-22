@@ -71,7 +71,9 @@ class AddonController extends Controller
 
             $value = $request->input($key);
 
-            if ($type === 'password' && ($value === null || trim((string) $value) === '')) {
+            // A password, or a field the addon marks secret: left empty, the
+            // stored value stays (the form never shows it).
+            if (($type === 'password' || ! empty($field['secret'])) && ($value === null || trim((string) $value) === '')) {
                 continue;
             }
 

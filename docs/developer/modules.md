@@ -98,7 +98,9 @@ public function getConfigFields(): array
 }
 ```
 
-Field types: `text`, `password` (never echoed back into the page), `textarea`,
+Field types: `text`, `password` (never echoed back into the page), `textarea`
+(add `'secret' => true` for a key or certificate that must not be shown again: the
+page then shows only that a value is set, and a blank save keeps it),
 `select` (with `options`) and `yesno`. A gateway field can carry a
 `description`, a sentence shown under it on the settings page. A gateway reads its saved values from
 `App\Models\GatewaySettings` (`gateway` = your `name`, `setting` = the field

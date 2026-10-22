@@ -36,6 +36,10 @@
                             <input type="checkbox" name="{{ $key }}" value="1" class="form-check-input"
                                 {{ ($settings[$key] ?? $field['default'] ?? '0') == '1' ? 'checked' : '' }}>
                         </div>
+                    @elseif($type === 'textarea' && ! empty($field['secret']))
+                        {{-- A secret is never sent back to the browser; empty keeps the stored one. --}}
+                        <textarea name="{{ $key }}" class="form-control" rows="3" autocomplete="off"
+                            placeholder="{{ ($settings[$key] ?? '') ? __('admin.addon_modules.key_is_set') : '' }}"></textarea>
                     @elseif($type === 'textarea')
                         <textarea name="{{ $key }}" class="form-control" rows="3">{{ $settings[$key] ?? $field['default'] ?? '' }}</textarea>
                     @elseif($type === 'password')

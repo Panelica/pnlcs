@@ -12,7 +12,8 @@ class ModuleSettings
     public const MAX_KEYS = 50;
 
     /**
-     * The names a module marks as secret, so a blank one can mean "keep".
+     * The names a module marks as secret (a password field, or any field with
+     * 'secret' => true), so a blank one can mean "keep".
      *
      * Modules describe their fields two ways: a list of ['name' => ...] rows
      * (gateways, registrars) or an array keyed by the field name (SSL).
@@ -22,8 +23,8 @@ class ModuleSettings
     public static function secretFieldNames(array $configFields): array
     {
         return collect($configFields)
-            ->map(fn ($field, $key) => ['name' => $field['name'] ?? (is_string($key) ? $key : null), 'type' => $field['type'] ?? null])
-            ->filter(fn ($field) => $field['type'] === 'password' && is_string($field['name']) && $field['name'] !== '')
+            ->map(fn ($field, $key) => ['name' => $field['name'] ?? (is_string($key) ? $key : null), 'type' => $field['type'] ?? null, 'secret' => ! empty($field['secret'])])
+            ->filter(fn ($field) => ($field['type'] === 'password' || $field['secret']) && is_string($field['name']) && $field['name'] !== '')
             ->pluck('name')
             ->values()
             ->all();
