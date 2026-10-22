@@ -118,7 +118,9 @@ class InvoicePdfService
 
         $ksef = $invoice->ksefInvoice;
 
-        if (! $ksef || ! filled($ksef->ksef_number)) {
+        // Accepted only: rows saved before this check could carry the send
+        // reference as their number on a rejected or unconfirmed invoice.
+        if (! $ksef || ! filled($ksef->ksef_number) || ! filled($ksef->accepted_at)) {
             return null;
         }
 
