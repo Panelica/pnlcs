@@ -432,7 +432,14 @@ class ProductController extends Controller
         // The plan the product sells, in the one key every module reads.
         if ($request->has('package_name')) {
             $config = $this->productConfig($product->fresh());
-            $config['package_name'] = (string) $request->input('package_name');
+            $package = trim((string) $request->input('package_name'));
+            // No package picked: leave the key out, as a new product does, so
+            // the module's own default and older keys still apply.
+            if ($package === '') {
+                unset($config['package_name']);
+            } else {
+                $config['package_name'] = $package;
+            }
             $product->update(['config_options' => $config]);
         }
 

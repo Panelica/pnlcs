@@ -195,6 +195,23 @@ abstract class AbstractServerModule implements ServerModuleInterface
             ? json_decode($product->config_options, true)
             : ($product->config_options ?? []);
 
-        return $config['package_name'] ?? $config['panelica_plan_id'] ?? $config['cpanel_package'] ?? null;
+        return self::planFrom($config, ['package_name', 'panelica_plan_id', 'cpanel_package']);
+    }
+
+    /**
+     * The first of these config keys that holds a value. A blank one is not a
+     * value: the product form saves "" when no package is picked, and `??`
+     * took that "" over the keys after it and over each module's default.
+     */
+    protected static function planFrom(array $config, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = trim((string) ($config[$key] ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
     }
 }

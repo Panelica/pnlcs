@@ -441,7 +441,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
         // package_name is what every module reads now; the older key
         // still works for products configured before that.
-        $planId = $config['package_name'] ?? $config['panelica_plan_id'] ?? null;
+        $planId = self::planFrom($config, ['package_name', 'panelica_plan_id']);
 
         // Managed mode: build/sync a panel plan from the product's resource
         // config (cpu/ram/inode/iops/...) and use it — full Panelica parity.
