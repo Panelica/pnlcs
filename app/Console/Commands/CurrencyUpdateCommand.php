@@ -57,8 +57,16 @@ class CurrencyUpdateCommand extends Command
         // when the operator named one: invoices print the rate they were
         // struck at, and a customer can check a central bank bulletin number
         // but not a commercial API's.
-        if ((string) Setting::get('OfficialRateProvider', '') === 'tcmb') {
-            $this->applyOfficialLiraRate($base, $updated, $missing);
+        $official = (string) Setting::get('OfficialRateProvider', '') === 'tcmb'
+            && $this->applyOfficialLiraRate($base, $updated, $missing);
+
+        // The lira rate now comes from the commercial provider: the bulletin
+        // details of an earlier TCMB run no longer describe it, and invoices
+        // kept printing them under a rate they did not come from.
+        if (! $official) {
+            foreach (['ExchangeRateSource', 'ExchangeRateKind', 'ExchangeRateDate', 'ExchangeRateBulletin'] as $key) {
+                Setting::set($key, '');
+            }
         }
 
         // Base rate is 1.0 by definition.
@@ -85,17 +93,19 @@ class CurrencyUpdateCommand extends Command
      *
      * A failure here is not fatal - the commercial rate already fetched stays,
      * and the invoice simply names that source instead.
+     *
+     * @return bool whether the lira rate is now the official one
      */
-    private function applyOfficialLiraRate(Currency $base, array &$updated, array &$missing): void
+    private function applyOfficialLiraRate(Currency $base, array &$updated, array &$missing): bool
     {
         if (strtoupper($base->code) !== 'USD') {
-            return;                       // TCMB quotes against the lira only
+            return false;                 // TCMB quotes against the lira only
         }
 
         $try = Currency::where('code', 'TRY')->first();
 
         if (! $try) {
-            return;
+            return false;
         }
 
         $kind = (string) Setting::get('TcmbRateKind', 'ForexSelling');
@@ -104,7 +114,7 @@ class CurrencyUpdateCommand extends Command
         if ($official === null) {
             $this->warn('TCMB unavailable - lira rate left at the commercial provider value.');
 
-            return;
+            return false;
         }
 
         $try->update(['rate' => round($official['rate'], 5)]);
@@ -126,5 +136,7 @@ class CurrencyUpdateCommand extends Command
             $official['bulletin'] ?? '-',
             number_format($official['rate'], 4)
         ));
+
+        return true;
     }
 }
