@@ -71,6 +71,9 @@
     // Login to panel: Panelica, and any other module that can hand out a sign-in link (ssoLogin).
     $panelModule = $service->server_id ? app(\App\Services\ProvisioningService::class)->resolveModule($service) : null;
     $canPanelLogin = $isPanelica || ($panelModule && method_exists($panelModule, 'ssoLogin'));
+    // The usage strip, for every module that reports live usage (Panelica,
+    // HestiaCP, aaPanel), not only Panelica.
+    $hasLiveUsage = $panelModule && method_exists($panelModule, 'liveUsage');
     $feat = $hostingFeatures ?? [];
     // Full control-panel tool set. `route` null = not built yet (shown as Soon).
     $tools = [
@@ -118,7 +121,7 @@
 </div></div>
 
 {{-- Resource strip --}}
-@if($isPanelica && $st === 'active')
+@if($hasLiveUsage && $st === 'active')
 <div class="sv-res">
     <div class="sv-metric" id="m-cpu" style="display:none">
         <div class="sv-mtop"><span class="sv-mic" style="background:rgba(99,102,241,.14);color:#6366f1"><i class="ri-cpu-line"></i></span><span class="sv-mlabel">{{ __('client.hosting.dashboard.cpu') }}</span></div>
@@ -140,7 +143,7 @@
         <div class="sv-mval"><span data-v>&hellip;</span> <small>MB</small></div>
         <div class="sv-mbar" style="visibility:hidden"><div class="sv-mfill"></div></div>
     </div>
-    <div class="sv-metric" id="m-sites">
+    <div class="sv-metric" id="m-sites" style="display:none">
         <div class="sv-mtop"><span class="sv-mic" style="background:rgba(100,116,139,.14);color:var(--muted)"><i class="ri-global-line"></i></span><span class="sv-mlabel">{{ __('client.hosting.dashboard.domains') }}</span></div>
         <div class="sv-mval"><span data-v>&hellip;</span></div>
         <div class="sv-mbar" style="visibility:hidden"><div class="sv-mfill"></div></div>
@@ -283,7 +286,7 @@
 @endif
 </div>
 
-@if($isPanelica && $st === 'active')
+@if($hasLiveUsage && $st === 'active')
 <script>
 (function(){
     function set(id,val,sub){var c=document.getElementById(id);if(!c)return;c.style.display='';var v=c.querySelector('[data-v]');if(v)v.innerHTML=val;var s=c.querySelector('[data-sub]');if(s&&sub!=null)s.textContent=sub;}
@@ -295,7 +298,8 @@
         if(u.ram){set('m-ram',(u.ram.used_mb||0).toLocaleString(),'/ '+(u.ram.limit_mb||0).toLocaleString()+' MB');bar('m-ram',u.ram.percent||0);}
         if(u.disk){var q=u.disk.quota_mb||0,us=u.disk.used_mb||0;set('m-disk',us.toLocaleString()+' <small>/ '+(q>0?q.toLocaleString()+' MB':'&infin;')+'</small>');if(q>0)bar('m-disk',us/q*100);}
         if(u.bandwidth)set('m-bw',(u.bandwidth.used_mb||0).toLocaleString());
-        set('m-sites',(u.domains?u.domains.length:0));
+        // Shown when the module lists the sites; HestiaCP and aaPanel do not.
+        if(u.domains&&u.domains.length)set('m-sites',u.domains.length);
       }).catch(function(){});
 })();
 </script>
