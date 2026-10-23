@@ -1124,6 +1124,7 @@ return [
         'auto_charge_off_hint' => '我们不会扣您的卡，每张发票由您自行支付。',
         'auto_charge_turn_on' => '开启自动付款',
         'auto_charge_turn_off' => '关闭自动付款',
+        'staff_cannot_consent' => '您正以该客户身份登录。银行卡和自动付款由客户本人决定：由客户自己添加银行卡并同意自动付款。您仍可代其支付账单。',
         'auto_charge_updated' => '您的自动付款设置已保存。',
         'add_card_button' => '添加银行卡',
         'add_card_title' => '保存银行卡',

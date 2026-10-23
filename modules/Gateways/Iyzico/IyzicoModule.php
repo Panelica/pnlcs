@@ -396,8 +396,13 @@ class IyzicoModule implements GatewayModuleInterface, TokenizableGatewayInterfac
 
         // With card storage on, the form shows a "save my card" box, and a
         // cardUserKey brings back the cards this customer stored before.
+        // Not while staff are signed in as the customer: storing a card is the
+        // cardholder's consent (App\Support\Impersonation). Cards already
+        // stored are still offered.
         if ((string) $this->getSetting('save_cards') !== '0') {
-            $body['registerCard'] = 1;
+            if (! \App\Support\Impersonation::active()) {
+                $body['registerCard'] = 1;
+            }
 
             $cardUserKey = $this->storedCardUserKey($invoice);
             if ($cardUserKey !== null) {

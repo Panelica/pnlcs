@@ -121,7 +121,9 @@ class GatewayWebhookController extends Controller
         // "Keep this card" is honoured only while automatic payment is on:
         // that is the only thing a stored card is for, and the card-add page
         // is closed for the same reason when it is off.
-        $params = AutoCharge::enabled() && $request->boolean("save_card") ? ["save_card" => true] : [];
+        // Nor while staff are signed in as the customer: keeping a card is the
+        // cardholder's consent (App\Support\Impersonation).
+        $params = AutoCharge::enabled() && $request->boolean("save_card") && ! \App\Support\Impersonation::active() ? ["save_card" => true] : [];
         $result = $module->capture($invoice, $invoice->amountDue(), $params);
         return response()->json($result);
     }

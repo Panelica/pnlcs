@@ -1151,6 +1151,7 @@ return [
         'auto_charge_off_hint' => 'No cobraremos su tarjeta. Usted paga cada factura usted mismo.',
         'auto_charge_turn_on' => 'Activar el pago automático',
         'auto_charge_turn_off' => 'Apaga el pago automático',
+        'staff_cannot_consent' => 'Ha iniciado sesión como este cliente. Las tarjetas y el pago automático son decisión del propio cliente: él añade una tarjeta y acepta el pago automático. Puede pagar una factura por él.',
         'auto_charge_updated' => 'Su ajuste de pago automático ha sido guardado.',
         'add_card_button' => 'Añadir una tarjeta',
         'add_card_title' => 'Almacene una tarjeta',

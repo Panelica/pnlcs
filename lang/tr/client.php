@@ -1124,6 +1124,7 @@ return [
         'auto_charge_off_hint' => 'Kartınızdan tahsilat yapmayız. Her faturayı kendiniz ödersiniz.',
         'auto_charge_turn_on' => 'Otomatik ödemeyi aç',
         'auto_charge_turn_off' => 'Otomatik ödemeyi kapat',
+        'staff_cannot_consent' => 'Bu müşteri olarak giriş yaptınız. Kart eklemek ve otomatik ödemeye izin vermek müşterinin kendi kararıdır; bunları müşteri kendisi yapar. Müşteri adına fatura ödeyebilirsiniz.',
         'auto_charge_updated' => 'Otomatik ödeme tercihiniz kaydedildi.',
         'add_card_button' => 'Kart Ekle',
         'add_card_title' => 'Kart Kaydet',

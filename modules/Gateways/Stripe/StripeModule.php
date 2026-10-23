@@ -587,7 +587,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // customer instead. Unticked by default: it is an agreement to be
         // charged later, and an agreement is given, not assumed.
         $saveHtml = "";
-        if (\App\Support\AutoCharge::enabled()) {
+        if (\App\Support\AutoCharge::enabled() && !\App\Support\Impersonation::active()) {
             $saveLabel = htmlspecialchars(__("messages.stripe.save_card"), ENT_QUOTES, "UTF-8");
             $saveHtml  = <<<SAVE
     <div class="form-check mt-3">
