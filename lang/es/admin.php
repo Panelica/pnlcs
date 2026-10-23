@@ -99,7 +99,7 @@ return [
 	'products.server_module_hint' => '¿Qué panel crea la cuenta cuando se compra este producto?',
 	'products.server_group' => 'Grupo de servidores',
 	'products.server_group_any' => 'Cualquier servidor de ese tipo',
-	'servers.needs_api_token' => 'Un servidor :type se identifica con una clave API. Introduzca el valor en el campo de clave API - la contraseña no se usa para este módulo.',
+	'servers.needs_api_token' => 'Un servidor :type se identifica con :field. Rellene el campo :field - la contraseña no se usa para este módulo.',
 	'servers.needs_credentials' => 'Un servidor :type necesita una clave API o una contraseña antes de poder usarse.',
 	'servers.hostname_unresolved' => 'Guardado, pero :host no se resuelve. Las llamadas usarán la dirección IP en su lugar.',
 	'servers.hostname_mismatch' => 'Guardado pero :host resuelve a :resolved, no a :ip. Uno de lo 2 está apuntando a la máquina equivocada.',

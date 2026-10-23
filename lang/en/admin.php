@@ -99,7 +99,7 @@ return [
     'products.server_module_hint' => 'Which panel creates the account when this product is bought.',
     'products.server_group' => 'Server group',
     'products.server_group_any' => 'Any server of that type',
-    'servers.needs_api_token' => 'A :type server signs in with an API key. Fill in the API key field - the password is not used for this module.',
+    'servers.needs_api_token' => 'A :type server signs in with its :field. Fill in the :field field - the password is not used for this module.',
     'servers.needs_credentials' => 'A :type server needs either an API key or a password before it can be used.',
     'servers.hostname_unresolved' => 'Saved, but :host does not resolve. Calls will use the IP address instead.',
     'servers.hostname_mismatch' => 'Saved, but :host resolves to :resolved, not :ip. One of the two is pointing at the wrong machine.',

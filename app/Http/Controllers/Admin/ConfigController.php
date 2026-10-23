@@ -1382,7 +1382,10 @@ class ConfigController extends Controller
         $password = $request->filled('password') ? $request->input('password') : $existing?->password;
 
         if ($need === 'token' && blank($token)) {
-            return __('admin.servers.needs_api_token', ['type' => strtoupper((string) $request->input('type'))]);
+            return __('admin.servers.needs_api_token', [
+                'type' => strtoupper((string) $request->input('type')),
+                'field' => $this->tokenFieldLabel((string) $request->input('type')),
+            ]);
         }
 
         if ($need === 'either' && blank($token) && blank($password)) {
@@ -1390,6 +1393,21 @@ class ConfigController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * What the server form calls the field the module signs in with, so the
+     * error names the field the operator actually sees.
+     */
+    private function tokenFieldLabel(string $type): string
+    {
+        return match (strtolower($type)) {
+            'panelica' => 'API Secret',
+            'cpanel' => 'API Token',
+            'proxmox' => __('proxmox.admin.token_secret'),
+            'aapanel' => __('aapanel.api_key'),
+            default => 'API Key',
+        };
     }
 
     /**

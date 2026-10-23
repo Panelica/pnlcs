@@ -99,7 +99,7 @@ return [
     'products.server_module_hint' => '客户购买此产品后，由哪个控制面板创建账户。',
     'products.server_group' => '服务器组',
     'products.server_group_any' => '该类型的任意服务器',
-    'servers.needs_api_token' => ':type 服务器使用 API 密钥登录。请填写 API 密钥；此模块不使用密码。',
+    'servers.needs_api_token' => ':type 服务器使用 :field 登录。请填写 :field 字段；此模块不使用密码。',
     'servers.needs_credentials' => ':type 服务器必须配置 API 密钥或密码后才能使用。',
     'servers.hostname_unresolved' => '已保存，但 :host 无法解析；调用时将改用 IP 地址。',
     'servers.hostname_mismatch' => '已保存，但 :host 解析为 :resolved，而不是 :ip。两者之一指向了错误的服务器。',

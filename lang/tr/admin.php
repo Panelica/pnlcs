@@ -96,7 +96,7 @@ return [
     'products.server_module_hint' => 'Bu ürün satın alındığında hesabı hangi panel oluşturur.',
     'products.server_group' => 'Sunucu grubu',
     'products.server_group_any' => 'O türdeki herhangi bir sunucu',
-    'servers.needs_api_token' => ':type sunucusu bir API anahtarı ile oturum açar. API anahtarı alanını doldurun - bu modül için parola kullanılmaz.',
+    'servers.needs_api_token' => ':type sunucusu :field ile oturum açar. :field alanını doldurun - bu modül için parola kullanılmaz.',
     'servers.needs_credentials' => ':type sunucusunun kullanılmadan önce bir API anahtarına veya parolaya ihtiyacı vardır.',
     'servers.hostname_unresolved' => 'Kaydedildi, ancak :host çözümlenmiyor. İstekler IP adresi üzerinden yapılacak.',
     'servers.hostname_mismatch' => 'Kaydedildi, ancak :host :resolved olarak çözülüyor, :ip değil. İkisi de yanlış makineyi gösteriyor.',
