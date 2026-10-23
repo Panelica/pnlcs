@@ -95,7 +95,7 @@ class KsefService
 
                 $this->logAction('submit', ['invoice_id' => $record->invoice_id], ['success' => true, 'status' => $result['status'] ?? 'sent', 'ksef_number' => $result['ksef_number'] ?? null, 'error' => $result['error_message'] ?? null]);
 
-                if (filled($result['ksef_number'] ?? null)) {
+                if (($result['accepted'] ?? false) && filled($result['ksef_number'] ?? null)) {
                     $this->notifyClient($record, (string) $result['ksef_number']);
                 }
 

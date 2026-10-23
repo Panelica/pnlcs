@@ -178,7 +178,11 @@ class KsefClient
                 'success' => true,
                 'session_reference' => $sessionRef,
                 'status' => $status['status'] ?? 'sent',
-                'ksef_number' => $status['ksef_number'] ?? $invoiceRef,
+                // Only KSeF's own number. The send reference is not one: it
+                // used to stand in for it when the invoice was rejected or
+                // not confirmed yet, and the customer was told it was an
+                // e-invoice.
+                'ksef_number' => $status['ksef_number'] ?? null,
                 'accepted' => ($status['status'] ?? '') === 'accepted',
                 'sent_at' => now()->toDateTimeString(),
                 'request_xml' => $requestXml,
