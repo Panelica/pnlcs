@@ -2,6 +2,116 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.8.0 — 2026-10-23
+
+A stable release, offered to every installation. It contains everything in
+1.7.0. None of the changes below went out in a beta first. Thank you,
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan), for all of them
+(#220 to #244).
+
+**Check your product addons after updating.** The addon pricing form said
+"leave a cycle at zero to not offer the addon on that cycle", but 0 has
+always sold the addon free on that cycle. An addon set up by that hint may be
+on sale for nothing on some cycles: set those cycles to -1 (#236). Nothing is
+changed for you.
+
+### Added
+
+- **A held or cancelled order can be put back to Pending** from its page
+  (**Set back to Pending**), as the API's `pendingorder` already could: an
+  order held by fraud screening by mistake no longer needs the API. As with
+  the API, services suspended and the invoice cancelled when it was held stay
+  as they are (#230).
+- **How early renewal invoices are raised is a setting:** Setup → General
+  Settings → Invoices, *Raise renewal invoices (days before due)*, 14 by
+  default as before. It was always 14, whatever was configured. Set below the
+  automatic charging lead time (3 days by default), a stored card is charged
+  as soon as the invoice is raised (#231).
+
+### Changed
+
+- **Addon pricing:** a cycle takes -1 to withdraw the addon from it, and the
+  hint says what 0 and -1 mean (#236).
+- **The server form names the credential field each module reads:** API Token
+  (cPanel), API Key (Plesk) and Login Key (DirectAdmin) on the second field;
+  the error for a missing one names that field (#235).
+- **A ticket department's address** is described as the address customers
+  write to, used to import their mail, which is what it is; new installs seed
+  the default departments without the project's own addresses (#237).
+
+### Fixed
+
+- **Promotions:**
+  - a fixed-amount code was taken off in the cart and never on the invoice
+    (#220);
+  - "new customers only" never applied to a first order, "once per customer"
+    counted the order being placed as a use, and "existing customers only"
+    let a first order through. A code that is refused is no longer kept on
+    the order, where renewals would have applied it later (#221).
+- **Invoices:**
+  - the lines of a paid, cancelled or refunded invoice can no longer be
+    changed on its page (#222);
+  - **Mark Paid** proposes what is still owed, not the total, and **Credit**
+    pays from the client's credit balance; it used to mark the invoice paid
+    and leave the balance untouched (#229);
+  - a quote turned into an invoice no longer puts the quote's admin notes on
+    the customer's invoice (#223);
+  - an invoice no longer names a TCMB bulletin when the lira rate came from
+    elsewhere, and only lira invoices carry one (#224).
+- **Fraud screening** sends the order's amount in the shop's currency; it was
+  always sent as US dollars (#225).
+- **Servers and provisioning:**
+  - a product without a server group skips disabled servers and those at
+    their account limit (#226), and the domain check while ordering skips a
+    disabled server too;
+  - **Test connection** knocks on each panel's own port (HestiaCP, aaPanel,
+    CyberPanel fell back to 22), tests Vultr at its API (#227), and fails on
+    DirectAdmin's login page (#241);
+  - a product saved with no package uses the module's default, and an older
+    plan key still applies (#232); a Panelica package change reads the
+    package the product page sets (#233); a product page whose panel cannot
+    list packages keeps the saved one (#234);
+  - Proxmox applies the IPv6 setting to KVM guests (#242); Plesk sends its API
+    key in the header the XML API reads (#243); HestiaCP removes the user when
+    the domain cannot be added, instead of marking the service active, and
+    retries a taken username (#244);
+  - the client service page shows live usage for HestiaCP and aaPanel too
+    (#228).
+- **KSeF:**
+  - the verification QR points at the environment set in the addon (#238);
+  - the seller address comes from General Settings (#239);
+  - a number is recorded, printed and announced only once KSeF accepted the
+    invoice (#240).
+
+### Database changes
+
+None. New installs seed the default ticket departments without an email
+address (#237). New setting: `InvoiceDaysBeforeDue` (#231).
+
+### For theme and module authors
+
+- `AbstractServerModule::planFrom(array $config, array $keys)` returns the
+  first key with a non-blank value; `getRemotePackage()` uses it (#232).
+- `Order::currencyCode()` is the currency an order's amount is in (#225).
+- `Promotion::isValidFor()` takes an optional order id to leave out, and
+  `InvoiceGenerationService::applyPromotion()` an optional `placingOrder`
+  (#221).
+- `ConfigController::defaultServerPort()` holds the default port of each
+  server type (#227).
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/addons.blade.php` (-1 allowed, new hint).
+- `resources/views/admin/config/servers.blade.php` (credential labels).
+- `resources/views/admin/invoices/show.blade.php` (locked lines, the amount
+  Mark Paid proposes).
+- `resources/views/admin/orders/show.blade.php` (Set back to Pending).
+- `resources/views/admin/products/edit.blade.php` (the saved package stays
+  selectable).
+- `resources/views/admin/settings/general.blade.php` (the renewal lead time).
+- `resources/views/client/services/show.blade.php` (live usage for every
+  module that reports it).
+
 ## 1.7.0 — 2026-10-23
 
 A stable release, offered to every installation. It contains everything in

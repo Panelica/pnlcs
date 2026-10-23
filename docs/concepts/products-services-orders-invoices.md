@@ -63,8 +63,10 @@ live account. A service has:
 - A link to the **server** it lives on and the **username** on that server
 
 The service is what **renews**. As the next due date approaches, PNLCS
-generates a renewal invoice; if it goes unpaid past your grace period, the
-service is **suspended**, and eventually **terminated**.
+generates a renewal invoice (14 days before the due date by default; change it
+under **Setup → General Settings → Invoices**, *Raise renewal invoices*); if it
+goes unpaid past your grace period, the service is **suspended**, and
+eventually **terminated**.
 
 ## How they flow together
 
