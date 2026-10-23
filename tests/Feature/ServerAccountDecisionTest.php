@@ -533,6 +533,16 @@ test('with a server group, the group\'s servers are the ones asked', function ()
         ->and($panel['calls'])->toBe([]);
 });
 
+test('without a server group, a disabled server is not asked: it takes no new accounts', function () {
+    $panel = p212Panel();
+    p212Fake($panel);
+    p212Server('Retired', '203.0.113.20')->update(['disabled' => true]);
+    p212Server('Current', '203.0.113.21');
+
+    expect(HostedDomainCheck::problem(p212CartProduct(), 'app.example.test'))->not->toBeNull()
+        ->and(collect(p212Calls($panel, 'GET'))->map(fn ($c) => $c[2])->all())->toBe(['203.0.113.21']);
+});
+
 test('a product whose module cannot tell is not asked', function () {
     $panel = p212Panel();
     p212Fake($panel);

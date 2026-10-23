@@ -14,11 +14,11 @@ use Illuminate\Support\Collection;
  * right, but by then the order is placed: the service sat in Pending and the
  * customer was told nothing (#212). The customer now hears it while ordering.
  *
- * Asked of the servers the order could be set up on, chosen the way the
- * module chooses at setup (AbstractServerModule::getServer): the product's
- * server group, or else the first active server of its type. A module that
- * cannot tell (no domainHostedOn()), or a server that does not answer, lets
- * the order through as before; setup still checks.
+ * Asked of the servers the order could be set up on, chosen by the rules the
+ * module applies at setup (AbstractServerModule::getServer): the product's
+ * server group, or else the first active server of its type that is not
+ * disabled. A module that cannot tell (no domainHostedOn()), or a server that
+ * does not answer, lets the order through as before; setup still checks.
  */
 final class HostedDomainCheck
 {
@@ -54,7 +54,8 @@ final class HostedDomainCheck
                 ->get();
         }
 
-        $first = Server::where('type', $type)->where('active', true)->first();
+        // A disabled server takes no new accounts (#226), so it is not asked.
+        $first = Server::where('type', $type)->where('active', true)->where('disabled', false)->orderBy('id')->first();
 
         return $first ? collect([$first]) : collect();
     }
