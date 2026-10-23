@@ -46,12 +46,11 @@
 
 <div class="card">
     <table class="data-table">
-        <thead><tr><th>{{ __('common.table.code') }}</th><th>{{ __('common.table.name') }}</th><th>{{ __('admin.currencies.prefix') }}</th><th>{{ __('admin.currencies.suffix') }}</th><th>{{ __('common.table.rate') }}</th><th>{{ __('admin.currencies.clients') }}</th><th>{{ __('admin.currencies.default') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
+        <thead><tr><th>{{ __('common.table.code') }}</th><th>{{ __('admin.currencies.prefix') }}</th><th>{{ __('admin.currencies.suffix') }}</th><th>{{ __('common.table.rate') }}</th><th>{{ __('admin.currencies.clients') }}</th><th>{{ __('admin.currencies.default') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>
         <tbody>
         @foreach($currencies as $currency)
         <tr>
             <td style="font-family:monospace;font-weight:600;">{{ $currency->code }}</td>
-            <td>{{ $currency->prefix }}</td>
             <td style="font-family:monospace;">{{ $currency->prefix }}</td>
             <td style="font-family:monospace;">{{ $currency->suffix ?? '' }}</td>
             <td>{{ $currency->rate }}</td>
