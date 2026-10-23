@@ -138,7 +138,12 @@ class InvoicePdfService
      */
     private function ksefVerifyUrl(string $number): string
     {
-        $env = (string) config('ksef.environment', 'prod');
+        // The environment the operator chose in the addon's settings. The
+        // config value is only the module's file default ("integration"), so
+        // reading it pointed production invoices at the test site.
+        $env = class_exists(\Modules\Ksef\KsefSettings::class)
+            ? (string) \Modules\Ksef\KsefSettings::resolve()['environment']
+            : (string) config('ksef.environment', 'prod');
         $base = in_array($env, ['integration', 'demo'], true)
             ? 'https://ksef-test.mf.gov.pl/web/verify'
             : 'https://ksef.mf.gov.pl/web/verify';
