@@ -294,7 +294,7 @@ class HestiaCPModule extends AbstractServerModule
         $config = is_string($newPackage['config_options'] ?? null)
             ? json_decode($newPackage['config_options'], true)
             : ($newPackage['config_options'] ?? []);
-        $packageName = $config['hestia_package'] ?? $config['package_name'] ?? null;
+        $packageName = self::planFrom($config, ['hestia_package', 'package_name']);
 
         if (! $packageName) {
             return $this->buildResult(false, 'No hestia_package configured in product.');
