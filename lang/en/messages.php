@@ -19,6 +19,7 @@ API access may be broken. While the balance cannot be read, no low-balance warni
     'stripe' => [
         'processing' => 'Processing…',
         'save_card' => 'Keep this card and pay my future invoices with it automatically. I can switch this off or remove the card on the payment methods page.',
+        'save_card_new' => 'Also keep this card. My saved card stays; I can choose which one pays my invoices on the payment methods page.',
     ],
     'iyzico' => [
         'page_title' => 'Secure payment',

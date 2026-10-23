@@ -19,6 +19,7 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
     'stripe' => [
         'processing' => 'Przetwarzanie…',
         'save_card' => 'Zapisz tę kartę i automatycznie opłacaj nią moje przyszłe faktury. Mogę to wyłączyć lub usunąć kartę na stronie metod płatności.',
+        'save_card_new' => 'Zapisz również tę kartę. Moja zapisana karta pozostaje; na stronie metod płatności wybieram, która opłaca moje faktury.',
     ],
     'iyzico' => [
         'page_title' => 'Bezpieczna płatność',

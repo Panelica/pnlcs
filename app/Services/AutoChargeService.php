@@ -328,6 +328,9 @@ class AutoChargeService
     /** Set while chargeNow() runs: the claim may make a scheduled retry early. */
     private bool $staffAsked = false;
 
+    /** Set while payNowWith() runs: the card the customer chose on the invoice. */
+    private ?PaymentMethod $customerCard = null;
+
     public function __construct(
         private PaymentService $payments,
         private ModuleRegistry $modules,
@@ -531,6 +534,75 @@ class AutoChargeService
             return 'error';
         } finally {
             $this->staffAsked = false;
+        }
+
+        if ($summary['needs_review'] > 0) {
+            $this->alertOperator($summary);
+        }
+
+        foreach (['charged', 'taken_not_recorded', 'action_required', 'outcome_unknown', 'failed', 'needs_review', 'held', 'not_due', 'closed'] as $key) {
+            if ($summary[$key] > 0) {
+                return $key;
+            }
+        }
+
+        return (string) (array_key_first($summary['skipped']) ?? 'nothing_owed');
+    }
+
+    /**
+     * One invoice, now, on the card the customer picked on the invoice page.
+     *
+     * The road chargeNow() takes, for the same reasons: the claim keeps it from
+     * overlapping a scheduled charge or a second click, a lost answer is
+     * finished by the rescue sweep, and settle() records the money. What the
+     * customer asking changes:
+     * - the card is the one they chose, not the default;
+     * - the customer's automatic-payment switch is not asked: they are paying,
+     *   not agreeing to be charged later;
+     * - an order's invoice can be paid this way too; Add Funds and mass
+     *   payments still cannot, as they turn into credit.
+     * A bank that wants the cardholder answers requires_action, and the invoice
+     * page offers the authentication it offers for a scheduled charge.
+     *
+     * @return string what happened, as a short key the page turns into words
+     */
+    public function payNowWith(Invoice $invoice, PaymentMethod $method): string
+    {
+        if (! AutoCharge::enabled()) {
+            return 'switched_off';
+        }
+
+        $gateways = $this->chargeableGateways();
+        if (! isset($gateways[strtolower((string) $method->gateway_name)])) {
+            return 'no_tokenising_gateway';
+        }
+
+        if ((int) $method->client_id !== (int) $invoice->client_id || $method->status !== PaymentMethod::STATUS_ACTIVE) {
+            return 'card_unavailable';
+        }
+
+        if ($invoice->items()->whereIn('type', ['AddFunds', \App\Services\MassPaymentService::ITEM_TYPE])->exists()
+            || $invoice->type === \App\Services\MassPaymentService::TYPE) {
+            return 'not_a_card_bill';
+        }
+
+        $summary = $this->blankSummary();
+        $this->staffAsked = true;
+        $this->customerCard = $method;
+
+        try {
+            $this->collect($invoice, $gateways, false, $summary);
+        } catch (\Throwable $e) {
+            Log::error('AutoCharge: a charge the customer asked for could not be made', [
+                'invoice' => $invoice->id,
+                'exception' => $e::class,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 'error';
+        } finally {
+            $this->staffAsked = false;
+            $this->customerCard = null;
         }
 
         if ($summary['needs_review'] > 0) {
@@ -1502,7 +1574,9 @@ class AutoChargeService
             return 'client_no_longer_trading';
         }
 
-        if (! $client->auto_charge) {
+        // A customer paying with a card they picked is not being charged
+        // automatically, so their answer about automatic payment does not apply.
+        if (! $client->auto_charge && $this->customerCard === null) {
             return 'customer_has_opted_out';
         }
 
@@ -1969,6 +2043,14 @@ class AutoChargeService
      */
     private function cardFor(Invoice $invoice, array $gateways): array
     {
+        if ($this->customerCard !== null) {
+            $card = PaymentMethod::query()->find($this->customerCard->id);
+
+            return $card !== null && $card->status === PaymentMethod::STATUS_ACTIVE && (int) $card->client_id === (int) $invoice->client_id
+                ? [$card, '']
+                : [null, 'card_unavailable'];
+        }
+
         if ($invoice->pay_method_id) {
             $named = PaymentMethod::query()->find($invoice->pay_method_id);
 
