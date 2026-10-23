@@ -373,10 +373,12 @@ class InvoiceGenerationService
                 return false;
             }
 
-            // Calculate discount amount
+            // Calculate discount amount. The promotions form saves a fixed
+            // discount as 'fixed_amount'; only 'fixed' was matched here, so
+            // those codes were quoted in the cart and never reached the invoice.
             $discount = match ($promo->type) {
                 'percentage' => round($base * ($promo->value / 100), 2),
-                'fixed' => min((float) $promo->value, $base),
+                'fixed', 'fixed_amount' => min((float) $promo->value, $base),
                 default => 0.0,
             };
 
