@@ -835,13 +835,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         // on. Reading only panelica_plan_id meant a product whose plan was
         // picked in the package field - the usual way now - could not be
         // moved onto at all.
-        $newPlanId = null;
-        foreach (['package_name', 'panelica_plan_id'] as $key) {
-            if (trim((string) ($config[$key] ?? '')) !== '') {
-                $newPlanId = trim((string) $config[$key]);
-                break;
-            }
-        }
+        $newPlanId = self::planFrom((array) $config, ['package_name', 'panelica_plan_id']);
 
         if (! $newPlanId) {
             return $this->buildResult(false, 'New product does not have a Panelica plan configured.');
