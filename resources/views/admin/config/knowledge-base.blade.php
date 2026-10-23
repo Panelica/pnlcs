@@ -82,8 +82,9 @@
         @csrf
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category') }}</label>
-            <select name="category_id" class="form-control">
-                <option value="">{{ __('admin.knowledge_base.uncategorized_option') }}</option>
+            {{-- Every article belongs to a category (category_id is required and
+                 NOT NULL); an "Uncategorized" choice here could never be saved. --}}
+            <select name="category_id" class="form-control" required>
                 @foreach($categories ?? [] as $cat)
                 <option value="{{ $cat->id }}">{{ $cat->name }}</option>
                 @endforeach
@@ -111,8 +112,7 @@
         @csrf @method('PUT')
         <div class="form-group"><label class="form-label">{{ __('common.form.title') }}</label><input type="text" name="title" value="{{ $art->title }}" required class="form-control"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.knowledge_base.category') }}</label>
-            <select name="category_id" class="form-control">
-                <option value="">{{ __('admin.knowledge_base.uncategorized_option') }}</option>
+            <select name="category_id" class="form-control" required>
                 @foreach($categories ?? [] as $cat)
                 <option value="{{ $cat->id }}" @selected($art->category_id == $cat->id)>{{ $cat->name }}</option>
                 @endforeach

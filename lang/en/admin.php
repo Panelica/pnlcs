@@ -1517,7 +1517,6 @@ return [
     'knowledge_base.published' => 'Published',
     'knowledge_base.title' => 'Knowledge Base',
     'knowledge_base.uncategorized' => 'Uncategorized',
-    'knowledge_base.uncategorized_option' => '— Uncategorized —',
     'knowledge_base.views' => 'Views',
     'knowledge_base.categories' => 'Categories',
     'knowledge_base.edit_category' => 'Edit Category',
