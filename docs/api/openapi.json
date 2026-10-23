@@ -9374,7 +9374,7 @@
                     },
                     "priority": {
                         "type": "string",
-                        "description": "low, medium (default), high or critical."
+                        "description": "low, medium (default) or high."
                     },
                     "adminusername": {
                         "type": "string",
@@ -10034,7 +10034,7 @@
                     },
                     "priority": {
                         "type": "string",
-                        "description": "low, medium, high or critical."
+                        "description": "low, medium or high."
                     },
                     "deptid": {
                         "type": "integer",

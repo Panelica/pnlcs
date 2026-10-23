@@ -224,7 +224,7 @@ Calls the API action [`openticket`](../api/all-endpoints.md) with POST.
 | `subject` | string | yes | Subject |
 | `message` | string | yes | Message body |
 | `email` | string | yes | Email of the person the ticket is for |
-| `priority` | string | no | low, medium, high or critical |
+| `priority` | string | no | low, medium or high |
 
 Always sends `adminusername=staff`.
 

@@ -31,7 +31,7 @@ class TicketApiController extends BaseApiController
     public function openTicket(Request $request)
     {
         $this->alias($request, 'clientid', 'userid');
-        $v = $request->validate(['deptid'=>'required|exists:ticket_departments,id','subject'=>'required|string|max:255','message'=>'required|string','email'=>'required|email','priority'=>'nullable|in:low,medium,high,critical','userid'=>'nullable|integer|exists:clients,id']);
+        $v = $request->validate(['deptid'=>'required|exists:ticket_departments,id','subject'=>'required|string|max:255','message'=>'required|string','email'=>'required|email','priority'=>'nullable|in:low,medium,high','userid'=>'nullable|integer|exists:clients,id']);
         // Through the one creator: six digits, checked to be free, which is
         // what the mail import matches a reply against.
         $ticket = app(TicketService::class)->createTicket(['department_id'=>$v['deptid'],'client_id'=>$request->userid,'name'=>$request->name,'email'=>$v['email'],'title'=>$v['subject'],'message'=>$v['message'],'priority'=>$v['priority']??'medium']);
@@ -91,7 +91,9 @@ class TicketApiController extends BaseApiController
                     $fail('The status is not one of the ticket statuses configured here.');
                 }
             }],
-            'priority' => 'sometimes|required|in:low,medium,high,critical',
+            // The priorities the admin and client screens and escalation rules
+            // know (and WHMCS's); a 'critical' ticket fell to Low on its next save.
+            'priority' => 'sometimes|required|in:low,medium,high',
             'deptid' => 'sometimes|required|exists:ticket_departments,id',
             'flag' => 'sometimes|nullable|integer|exists:admins,id',
             'subject' => 'sometimes|required|string|max:255',
