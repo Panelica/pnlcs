@@ -33,12 +33,12 @@ pnlcs/
 ├── database/             # Migrations, seeders, factories
 ├── docs/                 # Project documentation
 ├── lang/                 # Translations (30 locales)
-├── modules/              # Plug-in modules (gateways, registrars, server adapters)
+├── modules/              # Plug-in modules (gateways, registrars, servers, SSL, addons, reports)
 ├── public/               # Web entry point
 ├── resources/            # Views (Blade), CSS, JS sources
 ├── routes/               # web.php, api.php, console.php
 ├── tests/                # PHPUnit tests
-├── themes/               # 15 shipped themes
+├── themes/               # Shipped themes (one folder each)
 └── ...
 ```
 
@@ -156,9 +156,14 @@ Do not hand-edit machine-translated files unless you're a fluent speaker.
 
 PNLCS supports plug-in modules in `modules/`. New ones welcome — reference the existing ones for the expected interface:
 
-- **Payment gateways:** Stripe, PayPal, BankTransfer, Authorize.Net
-- **Domain registrars:** Enom, Manual
-- **Server adapters:** Panelica, cPanel, Plesk, DirectAdmin, Proxmox, Custom
+- **Payment gateways** (`modules/Gateways/`): Stripe, PayPal, BankTransfer, AuthorizeNet, Iyzico, Mollie, Razorpay, Tpay
+- **Domain registrars** (`modules/Registrars/`): Enom, Namecheap, OpenProvider, ResellerClub, DomainNameApi, HRD, Manual
+- **Server modules** (`modules/Servers/`): Panelica, PanelicaLicense, cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel, Proxmox, Vultr, Custom
+- **SSL** (`modules/Ssl/`): GoGetSSL
+- **Addons** (`modules/Addons/`): CompanyLookup, Ksef, ProjectManagement, StaffBoard
+- **Reports** (`modules/Reports/`): one class per report
+
+The folders are the current list; this one may lag behind them.
 
 If you're contributing a new gateway / registrar / server, please:
 
