@@ -218,6 +218,8 @@ A module can offer more than its interface requires:
 | `servicePageHides()` (servers), a list of `server_details`, `change_password` | leave out the server's name and address on the customer's page, or the Change password button on the staff page |
 | `isProvisioned(Service): bool` (servers) | decide whether the staff page offers **Create** (otherwise: an active service with a username has nothing to create) |
 | `emailMergeFields(Service)` (servers), `name => value` | add `{name}` fields to the service's emails; the built-in fields win a clash |
+| `accountOnServer(Service): ?bool` (servers) | ask staff what happens to the account before they close a service record (mark it Terminated or Cancelled, or delete it) while the account is still on the server: `true` it is there, `false` it is gone, `null` the module cannot tell. Without it, an active or suspended service is taken to have its account ([guide](../guides/connect-a-server.md#ending-a-service)) |
+| `domainHostedOn(Server, string $domain): ?bool` (servers) | refuse an order, while the customer orders, for a domain that is already set up on the servers the order would go to; `null` (could not ask) lets the order through |
 | `needsServerRecord(): bool` (servers), returning `false` | for a module that sells through an account kept elsewhere: it is not offered on **Setup → Servers**, and the product form asks `listPackages(null)` for its plans (an exception's message is shown as the reason when it cannot list them) |
 
 `customFunctions()` and `clientFunctions()` are given the service, so a module

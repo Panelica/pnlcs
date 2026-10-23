@@ -2,6 +2,125 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.7.0 — 2026-10-23
+
+A stable release, offered to every installation. It contains everything in
+1.6.1. None of the changes below went out in a beta first.
+
+### Added
+
+- **Closing a service asks what happens to its account on the server.** The
+  status buttons on a service's page change the record in PNLCS only; the
+  account on the server is ended with **Module Actions → Terminate**. A
+  service marked Terminated with the status button and then deleted left its
+  account, domain and apps running on the server with nothing billing them,
+  and the same domain could not be ordered again: the order stayed Pending
+  and nobody was told (#212). Now marking a service Terminated or Cancelled,
+  or deleting it, while its account may still be on the server asks first:
+  **Terminate on the server** (the default) removes the account there and
+  then closes the record; **Keep the account on the server** closes the
+  record only and writes that to the activity log. If the server refuses,
+  nothing changes and you see its reason. For Panelica servers PNLCS asks the
+  panel whether the account is still there, so a service already marked
+  Terminated by hand is covered too, and so is an active service that was
+  imported or added without linking its account. See
+  [Ending a service](docs/guides/connect-a-server.md#ending-a-service).
+  Thank you, [@dualarrow](https://github.com/dualarrow), for the report and
+  the screen recording that showed it.
+- **A domain already set up on your servers is refused while the customer
+  orders**, with a sentence asking them to contact you, instead of an order
+  that gets stuck (#212). A server that does not answer does not stop the
+  order.
+- **A setup that did not go through is visible.** The staff service page
+  shows the server's reason and the next automatic retry; staff are notified
+  when a setup on order placement fails (until now only a log line said so);
+  and the customer reads that the setup is in hand and there is no need to
+  order again, instead of a bare "Pending" (#212).
+- **Panelica Licenses shows your margin in your own currency without a
+  dollar currency on the site.** Panelica prices in US dollars; a site
+  selling in euros or lira had to add a USD currency, which also put dollars
+  in the store's currency menu, to see suggested prices and its margin. With
+  no USD currency the page now uses today's market rate, from the providers
+  of the automatic currency update, checked once a day, and says which rate
+  it used. A USD currency on the site still wins, and nothing is asked while
+  automatic rate updates are off (#213). Thank you,
+  [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+
+### Changed
+
+- **The status buttons on a service's page say what they do:** a line under
+  them says they change the record only and points to Module Actions (#212).
+- **The WHMCS migration guide describes Import WHMCS** (Utilities → Import
+  WHMCS): what it imports (clients, services, domains), in which order, and
+  what it leaves (products, invoices, transactions, tickets, settings). It
+  still said PNLCS had no importer. See
+  [Migrate from WHMCS](docs/guides/migrate-from-whmcs.md).
+
+### Fixed
+
+- **One stray character in a custom theme no longer breaks the styling of
+  every page.** Only colours were checked when the theme was saved; a `;` or
+  `}` in a font, size or shadow was printed as typed. Every token is now
+  checked when it is saved, and a value saved before that is left out when
+  printed. Values that work in CSS stay: `calc()`, font names in any script,
+  and colour functions such as `oklch()`, `color-mix()` and `var()` (#215).
+  Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan).
+- **Alerts in the dark client area are readable:** their text kept the light
+  theme's dark colour on a dark background.
+
+### Security
+
+- **The KSeF private key is no longer printed in the addon settings page.**
+  It is stored encrypted, but the page put it back, decrypted, into its form.
+  Now it shows only that a key is set; a blank save keeps it (#217).
+- **The ticket spam filter checks the customer's own address.** A request
+  carrying an extra `email` field had another address checked, so a blocked
+  customer could still open tickets and the per-hour limit could be stepped
+  around (#218).
+- **Company Lookup answers only while the addon is on.** Its endpoint kept
+  querying the registers with the operator's keys after the addon was
+  switched off (#216).
+- **A custom theme value can no longer end the `<style>` block it is printed
+  in** (#215).
+
+Thank you, [@ertugrulkeyvan](https://github.com/ertugrulkeyvan), for #213 and
+#215 to #218.
+
+### Database changes
+
+None.
+
+### For theme and module authors
+
+- Two optional server-module methods, listed in
+  [Writing a module](docs/developer/modules.md#optional-capabilities):
+  `accountOnServer(Service): ?bool` (is the account still on the server;
+  staff are asked before closing a record whose account is there or cannot
+  be checked) and `domainHostedOn(Server, string $domain): ?bool` (refuse an
+  order for a domain already on the server). The Panelica module has both.
+- `App\Services\ServerAccount` and `App\Services\HostedDomainCheck` answer
+  those questions for the core.
+- `App\Services\ExchangeRateService` (`rates()`, `rate()`) gives market
+  rates from the providers `pnlcs:currency-update` uses; the command now uses
+  it.
+- An addon configuration field can be `'secret' => true`: the settings page
+  never shows its value, and a blank save keeps it.
+- `ThemeService::isValidTokenValue()` decides whether a theme token value is
+  one CSS value. A theme's `theme.json` value it refuses is left out of the
+  page; every built-in theme passes.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/addon-output.blade.php` (a secret field is
+  shown empty).
+- `resources/views/admin/panelica-licenses/index.blade.php` (the market rate
+  note).
+- `resources/views/admin/services/show.blade.php` (the question before a
+  record is closed, the status buttons' hint, a setup that did not go
+  through).
+- `resources/views/client/layouts/app.blade.php` (dark alert text colours).
+- `resources/views/client/services/show.blade.php` (the setup-in-hand note).
+
 ## 1.6.1 — 2026-10-21
 
 A stable release with fixes, offered to every installation. It contains

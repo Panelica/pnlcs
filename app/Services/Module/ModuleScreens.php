@@ -26,7 +26,7 @@ use Illuminate\Support\HtmlString;
  *   servicePageHides(): array             'server_details', 'change_password'
  *   isProvisioned(Service): ?bool         whether Create has anything left to do
  *   accountOnServer(Service): ?bool       whether the account still exists on the server
- *                                         (null: the server could not be asked just now)
+ *                                         (null: it cannot tell, e.g. the server did not answer)
  *   emailMergeFields(Service): array      extra {fields} for the service's mail
  *
  * A function named in customFunctions() or clientFunctions() takes the service
