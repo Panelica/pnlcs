@@ -30,7 +30,7 @@ return [
     'addons.applicable_products' => '适用产品',
     'addons.applicable_products_hint' => '按住 Ctrl/Cmd 可多选；留空表示适用于全部产品。',
     'addons.pricing' => '定价',
-    'addons.pricing_hint' => '某个周期的价格设为零时，该周期不提供此附加服务。',
+    'addons.pricing_hint' => '填 0 表示该周期免费提供此附加服务；填 -1 表示该周期不提供。',
     'addons.monthly_price' => '月付',
     'addons.cycle_monthly' => '月付',
     'addons.cycle_quarterly' => '季付',

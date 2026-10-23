@@ -2643,7 +2643,10 @@ class ConfigController extends Controller
 
         $values = [];
         foreach ($cycles as $cycle) {
-            $values[$cycle] = round((float) ($prices[$cycle] ?? 0), 2);
+            // 0 sells the addon free on that cycle; -1 (any negative) does
+            // not offer it there (ProductAddon::offeredOn).
+            $price = round((float) ($prices[$cycle] ?? 0), 2);
+            $values[$cycle] = $price < 0 ? -1.0 : $price;
         }
 
         Pricing::updateOrCreate(

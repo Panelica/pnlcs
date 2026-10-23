@@ -30,7 +30,7 @@ return [
 	'addons.applicable_products' => 'Productos aplicables',
 	'addons.applicable_products_hint' => 'Mantenga presionada la tecla Ctrl/Cmd para seleccionar varios.',
 	'addons.pricing' => 'Precios',
-	'addons.pricing_hint' => 'Deje un ciclo en cero para no ofrecer el complemento en ese ciclo.',
+	'addons.pricing_hint' => '0 vende el complemento gratis en ese ciclo; -1 no lo ofrece en ese ciclo.',
 	'addons.monthly_price' => 'Mensual',
 	'addons.cycle_monthly' => 'Mensual',
 	'addons.cycle_quarterly' => 'Trimestral',
