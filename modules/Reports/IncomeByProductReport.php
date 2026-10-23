@@ -17,7 +17,11 @@ class IncomeByProductReport extends AbstractReport
         [$from, $to] = $this->getDateRange($request);
         $rows = DB::table("invoice_items")
             ->join("invoices", "invoices.id", "=", "invoice_items.invoice_id")
-            ->leftJoin("services", "services.id", "=", "invoice_items.rel_id")
+            // rel_id is a service id only on hosting and overage lines; domain,
+            // addon and upgrade lines carry their own row's id, which matched
+            // an unrelated service and credited its product.
+            ->leftJoin("services", fn ($join) => $join->on("services.id", "=", "invoice_items.rel_id")
+                ->whereIn("invoice_items.type", ["Hosting", "Overage"]))
             ->leftJoin("products", "products.id", "=", "services.product_id")
             ->selectRaw("COALESCE(products.name, invoice_items.description) as product, COUNT(DISTINCT invoices.id) as invoices, SUM(invoice_items.amount) as revenue")
             ->where("invoices.status", "paid")
