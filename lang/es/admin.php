@@ -998,7 +998,6 @@ return [
 	'currencies.prefix' => 'Prefijo',
 	'currencies.prefix_symbol' => 'Prefijo (símbolo)',
 	'currencies.rate' => 'Tasa',
-	'currencies.set_as_default' => 'Establecer como predeterminado',
 	'currencies.suffix' => 'Sufijo',
 	'currencies.number_format' => 'Formato de número',
 	'currencies.title' => 'Monedas',

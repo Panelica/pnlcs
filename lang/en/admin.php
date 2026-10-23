@@ -998,7 +998,6 @@ return [
     'currencies.prefix' => 'Prefix',
     'currencies.prefix_symbol' => 'Prefix (symbol)',
     'currencies.rate' => 'Rate',
-    'currencies.set_as_default' => 'Set as Default',
     'currencies.suffix' => 'Suffix',
     'currencies.number_format' => 'Number format',
     'currencies.title' => 'Currencies',
