@@ -2659,6 +2659,7 @@ return [
         'my_account_title' => 'Hesabım',
         'language_unavailable' => 'Aktif bir dil seçin.',
         'language_active_only' => 'Burada yalnızca :menu sayfasında aktif olan diller listelenir.',
+        'mail_type_environment' => 'Sunucu ayarı (.env)',
         'php_mail' => 'PHP Posta',
         'profile_information' => 'Profil bilgileri',
         'request_failed' => 'İstek başarısız oldu',

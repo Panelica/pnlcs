@@ -2684,6 +2684,7 @@ return [
         'my_account_title' => '我的账户',
         'language_unavailable' => '请选择已启用的语言。',
         'language_active_only' => '此处仅列出在 :menu 中已启用的语言。',
+        'mail_type_environment' => '服务器默认 (.env)',
         'php_mail' => 'PHP Mail',
         'profile_information' => '个人资料',
         'request_failed' => '请求失败',

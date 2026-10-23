@@ -543,7 +543,10 @@
                 <div class="form-group">
                     <label class="form-label">{{ __('admin.settings.mail_type') }}</label>
                     <select name="MailType" id="mail-type" class="form-control">
-                        <option value="php_mail" {{ ($settings['MailType'] ?? 'php_mail') === 'php_mail' ? 'selected' : '' }}>{{ __('admin.settings.php_mail') }}</option>
+                        {{-- No choice stored means the mailer in .env (App\Support\MailTransport). The
+                             form used to show PHP Mail for that, and the first save stored it. --}}
+                        <option value="" {{ blank($settings['MailType'] ?? null) ? 'selected' : '' }}>{{ __('admin.settings.mail_type_environment') }}</option>
+                        <option value="php_mail" {{ ($settings['MailType'] ?? '') === 'php_mail' ? 'selected' : '' }}>{{ __('admin.settings.php_mail') }}</option>
                         <option value="smtp" {{ ($settings['MailType'] ?? '') === 'smtp' ? 'selected' : '' }}>{{ __('admin.settings.smtp') }}</option>
                     </select>
                     <div style="color:#777;font-size:12px;margin-top:6px;">
@@ -578,7 +581,7 @@
                 </div>
             </div>
 
-            <div id="smtp-fields" style="display:{{ ($settings['MailType'] ?? 'php_mail') === 'smtp' ? 'block' : 'none' }};">
+            <div id="smtp-fields" style="display:{{ ($settings['MailType'] ?? '') === 'smtp' ? 'block' : 'none' }};">
                 <hr style="margin:10px 0;">
                 <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">{{ __('admin.settings.smtp_configuration') }}</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">

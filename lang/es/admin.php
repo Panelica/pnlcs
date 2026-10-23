@@ -2684,6 +2684,7 @@ return [
 		'my_account_title' => 'Mi cuenta',
 		'language_unavailable' => 'Elija un idioma activo.',
 		'language_active_only' => 'Aquí solo aparecen los idiomas activos en :menu.',
+		'mail_type_environment' => 'Predeterminado del servidor (.env)',
 		'php_mail' => 'Correo PHP',
 		'profile_information' => 'Información de perfil',
 		'request_failed' => 'Solicitud fallida',
