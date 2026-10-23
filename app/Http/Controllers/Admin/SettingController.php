@@ -17,6 +17,10 @@ class SettingController extends Controller
     public function general()
     {
         $settings = Setting::where('group', 'general')->pluck('value', 'setting');
+        // The default language is kept by the languages screen, under its own
+        // group. Read by group, this form found nothing, selected no option, and
+        // the browser posted the first language in the list.
+        $settings['DefaultLanguage'] = Setting::get('DefaultLanguage') ?? Language::where('is_default', true)->value('code');
 
         $invoiceService = app(\App\Services\InvoiceService::class);
         $proformaFormat = trim((string) ($settings['ProformaNumberFormat'] ?? 'PRO-{year}/{month}-{num}'));
@@ -185,6 +189,20 @@ class SettingController extends Controller
         }
         if (trim((string) ($data['RecaptchaSecretKey'] ?? '')) === '') {
             unset($data['RecaptchaSecretKey']);
+        }
+
+        // The default language is changed the way the languages screen changes
+        // it: the language row is marked as well, and the setting keeps its group.
+        if (array_key_exists('DefaultLanguage', $data)) {
+            $code = (string) $data['DefaultLanguage'];
+            unset($data['DefaultLanguage']);
+            if ($code !== '' && $code !== Setting::get('DefaultLanguage')) {
+                $request->validate(['DefaultLanguage' => [\Illuminate\Validation\Rule::in(Language::eligibleAsDefault()->pluck('code')->all())]]);
+                Language::where('is_default', true)->update(['is_default' => false]);
+                Language::where('code', $code)->update(['is_default' => true, 'is_active' => true]);
+                Setting::set('DefaultLanguage', $code, 'language');
+                \App\Translation\TranslationCacheManager::flush();
+            }
         }
 
         foreach ($data as $key => $value) {
