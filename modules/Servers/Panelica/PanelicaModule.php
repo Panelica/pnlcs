@@ -831,10 +831,20 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $config = is_string($newPackage['config_options'] ?? null)
             ? json_decode($newPackage['config_options'], true)
             : ($newPackage['config_options'] ?? []);
-        $newPlanId = $config['panelica_plan_id'] ?? null;
+        // The same keys, in the same order, that create() opens the account
+        // on. Reading only panelica_plan_id meant a product whose plan was
+        // picked in the package field - the usual way now - could not be
+        // moved onto at all.
+        $newPlanId = null;
+        foreach (['package_name', 'panelica_plan_id'] as $key) {
+            if (trim((string) ($config[$key] ?? '')) !== '') {
+                $newPlanId = trim((string) $config[$key]);
+                break;
+            }
+        }
 
         if (! $newPlanId) {
-            return $this->buildResult(false, 'New product does not have a panelica_plan_id configured.');
+            return $this->buildResult(false, 'New product does not have a Panelica plan configured.');
         }
 
         $resp = $this->patch($server, "/v1/accounts/{$userId}", ['plan_id' => $newPlanId]);
