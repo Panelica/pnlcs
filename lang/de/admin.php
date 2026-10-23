@@ -2743,6 +2743,7 @@ return [
     'settings.domains_section' => 'Domains',
     'settings.invoices_section' => 'Rechnungen',
     'settings.invoice_due_days' => 'Fällige Verzugszahlung (Tage)',
+    'settings.invoice_days_before_due' => 'Verlängerungsrechnung erstellen (Tage vor Fälligkeit)',
     'settings.default_nameservers' => 'Standard-Nameserver',
     'settings.default_nameservers_hint' => 'Wird bei der Registrierung oder Übertragung von Domains verwendet, wenn keine anderen Nameserver bereitgestellt werden.',
     'settings.themes' => 'Themen',

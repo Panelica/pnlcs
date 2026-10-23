@@ -2743,6 +2743,7 @@ return [
     'settings.domains_section' => '域名',
     'settings.invoices_section' => '账单',
     'settings.invoice_due_days' => '默认付款期限（天）',
+    'settings.invoice_days_before_due' => '续费发票提前生成（到期前天数）',
     'settings.default_nameservers' => '默认域名服务器',
     'settings.default_nameservers_hint' => '在注册或转入域名时，未提供其他域名服务器则使用这些。',
     'settings.themes' => '主题',

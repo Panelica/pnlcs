@@ -29,7 +29,10 @@ class InvoiceGenerationService
      */
     public function generateDueInvoices(): array
     {
-        $daysAhead = (int) config('billing.invoice_days_before_due', 14);
+        // How many days before the due date a renewal is invoiced. This read
+        // config('billing.invoice_days_before_due'), a key that does not exist,
+        // so it was always 14 and nothing could change it.
+        $daysAhead = max(0, (int) \App\Models\Setting::get('InvoiceDaysBeforeDue', 14));
         $cutoff = now()->addDays($daysAhead)->endOfDay();
 
         // Only active services that are due for renewal and not already
