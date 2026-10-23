@@ -18,6 +18,16 @@ abstract class AbstractReport implements ReportModuleInterface
         return true;
     }
 
+    /**
+     * A report that reads a year ('year') or a month ('month') instead of a
+     * date range says so here, and the report page offers that choice. Not on
+     * ReportModuleInterface, so reports written against it keep working.
+     */
+    public function periodFilter(): ?string
+    {
+        return null;
+    }
+
     public function hasCurrencyFilter(): bool
     {
         return false;
