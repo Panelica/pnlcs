@@ -24,7 +24,8 @@ gateway, fill in its keys, save and enable it.
 | **Bank Transfer** | Account holder, up to several banks (name, IBAN or account number, sort code, SWIFT/BIC), an additional note | none: you confirm payments by hand |
 
 A gateway is offered at checkout only once every required field has a value
-and it is enabled.
+and it is enabled. An enabled gateway that is missing one says **Not offered**
+on its card, and the card names the fields to fill in.
 
 ## Webhooks
 

@@ -1350,6 +1350,8 @@ return [
     'gateways.sort_order' => 'Sıralama',
     'gateways.auto_charge_link' => 'Otomatik ödeme ayarları',
     'gateways.auto_charge_note' => 'Bu ödeme sağlayıcı müşterinin kartını saklayabilir, yani otomatik ödeme onu kullanabilir.',
+    'gateways.not_offered' => 'Sunulmuyor',
+    'gateways.missing_settings' => 'Açık, ama şunlar doldurulana kadar müşterilere sunulmuyor: :fields.',
     'gateways.title' => 'Ödeme Yöntemleri',
     'gateways.transaction_key' => 'İşlem Anahtarı',
     'gateways.visible_name' => 'Görünen Ad',

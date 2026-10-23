@@ -287,6 +287,7 @@ return [
     ],
     'checkout.contact_details' => 'Datos de contacto',
     'checkout.payment_method' => 'Método de pago',
+    'checkout.nothing_to_pay' => 'Este pedido es gratuito: no hay nada que pagar.',
     'checkout.place_order' => 'Ordenar',
     'checkout.secure_checkout' => 'Pago seguro',
     'checkout.subtitle' => 'Revise su pedido y complete la compra.',

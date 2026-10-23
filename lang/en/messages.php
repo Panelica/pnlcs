@@ -398,6 +398,8 @@ API access may be broken. While the balance cannot be read, no low-balance warni
     'success.logo_uploaded' => 'Logo uploaded.',
     'success.nameservers_updated' => 'Nameservers updated.',
     'success.order_placed' => 'Order #:num placed successfully. Please complete payment.',
+    'success.order_placed_free' => 'Order #:num placed. There was nothing to pay.',
+    'success.order_placed_free_review' => 'Order #:num placed. There was nothing to pay; it is set up once we have reviewed it.',
     'success.password_changed' => 'Password changed.',
     'success.password_reset_successfully_please_log_in' => 'Password reset successfully. Please log in.',
     'success.product_added_to_cart' => 'Product added to cart successfully.',

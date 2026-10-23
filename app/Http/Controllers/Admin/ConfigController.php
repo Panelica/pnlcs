@@ -844,6 +844,11 @@ class ConfigController extends Controller
                     // already looking at, is the only place they would think
                     // to look for it.
                     'vaults_cards' => $module instanceof TokenizableGatewayInterface,
+                    // Switched on is not offered: checkout leaves out a gateway
+                    // whose required keys are empty (usableGateways). Named on
+                    // its card, so the operator who ticked it knows why the
+                    // customer does not see it.
+                    'missing' => $module ? $registry->missingGatewaySettings($module, $values->toArray()) : [],
                 ];
             })
             ->sortBy(fn ($gw) => [$gw->active ? 0 : 1, $gw->label])

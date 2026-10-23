@@ -280,6 +280,7 @@ return [
     ],
     'checkout.contact_details' => 'İletişim Bilgileri',
     'checkout.payment_method' => 'Ödeme Yöntemi',
+    'checkout.nothing_to_pay' => 'Bu sipariş ücretsiz: ödenecek bir tutar yok.',
     'checkout.place_order' => 'Siparişi Tamamla',
     'checkout.secure_checkout' => 'Güvenli ödeme',
     'checkout.subtitle' => 'Siparişinizi kontrol edip ödemeyi tamamlayın.',

@@ -395,6 +395,8 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
     'success.logo_uploaded' => 'Logo hochgeladen.',
     'success.nameservers_updated' => 'Nameserver wurden erfolgreich aktualisiert.',
     'success.order_placed' => 'Bestellung #:num erfolgreich aufgegeben. Bitte schließen Sie die Zahlung ab.',
+    'success.order_placed_free' => 'Bestellung #:num aufgegeben. Es war nichts zu bezahlen.',
+    'success.order_placed_free_review' => 'Bestellung #:num aufgegeben. Es war nichts zu bezahlen; sie wird eingerichtet, sobald wir sie geprüft haben.',
     'success.password_changed' => 'Passwort erfolgreich geändert.',
     'success.password_reset_successfully_please_log_in' => 'Passwort erfolgreich zurückgesetzt. Bitte melden Sie sich an.',
     'success.product_added_to_cart' => 'Produkt erfolgreich zum Warenkorb hinzugefügt.',

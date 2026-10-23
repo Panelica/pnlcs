@@ -280,6 +280,7 @@ return [
     ],
     'checkout.contact_details' => '联系人详情',
     'checkout.payment_method' => '付款方式',
+    'checkout.nothing_to_pay' => '此订单免费，无需付款。',
     'checkout.place_order' => '提交订单',
     'checkout.secure_checkout' => '安全结账',
     'checkout.subtitle' => '核对订单并完成购买。',

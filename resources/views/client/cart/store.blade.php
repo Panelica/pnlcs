@@ -44,7 +44,10 @@
                     <div class="pn-popular">{{ __('client.store.most_popular') }}</div>
                 @endif
                 <div style="font-size:15px;font-weight:700;color:var(--primary);margin-bottom:8px">{{ $product->name }}</div>
-                @if($startingPrice !== null)
+                @if($startingPrice !== null && $product->pay_type === 'free')
+                    {{-- A free product says so, not "$0.00 /monthly". --}}
+                    <div class="pn-product-price">{{ __('common.billing.free') }}</div>
+                @elseif($startingPrice !== null)
                     <div class="pn-product-price">{{ display_money_fmt($startingPrice) }} <span class="cycle">/{{ $startingCycle }}</span></div>
                 @else
                     <div class="pn-product-price">{{ __('client.store.contact_us') }}</div>

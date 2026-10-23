@@ -106,6 +106,13 @@
             </div>
             @endif
 
+            @if($freeOrder ?? false)
+            {{-- Free products only, at no charge: there is nothing to pay now or
+                 later, so no payment method to choose. The order still records
+                 one, the first the shop offers, as every order does. --}}
+            <input type="hidden" name="payment_method" value="{{ array_key_first($paymentMethods) }}">
+            <div class="pn-alert pn-alert-info mb-16" role="status">{{ __('client.checkout.nothing_to_pay') }}</div>
+            @else
             <div class="pn-card mb-16">
                 <div class="pn-card-header"><span class="pn-card-title">{{ __('client.checkout.payment_method') }}</span></div>
                 <div class="pn-card-body">
@@ -119,6 +126,7 @@
                     @endforeach
                 </div>
             </div>
+            @endif
 
             <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm)">
                 <input type="checkbox" name="terms" id="terms" value="1" required style="margin-top:2px;flex-shrink:0;accent-color:var(--primary)">

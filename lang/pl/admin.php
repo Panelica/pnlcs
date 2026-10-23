@@ -1360,6 +1360,8 @@ return [
     'gateways.sort_order' => 'Kolejność sortowania',
     'gateways.auto_charge_link' => 'Ustawienia płatności automatycznej',
     'gateways.auto_charge_note' => 'Ta bramka może przechowywać kartę klienta, więc płatność automatyczna może z niej korzystać.',
+    'gateways.not_offered' => 'Nieoferowana',
+    'gateways.missing_settings' => 'Włączona, ale nie jest oferowana klientom, dopóki nie zostaną wypełnione: :fields.',
     'gateways.title' => 'Bramki płatności',
     'gateways.transaction_key' => 'Klucz transakcji',
     'gateways.visible_name' => 'Widoczna nazwa',

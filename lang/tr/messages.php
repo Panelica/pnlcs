@@ -393,6 +393,8 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'success.logo_uploaded' => 'Logo yüklendi.',
     'success.nameservers_updated' => 'Ad sunucuları güncellendi.',
     'success.order_placed' => '#:num numaralı sipariş oluşturuldu. Lütfen ödemeyi tamamlayın.',
+    'success.order_placed_free' => '#:num numaralı sipariş oluşturuldu. Ödenecek bir tutar yoktu.',
+    'success.order_placed_free_review' => '#:num numaralı sipariş oluşturuldu. Ödenecek bir tutar yoktu; siparişi inceledikten sonra kurulumu yapılacak.',
     'success.password_changed' => 'Parola değiştirildi.',
     'success.password_reset_successfully_please_log_in' => 'Parolanız sıfırlandı. Lütfen giriş yapın.',
     'success.product_added_to_cart' => 'Ürün sepete eklendi.',

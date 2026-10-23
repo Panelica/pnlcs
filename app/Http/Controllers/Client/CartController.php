@@ -346,6 +346,8 @@ class CartController extends Controller
 
         $currency = Currency::getDefault();
         $paymentMethods = $this->getAvailablePaymentMethods();
+        // Nothing in the cart will ever be billed: no payment method to choose.
+        $freeOrder = $this->isFreeOrder($totals);
         $needsPhone = $this->needsPhone($cart);
         $needsBillingAddress = $this->needsBillingAddress($client, $needsPhone);
         $countries = \App\Support\Countries::all();
@@ -354,7 +356,27 @@ class CartController extends Controller
         // admin screen and read by nothing.
         $orderFields = $clientId ? collect() : \App\Models\CustomField::orderFields()->get();
 
-        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'client', 'needsBillingAddress', 'needsPhone', 'countries', 'orderFields'));
+        return view('client.cart.checkout', compact('cart', 'totals', 'currency', 'paymentMethods', 'freeOrder', 'client', 'needsBillingAddress', 'needsPhone', 'countries', 'orderFields'));
+    }
+
+    /**
+     * A cart of free products only, at no charge: nothing in it is billed now
+     * or later (a free service is never invoiced again), so the customer is
+     * not asked how they will pay. A paid product at zero today (a promotion)
+     * still asks: its renewals are charged.
+     */
+    private function isFreeOrder(array $totals): bool
+    {
+        $items = collect($totals['items'] ?? []);
+        if ($items->isEmpty() || (float) ($totals['total'] ?? 0) > 0.009) {
+            return false;
+        }
+        if ($items->contains(fn ($item) => ($item['type'] ?? 'product') !== 'product')) {
+            return false;
+        }
+        $ids = $items->pluck('product_id')->map(fn ($id) => (int) $id)->unique();
+
+        return Product::whereIn('id', $ids)->where('pay_type', 'free')->count() === $ids->count();
     }
 
     public function processCheckout(Request $request)
@@ -478,6 +500,22 @@ class CartController extends Controller
         // land on the invoice and can pay from there - the order is never lost.
         if ($payScreen = $this->cardPaymentScreen($order, (string) $request->payment_method)) {
             return $payScreen;
+        }
+
+        // Nothing to pay: the zero-total invoice was settled when the order was
+        // placed. "Please complete payment" on a paid invoice sent the customer
+        // looking for a payment that was never due; they go to their services.
+        // Only a zero total: a test account's order is settled without money
+        // too (AutoApproveOrderEmails), and that one did cost something.
+        $invoice = $order->invoice_id ? \App\Models\Invoice::find($order->invoice_id) : null;
+        if ($invoice && strtolower((string) $invoice->status) === 'paid'
+            && (float) $invoice->total <= 0.009 && (float) $invoice->credit <= 0.009) {
+            $awaitingReview = strtolower((string) $order->fresh()?->status) === 'pending'
+                && \App\Models\Service::where('order_id', $order->id)->where('status', 'pending')
+                    ->whereHas('product', fn ($q) => $q->where('auto_setup', 'manual'))->exists();
+
+            return redirect()->route('client.services.index')
+                ->with('success', __($awaitingReview ? 'messages.success.order_placed_free_review' : 'messages.success.order_placed_free', ['num' => $order->order_num]));
         }
 
         return redirect()->route('client.invoices.show', $order->invoice_id)

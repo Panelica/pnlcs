@@ -1360,6 +1360,8 @@ return [
 	'gateways.sort_order' => 'Orden de clasificación',
 	'gateways.auto_charge_link' => 'Configuración de pago automático',
 	'gateways.auto_charge_note' => 'Esta pasarela puede almacenar la tarjeta de un cliente, por lo que el pago automático puede utilizarla.',
+	'gateways.not_offered' => 'No se ofrece',
+	'gateways.missing_settings' => 'Activada, pero no se ofrece a los clientes hasta que se completen: :fields.',
 	'gateways.title' => 'Pasarelas de pago',
 	'gateways.transaction_key' => 'Clave de transacción',
 	'gateways.visible_name' => 'Nombre visible',

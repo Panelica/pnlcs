@@ -280,6 +280,7 @@ return [
     ],
     'checkout.contact_details' => 'Kontaktdaten',
     'checkout.payment_method' => 'Zahlungsmethode',
+    'checkout.nothing_to_pay' => 'Diese Bestellung ist kostenlos: Es ist nichts zu bezahlen.',
     'checkout.place_order' => 'Kostenpflichtig bestellen',
     'checkout.secure_checkout' => 'Sicherer Bestellabschluss',
     'checkout.subtitle' => 'Prüfen Sie Ihre Bestellung und schließen Sie den Kauf ab.',

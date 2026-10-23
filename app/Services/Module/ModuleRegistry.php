@@ -295,12 +295,7 @@ class ModuleRegistry
                 continue;
             }
 
-            $missing = collect($module->getConfigFields())
-                ->filter(fn ($field) => $field['required'] ?? false)
-                ->reject(fn ($field) => $values->has($field['name']))
-                ->isNotEmpty();
-
-            if ($missing) {
+            if ($this->missingGatewaySettings($module, $values->all()) !== []) {
                 continue;
             }
 
@@ -308,6 +303,24 @@ class ModuleRegistry
         }
 
         return $usable;
+    }
+
+    /**
+     * The required settings of a gateway that hold no value: why a gateway
+     * that is switched on is not offered to customers. The settings screen
+     * shows the same list, so the operator sees it where they set it.
+     *
+     * @param  array<string, mixed>  $values  setting => stored value
+     * @return list<string> the labels of the missing fields
+     */
+    public function missingGatewaySettings(object $module, array $values): array
+    {
+        return collect($module->getConfigFields())
+            ->filter(fn ($field) => $field['required'] ?? false)
+            ->reject(fn ($field) => trim((string) ($values[$field['name']] ?? '')) !== '')
+            ->map(fn ($field) => (string) ($field['label'] ?? $field['name']))
+            ->values()
+            ->all();
     }
 
     /**

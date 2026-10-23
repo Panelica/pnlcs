@@ -112,8 +112,15 @@
                                 <label class="cycle-option {{ $loop->first ? 'selected' : '' }}">
                                     <input type="radio" name="billing_cycle" value="{{ $cycle }}" data-price="{{ display_price($cyclePrice) }}" {{ $loop->first ? 'checked' : '' }}
                                         onchange="document.querySelectorAll('.cycle-option').forEach(e=>e.classList.remove('selected')); this.closest('.cycle-option').classList.add('selected')">
-                                    <div class="cycle-price">{{ display_money_fmt($cyclePrice) }}</div>
-                                    <div class="cycle-label">{{ $cycle }}</div>
+                                    @if($product->pay_type === 'free')
+                                        {{-- Free: no price to read. The cycle is named only when
+                                             the operator offers more than one. --}}
+                                        <div class="cycle-price">{{ __('common.billing.free') }}</div>
+                                        @if(count($pricedCycles) > 1)<div class="cycle-label">{{ $cycle }}</div>@endif
+                                    @else
+                                        <div class="cycle-price">{{ display_money_fmt($cyclePrice) }}</div>
+                                        <div class="cycle-label">{{ $cycle }}</div>
+                                    @endif
                                 </label>
                             @endforeach
                         @else

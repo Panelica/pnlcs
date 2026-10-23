@@ -397,6 +397,8 @@ API 访问可能已中断。在无法读取余额期间，也无法发出余额�
     'success.logo_uploaded' => '徽标已上传。',
     'success.nameservers_updated' => '域名服务器已更新。',
     'success.order_placed' => '订单 #:num 已成功提交，请完成付款。',
+    'success.order_placed_free' => '订单 #:num 已提交，无需付款。',
+    'success.order_placed_free_review' => '订单 #:num 已提交，无需付款；我们审核后即会开通。',
     'success.password_changed' => '密码已修改。',
     'success.password_reset_successfully_please_log_in' => '密码已成功重置，请登录。',
     'success.product_added_to_cart' => '产品已成功加入购物车。',

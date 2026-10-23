@@ -88,21 +88,48 @@ class Product extends Model
         $column = BillingCycleHelper::pricingColumn($cycle);
         $row = $column ? $this->pricingFor($currencyId) : null;
 
-        if (! $row || $row->{$column} === null) {
-            return null;
+        if ($row && $row->{$column} !== null) {
+            $price = round((float) $row->{$column}, 2);
+
+            if ($price > 0) {
+                return $price;
+            }
+
+            // A free product's zero is a real price: the checkout accepts it and
+            // the zero-total invoice settles itself as paid (OrderService). Without
+            // this the product had no billing cycle at all and could not be
+            // ordered. A negative value still means "not sold on this cycle".
+            if ($this->pay_type === 'free' && $price >= 0) {
+                return 0.0;
+            }
         }
 
-        $price = round((float) $row->{$column}, 2);
-
-        if ($price > 0) {
-            return $price;
+        // A free product sold on no cycle at all: the product form starts every
+        // cycle at -1 ("not sold"), so "Free" with the prices left alone could
+        // not be ordered - the order form had no cycle to offer and checkout
+        // said none was chosen. It is sold monthly at no charge; a free
+        // service is never invoiced again, so the cycle only dates it.
+        if ($this->pay_type === 'free' && $column === 'monthly' && ! $this->sellsAnyCycle($row)) {
+            return 0.0;
         }
 
-        // A free product's zero is a real price: the checkout accepts it and
-        // the zero-total invoice settles itself as paid (OrderService). Without
-        // this the product had no billing cycle at all and could not be
-        // ordered. A negative value still means "not sold on this cycle".
-        return $this->pay_type === 'free' && $price >= 0 ? 0.0 : null;
+        return null;
+    }
+
+    /** Whether a price row sells the product on at least one cycle (zero or more). */
+    private function sellsAnyCycle(?Pricing $row): bool
+    {
+        if (! $row) {
+            return false;
+        }
+
+        foreach (['monthly', 'quarterly', 'semiannually', 'annually', 'biennially', 'triennially'] as $column) {
+            if ($row->{$column} !== null && (float) $row->{$column} >= 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

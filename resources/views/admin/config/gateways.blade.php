@@ -18,9 +18,19 @@
         <summary style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 16px;list-style:none;">
             <span class="gw-chevron" style="display:inline-block;transition:transform .2s;color:#999;">&#9656;</span>
             <span style="flex:1;font-weight:600;">{{ $gw->label }}</span>
+            @if($gw->active && $gw->missing)
+            <span class="badge badge-pending" title="{{ __('admin.gateways.missing_settings', ['fields' => implode(', ', $gw->missing)]) }}">{{ __('admin.gateways.not_offered') }}</span>
+            @else
             <span class="badge {{ $gw->active ? 'badge-active' : 'badge-cancelled' }}">{{ $gw->active ? __('common.status.active') : __('common.status.inactive') }}</span>
+            @endif
         </summary>
         <div style="padding:0 16px 16px;border-top:1px solid #e5e7eb;">
+            @if($gw->active && $gw->missing)
+            {{-- Ticked active, yet left out of checkout and the invoice page
+                 until its keys are in: said here rather than discovered by a
+                 customer who cannot find the gateway. --}}
+            <div class="alert alert-warning" style="margin:12px 0 0;font-size:12.5px;">{{ __('admin.gateways.missing_settings', ['fields' => implode(', ', $gw->missing)]) }}</div>
+            @endif
             <form method="POST" action="{{ route('admin.config.gateways.settings.update', $gw->name) }}">
                 @csrf
                 <div class="form-group">

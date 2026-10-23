@@ -1360,6 +1360,8 @@ return [
     'gateways.sort_order' => '排序顺序',
     'gateways.auto_charge_link' => '自动付款设置',
     'gateways.auto_charge_note' => '此支付网关可以保存客户的银行卡，因此自动付款可以使用它。',
+    'gateways.not_offered' => '未提供',
+    'gateways.missing_settings' => '已启用，但在填写以下内容之前不会提供给客户：:fields。',
     'gateways.title' => '支付网关',
     'gateways.transaction_key' => '交易密钥',
     'gateways.visible_name' => '可见名称',

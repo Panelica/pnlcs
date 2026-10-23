@@ -281,6 +281,7 @@ return [
     ],
     'checkout.contact_details' => 'Contact Details',
     'checkout.payment_method' => 'Payment Method',
+    'checkout.nothing_to_pay' => 'This order is free: there is nothing to pay.',
     'checkout.place_order' => 'Place Order',
     'checkout.secure_checkout' => 'Secure checkout',
     'checkout.subtitle' => 'Review your order and complete purchase.',

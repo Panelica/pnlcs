@@ -1360,6 +1360,8 @@ return [
     'gateways.sort_order' => 'Sortierreihenfolge',
     'gateways.auto_charge_link' => 'Automatische Zahlungseinstellungen',
     'gateways.auto_charge_note' => 'Dieses Gateway kann die Karte eines Kunden speichern, so dass automatische Zahlungen damit möglich sind.',
+    'gateways.not_offered' => 'Nicht angeboten',
+    'gateways.missing_settings' => 'Eingeschaltet, wird Kunden aber erst angeboten, wenn diese Felder ausgefüllt sind: :fields.',
     'gateways.title' => 'Zahlungsgateways',
     'gateways.transaction_key' => 'Transaktionsschlüssel',
     'gateways.visible_name' => 'Sichtbarer Name',

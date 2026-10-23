@@ -1360,6 +1360,8 @@ return [
     'gateways.sort_order' => 'Sort Order',
     'gateways.auto_charge_link' => 'Automatic payment settings',
     'gateways.auto_charge_note' => 'This gateway can store a customer\'s card, so automatic payment can use it.',
+    'gateways.not_offered' => 'Not offered',
+    'gateways.missing_settings' => 'Switched on, but not offered to customers until these are filled in: :fields.',
     'gateways.title' => 'Payment Gateways',
     'gateways.transaction_key' => 'Transaction Key',
     'gateways.visible_name' => 'Visible Name',

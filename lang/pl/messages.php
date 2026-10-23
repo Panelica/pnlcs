@@ -398,6 +398,8 @@ Dostęp do API może być uszkodzony. Dopóki saldo jest nieczytelne, ostrzeżen
     'success.logo_uploaded' => 'Logo przesłane.',
     'success.nameservers_updated' => 'Serwery nazw zaktualizowane.',
     'success.order_placed' => 'Zamówienie #:num złożone pomyślnie. Dokończ płatność.',
+    'success.order_placed_free' => 'Zamówienie #:num złożone. Nie było nic do zapłaty.',
+    'success.order_placed_free_review' => 'Zamówienie #:num złożone. Nie było nic do zapłaty; zostanie uruchomione, gdy je sprawdzimy.',
     'success.password_changed' => 'Hasło zmienione.',
     'success.password_reset_successfully_please_log_in' => 'Hasło zresetowane pomyślnie. Zaloguj się.',
     'success.product_added_to_cart' => 'Produkt dodany do koszyka pomyślnie.',

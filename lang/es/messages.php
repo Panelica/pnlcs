@@ -402,6 +402,8 @@ Es posible que el acceso a la API no funcione. Mientras no se pueda leer el sald
     'success.logo_uploaded' => 'Logo subido.',
     'success.nameservers_updated' => 'Los servidores de nombres actualizados.',
     'success.order_placed' => 'Pedido n.º :num realizado correctamente. Complete el pago para finalizarlo.',
+    'success.order_placed_free' => 'Pedido n.º :num realizado. No había nada que pagar.',
+    'success.order_placed_free_review' => 'Pedido n.º :num realizado. No había nada que pagar; se activará cuando lo hayamos revisado.',
     'success.password_changed' => 'La contraseña cambió.',
     'success.password_reset_successfully_please_log_in' => 'Contraseña restablecida correctamente. Inicie sesión.',
     'success.product_added_to_cart' => 'Producto añadido al carrito con éxito',

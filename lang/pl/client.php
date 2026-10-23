@@ -281,6 +281,7 @@ return [
     ],
     'checkout.contact_details' => 'Dane kontaktowe',
     'checkout.payment_method' => 'Metoda płatności',
+    'checkout.nothing_to_pay' => 'To zamówienie jest bezpłatne: nie ma nic do zapłaty.',
     'checkout.place_order' => 'Złóż zamówienie',
     'checkout.secure_checkout' => 'Bezpieczne płatności',
     'checkout.subtitle' => 'Sprawdź zamówienie i sfinalizuj zakup.',

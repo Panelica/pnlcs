@@ -48,7 +48,11 @@
     <div class="stat-card"><div class="stat-value">{{ $domainCount }}</div><div class="stat-label">{{ __('admin.clients.domains') }}</div></div>
     <div class="stat-card"><div class="stat-value">{{ $invoiceCount }}</div><div class="stat-label">{{ __('admin.clients.invoices') }}</div></div>
     <div class="stat-card"><div class="stat-value">{{ $ticketCount }}</div><div class="stat-label">{{ __('admin.clients.tickets') }}</div></div>
-    <div class="stat-card" style="border-color:#d9534f;"><div class="stat-value" style="color:#d9534f;">{{ money_fmt($unpaidInvoices) }}</div><div class="stat-label">{{ __('admin.clients.unpaid') }}</div></div>
+    {{-- The total of the client's unpaid invoices. Red only when something is
+         owed: red at zero read as an "UNPAID" status on a client who owed
+         nothing. --}}
+    @php $owes = (float) $unpaidInvoices > 0.009; @endphp
+    <div class="stat-card" @if($owes) style="border-color:#d9534f;" @endif><div class="stat-value" @if($owes) style="color:#d9534f;" @endif>{{ money_fmt($unpaidInvoices) }}</div><div class="stat-label">{{ __('admin.clients.unpaid_invoices') }}</div></div>
 </div>
 
 {{-- Tab Navigation --}}
