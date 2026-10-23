@@ -123,7 +123,7 @@
                     </div>
                     <div class="form-group" style="margin:0;flex:1;min-width:120px;">
                         <label class="form-label">{{ __('admin.invoices.amount') }}</label>
-                        <input type="number" name="amount" step="0.01" value="{{ $invoice->total }}" class="form-control">
+                        <input type="number" name="amount" step="0.01" value="{{ number_format($invoice->amountDue(), 2, '.', '') }}" class="form-control">
                     </div>
                     <button type="submit" class="btn btn-success btn-sm" style="margin-bottom:0;">{{ __('admin.invoices.confirm_payment') }}</button>
                 </div>

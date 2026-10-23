@@ -477,6 +477,13 @@ class InvoiceController extends Controller
             'amount' => ['nullable', 'numeric', 'min:0.01'],
         ]);
 
+        // "Credit" pays from the client's credit balance. Recorded as an
+        // ordinary payment it marked the invoice paid and left the balance
+        // untouched, so the client kept the money and the invoice was settled.
+        if (($validated['gateway'] ?? null) === 'credit') {
+            return $this->payFromCredit($invoice, isset($validated['amount']) ? (float) $validated['amount'] : null);
+        }
+
         // The form's amount field used to be silently ignored, marking the
         // invoice fully paid regardless of what the admin entered. Routing
         // through PaymentService keeps partial payments, overpayment-to-credit
@@ -492,6 +499,29 @@ class InvoiceController extends Controller
             return back()->with('success', __('admin.messages.invoice_partially_paid', [
                 'num' => $invoice->invoice_num,
                 'balance' => number_format($result['balance'], 2),
+            ]));
+        }
+
+        return back()->with('success', __('admin.messages.invoice_marked_paid', ['num' => $invoice->invoice_num]));
+    }
+
+    private function payFromCredit(Invoice $invoice, ?float $amount): RedirectResponse
+    {
+        $due = $invoice->amountDue();
+        $credit = (float) $invoice->client?->credit;
+
+        if ($credit < 0.01 || $due < 0.01) {
+            return back()->with('error', __('admin.messages.no_credit_available'));
+        }
+
+        // applyCredit caps at the balance and at what is due, under locks.
+        $invoice = $this->invoiceService->applyCredit($invoice, min($amount ?? $due, $due));
+        $remaining = $invoice->amountDue();
+
+        if ($remaining > 0.009) {
+            return back()->with('success', __('admin.messages.invoice_partially_paid', [
+                'num' => $invoice->invoice_num,
+                'balance' => number_format($remaining, 2),
             ]));
         }
 
