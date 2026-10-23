@@ -232,12 +232,16 @@ class InvoiceXmlBuilder
 
     private function sellerAddress(): string
     {
+        // The address General Settings saves (Address, Postcode, CompanyCity),
+        // read the way the invoice PDF reads it. Address1/Address2 are not
+        // written by any screen, so every seller came out as "Polska".
         try {
+            $company = app(\App\Services\InvoicePdfService::class)->companyDetails();
             $parts = array_filter([
-                trim((string) Setting::get('Address1', '')),
-                trim((string) Setting::get('Address2', '')),
+                trim((string) preg_replace('/\s*[\r\n]+\s*/', ', ', (string) $company['address'])),
+                trim($company['postcode'].' '.$company['city']),
             ]);
-            $line = implode(' ', $parts);
+            $line = implode(', ', $parts);
         } catch (\Throwable) {
             $line = '';
         }
