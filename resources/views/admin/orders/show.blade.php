@@ -110,6 +110,13 @@
         <div class="panel">
             <div class="panel-heading panel-primary">{{ __('admin.orders.actions') }}</div>
             <div class="panel-body" style="display:flex;flex-direction:column;gap:6px;">
+                @if(in_array(strtolower($order->status), ['cancelled', 'fraud']))
+                <form method="POST" action="{{ route('admin.orders.reopen', $order) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-sm" style="width:100%;">{{ __('admin.orders.set_pending') }}</button>
+                </form>
+                @endif
+
                 @if(strtolower($order->status) === 'pending')
                 <form method="POST" action="{{ route('admin.orders.accept', $order) }}">
                     @csrf

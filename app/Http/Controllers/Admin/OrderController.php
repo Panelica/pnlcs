@@ -205,6 +205,22 @@ class OrderController extends Controller
     }
 
     /**
+     * Put a cancelled or fraud order back to pending - the API's pendingorder,
+     * which had no counterpart here, so an order held by fraud screening by
+     * mistake could not be released from the admin.
+     */
+    public function reopen(Order $order): RedirectResponse
+    {
+        if (! in_array($order->status, [OrderStatus::Cancelled->value, OrderStatus::Fraud->value], true)) {
+            return back();                // the button only shows on these two
+        }
+
+        $this->orderService->reopenOrder($order);
+
+        return back()->with('success', __('admin.messages.order_reopened', ['num' => $order->order_num]));
+    }
+
+    /**
      * Delete (soft-cancel) an order and all related items.
      */
     /**
