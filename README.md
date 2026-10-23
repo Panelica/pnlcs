@@ -20,6 +20,12 @@
   <a href="https://pnlcs.com/"><img src="https://img.shields.io/badge/Website-pnlcs.com-4051A9?style=for-the-badge" alt="Website — pnlcs.com"></a>
   <a href="https://hosting.panelica.com/"><img src="https://img.shields.io/badge/Live%20Demo-hosting.panelica.com-22C55E?style=for-the-badge" alt="Live Demo — hosting.panelica.com"></a>
   <a href="https://docs.pnlcs.com/"><img src="https://img.shields.io/badge/Documentation-docs.pnlcs.com-0EA5E9?style=for-the-badge" alt="Documentation — docs.pnlcs.com"></a>
+  <a href="https://community.pnlcs.com/"><img src="https://img.shields.io/badge/Community-community.pnlcs.com-F59E0B?style=for-the-badge" alt="Community — community.pnlcs.com"></a>
+</p>
+
+<p align="center">
+  Questions, ideas and show-and-tell live on the <b><a href="https://community.pnlcs.com/">PNLCS Community</a></b> —
+  ask there first, and see what others build with PNLCS.
 </p>
 
 <p align="center">
@@ -30,7 +36,8 @@
   <a href="#modules--servers-payment-gateways--domain-registrars">Modules</a> ·
   <a href="#selling-vps-on-proxmox-ve">Proxmox VPS</a> ·
   <a href="#screenshots--admin-panel--client-portal">Screenshots</a> ·
-  <a href="#contributing">Contributing</a>
+  <a href="#contributing">Contributing</a> ·
+  <a href="#support--community">Community</a>
 </p>
 
 ---
@@ -1746,10 +1753,12 @@ Ways to help:
    which ones have only been tested with faked responses — and file an issue
    with what you found.
 2. **Report a bug** with reproduction steps — screenshots help a lot.
-3. **Improve a translation** via the admin UI's export, edit a JSON file,
+3. **Answer a question** on the [community](https://community.pnlcs.com/c/help) and
+   help other people running PNLCS.
+4. **Improve a translation** via the admin UI's export, edit a JSON file,
    and send us a PR.
-4. **Write a module** — see [Writing your own module](#writing-your-own-module).
-5. **Write documentation** — installation on other distributions or hosting
+5. **Write a module** — see [Writing your own module](#writing-your-own-module).
+6. **Write documentation** — installation on other distributions or hosting
    panels, and anything this README gets wrong.
 
 Please keep in mind:
@@ -1764,17 +1773,23 @@ Please keep in mind:
 
 ## Support & Community
 
-Need help, want to report a bug, or have a feature request?
+Need help, have an idea, or want to show what you built?
 
-- 🐛 **Bug reports & feature requests** — [GitHub Issues](https://github.com/Panelica/pnlcs/issues)
-- 💬 **Community forum** — [forum.panelica.com](https://forum.panelica.com)
+- 💬 **[PNLCS Community](https://community.pnlcs.com/)** — the place to start:
+  - [Help](https://community.pnlcs.com/c/help) — installation, configuration and "how do I…" questions, with solved answers marked
+  - [Feature requests](https://community.pnlcs.com/c/feature-requests) — post ideas and vote on them; the team posts its plans in the [Roadmap](https://community.pnlcs.com/c/roadmap)
+  - [Modules & themes](https://community.pnlcs.com/c/modules-themes) and [Developers](https://community.pnlcs.com/c/developers) — building on PNLCS
+  - [Show & tell](https://community.pnlcs.com/c/show-and-tell) — your shop on PNLCS
+  - [Announcements](https://community.pnlcs.com/c/announcements) — releases and news from the team
+- 📖 **Documentation** — [docs.pnlcs.com](https://docs.pnlcs.com/), starting with the [installation guide](https://docs.pnlcs.com/install/)
+- 🐛 **Bug reports** — [GitHub Issues](https://github.com/Panelica/pnlcs/issues), with steps to reproduce
+- 🌐 **Website** — [pnlcs.com](https://pnlcs.com/)
 - 📧 **Email** — [info@panelica.com](mailto:info@panelica.com)
-- 🌐 **Main site** — [panelica.com](https://panelica.com)
 - 🔒 **Security disclosures** — [security@panelica.com](mailto:security@panelica.com) *(please do not open public issues for security)*
 
-We're happy to help from the forum or by email, but since this is a side
-project your patience is appreciated. For urgent matters, the forum tends
-to get the fastest community response.
+Questions get the fastest answer on the community, where other PNLCS users
+can help as well as the team. Since PNLCS is a side project for the Panelica
+team, your patience with email is appreciated.
 
 ---
 
