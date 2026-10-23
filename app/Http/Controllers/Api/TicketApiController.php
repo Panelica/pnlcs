@@ -99,13 +99,23 @@ class TicketApiController extends BaseApiController
         if ($request->has('subject')) {
             $ticket->title = $request->subject;
         }
+        $closing = false;
         if ($request->has('status')) {
             // Stored as the status is spelled in its own table.
-            $ticket->status = \App\Models\TicketStatus::whereRaw('LOWER(title) = ?', [strtolower((string) $request->status)])->value('title');
+            $status = \App\Models\TicketStatus::whereRaw('LOWER(title) = ?', [strtolower((string) $request->status)])->value('title');
+            // Closing goes through the service, as it does from the admin and
+            // client screens, so TicketClosed fires (hooks, notifications).
+            $closing = strtolower((string) $status) === 'closed' && strtolower((string) $ticket->status) !== 'closed';
+            if (! $closing) {
+                $ticket->status = $status;
+            }
         }
         foreach(['priority','admin','flag'] as $f) { if($request->has($f)) $ticket->$f=$request->$f; }
         if($request->has('deptid')) $ticket->department_id=$request->deptid;
         $ticket->save();
+        if ($closing) {
+            app(\App\Services\TicketService::class)->closeTicket($ticket);
+        }
         return $this->success(['ticketid'=>$ticket->id]);
     }
     public function deleteTicket(Request $request)
@@ -134,11 +144,16 @@ class TicketApiController extends BaseApiController
         // The notes go with the replies - staff's own record of the
         // conversation was left behind on a closed ticket - and the move
         // happens whole or not at all.
+        $wasClosed = strtolower((string) $ticket->status) === 'closed';
         DB::transaction(function () use ($ticket, $mergeInto) {
             TicketReply::where('ticket_id', $ticket->id)->update(['ticket_id' => $mergeInto->id]);
             \App\Models\TicketNote::where('ticket_id', $ticket->id)->update(['ticket_id' => $mergeInto->id]);
             $ticket->update(['status' => 'Closed', 'merged_ticket_id' => $mergeInto->id]);
         });
+        // The merged ticket is closed like any other: TicketClosed fires.
+        if (! $wasClosed) {
+            event(new \App\Events\TicketClosed($ticket->fresh()));
+        }
         return $this->success(['ticketid'=>$mergeInto->id]);
     }
     public function getTicketNotes(Request $request)
