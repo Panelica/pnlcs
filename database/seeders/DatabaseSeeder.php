@@ -94,11 +94,12 @@ class DatabaseSeeder extends Seeder
             Setting::firstOrCreate(['setting' => $s['setting']], $s);
         }
 
-        // Default ticket departments
-        TicketDepartment::firstOrCreate(['name' => 'General'], ['description' => 'General inquiries', 'email' => 'support@pnlcs.com']);
-        TicketDepartment::firstOrCreate(['name' => 'Technical Support'], ['description' => 'Technical issues and server problems', 'email' => 'tech@pnlcs.com']);
-        TicketDepartment::firstOrCreate(['name' => 'Billing'], ['description' => 'Billing and payment inquiries', 'email' => 'billing@pnlcs.com']);
-        TicketDepartment::firstOrCreate(['name' => 'Sales'], ['description' => 'Pre-sales questions', 'email' => 'sales@pnlcs.com']);
+        // Default ticket departments. No address: these are seeded into every
+        // install, and an address here is one this install receives mail on.
+        TicketDepartment::firstOrCreate(['name' => 'General'], ['description' => 'General inquiries']);
+        TicketDepartment::firstOrCreate(['name' => 'Technical Support'], ['description' => 'Technical issues and server problems']);
+        TicketDepartment::firstOrCreate(['name' => 'Billing'], ['description' => 'Billing and payment inquiries']);
+        TicketDepartment::firstOrCreate(['name' => 'Sales'], ['description' => 'Pre-sales questions']);
 
         // Default ticket statuses (matching WHMCS)
         TicketStatus::firstOrCreate(['title' => 'Open'], ['color' => '#22c55e', 'sort_order' => 1, 'show_active' => true]);

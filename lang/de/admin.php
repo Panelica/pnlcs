@@ -3017,7 +3017,7 @@ return [
     'custom_fields.type_textarea' => 'Langer Text',
     'terminated' => 'Beendet',
     'ticket_departments' => [
-        'email_hint_text' => ' (für Ticket-Benachrichtigungen)',
+        'email_hint_text' => ' (die Adresse, an die Kunden schreiben; für den Import ihrer E-Mails)',
     ],
     'ticket_departments.import_allow_unknown' => 'Akzeptieren Sie E-Mails von unbekannten Absendern (erstellt ein Ticket ohne Kundenkonto)',
     'ticket_departments.import_delete' => 'Nachrichten nach dem Import aus dem Postfach löschen',
@@ -3036,7 +3036,7 @@ return [
     'ticket_departments.confirm_delete' => 'Diese Abteilung löschen?',
     'ticket_departments.department_name' => 'Abteilungsname',
     'ticket_departments.edit_department' => 'Abteilung bearbeiten',
-    'ticket_departments.email_hint' => '(für Ticketbenachrichtigungen)',
+    'ticket_departments.email_hint' => '(die Adresse, an die Kunden schreiben; für den Import ihrer E-Mails)',
     'ticket_departments.hidden_from_clients' => 'Aus dem Kundenticketformular ausgeblendet',
     'ticket_departments.hidden_short' => 'Vor Kunden verborgen',
     'ticket_departments.no_departments' => 'Keine Abteilungen konfiguriert.',

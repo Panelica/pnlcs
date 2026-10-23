@@ -3017,7 +3017,7 @@ return [
     'custom_fields.type_textarea' => '长文本',
     'terminated' => '已终止',
     'ticket_departments' => [
-        'email_hint_text' => '（用于工单通知）',
+        'email_hint_text' => '（客户来信的地址；用于导入邮件）',
     ],
     'ticket_departments.import_allow_unknown' => '接受未知发件人的邮件（将创建不关联客户账户的工单）',
     'ticket_departments.import_delete' => '导入后从邮箱中删除邮件',
@@ -3036,7 +3036,7 @@ return [
     'ticket_departments.confirm_delete' => '确定删除此部门吗？',
     'ticket_departments.department_name' => '部门名称',
     'ticket_departments.edit_department' => '编辑部门',
-    'ticket_departments.email_hint' => '客户向此地址发送的邮件会进入该部门。',
+    'ticket_departments.email_hint' => '（客户来信的地址；用于导入邮件）',
     'ticket_departments.hidden_from_clients' => '对客户隐藏',
     'ticket_departments.hidden_short' => '隐藏',
     'ticket_departments.no_departments' => '暂无部门。',
