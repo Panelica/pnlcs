@@ -1487,6 +1487,7 @@ return [
     'invoices.item_updated' => 'Pozycja faktury została zaktualizowana.',
     'invoices.item_added' => 'Dodano pozycję.',
     'invoices.item_removed' => 'Usunięto pozycję.',
+    'invoices.items_locked' => 'Nie można zmieniać pozycji opłaconej, anulowanej lub zwróconej faktury.',
     'invoices.delete_item' => 'Usuń pozycję',
     'invoices.confirm_delete_item' => 'Usunąć tę pozycję?',
     'invoices.send' => 'Wyślij',

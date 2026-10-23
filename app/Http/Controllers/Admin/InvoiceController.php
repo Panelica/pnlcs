@@ -181,6 +181,10 @@ class InvoiceController extends Controller
     {
         abort_if($item->invoice_id !== $invoice->id, 404);
 
+        if ($this->itemsLocked($invoice)) {
+            return back()->with('error', __('admin.invoices.items_locked'));
+        }
+
         $validated = $request->validate([
             'description' => ['required', 'string', 'max:255'],
             'qty' => ['required', 'integer', 'min:1', 'max:999999'],
@@ -225,6 +229,10 @@ class InvoiceController extends Controller
      */
     public function storeItem(Request $request, Invoice $invoice): RedirectResponse
     {
+        if ($this->itemsLocked($invoice)) {
+            return back()->with('error', __('admin.invoices.items_locked'));
+        }
+
         $this->invoiceService->addLineItem($invoice, [
             'type' => 'Other',
             'description' => (string) $request->input('description', ''),
@@ -250,6 +258,10 @@ class InvoiceController extends Controller
     {
         abort_if($item->invoice_id !== $invoice->id, 404);
 
+        if ($this->itemsLocked($invoice)) {
+            return back()->with('error', __('admin.invoices.items_locked'));
+        }
+
         $item->delete();
         $this->invoiceService->recalculateTotals($invoice);
 
@@ -261,6 +273,18 @@ class InvoiceController extends Controller
         );
 
         return back()->with('success', __('admin.invoices.item_removed'));
+    }
+
+    /**
+     * A paid, cancelled or refunded invoice is closed: changing its lines
+     * recalculated the total under payments and refunds already recorded
+     * against it, and the customer's copy no longer matched what was paid.
+     */
+    private function itemsLocked(Invoice $invoice): bool
+    {
+        return in_array(strtolower((string) $invoice->status), [
+            InvoiceStatus::Paid->value, InvoiceStatus::Cancelled->value, InvoiceStatus::Refunded->value,
+        ], true);
     }
 
     /**

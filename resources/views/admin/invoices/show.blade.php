@@ -141,10 +141,13 @@
         <div class="card" style="margin-bottom:15px;">
             <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
                 <strong>{{ __('admin.invoices.line_items') }}</strong>
+                @php $itemsLocked = in_array($st, ['paid', 'cancelled', 'refunded'], true); @endphp
+                @unless($itemsLocked)
                 <form method="POST" action="{{ route('admin.invoices.items.store', $invoice) }}" style="display:inline;">
                     @csrf
                     <button type="submit" class="btn btn-default btn-xs">+ {{ __('admin.invoices.add_item') }}</button>
                 </form>
+                @endunless
             </div>
             @foreach($invoice->items as $item)
             <form id="item-form-{{ $item->id }}" method="POST" action="{{ route('admin.invoices.items.update', [$invoice, $item]) }}" style="display:none;">
@@ -175,17 +178,19 @@
                 <tr>
                     <td>
                         <div style="font-size:10px;color:#999;text-transform:uppercase;">{{ $item->type }}</div>
-                        <input type="text" form="item-form-{{ $item->id }}" name="description" value="{{ $item->description }}" class="inv-inline" data-enter-submit>
+                        <input type="text" form="item-form-{{ $item->id }}" name="description" value="{{ $item->description }}" class="inv-inline" data-enter-submit @disabled($itemsLocked)>
                     </td>
-                    <td><input type="number" form="item-form-{{ $item->id }}" name="qty" value="{{ (int) $item->qty }}" min="1" step="1" class="inv-inline inv-num" data-enter-submit></td>
-                    <td><input type="number" form="item-form-{{ $item->id }}" name="amount" value="{{ number_format((float) $item->amount, 2, '.', '') }}" step="0.01" min="0" class="inv-inline inv-num" data-enter-submit></td>
-                    <td><input type="number" form="item-form-{{ $item->id }}" name="tax_rate" value="{{ $effectiveRate > 0 ? rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') : '' }}" step="0.01" min="0" max="100" placeholder="0" class="inv-inline inv-num" data-enter-submit></td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="qty" value="{{ (int) $item->qty }}" min="1" step="1" class="inv-inline inv-num" data-enter-submit @disabled($itemsLocked)></td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="amount" value="{{ number_format((float) $item->amount, 2, '.', '') }}" step="0.01" min="0" class="inv-inline inv-num" data-enter-submit @disabled($itemsLocked)></td>
+                    <td><input type="number" form="item-form-{{ $item->id }}" name="tax_rate" value="{{ $effectiveRate > 0 ? rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') : '' }}" step="0.01" min="0" max="100" placeholder="0" class="inv-inline inv-num" data-enter-submit @disabled($itemsLocked)></td>
                     <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
                     <td style="text-align:center;">
+                        @unless($itemsLocked)
                         <form method="POST" action="{{ route('admin.invoices.items.destroy', [$invoice, $item]) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.invoices.confirm_delete_item')))">
                             @csrf @method('DELETE')
                             <button type="submit" style="background:none;border:none;color:#d9534f;cursor:pointer;font-size:16px;padding:0 2px;" title="{{ __('admin.invoices.delete_item') }}">&times;</button>
                         </form>
+                        @endunless
                     </td>
                 </tr>
                 @empty

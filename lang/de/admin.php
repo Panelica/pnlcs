@@ -1487,6 +1487,7 @@ return [
     'invoices.item_updated' => 'Rechnungsposten aktualisiert.',
     'invoices.item_added' => 'Werbebuchung hinzugefügt.',
     'invoices.item_removed' => 'Werbebuchung entfernt.',
+    'invoices.items_locked' => 'Positionen einer bezahlten, stornierten oder erstatteten Rechnung können nicht geändert werden.',
     'invoices.delete_item' => 'Artikel löschen',
     'invoices.confirm_delete_item' => 'Diese Werbebuchung löschen?',
     'invoices.send' => 'Senden',

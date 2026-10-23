@@ -1487,6 +1487,7 @@ return [
 	'invoices.item_updated' => 'Partida de factura actualizada.',
 	'invoices.item_added' => 'Línea de pedido agregada.',
 	'invoices.item_removed' => 'Línea de pedido eliminada.',
+    'invoices.items_locked' => 'No se pueden cambiar las líneas de una factura pagada, cancelada o reembolsada.',
 	'invoices.delete_item' => 'Eliminar elemento',
 	'invoices.confirm_delete_item' => '¿Eliminar esta línea de pedido?',
 	'invoices.send' => 'Enviar',

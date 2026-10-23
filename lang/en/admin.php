@@ -1487,6 +1487,7 @@ return [
     'invoices.item_updated' => 'Invoice line item updated.',
     'invoices.item_added' => 'Line item added.',
     'invoices.item_removed' => 'Line item removed.',
+    'invoices.items_locked' => 'Line items cannot be changed on a paid, cancelled or refunded invoice.',
     'invoices.delete_item' => 'Delete item',
     'invoices.confirm_delete_item' => 'Delete this line item?',
     'invoices.send' => 'Send',

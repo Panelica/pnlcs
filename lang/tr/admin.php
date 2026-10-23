@@ -1469,6 +1469,7 @@ return [
     'invoices.item_updated' => 'Fatura kalemi güncellendi.',
     'invoices.item_added' => 'Kalem eklendi.',
     'invoices.item_removed' => 'Kalem kaldırıldı.',
+    'invoices.items_locked' => 'Ödenmiş, iptal edilmiş ya da iade edilmiş faturanın kalemleri değiştirilemez.',
     'invoices.delete_item' => 'Kalemi sil',
     'invoices.confirm_delete_item' => 'Bu kalemi silmek istiyor musunuz?',
     'invoices.send' => 'Gönder',
