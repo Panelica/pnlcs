@@ -84,7 +84,7 @@ abstract class AbstractServerModule implements ServerModuleInterface
         $group = $service->product?->serverGroup;
         $server = $group
             ? $this->pickFromGroup($group, $service)
-            : Server::where('type', $this->getModuleName())->where('active', true)->first();
+            : $this->pickWithoutGroup($service);
 
         // Stick the service to the chosen server so later lifecycle actions
         // (suspend, terminate, usage polling) hit the same machine.
@@ -114,15 +114,7 @@ abstract class AbstractServerModule implements ServerModuleInterface
             return null;
         }
 
-        $counts = Service::whereIn('server_id', $candidates->pluck('id'))
-            ->whereIn('status', ['active', 'suspended'])
-            ->selectRaw('server_id, count(*) as aggregate')
-            ->groupBy('server_id')
-            ->pluck('aggregate', 'server_id');
-
-        $withCapacity = $candidates->filter(
-            fn ($s) => (int) $s->max_accounts === 0 || ($counts[$s->id] ?? 0) < (int) $s->max_accounts
-        );
+        [$withCapacity, $counts] = $this->withFreeCapacity($candidates);
         if ($withCapacity->isEmpty()) {
             Log::warning('Server group has no server with free capacity', [
                 'group_id' => $group->id, 'service_id' => $service->id, 'module' => $this->getModuleName(),
@@ -134,6 +126,57 @@ abstract class AbstractServerModule implements ServerModuleInterface
         return $group->fill_type === 'round_robin'
             ? $withCapacity->sortBy(fn ($s) => [($counts[$s->id] ?? 0), $s->id])->first()
             : $withCapacity->sortBy('id')->first();
+    }
+
+    /**
+     * A product without a server group takes the first server of its type,
+     * with the same rules a group applies: active, not disabled, and below
+     * its max_accounts. It used to take the first active server whatever its
+     * capacity, so a full or disabled server kept receiving accounts.
+     */
+    private function pickWithoutGroup(Service $service): ?Server
+    {
+        $candidates = Server::where('type', $this->getModuleName())
+            ->where('active', true)
+            ->where('disabled', false)
+            ->orderBy('id')
+            ->get();
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        [$withCapacity] = $this->withFreeCapacity($candidates);
+        if ($withCapacity->isEmpty()) {
+            Log::warning('No server with free capacity', [
+                'service_id' => $service->id, 'module' => $this->getModuleName(),
+            ]);
+
+            return null;
+        }
+
+        return $withCapacity->sortBy('id')->first();
+    }
+
+    /**
+     * The candidates below their max_accounts (0 = no limit), and how many
+     * live services each one hosts.
+     *
+     * @param  \Illuminate\Support\Collection<int, Server>  $candidates
+     * @return array{0: \Illuminate\Support\Collection<int, Server>, 1: \Illuminate\Support\Collection<int, int>}
+     */
+    private function withFreeCapacity($candidates): array
+    {
+        $counts = Service::whereIn('server_id', $candidates->pluck('id'))
+            ->whereIn('status', ['active', 'suspended'])
+            ->selectRaw('server_id, count(*) as aggregate')
+            ->groupBy('server_id')
+            ->pluck('aggregate', 'server_id');
+
+        $withCapacity = $candidates->filter(
+            fn ($s) => (int) $s->max_accounts === 0 || ($counts[$s->id] ?? 0) < (int) $s->max_accounts
+        );
+
+        return [$withCapacity, $counts];
     }
 
     protected function buildResult(bool $success, string $message, array $data = []): array
