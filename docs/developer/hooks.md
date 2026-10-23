@@ -71,7 +71,7 @@ $results = run_hook('MyCustomPoint', ['foo' => $bar]);
 | `AfterModuleUnsuspend` | service | unsuspend succeeded |
 | `PreModuleTerminate` | service | before terminate |
 | `AfterModuleTerminate` | service | terminate succeeded |
-| `AfterModulePassword` | service | password change succeeded |
+| `AfterModulePassword` (also `AfterModuleChangePassword`) | service | password change succeeded, VPS root password included |
 | `AfterModuleChangePackage` | service, newProduct | package change succeeded |
 | `ModuleActionFailed` | service, action, error | any module action failed (queued for retry) |
 

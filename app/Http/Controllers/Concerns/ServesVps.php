@@ -50,10 +50,12 @@ trait ServesVps
 
     public function password(Request $request, Service $service): JsonResponse
     {
-        $module = $this->vpsModule($service, true);
+        $this->vpsModule($service, true);
         $request->validate(['password' => ['required', 'confirmed', Password::min(10)->letters()->numbers()]]);
 
-        $result = $module->changePassword($service, (string) $request->input('password'));
+        // Through the provisioning service, as every other password change is,
+        // so the password hooks run for a VPS too.
+        $result = app(\App\Services\ProvisioningService::class)->changePassword($service, (string) $request->input('password'));
         $this->vpsAudit($service, 'VPS root password changed', $result['success']);
 
         return $this->vpsAnswer($result);

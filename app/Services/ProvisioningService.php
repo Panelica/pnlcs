@@ -198,6 +198,8 @@ class ProvisioningService
                 $service->password = $newPassword;
                 $service->save();
                 run_hook('AfterModulePassword', ['service' => $service]);
+                // The WHMCS name for the same point, so WHMCS hooks run unchanged.
+                run_hook('AfterModuleChangePassword', ['service' => $service]);
             }
 
             return $result;
