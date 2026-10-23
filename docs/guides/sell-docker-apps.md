@@ -91,7 +91,7 @@ Use this for "run your own stack" plans where a domain would be meaningless.
 
 ## 3. Build the product
 
-**Setup → Products/Services → New Hosting Product**, then set:
+**Setup → Products/Services → New Product**, then set:
 
 1. **Server Type** → `panelica`
 2. **Panelica Resources** section:

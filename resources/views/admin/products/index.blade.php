@@ -12,9 +12,18 @@
 
 @forelse($groups as $group)
 <div class="card" style="margin-bottom:15px;">
-    <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+    <div class="card-header" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <strong>{{ $group->name }}</strong>
-        <span style="font-size:12px;color:#777;">{{ $group->products->count() }} product{{ $group->products->count() != 1 ? 's' : '' }}@if($group->headline) &mdash; {{ $group->headline }}@endif</span>
+        @if($group->hidden)<span class="badge-suspended">{{ __('admin.products.hidden') }}</span>@endif
+        <span style="font-size:12px;color:#777;margin-left:auto;">{{ trans_choice('admin.products.group_products', $group->products->count(), ['count' => $group->products->count()]) }}@if($group->headline) &mdash; {{ $group->headline }}@endif</span>
+        <a href="{{ route('admin.products.groups.edit', $group) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
+        @if($group->products->isEmpty())
+        {{-- Only an empty group can go: deleting one with products would take them with it. --}}
+        <form method="POST" action="{{ route('admin.products.groups.destroy', $group) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.products.confirm_delete_group')))">
+            @csrf @method('DELETE')
+            <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
+        </form>
+        @endif
     </div>
     @if($group->products->count() > 0)
     <table class="data-table">
@@ -58,6 +67,9 @@
         <strong>{{ __('admin.products.products_services') }}</strong>
         <span style="font-size:12px;color:#777;">{{ $invoiceProducts->count() }} {{ __('admin.products.products_services') }}</span>
     </div>
+    {{-- Not products: ready-made lines for invoices made by hand. Read as
+         products, they were created to sell a service and could not be (#248). --}}
+    <div style="padding:8px 15px;font-size:12px;color:#777;border-bottom:1px solid #eee;">{{ __('admin.products.invoice_items_hint') }}</div>
     @if($invoiceProducts->count() > 0)
     <table class="data-table">
         <thead><tr><th>{{ __('admin.products.product_name') }}</th><th style="text-align:right;">{{ __('admin.invoices.price') }}</th><th>{{ __('admin.products.unit') }}</th><th>{{ __('admin.invoices.tax') }}</th><th style="text-align:right;">{{ __('common.table.actions') }}</th></tr></thead>

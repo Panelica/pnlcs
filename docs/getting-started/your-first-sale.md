@@ -16,11 +16,17 @@ sense.
 **Setup → Products/Services → New Group**
 
 A group is just a category customers browse, e.g. **Shared Hosting**. Give it a
-name and save.
+name and save. **Edit** on the group's row renames it or hides it from the
+store; **Delete** shows on a group with no products in it.
 
 ## Step 2 — Create a product
 
-**Setup → Products/Services → New Hosting Product**
+**Setup → Products/Services → New Product**
+
+Any product is made here, hosting or not: a support plan or a monitoring
+service is a product with **Type → Other** and no server module, priced on the
+billing cycles you sell it on. **Add Invoice Item** is something else: a
+ready-made line for invoices you create by hand.
 
 - **Name**: e.g. "Starter Hosting"
 - **Group**: the group you just made

@@ -69,6 +69,53 @@ class ProductController extends Controller
     }
 
     /**
+     * A group could be created and never touched again: no rename, no way to
+     * take it off the store, no delete (#246). The same form as creating it,
+     * with Hidden.
+     */
+    public function editGroup(ProductGroup $group)
+    {
+        return view('admin.products.create-group', ['group' => $group]);
+    }
+
+    public function updateGroup(Request $request, ProductGroup $group)
+    {
+        $validated = $request->validate(['name' => 'required|string|max:255', 'headline' => 'nullable|string', 'tagline' => 'nullable|string']);
+        // The slug stays: a rename does not move the group's address.
+        $validated['hidden'] = $request->boolean('hidden');
+        $group->update($validated);
+
+        return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_group_updated'));
+    }
+
+    /**
+     * products.group_id cascades on delete in the database, so deleting a
+     * group would take its products with it, deleted ones included, and the
+     * services that name them would be left naming nothing. A group is
+     * deleted only when it holds no product; deleted products are cleared
+     * with it only when no service names them.
+     */
+    public function destroyGroup(ProductGroup $group)
+    {
+        $live = $group->products()->count();
+        if ($live > 0) {
+            return back()->with('error', __('admin.messages.product_group_not_empty', ['count' => $live]));
+        }
+
+        $deleted = Product::onlyTrashed()->where('group_id', $group->id)->get();
+        if ($deleted->isNotEmpty() && Service::whereIn('product_id', $deleted->modelKeys())->exists()) {
+            return back()->with('error', __('admin.messages.product_group_has_history'));
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($group, $deleted) {
+            $deleted->each->forceDelete();
+            $group->delete();
+        });
+
+        return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_group_deleted'));
+    }
+
+    /**
      * The plans a module's server offers, for the product form.
      *
      * Asked of the first active server of that type - the plans are the

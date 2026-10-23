@@ -467,7 +467,7 @@
         <ul class="menu">
             <li><a href="{{ route('admin.products.index') }}" @if($routeName === 'admin.products.index') class="active" @endif>{{ __('admin.nav.products_services') }}</a></li>
             <li><a href="{{ route('admin.products.create') }}" @if($routeName === 'admin.products.create') class="active" @endif>{{ __('admin.sidebar.create_product') }}</a></li>
-            <li><a href="{{ route('admin.products.groups.create') }}" @if($routeName === 'admin.products.groups.create') class="active" @endif>{{ __('admin.sidebar.product_groups') }}</a></li>
+            <li><a href="{{ route('admin.products.groups.create') }}" @if(in_array($routeName, ['admin.products.groups.create', 'admin.products.groups.edit'], true)) class="active" @endif>{{ __('admin.sidebar.product_groups') }}</a></li>
             <li><a href="{{ route('admin.docker-apps.index') }}" @if($routeName === 'admin.docker-apps.index') class="active" @endif>{{ __('admin.nav.docker_apps') }}</a></li>
         </ul>
 
@@ -580,7 +580,24 @@
         <div class="alert alert-info">{{ session('info') }}</div>
     @endif
 
-    @yield('content')
+    @php
+        // A refused form came back with its reasons in $errors, and most admin
+        // pages never print them: the page reloaded as if nothing had happened
+        // (#247, a product edit refused over a Proxmox field read as "the
+        // group cannot be changed"). The reasons a page does not print itself
+        // are listed here; a page that prints them is left as it is.
+        $pageContent = $__env->yieldContent('content');
+        $unshownErrors = isset($errors) && $errors->any()
+            ? collect($errors->all())->reject(fn ($message) => str_contains($pageContent, e($message)))->values()
+            : collect();
+    @endphp
+    @if($unshownErrors->isNotEmpty())
+        <div class="alert alert-danger" role="alert">
+            @foreach($unshownErrors as $message)<div>&bull; {{ $message }}</div>@endforeach
+        </div>
+    @endif
+
+    {!! $pageContent !!}
 </div>
 
 {{-- ═══════════════════════════════════════════════
