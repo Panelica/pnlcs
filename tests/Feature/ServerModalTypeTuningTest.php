@@ -31,6 +31,10 @@ test('the modal knows what each panel type calls its credentials', function () {
         ->and($html)->toContain('data-role="type-hint"')
         // Both forms take part: the add form and the edit form.
         ->and($html)->toContain('data-role="edit-username-group"')
+        // #245: the edit form names the password field as the add form does
+        // (a Panelica server's API Key read "New password" there).
+        ->and($html)->toContain('data-role="edit-password-name"')
+        ->and($html)->toContain("const passName = q('password-name');")
         ->and($html)->toContain("serverTypeTuning(typeSelect, 'edit')");
 });
 

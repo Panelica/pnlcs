@@ -1516,6 +1516,8 @@ return [
     'hosting.containers.not_your_app' => 'Ta aplikacja nie należy do tej usługi.',
     'hosting.containers.notes_title' => 'Warto wiedzieć',
     'hosting.containers.open_app' => 'Otwórz aplikację',
+    'hosting.containers.open_wait_hint' => 'Jeszcze się nie otwiera? Domena wskazana tutaj przed chwilą może potrzebować kilku minut, aby dotrzeć do serwera. Do tego czasu użyj adresu serwera:',
+    'hosting.containers.open_server_hint' => 'To jest własny adres serwera. Aby otworzyć aplikację pod własnym adresem, wskaż tutaj jedną ze swoich domen w sekcji Domena.',
     'hosting.containers.open_panel' => 'Otwórz panel hostingu',
     'hosting.containers.over_plan' => 'Wymaga więcej pamięci, niż oferuje Twój plan',
     'hosting.containers.panel_hint' => 'Terminal, logi i ustawienia zaawansowane każdej aplikacji znajdziesz w panelu hostingu.',

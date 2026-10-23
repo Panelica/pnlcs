@@ -101,6 +101,7 @@ return [
         'client.hosting.containers.domain',
         'client.hosting.containers.group_websites',
         'client.hosting.containers.name',
+        'client.hosting.containers.ports',
         'client.hosting.containers.terminal',
         'client.hosting.containers.title',
         'client.hosting.cron.domain',

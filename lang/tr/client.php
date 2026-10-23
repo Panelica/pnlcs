@@ -1515,6 +1515,8 @@ return [
     'hosting.containers.not_your_app' => 'Bu uygulama bu hizmete ait değil.',
     'hosting.containers.notes_title' => 'Bilmekte fayda var',
     'hosting.containers.open_app' => 'Uygulamayı aç',
+    'hosting.containers.open_wait_hint' => 'Henüz açılmıyor mu? Buraya yeni yönlendirdiğiniz bir alan adının sunucuya ulaşması birkaç dakika sürebilir. O zamana kadar sunucu adresini kullanın:',
+    'hosting.containers.open_server_hint' => 'Bu, sunucunun kendi adresi. Uygulamayı kendi adresinizde açmak için Alan Adı bölümünden alan adlarınızdan birini buraya yönlendirin.',
     'hosting.containers.open_panel' => 'Hosting kontrol panelini aç',
     'hosting.containers.over_plan' => 'Paketinizin verdiğinden fazla bellek gerekiyor',
     'hosting.containers.panel_hint' => 'Her uygulamanın terminali, günlükleri ve gelişmiş ayarları hosting kontrol panelinizde bulunur.',

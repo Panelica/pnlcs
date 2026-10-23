@@ -1516,6 +1516,8 @@ return [
     'hosting.containers.not_your_app' => 'That app does not belong to this service.',
     'hosting.containers.notes_title' => 'Good to know',
     'hosting.containers.open_app' => 'Open app',
+    'hosting.containers.open_wait_hint' => 'Not opening yet? A domain you have just pointed here can take a few minutes to reach the server. Until then, use the server address:',
+    'hosting.containers.open_server_hint' => 'This is the server\'s own address. To open the app on your own address, point one of your domains at it under Domain.',
     'hosting.containers.open_panel' => 'Open the hosting panel',
     'hosting.containers.over_plan' => 'Needs more memory than your plan',
     'hosting.containers.panel_hint' => 'A terminal, logs and advanced settings for each app live in your hosting panel.',

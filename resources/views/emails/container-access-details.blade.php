@@ -7,6 +7,10 @@
 <x-mail::button :url="$accessUrl">
 {{ __('client.hosting.containers.open_app') }}
 </x-mail::button>
+
+@if(! empty($serverUrl) && $serverUrl !== $accessUrl)
+{{ __('client.hosting.containers.open_wait_hint') }} {{ $serverUrl }}
+@endif
 @endif
 
 <x-mail::table>

@@ -174,7 +174,9 @@ const UNTRANSLATED_VALUE_BUDGET = [
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
     // German hosting writes Domain, Domains and Registrar, not Domäne or
     // Standesbeamter. Those 25 labels are the whole of the raise.
-    'de' => 185,
+    // +1 2026-10-23 (#245): German writes "Ports", not "Häfen" (harbours),
+    // for the apps page's ports.
+    'de' => 186,
     'pl' => 102,
     'zh' => 37,
 ];

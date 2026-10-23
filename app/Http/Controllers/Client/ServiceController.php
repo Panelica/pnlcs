@@ -1231,13 +1231,18 @@ class ServiceController extends Controller
             return back()->with('error', __('client.hosting.containers.email_not_found'));
         }
 
+        // "Open app" on the customer's own domain when the app is pointed at
+        // one, as on the page (#245); the server address goes beside it.
+        $domain = $this->linkedDomainName($module, $service, $id);
+
         $client = $service->client;
         try {
             Mail::to($client->email)->send(new \App\Mail\ContainerAccessDetailsMail(
                 (string) ($container['template'] ?: $container['name']),
                 $access->items(),
                 $access->notes(),
-                $access->accessUrl(),
+                $domain !== null ? 'https://'.$domain : $access->accessUrl(),
+                $domain !== null ? $access->accessUrl() : null,
             ));
         } catch (\Throwable $e) {
             // A transport that cannot deliver - sendmail behind a disabled
@@ -1251,6 +1256,22 @@ class ServiceController extends Controller
         }
 
         return back()->with('success', __('client.hosting.containers.email_sent', ['email' => $client->email]));
+    }
+
+    /** The customer's domain an app is served on, if it is pointed at one. */
+    private function linkedDomainName(ServerModuleInterface $module, Service $service, string $containerId): ?string
+    {
+        if (! method_exists($module, 'containerDomainLinks') || ! method_exists($module, 'accountDomains')) {
+            return null;
+        }
+        $domains = $module->accountDomains($service);
+        foreach ($module->containerDomainLinks($service) as $domainId => $link) {
+            if (($link['container_id'] ?? '') === $containerId && isset($domains[$domainId])) {
+                return (string) $domains[$domainId];
+            }
+        }
+
+        return null;
     }
 
     public function destroyContainer(Request $request, Service $service)

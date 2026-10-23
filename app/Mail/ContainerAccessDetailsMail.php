@@ -20,12 +20,17 @@ class ContainerAccessDetailsMail extends Mailable
 
     /**
      * @param  array<string, string>  $items  label => value
+     * @param  ?string  $accessUrl  where "Open app" goes: the customer's domain
+     *                              when the app is pointed at one
+     * @param  ?string  $serverUrl  the server's own address, given beside a
+     *                              domain that may not reach the server yet
      */
     public function __construct(
         public string $appName,
         public array $items,
         public string $notes,
         public ?string $accessUrl,
+        public ?string $serverUrl = null,
     ) {}
 
     public function envelope(): Envelope
@@ -44,6 +49,7 @@ class ContainerAccessDetailsMail extends Mailable
                 'items' => $this->items,
                 'notes' => $this->notes,
                 'accessUrl' => $this->accessUrl,
+                'serverUrl' => $this->serverUrl,
                 'companyName' => config('app.name'),
             ],
         );

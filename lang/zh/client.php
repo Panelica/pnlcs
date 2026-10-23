@@ -1515,6 +1515,8 @@ return [
     'hosting.containers.not_your_app' => '该应用不属于此服务。',
     'hosting.containers.notes_title' => '注意事项',
     'hosting.containers.open_app' => '打开应用',
+    'hosting.containers.open_wait_hint' => '还打不开？刚指向此处的域名可能需要几分钟才能到达服务器。在此之前，请使用服务器地址：',
+    'hosting.containers.open_server_hint' => '这是服务器自身的地址。如需在您自己的地址上打开应用，请在“域名”中将您的某个域名指向此处。',
     'hosting.containers.open_panel' => '打开主机面板',
     'hosting.containers.over_plan' => '所需内存超出您的套餐',
     'hosting.containers.panel_hint' => '每个应用的终端、日志和高级设置都在您的主机面板中。',

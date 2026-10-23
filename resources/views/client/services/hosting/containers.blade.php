@@ -149,6 +149,15 @@
     .ct-go{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;padding:8px 15px;
         border-radius:9px;background:var(--primary);color:#fff;font-size:12.5px;font-weight:700;text-decoration:none}
     .ct-go:hover{filter:brightness(1.07)}
+    /* The button and where it goes, side by side; on a narrow screen the
+       address drops under the button instead of squeezing it. */
+    .ct-launch{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+    .ct-launch .ct-go{align-self:auto}
+    .ct-launch-at{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1 1 220px}
+    .ct-launch-url{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:600;color:var(--text);word-break:break-all}
+    .ct-launch-at .ct-hint{margin:0;max-width:none}
+    .ct-launch-at .ct-hint a{color:var(--primary);text-decoration:none;font-weight:600;word-break:break-all}
+    .ct-launch-at .ct-hint a:hover{text-decoration:underline}
     .ct-acc{font-size:12px}
     .ct-acc summary{cursor:pointer;color:var(--primary);font-weight:700;list-style:none;display:inline-flex;align-items:center;gap:5px}
     .ct-acc summary::-webkit-details-marker{display:none}
@@ -184,10 +193,20 @@
         .ct-acc-r{grid-template-columns:1fr auto}
         .ct-acc-r > span{grid-column:1 / -1;margin-bottom:-2px}
     }
-    .ct-dom{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px}
+    .ct-dom{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px;font-size:11.5px}
     .ct-dom a{color:var(--primary);text-decoration:none;font-weight:600}
     .ct-dom a:hover{text-decoration:underline}
-    .ct-domsel{font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);max-width:150px}
+    .ct-domsel{font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);max-width:min(150px,100%)}
+    /* A long app name (acct1-uptime-kuma) breaks inside its box instead of
+       running under the status badge, and on a phone the status and the
+       buttons take a line of their own under the name. */
+    .ct-name,.ct-img{overflow-wrap:anywhere}
+    @media (max-width:560px){
+        .ct-it-head{flex-wrap:wrap;row-gap:8px}
+        .ct-it-id{flex:1 1 calc(100% - 46px)}
+        .ct-it-state{margin-left:46px}
+        .ct-acts{margin-left:auto}
+    }
     .ct-domgo{font-size:11px;font-weight:700;padding:3px 9px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer}
     .ct-domgo:hover{border-color:var(--primary);color:var(--primary)}
     .ct-domx{background:none;border:0;color:var(--muted);cursor:pointer;font-size:14px;line-height:1;padding:0 2px}
@@ -448,12 +467,33 @@
                  OS container has none, and it is exactly the one that needs the
                  shell button most. --}}
             <div class="ct-it-foot">
-                @if($acc && $acc->accessUrl())
-                {{-- The address is the first thing anyone wants after installing,
-                     so it is a button, not a line inside a disclosure. --}}
-                <a class="ct-go" href="{{ $acc->accessUrl() }}" target="_blank" rel="noopener">
-                    <i class="ri-external-link-line"></i>{{ __('client.hosting.containers.open_app') }}
-                </a>
+                @php
+                    // The address is the first thing anyone wants after installing,
+                    // so it is a button, not a line inside a disclosure. On the
+                    // customer's own domain when the app is pointed at one: the
+                    // server's IP and port is what the panel reports, and opening
+                    // that while a domain serves the app was the wrong address (#245).
+                    $serverUrl = $acc?->accessUrl();
+                    $openUrl = $linkedId ? 'https://'.$domains[$linkedId] : $serverUrl;
+                @endphp
+                @if($openUrl)
+                <div class="ct-launch">
+                    <a class="ct-go" href="{{ $openUrl }}" target="_blank" rel="noopener">
+                        <i class="ri-external-link-line"></i>{{ __('client.hosting.containers.open_app') }}
+                    </a>
+                    <div class="ct-launch-at">
+                        <span class="ct-launch-url">{{ preg_replace('#^https?://#', '', rtrim($openUrl, '/')) }}</span>
+                        @if($linkedId && $serverUrl)
+                            {{-- A domain pointed here a minute ago may not reach the
+                                 server yet; the server address works meanwhile. --}}
+                            <span class="ct-hint">{{ __('client.hosting.containers.open_wait_hint') }}
+                                <a href="{{ $serverUrl }}" target="_blank" rel="noopener">{{ preg_replace('#^https?://#', '', rtrim($serverUrl, '/')) }}</a>
+                            </span>
+                        @elseif(! $linkedId)
+                            <span class="ct-hint">{{ __('client.hosting.containers.open_server_hint') }}</span>
+                        @endif
+                    </div>
+                </div>
                 @endif
                 {{-- A plain OS container runs `sleep infinity` and has no SSH in
                      it, so the only way in is a shell through the panel. Root or

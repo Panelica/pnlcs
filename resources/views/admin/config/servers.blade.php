@@ -183,7 +183,7 @@
                     </div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.port') }}</label><input type="number" id="edit-port" name="port" class="form-control"></div>
                     <div class="form-group" data-role="edit-username-group"><label class="form-label" data-role="edit-username-label">{{ __('common.form.username') }}</label><input type="text" id="edit-username" name="username" class="form-control" data-role="edit-username"></div>
-                    <div class="form-group"><label class="form-label" data-role="edit-password-label">{{ __('common.form.new_password') }}<small style="color:#999;">{{ __('admin.servers.keep_password') }}</small></label><input type="password" name="password" class="form-control" placeholder="{{ __('admin.servers.keep_secret') }}"></div>
+                    <div class="form-group"><label class="form-label" data-role="edit-password-label"><span data-role="edit-password-name">{{ __('common.form.new_password') }}</span> <small style="color:#999;">{{ __('admin.servers.keep_password') }}</small></label><input type="password" name="password" class="form-control" placeholder="{{ __('admin.servers.keep_secret') }}"></div>
                     <div class="form-group" data-role="edit-hash-group"><label class="form-label" data-role="edit-hash-label">{{ __('admin.servers.access_hash') }}</label><textarea name="access_hash" rows="2" class="form-control" placeholder="{{ __('admin.servers.keep_secret') }}"></textarea></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.servers.max_accounts') }}</label><input type="number" id="edit-max-accounts" name="max_accounts" min="0" class="form-control"></div>
                 </div>
@@ -318,9 +318,12 @@ function serverTypeTuning(selectEl, prefix) {
     }
 
     const passLabel = q('password-label');
-    // The edit form's password label carries its own "leave blank" note; only
-    // the add form gets the type-specific wording.
+    // The field is named the same way when adding and when editing (a Panelica
+    // server's API Key was "New password" on the edit form, #245); the edit
+    // form keeps its "leave blank to keep" note beside the name.
     if (passLabel && !prefix) { passLabel.textContent = t.passwordLabel; }
+    const passName = q('password-name');
+    if (passName) { passName.textContent = t.passwordLabel; }
     const pass = q('password');
     if (pass) { pass.placeholder = t.passwordPlaceholder; }
 

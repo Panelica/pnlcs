@@ -481,6 +481,75 @@ it('shows the connection details on the apps page', function () use ($MINE) {
 });
 
 /*
+ * #245: "Open app" opened the address the panel reports (the server's IP and
+ * the app's port) even when the app was pointed at one of the customer's
+ * domains. It opens the domain now; the server address stays beside it for a
+ * domain that does not reach the server yet. Without a domain the page says how
+ * to get one.
+ */
+function openAppSetup(array $container, array $linked): array
+{
+    fakeLinkApi([$container], [['id' => 'dom-own', 'domain_name' => 'own.test']], $linked);
+    [$owner, $s] = ctService(ctServer());
+    App\Models\DockerAppCredential::create([
+        'service_id' => $s->id, 'container_id' => 'c-mine', 'container_name' => 'acct1-wordpress',
+        'slug' => 'wordpress',
+        'payload' => ['access_url' => 'http://10.0.0.7:10000', 'credentials' => ['Admin user' => 'admin']],
+    ]);
+
+    return [$owner, $s];
+}
+
+it('opens an app pointed at a domain on that domain, with the server address beside it', function () use ($MINE) {
+    [$owner, $s] = openAppSetup($MINE, [['domain_id' => 'dom-own', 'container_id' => 'c-mine', 'container_name' => 'acct1-wordpress']]);
+
+    $page = $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk()->getContent();
+
+    expect($page)->toContain('<a class="ct-go" href="https://own.test"')
+        ->and($page)->not->toContain('<a class="ct-go" href="http://10.0.0.7:10000"')
+        ->and($page)->toContain(e(__('client.hosting.containers.open_wait_hint')))
+        ->and($page)->toContain('href="http://10.0.0.7:10000"')
+        ->and($page)->not->toContain(e(__('client.hosting.containers.open_server_hint')));
+});
+
+it('opens an app on no domain at the server address and says how to use a domain', function () use ($MINE) {
+    [$owner, $s] = openAppSetup($MINE, []);
+
+    $page = $this->actingAs($owner)->get(route('client.services.containers', $s))->assertOk()->getContent();
+
+    expect($page)->toContain('<a class="ct-go" href="http://10.0.0.7:10000"')
+        ->and($page)->toContain(e(__('client.hosting.containers.open_server_hint')))
+        ->and($page)->not->toContain(e(__('client.hosting.containers.open_wait_hint')));
+});
+
+it('mails the domain as the address of an app pointed at one, and the server address beside it', function () use ($MINE) {
+    Illuminate\Support\Facades\Mail::fake();
+    [$owner, $s] = openAppSetup($MINE, [['domain_id' => 'dom-own', 'container_id' => 'c-mine', 'container_name' => 'acct1-wordpress']]);
+
+    $this->actingAs($owner)->post(route('client.services.containers.email', $s), ['container_id' => 'c-mine'])
+        ->assertSessionHas('success');
+
+    Illuminate\Support\Facades\Mail::assertSent(App\Mail\ContainerAccessDetailsMail::class,
+        fn ($m) => $m->accessUrl === 'https://own.test' && $m->serverUrl === 'http://10.0.0.7:10000');
+
+    $mail = (new App\Mail\ContainerAccessDetailsMail('wordpress', ['Admin user' => 'admin'], '', 'https://own.test', 'http://10.0.0.7:10000'))->render();
+    expect($mail)->toContain('https://own.test')
+        ->and($mail)->toContain('http://10.0.0.7:10000')
+        ->and($mail)->toContain(e(__('client.hosting.containers.open_wait_hint')));
+});
+
+it('mails the server address of an app on no domain, as before', function () use ($MINE) {
+    Illuminate\Support\Facades\Mail::fake();
+    [$owner, $s] = openAppSetup($MINE, []);
+
+    $this->actingAs($owner)->post(route('client.services.containers.email', $s), ['container_id' => 'c-mine'])
+        ->assertSessionHas('success');
+
+    Illuminate\Support\Facades\Mail::assertSent(App\Mail\ContainerAccessDetailsMail::class,
+        fn ($m) => $m->accessUrl === 'http://10.0.0.7:10000' && $m->serverUrl === null);
+});
+
+/*
  * Reading what the panel already knows about a running container.
  *
  * Everything below was measured against a live panel first: the ports arrive as
