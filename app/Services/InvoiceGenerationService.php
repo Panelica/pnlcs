@@ -7,6 +7,7 @@ use App\Models\BillableItem;
 use App\Models\Client;
 use App\Models\Domain;
 use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\Promotion;
 use App\Models\Service;
 use App\Models\ServiceAddon;
@@ -318,8 +319,11 @@ class InvoiceGenerationService
      * @param  bool  $continuation  A renewal carrying a recurring code the
      *                              customer already claimed, rather than a
      *                              fresh claim of it.
+     * @param  Order|null  $placingOrder  The order this invoice is being made
+     *                                    for, so its own row does not count
+     *                                    against the code's rules.
      */
-    public function applyPromotion(Invoice $invoice, string $promoCode, bool $continuation = false): bool
+    public function applyPromotion(Invoice $invoice, string $promoCode, bool $continuation = false, ?Order $placingOrder = null): bool
     {
         $promo = Promotion::where('code', $promoCode)->first();
 
@@ -346,7 +350,7 @@ class InvoiceGenerationService
             if ($covered !== [] && array_intersect($covered, array_map('intval', $productIds)) === []) {
                 return false;
             }
-        } elseif (! $promo->isValidFor($invoice->client, $productIds)) {
+        } elseif (! $promo->isValidFor($invoice->client, $productIds, $placingOrder?->id)) {
             // The rules that go with the code - one per customer, new customers
             // only, existing customers only, particular products - were checked
             // in the cart and nowhere else. The order endpoint hands a code

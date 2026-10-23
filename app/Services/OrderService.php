@@ -211,8 +211,15 @@ class OrderService
 
             // Apply promotion if provided
             if ($promoCode) {
-                $this->invoiceGenerationService->applyPromotion($invoice, $promoCode);
+                $applied = $this->invoiceGenerationService->applyPromotion($invoice, $promoCode, placingOrder: $order);
                 $invoice = $invoice->fresh();
+
+                // A code that was refused is not on the order: it would count
+                // as used for a once-per-customer code, and renewals read the
+                // order's code for recurring promotions.
+                if (! $applied) {
+                    $order->update(['promo_code' => null]);
+                }
             }
 
             // Link invoice to order

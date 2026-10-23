@@ -21,8 +21,9 @@ class Promotion extends Model
      * per customer, new customers only, existing customers only.
      *
      * @param  array<int, int>  $productIds  what is in the basket
+     * @param  int|null  $placingOrderId  the order being placed with this code, if it already exists
      */
-    public function isValidFor(?Client $client, array $productIds = []): bool
+    public function isValidFor(?Client $client, array $productIds = [], ?int $placingOrderId = null): bool
     {
         if (! $this->isValid()) {
             return false;
@@ -50,7 +51,12 @@ class Promotion extends Model
             return ! $this->existing_client;
         }
 
-        $hasOrdered = Order::where('client_id', $client->id)->exists();
+        // The order being placed is created before its invoice, and the code is
+        // checked on that invoice. Counting it made every first order look like
+        // a returning customer's, and every once-per-customer code look used.
+        $hasOrdered = Order::where('client_id', $client->id)
+            ->when($placingOrderId, fn ($q) => $q->whereKeyNot($placingOrderId))
+            ->exists();
 
         if ($this->new_signups_only && $hasOrdered) {
             return false;
@@ -60,7 +66,7 @@ class Promotion extends Model
             return false;
         }
 
-        if ($this->apply_once && $this->usedBy($client)) {
+        if ($this->apply_once && $this->usedBy($client, $placingOrderId)) {
             return false;
         }
 
@@ -94,9 +100,10 @@ class Promotion extends Model
         return array_values(array_filter(array_map('intval', $ids)));
     }
 
-    private function usedBy(Client $client): bool
+    private function usedBy(Client $client, ?int $placingOrderId = null): bool
     {
         return Order::where('client_id', $client->id)
+            ->when($placingOrderId, fn ($q) => $q->whereKeyNot($placingOrderId))
             ->whereRaw('LOWER(promo_code) = ?', [strtolower((string) $this->code)])
             ->exists();
     }
