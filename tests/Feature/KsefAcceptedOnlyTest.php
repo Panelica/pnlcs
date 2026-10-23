@@ -40,6 +40,18 @@ it('does not mail the customer about an invoice KSeF rejected', function () {
     expect($record->fresh()->ksef_number)->toBeNull();
 });
 
+// What submit() used to hand back for an invoice KSeF had not confirmed: the
+// send reference in the number's place. Only acceptance announces it.
+it('does not mail the customer about an unconfirmed invoice that carries a number', function () {
+    Mail::fake();
+    $record = ksefRecord();
+
+    ksefServiceAnswering(['status' => 'sent', 'accepted' => false, 'ksef_number' => 'REF-20261022-SEND'])->send($record);
+
+    Mail::assertNothingQueued();
+    expect($record->fresh()->accepted_at)->toBeNull();
+});
+
 it('mails the customer once KSeF accepted the invoice', function () {
     Mail::fake();
     $record = ksefRecord();
