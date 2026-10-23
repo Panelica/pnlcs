@@ -2,6 +2,101 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.9.0 — 2026-10-23
+
+A stable release, offered to every installation. It contains everything in
+1.8.0. None of the changes below went out in a beta first. Thank you,
+[@pla0730484848-wq](https://github.com/pla0730484848-wq) (#246 to #248) and
+[@dualarrow](https://github.com/dualarrow) (#245 and the free order report on
+the forum).
+
+### Added
+
+- **Product groups can be edited, hidden and deleted.** A group could only be
+  created (#246). Each group on Setup → Products/Services now has **Edit**
+  (name, headline, tagline, **Hidden**: a hidden group is left out of the
+  store, and its products can still be ordered through a direct link) and,
+  when it holds no product, **Delete**. A group with products is refused,
+  because deleting a group in the database takes its products with it; a
+  group whose deleted products are still named by past services is refused
+  too, so hide it instead.
+- **A gateway that is switched on but missing its keys says so.** Checkout
+  leaves such a gateway out; its card under Setup → Payment Gateways now
+  says **Not offered** and names the fields to fill in.
+
+### Changed
+
+- **A refused form says why on every admin page.** Most admin pages never
+  printed the reasons a form was refused, so a save that did not go through
+  looked as if nothing had happened: a Proxmox product whose save was refused
+  over one of its fields read as "the group cannot be changed" (#247). The
+  admin layout now lists the reasons a page does not print itself.
+- **The product buttons say what they make:** **New Product** (it makes every
+  kind of product, a non-hosting service included, as Type Other with no
+  server module) and **Add Invoice Item**, a ready-made line for invoices you
+  create by hand; the section listing those is **Invoice Items** (#248).
+- **"Open app" opens the app on the customer's domain** when the app is
+  pointed at one, and shows the server address under it for a domain that
+  does not reach the server yet; without a domain it says how to use one.
+  The mailed connection details do the same (#245).
+- **A free order asks for no payment.** A cart of free products at no charge
+  shows no payment step; after the order the customer goes to their services
+  with "There was nothing to pay" (and that it is set up once reviewed, when
+  the product is set up by hand), not to a paid invoice saying "Please
+  complete payment".
+- **The client page's unpaid total** is labelled Unpaid Invoices and is red
+  only when something is owed; at zero it read as an "UNPAID" status.
+
+### Fixed
+
+- **A product set to Free with its prices left as the form starts them** (-1,
+  not sold, on every cycle) could not be ordered: the store said "Contact us"
+  and checkout said no billing cycle was chosen. Such a product is now sold
+  as Free, and the store and order page say Free. Free products with 0 on
+  chosen cycles keep exactly those.
+- **The apps page on a phone:** a long app name ran under its status badge,
+  and the domain picker cut off its button.
+- **The apps page in German and Spanish** read as machine translation:
+  "Offene Schale" and "Als Wurzel" for Open shell and As root, "Häfen" for
+  Ports, "Concha abierta", "Punto aquí." and category names with HTML
+  entities in them. Rewritten.
+- **The server edit form** names the password field by server type, as the
+  add form does (a Panelica server's API Key read "New password").
+
+### Database changes
+
+None.
+
+### For theme and module authors
+
+- `ModuleRegistry::missingGatewaySettings($module, $values)` lists a
+  gateway's required settings that hold no value; `usableGateways()` uses it.
+- `ContainerAccessDetailsMail` takes an optional `serverUrl`.
+- The admin layout prints validation errors the page did not print; an admin
+  view that prints its own is unchanged.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/clients/show.blade.php` (the unpaid total).
+- `resources/views/admin/config/gateways.blade.php` (Not offered and the
+  missing fields).
+- `resources/views/admin/config/servers.blade.php` (the edit form's password
+  label).
+- `resources/views/admin/layouts/app.blade.php` (the reasons a form was
+  refused).
+- `resources/views/admin/products/create-group.blade.php` (also the edit
+  form, with Hidden).
+- `resources/views/admin/products/index.blade.php` (group Edit and Delete,
+  the button names).
+- `resources/views/client/cart/checkout.blade.php` (no payment step for a
+  free order).
+- `resources/views/client/cart/configure.blade.php` (Free on a free product).
+- `resources/views/client/cart/store.blade.php` (Free on a free product).
+- `resources/views/client/services/hosting/containers.blade.php` (Open app on
+  the domain, the phone layout).
+- `resources/views/emails/container-access-details.blade.php` (the domain and
+  the server address).
+
 ## 1.8.0 — 2026-10-23
 
 A stable release, offered to every installation. It contains everything in
