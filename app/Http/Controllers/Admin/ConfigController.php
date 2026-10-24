@@ -460,8 +460,20 @@ class ConfigController extends Controller
 
     public function setDefaultCurrency(Currency $currency)
     {
-        Currency::query()->update(['is_default' => false]);
-        $currency->update(['is_default' => true]);
+        // Rates are stored against the default currency, which is 1. Only the
+        // flag moved before, so every rate stayed relative to the old default
+        // until the next rate update, and invoices and conversions in between
+        // used them. They are restated against the new one.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($currency) {
+            $factor = (float) $currency->rate;
+            if (! $currency->is_default && $factor > 0 && $factor !== 1.0) {
+                foreach (Currency::where('id', '!=', $currency->id)->get() as $other) {
+                    $other->update(['rate' => round((float) $other->rate / $factor, 5)]);
+                }
+            }
+            Currency::query()->update(['is_default' => false]);
+            $currency->update(['is_default' => true, 'rate' => 1]);
+        });
 
         return back()->with('success', __('messages.success.currency_set_default'));
     }
