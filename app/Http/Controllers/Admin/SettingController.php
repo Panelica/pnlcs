@@ -205,6 +205,13 @@ class SettingController extends Controller
             }
         }
 
+        // No mail type means the mailer configured in .env; choosing that
+        // option removes a stored choice rather than storing an empty one.
+        if (array_key_exists('MailType', $data) && blank($data['MailType'])) {
+            Setting::where('setting', 'MailType')->delete();
+            unset($data['MailType']);
+        }
+
         foreach ($data as $key => $value) {
             Setting::set($key, $value, 'general');
         }

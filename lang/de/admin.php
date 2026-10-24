@@ -2699,6 +2699,7 @@ return [
         'my_account_title' => 'Mein Konto',
         'language_unavailable' => 'Wählen Sie eine aktive Sprache.',
         'language_active_only' => 'Hier stehen nur die Sprachen, die unter :menu aktiv sind.',
+        'mail_type_environment' => 'Server-Standard (.env)',
         'php_mail' => 'PHP-Mail',
         'profile_information' => 'Profilinformationen',
         'request_failed' => 'Die Anfrage ist fehlgeschlagen',
