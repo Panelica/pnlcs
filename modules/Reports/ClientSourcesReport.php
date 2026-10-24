@@ -14,9 +14,12 @@ class ClientSourcesReport extends AbstractReport
 
     public function generate(Request $request): array
     {
+        // The source PNLCS records is the referring affiliate. This grouped by
+        // clients.notes, staff's private notes, so every note became a
+        // "source" and its text was printed in the report.
         $rows = DB::table("clients")->whereNull("deleted_at")
-            ->selectRaw("COALESCE(NULLIF(TRIM(notes), ''), 'Direct/Unknown') as source, COUNT(*) as clients")
-            ->groupBy("source")->orderBy("clients", "desc")->limit(20)->get();
+            ->selectRaw("CASE WHEN affiliate_id IS NULL THEN 'Direct/Unknown' ELSE 'Affiliate referral' END as source, COUNT(*) as clients")
+            ->groupBy("source")->orderBy("clients", "desc")->get();
         return ["columns" => ["Source", "Clients"], "rows" => $rows->toArray()];
     }
     public function hasDateFilter(): bool { return false; }
