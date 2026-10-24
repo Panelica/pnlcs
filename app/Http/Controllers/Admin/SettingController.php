@@ -76,7 +76,7 @@ class SettingController extends Controller
      * the screen that owns it looks it up by group.
      */
     private const GENERAL_KEYS = [
-        'ActiveClientAreaTemplate', 'Address', 'AdminDir', 'CompanyCity', 'CompanyName',
+        'Address', 'CompanyCity', 'CompanyName',
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
@@ -87,7 +87,7 @@ class SettingController extends Controller
         'TwilioAccountSid', 'TwilioAuthToken', 'TwilioVerifyEnabled', 'TwilioVerifyServiceSid',
         'ProformaEnabled', 'ProformaNumberFormat', 'HidePaidProformas',
         'LateFeeAmount', 'LateFeeMinDays', 'LateFeeType',
-        'MailEnabled', 'MailType', 'MaintenanceMode', 'OrderFormDisplayedOn', 'PhoneNumber',
+        'MailEnabled', 'MailType', 'MaintenanceMode', 'PhoneNumber',
         'SMTPHost', 'SMTPPassword', 'SMTPPort', 'SMTPSecurity', 'SMTPUsername',
         'PrivacyUrl', 'SystemEmailAddress', 'TaxID', 'Timezone', 'TOSUrl',
         // Saved from the languages screen, which posts to this same endpoint.

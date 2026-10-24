@@ -470,13 +470,8 @@
     <div class="card" id="settings-system_settings" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.system_settings') }}</strong></div>
         <div class="card-body">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.admin_login_prefix') }}</label><input type="text" name="AdminDir" value="{{ $settings['AdminDir'] ?? 'admin' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.client_area_template') }}</label><input type="text" name="ActiveClientAreaTemplate" value="{{ $settings['ActiveClientAreaTemplate'] ?? 'default' }}" class="form-control"></div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:8px;margin-top:5px;">
+            <div style="display:flex;flex-direction:column;gap:8px;">
                 <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="hidden" name="MaintenanceMode" value="0"><input type="checkbox" name="MaintenanceMode" value="1" {{ !empty($settings['MaintenanceMode']) ? 'checked' : '' }}> {{ __('admin.settings.maintenance_mode_label') }}</label>
-                <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="OrderFormDisplayedOn" value="orderforms" {{ ($settings['OrderFormDisplayedOn'] ?? '') === 'orderforms' ? 'checked' : '' }}> {{ __('admin.settings.enable_order_form') }}</label>
             </div>
         </div>
     </div>

@@ -73,3 +73,29 @@ test('the invoice reads only keys an operator can actually set', function () {
 
     expect(array_values(array_diff($found[1], $writable)))->toBe([]);
 });
+
+test('every setting the general settings screen saves is read by something besides that screen', function () {
+    $keys = (new ReflectionClassConstant(\App\Http\Controllers\Admin\SettingController::class, 'GENERAL_KEYS'))->getValue();
+
+    $source = '';
+    foreach ([app_path(), resource_path('views'), base_path('routes'), base_path('modules'), base_path('config')] as $dir) {
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
+        foreach ($it as $f) {
+            $path = $f->getPathname();
+            if (! $f->isFile() || ! str_ends_with($path, '.php')
+                || str_ends_with($path, 'Admin/SettingController.php')
+                || str_ends_with($path, 'admin/settings/general.blade.php')) {
+                continue;
+            }
+            $source .= file_get_contents($path);
+        }
+    }
+
+    // AdminDir, ActiveClientAreaTemplate and OrderFormDisplayedOn were saved
+    // from the form and read by nothing: three fields that changed nothing.
+    // DefaultNameserver1..5 are read as 'DefaultNameserver'.$i.
+    $read = fn (string $name) => str_contains($source, "'".$name."'") || str_contains($source, '"'.$name.'"');
+    $unread = array_values(array_filter($keys, fn ($key) => ! $read($key) && ! (preg_match('/\d$/', $key) && $read(rtrim($key, '0123456789')))));
+
+    expect($unread)->toBe([]);
+});
