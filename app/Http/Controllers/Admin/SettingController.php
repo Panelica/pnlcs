@@ -139,6 +139,32 @@ class SettingController extends Controller
 
     public function updateGeneral(Request $request)
     {
+        // Two forms post here, so every rule is "sometimes": a field a form
+        // does not carry is not checked. These values used to be stored as
+        // typed - a word in the SMTP port, a negative grace period, a time zone
+        // PHP does not know - and failed later, somewhere else.
+        $request->validate([
+            'Email' => 'sometimes|nullable|email|max:255',
+            'SystemEmailAddress' => 'sometimes|nullable|email|max:255',
+            'AbuseEmail' => 'sometimes|nullable|email|max:255',
+            'DpoEmail' => 'sometimes|nullable|email|max:255',
+            'Timezone' => 'sometimes|nullable|timezone:all',
+            'MailType' => 'sometimes|nullable|in:php_mail,smtp',
+            'SMTPPort' => 'sometimes|nullable|integer|between:1,65535',
+            'SMTPSecurity' => 'sometimes|nullable|in:tls,ssl,none',
+            'InvoiceDueDays' => 'sometimes|nullable|integer|min:0',
+            'AutoSuspensionDays' => 'sometimes|nullable|integer|min:0',
+            'AutoTerminationDays' => 'sometimes|nullable|integer|min:1',
+            'LateFeeType' => 'sometimes|nullable|in:none,flat,percent',
+            'LateFeeAmount' => 'sometimes|nullable|numeric|min:0',
+            'LateFeeMinDays' => 'sometimes|nullable|integer|min:0',
+            'AutoChargeDaysBefore' => 'sometimes|nullable|integer|min:0',
+            'AutoChargeMaxAttempts' => 'sometimes|nullable|integer|min:1',
+            'AutoChargeRetryDays' => 'sometimes|nullable|integer|min:'.\App\Support\AutoCharge::MINIMUM_RETRY_DAYS,
+            'DomainSuggestionCount' => 'sometimes|nullable|integer|between:1,12',
+            'RegistrarBalanceThreshold' => 'sometimes|nullable|numeric|min:0',
+        ]);
+
         $data = $request->only(self::GENERAL_KEYS);
 
         // An unticked checkbox is absent from the request, not false - so each

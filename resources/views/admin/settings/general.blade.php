@@ -7,6 +7,9 @@
 </div>
 <form method="POST" action="{{ route('admin.settings.general.update') }}">
     @csrf
+    @if($errors->any())
+        <div class="alert alert-danger"><ul style="margin:0;padding-left:18px;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+    @endif
 
     <div class="card" id="settings-company_information" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.company_information') }}</strong></div>
