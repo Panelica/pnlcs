@@ -60,6 +60,7 @@ class NotificationService
             // nowhere.
             'domain.registration_failed',
             'domain.renew_failed',
+            'domain.transfer_failed',
             // A paid domain whose extension has no registrar module: the Manual
             // registrar marked it active and nobody contacted a registry.
             'domain.manual_registration_required',

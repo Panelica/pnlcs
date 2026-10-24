@@ -34,6 +34,22 @@ test('every dispatched event can be subscribed to', function () {
     expect(NotificationService::eventTypes())->toContain(...$dispatched);
 });
 
+test('every event the code dispatches can be subscribed to', function () {
+    // domain.transfer_failed was dispatched by OrderService and missing from
+    // the list, so no rule could listen for it and the alert went nowhere.
+    $dispatched = [];
+    foreach ([app_path(), base_path('modules')] as $dir) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir)) as $f) {
+            if ($f->isFile() && str_ends_with($f->getFilename(), '.php')) {
+                preg_match_all("/dispatch\\(\\s*'([a-z]+\\.[a-z_]+)'/", (string) file_get_contents($f->getPathname()), $found);
+                $dispatched = array_merge($dispatched, $found[1]);
+            }
+        }
+    }
+
+    expect(array_values(array_diff(array_unique($dispatched), NotificationService::eventTypes())))->toBe([]);
+});
+
 test('the screen offers them', function () {
     $this->actingAs(notificationsAdmin(), 'admin')
         ->get(route('admin.config.notifications'))
