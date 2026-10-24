@@ -37,7 +37,11 @@ class PaymentMethodController extends Controller
         // it, and the customer cannot tell the difference from the outside.
         $cardStorageOffered = $autoChargeOffered && $this->vaultingGateway() !== null;
 
-        return view('client.payment-methods.index', compact('methods', 'autoChargeOffered', 'autoCharge', 'cardStorageOffered'));
+        // Staff signed in as the customer can see the cards but not add one or
+        // answer for the customer about automatic payment.
+        $staffSession = \App\Support\Impersonation::active();
+
+        return view('client.payment-methods.index', compact('methods', 'autoChargeOffered', 'autoCharge', 'cardStorageOffered', 'staffSession'));
     }
 
     /**
@@ -69,6 +73,10 @@ class PaymentMethodController extends Controller
         $client = $this->currentClient();
 
         abort_if($client === null, 403);
+
+        if (\App\Support\Impersonation::active()) {
+            return back()->with('error', __('client.payment_methods.staff_cannot_consent'));
+        }
 
         $client->update(['auto_charge' => $request->boolean('auto_charge')]);
 
@@ -156,6 +164,10 @@ class PaymentMethodController extends Controller
     public function createCard()
     {
         abort_unless(AutoCharge::enabled(), 404);
+
+        if (\App\Support\Impersonation::active()) {
+            return redirect()->route('client.payment-methods.index')->with('error', __('client.payment_methods.staff_cannot_consent'));
+        }
 
         $gateway = $this->vaultingGateway();
 
@@ -253,6 +265,10 @@ class PaymentMethodController extends Controller
     public function storeCard(Request $request)
     {
         abort_unless(AutoCharge::enabled(), 404);
+
+        if (\App\Support\Impersonation::active()) {
+            return redirect()->route('client.payment-methods.index')->with('error', __('client.payment_methods.staff_cannot_consent'));
+        }
 
         $gateway = $this->vaultingGateway();
 

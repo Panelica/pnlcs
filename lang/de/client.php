@@ -1124,6 +1124,7 @@ return [
         'auto_charge_off_hint' => 'Ihre Karte wird nicht automatisch belastet. Sie bezahlen jede Rechnung selbst.',
         'auto_charge_turn_on' => 'Automatische Zahlung aktivieren',
         'auto_charge_turn_off' => 'Automatische Zahlung deaktivieren',
+        'staff_cannot_consent' => 'Sie sind als dieser Kunde angemeldet. Karten und automatische Zahlung entscheidet der Kunde selbst: Er hinterlegt eine Karte und stimmt der automatischen Zahlung selbst zu. Eine Rechnung können Sie für ihn bezahlen.',
         'auto_charge_updated' => 'Ihre Einstellung für automatische Zahlungen wurde gespeichert.',
         'add_card_button' => 'Karte hinzufügen',
         'add_card_title' => 'Karte hinterlegen',

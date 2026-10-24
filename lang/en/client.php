@@ -1125,6 +1125,7 @@ return [
         'auto_charge_off_hint' => 'We will not charge your card. You pay each invoice yourself.',
         'auto_charge_turn_on' => 'Turn on automatic payment',
         'auto_charge_turn_off' => 'Turn off automatic payment',
+        'staff_cannot_consent' => 'You are signed in as this customer. Cards and automatic payment are the customer\'s own decision: they add a card and answer for automatic payment themselves. You can still pay an invoice for them.',
         'auto_charge_updated' => 'Your automatic payment setting has been saved.',
         'add_card_button' => 'Add a Card',
         'add_card_title' => 'Store a Card',

@@ -10,7 +10,7 @@
     {{-- Offered only where a card could actually be stored AND charged: the
          shop collects by card and has a gateway that can do it. Anywhere else
          the route itself does not exist, so a button would lead to a 404. --}}
-    @if($cardStorageOffered)
+    @if($cardStorageOffered && ! ($staffSession ?? false))
     <div>
         <a href="{{ route('client.payment-methods.add-card') }}" class="btn btn-primary btn-sm">{{ __('client.payment_methods.add_card_button') }}</a>
     </div>
@@ -28,6 +28,7 @@
             <p class="text-muted text-sm" style="margin:0;max-width:520px">
                 {{ $autoCharge ? __('client.payment_methods.auto_charge_on_hint') : __('client.payment_methods.auto_charge_off_hint') }}
             </p>
+            @unless($staffSession ?? false)
             <form method="POST" action="{{ route('client.payment-methods.auto-charge') }}">
                 @csrf
                 <input type="hidden" name="auto_charge" value="{{ $autoCharge ? '0' : '1' }}">
@@ -35,9 +36,14 @@
                     {{ $autoCharge ? __('client.payment_methods.auto_charge_turn_off') : __('client.payment_methods.auto_charge_turn_on') }}
                 </button>
             </form>
+            @endunless
         </div>
     </div>
 </div>
+@endif
+
+@if($staffSession ?? false)
+<div class="pn-alert pn-alert-info mb-24" role="status">{{ __('client.payment_methods.staff_cannot_consent') }}</div>
 @endif
 
 <div class="pn-card mb-24">

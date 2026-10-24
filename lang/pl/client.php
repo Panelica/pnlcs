@@ -1125,6 +1125,7 @@ return [
         'auto_charge_off_hint' => 'Nie będziemy obciążać Twojej karty. Każdą fakturę opłacasz samodzielnie.',
         'auto_charge_turn_on' => 'Włącz płatność automatyczną',
         'auto_charge_turn_off' => 'Wyłącz płatność automatyczną',
+        'staff_cannot_consent' => 'Jesteś zalogowany jako ten klient. Karty i płatność automatyczna to decyzja samego klienta: to on dodaje kartę i zgadza się na płatność automatyczną. Możesz opłacić za niego fakturę.',
         'auto_charge_updated' => 'Ustawienie płatności automatycznej zostało zapisane.',
         'add_card_button' => 'Dodaj kartę',
         'add_card_title' => 'Zapisz kartę',
