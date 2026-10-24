@@ -187,6 +187,20 @@
             <button type="submit" class="btn btn-primary">{{ __('client.invoices.pay_with_credit', ['amount' => money_fmt($usableCredit)]) }}</button>
         </form>
         @endif
+        @if(isset($storedCards) && $storedCards->isNotEmpty())
+        {{-- A card already stored: one click, charged the way automatic payment
+             charges it (a bank that wants the cardholder is answered above). --}}
+        <div class="mb-16 pn-stored-cards">
+            <p class="text-muted text-sm mb-8">{{ __('client.invoices.pay_with_stored_card') }}</p>
+            @foreach($storedCards as $card)
+            <form method="POST" action="{{ route('client.invoices.pay-with-card', $invoice) }}" style="display:inline-block;margin:0 8px 8px 0">
+                @csrf
+                <input type="hidden" name="payment_method_id" value="{{ $card->id }}">
+                <button type="submit" class="btn {{ $loop->first ? 'btn-primary' : 'btn-outline' }}">{{ __('client.invoices.pay_with_card_button', ['card' => trim(($card->card_brand ? ucfirst($card->card_brand).' ' : '').'•••• '.$card->last_four)]) }}</button>
+            </form>
+            @endforeach
+        </div>
+        @endif
         @if(!empty($gateways))
         @if(has_billing_conversion($invoice))
         {{-- The invoice reads in the customer's currency; most gateways take

@@ -256,6 +256,8 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::post('invoices/{invoice}/payment-notification', [InvoiceController::class, 'submitPaymentNotification'])->name('invoices.payment-notification');
         Route::post('invoices/{invoice}/pay-with-credit', [InvoiceController::class, 'payWithCredit'])->name('invoices.pay-with-credit');
+        // A card the customer already stored, chosen on the invoice (AutoChargeService::payNowWith).
+        Route::post('invoices/{invoice}/pay-with-card', [InvoiceController::class, 'payWithStoredCard'])->middleware('throttle:6,1')->name('invoices.pay-with-card');
 
         // Quotes
         Route::get('quotes', [QuoteController::class, 'index'])->name('quotes.index');

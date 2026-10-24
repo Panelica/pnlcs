@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Models\GatewaySettings;
 use App\Models\Invoice;
+use App\Models\PaymentMethod;
 use App\Models\PaymentNotification;
+use App\Services\AutoChargeService;
 use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 use App\Services\Module\ModuleRegistry;
@@ -71,6 +73,61 @@ class InvoiceController extends Controller
 
         return redirect()->route('client.invoices.show', $invoice)
             ->with('success', __('client.invoices.credit_applied'));
+    }
+
+    /**
+     * Pay the invoice now with a card the customer stored, chosen on the page.
+     *
+     * The card is charged the way a scheduled automatic payment is
+     * (AutoChargeService::payNowWith): one attempt at a time, recorded once,
+     * and a bank that asks for the cardholder is answered on this page.
+     */
+    public function payWithStoredCard(Request $request, Invoice $invoice)
+    {
+        abort_if($invoice->client_id !== $this->getClientId(), 403);
+
+        $method = PaymentMethod::where('client_id', $invoice->client_id)
+            ->whereKey((int) $request->input('payment_method_id'))
+            ->first();
+        abort_if($method === null, 404);
+
+        $outcome = app(AutoChargeService::class)->payNowWith($invoice, $method);
+
+        [$kind, $key] = match ($outcome) {
+            'charged' => ['success', 'client.invoices.card_payment_taken'],
+            'action_required' => ['info', 'client.invoices.card_payment_needs_you'],
+            'failed' => ['error', 'client.invoices.card_payment_refused'],
+            'nothing_owed', 'invoice_no_longer_collectable' => ['info', 'client.invoices.card_payment_nothing_owed'],
+            'taken_not_recorded', 'outcome_unknown', 'needs_review', 'held' => ['info', 'client.invoices.card_payment_pending'],
+            default => ['error', 'client.invoices.card_payment_unavailable'],
+        };
+
+        return redirect()->route('client.invoices.show', $invoice)->with($kind, __($key));
+    }
+
+    /**
+     * The cards this invoice can be paid with now: the customer's active
+     * stored cards with a gateway that can charge them, while the shop
+     * collects by card and the invoice is open. Not Add Funds or a payment
+     * for several invoices, which turn into credit.
+     */
+    private function storedCardsFor(Invoice $invoice)
+    {
+        $open = in_array(strtolower((string) $invoice->status), ['unpaid', 'overdue', 'partially_paid'], true);
+        if (! $open || ! \App\Support\AutoCharge::enabled()
+            || $invoice->type === \App\Services\MassPaymentService::TYPE
+            || $invoice->items->whereIn('type', ['AddFunds', \App\Services\MassPaymentService::ITEM_TYPE])->isNotEmpty()) {
+            return collect();
+        }
+
+        $gateways = array_keys(app(ModuleRegistry::class)->tokenisedGateways());
+
+        return PaymentMethod::where('client_id', $invoice->client_id)
+            ->where('status', PaymentMethod::STATUS_ACTIVE)
+            ->whereIn('gateway_name', $gateways)
+            ->orderByDesc('is_default')
+            ->orderBy('id')
+            ->get();
     }
 
     /** The account balance this invoice can take: none for a settled or Add Funds invoice. */
@@ -172,7 +229,10 @@ class InvoiceController extends Controller
         // an Add Funds invoice: that would pay the top-up with itself).
         $usableCredit = $this->creditUsableOn($invoice);
 
-        return view('client.invoices.show', compact('invoice', 'gateways', 'gatewayForms', 'gatewayLabels', 'pendingNotification', 'balance', 'chargeAttempt', 'stripePublishableKey', 'usableCredit'));
+        // Cards already stored, each with a "pay with this card" button.
+        $storedCards = $this->storedCardsFor($invoice);
+
+        return view('client.invoices.show', compact('invoice', 'gateways', 'gatewayForms', 'gatewayLabels', 'pendingNotification', 'balance', 'chargeAttempt', 'stripePublishableKey', 'usableCredit', 'storedCards'));
     }
 
     /**

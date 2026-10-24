@@ -21,6 +21,7 @@ Es posible que el acceso a la API no funcione. Mientras no se pueda leer el sald
     [
         'processing' => 'Procesando...',
         'save_card' => 'Guardar esta tarjeta y pagar con ella automáticamente mis próximas facturas. Puedo desactivarlo o eliminar la tarjeta en la página de métodos de pago.',
+        'save_card_new' => 'Guardar también esta tarjeta. Mi tarjeta guardada se mantiene; en la página de métodos de pago elijo cuál paga mis facturas.',
     ],
     'iyzico' =>
     [

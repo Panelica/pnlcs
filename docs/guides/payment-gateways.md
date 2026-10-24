@@ -113,6 +113,13 @@ charge it for renewals. Settings are under **Setup → General Settings →
 Automatic Payment**. Card numbers never pass through PNLCS: the customer
 enters them on the gateway's own form.
 
+While automatic payment is on, an open invoice also lists the customer's
+stored cards, each with a **Pay with** button. The card is charged now, the
+way a renewal is: one attempt at a time and recorded once, and if the bank
+asks the cardholder to confirm, the invoice page offers that step. Add Funds
+invoices and payments for several invoices are paid with the form, not a
+stored card.
+
 ## Refunds
 
 A paid invoice can be refunded, fully or in part, from its page in the admin

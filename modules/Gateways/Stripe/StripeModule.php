@@ -588,7 +588,14 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
         // charged later, and an agreement is given, not assumed.
         $saveHtml = "";
         if (\App\Support\AutoCharge::enabled() && !\App\Support\Impersonation::active()) {
-            $saveLabel = htmlspecialchars(__("messages.stripe.save_card"), ENT_QUOTES, "UTF-8");
+            // A customer who already keeps a card is told this one is kept
+            // beside it, not instead of it; the stored one is offered above
+            // the form (client.invoices.pay-with-card).
+            $hasCard = PaymentMethod::where("client_id", $invoice->client_id)
+                ->where("gateway_name", "stripe")
+                ->where("status", PaymentMethod::STATUS_ACTIVE)
+                ->exists();
+            $saveLabel = htmlspecialchars(__($hasCard ? "messages.stripe.save_card_new" : "messages.stripe.save_card"), ENT_QUOTES, "UTF-8");
             $saveHtml  = <<<SAVE
     <div class="form-check mt-3">
         <input class="form-check-input" type="checkbox" id="stripe-save-card" value="1">
