@@ -53,7 +53,9 @@ class ProjectController extends Controller
             'start_date'  => 'nullable|date',
         ]);
 
-        $project = Project::create($validated);
+        // projects.admin_id is the staff member the project belongs to (the
+        // Project Management addon lists it as "Assigned"); nothing set it.
+        $project = Project::create($validated + ['admin_id' => auth('admin')->id()]);
 
         return redirect()->route('admin.projects.show', $project)
             ->with('success', __('messages.success.project_created'));
