@@ -18,14 +18,14 @@ class I18nConvertCommand extends Command
         $this->basePath = base_path();
 
         if ($this->option('seed-only')) {
-            $this->call('db:seed', ['--class' => 'Database\\Seeders\\TranslationSeeder', '--force' => true]);
+            $this->seedTranslations();
             return 0;
         }
 
         if (!$this->option('blades-only') && !$this->option('controllers-only') && !$this->option('layouts-only') && !$this->option('emails-only')) {
             // Run everything
             $this->info('=== Phase 1: Seeding translations ===');
-            $this->call('db:seed', ['--class' => 'Database\\Seeders\\TranslationSeeder', '--force' => true]);
+            $this->seedTranslations();
 
             $this->info('=== Phase 2: Converting layouts ===');
             $this->convertLayouts();
@@ -980,5 +980,20 @@ class I18nConvertCommand extends Command
             $this->filesModified++;
             $this->info("  Modified: {$relativePath}");
         }
+    }
+
+    /**
+     * --dry-run kept every file as it was but still wrote the translations
+     * table; a dry run now changes nothing.
+     */
+    private function seedTranslations(): void
+    {
+        if ($this->option('dry-run')) {
+            $this->line('Dry run: TranslationSeeder would run here.');
+
+            return;
+        }
+
+        $this->call('db:seed', ['--class' => 'Database\\Seeders\\TranslationSeeder', '--force' => true]);
     }
 }
