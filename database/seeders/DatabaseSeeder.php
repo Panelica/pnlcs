@@ -78,7 +78,9 @@ class DatabaseSeeder extends Seeder
         // Default settings
         $settings = [
             ['setting' => 'CompanyName', 'value' => 'PNLCS', 'group' => 'general'],
-            ['setting' => 'Domain', 'value' => 'hosting.panelica.com', 'group' => 'general'],
+            // Empty: console mail links then follow APP_URL, which the installer
+            // writes. A seeded address sent every fresh install's cron mail to it.
+            ['setting' => 'Domain', 'value' => '', 'group' => 'general'],
             ['setting' => 'Logo', 'value' => '', 'group' => 'general'],
             ['setting' => 'DefaultLanguage', 'value' => 'en', 'group' => 'general'],
             ['setting' => 'DefaultPaymentMethod', 'value' => 'banktransfer', 'group' => 'general'],
