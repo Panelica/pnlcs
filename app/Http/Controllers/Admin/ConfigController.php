@@ -920,7 +920,7 @@ class ConfigController extends Controller
     public function ticketDepartments()
     {
         return view('admin.config.ticket-departments', [
-            'departments' => TicketDepartment::orderBy('sort_order')->get(),
+            'departments' => TicketDepartment::withCount('tickets')->orderBy('sort_order')->get(),
         ]);
     }
 
