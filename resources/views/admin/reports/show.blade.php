@@ -32,6 +32,28 @@
 </div>
 @endif
 
+@if(in_array($periodFilter ?? null, ['year', 'month'], true))
+{{-- Annual Income and Daily Performance read a year or a month; with only a
+     date range on the page they could be changed through the address alone. --}}
+<div class="card" style="margin-bottom:16px;">
+    <div class="card-body" style="padding:12px 16px;">
+        <form method="GET" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <label style="font-size:13px;font-weight:500;" for="report-year">{{ __('admin.reports.year') }}</label>
+            <input type="number" id="report-year" name="year" value="{{ (int) $year }}" min="2000" max="{{ now()->year + 1 }}" class="form-input" style="width:auto;">
+            @if($periodFilter === 'month')
+            <label style="font-size:13px;font-weight:500;" for="report-month">{{ __('admin.reports.month') }}</label>
+            <select id="report-month" name="month" class="form-input" style="width:auto;">
+                @foreach(range(1, 12) as $m)
+                <option value="{{ $m }}" @selected((int) $month === $m)>{{ \Carbon\Carbon::create(2000, $m, 1)->translatedFormat('F') }}</option>
+                @endforeach
+            </select>
+            @endif
+            <button type="submit" class="btn btn-sm btn-primary">{{ __('admin.reports.generate') }}</button>
+        </form>
+    </div>
+</div>
+@endif
+
 <div class="card">
     <div class="card-body" style="padding:0;overflow-x:auto;">
         @if(count($rows) > 0)

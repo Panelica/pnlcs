@@ -46,6 +46,7 @@ class ReportController extends Controller
             'rows' => $data['rows'] ?? [],
             'totals' => $data['totals'] ?? null,
             'hasDateFilter' => $report->hasDateFilter(),
+            'periodFilter' => method_exists($report, 'periodFilter') ? $report->periodFilter() : null,
             'canExport' => $report->canExport(),
             'from' => $request->input('from', now()->startOfMonth()->toDateString()),
             'to' => $request->input('to', now()->toDateString()),

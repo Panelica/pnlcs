@@ -24,4 +24,5 @@ class AnnualIncomeReport extends AbstractReport
         return ["columns" => ["#", "Month", "Income", "Fees", "Refunds", "Net"], "rows" => $rows->toArray(), "totals" => $totals];
     }
     public function hasDateFilter(): bool { return false; }
+    public function periodFilter(): ?string { return 'year'; }
 }

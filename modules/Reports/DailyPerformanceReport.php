@@ -29,4 +29,5 @@ class DailyPerformanceReport extends AbstractReport
         return ["columns" => ["Day", "Orders", "New Invoices", "Paid Invoices", "Tickets"], "rows" => $rows];
     }
     public function hasDateFilter(): bool { return false; }
+    public function periodFilter(): ?string { return 'month'; }
 }
