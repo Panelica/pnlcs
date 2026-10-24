@@ -2,6 +2,167 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.10.0 — 2026-10-24
+
+A stable release, offered to every installation. It contains everything in
+1.9.0. None of the changes below went out in a beta first. Thank you,
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#249 to #273) and
+[@pla0730484848-wq](https://github.com/pla0730484848-wq) (#274, #275).
+
+**Check your Domain setting after updating.** New installs were seeded with
+`hosting.panelica.com` as Setup → General Settings → **Domain**, and that is
+the address the scheduler's mail links to (invoice reminders, suspension
+notices, renewal invoices). New installs now leave it empty, so those links
+follow the address given to the installer (#252). If yours still says
+`hosting.panelica.com` and that is not your shop, correct or clear it.
+Nothing is changed for you.
+
+**Integrations using the API:** `openticket` and `updateticket` now refuse
+the priority `critical` (422). No screen and no escalation rule knew it, and
+a critical ticket fell to Low on its next save from the ticket page. Send
+`high` instead (#257).
+
+### Added
+
+- **Pay an invoice with a stored card.** While automatic payment is on, an
+  open invoice lists the customer's stored cards, each with a **Pay with Visa
+  •••• 4242** button above the gateway forms. The card is charged at once,
+  the way automatic payment charges it: one attempt at a time, recorded once,
+  and a bank that asks the cardholder to confirm is answered on the invoice
+  page. A customer who switched automatic payment off can still pay this way,
+  as they are paying now, not agreeing to be charged later. Add Funds invoices
+  and payments for several invoices are paid with the form. The Stripe form's
+  "keep this card" box says a new card is kept beside the one already kept
+  (#272).
+- **A product can keep its customers on it.** Setup → Products/Services, a
+  product's **Upgrade packages** card has **Customers can move to another
+  package**, ticked by default. Unticked, the Upgrade / Downgrade page offers
+  no other package, a change asked from the client area or through the API's
+  `upgradeproduct` is refused, and the service page leaves out Upgrade /
+  Downgrade unless the product has configurable options to raise. Staff can
+  still change a service's product on its admin page, and the packages ticked
+  in the list are kept for when moving is allowed again (#275).
+
+### Changed
+
+- **The Upgrade packages list is a box per package** across the card, under
+  each product group, scrolling when it is long. It was a narrow multi-select
+  that cut names off and needed Ctrl/Cmd to choose several (#274).
+- **General Settings checks what it saves:** a word in the SMTP port, a
+  negative grace period or late fee, a time zone PHP does not know, an e-mail
+  field that is not an address, or a mail type, SMTP security or late fee
+  type the code does not handle is refused with the reason at the top of the
+  form, and nothing from that save is stored (#253).
+- **General Settings → Mail Type has Server default (.env)**, selected while
+  no mail type is stored: mail then goes through the mailer in `.env`. Choosing
+  it hands a stored choice back to `.env` (#250).
+- **Three General Settings fields are gone** because nothing read them:
+  Admin Login URL Prefix (the admin area is always `/admin`), Client Area
+  Template (the client area follows the active theme) and Enable Online Order
+  Form (the store was open whatever it said). Stored values are left as they
+  are (#251).
+- **Currencies:** the edit dialog's Set as Default box, which saving ignored,
+  is gone (use **Make default** in the list) (#261), and so is the Name
+  column, which repeated the prefix (#262).
+- **The Client Sources report** counts clients referred by an affiliate and
+  the rest; it grouped them by staff's private notes (#264).
+- **A knowledge base article** is always given a category; the form no
+  longer offers Uncategorized, which could never be saved (#258).
+- **Annual Income and Daily Performance** have a year field (and a month
+  for Daily Performance); their period could be changed only through the
+  address (#266).
+
+### Fixed
+
+- **Saving General Settings changed the shop's default language** to the
+  first one in the list: the form did not see the language the languages
+  screen stores. It is selected now, and choosing another one there changes
+  it the way the languages screen does (#249).
+- **Saving General Settings for any reason moved mail from `.env` to PHP
+  Mail**, so an install sending through SMTP set in `.env` stopped sending
+  (#250).
+- **Making another currency the default** moved only the flag: the new
+  default kept its old rate and every other rate stayed against the old one
+  until the next rate update. Rates are now restated against the new default,
+  and the TCMB bulletin details a restated lira rate no longer comes from are
+  cleared (#260).
+- **Tickets closed through the API** (`updateticket`, `mergeticket`) run the
+  TicketClosed / TicketClose hooks, as tickets closed on screen do (#254).
+- **Changing a VPS root password** runs the password hook, and the hook also
+  runs under the name AfterModuleChangePassword (#255).
+- **Ticket Departments** shows each department's ticket count; it showed 0
+  (#256).
+- **A notification rule can listen for a failed domain transfer**
+  (`domain.transfer_failed`); the event was sent and nothing could subscribe
+  to it (#259).
+- **Reports:** Income by Product credited domain, addon and upgrade lines to
+  an unrelated product whose service id matched (#263); Aging Invoices left
+  out part-paid invoices and now shows what is still owed (#265).
+- **A project created in the admin area** records who created it, which the
+  Project Management addon lists as Assigned (#267).
+- **`pnlcs:i18n-convert --dry-run`** no longer writes the translations table
+  (#268).
+- **`.env.example`** drops `MAIL_ENCRYPTION`, which nothing reads, and says
+  what `MAIL_SCHEME` takes (#269). `CONTRIBUTING.md` lists every shipped
+  module (#270), and the README points to the PNLCS Community (#273).
+
+### Security
+
+- **Staff signed in as a customer** (**Login as Client**) can no longer
+  store a card, tick "keep this card", switch automatic payment on or off, or
+  pay with the customer's stored card. Each of these is the cardholder's own
+  consent, and it was recorded under the customer's name. Staff can still see
+  the cards and pay an invoice with the gateway form; a stored card is charged
+  on staff's initiative with **Charge card now** on the invoice in the admin
+  area, which keeps to the customer's automatic-payment choice (#271).
+- **The Client Sources report printed staff's private notes about clients**
+  to anyone who can open reports (#264).
+
+### Database changes
+
+- New column `products.allow_upgrades` (boolean, default true): migration
+  `2026_10_24_000001_add_allow_upgrades_to_products`. Every existing product
+  allows moving, as before (#275).
+- New installs seed the `Domain` setting empty (#252).
+- Choosing Server default (.env) deletes the `MailType` setting (#250).
+- Making another currency the default rewrites the other currencies' rates
+  and empties `ExchangeRateSource`, `ExchangeRateKind`, `ExchangeRateDate` and
+  `ExchangeRateBulletin` (#260).
+- `AdminDir`, `ActiveClientAreaTemplate` and `OrderFormDisplayedOn` are no
+  longer written; stored values stay (#251).
+
+### For theme and module authors
+
+- `App\Support\Impersonation::active()` says whether staff are signed in as
+  the customer (#271).
+- `AutoChargeService::payNowWith(Invoice, PaymentMethod)` charges a stored
+  card the customer picked; route `client.invoices.pay-with-card` (POST)
+  (#272).
+- `UpgradeService::canMoveTo()` is false for every package when the
+  product's `allow_upgrades` is off (#275).
+- `AbstractReport::periodFilter()` returns `'year'`, `'month'` or `null`; it
+  is not on `ReportModuleInterface`, and the report page asks for it only
+  when a report has it (#266).
+- Hooks: `AfterModuleChangePassword` runs beside `AfterModulePassword`, and
+  both run for a VPS root password (#255); `TicketClosed` / `TicketClose` run
+  for tickets closed through the API (#254).
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/currencies.blade.php` (no Set as Default
+  box, no Name column).
+- `resources/views/admin/config/knowledge-base.blade.php` (no
+  Uncategorized).
+- `resources/views/admin/products/edit.blade.php` (Upgrade packages).
+- `resources/views/admin/reports/show.blade.php` (year and month fields).
+- `resources/views/admin/settings/general.blade.php` (errors, Mail Type,
+  System Settings).
+- `resources/views/client/invoices/show.blade.php` (Pay with a stored card).
+- `resources/views/client/payment-methods/index.blade.php` (staff signed in
+  as the customer).
+- `resources/views/client/services/show.blade.php` (Upgrade / Downgrade only
+  when something can be offered).
+
 ## 1.9.0 — 2026-10-23
 
 A stable release, offered to every installation. It contains everything in
