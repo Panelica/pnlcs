@@ -69,7 +69,9 @@ class UpgradeService
      * Within the module, the operator may name the packages a product can
      * move to (Admin > Products > Upgrade packages). When they have, only
      * those; when they have not, any package of the same module, so an
-     * install without a list keeps offering upgrades.
+     * install without a list keeps offering upgrades. A product whose
+     * customers may not move at all (allow_upgrades off) moves nowhere, the
+     * list kept for when it is switched back on.
      */
     public function canMoveTo(Service $service, Product $newProduct): bool
     {
@@ -77,6 +79,10 @@ class UpgradeService
         $current = $service->product;
 
         if (! $current || strtolower((string) $current->server_type) !== strtolower((string) $newProduct->server_type)) {
+            return false;
+        }
+
+        if ($current->allow_upgrades === false) {
             return false;
         }
 

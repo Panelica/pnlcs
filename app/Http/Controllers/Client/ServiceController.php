@@ -117,7 +117,14 @@ class ServiceController extends Controller
             && \App\Models\ModuleQueue::where('service_id', $service->id)->where('action', 'create')
                 ->whereIn('status', ['pending', 'failed'])->exists();
 
-        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers', 'modulePanel', 'showServerDetails', 'setupDelayed'));
+        // Upgrade/Downgrade is offered unless the product keeps its customers
+        // on it (#275) and has no configurable option to raise instead; the
+        // page would have nothing to offer.
+        $upgradeOffered = ! $service->product
+            || $service->product->allow_upgrades !== false
+            || app(\App\Services\ConfigOptionService::class)->groupsFor($service->product)->isNotEmpty();
+
+        return view('client.services.show', compact('service', 'availableAddons', 'hostingFeatures', 'vpsFeatures', 'reinstallChoices', 'canRenewEarly', 'cycleOptions', 'downloads', 'orderAnswers', 'modulePanel', 'showServerDetails', 'setupDelayed', 'upgradeOffered'));
     }
 
     /**

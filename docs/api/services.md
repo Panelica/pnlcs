@@ -602,7 +602,7 @@ Move a service to another product, billing the difference.
 
 | Status | When |
 |---|---|
-| 422 | The change is not allowed. |
+| 422 | The change is not allowed: the product keeps its customers on it, does not offer the new package, or the new package uses another module. |
 
 !!! note
     The same upgrade the client area offers: the difference is billed, and the server is changed once it is paid.

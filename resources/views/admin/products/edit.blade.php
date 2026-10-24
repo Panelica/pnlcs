@@ -99,19 +99,32 @@
         </div>
     </div>
 
-    {{-- Which packages this one can move to. Empty: any package of the same module. --}}
+    {{-- Whether customers on this package may move to another, and to which.
+         None ticked: any package of the same module. Moving switched off: none,
+         and the ticks are kept for when it is switched back on. --}}
     <div class="card" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.products.upgrade_paths') }}</strong></div>
         <div class="card-body">
             <input type="hidden" name="upgrade_paths_section" value="1">
+            <div class="form-group" style="margin-bottom:12px;">
+                <input type="hidden" name="allow_upgrades" value="0">
+                <label style="font-weight:400;display:flex;gap:6px;align-items:center;margin:0;"><input type="checkbox" name="allow_upgrades" value="1" id="allow-upgrades" @checked(old('allow_upgrades', $product->allow_upgrades ?? true))> {{ __('admin.products.allow_upgrades') }}</label>
+                <small style="display:block;color:#777;margin-top:4px;">{{ __('admin.products.allow_upgrades_hint') }}</small>
+            </div>
             @if(($upgradeCandidates ?? collect())->isEmpty())
             <div style="font-size:12px;color:#777;">{{ __('admin.products.upgrade_paths_none') }}</div>
             @else
-            <select name="upgrade_paths[]" multiple size="{{ min(8, max(3, $upgradeCandidates->count())) }}" class="form-control" style="max-width:520px;">
-                @foreach($upgradeCandidates as $candidate)
-                <option value="{{ $candidate->id }}" @selected(in_array($candidate->id, $selectedUpgrades ?? [], true))>{{ $candidate->name }}@if($candidate->retired) ({{ __('admin.products.retired') }})@endif</option>
+            @php $ticked = old('upgrade_paths_section') ? array_map('intval', (array) old('upgrade_paths', [])) : ($selectedUpgrades ?? []); @endphp
+            <div id="upgrade-paths" style="max-height:320px;overflow-y:auto;border:1px solid #eee;border-radius:4px;background:#f9f9f9;padding:8px 12px;">
+                @foreach($upgradeCandidates->groupBy('group_id') as $candidates)
+                @if($candidates->first()->group?->name)
+                <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:{{ $loop->first ? '2px' : '10px' }} 0 4px;">{{ $candidates->first()->group->name }}</div>
+                @endif
+                @foreach($candidates as $candidate)
+                <label style="font-weight:400;display:flex;gap:8px;align-items:flex-start;margin:0;padding:3px 0;overflow-wrap:anywhere;"><input type="checkbox" name="upgrade_paths[]" value="{{ $candidate->id }}" style="margin-top:3px;flex-shrink:0;" @checked(in_array((int) $candidate->id, $ticked, true))> <span>{{ $candidate->name }}@if($candidate->hidden) ({{ __('admin.products.hidden') }})@endif @if($candidate->retired) ({{ __('admin.products.retired') }})@endif</span></label>
                 @endforeach
-            </select>
+                @endforeach
+            </div>
             <div style="font-size:12px;color:#777;margin-top:6px;">{{ __('admin.products.upgrade_paths_hint') }}</div>
             @endif
         </div>

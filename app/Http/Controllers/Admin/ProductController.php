@@ -396,6 +396,7 @@ class ProductController extends Controller
             // the only moves UpgradeService::canMoveTo() allows anyway.
             'upgradeCandidates' => Product::where('id', '!=', $product->id)
                 ->whereRaw('LOWER(COALESCE(server_type, \'\')) = ?', [strtolower((string) $product->server_type)])
+                ->with('group:id,name')
                 ->orderBy('group_id')->orderBy('name')->get(['id', 'name', 'group_id', 'hidden', 'retired']),
             'selectedUpgrades' => $product->upgradeProducts()->pluck('products.id')->map(fn ($id) => (int) $id)->all(),
             'proxmoxServers' => Server::where('type', 'proxmox')->orderByDesc('active')->orderBy('name')->get(['id', 'name', 'active']),
@@ -467,6 +468,13 @@ class ProductController extends Controller
         // the product's (possibly just changed) module are kept: a path to
         // another module could never be taken.
         if ($request->boolean('upgrade_paths_section')) {
+            // Whether customers may move at all (the form carries a hidden 0
+            // before the box); the list below is kept either way, for when
+            // moving is allowed again.
+            if ($request->has('allow_upgrades')) {
+                $product->update(['allow_upgrades' => $request->boolean('allow_upgrades')]);
+            }
+
             $module = strtolower((string) $product->fresh()->server_type);
             $ids = Product::whereIn('id', (array) $request->input('upgrade_paths', []))
                 ->where('id', '!=', $product->id)

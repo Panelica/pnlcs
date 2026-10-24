@@ -7809,7 +7809,7 @@
                         }
                     },
                     "422": {
-                        "description": "The change is not allowed.",
+                        "description": "The change is not allowed: the product keeps its customers on it, does not offer the new package, or the new package uses another module.",
                         "content": {
                             "application/json": {
                                 "schema": {
