@@ -184,3 +184,29 @@ test('a customer who keeps a card is told a new one is kept beside it', function
     pwcCard($client, '4242', default: true);
     expect(app(StripeModule::class)->getPaymentForm($invoice))->toContain(e(__('messages.stripe.save_card_new')));
 });
+
+/*
+ * Staff signed in as the customer (Impersonation) are not offered the stored
+ * cards. A customer paying with a card they picked is not asked about
+ * automatic payment, so from such a session staff could have charged the card
+ * of a customer who had switched automatic payment off, recorded as the
+ * customer's own payment. Charge now in the admin area charges a stored card
+ * on staff's initiative and keeps to that choice.
+ */
+test('staff signed in as the customer are offered no stored card and cannot charge one', function () {
+    $calls = pwcGateway();
+    [$user, $client, $invoice] = pwcCustomer(['auto_charge' => false]);
+    $card = pwcCard($client, '4242', default: true);
+    $staff = fn () => $this->actingAs($user)->withSession(['impersonating_admin_id' => 1, 'impersonating_admin_name' => 'Staff']);
+
+    $staff()->get(route('client.invoices.show', $invoice))->assertOk()
+        ->assertDontSee(route('client.invoices.pay-with-card', $invoice), false);
+
+    $staff()->post(route('client.invoices.pay-with-card', $invoice), ['payment_method_id' => $card->id])
+        ->assertRedirect(route('client.invoices.show', $invoice))
+        ->assertSessionHas('error', __('client.invoices.card_payment_staff'));
+
+    expect($calls->count())->toBe(0)
+        ->and(Attempt::where('invoice_id', $invoice->id)->exists())->toBeFalse()
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Unpaid->value);
+});

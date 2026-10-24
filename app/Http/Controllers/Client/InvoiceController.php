@@ -86,6 +86,14 @@ class InvoiceController extends Controller
     {
         abort_if($invoice->client_id !== $this->getClientId(), 403);
 
+        // Paying with a card picked here is not asked about automatic payment,
+        // so staff signed in as the customer could charge the card of one who
+        // switched it off, in the customer's name. Charge now in the admin
+        // area is staff's way, and it keeps to that choice.
+        if (\App\Support\Impersonation::active()) {
+            return redirect()->route('client.invoices.show', $invoice)->with('error', __('client.invoices.card_payment_staff'));
+        }
+
         $method = PaymentMethod::where('client_id', $invoice->client_id)
             ->whereKey((int) $request->input('payment_method_id'))
             ->first();
@@ -114,7 +122,7 @@ class InvoiceController extends Controller
     private function storedCardsFor(Invoice $invoice)
     {
         $open = in_array(strtolower((string) $invoice->status), ['unpaid', 'overdue', 'partially_paid'], true);
-        if (! $open || ! \App\Support\AutoCharge::enabled()
+        if (! $open || ! \App\Support\AutoCharge::enabled() || \App\Support\Impersonation::active()
             || $invoice->type === \App\Services\MassPaymentService::TYPE
             || $invoice->items->whereIn('type', ['AddFunds', \App\Services\MassPaymentService::ITEM_TYPE])->isNotEmpty()) {
             return collect();

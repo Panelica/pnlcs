@@ -669,6 +669,7 @@ return [
         'card_payment_nothing_owed' => 'No queda nada por pagar en esta factura.',
         'card_payment_pending' => 'Estamos comprobando el pago con su banco. No vuelva a pagar; el resultado aparecerá pronto en esta página.',
         'card_payment_unavailable' => 'Esta tarjeta no se puede usar ahora para esta factura. Pague con el formulario de abajo.',
+        'card_payment_staff' => 'Ha iniciado sesión como este cliente. Aquí solo el propio cliente puede usar una tarjeta guardada. Para cargarla usted, use Cargar tarjeta ahora en la factura del área de administración, que respeta la decisión del cliente sobre el pago automático.',
         'pay_with_credit' => 'Use mi crédito de cuenta (:amount)',
         'credit_applied' => 'Su crédito de cuenta se aplicó a esta factura.',
         'pn_amount_hint' => 'Introduzca la cantidad que transfirió, en la moneda que pagó. Esto corresponde a :amount en la factura.',

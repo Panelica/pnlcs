@@ -650,6 +650,7 @@ return [
         'card_payment_nothing_owed' => 'Bu faturada ödenecek tutar kalmadı.',
         'card_payment_pending' => 'Ödemeyi bankanızla kontrol ediyoruz. Lütfen yeniden ödemeyin; sonuç kısa süre içinde bu sayfada görünür.',
         'card_payment_unavailable' => 'Bu kart şu an bu fatura için kullanılamıyor. Lütfen aşağıdaki formla ödeyin.',
+        'card_payment_staff' => 'Bu müşteri olarak giriş yaptınız. Kayıtlı kart burada yalnız müşterinin kendisi tarafından kullanılır. Kartı siz çekecekseniz yönetici panelinde faturadaki Kartı şimdi çek düğmesini kullanın; o, müşterinin otomatik ödeme tercihine uyar.',
         'pay_with_credit' => 'Hesap bakiyemi kullan (:amount)',
         'credit_applied' => 'Hesap bakiyeniz bu faturaya uygulandı.',
         'pn_amount_hint' => 'Havale ettiğiniz tutarı ödediğiniz para biriminde girin. Faturadaki karşılığı :amount.',

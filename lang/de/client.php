@@ -650,6 +650,7 @@ return [
         'card_payment_nothing_owed' => 'Auf dieser Rechnung ist nichts mehr offen.',
         'card_payment_pending' => 'Wir prüfen die Zahlung bei Ihrer Bank. Bitte zahlen Sie nicht erneut; das Ergebnis erscheint in Kürze auf dieser Seite.',
         'card_payment_unavailable' => 'Diese Karte kann für diese Rechnung gerade nicht verwendet werden. Bitte zahlen Sie mit dem Formular unten.',
+        'card_payment_staff' => 'Sie sind als dieser Kunde angemeldet. Eine hinterlegte Karte verwendet hier nur der Kunde selbst. Um sie selbst zu belasten, nutzen Sie im Verwaltungsbereich bei der Rechnung Karte jetzt belasten; dabei gilt die Entscheidung des Kunden zur automatischen Zahlung.',
         'pay_with_credit' => 'Mein Guthaben verwenden (:amount)',
         'credit_applied' => 'Ihr Guthaben wurde auf diese Rechnung angerechnet.',
         'pn_amount_hint' => 'Geben Sie den überwiesenen Betrag in der verwendeten Währung ein. Dies entspricht :amount auf der Rechnung.',

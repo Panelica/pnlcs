@@ -651,6 +651,7 @@ return [
         'card_payment_nothing_owed' => 'There is nothing left to pay on this invoice.',
         'card_payment_pending' => 'We are checking the payment with your bank. Please do not pay again; this page will show the result shortly.',
         'card_payment_unavailable' => 'This card cannot be used for this invoice right now. Please pay with the form below.',
+        'card_payment_staff' => 'You are signed in as this customer. A stored card is used here by the customer only. To charge it yourself, use Charge card now on the invoice in the admin area, which keeps to the customer\'s choice about automatic payment.',
         'pay_with_credit' => 'Use my account credit (:amount)',
         'credit_applied' => 'Your account credit was applied to this invoice.',
         'pn_amount_hint' => 'Enter the amount you transferred, in the currency you paid. This corresponds to :amount on the invoice.',

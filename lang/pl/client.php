@@ -651,6 +651,7 @@ return [
         'card_payment_nothing_owed' => 'Na tej fakturze nie ma już nic do zapłaty.',
         'card_payment_pending' => 'Sprawdzamy płatność w Twoim banku. Nie płać ponownie; wynik pojawi się wkrótce na tej stronie.',
         'card_payment_unavailable' => 'Tej karty nie można teraz użyć dla tej faktury. Zapłać za pomocą formularza poniżej.',
+        'card_payment_staff' => 'Jesteś zalogowany jako ten klient. Zapisanej karty używa tu wyłącznie sam klient. Aby obciążyć ją samodzielnie, użyj przy fakturze w panelu administracyjnym przycisku Obciąż kartę teraz, który respektuje decyzję klienta dotyczącą płatności automatycznej.',
         'pay_with_credit' => 'Użyj środków z konta (:amount)',
         'credit_applied' => 'Środki z konta zostały zaliczone na poczet tej faktury.',
         'pn_amount_hint' => 'Podaj przelaną kwotę w walucie, w której zapłacono. Odpowiada to :amount na fakturze.',

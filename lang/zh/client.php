@@ -650,6 +650,7 @@ return [
         'card_payment_nothing_owed' => '此账单已无待付金额。',
         'card_payment_pending' => '我们正在与您的银行核实付款。请勿重复付款；结果稍后会显示在此页面。',
         'card_payment_unavailable' => '此银行卡目前无法用于此账单。请使用下方表单付款。',
+        'card_payment_staff' => '您正以该客户身份登录。此处的已存银行卡只能由客户本人使用。如需由您扣款，请在管理后台的账单页面使用“立即扣款”，该操作会遵循客户对自动付款的选择。',
         'pay_with_credit' => '使用我的账户余额（:amount）',
         'credit_applied' => '您的账户余额已用于支付此发票。',
         'pn_amount_hint' => '请以您支付的货币输入转账金额。对应发票上的 :amount。',
