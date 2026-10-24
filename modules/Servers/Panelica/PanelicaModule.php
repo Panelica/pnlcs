@@ -272,9 +272,11 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
      * its id. Basic columns go via POST /v1/plans (create) or PATCH (update);
      * advanced columns always via PATCH /v1/plans/{id}.
      */
-    private function ensureManagedPlan(Server $server, Service $service, array $spec): ?string
+    private function ensureManagedPlan(Server $server, Service $service, array $spec, ?int $productId = null): ?string
     {
-        $name = 'pnlcs-p'.($service->product_id ?? 'x');
+        // The product whose plan this is: the service's own when it is opened,
+        // the one it moves onto when its package changes.
+        $name = 'pnlcs-p'.($productId ?? $service->product_id ?? 'x');
         $planId = $this->findPlanByName($server, $name);
 
         if (! $planId) {
@@ -836,6 +838,20 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         // picked in the package field - the usual way now - could not be
         // moved onto at all.
         $newPlanId = self::planFrom((array) $config, ['package_name', 'panelica_plan_id']);
+
+        // A managed product opens its accounts on a plan built from its own
+        // resources (create()), so an account moving onto it goes onto that plan
+        // too. Reading only the package field left such a move on the old plan,
+        // while billing went over to the new product (UpgradeService::apply).
+        $spec = $this->managedPlanSpec((array) $config);
+        if ($spec) {
+            $productId = isset($newPackage['id']) ? (int) $newPackage['id'] : 0;
+            $newPlanId = $productId > 0 ? $this->ensureManagedPlan($server, $service, $spec, $productId) : null;
+
+            if (! $newPlanId) {
+                return $this->buildResult(false, 'Managed plan of the new product could not be prepared on the panel.');
+            }
+        }
 
         if (! $newPlanId) {
             return $this->buildResult(false, 'New product does not have a Panelica plan configured.');
@@ -2576,13 +2592,10 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $acc = $this->get($server, "/v1/accounts/{$accountId}");
         $planId = $acc->successful() ? ($acc->json('data.plan_id') ?? null) : null;
         if ($planId) {
-            $plans = $this->get($server, '/v1/plans');
-            if ($plans->successful()) {
-                foreach (($plans->json('data') ?? []) as $p) {
-                    if ((string) ($p['id'] ?? '') === (string) $planId) {
-                        $row = $p;
-                        break;
-                    }
+            foreach ($this->panelPlans($server) as $p) {
+                if ((string) ($p['id'] ?? '') === (string) $planId) {
+                    $row = $p;
+                    break;
                 }
             }
         }
@@ -2596,6 +2609,197 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $row = $this->planRow($service);
 
         return isset($row[$field]) ? (int) $row[$field] : null;
+    }
+
+    /** @var array<int, list<array<string, mixed>>> the panel's plans, by server, once per request */
+    private array $panelPlans = [];
+
+    /** @var array<string, array<string, mixed>> what an account uses, by account, read as needed */
+    private array $fitUsage = [];
+
+    /** How old the panel's memory sample may be before it says nothing about now. */
+    private const MEMORY_SAMPLE_MAX_AGE_MINUTES = 30;
+
+    /** @return list<array<string, mixed>> */
+    private function panelPlans(Server $server): array
+    {
+        if (! array_key_exists($server->id, $this->panelPlans)) {
+            $resp = $this->get($server, '/v1/plans');
+            $this->panelPlans[$server->id] = $resp->successful() ? array_values((array) ($resp->json('data') ?? [])) : [];
+        }
+
+        return $this->panelPlans[$server->id];
+    }
+
+    /**
+     * The limits a product puts an account on: its own resources for a managed
+     * product (the plan create() and changePackage() put it on), otherwise the
+     * panel plan it names. Null when that cannot be told.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function limitsOfProduct(Server $server, array $config): ?array
+    {
+        $spec = $this->managedPlanSpec($config);
+        if ($spec) {
+            return $spec['basic'] + $spec['advanced'];
+        }
+
+        $planId = self::planFrom($config, ['package_name', 'panelica_plan_id']);
+        if (! $planId) {
+            return null;
+        }
+        foreach ($this->panelPlans($server) as $plan) {
+            if ((string) ($plan['id'] ?? '') === (string) $planId) {
+                return (array) $plan;
+            }
+        }
+
+        return null;
+    }
+
+    /** One figure of what the account uses, asked of the panel once; null when it does not answer. */
+    private function fitUsage(Service $service, Server $server, string $accountId, string $what): mixed
+    {
+        $usage = &$this->fitUsage[$accountId];
+        $usage ??= [];
+        if (array_key_exists($what, $usage)) {
+            return $usage[$what];
+        }
+
+        $value = null;
+        switch ($what) {
+            case 'apps':
+                // Every container of the account, stopped ones too: what the
+                // panel counts against the plan, and what the Apps page shows.
+                // A panel that does not answer gives none, which stops nobody.
+                $value = count($this->containers($service));
+                break;
+            case 'stats':
+                $resp = $this->get($server, "/v1/accounts/{$accountId}/stats");
+                $value = $resp->successful() ? (array) ($resp->json('data') ?? []) : null;
+                break;
+            case 'subdomains':
+                $value = [];
+                foreach ($this->subdomains($service) as $sub) {
+                    $value[$sub['domain']] = ($value[$sub['domain']] ?? 0) + 1;
+                }
+                break;
+            case 'disk':
+                $resp = $this->get($server, "/v1/accounts/{$accountId}/disk-usage");
+                $value = $resp->successful() && isset($resp->json('data')['used_mb']) ? (int) $resp->json('data.used_mb') : null;
+                break;
+            case 'memory':
+                $resp = $this->get($server, "/v1/accounts/{$accountId}/resource-usage");
+                $data = $resp->successful() ? (array) ($resp->json('data') ?? []) : [];
+                $at = isset($data['recorded_at']) ? strtotime((string) $data['recorded_at']) : false;
+                // An idle account is not sampled again, so an old figure says
+                // nothing about what its apps use now.
+                if (! empty($data['available']) && $at !== false && $at >= time() - self::MEMORY_SAMPLE_MAX_AGE_MINUTES * 60) {
+                    $value = (int) ($data['memory_usage_mb'] ?? 0);
+                }
+                break;
+        }
+
+        return $usage[$what] = $value;
+    }
+
+    /**
+     * What the account has now that a move onto this product would not hold (#276).
+     *
+     * The panel applies a plan's limits when something is created, not to what
+     * already exists: a plan change goes through with three apps on a two-app
+     * plan, and the account keeps all three, on the smaller plan's CPU and
+     * memory. A customer moving themselves is told what to remove first.
+     *
+     * Counted the way the panel counts when something is created: -1 is no
+     * limit, and an account is over when it holds more than the limit (apps: 0
+     * means the package has none; subdomains are limited per domain; disk is
+     * limited when the quota is above 0). Only limits smaller than the
+     * account's plan has now are held against it. Memory is a warning, not a refusal:
+     * it changes by the minute. Anything the panel does not answer is not
+     * checked, so a panel that cannot tell stops nobody.
+     *
+     * @return array{problems: list<string>, warnings: list<string>}
+     */
+    public function packageChangeProblems(Service $service, \App\Models\Product $newProduct): array
+    {
+        $out = ['problems' => [], 'warnings' => []];
+        // The account first: getServer() picks and records a server for a
+        // service without one, which a question like this must not do.
+        $accountId = $this->linkedAccountId($service);
+        $server = $accountId ? $this->getServer($service) : null;
+        if (! $server || ! $accountId) {
+            return $out;
+        }
+
+        $raw = $newProduct->config_options;
+        $config = is_string($raw) ? (json_decode($raw, true) ?: []) : (array) ($raw ?? []);
+        $limits = $this->limitsOfProduct($server, $config);
+        if ($limits === null) {
+            return $out;
+        }
+        $limit = fn (string $key) => isset($limits[$key]) && is_numeric($limits[$key]) ? (int) $limits[$key] : null;
+        $over = fn (string $key, int $used, int $max) => __('panelica.fit_'.$key, ['used' => $used, 'limit' => $max, 'remove' => $used - $max]);
+
+        // Only a package that gives less than the account's plan does now is
+        // held against what the account has: one no smaller leaves it no worse
+        // off, so an account already over its plan (moved by staff) can still
+        // move up. The plan the panel has the account on; unknown, every limit
+        // of the new package counts.
+        $now = $this->planRow($service);
+        $tighter = function (string $key, int $target) use ($now) {
+            if (! isset($now[$key]) || ! is_numeric($now[$key])) {
+                return true;
+            }
+            $current = (int) $now[$key];
+            if ($key === 'disk_quota_mb' && $current <= 0) {
+                $current = -1; // no quota
+            }
+
+            return $current === -1 ? $target !== -1 : $target < $current;
+        };
+
+        $maxApps = $limit('max_containers');
+        if ($maxApps !== null && $maxApps !== -1 && $tighter('max_containers', $maxApps) && ($apps = $this->fitUsage($service, $server, $accountId, 'apps')) !== null) {
+            if ($maxApps === 0 && $apps > 0) {
+                $out['problems'][] = __('panelica.fit_apps_none', ['used' => $apps]);
+            } elseif ($maxApps > 0 && $apps > $maxApps) {
+                $out['problems'][] = $over('apps', $apps, $maxApps);
+            }
+        }
+
+        foreach (['domains' => ['max_domains', 'domain_count'], 'emails' => ['max_email_accounts', 'email_count'], 'ftp' => ['max_ftp_accounts', 'ftp_count']] as $key => [$field, $counted]) {
+            $max = $limit($field);
+            if ($max === null || $max < 0 || ! $tighter($field, $max)) {
+                continue;
+            }
+            $stats = $this->fitUsage($service, $server, $accountId, 'stats');
+            if (is_array($stats) && isset($stats[$counted]) && (int) $stats[$counted] > $max) {
+                $out['problems'][] = $over($key, (int) $stats[$counted], $max);
+            }
+        }
+
+        $maxSubs = $limit('max_subdomains');
+        if ($maxSubs !== null && $maxSubs >= 0 && $tighter('max_subdomains', $maxSubs)) {
+            foreach ((array) $this->fitUsage($service, $server, $accountId, 'subdomains') as $domain => $count) {
+                if ($count > $maxSubs) {
+                    $out['problems'][] = __('panelica.fit_subdomains', ['domain' => $domain, 'used' => $count, 'limit' => $maxSubs, 'remove' => $count - $maxSubs]);
+                }
+            }
+        }
+
+        $quota = $limit('disk_quota_mb');
+        if ($quota !== null && $quota > 0 && $tighter('disk_quota_mb', $quota) && ($disk = $this->fitUsage($service, $server, $accountId, 'disk')) !== null && $disk > $quota) {
+            $out['problems'][] = __('panelica.fit_disk', ['used' => number_format($disk), 'limit' => number_format($quota), 'remove' => number_format($disk - $quota)]);
+        }
+
+        $memory = $limit('memory_limit_mb');
+        if ($memory !== null && $memory > 0 && ($used = $this->fitUsage($service, $server, $accountId, 'memory')) !== null && $used > $memory) {
+            $out['warnings'][] = __('panelica.fit_memory', ['used' => number_format($used), 'limit' => number_format($memory)]);
+        }
+
+        return $out;
     }
 
     /**

@@ -931,7 +931,7 @@ return [
             'invoiceid' => 'integer or null: the invoice for the difference',
             'applied' => 'boolean: true when the change was made at once (nothing to pay)',
         ],
-        'errors' => [422 => 'The change is not allowed: the product keeps its customers on it, does not offer the new package, or the new package uses another module.'],
+        'errors' => [422 => 'The change is not allowed: the product keeps its customers on it, does not offer the new package, the new package uses another module, or what the account has does not fit the new package (the message says what to remove).'],
         'notes' => 'The same upgrade the client area offers: the difference is billed, and the server is changed once it is paid.',
     ],
     'addcancelrequest' => [

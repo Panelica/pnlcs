@@ -1023,6 +1023,8 @@ return [
     'services.submit_cancellation' => 'Solicitud de cancelación',
     'services.title' => 'Mis productos y servicios',
     'services.upgrade_downgrade' => 'Actualización / Downgrade',
+    'services.package_does_not_fit' => 'Este paquete no puede contener lo que su cuenta tiene ahora. :problems',
+    'services.package_fit_intro' => 'Antes de cambiarse a este paquete:',
     'services.upgrade_downgrade_title' => 'Actualización / Downgrade',
     'services.username' => 'Nombre de usuario',
     'ssl' =>

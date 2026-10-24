@@ -1000,6 +1000,8 @@ return [
     'services.submit_cancellation' => 'Kündigungsantrag absenden',
     'services.title' => 'Meine Produkte und Dienste',
     'services.upgrade_downgrade' => 'Tarifwechsel',
+    'services.package_does_not_fit' => 'Dieses Paket kann nicht aufnehmen, was Ihr Konto derzeit hat. :problems',
+    'services.package_fit_intro' => 'Bevor Sie zu diesem Paket wechseln können:',
     'services.upgrade_downgrade_title' => 'Tarifwechsel',
     'services.username' => 'Benutzername',
     'ssl' => [

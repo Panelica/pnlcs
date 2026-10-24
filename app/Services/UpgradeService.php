@@ -21,6 +21,50 @@ class UpgradeService
 {
     public function __construct(private ProvisioningService $provisioning) {}
 
+    /** @var array<int, \App\Contracts\ServerModuleInterface|null> one module per service, so it asks the panel once */
+    private array $fitModules = [];
+
+    /** @var array<string, array{problems: list<string>, warnings: list<string>}> */
+    private array $fitCache = [];
+
+    /**
+     * What the account has now that the new product could not hold, and what
+     * a move would bring that the customer should know (#276), from the
+     * service's server module when it can tell; nothing otherwise.
+     *
+     * @return array{problems: list<string>, warnings: list<string>}
+     */
+    public function packageFit(Service $service, Product $newProduct): array
+    {
+        $key = $service->id.':'.$newProduct->id;
+        if (isset($this->fitCache[$key])) {
+            return $this->fitCache[$key];
+        }
+
+        $none = ['problems' => [], 'warnings' => []];
+        if (! array_key_exists($service->id, $this->fitModules)) {
+            $this->fitModules[$service->id] = $this->provisioning->resolveModule($service);
+        }
+        $module = $this->fitModules[$service->id];
+
+        if (! $module || ! method_exists($module, 'packageChangeProblems')) {
+            return $this->fitCache[$key] = $none;
+        }
+
+        try {
+            $fit = (array) $module->packageChangeProblems($service, $newProduct);
+        } catch (\Throwable $e) {
+            // A panel that cannot be asked stops nobody, as before this check.
+            Log::warning('UpgradeService::packageFit could not ask the module', ['service' => $service->id, 'error' => $e->getMessage()]);
+            $fit = [];
+        }
+
+        return $this->fitCache[$key] = [
+            'problems' => array_values((array) ($fit['problems'] ?? [])),
+            'warnings' => array_values((array) ($fit['warnings'] ?? [])),
+        ];
+    }
+
     /**
      * @return array{available: bool, new_recurring?: float, current_recurring?: float,
      *               remaining_days?: int, cycle_days?: int, prorated_diff?: float}
@@ -132,6 +176,15 @@ class UpgradeService
 
         if (! $this->canMoveTo($service, $newProduct)) {
             return $refuse(__('client.cart.product_unavailable'));
+        }
+
+        // What the account has must fit the new package: the panel limits what
+        // is created, not what exists, so three apps would stay on a two-app
+        // package (#276). Staff changing a service's product on its admin page
+        // do not come through here.
+        $fit = $this->packageFit($service, $newProduct);
+        if ($fit['problems'] !== []) {
+            return $refuse(__('client.services.package_does_not_fit', ['problems' => implode(' ', $fit['problems'])]));
         }
 
         // r119-pending: one move at a time. Nothing used to check, so a second

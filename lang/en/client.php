@@ -1001,6 +1001,8 @@ return [
     'services.submit_cancellation' => 'Submit Cancellation Request',
     'services.title' => 'My Products & Services',
     'services.upgrade_downgrade' => 'Upgrade / Downgrade',
+    'services.package_does_not_fit' => 'This package cannot hold what your account has now. :problems',
+    'services.package_fit_intro' => 'Before you can move to this package:',
     'services.upgrade_downgrade_title' => 'Upgrade / Downgrade',
     'services.username' => 'Username',
     'ssl' => [

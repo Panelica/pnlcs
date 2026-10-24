@@ -45,6 +45,22 @@ For each service, the module can:
 - **Change password** and **change package** (upgrades/downgrades)
 - **Report usage** (disk / bandwidth) back for overage billing
 
+## Upgrades and downgrades
+
+A customer moves a service to another package from its **Upgrade /
+Downgrade** page. With the Panelica module, a package that gives less than the
+account's plan does now can be chosen only when what the account has fits it:
+apps, domains, email and FTP accounts, subdomains per domain and disk space,
+counted the way Panelica counts them when something is created. A package that
+does not fit is listed with what to remove first, and the move is refused,
+through the API's `upgradeproduct` as well. When the account uses more memory
+than a package allows, the customer is warned that their apps may be slowed
+down or stopped there.
+
+Panelica applies a plan's limits to what is created, not to what exists: a
+smaller plan removes nothing, and the account's apps share the smaller plan's
+CPU and memory. Staff can still change a service's product on its admin page.
+
 ## Reliable provisioning
 
 PNLCS only marks a service **Active** *after* the module confirms the account

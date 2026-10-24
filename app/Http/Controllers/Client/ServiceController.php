@@ -344,6 +344,11 @@ class ServiceController extends Controller
             })
             ->values();
 
+        // Whether what the account has fits each package, and what to remove
+        // first when it does not (#276); asked once per package, the panel's
+        // answers shared between them.
+        $packageFits = $availableProducts->mapWithKeys(fn (Product $product) => [$product->id => $upgrades->packageFit($service, $product)])->all();
+
         // The product's configurable options, to raise without changing product.
         $optionGroups = strtolower((string) $service->status) === 'active'
             ? app(\App\Services\ConfigOptionService::class)->groupsFor($service->product) : collect();
@@ -353,6 +358,7 @@ class ServiceController extends Controller
             'upgrades' => $availableProducts,
             'upgradePrices' => $prices,
             'upgradeCycle' => $cycle,
+            'packageFits' => $packageFits,
             'optionGroups' => $optionGroups,
             'currentOptions' => app(\App\Services\OptionUpgradeService::class)->current($service),
         ]);

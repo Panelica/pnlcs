@@ -1000,6 +1000,8 @@ return [
     'services.submit_cancellation' => 'İptal Talebini Gönder',
     'services.title' => 'Ürün ve Hizmetlerim',
     'services.upgrade_downgrade' => 'Yükselt / Düşür',
+    'services.package_does_not_fit' => 'Bu paket hesabınızda şu an olanları taşıyamıyor. :problems',
+    'services.package_fit_intro' => 'Bu pakete geçebilmeniz için önce:',
     'services.upgrade_downgrade_title' => 'Yükselt / Düşür',
     'services.username' => 'Kullanıcı Adı',
     'ssl' => [

@@ -38,10 +38,16 @@
                     // where the customer is known rather than guessed at here.
                     $price = $upgradePrices[$product->id] ?? null;
                     $cycle = strtolower($upgradeCycle ?? '');
+                    // What the account has that this package could not hold
+                    // (#276): such a package is shown, with what to remove
+                    // first, and cannot be chosen until it fits.
+                    $fit = $packageFits[$product->id] ?? ['problems' => [], 'warnings' => []];
+                    $blocked = $fit['problems'] !== [];
                 @endphp
-                <label style="display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--border); border-radius:4px; cursor:pointer;">
-                    <input type="radio" name="new_product_id" value="{{ $product->id }}" required style="margin:0;">
-                    <div style="flex:1;">
+                <div class="pn-upgrade-option" style="border:1px solid var(--border); border-radius:4px;">
+                <label style="display:flex; align-items:center; gap:12px; padding:14px; cursor:{{ $blocked ? 'not-allowed' : 'pointer' }};{{ $blocked ? ' opacity:.6;' : '' }}">
+                    <input type="radio" name="new_product_id" value="{{ $product->id }}" required style="margin:0;" @disabled($blocked)>
+                    <div style="flex:1; min-width:0;">
                         <div style="font-weight:500; font-size:13px; color:#1a4d80;">{{ $product->name }}</div>
                         @if($product->description)
                         <div style="font-size:12px; color:var(--muted); margin-top:3px;">{{ Str::limit(strip_tags($product->description), 100) }}</div>
@@ -54,6 +60,16 @@
                     </div>
                     @endif
                 </label>
+                @if($blocked)
+                <div class="pn-alert pn-alert-danger" role="note" style="display:block; margin:0 14px 14px; font-size:12.5px;">
+                    <div style="font-weight:600; margin-bottom:4px;">{{ __('client.services.package_fit_intro') }}</div>
+                    <ul style="margin:0; padding-left:18px;">@foreach($fit['problems'] as $problem)<li>{{ $problem }}</li>@endforeach</ul>
+                </div>
+                @endif
+                @foreach($fit['warnings'] as $warning)
+                <div class="pn-alert pn-alert-warning" role="note" style="margin:0 14px 14px; font-size:12.5px;">{{ $warning }}</div>
+                @endforeach
+                </div>
                 @endforeach
             </div>
             <div style="display:flex; gap:8px;">

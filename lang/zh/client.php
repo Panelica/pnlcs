@@ -1000,6 +1000,8 @@ return [
     'services.submit_cancellation' => '提交取消请求',
     'services.title' => '我的产品与服务',
     'services.upgrade_downgrade' => '升级 / 降级',
+    'services.package_does_not_fit' => '此套餐无法容纳您账户当前的内容。:problems',
+    'services.package_fit_intro' => '更换到此套餐之前，请先：',
     'services.upgrade_downgrade_title' => '升级 / 降级',
     'services.username' => '用户名',
     'ssl' => [

@@ -1001,6 +1001,8 @@ return [
     'services.submit_cancellation' => 'Wyślij wniosek o anulowanie',
     'services.title' => 'Moje produkty i usługi',
     'services.upgrade_downgrade' => 'Ulepszenie / Ograniczenie',
+    'services.package_does_not_fit' => 'Ten pakiet nie pomieści tego, co Twoje konto ma teraz. :problems',
+    'services.package_fit_intro' => 'Zanim przejdziesz na ten pakiet:',
     'services.upgrade_downgrade_title' => 'Ulepszenie / Ograniczenie',
     'services.username' => 'Nazwa użytkownika',
     'ssl' => [
