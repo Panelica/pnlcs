@@ -601,7 +601,7 @@ Open a new support ticket.
 | `email` | email | yes | The sender address. |
 | `clientid` | integer | no | The client, when the sender is one. userid is accepted too. |
 | `name` | string | no | The sender name, for a guest. |
-| `priority` | string | no | low, medium (default), high or critical. |
+| `priority` | string | no | low, medium (default) or high. |
 | `adminusername` | string | no | Any value: the ticket is opened by staff. |
 
 **Response**
@@ -642,7 +642,7 @@ Update ticket status or details.
 | `ticketid` | integer | yes | The ticket. |
 | `status` | string | no | One of the ticket statuses configured here (any letter case). |
 | `subject` | string | no | Up to 255 characters. |
-| `priority` | string | no | low, medium, high or critical. |
+| `priority` | string | no | low, medium or high. |
 | `deptid` | integer | no | Move it to this department. |
 | `flag` | integer | no | Assign it to this staff account (admin id). |
 
