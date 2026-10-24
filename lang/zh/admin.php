@@ -998,7 +998,6 @@ return [
     'currencies.prefix' => '前缀',
     'currencies.prefix_symbol' => '前缀（符号）',
     'currencies.rate' => '汇率',
-    'currencies.set_as_default' => '设为默认',
     'currencies.suffix' => '后缀',
     'currencies.number_format' => '数字格式',
     'currencies.title' => '货币',

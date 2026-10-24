@@ -988,7 +988,6 @@ return [
     'currencies.prefix' => 'Ön Ek',
     'currencies.prefix_symbol' => 'Ön ek (simge)',
     'currencies.rate' => 'Oran',
-    'currencies.set_as_default' => 'Varsayılan Yap',
     'currencies.suffix' => 'Son Ek',
     'currencies.number_format' => 'Sayı biçimi',
     'currencies.title' => 'Para Birimleri',

@@ -998,7 +998,6 @@ return [
     'currencies.prefix' => 'Präfix',
     'currencies.prefix_symbol' => 'Präfix (Symbol)',
     'currencies.rate' => 'Bewerten',
-    'currencies.set_as_default' => 'Als Standard festlegen',
     'currencies.suffix' => 'Suffix',
     'currencies.number_format' => 'Zahlenformat',
     'currencies.title' => 'Währungen',
