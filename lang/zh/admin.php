@@ -1520,7 +1520,6 @@ return [
     'knowledge_base.published' => '已发布',
     'knowledge_base.title' => '知识库',
     'knowledge_base.uncategorized' => '未分类',
-    'knowledge_base.uncategorized_option' => '— 未分类 —',
     'knowledge_base.views' => '浏览次数',
     'knowledge_base.categories' => '分类',
     'knowledge_base.edit_category' => '编辑分类',

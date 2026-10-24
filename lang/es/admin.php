@@ -1520,7 +1520,6 @@ return [
 	'knowledge_base.published' => 'Publicado',
 	'knowledge_base.title' => 'Base de conocimientos',
 	'knowledge_base.uncategorized' => 'Sin categoría',
-	'knowledge_base.uncategorized_option' => '— Sin categoría —',
 	'knowledge_base.views' => 'Vistas',
 	'knowledge_base.categories' => 'Categorías',
 	'knowledge_base.edit_category' => 'Editar categoría',
