@@ -42,3 +42,42 @@ it('changes nothing when the currency already is the default', function () {
     expect((float) $try->fresh()->rate)->toBe(40.0)
         ->and((float) $eur->fresh()->rate)->toBe(1.0);
 });
+
+/*
+ * The TCMB bulletin details (pnlcs:currency-update) describe the lira rate the
+ * bulletin gave against the default currency. Once the default changes the
+ * stored lira rate is restated from the others and no longer the bulletin's
+ * figure, so a lira invoice would print a bulletin its rate did not come from.
+ * The rate update clears them in the same case.
+ */
+function rebaseProvenance(): void
+{
+    foreach (['ExchangeRateSource' => 'TCMB', 'ExchangeRateKind' => 'ForexSelling', 'ExchangeRateDate' => '2031-03-10', 'ExchangeRateBulletin' => '2031/48'] as $key => $value) {
+        \App\Models\Setting::set($key, $value);
+    }
+}
+
+it('forgets the bulletin a restated lira rate no longer comes from', function () {
+    Currency::query()->update(['is_default' => false]);
+    Currency::factory()->create(['code' => 'USZ', 'rate' => 1, 'is_default' => true]);
+    $eur = Currency::factory()->create(['code' => 'EUZ', 'rate' => 0.9, 'is_default' => false]);
+    rebaseProvenance();
+
+    $this->actingAs(rebaseAdmin(), 'admin')
+        ->post(route('admin.config.currencies.default', $eur))->assertRedirect();
+
+    foreach (['ExchangeRateSource', 'ExchangeRateKind', 'ExchangeRateDate', 'ExchangeRateBulletin'] as $key) {
+        expect((string) \App\Models\Setting::get($key))->toBe('', $key);
+    }
+});
+
+it('keeps the bulletin when the default stays where it is', function () {
+    Currency::query()->update(['is_default' => false]);
+    $usd = Currency::factory()->create(['code' => 'USW', 'rate' => 1, 'is_default' => true]);
+    rebaseProvenance();
+
+    $this->actingAs(rebaseAdmin(), 'admin')
+        ->post(route('admin.config.currencies.default', $usd))->assertRedirect();
+
+    expect(\App\Models\Setting::get('ExchangeRateBulletin'))->toBe('2031/48');
+});

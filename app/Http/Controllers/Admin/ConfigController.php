@@ -471,6 +471,15 @@ class ConfigController extends Controller
                     $other->update(['rate' => round((float) $other->rate / $factor, 5)]);
                 }
             }
+            // The TCMB bulletin details describe the lira rate as the bulletin
+            // gave it against the old default. Restated, it is no longer that
+            // figure, and a lira invoice would print a bulletin its rate did not
+            // come from; the rate update clears them in the same case.
+            if (! $currency->is_default) {
+                foreach (['ExchangeRateSource', 'ExchangeRateKind', 'ExchangeRateDate', 'ExchangeRateBulletin'] as $key) {
+                    Setting::set($key, '');
+                }
+            }
             Currency::query()->update(['is_default' => false]);
             $currency->update(['is_default' => true, 'rate' => 1]);
         });
