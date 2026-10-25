@@ -787,7 +787,6 @@ class CartService
         return $cart->user_id ? Client::find($cart->user_id) : null;
     }
 
-    /** @return array<int, int> */
     /**
      * The code's rules against this basket, and, for a code limited to some
      * billing periods, at least one line it covers on one of them: otherwise
@@ -816,6 +815,7 @@ class CartService
         return false;
     }
 
+    /** @return array<int, int> */
     private function cartProductIds(Cart $cart): array
     {
         $ids = [];

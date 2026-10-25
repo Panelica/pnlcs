@@ -78,3 +78,15 @@ test('an invoice created unpaid is mailed and credited at once, as before', func
     Mail::assertQueued(InvoiceCreatedMail::class, 1);
     expect((float) Invoice::findOrFail($id)->credit)->toBe(10.0);
 });
+
+test('the client home page does not list a draft either', function () {
+    Mail::fake();
+    [$client, $user] = dsdCustomer();
+
+    $id = $this->withHeaders(dsdHeaders())->postJson('/api/v1/createinvoice', [
+        'userid' => $client->id, 'status' => 'draft', 'itemdescription1' => 'Consultancy', 'itemamount1' => 100,
+    ])->json('invoiceid');
+
+    $this->actingAs($user)->get(route('client.home'))->assertOk()
+        ->assertDontSee(route('client.invoices.show', $id), false);
+});

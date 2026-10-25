@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Enums\DomainStatus;
+use App\Enums\InvoiceStatus;
 use App\Enums\ServiceStatus;
 use App\Http\Controllers\Concerns\ResolvesClient;
 use App\Http\Controllers\Controller;
@@ -25,7 +26,9 @@ class HomeController extends Controller
             'domainCount' => Domain::whereIn('client_id', $clientIds)->where('status', DomainStatus::Active->value)->count(),
             'unpaidInvoices' => Invoice::whereIn('client_id', $clientIds)->outstanding()->count(),
             'openTickets' => Ticket::whereIn('client_id', $clientIds)->stillOpen()->count(),
-            'recentInvoices' => Invoice::whereIn('client_id', $clientIds)->excludeSettledProformas()->orderBy('id', 'desc')->limit(5)->get(),
+            // Not a draft: it has not been issued, and its page answers 404.
+            'recentInvoices' => Invoice::whereIn('client_id', $clientIds)->excludeSettledProformas()
+                ->where('status', '!=', InvoiceStatus::Draft->value)->orderBy('id', 'desc')->limit(5)->get(),
             'recentTickets' => Ticket::whereIn('client_id', $clientIds)->orderBy('id', 'desc')->limit(5)->get(),
             'activeServices' => Service::whereIn('client_id', $clientIds)->where('status', ServiceStatus::Active->value)->with('product')->limit(5)->get(),
             // The balance belongs to an account (clients.credit), not to the
