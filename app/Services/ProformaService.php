@@ -53,6 +53,17 @@ class ProformaService
                     'tax_rate2' => $proforma->tax_rate2,
                     'payment_method' => $proforma->payment_method,
                     'notes' => $proforma->notes,
+                    // The same amounts at the same rate. Left out, the model
+                    // stamped today's rate and bulletin on the VAT invoice, so
+                    // a TRY customer's legal invoice showed a different lira
+                    // amount from the proforma they had paid.
+                    'source_currency' => $proforma->source_currency,
+                    'billing_currency' => $proforma->billing_currency ?? $proforma->source_currency,
+                    'exchange_rate' => $proforma->exchange_rate,
+                    'exchange_rate_source' => $proforma->exchange_rate_source,
+                    'exchange_rate_kind' => $proforma->exchange_rate_kind,
+                    'exchange_rate_date' => $proforma->exchange_rate_date,
+                    'exchange_rate_ref' => $proforma->exchange_rate_ref,
                 ]);
 
                 foreach ($proforma->items as $item) {
