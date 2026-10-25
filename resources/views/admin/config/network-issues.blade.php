@@ -63,6 +63,8 @@
                     </select>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" required class="form-control">{{ $issue->description }}</textarea></div>
+                {{-- Shown to customers on Network Status ("Affecting: …"); the form had no field, so it was never set. --}}
+                <div class="form-group"><label class="form-label">{{ __('admin.network_issues.affected') }}</label><input type="text" name="affected_server" value="{{ $issue->affected_server }}" maxlength="255" list="ni-servers" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.network_issues.end_date') }}</label><input type="date" name="end_date" value="{{ $issue->end_date?->format('Y-m-d') }}" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
@@ -87,6 +89,7 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.network_issues.type_label') }}</label><select name="type" class="form-control"><option value="general">{{ __('admin.network_issues.type_general') }}</option><option value="network">{{ __('admin.network_issues.type_network') }}</option><option value="server">{{ __('admin.network_issues.type_server') }}</option><option value="datacenter">{{ __('admin.network_issues.type_datacenter') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('common.table.status') }}</label><select name="status" class="form-control"><option value="open">{{ __('admin.network_issues.status_open') }}</option><option value="scheduled">{{ __('admin.network_issues.status_scheduled') }}</option><option value="investigating">{{ __('admin.network_issues.status_investigating') }}</option><option value="resolved">{{ __('admin.network_issues.status_resolved') }}</option></select></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.description') }}</label><textarea name="description" rows="4" required class="form-control"></textarea></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.network_issues.affected') }}</label><input type="text" name="affected_server" maxlength="255" list="ni-servers" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-add-ni').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
@@ -95,4 +98,5 @@
         </form>
     </div>
 </div>
+<datalist id="ni-servers">@foreach($serverNames ?? [] as $name)<option value="{{ $name }}">@endforeach</datalist>
 @endsection
