@@ -675,6 +675,8 @@ return [
     'client_groups.create_group' => '创建组',
     'client_groups.description' => '客户组可用于客户分类，并为各组设置不同的折扣、付款期限或其他选项。',
     'client_groups.discount_pct' => '折扣%',
+    'client_groups.suspend_exempt' => '从不自动暂停此组的客户',
+    'client_groups.terminate_exempt' => '从不自动终止此组客户的服务',
     'client_groups.group_name' => '组名称',
     'client_groups.name_placeholder' => '例如：VIP、经销商、企业客户',
     'client_groups.no_groups' => '尚未配置客户组。',

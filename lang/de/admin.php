@@ -675,6 +675,8 @@ return [
     'client_groups.create_group' => 'Gruppe erstellen',
     'client_groups.description' => 'Mit Kundengruppen können Sie Kunden kategorisieren und pro Gruppe unterschiedliche Einstellungen, Rabattstufen oder Zahlungsbedingungen anwenden.',
     'client_groups.discount_pct' => 'Rabatt %',
+    'client_groups.suspend_exempt' => 'Kunden dieser Gruppe nie automatisch sperren',
+    'client_groups.terminate_exempt' => 'Kunden dieser Gruppe nie automatisch kündigen',
     'client_groups.group_name' => 'Gruppenname',
     'client_groups.name_placeholder' => 'z.B. VIP, Wiederverkäufer, Unternehmen',
     'client_groups.no_groups' => 'Keine Clientgruppen konfiguriert.',
