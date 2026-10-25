@@ -111,6 +111,22 @@ class TicketEscalationService
                     event(new TicketReplied($ticket->fresh(), (string) $rule->add_reply, true));
                 }
 
+                // "Send notification on escalation": through the notification
+                // rules, where staff choose who hears of ticket.escalated and
+                // how. The switch was saved and nothing read it.
+                if ($rule->notify) {
+                    try {
+                        app(NotificationService::class)->dispatch('ticket.escalated', [
+                            'event_type' => 'ticket.escalated',
+                            'subject' => "Ticket #{$ticket->tid} escalated",
+                            'message' => "Ticket #{$ticket->tid} \"{$ticket->title}\" was escalated by rule \"{$rule->name}\": no response for {$rule->time_elapsed} minutes.".($changes !== [] ? ' '.implode(', ', $changes).'.' : ''),
+                            'ticket_id' => $ticket->id,
+                        ]);
+                    } catch (\Throwable $e) {
+                        Log::error('Escalation notification failed', ['ticket' => $ticket->id, 'error' => $e->getMessage()]);
+                    }
+                }
+
                 $escalated++;
                 Log::info("Ticket #{$ticket->id} escalated by rule \"{$rule->name}\"");
             }

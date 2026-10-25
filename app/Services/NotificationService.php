@@ -39,6 +39,9 @@ class NotificationService
             'payment.charge_needs_review',
             'ticket.opened',
             'ticket.replied',
+            // An escalation rule with "Send notification" ticked fired; the
+            // switch was saved and never read.
+            'ticket.escalated',
             'service.activated',
             'service.suspended',
             'service.terminated',

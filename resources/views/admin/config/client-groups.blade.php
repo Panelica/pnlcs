@@ -40,6 +40,9 @@
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.group_name') }}</label><input type="text" name="name" required class="form-control" value="{{ $group->name }}"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.color') }}</label><input type="color" name="color" value="{{ $group->color ?: '#405189' }}" class="form-control" style="height:38px;padding:3px;"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.discount_pct') }}</label><input type="number" name="discount_percent" value="{{ $group->discount_percent }}" min="0" max="100" step="0.01" class="form-control"></div>
+        {{-- Read by auto-suspend and auto-terminate; no form set them. --}}
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="hidden" name="suspend_exempt" value="0"><input type="checkbox" name="suspend_exempt" value="1" @checked($group->suspend_exempt)> {{ __('admin.client_groups.suspend_exempt') }}</label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:4px;"><input type="hidden" name="terminate_exempt" value="0"><input type="checkbox" name="terminate_exempt" value="1" @checked($group->terminate_exempt)> {{ __('admin.client_groups.terminate_exempt') }}</label>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('edit-group-{{ $group->id }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
@@ -54,6 +57,8 @@
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.group_name') }}</label><input type="text" name="name" required class="form-control" placeholder="{{ __('admin.client_groups.name_placeholder') }}"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.color') }}</label><input type="color" name="color" value="#405189" class="form-control" style="height:38px;padding:3px;"></div>
         <div class="form-group"><label class="form-label">{{ __('admin.client_groups.discount_pct') }}</label><input type="number" name="discount_percent" value="0" min="0" max="100" step="0.01" class="form-control"></div>
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="hidden" name="suspend_exempt" value="0"><input type="checkbox" name="suspend_exempt" value="1"> {{ __('admin.client_groups.suspend_exempt') }}</label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:4px;"><input type="hidden" name="terminate_exempt" value="0"><input type="checkbox" name="terminate_exempt" value="1"> {{ __('admin.client_groups.terminate_exempt') }}</label>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('add-group')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.client_groups.create_group') }}</button>

@@ -945,6 +945,8 @@ return [
         'upgrade_downgrade_title' => '升级 / 降级',
         'username' => '用户名',
         'setup_delayed' => '我们暂时无法完成此服务的设置。我们的团队已收到通知，将尽快完成；无需重新订购。',
+        'suspended_because' => '此服务已暂停：:reason',
+        'suspended_ask_support' => '此服务已暂停。请联系支持了解原因。',
     ],
     'domains.lock_unavailable' => '此域名的注册商不支持在此处切换锁定状态，请联系技术支持。',
     'status.unknown' => '未知',

@@ -142,28 +142,74 @@ class InvoiceGenerationService
                 continue;
             }
 
-            try {
-                $invoice = $this->generateForServices(
-                    $client,
-                    $clientServices->all(),
-                    $clientAddons->all(),
-                    $clientDomains->all(),
-                    $clientCharges->all()
-                );
+            $batches = $this->separateRenewals()
+                ? $this->oneInvoicePerRenewal($clientServices, $clientAddons, $clientDomains, $clientCharges)
+                : [[$clientServices->all(), $clientAddons->all(), $clientDomains->all(), $clientCharges->all()]];
 
-                if ($invoice) {
-                    $summary['generated']++;
-                    $summary['invoice_ids'][] = $invoice->id;
-                } else {
-                    $summary['skipped']++;
+            foreach ($batches as [$batchServices, $batchAddons, $batchDomains, $batchCharges]) {
+                try {
+                    $invoice = $this->generateForServices($client, $batchServices, $batchAddons, $batchDomains, $batchCharges);
+
+                    if ($invoice) {
+                        $summary['generated']++;
+                        $summary['invoice_ids'][] = $invoice->id;
+                    } else {
+                        $summary['skipped']++;
+                    }
+                } catch (\Throwable $e) {
+                    Log::error('Invoice generation failed for client '.$clientId.': '.$e->getMessage());
+                    $summary['errors']++;
                 }
-            } catch (\Throwable $e) {
-                Log::error('Invoice generation failed for client '.$clientId.': '.$e->getMessage());
-                $summary['errors']++;
             }
         }
 
         return $summary;
+    }
+
+    /**
+     * Whether each renewal gets its own invoice (InvoiceRenewalsSeparately).
+     *
+     * Off, as before, everything a client has falling due in the same run goes
+     * on one invoice. That suits most shops, but the customer can then only pay
+     * all of it or none: someone with two servers who wants to keep one and let
+     * the other lapse has no invoice for just the one (#302).
+     */
+    private function separateRenewals(): bool
+    {
+        return (bool) (int) \App\Models\Setting::get('InvoiceRenewalsSeparately', 0);
+    }
+
+    /**
+     * One invoice per service (with its own addons and usage), one per domain,
+     * one per addon whose service is not renewing in this run, and the one-off
+     * charges together.
+     *
+     * @return array<int, array{0: array, 1: array, 2: array, 3: array}>
+     */
+    private function oneInvoicePerRenewal($services, $addons, $domains, $charges): array
+    {
+        $batches = [];
+        $placed = [];
+
+        foreach ($services as $service) {
+            $own = $addons->filter(fn ($addon) => (int) $addon->service_id === (int) $service->id);
+            $placed = [...$placed, ...$own->pluck('id')->all()];
+            $batches[] = [[$service], $own->values()->all(), [], []];
+        }
+
+        foreach ($addons->reject(fn ($addon) => in_array($addon->id, $placed, true)) as $addon) {
+            $batches[] = [[], [$addon], [], []];
+        }
+
+        foreach ($domains as $domain) {
+            $batches[] = [[], [], [$domain], []];
+        }
+
+        if ($charges->isNotEmpty()) {
+            $batches[] = [[], [], [], $charges->all()];
+        }
+
+        return $batches;
     }
 
     /**
@@ -276,17 +322,21 @@ class InvoiceGenerationService
     {
         $covered = $promo->coveredProductIds();
 
-        if ($covered === []) {
+        if ($covered === [] && $promo->billingCycles() === []) {
             return (float) $invoice->subtotal;
         }
 
         $serviceItems = $invoice->items->whereIn('type', ['Hosting', 'Service', 'hosting', 'service']);
 
-        $productByService = Service::whereIn('id', $serviceItems->pluck('rel_id')->filter())
-            ->pluck('product_id', 'id');
+        $services = Service::whereIn('id', $serviceItems->pluck('rel_id')->filter())
+            ->get(['id', 'product_id', 'billing_cycle'])->keyBy('id');
 
+        // A code limited to some billing periods discounts only the lines on
+        // one of them: a monthly service ordered with a yearly code pays in full.
         return (float) $serviceItems
-            ->filter(fn ($item) => in_array((int) ($productByService[$item->rel_id] ?? 0), $covered, true))
+            ->filter(fn ($item) => ($service = $services[$item->rel_id] ?? null)
+                && ($covered === [] || in_array((int) $service->product_id, $covered, true))
+                && $promo->coversCycle($service->billing_cycle))
             ->sum('amount');
     }
 

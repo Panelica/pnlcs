@@ -575,6 +575,8 @@ class ClientController extends Controller
             'default_payment_method' => 'nullable|string|max:50',
             'language' => 'nullable|string|max:10',
             'password' => 'nullable|string|min:8|confirmed',
+            'tax_exempt' => 'sometimes|boolean',
+            'override_auto_suspend' => 'sometimes|boolean',
         ]);
 
         // The customer who signs in with the account's address moves with it

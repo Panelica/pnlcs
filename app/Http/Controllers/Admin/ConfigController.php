@@ -686,6 +686,8 @@ class ConfigController extends Controller
             'expiration_date' => 'nullable|date|after_or_equal:start_date',
             'recurring' => 'boolean',
             'cycles' => 'nullable|integer|min:0|max:1000',
+            'billing_cycles' => 'nullable|array',
+            'billing_cycles.*' => 'in:'.implode(',', array_keys(\App\Models\Service::CYCLE_MONTHS)),
             'notes' => 'nullable|string',
             'applies_to' => 'nullable|array',
             'applies_to.*' => 'integer|exists:products,id',
@@ -697,6 +699,8 @@ class ConfigController extends Controller
         ]);
         $v['recurring'] = $request->boolean('recurring');
         $v['cycles'] = (int) ($v['cycles'] ?? 0);
+        // None ticked: every billing period, as before.
+        $v['billing_cycles'] = implode(',', array_unique($request->input('billing_cycles', []))) ?: null;
         $v['apply_once'] = $request->boolean('apply_once');
         $v['new_signups_only'] = $request->boolean('new_signups_only');
         $v['existing_client'] = $request->boolean('existing_client');
@@ -722,10 +726,14 @@ class ConfigController extends Controller
             'expiration_date' => 'nullable|date|after_or_equal:start_date',
             'recurring' => 'boolean',
             'cycles' => 'nullable|integer|min:0|max:1000',
+            'billing_cycles' => 'nullable|array',
+            'billing_cycles.*' => 'in:'.implode(',', array_keys(\App\Models\Service::CYCLE_MONTHS)),
             'notes' => 'nullable|string',
         ]);
         $v['recurring'] = $request->boolean('recurring');
         $v['cycles'] = (int) ($v['cycles'] ?? 0);
+        // None ticked: every billing period, as before.
+        $v['billing_cycles'] = implode(',', array_unique($request->input('billing_cycles', []))) ?: null;
         $promotion->update($v);
 
         return back()->with('success', __('messages.success.promotion_updated'));
@@ -831,6 +839,9 @@ class ConfigController extends Controller
             'category' => 'nullable|in:generic,local,country,new',
             'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',
+            // Days in redemption after the grace period; domain sync and the
+            // renewal reminders count them, and no form set them.
+            'redemption_grace_period' => 'nullable|integer|min:0',
             'min_years' => 'nullable|integer|min:1',
             'max_years' => 'nullable|integer|min:1',
             'auto_registrar' => 'nullable|string',
@@ -1087,6 +1098,8 @@ class ConfigController extends Controller
     {
         return view('admin.config.network-issues', [
             'networkIssues' => NetworkIssue::orderBy('id', 'desc')->get(),
+            // Offered as suggestions for "Affected"; any text is accepted.
+            'serverNames' => \App\Models\Server::orderBy('name')->pluck('name')->filter()->unique()->values(),
         ]);
     }
 
@@ -1115,6 +1128,10 @@ class ConfigController extends Controller
     {
         return view('admin.config.transactions', [
             'transactions' => Transaction::with('client')->orderBy('id', 'desc')->paginate(25),
+            // Credit staff added or took by hand (#307), with the reason and who did it. Kept out of the
+            // transactions above: no money moved, so it is not income.
+            'adjustments' => \App\Models\Credit::with(['client', 'admin'])->whereNotNull('admin_id')
+                ->orderBy('id', 'desc')->paginate(25, ['*'], 'adjustments_page'),
         ]);
     }
 
@@ -1809,14 +1826,14 @@ class ConfigController extends Controller
     // Network Issues
     public function storeNetworkIssue(Request $request)
     {
-        NetworkIssue::create($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
+        NetworkIssue::create($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected_server' => 'nullable|string|max:255', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
 
         return back()->with('success', __('messages.success.network_issue_created'));
     }
 
     public function updateNetworkIssue(Request $request, NetworkIssue $issue)
     {
-        $issue->update($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
+        $issue->update($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected_server' => 'nullable|string|max:255', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
 
         return back()->with('success', __('messages.success.network_issue_updated'));
     }
@@ -1897,6 +1914,9 @@ class ConfigController extends Controller
             'category' => 'nullable|in:generic,local,country,new',
             'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',
+            // Days in redemption after the grace period; domain sync and the
+            // renewal reminders count them, and no form set them.
+            'redemption_grace_period' => 'nullable|integer|min:0',
             'min_years' => 'nullable|integer|min:1',
             'max_years' => 'nullable|integer|min:1',
             'auto_registrar' => 'nullable|string',
@@ -2066,14 +2086,14 @@ class ConfigController extends Controller
 
     public function storeClientGroup(Request $request)
     {
-        ClientGroup::create($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100']));
+        ClientGroup::create($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100', 'suspend_exempt' => 'sometimes|boolean', 'terminate_exempt' => 'sometimes|boolean']));
 
         return back()->with('success', __('admin.messages.client_group_created'));
     }
 
     public function updateClientGroup(Request $request, ClientGroup $group)
     {
-        $group->update($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100']));
+        $group->update($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100', 'suspend_exempt' => 'sometimes|boolean', 'terminate_exempt' => 'sometimes|boolean']));
 
         return back()->with('success', __('admin.messages.client_group_updated'));
     }
@@ -2506,6 +2526,37 @@ class ConfigController extends Controller
 
     public function storeNotificationRule(Request $request)
     {
+        $v = $this->validatedNotificationRule($request);
+        if ($v instanceof \Illuminate\Http\RedirectResponse) {
+            return $v;
+        }
+
+        NotificationRule::create($v);
+
+        return back()->with('success', __('admin.messages.notification_rule_created'));
+    }
+
+    /**
+     * Change a rule's event, channel, recipient or switch. Rules could only be
+     * added and deleted, so a typo in the recipient or a move to another
+     * channel meant deleting the rule and building it again.
+     */
+    public function updateNotificationRule(Request $request, $id)
+    {
+        $rule = NotificationRule::findOrFail($id);
+        $v = $this->validatedNotificationRule($request);
+        if ($v instanceof \Illuminate\Http\RedirectResponse) {
+            return $v;
+        }
+
+        $rule->update($v);
+
+        return back()->with('success', __('admin.messages.notification_rule_updated'));
+    }
+
+    /** @return array<string, mixed>|\Illuminate\Http\RedirectResponse */
+    private function validatedNotificationRule(Request $request)
+    {
         $v = $request->validate([
             'event' => 'required|string|max:255',
             'provider_id' => 'required|exists:notification_providers,id',
@@ -2528,9 +2579,8 @@ class ConfigController extends Controller
 
         $v['active'] = $request->boolean('active');
         $v['conditions'] = $request->input('conditions', []);
-        NotificationRule::create($v);
 
-        return back()->with('success', __('admin.messages.notification_rule_created'));
+        return $v;
     }
 
     public function destroyNotificationRule($id)

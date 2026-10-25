@@ -76,6 +76,7 @@
                     <li><a href="{{ route('admin.clients.index') }}">{{ __('admin.nav.view_search_clients') }}</a></li>
                     <li><a href="{{ route('admin.clients.billing') }}">{{ __('admin.clients.billing_identity') }}</a></li>
                     <li><a href="{{ route('admin.clients.create') }}">{{ __('admin.nav.add_new_client') }}</a></li>
+                    <li><a href="{{ route('admin.bulk.mass-email') }}">{{ __('admin.bulk.mass_email') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.services.index') }}">{{ __('admin.nav.products_services') }}</a></li>
                     <li><a href="{{ route('admin.domains.index') }}">{{ __('admin.nav.domains') }}</a></li>
@@ -233,6 +234,7 @@
                     <li><a href="{{ route('admin.api-docs') }}">{{ __('admin.nav.api_documentation') }}</a></li>
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.products.index') }}">{{ __('admin.nav.products_services') }}</a></li>
+                    <li><a href="{{ route('admin.config.config-options') }}">{{ __('admin.config_options.title') }}</a></li>
                     <li><a href="{{ route('admin.config.servers') }}">{{ __('admin.nav.servers') }}</a></li>
                     <li><a href="{{ route('admin.config.server-groups') }}">{{ __('admin.nav.server_groups') }}</a></li>
                     <li><a href="{{ route('admin.config.domain-pricing') }}">{{ __('admin.nav.domain_pricing') }}</a></li>
@@ -251,6 +253,7 @@
                     <li class="divider"></li>
                     <li><a href="{{ route('admin.config.ticket-departments') }}">{{ __('admin.nav.ticket_departments') }}</a></li>
                     <li><a href="{{ route('admin.config.ticket-statuses') }}">{{ __('admin.nav.ticket_statuses') }}</a></li>
+                    <li><a href="{{ route('admin.config.ticket-escalation') }}">{{ __('admin.ticket_escalation.title') }}</a></li>
                     <li><a href="{{ route('admin.config.predefined-replies') }}">{{ __('admin.nav.predefined_replies') }}</a></li>
                     <li><a href="{{ route('admin.config.email-templates') }}">{{ __('admin.nav.email_templates') }}</a></li>
                     <li class="divider"></li>
@@ -345,6 +348,7 @@
             <li><a href="{{ route('admin.clients.index') }}" @if($routeName === 'admin.clients.index') class="active" @endif>{{ __('admin.nav.view_search_clients') }}</a></li>
             <li><a href="{{ route('admin.clients.billing') }}" @if($routeName === 'admin.clients.billing') class="active" @endif>{{ __('admin.clients.billing_identity') }}</a></li>
             <li><a href="{{ route('admin.clients.create') }}" @if($routeName === 'admin.clients.create') class="active" @endif>{{ __('admin.nav.add_new_client') }}</a></li>
+            <li><a href="{{ route('admin.bulk.mass-email') }}" @if($routeName === 'admin.bulk.mass-email') class="active" @endif>{{ __('admin.bulk.mass_email') }}</a></li>
         </ul>
         <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.services') }}</div>
         <ul class="menu">
@@ -466,6 +470,7 @@
         <div class="sidebar-header"><i class="fas fa-cube"></i> {{ __('admin.sidebar.products') }}</div>
         <ul class="menu">
             <li><a href="{{ route('admin.products.index') }}" @if($routeName === 'admin.products.index') class="active" @endif>{{ __('admin.nav.products_services') }}</a></li>
+            <li><a href="{{ route('admin.config.config-options') }}" @if($routeName === 'admin.config.config-options') class="active" @endif>{{ __('admin.config_options.title') }}</a></li>
             <li><a href="{{ route('admin.products.create') }}" @if($routeName === 'admin.products.create') class="active" @endif>{{ __('admin.sidebar.create_product') }}</a></li>
             <li><a href="{{ route('admin.products.groups.create') }}" @if(in_array($routeName, ['admin.products.groups.create', 'admin.products.groups.edit'], true)) class="active" @endif>{{ __('admin.sidebar.product_groups') }}</a></li>
             <li><a href="{{ route('admin.docker-apps.index') }}" @if($routeName === 'admin.docker-apps.index') class="active" @endif>{{ __('admin.nav.docker_apps') }}</a></li>
@@ -483,6 +488,7 @@
         <ul class="menu">
             <li><a href="{{ route('admin.config.ticket-departments') }}" @if($routeName === 'admin.config.ticket-departments') class="active" @endif>{{ __('admin.nav.ticket_departments') }}</a></li>
             <li><a href="{{ route('admin.config.ticket-statuses') }}" @if($routeName === 'admin.config.ticket-statuses') class="active" @endif>{{ __('admin.nav.ticket_statuses') }}</a></li>
+            <li><a href="{{ route('admin.config.ticket-escalation') }}" @if($routeName === 'admin.config.ticket-escalation') class="active" @endif>{{ __('admin.ticket_escalation.title') }}</a></li>
             <li><a href="{{ route('admin.config.predefined-replies') }}" @if($routeName === 'admin.config.predefined-replies') class="active" @endif>{{ __('admin.nav.predefined_replies') }}</a></li>
             <li><a href="{{ route('admin.config.email-templates') }}" @if($routeName === 'admin.config.email-templates') class="active" @endif>{{ __('admin.nav.email_templates') }}</a></li>
         </ul>

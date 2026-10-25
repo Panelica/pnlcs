@@ -104,6 +104,7 @@
                     @endif
                 </td>
                 <td style="text-align:right;">
+                    <button type="button" onclick="document.getElementById('modal-edit-rule-{{ $rule->id }}').style.display='flex'" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</button>
                     <form method="POST" action="{{ route('admin.config.notification-rules.destroy', $rule->id) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.notifications.confirm_delete_rule')))">
                         @csrf @method("DELETE")
                         <button type="submit" class="btn btn-danger btn-xs">{{ __('common.actions.delete') }}</button>
@@ -211,6 +212,48 @@
         </form>
     </div>
 </div>
+
+{{-- Edit Rule Modals --}}
+@foreach($allRules ?? [] as $rule)
+<div id="modal-edit-rule-{{ $rule->id }}" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">
+    <div style="position:fixed;inset:0;background:rgba(0,0,0,0.5);" onclick="document.getElementById('modal-edit-rule-{{ $rule->id }}').style.display='none'"></div>
+    <div style="position:relative;background:#fff;border-radius:4px;width:480px;max-width:95%;box-shadow:0 5px 30px rgba(0,0,0,0.3);">
+        <div style="padding:15px 20px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;">
+            <h4 style="margin:0;font-size:16px;">{{ __('admin.notifications.edit_rule') }}</h4>
+            <button type="button" onclick="document.getElementById('modal-edit-rule-{{ $rule->id }}').style.display='none'" style="background:none;border:none;font-size:22px;cursor:pointer;color:#777;">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('admin.config.notification-rules.update', $rule->id) }}">
+            @csrf @method('PUT')
+            <div style="padding:20px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.notifications.provider') }} *</label>
+                    <select name="provider_id" required class="form-control">
+                        @foreach($providers as $p)
+                            <option value="{{ $p->id }}" @selected((int) $rule->provider_id === (int) $p->id)>{{ $p->name }} ({{ $p->type }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.notifications.event_type') }} *</label>
+                    <select name="event" required class="form-control">
+                        @foreach($eventTypes as $ev)
+                            <option value="{{ $ev }}" @selected($rule->event === $ev)>{{ $ev }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.notifications.recipient_email') }}</label>
+                    <input type="email" name="conditions[recipient_email]" value="{{ ((array) ($rule->conditions ?? []))['recipient_email'] ?? '' }}" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><input type="checkbox" name="active" value="1" @checked($rule->active)> {{ __('admin.notifications.active') }}</label>
+                </div>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-edit-rule-{{ $rule->id }}').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
+                <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endforeach
 
 {{-- Add Rule Modal --}}
 <div id="modal-add-rule" style="display:none;position:fixed;inset:0;z-index:1050;align-items:center;justify-content:center;">

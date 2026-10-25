@@ -63,9 +63,14 @@ class UnsuspendOnPaymentCommand extends Command
             // asked only about the service, so a client behind on a domain
             // renewal had their hosting switched off at 07:00 and back on by
             // 07:30, day after day, with an email each way.
-            if (Invoice::where('client_id', $service->client_id)
-                ->overduePastGrace(SuspensionCommand::graceDays())
-                ->exists()) {
+            // With AutoSuspendInvoicedOnly the debt that counts is this
+            // service's own, as it is for suspending.
+            $behind = SuspensionCommand::invoicedOnly()
+                ? Service::whereKey($service->id)->owingOverdue(SuspensionCommand::graceDays())->exists()
+                : Invoice::where('client_id', $service->client_id)
+                    ->overduePastGrace(SuspensionCommand::graceDays())
+                    ->exists();
+            if ($behind) {
                 $stillBehind++;
 
                 continue;

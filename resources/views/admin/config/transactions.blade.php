@@ -31,4 +31,30 @@
     @endif
     @endif
 </div>
+
+{{-- Balance changed by hand (#307): who, when, how much and why. Not payments, so not in the list above. --}}
+<div class="card" style="margin-top:20px;">
+    <div class="card-header"><strong>{{ __('admin.transactions.adjustments_title') }}</strong>
+        <div style="font-size:12px;color:#777;font-weight:400;margin-top:2px;">{{ __('admin.transactions.adjustments_hint') }}</div></div>
+    @if(($adjustments ?? collect())->isEmpty())
+    <div class="card-body" style="text-align:center;padding:24px;color:#999;">{{ __('admin.transactions.no_adjustments') }}</div>
+    @else
+    <table class="data-table">
+        <thead><tr><th>{{ __('common.table.date') }}</th><th>{{ __('common.table.client') }}</th><th>{{ __('common.table.type') }}</th><th>{{ __('common.table.amount') }}</th><th>{{ __('admin.transactions.reason') }}</th><th>{{ __('admin.transactions.by') }}</th></tr></thead>
+        <tbody>
+        @foreach($adjustments as $adj)
+        <tr>
+            <td style="font-size:12px;white-space:nowrap;">{{ ($adj->date ?? $adj->created_at)?->format(date_fmt()) }}</td>
+            <td>@if($adj->client)<a href="{{ route('admin.clients.credit', $adj->client) }}" style="color:#337ab7;">{{ $adj->client->full_name }}</a>@else {{ __('admin.transactions.deleted_client') }} @endif</td>
+            <td>{{ (float) $adj->amount >= 0 ? __('admin.transactions.credit_added') : __('admin.transactions.credit_deducted') }}</td>
+            <td style="font-weight:600;color:{{ (float) $adj->amount >= 0 ? '#5cb85c' : '#d9534f' }};">{{ ((float) $adj->amount >= 0 ? '+' : '-').money_fmt(abs((float) $adj->amount)) }}</td>
+            <td>{{ $adj->description }}</td>
+            <td>{{ $adj->admin?->full_name ?: ($adj->admin?->username ?? '#'.$adj->admin_id) }}</td>
+        </tr>
+        @endforeach
+        </tbody>
+    </table>
+    <div style="padding:10px 15px;">{{ $adjustments->links() }}</div>
+    @endif
+</div>
 @endsection

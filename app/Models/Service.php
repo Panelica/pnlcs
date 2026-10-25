@@ -63,6 +63,27 @@ class Service extends Model
     }
 
     /**
+     * Why the service is suspended, in words the customer may read: what staff
+     * typed when they suspended it, or "Unpaid invoice" for a suspension
+     * billing made (the text auto-suspend writes is for staff). Null when it is
+     * not suspended or no reason was given.
+     */
+    public function customerSuspensionReason(): ?string
+    {
+        $reason = trim((string) $this->suspension_reason);
+
+        if (strtolower((string) $this->status) !== 'suspended' || $reason === '') {
+            return null;
+        }
+
+        $lower = strtolower($reason);
+
+        return str_contains($lower, 'overdue') || str_contains($lower, 'unpaid')
+            ? __('email.common.unpaid_invoice')
+            : $reason;
+    }
+
+    /**
      * What this service is worth per month, whatever it is billed in.
      */
     public function monthlyAmount(): float
@@ -139,6 +160,24 @@ class Service extends Model
     public function scopeActive($q)
     {
         return $q->where('status', ServiceStatus::Active->value);
+    }
+
+    /**
+     * Services on an invoice that has been overdue longer than the grace
+     * period: as the service itself, its usage overage, or one of its addons.
+     * What AutoSuspendInvoicedOnly suspends over (SuspensionCommand).
+     */
+    public function scopeOwingOverdue($q, int $graceDays)
+    {
+        return $q->whereExists(fn ($e) => $e->selectRaw('1')->from('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->where('invoices.status', \App\Enums\InvoiceStatus::Overdue->value)
+            ->where('invoices.due_date', '<', now()->subDays($graceDays))
+            ->where(fn ($w) => $w
+                ->where(fn ($own) => $own->whereIn('invoice_items.type', ['Hosting', 'Service', 'hosting', 'service', 'Overage'])
+                    ->whereColumn('invoice_items.rel_id', 'services.id'))
+                ->orWhere(fn ($addon) => $addon->where('invoice_items.type', 'Addon')
+                    ->whereIn('invoice_items.rel_id', fn ($a) => $a->select('id')->from('service_addons')->whereColumn('service_addons.service_id', 'services.id')))));
     }
 
     /** A service the customer can still act on (not terminated/cancelled/fraud). */

@@ -124,9 +124,15 @@ class ServiceController extends Controller
             $request->validate(['password' => ['required', 'string', 'min:6']]);
         }
 
+        // The reason is shown to the customer (service page, suspension email)
+        // and to the next member of staff; it is kept short.
+        if ($action === 'suspend') {
+            $request->validate(['reason' => ['nullable', 'string', 'max:255']]);
+        }
+
         $result = match ($action) {
             'create' => $this->provisioning->createAccount($service),
-            'suspend' => $this->provisioning->suspendAccount($service, $request->get('reason', '')),
+            'suspend' => $this->provisioning->suspendAccount($service, trim((string) $request->input('reason', ''))),
             'unsuspend' => $this->provisioning->unsuspendAccount($service),
             'terminate' => $this->provisioning->terminateAccount($service),
             'changepassword' => $this->provisioning->changePassword($service, $request->get('password', '')),
