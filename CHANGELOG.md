@@ -2,6 +2,132 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.12.0 — 2026-10-25
+
+A stable release, offered to every installation. It contains everything in
+1.11.0. None of the changes below went out in a beta first. Thank you,
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#288 to #293, #295 to
+#300, #304) and [@pla0730484848-wq](https://github.com/pla0730484848-wq)
+(#286, #287, #301, #305).
+
+**Integrations using the API: a draft invoice now waits until it is
+published.** `createinvoice` with `status=draft` used to mail the customer
+the invoice, spend their credit balance on it and list it in their client
+area. A draft now does none of that. `updateinvoice` with `status=unpaid`
+publishes it: it is mailed and the balance applied, as for an invoice
+created unpaid. If your integration creates drafts and never publishes them,
+customers stop seeing them (#295).
+
+**English text is read from `lang/en/*.php` only.** `lang/en.json` repeated
+461 of those strings and, in English, took precedence over them, so an edit
+to `lang/en/common.php` did not show in English. The update removes the file;
+if you changed it yourself it is kept, and it keeps overriding. Two English
+labels change: "Postcode" becomes "Postcode / ZIP" and "State" becomes
+"State / Region" (#300).
+
+### Added
+
+- **Suspend only the services on the overdue invoice.** Setup → General
+  Settings → Automation, off by default. Off, an invoice overdue past the
+  grace period suspends every active service of the client, as before. On,
+  only the services on that invoice are suspended: the service itself, its
+  usage overage or one of its add-ons, so a late domain renewal no longer
+  switches off the client's servers. Unsuspend on payment asks about the same
+  debt, so a paid service comes back on while another invoice is still open
+  (#291, #301).
+- **A promotion can be limited to billing periods.** Both promotion forms have
+  **Billing periods**; none ticked means every period, which is what every
+  existing code keeps. A limited code is refused in the cart when no line is
+  on one of its periods, and in a mixed basket and on renewals it comes off
+  only the lines that are (#304).
+- **Notification rules can be edited:** event, channel, recipient and the
+  on/off switch, under the same checks as a new rule. They could only be
+  added and deleted (#298).
+- **An escalation rule's "Send notification on escalation"** raises the
+  `ticket.escalated` event, which a notification rule can now pick. The
+  switch was saved and never read (#296).
+- **The customer's list of services shows each server's address** under the
+  domain. The related-service pickers on the customer's and the admin's New
+  Ticket pages, and the admin's ticket page, show it beside the domain. The
+  address is what the module recorded (an address from the pool, the one the
+  Proxmox guest last reported, Vultr's main IP); no server is asked (#289,
+  #287).
+- Menu entries for **Ticket Escalation Rules**, **Configurable Options** and
+  **Mass Email**, which could be reached only by their address (#296).
+
+### Changed
+
+- **The admin top bar stays on one row** from 1280px up, with each count
+  badge beside its icon. Between 1275px and 1599px the menu shows its labels
+  without icons. The mobile menu is unchanged.
+
+### Fixed
+
+- **The VAT invoice for a paid proforma keeps the proforma's exchange rate
+  and bulletin.** It was stamped with the rate of the day it was issued, so a
+  customer billed in lira could get a legal invoice for a different lira
+  amount from the proforma they had paid (#290).
+- **Edit Client** has **Tax Exempt**, **Never suspend this client
+  automatically** and **Group**. Billing reads all three, and none could be
+  set once the client existed (#292, #305).
+- **Client groups:** Add and Edit have **Never suspend this group's clients
+  automatically** and **Never terminate this group's clients
+  automatically**. Automatic suspension and termination read both, and no
+  form set them (#293).
+- **Network issues keep the server they affect.** The form has **Affected**,
+  with your servers suggested, and customers see it on Network Status. There
+  was no field, and the controller saved a key no column holds (#297).
+- **Domain Pricing** has **Redemption Period (days, after grace)** for each
+  extension. Domain sync and the renewal reminders count it, and it stayed 0
+  because no form set it (#299).
+- **Proxmox Test Connection** no longer says an existing vendor snippet is
+  missing when the token has Datastore.AllocateSpace on the storage but not
+  Datastore.Allocate: Proxmox lists snippets only to a token with Allocate.
+  It now says the snippet could not be checked, and reports a problem only
+  when AllocateSpace is missing too (#288, #286).
+
+### Database changes
+
+- `promotions.billing_cycles` (nullable; the periods, comma-separated),
+  migration `2026_10_25_000001_add_billing_cycles_to_promotions` (#304).
+- New setting: `AutoSuspendInvoicedOnly` (#291).
+
+### For theme and module authors
+
+- `lang/en.json` is gone; English strings come from `lang/en/*.php`. A JSON
+  translation file that repeats a key of the group files fails the test
+  suite (#300).
+- `InvoiceService::publishDraft(Invoice $invoice)` issues a draft: it becomes
+  unpaid, `InvoiceCreated` is raised and the client's balance is applied.
+  `createInvoice()` holds all three back for a draft. The client area answers
+  404 for a draft's page and PDF (#295).
+- `Service::scopeOwingOverdue(int $graceDays)` and
+  `SuspensionCommand::invoicedOnly()` (#291).
+- `Promotion::billingCycles()`, `coversCycle()` and `cycleKey()` (#304).
+- `Service::primaryIp()` gives the address the module recorded (#289).
+- Notification event `ticket.escalated` (#296); route
+  `admin.config.notification-rules.update` (PUT) (#298).
+- `Client` makes `override_auto_suspend` fillable (#292).
+
+### Views a theme may override that changed
+
+- `resources/views/admin/clients/edit.blade.php` (Tax Exempt, Never suspend
+  automatically, Group).
+- `resources/views/admin/config/client-groups.blade.php` (the two
+  exemptions).
+- `resources/views/admin/config/domain-pricing.blade.php` (Redemption
+  Period).
+- `resources/views/admin/config/network-issues.blade.php` (Affected).
+- `resources/views/admin/config/notifications.blade.php` (Edit Rule).
+- `resources/views/admin/config/promotions.blade.php` (Billing periods).
+- `resources/views/admin/layouts/app.blade.php` (three menu entries).
+- `resources/views/admin/settings/general.blade.php` (Suspend only the
+  services on the overdue invoice).
+- `resources/views/admin/tickets/create.blade.php`,
+  `resources/views/admin/tickets/show.blade.php`,
+  `resources/views/client/tickets/create.blade.php` and
+  `resources/views/client/services/index.blade.php` (the server's address).
+
 ## 1.11.0 — 2026-10-25
 
 A stable release, offered to every installation. It contains everything in
