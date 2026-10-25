@@ -91,6 +91,8 @@ Schedule::command('pnlcs:usage-polling')->hourly();
 
 // Proxmox reinstalls, restores and rollbacks: send the next task when one ends
 Schedule::command('pnlcs:proxmox-tasks')->everyMinute()->withoutOverlapping(10);
+// A node past its capacity line tells staff, once a day (#303).
+Schedule::command('pnlcs:proxmox-capacity')->hourly()->withoutOverlapping();
 
 // Module queue — retry failed provisioning actions every 5 minutes
 Schedule::command('pnlcs:module-queue')->everyFiveMinutes()->withoutOverlapping();
@@ -130,4 +132,3 @@ Schedule::command('pnlcs:update-rollback --abandoned')->everyMinute()->evenInMai
 // process that dies, which is exactly the case these exist for. One update at
 // a time is the updater's own file lock, released by the system when its
 // process dies, and a request is claimed by exactly one process.
-

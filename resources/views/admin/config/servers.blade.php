@@ -78,6 +78,7 @@
                 </form>
                 @if(strtolower((string) $server->type) === 'proxmox')
                 <a href="{{ route('admin.config.servers.images', $server) }}" class="btn btn-default btn-xs">{{ __('proxmox.images.button') }}</a>
+                <a href="{{ route('admin.config.servers.capacity', $server) }}" class="btn btn-default btn-xs">{{ __('proxmox.capacity.button') }}</a>
                 @endif
                 <button type="button" class="btn btn-default btn-xs" onclick="editServer({{ $server->id }},{{ json_encode($server->name) }},{{ json_encode($server->hostname) }},{{ json_encode($server->ip_address) }},{{ json_encode($server->type) }},{{ json_encode($server->port) }},{{ json_encode($server->username) }},{{ (int)($server->max_accounts ?? 500) }},{{ json_encode($server->nameserver1 ?? '') }},{{ json_encode($server->nameserver2 ?? '') }},{{ $server->active ? 'true' : 'false' }},{{ json_encode((object) ($server->settings ?? [])) }})">{{ __('common.actions.edit') }}</button>
                 <form method="POST" action="{{ route('admin.config.servers.destroy', $server) }}" style="display:inline;" onsubmit="return pnConfirm(event, @js(__('admin.servers.confirm_delete')))">
@@ -133,6 +134,7 @@
                         <div class="form-group"><label class="form-label">{{ __('proxmox.admin.vmid_max') }}</label><input type="number" min="100" name="settings[vmid_max]" data-pve="vmid-max" class="form-control" placeholder="5999"></div>
                         <div class="form-group" style="grid-column:span 2;"><small style="color:#888;">{{ __('proxmox.admin.vmid_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('proxmox.admin.backup_storage') }}</label><input type="text" name="settings[backup_storage]" data-pve="backup-storage" class="form-control" placeholder="local"><small style="color:#888;">{{ __('proxmox.admin.backup_storage_hint') }}</small></div>
+                        <div class="form-group"><label class="form-label">{{ __('proxmox.capacity.alert') }}</label><input type="number" min="0" max="1000" name="settings[capacity_alert]" data-pve="capacity-alert" class="form-control" placeholder="80"><small style="color:#888;">{{ __('proxmox.capacity.alert_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('proxmox.admin.ci_vendor') }}</label><input type="text" name="settings[ci_vendor]" data-pve="ci-vendor" class="form-control" placeholder="local:snippets/pnlcs-vendor.yaml"><small style="color:#888;">{{ __('proxmox.admin.ci_vendor_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('proxmox.admin.ipv4_pool') }}</label><textarea name="settings[ipv4_pool]" data-pve="ipv4" rows="3" class="form-control" style="font-family:monospace;font-size:12px;" placeholder="203.0.113.10-203.0.113.40/24 gw 203.0.113.1"></textarea><small style="color:#888;">{{ __('proxmox.admin.ipv4_pool_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="settings[verify_tls]" value="1" data-pve="verify-tls"> {{ __('proxmox.admin.verify_tls') }}</label></div>
@@ -196,6 +198,7 @@
                         <div class="form-group"><label class="form-label">{{ __('proxmox.admin.vmid_max') }}</label><input type="number" min="100" name="settings[vmid_max]" id="edit-pve-vmid-max" class="form-control" placeholder="5999"></div>
                         <div class="form-group" style="grid-column:span 2;"><small style="color:#888;">{{ __('proxmox.admin.vmid_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('proxmox.admin.backup_storage') }}</label><input type="text" name="settings[backup_storage]" id="edit-pve-backup-storage" class="form-control" placeholder="local"><small style="color:#888;">{{ __('proxmox.admin.backup_storage_hint') }}</small></div>
+                        <div class="form-group"><label class="form-label">{{ __('proxmox.capacity.alert') }}</label><input type="number" min="0" max="1000" name="settings[capacity_alert]" id="edit-pve-capacity-alert" class="form-control" placeholder="80"><small style="color:#888;">{{ __('proxmox.capacity.alert_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('proxmox.admin.ci_vendor') }}</label><input type="text" name="settings[ci_vendor]" id="edit-pve-ci-vendor" class="form-control" placeholder="local:snippets/pnlcs-vendor.yaml"><small style="color:#888;">{{ __('proxmox.admin.ci_vendor_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('proxmox.admin.ipv4_pool') }}</label><textarea name="settings[ipv4_pool]" id="edit-pve-ipv4" rows="3" class="form-control" style="font-family:monospace;font-size:12px;" placeholder="203.0.113.10-203.0.113.40/24 gw 203.0.113.1"></textarea><small style="color:#888;">{{ __('proxmox.admin.ipv4_pool_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="settings[verify_tls]" value="1" id="edit-pve-verify-tls"> {{ __('proxmox.admin.verify_tls') }}</label></div>
@@ -363,6 +366,7 @@ function editServer(id, name, hostname, ip, type, port, username, maxAccounts, n
     document.getElementById('edit-pve-verify-tls').checked = !!settings.verify_tls;
     document.getElementById('edit-pve-ci-vendor').value = settings.ci_vendor || '';
     document.getElementById('edit-pve-backup-storage').value = settings.backup_storage || '';
+    document.getElementById('edit-pve-capacity-alert').value = settings.capacity_alert ?? '';
     document.getElementById('edit-name').value = name || '';
     document.getElementById('edit-hostname').value = hostname || '';
     document.getElementById('edit-ip').value = ip || '';
