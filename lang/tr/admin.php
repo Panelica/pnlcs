@@ -666,6 +666,8 @@ return [
     'client_groups.create_group' => 'Grup Oluştur',
     'client_groups.description' => 'Müşteri grupları, müşterilerinizi sınıflandırmanızı ve her gruba farklı ayarlar, indirim oranları veya ödeme koşulları uygulamanızı sağlar.',
     'client_groups.discount_pct' => 'İndirim %',
+    'client_groups.suspend_exempt' => 'Bu gruptaki müşterileri asla otomatik askıya alma',
+    'client_groups.terminate_exempt' => 'Bu gruptaki müşterilerin hizmetlerini asla otomatik kapatma',
     'client_groups.group_name' => 'Grup Adı',
     'client_groups.name_placeholder' => 'örn. VIP, Bayi, Kurumsal',
     'client_groups.no_groups' => 'Tanımlı müşteri grubu yok.',

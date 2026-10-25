@@ -675,6 +675,8 @@ return [
 	'client_groups.create_group' => 'Crear grupo',
 	'client_groups.description' => 'Los grupos de clientes le permiten categorizar clientes y aplicar diferentes configuraciones, niveles de descuento o condiciones de pago por grupo.',
 	'client_groups.discount_pct' => 'Descuento %',
+	'client_groups.suspend_exempt' => 'No suspender nunca automáticamente a los clientes de este grupo',
+	'client_groups.terminate_exempt' => 'No terminar nunca automáticamente a los clientes de este grupo',
 	'client_groups.group_name' => 'Nombre del grupo',
 	'client_groups.name_placeholder' => 'p.ej. VIP, Reseller, Enterprise',
 	'client_groups.no_groups' => 'No hay grupos de clientes configurados.',

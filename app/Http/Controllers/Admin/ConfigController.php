@@ -2064,14 +2064,14 @@ class ConfigController extends Controller
 
     public function storeClientGroup(Request $request)
     {
-        ClientGroup::create($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100']));
+        ClientGroup::create($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100', 'suspend_exempt' => 'sometimes|boolean', 'terminate_exempt' => 'sometimes|boolean']));
 
         return back()->with('success', __('admin.messages.client_group_created'));
     }
 
     public function updateClientGroup(Request $request, ClientGroup $group)
     {
-        $group->update($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100']));
+        $group->update($request->validate(['name' => 'required', 'color' => 'nullable|string|max:7', 'discount_percent' => 'nullable|numeric|min:0|max:100', 'suspend_exempt' => 'sometimes|boolean', 'terminate_exempt' => 'sometimes|boolean']));
 
         return back()->with('success', __('admin.messages.client_group_updated'));
     }
