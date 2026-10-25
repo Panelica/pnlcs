@@ -1151,6 +1151,7 @@ return [
     'domain_pricing.extension' => 'Rozszerzenie',
     'domain_pricing.grace' => 'Karencja',
     'domain_pricing.grace_period' => 'Okres karencji (dni)',
+    'domain_pricing.redemption_period' => 'Okres odkupienia (dni, po okresie karencji)',
     'domain_pricing.manual' => 'Ręcznie',
     'domain_pricing.max_years' => 'Maks. lat',
     'domain_pricing.min_max_years' => 'Min/Maks. lat',

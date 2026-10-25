@@ -1151,6 +1151,7 @@ return [
     'domain_pricing.extension' => 'Erweiterung',
     'domain_pricing.grace' => 'Gnade',
     'domain_pricing.grace_period' => 'Kulanzfrist (Tage)',
+    'domain_pricing.redemption_period' => 'Wiederherstellungsfrist (Tage, nach der Kulanzfrist)',
     'domain_pricing.manual' => 'Handbuch',
     'domain_pricing.max_years' => 'Maximale Jahre',
     'domain_pricing.min_max_years' => 'Min./Max. Jahre',

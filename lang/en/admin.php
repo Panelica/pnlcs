@@ -1151,6 +1151,7 @@ return [
     'domain_pricing.extension' => 'Extension',
     'domain_pricing.grace' => 'Grace',
     'domain_pricing.grace_period' => 'Grace Period (days)',
+    'domain_pricing.redemption_period' => 'Redemption Period (days, after grace)',
     'domain_pricing.manual' => 'Manual',
     'domain_pricing.max_years' => 'Max Years',
     'domain_pricing.min_max_years' => 'Min/Max Yrs',

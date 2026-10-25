@@ -29,7 +29,7 @@
             <td>{{ money_fmt($tld->transfer_price) }}</td>
             <td>{{ money_fmt($tld->renew_price) }}</td>
             <td>{{ $tld->restore_price > 0 ? money_fmt($tld->restore_price) : "-" }}</td>
-            <td>{{ $tld->grace_period }}d</td>
+            <td>{{ $tld->grace_period }}d{{ $tld->redemption_grace_period ? ' + '.$tld->redemption_grace_period.'d' : '' }}</td>
             <td>{{ $tld->min_years }}-{{ $tld->max_years }}</td>
             <td>{{ $tld->auto_registrar ?: __('admin.domain_pricing.manual') }}</td>
             <td><span class="badge-{{ $tld->enabled ? 'active' : 'suspended' }}">{{ $tld->enabled ? __('common.status.enabled') : __('common.status.disabled') }}</span></td>
@@ -68,6 +68,7 @@
                     <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.restore_price") }}</label><input type="number" name="restore_price" id="tld-restore" step="0.01" min="0" value="0" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.privacy_price") }}</label><input type="number" name="privacy_price" id="tld-privacy" step="0.01" min="0" class="form-control"><p style="font-size:11px;color:#999;margin-top:4px;">{{ __("admin.domain_pricing.privacy_price_hint") }}</p></div>
                     <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.grace_period") }}</label><input type="number" name="grace_period" id="tld-grace" value="0" min="0" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.redemption_period") }}</label><input type="number" name="redemption_grace_period" id="tld-redemption" value="0" min="0" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.min_years') }}</label><input type="number" name="min_years" id="tld-min" value="1" min="1" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.max_years') }}</label><input type="number" name="max_years" id="tld-max" value="10" min="1" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.auto_registrar') }}</label><input type="text" name="auto_registrar" id="tld-reg2" class="form-control" placeholder="none"></div>
@@ -97,6 +98,7 @@ function openAddTLD() {
     document.getElementById('tld-cat').value = 'new';
     document.getElementById('tld-popular').checked = false;
     document.getElementById('tld-grace').value = 0;
+    document.getElementById('tld-redemption').value = 0;
     document.getElementById('tld-min').value = 1;
     document.getElementById('tld-max').value = 10;
     document.getElementById('tld-reg2').value = '';
@@ -117,6 +119,7 @@ function openEditTLD(d) {
     document.getElementById('tld-cat').value = d.category || 'new';
     document.getElementById('tld-popular').checked = !!d.is_popular;
     document.getElementById('tld-grace').value = d.grace_period || 0;
+    document.getElementById('tld-redemption').value = d.redemption_grace_period || 0;
     document.getElementById('tld-min').value = d.min_years || 1;
     document.getElementById('tld-max').value = d.max_years || 10;
     document.getElementById('tld-reg2').value = d.auto_registrar || '';
