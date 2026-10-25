@@ -61,30 +61,20 @@ management panel, and our own hosting sales run on it. We wanted an open,
 self-hosted billing system that integrates natively with Panelica and works
 with other control panels too — so we built one.
 
-**What works well today:**
+**What it does today:**
 
 - Client portal, admin panel, and core billing flows
 - Invoicing, orders, services, domains, tickets, knowledge base
-- The **Panelica server module** (fully tested against live servers)
-- The **Proxmox VE server module** for selling VPS — tested end to end on a
-  live Proxmox VE 9.1 host with a pool-limited API token
-- Stripe payment gateway (tested in production)
+- Server modules for Panelica, cPanel, Plesk, DirectAdmin, HestiaCP, aaPanel,
+  Proxmox VE (VPS) and Vultr
+- Payment gateways: Stripe, PayPal, Authorize.Net, iyzico, Mollie, Razorpay,
+  Tpay and bank transfer
+- Domain registrars: Enom, Namecheap, ResellerClub, OpenProvider,
+  DomainNameAPI and HRD
 - Multi-language UI (30 locales, admin-editable translations)
 
-**What needs your help:**
-
-- **cPanel / Plesk / DirectAdmin / HestiaCP / Vultr server modules** —
-  covered by automated tests, but we have not run them end-to-end against
-  live servers. If you run one of these, please try it out and open an issue
-  (or even better, a pull request) telling us what you found.
-- **aaPanel server module** — needs a run on a panel licensed for aaPanel
-  Pro (Sub aaPanel is a Pro feature).
-- **PayPal / Authorize.Net / Bank Transfer gateways** — same story.
-- **Enom domain registrar** — API integration exists, needs real-world
-  verification.
-- General bug reports, typos, translation improvements.
-
-We read every issue. Reproduction steps or a patch help us move fast.
+Bug reports, typos and translation improvements are always welcome. We read
+every issue; reproduction steps or a patch help us move fast.
 
 ---
 
@@ -351,9 +341,7 @@ PNLCS sells **KVM virtual machines and LXC containers on Proxmox VE**, from
 the first order to termination. The customer picks the operating system and
 size at checkout; when the invoice is paid, the server is cloned from a
 template, sized, given an address and started; the customer then runs it
-from the billing portal. The module was tested end to end with KVM servers on
-a live **Proxmox VE 9.1** host, through an API token limited to one resource
-pool; LXC is covered by the automated tests.
+from the billing portal.
 
 📖 **Full step-by-step guide:** [docs.pnlcs.com → Sell VPS on Proxmox VE](https://docs.pnlcs.com/guides/sell-vps-on-proxmox/)
 
@@ -1322,47 +1310,40 @@ ResellerClub, OpenProvider, HRD, DomainNameAPI) — and add your own modules wit
 core code (see [Writing your own module](#writing-your-own-module)).
 
 > 💡 **Choosing a panel to sell on?** The **[Panelica](https://panelica.com)**
-> server module is tested end-to-end and provisions instantly. Panelica is a
+> server module provisions instantly. Panelica is a
 > modern **cPanel / Plesk alternative** with built-in per-user isolation (no
 > CloudLinux) and universal migration from cPanel, Plesk, DirectAdmin, and
 > CyberPanel.
 
-This is every module in `modules/`, and whether the test suite exercises its
-own code. "Covered" means there are tests that drive the module and assert on
-what it sends and stores, with the provider's HTTP responses faked. It is not
-a statement that the integration has been run against a live provider account.
+This is every module in `modules/`:
 
-| Module        | Type      | Automated tests |
-|---------------|-----------|-----------------|
-| Panelica      | Server    | Covered         |
-| cPanel        | Server    | Covered         |
-| Plesk         | Server    | Covered         |
-| DirectAdmin   | Server    | Covered         |
-| Proxmox       | Server    | Covered         |
-| HestiaCP      | Server    | Covered         |
-| aaPanel       | Server    | Covered         |
-| Vultr         | Server    | Covered         |
-| Custom        | Server    | None yet        |
-| Stripe        | Gateway   | Covered         |
-| iyzico        | Gateway   | Covered         |
-| PayPal        | Gateway   | Covered         |
-| Authorize.Net | Gateway   | Covered         |
-| Razorpay      | Gateway   | Covered         |
-| Mollie        | Gateway   | Covered         |
-| Tpay          | Gateway   | None yet        |
-| BankTransfer  | Gateway   | Covered         |
-| Enom          | Registrar | Covered         |
-| Namecheap     | Registrar | Covered         |
-| ResellerClub  | Registrar | Covered         |
-| OpenProvider  | Registrar | Covered         |
-| DomainNameAPI | Registrar | Partly (nameservers, domain sync) |
-| HRD           | Registrar | None yet        |
-| Manual        | Registrar | None yet        |
-| GoGetSSL      | SSL       | Covered         |
-
-If you run one of these against a real provider, please open an issue with
-what worked and what didn't — especially anything the faked responses could
-not have caught. A short note is enough; we can iterate from there.
+| Module        | Type      |
+|---------------|-----------|
+| Panelica      | Server    |
+| cPanel        | Server    |
+| Plesk         | Server    |
+| DirectAdmin   | Server    |
+| Proxmox       | Server    |
+| HestiaCP      | Server    |
+| aaPanel       | Server    |
+| Vultr         | Server    |
+| Custom        | Server    |
+| Stripe        | Gateway   |
+| iyzico        | Gateway   |
+| PayPal        | Gateway   |
+| Authorize.Net | Gateway   |
+| Razorpay      | Gateway   |
+| Mollie        | Gateway   |
+| Tpay          | Gateway   |
+| BankTransfer  | Gateway   |
+| Enom          | Registrar |
+| Namecheap     | Registrar |
+| ResellerClub  | Registrar |
+| OpenProvider  | Registrar |
+| DomainNameAPI | Registrar |
+| HRD           | Registrar |
+| Manual        | Registrar |
+| GoGetSSL      | SSL       |
 
 ### Managing modules — Setup → Modules
 

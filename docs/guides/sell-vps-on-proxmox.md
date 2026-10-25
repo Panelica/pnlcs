@@ -9,12 +9,6 @@ panel on the admin's service page.
 
 ![A customer's virtual server](../screenshots/client-vps.png)
 
-The module was tested end to end against a live **Proxmox VE 9.1** host,
-through an API token that can reach only its own resource pool: templates
-installed from the admin panel, servers created from orders and by hand,
-reinstalled, snapshotted, backed up and restored, and signed into over SSH with
-the password PNLCS set.
-
 ## How it fits together
 
 ```mermaid

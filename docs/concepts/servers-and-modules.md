@@ -16,7 +16,7 @@ provider's API. PNLCS ships with these server modules:
 
 | Module | What it provisions |
 |--------|--------------------|
-| **Panelica** | Accounts on a Panelica hosting panel (fully tested) |
+| **Panelica** | Accounts on a Panelica hosting panel |
 | **cPanel** | WHM/cPanel accounts |
 | **Plesk** | Plesk subscriptions |
 | **DirectAdmin** | DirectAdmin users |
@@ -77,7 +77,6 @@ You can watch and retry failed jobs; see
 Step-by-step: [Connect a Server](../guides/connect-a-server.md).
 
 !!! tip "Which panel should I use?"
-    PNLCS works with all the panels above. If you're still choosing, the
-    **Panelica** module is the most thoroughly tested, and
+    PNLCS works with all the panels above. If you're still choosing,
     [Panelica](https://panelica.com) is a modern cPanel/Plesk alternative with
     built-in isolation (no CloudLinux) and universal migration.
