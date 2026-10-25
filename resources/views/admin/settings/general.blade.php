@@ -508,6 +508,10 @@
                 </select>
                 <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.consolidated_billing_hint') }}</div>
             </div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:6px;">
+                <input type="hidden" name="InvoiceRenewalsSeparately" value="0"><input type="checkbox" name="InvoiceRenewalsSeparately" value="1" {{ !empty($settings['InvoiceRenewalsSeparately']) ? 'checked' : '' }}>
+                {{ __('admin.settings.invoice_renewals_separately') }}
+            </label>
             <div class="form-group" style="margin-top:10px;max-width:50%;">
                 <label class="form-label" for="invoice-number-format">{{ __('admin.settings.invoice_number_format') }}</label>
                 <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">

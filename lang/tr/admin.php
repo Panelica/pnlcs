@@ -2732,6 +2732,7 @@ return [
     'settings.consolidated_billing_day' => 'Toplu faturalama günü',
     'settings.consolidated_billing_off' => 'Kapalı: her yenileme ayrı faturalanır',
     'settings.consolidated_billing_hint' => 'Ayın bu gününde her müşteriye, gelecek ayın aynı gününe kadar yenilenecek her şey için tek fatura kesilir (yukarıdaki gün sayısı kadar fazlasıyla). Arada yalnız geç kalacak yenilemeler faturalanır.',
+    'settings.invoice_renewals_separately' => 'Her yenilemeyi ayrı faturala; müşteri bir hizmeti yenileyip diğerini bırakabilsin',
     'settings.default_nameservers' => 'Varsayılan Ad Sunucuları',
     'settings.default_nameservers_hint' => 'Başka ad sunucusu sağlanmadığında alan adları kaydedilirken veya aktarılırken kullanılır.',
     'settings.themes' => 'Temalar',

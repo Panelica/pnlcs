@@ -2758,6 +2758,7 @@ return [
     'settings.consolidated_billing_day' => 'Consolidated billing day',
     'settings.consolidated_billing_off' => 'Off: each renewal is invoiced on its own',
     'settings.consolidated_billing_hint' => 'On this day of the month each customer gets one invoice for everything renewing before the same day next month (plus the days above). In between, only renewals that would otherwise be invoiced late are raised.',
+    'settings.invoice_renewals_separately' => 'Invoice each renewal separately, so a customer can renew one service and let another lapse',
     'settings.default_nameservers' => 'Default Nameservers',
     'settings.default_nameservers_hint' => 'Used when registering or transferring domains when no other nameservers are supplied.',
     'settings.themes' => 'Themes',

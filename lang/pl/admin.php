@@ -2758,6 +2758,7 @@ return [
     'settings.consolidated_billing_day' => 'Dzień zbiorczego fakturowania',
     'settings.consolidated_billing_off' => 'Wyłączone: każde odnowienie ma osobną fakturę',
     'settings.consolidated_billing_hint' => 'W tym dniu miesiąca każdy klient dostaje jedną fakturę za wszystko, co odnawia się przed tym samym dniem następnego miesiąca (plus dni powyżej). W międzyczasie wystawiane są tylko odnowienia, które inaczej byłyby spóźnione.',
+    'settings.invoice_renewals_separately' => 'Wystawiaj osobną fakturę za każde odnowienie, aby klient mógł odnowić jedną usługę, a inną pozostawić',
     'settings.default_nameservers' => 'Domyślne serwery DNS',
     'settings.default_nameservers_hint' => 'Używane przy rejestracji i transferze domen, gdy nie podano innych serwerów DNS.',
     'settings.themes' => 'Motywy',
