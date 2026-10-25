@@ -691,8 +691,8 @@
         if (b.hasAttribute('data-copy')) { copy(b.getAttribute('data-copy'), b); return; }
         if (b.hasAttribute('data-snap-rollback')) {
             var n = b.getAttribute('data-snap-rollback');
-            ask({ title: T.snapshot_rollback, text: fill(T.confirm_rollback, { name: n }), ok: T.snapshot_rollback }).then(function (yes) {
-                if (yes) { msg(T.working, 'info'); post(urls.snapshotAction, { action: 'rollback', name: n }).then(lists); }
+            ask({ title: T.snapshot_rollback, text: fill(T.confirm_rollback, { name: n }), word: confirmWord, ok: T.snapshot_rollback }).then(function (typed) {
+                if (typed) { msg(T.working, 'info'); post(urls.snapshotAction, { action: 'rollback', name: n, confirm: typed }).then(lists); }
             });
         } else if (b.hasAttribute('data-snap-delete')) {
             var n2 = b.getAttribute('data-snap-delete');
