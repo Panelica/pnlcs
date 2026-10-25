@@ -32,4 +32,9 @@ class VpsController extends Controller
     {
         return auth('admin')->user()?->full_name ?: 'admin';
     }
+
+    protected function vpsShowsInfrastructure(): bool
+    {
+        return true;
+    }
 }

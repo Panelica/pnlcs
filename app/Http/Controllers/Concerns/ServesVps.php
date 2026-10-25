@@ -27,7 +27,21 @@ trait ServesVps
 
     public function status(Service $service): JsonResponse
     {
-        return response()->json($this->vpsModule($service, false)->vmStatus($service));
+        $status = $this->vpsModule($service, false)->vmStatus($service);
+
+        // Which Proxmox node the server runs on is the operator's business:
+        // nothing in the customer's panel shows it, and it names the host.
+        if (! $this->vpsShowsInfrastructure()) {
+            unset($status['node']);
+        }
+
+        return response()->json($status);
+    }
+
+    /** Whether the caller may see where the server runs (staff); a customer may not. */
+    protected function vpsShowsInfrastructure(): bool
+    {
+        return false;
     }
 
     public function graphs(Request $request, Service $service): JsonResponse
