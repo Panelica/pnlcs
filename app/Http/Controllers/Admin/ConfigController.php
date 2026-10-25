@@ -1113,6 +1113,10 @@ class ConfigController extends Controller
     {
         return view('admin.config.transactions', [
             'transactions' => Transaction::with('client')->orderBy('id', 'desc')->paginate(25),
+            // Credit staff added or took by hand (#307), with the reason and who did it. Kept out of the
+            // transactions above: no money moved, so it is not income.
+            'adjustments' => \App\Models\Credit::with(['client', 'admin'])->whereNotNull('admin_id')
+                ->orderBy('id', 'desc')->paginate(25, ['*'], 'adjustments_page'),
         ]);
     }
 
