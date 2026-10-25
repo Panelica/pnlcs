@@ -71,6 +71,7 @@ return [
         'no_vendor' => '未设置 cloud-init vendor 片段。Debian、Ubuntu 和 RHEL 云镜像会拒绝 SSH 密码登录，客户将无法使用 PNLCS 提供的密码登录。请用下面的命令创建该片段，并在此服务器中填写。',
         'vendor_missing' => 'vendor 片段 :volume 在节点 :node 上不存在。请用下面的命令创建。',
         'vendor_unverified' => '无法检查 vendor 片段 :volume（令牌无法列出 :storage 的内容）；服务器仍会应用它。',
+        'vendor_rights' => '无法将 vendor 片段 :volume 提供给新服务器：令牌需要 :storage 上的 Datastore.AllocateSpace 权限。',
         'vendor' => '新的 KVM 服务器将应用 vendor 片段 :volume（SSH 密码登录和 QEMU guest agent）。',
         'token_id_missing' => '已填写 API 令牌密钥，但缺少对应的令牌 ID（用户字段为 ":user"）。Proxmox 需要两者。',
         'unreachable' => '无法连接 Proxmox：:error',

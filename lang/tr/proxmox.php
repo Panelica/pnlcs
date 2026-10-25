@@ -71,6 +71,7 @@ return [
         'no_vendor' => 'Cloud-init vendor snippet\'i tanımlı değil. Debian, Ubuntu ve RHEL cloud imajları SSH\'ta parolayla girişi reddeder; müşteriler PNLCS\'in verdiği parolayla giremez. Snippet\'i aşağıdaki komutlarla oluşturun ve bu sunucuya girin.',
         'vendor_missing' => ':volume vendor snippet\'i :node node\'unda yok. Aşağıdaki komutlarla oluşturun.',
         'vendor_unverified' => ':volume vendor snippet\'i kontrol edilemedi (token :storage içeriğini listeleyemiyor); sunuculara yine de uygulanır.',
+        'vendor_rights' => ':volume vendor snippet\'i yeni sunuculara verilemez: token\'ın :storage üzerinde Datastore.AllocateSpace yetkisi olmalı.',
         'vendor' => 'Yeni KVM sunucuları :volume vendor snippet\'ini alır (SSH parola girişi ve QEMU guest agent).',
         'token_id_missing' => 'Bir API token gizli anahtarı var ama ona ait token kimliği yok (kullanıcı alanında ":user" yazıyor). Proxmox ikisine birden ihtiyaç duyar.',
         'unreachable' => 'Proxmox\'a ulaşılamadı: :error',

@@ -260,14 +260,25 @@ YAML;
         } elseif ($node !== '') {
             [$vendorStorage] = explode(':', $vendor, 2);
             $listed = $this->api->get("nodes/{$node}/storage/{$vendorStorage}/content", ['content' => 'snippets']);
-            if ($listed->ok && ! collect($listed->list())->contains('volid', $vendor)) {
+            // Proxmox lists a snippet only to a caller with Datastore.Allocate
+            // on the storage (check_volume_access, called without a content
+            // type); putting one on a guest takes Datastore.AllocateSpace. So
+            // for the token Test Connection recommends the list is always
+            // empty and proves nothing (#286): what can be checked is the
+            // right to use it.
+            $storageRights = $perms === null ? null : self::rightsAt($perms, "/storage/{$vendorStorage}");
+            $hidden = $storageRights !== null && ! in_array('Datastore.Allocate', $storageRights, true);
+            if ($hidden && ! in_array('Datastore.AllocateSpace', $storageRights, true)) {
+                $add('fail', 'vendor_rights', ['volume' => $vendor, 'storage' => $vendorStorage]);
+                $failed = $rightsProblem = true;
+            } elseif ($listed->ok && collect($listed->list())->contains('volid', $vendor)) {
+                $add('ok', 'vendor', ['volume' => $vendor]);
+            } elseif ($hidden || ! $listed->ok) {
+                $add('info', 'vendor_unverified', ['volume' => $vendor, 'storage' => $vendorStorage]);
+            } else {
                 $add('fail', 'vendor_missing', ['volume' => $vendor, 'node' => $node]);
                 $failed = true;
                 $snippetCommands = $this->snippetCommands($storages ?? collect());
-            } elseif (! $listed->ok) {
-                $add('info', 'vendor_unverified', ['volume' => $vendor, 'storage' => $vendorStorage]);
-            } else {
-                $add('ok', 'vendor', ['volume' => $vendor]);
             }
         }
 

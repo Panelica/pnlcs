@@ -71,6 +71,7 @@ return [
         'no_vendor' => 'No cloud-init vendor snippet is set. Debian, Ubuntu and RHEL cloud images refuse SSH password logins, so customers could not sign in with the password PNLCS gives them. Create the snippet with the commands below and enter it on this server.',
         'vendor_missing' => 'The vendor snippet :volume does not exist on node :node. Create it with the commands below.',
         'vendor_unverified' => 'The vendor snippet :volume could not be checked (the token cannot list :storage); guests will get it anyway.',
+        'vendor_rights' => 'The vendor snippet :volume cannot be given to new guests: the token needs Datastore.AllocateSpace on :storage.',
         'vendor' => 'New KVM guests get the vendor snippet :volume (SSH password login and the QEMU guest agent).',
         'token_id_missing' => 'There is an API token secret but no token ID to go with it (the user field says ":user"). Proxmox needs both.',
         'unreachable' => 'Proxmox could not be reached: :error',
