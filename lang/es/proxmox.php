@@ -71,6 +71,7 @@ return [
         'no_vendor' => 'No hay ningún fragmento vendor de cloud-init definido. Las imágenes cloud de Debian, Ubuntu y RHEL rechazan el inicio de sesión SSH con contraseña, así que los clientes no podrían entrar con la contraseña que les da PNLCS. Cree el fragmento con los comandos de abajo e indíquelo en este servidor.',
         'vendor_missing' => 'El fragmento vendor :volume no existe en el nodo :node. Créelo con los comandos de abajo.',
         'vendor_unverified' => 'No se pudo comprobar el fragmento vendor :volume (el token no puede listar :storage); los invitados lo recibirán igualmente.',
+        'vendor_rights' => 'El fragmento vendor :volume no se puede dar a los invitados nuevos: el token necesita Datastore.AllocateSpace en :storage.',
         'vendor' => 'Los nuevos invitados KVM reciben el fragmento vendor :volume (inicio de sesión SSH con contraseña y agente invitado QEMU).',
         'token_id_missing' => 'Hay un secreto de token de API pero ningún ID de token que lo acompañe (el campo de usuario dice ":user"). Proxmox necesita ambos.',
         'unreachable' => 'No se pudo contactar con Proxmox: :error',

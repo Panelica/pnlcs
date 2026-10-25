@@ -7,6 +7,7 @@ use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;
+use Modules\Servers\Proxmox\ProxmoxSetup;
 
 /**
  * A Proxmox VE cluster in memory, behaving the way the real API does where it
@@ -198,8 +199,14 @@ final class FakeProxmox
             return $this->ok($this->storages);
         }
         if ($method === 'GET' && ($rest[0] ?? '') === 'storage' && ($rest[2] ?? '') === 'content') {
+            // Proxmox lists a snippet only to a caller with Datastore.Allocate
+            // on the storage, though AllocateSpace is enough to use one.
+            $seesSnippets = $this->permissions === []
+                || in_array('Datastore.Allocate', ProxmoxSetup::rightsAt($this->permissions, '/storage/'.$rest[1]), true);
+
             return $this->ok(array_values(array_filter($this->volumes[$rest[1]] ?? [], fn ($v) => (! isset($p['content']) || $v['content'] === $p['content'])
-                && (! isset($p['vmid']) || (int) ($v['vmid'] ?? 0) === (int) $p['vmid']))));
+                && (! isset($p['vmid']) || (int) ($v['vmid'] ?? 0) === (int) $p['vmid'])
+                && ($v['content'] !== 'snippets' || $seesSnippets))));
         }
         if ($method === 'DELETE' && ($rest[0] ?? '') === 'storage' && ($rest[2] ?? '') === 'content') {
             $volid = implode('/', array_slice($rest, 3));
