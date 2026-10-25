@@ -55,6 +55,14 @@ final class FakeProxmox
     /** While true, every task reports "running" - the way a long clone or restore does. */
     public bool $holdTasks = false;
 
+    /**
+     * While true, the caller's rights reach a guest only through its pool. A
+     * new guest joins the pool at the end of its creation, and Proxmox checks
+     * the tags given at creation against /vms/<id> (pool left out), so such a
+     * create is refused: a container at once, a virtual machine by its task.
+     */
+    public bool $poolOnlyRights = false;
+
     /** vmid => [snapname => [snaptime, description]] */
     public array $snapshots = [];
 
@@ -371,6 +379,16 @@ final class FakeProxmox
         }
         if ($type === 'lxc' && isset($p['password']) && isset($p['vmid']) && ! isset($p['ostemplate'])) {
             return $this->error(400, 'ostemplate: property is missing and it is not optional');
+        }
+        if ($this->poolOnlyRights && isset($p['tags'])) {
+            $reason = "Permission check failed (/vms/{$vmid}, VM.Config.Options)";
+            if ($type === 'lxc') {
+                return $this->error(403, $reason);
+            }
+            $upid = json_decode($this->task()->wait()->getBody()->getContents(), true)['data'];
+            $this->tasks[$upid] = "unable to create VM {$vmid} - 403 {$reason}";
+
+            return $this->ok($upid);
         }
 
         $config = collect($p)->except(['vmid', 'pool', 'start', 'password', 'ostemplate'])->all();

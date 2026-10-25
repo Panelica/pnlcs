@@ -272,6 +272,10 @@ final class ProxmoxImages
             ];
             if (($pool = (string) $this->server->setting('pool', '')) !== '') {
                 $body['pool'] = $pool;
+                // Proxmox checks tags on a new guest against /vms/<id>, which a
+                // token limited to the pool has no right on until the guest has
+                // joined it; the tag is set in the next step instead.
+                unset($body['tags']);
             }
             $sent = $this->api->post("nodes/{$node}/qemu", $body);
             if (! $sent->ok) {
@@ -285,6 +289,14 @@ final class ProxmoxImages
         }
 
         if ($job['step'] === 'created') {
+            if ((string) $this->server->setting('pool', '') !== '') {
+                $tagged = $this->api->put("nodes/{$node}/qemu/{$job['vmid']}/config", ['tags' => self::TAG]);
+                if (! $tagged->ok) {
+                    $this->saveJob($key, ['step' => 'failed', 'error' => $tagged->error] + $job);
+
+                    return false;
+                }
+            }
             $sent = $this->api->post("nodes/{$node}/qemu/{$job['vmid']}/template");
             if (! $sent->ok) {
                 $this->saveJob($key, ['step' => 'failed', 'error' => $sent->error] + $job);

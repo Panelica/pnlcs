@@ -150,10 +150,12 @@ it('creates an unprivileged container with the marks, the pool and a fixed addre
     expect($body)->toMatchArray([
         'unprivileged' => 1, 'pool' => 'pnlcs', 'rootfs' => 'local-lvm:8', 'memory' => 512, 'features' => 'nesting=1',
         'ostemplate' => 'local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst',
-    ])->and($body['tags'])->toBe('pnlcs;pnlcs-s'.$service->id)
+    ])->not->toHaveKey('tags')
         ->and($body['net0'])->toBe('name=eth0,bridge=vmbr0,ip=198.51.100.10/28,gw=198.51.100.1')
         ->and($body['password'])->toBe($service->fresh()->password);
-    expect($pve->guests[$result['data']['vmid']]['status'])->toBe('running');
+    // Tagged once it is in the pool (#278).
+    expect($pve->guests[$result['data']['vmid']]['status'])->toBe('running')
+        ->and($pve->guests[$result['data']['vmid']]['config']['tags'])->toBe('pnlcs;pnlcs-s'.$service->id);
 });
 
 it('says what Proxmox said when it refuses to create', function () {

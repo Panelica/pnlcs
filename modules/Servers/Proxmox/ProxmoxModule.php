@@ -368,6 +368,10 @@ class ProxmoxModule extends AbstractServerModule
         ];
         if ($pool !== '') {
             $body['pool'] = $pool;
+            // A token whose rights come from the pool cannot tag a guest that
+            // is not in it yet (Proxmox checks tags on /vms/<id>); the tags
+            // are set by configureQemu once the guest has joined.
+            unset($body['tags']);
         }
 
         return $api->post("nodes/{$node}/qemu", $body);
@@ -407,6 +411,8 @@ class ProxmoxModule extends AbstractServerModule
         }
         if (($pool = (string) $server->setting('pool', '')) !== '') {
             $body['pool'] = $pool;
+            // As for a virtual machine: tagged by configureLxc, in the pool.
+            unset($body['tags']);
         }
 
         return $body;
