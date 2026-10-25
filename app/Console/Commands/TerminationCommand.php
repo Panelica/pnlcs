@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Log;
  *  - It only ever looks at services that are suspended AND whose client still
  *    owes an overdue invoice. Paying the debt takes a service off the list at
  *    once, even before unsuspend-on-payment has switched it back on.
+ *  - Only a suspension billing put in place counts: one staff made by hand
+ *    (abuse, a security problem, a customer's request) is not "suspended over
+ *    an unpaid invoice", even while the client owes one, and stays.
  *  - A pending cancellation request belongs to pnlcs:process-cancellations,
  *    which honours the customer's chosen end-of-billing date; this command
  *    stays away from those services entirely.
@@ -45,6 +48,12 @@ class TerminationCommand extends Command
             // NULL by itself, this whereNotNull just says so out loud.
             ->whereNotNull('suspension_date')
             ->whereDate('suspension_date', '<=', today()->subDays($days))
+            // The reason auto-suspend writes ("Overdue Invoice - Automatic
+            // Suspension"), read the way unsuspend-on-payment reads it - except
+            // that a blank reason is not taken as ours here: staff may suspend
+            // without typing one, and this deletes the account.
+            ->where(fn ($q) => $q->where('suspension_reason', 'like', '%overdue%')
+                ->orWhere('suspension_reason', 'like', '%unpaid%'))
             ->whereHas('client', function ($q) {
                 $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace(0));
             })

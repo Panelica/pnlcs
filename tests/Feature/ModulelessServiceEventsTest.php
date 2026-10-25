@@ -93,7 +93,7 @@ test('suspending it for an overdue invoice raises ServiceSuspended', function ()
 test('ending it raises ServiceTerminated', function () {
     Setting::set('AutoTerminationEnabled', '1');
     Setting::set('AutoTerminationDays', '30');
-    $service = mlService(['status' => 'suspended', 'suspension_date' => now()->subDays(45)]);
+    $service = mlService(['status' => 'suspended', 'suspension_date' => now()->subDays(45), 'suspension_reason' => 'Overdue Invoice - Automatic Suspension']);
     Invoice::factory()->create(['client_id' => $service->client_id, 'status' => 'overdue', 'due_date' => now()->subDays(50), 'total' => 49]);
 
     Event::fake([ServiceTerminated::class]);

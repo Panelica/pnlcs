@@ -181,6 +181,22 @@ test('a manually suspended service without a suspension date is never picked up'
     Http::assertNothingSent();
 });
 
+test('a service staff suspended by hand stays, even while the client owes an overdue invoice', function (?string $reason) {
+    Http::fake(['*' => Http::response(['success' => true], 200)]);
+    enableAutoTermination(30);
+    $service = suspendedService(['suspension_reason' => $reason]);
+
+    $this->artisan('pnlcs:auto-terminate')->assertSuccessful();
+    $this->artisan('pnlcs:auto-terminate --dry-run')->doesntExpectOutputToContain("#{$service->id}")->assertSuccessful();
+
+    expect($service->fresh()->status)->toBe('suspended');
+    Http::assertNothingSent();
+})->with([
+    'abuse' => ['Abuse report: outgoing spam'],
+    'bulk action' => ['Suspended by administrator'],
+    'no reason typed' => [null],
+]);
+
 test('services without a server module are still marked terminated locally', function () {
     enableAutoTermination(30);
     $client = Client::factory()->create();
@@ -192,6 +208,7 @@ test('services without a server module are still marked terminated locally', fun
         'client_id' => $client->id, 'product_id' => $product->id,
         'server_id' => null, 'status' => 'suspended',
         'suspension_date' => now()->subDays(45),
+        'suspension_reason' => 'Overdue Invoice - Automatic Suspension',
     ]);
     $invoice = Invoice::factory()->create([
         'client_id' => $client->id, 'status' => 'overdue',
