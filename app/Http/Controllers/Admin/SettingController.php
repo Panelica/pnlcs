@@ -81,6 +81,8 @@ class SettingController extends Controller
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay',
+        // The tax page's two switches (#305).
+        'TaxEnabled', 'TaxInclusivePrices',
         'AutoSuspensionDays', 'AutoTerminationDays', 'AutoTerminationEnabled',
         'FraudLabsApiKey', 'FraudLabsEnabled',
         'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',

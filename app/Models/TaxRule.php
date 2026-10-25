@@ -12,8 +12,42 @@ class TaxRule extends Model {
     /**
      * The global default rate (empty country), falling back to any default.
      */
+    /**
+     * Whether the shop charges tax at all (TaxEnabled; on unless switched off).
+     * A shop that sells at one advertised price, or is not registered for VAT,
+     * had to delete every rule to stop tax being added (#305).
+     */
+    public static function enabled(): bool
+    {
+        return (string) Setting::get('TaxEnabled', '1') !== '0';
+    }
+
+    /**
+     * Whether the prices entered already include tax (TaxInclusivePrices). Then
+     * the advertised price is what the customer pays, and the tax is the part
+     * of it the rate accounts for: price × rate / (100 + rate).
+     */
+    public static function pricesIncludeTax(): bool
+    {
+        return (string) Setting::get('TaxInclusivePrices', '0') === '1';
+    }
+
+    /** The tax on an amount at a rate, added on top or taken out of it as the shop prices. */
+    public static function taxOn(float $amount, float $rate): float
+    {
+        if ($rate <= 0) {
+            return 0.0;
+        }
+
+        return round(self::pricesIncludeTax() ? $amount * $rate / (100 + $rate) : $amount * $rate / 100, 2);
+    }
+
     public static function defaultRate(): float
     {
+        if (! self::enabled()) {
+            return 0.0;
+        }
+
         $rule = static::where('is_default', true)
             ->orderByRaw("CASE WHEN country = '' THEN 0 ELSE 1 END")
             ->orderBy('id')
