@@ -45,7 +45,7 @@ class TicketController extends Controller
         return view('admin.tickets.create', [
             'client' => $client,
             'departments' => TicketDepartment::orderBy('sort_order')->get(['id', 'name']),
-            'services' => $client ? \App\Models\Service::where('client_id', $client->id)->with('product:id,name')->orderByDesc('id')->get(['id', 'product_id', 'domain']) : collect(),
+            'services' => $client ? \App\Models\Service::where('client_id', $client->id)->with('product:id,name')->orderByDesc('id')->get(['id', 'product_id', 'domain', 'module_data']) : collect(),
         ]);
     }
 

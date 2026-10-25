@@ -56,7 +56,11 @@
                     <option value="">-- {{ __('client.tickets.none') }} --</option>
                     @if(isset($services))
                         @foreach($services as $svc)
-                        <option value="{{ $svc->id }}">{{ $svc->product?->name ?? __('client.services.title') }}{{ $svc->domain ? " (".$svc->domain.")" : "" }}</option>
+                        {{-- With the address, so one of several alike servers can be picked (#287). --}}
+                        @php
+                            $svcLabel = implode(' · ', array_filter([$svc->domain, $svc->primaryIp()]));
+                        @endphp
+                        <option value="{{ $svc->id }}">{{ $svc->product?->name ?? __('client.services.title') }}{{ $svcLabel !== '' ? " (".$svcLabel.")" : "" }}</option>
                         @endforeach
                     @endif
                 </select>

@@ -61,7 +61,13 @@
                         <a href="{{ route("client.services.show", $s) }}" style="font-weight:600">{{ $s->product?->name ?? "N/A" }}</a>
                         @include('client.services.partials.tool-links', ['svc' => $s])
                     </td>
-                    <td class="text-muted">{{ $s->domain ?? "-" }}</td>
+                    <td class="text-muted">
+                        {{ $s->domain ?? "-" }}
+                        {{-- Several servers of one product look alike; the address tells them apart (#287). --}}
+                        @if($ip = $s->primaryIp())
+                        <div class="text-sm" style="font-family:var(--font-mono, monospace)">{{ $ip }}</div>
+                        @endif
+                    </td>
                     <td class="text-muted" style="text-transform:capitalize">{{ $s->billing_cycle ?? "-" }}</td>
                     <td style="font-weight:600">{{ display_money_fmt($s->amount) }}</td>
                     <td class="text-muted text-sm">{{ $s->next_due_date?->format(date_fmt()) ?? "-" }}</td>
