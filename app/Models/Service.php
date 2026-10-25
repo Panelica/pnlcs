@@ -63,6 +63,27 @@ class Service extends Model
     }
 
     /**
+     * Why the service is suspended, in words the customer may read: what staff
+     * typed when they suspended it, or "Unpaid invoice" for a suspension
+     * billing made (the text auto-suspend writes is for staff). Null when it is
+     * not suspended or no reason was given.
+     */
+    public function customerSuspensionReason(): ?string
+    {
+        $reason = trim((string) $this->suspension_reason);
+
+        if (strtolower((string) $this->status) !== 'suspended' || $reason === '') {
+            return null;
+        }
+
+        $lower = strtolower($reason);
+
+        return str_contains($lower, 'overdue') || str_contains($lower, 'unpaid')
+            ? __('email.common.unpaid_invoice')
+            : $reason;
+    }
+
+    /**
      * What this service is worth per month, whatever it is billed in.
      */
     public function monthlyAmount(): float

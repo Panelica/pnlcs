@@ -2614,6 +2614,7 @@ return [
     'services.server_module' => 'Serwer i moduł',
     'services.service_info' => 'Informacje o usłudze',
     'services.suspend' => 'Zawieś',
+    'services.suspend_reason_placeholder' => 'Powód (widoczny dla klienta)',
     'services.suspended' => 'Zawieszony',
     'services.terminate' => 'Zakończ',
     'services.terminated' => 'Zakończony',

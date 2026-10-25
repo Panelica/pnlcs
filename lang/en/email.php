@@ -169,6 +169,7 @@ return [
         'error_contact' => 'If you believe this is an error, please contact our support team.',
         'reactivate' => 'To reactivate your service, please log in to your account and settle any outstanding invoices.',
         'suspended' => 'Your service has been suspended.',
+        'reason_ask_support' => 'Contact support for details',
     ],
     'service_termination' => [
         'data_removed' => 'All associated data has been removed. This action is irreversible.',

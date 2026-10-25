@@ -945,6 +945,8 @@ return [
         'upgrade_downgrade_title' => 'Yükselt / Düşür',
         'username' => 'Kullanıcı Adı',
         'setup_delayed' => 'Bu hizmetin kurulumunu henüz tamamlayamadık. Ekibimize haber verildi, kısa sürede tamamlanacak; yeniden sipariş vermenize gerek yok.',
+        'suspended_because' => 'Bu hizmet askıya alındı: :reason',
+        'suspended_ask_support' => 'Bu hizmet askıya alındı. Nedenini öğrenmek için destekle iletişime geçin.',
     ],
     'domains.lock_unavailable' => 'Bu alan adının kayıt kuruluşu buradan kilitlemeyi desteklemiyor. Lütfen destek ekibiyle iletişime geçin.',
     'status.unknown' => 'Bilinmiyor',

@@ -168,6 +168,7 @@ return [
         'error_contact' => 'Falls Sie dies für einen Fehler halten, kontaktieren Sie bitte unseren Support.',
         'reactivate' => 'Um Ihren Dienst wieder zu aktivieren, melden Sie sich bitte in Ihrem Kundenkonto an und begleichen Sie alle offenen Rechnungen.',
         'suspended' => 'Ihr Dienst wurde gesperrt.',
+        'reason_ask_support' => 'Details erhalten Sie vom Support',
     ],
     'service_termination' => [
         'data_removed' => 'Alle zugehörigen Daten wurden entfernt. Dieser Vorgang kann nicht rückgängig gemacht werden.',

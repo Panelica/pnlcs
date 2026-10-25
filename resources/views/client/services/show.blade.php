@@ -99,6 +99,10 @@
 <div class="pn-alert pn-alert-warning" role="status">{{ __('client.services.setup_delayed') }}</div>
 @endif
 
+@if(strtolower((string) $service->status) === 'suspended')
+<div class="pn-alert pn-alert-warning" role="status">{{ $service->customerSuspensionReason() !== null ? __('client.services.suspended_because', ['reason' => $service->customerSuspensionReason()]) : __('client.services.suspended_ask_support') }}</div>
+@endif
+
 {{-- Hero --}}
 <div class="sv-hero"><div class="sv-hero-in">
     <div class="sv-hrow">

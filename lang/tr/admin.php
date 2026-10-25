@@ -2589,6 +2589,7 @@ return [
     'services.server_module' => 'Sunucu & Modül',
     'services.service_info' => 'Hizmet Bilgileri',
     'services.suspend' => 'Askıya Al',
+    'services.suspend_reason_placeholder' => 'Sebep (müşteriye gösterilir)',
     'services.suspended' => 'Askıya Alınmış',
     'services.terminate' => 'Sonlandır',
     'services.terminated' => 'Sonlandırılmış',

@@ -168,6 +168,7 @@ return [
         'error_contact' => 'Si cree que se trata de un error, contacte con nuestro equipo de soporte.',
         'reactivate' => 'Para reactivar su servicio, inicie sesión en su cuenta y pague las facturas pendientes.',
         'suspended' => 'Su servicio se ha suspendido.',
+        'reason_ask_support' => 'Contacte con soporte para más detalles',
     ],
     'service_termination' => [
         'data_removed' => 'Se han eliminado todos los datos asociados. Esta acción es irreversible.',

@@ -169,6 +169,7 @@ return [
         'error_contact' => 'Jeśli uważasz, że to błąd, skontaktuj się z naszym zespołem wsparcia.',
         'reactivate' => 'Aby ponownie aktywować usługę, zaloguj się do swojego konta i ureguluj wszelkie zaległe faktury.',
         'suspended' => 'Twoja usługa została zawieszona.',
+        'reason_ask_support' => 'Szczegóły uzyskasz w pomocy technicznej',
     ],
     'service_termination' => [
         'data_removed' => 'Wszystkie powiązane dane zostały usunięte. Ta operacja jest nieodwracalna.',

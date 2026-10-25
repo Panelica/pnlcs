@@ -168,6 +168,7 @@ return [
         'error_contact' => 'Bunun bir hata olduğunu düşünüyorsanız lütfen destek ekibimizle iletişime geçin.',
         'reactivate' => 'Hizmetinizi yeniden aktifleştirmek için hesabınıza giriş yapıp ödenmemiş faturalarınızı kapatın.',
         'suspended' => 'Hizmetiniz askıya alındı.',
+        'reason_ask_support' => 'Ayrıntı için destekle iletişime geçin',
     ],
     'service_termination' => [
         'data_removed' => 'Hizmete ait tüm veriler silindi. Bu işlem geri alınamaz.',

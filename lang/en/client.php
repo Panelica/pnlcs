@@ -946,6 +946,8 @@ return [
         'upgrade_downgrade_title' => 'Upgrade / Downgrade Service',
         'username' => 'Username',
         'setup_delayed' => 'We could not finish setting up this service yet. Our team has been told and will complete it shortly; there is no need to order again.',
+        'suspended_because' => 'This service is suspended: :reason',
+        'suspended_ask_support' => 'This service is suspended. Please contact support to find out why.',
     ],
     'domains.lock_unavailable' => 'The registrar for this domain does not support locking from here. Please contact support.',
     'status.unknown' => 'Unknown',

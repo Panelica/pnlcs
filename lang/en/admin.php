@@ -2614,6 +2614,7 @@ return [
     'services.server_module' => 'Server & Module',
     'services.service_info' => 'Service Info',
     'services.suspend' => 'Suspend',
+    'services.suspend_reason_placeholder' => 'Reason (shown to the customer)',
     'services.suspended' => 'Suspended',
     'services.terminate' => 'Terminate',
     'services.terminated' => 'Terminated',

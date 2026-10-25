@@ -10,7 +10,7 @@
 <table style="width:100%;border-collapse:collapse;margin:20px 0;">
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.product_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->product?->name ?? 'N/A' }}</td></tr>
 <tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.domain_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->domain ?? 'N/A' }}</td></tr>
-<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.reason_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $reason ?? __('email.common.unpaid_invoice') }}</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #eee;"><strong>{{ __('email.common.reason_label') }}</strong></td><td style="padding:8px;border-bottom:1px solid #eee;">{{ $service->customerSuspensionReason() ?? (trim((string) ($reason ?? '')) !== '' ? $reason : __('email.service_suspension.reason_ask_support')) }}</td></tr>
 </table>
 
 <p>{{ __('email.service_suspension.reactivate') }}</p>

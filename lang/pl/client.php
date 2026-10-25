@@ -946,6 +946,8 @@ return [
         'upgrade_downgrade_title' => 'Ulepszenie / Ograniczenie usługi',
         'username' => 'Nazwa użytkownika',
         'setup_delayed' => 'Nie udało się jeszcze zakończyć konfiguracji tej usługi. Nasz zespół został powiadomiony i wkrótce ją dokończy; nie trzeba zamawiać ponownie.',
+        'suspended_because' => 'Ta usługa jest zawieszona: :reason',
+        'suspended_ask_support' => 'Ta usługa jest zawieszona. Skontaktuj się z pomocą techniczną, aby poznać powód.',
     ],
     'domains.lock_unavailable' => 'Rejestrator tej domeny nie obsługuje blokady z tego miejsca. Skontaktuj się z pomocą techniczną.',
     'status.unknown' => 'Nieznany',
