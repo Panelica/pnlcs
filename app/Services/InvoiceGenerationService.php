@@ -29,11 +29,11 @@ class InvoiceGenerationService
      */
     public function generateDueInvoices(): array
     {
-        // How many days before the due date a renewal is invoiced. This read
-        // config('billing.invoice_days_before_due'), a key that does not exist,
-        // so it was always 14 and nothing could change it.
-        $daysAhead = max(0, (int) \App\Models\Setting::get('InvoiceDaysBeforeDue', 14));
-        $cutoff = now()->addDays($daysAhead)->endOfDay();
+        // How far ahead this run invoices: InvoiceDaysBeforeDue, or the
+        // month to come on a consolidated billing day (see billingWindow).
+        // $daysAhead is how far before its due date a renewal can have been
+        // invoiced, which the paid-domain guard below looks back over.
+        [$cutoff, $daysAhead] = $this->billingWindow();
 
         // Only active services that are due for renewal and not already
         // invoiced. The dedup guard used to be missing entirely despite what
@@ -164,6 +164,48 @@ class InvoiceGenerationService
         }
 
         return $summary;
+    }
+
+    /**
+     * The last due date this run invoices, and how many days ahead that is.
+     *
+     * By default a renewal is invoiced InvoiceDaysBeforeDue days before it is
+     * due (this read config('billing.invoice_days_before_due'), a key that
+     * does not exist, so it was always 14). A customer with many services and
+     * domains renewing on different days got as many small invoices.
+     *
+     * With ConsolidatedBillingDay set (1-28), the run on that day of the month
+     * takes everything falling due before the next billing day, plus the
+     * usual lead, so each customer gets one invoice for the month. Between
+     * billing days only what would otherwise be invoiced late is raised: a
+     * renewal due before the next billing day that was not there on the last
+     * one (a service ordered since), at the usual lead and no earlier.
+     *
+     * The second value is how far ahead of its due date a renewal can be
+     * invoiced at all: the lead, or with a billing day up to a month more.
+     *
+     * @return array{0: Carbon, 1: int}
+     */
+    public function billingWindow(?Carbon $today = null): array
+    {
+        $today = ($today ?? now())->copy()->startOfDay();
+        $lead = max(0, (int) \App\Models\Setting::get('InvoiceDaysBeforeDue', 14));
+        $day = (int) \App\Models\Setting::get('ConsolidatedBillingDay', 0);
+
+        if ($day < 1 || $day > 28) {
+            return [$today->copy()->addDays($lead)->endOfDay(), $lead];
+        }
+
+        $next = $today->copy()->day($day);
+        if ($next->lte($today)) {
+            $next->addMonthNoOverflow();
+        }
+
+        $cutoff = $today->day === $day
+            ? $next->copy()->subDay()->addDays($lead)->endOfDay()
+            : $today->copy()->addDays($lead)->min($next->copy()->subDay())->endOfDay();
+
+        return [$cutoff, $lead + 31];
     }
 
     /**
