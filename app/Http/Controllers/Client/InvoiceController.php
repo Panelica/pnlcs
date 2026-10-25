@@ -26,6 +26,8 @@ class InvoiceController extends Controller
         $invoices = Invoice::with('items')
             ->excludeSettledProformas()
             ->where('client_id', $this->getClientId())
+            // A draft has not been issued to the customer.
+            ->where('status', '!=', \App\Enums\InvoiceStatus::Draft->value)
             ->orderBy('id', 'desc')
             ->paginate(25);
 
@@ -155,6 +157,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice)
     {
         abort_if($invoice->client_id !== $this->getClientId(), 403);
+        abort_if($invoice->status === \App\Enums\InvoiceStatus::Draft->value, 404);
 
         // The outcome of a payment return arrives as a code in the query
         // string: the callback request has no session, so it cannot flash a
@@ -349,6 +352,7 @@ class InvoiceController extends Controller
     public function downloadPdf(Invoice $invoice, InvoicePdfService $pdfService)
     {
         abort_if($invoice->client_id !== $this->getClientId(), 403);
+        abort_if($invoice->status === \App\Enums\InvoiceStatus::Draft->value, 404);
 
         return $pdfService->download($invoice);
     }

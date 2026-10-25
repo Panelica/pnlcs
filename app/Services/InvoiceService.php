@@ -83,9 +83,34 @@ class InvoiceService
             return $this->recalculateTotals($invoice->fresh());
         });
 
+        // A draft has not been issued to anybody: it is not mailed, the
+        // customer's balance is not spent on it, and the hooks that act on a
+        // new invoice wait. All three happen when it is published.
+        if ($invoice->status === InvoiceStatus::Draft->value) {
+            return $invoice->fresh();
+        }
+
         event(new InvoiceCreated($invoice));
 
         $this->applyAvailableCredit($invoice);
+
+        return $invoice->fresh();
+    }
+
+    /**
+     * Issue a draft: it becomes unpaid, and what createInvoice() holds back for
+     * a draft happens now - the created event (mail, hooks) and the customer's
+     * balance applied.
+     */
+    public function publishDraft(Invoice $invoice): Invoice
+    {
+        if ($invoice->status !== InvoiceStatus::Draft->value) {
+            return $invoice;
+        }
+
+        $invoice->update(['status' => InvoiceStatus::Unpaid->value]);
+        event(new InvoiceCreated($invoice->fresh()));
+        $this->applyAvailableCredit($invoice->fresh());
 
         return $invoice->fresh();
     }
