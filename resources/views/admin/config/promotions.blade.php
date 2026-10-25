@@ -66,11 +66,13 @@
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('common.table.value') }}</label><input type="number" step="0.01" min="0" name="value" value="{{ $promo->value }}" required class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.promotions.max_uses') }}</label><input type="number" min="0" name="max_uses" value="{{ $promo->max_uses }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.promotions.start_date') }}</label><input type="date" name="start_date" value="{{ $promo->start_date?->format('Y-m-d') }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.promotions.expires') }}</label><input type="date" name="expiration_date" value="{{ $promo->expiration_date?->format('Y-m-d') }}" class="form-control"></div>
                 <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;">
                     <input type="checkbox" name="recurring" value="1" @checked($promo->recurring)>
                     {{ __('admin.promotions.recurring') }}
                 </label>
+                <div class="form-group" style="margin-top:10px;"><label class="form-label">{{ __('admin.promotions.cycles') }} <small style="color:#999;">{{ __('admin.promotions.cycles_hint') }}</small></label><input type="number" min="0" max="1000" name="cycles" value="{{ (int) $promo->cycles }}" class="form-control"></div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">
                 <button type="button" onclick="document.getElementById('modal-edit-promo-{{ $promo->id }}').style.display='none'" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
@@ -98,7 +100,9 @@
                     <div class="form-group"><label class="form-label">{{ __('admin.promotions.requires') }}</label><select name="requires[]" multiple class="form-control" style="height:90px;">@foreach(($products ?? collect()) as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach</select><p style="font-size:11px;color:#999;margin-top:4px;">{{ __('admin.promotions.requires_hint') }}</p></div>
                     <div class="form-group" style="display:flex;gap:16px;flex-wrap:wrap;"><label style="font-size:12px;"><input type="checkbox" name="apply_once" value="1"> {{ __('admin.promotions.apply_once') }}</label><label style="font-size:12px;"><input type="checkbox" name="new_signups_only" value="1"> {{ __('admin.promotions.new_signups_only') }}</label><label style="font-size:12px;"><input type="checkbox" name="existing_client" value="1"> {{ __('admin.promotions.existing_client') }}</label></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.promotions.max_uses') }} <small style="color:#999;">{{ __('admin.promotions.unlimited_hint') }}</small></label><input type="number" name="max_uses" value="{{ old('max_uses', 0) }}" min="0" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.promotions.start_date') }} <small style="color:#999;">{{ __('admin.promotions.optional_hint') }}</small></label><input type="date" name="start_date" value="{{ old('start_date') }}" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.promotions.expiry_date') }} <small style="color:#999;">{{ __('admin.promotions.optional_hint') }}</small></label><input type="date" name="expiration_date" value="{{ old('expiration_date') }}" class="form-control"></div>
+                    <div class="form-group" style="grid-column:span 2;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;"><label style="font-size:12px;"><input type="checkbox" name="recurring" value="1" @checked(old('recurring'))> {{ __('admin.promotions.recurring') }}</label><div style="flex:1;min-width:180px;"><label class="form-label">{{ __('admin.promotions.cycles') }} <small style="color:#999;">{{ __('admin.promotions.cycles_hint') }}</small></label><input type="number" name="cycles" value="{{ old('cycles', 0) }}" min="0" max="1000" class="form-control"></div></div>
                 </div>
             </div>
             <div style="padding:12px 20px;border-top:1px solid #e5e5e5;display:flex;gap:8px;justify-content:flex-end;">

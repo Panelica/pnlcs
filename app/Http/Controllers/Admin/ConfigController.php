@@ -683,6 +683,7 @@ class ConfigController extends Controller
             'start_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after_or_equal:start_date',
             'recurring' => 'boolean',
+            'cycles' => 'nullable|integer|min:0|max:1000',
             'notes' => 'nullable|string',
             'applies_to' => 'nullable|array',
             'applies_to.*' => 'integer|exists:products,id',
@@ -693,6 +694,7 @@ class ConfigController extends Controller
             'existing_client' => 'boolean',
         ]);
         $v['recurring'] = $request->boolean('recurring');
+        $v['cycles'] = (int) ($v['cycles'] ?? 0);
         $v['apply_once'] = $request->boolean('apply_once');
         $v['new_signups_only'] = $request->boolean('new_signups_only');
         $v['existing_client'] = $request->boolean('existing_client');
@@ -717,9 +719,11 @@ class ConfigController extends Controller
             'start_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after_or_equal:start_date',
             'recurring' => 'boolean',
+            'cycles' => 'nullable|integer|min:0|max:1000',
             'notes' => 'nullable|string',
         ]);
         $v['recurring'] = $request->boolean('recurring');
+        $v['cycles'] = (int) ($v['cycles'] ?? 0);
         $promotion->update($v);
 
         return back()->with('success', __('messages.success.promotion_updated'));
