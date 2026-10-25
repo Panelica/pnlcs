@@ -174,6 +174,9 @@ class InvoiceApiController extends BaseApiController
                 $service->markPaid($invoice, $request->input('transid'), (string) ($request->input('gateway') ?: 'manual'));
             } elseif ($status === InvoiceStatus::Cancelled->value) {
                 $service->cancelInvoice($invoice);
+            } elseif ($status === InvoiceStatus::Unpaid->value && $invoice->status === InvoiceStatus::Draft->value) {
+                // Publishing a draft: mailed and credited now, not when drafted.
+                $service->publishDraft($invoice);
             } else {
                 $invoice->update(['status' => $status]);
             }
