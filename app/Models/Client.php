@@ -75,6 +75,8 @@ class Client extends Model
         'auto_charge',
         'credit',
         'tax_exempt',
+        // Read by auto-suspend; set on the admin's client form.
+        'override_auto_suspend',
         'language',
         'notes',
         'affiliate_id',

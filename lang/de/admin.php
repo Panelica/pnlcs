@@ -744,6 +744,7 @@ return [
         'tab_summary' => 'Zusammenfassung',
         'tab_tickets' => 'Tickets',
         'tax_exempt' => 'Steuerbefreit',
+        'never_auto_suspend' => 'Diesen Kunden nie automatisch sperren',
         'tickets' => 'Tickets',
         'title' => 'Kunden',
         'total_invoices' => 'Gesamtrechnungen',

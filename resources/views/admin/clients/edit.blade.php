@@ -89,6 +89,10 @@
                         @endforeach
                     </select>
                 </div>
+                {{-- Set when the client was created and, until now, nowhere after. --}}
+                <div class="form-group"><label class="form-label">{{ __('common.form.group') }}</label>
+                    <select name="group_id" class="form-control"><option value="">{{ __('common.none') }}</option>@foreach($groups as $g)<option value="{{ $g->id }}" @selected((string) old('group_id', $client->group_id) === (string) $g->id)>{{ $g->name }}</option>@endforeach</select>
+                </div>
                 @php $clientCurrencyId = (int) old('currency_id', $client->currency_id ?: $currencies->firstWhere('is_default', true)?->id); @endphp
                 <div class="form-group"><label class="form-label">{{ __('common.form.currency') }}</label>
                     <select name="currency_id" class="form-control">
@@ -105,6 +109,18 @@
                         @endforeach
                     </select>
                 </div>
+            </div>
+            {{-- Billing reads both (no tax on the invoice; auto-suspend leaves the
+                 account alone); the client page showed the first, nothing set either. --}}
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+                <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="hidden" name="tax_exempt" value="0"><input type="checkbox" name="tax_exempt" value="1" @checked(old('tax_exempt', $client->tax_exempt))>
+                    {{ __('admin.clients.tax_exempt') }}
+                </label>
+                <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="hidden" name="override_auto_suspend" value="0"><input type="checkbox" name="override_auto_suspend" value="1" @checked(old('override_auto_suspend', $client->override_auto_suspend))>
+                    {{ __('admin.clients.never_auto_suspend') }}
+                </label>
             </div>
             <hr style="margin:18px 0;border:none;border-top:1px solid #e5e5e5;">
             <h4 style="margin:0 0 12px;font-size:14px;font-weight:600;">{{ __('common.form.password') }}</h4>

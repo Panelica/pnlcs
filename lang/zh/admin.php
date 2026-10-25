@@ -744,6 +744,7 @@ return [
         'tab_summary' => '摘要',
         'tab_tickets' => '工单',
         'tax_exempt' => '免税',
+        'never_auto_suspend' => '从不自动暂停此客户',
         'tickets' => '工单',
         'title' => '客户',
         'total_invoices' => '发票总数',

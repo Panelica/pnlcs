@@ -744,6 +744,7 @@ return [
         'tab_summary' => 'Summary',
         'tab_tickets' => 'Tickets',
         'tax_exempt' => 'Tax Exempt',
+        'never_auto_suspend' => 'Never suspend this client automatically',
         'tickets' => 'Tickets',
         'title' => 'Clients',
         'total_invoices' => 'Total Invoices',
