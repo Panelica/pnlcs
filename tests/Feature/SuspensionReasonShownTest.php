@@ -72,3 +72,12 @@ test('an active service says nothing about suspension', function () {
         ->assertDontSee(__('client.services.suspended_ask_support'));
     expect($service->customerSuspensionReason())->toBeNull();
 });
+
+test('staff read the reason once on the admin service page', function () {
+    [$service] = srsService();
+    $service->update(['status' => 'suspended', 'suspension_date' => now(), 'suspension_reason' => 'AUP breach: open relay']);
+
+    $html = $this->actingAs(srsAdmin(), 'admin')->get(route('admin.services.show', $service))->assertOk()->getContent();
+
+    expect(substr_count($html, 'AUP breach: open relay'))->toBe(1);
+});

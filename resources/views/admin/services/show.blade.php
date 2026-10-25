@@ -97,7 +97,7 @@
                 <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.services.server') }}</td><td style="padding:5px 0;font-weight:600;">{{ $service->server->name ?? __('admin.services.none_assigned') }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.module') }}</td><td style="padding:5px 0;">{{ $service->product?->server_type ?: ($service->product?->ssl_module ?: __('admin.services.none_label')) }}</td></tr>
                 @if($service->suspension_date)
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.suspended') }}</td><td style="padding:5px 0;color:#d9534f;">{{ $service->suspension_date->format(date_fmt()) }}@if($service->suspension_reason) · {{ $service->suspension_reason }}@endif</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.suspended') }}</td><td style="padding:5px 0;color:#d9534f;">{{ $service->suspension_date->format(date_fmt()) }}</td></tr>
                 @endif
                 @if($service->suspension_reason)
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.reason') }}</td><td style="padding:5px 0;color:#777;">{{ $service->suspension_reason }}</td></tr>
