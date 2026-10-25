@@ -25,7 +25,7 @@
         @php $relatedService = $ticket->service ? \App\Models\Service::with('product')->find($ticket->service) : null; @endphp
         @if($relatedService)
         <div><strong style="color:#777;">{{ __('admin.tickets.related_service_label') }}</strong>
-            <a href="{{ route('admin.services.show', $relatedService) }}">{{ $relatedService->product->name ?? __('admin.tickets.service') }}{{ $relatedService->domain ? ' ('.$relatedService->domain.')' : '' }}</a>
+            <a href="{{ route('admin.services.show', $relatedService) }}">{{ $relatedService->product->name ?? __('admin.tickets.service') }}{{ $relatedService->domain ? ' ('.$relatedService->domain.')' : '' }}</a>@if($relatedService->primaryIp()) <code>{{ $relatedService->primaryIp() }}</code>@endif
         </div>
         @endif
         <div><strong style="color:#777;">{{ __('admin.tickets.client_label') }}</strong>

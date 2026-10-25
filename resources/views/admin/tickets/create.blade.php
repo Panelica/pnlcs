@@ -51,7 +51,7 @@
                     <select id="t-svc" name="related_service" class="form-control">
                         <option value="">{{ __('admin.tickets.open_no_service') }}</option>
                         @foreach($services as $s)
-                        <option value="{{ $s->id }}" @selected(old('related_service') == $s->id)>{{ $s->product?->name }}@if($s->domain) · {{ $s->domain }}@endif</option>
+                        <option value="{{ $s->id }}" @selected(old('related_service') == $s->id)>{{ $s->product?->name }}@if($s->domain) · {{ $s->domain }}@endif @if($s->primaryIp()) · {{ $s->primaryIp() }}@endif</option>
                         @endforeach
                     </select>
                 </div>

@@ -57,3 +57,15 @@ it('keeps the first IPv4 address a running server reports, and forgets it when t
     expect((new ProxmoxModule)->terminate($service->fresh(['server', 'product']))['success'])->toBeTrue()
         ->and($service->fresh()->primaryIp())->toBeNull();
 });
+
+it('names each server by its address when a ticket is opened about it, and shows it to staff', function () {
+    $server = pveServer();
+    $service = pveService($server, [], ['pve_ipv4' => '203.0.113.10'], ['domain' => 'vps1.example.com']);
+    $twin = Service::factory()->create(['client_id' => $service->client_id, 'product_id' => $service->product_id, 'server_id' => $server->id, 'status' => 'active', 'domain' => null, 'module_data' => ['pve_seen_ip' => '203.0.113.11']]);
+
+    test()->actingAs(pveCustomer($service))->get(route('client.tickets.create'))->assertOk()
+        ->assertSee('(vps1.example.com · 203.0.113.10)', false)->assertSee('(203.0.113.11)', false);
+
+    test()->actingAs(pveAdmin(), 'admin')->get(route('admin.tickets.create', ['client' => $service->client_id]))->assertOk()
+        ->assertSee('203.0.113.10');
+});
