@@ -744,6 +744,7 @@ return [
         'tab_summary' => 'Podsumowanie',
         'tab_tickets' => 'Zgłoszenia',
         'tax_exempt' => 'Zwolniony z podatku',
+        'never_auto_suspend' => 'Nigdy nie zawieszaj automatycznie tego klienta',
         'tickets' => 'Zgłoszenia',
         'title' => 'Klienci',
         'total_invoices' => 'Łączna liczba faktur',

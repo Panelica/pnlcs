@@ -744,6 +744,7 @@ return [
 		'tab_summary' => 'Resumen',
 		'tab_tickets' => 'Entradas',
 		'tax_exempt' => 'Exento de impuestos',
+		'never_auto_suspend' => 'No suspender nunca a este cliente automáticamente',
 		'tickets' => 'Entradas',
 		'title' => 'Clientes',
 		'total_invoices' => 'Facturas totales',

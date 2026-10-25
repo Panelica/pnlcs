@@ -735,6 +735,7 @@ return [
         'tab_summary' => 'Özet',
         'tab_tickets' => 'Destek Talepleri',
         'tax_exempt' => 'Vergiden Muaf',
+        'never_auto_suspend' => 'Bu müşteriyi asla otomatik askıya alma',
         'tickets' => 'Destek Talepleri',
         'title' => 'Müşteriler',
         'total_invoices' => 'Toplam Fatura',
