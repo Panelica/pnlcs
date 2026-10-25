@@ -81,7 +81,7 @@ class SettingController extends Controller
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay',
-        'AutoSuspensionDays', 'AutoTerminationDays', 'AutoTerminationEnabled',
+        'AutoSuspensionDays', 'AutoSuspendInvoicedOnly', 'AutoTerminationDays', 'AutoTerminationEnabled',
         'FraudLabsApiKey', 'FraudLabsEnabled',
         'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',
         'TwilioAccountSid', 'TwilioAuthToken', 'TwilioVerifyEnabled', 'TwilioVerifyServiceSid',

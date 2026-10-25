@@ -93,6 +93,10 @@
                 </div>
             </div>
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:5px;">
+                <input type="hidden" name="AutoSuspendInvoicedOnly" value="0"><input type="checkbox" name="AutoSuspendInvoicedOnly" value="1" {{ !empty($settings['AutoSuspendInvoicedOnly']) ? 'checked' : '' }}>
+                {{ __('admin.settings.auto_suspend_invoiced_only') }}
+            </label>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;margin-top:5px;">
                 <input type="hidden" name="AutoTerminationEnabled" value="0"><input type="checkbox" name="AutoTerminationEnabled" value="1" {{ !empty($settings['AutoTerminationEnabled']) ? 'checked' : '' }}>
                 {{ __('admin.settings.auto_termination_label') }}
             </label>

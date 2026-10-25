@@ -3213,6 +3213,7 @@ return [
     'orders.domain_edit_locked' => 'Die Domain kann nur geändert werden, während die Bestellung noch aussteht und noch nicht auf dem Server bereitgestellt ist.',
     'settings.automation' => 'Automatisierung',
     'settings.auto_suspension_days' => 'Aussetzen nach (Tage überfällig)',
+    'settings.auto_suspend_invoiced_only' => 'Nur die Dienste auf der überfälligen Rechnung sperren (aus: alle aktiven Dienste des Kunden)',
     'settings.auto_termination_days' => 'Kündigung nach (in Tagen ausgesetzt)',
     'settings.auto_termination_label' => 'Beenden Sie automatisch Dienste, die wegen Nichtzahlung gesperrt wurden',
     'settings.automation_hint' => 'Durch die Aussetzung wird ein Dienst pausiert, sobald eine Rechnung für die angegebene Anzahl von Tagen überfällig ist. Durch die Kündigung werden das Konto und seine Daten dauerhaft gelöscht; Es ist standardmäßig deaktiviert und betrifft immer nur Dienste, die aufgrund einer noch unbezahlten Rechnung ausgesetzt wurden. Sehen Sie sich die Liste jederzeit in der Vorschau an mit: php artisan pnlcs:auto-terminate --dry-run',

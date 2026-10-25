@@ -3213,6 +3213,7 @@ return [
     'orders.domain_edit_locked' => '只有在订单处于待处理且尚未在服务器上开通时，才能更改域名。',
     'settings.automation' => '自动化',
     'settings.auto_suspension_days' => '逾期天数后暂停',
+    'settings.auto_suspend_invoiced_only' => '仅暂停逾期账单上的服务（关闭时：暂停该客户的所有有效服务）',
     'settings.auto_termination_days' => '暂停天数后终止',
     'settings.auto_termination_label' => '自动终止因欠费被暂停的服务',
     'settings.automation_hint' => '当发票逾期达到设定天数时,暂停会停用服务。终止会永久删除账户及其数据;默认关闭,且仅作用于因仍未支付的发票而被暂停的服务。可随时预览：php artisan pnlcs:auto-terminate --dry-run',
