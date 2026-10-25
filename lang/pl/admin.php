@@ -3732,6 +3732,8 @@ return [
     'promotions.start_date' => 'Data rozpoczęcia',
     'promotions.cycles' => 'Okresy rozliczeniowe z rabatem',
     'promotions.cycles_hint' => '(gdy dotyczy odnowień; 0 = bez limitu)',
+    'promotions.billing_cycles' => 'Okresy rozliczeniowe',
+    'promotions.billing_cycles_hint' => '(nic nie zaznaczono: każdy okres)',
     'promotions.optional_hint' => '(opcjonalnie)',
     'domains.period_years' => ':count rok/lata',
     'domains.per_year' => ':amount/rok',

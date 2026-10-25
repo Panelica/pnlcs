@@ -494,7 +494,7 @@ class CartService
             return ['success' => false, 'message' => 'Invalid promo code.', 'discount' => 0.0];
         }
 
-        if (! $promo->isValidFor($this->cartClient($cart), $this->cartProductIds($cart))) {
+        if (! $this->promoFits($cart, $promo)) {
             return ['success' => false, 'message' => 'This promo code cannot be used on this order.', 'discount' => 0.0];
         }
 
@@ -585,20 +585,24 @@ class CartService
         if ($promoCode) {
             $promo = Promotion::where('code', $promoCode)->first();
 
-            if ($promo && $promo->isValidFor($this->cartClient($cart), $this->cartProductIds($cart))) {
+            if ($promo && $this->promoFits($cart, $promo)) {
                 $discountable = $taxable + $untaxed;
 
                 // A code limited to some products comes off those lines only,
                 // exactly as the invoice writes it. The cart used to take the
                 // percentage off the whole basket, so the customer was quoted
                 // 50 off and billed 5 off.
+                // Likewise a code limited to some billing periods: a month taken
+                // with a code meant for a year is charged in full.
                 $covered = $promo->coveredProductIds();
 
-                if ($covered !== []) {
+                if ($covered !== [] || $promo->billingCycles() !== []) {
                     $coveredAmount = 0.0;
 
                     foreach ($items as $item) {
-                        if (($item['type'] ?? 'product') !== 'domain' && in_array((int) ($item['product_id'] ?? 0), $covered, true)) {
+                        if (($item['type'] ?? 'product') !== 'domain'
+                            && ($covered === [] || in_array((int) ($item['product_id'] ?? 0), $covered, true))
+                            && $promo->coversCycle($item['billing_cycle'] ?? null)) {
                             $coveredAmount += (float) ($item['price'] ?? 0);
                         }
                     }
@@ -784,6 +788,34 @@ class CartService
     }
 
     /** @return array<int, int> */
+    /**
+     * The code's rules against this basket, and, for a code limited to some
+     * billing periods, at least one line it covers on one of them: otherwise
+     * it would be accepted and take nothing off.
+     */
+    private function promoFits(Cart $cart, Promotion $promo): bool
+    {
+        if (! $promo->isValidFor($this->cartClient($cart), $this->cartProductIds($cart))) {
+            return false;
+        }
+
+        if ($promo->billingCycles() === []) {
+            return true;
+        }
+
+        $covered = $promo->coveredProductIds();
+
+        foreach ($this->getData($cart)['items'] ?? [] as $item) {
+            if (($item['type'] ?? 'product') !== 'domain'
+                && ($covered === [] || in_array((int) ($item['product_id'] ?? 0), $covered, true))
+                && $promo->coversCycle($item['billing_cycle'] ?? null)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function cartProductIds(Cart $cart): array
     {
         $ids = [];

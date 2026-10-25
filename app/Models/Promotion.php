@@ -9,7 +9,7 @@ class Promotion extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['code', 'type', 'recurring', 'value', 'cycles', 'applies_to', 'requires', 'start_date', 'expiration_date', 'max_uses', 'uses', 'lifetime_promo', 'apply_once', 'new_signups_only', 'existing_client', 'upgrades', 'notes'];
+    protected $fillable = ['code', 'type', 'recurring', 'value', 'cycles', 'billing_cycles', 'applies_to', 'requires', 'start_date', 'expiration_date', 'max_uses', 'uses', 'lifetime_promo', 'apply_once', 'new_signups_only', 'existing_client', 'upgrades', 'notes'];
 
     protected function casts(): array
     {
@@ -71,6 +71,40 @@ class Promotion extends Model
         }
 
         return true;
+    }
+
+    /**
+     * The billing periods the code applies to, as Service::CYCLE_MONTHS keys
+     * ('monthly', 'annually', ...). Empty: every period.
+     *
+     * @return array<int, string>
+     */
+    public function billingCycles(): array
+    {
+        $raw = trim((string) $this->billing_cycles);
+
+        if ($raw === '') {
+            return [];
+        }
+
+        return array_values(array_intersect(
+            array_map(fn ($c) => self::cycleKey($c), explode(',', $raw)),
+            array_keys(Service::CYCLE_MONTHS),
+        ));
+    }
+
+    /** Whether a line billed over this period may carry the code. */
+    public function coversCycle(?string $cycle): bool
+    {
+        $allowed = $this->billingCycles();
+
+        return $allowed === [] || in_array(self::cycleKey($cycle), $allowed, true);
+    }
+
+    /** 'Semi-Annually', 'semiannually' and 'semi_annually' are one period. */
+    public static function cycleKey(?string $cycle): string
+    {
+        return strtolower(str_replace([' ', '-', '_'], '', trim((string) $cycle)));
     }
 
     /** @return array<int, int> */

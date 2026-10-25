@@ -276,17 +276,21 @@ class InvoiceGenerationService
     {
         $covered = $promo->coveredProductIds();
 
-        if ($covered === []) {
+        if ($covered === [] && $promo->billingCycles() === []) {
             return (float) $invoice->subtotal;
         }
 
         $serviceItems = $invoice->items->whereIn('type', ['Hosting', 'Service', 'hosting', 'service']);
 
-        $productByService = Service::whereIn('id', $serviceItems->pluck('rel_id')->filter())
-            ->pluck('product_id', 'id');
+        $services = Service::whereIn('id', $serviceItems->pluck('rel_id')->filter())
+            ->get(['id', 'product_id', 'billing_cycle'])->keyBy('id');
 
+        // A code limited to some billing periods discounts only the lines on
+        // one of them: a monthly service ordered with a yearly code pays in full.
         return (float) $serviceItems
-            ->filter(fn ($item) => in_array((int) ($productByService[$item->rel_id] ?? 0), $covered, true))
+            ->filter(fn ($item) => ($service = $services[$item->rel_id] ?? null)
+                && ($covered === [] || in_array((int) $service->product_id, $covered, true))
+                && $promo->coversCycle($service->billing_cycle))
             ->sum('amount');
     }
 
