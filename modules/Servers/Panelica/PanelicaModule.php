@@ -3299,7 +3299,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             return $this->buildResult(false, __('panelica.database_create_unavailable'));
         }
         if ($resp->status() === 403) {
-            return $this->buildResult(false, __('panelica.database_limit'));
+            return $this->buildResult(false, $this->refusalMessage($resp, __('panelica.database_limit')));
         }
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not create the database.'));
@@ -3441,6 +3441,26 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $msg = $resp->json('details') ?? $resp->json('message') ?? $resp->json('error');
 
         return (is_string($msg) && $msg !== '') ? $msg : $fallback;
+    }
+
+    /**
+     * A 403 on a create is the plan's limit most of the time, but not always:
+     * the panel also answers 403 when the API key lacks the scope, or the
+     * account may not use the feature at all. Calling every one of them "limit
+     * reached" sent customers to upgrade a plan that was not the problem. A
+     * limit keeps the clear, translated message; anything else is shown as the
+     * panel said it, and logged for staff.
+     */
+    private function refusalMessage(Response $resp, string $limitMessage): string
+    {
+        $said = $this->apiMessage($resp, '');
+        if ($said === '' || preg_match('/limit|quota|maximum|exceed/i', $said)) {
+            return $limitMessage;
+        }
+
+        Log::warning('PanelicaModule: the panel refused a create', ['status' => $resp->status(), 'message' => $said]);
+
+        return $said;
     }
 
     /**
@@ -3587,7 +3607,8 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
      * fenced against accountDomains() before anything is sent, so a forged id
      * for another account's domain never reaches the panel. The panel enforces
      * the plan's mailbox limit itself (403); that is surfaced as a clear
-     * message rather than a generic failure.
+     * message rather than a generic failure, and any other 403 as the panel
+     * worded it (refusalMessage).
      */
     public function createEmail(Service $service, string $domainId, string $localPart, string $password, int $quotaMb = 0): array
     {
@@ -3617,7 +3638,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
 
         $resp = $this->post($server, '/v1/email-accounts', $payload);
         if ($resp->status() === 403) {
-            return $this->buildResult(false, __('panelica.mailbox_limit'));
+            return $this->buildResult(false, $this->refusalMessage($resp, __('panelica.mailbox_limit')));
         }
         if (! $resp->successful()) {
             Log::error('PanelicaModule::createEmail failed', ['status' => $resp->status(), 'body' => $resp->body()]);
