@@ -3727,6 +3727,8 @@ return [
     'promotions.start_date' => 'Start Date',
     'promotions.cycles' => 'Billing cycles discounted',
     'promotions.cycles_hint' => '(when it applies to renewals; 0 = no limit)',
+    'promotions.billing_cycles' => 'Billing periods',
+    'promotions.billing_cycles_hint' => '(none ticked: every period)',
     'promotions.optional_hint' => '(optional)',
     'domains.period_years' => ':count year(s)',
     'domains.per_year' => ':amount/year',

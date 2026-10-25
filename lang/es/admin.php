@@ -3727,6 +3727,8 @@ return [
 	'promotions.start_date' => 'Fecha de inicio',
 	'promotions.cycles' => 'Ciclos de facturación con descuento',
 	'promotions.cycles_hint' => '(si aplica a renovaciones; 0 = sin límite)',
+	'promotions.billing_cycles' => 'Periodos de facturación',
+	'promotions.billing_cycles_hint' => '(ninguno marcado: todos los periodos)',
 	'promotions.optional_hint' => '(opcional)',
 	'domains.period_years' => ':count año(s)',
 	'domains.per_year' => ':amount/año',

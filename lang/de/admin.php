@@ -3721,6 +3721,8 @@ return [
     'promotions.start_date' => 'Startdatum',
     'promotions.cycles' => 'Rabattierte Abrechnungszeiträume',
     'promotions.cycles_hint' => '(wenn er für Verlängerungen gilt; 0 = unbegrenzt)',
+    'promotions.billing_cycles' => 'Abrechnungszeiträume',
+    'promotions.billing_cycles_hint' => '(keiner angekreuzt: jeder Zeitraum)',
     'promotions.optional_hint' => '(nicht erforderlich)',
     'domains.period_years' => ':count Jahr(e)',
     'domains.per_year' => ':amount/Jahr',

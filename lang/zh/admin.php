@@ -3725,6 +3725,8 @@ return [
     'promotions.start_date' => '开始日期',
     'promotions.cycles' => '享受折扣的计费周期数',
     'promotions.cycles_hint' => '（适用于续费时；0 = 不限）',
+    'promotions.billing_cycles' => '计费周期',
+    'promotions.billing_cycles_hint' => '（未勾选：所有周期）',
     'promotions.optional_hint' => '（可选）',
     'domains.period_years' => ':count 年',
     'domains.per_year' => ':amount/年',

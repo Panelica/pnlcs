@@ -3725,6 +3725,8 @@ return [
     'promotions.start_date' => 'Başlangıç tarihi',
     'promotions.cycles' => 'İndirimli dönem sayısı',
     'promotions.cycles_hint' => '(yenilemelere uygulanıyorsa; 0 = sınırsız)',
+    'promotions.billing_cycles' => 'Ödeme dönemleri',
+    'promotions.billing_cycles_hint' => '(hiçbiri seçili değilse: her dönem)',
     'promotions.optional_hint' => '(isteğe bağlı)',
     'domains.period_years' => ':count yıl',
     'domains.per_year' => ':amount/yıl',
