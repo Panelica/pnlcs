@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Services\OrderService;
+use App\Services\PaymentService;
 
 /*
  * Releasing an order held as fraud changed the order's status and nothing
@@ -70,7 +71,7 @@ test('a reopened cancelled order gets its invoice back too', function () {
 test('a part-paid invoice reopens part paid, and the payment is not handed out again on a second verdict', function () {
     [$client, $order, $invoice] = rorOrder();
     $client->update(['credit' => 0]);
-    app(\App\Services\PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-PART-1', 5.0);
+    app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-PART-1', 5.0);
     $orders = app(OrderService::class);
 
     $orders->markFraud($order);
@@ -79,7 +80,7 @@ test('a part-paid invoice reopens part paid, and the payment is not handed out a
     $orders->reopenOrder($order->fresh());
     expect((float) $client->fresh()->credit)->toBe(0.0)
         ->and($invoice->fresh()->status)->toBe('partially_paid')
-        ->and(app(\App\Services\PaymentService::class)->amountPaid($invoice->fresh()))->toBe(5.0);
+        ->and(app(PaymentService::class)->amountPaid($invoice->fresh()))->toBe(5.0);
 
     $orders->markFraud($order->fresh());
     expect((float) $client->fresh()->credit)->toBe(5.0);
@@ -88,7 +89,7 @@ test('a part-paid invoice reopens part paid, and the payment is not handed out a
 test('if the returned credit has been spent, the invoice stays cancelled rather than counting the payment twice', function () {
     [$client, $order, $invoice] = rorOrder();
     $client->update(['credit' => 0]);
-    app(\App\Services\PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-PART-2', 5.0);
+    app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-PART-2', 5.0);
     $orders = app(OrderService::class);
     $orders->markFraud($order);
     $client->update(['credit' => 2]);
