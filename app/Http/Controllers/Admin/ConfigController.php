@@ -2504,6 +2504,37 @@ class ConfigController extends Controller
 
     public function storeNotificationRule(Request $request)
     {
+        $v = $this->validatedNotificationRule($request);
+        if ($v instanceof \Illuminate\Http\RedirectResponse) {
+            return $v;
+        }
+
+        NotificationRule::create($v);
+
+        return back()->with('success', __('admin.messages.notification_rule_created'));
+    }
+
+    /**
+     * Change a rule's event, channel, recipient or switch. Rules could only be
+     * added and deleted, so a typo in the recipient or a move to another
+     * channel meant deleting the rule and building it again.
+     */
+    public function updateNotificationRule(Request $request, $id)
+    {
+        $rule = NotificationRule::findOrFail($id);
+        $v = $this->validatedNotificationRule($request);
+        if ($v instanceof \Illuminate\Http\RedirectResponse) {
+            return $v;
+        }
+
+        $rule->update($v);
+
+        return back()->with('success', __('admin.messages.notification_rule_updated'));
+    }
+
+    /** @return array<string, mixed>|\Illuminate\Http\RedirectResponse */
+    private function validatedNotificationRule(Request $request)
+    {
         $v = $request->validate([
             'event' => 'required|string|max:255',
             'provider_id' => 'required|exists:notification_providers,id',
@@ -2526,9 +2557,8 @@ class ConfigController extends Controller
 
         $v['active'] = $request->boolean('active');
         $v['conditions'] = $request->input('conditions', []);
-        NotificationRule::create($v);
 
-        return back()->with('success', __('admin.messages.notification_rule_created'));
+        return $v;
     }
 
     public function destroyNotificationRule($id)
