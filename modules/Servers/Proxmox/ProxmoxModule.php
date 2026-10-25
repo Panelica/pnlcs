@@ -1197,7 +1197,7 @@ class ProxmoxModule extends AbstractServerModule
         $this->setModuleData($service, ['pve_seen_ip' => $ipv4]);
     }
 
-        private function configuredAddresses(Service $service, array $guest): array
+    private function configuredAddresses(Service $service, array $guest): array
     {
         $ip = $this->getModuleData($service)['pve_ipv4'] ?? null;
         if ($ip) {
