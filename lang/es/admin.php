@@ -3213,6 +3213,7 @@ return [
 	'orders.domain_edit_locked' => 'El dominio solo se puede cambiar mientras el pedido esté pendiente y aún no aprovisionado en el servidor.',
 	'settings.automation' => 'Automatización',
 	'settings.auto_suspension_days' => 'Suspender después (días de retraso)',
+	'settings.auto_suspend_invoiced_only' => 'Suspender solo los servicios de la factura vencida (desactivado: todos los servicios activos del cliente)',
 	'settings.auto_termination_days' => 'Terminar después (días suspendidos)',
 	'settings.auto_termination_label' => 'Dar de baja automáticamente los servicios suspendidos por falta de pago',
 	'settings.automation_hint' => 'La suspensión pausa un servicio cuando una factura lleva vencida el número de días indicado. La terminación elimina permanentemente la cuenta y sus datos; está desactivada de forma predeterminada y solo afecta a servicios suspendidos por una factura que sigue impaga. Puede revisar la lista en cualquier momento con: php artisan pnlcs:auto-terminate --dry-run',

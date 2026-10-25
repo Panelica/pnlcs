@@ -28,6 +28,21 @@ class SuspensionCommand extends Command
         return max(0, (int) Setting::get('AutoSuspensionDays', 3));
     }
 
+    /**
+     * Whether only the services on the overdue invoice are suspended.
+     *
+     * Off (the default), the question is about the client: an overdue invoice
+     * of any kind - a domain renewal, a one-off charge - suspends every active
+     * service they have. On, it is about the service, the way an operator who
+     * sells many services to one customer (a reseller, an agency) may want it:
+     * a late domain renewal does not take down a customer's other servers.
+     * Unsuspend-on-payment asks the same question, so the two agree.
+     */
+    public static function invoicedOnly(): bool
+    {
+        return (bool) (int) Setting::get('AutoSuspendInvoicedOnly', 0);
+    }
+
     public function handle(ProvisioningService $provisioning): int
     {
         $services = Service::with(['client.group', 'server', 'product'])
@@ -41,9 +56,13 @@ class SuspensionCommand extends Command
             ->where(fn ($q) => $q
                 ->whereNull('override_auto_suspend_date')
                 ->orWhereDate('override_auto_suspend_date', '<', today()))
-            ->whereHas('client', function ($q) {
-                $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace(self::graceDays()));
-            })
+            ->when(
+                self::invoicedOnly(),
+                fn ($q) => $q->owingOverdue(self::graceDays()),
+                fn ($q) => $q->whereHas('client', function ($q) {
+                    $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace(self::graceDays()));
+                }),
+            )
             ->get();
 
         $suspended = 0;

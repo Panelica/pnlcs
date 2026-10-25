@@ -3213,6 +3213,7 @@ return [
     'orders.domain_edit_locked' => 'Domenę można zmienić tylko wtedy, gdy zamówienie jest oczekujące i nie zostało jeszcze uruchomione na serwerze.',
     'settings.automation' => 'Automatyzacja',
     'settings.auto_suspension_days' => 'Zawieś po (dniach zaległości)',
+    'settings.auto_suspend_invoiced_only' => 'Zawieszaj tylko usługi z zaległej faktury (wyłączone: wszystkie aktywne usługi klienta)',
     'settings.auto_termination_days' => 'Zakończ po (dniach zawieszenia)',
     'settings.auto_termination_label' => 'Automatycznie kończ usługi zawieszone za brak płatności',
     'settings.automation_hint' => 'Zawieszenie wstrzymuje usługę, gdy faktura jest przeterminowana o podaną liczbę dni. Zakończenie trwale usuwa konto i jego dane; domyślnie jest wyłączone i dotyczy wyłącznie usług zawieszonych z powodu wciąż nieopłaconej faktury. Podgląd: php artisan pnlcs:auto-terminate --dry-run',
