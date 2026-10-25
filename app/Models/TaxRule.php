@@ -32,14 +32,24 @@ class TaxRule extends Model {
         return (string) Setting::get('TaxInclusivePrices', '0') === '1';
     }
 
-    /** The tax on an amount at a rate, added on top or taken out of it as the shop prices. */
-    public static function taxOn(float $amount, float $rate): float
+    /**
+     * The tax on an amount at a rate, unrounded: added on top, or the part of
+     * a price that includes it. Summed over lines and rounded once, as the
+     * totals always were.
+     */
+    public static function taxShare(float $amount, float $rate, ?bool $inclusive = null): float
     {
         if ($rate <= 0) {
             return 0.0;
         }
 
-        return round(self::pricesIncludeTax() ? $amount * $rate / (100 + $rate) : $amount * $rate / 100, 2);
+        return ($inclusive ?? self::pricesIncludeTax()) ? $amount * $rate / (100 + $rate) : $amount * $rate / 100;
+    }
+
+    /** taxShare(), rounded. */
+    public static function taxOn(float $amount, float $rate, ?bool $inclusive = null): float
+    {
+        return round(self::taxShare($amount, $rate, $inclusive), 2);
     }
 
     public static function defaultRate(): float

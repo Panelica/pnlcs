@@ -76,7 +76,7 @@ class QuoteService
             $lineTotal = max(0, $lineTotal);
             $subtotal += $lineTotal;
             if ($item->taxable && $taxRate > 0) {
-                $taxTotal += TaxRule::taxOn($lineTotal, $taxRate);
+                $taxTotal += TaxRule::taxShare($lineTotal, $taxRate);
             }
         }
 

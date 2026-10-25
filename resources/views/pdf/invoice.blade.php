@@ -127,7 +127,7 @@
         </thead>
         <tbody>
             @forelse($invoice->items as $item)
-            @php $rate = $item->tax_rate !== null ? (float)$item->tax_rate : ($item->taxed ? (float)$invoice->tax_rate : 0.0); @endphp
+            @php $rate = $invoice->lineTax($item)['rate']; @endphp
             <tr>
                 <td>{{ $item->description }}</td>
                 <td class="text-right">{{ (int) $item->qty }}</td>
@@ -142,18 +142,9 @@
     </table>
 
     @php
-    $vatGroups = [];
-    foreach ($invoice->items as $it) {
-        $r = $it->tax_rate !== null ? (float) $it->tax_rate : ($it->taxed ? (float) $invoice->tax_rate : 0.0);
-        $label = $it->tax_label ?: ($r > 0 ? rtrim(rtrim(number_format($r, 2), '0'), '.').'%' : null);
-        if ($label === null) { continue; }
-        $tx = (float) $it->amount * (int) $it->qty * $r / 100;
-        $net = (float) $it->amount * (int) $it->qty;
-        if (! isset($vatGroups[$label])) { $vatGroups[$label] = ['amount' => 0.0, 'rate' => $r, 'net' => 0.0]; }
-        $vatGroups[$label]['amount'] += $tx;
-        $vatGroups[$label]['net'] += $net;
-    }
-    uasort($vatGroups, fn ($a, $b) => $b['rate'] <=> $a['rate']);
+    // One computation for every invoice document (Invoice::vatBreakdown): the line rates, the tax mode it was
+    // issued under (on top, included, none), each rate's net and VAT rounded once.
+    $vatGroups = $invoice->vatBreakdown();
     @endphp
 
     <div class="totals">

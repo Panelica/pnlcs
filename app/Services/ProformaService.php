@@ -64,6 +64,7 @@ class ProformaService
                     'exchange_rate_kind' => $proforma->exchange_rate_kind,
                     'exchange_rate_date' => $proforma->exchange_rate_date,
                     'exchange_rate_ref' => $proforma->exchange_rate_ref,
+                    'tax_mode' => $proforma->tax_mode,
                 ]);
 
                 foreach ($proforma->items as $item) {
