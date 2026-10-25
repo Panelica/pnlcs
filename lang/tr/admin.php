@@ -2562,6 +2562,7 @@ return [
         'terminate_account' => 'Sonlandır',
         'terminated' => 'Sonlandırılmış',
         'title' => 'Ürünler/Hizmetler',
+        'search_placeholder' => 'Alan adı, kullanıcı adı, IP adresi ya da hizmet no',
         'unsuspend' => 'Askıyı Kaldır',
         'unsuspend_account' => 'Askıyı Kaldır',
         'username' => 'Kullanıcı Adı',
