@@ -43,6 +43,26 @@ class Service extends Model
     }
 
     /**
+     * The address a customer knows a server by, for lists: the one assigned
+     * from the operator's pool, else the one the guest last reported (Proxmox),
+     * or the instance's main IP (Vultr). Read from what the module recorded,
+     * so a list never calls a server. Null when there is none yet.
+     */
+    public function primaryIp(): ?string
+    {
+        $data = is_array($this->module_data) ? $this->module_data : [];
+
+        foreach (['pve_ipv4', 'pve_seen_ip', 'vultr_main_ip'] as $key) {
+            $ip = (string) ($data[$key] ?? '');
+            if (filter_var($ip, FILTER_VALIDATE_IP) && $ip !== '0.0.0.0') {
+                return $ip;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * What this service is worth per month, whatever it is billed in.
      */
     public function monthlyAmount(): float

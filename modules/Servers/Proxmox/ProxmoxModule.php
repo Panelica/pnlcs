@@ -937,7 +937,7 @@ class ProxmoxModule extends AbstractServerModule
             : $this->buildResult(false, __('proxmox.error.remove_failed', ['vmid' => $guest['vmid'], 'error' => $removed->error]));
 
         if ($removed->ok) {
-            $this->setModuleData($service, ['pve_state' => 'removed', 'pve_ipv4' => null, 'pve_job' => null]);
+            $this->setModuleData($service, ['pve_state' => 'removed', 'pve_ipv4' => null, 'pve_seen_ip' => null, 'pve_job' => null]);
         }
         $this->logAction($service, 'terminate', $result);
 
@@ -1084,6 +1084,8 @@ class ProxmoxModule extends AbstractServerModule
         $v = is_array($current->data) ? $current->data : [];
         $cfg = $guest['config'];
         $running = ($v['status'] ?? '') === 'running';
+        $addresses = $running ? $this->addresses($api, $guest, $service) : $this->configuredAddresses($service, $guest);
+        $this->rememberAddress($service, $addresses);
 
         return [
             'available' => true,
@@ -1100,7 +1102,7 @@ class ProxmoxModule extends AbstractServerModule
             'disk' => $this->diskUsage($api, $guest, $v, $running),
             'net' => ['in' => (int) ($v['netin'] ?? 0), 'out' => (int) ($v['netout'] ?? 0)],
             'agent' => $guest['type'] === 'qemu' && ! empty($v['agent']),
-            'addresses' => $running ? $this->addresses($api, $guest, $service) : $this->configuredAddresses($service, $guest),
+            'addresses' => $addresses,
             'image' => $this->imageLabel($service),
             'last_error' => $lastError,
         ];
@@ -1179,7 +1181,23 @@ class ProxmoxModule extends AbstractServerModule
         return $found !== [] ? $found : $this->configuredAddresses($service, $guest);
     }
 
-    private function configuredAddresses(Service $service, array $guest): array
+    /**
+     * Keep the server's first IPv4 address, so the customer's list of services
+     * can show it without asking Proxmox (Service::primaryIp). Written only
+     * when it changes; an address from the operator's pool is already kept.
+     */
+    private function rememberAddress(Service $service, array $addresses): void
+    {
+        $ipv4 = collect($addresses)->first(fn ($ip) => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4));
+        $data = $this->getModuleData($service);
+        if ($ipv4 === null || ! empty($data['pve_ipv4']) || ($data['pve_seen_ip'] ?? null) === $ipv4) {
+            return;
+        }
+
+        $this->setModuleData($service, ['pve_seen_ip' => $ipv4]);
+    }
+
+        private function configuredAddresses(Service $service, array $guest): array
     {
         $ip = $this->getModuleData($service)['pve_ipv4'] ?? null;
         if ($ip) {
