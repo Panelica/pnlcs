@@ -9,4 +9,6 @@ class Credit extends Model {
     protected $fillable = ["client_id", "admin_id", "date", "description", "amount"];
     protected function casts(): array { return ["date" => "date", "amount" => "decimal:2"]; }
     public function client() { return $this->belongsTo(Client::class); }
+    /** The member of staff who added or took the credit by hand (ClientCreditController); null for the system's own lines. */
+    public function admin() { return $this->belongsTo(Admin::class); }
 }
