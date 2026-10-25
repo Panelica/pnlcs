@@ -2,6 +2,104 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.11.0 — 2026-10-25
+
+A stable release, offered to every installation. It contains everything in
+1.10.0. None of the changes below went out in a beta first. Thank you,
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#279 to #285),
+[@dualarrow](https://github.com/dualarrow) (#276) and
+[@pla0730484848-wq](https://github.com/pla0730484848-wq) (#278).
+
+**Automatic termination now ends only services suspended for non-payment.**
+It used to take any service suspended long enough while the client owed some
+overdue invoice, so a server staff suspended by hand (an abuse report, a
+customer's request) was deleted with its data. It now takes only suspensions
+automatic suspension made. A service suspended for non-payment with no reason
+recorded is no longer terminated on its own either: end it by hand (#280).
+
+### Added
+
+- **Consolidated billing day.** Setup → General Settings → Invoices,
+  **Consolidated billing day** (1–28, off by default): on that day each
+  customer gets one invoice for everything renewing before the same day next
+  month, plus the days set in **Raise renewal invoices (days before due)**,
+  due after **Default payment due (days)**. Between billing days only what
+  would otherwise be invoiced late is raised, such as a service ordered since.
+  Off, nothing changes. If the billing day's run is missed (the server was
+  down), that month's renewals are invoiced on their own days and the next
+  billing day picks up from there (#285).
+- **Promotions:** both promotion forms have **Start Date** and **Billing
+  cycles discounted** (0 = no limit), and the Add form has **Applies to
+  renewals as well**. Billing already read both; they could only be set in
+  the database (#283).
+
+### Changed
+
+- **A customer cannot move onto a Panelica package that cannot hold what the
+  account has.** The panel applies a plan's limits when something is created,
+  not to what exists, so three apps stayed on a two-app package. A package
+  that gives less than the account's plan does now is greyed out on the
+  Upgrade / Downgrade page with what to remove first: apps, domains, email
+  and FTP accounts, subdomains per domain and disk space, counted the way
+  Panelica counts them. The move is refused through the API's
+  `upgradeproduct` as well. Memory above a package is a warning, not a
+  refusal. Staff can still change a service's product on its admin page
+  (#276).
+- **Rolling a VPS back to a snapshot asks for the server's name**, as a
+  reinstall and a backup restore do, in the customer's panel and the admin's
+  (#281).
+- **A Panelica mailbox or database the panel refuses says why:** "limit
+  reached" was shown for every refusal, including an API key without the
+  scope. A limit keeps the translated message; anything else is shown as the
+  panel worded it and logged (#282).
+
+### Fixed
+
+- **Proxmox with a token limited to a resource pool**, as Test Connection
+  recommends: installing an image under Servers → Images, and creating a
+  server from an ISO or a container, was refused with 403 on `/vms/<id>`.
+  Proxmox checks tags on a new guest before it joins the pool, so with a pool
+  set the tags are now written once the guest is in it (#278, #279).
+- **Moving onto a product with managed resources** did not move the Panelica
+  account onto that product's plan, while billing moved to the new product.
+  The account now goes onto the product's own plan, as a new account does
+  (#276).
+
+### Security
+
+- **The customer's VPS status named the Proxmox node** the server runs on,
+  often the host's real name. It is now left out for customers; staff still
+  see it (#284).
+
+### Database changes
+
+None. New setting: `ConsolidatedBillingDay` (#285).
+
+### For theme and module authors
+
+- A server module may implement
+  `packageChangeProblems(Service $service, Product $newProduct): array`
+  (`problems` and `warnings`, in words for the customer).
+  `UpgradeService::packageFit()` asks it, and `requestProductChange()`
+  refuses a package with problems (#276).
+- `ServesVps::vpsShowsInfrastructure()` decides whether the status answer
+  carries `node`; false unless a controller says otherwise (#284).
+- `InvoiceGenerationService::billingWindow()` gives the last due date a run
+  invoices and how far ahead that is (#285).
+- API: `upgradeproduct` answers 422 when what the account has does not fit
+  the new package, with what to remove in the message (#276).
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/promotions.blade.php` (Start Date, Billing
+  cycles discounted, Applies to renewals as well).
+- `resources/views/admin/settings/general.blade.php` (Consolidated billing
+  day).
+- `resources/views/client/services/upgrade.blade.php` (packages that do not
+  fit, memory warnings).
+- `resources/views/components/vps-panel.blade.php` (the server's name before
+  a rollback).
+
 ## 1.10.0 — 2026-10-24
 
 A stable release, offered to every installation. It contains everything in
