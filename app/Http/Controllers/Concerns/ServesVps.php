@@ -125,6 +125,12 @@ trait ServesVps
             'description' => 'nullable|string|max:200',
         ]);
 
+        // Rolling back throws away everything since the snapshot: the same
+        // typed confirmation as a reinstall or a restore.
+        if ($v['action'] === 'rollback' && ($refused = $this->vpsConfirmRefused($request, $service))) {
+            return $refused;
+        }
+
         $result = match ($v['action']) {
             'create' => $module->snapshotCreate($service, $v['name'], (string) ($v['description'] ?? '')),
             'rollback' => $module->snapshotRollback($service, $v['name']),
@@ -167,7 +173,7 @@ trait ServesVps
         return $this->vpsAnswer($result);
     }
 
-    /** The word typed to confirm a reinstall or a restore: the server's name. */
+    /** The word typed to confirm a reinstall, a restore or a rollback: the server's name. */
     public static function confirmationWord(Service $service): string
     {
         return $service->domain ?: 'vps-'.$service->id;
