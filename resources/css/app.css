@@ -33,7 +33,18 @@ h1, h2, h3, h4, h5, h6 { font-family: "Open Sans", "Helvetica Neue", Helvetica, 
     .navigation .navbar-collapse { display: block !important; float: left; }
     .navigation .navbar-collapse > ul { display: flex; }
     .navigation .navbar-collapse > ul > li { float: left; width: auto; position: relative; }
-    .navigation .navbar-collapse > ul > li > a { padding: 5px 12px; line-height: 35px; white-space: nowrap; transition: background-color 0.15s; }
+    .navigation .navbar-collapse > ul > li > a { padding: 5px 9px; line-height: 35px; white-space: nowrap; transition: background-color 0.15s; }
+    /* Tighter than the dropdowns' 9px: the bar has to hold the menu, the
+       search, three count badges, Setup and the admin's name on one row. */
+    .navigation .navbar-collapse > ul > li > a i { margin: 0; margin-inline-end: 6px; width: auto; }
+    /* Right side: each count badge sits beside its icon (5px), every item
+       padded the same on both sides, in either text direction. */
+    .navigation .nav-right-items { gap: 4px; }
+    .navigation .nav-right-items > ul > li > a { display: flex; align-items: center; gap: 5px; padding: 0 10px; height: 35px; line-height: 1; white-space: nowrap; }
+    .navigation .nav-right-items > ul > li > a i { margin: 0; width: auto; }
+    .navigation .nav-right-items .nav-badge { margin-left: 0; }
+    /* The admin's name: a long one is cut rather than pushing the bar onto a second row. */
+    .navigation .nav-right-items > ul > li:last-child > a { display: block; max-width: 170px; overflow: hidden; text-overflow: ellipsis; line-height: 35px; }
     .navigation .navbar-collapse > ul > li > a:hover { background-color: #1b4d7f; border-radius: 3px; }
     .navigation ul li.has-dropdown { position: relative; }
     .navigation ul li.has-dropdown > ul.dropdown-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 200px; padding: 5px 0; background: #fff; border: 1px solid #ddd; box-shadow: 0 6px 12px rgba(0,0,0,.175); z-index: 1000; border-radius: 0 0 4px 4px; }
@@ -43,6 +54,18 @@ h1, h2, h3, h4, h5, h6 { font-family: "Open Sans", "Helvetica Neue", Helvetica, 
     .navigation ul li.has-dropdown > ul.dropdown-menu li a:hover { background: #f5f5f5; color: var(--theme-primary, #1A4D80); }
     .navigation ul li.has-dropdown > ul.dropdown-menu .divider { height: 1px; margin: 4px 0; overflow: hidden; background-color: #e5e5e5; }
     .navigation .nav-toggle-li { display: none; }
+}
+
+/* Laptop widths: the menu reads as words alone, so the bar stays one row with
+   the count badges showing. The icons come back from 1600px. */
+@media (min-width: 1275px) and (max-width: 1599px) {
+    .navigation .navbar-collapse > ul > li > a i { display: none; }
+}
+
+/* The narrowest of them, where the longest menu words (German) still need it. */
+@media (min-width: 1275px) and (max-width: 1365px) {
+    .navigation .navbar-collapse > ul > li > a { padding: 5px 7px; }
+    .navigation .nav-right-items > ul > li > a { padding: 0 8px; }
 }
 
 @media (max-width: 1274px) {
