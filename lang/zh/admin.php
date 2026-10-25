@@ -2765,6 +2765,7 @@ return [
     'settings.consolidated_billing_day' => '合并账单日',
     'settings.consolidated_billing_off' => '关闭：每项续费单独开具账单',
     'settings.consolidated_billing_hint' => '每月的这一天，每位客户收到一张账单，涵盖下月同一天之前续费的所有项目（另加上方的天数）。其间只开具否则会延迟的续费账单。',
+    'settings.invoice_renewals_separately' => '每项续费单独开具账单，客户可以续费一项服务而让另一项到期',
     'settings.default_nameservers' => '默认域名服务器',
     'settings.default_nameservers_hint' => '在注册或转入域名时，未提供其他域名服务器则使用这些。',
     'settings.themes' => '主题',

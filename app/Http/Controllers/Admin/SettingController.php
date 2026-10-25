@@ -80,7 +80,7 @@ class SettingController extends Controller
         'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
-        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay',
+        'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay', 'InvoiceRenewalsSeparately',
         'AutoSuspensionDays', 'AutoSuspendInvoicedOnly', 'AutoTerminationDays', 'AutoTerminationEnabled',
         'FraudLabsApiKey', 'FraudLabsEnabled',
         'MaxMindAccountId', 'MaxMindEnabled', 'MaxMindLicenseKey',

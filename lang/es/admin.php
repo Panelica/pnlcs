@@ -2765,6 +2765,7 @@ return [
     'settings.consolidated_billing_day' => 'Día de facturación agrupada',
     'settings.consolidated_billing_off' => 'Desactivado: cada renovación se factura por separado',
     'settings.consolidated_billing_hint' => 'Este día del mes cada cliente recibe una factura por todo lo que se renueva antes del mismo día del mes siguiente (más los días de arriba). Entre medias solo se facturan las renovaciones que si no llegarían tarde.',
+    'settings.invoice_renewals_separately' => 'Facturar cada renovación por separado, para que el cliente pueda renovar un servicio y dejar vencer otro',
 	'settings.default_nameservers' => 'Servidores de nombres predeterminados',
 	'settings.default_nameservers_hint' => 'Se utiliza al registrar o transferir dominios cuando no se proporcionan otros servidores de nombres.',
 	'settings.themes' => 'Temas',

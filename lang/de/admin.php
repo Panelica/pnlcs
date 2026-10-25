@@ -2765,6 +2765,7 @@ return [
     'settings.consolidated_billing_day' => 'Sammelrechnungstag',
     'settings.consolidated_billing_off' => 'Aus: jede Verlängerung wird einzeln abgerechnet',
     'settings.consolidated_billing_hint' => 'An diesem Tag des Monats erhält jeder Kunde eine Rechnung für alles, was bis zum gleichen Tag im Folgemonat verlängert wird (zuzüglich der Tage oben). Dazwischen werden nur Verlängerungen abgerechnet, die sonst zu spät kämen.',
+    'settings.invoice_renewals_separately' => 'Jede Verlängerung separat abrechnen, damit ein Kunde einen Dienst verlängern und einen anderen auslaufen lassen kann',
     'settings.default_nameservers' => 'Standard-Nameserver',
     'settings.default_nameservers_hint' => 'Wird bei der Registrierung oder Übertragung von Domains verwendet, wenn keine anderen Nameserver bereitgestellt werden.',
     'settings.themes' => 'Themen',
