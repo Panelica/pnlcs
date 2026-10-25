@@ -13,7 +13,7 @@
 
 function jsonOnlyViewKeys(): array
 {
-    $json = json_decode(file_get_contents(lang_path('en.json')), true) ?: [];
+    $json = is_file(lang_path('en.json')) ? (json_decode(file_get_contents(lang_path('en.json')), true) ?: []) : [];
     $used = [];
     foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(resource_path('views'))) as $file) {
         if (! str_ends_with($file->getFilename(), '.blade.php')) {
