@@ -499,6 +499,16 @@
                 <input type="number" id="invoice-days-before-due" name="InvoiceDaysBeforeDue" value="{{ $settings['InvoiceDaysBeforeDue'] ?? '14' }}" class="form-control" min="0" max="365">
             </div>
             <div class="form-group" style="margin-top:10px;max-width:50%;">
+                <label class="form-label" for="consolidated-billing-day">{{ __('admin.settings.consolidated_billing_day') }}</label>
+                <select id="consolidated-billing-day" name="ConsolidatedBillingDay" class="form-control">
+                    <option value="0">{{ __('admin.settings.consolidated_billing_off') }}</option>
+                    @for($d = 1; $d <= 28; $d++)
+                    <option value="{{ $d }}" @selected((int) ($settings['ConsolidatedBillingDay'] ?? 0) === $d)>{{ $d }}</option>
+                    @endfor
+                </select>
+                <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.consolidated_billing_hint') }}</div>
+            </div>
+            <div class="form-group" style="margin-top:10px;max-width:50%;">
                 <label class="form-label" for="invoice-number-format">{{ __('admin.settings.invoice_number_format') }}</label>
                 <input type="text" id="invoice-number-format" name="InvoiceNumberFormat" value="{{ $settings['InvoiceNumberFormat'] ?? 'INV-{year}{month}-{num}' }}" class="form-control" placeholder="INV-{year}{month}-{num}">
             </div>
