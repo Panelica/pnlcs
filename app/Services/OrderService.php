@@ -697,15 +697,51 @@ class OrderService
             return $order;
         }
 
-        return DB::transaction(function () use ($order) {
+        $wasFraud = $order->status === OrderStatus::Fraud->value;
+
+        $suspended = DB::transaction(function () use ($order, $wasFraud) {
             foreach ($this->stockControlledProductIds($order) as $productId) {
                 Product::whereKey($productId)->where('stock_qty', '>', 0)->decrement('stock_qty');
             }
 
             $order->update(['status' => OrderStatus::Pending->value]);
 
-            return $order->fresh();
+            // The verdict cancelled the order's invoice (closeOrderInvoice), and
+            // a pending order with a cancelled invoice can be neither paid nor
+            // accepted: releasing a false alarm used to change the order's
+            // status and nothing else. What was paid on it went back as credit
+            // when it was cancelled, so it is simply owed again, with a due
+            // date the customer can still meet.
+            $invoice = $order->invoice_id ? $order->invoice : null;
+            if ($invoice && strtolower((string) $invoice->status) === InvoiceStatus::Cancelled->value) {
+                $due = now()->addDays((int) \App\Models\Setting::get('InvoiceDueDays', 14))->startOfDay();
+                $invoice->update([
+                    'status' => InvoiceStatus::Unpaid->value,
+                    'due_date' => $invoice->due_date && $invoice->due_date->gt($due) ? $invoice->due_date : $due->toDateString(),
+                ]);
+            }
+
+            // The services the verdict suspended, and only those: one suspended
+            // since for another reason stays as it is.
+            return $wasFraud
+                ? Service::where('order_id', $order->id)->where('status', ServiceStatus::Suspended->value)
+                    ->where('suspension_reason', self::FRAUD_SUSPENSION_REASON)->get()
+                : collect();
         });
+
+        // As markFraud suspended them: on the server through the provisioning
+        // service (a refusal is queued for retry), locally otherwise.
+        foreach ($suspended as $service) {
+            if ($service->server_id) {
+                $this->provisioning->unsuspendAccount($service);
+
+                continue;
+            }
+
+            $service->update(['status' => ServiceStatus::Active->value, 'suspension_date' => null, 'suspension_reason' => null]);
+        }
+
+        return $order->fresh();
     }
 
     /** Hand back one unit per stock-controlled service on this order. */
