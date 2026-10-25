@@ -829,6 +829,9 @@ class ConfigController extends Controller
             'category' => 'nullable|in:generic,local,country,new',
             'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',
+            // Days in redemption after the grace period; domain sync and the
+            // renewal reminders count them, and no form set them.
+            'redemption_grace_period' => 'nullable|integer|min:0',
             'min_years' => 'nullable|integer|min:1',
             'max_years' => 'nullable|integer|min:1',
             'auto_registrar' => 'nullable|string',
@@ -1897,6 +1900,9 @@ class ConfigController extends Controller
             'category' => 'nullable|in:generic,local,country,new',
             'is_popular' => 'boolean',
             'grace_period' => 'nullable|integer|min:0',
+            // Days in redemption after the grace period; domain sync and the
+            // renewal reminders count them, and no form set them.
+            'redemption_grace_period' => 'nullable|integer|min:0',
             'min_years' => 'nullable|integer|min:1',
             'max_years' => 'nullable|integer|min:1',
             'auto_registrar' => 'nullable|string',

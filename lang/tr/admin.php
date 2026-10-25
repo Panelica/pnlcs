@@ -1144,6 +1144,7 @@ return [
     'domain_pricing.extension' => 'Uzantı',
     'domain_pricing.grace' => 'Ek Süre',
     'domain_pricing.grace_period' => 'Ek Süre (gün)',
+    'domain_pricing.redemption_period' => 'Kurtarma süresi (gün, ek süreden sonra)',
     'domain_pricing.manual' => 'Manuel',
     'domain_pricing.max_years' => 'En Çok Yıl',
     'domain_pricing.min_max_years' => 'En Az/En Çok Yıl',

@@ -1154,6 +1154,7 @@ return [
     'domain_pricing.extension' => '扩展',
     'domain_pricing.grace' => '宽限期',
     'domain_pricing.grace_period' => '宽限期（天）',
+    'domain_pricing.redemption_period' => '赎回期（天，宽限期之后）',
     'domain_pricing.manual' => '手动',
     'domain_pricing.max_years' => '最长年限',
     'domain_pricing.min_max_years' => '最短/最长年限',
