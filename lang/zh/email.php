@@ -168,6 +168,7 @@ return [
         'error_contact' => '如果您认为此项暂停有误，请联系我们的支持团队。',
         'reactivate' => '如需恢复服务，请登录客户中心并结清所有未付款发票。',
         'suspended' => '您的服务已被暂停。',
+        'reason_ask_support' => '详情请联系支持',
     ],
     'service_termination' => [
         'data_removed' => '所有关联数据均已删除，此操作无法撤销。',

@@ -97,7 +97,7 @@
                 <tr><td style="padding:5px 0;color:#777;width:40%;">{{ __('admin.services.server') }}</td><td style="padding:5px 0;font-weight:600;">{{ $service->server->name ?? __('admin.services.none_assigned') }}</td></tr>
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.module') }}</td><td style="padding:5px 0;">{{ $service->product?->server_type ?: ($service->product?->ssl_module ?: __('admin.services.none_label')) }}</td></tr>
                 @if($service->suspension_date)
-                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.suspended') }}</td><td style="padding:5px 0;color:#d9534f;">{{ $service->suspension_date->format(date_fmt()) }}</td></tr>
+                <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.suspended') }}</td><td style="padding:5px 0;color:#d9534f;">{{ $service->suspension_date->format(date_fmt()) }}@if($service->suspension_reason) · {{ $service->suspension_reason }}@endif</td></tr>
                 @endif
                 @if($service->suspension_reason)
                 <tr><td style="padding:5px 0;color:#777;">{{ __('admin.services.reason') }}</td><td style="padding:5px 0;color:#777;">{{ $service->suspension_reason }}</td></tr>
@@ -235,8 +235,12 @@
                 @csrf <button type="submit" class="btn btn-success btn-sm">{{ __('admin.services.create_account') }}</button>
             </form>
             @endunless
-            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'suspend']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_suspend')))">
-                @csrf <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.services.suspend') }}</button>
+            {{-- The reason travels with the suspension: the customer sees it on the service page and in the email,
+                 the next member of staff on this page. --}}
+            <form method="POST" action="{{ route('admin.services.module-action', [$service, 'suspend']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_suspend')))" style="display:inline-flex;gap:6px;align-items:center;">
+                @csrf
+                <input type="text" name="reason" maxlength="255" class="form-control input-sm" style="width:220px;height:30px;" placeholder="{{ __('admin.services.suspend_reason_placeholder') }}" aria-label="{{ __('admin.services.suspend_reason_placeholder') }}">
+                <button type="submit" class="btn btn-warning btn-sm">{{ __('admin.services.suspend') }}</button>
             </form>
             <form method="POST" action="{{ route('admin.services.module-action', [$service, 'unsuspend']) }}" onsubmit="return pnConfirm(event, @js(__('admin.services.confirm_unsuspend')))">
                 @csrf <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.services.unsuspend') }}</button>

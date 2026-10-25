@@ -2620,6 +2620,7 @@ return [
     'services.server_module' => '服务器与模块',
     'services.service_info' => '服务信息',
     'services.suspend' => '暂停',
+    'services.suspend_reason_placeholder' => '原因（客户可见）',
     'services.suspended' => '已暂停',
     'services.terminate' => '终止',
     'services.terminated' => '已终止',

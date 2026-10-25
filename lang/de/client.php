@@ -945,6 +945,8 @@ return [
         'upgrade_downgrade_title' => 'Tarifwechsel',
         'username' => 'Benutzername',
         'setup_delayed' => 'Wir konnten die Einrichtung dieses Dienstes noch nicht abschließen. Unser Team wurde informiert und schließt sie in Kürze ab; Sie müssen nicht erneut bestellen.',
+        'suspended_because' => 'Dieser Dienst ist gesperrt: :reason',
+        'suspended_ask_support' => 'Dieser Dienst ist gesperrt. Bitte wenden Sie sich an den Support, um den Grund zu erfahren.',
     ],
     'domains.lock_unavailable' => 'Der Registrar dieser Domain unterstützt die Sperre hier nicht. Bitte kontaktieren Sie den Support.',
     'status.unknown' => 'Unbekannt',

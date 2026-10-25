@@ -2620,6 +2620,7 @@ return [
     'services.server_module' => 'Server & Modul',
     'services.service_info' => 'Service-Info',
     'services.suspend' => 'Aussetzen',
+    'services.suspend_reason_placeholder' => 'Grund (wird dem Kunden angezeigt)',
     'services.suspended' => 'Suspendiert',
     'services.terminate' => 'Beenden',
     'services.terminated' => 'Beendet',
