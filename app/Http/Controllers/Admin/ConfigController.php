@@ -1085,6 +1085,8 @@ class ConfigController extends Controller
     {
         return view('admin.config.network-issues', [
             'networkIssues' => NetworkIssue::orderBy('id', 'desc')->get(),
+            // Offered as suggestions for "Affected"; any text is accepted.
+            'serverNames' => \App\Models\Server::orderBy('name')->pluck('name')->filter()->unique()->values(),
         ]);
     }
 
@@ -1807,14 +1809,14 @@ class ConfigController extends Controller
     // Network Issues
     public function storeNetworkIssue(Request $request)
     {
-        NetworkIssue::create($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
+        NetworkIssue::create($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected_server' => 'nullable|string|max:255', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
 
         return back()->with('success', __('messages.success.network_issue_created'));
     }
 
     public function updateNetworkIssue(Request $request, NetworkIssue $issue)
     {
-        $issue->update($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected' => 'nullable|string', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
+        $issue->update($request->validate(['title' => 'required', 'description' => 'required|string', 'type' => 'nullable|string', 'status' => 'required', 'affected_server' => 'nullable|string|max:255', 'start_date' => 'nullable|date', 'end_date' => 'nullable|date']));
 
         return back()->with('success', __('messages.success.network_issue_updated'));
     }
