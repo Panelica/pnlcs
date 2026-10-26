@@ -53,8 +53,8 @@
         <div style="max-width:280px;margin-left:auto">
             @php
             // One computation for every invoice document (Invoice::vatBreakdown): the line rates, the tax mode it was
-    // issued under (on top, included, none), each rate's net and VAT rounded once.
-    $vatGroups = $invoice->vatBreakdown();
+            // issued under (on top, included, none), each rate's net and VAT rounded once.
+            $vatGroups = $invoice->vatBreakdown();
             @endphp
             @if($invoice->subtotal && $invoice->subtotal != $invoice->total)
             <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13.5px;border-bottom:1px solid #f1f5f9">

@@ -156,8 +156,8 @@
             @endforeach
             @php
             // One computation for every invoice document (Invoice::vatBreakdown): the line rates, the tax mode it was
-    // issued under (on top, included, none), each rate's net and VAT rounded once.
-    $vatGroups = $invoice->vatBreakdown();
+            // issued under (on top, included, none), each rate's net and VAT rounded once.
+            $vatGroups = $invoice->vatBreakdown();
             @endphp
             <table class="data-table">
                 <thead><tr>
