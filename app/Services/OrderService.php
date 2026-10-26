@@ -390,6 +390,24 @@ class OrderService
     }
 
     /**
+     * Create one ordered service on its server. createAccount activates it and
+     * fires ServiceActivated on success; on failure it queues a retry and the
+     * service stays pending (no "active but never provisioned" state), and
+     * staff are told.
+     */
+    public function provisionOrderedService(Service $svc): void
+    {
+        $result = $this->provisioning->createAccount($svc);
+        if ($result['success'] ?? false) {
+            Log::info('Auto-provisioned service #'.$svc->id.' on order accept');
+        } else {
+            Log::error('Auto-provision failed for service #'.$svc->id.': '.($result['message'] ?? 'unknown'));
+
+            $this->notifyProvisioningFailed($svc, (string) ($result['message'] ?? 'unknown'));
+        }
+    }
+
+    /**
      * Accept a pending order and provision its services.
      *
      * $manual = true  → admin explicitly accepted: everything is provisioned,
@@ -432,16 +450,14 @@ class OrderService
             }
 
             if ($svc->product && $svc->product->server_type) {
-                // createAccount activates the service and fires ServiceActivated
-                // on success; on failure it queues a retry and the service
-                // stays pending (no "active but never provisioned" state).
-                $result = $this->provisioning->createAccount($svc);
-                if ($result['success'] ?? false) {
-                    Log::info('Auto-provisioned service #'.$svc->id.' on order accept');
+                // Accepted automatically (the invoice was paid): the setup runs
+                // as a job, so the checkout or the payment return answers at
+                // once instead of waiting for every server to be built. Staff
+                // accepting by hand (admin, API) still wait and see the result.
+                if ($manual) {
+                    $this->provisionOrderedService($svc);
                 } else {
-                    Log::error('Auto-provision failed for service #'.$svc->id.': '.($result['message'] ?? 'unknown'));
-
-                    $this->notifyProvisioningFailed($svc, (string) ($result['message'] ?? 'unknown'));
+                    \App\Jobs\ProvisionOrderedService::dispatch($svc->id);
                 }
             } else {
                 // No server module involved — plain activation. Legitimate for

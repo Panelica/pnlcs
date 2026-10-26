@@ -492,7 +492,18 @@ class CartController extends Controller
                 ->with('error', __('messages.error.cart_is_empty'));
         }
 
-        $order = $this->cartService->checkout($cart, $clientId, $request->payment_method);
+        // One order per press. A second submit while the first is still placing
+        // (a double click, a reload of the spinning page) would place the same
+        // basket again; it now finds the order on its way.
+        $lock = \Illuminate\Support\Facades\Cache::lock('checkout-cart-'.$cart->id, 120);
+        if (! $lock->get()) {
+            return redirect()->route('client.services.index')->with('info', __('messages.info.order_already_placing'));
+        }
+        try {
+            $order = $this->cartService->checkout($cart, $clientId, $request->payment_method);
+        } finally {
+            $lock->release();
+        }
 
         // A customer who chose to pay by card landed on the invoice and had to
         // press "pay by card" there as well. They already made that choice, so
@@ -514,8 +525,14 @@ class CartController extends Controller
                 && \App\Models\Service::where('order_id', $order->id)->where('status', 'pending')
                     ->whereHas('product', fn ($q) => $q->where('auto_setup', 'manual'))->exists();
 
+            // Services being set up in the background (ProvisionOrderedService):
+            // the customer is told they are on their way, and that mail follows.
+            $settingUp = ! $awaitingReview && \App\Models\Service::where('order_id', $order->id)->where('status', 'pending')
+                ->whereHas('product', fn ($q) => $q->whereNotNull('server_type')->where('server_type', '!=', ''))->exists();
+
             return redirect()->route('client.services.index')
-                ->with('success', __($awaitingReview ? 'messages.success.order_placed_free_review' : 'messages.success.order_placed_free', ['num' => $order->order_num]));
+                ->with('success', __($awaitingReview ? 'messages.success.order_placed_free_review'
+                    : ($settingUp ? 'messages.success.order_placed_setting_up' : 'messages.success.order_placed_free'), ['num' => $order->order_num]));
         }
 
         return redirect()->route('client.invoices.show', $order->invoice_id)
