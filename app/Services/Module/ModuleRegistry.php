@@ -23,6 +23,9 @@ class ModuleRegistry
     /** @var array<string, array<string, string>> type => key => manifest path, for modules found by discovery */
     protected array $discovered = [];
 
+    /** @var array<string, string> "type name" => service provider class a discovered module's manifest names */
+    protected array $providers = [];
+
     /**
      * How the vendors write their own names. getModuleName() is the lookup key
      * for most built-in modules ("cpanel", "gogetssl"), and ucfirst() of that
@@ -72,7 +75,7 @@ class ModuleRegistry
      *
      * Returns whether the module was registered.
      */
-    public function registerDiscovered(string $type, string $name, string $class, string $manifestPath): bool
+    public function registerDiscovered(string $type, string $name, string $class, string $manifestPath, string $provider = ''): bool
     {
         $contract = self::TYPE_CONTRACTS[$type] ?? null;
 
@@ -89,7 +92,25 @@ class ModuleRegistry
 
         $this->discovered[$type][self::key($name)] = $manifestPath;
 
+        // Only a module that was registered brings its provider: one the core
+        // shadows, or whose class is not of its type, adds no routes either.
+        if ($provider !== '') {
+            $this->providers["{$type} ".self::key($name)] = $provider;
+        }
+
         return true;
+    }
+
+    /**
+     * Service providers of the modules found by their pnlcs.json ("provider"),
+     * keyed "type name": routes, views, migrations and scheduled tasks of a
+     * module that lives outside the core, so an update does not remove them.
+     *
+     * @return array<string, string>
+     */
+    public function discoveredProviders(): array
+    {
+        return $this->providers;
     }
 
     public function has(string $type, string $name): bool

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\AddonManager;
+use App\Support\GuardedProviders;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,10 +21,8 @@ use Illuminate\Support\ServiceProvider;
  * is logged with the addon's name and skipped, the way a failing hook file
  * is: the panel and every other addon keep working.
  *
- * That is why the providers are not handed to $app->register(): during a
- * real boot Laravel would run their boot() later, in its own walk over the
- * providers, where no error of theirs can be caught here. They are
- * registered and booted below instead, each step on its own.
+ * The guarded register-and-boot is App\Support\GuardedProviders, shared
+ * with modules that bring a provider through their pnlcs.json.
  */
 class AddonServiceProvider extends ServiceProvider
 {
@@ -38,39 +37,10 @@ class AddonServiceProvider extends ServiceProvider
             return;
         }
 
-        $providers = [];
+        $labelled = [];
         foreach ($candidates as $name => $class) {
-            try {
-                if (! is_subclass_of($class, ServiceProvider::class)) {
-                    Log::warning("Addon {$name}: {$class} is not a service provider, skipped.");
-
-                    continue;
-                }
-                $provider = new $class($this->app);
-                $provider->register();
-                $providers[$name] = $provider;
-            } catch (\Throwable $e) {
-                $this->skip($name, $e);
-            }
+            $labelled["Addon {$name}"] = $class;
         }
-
-        foreach ($providers as $name => $provider) {
-            try {
-                $provider->callBootingCallbacks();
-                if (method_exists($provider, 'boot')) {
-                    $this->app->call([$provider, 'boot']);
-                }
-                $provider->callBootedCallbacks();
-            } catch (\Throwable $e) {
-                $this->skip($name, $e);
-            }
-        }
-    }
-
-    private function skip(string $name, \Throwable $e): void
-    {
-        Log::error("Addon {$name}: service provider failed to load, skipped — ".$e->getMessage(), [
-            'exception' => $e,
-        ]);
+        GuardedProviders::boot($this->app, $labelled);
     }
 }

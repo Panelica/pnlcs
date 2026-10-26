@@ -3,82 +3,134 @@
 namespace App\Providers;
 
 use App\Services\Module\ModuleRegistry;
+use App\Support\GuardedProviders;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use Modules\Gateways\AuthorizeNet\AuthorizeNetModule;
+use Modules\Gateways\BankTransfer\BankTransferModule;
+use Modules\Gateways\Iyzico\IyzicoModule;
+use Modules\Gateways\Mollie\MollieModule;
+use Modules\Gateways\PayPal\PayPalModule;
+use Modules\Gateways\Razorpay\RazorpayModule;
+use Modules\Gateways\Stripe\StripeModule;
+use Modules\Gateways\Tpay\TpayModule;
+use Modules\Registrars\DomainNameApi\DomainNameApiRegistrar;
+use Modules\Registrars\Enom\EnomRegistrar;
+use Modules\Registrars\HRD\HrdRegistrar;
+use Modules\Registrars\Manual\ManualRegistrar;
+use Modules\Registrars\Namecheap\NamecheapRegistrar;
+use Modules\Registrars\OpenProvider\OpenProviderRegistrar;
+use Modules\Registrars\ResellerClub\ResellerClubRegistrar;
+use Modules\Servers\AaPanel\AaPanelModule;
+use Modules\Servers\CPanel\CPanelModule;
+use Modules\Servers\Custom\CustomModule;
+use Modules\Servers\DirectAdmin\DirectAdminModule;
+use Modules\Servers\HestiaCP\HestiaCPModule;
+use Modules\Servers\Panelica\PanelicaModule;
+use Modules\Servers\PanelicaLicense\PanelicaLicenseModule;
+use Modules\Servers\Plesk\PleskModule;
+use Modules\Servers\Proxmox\ProxmoxModule;
+use Modules\Servers\Vultr\VultrModule;
+use Modules\Ssl\GoGetSSL\GoGetSslModule;
 
 class ModuleServiceProvider extends ServiceProvider
 {
+    /**
+     * A module found by its pnlcs.json may name a Laravel service provider
+     * ("provider"): a gateway's own checkout pages and webhook URLs, a
+     * module's tables, views and scheduled tasks. They live in the module's
+     * folder, so an update leaves them in place. A provider that fails is
+     * logged with the module's name and skipped (GuardedProviders).
+     */
+    public function boot(): void
+    {
+        try {
+            $candidates = $this->app->make(ModuleRegistry::class)->discoveredProviders();
+        } catch (\Throwable $e) {
+            Log::error('Module service providers not loaded, module discovery failed: '.$e->getMessage());
+
+            return;
+        }
+
+        $labelled = [];
+        foreach ($candidates as $module => $class) {
+            $labelled["Module {$module}"] = $class;
+        }
+        GuardedProviders::boot($this->app, $labelled);
+    }
+
     public function register(): void
     {
         $this->app->singleton(ModuleRegistry::class, function () {
-            $registry = new ModuleRegistry();
+            $registry = new ModuleRegistry;
 
             // Built-in server modules
-            $registry->registerServer('custom', \Modules\Servers\Custom\CustomModule::class);
+            $registry->registerServer('custom', CustomModule::class);
 
             // Built-in gateway modules
-            $registry->registerGateway('banktransfer', \Modules\Gateways\BankTransfer\BankTransferModule::class);
-            $registry->registerGateway('stripe', \Modules\Gateways\Stripe\StripeModule::class);
-            $registry->registerGateway('paypal', \Modules\Gateways\PayPal\PayPalModule::class);
-            $registry->registerGateway('authorize', \Modules\Gateways\AuthorizeNet\AuthorizeNetModule::class);
+            $registry->registerGateway('banktransfer', BankTransferModule::class);
+            $registry->registerGateway('stripe', StripeModule::class);
+            $registry->registerGateway('paypal', PayPalModule::class);
+            $registry->registerGateway('authorize', AuthorizeNetModule::class);
 
             // Panelica hosting panel module
-            if (class_exists(\Modules\Servers\Panelica\PanelicaModule::class)) {
-                $registry->registerServer('panelica', \Modules\Servers\Panelica\PanelicaModule::class);
+            if (class_exists(PanelicaModule::class)) {
+                $registry->registerServer('panelica', PanelicaModule::class);
             }
 
             // cPanel/WHM module
-            if (class_exists(\Modules\Servers\CPanel\CPanelModule::class)) {
-                $registry->registerServer('cpanel', \Modules\Servers\CPanel\CPanelModule::class);
+            if (class_exists(CPanelModule::class)) {
+                $registry->registerServer('cpanel', CPanelModule::class);
             }
 
             // Plesk Obsidian module
-            $registry->registerServer('plesk', \Modules\Servers\Plesk\PleskModule::class);
+            $registry->registerServer('plesk', PleskModule::class);
 
             // DirectAdmin module
-            $registry->registerServer('directadmin', \Modules\Servers\DirectAdmin\DirectAdminModule::class);
+            $registry->registerServer('directadmin', DirectAdminModule::class);
 
             // Proxmox VE module (KVM + LXC)
-            if (class_exists(\Modules\Servers\Proxmox\ProxmoxModule::class)) {
-                $registry->registerServer("proxmox", \Modules\Servers\Proxmox\ProxmoxModule::class);
+            if (class_exists(ProxmoxModule::class)) {
+                $registry->registerServer('proxmox', ProxmoxModule::class);
             }
 
             // HestiaCP module
-            $registry->registerServer("hestiacp", \Modules\Servers\HestiaCP\HestiaCPModule::class);
+            $registry->registerServer('hestiacp', HestiaCPModule::class);
             // aaPanel module (Sub aaPanel accounts)
-            $registry->registerServer("aapanel", \Modules\Servers\AaPanel\AaPanelModule::class);
+            $registry->registerServer('aapanel', AaPanelModule::class);
             // Vultr VPS module
-            $registry->registerServer("vultr", \Modules\Servers\Vultr\VultrModule::class);
+            $registry->registerServer('vultr', VultrModule::class);
             // Panelica licenses, sold with a Panelica partner account
-            $registry->registerServer('panelicalicense', \Modules\Servers\PanelicaLicense\PanelicaLicenseModule::class);
+            $registry->registerServer('panelicalicense', PanelicaLicenseModule::class);
 
             // Namecheap Registrar
-            $registry->registerRegistrar("namecheap", \Modules\Registrars\Namecheap\NamecheapRegistrar::class);
+            $registry->registerRegistrar('namecheap', NamecheapRegistrar::class);
             // ResellerClub / LogicBoxes Registrar
-            $registry->registerRegistrar("resellerclub", \Modules\Registrars\ResellerClub\ResellerClubRegistrar::class);
-            $registry->registerRegistrar("openprovider", \Modules\Registrars\OpenProvider\OpenProviderRegistrar::class);
+            $registry->registerRegistrar('resellerclub', ResellerClubRegistrar::class);
+            $registry->registerRegistrar('openprovider', OpenProviderRegistrar::class);
             // eNom Registrar
-            $registry->registerRegistrar("enom", \Modules\Registrars\Enom\EnomRegistrar::class);
+            $registry->registerRegistrar('enom', EnomRegistrar::class);
             // Manual Registrar
-            $registry->registerRegistrar("manual", \Modules\Registrars\Manual\ManualRegistrar::class);
+            $registry->registerRegistrar('manual', ManualRegistrar::class);
             // HRD Registrar (hrd.pl)
-            $registry->registerRegistrar("hrd", \Modules\Registrars\HRD\HrdRegistrar::class);
+            $registry->registerRegistrar('hrd', HrdRegistrar::class);
             // DomainNameAPI (Turkey). The module shipped without this line and
             // without a pnlcs.json, so it could be configured nowhere and every
             // domain naming it was treated as having no registrar.
-            $registry->registerRegistrar("domainnameapi", \Modules\Registrars\DomainNameApi\DomainNameApiRegistrar::class);
+            $registry->registerRegistrar('domainnameapi', DomainNameApiRegistrar::class);
 
             // Mollie (EU)
-            $registry->registerGateway("mollie", \Modules\Gateways\Mollie\MollieModule::class);
+            $registry->registerGateway('mollie', MollieModule::class);
             // Razorpay (India/Asia)
-            $registry->registerGateway("razorpay", \Modules\Gateways\Razorpay\RazorpayModule::class);
+            $registry->registerGateway('razorpay', RazorpayModule::class);
             // Tpay (Poland)
-            $registry->registerGateway("tpay", \Modules\Gateways\Tpay\TpayModule::class);
+            $registry->registerGateway('tpay', TpayModule::class);
 
             // iyzico (Turkey) - cards, 3D Secure, instalments
-            $registry->registerGateway("iyzico", \Modules\Gateways\Iyzico\IyzicoModule::class);
+            $registry->registerGateway('iyzico', IyzicoModule::class);
 
             // SSL Modules
-            $registry->registerSsl('gogetssl', \Modules\Ssl\GoGetSSL\GoGetSslModule::class);
+            $registry->registerSsl('gogetssl', GoGetSslModule::class);
 
             $this->discoverModules($registry);
 
@@ -114,7 +166,9 @@ class ModuleServiceProvider extends ServiceProvider
                 continue;
             }
 
-            $registry->registerDiscovered($type, $name, $class, $manifestPath);
+            $provider = trim((string) ($manifest['provider'] ?? ''));
+
+            $registry->registerDiscovered($type, $name, $class, $manifestPath, $provider);
         }
     }
 }
