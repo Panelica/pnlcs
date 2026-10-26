@@ -2,15 +2,20 @@
 @section("title", __("admin.products.title"))
 @section("content")
 
-<div class="page-header">
+<div class="page-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
     <h1>{{ __('admin.services.title') }}</h1>
+    <form method="GET" action="{{ route('admin.services.index') }}" style="display:flex;gap:6px;">
+        @if(request('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
+        <input type="search" name="q" value="{{ request('q') }}" class="form-control" style="width:280px;" placeholder="{{ __('admin.services.search_placeholder') }}" aria-label="{{ __('admin.services.search_placeholder') }}">
+        <button type="submit" class="btn btn-default btn-sm">{{ __('common.actions.search') }}</button>
+    </form>
 </div>
 
 <!-- Status Filter Tabs -->
 <div style="margin-bottom:16px;border-bottom:1px solid #ddd;display:flex;gap:0;flex-wrap:wrap;">
     @foreach(["" => "All", "active" => "Active", "suspended" => "Suspended", "terminated" => "Terminated", "pending" => "Pending", "cancelled" => "Cancelled"] as $val => $label)
     @php $isActive = (request("status","") == $val); @endphp
-    <a href="{{ route("admin.services.index", ["status" => $val]) }}"
+    <a href="{{ route("admin.services.index", array_filter(["status" => $val, "q" => request("q")])) }}"
        style="display:inline-block;padding:8px 16px;font-size:13px;text-decoration:none;color:{{ $isActive ? "#1a4d80" : "#666" }};font-weight:{{ $isActive ? "700" : "400" }};border-bottom:{{ $isActive ? "3px solid #1a4d80" : "3px solid transparent" }};margin-bottom:-1px;">
         {{ $label }}
     </a>
@@ -53,7 +58,7 @@
                     <a href="{{ route("admin.clients.show", $service->client_id) }}" style="color:#337ab7;text-decoration:none;">{{ $service->client->full_name }}</a>
                     @else N/A @endif
                 </td>
-                <td style="font-family:monospace;font-size:12px;color:#666;">{{ $service->domain ?? "-" }}</td>
+                <td style="font-family:monospace;font-size:12px;color:#666;">{{ $service->domain ?? "-" }}@if($service->primaryIp())<div>{{ $service->primaryIp() }}</div>@endif</td>
                 <td style="color:#666;">{{ ucfirst($service->billing_cycle ?? "-") }}</td>
                 <td style="text-align:right;font-weight:500;">{{ money_fmt($service->amount) }}</td>
                 <td style="color:#666;">{{ $service->next_due_date?->format(date_fmt()) ?? "-" }}</td>

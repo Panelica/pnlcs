@@ -2587,6 +2587,7 @@ return [
         'terminate_account' => 'Beenden',
         'terminated' => 'Beendet',
         'title' => 'Produkte/Dienstleistungen',
+        'search_placeholder' => 'Domain, Benutzername, IP-Adresse oder Dienst-ID',
         'unsuspend' => 'Suspendierung aufheben',
         'unsuspend_account' => 'Suspendierung aufheben',
         'username' => 'Benutzername',

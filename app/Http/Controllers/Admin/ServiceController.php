@@ -28,6 +28,21 @@ class ServiceController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+        // One box (#308): a domain, a username, a service id, or an IP address. An abuse report or a network
+        // notice often gives nothing but the address; the modules record it in module_data (pool or reported
+        // address on Proxmox, Vultr's main IP, any further addresses), so an exact quoted match finds it there.
+        if ($request->filled('q')) {
+            $q = trim((string) $request->query('q'));
+            $query->where(function ($w) use ($q) {
+                $w->where('domain', 'like', '%'.$q.'%')->orWhere('username', $q);
+                if (ctype_digit($q)) {
+                    $w->orWhere('id', (int) $q);
+                }
+                if (filter_var($q, FILTER_VALIDATE_IP)) {
+                    $w->orWhere('module_data', 'like', '%"'.$q.'"%');
+                }
+            });
+        }
         $services = $query->orderBy('created_at', 'desc')->paginate(25);
 
         return view('admin.services.index', compact('services'));

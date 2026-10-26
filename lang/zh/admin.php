@@ -2587,6 +2587,7 @@ return [
         'terminate_account' => '终止',
         'terminated' => '已终止',
         'title' => '服务',
+        'search_placeholder' => '域名、用户名、IP 地址或服务 ID',
         'unsuspend' => '解除暂停',
         'unsuspend_account' => '解除账户暂停',
         'username' => '用户名',
