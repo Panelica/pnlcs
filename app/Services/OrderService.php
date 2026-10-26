@@ -773,10 +773,13 @@ class OrderService
     private function reopenCancelledInvoice(Invoice $invoice): void
     {
         $paid = app(PaymentService::class)->amountPaid($invoice);
-        $client = $invoice->client;
+        // Locked, as every other change to a balance is (ClientCreditController,
+        // InvoiceService): spending the credit at the same moment cannot slip
+        // between the check and the decrement. reopenOrder() holds the transaction.
+        $client = $invoice->client_id ? Client::whereKey($invoice->client_id)->lockForUpdate()->first() : null;
 
         if ($paid > 0.009) {
-            if (! $client || (float) $client->fresh()->credit + 0.009 < $paid) {
+            if (! $client || (float) $client->credit + 0.009 < $paid) {
                 Log::warning('Reopening order: invoice #'.$invoice->invoice_num.' left cancelled; the '.$paid.' paid on it was returned as credit and has been spent.');
 
                 return;
