@@ -41,7 +41,7 @@ class AdminSearch
         $kinds = [
             'clients' => ['view_clients', fn () => $this->clients($like, $number)],
             'invoices' => ['view_invoices', fn () => $this->invoices($like, $number)],
-            'services' => ['view_services', fn () => $this->services($like, $number)],
+            'services' => ['view_services', fn () => $this->services($query)],
             'domains' => ['manage_domains', fn () => $this->domains($like)],
             'tickets' => ['view_tickets', fn () => $this->tickets($like, ltrim($query, '#'))],
             'orders' => ['view_orders', fn () => $this->orders($like, $number)],
@@ -100,15 +100,11 @@ class AdminSearch
             ]);
     }
 
-    private function services(string $like, ?int $number): Collection
+    /** Service::matching(), as the services list's search box: an IP address finds the server too. */
+    private function services(string $query): Collection
     {
         return Service::query()->with(['client', 'product'])
-            ->where(function (Builder $q) use ($like, $number) {
-                $q->where('domain', 'like', $like)->orWhere('username', 'like', $like);
-                if ($number) {
-                    $q->orWhere('id', $number);
-                }
-            })
+            ->matching($query)
             ->orderByDesc('id')->limit(self::PER_KIND)->get()
             ->map(fn (Service $s) => [
                 'title' => ($s->domain ?: '#'.$s->id).($s->product ? ' · '.$s->product->name : ''),

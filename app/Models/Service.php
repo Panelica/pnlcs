@@ -167,6 +167,32 @@ class Service extends Model
      * period: as the service itself, its usage overage, or one of its addons.
      * What AutoSuspendInvoicedOnly suspends over (SuspensionCommand).
      */
+    /**
+     * Services matching what staff typed: part of the domain or the username,
+     * the id (with or without #), or an IP address a module recorded in
+     * module_data (the pool or reported address on Proxmox, Vultr's main IP,
+     * any further address), matched whole. One rule for the admin list's
+     * search box and the admin bar's search (AdminSearch), so the two find the
+     * same services.
+     */
+    public function scopeMatching($q, string $term)
+    {
+        $term = trim($term);
+        $like = '%'.addcslashes($term, '\\%_').'%';
+        $number = ctype_digit(ltrim($term, '#')) ? (int) ltrim($term, '#') : null;
+
+        return $q->where(function ($w) use ($term, $like, $number) {
+            $w->where('domain', 'like', $like)->orWhere('username', 'like', $like);
+            if ($number) {
+                $w->orWhere('id', $number);
+            }
+            // The quoted value, so 203.0.113.10 does not find 203.0.113.100.
+            if (filter_var($term, FILTER_VALIDATE_IP)) {
+                $w->orWhere('module_data', 'like', '%"'.$term.'"%');
+            }
+        });
+    }
+
     public function scopeOwingOverdue($q, int $graceDays)
     {
         return $q->whereExists(fn ($e) => $e->selectRaw('1')->from('invoice_items')

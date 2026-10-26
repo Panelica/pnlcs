@@ -47,3 +47,20 @@ test('a domain, a username or an id also finds the service, and the list shows t
             ->assertSee('shop.example.com')->assertSee('203.0.113.20')->assertDontSee('unrelated.example.com');
     }
 });
+
+test('the admin bar search finds a service by its IP address too, by the same rule', function () {
+    Service::factory()->create(['domain' => 'barhit.example.com', 'module_data' => ['pve_ipv4' => '203.0.113.30']]);
+    Service::factory()->create(['domain' => 'barmiss.example.com', 'module_data' => ['pve_ipv4' => '203.0.113.31']]);
+
+    $groups = collect($this->actingAs(sisAdmin(), 'admin')->getJson(route('admin.search', ['q' => '203.0.113.30']))->assertOk()->json('groups'));
+    $titles = collect($groups->firstWhere('type', 'services')['items'] ?? [])->pluck('title')->implode(' ');
+
+    expect($titles)->toContain('barhit.example.com')->not->toContain('barmiss.example.com');
+});
+
+test('a percent sign in the box is searched for, not taken as a wildcard', function () {
+    Service::factory()->create(['domain' => 'plain.example.com']);
+
+    $this->actingAs(sisAdmin(), 'admin')->get(route('admin.services.index', ['q' => '%']))->assertOk()
+        ->assertDontSee('plain.example.com');
+});
