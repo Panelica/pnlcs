@@ -93,7 +93,9 @@ it('advances a service next_due_date when its renewal invoice is paid', function
     app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-S1', (float) $invoice->total);
 
     $service->refresh();
-    expect($service->next_due_date->toDateString())->toBe($due->copy()->addMonth()->toDateString());
+    // As BillingCycleHelper advances it: without overflow, so a due date on the
+    // 31st moves to the last day of next month, not into the month after.
+    expect($service->next_due_date->toDateString())->toBe($due->copy()->addMonthNoOverflow()->toDateString());
 });
 
 it('does not advance a service for a new-order invoice (order references the invoice)', function () {
