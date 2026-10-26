@@ -9,8 +9,10 @@ use App\Enums\ServiceStatus;
 use App\Events\OrderPlaced;
 use App\Events\ServiceActivated;
 use App\Models\Client;
+use App\Models\Credit;
 use App\Models\Domain;
 use App\Models\DomainPricing;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Promotion;
@@ -697,15 +699,88 @@ class OrderService
             return $order;
         }
 
-        return DB::transaction(function () use ($order) {
+        $wasFraud = $order->status === OrderStatus::Fraud->value;
+
+        $suspended = DB::transaction(function () use ($order, $wasFraud) {
             foreach ($this->stockControlledProductIds($order) as $productId) {
                 Product::whereKey($productId)->where('stock_qty', '>', 0)->decrement('stock_qty');
             }
 
             $order->update(['status' => OrderStatus::Pending->value]);
 
-            return $order->fresh();
+            // The verdict cancelled the order's invoice (closeOrderInvoice), and
+            // a pending order with a cancelled invoice can be neither paid nor
+            // accepted: releasing a false alarm used to change the order's
+            // status and nothing else. What was paid on it went back as credit
+            // when it was cancelled, so it is simply owed again, with a due
+            // date the customer can still meet.
+            $invoice = $order->invoice_id ? $order->invoice : null;
+            if ($invoice && strtolower((string) $invoice->status) === InvoiceStatus::Cancelled->value) {
+                $this->reopenCancelledInvoice($invoice);
+            }
+
+            // The services the verdict suspended, and only those: one suspended
+            // since for another reason stays as it is.
+            return $wasFraud
+                ? Service::where('order_id', $order->id)->where('status', ServiceStatus::Suspended->value)
+                    ->where('suspension_reason', self::FRAUD_SUSPENSION_REASON)->get()
+                : collect();
         });
+
+        // As markFraud suspended them: on the server through the provisioning
+        // service (a refusal is queued for retry), locally otherwise.
+        foreach ($suspended as $service) {
+            if ($service->server_id) {
+                $this->provisioning->unsuspendAccount($service);
+
+                continue;
+            }
+
+            $service->update(['status' => ServiceStatus::Active->value, 'suspension_date' => null, 'suspension_reason' => null]);
+        }
+
+        return $order->fresh();
+    }
+
+    /**
+     * Make the order's cancelled invoice payable again.
+     *
+     * Cancelling it handed whatever had been paid on it back as credit, while
+     * the payments stayed linked to the invoice. Reopening it as it was would
+     * count that money twice - once as the customer's credit, once against the
+     * invoice - and every further verdict and release would hand it out again.
+     * So the credit given back is taken back first, and the invoice reopens
+     * part paid. If the customer has spent it since, the invoice stays
+     * cancelled: staff settle that by hand rather than the system inventing
+     * money.
+     */
+    private function reopenCancelledInvoice(Invoice $invoice): void
+    {
+        $paid = app(PaymentService::class)->amountPaid($invoice);
+        $client = $invoice->client;
+
+        if ($paid > 0.009) {
+            if (! $client || (float) $client->fresh()->credit + 0.009 < $paid) {
+                Log::warning('Reopening order: invoice #'.$invoice->invoice_num.' left cancelled; the '.$paid.' paid on it was returned as credit and has been spent.');
+
+                return;
+            }
+
+            $client->decrement('credit', $paid);
+            Credit::create([
+                'client_id' => $client->id,
+                'admin_id' => null,
+                'date' => now()->toDateString(),
+                'description' => "Invoice #{$invoice->invoice_num} reopened — returned payment taken back",
+                'amount' => -$paid,
+            ]);
+        }
+
+        $due = now()->addDays((int) Setting::get('InvoiceDueDays', 14))->startOfDay();
+        $invoice->update([
+            'status' => $paid > 0.009 ? InvoiceStatus::PartiallyPaid->value : InvoiceStatus::Unpaid->value,
+            'due_date' => $invoice->due_date && $invoice->due_date->gt($due) ? $invoice->due_date : $due->toDateString(),
+        ]);
     }
 
     /** Hand back one unit per stock-controlled service on this order. */
