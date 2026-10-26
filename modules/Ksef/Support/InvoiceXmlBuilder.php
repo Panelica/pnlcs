@@ -136,9 +136,12 @@ class InvoiceXmlBuilder
 
         foreach ($invoice->items as $item) {
             $qty = max(1, (int) ($item->qty ?? 1));
-            $net = round((float) $item->amount * $qty, 2);
-            $rate = $item->tax_rate !== null ? (float) $item->tax_rate : ($item->taxed ? (float) $invoice->tax_rate : 0.0);
-            $vat = round($net * $rate / 100, 2);
+            // As the invoice was taxed (Invoice::lineTax): the line's own rate or the invoice's, none on an
+            // invoice issued with tax off, and with prices that include tax the VAT is the part the gross holds.
+            $line = $invoice->lineTax($item);
+            $rate = $line['rate'];
+            $net = round($line['net'], 2);
+            $vat = round($line['vat'], 2);
             $grand += $net + $vat;
 
             $key = (string) $rate;
@@ -153,7 +156,7 @@ class InvoiceXmlBuilder
                 .'<P_7>'.e((string) ($item->description ?? '')).'</P_7>'
                 .'<P_8A>'.e((string) ($item->unit ?? 'szt.')).'</P_8A>'
                 .'<P_8B>'.$this->qty($qty).'</P_8B>'
-                .'<P_9A>'.$this->amount($item->amount).'</P_9A>'
+                .'<P_9A>'.$this->amount(round($line['net'] / $qty, 2)).'</P_9A>'
                 .'<P_11>'.$this->amount($net).'</P_11>'
                 .'<P_11Vat>'.$this->amount($vat).'</P_11Vat>'
                 .'<P_12>'.$this->rateCode($rate).'</P_12>'

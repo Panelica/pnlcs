@@ -72,6 +72,7 @@ class InvoiceService
                 'total' => 0,
                 'tax_rate' => 0,
                 'tax_rate2' => 0,
+                'tax_mode' => $options['tax_mode'] ?? Invoice::currentTaxMode(),
             ]);
 
             foreach ($items as $itemData) {
@@ -209,9 +210,8 @@ class InvoiceService
         $perItem = $invoice->items->contains(fn ($item) => $item->tax_rate !== null);
 
         if ($perItem) {
-            $taxAmount = round($invoice->items->sum(
-                fn ($item) => (float) $item->amount * (int) $item->qty * ((float) ($item->tax_rate ?? 0) / 100)
-            ), 2);
+            // Each line's share unrounded, the sum rounded once (Invoice::lineTax).
+            $taxAmount = round($invoice->items->sum(fn ($item) => $invoice->lineTax($item)['vat']), 2);
 
             $rates = $invoice->items->pluck('tax_rate')->filter(fn ($r) => $r !== null && (float) $r > 0)->unique()->values();
             $taxRate = $rates->count() === 1 ? (float) $rates->first() : 0.0;
@@ -226,7 +226,19 @@ class InvoiceService
                 $taxRate = $this->calculateTax($taxableAmount, $invoice->client_id)['tax_rate'];
             }
 
-            $taxAmount = $taxRate > 0 ? round($taxableAmount * ($taxRate / 100), 2) : 0;
+            if ($invoice->tax_mode === Invoice::TAX_NONE) {
+                $taxRate = 0.0;
+            }
+
+            $taxAmount = TaxRule::taxOn($taxableAmount, $taxRate, $invoice->tax_mode === Invoice::TAX_INCLUSIVE);
+        }
+
+        // With prices that include tax, the lines already carry it: the tax is
+        // the part of them it accounts for, so the subtotal is what is left and
+        // subtotal + tax is still the total every invoice view prints. Read
+        // from the invoice, fixed when it was issued, not today's setting.
+        if ($invoice->tax_mode === Invoice::TAX_INCLUSIVE) {
+            $subtotal -= $taxAmount;
         }
 
         $credit = (float) $invoice->credit;
@@ -528,14 +540,14 @@ class InvoiceService
 
         $client = Client::find($clientId);
 
-        if (! $client || $client->tax_exempt) {
+        if (! $client || $client->tax_exempt || ! TaxRule::enabled()) {
             return ['tax' => 0.0, 'tax_rate' => 0.0];
         }
 
         $rate = $this->rateFor($client);
 
         return [
-            'tax' => round($amount * ($rate / 100), 2),
+            'tax' => TaxRule::taxOn($amount, $rate),
             'tax_rate' => $rate,
         ];
     }

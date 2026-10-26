@@ -155,18 +155,9 @@
             </form>
             @endforeach
             @php
-            $vatGroups = [];
-            foreach ($invoice->items as $it) {
-                $rate = $it->tax_rate !== null ? (float) $it->tax_rate : ($it->taxed ? (float) $invoice->tax_rate : 0.0);
-                $label = $it->tax_label ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null);
-                if ($label === null) { continue; }
-                $tax = (float) $it->amount * (int) $it->qty * $rate / 100;
-                $net = (float) $it->amount * (int) $it->qty;
-                if (! isset($vatGroups[$label])) { $vatGroups[$label] = ['amount' => 0.0, 'rate' => $rate, 'net' => 0.0]; }
-                $vatGroups[$label]['amount'] += $tax;
-                $vatGroups[$label]['net'] += $net;
-            }
-            uasort($vatGroups, fn ($a, $b) => $b['rate'] <=> $a['rate']);
+            // One computation for every invoice document (Invoice::vatBreakdown): the line rates, the tax mode it was
+    // issued under (on top, included, none), each rate's net and VAT rounded once.
+    $vatGroups = $invoice->vatBreakdown();
             @endphp
             <table class="data-table">
                 <thead><tr>

@@ -23,7 +23,9 @@ class Invoice extends Model {
         // The shop prices in one currency and may bill in another, at the
         // rate that stood when the invoice was raised.
         'source_currency', 'billing_currency', 'exchange_rate',
-        'exchange_rate_source', 'exchange_rate_kind', 'exchange_rate_date', 'exchange_rate_ref'];
+        'exchange_rate_source', 'exchange_rate_kind', 'exchange_rate_date', 'exchange_rate_ref',
+        // How it was taxed when issued (#305): null = on top, 'inclusive', 'none'.
+        'tax_mode'];
 
     /**
      * Freeze the billing rate the moment an invoice comes into existence.
@@ -154,6 +156,63 @@ class Invoice extends Model {
     }
 
     public function items() { return $this->hasMany(InvoiceItem::class); }
+
+    public const TAX_INCLUSIVE = 'inclusive';
+    public const TAX_NONE = 'none';
+
+    /** The tax mode for an invoice issued now, from the shop's tax settings. */
+    public static function currentTaxMode(): ?string
+    {
+        return ! TaxRule::enabled() ? self::TAX_NONE : (TaxRule::pricesIncludeTax() ? self::TAX_INCLUSIVE : null);
+    }
+
+    /**
+     * One line's rate, net and VAT, unrounded, as this invoice was taxed: the
+     * line's own rate (the admin builder writes one), else the invoice rate on
+     * a taxed line; none at all on an invoice issued with tax off; with prices
+     * that include tax the line amount is gross and the VAT the part it holds.
+     *
+     * @return array{rate: float, net: float, vat: float}
+     */
+    public function lineTax(InvoiceItem $item): array
+    {
+        $amount = (float) $item->amount * max(1, (int) ($item->qty ?? 1));
+        $rate = $this->tax_mode === self::TAX_NONE ? 0.0
+            : ($item->tax_rate !== null ? (float) $item->tax_rate : ($item->taxed ? (float) $this->tax_rate : 0.0));
+        $vat = TaxRule::taxShare($amount, $rate, $this->tax_mode === self::TAX_INCLUSIVE);
+
+        return ['rate' => $rate, 'net' => $this->tax_mode === self::TAX_INCLUSIVE ? $amount - $vat : $amount, 'vat' => $vat];
+    }
+
+    /**
+     * The VAT rows the invoice documents print: per label (the line's tax label,
+     * else its rate), net and VAT summed and rounded once, highest rate first.
+     * One place for the PDF, the client and admin invoice pages and KSeF.
+     *
+     * @return array<string, array{rate: float, net: float, amount: float}>
+     */
+    public function vatBreakdown(): array
+    {
+        $groups = [];
+        foreach ($this->items as $item) {
+            $line = $this->lineTax($item);
+            $label = $item->tax_label ?: ($line['rate'] > 0 ? rtrim(rtrim(number_format($line['rate'], 2), '0'), '.').'%' : null);
+            if ($label === null) {
+                continue;
+            }
+            $groups[$label] ??= ['amount' => 0.0, 'rate' => $line['rate'], 'net' => 0.0];
+            $groups[$label]['amount'] += $line['vat'];
+            $groups[$label]['net'] += $line['net'];
+        }
+        foreach ($groups as &$group) {
+            $group['amount'] = round($group['amount'], 2);
+            $group['net'] = round($group['net'], 2);
+        }
+        unset($group);
+        uasort($groups, fn ($a, $b) => $b['rate'] <=> $a['rate']);
+
+        return $groups;
+    }
     public function transactions() { return $this->hasMany(Transaction::class); }
 
     /**

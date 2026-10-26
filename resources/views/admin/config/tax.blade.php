@@ -7,6 +7,26 @@
     <button type="button" onclick="openAddTax()" class="btn btn-primary btn-sm">+ {{ __('admin.tax.add_rule') }}</button>
 </div>
 
+{{-- How tax is charged at all (#305): off without deleting the rules, and prices that already include it. --}}
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-body">
+        <form method="POST" action="{{ route('admin.settings.general.update') }}" style="display:flex;flex-direction:column;gap:6px;">
+            @csrf
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="hidden" name="TaxEnabled" value="0"><input type="checkbox" name="TaxEnabled" value="1" @checked($taxEnabled ?? true)>
+                <strong>{{ __('admin.tax.charge_tax') }}</strong>
+            </label>
+            <div style="font-size:12px;color:#777;margin:-2px 0 4px 22px;">{{ __('admin.tax.charge_tax_hint') }}</div>
+            <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                <input type="hidden" name="TaxInclusivePrices" value="0"><input type="checkbox" name="TaxInclusivePrices" value="1" @checked($taxInclusive ?? false)>
+                <strong>{{ __('admin.tax.prices_include_tax') }}</strong>
+            </label>
+            <div style="font-size:12px;color:#777;margin:-2px 0 4px 22px;">{{ __('admin.tax.prices_include_tax_hint') }}</div>
+            <div><button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button></div>
+        </form>
+    </div>
+</div>
+
 <div class="card">
     @if(($groups ?? collect())->isEmpty())
     <div class="card-body" style="text-align:center;padding:40px;color:#999;">{{ __('admin.tax.no_rules') }}</div>

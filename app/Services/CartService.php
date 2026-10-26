@@ -627,11 +627,14 @@ class CartService
 
         // carts.user_id holds the client id, despite the column name.
         $taxRate = $this->getTaxRate($cart->user_id);
-        $taxAmount = round($taxable * ($taxRate / 100), 2);
-        $total = round(max(0, $taxable + $untaxed) + $taxAmount, 2);
+        $taxAmount = \App\Models\TaxRule::taxOn($taxable, $taxRate);
+        // Prices that include tax: the customer pays what the lines say, and the
+        // tax is the part of it the rate accounts for.
+        $inclusive = \App\Models\TaxRule::pricesIncludeTax();
+        $total = round(max(0, $taxable + $untaxed) + ($inclusive ? 0 : $taxAmount), 2);
 
         return [
-            'subtotal' => round($subtotal, 2),
+            'subtotal' => round($subtotal - ($inclusive ? $taxAmount : 0), 2),
             'discount' => round($groupDiscount + $promoDiscount, 2),
             'group_discount' => round($groupDiscount, 2),
             'promo_discount' => round($promoDiscount, 2),

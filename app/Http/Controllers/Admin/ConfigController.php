@@ -573,6 +573,8 @@ class ConfigController extends Controller
 
     public function tax()
     {
+        $taxEnabled = TaxRule::enabled();
+        $taxInclusive = TaxRule::pricesIncludeTax();
         $groups = TaxRule::orderBy('country')->orderBy('state')->orderByDesc('is_default')->orderBy('id')->get()
             ->groupBy(fn ($r) => $r->country."\x1F".$r->state)
             ->map(fn ($rules) => (object) [
@@ -583,7 +585,7 @@ class ConfigController extends Controller
             ])
             ->values();
 
-        return view('admin.config.tax', ['groups' => $groups]);
+        return view('admin.config.tax', ['groups' => $groups, 'taxEnabled' => $taxEnabled, 'taxInclusive' => $taxInclusive]);
     }
 
     public function storeTax(Request $request)

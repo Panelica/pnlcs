@@ -76,8 +76,14 @@ class QuoteService
             $lineTotal = max(0, $lineTotal);
             $subtotal += $lineTotal;
             if ($item->taxable && $taxRate > 0) {
-                $taxTotal += $lineTotal * ($taxRate / 100);
+                $taxTotal += TaxRule::taxShare($lineTotal, $taxRate);
             }
+        }
+
+        // As the invoice: with prices that include tax, the subtotal is what is
+        // left once the tax is taken out, and the total is what was quoted.
+        if (TaxRule::pricesIncludeTax()) {
+            $subtotal -= $taxTotal;
         }
 
         $quote->subtotal = round($subtotal, 2);

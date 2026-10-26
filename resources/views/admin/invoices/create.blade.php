@@ -209,6 +209,8 @@ function invoiceBuilder() {
         currencyPrefix: @json($defaultCurrency?->prefix ?? ''),
         currencySuffix: @json($defaultCurrency?->suffix ?? ''),
         taxRate: 0,
+        // How the invoice will be taxed when saved: null on top, 'inclusive', 'none' (Invoice::currentTaxMode).
+        taxMode: @json(\App\Models\Invoice::currentTaxMode()),
         taxLabel: '',
         clientRates: [],
         vatLabel: @json(__('admin.invoices.tax')),
@@ -314,16 +316,20 @@ function invoiceBuilder() {
         lineTotal(item) { return (parseFloat(item.amount) || 0) * (parseInt(item.qty, 10) || 1); },
         fmtRate(r) { return String(Math.round(r * 100) / 100); },
         recalculate() {
-            this.subtotal = this.items.reduce((s, i) => s + this.lineTotal(i), 0);
+            // As the invoice will be saved (Invoice::lineTax): no tax while the shop charges none, and with prices
+            // that include tax the VAT is the part of the line it holds.
+            const inclusive = this.taxMode === 'inclusive';
+            const gross = this.items.reduce((s, i) => s + this.lineTotal(i), 0);
             const groups = {};
             this.items.forEach(i => {
-                const rate = parseFloat(i.tax_rate) || 0;
+                const rate = this.taxMode === 'none' ? 0 : (parseFloat(i.tax_rate) || 0);
                 const label = (i.tax_label || '').trim();
                 if (!label && rate <= 0) { return; }
                 const key = label || (rate + '%');
                 groups[key] = groups[key] || { label: key, rate: rate, amount: 0, net: 0 };
-                groups[key].amount += this.lineTotal(i) * rate / 100;
-                groups[key].net += this.lineTotal(i);
+                const share = inclusive ? this.lineTotal(i) * rate / (100 + rate) : this.lineTotal(i) * rate / 100;
+                groups[key].amount += share;
+                groups[key].net += inclusive ? this.lineTotal(i) - share : this.lineTotal(i);
             });
             this.vatBreakdown = Object.values(groups).map(g => ({
                 label: g.label,
@@ -332,6 +338,7 @@ function invoiceBuilder() {
                 net: Math.round(g.net * 100) / 100
             })).sort((a, b) => b.rate - a.rate);
             this.taxAmount = Math.round(this.vatBreakdown.reduce((s, g) => s + g.amount, 0) * 100) / 100;
+            this.subtotal = inclusive ? Math.round((gross - this.taxAmount) * 100) / 100 : gross;
             this.grandTotal = Math.round((this.subtotal + this.taxAmount) * 100) / 100;
         }
     };
