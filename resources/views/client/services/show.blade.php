@@ -224,10 +224,16 @@
     <div class="sv-panel">
         <div class="sv-ph">{{ __('client.services.server_info') }}</div>
         <ul class="sv-dl">
+            {{-- A virtual server's host is the hypervisor: its name and address are not the customer's
+                 business. The customer is shown their own server's address instead (#322). --}}
+            @php($onHypervisor = strtolower((string) $service->server?->type) === 'proxmox')
+            @unless($onHypervisor)
             <li><span class="k">{{ __('client.services.server') }}</span><span class="v">{{ $service->server->name ?? '—' }}</span></li>
+            @endunless
             <li><span class="k">{{ __('client.services.username') }}</span><span class="v"><span class="sv-code">{{ $service->username ?? '—' }}</span></span></li>
-            {{-- A virtual server's host is the hypervisor: its address is not the customer's business. --}}
-            @if(strtolower((string) $service->server?->type) !== 'proxmox')
+            @if($onHypervisor)
+            @if($service->primaryIp())<li><span class="k">{{ __('client.services.ip_address') }}</span><span class="v"><span class="sv-code">{{ $service->primaryIp() }}</span></span></li>@endif
+            @else
             @if($service->server?->hostname)<li><span class="k">{{ __('client.services.hostname') }}</span><span class="v">{{ $service->server->hostname }}</span></li>@endif
             @if($service->server?->ip_address)<li><span class="k">{{ __('client.services.ip_address') }}</span><span class="v"><span class="sv-code">{{ $service->server->ip_address }}</span></span></li>@endif
             @endif
