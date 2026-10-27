@@ -165,10 +165,14 @@ function localeValues(string $locale): array
 // name "Panelica :plan"), de +4 (Status, Server, Installation, the product
 // name), pl +4 (Plan twice, Status, the product name), zh +1 (the product
 // name). Listed in database/data/same_as_english.php as well.
+// Raised 2026-10-27 for the Proxmox capacity page (proxmox.capacity.*, #316),
+// by words these languages write the same way: tr +2 (PNLCS, Disk), de +4
+// (PNLCS, CPU, Disk, offline), pl +3 (PNLCS, CPU, offline), zh +2 (PNLCS,
+// CPU). Listed in database/data/same_as_english.php as well.
 const UNTRANSLATED_VALUE_BUDGET = [
     // +1 each 2026-10-21: the admin menu entry of the Panelica license module
     // is the product name, "Panelica", in every language.
-    'tr' => 55,
+    'tr' => 57,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
@@ -176,9 +180,9 @@ const UNTRANSLATED_VALUE_BUDGET = [
     // Standesbeamter. Those 25 labels are the whole of the raise.
     // +1 2026-10-23 (#245): German writes "Ports", not "Häfen" (harbours),
     // for the apps page's ports.
-    'de' => 186,
-    'pl' => 102,
-    'zh' => 37,
+    'de' => 190,
+    'pl' => 105,
+    'zh' => 39,
 ];
 
 test('a complete language is translated, not merely present', function () {
