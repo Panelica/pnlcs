@@ -32,8 +32,6 @@ return [
     'field_mapping' => 'Сопоставление полей',
     'source_column' => 'Поле WHMCS',
     'target_field' => 'Поле PNLCS',
-    'preview_source' => 'WHMCS',
-    'preview_target' => 'PNLCS',
     'custom_field' => 'пользовательское поле',
     'skip' => 'Пропустить',
     'constant_value' => 'Постоянное значение',
@@ -106,7 +104,6 @@ return [
         'product_id_not_found' => 'Сопоставленный id продукта ":id" не существует в PNLCS.',
         'server_not_found' => 'Сервер «:name» не найден в PNLCS.',
     ],
-
     'steps' => [
         'connect' => 'Подключение',
         'map' => 'Сопоставление полей',
