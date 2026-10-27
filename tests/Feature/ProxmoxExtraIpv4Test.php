@@ -175,3 +175,16 @@ it('shows staff which address belongs to which service, and finds a service by a
     $this->actingAs($admin, 'admin')->get(route('admin.services.index', ['q' => '203.0.113.7']))->assertOk()
         ->assertSee($service->domain);
 });
+
+it('does not sell additional addresses on a product that takes its address by DHCP', function () {
+    $service = pveService(pveServer());   // IPv4 by DHCP: the module gives no additional address
+
+    expect(fn () => ProxmoxOrderOptions::create($service->product, ['extra_ipv4' => ['choices' => [
+        ['value' => '0', 'price' => 0], ['value' => '1', 'price' => 3],
+    ]]]))->toThrow(ValidationException::class, __('proxmox.product.opt_extra_ipv4_needs_pool'));
+    expect(ProxmoxOrderOptions::linked($service->product->fresh()))->toBe([]);
+
+    // "No additional address" alone sells nothing, so it may stay.
+    ProxmoxOrderOptions::create($service->product->fresh(), ['extra_ipv4' => ['choices' => [['value' => '0', 'price' => 0]]]]);
+    expect(ProxmoxOrderOptions::linked($service->product->fresh())[0]['key'])->toBe('extra_ipv4');
+});

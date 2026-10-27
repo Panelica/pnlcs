@@ -275,6 +275,7 @@ return [
         'opt_extra_ipv4' => 'Dodatkowe adresy IPv4',
         'opt_extra_ipv4_label' => '{0} Bez dodatkowego adresu|{1} :n dodatkowy adres IPv4|[2,4] :n dodatkowe adresy IPv4|[5,*] :n dodatkowych adresów IPv4',
         'opt_extra_ipv4_hint' => 'Z puli IPv4 serwera, każdy na osobnej karcie sieciowej (net1, net2, ...), gdy adres powyżej pochodzi z puli. Najwyżej :max na serwer. Klient może później dokupić więcej.',
+        'opt_extra_ipv4_needs_pool' => 'Dodatkowe adresy IPv4 pochodzą z puli IPv4 serwera. Najpierw ustaw adres IPv4 na pulę albo oferuj tylko "Bez dodatkowego adresu".',
         'opt_os_hint' => 'Szablony zaznaczone powyżej, najpierw szablon produktu. Nadaj cenę płatnemu systemowi, np. licencjonowanemu.',
         'opt_os_none' => 'Najpierw zaznacz powyżej systemy operacyjne.',
         'opt_save_first' => 'Najpierw zapisz produkt jako produkt Proxmox.',

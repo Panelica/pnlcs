@@ -275,6 +275,7 @@ return [
         'opt_extra_ipv4' => '附加 IPv4 地址',
         'opt_extra_ipv4_label' => '{0} 无附加地址|{1} :n 个附加 IPv4 地址|[2,*] :n 个附加 IPv4 地址',
         'opt_extra_ipv4_hint' => '当上方地址来自地址池时，从服务器的 IPv4 地址池分配，每个地址使用单独的网卡（net1、net2……）。每台服务器最多 :max 个。客户之后可通过升级增加。',
+        'opt_extra_ipv4_needs_pool' => '附加 IPv4 地址来自服务器的 IPv4 地址池。请先将 IPv4 地址设为从地址池分配，或只提供“无附加地址”。',
         'opt_os_hint' => '上方勾选的模板，产品自身的模板在前。为收费的系统（例如需要许可证的）设置价格。',
         'opt_os_none' => '请先勾选上方的操作系统。',
         'opt_save_first' => '请先将产品保存为 Proxmox 产品。',

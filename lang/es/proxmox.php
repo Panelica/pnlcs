@@ -275,6 +275,7 @@ return [
         'opt_extra_ipv4' => 'Direcciones IPv4 adicionales',
         'opt_extra_ipv4_label' => '{0} Sin dirección adicional|{1} :n dirección IPv4 adicional|[2,*] :n direcciones IPv4 adicionales',
         'opt_extra_ipv4_hint' => 'Del grupo IPv4 del servidor, cada una en su propia tarjeta de red (net1, net2, ...), cuando la dirección de arriba viene del grupo. Como máximo :max por servidor. El cliente puede añadir más después con una mejora.',
+        'opt_extra_ipv4_needs_pool' => 'Las direcciones IPv4 adicionales salen del grupo IPv4 del servidor. Ponga primero la dirección IPv4 en el grupo, o ofrezca solo "Sin dirección adicional".',
         'opt_os_hint' => 'Las plantillas marcadas arriba, primero la del producto. Ponga precio a un sistema de pago, como uno con licencia.',
         'opt_os_none' => 'Marque primero los sistemas operativos de arriba.',
         'opt_save_first' => 'Guarde primero el producto como producto de Proxmox.',

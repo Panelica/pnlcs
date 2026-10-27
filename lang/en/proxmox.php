@@ -275,6 +275,7 @@ return [
         'opt_extra_ipv4' => 'Additional IPv4 addresses',
         'opt_extra_ipv4_label' => '{0} No additional address|{1} :n additional IPv4 address|[2,*] :n additional IPv4 addresses',
         'opt_extra_ipv4_hint' => 'Given from the server\'s IPv4 pool, each on a network card of its own (net1, net2, ...), when the address above comes from the pool. At most :max per server. Customers can add more later as an upgrade.',
+        'opt_extra_ipv4_needs_pool' => 'Additional IPv4 addresses come from the server\'s IPv4 pool. Set IPv4 address to "One from the server\'s IPv4 pool" first, or offer only "No additional address".',
         'opt_os_hint' => 'The templates ticked above, the product\'s own first. Give a system that costs extra, such as a licensed one, a price.',
         'opt_os_none' => 'Tick the operating systems above first.',
         'opt_save_first' => 'Save the product as a Proxmox product first.',

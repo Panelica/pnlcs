@@ -113,6 +113,11 @@ final class ProxmoxOrderOptions
             if ($choices === []) {
                 throw ValidationException::withMessages(['options' => __('proxmox.product.opt_no_choices', ['option' => self::defaultTitle($key)])]);
             }
+            // Additional addresses come only from the pool: on a DHCP product the
+            // module gives none, and a priced choice would be sold for nothing.
+            if ($key === 'extra_ipv4' && $plan->ipv4 !== 'pool' && array_filter(array_keys($choices), fn ($v) => (int) $v > 0) !== []) {
+                throw ValidationException::withMessages(['options' => __('proxmox.product.opt_extra_ipv4_needs_pool')]);
+            }
             $title = trim((string) ($spec[$key]['title'] ?? ''));
             $rows[$key] = ['title' => mb_substr($title !== '' ? $title : self::defaultTitle($key), 0, 80), 'choices' => $choices];
         }

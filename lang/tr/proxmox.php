@@ -275,6 +275,7 @@ return [
         'opt_extra_ipv4' => 'Ek IPv4 adresi',
         'opt_extra_ipv4_label' => '{0} Ek adres yok|{1} :n ek IPv4 adresi|[2,*] :n ek IPv4 adresi',
         'opt_extra_ipv4_hint' => 'Yukarıdaki adres havuzdan veriliyorsa sunucunun IPv4 havuzundan, her biri kendi ağ kartında (net1, net2, ...) verilir. Sunucu başına en çok :max. Müşteri sonradan yükseltmeyle ekleyebilir.',
+        'opt_extra_ipv4_needs_pool' => 'Ek IPv4 adresleri sunucunun IPv4 havuzundan verilir. Önce IPv4 adresini "Sunucunun IPv4 havuzundan bir adres" yapın ya da yalnız "Ek adres yok" seçeneğini sunun.',
         'opt_os_hint' => 'Yukarıda işaretlenen şablonlar, ürünün kendi şablonu başta. Lisanslı bir sistem gibi ek ücretli olanlara fiyat verin.',
         'opt_os_none' => 'Önce yukarıdan işletim sistemlerini işaretleyin.',
         'opt_save_first' => 'Önce ürünü Proxmox ürünü olarak kaydedin.',
