@@ -83,6 +83,26 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         }
     }
 
+    /**
+     * The partner's balance, for the dashboard and the low-balance warning.
+     * HRD reports a single PLN float; renewals stop once it runs dry, so this
+     * is worth surfacing instead of discovering through a failed renewal.
+     */
+    public function getBalance(): array
+    {
+        try {
+            $balance = $this->client()->partnerGetBalance();
+
+            return [
+                'success' => true,
+                'pln' => $balance['balance'] ?? null,
+                'message' => null,
+            ];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
     public function register(Domain $domain, int $years, array $params = []): array
     {
         try {
