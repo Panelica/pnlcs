@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * The order options a Proxmox product sells: operating system, memory, cores
- * and disk the customer picks at checkout.
+ * The order options a Proxmox product sells: operating system, memory, cores,
+ * disk and additional IPv4 addresses the customer picks at checkout.
  *
  * They are ordinary configurable options, named "key|Title" with choices
  * "value|Label", which ProxmoxPlan reads when it builds the server. This class
@@ -24,7 +24,7 @@ use Illuminate\Validation\ValidationException;
 final class ProxmoxOrderOptions
 {
     /** The keys the product page can build, in the order they are shown. */
-    public const KEYS = ['os', 'memory', 'cores', 'disk'];
+    public const KEYS = ['os', 'memory', 'cores', 'disk', 'extra_ipv4'];
 
     /** Months each billing period covers, for pricing longer periods from the monthly price. */
     private const MONTHS = ['monthly' => 1, 'quarterly' => 3, 'semiannually' => 6, 'annually' => 12, 'biennially' => 24, 'triennially' => 36];
@@ -171,6 +171,7 @@ final class ProxmoxOrderOptions
                 : ((int) $value >= 1024 ? rtrim(rtrim(number_format((int) $value / 1024, 2, '.', ''), '0'), '.').' GB' : (int) $value.' MB'),
             'cores' => trans_choice('proxmox.product.opt_cores_label', (int) $value, ['n' => (int) $value]),
             'disk' => (int) $value.' GB',
+            'extra_ipv4' => trans_choice('proxmox.product.opt_extra_ipv4_label', (int) $value, ['n' => (int) $value]),
             default => $value,
         };
     }
@@ -182,6 +183,7 @@ final class ProxmoxOrderOptions
             'memory' => ctype_digit($value) && (int) $value >= 64 && (int) $value <= 4194304,
             'cores' => ctype_digit($value) && (int) $value >= 1 && (int) $value <= 512,
             'disk' => ctype_digit($value) && (int) $value >= 1 && (int) $value <= 1048576,
+            'extra_ipv4' => ctype_digit($value) && (int) $value <= ProxmoxPlan::MAX_EXTRA_IPV4,
             default => false,
         };
     }

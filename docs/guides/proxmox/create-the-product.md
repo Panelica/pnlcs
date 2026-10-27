@@ -67,7 +67,7 @@ above the sections always shows what one order gets.
 ## 5 · Let the customer choose at checkout
 
 Tick what the customer may pick when ordering — **operating system, memory,
-CPU cores, disk** — edit the choices and their **extra monthly price**, and
+CPU cores, disk, additional IPv4 addresses** — edit the choices and their **extra monthly price**, and
 press **Create order options**. PNLCS creates the configurable options,
 links them to the product and shows them in a table. Longer billing periods
 are charged the monthly price times their months (quarterly = 3×, annually
@@ -82,9 +82,32 @@ module reads, the part after is what the customer sees.
 !!! note "Writing options by hand"
     The same convention works for options you create yourself. The keys the
     module understands are `os`, `memory`, `cores`, `disk`, `swap`,
-    `bandwidth`, `rate`, `snapshots` and `backups`. A *quantity* option sets
+    `bandwidth`, `rate`, `snapshots`, `backups` and `extra_ipv4`. A *quantity* option sets
     the number itself, e.g. `cores|CPU cores` with the quantity the customer
     types.
+
+## Additional IPv4 addresses
+
+With **IPv4 address** set to the server's pool, the product can also sell
+additional addresses: tick **Additional IPv4 addresses** above and give each
+choice (`0`, `1`, `2`…) its monthly price, or make an `extra_ipv4` option
+yourself. A *quantity* option lets the customer type the number.
+
+- The addresses come from the same pool as the server's own, and go back to
+  it when the service ends. A pool that cannot give them all refuses the
+  order's set-up, which is retried, rather than giving fewer.
+- Each address is on a network card of its own (`net1`, `net2`…) on the
+  product's bridge, without a gateway: the server keeps its route on `net0`.
+  A virtual machine learns them through cloud-init, a container directly.
+  This also suits providers that bind each additional address to a MAC of
+  its own.
+- The customer can buy more later on the service's **Upgrade** page
+  (*Raise options*), charged for the rest of the billing cycle. A container gets
+  them at once; a virtual machine when it is next restarted from the panel.
+  An address that staff take away removes its card.
+- Which address belongs to which service: **Configuration → Servers →
+  Capacity**, under *IPv4 pool*. The service page lists them too, and the
+  admin service search finds a service by any of them.
 
 ## What the customer sees when ordering
 

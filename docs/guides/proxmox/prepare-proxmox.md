@@ -179,7 +179,9 @@ Pick one per product:
   ```
 
   Each new server gets the next free address, written into cloud-init; it goes
-  back to the pool when the service is terminated or cancelled.
+  back to the pool when the service is terminated or cancelled. A product
+  can also sell additional addresses from the pool (see
+  [create the product](create-the-product.md#additional-ipv4-addresses)).
 
 IPv6 can be left off or set to SLAAC (automatic) per product.
 
