@@ -188,3 +188,18 @@ it('does not sell additional addresses on a product that takes its address by DH
     ProxmoxOrderOptions::create($service->product->fresh(), ['extra_ipv4' => ['choices' => [['value' => '0', 'price' => 0]]]]);
     expect(ProxmoxOrderOptions::linked($service->product->fresh())[0]['key'])->toBe('extra_ipv4');
 });
+
+it('lists the additional addresses with their card on the admin VPS panel', function () {
+    $pve = FakeProxmox::install();
+    $server = pveServer(['ipv4_pool' => '203.0.113.1-203.0.113.9/24 gw 203.0.113.1']);
+    $service = pveService($server, ['pve_ipv4' => 'pool'], [], ['status' => 'active']);
+    pveOwnedGuest($pve, $service, 801);
+    $service->forceFill(['module_data' => $service->module_data + [
+        'pve_ipv4' => '203.0.113.2',
+        'pve_ipv4_extra' => [['address' => '203.0.113.7', 'prefix' => 24, 'gateway' => '203.0.113.1'], ['address' => '203.0.113.8', 'prefix' => 24, 'gateway' => '203.0.113.1']],
+    ]])->save();
+
+    $this->actingAs(pveAdmin(), 'admin')->get(route('admin.services.show', $service))->assertOk()
+        ->assertSee(__('proxmox.admin.extra_addresses'))
+        ->assertSee('203.0.113.7/24 (net1), 203.0.113.8/24 (net2)');
+});
