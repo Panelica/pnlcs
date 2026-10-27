@@ -873,20 +873,6 @@ class OrderService
     }
 
     /**
-     * Put a paid domain in front of its registrar.
-     *
-     * The module writes the registration date, expiry and status itself when
-     * it succeeds. A refusal leaves the domain pending and raises it, because
-     * only a person can sort out a registry that said no.
-     *
-     * A transfer cannot be started from here - it needs an EPP code, which the
-     * order does not collect - so those are recorded as before and flagged for
-     * somebody to start by hand.
-     *
-     * Returns why the registration did not happen, or null when it did (or
-     * when there was nothing to send).
-     */
-    /**
      * Which nameservers a newly registered domain gets, first match wins:
      *
      *  1. those already on the domain record;
@@ -912,7 +898,7 @@ class OrderService
             return $own;
         }
 
-        $ofServer = fn ($server) => $server ? $list([$server->nameserver1, $server->nameserver2, $server->nameserver3, $server->nameserver4, $server->nameserver5]) : [];
+        $ofServer = fn ($server) => $list(DomainHosting::serverNameservers($server));
 
         $service = $order
             ? Service::with('product.serverGroup.servers', 'server')
@@ -938,11 +924,25 @@ class OrderService
             }
         }
 
-        $defaults = $list(array_map(fn ($i) => Setting::get('DefaultNameserver'.$i, ''), range(1, 5)));
+        $defaults = $list(DomainHosting::defaultNameservers());
 
         return count($defaults) >= 2 ? $defaults : [];
     }
 
+    /**
+     * Put a paid domain in front of its registrar.
+     *
+     * The module writes the registration date, expiry and status itself when
+     * it succeeds. A refusal leaves the domain pending and raises it, because
+     * only a person can sort out a registry that said no.
+     *
+     * A transfer cannot be started from here - it needs an EPP code, which the
+     * order does not collect - so those are recorded as before and flagged for
+     * somebody to start by hand.
+     *
+     * Returns why the registration did not happen, or null when it did (or
+     * when there was nothing to send).
+     */
     private function registerOrderedDomain(?Order $order, Domain $domain): ?string
     {
         $registrar = app(ModuleRegistry::class)

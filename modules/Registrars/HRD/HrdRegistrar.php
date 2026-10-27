@@ -6,7 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
-use App\Models\Setting;
+use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -357,16 +357,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
      */
     protected function defaultNameservers(): array
     {
-        $ns = [];
-
-        for ($i = 1; $i <= 5; $i++) {
-            $value = trim((string) Setting::get('DefaultNameserver'.$i, ''));
-            if ($value !== '') {
-                $ns[] = $value;
-            }
-        }
-
-        return $ns;
+        return DomainHosting::defaultNameservers();
     }
 
     protected function loadSettings(): array

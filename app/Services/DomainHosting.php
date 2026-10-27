@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Contracts\HostsAccountDomains;
 use App\Models\Domain;
 use App\Models\RegistrarSettings;
+use App\Models\Server;
 use App\Models\Service;
+use App\Models\Setting;
 use App\Services\Module\ModuleRegistry;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -55,9 +57,7 @@ class DomainHosting
      */
     public function nameserversFor(Service $service, Domain $domain): array
     {
-        $server = $service->server;
-        $ns = $server ? array_map(fn ($i) => (string) $server->{'nameserver'.$i}, range(1, 5)) : [];
-        $ns = array_values(array_filter(array_map('trim', $ns)));
+        $ns = self::serverNameservers($service->server);
 
         if ($ns === [] && filled($domain->registrar)) {
             $defaults = RegistrarSettings::where('registrar', strtolower((string) $domain->registrar))
@@ -73,6 +73,34 @@ class DomainHosting
         }
 
         return $ns;
+    }
+
+    /**
+     * The nameservers entered on a server (nameserver1-5), in order, blanks
+     * left out. One reading for "set up on my hosting" and for registering a
+     * domain ordered with hosting (OrderService).
+     *
+     * @return list<string>
+     */
+    public static function serverNameservers(?Server $server): array
+    {
+        if (! $server) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(fn ($i) => trim((string) $server->{'nameserver'.$i}), range(1, 5))));
+    }
+
+    /**
+     * General Settings -> Default Nameservers (DefaultNameserver1-5), blanks
+     * left out: what a domain is registered with when nothing else says. Read
+     * by the order's registration and by the HRD module.
+     *
+     * @return list<string>
+     */
+    public static function defaultNameservers(): array
+    {
+        return array_values(array_filter(array_map(fn ($i) => trim((string) Setting::get('DefaultNameserver'.$i, '')), range(1, 5))));
     }
 
     /** Is the domain on this account, with its nameservers pointing there? */
