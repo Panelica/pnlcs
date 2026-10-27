@@ -45,11 +45,11 @@
         <div class="wi-note"><i class="fas fa-circle-info" style="margin-top:2px;"></i><span>{{ __('whmcs_import.domains_client_hint') }}</span></div>
     @endif
 
-    @if(!empty($errors))
+    @if(!empty($problems))
         <div class="wi-problems" role="alert">
             <h2><i class="fas fa-circle-exclamation"></i> {{ __('whmcs_import.validation_title') }}</h2>
             <ul>
-                @foreach($errors as $error)
+                @foreach($problems as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>

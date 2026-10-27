@@ -96,7 +96,7 @@ class WhmcsImportController extends Controller
         $mapping = $data['mapping'];
         $matchKey = $this->resolveMatchKey($request->input('match_key'), $config);
 
-        $data['errors'] = $this->validateMapping($data, $mapping, $matchKey, $request->input('import_mode', 'add'), $config['required_fields']);
+        $data['problems'] = $this->validateMapping($data, $mapping, $matchKey, $request->input('import_mode', 'add'), $config['required_fields']);
 
         $rows = $data['connector']->rows($data['sourceTable'], 10);
         $this->enrichRows($data, $rows);
@@ -125,7 +125,7 @@ class WhmcsImportController extends Controller
 
         $errors = $this->validateMapping($data, $mapping, $matchKey, $importMode, $config['required_fields']);
         if ($errors !== []) {
-            $data['errors'] = $errors;
+            $data['problems'] = $errors;
 
             return view('admin.whmcs-import.mapper', $data)->with('error', __('whmcs_import.validation.fix_errors'));
         }
@@ -317,7 +317,7 @@ class WhmcsImportController extends Controller
             'matchKey' => $this->resolveMatchKey($request->input('match_key'), $config, $profile?->match_key),
             'importMode' => $request->input('import_mode', $profile?->import_mode ?? 'add'),
             'totalCount' => $connector->count($sourceTable),
-            'errors' => [],
+            'problems' => [],
             'preview' => null,
         ];
     }
