@@ -37,6 +37,7 @@ above is `Modules\Gateways\AcmePay\AcmePayModule`.
 | `name` | yes | Unique key, stored on invoices, products and settings. Lower-case, no spaces. |
 | `type` | yes | `gateway`, `server`, `registrar` or `ssl` |
 | `class` | yes | Fully qualified class name of the module |
+| `provider` | no | Fully qualified class of a Laravel service provider in the module's folder: its own routes, views, migrations and scheduled tasks (see below) |
 | `requires` | no | `{"pnlcs": ">=1.3 <2"}`: the PNLCS versions the module works with. An update to a version outside it does not start until the operator updates the module, disables it, or chooses to go ahead |
 | `version`, `display_name`, `description`, `author` | no | Informational |
 
@@ -127,6 +128,48 @@ gateway is switched on with its required settings filled in.
 - `response` (the body your provider expects, `OK` by default) and
   `http_status` set the reply. Return them on failures too, so the provider
   stops retrying.
+
+**Pages, webhooks and tables of a module.** A module may need more than the
+callback: a checkout page of its own, a return URL, a webhook that answers
+differently, a table. Name a Laravel service provider in the manifest
+(`"provider": "Modules\\Gateways\\AcmePay\\AcmePayServiceProvider"`) and
+PNLCS registers it while the module is registered, so the framework's own means
+work from the module's folder, and an update, which resets the core's files,
+leaves them in place:
+
+```php
+// modules/Gateways/AcmePay/AcmePayServiceProvider.php
+namespace Modules\Gateways\AcmePay;
+
+use Illuminate\Support\ServiceProvider;
+
+class AcmePayServiceProvider extends ServiceProvider
+{
+    public function boot(): void
+    {
+        $this->loadRoutesFrom(__DIR__.'/routes.php');
+        $this->loadViewsFrom(__DIR__.'/views', 'acmepay');
+        $this->loadMigrationsFrom(__DIR__.'/migrations');   // run by `php artisan migrate`, a step of every update
+    }
+}
+```
+
+- A route file without middleware has none: a webhook there gets the raw body
+  and headers and no CSRF check. Put pages for customers behind the client
+  area's guards (`['web', 'banned.ip', 'client.permission', 'auth', '2fa']`).
+- **Check the gateway is on in your own controllers** (a module's routes exist
+  while its folder does). Apply a payment with
+  `app(\App\Services\PaymentService::class)->applyPayment($invoice, '<name>',
+  $transactionId, $amount)`: as with the callback, the provider's transaction
+  id is what keeps a repeat from paying twice.
+- A route named `gateway.<name>.…` counts as the gateway's own: the generic
+  `/gateway/<name>/callback` then stops answering for it. Name routes under
+  your module's own prefix otherwise.
+- A module the core shadows (a built-in name) or whose class is not of its
+  type brings no provider either. A provider that fails is logged
+  (`Module gateway <name>: service provider failed to load`) and skipped.
+- After adding or removing a module on an installation that caches routes,
+  run `php artisan optimize`.
 
 **Addons** (`modules/Addons/<Name>/<Name>Module.php`, implementing
 `App\Contracts\AddonModuleInterface`) need no manifest: any addon folder is
