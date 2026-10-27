@@ -55,6 +55,26 @@ month, so it survives reboots (the counters on the machine itself restart at
 every boot). It appears on the service as usage against the product's
 monthly traffic.
 
+## Capacity
+
+**Configuration → Servers → Capacity** on a Proxmox server shows, for each
+node, its CPU threads, memory and guest storage next to what the guests on it
+have been given: their cores, memory and disks. What the host uses right now
+is shown too, but it says little about what the node can still take. A guest
+that sleeps today has still been sold. The "PNLCS" column counts the guests
+PNLCS set up; templates are left out. Only guests the API token can see are
+counted, so a token limited to a pool shows that pool.
+
+**Capacity alert (%)** on the server (80 unless set) is the line: once an
+hour, `pnlcs:proxmox-capacity` checks every active Proxmox server and, when a
+node has given out that share of its memory or disk, raises
+`server.capacity_high`. Add a notification rule for that event to get it by
+e-mail or chat. It comes once a day per node and resource, so there is time to
+lower the stock of the products sold there or add a server before an order
+cannot be set up. Set the line over 100 if you oversell on purpose, or to 0 to
+turn it off. CPU is shown but never alerts: a VPS host shares cores between
+guests by design.
+
 ## Where to look when something went wrong
 
 - **The service page** shows the reason of the last failed job in red.

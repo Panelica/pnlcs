@@ -3,30 +3,43 @@
 use App\Http\Controllers\Admin\AddonController;
 use App\Http\Controllers\Admin\AffiliateController;
 use App\Http\Controllers\Admin\AuthController;
-use App\Http\Controllers\Admin\DockerAppController;
 use App\Http\Controllers\Admin\BulkActionController;
 use App\Http\Controllers\Admin\CalendarController;
 use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\ClientCreditController;
 use App\Http\Controllers\Admin\ConfigController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DockerAppController;
 use App\Http\Controllers\Admin\DomainController;
+use App\Http\Controllers\Admin\DomainSearchLogController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\LiveServerController;
 use App\Http\Controllers\Admin\LogController;
+use App\Http\Controllers\Admin\LogRetentionController;
+use App\Http\Controllers\Admin\ModuleController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PaymentNotificationController;
+use App\Http\Controllers\Admin\PredefinedReplyController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductCustomFieldController;
 use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\ProxmoxImageController;
 use App\Http\Controllers\Admin\QuoteController;
+use App\Http\Controllers\Admin\RegistrarBalanceController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SslOrderController;
 use App\Http\Controllers\Admin\TicketController;
 use App\Http\Controllers\Admin\TranslationController;
-use App\Http\Controllers\Admin\WhoisController;
+use App\Http\Controllers\Admin\UpdateController;
+use App\Http\Controllers\Admin\VpsController;
 use App\Http\Controllers\Admin\WhmcsImportController;
+use App\Http\Controllers\Admin\WhoisController;
 use App\Http\Middleware\AdminTwoFactorVerify;
 use Illuminate\Support\Facades\Route;
+use Modules\CompanyLookup\Http\Admin\CompanyLookupTestController;
 
 Route::get('/admin/login', [AuthController::class, 'showLogin'])->name('admin.login');
 Route::post('/admin/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('admin.login.submit');
@@ -37,7 +50,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // Dashboard, logout, search — no permission required (all admins)
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     // Each kind of result is filtered by the permission its page asks for.
-    Route::get('search', \App\Http\Controllers\Admin\SearchController::class)->middleware('throttle:60,1')->name('search');
+    Route::get('search', SearchController::class)->middleware('throttle:60,1')->name('search');
     // Signing out must stay reachable while the code is outstanding.
     Route::post('/logout', [AuthController::class, 'logout'])
         ->withoutMiddleware([AdminTwoFactorVerify::class])->name('logout');
@@ -47,8 +60,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // =============================================
     // Live Servers — the Panelica servers, one click from their panel
     Route::middleware('admin.permission:manage_servers')->group(function () {
-        Route::get('live-servers', [\App\Http\Controllers\Admin\LiveServerController::class, 'index'])->name('live-servers.index');
-        Route::post('live-servers/{server}/login', [\App\Http\Controllers\Admin\LiveServerController::class, 'login'])
+        Route::get('live-servers', [LiveServerController::class, 'index'])->name('live-servers.index');
+        Route::post('live-servers/{server}/login', [LiveServerController::class, 'login'])
             ->middleware('throttle:20,1')->name('live-servers.login');
     });
 
@@ -71,8 +84,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
 
     // Money on the client's balance: with the invoices, not the profile.
     Route::middleware('admin.permission:manage_invoices')->group(function () {
-        Route::get('clients/{client}/credit', [\App\Http\Controllers\Admin\ClientCreditController::class, 'index'])->name('clients.credit');
-        Route::post('clients/{client}/credit', [\App\Http\Controllers\Admin\ClientCreditController::class, 'store'])->name('clients.credit.store');
+        Route::get('clients/{client}/credit', [ClientCreditController::class, 'index'])->name('clients.credit');
+        Route::post('clients/{client}/credit', [ClientCreditController::class, 'store'])->name('clients.credit.store');
     });
     Route::middleware('admin.permission:edit_clients')->group(function () {
         Route::get('clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
@@ -118,8 +131,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
         Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-        Route::post('products/{product}/fields', [\App\Http\Controllers\Admin\ProductCustomFieldController::class, 'store'])->name('products.fields.store');
-        Route::delete('products/{product}/fields/{field}', [\App\Http\Controllers\Admin\ProductCustomFieldController::class, 'destroy'])->name('products.fields.destroy');
+        Route::post('products/{product}/fields', [ProductCustomFieldController::class, 'store'])->name('products.fields.store');
+        Route::delete('products/{product}/fields/{field}', [ProductCustomFieldController::class, 'destroy'])->name('products.fields.destroy');
         Route::get('products/groups/create', [ProductController::class, 'createGroup'])->name('products.groups.create');
         Route::post('products/groups', [ProductController::class, 'storeGroup'])->name('products.groups.store');
         Route::get('products/groups/{group}/edit', [ProductController::class, 'editGroup'])->name('products.groups.edit');
@@ -202,8 +215,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:manage_services')->group(function () {
         Route::post('services/{service}/module/{action}', [ServiceController::class, 'moduleAction'])->name('services.module-action');
-        Route::get('services/{service}/vps-status', [\App\Http\Controllers\Admin\VpsController::class, 'status'])->name('services.vps-status');
-        Route::prefix('services/{service}/vps')->name('services.vps.')->controller(\App\Http\Controllers\Admin\VpsController::class)->group(function () {
+        Route::get('services/{service}/vps-status', [VpsController::class, 'status'])->name('services.vps-status');
+        Route::prefix('services/{service}/vps')->name('services.vps.')->controller(VpsController::class)->group(function () {
             Route::get('status', 'status')->name('status');
             Route::get('graphs', 'graphs')->name('graphs');
             Route::post('power', 'power')->middleware('throttle:30,1')->name('power');
@@ -217,7 +230,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::post('services/{service}/addons', [ServiceController::class, 'storeAddon'])->name('services.addons.store');
         Route::post('services/{service}/addons/{addon}/cancel', [ServiceController::class, 'cancelAddon'])->name('services.addons.cancel');
         Route::put('services/{service}/next-due', [ServiceController::class, 'updateNextDue'])->name('services.next-due');
-        Route::put('services/{service}/fields', [\App\Http\Controllers\Admin\ProductCustomFieldController::class, 'updateService'])->name('services.fields');
+        Route::put('services/{service}/fields', [ProductCustomFieldController::class, 'updateService'])->name('services.fields');
         Route::put('services/{service}/status', [ServiceController::class, 'updateStatus'])->name('services.status');
         Route::put('services/{service}', [ServiceController::class, 'update'])->name('services.update');
         Route::delete('services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
@@ -228,7 +241,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     // =============================================
     Route::middleware('admin.permission:list_domains')->group(function () {
         Route::get('domains', [DomainController::class, 'index'])->name('domains.index');
-        Route::get('domains/searches', [\App\Http\Controllers\Admin\DomainSearchLogController::class, 'index'])->name('domains.searches');
+        Route::get('domains/searches', [DomainSearchLogController::class, 'index'])->name('domains.searches');
     });
     Route::middleware('admin.permission:manage_domains')->group(function () {
         Route::get('domains/{domain}', [DomainController::class, 'show'])->name('domains.show');
@@ -283,9 +296,9 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('settings', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings', [SettingController::class, 'updateGeneral'])->name('settings.general.update');
         Route::post('settings/test-email', [SettingController::class, 'testEmail'])->name('settings.test-email');
-        Route::get('settings/log-retention', [\App\Http\Controllers\Admin\LogRetentionController::class, 'index'])->name('settings.log-retention');
-        Route::put('settings/log-retention', [\App\Http\Controllers\Admin\LogRetentionController::class, 'update'])->name('settings.log-retention.update');
-        Route::post('settings/log-retention/prune', [\App\Http\Controllers\Admin\LogRetentionController::class, 'prune'])->middleware('throttle:10,1')->name('settings.log-retention.prune');
+        Route::get('settings/log-retention', [LogRetentionController::class, 'index'])->name('settings.log-retention');
+        Route::put('settings/log-retention', [LogRetentionController::class, 'update'])->name('settings.log-retention.update');
+        Route::post('settings/log-retention/prune', [LogRetentionController::class, 'prune'])->middleware('throttle:10,1')->name('settings.log-retention.prune');
 
         // Appearance / Theme
         Route::get('settings/appearance', [SettingController::class, 'appearance'])->name('settings.appearance');
@@ -391,21 +404,21 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
 
         // PNLCS updates — manage_updates (full administrators unless a role is given it)
         Route::middleware('admin.permission:manage_updates')->group(function () {
-            Route::get('updates', [\App\Http\Controllers\Admin\UpdateController::class, 'index'])->name('updates');
-            Route::get('updates/status', [\App\Http\Controllers\Admin\UpdateController::class, 'status'])->name('updates.status');
-            Route::get('updates/merged', [\App\Http\Controllers\Admin\UpdateController::class, 'merged'])->name('updates.merged');
-            Route::post('updates/channel', [\App\Http\Controllers\Admin\UpdateController::class, 'channel'])->name('updates.channel');
-            Route::post('updates/check', [\App\Http\Controllers\Admin\UpdateController::class, 'check'])->middleware('throttle:10,1')->name('updates.check');
-            Route::post('updates/prepare', [\App\Http\Controllers\Admin\UpdateController::class, 'prepare'])->name('updates.prepare');
-            Route::post('updates/apply', [\App\Http\Controllers\Admin\UpdateController::class, 'apply'])->name('updates.apply');
-            Route::post('updates/resolve', [\App\Http\Controllers\Admin\UpdateController::class, 'resolve'])->name('updates.resolve');
-            Route::post('updates/bar', [\App\Http\Controllers\Admin\UpdateController::class, 'bar'])->name('updates.bar');
+            Route::get('updates', [UpdateController::class, 'index'])->name('updates');
+            Route::get('updates/status', [UpdateController::class, 'status'])->name('updates.status');
+            Route::get('updates/merged', [UpdateController::class, 'merged'])->name('updates.merged');
+            Route::post('updates/channel', [UpdateController::class, 'channel'])->name('updates.channel');
+            Route::post('updates/check', [UpdateController::class, 'check'])->middleware('throttle:10,1')->name('updates.check');
+            Route::post('updates/prepare', [UpdateController::class, 'prepare'])->name('updates.prepare');
+            Route::post('updates/apply', [UpdateController::class, 'apply'])->name('updates.apply');
+            Route::post('updates/resolve', [UpdateController::class, 'resolve'])->name('updates.resolve');
+            Route::post('updates/bar', [UpdateController::class, 'bar'])->name('updates.bar');
         });
 
         // Every installed module and its on/off switch — manage_settings
         Route::middleware('admin.permission:manage_settings')->group(function () {
-            Route::get('modules', [\App\Http\Controllers\Admin\ModuleController::class, 'index'])->name('modules');
-            Route::post('modules/{type}/{key}/toggle', [\App\Http\Controllers\Admin\ModuleController::class, 'toggle'])->name('modules.toggle');
+            Route::get('modules', [ModuleController::class, 'index'])->name('modules');
+            Route::post('modules/{type}/{key}/toggle', [ModuleController::class, 'toggle'])->name('modules.toggle');
         });
 
         // Servers & Domains — manage_servers
@@ -415,9 +428,10 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::put('servers/{server}', [ConfigController::class, 'updateServer'])->name('servers.update');
             Route::delete('servers/{server}', [ConfigController::class, 'destroyServer'])->name('servers.destroy');
             Route::post('servers/{server}/test', [ConfigController::class, 'testServerConnection'])->name('servers.test');
-            Route::get('servers/{server}/images', [\App\Http\Controllers\Admin\ProxmoxImageController::class, 'show'])->name('servers.images');
-            Route::get('servers/{server}/images/status', [\App\Http\Controllers\Admin\ProxmoxImageController::class, 'status'])->name('servers.images.status');
-            Route::post('servers/{server}/images', [\App\Http\Controllers\Admin\ProxmoxImageController::class, 'install'])->middleware('throttle:20,1')->name('servers.images.install');
+            Route::get('servers/{server}/images', [ProxmoxImageController::class, 'show'])->name('servers.images');
+            Route::get('servers/{server}/capacity', [ProxmoxImageController::class, 'capacity'])->name('servers.capacity');
+            Route::get('servers/{server}/images/status', [ProxmoxImageController::class, 'status'])->name('servers.images.status');
+            Route::post('servers/{server}/images', [ProxmoxImageController::class, 'install'])->middleware('throttle:20,1')->name('servers.images.install');
 
             Route::get('server-groups', [ConfigController::class, 'serverGroups'])->name('server-groups');
             Route::post('server-groups', [ConfigController::class, 'storeServerGroup'])->name('server-groups.store');
@@ -438,10 +452,10 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
 
         // Registrars — manage_registrars
         Route::middleware('admin.permission:manage_registrars')->group(function () {
-    Route::get('registrars', [ConfigController::class, 'registrars'])->name('registrars');
-    Route::post('registrar-balance/check', [\App\Http\Controllers\Admin\RegistrarBalanceController::class, 'check'])->middleware('throttle:6,1')->name('registrar-balance.check');
-    Route::post('registrars/{registrar}/settings', [ConfigController::class, 'updateRegistrarSettings'])->name('registrars.settings.update');
-    Route::post('registrars/{registrar}/test', [ConfigController::class, 'testRegistrar'])->name('registrars.test');
+            Route::get('registrars', [ConfigController::class, 'registrars'])->name('registrars');
+            Route::post('registrar-balance/check', [RegistrarBalanceController::class, 'check'])->middleware('throttle:6,1')->name('registrar-balance.check');
+            Route::post('registrars/{registrar}/settings', [ConfigController::class, 'updateRegistrarSettings'])->name('registrars.settings.update');
+            Route::post('registrars/{registrar}/test', [ConfigController::class, 'testRegistrar'])->name('registrars.test');
         });
 
         // Support — manage_ticket_config
@@ -457,12 +471,12 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('ticket-statuses/auto-close', [ConfigController::class, 'saveTicketAutoClose'])->name('ticket-statuses.auto-close');
             Route::delete('ticket-statuses/{status}', [ConfigController::class, 'destroyTicketStatus'])->name('ticket-statuses.destroy');
 
-            Route::get('predefined-replies', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'index'])->name('predefined-replies');
-            Route::post('predefined-replies/categories', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'storeCategory'])->name('predefined-replies.categories.store');
-            Route::delete('predefined-replies/categories/{category}', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'destroyCategory'])->name('predefined-replies.categories.destroy');
-            Route::post('predefined-replies', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'store'])->name('predefined-replies.store');
-            Route::put('predefined-replies/{reply}', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'update'])->name('predefined-replies.update');
-            Route::delete('predefined-replies/{reply}', [\App\Http\Controllers\Admin\PredefinedReplyController::class, 'destroy'])->name('predefined-replies.destroy');
+            Route::get('predefined-replies', [PredefinedReplyController::class, 'index'])->name('predefined-replies');
+            Route::post('predefined-replies/categories', [PredefinedReplyController::class, 'storeCategory'])->name('predefined-replies.categories.store');
+            Route::delete('predefined-replies/categories/{category}', [PredefinedReplyController::class, 'destroyCategory'])->name('predefined-replies.categories.destroy');
+            Route::post('predefined-replies', [PredefinedReplyController::class, 'store'])->name('predefined-replies.store');
+            Route::put('predefined-replies/{reply}', [PredefinedReplyController::class, 'update'])->name('predefined-replies.update');
+            Route::delete('predefined-replies/{reply}', [PredefinedReplyController::class, 'destroy'])->name('predefined-replies.destroy');
 
             Route::get('ticket-escalation', [ConfigController::class, 'ticketEscalation'])->name('ticket-escalation');
             Route::post('ticket-escalation', [ConfigController::class, 'storeTicketEscalation'])->name('ticket-escalation.store');
@@ -552,7 +566,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::get('addons/modules/{name}', [AddonController::class, 'show'])->name('addons.modules.show');
             Route::post('addons/modules/{name}/toggle', [AddonController::class, 'toggle'])->name('addons.modules.toggle');
             Route::post('addons/modules/{name}/settings', [AddonController::class, 'saveSettings'])->name('addons.modules.settings');
-            Route::post('addons/modules/company-lookup/test/{provider}', [\Modules\CompanyLookup\Http\Admin\CompanyLookupTestController::class, 'test'])->name('addons.modules.company-lookup.test');
+            Route::post('addons/modules/company-lookup/test/{provider}', [CompanyLookupTestController::class, 'test'])->name('addons.modules.company-lookup.test');
 
             Route::get('bundles', [ConfigController::class, 'bundles'])->name('bundles');
             Route::post('bundles', [ConfigController::class, 'storeBundle'])->name('bundles.store');

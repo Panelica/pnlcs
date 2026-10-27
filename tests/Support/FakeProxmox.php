@@ -24,7 +24,7 @@ final class FakeProxmox
     public array $guests = [];
 
     public array $nodes = [
-        'pve' => ['status' => 'online', 'mem' => 4 * 1073741824, 'maxmem' => 32 * 1073741824],
+        'pve' => ['status' => 'online', 'mem' => 4 * 1073741824, 'maxmem' => 32 * 1073741824, 'maxcpu' => 8, 'cpu' => 0.12],
     ];
 
     /** The caller's rights: path => [privilege => propagate]. */
@@ -497,6 +497,7 @@ final class FakeProxmox
             'id' => "{$g['type']}/{$vmid}", 'vmid' => $vmid, 'node' => $g['node'], 'type' => $g['type'],
             'template' => $g['template'], 'status' => $g['status'], 'name' => $g['config']['name'] ?? $g['config']['hostname'] ?? '',
             'tags' => $g['config']['tags'] ?? '', 'maxdisk' => 20 * 1073741824, 'disk' => 0,
+            'maxcpu' => (int) ($g['config']['cores'] ?? 1), 'maxmem' => (int) ($g['config']['memory'] ?? 512) * 1048576,
             'netin' => 5 * 1048576, 'netout' => 5 * 1048576, 'pool' => $g['pool'] ?? null,
         ])->values()->all();
     }

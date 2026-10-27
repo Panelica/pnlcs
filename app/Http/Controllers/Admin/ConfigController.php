@@ -4,6 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Constants\Permissions;
 use App\Contracts\TokenizableGatewayInterface;
+use App\Http\Controllers\Api\ClientApiController;
+use App\Http\Controllers\Api\DomainApiController;
+use App\Http\Controllers\Api\InvoiceApiController;
+use App\Http\Controllers\Api\OrderApiController;
+use App\Http\Controllers\Api\ServiceApiController;
+use App\Http\Controllers\Api\SystemApiController;
+use App\Http\Controllers\Api\TicketApiController;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Admin;
@@ -19,9 +26,9 @@ use App\Models\ConfigOption;
 use App\Models\ConfigOptionGroup;
 use App\Models\ConfigOptionLink;
 use App\Models\ConfigOptionSub;
+use App\Models\Credit;
 use App\Models\Currency;
 use App\Models\CustomField;
-use App\Models\CustomFieldValue;
 use App\Models\DomainPricing;
 use App\Models\Download;
 use App\Models\DownloadCategory;
@@ -29,6 +36,7 @@ use App\Models\EmailTemplate;
 use App\Models\GatewaySettings;
 use App\Models\KbArticle;
 use App\Models\KbCategory;
+use App\Models\Language;
 use App\Models\NetworkIssue;
 use App\Models\NotificationProvider;
 use App\Models\NotificationRule;
@@ -53,10 +61,22 @@ use App\Models\TodoItem;
 use App\Models\Transaction;
 use App\Services\Module\ModuleRegistry;
 use App\Services\NotificationService;
+use App\Support\ApiReference;
+use App\Support\AutoCharge;
+use App\Support\ContentTranslations;
+use App\Support\CustomerCurrency;
+use App\Support\IpAllowList;
+use App\Support\ModuleSettings;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Modules\Servers\Proxmox\Ipv4Pool;
 
 class ConfigController extends Controller
 {
@@ -318,10 +338,10 @@ class ConfigController extends Controller
     /** The allow-list from the form, or back to it with the entry that is not an address. */
     private function allowedIpsFrom(?string $input): array
     {
-        [$list, $bad] = \App\Support\IpAllowList::parse($input);
+        [$list, $bad] = IpAllowList::parse($input);
 
         if ($list === null) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'allowed_ips' => __('admin.api_credentials.invalid_ip', ['value' => $bad]),
             ]);
         }
@@ -342,7 +362,7 @@ class ConfigController extends Controller
     {
         return view('admin.config.currencies', [
             'currencies' => Currency::all(),
-            'customerChoice' => (string) Setting::get(\App\Support\CustomerCurrency::SETTING, '0') === '1',
+            'customerChoice' => (string) Setting::get(CustomerCurrency::SETTING, '0') === '1',
             'autoUpdateRates' => (string) Setting::get('currency_auto_update', '1') === '1',
             'clientsPerCurrency' => $this->clientsPerCurrency(),
         ]);
@@ -384,7 +404,7 @@ class ConfigController extends Controller
             'auto_update_rates' => 'nullable|boolean',
         ]);
 
-        Setting::set(\App\Support\CustomerCurrency::SETTING, $request->boolean('customer_choice') ? '1' : '0', 'billing');
+        Setting::set(CustomerCurrency::SETTING, $request->boolean('customer_choice') ? '1' : '0', 'billing');
         Setting::set('currency_auto_update', $request->boolean('auto_update_rates') ? '1' : '0', 'billing');
 
         return back()->with('success', __('admin.currencies.settings_saved'));
@@ -396,7 +416,7 @@ class ConfigController extends Controller
      */
     public function updateCurrencyRates()
     {
-        $code = \Illuminate\Support\Facades\Artisan::call('pnlcs:currency-update', ['--force' => true]);
+        $code = Artisan::call('pnlcs:currency-update', ['--force' => true]);
 
         return back()->with($code === 0 ? 'success' : 'error', $code === 0
             ? __('admin.currencies.rates_updated')
@@ -464,7 +484,7 @@ class ConfigController extends Controller
         // flag moved before, so every rate stayed relative to the old default
         // until the next rate update, and invoices and conversions in between
         // used them. They are restated against the new one.
-        \Illuminate\Support\Facades\DB::transaction(function () use ($currency) {
+        DB::transaction(function () use ($currency) {
             $factor = (float) $currency->rate;
             if (! $currency->is_default && $factor > 0 && $factor !== 1.0) {
                 foreach (Currency::where('id', '!=', $currency->id)->get() as $other) {
@@ -687,7 +707,7 @@ class ConfigController extends Controller
             'recurring' => 'boolean',
             'cycles' => 'nullable|integer|min:0|max:1000',
             'billing_cycles' => 'nullable|array',
-            'billing_cycles.*' => 'in:'.implode(',', array_keys(\App\Models\Service::CYCLE_MONTHS)),
+            'billing_cycles.*' => 'in:'.implode(',', array_keys(Service::CYCLE_MONTHS)),
             'notes' => 'nullable|string',
             'applies_to' => 'nullable|array',
             'applies_to.*' => 'integer|exists:products,id',
@@ -727,7 +747,7 @@ class ConfigController extends Controller
             'recurring' => 'boolean',
             'cycles' => 'nullable|integer|min:0|max:1000',
             'billing_cycles' => 'nullable|array',
-            'billing_cycles.*' => 'in:'.implode(',', array_keys(\App\Models\Service::CYCLE_MONTHS)),
+            'billing_cycles.*' => 'in:'.implode(',', array_keys(Service::CYCLE_MONTHS)),
             'notes' => 'nullable|string',
         ]);
         $v['recurring'] = $request->boolean('recurring');
@@ -894,7 +914,7 @@ class ConfigController extends Controller
 
         return view('admin.config.gateways', [
             'gateways' => $gateways,
-            'autoChargeOn' => \App\Support\AutoCharge::enabled(),
+            'autoChargeOn' => AutoCharge::enabled(),
         ]);
     }
 
@@ -936,11 +956,11 @@ class ConfigController extends Controller
 
     public function emailTemplates(Request $request)
     {
-        $languages = \App\Models\Language::orderBy('sort_order')->get();
+        $languages = Language::orderBy('sort_order')->get();
 
         $lang = (string) $request->query('lang', '');
         if ($lang === '' || ! $languages->contains('code', $lang)) {
-            $default = \App\Models\Language::getDefault();
+            $default = Language::getDefault();
             $lang = $default->code ?? 'en';
         }
 
@@ -1018,7 +1038,7 @@ class ConfigController extends Controller
     {
         return view('admin.config.announcements', [
             'announcements' => Announcement::with('translations')->orderBy('id', 'desc')->get(),
-            'translationLanguages' => \App\Support\ContentTranslations::languages(),
+            'translationLanguages' => ContentTranslations::languages(),
             'categories' => Announcement::whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
         ]);
     }
@@ -1038,7 +1058,7 @@ class ConfigController extends Controller
             'announcement' => $v['announcement'],
             'published' => $request->boolean('published'),
         ]);
-        \App\Support\ContentTranslations::save($announcement->translations(), (array) ($v['translations'] ?? []), ['title', 'announcement']);
+        ContentTranslations::save($announcement->translations(), (array) ($v['translations'] ?? []), ['title', 'announcement']);
 
         return back()->with('success', __('messages.success.announcement_published'));
     }
@@ -1049,7 +1069,7 @@ class ConfigController extends Controller
     {
         return view('admin.config.downloads', [
             'categories' => DownloadCategory::with('downloads.products')->get(),
-            'products' => \App\Models\Product::orderBy('name')->get(['id', 'name']),
+            'products' => Product::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -1060,7 +1080,7 @@ class ConfigController extends Controller
         return view('admin.config.knowledge-base', [
             'categories' => KbCategory::with('translations')->orderBy('name')->get(),
             'articles' => KbArticle::with('category', 'translations')->orderByDesc('id')->get(),
-            'translationLanguages' => \App\Support\ContentTranslations::languages(),
+            'translationLanguages' => ContentTranslations::languages(),
         ]);
     }
 
@@ -1068,7 +1088,7 @@ class ConfigController extends Controller
     {
         $v = $this->validateKbArticle($request);
         $article = KbArticle::create($v);
-        \App\Support\ContentTranslations::save($article->translations(), (array) $request->input('translations', []), ['title', 'article']);
+        ContentTranslations::save($article->translations(), (array) $request->input('translations', []), ['title', 'article']);
 
         return back()->with('success', __('messages.success.article_created'));
     }
@@ -1099,7 +1119,7 @@ class ConfigController extends Controller
         return view('admin.config.network-issues', [
             'networkIssues' => NetworkIssue::orderBy('id', 'desc')->get(),
             // Offered as suggestions for "Affected"; any text is accepted.
-            'serverNames' => \App\Models\Server::orderBy('name')->pluck('name')->filter()->unique()->values(),
+            'serverNames' => Server::orderBy('name')->pluck('name')->filter()->unique()->values(),
         ]);
     }
 
@@ -1130,7 +1150,7 @@ class ConfigController extends Controller
             'transactions' => Transaction::with('client')->orderBy('id', 'desc')->paginate(25),
             // Credit staff added or took by hand (#307), with the reason and who did it. Kept out of the
             // transactions above: no money moved, so it is not income.
-            'adjustments' => \App\Models\Credit::with(['client', 'admin'])->whereNotNull('admin_id')
+            'adjustments' => Credit::with(['client', 'admin'])->whereNotNull('admin_id')
                 ->orderBy('id', 'desc')->paginate(25, ['*'], 'adjustments_page'),
         ]);
     }
@@ -1145,7 +1165,7 @@ class ConfigController extends Controller
 
         return view('admin.config.todo', [
             'items' => TodoItem::when($mine, fn ($q) => $q->where('admin', $me))->orderBy('id', 'desc')->get(),
-            'admins' => \App\Models\Admin::orderBy('username')->pluck('username'),
+            'admins' => Admin::orderBy('username')->pluck('username'),
             'mine' => $mine,
         ]);
     }
@@ -1227,7 +1247,7 @@ class ConfigController extends Controller
     public function saveTicketAutoClose(Request $request)
     {
         $hours = (int) $request->validate(['hours' => 'required|integer|min:0|max:8760'])['hours'];
-        \App\Models\Setting::set('TicketAutoCloseHours', (string) $hours);
+        Setting::set('TicketAutoCloseHours', (string) $hours);
 
         return back()->with('success', __('admin.ticket_statuses.auto_close_saved'));
     }
@@ -1367,7 +1387,7 @@ class ConfigController extends Controller
         $settings = $existing?->settings ?? [];
 
         if (strtolower((string) $request->input('type')) !== 'proxmox') {
-            return array_diff_key($settings, array_flip(['node', 'pool', 'vmid_min', 'vmid_max', 'ipv4_pool', 'verify_tls', 'ci_vendor', 'backup_storage'])) ?: null;
+            return array_diff_key($settings, array_flip(['node', 'pool', 'vmid_min', 'vmid_max', 'ipv4_pool', 'verify_tls', 'ci_vendor', 'backup_storage', 'capacity_alert'])) ?: null;
         }
 
         $in = (array) $request->input('settings', []);
@@ -1400,7 +1420,7 @@ class ConfigController extends Controller
             return __('proxmox.admin.vmid_invalid');
         }
         try {
-            \Modules\Servers\Proxmox\Ipv4Pool::ranges($ipv4);
+            Ipv4Pool::ranges($ipv4);
         } catch (\InvalidArgumentException $e) {
             return __('proxmox.error.pool_invalid', ['line' => $e->getMessage()]);
         }
@@ -1414,6 +1434,8 @@ class ConfigController extends Controller
             'verify_tls' => ! empty($in['verify_tls']),
             'ci_vendor' => $vendor,
             'backup_storage' => $backupStorage,
+            // Per cent of a node's CPU, memory or disk given to guests past which staff are told (#303); empty = 80, 0 = never.
+            'capacity_alert' => ($in['capacity_alert'] ?? '') === '' ? null : max(0, min(1000, (int) $in['capacity_alert'])),
         ]);
     }
 
@@ -1656,7 +1678,7 @@ class ConfigController extends Controller
         unset($v['translations']);
         $v['announcement'] = $request->body ?? $request->announcement ?? $announcement->announcement;
         $announcement->update($v);
-        \App\Support\ContentTranslations::save($announcement->translations(), $translations, ['title', 'announcement']);
+        ContentTranslations::save($announcement->translations(), $translations, ['title', 'announcement']);
 
         return back()->with('success', __('messages.success.announcement_updated'));
     }
@@ -1690,7 +1712,7 @@ class ConfigController extends Controller
             'translations.*.description' => 'nullable|string',
         ]);
         $category->update(['name' => $v['name'], 'description' => $v['description'] ?? null]);
-        \App\Support\ContentTranslations::save($category->translations(), (array) ($v['translations'] ?? []), ['name', 'description']);
+        ContentTranslations::save($category->translations(), (array) ($v['translations'] ?? []), ['name', 'description']);
 
         return back()->with('success', __('admin.knowledge_base.category_updated'));
     }
@@ -1698,7 +1720,7 @@ class ConfigController extends Controller
     public function updateKbArticle(Request $request, KbArticle $article)
     {
         $article->update($this->validateKbArticle($request));
-        \App\Support\ContentTranslations::save($article->translations(), (array) $request->input('translations', []), ['title', 'article']);
+        ContentTranslations::save($article->translations(), (array) $request->input('translations', []), ['title', 'article']);
 
         return back()->with('success', __('messages.success.article_updated'));
     }
@@ -1753,7 +1775,7 @@ class ConfigController extends Controller
         return view('admin.config.download-edit', [
             'download' => $download->load('products'),
             'categories' => DownloadCategory::orderBy('name')->get(),
-            'products' => \App\Models\Product::orderBy('name')->get(['id', 'name']),
+            'products' => Product::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -1807,7 +1829,7 @@ class ConfigController extends Controller
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $name = preg_replace('/[^A-Za-z0-9._-]+/', '-', $file->getClientOriginalName()) ?: 'download';
-            $path = $file->storeAs('downloads/'.\Illuminate\Support\Str::uuid(), $name, Download::DISK);
+            $path = $file->storeAs('downloads/'.Str::uuid(), $name, Download::DISK);
 
             $download->deleteStoredFile();
             $download->type = 'file';
@@ -1944,7 +1966,7 @@ class ConfigController extends Controller
      * anything close to this, so the cap only ever stops a tampered form from
      * filling the table with rows.
      */
-    private const SETTINGS_MAX_KEYS = \App\Support\ModuleSettings::MAX_KEYS;
+    private const SETTINGS_MAX_KEYS = ModuleSettings::MAX_KEYS;
 
     public function updateGatewaySettings(Request $request, string $gateway)
     {
@@ -2011,13 +2033,13 @@ class ConfigController extends Controller
     /** The names a module marks as secret, so a blank one can mean "keep". */
     private function secretFieldNames(array $configFields): array
     {
-        return \App\Support\ModuleSettings::secretFieldNames($configFields);
+        return ModuleSettings::secretFieldNames($configFields);
     }
 
     /** See ModuleSettings::sanitise - the screens and the API share the rules. */
     private function sanitiseModuleSettings(array $settings, array $secretFields): array
     {
-        return \App\Support\ModuleSettings::sanitise($settings, $secretFields);
+        return ModuleSettings::sanitise($settings, $secretFields);
     }
 
     public function updateRegistrarSettings(Request $request, string $registrar)
@@ -2114,13 +2136,13 @@ class ConfigController extends Controller
      * and ApiDocsTest holds the rendered page to exactly the routed set.
      */
     private const API_DOC_SECTIONS = [
-        \App\Http\Controllers\Api\SystemApiController::class => 'system',
-        \App\Http\Controllers\Api\ClientApiController::class => 'clients',
-        \App\Http\Controllers\Api\InvoiceApiController::class => 'invoices',
-        \App\Http\Controllers\Api\OrderApiController::class => 'orders',
-        \App\Http\Controllers\Api\TicketApiController::class => 'tickets',
-        \App\Http\Controllers\Api\DomainApiController::class => 'domains',
-        \App\Http\Controllers\Api\ServiceApiController::class => 'services',
+        SystemApiController::class => 'system',
+        ClientApiController::class => 'clients',
+        InvoiceApiController::class => 'invoices',
+        OrderApiController::class => 'orders',
+        TicketApiController::class => 'tickets',
+        DomainApiController::class => 'domains',
+        ServiceApiController::class => 'services',
     ];
 
     public function apiDocs()
@@ -2141,10 +2163,10 @@ class ConfigController extends Controller
                 'method' => in_array('POST', $route->methods(), true) ? 'POST' : 'GET',
                 // A curated description where one was written; the method name
                 // spelled out otherwise - true but plain beats absent.
-                'desc' => \Illuminate\Support\Facades\Lang::has($descKey)
+                'desc' => Lang::has($descKey)
                     ? __($descKey)
                     : ucfirst(strtolower(preg_replace('/(?<!^)[A-Z]/', ' $0', $method))),
-                'params' => \App\Support\ApiReference::hint($params[$slug] ?? []),
+                'params' => ApiReference::hint($params[$slug] ?? []),
             ];
         }
 
@@ -2527,7 +2549,7 @@ class ConfigController extends Controller
     public function storeNotificationRule(Request $request)
     {
         $v = $this->validatedNotificationRule($request);
-        if ($v instanceof \Illuminate\Http\RedirectResponse) {
+        if ($v instanceof RedirectResponse) {
             return $v;
         }
 
@@ -2545,7 +2567,7 @@ class ConfigController extends Controller
     {
         $rule = NotificationRule::findOrFail($id);
         $v = $this->validatedNotificationRule($request);
-        if ($v instanceof \Illuminate\Http\RedirectResponse) {
+        if ($v instanceof RedirectResponse) {
             return $v;
         }
 
@@ -2554,7 +2576,7 @@ class ConfigController extends Controller
         return back()->with('success', __('admin.messages.notification_rule_updated'));
     }
 
-    /** @return array<string, mixed>|\Illuminate\Http\RedirectResponse */
+    /** @return array<string, mixed>|RedirectResponse */
     private function validatedNotificationRule(Request $request)
     {
         $v = $request->validate([

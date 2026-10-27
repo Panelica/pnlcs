@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\Server;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Servers\Proxmox\ProxmoxCapacity;
 use Modules\Servers\Proxmox\ProxmoxImages;
 
 /**
@@ -20,6 +21,20 @@ class ProxmoxImageController extends Controller
         abort_unless(strtolower((string) $server->type) === 'proxmox', 404);
 
         return view('admin.config.server-images', ['server' => $server]);
+    }
+
+    /** What the server's nodes have and what has been given out of it (#303). */
+    public function capacity(Server $server)
+    {
+        abort_unless(strtolower((string) $server->type) === 'proxmox', 404);
+
+        try {
+            $overview = ProxmoxCapacity::for($server)->overview();
+        } catch (\Throwable $e) {
+            $overview = ['ok' => false, 'error' => $e->getMessage(), 'threshold' => 0, 'nodes' => [], 'services' => []];
+        }
+
+        return view('admin.config.server-capacity', ['server' => $server, 'overview' => $overview]);
     }
 
     public function status(Server $server): JsonResponse

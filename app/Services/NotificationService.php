@@ -7,6 +7,7 @@ use App\Models\NotificationRule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 
 class NotificationService
 {
@@ -53,6 +54,9 @@ class NotificationService
             // Sent by an integration through the API's triggernotificationevent;
             // routed like any other event by the rules set up for it.
             'api.custom',
+            // A Proxmox node has given out more of its memory or disk than
+            // the server's capacity line (pnlcs:proxmox-capacity, #303).
+            'server.capacity_high',
             'backup.failed',
             'module.failed',
             'module.failed_permanently',
@@ -213,7 +217,7 @@ class NotificationService
         ];
 
         foreach ($targets as $key => $routeName) {
-            if (! empty($data[$key]) && \Illuminate\Support\Facades\Route::has($routeName)) {
+            if (! empty($data[$key]) && Route::has($routeName)) {
                 return route($routeName, $data[$key]);
             }
         }
