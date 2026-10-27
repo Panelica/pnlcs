@@ -87,6 +87,39 @@
 </div>
 @endforeach
 
+@if($ipv4['pool'])
+<div class="card" style="margin-bottom:15px;">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <strong>{{ __('proxmox.capacity.ipv4_title') }}</strong>
+        <span class="pcap-muted">{{ __('proxmox.capacity.ipv4_summary', ['used' => count($ipv4['holders']), 'free' => $ipv4['free']]) }}</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+        @if(empty($ipv4['holders']))
+        <p class="pcap-muted" style="padding:10px 12px;margin:0;">{{ __('proxmox.capacity.ipv4_none') }}</p>
+        @else
+        <table class="table" style="margin:0;">
+            <thead><tr>
+                <th>{{ __('proxmox.capacity.ipv4_address') }}</th>
+                <th>{{ __('proxmox.capacity.ipv4_kind') }}</th>
+                <th>{{ __('proxmox.capacity.ipv4_service') }}</th>
+                <th>{{ __('proxmox.capacity.ipv4_client') }}</th>
+            </tr></thead>
+            <tbody>
+            @foreach($ipv4['holders'] as $held)
+                <tr>
+                    <td><code>{{ $held['address'] }}</code></td>
+                    <td>{{ __('proxmox.capacity.ipv4_kind_'.$held['kind']) }}</td>
+                    <td><a href="{{ route('admin.services.show', $held['service']->id) }}">#{{ $held['service']->id }}</a> {{ $held['service']->domain }} <span class="pcap-muted">{{ $held['service']->status }}</span></td>
+                    <td>@if($held['service']->client)<a href="{{ route('admin.clients.show', $held['service']->client_id) }}">{{ $held['service']->client->display_name }}</a>@endif</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+        @endif
+    </div>
+</div>
+@endif
+
 @if(! empty($overview['services']))
 <p class="pcap-muted">{{ __('proxmox.capacity.services') }}:
     @foreach($overview['services'] as $status => $n){{ $status }} {{ $n }}@if(! $loop->last) · @endif @endforeach

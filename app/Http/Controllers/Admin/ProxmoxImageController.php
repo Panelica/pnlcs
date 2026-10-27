@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Server;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Servers\Proxmox\Ipv4Pool;
 use Modules\Servers\Proxmox\ProxmoxCapacity;
 use Modules\Servers\Proxmox\ProxmoxImages;
 
@@ -34,7 +36,15 @@ class ProxmoxImageController extends Controller
             $overview = ['ok' => false, 'error' => $e->getMessage(), 'threshold' => 0, 'nodes' => [], 'services' => []];
         }
 
-        return view('admin.config.server-capacity', ['server' => $server, 'overview' => $overview]);
+        try {
+            $holders = Ipv4Pool::holders($server);
+            (new EloquentCollection(array_column($holders, 'service')))->load('client:id,first_name,last_name,company_name');
+            $ipv4 = ['holders' => $holders, 'free' => Ipv4Pool::freeCount($server), 'pool' => trim((string) $server->setting('ipv4_pool')) !== ''];
+        } catch (\Throwable) {
+            $ipv4 = ['holders' => [], 'free' => 0, 'pool' => false];
+        }
+
+        return view('admin.config.server-capacity', ['server' => $server, 'overview' => $overview, 'ipv4' => $ipv4]);
     }
 
     public function status(Server $server): JsonResponse

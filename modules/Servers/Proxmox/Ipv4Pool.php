@@ -6,7 +6,8 @@ use App\Models\Server;
 use App\Models\Service;
 
 /**
- * The public IPv4 addresses a Proxmox server hands out, one per guest.
+ * The public IPv4 addresses a Proxmox server hands out: one to each guest,
+ * and the additional ones a guest's plan sells (the extra_ipv4 option).
  *
  * Written on the server as one range per line:
  *
@@ -48,14 +49,52 @@ final class Ipv4Pool
     /** Addresses held by live services on this server. */
     public static function taken(Server $server, ?int $exceptServiceId = null): array
     {
-        return Service::where('server_id', $server->id)
+        return array_column(self::holders($server, $exceptServiceId), 'address');
+    }
+
+    /**
+     * Who holds each address: the service, and whether it is the guest's own
+     * address or an additional one.
+     *
+     * @return array<int, array{address: string, kind: string, service: Service}>
+     */
+    public static function holders(Server $server, ?int $exceptServiceId = null): array
+    {
+        $held = [];
+        $services = Service::where('server_id', $server->id)
             ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
             ->when($exceptServiceId, fn ($q) => $q->where('id', '!=', $exceptServiceId))
-            ->get(['id', 'module_data'])
-            ->map(fn ($s) => is_array($s->module_data) ? ($s->module_data['pve_ipv4'] ?? null) : null)
-            ->filter()
-            ->values()
-            ->all();
+            ->orderBy('id')
+            ->get(['id', 'client_id', 'product_id', 'domain', 'status', 'module_data']);
+        foreach ($services as $service) {
+            $data = is_array($service->module_data) ? $service->module_data : [];
+            if (! empty($data['pve_ipv4'])) {
+                $held[] = ['address' => (string) $data['pve_ipv4'], 'kind' => 'main', 'service' => $service];
+            }
+            foreach (self::extras($data) as $extra) {
+                $held[] = ['address' => $extra['address'], 'kind' => 'extra', 'service' => $service];
+            }
+        }
+
+        return $held;
+    }
+
+    /**
+     * The additional addresses a service holds, in the order its network
+     * cards carry them (net1, net2, ...).
+     *
+     * @return array<int, array{address: string, prefix: int, gateway: string}>
+     */
+    public static function extras(array $moduleData): array
+    {
+        $out = [];
+        foreach ((array) ($moduleData['pve_ipv4_extra'] ?? []) as $extra) {
+            if (is_array($extra) && ! empty($extra['address'])) {
+                $out[] = ['address' => (string) $extra['address'], 'prefix' => (int) ($extra['prefix'] ?? 32), 'gateway' => (string) ($extra['gateway'] ?? '')];
+            }
+        }
+
+        return $out;
     }
 
     /**

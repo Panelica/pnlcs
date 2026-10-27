@@ -198,6 +198,12 @@
             <div class="vps-row"><span class="k">{{ __('proxmox.admin.pool_address') }}</span><span class="v vps-code">
                 {{ !empty($pveData['pve_ipv4']) ? __('proxmox.admin.pool_address_value', ['address' => $pveData['pve_ipv4'].'/'.($pveData['pve_ipv4_prefix'] ?? ''), 'gateway' => $pveData['pve_ipv4_gateway'] ?? '']) : __('proxmox.admin.pool_address_none') }}
             </span></div>
+            @php $pveExtras = \Modules\Servers\Proxmox\Ipv4Pool::extras(is_array($pveData) ? $pveData : []); @endphp
+            @if($pveExtras)
+            <div class="vps-row"><span class="k">{{ __('proxmox.admin.extra_addresses') }}</span><span class="v vps-code">
+                @foreach($pveExtras as $i => $extra){{ $extra['address'] }}/{{ $extra['prefix'] }} (net{{ $i + 1 }})@if(! $loop->last), @endif @endforeach
+            </span></div>
+            @endif
             @endif
         </div>
         @if($proxmoxUrl)

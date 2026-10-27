@@ -172,10 +172,19 @@ class ProxmoxModule extends AbstractServerModule
 
         if ($existing) {
             ['vmid' => $vmid, 'node' => $node] = $existing;
+            $extras = $this->reserveExtraAddresses($service, $server, $plan);
+            if ($extras instanceof ProxmoxResult) {
+                return $this->buildResult(false, $extras->error);
+            }
         } else {
             $ip = $this->reserveAddress($service, $server, $plan);
             if ($ip instanceof ProxmoxResult) {
                 return $this->buildResult(false, $ip->error);
+            }
+            // Before the guest is made, so a pool that is short makes nothing.
+            $extras = $this->reserveExtraAddresses($service, $server, $plan);
+            if ($extras instanceof ProxmoxResult) {
+                return $this->buildResult(false, $extras->error);
             }
 
             $made = $this->makeGuest($service, $server, $api, $plan, $ip);
@@ -273,6 +282,43 @@ class ProxmoxModule extends AbstractServerModule
             $this->setModuleData($service, ['pve_ipv4' => $ip['address'], 'pve_ipv4_prefix' => $ip['prefix'], 'pve_ipv4_gateway' => $ip['gateway']]);
 
             return $ip;
+        });
+    }
+
+    /**
+     * Hold the additional addresses the plan sells, keeping the ones the
+     * service already has. All or nothing: when the pool cannot give every
+     * address it gives none, and the service keeps what it held.
+     *
+     * @return array<int, array{address: string, prefix: int, gateway: string}>|ProxmoxResult
+     */
+    private function reserveExtraAddresses(Service $service, Server $server, ProxmoxPlan $plan): array|ProxmoxResult
+    {
+        $want = $plan->ipv4 === 'pool' ? $plan->extra_ipv4 : 0;
+        $held = Ipv4Pool::extras($this->getModuleData($service));
+        if (count($held) === $want) {
+            return $held;
+        }
+
+        return Cache::lock("pve-ipv4-{$server->id}", 30)->block(20, function () use ($service, $server, $want) {
+            $data = $this->getModuleData($service);
+            $keep = array_slice(Ipv4Pool::extras($data), 0, $want);
+            $own = array_values(array_filter([$data['pve_ipv4'] ?? null, ...array_column($keep, 'address')]));
+            while (count($keep) < $want) {
+                try {
+                    $ip = Ipv4Pool::allocate($server, $service, $own);
+                } catch (\InvalidArgumentException $e) {
+                    return ProxmoxResult::failed(__('proxmox.error.pool_invalid', ['line' => $e->getMessage()]));
+                }
+                if (! $ip) {
+                    return ProxmoxResult::failed(__('proxmox.error.pool_short', ['server' => $server->name, 'count' => $want]));
+                }
+                $keep[] = $ip;
+                $own[] = $ip['address'];
+            }
+            $this->setModuleData($service, ['pve_ipv4_extra' => $keep ?: null]);
+
+            return $keep;
         });
     }
 
@@ -443,6 +489,11 @@ class ProxmoxModule extends AbstractServerModule
         if ($plan->cpulimit > 0) {
             $body['cpulimit'] = $plan->cpulimit;
         }
+        [$nics, $drop] = $this->extraNics($service, $plan, $cfg, false);
+        $body += $nics;
+        if ($drop !== []) {
+            $body['delete'] = implode(',', $drop);
+        }
 
         if ($plan->template !== '') {
             $body += [
@@ -476,6 +527,7 @@ class ProxmoxModule extends AbstractServerModule
         if (! $set->ok) {
             return $set;
         }
+        $this->setModuleData($service, ['pve_extra_nics' => count(Ipv4Pool::extras($this->getModuleData($service))) ?: null]);
 
         $disk = $this->bootDisk($cfg);
         if ($disk && $plan->template !== '') {
@@ -501,14 +553,20 @@ class ProxmoxModule extends AbstractServerModule
         }
         $cfg = is_array($current->data) ? $current->data : [];
 
-        $set = $api->put("{$path}/config", [
+        [$nics, $drop] = $this->extraNics($service, $plan, $cfg, true);
+        $body = [
             'tags' => $this->mergeTags($cfg, $service),
             'description' => $this->description($service),
             'onboot' => 1,
-        ]);
+        ] + $nics;
+        if ($drop !== []) {
+            $body['delete'] = implode(',', $drop);
+        }
+        $set = $api->put("{$path}/config", $body);
         if (! $set->ok) {
             return $set;
         }
+        $this->setModuleData($service, ['pve_extra_nics' => count(Ipv4Pool::extras($this->getModuleData($service))) ?: null]);
 
         if ($plan->protection) {
             $api->put("{$path}/config", ['protection' => 1]);
@@ -556,11 +614,12 @@ class ProxmoxModule extends AbstractServerModule
         return $net;
     }
 
-    private function lxcNet(ProxmoxPlan $plan, ?array $ip, ?string $mac = null): string
+    /** eth0 carries the guest's own address and route; eth1 upward one additional address each. */
+    private function lxcNet(ProxmoxPlan $plan, ?array $ip, ?string $mac = null, int $index = 0): string
     {
-        $net = "name=eth0,bridge={$plan->bridge}".($mac ? ",hwaddr={$mac}" : '');
-        $net .= $ip ? ",ip={$ip['address']}/{$ip['prefix']},gw={$ip['gateway']}" : ',ip=dhcp';
-        if ($plan->ipv6 === 'auto') {
+        $net = "name=eth{$index},bridge={$plan->bridge}".($mac ? ",hwaddr={$mac}" : '');
+        $net .= $ip ? ",ip={$ip['address']}/{$ip['prefix']}".($index === 0 ? ",gw={$ip['gateway']}" : '') : ',ip=dhcp';
+        if ($plan->ipv6 === 'auto' && $index === 0) {
             $net .= ',ip6=auto';
         }
         if ($plan->vlan > 0) {
@@ -574,6 +633,49 @@ class ProxmoxModule extends AbstractServerModule
         }
 
         return $net;
+    }
+
+    /**
+     * The network cards that carry the additional addresses: net1 upward, one
+     * address each, on the guest's bridge. Only net0 has the gateway, so the
+     * guest keeps one default route. A card PNLCS added for an address the
+     * service no longer has is removed; cards it did not add are left alone.
+     *
+     * Proxmox sets an address on a card, not several on one, and a virtual
+     * machine learns it through cloud-init. That is also how a provider that
+     * binds each additional address to its own MAC wants it.
+     *
+     * @return array{0: array<string, string>, 1: array<int, string>} settings to write, settings to delete
+     */
+    private function extraNics(Service $service, ProxmoxPlan $plan, array $cfg, bool $lxc): array
+    {
+        $data = $this->getModuleData($service);
+        $extras = Ipv4Pool::extras($data);
+        $set = [];
+        foreach ($extras as $i => $ip) {
+            $n = $i + 1;
+            $mac = $this->macOf((string) ($cfg["net{$n}"] ?? ''));
+            if ($lxc) {
+                $set["net{$n}"] = $this->lxcNet($plan, $ip, $mac, $n);
+
+                continue;
+            }
+            $set["net{$n}"] = $this->qemuNet($plan, $mac);
+            if ($plan->template !== '') {
+                $set["ipconfig{$n}"] = "ip={$ip['address']}/{$ip['prefix']}";
+            }
+        }
+
+        $drop = [];
+        for ($n = count($extras) + 1; $n <= (int) ($data['pve_extra_nics'] ?? 0); $n++) {
+            foreach ($lxc ? ["net{$n}"] : ["net{$n}", "ipconfig{$n}"] as $key) {
+                if (array_key_exists($key, $cfg)) {
+                    $drop[] = $key;
+                }
+            }
+        }
+
+        return [$set, $drop];
     }
 
     private function macOf(string $net): ?string
@@ -937,7 +1039,7 @@ class ProxmoxModule extends AbstractServerModule
             : $this->buildResult(false, __('proxmox.error.remove_failed', ['vmid' => $guest['vmid'], 'error' => $removed->error]));
 
         if ($removed->ok) {
-            $this->setModuleData($service, ['pve_state' => 'removed', 'pve_ipv4' => null, 'pve_seen_ip' => null, 'pve_job' => null]);
+            $this->setModuleData($service, ['pve_state' => 'removed', 'pve_ipv4' => null, 'pve_ipv4_extra' => null, 'pve_extra_nics' => null, 'pve_seen_ip' => null, 'pve_job' => null]);
         }
         $this->logAction($service, 'terminate', $result);
 
@@ -1026,18 +1128,36 @@ class ProxmoxModule extends AbstractServerModule
         $cfg = is_string($cfg) ? (json_decode($cfg, true) ?: []) : (is_array($cfg) ? $cfg : []);
         $plan = ProxmoxPlan::forService($service, $cfg);
 
+        // Addresses first: a pool that is short changes nothing on the guest.
+        $before = count(Ipv4Pool::extras($this->getModuleData($service)));
+        $extras = $this->reserveExtraAddresses($service, $service->server, $plan);
+        if ($extras instanceof ProxmoxResult) {
+            return $this->buildResult(false, $extras->error);
+        }
+        $lxc = $guest['type'] === 'lxc';
+        [$nics, $drop] = $this->extraNics($service, $plan, $guest['config'], $lxc);
+
         $body = ['cores' => $plan->cores, 'memory' => $plan->memory];
-        if ($guest['type'] === 'lxc') {
+        if ($lxc) {
             $body['swap'] = $plan->swap;
         } else {
             $body['sockets'] = $plan->sockets;
         }
-        $body[$plan->cpulimit > 0 ? 'cpulimit' : 'delete'] = $plan->cpulimit > 0 ? $plan->cpulimit : 'cpulimit';
+        if ($plan->cpulimit > 0) {
+            $body['cpulimit'] = $plan->cpulimit;
+        } else {
+            array_unshift($drop, 'cpulimit');
+        }
+        $body += $nics;
+        if ($drop !== []) {
+            $body['delete'] = implode(',', $drop);
+        }
 
         $set = $api->put("{$guest['path']}/config", $body);
         if (! $set->ok) {
             return $this->buildResult(false, __('proxmox.error.resources_failed', ['error' => $set->error]));
         }
+        $this->setModuleData($service, ['pve_extra_nics' => count($extras) ?: null]);
 
         $disk = $guest['type'] === 'lxc' ? 'rootfs' : $this->bootDisk($guest['config']);
         if ($disk) {
@@ -1047,7 +1167,13 @@ class ProxmoxModule extends AbstractServerModule
             }
         }
 
-        $result = $this->buildResult(true, __('proxmox.package_changed', ['vmid' => $guest['vmid']]), $body);
+        $message = __('proxmox.package_changed', ['vmid' => $guest['vmid']]);
+        // A container takes a new card at once; a virtual machine reads its
+        // addresses from cloud-init when it next starts.
+        if (! $lxc && count($extras) !== $before && $plan->template !== '') {
+            $message .= ' '.__('proxmox.extra_ipv4_restart');
+        }
+        $result = $this->buildResult(true, $message, $body);
         $this->logAction($service, 'changePackage', $result);
 
         return $result;
@@ -1199,9 +1325,9 @@ class ProxmoxModule extends AbstractServerModule
 
     private function configuredAddresses(Service $service, array $guest): array
     {
-        $ip = $this->getModuleData($service)['pve_ipv4'] ?? null;
-        if ($ip) {
-            return [$ip];
+        $data = $this->getModuleData($service);
+        if (! empty($data['pve_ipv4'])) {
+            return [$data['pve_ipv4'], ...array_column(Ipv4Pool::extras($data), 'address')];
         }
         $line = (string) ($guest['config']['ipconfig0'] ?? $guest['config']['net0'] ?? '');
 

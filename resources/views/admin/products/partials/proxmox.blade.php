@@ -18,6 +18,7 @@
         'memory' => collect([$pveMemory, $pveMemory * 2, $pveMemory * 4])->map(fn ($v, $i) => ['value' => $v, 'price' => [0, 5, 12][$i]])->all(),
         'cores' => collect([$pveCores, $pveCores * 2, $pveCores * 4])->map(fn ($v, $i) => ['value' => $v, 'price' => [0, 4, 10][$i]])->all(),
         'disk' => collect([$pveDisk, $pveDisk * 2, $pveDisk * 4])->map(fn ($v, $i) => ['value' => $v, 'price' => [0, 2, 5][$i]])->all(),
+        'extra_ipv4' => [['value' => 0, 'price' => 0], ['value' => 1, 'price' => 3], ['value' => 2, 'price' => 6]],
     ];
     $pvePresets = [[1, 1024, 20], [1, 2048, 40], [2, 4096, 80], [4, 8192, 160], [8, 16384, 320]];
 @endphp
@@ -270,7 +271,7 @@
                                 @if($key !== 'os')
                                 @foreach($pveTiers[$key] as $tier)
                                 <tr>
-                                    <td><input type="number" min="1" data-v value="{{ $tier['value'] }}" class="form-control"></td>
+                                    <td><input type="number" min="{{ $key === 'extra_ipv4' ? 0 : 1 }}" data-v value="{{ $tier['value'] }}" class="form-control"></td>
                                     <td><input type="text" data-l value="{{ \Modules\Servers\Proxmox\ProxmoxOrderOptions::defaultLabel($key, (string) $tier['value']) }}" class="form-control"></td>
                                     <td><input type="number" min="0" step="0.01" data-p value="{{ number_format($tier['price'], 2, '.', '') }}" class="form-control"></td>
                                     <td><button type="button" class="btn btn-default btn-xs" data-opt-remove>{{ __('proxmox.product.opt_remove') }}</button></td>
@@ -282,6 +283,9 @@
                         @if($key === 'os')
                         <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('proxmox.product.opt_os_hint') }}</div>
                         @else
+                        @if($key === 'extra_ipv4')
+                        <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('proxmox.product.opt_extra_ipv4_hint', ['max' => \Modules\Servers\Proxmox\ProxmoxPlan::MAX_EXTRA_IPV4]) }}</div>
+                        @endif
                         <button type="button" class="btn btn-default btn-xs" data-opt-add style="margin-top:6px;">{{ __('proxmox.product.opt_add') }}</button>
                         @endif
                     </div>
@@ -461,7 +465,7 @@
             if (add) {
                 add.addEventListener('click', function () {
                     var tr = document.createElement('tr');
-                    tr.innerHTML = '<td><input type="number" min="1" data-v class="form-control"></td><td><input type="text" data-l class="form-control" placeholder="' + esc(S.opt_label_auto) + '"></td>'
+                    tr.innerHTML = '<td><input type="number" min="' + (box.getAttribute('data-opt') === 'extra_ipv4' ? 0 : 1) + '" data-v class="form-control"></td><td><input type="text" data-l class="form-control" placeholder="' + esc(S.opt_label_auto) + '"></td>'
                         + '<td><input type="number" min="0" step="0.01" data-p class="form-control" value="0.00"></td><td><button type="button" class="btn btn-default btn-xs" data-opt-remove>' + esc(S.opt_remove) + '</button></td>';
                     box.querySelector('[data-opt-rows]').appendChild(tr);
                 });

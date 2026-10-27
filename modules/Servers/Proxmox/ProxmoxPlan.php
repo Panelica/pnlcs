@@ -19,7 +19,13 @@ use App\Models\Service;
 final class ProxmoxPlan
 {
     /** Configurable option keys this module understands. */
-    public const OPTION_KEYS = ['cores', 'memory', 'disk', 'swap', 'os', 'bandwidth', 'rate', 'snapshots', 'backups'];
+    public const OPTION_KEYS = ['cores', 'memory', 'disk', 'swap', 'os', 'bandwidth', 'rate', 'snapshots', 'backups', 'extra_ipv4'];
+
+    /**
+     * Additional IPv4 addresses one guest may have. Each takes a network card
+     * (net1, net2, ...), and Proxmox stops at net31.
+     */
+    public const MAX_EXTRA_IPV4 = 16;
 
     public function __construct(public readonly array $values) {}
 
@@ -48,6 +54,7 @@ final class ProxmoxPlan
             'swap' => max(0, (int) $pick('swap', [], 512)),
             'disk' => max(1, (int) $pick('disk', ['disk'], 20)),
             'ipv4' => (string) $pick('ipv4', [], 'dhcp') === 'pool' ? 'pool' : 'dhcp',
+            'extra_ipv4' => min(self::MAX_EXTRA_IPV4, max(0, (int) $pick('extra_ipv4', [], 0))),
             'ipv6' => (string) $pick('ipv6', [], 'none'),
             'nesting' => (bool) $pick('nesting', [], false),
             'protection' => (bool) $pick('protection', [], true),
@@ -188,6 +195,13 @@ final class ProxmoxPlan
             if ($value !== '') {
                 $values[$values['type'] === 'lxc' ? 'ostemplate' : 'template'] = $value;
             }
+
+            return $values;
+        }
+
+        if ($key === 'extra_ipv4') {
+            // Zero is a real choice here ("no additional address").
+            $values[$key] = is_numeric($value) ? min(self::MAX_EXTRA_IPV4, max(0, (int) $value)) : $values[$key];
 
             return $values;
         }
