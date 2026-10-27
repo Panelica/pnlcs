@@ -2,6 +2,137 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.13.0 — 2026-10-27
+
+A stable release, offered to every installation. It contains everything in
+1.12.0. None of the changes below went out in a beta first. Thank you,
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#294, #309 to #314,
+#316 to #318) and [@pla0730484848-wq](https://github.com/pla0730484848-wq)
+(#302, #303, #305 to #308, #315, #322).
+
+**A domain ordered with hosting is now registered with the hosting's
+nameservers.** Registration passed no nameservers before, so every registrar
+module used its own (often the registrar's parking servers) and the site did
+not open until the customer changed them. Now, in order: nameservers already
+on the domain; those of the hosting server ordered with it (or, while the
+server is not yet chosen, the ones every server of its group shares); Setup →
+General Settings → **Default Nameservers**; and only then the module's own, as
+before. Check your servers' nameservers and the defaults before updating
+(#318).
+
+**The reason typed when suspending a service is shown to the customer**, on
+the service page and in the suspension email. Write it for the customer to
+read (#309).
+
+### Added
+
+- **Prices that include tax, and tax switched off.** Setup → Tax
+  Configuration has **Charge tax** (on by default; off adds no tax anywhere and
+  keeps the rules) and **Prices include tax** (off by default; on, the price
+  entered is what the customer pays and the tax is the part of it the rate
+  accounts for, so 6.00 at 20% is 5.00 + 1.00). Each invoice keeps the mode it
+  was issued with, so changing the settings later does not change an invoice
+  already issued. The PDF, the client and admin invoice pages and KSeF all
+  print the VAT rows from the same computation. With both switches at their
+  defaults nothing changes (#312, #305).
+- **Invoice each renewal separately.** Setup → General Settings → Invoices,
+  off by default. On, each service (with its own addons and usage), each
+  domain and each addon whose service is not renewing gets its own renewal
+  invoice, so a customer can renew one server and let another lapse (#311,
+  #302).
+- **Proxmox capacity.** A **Capacity** page for each Proxmox server (next to
+  Images) shows, per node, the CPU, memory and disk the guests have been given
+  against what the node has, what PNLCS set up, what is used now, running and
+  stopped guests, and this server's services by status. **Capacity alert (%)**
+  on the server form (80 unless set, 0 = off): `pnlcs:proxmox-capacity` runs
+  hourly and raises `server.capacity_high` once a day per node and resource
+  when memory or disk given out passes it. CPU is shown but never alerts
+  (#316, #303).
+- **Search the admin list of services** by IP address, domain, username or
+  service id. An IP address is matched whole against what the modules record
+  (the Proxmox pool or reported address, Vultr's main IP, further addresses).
+  The admin bar search uses the same rule, so it finds a server by its IP
+  address too (#313, #308).
+- **A suspension reason.** Suspend on the admin service page takes a reason
+  (up to 255 characters). The customer reads it on the service page and in the
+  suspension email; a billing suspension reads "Unpaid invoice"; with no
+  reason the customer is asked to contact support. The email no longer calls
+  every suspension an unpaid invoice (#309, #306).
+- **Balance adjustments by staff** are listed under Billing → Transactions,
+  with the date, client, credit added or deducted, amount, reason and the
+  member of staff. They are kept apart from the transactions: no money moved,
+  so they are not income (#310, #307).
+- **A module installed through `pnlcs.json` may bring its own service
+  provider** (`"provider"`), so a gateway's checkout pages, webhooks,
+  migrations and scheduled tasks live in its folder and survive updates. A
+  provider that fails is logged with the module's name and skipped (#317,
+  #315).
+
+### Changed
+
+- **A paid order's servers are set up by a job** (`ProvisionOrderedService`).
+  With a queue worker (`QUEUE_CONNECTION=database` and the scheduler) the
+  checkout and the card payment's return answer at once. With the shipped
+  `QUEUE_CONNECTION=sync` the setup still runs in the request, as before.
+  Staff accepting an order by hand still wait and see the result. A second
+  press of **Complete order** while the order is being placed no longer
+  places it twice (#314).
+- **Releasing an order held as fraud** makes its invoice payable again and
+  switches back on the services the verdict suspended (only those). A part-paid
+  invoice takes back the credit its cancellation returned and reopens part
+  paid, so the payment is not counted twice; if that credit has been spent,
+  the invoice stays cancelled for staff to settle (#294).
+
+### Fixed
+
+- **The client area named the Proxmox server a VPS runs on** in Server
+  Information. A VPS now shows the customer the address of their own server;
+  other services still show their server (#322).
+- A **renewal test** expected a due date on the 31st to move into the month
+  after next; the code correctly moves it to the last day of next month.
+
+### Database changes
+
+- `invoices.tax_mode` (nullable; null = tax added on top, as every existing
+  invoice, `inclusive` or `none`), migration
+  `2026_10_25_000002_add_tax_mode_to_invoices` (#312).
+- New settings: `InvoiceRenewalsSeparately` (#311), `TaxEnabled`,
+  `TaxInclusivePrices` (#312); server setting `capacity_alert` (#316).
+
+### For theme and module authors
+
+- `pnlcs.json` may name a `provider` class; `App\Support\GuardedProviders`
+  registers and boots it, as it does an addon's (#317).
+- `Invoice::lineTax()`, `Invoice::vatBreakdown()`, `Invoice::currentTaxMode()`
+  and `TaxRule::enabled()`, `pricesIncludeTax()`, `taxShare()` and `taxOn()`
+  (#312). A view that prints VAT rows should use `vatBreakdown()`.
+- `Service::customerSuspensionReason()` (#309), `Service::matching()` (#313).
+- `DomainHosting::serverNameservers()` and `DomainHosting::defaultNameservers()`
+  (#318). Registration passes `ns1`…`ns5` and `nameservers` to the registrar
+  module.
+- Job `App\Jobs\ProvisionOrderedService` and `OrderService::provisionOrderedService()`
+  (#314).
+- Notification event `server.capacity_high`, command `pnlcs:proxmox-capacity`,
+  route `admin.config.servers.capacity` (#316). `Credit::admin()` (#310).
+
+### Views a theme may override that changed
+
+- `resources/views/admin/config/servers.blade.php` (Capacity button, Capacity
+  alert field) and the new `admin/config/server-capacity.blade.php`.
+- `resources/views/admin/config/tax.blade.php` (the two tax switches).
+- `resources/views/admin/config/transactions.blade.php` (balance adjustments).
+- `resources/views/admin/invoices/create.blade.php`,
+  `resources/views/admin/invoices/show.blade.php`,
+  `resources/views/client/invoices/show.blade.php` and
+  `resources/views/pdf/invoice.blade.php` (VAT rows from `vatBreakdown()`).
+- `resources/views/admin/services/index.blade.php` (search, address under the
+  domain) and `resources/views/admin/services/show.blade.php` (Suspend reason).
+- `resources/views/admin/settings/general.blade.php` (Invoice each renewal
+  separately).
+- `resources/views/client/services/show.blade.php` (suspension notice; no
+  Proxmox server name).
+- `resources/views/emails/service-suspension.blade.php` (the reason).
+
 ## 1.12.0 — 2026-10-25
 
 A stable release, offered to every installation. It contains everything in
