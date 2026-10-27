@@ -6,27 +6,33 @@ use App\Enums\DomainStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\OrderStatus;
 use App\Enums\ServiceStatus;
+use App\Events\DomainRegistered;
+use App\Events\DomainTransferStarted;
 use App\Events\OrderPlaced;
 use App\Events\ServiceActivated;
+use App\Http\Controllers\LegalController;
+use App\Jobs\ProvisionOrderedService;
 use App\Models\Client;
 use App\Models\Credit;
+use App\Models\CustomField;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Promotion;
+use App\Models\Server;
 use App\Models\Service;
 use App\Models\ServiceAddon;
 use App\Models\Setting;
 use App\Models\SslOrder;
 use App\Services\Module\ModuleRegistry;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
 
 class OrderService
 {
@@ -64,11 +70,11 @@ class OrderService
 
         return [
             'terms_accepted_at' => now(),
-            'terms_version' => \App\Http\Controllers\LegalController::REVISED,
+            'terms_version' => LegalController::REVISED,
             'terms_ip' => $request->ip(),
             // Named rather than linked: the customer is entitled to the text
             // they agreed to, and these documents get revised.
-            'terms_documents' => array_keys(\App\Http\Controllers\LegalController::DOCUMENTS),
+            'terms_documents' => array_keys(LegalController::DOCUMENTS),
         ];
     }
 
@@ -162,8 +168,8 @@ class OrderService
                     // An order is the customer's word: staff-only fields are
                     // never filled from it.
                     if (! empty($item['custom_fields']) && $service->product_id) {
-                        \App\Models\CustomField::storeValues($service->id,
-                            \App\Models\CustomField::productFields((int) $service->product_id)->where('admin_only', false)->get(),
+                        CustomField::storeValues($service->id,
+                            CustomField::productFields((int) $service->product_id)->where('admin_only', false)->get(),
                             (array) $item['custom_fields']);
                     }
 
@@ -336,7 +342,7 @@ class OrderService
         $subject = 'PROVISIONING FAILED - service #'.$svc->id.' ('.($svc->domain ?: 'no domain').')';
 
         try {
-            app(\App\Services\NotificationService::class)->dispatch('service.provision_failed', [
+            app(NotificationService::class)->dispatch('service.provision_failed', [
                 'event_type' => 'service.provision_failed',
                 'subject' => $subject,
                 'message' => implode("\n", $lines),
@@ -457,7 +463,7 @@ class OrderService
                 if ($manual) {
                     $this->provisionOrderedService($svc);
                 } else {
-                    \App\Jobs\ProvisionOrderedService::dispatch($svc->id);
+                    ProvisionOrderedService::dispatch($svc->id);
                 }
             } else {
                 // No server module involved — plain activation. Legitimate for
@@ -880,6 +886,63 @@ class OrderService
      * Returns why the registration did not happen, or null when it did (or
      * when there was nothing to send).
      */
+    /**
+     * Which nameservers a newly registered domain gets, first match wins:
+     *
+     *  1. those already on the domain record;
+     *  2. a hosting service ordered with it (same order, same domain name):
+     *     its server's nameservers, or - when the server is chosen only when
+     *     the service is set up, which runs after this - the nameservers that
+     *     every active server of the product's group (or, without a group, of
+     *     its server type) has in common;
+     *  3. the default nameservers of General Settings (DefaultNameserver1-5),
+     *     which until now only the HRD module read;
+     *  4. none: the registrar module uses its own settings, as before.
+     *
+     * @return list<string>
+     */
+    private function registrationNameservers(?Order $order, Domain $domain): array
+    {
+        $list = fn (iterable $names) => array_values(array_unique(array_filter(array_map(
+            fn ($n) => strtolower(trim((string) $n)), is_array($names) ? $names : iterator_to_array($names)
+        ))));
+
+        $own = $list($domain->nameserverList());
+        if (count($own) >= 2) {
+            return $own;
+        }
+
+        $ofServer = fn ($server) => $server ? $list([$server->nameserver1, $server->nameserver2, $server->nameserver3, $server->nameserver4, $server->nameserver5]) : [];
+
+        $service = $order
+            ? Service::with('product.serverGroup.servers', 'server')
+                ->where('order_id', $order->id)
+                ->whereRaw('LOWER(domain) = ?', [strtolower((string) $domain->domain)])
+                ->get()
+                ->first(fn ($s) => trim((string) $s->product?->server_type) !== '')
+            : null;
+
+        if ($service) {
+            $fromServer = $ofServer($service->server);
+            if (count($fromServer) >= 2) {
+                return $fromServer;
+            }
+
+            $candidates = $service->product->serverGroup
+                ? $service->product->serverGroup->servers->where('active', true)
+                : Server::where('active', true)->whereRaw('LOWER(type) = ?', [strtolower((string) $service->product->server_type)])->get();
+            // Only when they all agree: which of them will be picked is not known yet.
+            $sets = $candidates->map($ofServer)->values();
+            if ($sets->isNotEmpty() && $sets->every(fn ($s) => count($s) >= 2) && $sets->map(fn ($s) => implode(' ', $s))->unique()->count() === 1) {
+                return $sets->first();
+            }
+        }
+
+        $defaults = $list(array_map(fn ($i) => Setting::get('DefaultNameserver'.$i, ''), range(1, 5)));
+
+        return count($defaults) >= 2 ? $defaults : [];
+    }
+
     private function registerOrderedDomain(?Order $order, Domain $domain): ?string
     {
         $registrar = app(ModuleRegistry::class)
@@ -949,6 +1012,22 @@ class OrderService
             'privacy' => (bool) $domain->id_protection,
         ]);
 
+        // The nameservers the domain should point at. Nothing was passed
+        // before, so every module fell back to its own settings - for
+        // DomainNameAPI the registrar's own parking servers - and a domain
+        // bought with hosting did not reach the hosting server.
+        $nameservers = $this->registrationNameservers($order, $domain);
+        if ($nameservers !== []) {
+            foreach ($nameservers as $i => $ns) {
+                $params['ns'.($i + 1)] = $ns;
+            }
+            $params['nameservers'] = $nameservers;
+            // Recorded on the domain, so its page shows what it was registered with.
+            if ($domain->nameserverList() === []) {
+                $domain->forceFill(['nameservers' => json_encode($nameservers)])->save();
+            }
+        }
+
         try {
             $result = $registrar->register($domain, max(1, (int) $domain->registration_period), $params);
         } catch (\Throwable $e) {
@@ -962,7 +1041,7 @@ class OrderService
             if (strtolower((string) $domain->status) !== DomainStatus::Active->value) {
                 $domain->update(['status' => DomainStatus::Active->value]);
             }
-            event(new \App\Events\DomainRegistered($domain));
+            event(new DomainRegistered($domain));
 
             return null;
         }
@@ -1055,7 +1134,7 @@ class OrderService
             ]);
             // Started, not finished: the losing registrar still has days to
             // release it.
-            event(new \App\Events\DomainTransferStarted($domain));
+            event(new DomainTransferStarted($domain));
 
             return;
         }
@@ -1101,7 +1180,7 @@ class OrderService
 
         // A TLD added without a registrar would otherwise fall through to the
         // Manual module, which marks the domain active without registering it.
-        $default = (string) \App\Models\Setting::get('default_registrar', '');
+        $default = (string) Setting::get('default_registrar', '');
 
         return $default !== '' && strtolower($default) !== 'manual' ? $default : null;
     }
