@@ -567,7 +567,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.settings.invoice_template_file') }}</label>
-                        <input type="file" name="template" accept=".blade.php,.php" class="form-control" form="invoice-template-upload">
+                        <input type="file" name="template" accept=".html,.htm,.txt" class="form-control" form="invoice-template-upload">
                         <button type="submit" form="invoice-template-upload" class="btn btn-default btn-sm" style="margin-top:8px;">{{ __('admin.settings.invoice_template_upload') }}</button>
                     </div>
                     <div class="form-group">
@@ -578,6 +578,7 @@
                     </div>
                 </div>
                 <div style="font-size:12px;color:#777;margin-top:6px;">{{ __('admin.settings.invoice_template_hint') }}</div>
+                <div style="font-size:12px;color:#777;font-family:monospace;margin-top:4px;line-height:1.8;">{{ collect($invoiceTemplateVocabulary)->map(fn ($p) => '{'.$p.'}')->join(' ') }}</div>
             </div>
         </div>
     </div>

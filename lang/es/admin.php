@@ -3320,7 +3320,7 @@ return [
     'settings.invoice_template_remove_confirm' => '¿Quitar la plantilla de factura subida y volver a la integrada?',
     'settings.invoice_template_uploaded' => 'Plantilla de factura subida.',
     'settings.invoice_template_removed' => 'Plantilla de factura quitada.',
-    'settings.invoice_template_hint' => 'La plantilla personalizada es un documento Blade (.blade.php) renderizado con $invoice, $company y $ksef. Subirla cambia a ella; guarde el formulario para conservar la selección.',
+    'settings.invoice_template_hint' => 'La plantilla personalizada es un documento HTML plano. Al renderizarse, los siguientes marcadores se sustituyen por los datos de la factura; no se procesa nada más. Subirla cambia a ella; guarde el formulario para conservar la selección.',
 	'settings.sms_verification' => 'Verificación por SMS',
 	'settings.social_login' => 'Inicio de sesión social',
 	'settings.google_login_enabled' => 'Permitir que los clientes inicien sesión con Google',

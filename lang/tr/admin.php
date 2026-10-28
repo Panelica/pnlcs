@@ -3294,7 +3294,7 @@ return [
     'settings.invoice_template_remove_confirm' => 'Yüklenen fatura şablonu kaldırılıp yerleşik olana mı dönülsün?',
     'settings.invoice_template_uploaded' => 'Fatura şablonu yüklendi.',
     'settings.invoice_template_removed' => 'Fatura şablonu kaldırıldı.',
-    'settings.invoice_template_hint' => 'Özel şablon, $invoice, $company ve $ksef ile işlenen bir Blade belgesidir (.blade.php). Yükleme ona geçirir; seçimi korumak için formu kaydedin.',
+    'settings.invoice_template_hint' => 'Özel şablon düz bir HTML belgesidir. Aşağıdaki yer tutucular, işleme sırasında fatura verileriyle değiştirilir; başka hiçbir şey işlenmez. Yükleme ona geçirir; seçimi korumak için formu kaydedin.',
     'settings.sms_verification' => 'SMS Doğrulama',
     'settings.social_login' => 'Sosyal Giriş',
     'settings.google_login_enabled' => 'Müşteriler Google ile giriş yapabilsin',

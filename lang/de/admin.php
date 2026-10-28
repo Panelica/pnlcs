@@ -3319,7 +3319,7 @@ return [
     'settings.invoice_template_remove_confirm' => 'Hochgeladene Rechnungsvorlage entfernen und zur eingebauten zurückkehren?',
     'settings.invoice_template_uploaded' => 'Rechnungsvorlage hochgeladen.',
     'settings.invoice_template_removed' => 'Rechnungsvorlage entfernt.',
-    'settings.invoice_template_hint' => 'Die eigene Vorlage ist ein Blade-Dokument (.blade.php), das mit $invoice, $company und $ksef gerendert wird. Das Hochladen stellt darauf um; speichern Sie das Formular, um die Auswahl zu behalten.',
+    'settings.invoice_template_hint' => 'Die eigene Vorlage ist ein einfaches HTML-Dokument. Die Platzhalter unten werden beim Rendern durch die Rechnungsdaten ersetzt; nichts anderes wird verarbeitet. Das Hochladen stellt darauf um; speichern Sie das Formular, um die Auswahl zu behalten.',
     'settings.sms_verification' => 'SMS-Verifizierung',
     'settings.social_login' => 'Soziales Login',
     'settings.google_login_enabled' => 'Erlauben Sie Kunden, sich mit Google anzumelden',

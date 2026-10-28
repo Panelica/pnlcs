@@ -46,6 +46,7 @@ class SettingController extends Controller
             'proformaLast' => $proformaLast,
             'invoiceTemplateCustom' => is_file(\App\Services\InvoicePdfService::customTemplatePath()),
             'invoiceTemplateName' => (string) Setting::get('InvoiceTemplateName', ''),
+            'invoiceTemplateVocabulary' => \App\Services\InvoicePdfService::customTemplateVocabulary(),
         ]);
     }
 
@@ -594,13 +595,14 @@ class SettingController extends Controller
     // ═══════════════════════════════════════════════════════
 
     /**
-     * Store an uploaded invoice template (a Blade .blade.php document) on the
-     * private disk and switch the invoice renderer to it.
+     * Store an uploaded invoice template (a plain HTML document with
+     * {placeholders}) on the private disk and switch the invoice renderer to
+     * it. Only HTML/text is accepted: the template is data, never code.
      */
     public function uploadInvoiceTemplate(Request $request)
     {
         $request->validate([
-            'template' => 'required|file|max:2048',
+            'template' => 'required|file|max:2048|mimes:html,htm,txt',
         ]);
 
         $file = $request->file('template');

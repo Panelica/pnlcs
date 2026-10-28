@@ -6,7 +6,6 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Services\AddonManager;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Blade;
 use Symfony\Component\HttpFoundation\Response;
 
 class InvoicePdfService
@@ -94,22 +93,25 @@ class InvoicePdfService
         $invoice->load('client', 'items', 'ksefInvoice');
 
         $company = $this->companyDetails();
-        $data = [
-            'invoice' => $invoice,
-            'company' => $company,
-            'ksef' => $this->ksefInfo($invoice),
-        ];
+        $ksef = $this->ksefInfo($invoice);
 
         $template = $this->customTemplate();
         if ($template !== null) {
-            // The uploaded template is a full HTML document; Blade renders it
-            // with the same data the built-in view gets.
-            $html = Blade::render((string) file_get_contents($template), $data);
+            // The uploaded template is a plain HTML document whose {placeholders}
+            // are replaced here. It is data, never code: nothing in it runs.
+            $html = $this->merge(
+                (string) file_get_contents($template),
+                $this->placeholderVars($invoice, $company, $ksef)
+            );
 
             return Pdf::loadHTML($html)->setPaper('a4');
         }
 
-        return Pdf::loadView('pdf.invoice', $data)->setPaper('a4');
+        return Pdf::loadView('pdf.invoice', [
+            'invoice' => $invoice,
+            'company' => $company,
+            'ksef' => $ksef,
+        ])->setPaper('a4');
     }
 
     /**
@@ -129,7 +131,127 @@ class InvoicePdfService
     /** Where an uploaded custom invoice template lives. */
     public static function customTemplatePath(): string
     {
-        return storage_path('app/invoice-templates/custom.blade.php');
+        return storage_path('app/invoice-templates/custom.html');
+    }
+
+    /**
+     * Replace the template's {placeholders} with their values. Anything left
+     * over is not a known placeholder and is left untouched, so a stray brace
+     * cannot break the document.
+     *
+     * @param  array<string, string>  $vars
+     */
+    public function merge(string $template, array $vars): string
+    {
+        foreach ($vars as $key => $value) {
+            $template = str_replace('{'.$key.'}', (string) $value, $template);
+        }
+
+        return $template;
+    }
+
+    /**
+     * The values the custom template can refer to. The keys are the vocabulary
+     * listed on the settings screen (see customTemplateVocabulary).
+     *
+     * @return array<string, string>
+     */
+    public function placeholderVars(Invoice $invoice, ?array $company = null, ?array $ksef = null): array
+    {
+        $company ??= $this->companyDetails();
+        $buyer = fn (string $field) => (string) $invoice->buyer($field);
+
+        $logo = $company['logo'] ?? '';
+
+        $vars = [
+            'company_name' => $company['name'],
+            'company_legal_name' => $company['legal_name'],
+            'company_domain' => $company['domain'],
+            'company_address' => $company['address'],
+            'company_city' => $company['city'],
+            'company_postcode' => $company['postcode'],
+            'company_country' => $company['country'],
+            'company_phone' => $company['phone'],
+            'company_email' => $company['email'],
+            'company_tax_office' => $company['tax_office'],
+            'company_tax_id' => $company['tax_id'],
+            'company_mersis' => $company['mersis'],
+            'company_logo' => $logo !== '' ? '<img src="'.e($logo).'" alt="">' : '',
+
+            'client_name' => trim($buyer('first_name').' '.$buyer('last_name')),
+            'client_company' => $buyer('company_name'),
+            'client_address' => $buyer('address1'),
+            'client_address2' => $buyer('address2'),
+            'client_city' => $buyer('city'),
+            'client_state' => $buyer('state'),
+            'client_postcode' => $buyer('postcode'),
+            'client_country' => $buyer('country'),
+            'client_tax_id' => $buyer('tax_id'),
+            'client_email' => $buyer('email'),
+
+            'invoice_number' => (string) ($invoice->invoice_num ?? $invoice->id),
+            'invoice_date' => $invoice->date?->format(date_fmt()) ?? '',
+            'due_date' => $invoice->due_date?->format(date_fmt()) ?? '',
+            'date_paid' => $invoice->date_paid?->format(date_fmt()) ?? '',
+            'status' => invoice_status_label($invoice->status),
+            'payment_method' => $invoice->payment_method ? payment_method_label((string) $invoice->payment_method) : '',
+            'subtotal' => invoice_money_fmt((float) $invoice->subtotal, $invoice),
+            'tax' => invoice_money_fmt((float) $invoice->tax, $invoice),
+            'tax2' => invoice_money_fmt((float) $invoice->tax2, $invoice),
+            'credit' => invoice_money_fmt((float) $invoice->credit, $invoice),
+            'total' => invoice_money_fmt((float) $invoice->total, $invoice),
+            'notes' => $invoice->notes ? nl2br(e($invoice->notes)) : '',
+            'items' => $this->itemsHtml($invoice),
+        ];
+
+        $ksef ??= $this->ksefInfo($invoice);
+        $vars['ksef_number'] = $ksef['number'] ?? '';
+        $vars['ksef_qr'] = ! empty($ksef['qr']) ? '<img src="'.$ksef['qr'].'" alt="">' : '';
+
+        return $vars;
+    }
+
+    /** The invoice line items as a table, styled by the template's own CSS. */
+    protected function itemsHtml(Invoice $invoice): string
+    {
+        $rows = '';
+        foreach ($invoice->items as $item) {
+            $rows .= '<tr>'
+                .'<td>'.e($item->description).'</td>'
+                .'<td class="num">'.(int) $item->qty.'</td>'
+                .'<td class="num">'.e(invoice_money_fmt((float) $item->amount, $invoice)).'</td>'
+                .'<td class="num">'.e(invoice_money_fmt((float) $item->amount * (int) $item->qty, $invoice)).'</td>'
+                .'</tr>';
+        }
+
+        return '<table class="invoice-items"><thead><tr>'
+            .'<th>'.e(__('common.table.description')).'</th>'
+            .'<th class="num">'.e(__('common.table.qty')).'</th>'
+            .'<th class="num">'.e(__('common.table.price')).'</th>'
+            .'<th class="num">'.e(__('common.table.total')).'</th>'
+            .'</tr></thead><tbody>'.$rows.'</tbody></table>';
+    }
+
+    /**
+     * The placeholder vocabulary an uploaded template can use, for the
+     * settings screen to list.
+     *
+     * @return list<string>
+     */
+    public static function customTemplateVocabulary(): array
+    {
+        return [
+            'company_name', 'company_legal_name', 'company_domain', 'company_address',
+            'company_city', 'company_postcode', 'company_country', 'company_phone',
+            'company_email', 'company_tax_office', 'company_tax_id', 'company_mersis',
+            'company_logo',
+            'client_name', 'client_company', 'client_address', 'client_address2',
+            'client_city', 'client_state', 'client_postcode', 'client_country',
+            'client_tax_id', 'client_email',
+            'invoice_number', 'invoice_date', 'due_date', 'date_paid', 'status',
+            'payment_method', 'subtotal', 'tax', 'tax2', 'credit', 'total', 'notes',
+            'items', 'ksef_number', 'ksef_qr',
+        ];
     }
 
     /**

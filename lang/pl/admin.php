@@ -3320,7 +3320,7 @@ return [
     'settings.invoice_template_remove_confirm' => 'Usunąć wgrany szablon faktury i wrócić do wbudowanego?',
     'settings.invoice_template_uploaded' => 'Szablon faktury wgrany.',
     'settings.invoice_template_removed' => 'Szablon faktury usunięty.',
-    'settings.invoice_template_hint' => 'Własny szablon to dokument Blade (.blade.php) renderowany ze zmiennymi $invoice, $company i $ksef. Wgranie przełącza na niego; zapisz formularz, aby zachować wybór.',
+    'settings.invoice_template_hint' => 'Własny szablon to zwykły dokument HTML. Placeholdery poniżej są przy renderowaniu zamieniane na dane faktury; nic innego nie jest przetwarzane. Wgranie przełącza na niego; zapisz formularz, aby zachować wybór.',
     'settings.sms_verification' => 'Weryfikacja SMS',
     'settings.social_login' => 'Logowanie społecznościowe',
     'settings.google_login_enabled' => 'Pozwól klientom logować się przez Google',

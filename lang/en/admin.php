@@ -3320,7 +3320,7 @@ return [
     'settings.invoice_template_remove_confirm' => 'Remove the uploaded invoice template and go back to the built-in one?',
     'settings.invoice_template_uploaded' => 'Invoice template uploaded.',
     'settings.invoice_template_removed' => 'Invoice template removed.',
-    'settings.invoice_template_hint' => 'The custom template is a Blade document (.blade.php) rendered with $invoice, $company and $ksef. Upload switches to it; save the form to keep the selection.',
+    'settings.invoice_template_hint' => 'The custom template is a plain HTML document. The placeholders below are replaced with the invoice data when it is rendered; nothing else is processed. Upload switches to it; save the form to keep the selection.',
     'settings.sms_verification' => 'SMS Verification',
     'settings.social_login' => 'Social Login',
     'settings.google_login_enabled' => 'Allow customers to sign in with Google',
