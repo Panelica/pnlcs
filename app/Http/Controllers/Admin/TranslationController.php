@@ -16,6 +16,9 @@ use Illuminate\Validation\Rule;
 
 class TranslationController extends Controller
 {
+    /** Where an exported file lists the texts kept the same as English on purpose (#324). */
+    public const SAME_AS_ENGLISH = '_same_as_english';
+
     public function index(TranslationCoverage $coverage)
     {
         $languages = Language::orderBy('sort_order')->get();
@@ -111,12 +114,16 @@ class TranslationController extends Controller
         // Database values are optional site-specific overrides.
         $overrides = DynamicTranslation::where('language', $locale)
             ->whereNotNull('value')->where('value', '!=', '')
-            ->get(['group', 'key', 'value', 'is_auto_translated']);
+            ->get(['group', 'key', 'value', 'is_auto_translated', 'same_as_english']);
         $autoTranslated = [];
+        $sameAsEnglish = [];
         foreach ($overrides as $row) {
             $targetTranslations[$row->group.'.'.$row->key] = $row->value;
             if ($row->is_auto_translated) {
                 $autoTranslated[$row->group.'.'.$row->key] = true;
+            }
+            if ($row->same_as_english) {
+                $sameAsEnglish[$row->group.'.'.$row->key] = true;
             }
         }
 
@@ -135,7 +142,7 @@ class TranslationController extends Controller
 
         return view('admin.config.languages.translations', compact(
             'language', 'englishKeys', 'targetTranslations', 'groups', 'locale', 'filter',
-            'autoTranslated', 'aiCounts', 'aiConfigured', 'aiModel'
+            'autoTranslated', 'sameAsEnglish', 'aiCounts', 'aiConfigured', 'aiModel'
         ));
     }
 
@@ -145,9 +152,11 @@ class TranslationController extends Controller
             'group' => 'required|string',
             'key' => 'required|string',
             'value' => 'nullable|string',
+            'same' => 'nullable|boolean',
         ]);
 
-        $this->storeOverride($locale, $request->group, $request->key, (string) $request->value, $officialTranslations->forLocale($locale));
+        $this->storeOverride($locale, $request->group, $request->key, (string) $request->value, $officialTranslations->forLocale($locale),
+            $request->boolean('same') ? $this->englishText($officialTranslations, $request->group, $request->key) : null);
 
         TranslationCacheManager::flushKey($locale, $request->group);
 
@@ -168,7 +177,8 @@ class TranslationController extends Controller
             if (empty($item['group']) || empty($item['key'])) {
                 continue;
             }
-            if ($this->storeOverride($locale, $item['group'], $item['key'], (string) ($item['value'] ?? ''), $official)) {
+            $same = ! empty($item['same']) ? $this->englishText($officialTranslations, $item['group'], $item['key']) : null;
+            if ($this->storeOverride($locale, $item['group'], $item['key'], (string) ($item['value'] ?? ''), $official, $same)) {
                 $count++;
             }
         }
@@ -193,11 +203,25 @@ class TranslationController extends Controller
      * So a value equal to the shipped text, or empty, removes the override
      * and lets the file speak; only a real difference is stored.
      *
+     * A text kept the same as English on purpose ($sameAsEnglish, the English
+     * text) is stored as English and marked, so it counts as translated
+     * (TranslationCoverage), even where the file says the same.
+     *
      * @param  array<string, array<string, string>>  $official
      * @return bool whether an override was stored
      */
-    private function storeOverride(string $locale, string $group, string $key, string $value, array $official): bool
+    private function storeOverride(string $locale, string $group, string $key, string $value, array $official, ?string $sameAsEnglish = null): bool
     {
+        if ($sameAsEnglish !== null) {
+            $row = DynamicTranslation::firstOrNew(['language' => $locale, 'group' => $group, 'key' => $key]);
+            if ($row->exists && $row->same_as_english && $row->value === $sameAsEnglish) {
+                return false;
+            }
+            $row->fill(['value' => $sameAsEnglish, 'is_auto_translated' => false, 'is_reviewed' => true, 'same_as_english' => true])->save();
+
+            return true;
+        }
+
         $shipped = $official[$group][$key] ?? null;
 
         if (trim($value) === '' || ($shipped !== null && $value === $shipped)) {
@@ -207,13 +231,21 @@ class TranslationController extends Controller
         }
 
         $row = DynamicTranslation::firstOrNew(['language' => $locale, 'group' => $group, 'key' => $key]);
-        if ($row->exists && $row->value === $value) {
+        if ($row->exists && $row->value === $value && ! $row->same_as_english) {
             return false;
         }
 
-        $row->fill(['value' => $value, 'is_auto_translated' => false, 'is_reviewed' => true])->save();
+        $row->fill(['value' => $value, 'is_auto_translated' => false, 'is_reviewed' => true, 'same_as_english' => false])->save();
 
         return true;
+    }
+
+    /** The English text of a key, or null when English has none (a key unknown to PNLCS). */
+    private function englishText(OfficialTranslationRepository $officialTranslations, string $group, string $key): ?string
+    {
+        $english = $officialTranslations->forLocale('en')[$group][$key] ?? null;
+
+        return is_string($english) && trim($english) !== '' ? $english : null;
     }
 
     /**
@@ -246,21 +278,64 @@ class TranslationController extends Controller
         }
     }
 
-    public function export(string $locale, OfficialTranslationRepository $officialTranslations)
+    /**
+     * Every text English has, with what the language says for each: its
+     * database override, else its file, else empty for the translator to
+     * fill (#324). The file used to be built from the language's own files,
+     * so a key they did not have yet was not in it, and a language could not
+     * be completed through Export and Import. Texts that live only in the
+     * database (an addon's own, seeded by its migration) follow, as before.
+     *
+     * "?missing=1" gives only the texts not yet in the language's own words
+     * (TranslationCoverage). Texts kept the same as English on purpose are
+     * listed under "_same_as_english", which Import reads back.
+     */
+    public function export(string $locale, OfficialTranslationRepository $officialTranslations, ?TranslationCoverage $coverage = null)
     {
-        $translations = $officialTranslations->forLocale($locale);
+        $own = $officialTranslations->forLocale($locale);
+        $same = [];
+        $databaseOnly = [];
         DynamicTranslation::where('language', $locale)
-            ->orderBy('group')
-            ->orderBy('key')
-            ->get(['group', 'key', 'value'])
-            ->each(function ($row) use (&$translations) {
-                if ($row->value !== null && $row->value !== '') {
-                    $translations[$row->group][$row->key] = $row->value;
+            ->whereNotNull('value')->where('value', '!=', '')
+            ->orderBy('group')->orderBy('key')
+            ->get(['group', 'key', 'value', 'same_as_english'])
+            ->each(function ($row) use (&$own, &$same, &$databaseOnly) {
+                $own[$row->group][$row->key] = $row->value;
+                $databaseOnly[$row->group][$row->key] = $row->value;
+                if ($row->same_as_english) {
+                    $same[] = $row->group.'.'.$row->key;
                 }
             });
 
+        $missingOnly = request()->boolean('missing');
+        $translated = $missingOnly ? ($coverage ?? app(TranslationCoverage::class))->translated($locale) : [];
+
+        $translations = [];
+        foreach ($officialTranslations->forLocale('en') as $group => $keys) {
+            foreach ($keys as $key => $english) {
+                if ($missingOnly && isset($translated[$group.'.'.$key])) {
+                    continue;
+                }
+                $value = $own[$group][$key] ?? '';
+                $translations[$group][$key] = is_string($value) ? $value : '';
+            }
+        }
+        if (! $missingOnly) {
+            foreach ($databaseOnly as $group => $keys) {
+                foreach ($keys as $key => $value) {
+                    $translations[$group][$key] ??= $value;
+                }
+            }
+        }
+        if ($same !== [] && ! $missingOnly) {
+            sort($same);
+            $translations[self::SAME_AS_ENGLISH] = $same;
+        }
+
+        $name = $missingOnly ? "{$locale}-missing.json" : "{$locale}.json";
+
         return response()->json($translations, 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-            ->header('Content-Disposition', "attachment; filename=\"{$locale}.json\"");
+            ->header('Content-Disposition', "attachment; filename=\"{$name}\"");
     }
 
     public function import(Request $request, string $locale, OfficialTranslationRepository $officialTranslations)
@@ -279,7 +354,18 @@ class TranslationController extends Controller
         // storeOverride), so a round trip through Export and Import no longer
         // pins the whole language to the day it was exported.
         $official = $officialTranslations->forLocale($locale);
+        $english = $officialTranslations->forLocale('en');
+        // Known: what English ships, and what lives only in the database (an
+        // addon's texts, in any language).
+        $databaseKeys = DynamicTranslation::query()->select(['group', 'key'])->distinct()->get()
+            ->mapWithKeys(fn ($row) => [$row->group."\0".$row->key => true])->all();
+        $same = array_flip(array_filter((array) ($data[self::SAME_AS_ENGLISH] ?? []), 'is_string'));
+        unset($data[self::SAME_AS_ENGLISH]);
+
         $count = 0;
+        // A key nobody has would be stored and never shown: a typo, or a text
+        // PNLCS has since removed. It is left out and named (#324).
+        $unknown = [];
         foreach ($data as $group => $keys) {
             if (! is_array($keys)) {
                 continue;
@@ -288,7 +374,14 @@ class TranslationController extends Controller
                 if (! is_string($value)) {
                     continue;
                 }
-                if ($this->storeOverride($locale, (string) $group, (string) $key, $value, $official)) {
+                $source = $english[$group][$key] ?? null;
+                if (! is_string($source) && ! isset($databaseKeys[$group."\0".$key])) {
+                    $unknown[] = $group.'.'.$key;
+
+                    continue;
+                }
+                $sameAs = is_string($source) && trim($source) !== '' && isset($same[$group.'.'.$key]) ? $source : null;
+                if ($this->storeOverride($locale, (string) $group, (string) $key, $value, $official, $sameAs)) {
                     $count++;
                 }
             }
@@ -296,7 +389,15 @@ class TranslationController extends Controller
 
         TranslationCacheManager::flushLocale($locale);
 
-        return back()->with('success', __('admin.messages.imported_translations', ['count' => $count]));
+        $message = __('admin.messages.imported_translations', ['count' => $count]);
+        if ($unknown !== []) {
+            $message .= ' '.__('admin.messages.imported_translations_unknown', [
+                'count' => count($unknown),
+                'keys' => implode(', ', array_slice($unknown, 0, 5)).(count($unknown) > 5 ? ', …' : ''),
+            ]);
+        }
+
+        return back()->with('success', $message);
     }
 
     public function clearCache()

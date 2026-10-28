@@ -21,7 +21,9 @@ use App\Models\DynamicTranslation;
  *  - machine translation gave the English text back (is_auto_translated),
  *    so it is not asked about again and again;
  *  - the shipped translation writes it that way on purpose
- *    (database/data/same_as_english.php: Stripe, Status, Logo).
+ *    (database/data/same_as_english.php: Stripe, Status, Logo);
+ *  - the operator marked it "same as English" in the editor or in an
+ *    imported file (same_as_english, #324).
  * A database text the operator imported or saved that is the English text
  * does not: that is how an English export ends up looking translated.
  */
@@ -62,11 +64,11 @@ class TranslationCoverage
         $confirmed = [];
         DynamicTranslation::where('language', $locale)
             ->whereNotNull('value')->where('value', '!=', '')
-            ->get(['group', 'key', 'value', 'is_auto_translated'])
+            ->get(['group', 'key', 'value', 'is_auto_translated', 'same_as_english'])
             ->each(function ($row) use (&$text, &$confirmed) {
                 $fullKey = $row->group.'.'.$row->key;
                 $text[$fullKey] = (string) $row->value;
-                if ($row->is_auto_translated) {
+                if ($row->is_auto_translated || $row->same_as_english) {
                     $confirmed[$fullKey] = true;
                 }
             });
