@@ -8,7 +8,7 @@ class DynamicTranslation extends Model
 {
     protected $fillable = [
         'language', 'group', 'key', 'value',
-        'is_auto_translated', 'is_reviewed',
+        'is_auto_translated', 'is_reviewed', 'same_as_english',
     ];
 
     protected function casts(): array
@@ -16,6 +16,7 @@ class DynamicTranslation extends Model
         return [
             'is_auto_translated' => 'boolean',
             'is_reviewed' => 'boolean',
+            'same_as_english' => 'boolean',
         ];
     }
 

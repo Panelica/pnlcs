@@ -9,6 +9,9 @@
     </div>
     <div style="display:flex;gap:8px;">
         <a href="{{ route('admin.config.languages.export', $locale) }}" class="btn btn-default btn-sm"><i class="fas fa-download"></i> {{ __('admin.config.translations.export_json') }}</a>
+        @if($locale !== 'en')
+        <a href="{{ route('admin.config.languages.export', [$locale, 'missing' => 1]) }}" class="btn btn-default btn-sm"><i class="fas fa-download"></i> {{ __('admin.config.translations.export_missing') }}</a>
+        @endif
         <form method="POST" action="{{ route('admin.config.languages.import', $locale) }}" enctype="multipart/form-data" style="display:inline-flex;gap:4px;align-items:center;">
             @csrf
             <input type="file" name="file" accept=".json" style="font-size:12px;max-width:160px;">
@@ -134,9 +137,17 @@
                             class="form-control" style="font-size:13px;padding:5px 8px;"
                             placeholder="{{ $locale === 'en' ? '' : __('admin.config.translations.enter_translation') }}"
                             {{ $locale === 'en' ? 'readonly' : '' }}>
+                        @if($locale !== 'en')
+                        <label style="font-size:11.5px;color:#666;font-weight:400;margin:3px 0 0;display:inline-flex;gap:4px;align-items:center;">
+                            <input type="checkbox" name="translations[{{ $i }}][same]" value="1" @checked(isset($sameAsEnglish[$fullKey]))>
+                            {{ __('admin.config.translations.same_as_english') }}
+                        </label>
+                        @endif
                     </td>
                     <td style="text-align:center;">
-                        @if($targetValue && $isAutoTranslated)
+                        @if(isset($sameAsEnglish[$fullKey]))
+                        <i class="fas fa-equals" style="color:#10b981;" title="{{ __('admin.config.translations.same_as_english_marker') }}"></i>
+                        @elseif($targetValue && $isAutoTranslated)
                         <i class="fas fa-robot" style="color:#f59e0b;" title="{{ __('admin.config.translations.ai_marker') }}"></i>
                         @elseif($targetValue)
                         <i class="fas fa-check" style="color:#10b981;" title="{{ __('admin.config.translations.manual_marker') }}"></i>
