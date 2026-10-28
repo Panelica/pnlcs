@@ -19,7 +19,7 @@ return [
     ],
     'Email Verification' => [
         'subject' => 'E-Mail-Adresse bestätigen – {CompanyName}',
-        'message' => "Guten Tag {client_name},\n\nBitte bestätigen Sie Ihre E-Mail-Adresse, damit wir Ihnen Rechnungen und wichtige Mitteilungen zu Ihrem Kundenkonto senden können.\n\nE-Mail-Adresse bestätigen: {verify_url}\n\nDieser Link ist 24 Stunden gültig.\n\nMit freundlichen Grüßen\nIhr {CompanyName}-Team",
+        'message' => "Guten Tag {client_name},\n\nBitte bestätigen Sie Ihre E-Mail-Adresse, damit wir Ihnen Rechnungen und wichtige Mitteilungen zu Ihrem Kundenkonto senden können.\n\nIhr Bestätigungscode: {verification_code}\nGeben Sie ihn auf der Seite ein, die danach gefragt hat. Er ist {code_minutes} Minuten gültig.\n\nOder hier bestätigen: {verify_url}\nDieser Link ist 24 Stunden gültig und bestätigt nur die Adresse.\n\nGeben Sie diesen Code und Link an niemanden weiter.\n\nMit freundlichen Grüßen\nIhr {CompanyName}-Team",
     ],
     'Password Reset Confirmation' => [
         'subject' => 'Passwort zurücksetzen – {CompanyName}',

@@ -249,6 +249,7 @@ class EmailTemplateService
         foreach ([
             'resetUrl' => 'reset_url',
             'verifyUrl' => 'verify_url',
+            'verificationCode' => 'verification_code',
             'replyMessage' => 'ticket_reply',
             'reason' => 'suspend_reason',
             // The address change warning is about two addresses and carries

@@ -133,6 +133,10 @@ Route::prefix('client')->name('client.')->middleware(['banned.ip', 'client.permi
         Route::get('email/verify', [\App\Http\Controllers\Client\EmailVerificationController::class, 'notice'])->name('verification.notice');
         Route::post('email/verification-notification', [\App\Http\Controllers\Client\EmailVerificationController::class, 'resend'])
             ->middleware('throttle:3,1')->name('verification.send');
+        // The code from the same mail. Each code also dies after five wrong
+        // tries; this keeps the guessing slow across resends.
+        Route::post('email/verify-code', [\App\Http\Controllers\Client\EmailVerificationController::class, 'verifyCode'])
+            ->middleware('throttle:10,1')->name('verification.code');
         // Signing out must stay reachable while the code is outstanding.
         Route::post('logout', [AuthController::class, 'logout'])
             ->withoutMiddleware([TwoFactorVerify::class])->name('logout');

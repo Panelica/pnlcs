@@ -7,11 +7,21 @@
 
 <p>{{ __('client.email_verify.mail_intro', ['email' => $email]) }}</p>
 
+@if ($verificationCode !== '')
+<p>{{ __('client.email_verify.mail_code_intro') }}</p>
+<p style="font-size:28px;font-weight:bold;letter-spacing:6px;margin:16px 0;">{{ $verificationCode }}</p>
+<p style="font-size:12px;color:#666;">{{ __('client.email_verify.mail_code_hint', ['minutes' => $minutes]) }}</p>
+
+<p>{{ __('client.email_verify.mail_link_intro') }}</p>
+@endif
+
 <p style="margin:24px 0;">
   <a href="{{ $verifyUrl }}" style="background:#405189;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;display:inline-block;">{{ __('client.email_verify.mail_button') }}</a>
 </p>
 
 <p style="font-size:12px;color:#666;">{{ __('client.email_verify.mail_fallback') }}<br>{{ $verifyUrl }}</p>
+
+<p style="font-size:12px;color:#666;">{{ __('client.email_verify.mail_private') }}</p>
 
 <p style="font-size:12px;color:#666;">{{ __('client.email_verify.mail_ignore') }}</p>
 

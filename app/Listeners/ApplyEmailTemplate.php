@@ -22,7 +22,7 @@ class ApplyEmailTemplate
     /** Mailables that must never be copied to a second address. */
     private const NEVER_COPIED = [
         'PasswordResetMail',
-        // Its link both verifies an address and signs the holder in.
+        // Its link and code verify an address.
         'EmailVerificationMail',
         // Carries an app's generated passwords in the clear, on the account
         // owner's own request - for their eyes only.

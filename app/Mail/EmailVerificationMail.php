@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Http\Controllers\Client\EmailVerificationController;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -15,9 +16,9 @@ use Illuminate\Queue\SerializesModels;
  * leave the sign-up form; making that depend on a queue worker being alive
  * turns a working panel into a broken one the first time the worker stops.
  *
- * Like the password reset, the link opens an account, so it is kept out of the
- * mail history: a stored copy would let anyone who can read that screen
- * verify - and sign in as - somebody else's account.
+ * Like the password reset, the link and the code are kept out of the mail
+ * history: a stored copy would let anyone who can read that screen verify
+ * somebody else's address.
  */
 class EmailVerificationMail extends Mailable
 {
@@ -30,6 +31,7 @@ class EmailVerificationMail extends Mailable
         public string $verifyUrl,
         public string $email,
         public string $firstName = '',
+        public string $verificationCode = '',
     ) {}
 
     public function headers(): Headers
@@ -52,6 +54,8 @@ class EmailVerificationMail extends Mailable
                 'verifyUrl' => $this->verifyUrl,
                 'email' => $this->email,
                 'firstName' => $this->firstName,
+                'verificationCode' => $this->verificationCode,
+                'minutes' => EmailVerificationController::CODE_MINUTES,
                 'companyName' => company_name(),
             ],
         );

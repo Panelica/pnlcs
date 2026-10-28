@@ -4,6 +4,7 @@ use App\Http\Controllers\Client\EmailVerificationController;
 use App\Mail\EmailVerificationMail;
 use App\Models\Client;
 use App\Models\Currency;
+use App\Models\EmailTemplate;
 use App\Models\Pricing;
 use App\Models\Product;
 use App\Models\ProductGroup;
@@ -118,14 +119,141 @@ test('a verified customer checks out as before', function () {
         ->assertSessionHasNoErrors();
 });
 
-test('the link verifies the address and lets the customer in', function () {
+test('the link verifies the address and sends the customer to sign in', function () {
     [$user] = signedUpCustomer(verified: false);
 
     $this->get(EmailVerificationController::verificationUrl($user))
+        ->assertRedirect(route('client.login'))
+        ->assertSessionHas('success', __('client.email_verify.verified_sign_in'));
+
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+    $this->assertGuest();
+});
+
+test('a forwarded link signs nobody in, before or after the address is verified', function () {
+    [$user] = signedUpCustomer(verified: false);
+    $url = EmailVerificationController::verificationUrl($user);
+
+    $this->get($url);
+    $this->get($url)->assertRedirect(route('client.login'));
+
+    $this->assertGuest();
+});
+
+test('the link opened where the customer is signed in goes back to the panel', function () {
+    [$user] = signedUpCustomer(verified: false);
+
+    $this->actingAs($user)->get(EmailVerificationController::verificationUrl($user))
         ->assertRedirect(route('client.home'));
 
-    expect($user->fresh()->email_verified_at)->not->toBeNull()
-        ->and(auth()->id())->toBe($user->id);
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+});
+
+/** Send the mail and return the code in it. */
+function sentVerificationCode(User $user): string
+{
+    Mail::fake();
+    EmailVerificationController::send($user);
+
+    $code = null;
+    Mail::assertSent(EmailVerificationMail::class, function ($mail) use (&$code) {
+        $code = $mail->verificationCode;
+
+        return true;
+    });
+
+    return $code;
+}
+
+test('the mail carries a six-digit code that verifies the signed-in customer', function () {
+    [$user] = signedUpCustomer(verified: false);
+    $code = sentVerificationCode($user);
+
+    expect($code)->toMatch('/^\d{6}$/');
+
+    $this->actingAs($user)->post(route('client.verification.code'), ['code' => substr($code, 0, 3).' '.substr($code, 3)])
+        ->assertRedirect(route('client.home'));
+
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+});
+
+test('the code returns a stopped order to the checkout', function () {
+    [$user] = signedUpCustomer(verified: false);
+
+    $this->actingAs($user);
+    $this->post(route('client.cart.add'), ['product_id' => verifyProduct()->id, 'billing_cycle' => 'monthly']);
+    $this->post(route('client.cart.process'), ['payment_method' => 'banktransfer', 'terms' => '1']);
+
+    $this->post(route('client.verification.code'), ['code' => sentVerificationCode($user)])
+        ->assertRedirect(route('client.cart.checkout'));
+});
+
+test('a wrong code verifies nothing, and five of them use the code up', function () {
+    [$user] = signedUpCustomer(verified: false);
+    $code = sentVerificationCode($user);
+    $wrong = $code === '111111' ? '222222' : '111111';
+
+    $this->actingAs($user);
+    foreach (range(1, EmailVerificationController::CODE_ATTEMPTS) as $try) {
+        $this->post(route('client.verification.code'), ['code' => $wrong])->assertSessionHasErrors('code');
+    }
+
+    $this->post(route('client.verification.code'), ['code' => $code])->assertSessionHasErrors('code');
+
+    expect($user->fresh()->email_verified_at)->toBeNull();
+});
+
+test('an expired code is refused', function () {
+    [$user] = signedUpCustomer(verified: false);
+    $code = sentVerificationCode($user);
+
+    $this->travel(EmailVerificationController::CODE_MINUTES + 1)->minutes();
+
+    $this->actingAs($user)->post(route('client.verification.code'), ['code' => $code])->assertSessionHasErrors('code');
+
+    expect($user->fresh()->email_verified_at)->toBeNull();
+});
+
+test('sending again replaces the code', function () {
+    [$user] = signedUpCustomer(verified: false);
+    $first = sentVerificationCode($user);
+    do {
+        $second = sentVerificationCode($user);
+    } while ($second === $first);
+
+    $this->actingAs($user)->post(route('client.verification.code'), ['code' => $first])->assertSessionHasErrors('code');
+    $this->post(route('client.verification.code'), ['code' => $second])->assertSessionHasNoErrors();
+
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+});
+
+test('a code sent to the old address does not verify the new one', function () {
+    [$user] = signedUpCustomer(verified: false);
+    $code = sentVerificationCode($user);
+    $user->update(['email' => 'moved@example.test']);
+
+    $this->actingAs($user)->post(route('client.verification.code'), ['code' => $code])->assertSessionHasErrors('code');
+
+    expect($user->fresh()->email_verified_at)->toBeNull();
+});
+
+test('a code is only good for the account it was sent to', function () {
+    [$owner] = signedUpCustomer(verified: false);
+    [$other] = signedUpCustomer(verified: false);
+    $code = sentVerificationCode($owner);
+
+    $this->actingAs($other)->post(route('client.verification.code'), ['code' => $code])->assertSessionHasErrors('code');
+
+    expect($other->fresh()->email_verified_at)->toBeNull();
+});
+
+test('the waiting page asks for the code', function () {
+    [$user] = signedUpCustomer(verified: false);
+
+    $this->actingAs($user)->get(route('client.verification.notice'))
+        ->assertOk()
+        ->assertSee(route('client.verification.code'), false)
+        ->assertSee(__('client.email_verify.code_label'));
 });
 
 test('a link with a broken signature verifies nothing', function () {
@@ -222,4 +350,33 @@ test('the mail carries a link the framework accepts', function () {
     );
 
     expect($mail->render())->toContain('/client/email/verify/');
+});
+
+test('the mail shows the code above the link', function () {
+    [$user] = signedUpCustomer(verified: false);
+
+    $html = (new EmailVerificationMail(EmailVerificationController::verificationUrl($user), $user->email, 'Ada', '482913'))->render();
+
+    expect($html)->toContain('482913')
+        ->and(strpos($html, '482913'))->toBeLessThan(strpos($html, '/client/email/verify/'));
+});
+
+test('the template text an install already has mentions the code, unless the operator wrote their own', function () {
+    $migration = require database_path('migrations/2026_10_29_000001_email_verification_template_code.php');
+    $old = "Dear {client_name},\n\nPlease confirm this email address so we can send you invoices and account notices.\n\nConfirm here: {verify_url}\n\nThe link is valid for 24 hours.\n\n{CompanyName}";
+
+    EmailTemplate::where('name', 'Email Verification')->delete();
+    $shipped = EmailTemplate::create(['type' => 'general', 'name' => 'Email Verification', 'language' => 'en', 'subject' => 'Confirm', 'message' => $old]);
+    $copy = EmailTemplate::create(['type' => 'general', 'name' => 'Email Verification', 'language' => 'fr', 'subject' => 'Confirm', 'message' => $old]);
+    $own = EmailTemplate::create(['type' => 'general', 'name' => 'Email Verification', 'language' => 'tr', 'subject' => 'Onay', 'message' => 'Onaylayın: {verify_url}', 'custom' => true]);
+
+    $migration->up();
+    $migration->up();
+
+    expect($shipped->fresh()->message)->toContain('{verification_code}')
+        ->and($copy->fresh()->message)->toBe($shipped->fresh()->message)
+        ->and($own->fresh()->message)->toBe('Onaylayın: {verify_url}');
+
+    $migration->down();
+    expect($shipped->fresh()->message)->toBe($old);
 });
