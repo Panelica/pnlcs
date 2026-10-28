@@ -567,19 +567,13 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.settings.invoice_template_file') }}</label>
-                        <form method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data" style="margin:0;">
-                            @csrf
-                            <input type="file" name="template" accept=".blade.php,.php" class="form-control">
-                            <button type="submit" class="btn btn-default btn-sm" style="margin-top:8px;">{{ __('admin.settings.invoice_template_upload') }}</button>
-                        </form>
+                        <input type="file" name="template" accept=".blade.php,.php" class="form-control" form="invoice-template-upload">
+                        <button type="submit" form="invoice-template-upload" class="btn btn-default btn-sm" style="margin-top:8px;">{{ __('admin.settings.invoice_template_upload') }}</button>
                     </div>
                     <div class="form-group">
                         <label class="form-label">&nbsp;</label>
                         @if($invoiceTemplateCustom)
-                        <form method="POST" action="{{ route('admin.settings.invoice-template.remove') }}" style="margin:0;">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
-                        </form>
+                        <button type="submit" form="invoice-template-remove" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
                         @endif
                     </div>
                 </div>
@@ -707,6 +701,12 @@
         <button type="submit" class="btn btn-primary">{{ __('admin.settings.save_settings') }}</button>
     </div>
 </form>
+
+{{-- The invoice-template upload/remove run as their own requests, but their
+     controls sit inside the settings form above, which must not be nested.
+     These empty forms are targeted through the controls' `form` attribute. --}}
+<form id="invoice-template-upload" method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data">@csrf</form>
+<form id="invoice-template-remove" method="POST" action="{{ route('admin.settings.invoice-template.remove') }}">@csrf @method('DELETE')</form>
 
 <script>
 document.getElementById('invoice-number-format').addEventListener('input', renderInvoicePreview);
