@@ -32,8 +32,6 @@ return [
     'field_mapping' => 'Зіставлення полів',
     'source_column' => 'Поле WHMCS',
     'target_field' => 'Поле PNLCS',
-    'preview_source' => 'WHMCS',
-    'preview_target' => 'PNLCS',
     'custom_field' => 'власне поле',
     'skip' => 'Пропустити',
     'constant_value' => 'Стале значення',
@@ -73,7 +71,7 @@ return [
         'skipped_details' => 'Пропущені записи',
         'record' => 'Запис',
         'whmcs_id' => 'ID у WHMCS',
-        'email' => 'E-mail',
+        'email' => 'Електронна пошта',
         'error' => 'Помилка',
         'no_errors' => 'Помилок немає.',
         'no_skipped' => 'Пропущених записів немає.',
@@ -106,7 +104,6 @@ return [
         'product_id_not_found' => 'Зіставлений id продукту ":id" не існує в PNLCS.',
         'server_not_found' => 'Сервер «:name» не знайдено в PNLCS.',
     ],
-
     'steps' => [
         'connect' => 'Підключення',
         'map' => 'Зіставлення полів',
