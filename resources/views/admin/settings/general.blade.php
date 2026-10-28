@@ -11,7 +11,25 @@
         <div class="alert alert-danger"><ul style="margin:0;padding-left:18px;">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
     @endif
 
-    <div class="card" id="settings-company_information" style="margin-bottom:15px;">
+    <style>
+        .settings-tabs { display:flex; flex-wrap:wrap; gap:2px; border-bottom:2px solid #e5e7eb; margin-bottom:18px; }
+        .settings-tab { padding:9px 16px; font-size:13px; background:none; border:none; border-bottom:3px solid transparent; color:#555; cursor:pointer; margin-bottom:-2px; }
+        .settings-tab:hover { color:#333; }
+        .settings-tab.is-active { border-bottom-color:#337ab7; color:#337ab7; font-weight:600; }
+        .card[data-tab][hidden] { display:none !important; }
+    </style>
+    <div class="settings-tabs" role="tablist">
+        <button type="button" class="settings-tab is-active" data-tab="firma">{{ __('admin.settings.tab_firma') }}</button>
+        <button type="button" class="settings-tab" data-tab="fakturowanie">{{ __('admin.settings.tab_invoicing') }}</button>
+        <button type="button" class="settings-tab" data-tab="domeny">{{ __('admin.settings.tab_domains') }}</button>
+        <button type="button" class="settings-tab" data-tab="powiadomienia">{{ __('admin.settings.tab_notifications') }}</button>
+        <button type="button" class="settings-tab" data-tab="bezpieczenstwo">{{ __('admin.settings.tab_security') }}</button>
+        <button type="button" class="settings-tab" data-tab="automatyzacja">{{ __('admin.settings.tab_automation') }}</button>
+        <button type="button" class="settings-tab" data-tab="seo">{{ __('admin.settings.tab_seo') }}</button>
+        <button type="button" class="settings-tab" data-tab="inne">{{ __('admin.settings.tab_other') }}</button>
+    </div>
+
+    <div class="card" data-tab="firma" id="settings-company_information" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.company_information') }}</strong></div>
         <div class="card-body">
             <div class="form-group"><label class="form-label">{{ __('common.form.company_name') }}</label><input type="text" name="CompanyName" value="{{ $settings['CompanyName'] ?? '' }}" class="form-control"></div>
@@ -26,7 +44,7 @@
         </div>
     </div>
 
-    <div class="card" id="settings-localization" style="margin-bottom:15px;">
+    <div class="card" data-tab="firma" id="settings-localization" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.localization') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
@@ -58,7 +76,7 @@
     {{-- Where the terms are. The registration form asks customers to agree to
          them and links both; with nowhere to enter the addresses the links
          went to "#". --}}
-    <div class="card" id="settings-legal" style="margin-bottom:15px;">
+    <div class="card" data-tab="firma" id="settings-legal" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.legal') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
@@ -79,7 +97,7 @@
          days; termination did not exist at all. Termination deletes data, so
          it ships OFF and only ever touches services suspended over an unpaid
          invoice (see TerminationCommand for the exact rules). --}}
-    <div class="card" id="settings-automation" style="margin-bottom:15px;">
+    <div class="card" data-tab="automatyzacja" id="settings-automation" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.automation') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
@@ -115,7 +133,7 @@
          "absent" cannot be told apart from "cleared" - a form states its own
          switches rather than leaving them to be inferred from what is missing.
          There is deliberately no matching block in the controller. --}}
-    <div class="card" id="auto-charge" style="margin-bottom:15px;">
+    <div class="card" data-tab="fakturowanie" id="auto-charge" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.auto_charge') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -145,7 +163,7 @@
          key or an outage never blocks an order (see FraudDetectionService).
          The secret fields keep their stored value when left blank, the same
          contract as the mail password. --}}
-    <div class="card" id="settings-fraud_screening" style="margin-bottom:15px;">
+    <div class="card" data-tab="bezpieczenstwo" id="settings-fraud_screening" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.fraud_screening') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -176,7 +194,7 @@
 
     {{-- Twilio Verify. State (codes, attempts, expiry) lives at Twilio; the
          panel only records the moment a check comes back approved. --}}
-    <div class="card" id="settings-sms_verification" style="margin-bottom:15px;">
+    <div class="card" data-tab="powiadomienia" id="settings-sms_verification" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.sms_verification') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -204,7 +222,7 @@
     {{-- Proving the address on a new account. On unless an operator turns it
          off: the safer behaviour is the one you get without reading a
          settings screen. --}}
-    <div class="card" id="settings-email_verification" style="margin-bottom:15px;">
+    <div class="card" data-tab="powiadomienia" id="settings-email_verification" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.email_verification') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -218,7 +236,7 @@
     {{-- Signing in with Google. Off until an operator creates their own
          OAuth client, so nothing is exposed by default and no credential of
          ours is ever shipped in a release. --}}
-    <div class="card" id="settings-social_login" style="margin-bottom:15px;">
+    <div class="card" data-tab="bezpieczenstwo" id="settings-social_login" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.social_login') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -265,7 +283,7 @@
     {{-- A second check before a domain can leave: an emailed code in front of
          its transfer code and its lock. Off by default, so an install that
          updates changes nothing for its customers until the operator says. --}}
-    <div class="card" id="settings-account_protection" style="margin-bottom:15px;">
+    <div class="card" data-tab="bezpieczenstwo" id="settings-account_protection" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.account_protection') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -280,7 +298,7 @@
          contact form, the one door anyone can use, and the signed-in ticket
          form, each with its own switch. Off until an operator registers their
          own site, so no key of ours ships in a release. --}}
-    <div class="card" id="settings-recaptcha" style="margin-bottom:15px;">
+    <div class="card" data-tab="bezpieczenstwo" id="settings-recaptcha" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.recaptcha') }}</strong></div>
         <div class="card-body">
             <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;">
@@ -314,7 +332,7 @@
     {{-- The seller's registered identity. A contract, an official invoice and
          the contact page all name it, and they read these same fields so the
          three can never disagree. --}}
-    <div class="card" id="settings-legal_identity" style="margin-bottom:15px;">
+    <div class="card" data-tab="firma" id="settings-legal_identity" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.legal_identity') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
@@ -336,7 +354,7 @@
     </div>
 
     {{-- Tag Manager, the operator's own code and the cookie consent bar (App\Support\Tracking). --}}
-    <div class="card" id="settings-tracking_section" style="margin-bottom:15px;">
+    <div class="card" data-tab="seo" id="settings-tracking_section" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.tracking_section') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 2fr;gap:15px;">
@@ -354,7 +372,7 @@
     </div>
 
     {{-- What search engines and shared links show (App\Support\Seo). --}}
-    <div class="card" id="settings-seo_section" style="margin-bottom:15px;">
+    <div class="card" data-tab="seo" id="settings-seo_section" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.seo_section') }}</strong></div>
         <div class="card-body">
             <div class="form-group"><label class="form-label">{{ __('admin.settings.seo_description') }}</label><textarea name="SeoDescription" rows="2" maxlength="300" class="form-control">{{ $settings['SeoDescription'] ?? '' }}</textarea><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.seo_description_hint') }}</div></div>
@@ -376,7 +394,7 @@
     {{-- Billing in a second currency. The shop keeps pricing in its own
          currency; each invoice freezes the rate it was struck at, and names
          the source when there is an official one to name. --}}
-    <div class="card" id="settings-billing_currency_section" style="margin-bottom:15px;">
+    <div class="card" data-tab="fakturowanie" id="settings-billing_currency_section" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.billing_currency_section') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
@@ -409,7 +427,7 @@
 
     {{-- What the domain search suggests next to the name searched. Empty
          keeps the built-in list. --}}
-    <div class="card" id="settings-domain_suggestions" style="margin-bottom:15px;">
+    <div class="card" data-tab="domeny" id="settings-domain_suggestions" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.domain_suggestions') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:3fr 1fr;gap:15px;">
@@ -421,7 +439,7 @@
     </div>
 
     {{-- The registrar float. --}}
-    <div class="card" id="settings-registrar_balance" style="margin-bottom:15px;">
+    <div class="card" data-tab="domeny" id="settings-registrar_balance" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.registrar_balance') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:15px;">
@@ -449,7 +467,7 @@
     {{-- Late fees. The command that charges them has always read these three
          settings; there was nowhere to enter them, so it read "none" every
          morning and stopped. --}}
-    <div class="card" id="settings-late_fees" style="margin-bottom:15px;">
+    <div class="card" data-tab="fakturowanie" id="settings-late_fees" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.late_fees') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
@@ -474,7 +492,7 @@
         </div>
     </div>
 
-    <div class="card" id="settings-system_settings" style="margin-bottom:15px;">
+    <div class="card" data-tab="automatyzacja" id="settings-system_settings" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.system_settings') }}</strong></div>
         <div class="card-body">
             <div style="display:flex;flex-direction:column;gap:8px;">
@@ -483,7 +501,7 @@
         </div>
     </div>
 
-    <div class="card" id="settings-invoices_section" style="margin-bottom:15px;">
+    <div class="card" data-tab="fakturowanie" id="settings-invoices_section" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.invoices_section') }}</strong></div>
         <div class="card-body">
             <div class="form-group" style="max-width:50%;">
@@ -556,7 +574,7 @@
         </div>
     </div>
 
-    <div class="card" id="settings-mail_configuration" style="margin-bottom:15px;">
+    <div class="card" data-tab="powiadomienia" id="settings-mail_configuration" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.mail_configuration') }}</strong></div>
         <div class="card-body">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:10px;">
@@ -636,13 +654,13 @@
 
             <hr style="margin:14px 0;">
             <div style="display:flex;gap:10px;align-items:center;">
-                <button type="button" id="test-email-btn" class="btn btn-secondary">{{ __('admin.settings.send_test_email') }}</button>
+                <button type="button" id="test-email-btn" class="btn btn-default">{{ __('admin.settings.send_test_email') }}</button>
                 <span id="test-email-result" style="font-size:13px;"></span>
             </div>
         </div>
     </div>
 
-    <div class="card" id="settings-domains_section" style="margin-bottom:15px;">
+    <div class="card" data-tab="domeny" id="settings-domains_section" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.domains_section') }}</strong></div>
         <div class="card-body">
             <label class="form-label">{{ __('admin.settings.default_nameservers') }}</label>
@@ -677,6 +695,26 @@
 </form>
 
 <script>
+(function () {
+    var tabs = document.querySelectorAll('.settings-tab');
+    var panes = document.querySelectorAll('.card[data-tab]');
+
+    function activate(name) {
+        tabs.forEach(function (t) {
+            t.classList.toggle('is-active', t.getAttribute('data-tab') === name);
+        });
+        panes.forEach(function (p) {
+            p.hidden = p.getAttribute('data-tab') !== name;
+        });
+    }
+
+    tabs.forEach(function (t) {
+        t.addEventListener('click', function () { activate(t.getAttribute('data-tab')); });
+    });
+
+    activate('firma');
+})();
+
 document.getElementById('invoice-number-format').addEventListener('input', renderInvoicePreview);
 document.addEventListener('DOMContentLoaded', renderInvoicePreview);
 
