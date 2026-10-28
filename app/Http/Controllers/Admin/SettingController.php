@@ -45,6 +45,7 @@ class SettingController extends Controller
             'proformaPreview' => $invoiceService->renderInvoiceNumber($proformaFormat, $proformaSeq),
             'proformaLast' => $proformaLast,
             'invoiceTemplateCustom' => is_file(\App\Services\InvoicePdfService::customTemplatePath()),
+            'invoiceTemplateName' => (string) Setting::get('InvoiceTemplateName', ''),
         ]);
     }
 
@@ -602,7 +603,8 @@ class SettingController extends Controller
             'template' => 'required|file|max:2048',
         ]);
 
-        $content = (string) file_get_contents($request->file('template')->getRealPath());
+        $file = $request->file('template');
+        $content = (string) file_get_contents($file->getRealPath());
 
         $dir = dirname(\App\Services\InvoicePdfService::customTemplatePath());
         if (! is_dir($dir)) {
@@ -612,6 +614,8 @@ class SettingController extends Controller
         file_put_contents(\App\Services\InvoicePdfService::customTemplatePath(), $content);
 
         Setting::set('InvoiceTemplate', 'custom', 'general');
+        // The original name is shown in the selector, not the fixed file name.
+        Setting::set('InvoiceTemplateName', basename((string) $file->getClientOriginalName()), 'general');
 
         return back()->with('success', __('admin.settings.invoice_template_uploaded'));
     }
@@ -623,6 +627,7 @@ class SettingController extends Controller
             unlink($path);
         }
         Setting::set('InvoiceTemplate', 'default', 'general');
+        Setting::set('InvoiceTemplateName', '', 'general');
 
         return back()->with('success', __('admin.settings.invoice_template_removed'));
     }
