@@ -553,6 +553,28 @@
                     {{ __('admin.settings.hide_paid_proformas') }}
                 </label>
             </div>
+
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid #eee;">
+                <label style="font-size:13px;font-weight:600;display:block;">{{ __('admin.settings.invoice_template') }}</label>
+                <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+                    <select name="InvoiceTemplate" class="form-control" style="width:auto;">
+                        <option value="default" @selected(($settings['InvoiceTemplate'] ?? 'default') !== 'custom')>{{ __('admin.settings.invoice_template_default') }}</option>
+                        <option value="custom" @selected(($settings['InvoiceTemplate'] ?? 'default') === 'custom')>{{ __('admin.settings.invoice_template_custom') }}</option>
+                    </select>
+                    <form method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data" style="display:inline;margin:0;">
+                        @csrf
+                        <input type="file" name="template" accept=".blade.php,.php" class="form-control" style="display:inline-block;width:auto;">
+                        <button type="submit" class="btn btn-default btn-sm">{{ __('admin.settings.invoice_template_upload') }}</button>
+                    </form>
+                    @if($invoiceTemplateCustom)
+                    <form method="POST" action="{{ route('admin.settings.invoice-template.remove') }}" style="display:inline;margin:0;">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
+                    </form>
+                    @endif
+                </div>
+                <div style="font-size:12px;color:#777;margin-top:6px;">{{ __('admin.settings.invoice_template_hint') }}</div>
+            </div>
         </div>
     </div>
 

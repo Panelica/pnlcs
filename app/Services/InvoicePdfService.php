@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Setting;
 use App\Services\AddonManager;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Blade;
 use Symfony\Component\HttpFoundation\Response;
 
 class InvoicePdfService
@@ -93,12 +94,42 @@ class InvoicePdfService
         $invoice->load('client', 'items', 'ksefInvoice');
 
         $company = $this->companyDetails();
-
-        return Pdf::loadView('pdf.invoice', [
+        $data = [
             'invoice' => $invoice,
             'company' => $company,
             'ksef' => $this->ksefInfo($invoice),
-        ])->setPaper('a4');
+        ];
+
+        $template = $this->customTemplate();
+        if ($template !== null) {
+            // The uploaded template is a full HTML document; Blade renders it
+            // with the same data the built-in view gets.
+            $html = Blade::render((string) file_get_contents($template), $data);
+
+            return Pdf::loadHTML($html)->setPaper('a4');
+        }
+
+        return Pdf::loadView('pdf.invoice', $data)->setPaper('a4');
+    }
+
+    /**
+     * The uploaded custom template's path, or null when none is in use.
+     * Selected through Settings — General (InvoiceTemplate), the file is kept
+     * on the private disk so it is never served by the web server.
+     */
+    public function customTemplate(): ?string
+    {
+        if ((string) Setting::get('InvoiceTemplate', 'default') !== 'custom') {
+            return null;
+        }
+
+        return is_file(self::customTemplatePath()) ? self::customTemplatePath() : null;
+    }
+
+    /** Where an uploaded custom invoice template lives. */
+    public static function customTemplatePath(): string
+    {
+        return storage_path('app/invoice-templates/custom.blade.php');
     }
 
     /**

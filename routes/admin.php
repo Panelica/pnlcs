@@ -296,6 +296,8 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('settings', [SettingController::class, 'general'])->name('settings.general');
         Route::post('settings', [SettingController::class, 'updateGeneral'])->name('settings.general.update');
         Route::post('settings/test-email', [SettingController::class, 'testEmail'])->name('settings.test-email');
+        Route::post('settings/invoice-template', [SettingController::class, 'uploadInvoiceTemplate'])->name('settings.invoice-template.upload');
+        Route::delete('settings/invoice-template', [SettingController::class, 'removeInvoiceTemplate'])->name('settings.invoice-template.remove');
         Route::get('settings/log-retention', [LogRetentionController::class, 'index'])->name('settings.log-retention');
         Route::put('settings/log-retention', [LogRetentionController::class, 'update'])->name('settings.log-retention.update');
         Route::post('settings/log-retention/prune', [LogRetentionController::class, 'prune'])->middleware('throttle:10,1')->name('settings.log-retention.prune');
