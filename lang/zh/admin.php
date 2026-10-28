@@ -3311,7 +3311,7 @@ return [
     'settings.registrar_currency' => '货币',
     'settings.registrar_alert_email' => '提醒邮箱',
     'settings.registrar_balance_hint' => '每天检查两次。',
-    'settings.tab_firma' => '公司',
+    'settings.tab_company' => '公司',
     'settings.tab_invoicing' => '开票',
     'settings.tab_domains' => '域名',
     'settings.tab_notifications' => '通知',

@@ -3310,7 +3310,7 @@ return [
     'settings.registrar_currency' => 'Währung',
     'settings.registrar_alert_email' => 'Benachrichtigungs-E-Mail',
     'settings.registrar_balance_hint' => 'Zweimal täglich überprüft.',
-    'settings.tab_firma' => 'Firma',
+    'settings.tab_company' => 'Firma',
     'settings.tab_invoicing' => 'Abrechnung',
     'settings.tab_domains' => 'Domains',
     'settings.tab_notifications' => 'Benachrichtigungen',

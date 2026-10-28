@@ -3311,7 +3311,7 @@ return [
 	'settings.registrar_currency' => 'Divisa',
 	'settings.registrar_alert_email' => 'Correo electrónico de alerta',
 	'settings.registrar_balance_hint' => 'Revisado dos veces al día.',
-    'settings.tab_firma' => 'Empresa',
+    'settings.tab_company' => 'Empresa',
     'settings.tab_invoicing' => 'Facturación',
     'settings.tab_domains' => 'Dominios',
     'settings.tab_notifications' => 'Notificaciones',

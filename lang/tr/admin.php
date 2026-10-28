@@ -3285,7 +3285,7 @@ return [
     'settings.registrar_currency' => 'Para birimi',
     'settings.registrar_alert_email' => 'Uyarı e-postası',
     'settings.registrar_balance_hint' => 'Günde iki kez kontrol edilir.',
-    'settings.tab_firma' => 'Firma',
+    'settings.tab_company' => 'Firma',
     'settings.tab_invoicing' => 'Faturalandırma',
     'settings.tab_domains' => 'Alan adları',
     'settings.tab_notifications' => 'Bildirimler',
