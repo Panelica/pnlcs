@@ -3286,6 +3286,7 @@ return [
     'settings.registrar_alert_email' => 'Uyarı e-postası',
     'settings.registrar_balance_hint' => 'Günde iki kez kontrol edilir.',
     'settings.invoice_template' => 'Fatura şablonu',
+    'settings.invoice_template_file' => 'Şablon dosyası',
     'settings.invoice_template_default' => 'Yerleşik',
     'settings.invoice_template_custom' => 'Özel (yüklendi)',
     'settings.invoice_template_upload' => 'Şablon yükle',

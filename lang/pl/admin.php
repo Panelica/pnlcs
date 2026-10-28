@@ -3312,6 +3312,7 @@ return [
     'settings.registrar_alert_email' => 'E-mail alertu',
     'settings.registrar_balance_hint' => 'Sprawdzane dwa razy dziennie.',
     'settings.invoice_template' => 'Szablon faktury',
+    'settings.invoice_template_file' => 'Plik szablonu',
     'settings.invoice_template_default' => 'Wbudowany',
     'settings.invoice_template_custom' => 'Własny (wgrany)',
     'settings.invoice_template_upload' => 'Wgraj szablon',

@@ -3312,6 +3312,7 @@ return [
     'settings.registrar_alert_email' => '提醒邮箱',
     'settings.registrar_balance_hint' => '每天检查两次。',
     'settings.invoice_template' => '发票模板',
+    'settings.invoice_template_file' => '模板文件',
     'settings.invoice_template_default' => '内置',
     'settings.invoice_template_custom' => '自定义（已上传）',
     'settings.invoice_template_upload' => '上传模板',

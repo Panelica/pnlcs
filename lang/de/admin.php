@@ -3311,6 +3311,7 @@ return [
     'settings.registrar_alert_email' => 'Benachrichtigungs-E-Mail',
     'settings.registrar_balance_hint' => 'Zweimal täglich überprüft.',
     'settings.invoice_template' => 'Rechnungsvorlage',
+    'settings.invoice_template_file' => 'Vorlagendatei',
     'settings.invoice_template_default' => 'Eingebaut',
     'settings.invoice_template_custom' => 'Eigene (hochgeladen)',
     'settings.invoice_template_upload' => 'Vorlage hochladen',

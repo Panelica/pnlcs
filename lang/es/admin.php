@@ -3312,6 +3312,7 @@ return [
 	'settings.registrar_alert_email' => 'Correo electrónico de alerta',
 	'settings.registrar_balance_hint' => 'Revisado dos veces al día.',
     'settings.invoice_template' => 'Plantilla de factura',
+    'settings.invoice_template_file' => 'Archivo de plantilla',
     'settings.invoice_template_default' => 'Integrada',
     'settings.invoice_template_custom' => 'Personalizada (subida)',
     'settings.invoice_template_upload' => 'Subir plantilla',

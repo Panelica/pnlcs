@@ -3312,6 +3312,7 @@ return [
     'settings.registrar_alert_email' => 'Alert email',
     'settings.registrar_balance_hint' => 'Checked twice a day.',
     'settings.invoice_template' => 'Invoice template',
+    'settings.invoice_template_file' => 'Template file',
     'settings.invoice_template_default' => 'Built-in',
     'settings.invoice_template_custom' => 'Custom (uploaded)',
     'settings.invoice_template_upload' => 'Upload template',

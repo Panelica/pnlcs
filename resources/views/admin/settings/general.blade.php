@@ -566,11 +566,11 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">{{ __('admin.settings.invoice_template_upload') }}</label>
-                        <form method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data" style="display:flex;gap:8px;margin:0;">
+                        <label class="form-label">{{ __('admin.settings.invoice_template_file') }}</label>
+                        <form method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data" style="margin:0;">
                             @csrf
                             <input type="file" name="template" accept=".blade.php,.php" class="form-control">
-                            <button type="submit" class="btn btn-default btn-sm" style="white-space:nowrap;">{{ __('admin.settings.invoice_template_upload') }}</button>
+                            <button type="submit" class="btn btn-default btn-sm" style="margin-top:8px;">{{ __('admin.settings.invoice_template_upload') }}</button>
                         </form>
                     </div>
                     <div class="form-group">
