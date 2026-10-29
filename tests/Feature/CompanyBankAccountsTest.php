@@ -37,7 +37,8 @@ it('renders one bank account', function () {
         ->toContain('Nest Bank')
         ->toContain('PLN')
         ->toContain('PL 63 2530 0008 2096 1022 3191 0001')
-        ->toContain('24BOX Igor Rybicki');
+        ->toContain('24BOX Igor Rybicki')
+        ->not->toContain('<table');
 });
 
 it('renders multiple bank accounts', function () {

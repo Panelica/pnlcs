@@ -347,10 +347,10 @@ class InvoicePdfService
     }
 
     /**
-     * The bank accounts the {company_bank_accounts} placeholder emits: one row
-     * per account from the bank-transfer module, with its bank name, currency
-     * and number. Empty when no accounts are configured, so the conditional
-     * block {?company_bank_accounts}…{/company_bank_accounts} hides it itself.
+     * The bank accounts the {company_bank_accounts} placeholder emits: the
+     * heading and the account holder as two lines, then one line per account
+     * with its bank name, currency and number — plain text, no table. Empty
+     * when no accounts are configured, so the conditional block hides itself.
      */
     protected function bankAccountsHtml(): string
     {
@@ -362,42 +362,26 @@ class InvoicePdfService
 
         $holder = trim((string) ($accounts[0]['holder'] ?? ''));
 
-        $rows = '';
+        $html = '<div style="font-weight:bold;margin-bottom:2pt;">'.e(__('pdf.bank_accounts')).'</div>';
+
+        if ($holder !== '') {
+            $html .= '<div style="margin-bottom:4pt;">'.e($holder).'</div>';
+        }
+
         foreach ($accounts as $account) {
             $name = trim((string) ($account['name'] ?? ''));
             $currency = trim((string) ($account['currency'] ?? ''));
-            $label = implode(' · ', array_filter([$name, $currency]));
-
             $number = trim((string) ($account['iban'] ?? ''));
             if ($number === '') {
                 $number = trim((string) ($account['account_number'] ?? ''));
             }
 
-            $rows .= '<tr>'
-                .'<td>'.e($label).'</td>'
-                .'<td class="num">'.e($number).'</td>'
-                .'</tr>';
+            $label = implode(' · ', array_filter([$name, $currency]));
+
+            $html .= '<div>'.e($label !== '' ? $label.' — '.$number : $number).'</div>';
         }
 
-        $title = e(__('pdf.bank_accounts'));
-        if ($holder !== '') {
-            $title .= '<br><span style="font-weight:normal;">'.e($holder).'</span>';
-        }
-
-        return $this->bankAccountsStyle()
-            .'<table class="bank-accounts"><thead><tr><th colspan="2">'.$title.'</th></tr></thead>'
-            .'<tbody>'.$rows.'</tbody></table>';
-    }
-
-    /** The self-contained stylesheet for the {company_bank_accounts} table. */
-    protected function bankAccountsStyle(): string
-    {
-        return '<style>'
-            .'table.bank-accounts{width:100%;border-collapse:collapse;font-size:8.5pt;table-layout:fixed;}'
-            .'table.bank-accounts th,table.bank-accounts td{border:0.5pt solid #111;padding:2pt 4pt;vertical-align:top;}'
-            .'table.bank-accounts thead th{background:#eaeaea;text-align:left;font-weight:bold;}'
-            .'table.bank-accounts td.num{text-align:right;font-family:monospace;}'
-            .'</style>';
+        return $html;
     }
 
     /** The unit net price: gross less its tax share when prices include tax. */
