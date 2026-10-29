@@ -226,6 +226,7 @@ class InvoicePdfService
             'notes' => $invoice->notes ? nl2br(e($invoice->notes)) : '',
             'items' => $this->itemsHtml($invoice),
             'vat_summary' => $this->vatSummaryHtml($invoice),
+            'company_bank_accounts' => $this->bankAccountsHtml(),
         ];
 
         // Everything above is text the customer or the operator typed, and it
@@ -233,7 +234,7 @@ class InvoicePdfService
         // that way in the PDF, not break the document around it. The values
         // that ARE markup - the logo, the tables and the notes - are built
         // here and escaped as they are built.
-        $markup = ['company_logo', 'items', 'notes', 'vat_summary'];
+        $markup = ['company_logo', 'items', 'notes', 'vat_summary', 'company_bank_accounts'];
         foreach ($vars as $key => $value) {
             if (! in_array($key, $markup, true)) {
                 $vars[$key] = e((string) $value);
@@ -389,6 +390,41 @@ class InvoicePdfService
             .'</tr></thead><tbody>'.$rows.'</tbody></table>';
     }
 
+    /**
+     * The bank accounts the {company_bank_accounts} placeholder emits: one
+     * line per account with its bank name, currency and number — plain text,
+     * no table. Empty when no accounts are configured, so the conditional
+     * block {?company_bank_accounts}…{/company_bank_accounts} hides it itself.
+     */
+    protected function bankAccountsHtml(): string
+    {
+        $accounts = (new BankTransferModule)->accounts();
+
+        if ($accounts === []) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($accounts as $account) {
+            $name = trim((string) ($account['name'] ?? ''));
+            $currency = trim((string) ($account['currency'] ?? ''));
+            $number = trim((string) ($account['iban'] ?? ''));
+            if ($number === '') {
+                $number = trim((string) ($account['account_number'] ?? ''));
+            }
+
+            $label = implode(' · ', array_filter([$name, $currency]));
+
+            if ($label !== '') {
+                $html .= '<div>'.e($label).'</div>';
+            }
+
+            $html .= '<div>- '.e($number).'</div>';
+        }
+
+        return $html;
+    }
+
     /** The unit net price: gross less its tax share when prices include tax. */
     protected function unitNetPrice(Invoice $invoice, InvoiceItem $item, float $rate): float
     {
@@ -431,7 +467,7 @@ class InvoicePdfService
             'company_name', 'company_legal_name', 'company_domain', 'company_address',
             'company_city', 'company_postcode', 'company_country', 'company_phone',
             'company_email', 'company_tax_office', 'company_tax_id', 'company_mersis',
-            'company_logo',
+            'company_logo', 'company_bank_accounts',
             'client_name', 'client_company', 'client_address', 'client_address2',
             'client_city', 'client_state', 'client_postcode', 'client_country',
             'client_tax_id', 'client_email',
