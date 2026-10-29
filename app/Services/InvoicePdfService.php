@@ -303,11 +303,15 @@ class InvoicePdfService
             : $unit;
     }
 
-    /** The VAT column value: the line's label ("zw."/…), else its rate. */
+    /**
+     * The VAT column value: the line's rate ("23%"), or its label ("zw.",
+     * "np.") when there is no rate. The tax rule's full name ("VAT 23%") is
+     * the VAT-breakdown group, not what the column prints.
+     */
     protected function vatLabel(InvoiceItem $item, float $rate): string
     {
-        if ($item->tax_label) {
-            return (string) $item->tax_label;
+        if ($rate <= 0) {
+            return $item->tax_label ?: '0%';
         }
 
         return rtrim(rtrim(number_format($rate, 2), '0'), '.').'%';
