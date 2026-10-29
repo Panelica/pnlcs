@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Setting;
@@ -366,18 +365,10 @@ class InvoicePdfService
         return rtrim(rtrim(number_format($rate, 2), '0'), '.').'%';
     }
 
-    /** An amount as a bare number in the invoice's currency, no symbol. */
+    /** An amount in the invoice's currency, with its symbol. */
     protected function lineAmount(Invoice $invoice, float|int|string|null $amount): string
     {
-        $code = strtoupper((string) ($invoice->source_currency ?? ''));
-        if ($code !== '') {
-            $currency = Currency::where('code', $code)->first();
-            if ($currency) {
-                return $currency->number($amount);
-            }
-        }
-
-        return number_format((float) $amount, 2, ',', ' ');
+        return invoice_money_fmt($amount, $invoice);
     }
 
     /**
