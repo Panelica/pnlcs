@@ -19,9 +19,11 @@ which anybody can send. Ask for a reset for somebody else's address with a
 forged host and the victim clicks a link in a genuine mail from your shop
 that hands the token to another server. Reset, invitation and verification
 links are now built from **Settings → General → Domain**, then `APP_URL`;
-with neither set the old behaviour remains and a warning naming the route is
-logged, so an installation nobody has configured still sends a working link.
-**Set the Domain setting if you have not.**
+with neither set — or with an `APP_URL` only the server can reach, which is
+what the container image writes when the operator passes none
+(`http://localhost`) — the old behaviour remains and a warning naming the
+route is logged, so an installation nobody has configured still sends a
+working link. **Set the Domain setting if you have not.**
 
 **Two things to know before you upgrade.** The host header is no longer taken
 from `X-Forwarded-Host`: if you front PNLCS with a proxy that replaces the
