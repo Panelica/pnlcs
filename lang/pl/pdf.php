@@ -17,6 +17,7 @@ return [
     'description' => 'Opis',
     'due_date' => 'Termin Płatności',
     'invoice' => 'FAKTURA',
+    'proforma' => 'FAKTURA PROFORMA',
     'invoice_date' => 'Data Wystawienia',
     'invoice_details' => 'Szczegóły Faktury',
     'invoice_number' => 'Numer Faktury',

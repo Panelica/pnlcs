@@ -17,6 +17,7 @@ return [
     'description' => 'Beschreibung',
     'due_date' => 'Fälligkeitsdatum',
     'invoice' => 'RECHNUNG',
+    'proforma' => 'PROFORMARECHNUNG',
     'invoice_date' => 'Rechnungsdatum',
     'invoice_details' => 'Rechnungsdetails',
     'invoice_number' => 'Rechnungsnummer',

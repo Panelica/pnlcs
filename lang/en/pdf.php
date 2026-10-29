@@ -17,6 +17,7 @@ return [
     'description' => 'Description',
     'due_date' => 'Due Date',
     'invoice' => 'INVOICE',
+    'proforma' => 'PROFORMA INVOICE',
     'invoice_date' => 'Invoice Date',
     'invoice_details' => 'Invoice Details',
     'invoice_number' => 'Invoice Number',
