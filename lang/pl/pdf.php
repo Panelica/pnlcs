@@ -41,6 +41,10 @@ return [
     'tax' => 'VAT',
     'tax_id' => 'NIP',
     'taxed' => 'Opodatkowana',
+    'vat_rate' => 'Stawka VAT',
+    'vat_net' => 'Netto',
+    'vat_amount' => 'Kwota VAT',
+    'vat_gross' => 'Brutto',
     'thank_you' => 'Dziękujemy za Twoje zamówienie!',
     'total' => 'Razem',
 ];

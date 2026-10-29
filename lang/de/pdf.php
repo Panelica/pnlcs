@@ -41,6 +41,10 @@ return [
     'tax' => 'Steuer',
     'tax_id' => 'Steuer-ID',
     'taxed' => 'Besteuert',
+    'vat_rate' => 'MwSt.-Satz',
+    'vat_net' => 'Netto',
+    'vat_amount' => 'MwSt.-Betrag',
+    'vat_gross' => 'Brutto',
     'thank_you' => 'Vielen Dank für Ihr Geschäft!',
     'total' => 'Insgesamt',
 ];

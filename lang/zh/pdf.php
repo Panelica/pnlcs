@@ -41,6 +41,10 @@ return [
     'tax' => '税费',
     'tax_id' => '税号',
     'taxed' => '计税',
+    'vat_rate' => '税率',
+    'vat_net' => '净额',
+    'vat_amount' => '税额',
+    'vat_gross' => '总额',
     'thank_you' => '感谢您的惠顾！',
     'total' => '合计',
 ];

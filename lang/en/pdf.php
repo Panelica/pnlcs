@@ -41,6 +41,10 @@ return [
     'tax' => 'Tax',
     'tax_id' => 'Tax ID',
     'taxed' => 'Taxed',
+    'vat_rate' => 'VAT rate',
+    'vat_net' => 'Net',
+    'vat_amount' => 'VAT amount',
+    'vat_gross' => 'Gross',
     'thank_you' => 'Thank you for your business!',
     'total' => 'Total',
 ];

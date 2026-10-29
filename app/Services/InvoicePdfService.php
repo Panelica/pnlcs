@@ -225,14 +225,15 @@ class InvoicePdfService
             'total' => invoice_money_fmt((float) $invoice->total, $invoice),
             'notes' => $invoice->notes ? nl2br(e($invoice->notes)) : '',
             'items' => $this->itemsHtml($invoice),
+            'vat_summary' => $this->vatSummaryHtml($invoice),
         ];
 
         // Everything above is text the customer or the operator typed, and it
         // is about to become HTML: a company called "Müller & Sohn" must read
-        // that way in the PDF, not break the document around it. The two
-        // values that ARE markup - the logo tag and the items table - are
-        // built here and escaped as they are built.
-        $markup = ['company_logo', 'items', 'notes'];
+        // that way in the PDF, not break the document around it. The values
+        // that ARE markup - the logo, the tables and the notes - are built
+        // here and escaped as they are built.
+        $markup = ['company_logo', 'items', 'notes', 'vat_summary'];
         foreach ($vars as $key => $value) {
             if (! in_array($key, $markup, true)) {
                 $vars[$key] = e((string) $value);
@@ -345,6 +346,67 @@ class InvoicePdfService
             .'</style>';
     }
 
+    /**
+     * The VAT summary table the {vat_summary} placeholder emits: one row per
+     * VAT rate — or tax treatment, "zw." / "np." and the like — with net, VAT
+     * and gross summed, then a totals row. Empty when the invoice has no VAT
+     * breakdown, so the {?vat_summary} conditional block hides it by itself.
+     */
+    protected function vatSummaryHtml(Invoice $invoice): string
+    {
+        $groups = $invoice->vatBreakdown();
+
+        if ($groups === []) {
+            return '';
+        }
+
+        $rows = '';
+        $netTotal = 0.0;
+        $vatTotal = 0.0;
+
+        foreach ($groups as $label => $group) {
+            $net = (float) $group['net'];
+            $vat = (float) $group['amount'];
+            $netTotal += $net;
+            $vatTotal += $vat;
+
+            $rows .= '<tr>'
+                .'<td>'.e((string) $label).'</td>'
+                .'<td class="num">'.e(invoice_money_fmt($net, $invoice)).'</td>'
+                .'<td class="num">'.e(invoice_money_fmt($vat, $invoice)).'</td>'
+                .'<td class="num">'.e(invoice_money_fmt($net + $vat, $invoice)).'</td>'
+                .'</tr>';
+        }
+
+        $netTotal = round($netTotal, 2);
+        $vatTotal = round($vatTotal, 2);
+
+        return $this->vatSummaryStyle()
+            .'<table class="vat-summary"><thead><tr>'
+            .'<th>'.e(__('pdf.vat_rate')).'</th>'
+            .'<th class="num">'.e(__('pdf.vat_net')).'</th>'
+            .'<th class="num">'.e(__('pdf.vat_amount')).'</th>'
+            .'<th class="num">'.e(__('pdf.vat_gross')).'</th>'
+            .'</tr></thead><tbody>'.$rows
+            .'<tr class="total"><td>'.e(__('pdf.total')).'</td>'
+            .'<td class="num">'.e(invoice_money_fmt($netTotal, $invoice)).'</td>'
+            .'<td class="num">'.e(invoice_money_fmt($vatTotal, $invoice)).'</td>'
+            .'<td class="num">'.e(invoice_money_fmt($netTotal + $vatTotal, $invoice)).'</td>'
+            .'</tr></tbody></table>';
+    }
+
+    /** The self-contained stylesheet for the {vat_summary} table. */
+    protected function vatSummaryStyle(): string
+    {
+        return '<style>'
+            .'table.vat-summary{width:100%;border-collapse:collapse;font-size:8.5pt;table-layout:fixed;}'
+            .'table.vat-summary th,table.vat-summary td{border:0.5pt solid #111;padding:2pt 4pt;vertical-align:top;}'
+            .'table.vat-summary thead th{background:#eaeaea;text-align:center;font-weight:bold;line-height:1.15;}'
+            .'table.vat-summary td.num,table.vat-summary th.num{text-align:right;}'
+            .'table.vat-summary tr.total td{font-weight:bold;background:#f5f5f5;}'
+            .'</style>';
+    }
+
     /** The unit net price: gross less its tax share when prices include tax. */
     protected function unitNetPrice(Invoice $invoice, InvoiceItem $item, float $rate): float
     {
@@ -393,7 +455,7 @@ class InvoicePdfService
             'client_tax_id', 'client_email',
             'invoice_number', 'invoice_type', 'is_proforma', 'invoice_date', 'due_date', 'date_paid', 'status',
             'payment_method', 'subtotal', 'tax', 'tax2', 'credit', 'total', 'notes',
-            'items', 'ksef_number', 'ksef_qr', 'payment_qr',
+            'items', 'vat_summary', 'ksef_number', 'ksef_qr', 'payment_qr',
         ];
     }
 
