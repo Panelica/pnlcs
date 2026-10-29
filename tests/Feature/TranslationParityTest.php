@@ -169,10 +169,17 @@ function localeValues(string $locale): array
 // by words these languages write the same way: tr +2 (PNLCS, Disk), de +4
 // (PNLCS, CPU, Disk, offline), pl +3 (PNLCS, CPU, offline), zh +2 (PNLCS,
 // CPU). Listed in database/data/same_as_english.php as well.
+// Raised 2026-10-29 for the invoice items table (pdf.items_*, #336), by the
+// two values these languages write the same way: Turkish "No." for the line
+// number, listed in database/data/same_as_english.php, and Polish "VAT" for
+// the tax column - the tax is called VAT in Poland. "VAT" is not on that list
+// because it has no lowercase letter, so the list's own test counts it as
+// carrying no words (TranslationCoverage::hasNoWords); this budget, which
+// looks at the English value instead, still sees it.
 const UNTRANSLATED_VALUE_BUDGET = [
     // +1 each 2026-10-21: the admin menu entry of the Panelica license module
     // is the product name, "Panelica", in every language.
-    'tr' => 57,
+    'tr' => 58,
     // Measured 2026-09-23: words German writes the same way - Name, Status,
     // Server, Support, Tickets, Logo, Favicon, Downloads, PHP.
     // Raised 2026-09-24 by 25, on a native speaker's review (Dirk Mehmke):
@@ -183,7 +190,7 @@ const UNTRANSLATED_VALUE_BUDGET = [
     // +1 2026-10-29 (#332): the settings page's new "Domains" tab is written
     // "Domains" in German too, as the labels above it already are.
     'de' => 191,
-    'pl' => 105,
+    'pl' => 106,
     'zh' => 39,
 ];
 

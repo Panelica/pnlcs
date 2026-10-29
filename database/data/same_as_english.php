@@ -382,6 +382,7 @@ return [
         'panelica_license.page.menu',
         'panelica_license.page.plan',
         'panelica_license.page.product_name',
+        'pdf.items_lp',
         'proxmox.capacity.disk',
         'reports.net',
         'sections.footer.blog',
