@@ -63,7 +63,12 @@ in_ct /usr/local/bin/update.sh --check >"$DIR/check.out" 2>&1; CODE=$?
 [ $CODE -eq 2 ] && ok "update.sh --check refuses on the conflict (exit 2)" || bad "check exit $CODE"
 grep -q "conflict  public/robots.txt" "$DIR/check.out" && ok "the conflict is public/robots.txt" || bad "robots conflict not reported"
 snapshot "$DIR/after-check.json"
-php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-check.json" >>"$LOG" 2>&1 && ok "a check changes nothing" || bad "the check changed something"
+# The image's scheduler runs every minute: its run log and heartbeat move on
+# their own while the container is up, whether or not an update is going on.
+# They are left out here as the legacy and VM scenarios already leave them out
+# - otherwise a minute boundary falling inside the window fails the gate.
+SCHEDULER_MOVES="--ignore-table=activity_logs --ignore-table=scheduled_task_runs --ignore-row=settings.LastCronRun"
+php "$LAB/compare.php" "$DIR/before.json" "$DIR/after-check.json" $SCHEDULER_MOVES >>"$LOG" 2>&1 && ok "a check changes nothing" || bad "the check changed something"
 
 echo "== update with the decision: keep mine"
 EXTRA=(); [ "$VARIANT" = crash ] && EXTRA=(-e PNLCS_UPDATE_LAB_KILL_AT=migrating)
@@ -93,7 +98,7 @@ else
         [ $CODE -eq 1 ] && ok "update fails and says so" || bad "update exit $CODE"
     fi
     snapshot "$DIR/after.json"
-    php "$LAB/compare.php" "$DIR/before.json" "$DIR/after.json" --content-only=storage/ >>"$LOG" 2>&1 && ok "files and database exactly as before" || { bad "something differs"; php "$LAB/compare.php" "$DIR/before.json" "$DIR/after.json" --content-only=storage/ | head -10; }
+    php "$LAB/compare.php" "$DIR/before.json" "$DIR/after.json" --content-only=storage/ $SCHEDULER_MOVES >>"$LOG" 2>&1 && ok "files and database exactly as before" || { bad "something differs"; php "$LAB/compare.php" "$DIR/before.json" "$DIR/after.json" --content-only=storage/ $SCHEDULER_MOVES | head -10; }
     [ "$(in_ct cat $APP/VERSION)" = "${LAB_A}" ] && ok "VERSION is still ${LAB_A}" || bad "VERSION is $(in_ct cat $APP/VERSION)"
     in_ct test ! -f $APP/storage/framework/down && ok "site is up" || bad "site is in maintenance"
     [ "$(docker exec "$CT" curl -s -o /dev/null -w '%{http_code}' -H 'Host: lab.example.test' http://127.0.0.1/admin/login)" = 200 ] && ok "admin login answers 200" || bad "admin login over HTTP"
