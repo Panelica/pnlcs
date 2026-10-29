@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Currency;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Setting;
+use App\Models\TaxRule;
 use App\Services\AddonManager;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Symfony\Component\HttpFoundation\Response;
@@ -135,14 +138,32 @@ class InvoicePdfService
     }
 
     /**
-     * Replace the template's {placeholders} with their values. Anything left
-     * over is not a known placeholder and is left untouched, so a stray brace
-     * cannot break the document.
+     * Replace the template's {placeholders} with their values and resolve its
+     * conditional blocks. Anything left over is not a known placeholder and is
+     * left untouched, so a stray brace cannot break the document.
+     *
+     * A block {?key} … {/key} renders only when {key} has a value;
+     * {!key} … {/key} renders only when it is empty. The test is against the
+     * value, so it stays data, never code — nothing in the template runs.
      *
      * @param  array<string, string>  $vars
      */
     public function merge(string $template, array $vars): string
     {
+        $block = '/\{(?<mark>[?!])(?<key>[a-z0-9_]+)\}(?<body>.*?)\{\/\k<key>\}/s';
+
+        // Resolve blocks innermost-first until none remain, so a block shown
+        // around another block is still processed.
+        $count = 0;
+        do {
+            $template = preg_replace_callback($block, function (array $m) use ($vars): string {
+                $empty = ! filled($vars[$m['key']] ?? null);
+                $show = $m['mark'] === '!' ? $empty : ! $empty;
+
+                return $show ? $m['body'] : '';
+            }, $template, -1, $count);
+        } while ($count > 0);
+
         foreach ($vars as $key => $value) {
             $template = str_replace('{'.$key.'}', (string) $value, $template);
         }
@@ -223,25 +244,109 @@ class InvoicePdfService
         return $vars;
     }
 
-    /** The invoice line items as a table, styled by the template's own CSS. */
+    /**
+     * The invoice line items as the 9-column table the {items} placeholder
+     * emits. The table carries its own style block and classes so a custom
+     * template's CSS cannot flatten it, and every value is escaped.
+     */
     protected function itemsHtml(Invoice $invoice): string
     {
         $rows = '';
+        $index = 0;
         foreach ($invoice->items as $item) {
+            $index++;
+            $line = $invoice->lineTax($item);
+            $rate = (float) $line['rate'];
+            $unitNet = $this->unitNetPrice($invoice, $item, $rate);
+            $net = (float) $line['net'];
+            $vat = (float) $line['vat'];
+
             $rows .= '<tr>'
-                .'<td>'.e($item->description).'</td>'
-                .'<td class="num">'.(int) $item->qty.'</td>'
-                .'<td class="num">'.e(invoice_money_fmt((float) $item->amount, $invoice)).'</td>'
-                .'<td class="num">'.e(invoice_money_fmt((float) $item->amount * (int) $item->qty, $invoice)).'</td>'
+                .'<td class="c">'.$index.'</td>'
+                .'<td>'.e((string) $item->description).'</td>'
+                .'<td class="c">'.max(1, (int) ($item->qty ?? 1)).'</td>'
+                .'<td class="c">'.e((string) ($item->unit ?? '')).'</td>'
+                .'<td class="num">'.e($this->lineAmount($invoice, $unitNet)).'</td>'
+                .'<td class="c">'.e($this->vatLabel($item, $rate)).'</td>'
+                .'<td class="num">'.e($this->lineAmount($invoice, $vat)).'</td>'
+                .'<td class="num">'.e($this->lineAmount($invoice, $net)).'</td>'
+                .'<td class="num">'.e($this->lineAmount($invoice, $net + $vat)).'</td>'
                 .'</tr>';
         }
 
-        return '<table class="invoice-items"><thead><tr>'
-            .'<th>'.e(__('common.table.description')).'</th>'
-            .'<th class="num">'.e(__('common.table.qty')).'</th>'
-            .'<th class="num">'.e(__('common.table.price')).'</th>'
-            .'<th class="num">'.e(__('common.table.total')).'</th>'
+        return $this->itemsTableStyle()
+            .'<table class="invoice-items"><thead><tr>'
+            .'<th class="lp">'.e(__('pdf.items_lp')).'</th>'
+            .'<th class="name">'.e(__('pdf.items_name')).'</th>'
+            .'<th class="qty">'.e(__('pdf.items_qty')).'</th>'
+            .'<th class="unit">'.e(__('pdf.items_unit')).'</th>'
+            .'<th class="net-price">'.e(__('pdf.items_net_price')).'</th>'
+            .'<th class="vat-rate">'.e(__('pdf.items_vat_rate')).'</th>'
+            .'<th class="vat-amount">'.e(__('pdf.items_vat_amount')).'</th>'
+            .'<th class="net-amount">'.e(__('pdf.items_net_amount')).'</th>'
+            .'<th class="gross-amount">'.e(__('pdf.items_gross_amount')).'</th>'
             .'</tr></thead><tbody>'.$rows.'</tbody></table>';
+    }
+
+    /** The self-contained stylesheet for the {items} table. */
+    protected function itemsTableStyle(): string
+    {
+        return '<style>'
+            .'table.invoice-items{width:100%;border-collapse:collapse;font-size:8.5pt;table-layout:fixed;}'
+            .'table.invoice-items th,table.invoice-items td{border:0.5pt solid #111;padding:2pt 4pt;vertical-align:top;}'
+            .'table.invoice-items thead th{background:#eaeaea;text-align:center;font-weight:bold;line-height:1.15;word-wrap:break-word;overflow-wrap:break-word;}'
+            .'table.invoice-items td{word-wrap:break-word;overflow-wrap:break-word;}'
+            .'table.invoice-items tbody tr{page-break-inside:avoid;}'
+            .'table.invoice-items th.lp{width:4%;}'
+            .'table.invoice-items th.name{width:29%;}'
+            .'table.invoice-items th.qty{width:7%;}'
+            .'table.invoice-items th.unit{width:6%;}'
+            .'table.invoice-items th.net-price{width:12%;}'
+            .'table.invoice-items th.vat-rate{width:7%;}'
+            .'table.invoice-items th.vat-amount{width:11%;}'
+            .'table.invoice-items th.net-amount{width:11%;}'
+            .'table.invoice-items th.gross-amount{width:13%;}'
+            .'table.invoice-items td.c{text-align:center;}'
+            .'table.invoice-items td.num{text-align:right;}'
+            .'</style>';
+    }
+
+    /** The unit net price: gross less its tax share when prices include tax. */
+    protected function unitNetPrice(Invoice $invoice, InvoiceItem $item, float $rate): float
+    {
+        $unit = (float) $item->amount;
+
+        return $invoice->tax_mode === Invoice::TAX_INCLUSIVE
+            ? $unit - TaxRule::taxShare($unit, $rate, true)
+            : $unit;
+    }
+
+    /**
+     * The VAT column value: the line's rate ("23%"), or its label ("zw.",
+     * "np.") when there is no rate. The tax rule's full name ("VAT 23%") is
+     * the VAT-breakdown group, not what the column prints.
+     */
+    protected function vatLabel(InvoiceItem $item, float $rate): string
+    {
+        if ($rate <= 0) {
+            return $item->tax_label ?: '0%';
+        }
+
+        return rtrim(rtrim(number_format($rate, 2), '0'), '.').'%';
+    }
+
+    /** An amount as a bare number in the invoice's currency, no symbol. */
+    protected function lineAmount(Invoice $invoice, float|int|string|null $amount): string
+    {
+        $code = strtoupper((string) ($invoice->source_currency ?? ''));
+        if ($code !== '') {
+            $currency = Currency::where('code', $code)->first();
+            if ($currency) {
+                return $currency->number($amount);
+            }
+        }
+
+        return number_format((float) $amount, 2, ',', ' ');
     }
 
     /**
