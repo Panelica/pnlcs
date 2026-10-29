@@ -61,6 +61,25 @@ it('falls back to APP_URL when no Domain is set, and still ignores the request h
         ->not->toContain('attacker');
 });
 
+it('counts an address only the server can reach as no address at all', function () {
+    Setting::where('setting', 'Domain')->delete();
+
+    // What the container image writes into .env when the operator passes no
+    // APP_URL. A customer cannot open a link to it, so it is not used.
+    foreach (['http://localhost', 'http://localhost:8080', 'https://app.localhost', 'http://127.0.0.1', 'http://127.0.0.53:8000', 'http://0.0.0.0'] as $local) {
+        config(['app.url' => $local]);
+        expect(\App\Support\MailLink::root())->toBeNull();
+    }
+
+    config(['app.url' => 'https://billing.example.com']);
+    expect(\App\Support\MailLink::root())->toBe('https://billing.example.com');
+
+    // A Domain the operator set is read the same way.
+    Setting::updateOrCreate(['setting' => 'Domain'], ['value' => 'http://localhost', 'group' => 'general']);
+    config(['app.url' => 'https://billing.example.com']);
+    expect(\App\Support\MailLink::root())->toBe('https://billing.example.com');
+});
+
 it('does not let a forwarded host decide what the application thinks its address is', function () {
     Setting::where('setting', 'Domain')->delete();
     config(['app.url' => 'https://fallback.example.com']);

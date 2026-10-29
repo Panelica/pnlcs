@@ -28,7 +28,10 @@ use Illuminate\Support\Facades\URL;
  *  1. Settings -> General -> Domain, the address the operator entered. (The
  *     same value AppServiceProvider pins every generated URL to, so a
  *     configured installation already agreed with this.)
- *  2. APP_URL, for an installation that has not set the Domain yet.
+ *  2. APP_URL, for an installation that has not set the Domain yet - unless it
+ *     is a local address. The container image writes APP_URL=http://localhost
+ *     when nobody passes one, and a customer cannot reach that; such an
+ *     address counts as no address at all.
  *  3. Neither: the request, as before, with a warning in the log. A brand new
  *     installation can still invite its first login; it is told to set the
  *     address.
@@ -89,12 +92,32 @@ final class MailLink
             if (! preg_match('#^https?://#i', $candidate)) {
                 $candidate = 'https://'.$candidate;
             }
-            if (filter_var($candidate, FILTER_VALIDATE_URL)) {
-                return rtrim($candidate, '/');
+            if (! filter_var($candidate, FILTER_VALIDATE_URL) || self::isLocal($candidate)) {
+                continue;
             }
+
+            return rtrim($candidate, '/');
         }
 
         return null;
+    }
+
+    /**
+     * An address only the server itself can reach. The container image writes
+     * APP_URL=http://localhost when the operator passes none, and a reset link
+     * pointing there is of no use to the customer who receives it - the
+     * request is a better guess than that, so this is treated as unset.
+     */
+    private static function isLocal(string $url): bool
+    {
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+
+        return $host === 'localhost'
+            || str_ends_with($host, '.localhost')
+            || $host === '::1'
+            || $host === '[::1]'
+            || (bool) preg_match('/^127\./', $host)
+            || $host === '0.0.0.0';
     }
 
     private static function domainSetting(): string
