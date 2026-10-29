@@ -124,6 +124,29 @@ it('draws an EPC QR for a non-Polish company with a EUR account', function () {
         ->toStartWith('<img src="data:image/png;base64,');
 });
 
+it('does not put a euro figure into the ZBP code as grosze', function () {
+    Setting::set('Country', 'PL', 'general');
+    seedBankTransfer();
+    $service = app(InvoicePdfService::class);
+
+    // A Polish shop pricing in euro. The only account declared is the złoty
+    // one and the ZBP amount field is in grosze, so that code is not drawn -
+    // and with no euro account there is nothing else to draw.
+    $euro = Invoice::factory()->create(['invoice_num' => 'FV-EUR', 'total' => 100, 'source_currency' => 'EUR']);
+    expect($service->paymentQr($euro))->toBe('');
+
+    // Given a euro account it is the EPC code, which states no amount.
+    seedBankTransfer(['bank2_active' => '1', 'bank2_name' => 'EUR Bank', 'bank2_currency' => 'EUR', 'bank2_iban' => 'DE89370400440532013000']);
+    expect($service->paymentQr($euro))->toStartWith('<img src="data:image/png;base64,');
+
+    // A złoty invoice at the same shop still gets the ZBP code, and so does
+    // one raised before the currency column existed.
+    $zloty = Invoice::factory()->create(['invoice_num' => 'FV-PLN', 'total' => 100, 'source_currency' => 'PLN']);
+    $unstamped = Invoice::factory()->create(['invoice_num' => 'FV-OLD', 'total' => 100, 'source_currency' => null]);
+    expect($service->paymentQr($zloty))->toStartWith('<img src="data:image/png;base64,')
+        ->and($service->paymentQr($unstamped))->toStartWith('<img src="data:image/png;base64,');
+});
+
 it('renders no QR for a settled invoice', function () {
     Setting::set('Country', 'PL', 'general');
     seedBankTransfer();

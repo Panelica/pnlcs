@@ -429,7 +429,16 @@ class InvoicePdfService
         $size = 200;
         $level = null;
 
-        if ($companyCountry === 'PL') {
+        // The ZBP field is an amount in grosze, so it can only carry a złoty
+        // invoice. A Polish shop that prices in euro would otherwise hand the
+        // payer the euro figure as złoty - a quarter of what is owed - so an
+        // invoice in another currency falls through to the EPC code, which
+        // states no amount at all. An invoice with no currency stamped on it
+        // predates the column and is read as the shop's own, the same fallback
+        // invoice_money_fmt() makes.
+        $invoiceCurrency = strtoupper(trim((string) ($invoice->source_currency ?? '')));
+
+        if ($companyCountry === 'PL' && ($invoiceCurrency === '' || $invoiceCurrency === 'PLN')) {
             $bank = $module->bankByCurrency('PLN');
             if ($bank !== null) {
                 $account = trim((string) ($bank['account_number'] ?? ''));
