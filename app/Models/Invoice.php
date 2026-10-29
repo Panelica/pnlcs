@@ -155,16 +155,6 @@ class Invoice extends Model {
         return max(0.0, app(\App\Services\PaymentService::class)->balance($this));
     }
 
-    /**
-     * Whether this is a proforma rather than a VAT invoice. The column defaults
-     * to "vat", and an invoice raised before the proforma scheme existed carries
-     * nothing at all, so an absent value reads as a VAT invoice.
-     */
-    public function isProforma(): bool
-    {
-        return ($this->type ?? 'vat') === 'proforma';
-    }
-
     public function items() { return $this->hasMany(InvoiceItem::class); }
 
     /**

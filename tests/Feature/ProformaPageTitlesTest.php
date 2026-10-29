@@ -11,7 +11,6 @@ use App\Models\User;
  * not call it one. The PDF was fixed to say "Proforma"; the admin and client
  * invoice pages still headed every document "Invoice #X".
  */
-
 function proformaScreenAdmin(): Admin
 {
     return Admin::factory()->create([
