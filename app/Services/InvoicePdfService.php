@@ -347,10 +347,11 @@ class InvoicePdfService
     }
 
     /**
-     * The VAT summary table the {vat_summary} placeholder emits: one row per
-     * VAT rate — or tax treatment, "zw." / "np." and the like — with net, VAT
-     * and gross summed, then a totals row. Empty when the invoice has no VAT
-     * breakdown, so the {?vat_summary} conditional block hides it by itself.
+     * The summary table the {vat_summary} placeholder emits: the net total,
+     * one row per VAT rate (or tax treatment, "zw." / "np." and the like) with
+     * its tax amount only, the VAT total and the gross amount due — a single
+     * two-column table. Empty when the invoice has no VAT breakdown, so the
+     * {?vat_summary} conditional block hides it by itself.
      */
     protected function vatSummaryHtml(Invoice $invoice): string
     {
@@ -360,39 +361,33 @@ class InvoicePdfService
             return '';
         }
 
-        $rows = '';
-        $netTotal = 0.0;
-        $vatTotal = 0.0;
+        $rows = '<tr>'
+            .'<td>'.e(__('pdf.vat_net_total')).'</td>'
+            .'<td class="num">'.e(invoice_money_fmt((float) $invoice->subtotal, $invoice)).'</td>'
+            .'</tr>';
 
         foreach ($groups as $label => $group) {
-            $net = (float) $group['net'];
-            $vat = (float) $group['amount'];
-            $netTotal += $net;
-            $vatTotal += $vat;
-
             $rows .= '<tr>'
                 .'<td>'.e((string) $label).'</td>'
-                .'<td class="num">'.e(invoice_money_fmt($net, $invoice)).'</td>'
-                .'<td class="num">'.e(invoice_money_fmt($vat, $invoice)).'</td>'
-                .'<td class="num">'.e(invoice_money_fmt($net + $vat, $invoice)).'</td>'
+                .'<td class="num">'.e(invoice_money_fmt((float) $group['amount'], $invoice)).'</td>'
                 .'</tr>';
         }
 
-        $netTotal = round($netTotal, 2);
-        $vatTotal = round($vatTotal, 2);
+        $rows .= '<tr>'
+            .'<td>'.e(__('pdf.vat_total')).'</td>'
+            .'<td class="num">'.e(invoice_money_fmt((float) $invoice->tax, $invoice)).'</td>'
+            .'</tr>';
+
+        $rows .= '<tr class="total">'
+            .'<td>'.e(__('pdf.vat_gross_total')).'</td>'
+            .'<td class="num">'.e(invoice_money_fmt((float) $invoice->total, $invoice)).'</td>'
+            .'</tr>';
 
         return $this->vatSummaryStyle()
             .'<table class="vat-summary"><thead><tr>'
-            .'<th>'.e(__('pdf.vat_rate')).'</th>'
-            .'<th class="num">'.e(__('pdf.vat_net')).'</th>'
-            .'<th class="num">'.e(__('pdf.vat_amount')).'</th>'
-            .'<th class="num">'.e(__('pdf.vat_gross')).'</th>'
-            .'</tr></thead><tbody>'.$rows
-            .'<tr class="total"><td>'.e(__('pdf.total')).'</td>'
-            .'<td class="num">'.e(invoice_money_fmt($netTotal, $invoice)).'</td>'
-            .'<td class="num">'.e(invoice_money_fmt($vatTotal, $invoice)).'</td>'
-            .'<td class="num">'.e(invoice_money_fmt($netTotal + $vatTotal, $invoice)).'</td>'
-            .'</tr></tbody></table>';
+            .'<th>'.e(__('pdf.vat_summary_desc')).'</th>'
+            .'<th class="num">'.e(__('pdf.amount')).'</th>'
+            .'</tr></thead><tbody>'.$rows.'</tbody></table>';
     }
 
     /** The self-contained stylesheet for the {vat_summary} table. */
