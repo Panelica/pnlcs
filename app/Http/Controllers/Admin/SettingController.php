@@ -462,8 +462,22 @@ class SettingController extends Controller
         return back()->with('error', __('messages.error.theme_not_found_or_invalid'));
     }
 
+    /**
+     * Install a theme from a zip.
+     *
+     * A theme is Blade: its views are prepended to the view path and compiled,
+     * so whatever is in them runs as the web user. Uploading one is therefore
+     * the same privilege as deploying code - not what "manage settings" reads
+     * like in the permission list, which is how a settings role could reach it
+     * (reported privately in October 2026). Only a full administrator may
+     * bring theme files in; the rest of the appearance screen is unchanged.
+     */
     public function installTheme(Request $request, ThemeManager $themeManager)
     {
+        if (! auth('admin')->user()?->role?->is_full_admin) {
+            abort(403, 'Installing a theme requires a full administrator account.');
+        }
+
         $request->validate([
             'theme_zip' => 'required|file|mimes:zip|max:20480',
         ]);

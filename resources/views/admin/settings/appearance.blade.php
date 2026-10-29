@@ -162,7 +162,10 @@
                 </div>
                 @endforeach
 
-                {{-- Upload new theme card --}}
+                {{-- Upload new theme card. A theme's views are compiled Blade, so
+                     installing one runs code: full administrators only (see
+                     SettingController::installTheme). --}}
+                @if(auth('admin')->user()?->role?->is_full_admin)
                 <div class="theme-card" style="border-style:dashed;">
                     <form action="{{ route('admin.settings.appearance.theme.install') }}" method="POST" enctype="multipart/form-data" id="themeUploadForm">
                         @csrf
@@ -175,6 +178,7 @@
                         </label>
                     </form>
                 </div>
+                @endif
             </div>
 
             @if(!empty($installedThemes))
