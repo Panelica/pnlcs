@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Services\AddonManager;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Modules\Gateways\BankTransfer\BankTransferModule;
 use Symfony\Component\HttpFoundation\Response;
 
 class InvoicePdfService
@@ -241,6 +242,7 @@ class InvoicePdfService
         $ksef ??= $this->ksefInfo($invoice);
         $vars['ksef_number'] = e((string) ($ksef['number'] ?? ''));
         $vars['ksef_qr'] = ! empty($ksef['qr']) ? '<img src="'.e((string) $ksef['qr']).'" alt="">' : '';
+        $vars['payment_qr'] = $this->paymentQr($invoice);
 
         return $vars;
     }
@@ -391,8 +393,125 @@ class InvoicePdfService
             'client_tax_id', 'client_email',
             'invoice_number', 'invoice_type', 'is_proforma', 'invoice_date', 'due_date', 'date_paid', 'status',
             'payment_method', 'subtotal', 'tax', 'tax2', 'credit', 'total', 'notes',
-            'items', 'ksef_number', 'ksef_qr',
+            'items', 'ksef_number', 'ksef_qr', 'payment_qr',
         ];
+    }
+
+    /**
+     * A payment QR code as an inline <img>, from the bank-transfer module. The
+     * creditor's own account decides the payload, not the customer's country:
+     *
+     * - a Polish company gets the Polish ZBP "Przyjazny Przelew" (an NRB)
+     *   against its PLN account;
+     * - any other company gets the EPC SEPA payload (an IBAN) against its EUR
+     *   account, with the amount left out so the payer types it;
+     * - with no matching account, no QR.
+     */
+    public function paymentQr(Invoice $invoice): string
+    {
+        // A settled invoice owes nothing: a zero amount is "type it yourself"
+        // in ZBP and below the minimum in EPC.
+        if ((float) $invoice->amountDue() <= 0) {
+            return '';
+        }
+
+        $module = new BankTransferModule;
+
+        // The gateway's own switch, the one checkout reads.
+        if (! $module->isActive()) {
+            return '';
+        }
+
+        $companyCountry = strtoupper(trim($this->firstFilled(['Country', 'CompanyCountry'])));
+        $nip = (string) Setting::get('TaxID', '');
+
+        $payload = '';
+        $size = 200;
+        $level = null;
+
+        if ($companyCountry === 'PL') {
+            $bank = $module->bankByCurrency('PLN');
+            if ($bank !== null) {
+                $account = trim((string) ($bank['account_number'] ?? ''));
+                $nrb = $this->nrb($account !== '' ? $account : (string) ($bank['iban'] ?? ''));
+
+                if ($nrb !== '') {
+                    $holder = trim((string) ($bank['holder'] ?? ''));
+                    if ($holder === '') {
+                        $holder = company_name();
+                    }
+                    $payload = $this->zbpPayload($holder, $nrb, $nip, 'PL', $invoice);
+                    $size = 250;
+                }
+            }
+        }
+
+        if ($payload === '') {
+            $bank = $module->bankByCurrency('EUR');
+            if ($bank !== null && trim((string) ($bank['iban'] ?? '')) !== '') {
+                $holder = trim((string) ($bank['holder'] ?? ''));
+                if ($holder === '') {
+                    $holder = company_name();
+                }
+                $payload = $this->epcPayload($holder, (string) $bank['iban'], (string) ($bank['swift'] ?? ''), $invoice);
+                $level = \BaconQrCode\Common\ErrorCorrectionLevel::M();
+            }
+        }
+
+        if ($payload === '') {
+            return '';
+        }
+
+        $uri = $this->qrDataUri($payload, $size, $level);
+
+        return $uri !== '' ? '<img src="'.$uri.'" alt="">' : '';
+    }
+
+    /** The 26-digit NRB from an NRB or a PL-prefixed IBAN; '' when foreign. */
+    protected function nrb(string $ibanOrAccount): string
+    {
+        $digits = preg_replace('/\D/', '', $ibanOrAccount) ?? '';
+        $digits = strlen($digits) === 28 ? substr($digits, 2) : $digits;
+
+        return preg_match('/^\d{26}$/', $digits) === 1 ? $digits : '';
+    }
+
+    /** The Polish ZBP ("Przyjazny Przelew") payload: nine pipe-delimited fields. */
+    protected function zbpPayload(string $holder, string $account, string $nip, string $country, Invoice $invoice): string
+    {
+        $name = $this->zbpChars(mb_substr($holder, 0, 20));
+        $amount = sprintf('%06d', (int) round((float) $invoice->amountDue() * 100));
+        $title = $this->zbpChars(mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 32));
+        $nip = preg_replace('/\D/', '', $nip) ?? '';
+
+        return implode('|', [$nip, $country, $account, $amount, $name, $title, '', '', '']);
+    }
+
+    /** The EPC SEPA payload (BCD tag), one field per line, amount left out. */
+    protected function epcPayload(string $holder, string $iban, string $swift, Invoice $invoice): string
+    {
+        if ($iban === '') {
+            return '';
+        }
+
+        $iban = strtoupper((string) preg_replace('/\s+/', '', $iban));
+        $name = mb_substr($holder, 0, 70);
+        $title = mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 35);
+
+        // The amount is optional in EPC and declared per currency there; the
+        // invoice is in the shop currency, so a number here would claim a
+        // currency it isn't in. Leave it out and let the payer type it.
+        return implode("\n", ['BCD', '002', '1', 'SCT', $swift, $name, $iban, '', '', '', $title]);
+    }
+
+    /**
+     * Characters the ZBP "Przyjazny Przelew" recommendation allows: letters
+     * (with the Polish diacritics), digits, space and ,./\-@#&*_. Anything
+     * else is dropped so a "Müller & Söhne (Pl)" does not go in verbatim.
+     */
+    protected function zbpChars(string $value): string
+    {
+        return preg_replace('~[^A-Za-z0-9 ,./\\\\\-@#&*_ĄĆĘŁŃÓŚŹŻąćęłńóśźż]~u', '', $value) ?? '';
     }
 
     /**
@@ -452,11 +571,12 @@ class InvoicePdfService
      * does not fetch remote URLs). Empty string when generation fails, so an
      * invoice never breaks on a missing image extension.
      */
-    private function qrDataUri(string $content): string
+    private function qrDataUri(string $content, int $size = 200, ?\BaconQrCode\Common\ErrorCorrectionLevel $level = null): string
     {
         try {
-            $renderer = new \BaconQrCode\Renderer\GDLibRenderer(200, 2);
-            $png = (new \BaconQrCode\Writer($renderer))->writeString($content);
+            $renderer = new \BaconQrCode\Renderer\GDLibRenderer($size, 2);
+            $writer = new \BaconQrCode\Writer($renderer);
+            $png = $writer->writeString($content, ecLevel: $level);
 
             return 'data:image/png;base64,'.base64_encode($png);
         } catch (\Throwable) {
