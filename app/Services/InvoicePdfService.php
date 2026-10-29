@@ -211,6 +211,8 @@ class InvoicePdfService
             'client_email' => $buyer('email'),
 
             'invoice_number' => (string) ($invoice->invoice_num ?? $invoice->id),
+            'invoice_type' => (($invoice->type ?? 'vat') === 'proforma') ? __('pdf.proforma') : __('pdf.invoice'),
+            'is_proforma' => (($invoice->type ?? 'vat') === 'proforma') ? '1' : '',
             'invoice_date' => $invoice->date?->format(date_fmt()) ?? '',
             'due_date' => $invoice->due_date?->format(date_fmt()) ?? '',
             'date_paid' => $invoice->date_paid?->format(date_fmt()) ?? '',
@@ -396,7 +398,7 @@ class InvoicePdfService
             'client_name', 'client_company', 'client_address', 'client_address2',
             'client_city', 'client_state', 'client_postcode', 'client_country',
             'client_tax_id', 'client_email',
-            'invoice_number', 'invoice_date', 'due_date', 'date_paid', 'status',
+            'invoice_number', 'invoice_type', 'is_proforma', 'invoice_date', 'due_date', 'date_paid', 'status',
             'payment_method', 'subtotal', 'tax', 'tax2', 'credit', 'total', 'notes',
             'items', 'ksef_number', 'ksef_qr',
         ];

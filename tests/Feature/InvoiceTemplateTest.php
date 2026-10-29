@@ -50,6 +50,21 @@ it('resolves conditional blocks against the placeholder value', function () {
         ->toBe('A[Some note]B[unpaid]CD');
 });
 
+it('distinguishes a proforma from a VAT invoice', function () {
+    $service = app(InvoicePdfService::class);
+
+    $vat = Invoice::factory()->create(['type' => 'vat', 'invoice_num' => 'INV-1']);
+    $proforma = Invoice::factory()->create(['type' => 'proforma', 'invoice_num' => 'PRO-1']);
+
+    $varsVat = $service->placeholderVars($vat);
+    $varsProforma = $service->placeholderVars($proforma);
+
+    expect($varsVat['is_proforma'])->toBe('')
+        ->and($varsProforma['is_proforma'])->toBe('1')
+        ->and($varsVat['invoice_type'])->toBe(__('pdf.invoice'))
+        ->and($varsProforma['invoice_type'])->toBe(__('pdf.proforma'));
+});
+
 it('uses the uploaded template only while one is selected and present', function () {
     $invoice = Invoice::factory()->create();
     $service = app(InvoicePdfService::class);

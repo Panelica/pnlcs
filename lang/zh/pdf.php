@@ -17,6 +17,7 @@ return [
     'description' => '描述',
     'due_date' => '到期日期',
     'invoice' => '发票',
+    'proforma' => '形式发票',
     'invoice_date' => '发票日期',
     'invoice_details' => '发票详情',
     'invoice_number' => '发票编号',

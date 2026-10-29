@@ -17,6 +17,7 @@ return [
     'description' => 'Açıklama',
     'due_date' => 'Son Ödeme Tarihi',
     'invoice' => 'FATURA',
+    'proforma' => 'PROFORMA FATURA',
     'invoice_date' => 'Fatura Tarihi',
     'invoice_details' => 'Fatura Bilgileri',
     'invoice_number' => 'Fatura No',
