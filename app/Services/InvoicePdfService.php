@@ -418,7 +418,7 @@ class InvoicePdfService
         $iban = (string) ($bank['iban'] ?? '');
         $account = (string) ($bank['account_number'] ?? '');
         $swift = (string) ($bank['swift'] ?? '');
-        $nip = (string) ($bank['nip'] ?? '');
+        $nip = (string) Setting::get('TaxID', '');
 
         if ($holder === '') {
             return '';
