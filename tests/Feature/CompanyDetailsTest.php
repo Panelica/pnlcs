@@ -64,12 +64,13 @@ function settingsAdmin(): Admin
     ]);
 }
 
-test('the settings screen asks for the city and the tax id', function () {
+test('the settings screen asks for the city, postcode and the tax id', function () {
     $admin = settingsAdmin();
 
     $this->actingAs($admin, 'admin')->get(route('admin.settings.general'))
         ->assertOk()
         ->assertSee('name="CompanyCity"', false)
+        ->assertSee('name="Postcode"', false)
         ->assertSee('name="TaxID"', false);
 });
 
