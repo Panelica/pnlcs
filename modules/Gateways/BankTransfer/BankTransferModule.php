@@ -34,6 +34,7 @@ class BankTransferModule implements GatewayModuleInterface
     {
         $fields = [
             ["name" => "account_name", "label" => "Account holder (the same for every bank)", "type" => "text"],
+            ["name" => "nip", "label" => "NIP (company tax ID, used in the Polish payment QR)", "type" => "text"],
         ];
 
         foreach (self::SLOTS as $n => $keys) {
@@ -102,7 +103,7 @@ class BankTransferModule implements GatewayModuleInterface
      * The bank at a slot with the shared account holder, for a payment QR code
      * on an invoice.
      *
-     * @return array{holder: string, name: string, iban: string, account_number: string, swift: string}|null
+     * @return array{holder: string, nip: string, name: string, iban: string, account_number: string, swift: string}|null
      */
     public function bank(int $index = 0): ?array
     {
@@ -112,6 +113,7 @@ class BankTransferModule implements GatewayModuleInterface
         }
 
         $bank["holder"] = trim((string) $this->getSetting("account_name"));
+        $bank["nip"] = trim((string) $this->getSetting("nip"));
 
         return $bank;
     }

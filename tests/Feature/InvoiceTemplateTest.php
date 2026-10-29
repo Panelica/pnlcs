@@ -88,9 +88,8 @@ it('builds a ZBP payload for Polish customers and an EPC payload otherwise', fun
     $nrb = (new ReflectionMethod($service, 'nrb'))->invoke($service, 'PL 63 2530 0008 2096 1022 3191 0001');
     expect($nrb)->toBe('63253000082096102231910001');
 
-    $zbp = (new ReflectionMethod($service, 'zbpPayload'))->invoke($service, '24 Box Igor Rybicki', '63253000082096102231910001', $invoice);
-    expect($zbp)->toStartWith('|24 Box Igor Rybicki|63253000082096102231910001|')
-        ->toContain('INV-1');
+    $zbp = (new ReflectionMethod($service, 'zbpPayload'))->invoke($service, '24 Box Igor Rybicki', '63253000082096102231910001', '1234567890', 'PL', $invoice);
+    expect($zbp)->toBe('1234567890|PL|63253000082096102231910001|012345|24 Box Igor Rybicki|INV-1|||');
 
     $epc = (new ReflectionMethod($service, 'epcPayload'))->invoke($service, '24 Box Igor Rybicki', 'PL63253000082096102231910001', 'NESBPLPW', $invoice);
     expect($epc)->toStartWith("BCD\n002\n1\nSCT\nNESBPLPW\n24 Box Igor Rybicki\n")

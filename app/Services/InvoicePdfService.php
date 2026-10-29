@@ -418,6 +418,7 @@ class InvoicePdfService
         $iban = (string) ($bank['iban'] ?? '');
         $account = (string) ($bank['account_number'] ?? '');
         $swift = (string) ($bank['swift'] ?? '');
+        $nip = (string) ($bank['nip'] ?? '');
 
         if ($holder === '') {
             return '';
@@ -427,7 +428,7 @@ class InvoicePdfService
         if ($local) {
             $nrb = $this->nrb($account !== '' ? $account : $iban);
             if ($nrb !== '') {
-                $payload = $this->zbpPayload($holder, $nrb, $invoice);
+                $payload = $this->zbpPayload($holder, $nrb, $nip, $companyCountry, $invoice);
             }
         }
 
@@ -453,14 +454,15 @@ class InvoicePdfService
         return preg_match('/^\d{26}$/', $digits) === 1 ? $digits : '';
     }
 
-    /** The Polish ZBP ("Przyjazny Przelew") payload: pipe-delimited fields. */
-    protected function zbpPayload(string $holder, string $account, Invoice $invoice): string
+    /** The Polish ZBP ("Przyjazny Przelew") payload: nine pipe-delimited fields. */
+    protected function zbpPayload(string $holder, string $account, string $nip, string $country, Invoice $invoice): string
     {
         $name = mb_substr($holder, 0, 20);
-        $amount = number_format((float) $invoice->amountDue(), 2, ',', '');
+        $amount = sprintf('%06d', (int) round((float) $invoice->amountDue() * 100));
         $title = mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 32);
+        $nip = preg_replace('/\D/', '', $nip) ?? '';
 
-        return '|'.$name.'|'.$account.'|'.$amount.'|'.$title.'|';
+        return implode('|', [$nip, $country, $account, $amount, $name, $title, '', '', '']);
     }
 
     /** The EPC SEPA payload (BCD tag), one field per line, amount in EUR. */
