@@ -7,7 +7,7 @@ use App\Models\InvoiceItem;
 use App\Models\Setting;
 use App\Services\InvoicePdfService;
 
-/**
+/*
  * The {vat_summary} placeholder: an invoice's items grouped by VAT rate (or
  * tax treatment), net / VAT / gross summed, computed from the saved items
  * (Invoice::vatBreakdown), not by parsing the rendered HTML.
