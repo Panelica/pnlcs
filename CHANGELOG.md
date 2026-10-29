@@ -2,6 +2,149 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.14.0 — 2026-10-29
+
+A stable release, offered to every installation. It contains everything in
+1.13.0. None of the changes below went out in a beta first. Thank you,
+[@ertugrulkeyvan](https://github.com/ertugrulkeyvan) (#323, #330, #333),
+[@hedon77](https://github.com/hedon77) (#328, #329, #331, #332),
+[@pla0730484848-wq](https://github.com/pla0730484848-wq) (#321, #324, #325,
+#326) and [@dualarrow](https://github.com/dualarrow) (#320, #334).
+
+**The verification mail no longer signs anybody in.** Its link confirmed the
+address *and* signed in whoever opened it, for 24 hours and as often as it was
+opened. Customers forward that mail — they are told to look for "the code" and
+the link is the only thing in it — so whoever received it was in the account
+without a password. The mail now carries a **six-digit code** to type into the
+page that asked for it, and the link only confirms the address: opened where
+nobody is signed in, it confirms and sends the visitor to the sign-in page. If
+you have customised the verification template, add `{verification_code}` to
+it; a template without it still gets a working link (#333).
+
+**A domain ordered with hosting kept the nameserver change from 1.13.0** — no
+action needed, this is only a reminder that it landed there.
+
+### Added
+
+- **Additional IPv4 addresses, sold with a Proxmox VPS.** A new configurable
+  option (*Additional IPv4 addresses*, `extra_ipv4`) on the product page, with
+  a price per address; at most 16 per guest. The server's IPv4 pool hands them
+  out under the same lock as the guest's own address, all or nothing, and each
+  one gets a network card of its own (`net1`, `net2`, …) with no gateway, so
+  the guest keeps a single default route. A customer can buy more later as an
+  option upgrade: the addresses already held are kept, only the cards PNLCS
+  added are removed when the number goes down, and a virtual machine is asked
+  to restart so cloud-init reads them. The **Capacity** page gains an *IPv4
+  pool* card showing every address with its use, service and client, and the
+  admin VPS panel lists a guest's additional addresses with their card. Only
+  offered where the product takes its address from the pool — a product on
+  DHCP cannot sell an address the module would never give (#323, #321).
+- **Ukrainian and Russian are complete.** Both languages now carry every
+  group `lang/en` has: 1,543 texts that fell back to English in each of them
+  are translated. Every placeholder, HTML tag and plural form was checked
+  against the English (#326).
+- **A language can be completed through Export and Import.** The export is
+  built from the English key list, so it carries every text with an empty
+  value where the language has none; before, a key the language did not have
+  yet was simply absent and could not be filled in. **Export missing** gives
+  only what is not counted as translated yet. A text kept the same as English
+  on purpose can be ticked as such in the editor and then counts as
+  translated, so a complete translation can reach 100%; an exported file
+  carries those marks and import reads them back. Import now leaves out keys
+  PNLCS does not have and names them instead of storing them silently
+  (#330, #324).
+- **A selectable invoice template.** Settings → General → Invoicing offers the
+  built-in document or one you upload. The uploaded file is plain HTML whose
+  `{placeholders}` — the invoice, the client, the company, the items table —
+  are replaced when the PDF is made. It is data, not code: nothing in it is
+  executed, and the vocabulary is listed on the settings page (#331).
+- **The general settings page is split into tabs** — Company, Invoicing,
+  Domains, Notifications, Security, Automation, SEO & tracking, Other —
+  instead of twenty-two sections in one scroll. The form and its single Save
+  button are unchanged. A link into a section opens the tab holding it, so the
+  admin search still takes you straight to a setting, and the tab is recorded
+  in the address so it can be shared (#332).
+- **HRD joins the registrar balance watch.** The registrar now reports its
+  partner balance in PLN, so it can be picked in Settings → Registrar balance
+  and warn before renewals stop for want of funds (#329).
+
+### Changed
+
+- The active settings tab takes the installation's own colour
+  (`--theme-primary`), so white-label branding applies to it.
+
+### Fixed
+
+- **The import mapper answered with a 500.** It passed its own problem list to
+  the view as `$errors`, shadowing Laravel's error bag, and the admin layout's
+  `$errors->any()` then failed on a plain array. The list is `$problems` now
+  (#328).
+- **Text in a custom invoice template is written as text.** A company called
+  "Müller & Sohn", or a name holding a tag, went into the document as markup
+  and could break the invoice around it. Every value is escaped; the three
+  that are deliberately markup — the logo tag, the items table and the notes —
+  are escaped as they are built, as is the KSeF number and QR tag.
+- The admin VPS panel's list of additional addresses was written with text
+  outside a translation call.
+- German counts as fully translated again: the settings page's new *Domains*
+  tab is written "Domains" in German too, as the Domain and Registrar labels
+  above it already are, and it is listed as such.
+- The addon renewal test expected a plain month step, which overflows a due
+  date on the 31st into the month after next; a cycle is advanced without
+  overflow, so the expectation now follows `BillingCycleHelper`.
+
+### Security
+
+- The verification link no longer signs anybody in (see above). The code is
+  six digits from `random_int`, kept only as a SHA-256 hash together with a
+  hash of the address it was sent to, compared with `hash_equals`, good for
+  fifteen minutes, and used up by five wrong tries. Sending the mail again
+  replaces it, a code sent to an address the login no longer has is refused,
+  and the route sits in the signed-in group at ten tries a minute (#333).
+
+### Database changes
+
+- `dynamic_translations.same_as_english` (boolean, default false), migration
+  `2026_10_28_000001_add_same_as_english_to_dynamic_translations` (#330).
+- `2026_10_29_000001_email_verification_template_code` rewrites the
+  verification template in every language **only** where the row still holds
+  the text PNLCS shipped; a wording you wrote is left alone, and running it
+  again changes nothing (#333).
+- New settings: `InvoiceTemplate`, `InvoiceTemplateName` (#331); server
+  setting `capacity_alert` keeps its meaning from 1.13.0.
+
+### For theme and module authors
+
+- `InvoicePdfService::merge()`, `placeholderVars()` and
+  `customTemplatePath()`; the placeholder vocabulary is the keys of
+  `placeholderVars()` (#331).
+- `Ipv4Pool::holders()` and `Ipv4Pool::extras()`; `taken()` is built on them.
+  `ProxmoxPlan::OPTION_KEYS` gains `extra_ipv4` and `ProxmoxPlan::MAX_EXTRA_IPV4`
+  is 16. A service's additional addresses live in its module data as
+  `pve_ipv4_extra`, with `pve_extra_nics` counting the cards PNLCS added (#323).
+- `EmailVerificationController::CODE_MINUTES` and `CODE_ATTEMPTS`; the
+  verification mail passes `{verification_code}` and `{code_minutes}` to a
+  customised template; `EmailVerificationMail` takes the code as its last
+  argument, so existing callers keep working (#333).
+- `TranslationController::SAME_AS_ENGLISH` is the key an exported file uses
+  for the texts kept the same as English (#330).
+- `HrdRegistrar::getBalance()` returns the balance under `pln` (#329).
+
+### Views a theme may override that changed
+
+- `resources/views/admin/settings/general.blade.php` (tabs; the invoice
+  template controls).
+- `resources/views/client/auth/verify-email.blade.php` and
+  `resources/views/emails/email-verification.blade.php` (the code).
+- `resources/views/admin/config/languages/translations.blade.php` (Export
+  missing, the *Same as English* tick and its marker).
+- `resources/views/admin/config/server-capacity.blade.php` (the IPv4 pool
+  card) and `resources/views/admin/products/partials/proxmox.blade.php`
+  (the additional-addresses option).
+- `resources/views/components/vps-panel.blade.php` (a guest's additional
+  addresses).
+- `resources/views/admin/whmcs-import/mapper.blade.php` (`$problems`).
+
 ## 1.13.0 — 2026-10-27
 
 A stable release, offered to every installation. It contains everything in
