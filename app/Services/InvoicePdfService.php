@@ -347,10 +347,10 @@ class InvoicePdfService
     }
 
     /**
-     * The bank accounts the {company_bank_accounts} placeholder emits: the
-     * heading and the account holder as two lines, then one line per account
-     * with its bank name, currency and number — plain text, no table. Empty
-     * when no accounts are configured, so the conditional block hides itself.
+     * The bank accounts the {company_bank_accounts} placeholder emits: one
+     * line per account with its bank name, currency and number — plain text,
+     * no table. Empty when no accounts are configured, so the conditional
+     * block {?company_bank_accounts}…{/company_bank_accounts} hides it itself.
      */
     protected function bankAccountsHtml(): string
     {
@@ -360,14 +360,7 @@ class InvoicePdfService
             return '';
         }
 
-        $holder = trim((string) ($accounts[0]['holder'] ?? ''));
-
-        $html = '<div style="font-weight:bold;margin-bottom:2pt;">'.e(__('pdf.bank_accounts')).'</div>';
-
-        if ($holder !== '') {
-            $html .= '<div style="margin-bottom:4pt;">'.e($holder).'</div>';
-        }
-
+        $html = '';
         foreach ($accounts as $account) {
             $name = trim((string) ($account['name'] ?? ''));
             $currency = trim((string) ($account['currency'] ?? ''));
