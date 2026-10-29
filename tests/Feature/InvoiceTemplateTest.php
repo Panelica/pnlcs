@@ -23,6 +23,22 @@ function invoiceTemplateCleanup(): void
     Setting::set('InvoiceTemplateName', '', 'general');
 }
 
+function seedBankTransfer(array $settings = []): void
+{
+    $defaults = [
+        'active' => '1',
+        'account_name' => '24 Box Igor Rybicki',
+        'bank_active' => '1',
+        'bank_name' => 'Nest Bank',
+        'bank_currency' => 'PLN',
+        'iban' => 'PL 63 2530 0008 2096 1022 3191 0001',
+    ];
+
+    foreach (array_merge($defaults, $settings) as $setting => $value) {
+        GatewaySettings::updateOrCreate(['gateway' => 'banktransfer', 'setting' => $setting], ['value' => $value]);
+    }
+}
+
 it('replaces placeholders with invoice data and never executes the content', function () {
     $client = Client::factory()->create();
     $invoice = Invoice::factory()->create(['client_id' => $client->id, 'invoice_num' => 'INV-123']);
@@ -51,37 +67,59 @@ it('resolves conditional blocks against the placeholder value', function () {
         ->toBe('A[Some note]B[unpaid]CD');
 });
 
-it('picks the payment QR account by the customer country', function () {
+it('draws a ZBP QR for a Polish company with a PLN account', function () {
     Setting::set('Country', 'PL', 'general');
+    seedBankTransfer();
 
-    // Slot 0 in the company currency (PLN), slot 1 in EUR.
-    GatewaySettings::updateOrCreate(['gateway' => 'banktransfer', 'setting' => 'account_name'], ['value' => '24 Box Igor Rybicki']);
-    GatewaySettings::updateOrCreate(['gateway' => 'banktransfer', 'setting' => 'bank_name'], ['value' => 'Nest Bank']);
-    GatewaySettings::updateOrCreate(['gateway' => 'banktransfer', 'setting' => 'iban'], ['value' => 'PL 63 2530 0008 2096 1022 3191 0001']);
-    GatewaySettings::updateOrCreate(['gateway' => 'banktransfer', 'setting' => 'bank2_name'], ['value' => 'EUR Bank']);
-    GatewaySettings::updateOrCreate(['gateway' => 'banktransfer', 'setting' => 'bank2_iban'], ['value' => 'DE89370400440532013000']);
+    $invoice = Invoice::factory()->create(['total' => 100, 'invoice_num' => 'INV-1']);
 
-    $service = app(InvoicePdfService::class);
-
-    $pl = Invoice::factory()->create(['client_id' => Client::factory()->create(['country' => 'PL'])->id, 'invoice_num' => 'INV-1']);
-    $de = Invoice::factory()->create(['client_id' => Client::factory()->create(['country' => 'DE'])->id, 'invoice_num' => 'INV-2']);
-    $us = Invoice::factory()->create(['client_id' => Client::factory()->create(['country' => 'US'])->id, 'invoice_num' => 'INV-3']);
-
-    // Local -> first account (ZBP), SEPA -> second (EPC), elsewhere -> none.
-    expect($service->placeholderVars($pl)['payment_qr'])->toStartWith('<img src="data:image/png;base64,')
-        ->and($service->placeholderVars($de)['payment_qr'])->toStartWith('<img src="data:image/png;base64,')
-        ->and($service->placeholderVars($us)['payment_qr'])->toBe('');
+    expect(app(InvoicePdfService::class)->placeholderVars($invoice)['payment_qr'])
+        ->toStartWith('<img src="data:image/png;base64,');
 });
 
-it('renders no payment QR when no bank is configured', function () {
-    $service = app(InvoicePdfService::class);
-    $client = Client::factory()->create(['country' => 'PL']);
-    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'invoice_num' => 'INV-1']);
+it('draws an EPC QR for a non-Polish company with a EUR account', function () {
+    Setting::set('Country', 'DE', 'general');
+    seedBankTransfer([
+        'bank2_active' => '1',
+        'bank2_name' => 'Nest Bank EUR',
+        'bank2_currency' => 'EUR',
+        'bank2_iban' => 'DE89370400440532013000',
+    ]);
 
-    expect($service->placeholderVars($invoice)['payment_qr'])->toBe('');
+    $invoice = Invoice::factory()->create(['total' => 50, 'invoice_num' => 'INV-2']);
+
+    expect(app(InvoicePdfService::class)->placeholderVars($invoice)['payment_qr'])
+        ->toStartWith('<img src="data:image/png;base64,');
 });
 
-it('builds a ZBP payload for Polish customers and an EPC payload otherwise', function () {
+it('renders no QR for a settled invoice', function () {
+    Setting::set('Country', 'PL', 'general');
+    seedBankTransfer();
+
+    $invoice = Invoice::factory()->create(['total' => 0, 'invoice_num' => 'INV-1']);
+
+    expect(app(InvoicePdfService::class)->placeholderVars($invoice)['payment_qr'])->toBe('');
+});
+
+it('renders no QR when bank transfer is switched off', function () {
+    Setting::set('Country', 'PL', 'general');
+    seedBankTransfer(['active' => '0']);
+
+    $invoice = Invoice::factory()->create(['total' => 100, 'invoice_num' => 'INV-1']);
+
+    expect(app(InvoicePdfService::class)->placeholderVars($invoice)['payment_qr'])->toBe('');
+});
+
+it('renders no QR when no account matches the company currency', function () {
+    Setting::set('Country', 'PL', 'general');
+    seedBankTransfer(['bank_currency' => 'USD']);
+
+    $invoice = Invoice::factory()->create(['total' => 100, 'invoice_num' => 'INV-1']);
+
+    expect(app(InvoicePdfService::class)->placeholderVars($invoice)['payment_qr'])->toBe('');
+});
+
+it('builds a ZBP payload and an EPC payload', function () {
     $service = app(InvoicePdfService::class);
     $invoice = Invoice::factory()->create(['invoice_num' => 'INV-1', 'total' => 123.45]);
 
@@ -92,8 +130,16 @@ it('builds a ZBP payload for Polish customers and an EPC payload otherwise', fun
     expect($zbp)->toBe('1234567890|PL|63253000082096102231910001|012345|24 Box Igor Rybicki|INV-1|||');
 
     $epc = (new ReflectionMethod($service, 'epcPayload'))->invoke($service, '24 Box Igor Rybicki', 'PL63253000082096102231910001', 'NESBPLPW', $invoice);
-    expect($epc)->toStartWith("BCD\n002\n1\nSCT\nNESBPLPW\n24 Box Igor Rybicki\n")
-        ->toContain('INV-1');
+    expect($epc)->toBe("BCD\n002\n1\nSCT\nNESBPLPW\n24 Box Igor Rybicki\nPL63253000082096102231910001\n\n\n\nINV-1");
+});
+
+it('strips characters outside the ZBP set from the name and title', function () {
+    $service = app(InvoicePdfService::class);
+    $invoice = Invoice::factory()->create(['invoice_num' => 'FV (1)', 'total' => 10]);
+
+    $zbp = (new ReflectionMethod($service, 'zbpPayload'))->invoke($service, 'Müller & Söhne (Pl)', '63253000082096102231910001', '', 'PL', $invoice);
+
+    expect($zbp)->toBe('|PL|63253000082096102231910001|001000|Mller & Shne Pl|FV 1|||');
 });
 
 it('uses the uploaded template only while one is selected and present', function () {

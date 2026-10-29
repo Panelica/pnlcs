@@ -40,6 +40,7 @@ class BankTransferModule implements GatewayModuleInterface
             $label = "Bank ".($n + 1);
             $fields[] = ["name" => $keys["active"], "label" => "$label - show to customers?", "type" => "yesno", "default" => "1"];
             $fields[] = ["name" => $keys["name"], "label" => "$label - bank name", "type" => "text"];
+            $fields[] = ["name" => $keys["currency"], "label" => "$label - currency (ISO code, e.g. PLN / EUR)", "type" => "text"];
             $fields[] = ["name" => $keys["iban"], "label" => "$label - IBAN", "type" => "text"];
             $fields[] = ["name" => $keys["account_number"], "label" => "$label - account number (if no IBAN)", "type" => "text"];
             $fields[] = ["name" => $keys["sort_code"], "label" => "$label - sort code / routing (optional)", "type" => "text"];
@@ -53,9 +54,9 @@ class BankTransferModule implements GatewayModuleInterface
 
     /** Setting keys per bank slot; slot 0 carries the legacy single-account keys. */
     private const SLOTS = [
-        ["active" => "bank_active",  "name" => "bank_name",  "iban" => "iban",       "account_number" => "account_number",       "sort_code" => "sort_code",       "swift" => "swift"],
-        ["active" => "bank2_active", "name" => "bank2_name", "iban" => "bank2_iban", "account_number" => "bank2_account_number", "sort_code" => "bank2_sort_code", "swift" => "bank2_swift"],
-        ["active" => "bank3_active", "name" => "bank3_name", "iban" => "bank3_iban", "account_number" => "bank3_account_number", "sort_code" => "bank3_sort_code", "swift" => "bank3_swift"],
+        ["active" => "bank_active",  "name" => "bank_name",  "iban" => "iban",       "account_number" => "account_number",       "sort_code" => "sort_code",       "swift" => "swift",       "currency" => "bank_currency"],
+        ["active" => "bank2_active", "name" => "bank2_name", "iban" => "bank2_iban", "account_number" => "bank2_account_number", "sort_code" => "bank2_sort_code", "swift" => "bank2_swift", "currency" => "bank2_currency"],
+        ["active" => "bank3_active", "name" => "bank3_name", "iban" => "bank3_iban", "account_number" => "bank3_account_number", "sort_code" => "bank3_sort_code", "swift" => "bank3_swift", "currency" => "bank3_currency"],
     ];
 
     private function getSetting(string $key): ?string
@@ -63,6 +64,16 @@ class BankTransferModule implements GatewayModuleInterface
         $row = GatewaySettings::where("gateway", "banktransfer")->where("setting", $key)->first();
 
         return $row?->value;
+    }
+
+    /**
+     * Whether the gateway's own switch is on. The same test ModuleRegistry::
+     * usableGateways() uses: the switch is a setting saved as "1"/"0", and a
+     * switch that was never written counts as off.
+     */
+    public function isActive(): bool
+    {
+        return (string) $this->getSetting("active") === "1";
     }
 
     /**
@@ -102,11 +113,38 @@ class BankTransferModule implements GatewayModuleInterface
      * The bank at a slot with the shared account holder, for a payment QR code
      * on an invoice.
      *
-     * @return array{holder: string, name: string, iban: string, account_number: string, swift: string}|null
+     * @return array{holder: string, name: string, iban: string, account_number: string, swift: string, currency: string}|null
      */
     public function bank(int $index = 0): ?array
     {
-        $bank = $this->banks()[$index] ?? null;
+        return $this->withHolder($this->banks()[$index] ?? null);
+    }
+
+    /**
+     * The first bank whose currency matches, with the shared account holder.
+     *
+     * Slots are matched by their currency, not by their position: `banks()`
+     * drops switched-off and half-filled slots, so "slot 1 is the EUR one" is
+     * a convention of one installation and no contract of the product.
+     *
+     * @return array{holder: string, name: string, iban: string, account_number: string, swift: string, currency: string}|null
+     */
+    public function bankByCurrency(string $currency): ?array
+    {
+        $currency = strtoupper(trim($currency));
+
+        foreach ($this->banks() as $bank) {
+            if (strtoupper(trim((string) ($bank["currency"] ?? ''))) === $currency) {
+                return $this->withHolder($bank);
+            }
+        }
+
+        return null;
+    }
+
+    /** The bank with the shared account holder attached. */
+    private function withHolder(?array $bank): ?array
+    {
         if ($bank === null) {
             return null;
         }

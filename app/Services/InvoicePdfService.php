@@ -374,73 +374,71 @@ class InvoicePdfService
     }
 
     /**
-     * Countries an EPC SEPA transfer can be made to (the SEPA zone). A customer
-     * from anywhere else gets no payment QR.
-     */
-    protected const SEPA_COUNTRIES = [
-        'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
-        'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'MC', 'NL', 'NO',
-        'PL', 'PT', 'RO', 'SM', 'SK', 'SI', 'ES', 'SE', 'CH', 'GB', 'AD', 'VA',
-    ];
-
-    /**
      * A payment QR code as an inline <img>, from the bank-transfer module. The
-     * customer's country decides the account and the payload:
+     * creditor's own account decides the payload, not the customer's country:
      *
-     * - same country as the company: the first account (company currency),
-     *   encoded as the Polish ZBP "Przyjazny Przelew" (an NRB);
-     * - elsewhere in the SEPA zone: the second account (EUR), encoded as the
-     *   EPC SEPA payload (an IBAN);
-     * - anywhere else: no QR.
+     * - a Polish company gets the Polish ZBP "Przyjazny Przelew" (an NRB)
+     *   against its PLN account;
+     * - any other company gets the EPC SEPA payload (an IBAN) against its EUR
+     *   account, with the amount left out so the payer types it;
+     * - with no matching account, no QR.
      */
     public function paymentQr(Invoice $invoice): string
     {
+        // A settled invoice owes nothing: a zero amount is "type it yourself"
+        // in ZBP and below the minimum in EPC.
+        if ((float) $invoice->amountDue() <= 0) {
+            return '';
+        }
+
         $module = new BankTransferModule;
-        $companyCountry = strtoupper((string) Setting::get('Country', ''));
-        $clientCountry = strtoupper((string) $invoice->buyer('country'));
 
-        $local = $companyCountry !== '' && $clientCountry === $companyCountry;
-        $sepa = ! $local && in_array($clientCountry, self::SEPA_COUNTRIES, true);
-
-        if (! $local && ! $sepa) {
+        // The gateway's own switch, the one checkout reads.
+        if (! $module->isActive()) {
             return '';
         }
 
-        $bank = $module->bank($local ? 0 : 1);
-        if ($bank === null) {
-            return '';
-        }
-
-        $holder = (string) ($bank['holder'] ?? '');
-        if ($holder === '') {
-            $holder = company_name();
-        }
-        $iban = (string) ($bank['iban'] ?? '');
-        $account = (string) ($bank['account_number'] ?? '');
-        $swift = (string) ($bank['swift'] ?? '');
+        $companyCountry = strtoupper(trim($this->firstFilled(['Country', 'CompanyCountry'])));
         $nip = (string) Setting::get('TaxID', '');
 
-        if ($holder === '') {
-            return '';
-        }
-
         $payload = '';
-        if ($local) {
-            $nrb = $this->nrb($account !== '' ? $account : $iban);
-            if ($nrb !== '') {
-                $payload = $this->zbpPayload($holder, $nrb, $nip, $companyCountry, $invoice);
+        $size = 200;
+        $level = null;
+
+        if ($companyCountry === 'PL') {
+            $bank = $module->bankByCurrency('PLN');
+            if ($bank !== null) {
+                $account = trim((string) ($bank['account_number'] ?? ''));
+                $nrb = $this->nrb($account !== '' ? $account : (string) ($bank['iban'] ?? ''));
+
+                if ($nrb !== '') {
+                    $holder = trim((string) ($bank['holder'] ?? ''));
+                    if ($holder === '') {
+                        $holder = company_name();
+                    }
+                    $payload = $this->zbpPayload($holder, $nrb, $nip, 'PL', $invoice);
+                    $size = 250;
+                }
             }
         }
 
-        if ($payload === '' && $iban !== '') {
-            $payload = $this->epcPayload($holder, $iban, $swift, $invoice);
+        if ($payload === '') {
+            $bank = $module->bankByCurrency('EUR');
+            if ($bank !== null && trim((string) ($bank['iban'] ?? '')) !== '') {
+                $holder = trim((string) ($bank['holder'] ?? ''));
+                if ($holder === '') {
+                    $holder = company_name();
+                }
+                $payload = $this->epcPayload($holder, (string) $bank['iban'], (string) ($bank['swift'] ?? ''), $invoice);
+                $level = \BaconQrCode\Common\ErrorCorrectionLevel::M();
+            }
         }
 
         if ($payload === '') {
             return '';
         }
 
-        $uri = $this->qrDataUri($payload);
+        $uri = $this->qrDataUri($payload, $size, $level);
 
         return $uri !== '' ? '<img src="'.$uri.'" alt="">' : '';
     }
@@ -457,15 +455,15 @@ class InvoicePdfService
     /** The Polish ZBP ("Przyjazny Przelew") payload: nine pipe-delimited fields. */
     protected function zbpPayload(string $holder, string $account, string $nip, string $country, Invoice $invoice): string
     {
-        $name = mb_substr($holder, 0, 20);
+        $name = $this->zbpChars(mb_substr($holder, 0, 20));
         $amount = sprintf('%06d', (int) round((float) $invoice->amountDue() * 100));
-        $title = mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 32);
+        $title = $this->zbpChars(mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 32));
         $nip = preg_replace('/\D/', '', $nip) ?? '';
 
         return implode('|', [$nip, $country, $account, $amount, $name, $title, '', '', '']);
     }
 
-    /** The EPC SEPA payload (BCD tag), one field per line, amount in EUR. */
+    /** The EPC SEPA payload (BCD tag), one field per line, amount left out. */
     protected function epcPayload(string $holder, string $iban, string $swift, Invoice $invoice): string
     {
         if ($iban === '') {
@@ -474,22 +472,22 @@ class InvoicePdfService
 
         $iban = strtoupper((string) preg_replace('/\s+/', '', $iban));
         $name = mb_substr($holder, 0, 70);
-        $amount = number_format($this->eurAmount($invoice), 2, '.', '');
         $title = mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 35);
 
-        return "BCD\n002\n1\nSCT\n{$swift}\n{$name}\n{$iban}\nEUR{$amount}\n\n\n{$title}\n";
+        // The amount is optional in EPC and declared per currency there; the
+        // invoice is in the shop currency, so a number here would claim a
+        // currency it isn't in. Leave it out and let the payer type it.
+        return implode("\n", ['BCD', '002', '1', 'SCT', $swift, $name, $iban, '', '', '', $title]);
     }
 
-    /** The amount due in EUR: converted when the invoice bills in EUR. */
-    protected function eurAmount(Invoice $invoice): float
+    /**
+     * Characters the ZBP "Przyjazny Przelew" recommendation allows: letters
+     * (with the Polish diacritics), digits, space and ,./\-@#&*_. Anything
+     * else is dropped so a "Müller & Söhne (Pl)" does not go in verbatim.
+     */
+    protected function zbpChars(string $value): string
     {
-        $amount = $invoice->amountDue();
-
-        if (strtoupper((string) $invoice->billing_currency) === 'EUR' && (float) $invoice->exchange_rate > 0) {
-            return round($amount * (float) $invoice->exchange_rate, 2);
-        }
-
-        return $amount;
+        return preg_replace('~[^A-Za-z0-9 ,./\\\\\-@#&*_ĄĆĘŁŃÓŚŹŻąćęłńóśźż]~u', '', $value) ?? '';
     }
 
     /**
@@ -549,11 +547,12 @@ class InvoicePdfService
      * does not fetch remote URLs). Empty string when generation fails, so an
      * invoice never breaks on a missing image extension.
      */
-    private function qrDataUri(string $content): string
+    private function qrDataUri(string $content, int $size = 200, ?\BaconQrCode\Common\ErrorCorrectionLevel $level = null): string
     {
         try {
-            $renderer = new \BaconQrCode\Renderer\GDLibRenderer(200, 2);
-            $png = (new \BaconQrCode\Writer($renderer))->writeString($content);
+            $renderer = new \BaconQrCode\Renderer\GDLibRenderer($size, 2);
+            $writer = new \BaconQrCode\Writer($renderer);
+            $png = $writer->writeString($content, ecLevel: $level);
 
             return 'data:image/png;base64,'.base64_encode($png);
         } catch (\Throwable) {
