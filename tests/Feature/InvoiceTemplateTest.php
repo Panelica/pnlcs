@@ -84,6 +84,34 @@ it('builds the items table from the invoice line items', function () {
     expect($html)->toContain('Hosting Pro')->toContain('<table');
 });
 
+it('leaves the VAT columns off an invoice that is not taxed', function () {
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'tax_mode' => Invoice::TAX_NONE]);
+    InvoiceItem::factory()->create(['invoice_id' => $invoice->id, 'client_id' => $client->id, 'description' => 'Hosting Pro', 'qty' => 2, 'amount' => 10]);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['items'];
+
+    // The four-column table, as it was before the VAT table existed: no VAT
+    // header, no "0%" claiming a rate, and no style block of ours over the
+    // template's own CSS.
+    expect($html)->toContain('Hosting Pro')
+        ->not->toContain(__('pdf.items_vat_rate'))
+        ->not->toContain(__('pdf.items_gross_amount'))
+        ->not->toContain('<style>');
+    expect(preg_match_all('/<th[ >]/', $html))->toBe(4);
+});
+
+it('builds the VAT table when the invoice is taxed', function () {
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'tax_mode' => null]);
+    InvoiceItem::factory()->create(['invoice_id' => $invoice->id, 'client_id' => $client->id, 'description' => 'Hosting Pro', 'qty' => 1, 'amount' => 100, 'tax_rate' => 23]);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['items'];
+
+    expect($html)->toContain(__('pdf.items_vat_rate'))->toContain('23%');
+    expect(preg_match_all('/<th[ >]/', $html))->toBe(9);
+});
+
 it('refuses an upload that is not an HTML document', function () {
     $admin = Admin::factory()->create(['role_id' => AdminRole::factory()->create(['permissions' => ['manage_settings']])->id]);
 

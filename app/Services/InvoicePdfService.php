@@ -251,6 +251,16 @@ class InvoicePdfService
      */
     protected function itemsHtml(Invoice $invoice): string
     {
+        // Nothing on this invoice is taxed, so the VAT columns would be three
+        // zeros and a "0%" - which, where VAT registration is a legal claim,
+        // says something that is not true. Such an invoice keeps the four
+        // column table it has always had, byte for byte, including its lack of
+        // a style block: a template that styles .invoice-items itself is not
+        // overruled.
+        if ($invoice->tax_mode === Invoice::TAX_NONE) {
+            return $this->plainItemsHtml($invoice);
+        }
+
         $rows = '';
         $index = 0;
         foreach ($invoice->items as $item) {
@@ -285,6 +295,27 @@ class InvoicePdfService
             .'<th class="vat-amount">'.e(__('pdf.items_vat_amount')).'</th>'
             .'<th class="net-amount">'.e(__('pdf.items_net_amount')).'</th>'
             .'<th class="gross-amount">'.e(__('pdf.items_gross_amount')).'</th>'
+            .'</tr></thead><tbody>'.$rows.'</tbody></table>';
+    }
+
+    /** The line items of an untaxed invoice: description, quantity, price, total. */
+    protected function plainItemsHtml(Invoice $invoice): string
+    {
+        $rows = '';
+        foreach ($invoice->items as $item) {
+            $rows .= '<tr>'
+                .'<td>'.e((string) $item->description).'</td>'
+                .'<td class="num">'.max(1, (int) ($item->qty ?? 1)).'</td>'
+                .'<td class="num">'.e(invoice_money_fmt((float) $item->amount, $invoice)).'</td>'
+                .'<td class="num">'.e(invoice_money_fmt((float) $item->amount * max(1, (int) ($item->qty ?? 1)), $invoice)).'</td>'
+                .'</tr>';
+        }
+
+        return '<table class="invoice-items"><thead><tr>'
+            .'<th>'.e(__('common.table.description')).'</th>'
+            .'<th class="num">'.e(__('common.table.qty')).'</th>'
+            .'<th class="num">'.e(__('common.table.price')).'</th>'
+            .'<th class="num">'.e(__('common.table.total')).'</th>'
             .'</tr></thead><tbody>'.$rows.'</tbody></table>';
     }
 
