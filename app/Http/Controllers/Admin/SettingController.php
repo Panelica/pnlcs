@@ -44,6 +44,9 @@ class SettingController extends Controller
             'proformaFormat' => $proformaFormat,
             'proformaPreview' => $invoiceService->renderInvoiceNumber($proformaFormat, $proformaSeq),
             'proformaLast' => $proformaLast,
+            'invoiceTemplateCustom' => is_file(\App\Services\InvoicePdfService::customTemplatePath()),
+            'invoiceTemplateName' => (string) Setting::get('InvoiceTemplateName', ''),
+            'invoiceTemplateVocabulary' => \App\Services\InvoicePdfService::customTemplateVocabulary(),
         ]);
     }
 
@@ -81,6 +84,8 @@ class SettingController extends Controller
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay', 'InvoiceRenewalsSeparately',
+        // The invoice document template: the built-in view or an uploaded one.
+        'InvoiceTemplate',
         // The tax page's two switches (#305).
         'TaxEnabled', 'TaxInclusivePrices',
         'AutoSuspensionDays', 'AutoSuspendInvoicedOnly', 'AutoTerminationDays', 'AutoTerminationEnabled',
@@ -583,6 +588,50 @@ class SettingController extends Controller
         ThemeService::clearCache();
 
         return back()->with("success", __("admin.messages.favicon_removed"));
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INVOICE TEMPLATE
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Store an uploaded invoice template (a plain HTML document with
+     * {placeholders}) on the private disk and switch the invoice renderer to
+     * it. Only HTML/text is accepted: the template is data, never code.
+     */
+    public function uploadInvoiceTemplate(Request $request)
+    {
+        $request->validate([
+            'template' => 'required|file|max:2048|mimes:html,htm,txt',
+        ]);
+
+        $file = $request->file('template');
+        $content = (string) file_get_contents($file->getRealPath());
+
+        $dir = dirname(\App\Services\InvoicePdfService::customTemplatePath());
+        if (! is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        file_put_contents(\App\Services\InvoicePdfService::customTemplatePath(), $content);
+
+        Setting::set('InvoiceTemplate', 'custom', 'general');
+        // The original name is shown in the selector, not the fixed file name.
+        Setting::set('InvoiceTemplateName', basename((string) $file->getClientOriginalName()), 'general');
+
+        return back()->with('success', __('admin.settings.invoice_template_uploaded'));
+    }
+
+    public function removeInvoiceTemplate()
+    {
+        $path = \App\Services\InvoicePdfService::customTemplatePath();
+        if (is_file($path)) {
+            unlink($path);
+        }
+        Setting::set('InvoiceTemplate', 'default', 'general');
+        Setting::set('InvoiceTemplateName', '', 'general');
+
+        return back()->with('success', __('admin.settings.invoice_template_removed'));
     }
 
     public function sectionsList()
