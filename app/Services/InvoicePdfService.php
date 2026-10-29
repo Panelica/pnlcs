@@ -371,7 +371,11 @@ class InvoicePdfService
 
             $label = implode(' · ', array_filter([$name, $currency]));
 
-            $html .= '<div>'.e($label !== '' ? $label.' — '.$number : $number).'</div>';
+            if ($label !== '') {
+                $html .= '<div>'.e($label).'</div>';
+            }
+
+            $html .= '<div>- '.e($number).'</div>';
         }
 
         return $html;
