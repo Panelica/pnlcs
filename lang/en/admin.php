@@ -103,6 +103,7 @@ return [
     'servers.needs_credentials' => 'A :type server needs either an API key or a password before it can be used.',
     'servers.hostname_unresolved' => 'Saved, but :host does not resolve. Calls will use the IP address instead.',
     'servers.hostname_mismatch' => 'Saved, but :host resolves to :resolved, not :ip. One of the two is pointing at the wrong machine.',
+    'servers.hostname_behind_nat' => 'Saved. :host resolves to :resolved and :ip is a private address, as for a server behind NAT: PNLCS calls the server at :ip, and customers\' links (webmail, phpMyAdmin, file manager) use :host, so :host has to reach the panel from outside.',
     'servers.auth_failed' => 'Reached :host, but :type refused the credentials. Check the API key.',
     'servers.auth_error' => 'Reached :host, but the check failed: :error',
     'servers.api_key' => 'API key / token',

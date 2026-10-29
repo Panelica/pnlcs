@@ -103,6 +103,7 @@ return [
 	'servers.needs_credentials' => 'Un servidor :type necesita una clave API o una contraseña antes de poder usarse.',
 	'servers.hostname_unresolved' => 'Guardado, pero :host no se resuelve. Las llamadas usarán la dirección IP en su lugar.',
 	'servers.hostname_mismatch' => 'Guardado pero :host resuelve a :resolved, no a :ip. Uno de lo 2 está apuntando a la máquina equivocada.',
+	'servers.hostname_behind_nat' => 'Guardado. :host resuelve a :resolved y :ip es una dirección privada, como en un servidor detrás de NAT: PNLCS llama al servidor en :ip y los enlaces de los clientes (webmail, phpMyAdmin, gestor de archivos) usan :host, por lo que :host debe llegar al panel desde fuera.',
 	'servers.auth_failed' => 'Se alcanzó :host, pero :type rechazó las credenciales.',
 	'servers.auth_error' => 'Se alcanzó :host, pero la verificación falló: :error',
 	'servers.api_key' => 'Clave/token API',

@@ -67,6 +67,7 @@ use App\Support\ContentTranslations;
 use App\Support\CustomerCurrency;
 use App\Support\IpAllowList;
 use App\Support\ModuleSettings;
+use App\Support\ServerAddress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -830,11 +831,11 @@ class ConfigController extends Controller
 
         $server = Server::create($v);
 
-        $warning = $this->hostnameWarning($server->hostname, $server->ip_address);
+        [$type, $notice] = $this->hostnameNotice($server->hostname, $server->ip_address) ?? ['ignored', null];
 
         return back()
             ->with('success', __('messages.success.server_created'))
-            ->with($warning ? 'warning' : 'ignored', $warning);
+            ->with($type, $notice);
     }
 
     // ===== DOMAIN PRICING =====
@@ -1331,11 +1332,11 @@ class ConfigController extends Controller
 
         $server->update($v);
 
-        $warning = $this->hostnameWarning($server->hostname, $server->ip_address);
+        [$type, $notice] = $this->hostnameNotice($server->hostname, $server->ip_address) ?? ['ignored', null];
 
         return back()
             ->with('success', __('messages.success.server_updated'))
-            ->with($warning ? 'warning' : 'ignored', $warning);
+            ->with($type, $notice);
     }
 
     /**
@@ -1484,8 +1485,13 @@ class ConfigController extends Controller
     /**
      * A hostname that resolves somewhere other than the address beside it is
      * the likeliest way to point a server record at the wrong machine.
+     *
+     * Unless the address is a private one and the hostname public: that is a
+     * server behind NAT, recorded the right way (#334), and is said as such.
+     *
+     * @return array{0: string, 1: string}|null [flash type, message]
      */
-    private function hostnameWarning(?string $hostname, ?string $ip): ?string
+    private function hostnameNotice(?string $hostname, ?string $ip): ?array
     {
         $hostname = trim((string) $hostname);
         $ip = trim((string) $ip);
@@ -1494,21 +1500,21 @@ class ConfigController extends Controller
             return null;
         }
 
-        $resolved = @gethostbynamel($hostname) ?: [];
+        $resolved = ServerAddress::resolve($hostname);
 
         if ($resolved === []) {
-            return __('admin.servers.hostname_unresolved', ['host' => $hostname]);
+            return ['warning', __('admin.servers.hostname_unresolved', ['host' => $hostname])];
         }
 
-        if (! in_array($ip, $resolved, true)) {
-            return __('admin.servers.hostname_mismatch', [
-                'host' => $hostname,
-                'resolved' => implode(', ', $resolved),
-                'ip' => $ip,
-            ]);
+        if (in_array($ip, $resolved, true)) {
+            return null;
         }
 
-        return null;
+        $values = ['host' => $hostname, 'resolved' => implode(', ', $resolved), 'ip' => $ip];
+
+        return ServerAddress::behindNat($ip, $resolved)
+            ? ['info', __('admin.servers.hostname_behind_nat', $values)]
+            : ['warning', __('admin.servers.hostname_mismatch', $values)];
     }
 
     public function destroyServer(Server $server)

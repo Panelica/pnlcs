@@ -103,6 +103,7 @@ return [
     'servers.needs_credentials' => 'Serwer :type wymaga klucza API lub hasła, zanim będzie można go używać.',
     'servers.hostname_unresolved' => 'Zapisano, ale :host nie rozwiązuje się. Połączenia będą używać adresu IP.',
     'servers.hostname_mismatch' => 'Zapisano, ale :host rozwiązuje się na :resolved, a nie :ip. Jedno z dwóch wskazuje na niewłaściwą maszynę.',
+    'servers.hostname_behind_nat' => 'Zapisano. :host rozwiązuje się na :resolved, a :ip to adres prywatny, jak w przypadku serwera za NAT: PNLCS łączy się z serwerem pod :ip, a linki klientów (webmail, phpMyAdmin, menedżer plików) używają :host, więc :host musi prowadzić do panelu z zewnątrz.',
     'servers.auth_failed' => 'Połączono z :host, ale :type odrzucił poświadczenia. Sprawdź klucz API.',
     'servers.auth_error' => 'Połączono z :host, ale sprawdzenie nie powiodło się: :error',
     'servers.api_key' => 'Klucz API / token',

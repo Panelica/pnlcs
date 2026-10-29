@@ -102,6 +102,7 @@ return [
     'servers.needs_credentials' => 'Для використання сервера :type необхідно вказати API-ключ або пароль.',
     'servers.hostname_unresolved' => 'Збережено, але ім’я :host не визначається через DNS. Натомість використовуватиметься IP-адреса.',
     'servers.hostname_mismatch' => 'Збережено, але :host вказує на :resolved, а не на :ip. Одне з цих значень веде на інший сервер.',
+    'servers.hostname_behind_nat' => 'Збережено. :host вказує на :resolved, а :ip — приватна адреса, як у сервера за NAT: PNLCS звертається до сервера за :ip, а посилання клієнтів (webmail, phpMyAdmin, файловий менеджер) використовують :host, тому :host має відкривати панель ззовні.',
     'servers.auth_failed' => 'З’єднання з :host встановлено, але :type відхилив облікові дані. Перевірте API-ключ.',
     'servers.auth_error' => 'З’єднання з :host встановлено, але перевірка завершилася помилкою: :error',
     'servers.api_key' => 'API-ключ / токен',
