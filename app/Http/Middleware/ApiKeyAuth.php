@@ -9,10 +9,20 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpFoundation\IpUtils;
 
 class ApiKeyAuth
 {
+    /** Password attempts allowed per username and address, as the admin login allows. */
+    private const PASSWORD_ATTEMPTS = 5;
+
+    private const PASSWORD_DECAY = 60;
+
+    /** One answer for every failed sign-in, so none of them is an oracle. */
+    private const AUTH_FAILED = 'Authentication failed';
+
     public function handle(Request $request, Closure $next)
     {
         // The liveness probe is public so uptime monitors can use it; it says
@@ -58,7 +68,26 @@ class ApiKeyAuth
         }
 
         // 2. Admin username/password auth (WHMCS compatible)
+        //
+        // Guessing passwords here was cheap: the throttle on /api is keyed on
+        // the API credential that was sent, and a username+password request
+        // sends none, so attempts shared one bucket. Worse, a correct password
+        // on an account with a second factor answered differently from a wrong
+        // one, which told the guesser when they had found it. Both reported
+        // privately in October 2026.
+        //
+        // Now: five attempts a minute per username and address, the same five
+        // the admin login allows, and every failure says the same thing. The
+        // real reason goes to the log, for the operator who has to explain it
+        // to an integrator.
         if ($username && $password) {
+            $key = 'api-password:'.sha1(mb_strtolower((string) $username).'|'.(string) $request->ip());
+
+            if (RateLimiter::tooManyAttempts($key, self::PASSWORD_ATTEMPTS)) {
+                return response()->json(['result' => 'error', 'message' => self::AUTH_FAILED], 429)
+                    ->header('Retry-After', (string) RateLimiter::availableIn($key));
+            }
+
             $admin = Admin::where('username', $username)->first();
             if ($admin && Hash::check($password, $admin->password)) {
                 // A password is only half of what this account signs in with.
@@ -66,16 +95,23 @@ class ApiKeyAuth
                 // factor the admin login asks for; an API credential is the
                 // way in for an account that has one.
                 if ($admin->second_factor_type && $admin->second_factor_secret) {
-                    return response()->json([
-                        'result' => 'error',
-                        'message' => 'This account uses two-factor authentication. Use an API credential (identifier and secret) instead of the password.',
-                    ], 401);
+                    RateLimiter::hit($key, self::PASSWORD_DECAY);
+                    Log::info('API password sign-in refused: the account uses two-factor authentication, so an API credential is required.', [
+                        'admin_id' => $admin->id,
+                        'ip' => $request->ip(),
+                    ]);
+
+                    return response()->json(['result' => 'error', 'message' => self::AUTH_FAILED], 401);
                 }
+
+                RateLimiter::clear($key);
 
                 return $this->asAdmin($request, $next, $admin);
             }
 
-            return response()->json(['result' => 'error', 'message' => 'Authentication failed'], 401);
+            RateLimiter::hit($key, self::PASSWORD_DECAY);
+
+            return response()->json(['result' => 'error', 'message' => self::AUTH_FAILED], 401);
         }
 
         // 3. Bearer token auth (for session-based API access)

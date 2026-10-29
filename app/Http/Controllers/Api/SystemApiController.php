@@ -34,6 +34,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -457,9 +458,24 @@ class SystemApiController extends BaseApiController
         return $this->success();
     }
 
+    /**
+     * Check a client's email and password (WHMCS ValidateLogin). An integration
+     * calls this from its own login form, so it is the one API call that takes
+     * a password a visitor typed - and the throttle on /api counts per API
+     * credential, 300 a minute, which is a comfortable rate to guess at. The
+     * client login form allows five attempts per email and address; this
+     * allows ten, and the clock does not reset on a correct password, so a
+     * guesser cannot buy more attempts by finding one.
+     */
     public function validateLogin(Request $request)
     {
         $request->validate(['email' => 'required|email', 'password2' => 'required|string']);
+
+        $key = 'api-validatelogin:'.sha1(mb_strtolower((string) $request->email).'|'.(string) $request->ip());
+        if (RateLimiter::tooManyAttempts($key, 10)) {
+            return $this->error('Invalid credentials', 429);
+        }
+        RateLimiter::hit($key, 60);
 
         $user = User::where('email', $request->email)->first();
         if (! $user || ! Hash::check($request->password2, $user->password)) {
