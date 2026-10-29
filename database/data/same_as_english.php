@@ -75,6 +75,7 @@ return [
         'admin.settings.domains_section',
         'admin.settings.favicon',
         'admin.settings.logo',
+        'admin.settings.tab_domains',
         'admin.settings.ticket_signature_hint',
         'admin.sidebar.status',
         'admin.sidebar.tickets',

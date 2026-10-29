@@ -314,8 +314,10 @@ test('paying a renewal moves the addon date on by one cycle', function () {
 
     app(PaymentService::class)->applyPayment($invoice, 'banktransfer', 'TXN-ADDON', (float) $invoice->total);
 
+    // As BillingCycleHelper advances it: without overflow, so a due date on the
+    // 31st moves to the last day of next month, not into the month after.
     expect($serviceAddon->fresh()->next_due_date->toDateString())
-        ->toBe($due->addMonth()->toDateString());
+        ->toBe($due->addMonthNoOverflow()->toDateString());
 });
 
 // ---------------------------------------------------------------------------

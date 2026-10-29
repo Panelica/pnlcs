@@ -180,7 +180,9 @@ const UNTRANSLATED_VALUE_BUDGET = [
     // Standesbeamter. Those 25 labels are the whole of the raise.
     // +1 2026-10-23 (#245): German writes "Ports", not "Häfen" (harbours),
     // for the apps page's ports.
-    'de' => 190,
+    // +1 2026-10-29 (#332): the settings page's new "Domains" tab is written
+    // "Domains" in German too, as the labels above it already are.
+    'de' => 191,
     'pl' => 105,
     'zh' => 39,
 ];
