@@ -3325,7 +3325,7 @@ return [
     'settings.invoice_template_remove_confirm' => 'Remove the uploaded invoice template and go back to the built-in one?',
     'settings.invoice_template_uploaded' => 'Invoice template uploaded.',
     'settings.invoice_template_removed' => 'Invoice template removed.',
-    'settings.invoice_template_hint' => 'The custom template is a plain HTML document. The placeholders below are replaced with the invoice data when it is rendered; nothing else is processed. Upload switches to it; save the form to keep the selection.',
+    'settings.invoice_template_hint' => 'The custom template is a plain HTML document. The placeholders below are replaced with the invoice data when it is rendered; nothing else is processed. Wrap a block in {?key}…{/key} to show it only when the value is set, or {!key}…{/key} to show it only when it is empty. Upload switches to it; save the form to keep the selection.',
     'settings.tab_company' => 'Company',
     'settings.tab_invoicing' => 'Invoicing',
     'settings.tab_domains' => 'Domains',

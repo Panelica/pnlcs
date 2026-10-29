@@ -40,6 +40,16 @@ it('replaces placeholders with invoice data and never executes the content', fun
     invoiceTemplateCleanup();
 });
 
+it('resolves conditional blocks against the placeholder value', function () {
+    $service = app(InvoicePdfService::class);
+    $vars = ['notes' => 'Some note', 'date_paid' => '', 'unknown' => null];
+
+    $template = 'A{?notes}[{notes}]{/notes}B{!date_paid}[unpaid]{/date_paid}C{?unknown}[x]{/unknown}D';
+
+    expect($service->merge($template, $vars))
+        ->toBe('A[Some note]B[unpaid]CD');
+});
+
 it('uses the uploaded template only while one is selected and present', function () {
     $invoice = Invoice::factory()->create();
     $service = app(InvoicePdfService::class);

@@ -3324,7 +3324,7 @@ return [
     'settings.invoice_template_remove_confirm' => 'Hochgeladene Rechnungsvorlage entfernen und zur eingebauten zurückkehren?',
     'settings.invoice_template_uploaded' => 'Rechnungsvorlage hochgeladen.',
     'settings.invoice_template_removed' => 'Rechnungsvorlage entfernt.',
-    'settings.invoice_template_hint' => 'Die eigene Vorlage ist ein einfaches HTML-Dokument. Die Platzhalter unten werden beim Rendern durch die Rechnungsdaten ersetzt; nichts anderes wird verarbeitet. Das Hochladen stellt darauf um; speichern Sie das Formular, um die Auswahl zu behalten.',
+    'settings.invoice_template_hint' => 'Die eigene Vorlage ist ein einfaches HTML-Dokument. Die Platzhalter unten werden beim Rendern durch die Rechnungsdaten ersetzt; nichts anderes wird verarbeitet. Ein Block {?schlüssel}…{/schlüssel} erscheint nur, wenn der Wert gesetzt ist, ein Block {!schlüssel}…{/schlüssel} nur, wenn er leer ist. Das Hochladen stellt darauf um; speichern Sie das Formular, um die Auswahl zu behalten.',
     'settings.tab_company' => 'Firma',
     'settings.tab_invoicing' => 'Abrechnung',
     'settings.tab_domains' => 'Domains',

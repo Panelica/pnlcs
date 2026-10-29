@@ -3325,7 +3325,7 @@ return [
     'settings.invoice_template_remove_confirm' => '删除已上传的发票模板并返回内置模板？',
     'settings.invoice_template_uploaded' => '发票模板已上传。',
     'settings.invoice_template_removed' => '发票模板已删除。',
-    'settings.invoice_template_hint' => '自定义模板是纯 HTML 文档。渲染时，下面的占位符会替换为发票数据；不会处理其他任何内容。上传会切换到它；保存表单以保留选择。',
+    'settings.invoice_template_hint' => '自定义模板是纯 HTML 文档。渲染时，下面的占位符会替换为发票数据；不会处理其他任何内容。{?key}…{/key} 块仅在值已设置时显示，{!key}…{/key} 块仅在值为空时显示。上传会切换到它；保存表单以保留选择。',
     'settings.tab_company' => '公司',
     'settings.tab_invoicing' => '开票',
     'settings.tab_domains' => '域名',

@@ -3325,7 +3325,7 @@ return [
     'settings.invoice_template_remove_confirm' => '¿Quitar la plantilla de factura subida y volver a la integrada?',
     'settings.invoice_template_uploaded' => 'Plantilla de factura subida.',
     'settings.invoice_template_removed' => 'Plantilla de factura quitada.',
-    'settings.invoice_template_hint' => 'La plantilla personalizada es un documento HTML plano. Al renderizarse, los siguientes marcadores se sustituyen por los datos de la factura; no se procesa nada más. Subirla cambia a ella; guarde el formulario para conservar la selección.',
+    'settings.invoice_template_hint' => 'La plantilla personalizada es un documento HTML plano. Al renderizarse, los siguientes marcadores se sustituyen por los datos de la factura; no se procesa nada más. Un bloque {?clave}…{/clave} se muestra solo cuando el valor está definido, y {!clave}…{/clave} solo cuando está vacío. Subirla cambia a ella; guarde el formulario para conservar la selección.',
     'settings.tab_company' => 'Empresa',
     'settings.tab_invoicing' => 'Facturación',
     'settings.tab_domains' => 'Dominios',

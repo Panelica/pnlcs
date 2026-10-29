@@ -138,14 +138,32 @@ class InvoicePdfService
     }
 
     /**
-     * Replace the template's {placeholders} with their values. Anything left
-     * over is not a known placeholder and is left untouched, so a stray brace
-     * cannot break the document.
+     * Replace the template's {placeholders} with their values and resolve its
+     * conditional blocks. Anything left over is not a known placeholder and is
+     * left untouched, so a stray brace cannot break the document.
+     *
+     * A block {?key} … {/key} renders only when {key} has a value;
+     * {!key} … {/key} renders only when it is empty. The test is against the
+     * value, so it stays data, never code — nothing in the template runs.
      *
      * @param  array<string, string>  $vars
      */
     public function merge(string $template, array $vars): string
     {
+        $block = '/\{(?<mark>[?!])(?<key>[a-z0-9_]+)\}(?<body>.*?)\{\/\k<key>\}/s';
+
+        // Resolve blocks innermost-first until none remain, so a block shown
+        // around another block is still processed.
+        $count = 0;
+        do {
+            $template = preg_replace_callback($block, function (array $m) use ($vars): string {
+                $empty = ! filled($vars[$m['key']] ?? null);
+                $show = $m['mark'] === '!' ? $empty : ! $empty;
+
+                return $show ? $m['body'] : '';
+            }, $template, -1, $count);
+        } while ($count > 0);
+
         foreach ($vars as $key => $value) {
             $template = str_replace('{'.$key.'}', (string) $value, $template);
         }
