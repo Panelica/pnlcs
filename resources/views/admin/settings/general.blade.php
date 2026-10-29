@@ -585,13 +585,13 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.settings.invoice_template_file') }}</label>
-                        <input type="file" name="template" accept=".html,.htm,.txt" class="form-control" form="invoice-template-upload">
-                        <button type="submit" form="invoice-template-upload" class="btn btn-default btn-sm" style="margin-top:8px;">{{ __('admin.settings.invoice_template_upload') }}</button>
+                        <input type="file" id="invoice-template-file" accept=".html,.htm,.txt" class="form-control">
+                        <button type="button" id="invoice-template-upload-btn" class="btn btn-default btn-sm" style="margin-top:8px;">{{ __('admin.settings.invoice_template_upload') }}</button>
                     </div>
                     <div class="form-group">
                         <label class="form-label">&nbsp;</label>
                         @if($invoiceTemplateCustom)
-                        <button type="submit" form="invoice-template-remove" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
+                        <button type="button" id="invoice-template-remove-btn" class="btn btn-default btn-sm">{{ __('admin.settings.invoice_template_remove') }}</button>
                         @endif
                     </div>
                 </div>
@@ -721,11 +721,52 @@
     </div>
 </form>
 
-{{-- The invoice-template upload/remove run as their own requests, but their
-     controls sit inside the settings form above, which must not be nested.
-     These empty forms are targeted through the controls' `form` attribute. --}}
-<form id="invoice-template-upload" method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data">@csrf</form>
-<form id="invoice-template-remove" method="POST" action="{{ route('admin.settings.invoice-template.remove') }}">@csrf @method('DELETE')</form>
+<script>
+// The invoice-template upload/remove are their own requests, so they go through
+// fetch with the page's CSRF token instead of a nested form.
+(function () {
+    var token = (document.querySelector('input[name="_token"]') || {}).value || '';
+
+    var uploadBtn = document.getElementById('invoice-template-upload-btn');
+    var fileInput = document.getElementById('invoice-template-file');
+    if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', function () {
+            if (!fileInput.files.length) {
+                return;
+            }
+            var fd = new FormData();
+            fd.append('template', fileInput.files[0]);
+            fd.append('_token', token);
+            fetch('{{ route('admin.settings.invoice-template.upload') }}', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            }).finally(function () { window.location.reload(); });
+        });
+    }
+
+    var removeBtn = document.getElementById('invoice-template-remove-btn');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function () {
+            var message = '{{ __("admin.settings.invoice_template_remove_confirm") }}';
+            var ask = (window.pnDialog && window.pnDialog.confirm)
+                ? window.pnDialog.confirm(message, { danger: true })
+                : Promise.resolve(window.confirm(message));
+
+            ask.then(function (yes) {
+                if (!yes) {
+                    return;
+                }
+                fetch('{{ route('admin.settings.invoice-template.remove') }}', {
+                    method: 'POST',
+                    body: new URLSearchParams({ _method: 'DELETE', _token: token }),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                }).finally(function () { window.location.reload(); });
+            });
+        });
+    }
+})();
+</script>
 
 <script>
 (function () {
