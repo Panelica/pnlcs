@@ -225,14 +225,15 @@ class InvoicePdfService
             'total' => invoice_money_fmt((float) $invoice->total, $invoice),
             'notes' => $invoice->notes ? nl2br(e($invoice->notes)) : '',
             'items' => $this->itemsHtml($invoice),
+            'company_bank_accounts' => $this->bankAccountsHtml(),
         ];
 
         // Everything above is text the customer or the operator typed, and it
         // is about to become HTML: a company called "Müller & Sohn" must read
-        // that way in the PDF, not break the document around it. The two
-        // values that ARE markup - the logo tag and the items table - are
-        // built here and escaped as they are built.
-        $markup = ['company_logo', 'items', 'notes'];
+        // that way in the PDF, not break the document around it. The values
+        // that ARE markup - the logo, the tables and the notes - are built
+        // here and escaped as they are built.
+        $markup = ['company_logo', 'items', 'notes', 'company_bank_accounts'];
         foreach ($vars as $key => $value) {
             if (! in_array($key, $markup, true)) {
                 $vars[$key] = e((string) $value);
@@ -345,6 +346,60 @@ class InvoicePdfService
             .'</style>';
     }
 
+    /**
+     * The bank accounts the {company_bank_accounts} placeholder emits: one row
+     * per account from the bank-transfer module, with its bank name, currency
+     * and number. Empty when no accounts are configured, so the conditional
+     * block {?company_bank_accounts}…{/company_bank_accounts} hides it itself.
+     */
+    protected function bankAccountsHtml(): string
+    {
+        $accounts = (new BankTransferModule)->accounts();
+
+        if ($accounts === []) {
+            return '';
+        }
+
+        $holder = trim((string) ($accounts[0]['holder'] ?? ''));
+
+        $rows = '';
+        foreach ($accounts as $account) {
+            $name = trim((string) ($account['name'] ?? ''));
+            $currency = trim((string) ($account['currency'] ?? ''));
+            $label = implode(' · ', array_filter([$name, $currency]));
+
+            $number = trim((string) ($account['iban'] ?? ''));
+            if ($number === '') {
+                $number = trim((string) ($account['account_number'] ?? ''));
+            }
+
+            $rows .= '<tr>'
+                .'<td>'.e($label).'</td>'
+                .'<td class="num">'.e($number).'</td>'
+                .'</tr>';
+        }
+
+        $title = e(__('pdf.bank_accounts'));
+        if ($holder !== '') {
+            $title .= '<br><span style="font-weight:normal;">'.e($holder).'</span>';
+        }
+
+        return $this->bankAccountsStyle()
+            .'<table class="bank-accounts"><thead><tr><th colspan="2">'.$title.'</th></tr></thead>'
+            .'<tbody>'.$rows.'</tbody></table>';
+    }
+
+    /** The self-contained stylesheet for the {company_bank_accounts} table. */
+    protected function bankAccountsStyle(): string
+    {
+        return '<style>'
+            .'table.bank-accounts{width:100%;border-collapse:collapse;font-size:8.5pt;table-layout:fixed;}'
+            .'table.bank-accounts th,table.bank-accounts td{border:0.5pt solid #111;padding:2pt 4pt;vertical-align:top;}'
+            .'table.bank-accounts thead th{background:#eaeaea;text-align:left;font-weight:bold;}'
+            .'table.bank-accounts td.num{text-align:right;font-family:monospace;}'
+            .'</style>';
+    }
+
     /** The unit net price: gross less its tax share when prices include tax. */
     protected function unitNetPrice(Invoice $invoice, InvoiceItem $item, float $rate): float
     {
@@ -387,7 +442,7 @@ class InvoicePdfService
             'company_name', 'company_legal_name', 'company_domain', 'company_address',
             'company_city', 'company_postcode', 'company_country', 'company_phone',
             'company_email', 'company_tax_office', 'company_tax_id', 'company_mersis',
-            'company_logo',
+            'company_logo', 'company_bank_accounts',
             'client_name', 'client_company', 'client_address', 'client_address2',
             'client_city', 'client_state', 'client_postcode', 'client_country',
             'client_tax_id', 'client_email',

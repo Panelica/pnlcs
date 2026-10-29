@@ -2,6 +2,7 @@
 
 return [
     'amount_in' => 'Do zapłaty',
+    'bank_accounts' => 'Rachunki bankowe',
     'rate_label' => 'Kurs wymiany',
     'rate_note' => 'Rozliczono w :to, przeliczone z :from po kursie :rate.',
     'rate_note_official' => 'Przeliczono po :kind opublikowanym przez :source dnia :date: 1 :from = :rate :to:ref',
