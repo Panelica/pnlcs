@@ -8,6 +8,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -25,6 +26,11 @@ use Illuminate\Support\Facades\URL;
  * and a hash of the address, so nothing has to be kept in a table and a
  * changed address invalidates every old link on its own.
  *
+ * The same mail carries a six-digit code for the page the customer is already
+ * signed in on. Customers read the mail on a phone and pass on "the code" -
+ * the link included - to whoever asked them for it, so neither one signs
+ * anybody in: they prove the mailbox, and the session proves the person.
+ *
  * Unverified customers can still sign in and look around - they are stopped at
  * the checkout, the one point where an unreachable address actually costs
  * somebody money.
@@ -33,6 +39,11 @@ class EmailVerificationController extends Controller
 {
     /** How long a link is good for. */
     private const LINK_TTL_MINUTES = 60 * 24;
+
+    /** How long a code is good for, and how many wrong tries it takes. */
+    public const CODE_MINUTES = 15;
+
+    public const CODE_ATTEMPTS = 5;
 
     /**
      * Whether this installation asks for verification at all.
@@ -70,6 +81,7 @@ class EmailVerificationController extends Controller
                 self::verificationUrl($user),
                 $user->email,
                 (string) $user->first_name,
+                self::newCode($user),
             ));
 
             return true;
@@ -78,6 +90,54 @@ class EmailVerificationController extends Controller
 
             return false;
         }
+    }
+
+    /**
+     * A fresh code; the one sent before stops working. Kept in the cache
+     * rather than the session: staff changing a login's address send the mail
+     * from their own session, and the customer types the code into theirs.
+     * Only a hash is kept, with the address it was sent to.
+     */
+    private static function newCode(User $user): string
+    {
+        $code = (string) random_int(100000, 999999);
+
+        Cache::put(self::codeKey($user), [
+            'hash' => hash('sha256', $code),
+            'email' => sha1($user->email),
+            'attempts' => 0,
+            'expires' => now()->addMinutes(self::CODE_MINUTES)->getTimestamp(),
+        ], now()->addMinutes(self::CODE_MINUTES));
+
+        return $code;
+    }
+
+    /** True when the code is the one last sent to the user's current address. */
+    private static function checkCode(User $user, string $code): bool
+    {
+        $pending = Cache::get(self::codeKey($user));
+
+        if (! is_array($pending) || $pending['expires'] < now()->getTimestamp()
+            || $pending['attempts'] >= self::CODE_ATTEMPTS
+            || ! hash_equals($pending['email'], sha1($user->email))) {
+            return false;
+        }
+
+        if (! hash_equals($pending['hash'], hash('sha256', $code))) {
+            $pending['attempts']++;
+            Cache::put(self::codeKey($user), $pending, now()->setTimestamp($pending['expires']));
+
+            return false;
+        }
+
+        Cache::forget(self::codeKey($user));
+
+        return true;
+    }
+
+    private static function codeKey(User $user): string
+    {
+        return 'email-verification-code:'.$user->id;
     }
 
     /** The "check your inbox" page. */
@@ -91,8 +151,34 @@ class EmailVerificationController extends Controller
     }
 
     /**
+     * The code in the mail, typed into the waiting page.
+     */
+    public function verifyCode(Request $request)
+    {
+        $user = $request->user();
+
+        if (! self::required() || $user->hasVerifiedEmail()) {
+            return redirect()->route('client.home');
+        }
+
+        $code = preg_replace('/\D/', '', (string) $request->input('code'));
+
+        if ($code === '' || ! self::checkCode($user, $code)) {
+            return back()->withErrors(['code' => __('client.email_verify.code_invalid')]);
+        }
+
+        $user->markEmailAsVerified();
+
+        return $this->afterVerification($request);
+    }
+
+    /**
      * The link in the mail. No sign-in required: the customer may open it on a
      * phone that has no session. The signature is what makes it safe.
+     *
+     * It verifies the address and nothing more. It used to sign the holder in
+     * as well, for 24 hours and as often as it was opened - and customers
+     * forward it, taking it for "the code".
      */
     public function verify(Request $request, int $id, string $hash)
     {
@@ -105,18 +191,25 @@ class EmailVerificationController extends Controller
 
         if (! $user->hasVerifiedEmail()) {
             $user->markEmailAsVerified();
+            Cache::forget(self::codeKey($user));
         }
 
-        // Somebody else already signed in on this browser keeps their session;
-        // otherwise the person who proved the address is let in.
+        // Opened where nobody is signed in - another device, a forwarded
+        // link - the address is confirmed and the customer signs in as usual.
         if (! Auth::check()) {
-            Auth::login($user);
+            return redirect()->route('client.login')
+                ->with('success', __('client.email_verify.verified_sign_in'));
         }
 
+        return $this->afterVerification($request);
+    }
+
+    private function afterVerification(Request $request)
+    {
         // An order that was stopped at the payment step goes back there - that
-        // is what they verified for. The marker lives in the session, so a link
-        // opened on another device lands on the dashboard instead, with the
-        // basket still waiting.
+        // is what they verified for. The marker lives in the session, so a
+        // browser without it lands on the dashboard instead, with the basket
+        // still waiting.
         $target = $request->session()->pull('checkout_after_verification')
             ? 'client.cart.checkout'
             : 'client.home';
