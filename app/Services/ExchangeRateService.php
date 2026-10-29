@@ -43,6 +43,16 @@ class ExchangeRateService
             Log::warning('Currency update: frankfurter failed: '.$e->getMessage());
         }
 
+        // Provider 3: allratestoday.com (ECB reference rates, re-based to $base server-side)
+        try {
+            $response = Http::timeout($timeout)->get("https://allratestoday.com/api/open/latest/{$base}");
+            if ($response->successful() && ($response->json('result') === 'success') && is_array($response->json('rates'))) {
+                return $response->json('rates');
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Currency update: allratestoday failed: '.$e->getMessage());
+        }
+
         return null;
     }
 

@@ -43,6 +43,22 @@ test('currency update falls back to frankfurter when er-api fails', function () 
     expect((float) Currency::where('code', 'USD')->first()->rate)->toBe(1.08);
 });
 
+test('currency update falls back to allratestoday when er-api and frankfurter fail', function () {
+    Currency::query()->delete();
+    Currency::create(['code' => 'EUR', 'rate' => 1, 'is_default' => true]);
+    Currency::create(['code' => 'USD', 'rate' => 1]);
+
+    Http::fake([
+        'open.er-api.com/*'     => Http::response('oops', 500),
+        'api.frankfurter.app/*' => Http::response('oops', 500),
+        'allratestoday.com/*'   => Http::response(['result' => 'success', 'base_code' => 'EUR', 'rates' => ['USD' => 1.09]]),
+    ]);
+
+    $this->artisan('pnlcs:currency-update')->assertExitCode(0);
+
+    expect((float) Currency::where('code', 'USD')->first()->rate)->toBe(1.09);
+});
+
 test('currency update respects the disable setting', function () {
     Currency::query()->delete();
     Currency::create(['code' => 'USD', 'rate' => 1, 'is_default' => true]);
