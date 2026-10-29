@@ -110,3 +110,20 @@ it('accepts an HTML template and removes it back to the built-in one', function 
 
     invoiceTemplateCleanup();
 });
+
+it('writes text into the template as text, so a name with markup cannot break the document', function () {
+    $client = Client::factory()->create([
+        'company_name' => 'Müller & Sohn <b>GmbH</b>',
+        'first_name' => 'Ann & Co',
+        'address1' => '5 "Main" Street',
+    ]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id]);
+
+    $vars = app(InvoicePdfService::class)->placeholderVars($invoice);
+
+    expect($vars['client_company'])->toBe('Müller &amp; Sohn &lt;b&gt;GmbH&lt;/b&gt;')
+        ->and($vars['client_name'])->toContain('Ann &amp; Co')
+        ->and($vars['client_address'])->toBe('5 &quot;Main&quot; Street')
+        // The two values that are meant to be markup stay markup.
+        ->and($vars['items'])->toContain('<table');
+});

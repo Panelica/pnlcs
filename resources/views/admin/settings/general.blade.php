@@ -15,7 +15,7 @@
         .settings-tabs { display:flex; flex-wrap:wrap; gap:2px; border-bottom:2px solid #e5e7eb; margin-bottom:18px; }
         .settings-tab { padding:9px 16px; font-size:13px; background:none; border:none; border-bottom:3px solid transparent; color:#555; cursor:pointer; margin-bottom:-2px; }
         .settings-tab:hover { color:#333; }
-        .settings-tab.is-active { border-bottom-color:#337ab7; color:#337ab7; font-weight:600; }
+        .settings-tab.is-active { border-bottom-color:var(--theme-primary, #1a4d80); color:var(--theme-primary, #1a4d80); font-weight:600; }
         .card[data-tab][hidden] { display:none !important; }
     </style>
     <div class="settings-tabs" role="tablist">
@@ -742,10 +742,37 @@
     }
 
     tabs.forEach(function (t) {
-        t.addEventListener('click', function () { activate(t.getAttribute('data-tab')); });
+        t.addEventListener('click', function () {
+            activate(t.getAttribute('data-tab'));
+            history.replaceState(null, '', '#' + t.getAttribute('data-tab'));
+        });
     });
 
-    activate('company');
+    // A link to one section - the admin search returns those
+    // (AdminSettingsIndex), and so do the anchors on this page - must open the
+    // tab holding it, or it lands on a hidden card and the page looks empty.
+    function tabOf(hash) {
+        if (!hash) return null;
+        var name = hash.replace('#', '');
+        var byTab = document.querySelector('.settings-tab[data-tab="' + CSS.escape(name) + '"]');
+        if (byTab) return name;
+        var section = document.getElementById(name) || document.querySelector('[id="' + CSS.escape(name) + '"]');
+        var card = section ? section.closest('.card[data-tab]') : null;
+
+        return card ? card.getAttribute('data-tab') : null;
+    }
+
+    function openFromHash() {
+        var name = tabOf(window.location.hash) || 'company';
+        activate(name);
+        var target = document.getElementById(window.location.hash.replace('#', ''));
+        if (target && target.closest('.card[data-tab]')) {
+            target.scrollIntoView();
+        }
+    }
+
+    window.addEventListener('hashchange', openFromHash);
+    openFromHash();
 })();
 
 document.getElementById('invoice-number-format').addEventListener('input', renderInvoicePreview);

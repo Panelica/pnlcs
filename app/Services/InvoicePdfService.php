@@ -204,9 +204,21 @@ class InvoicePdfService
             'items' => $this->itemsHtml($invoice),
         ];
 
+        // Everything above is text the customer or the operator typed, and it
+        // is about to become HTML: a company called "Müller & Sohn" must read
+        // that way in the PDF, not break the document around it. The two
+        // values that ARE markup - the logo tag and the items table - are
+        // built here and escaped as they are built.
+        $markup = ['company_logo', 'items', 'notes'];
+        foreach ($vars as $key => $value) {
+            if (! in_array($key, $markup, true)) {
+                $vars[$key] = e((string) $value);
+            }
+        }
+
         $ksef ??= $this->ksefInfo($invoice);
-        $vars['ksef_number'] = $ksef['number'] ?? '';
-        $vars['ksef_qr'] = ! empty($ksef['qr']) ? '<img src="'.$ksef['qr'].'" alt="">' : '';
+        $vars['ksef_number'] = e((string) ($ksef['number'] ?? ''));
+        $vars['ksef_qr'] = ! empty($ksef['qr']) ? '<img src="'.e((string) $ksef['qr']).'" alt="">' : '';
 
         return $vars;
     }
