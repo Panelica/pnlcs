@@ -2179,6 +2179,7 @@ return [
     'search.tickets' => 'Support-Tickets',
     'search.orders' => 'Bestellungen',
     'search.invoice_title' => 'Rechnung #:num',
+    'search.proforma_title' => 'Proformarechnung #:num',
     'search.order_title' => 'Bestellung #:num',
     'search.pages' => 'Seiten',
     'search.settings' => 'Einstellungen',

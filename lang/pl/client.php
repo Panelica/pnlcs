@@ -717,6 +717,7 @@ return [
     'invoices.due' => 'Termin płatności',
     'invoices.invoice_details' => 'Szczegóły faktury',
     'invoices.invoice_prefix' => 'Faktura #:id',
+    'invoices.proforma_prefix' => 'Proforma #:id',
     'invoices.issued' => 'Wystawiono',
     'invoices.network_error' => 'Błąd sieci:',
     'invoices.network_error_only' => 'Nie udało się połączyć z operatorem płatności. Sprawdź połączenie i spróbuj ponownie.',

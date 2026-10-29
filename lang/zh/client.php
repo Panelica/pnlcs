@@ -716,6 +716,7 @@ return [
     'invoices.due' => '应付',
     'invoices.invoice_details' => '发票详情',
     'invoices.invoice_prefix' => '发票 #:id',
+    'invoices.proforma_prefix' => '形式发票 #:id',
     'invoices.issued' => '开具日期',
     'invoices.network_error' => '网络错误：',
     'invoices.network_error_only' => '无法连接到支付服务商，请检查网络后重试。',

@@ -716,6 +716,7 @@ return [
     'invoices.due' => 'Son Ödeme',
     'invoices.invoice_details' => 'Fatura Detayları',
     'invoices.invoice_prefix' => 'Fatura #:id',
+    'invoices.proforma_prefix' => 'Proforma Fatura #:id',
     'invoices.issued' => 'Düzenlenme',
     'invoices.network_error' => 'Ağ hatası:',
     'invoices.network_error_only' => 'Ödeme sağlayıcısına ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.',

@@ -716,6 +716,7 @@ return [
     'invoices.due' => 'Fällig',
     'invoices.invoice_details' => 'Rechnungsdetails',
     'invoices.invoice_prefix' => 'Rechnung Nr. :id',
+    'invoices.proforma_prefix' => 'Proformarechnung Nr. :id',
     'invoices.issued' => 'Ausgestellt',
     'invoices.network_error' => 'Netzwerkfehler:',
     'invoices.network_error_only' => 'Der Zahlungsanbieter ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',

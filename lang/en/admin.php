@@ -2179,6 +2179,7 @@ return [
     'search.tickets' => 'Tickets',
     'search.orders' => 'Orders',
     'search.invoice_title' => 'Invoice #:num',
+    'search.proforma_title' => 'Proforma #:num',
     'search.order_title' => 'Order #:num',
     'search.pages' => 'Pages',
     'search.settings' => 'Settings',
