@@ -79,6 +79,20 @@ We maintain a public hall of fame for researchers who help us. If you'd like to 
 - Panelica licence credit
 - Project swag
 
+## Hall of fame
+
+The people below reported a security defect privately and gave us the time to
+ship a fix first. Thank you — PNLCS is safer because of you.
+
+| Reported | Researcher | Finding |
+|---|---|---|
+| 2026-10-04 | [Santosh Kumar Puppala](https://github.com/Santoshkumarpuppala) | An API request carrying a valid identifier and no secret was accepted, which opened the whole admin API. Fixed in 1.3.0. |
+| 2026-10-13 | Sam Can ([@TailsNode](https://github.com/TailsNode)) | A password reset link took its host from the request, so a forged `X-Forwarded-Host` made a genuine mail from the shop point at somebody else's server. Fixed in 1.15.0. |
+| 2026-10-22 | Ertuğrul Keyvan (ikahost) | A review of the source: no effective limit on passwords tried at the API and a different answer for an account with a second factor; the same mail-link host problem; and a theme upload, behind `manage_settings`, running code. Fixed in 1.15.0. |
+
+If you have reported something and would like to be listed, or listed
+differently, write to [security@panelica.com](mailto:security@panelica.com).
+
 ## Safe harbour
 
 We will not pursue legal action against good-faith security researchers who:
