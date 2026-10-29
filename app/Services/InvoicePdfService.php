@@ -347,11 +347,11 @@ class InvoicePdfService
     }
 
     /**
-     * The summary table the {vat_summary} placeholder emits: the net total,
-     * one row per VAT rate (or tax treatment, "zw." / "np." and the like) with
-     * its tax amount only, the VAT total and the gross amount due — a single
-     * two-column table. Empty when the invoice has no VAT breakdown, so the
-     * {?vat_summary} conditional block hides it by itself.
+     * The {vat_summary} placeholder: one row per VAT rate — or tax treatment,
+     * "zw." / "np." and the like — with its tax amount only. The net, VAT and
+     * gross totals are the template's own {subtotal}, {tax} and {total}, so
+     * they are not repeated here. Empty when the invoice has no VAT breakdown,
+     * so the {?vat_summary} conditional block hides it by itself.
      */
     protected function vatSummaryHtml(Invoice $invoice): string
     {
@@ -361,11 +361,7 @@ class InvoicePdfService
             return '';
         }
 
-        $rows = '<tr>'
-            .'<td>'.e(__('pdf.vat_net_total')).'</td>'
-            .'<td class="num">'.e(invoice_money_fmt((float) $invoice->subtotal, $invoice)).'</td>'
-            .'</tr>';
-
+        $rows = '';
         foreach ($groups as $label => $group) {
             $rows .= '<tr>'
                 .'<td>'.e((string) $label).'</td>'
@@ -373,32 +369,17 @@ class InvoicePdfService
                 .'</tr>';
         }
 
-        $rows .= '<tr>'
-            .'<td>'.e(__('pdf.vat_total')).'</td>'
-            .'<td class="num">'.e(invoice_money_fmt((float) $invoice->tax, $invoice)).'</td>'
-            .'</tr>';
-
-        $rows .= '<tr class="total">'
-            .'<td>'.e(__('pdf.vat_gross_total')).'</td>'
-            .'<td class="num">'.e(invoice_money_fmt((float) $invoice->total, $invoice)).'</td>'
-            .'</tr>';
-
         return $this->vatSummaryStyle()
-            .'<table class="vat-summary"><thead><tr>'
-            .'<th>'.e(__('pdf.vat_summary_desc')).'</th>'
-            .'<th class="num">'.e(__('pdf.amount')).'</th>'
-            .'</tr></thead><tbody>'.$rows.'</tbody></table>';
+            .'<table class="vat-summary"><tbody>'.$rows.'</tbody></table>';
     }
 
     /** The self-contained stylesheet for the {vat_summary} table. */
     protected function vatSummaryStyle(): string
     {
         return '<style>'
-            .'table.vat-summary{width:100%;border-collapse:collapse;font-size:8.5pt;table-layout:fixed;}'
-            .'table.vat-summary th,table.vat-summary td{border:0.5pt solid #111;padding:2pt 4pt;vertical-align:top;}'
-            .'table.vat-summary thead th{background:#eaeaea;text-align:center;font-weight:bold;line-height:1.15;}'
-            .'table.vat-summary td.num,table.vat-summary th.num{text-align:right;}'
-            .'table.vat-summary tr.total td{font-weight:bold;background:#f5f5f5;}'
+            .'table.vat-summary{width:100%;border-collapse:collapse;font-size:8.5pt;}'
+            .'table.vat-summary td{border:0.5pt solid #111;padding:2pt 4pt;vertical-align:top;}'
+            .'table.vat-summary td.num{text-align:right;}'
             .'</style>';
     }
 
