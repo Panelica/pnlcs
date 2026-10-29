@@ -2,6 +2,115 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.15.0 — 2026-10-29
+
+A stable release, offered to every installation. It closes three security
+defects reported to us privately this month and carries the invoice-template
+work from #336. Thank you, [@hedon77](https://github.com/hedon77) (#336), and
+thank you to the three researchers who reported privately and waited for a
+fix: [Santosh Kumar Puppala](https://github.com/Santoshkumarpuppala), Sam Can
+([@TailsNode](https://github.com/TailsNode)) and Ertuğrul Keyvan (ikahost).
+They are now named in SECURITY.md.
+
+**A link in a mail no longer comes from the request.** A password reset link
+was built inside the web request, so its host was whatever the request
+carried — and with every proxy trusted, that included `X-Forwarded-Host`,
+which anybody can send. Ask for a reset for somebody else's address with a
+forged host and the victim clicks a link in a genuine mail from your shop
+that hands the token to another server. Reset, invitation and verification
+links are now built from **Settings → General → Domain**, then `APP_URL`;
+with neither set the old behaviour remains and a warning naming the route is
+logged, so an installation nobody has configured still sends a working link.
+**Set the Domain setting if you have not.**
+
+**Two things to know before you upgrade.** The host header is no longer taken
+from `X-Forwarded-Host`: if you front PNLCS with a proxy that replaces the
+`Host` header with an internal name and announces the public one in
+`X-Forwarded-Host`, pass the public host instead — the client address, port,
+scheme and prefix are still trusted from the proxy, which is what the setting
+was there for. And the API's username+password sign-in now answers an account
+that has a second factor with the same `Authentication failed` as a wrong
+password; an integration that matched the old sentence sees a different one.
+
+### Added
+
+- **A VAT line-items table for custom invoice templates.** `{items}` now
+  emits a nine-column table — number, item, quantity, unit, net price, VAT
+  rate, VAT amount, net amount, gross amount — with its own style block and
+  `.invoice-items` classes, so a template's CSS cannot flatten it. The values
+  reuse `Invoice::lineTax()` and `TaxRule::taxShare()`, the VAT column prints
+  the rate (`23%`) or the line's label (`zw.`, `np.`), and the headers are
+  translated in every complete language. Long names wrap and a row is not
+  split across pages (#336).
+- **Conditional blocks in a custom invoice template.** `{?key}…{/key}`
+  renders only when `{key}` has a value and `{!key}…{/key}` only when it is
+  empty, nested, resolved before the values are substituted — so a value
+  carrying braces is never read as a block. The template stays data: nothing
+  in it is executed (#336).
+
+### Changed
+
+- Installing a theme takes a full administrator. A theme's views are compiled
+  as Blade, so a theme zip is code; the upload sat behind `manage_settings`,
+  which nobody reads as "may deploy code". Activating, downloading and
+  deleting the themes already installed are unchanged, and the upload card is
+  no longer drawn for roles that would be refused.
+- Trusted proxy headers: the client address, port, scheme, prefix and the AWS
+  ELB header, no longer the forwarded host.
+
+### Fixed
+
+- An invoice that is not taxed (`tax_mode = none`) keeps the four-column
+  `{items}` table it had before, byte for byte, including having no style
+  block of ours over the template's own CSS. The nine-column table would have
+  printed three zero columns and a `0%` rate — which, where VAT registration
+  is a legal claim, says something untrue — and would have changed the shape
+  of every template already using `{items}` (#336).
+
+### Security
+
+- **Mail links took their host from the request** (reported by Sam Can and,
+  independently, by Ertuğrul Keyvan). Reset, invitation and verification links
+  are built from the configured address; `X-Forwarded-Host` is no longer
+  trusted. Verification links already in customers' mailboxes keep working:
+  both the relative and the absolute signature are accepted.
+- **A password tried at the API was not effectively counted** (reported by
+  Ertuğrul Keyvan). The throttle on `/api` is keyed on the API credential
+  that was sent, and a username+password request sends none, so attempts from
+  everywhere shared one bucket. Now five attempts a minute per username and
+  address, cleared on success, answered with 429 and `Retry-After`;
+  `ValidateLogin` allows ten per email and address and does not reset on a
+  correct password. An account with a second factor answers exactly as a wrong
+  password does, with the real reason logged for the operator.
+- **Installing a theme ran code with `manage_settings`** (reported by
+  Ertuğrul Keyvan). It takes a full administrator, as above. This is the same
+  door as the invoice-template upload closed in #331.
+- The 1.3.0 fix for an API request carrying a valid identifier and no secret
+  was reported by Santosh Kumar Puppala; the credit was never written down.
+  It is now, in SECURITY.md.
+
+### Database changes
+
+- None. No migration ships in this release.
+
+### For theme and module authors
+
+- `App\Support\MailLink::route()` and `MailLink::signedRoute()` build a URL
+  from the configured address rather than the request. Any link that goes
+  into a mail should use them; `MailLink::root()` returns the configured root
+  or null.
+- `InvoicePdfService` gains `plainItemsHtml()`, `itemsTableStyle()`,
+  `unitNetPrice()`, `vatLabel()` and `lineAmount()`, all protected and
+  overridable, and `merge()` resolves `{?key}` / `{!key}` blocks before it
+  substitutes values.
+- `SettingController::installTheme()` refuses a role that is not
+  `is_full_admin` with a 403 before validation.
+
+### Views a theme may override that changed
+
+- `resources/views/admin/settings/appearance.blade.php` (the theme upload
+  card is drawn only for a full administrator).
+
 ## 1.14.0 — 2026-10-29
 
 A stable release, offered to every installation. It contains everything in
