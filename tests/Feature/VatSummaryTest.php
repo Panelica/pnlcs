@@ -9,10 +9,10 @@ use App\Services\InvoicePdfService;
 use App\Services\InvoiceService;
 
 /*
- * The {vat_summary} placeholder: one row per VAT rate (or tax treatment) with
- * its tax amount only. The net, VAT and gross totals are the template's own
- * {subtotal}, {tax} and {total}, so they are not repeated here. Computed from
- * the saved items (Invoice::vatBreakdown), not by parsing the rendered HTML.
+ * The {vat_summary} placeholder: the complete invoice summary in one table —
+ * net total, one row per VAT rate (or tax treatment) with its tax amount, the
+ * VAT total and the gross amount due. The {subtotal}, {tax} and {total}
+ * placeholders stay available for simpler templates.
  */
 
 function vatCurrency(): void
@@ -55,19 +55,7 @@ function renderVatTemplate(string $template, Invoice $invoice): string
     return $service->merge($template, $service->placeholderVars($invoice));
 }
 
-it('renders a single rate with only its tax amount', function () {
-    $invoice = vatSummaryInvoice([
-        ['description' => 'Hosting', 'amount' => 100, 'tax_rate' => 23, 'tax_label' => 'VAT 23%'],
-    ]);
-
-    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['vat_summary'];
-
-    expect($html)
-        ->toContain('VAT 23%')
-        ->toContain(invoice_money_fmt(23, $invoice));   // the 23% tax only
-});
-
-it('renders one row per rate with only the tax amount', function () {
+it('renders the full summary: net, per-rate VAT, VAT total and gross', function () {
     $invoice = vatSummaryInvoice([
         ['description' => 'A', 'amount' => 784, 'tax_rate' => 23, 'tax_label' => 'VAT 23%'],
         ['description' => 'B', 'amount' => 100, 'tax_rate' => 8, 'tax_label' => 'VAT 8%'],
@@ -76,8 +64,28 @@ it('renders one row per rate with only the tax amount', function () {
     $html = app(InvoicePdfService::class)->placeholderVars($invoice)['vat_summary'];
 
     expect($html)
+        ->toContain(__('pdf.vat_net_total'))
+        ->toContain(invoice_money_fmt((float) $invoice->subtotal, $invoice))
         ->toContain('VAT 23%')->toContain(invoice_money_fmt(180.32, $invoice))
-        ->toContain('VAT 8%')->toContain(invoice_money_fmt(8, $invoice));
+        ->toContain('VAT 8%')->toContain(invoice_money_fmt(8, $invoice))
+        ->toContain(__('pdf.vat_total'))
+        ->toContain(invoice_money_fmt((float) $invoice->tax, $invoice))
+        ->toContain(__('pdf.vat_gross_total'))
+        ->toContain(invoice_money_fmt((float) $invoice->total, $invoice));
+});
+
+it('renders a single rate summary', function () {
+    $invoice = vatSummaryInvoice([
+        ['description' => 'Hosting', 'amount' => 100, 'tax_rate' => 23, 'tax_label' => 'VAT 23%'],
+    ]);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['vat_summary'];
+
+    expect($html)
+        ->toContain('VAT 23%')
+        ->toContain(invoice_money_fmt(23, $invoice))
+        ->toContain(invoice_money_fmt(100, $invoice))   // net
+        ->toContain(invoice_money_fmt(123, $invoice));  // gross
 });
 
 it('sums several items with the same rate into one row', function () {
@@ -107,7 +115,7 @@ it('keeps a 0% rate and a VAT exemption distinct', function () {
         ->toContain('zw.');
 });
 
-it('does not repeat the net, VAT or gross totals', function () {
+it('the summary totals match the document values', function () {
     $invoice = vatSummaryInvoice([
         ['description' => 'A', 'amount' => 784, 'tax_rate' => 23, 'tax_label' => 'VAT 23%'],
         ['description' => 'B', 'amount' => 100, 'tax_rate' => 8, 'tax_label' => 'VAT 8%'],
@@ -115,12 +123,32 @@ it('does not repeat the net, VAT or gross totals', function () {
 
     $html = app(InvoicePdfService::class)->placeholderVars($invoice)['vat_summary'];
 
-    // The template prints these itself — {subtotal}, {tax}, {total} — so the
-    // breakdown must not carry them again.
     expect($html)
-        ->not->toContain(invoice_money_fmt((float) $invoice->subtotal, $invoice))
-        ->not->toContain(invoice_money_fmt((float) $invoice->tax, $invoice))
-        ->not->toContain(invoice_money_fmt((float) $invoice->total, $invoice));
+        ->toContain(invoice_money_fmt((float) $invoice->subtotal, $invoice))
+        ->toContain(invoice_money_fmt((float) $invoice->tax, $invoice))
+        ->toContain(invoice_money_fmt((float) $invoice->total, $invoice));
+});
+
+it('keeps {subtotal}, {tax} and {total} working independently', function () {
+    $invoice = vatSummaryInvoice([
+        ['description' => 'A', 'amount' => 784, 'tax_rate' => 23, 'tax_label' => 'VAT 23%'],
+        ['description' => 'B', 'amount' => 100, 'tax_rate' => 8, 'tax_label' => 'VAT 8%'],
+    ]);
+
+    $vars = app(InvoicePdfService::class)->placeholderVars($invoice);
+
+    expect($vars['subtotal'])->toBe(invoice_money_fmt((float) $invoice->subtotal, $invoice))
+        ->and($vars['tax'])->toBe(invoice_money_fmt((float) $invoice->tax, $invoice))
+        ->and($vars['total'])->toBe(invoice_money_fmt((float) $invoice->total, $invoice));
+
+    // A template built only from the individual placeholders still renders.
+    $html = renderVatTemplate('{subtotal}|{tax}|{total}', $invoice);
+
+    expect($html)->toBe(
+        invoice_money_fmt((float) $invoice->subtotal, $invoice)
+        .'|'.invoice_money_fmt((float) $invoice->tax, $invoice)
+        .'|'.invoice_money_fmt((float) $invoice->total, $invoice)
+    );
 });
 
 it('does not render the summary when the placeholder is absent', function () {
