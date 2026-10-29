@@ -57,7 +57,10 @@
             @if($company['tax_id'])<div>{{ __('pdf.tax_id') }}: {{ $company['tax_id'] }}</div>@endif
         </div>
         <div class="header-right">
-            <div class="invoice-title">{{ __('pdf.invoice') }}</div>
+            {{-- A proforma is not a VAT invoice and must not be headed as one
+                 (Invoice::isProforma), the same distinction {invoice_type}
+                 makes for an uploaded template. --}}
+            <div class="invoice-title">{{ $invoice->isProforma() ? __('pdf.proforma') : __('pdf.invoice') }}</div>
             <div class="invoice-number">#{{ $invoice->invoice_num ?? $invoice->id }}</div>
             @if($invoice->sourceInvoice)
             <div style="font-size:11px;color:#777;margin-top:4px;">{{ __('admin.invoices.source_proforma') }}: {{ $invoice->sourceInvoice->invoice_num }}</div>

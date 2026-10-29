@@ -211,8 +211,8 @@ class InvoicePdfService
             'client_email' => $buyer('email'),
 
             'invoice_number' => (string) ($invoice->invoice_num ?? $invoice->id),
-            'invoice_type' => (($invoice->type ?? 'vat') === 'proforma') ? __('pdf.proforma') : __('pdf.invoice'),
-            'is_proforma' => (($invoice->type ?? 'vat') === 'proforma') ? '1' : '',
+            'invoice_type' => $invoice->isProforma() ? __('pdf.proforma') : __('pdf.invoice'),
+            'is_proforma' => $invoice->isProforma() ? '1' : '',
             'invoice_date' => $invoice->date?->format(date_fmt()) ?? '',
             'due_date' => $invoice->due_date?->format(date_fmt()) ?? '',
             'date_paid' => $invoice->date_paid?->format(date_fmt()) ?? '',

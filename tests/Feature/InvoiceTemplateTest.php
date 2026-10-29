@@ -65,6 +65,22 @@ it('distinguishes a proforma from a VAT invoice', function () {
         ->and($varsProforma['invoice_type'])->toBe(__('pdf.proforma'));
 });
 
+it('heads the built-in document a proforma when that is what it is', function () {
+    $service = app(InvoicePdfService::class);
+    $company = $service->companyDetails();
+
+    $proforma = Invoice::factory()->create(['type' => 'proforma', 'invoice_num' => 'PRO-9']);
+    $vat = Invoice::factory()->create(['type' => 'vat', 'invoice_num' => 'INV-9']);
+
+    $render = fn (Invoice $invoice) => view('pdf.invoice', ['invoice' => $invoice, 'company' => $company, 'ksef' => null])->render();
+
+    // The built-in template headed every document "Invoice", so a proforma
+    // printed as a tax document it is not.
+    expect($render($proforma))->toContain(__('pdf.proforma'))
+        ->and($render($vat))->toContain(__('pdf.invoice'))
+        ->and($render($vat))->not->toContain(__('pdf.proforma'));
+});
+
 it('uses the uploaded template only while one is selected and present', function () {
     $invoice = Invoice::factory()->create();
     $service = app(InvoicePdfService::class);

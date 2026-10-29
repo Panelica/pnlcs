@@ -157,6 +157,20 @@ class Invoice extends Model {
 
     public function items() { return $this->hasMany(InvoiceItem::class); }
 
+    /**
+     * Is this document a proforma rather than a VAT invoice?
+     *
+     * The column defaults to 'vat', and an invoice raised before the proforma
+     * scheme existed carries nothing at all, so the absence is read as a VAT
+     * invoice. The two must not be titled the same: a proforma is a request
+     * for payment, and in the countries that have the scheme a document headed
+     * "Invoice" is a tax document whether it meant to be one or not.
+     */
+    public function isProforma(): bool
+    {
+        return ($this->type ?? 'vat') === 'proforma';
+    }
+
     public const TAX_INCLUSIVE = 'inclusive';
     public const TAX_NONE = 'none';
 
