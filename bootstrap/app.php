@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 // A copy that was only uploaded has no .env yet: it gets one, with a key,
@@ -56,7 +57,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // actually arrived on, whatever it is. Without this a page served over
         // https emits http asset URLs and the browser blocks them as mixed
         // content. This is domain-agnostic: no per-domain APP_URL to maintain.
-        $middleware->trustProxies(at: '*');
+        // Every proxy is trusted for the client's address, the port, the scheme
+        // and the prefix - but NOT for the host. Laravel's default set includes
+        // X-Forwarded-Host, and with it anybody could decide what host this
+        // application thought it was answering on, which is how a password
+        // reset link ended up pointing at somebody else's server (reported
+        // privately, twice, in October 2026). Mail links no longer come from
+        // the request at all (App\Support\MailLink); this closes the same door
+        // for every other generated URL.
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO
+            | Request::HEADER_X_FORWARDED_PREFIX
+            | Request::HEADER_X_FORWARDED_AWS_ELB);
         $middleware->prepend(ResetOpcacheAfterUpdate::class);
         // Language in the address: /en/... is routed as /... with English
         // chosen (LocaleUrl). Before routing, after the proxy is trusted.

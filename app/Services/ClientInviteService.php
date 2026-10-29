@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Mail\BulkMassMail;
 use App\Models\Client;
 use App\Models\UserInvite;
+use App\Support\MailLink;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -37,7 +38,8 @@ class ClientInviteService
             'permissions' => $permissions,
         ]);
 
-        $link = route('client.invite.show', $plain);
+        // See MailLink: the request's host must not decide where a mail link points.
+        $link = MailLink::route('client.invite.show', $plain);
         $locale = $client->language ?: config('app.locale');
         $account = trim($client->company_name ?: $client->first_name.' '.$client->last_name);
         Mail::to($email)->queue(new BulkMassMail(

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\PasswordResetMail;
 use App\Models\User;
+use App\Support\MailLink;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -31,7 +32,9 @@ class PasswordResetSender
             ['email' => $email],
             ['token' => Hash::make($token), 'created_at' => now()]
         );
-        $resetUrl = route('client.password.reset', ['token' => $token]).'?email='.urlencode($email);
+        // Not route(): that takes its host from the request, and a mail link
+        // must come from the address this installation is configured with.
+        $resetUrl = MailLink::route('client.password.reset', ['token' => $token]).'?email='.urlencode($email);
 
         try {
             Mail::to($email)->send(new PasswordResetMail($resetUrl, $email));

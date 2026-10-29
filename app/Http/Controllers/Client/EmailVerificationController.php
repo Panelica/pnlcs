@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Mail\EmailVerificationMail;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\MailLink;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\URL;
 
 /**
  * Proving that the address on an account belongs to the person using it.
@@ -58,7 +58,8 @@ class EmailVerificationController extends Controller
 
     public static function verificationUrl(User $user): string
     {
-        return URL::temporarySignedRoute(
+        // Signed under the configured address, not the request's: see MailLink.
+        return MailLink::signedRoute(
             'client.verification.verify',
             now()->addMinutes(self::LINK_TTL_MINUTES),
             ['id' => $user->id, 'hash' => sha1($user->email)]
@@ -184,7 +185,11 @@ class EmailVerificationController extends Controller
     {
         $user = User::find($id);
 
-        if (! $request->hasValidSignature() || ! $user || ! hash_equals(sha1($user->email), $hash)) {
+        // Both signatures: a link signed relatively (what MailLink builds now)
+        // and one signed absolutely (what is already in customers' mailboxes).
+        $signed = $request->hasValidSignature(false) || $request->hasValidSignature();
+
+        if (! $signed || ! $user || ! hash_equals(sha1($user->email), $hash)) {
             return redirect()->route('client.login')
                 ->with('error', __('client.email_verify.link_invalid'));
         }
