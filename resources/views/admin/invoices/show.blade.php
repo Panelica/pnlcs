@@ -1,9 +1,9 @@
 @extends('admin.layouts.app')
-@section('title', __('admin.search.invoice_title', ['num' => $invoice->invoice_num]))
+@section('title', __($invoice->isProforma() ? 'admin.search.proforma_title' : 'admin.search.invoice_title', ['num' => $invoice->invoice_num]))
 @section('content')
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-    <h1>{{ __('admin.search.invoice_title', ['num' => $invoice->invoice_num]) }} <span class="badge-{{ strtolower($invoice->status) }}" style="font-size:14px;vertical-align:middle;">{{ invoice_status_label($invoice->status) }}</span></h1>
+    <h1>{{ __($invoice->isProforma() ? 'admin.search.proforma_title' : 'admin.search.invoice_title', ['num' => $invoice->invoice_num]) }} <span class="badge-{{ strtolower($invoice->status) }}" style="font-size:14px;vertical-align:middle;">{{ invoice_status_label($invoice->status) }}</span></h1>
     @php $st = strtolower((string) $invoice->status); @endphp
     <div style="display:flex;gap:6px;align-items:center;">
         @if(in_array($st, ['unpaid', 'overdue', 'partially_paid', 'payment_pending']))

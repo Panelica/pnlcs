@@ -2160,6 +2160,7 @@ return [
     'search.tickets' => 'Destek talepleri',
     'search.orders' => 'Siparişler',
     'search.invoice_title' => 'Fatura #:num',
+    'search.proforma_title' => 'Proforma Fatura #:num',
     'search.order_title' => 'Sipariş #:num',
     'search.pages' => 'Sayfalar',
     'search.settings' => 'Ayarlar',

@@ -717,6 +717,7 @@ return [
     'invoices.due' => 'Due',
     'invoices.invoice_details' => 'Invoice Details',
     'invoices.invoice_prefix' => 'Invoice #:id',
+    'invoices.proforma_prefix' => 'Proforma #:id',
     'invoices.issued' => 'Issued',
     'invoices.network_error' => 'Network error:',
     'invoices.network_error_only' => 'We could not reach the payment provider. Please check your connection and try again.',

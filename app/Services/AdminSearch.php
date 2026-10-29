@@ -94,7 +94,7 @@ class AdminSearch
             })
             ->orderByDesc('id')->limit(self::PER_KIND)->get()
             ->map(fn (Invoice $i) => [
-                'title' => __('admin.search.invoice_title', ['num' => $i->invoice_num ?: $i->id]),
+                'title' => __($i->isProforma() ? 'admin.search.proforma_title' : 'admin.search.invoice_title', ['num' => $i->invoice_num ?: $i->id]),
                 'subtitle' => trim(($i->client?->display_name ?? '').' · '.number_format((float) $i->total, 2).' · '.$i->status, ' ·'),
                 'url' => route('admin.invoices.show', $i),
             ]);

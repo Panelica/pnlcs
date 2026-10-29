@@ -2179,6 +2179,7 @@ return [
     'search.tickets' => 'Zgłoszenia',
     'search.orders' => 'Zamówienia',
     'search.invoice_title' => 'Faktura #:num',
+    'search.proforma_title' => 'Proforma #:num',
     'search.order_title' => 'Zamówienie #:num',
     'search.pages' => 'Strony',
     'search.settings' => 'Ustawienia',

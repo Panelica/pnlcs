@@ -2179,6 +2179,7 @@ return [
     'search.tickets' => '工单',
     'search.orders' => '订单',
     'search.invoice_title' => '发票 #:num',
+    'search.proforma_title' => '形式发票 #:num',
     'search.order_title' => '订单 #:num',
     'search.pages' => '页面',
     'search.settings' => '设置',

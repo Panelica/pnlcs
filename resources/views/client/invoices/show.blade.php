@@ -1,5 +1,5 @@
 @extends("client.layouts.app")
-@section("title", __("client.invoices.invoice_prefix", ["id" => $invoice->invoice_num ?? $invoice->id]))
+@section("title", __($invoice->isProforma() ? "client.invoices.proforma_prefix" : "client.invoices.invoice_prefix", ["id" => $invoice->invoice_num ?? $invoice->id]))
 @section("content")
 
 <a href="{{ route("client.invoices.index") }}" class="pn-back">
@@ -9,7 +9,7 @@
 
 <div class="pn-page-header">
     <div>
-        <h1 class="pn-page-title">{{ __('client.invoices.invoice_prefix', ['id' => $invoice->invoice_num ?? $invoice->id]) }}</h1>
+        <h1 class="pn-page-title">{{ __($invoice->isProforma() ? 'client.invoices.proforma_prefix' : 'client.invoices.invoice_prefix', ['id' => $invoice->invoice_num ?? $invoice->id]) }}</h1>
         <p class="pn-page-subtitle">{{ __('client.invoices.issued') }} {{ $invoice->date?->format(date_fmt()) ?? "N/A" }}</p>
         @if($invoice->sourceInvoice)
         <p class="pn-page-subtitle" style="color:var(--muted);">{{ __('admin.invoices.source_proforma') }}: <strong>{{ $invoice->sourceInvoice->invoice_num }}</strong></p>
