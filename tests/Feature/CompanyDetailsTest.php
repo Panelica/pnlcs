@@ -67,11 +67,24 @@ function settingsAdmin(): Admin
 test('the settings screen asks for the city, postcode and the tax id', function () {
     $admin = settingsAdmin();
 
-    $this->actingAs($admin, 'admin')->get(route('admin.settings.general'))
+    $html = $this->actingAs($admin, 'admin')->get(route('admin.settings.general'))
         ->assertOk()
         ->assertSee('name="CompanyCity"', false)
         ->assertSee('name="Postcode"', false)
-        ->assertSee('name="TaxID"', false);
+        ->assertSee('name="TaxID"', false)
+        ->getContent();
+
+    // The postal address is asked for in one place and in the order it is
+    // written: the address, then the postcode, the city and the state, all in
+    // the company card rather than among the registry identifiers (#342).
+    $company = strpos($html, 'id="settings-company_information"');
+    $legal = strpos($html, 'id="settings-legal_identity"');
+    foreach (['name="Address"', 'name="Postcode"', 'name="CompanyCity"', 'name="State"'] as $field) {
+        $at = strpos($html, $field);
+        expect($at)->toBeGreaterThan($company, "{$field} is not in the company card")
+            ->and($at)->toBeLessThan($legal, "{$field} is not in the company card");
+    }
+    expect(strpos($html, 'name="Postcode"'))->toBeLessThan(strpos($html, 'name="CompanyCity"'));
 });
 
 test('saving them from the screen reaches the invoice', function () {

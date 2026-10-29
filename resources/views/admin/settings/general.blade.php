@@ -40,6 +40,7 @@
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.company_email') }}</label><input type="email" name="Email" value="{{ $settings['Email'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.postcode') }}</label><input type="text" name="Postcode" value="{{ $settings['Postcode'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="CompanyCity" value="{{ $settings['CompanyCity'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.state') }}</label><input type="text" name="State" value="{{ $settings['State'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label><input type="text" name="TaxID" value="{{ $settings['TaxID'] ?? '' }}" class="form-control"></div>
             </div>
         </div>
@@ -339,7 +340,6 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.company_legal_name') }}</label><input type="text" name="CompanyLegalName" value="{{ $settings['CompanyLegalName'] ?? '' }}" class="form-control"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.company_legal_name_hint') }}</div></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.tax_office') }}</label><input type="text" name="TaxOffice" value="{{ $settings['TaxOffice'] ?? '' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.state') }}</label><input type="text" name="State" value="{{ $settings['State'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.trade_registry_no') }}</label><input type="text" name="TradeRegistryNo" value="{{ $settings['TradeRegistryNo'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.mersis_no') }}</label><input type="text" name="MersisNo" value="{{ $settings['MersisNo'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.abuse_email') }}</label><input type="email" name="AbuseEmail" value="{{ $settings['AbuseEmail'] ?? '' }}" class="form-control"></div>
