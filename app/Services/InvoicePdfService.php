@@ -9,6 +9,7 @@ use App\Models\Setting;
 use App\Models\TaxRule;
 use App\Services\AddonManager;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Modules\Gateways\BankTransfer\BankTransferModule;
 use Symfony\Component\HttpFoundation\Response;
 
 class InvoicePdfService
@@ -240,6 +241,7 @@ class InvoicePdfService
         $ksef ??= $this->ksefInfo($invoice);
         $vars['ksef_number'] = e((string) ($ksef['number'] ?? ''));
         $vars['ksef_qr'] = ! empty($ksef['qr']) ? '<img src="'.e((string) $ksef['qr']).'" alt="">' : '';
+        $vars['payment_qr'] = $this->paymentQr($invoice);
 
         return $vars;
     }
@@ -367,8 +369,125 @@ class InvoicePdfService
             'client_tax_id', 'client_email',
             'invoice_number', 'invoice_date', 'due_date', 'date_paid', 'status',
             'payment_method', 'subtotal', 'tax', 'tax2', 'credit', 'total', 'notes',
-            'items', 'ksef_number', 'ksef_qr',
+            'items', 'ksef_number', 'ksef_qr', 'payment_qr',
         ];
+    }
+
+    /**
+     * Countries an EPC SEPA transfer can be made to (the SEPA zone). A customer
+     * from anywhere else gets no payment QR.
+     */
+    protected const SEPA_COUNTRIES = [
+        'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR',
+        'HU', 'IS', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU', 'MT', 'MC', 'NL', 'NO',
+        'PL', 'PT', 'RO', 'SM', 'SK', 'SI', 'ES', 'SE', 'CH', 'GB', 'AD', 'VA',
+    ];
+
+    /**
+     * A payment QR code as an inline <img>, from the bank-transfer module. The
+     * customer's country decides the account and the payload:
+     *
+     * - same country as the company: the first account (company currency),
+     *   encoded as the Polish ZBP "Przyjazny Przelew" (an NRB);
+     * - elsewhere in the SEPA zone: the second account (EUR), encoded as the
+     *   EPC SEPA payload (an IBAN);
+     * - anywhere else: no QR.
+     */
+    public function paymentQr(Invoice $invoice): string
+    {
+        $module = new BankTransferModule;
+        $companyCountry = strtoupper((string) Setting::get('Country', ''));
+        $clientCountry = strtoupper((string) $invoice->buyer('country'));
+
+        $local = $companyCountry !== '' && $clientCountry === $companyCountry;
+        $sepa = ! $local && in_array($clientCountry, self::SEPA_COUNTRIES, true);
+
+        if (! $local && ! $sepa) {
+            return '';
+        }
+
+        $bank = $module->bank($local ? 0 : 1);
+        if ($bank === null) {
+            return '';
+        }
+
+        $holder = (string) ($bank['holder'] ?? '');
+        if ($holder === '') {
+            $holder = company_name();
+        }
+        $iban = (string) ($bank['iban'] ?? '');
+        $account = (string) ($bank['account_number'] ?? '');
+        $swift = (string) ($bank['swift'] ?? '');
+
+        if ($holder === '') {
+            return '';
+        }
+
+        $payload = '';
+        if ($local) {
+            $nrb = $this->nrb($account !== '' ? $account : $iban);
+            if ($nrb !== '') {
+                $payload = $this->zbpPayload($holder, $nrb, $invoice);
+            }
+        }
+
+        if ($payload === '' && $iban !== '') {
+            $payload = $this->epcPayload($holder, $iban, $swift, $invoice);
+        }
+
+        if ($payload === '') {
+            return '';
+        }
+
+        $uri = $this->qrDataUri($payload);
+
+        return $uri !== '' ? '<img src="'.$uri.'" alt="">' : '';
+    }
+
+    /** The 26-digit NRB from an NRB or a PL-prefixed IBAN; '' when foreign. */
+    protected function nrb(string $ibanOrAccount): string
+    {
+        $digits = preg_replace('/\D/', '', $ibanOrAccount) ?? '';
+        $digits = strlen($digits) === 28 ? substr($digits, 2) : $digits;
+
+        return preg_match('/^\d{26}$/', $digits) === 1 ? $digits : '';
+    }
+
+    /** The Polish ZBP ("Przyjazny Przelew") payload: pipe-delimited fields. */
+    protected function zbpPayload(string $holder, string $account, Invoice $invoice): string
+    {
+        $name = mb_substr($holder, 0, 20);
+        $amount = number_format((float) $invoice->amountDue(), 2, ',', '');
+        $title = mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 32);
+
+        return '|'.$name.'|'.$account.'|'.$amount.'|'.$title.'|';
+    }
+
+    /** The EPC SEPA payload (BCD tag), one field per line, amount in EUR. */
+    protected function epcPayload(string $holder, string $iban, string $swift, Invoice $invoice): string
+    {
+        if ($iban === '') {
+            return '';
+        }
+
+        $iban = strtoupper((string) preg_replace('/\s+/', '', $iban));
+        $name = mb_substr($holder, 0, 70);
+        $amount = number_format($this->eurAmount($invoice), 2, '.', '');
+        $title = mb_substr((string) ($invoice->invoice_num ?? $invoice->id), 0, 35);
+
+        return "BCD\n002\n1\nSCT\n{$swift}\n{$name}\n{$iban}\nEUR{$amount}\n\n\n{$title}\n";
+    }
+
+    /** The amount due in EUR: converted when the invoice bills in EUR. */
+    protected function eurAmount(Invoice $invoice): float
+    {
+        $amount = $invoice->amountDue();
+
+        if (strtoupper((string) $invoice->billing_currency) === 'EUR' && (float) $invoice->exchange_rate > 0) {
+            return round($amount * (float) $invoice->exchange_rate, 2);
+        }
+
+        return $amount;
     }
 
     /**
