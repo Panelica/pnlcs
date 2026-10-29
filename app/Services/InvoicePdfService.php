@@ -383,21 +383,10 @@ class InvoicePdfService
             .'<td>'.e(invoice_money_fmt((float) $invoice->total, $invoice)).'</td>'
             .'</tr>';
 
-        return $this->vatSummaryStyle()
-            .'<table class="vat-summary"><thead><tr>'
+        return '<table class="vat-summary"><thead><tr>'
             .'<th>'.e(__('pdf.vat_summary_desc')).'</th>'
             .'<th>'.e(__('pdf.amount')).'</th>'
             .'</tr></thead><tbody>'.$rows.'</tbody></table>';
-    }
-
-    /** The self-contained stylesheet for the {vat_summary} table. */
-    protected function vatSummaryStyle(): string
-    {
-        return '<style>'
-            .'table.vat-summary{width:50%;margin-left:auto;border-collapse:collapse;font-size:8.5pt;table-layout:fixed;}'
-            .'table.vat-summary th,table.vat-summary td{border:0.5pt solid #111;padding:2pt 4pt;text-align:right;}'
-            .'table.vat-summary tr.total td{font-weight:bold;background:#f2f2f2;}'
-            .'</style>';
     }
 
     /** The unit net price: gross less its tax share when prices include tax. */

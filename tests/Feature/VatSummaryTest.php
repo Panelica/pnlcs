@@ -151,6 +151,19 @@ it('keeps {subtotal}, {tax} and {total} working independently', function () {
     );
 });
 
+it('does not emit raw CSS text with the summary', function () {
+    $invoice = vatSummaryInvoice([
+        ['description' => 'A', 'amount' => 100, 'tax_rate' => 23, 'tax_label' => 'VAT 23%'],
+    ]);
+
+    $html = app(InvoicePdfService::class)->placeholderVars($invoice)['vat_summary'];
+
+    expect($html)
+        ->not->toContain('<style')
+        ->not->toContain('border-collapse')
+        ->not->toContain('table.vat-summary{');
+});
+
 it('does not render the summary when the placeholder is absent', function () {
     $invoice = vatSummaryInvoice([
         ['description' => 'A', 'amount' => 100, 'tax_rate' => 23, 'tax_label' => 'VAT 23%'],
