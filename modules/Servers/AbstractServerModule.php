@@ -6,6 +6,7 @@ use App\Contracts\ServerModuleInterface;
 use App\Models\Server;
 use App\Models\ServerGroup;
 use App\Models\Service;
+use App\Support\ServerAddress;
 use Illuminate\Support\Facades\Log;
 
 abstract class AbstractServerModule implements ServerModuleInterface
@@ -17,6 +18,11 @@ abstract class AbstractServerModule implements ServerModuleInterface
      * A server record carries both and only the hostname was ever used, so a
      * stale or mistyped hostname sent the call somewhere else with no sign of
      * what had happened.
+     *
+     * A server behind NAT - a private IP, a hostname that resolves to the
+     * public address in front of it - is called on its IP too, but quietly:
+     * that is how it is meant to be recorded, and the warning was written to
+     * the log on every call.
      */
     /**
      * The plans this server offers, for the product form to choose from.
@@ -45,7 +51,7 @@ abstract class AbstractServerModule implements ServerModuleInterface
             return $hostname;
         }
 
-        $resolved = @gethostbynamel($hostname) ?: [];
+        $resolved = ServerAddress::resolve($hostname);
 
         if ($resolved === []) {
             Log::warning('Server hostname does not resolve; using the recorded address', [
@@ -58,6 +64,10 @@ abstract class AbstractServerModule implements ServerModuleInterface
         }
 
         if (! in_array($ip, $resolved, true)) {
+            if (ServerAddress::behindNat($ip, $resolved)) {
+                return $ip;
+            }
+
             Log::warning('Server hostname resolves elsewhere; using the recorded address', [
                 'server_id' => $server->id,
                 'hostname' => $hostname,

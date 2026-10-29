@@ -103,6 +103,7 @@ return [
     'servers.needs_credentials' => ':type 服务器必须配置 API 密钥或密码后才能使用。',
     'servers.hostname_unresolved' => '已保存，但 :host 无法解析；调用时将改用 IP 地址。',
     'servers.hostname_mismatch' => '已保存，但 :host 解析为 :resolved，而不是 :ip。两者之一指向了错误的服务器。',
+    'servers.hostname_behind_nat' => '已保存。:host 解析为 :resolved，而 :ip 是私有地址，这是 NAT 后服务器的正确设置：PNLCS 通过 :ip 调用服务器，客户的链接（Webmail、phpMyAdmin、文件管理器）使用 :host，因此 :host 必须能从外部访问面板。',
     'servers.auth_failed' => '已连接 :host，但 :type 拒绝了登录凭据。请检查 API 密钥。',
     'servers.auth_error' => '已连接 :host，但检查失败：:error',
     'servers.api_key' => 'API 密钥 / 令牌',
