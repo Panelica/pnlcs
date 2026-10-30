@@ -312,14 +312,16 @@ function invoiceBuilder() {
             item.unit = p.unit || '';
             if (p.tax_rate !== undefined && p.tax_rate !== null) {
                 item.tax_rate = p.tax_rate;
-                item.tax_label = p.tax_label || '';
-                item.tax_rule_id = p.tax_rule_id ?? this.ruleIdForLabel(item.tax_label);
-                // Make the product's own rule selectable in the per-line box,
-                // even before a customer is chosen (their rules are the box's
-                // options, so a label not among them would otherwise not show).
-                if (item.tax_label && !this.clientRates.some(r => r.name === item.tax_label)) {
-                    this.clientRates.push({ id: item.tax_rule_id, name: item.tax_label, rate: item.tax_rate, is_default: false });
+                const label = p.tax_label || '';
+                item.tax_rule_id = p.tax_rule_id ?? this.ruleIdForLabel(label);
+                // Make the product's own rule selectable in the per-line box
+                // before setting the line's label, so the select has an option
+                // to match. A customer may not be chosen yet, and their rules
+                // are the box's options.
+                if (label && !this.clientRates.some(r => r.name === label)) {
+                    this.clientRates = [...this.clientRates, { id: item.tax_rule_id, name: label, rate: item.tax_rate, is_default: false }];
                 }
+                item.tax_label = label;
             } else {
                 item.tax_rate = p.taxed ? this.taxRate : 0;
                 item.tax_label = p.taxed ? this.taxLabel : '';
