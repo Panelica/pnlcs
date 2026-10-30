@@ -74,6 +74,62 @@ test('vat breakdown keeps legacy lines grouped by label', function () {
         ->and(array_key_first($groups))->toBe('Legacy 23%');
 });
 
+test('vat breakdown sums two rules sharing a label instead of dropping one', function () {
+    $ruleA = TaxRule::factory()->create(['name' => 'VAT 23%', 'tax_rate' => 23.00, 'country' => 'PL']);
+    $ruleB = TaxRule::factory()->create(['name' => 'VAT 23%', 'tax_rate' => 23.00, 'country' => 'DE']);
+
+    $client = Client::factory()->create(['tax_exempt' => false]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id]);
+
+    InvoiceItem::factory()->create([
+        'invoice_id' => $invoice->id,
+        'client_id' => $client->id,
+        'amount' => 100.00,
+        'qty' => 1,
+        'taxed' => true,
+        'tax_rate' => 23.00,
+        'tax_rule_id' => $ruleA->id,
+    ]);
+    InvoiceItem::factory()->create([
+        'invoice_id' => $invoice->id,
+        'client_id' => $client->id,
+        'amount' => 100.00,
+        'qty' => 1,
+        'taxed' => true,
+        'tax_rate' => 23.00,
+        'tax_rule_id' => $ruleB->id,
+    ]);
+
+    $groups = $invoice->fresh()->vatBreakdown();
+
+    expect($groups)->toHaveCount(1)
+        ->and(array_key_first($groups))->toBe('VAT 23%')
+        ->and($groups['VAT 23%']['amount'])->toBe(46.0);
+});
+
+test('a line keeps its own label even when its rule was renamed', function () {
+    $rule = TaxRule::factory()->create(['name' => 'PL VAT 23 (renamed)', 'tax_rate' => 23.00]);
+
+    $client = Client::factory()->create(['tax_exempt' => false]);
+    $invoice = Invoice::factory()->create(['client_id' => $client->id]);
+
+    InvoiceItem::factory()->create([
+        'invoice_id' => $invoice->id,
+        'client_id' => $client->id,
+        'amount' => 100.00,
+        'qty' => 1,
+        'taxed' => true,
+        'tax_rate' => 23.00,
+        'tax_label' => 'VAT 23%',
+        'tax_rule_id' => $rule->id,
+    ]);
+
+    $groups = $invoice->fresh()->vatBreakdown();
+
+    expect($groups)->toHaveCount(1)
+        ->and(array_key_first($groups))->toBe('VAT 23%');
+});
+
 // ---------------------------------------------------------------------------
 // Line editing
 // ---------------------------------------------------------------------------

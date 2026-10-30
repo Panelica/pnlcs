@@ -209,6 +209,10 @@ class Invoice extends Model {
      */
     public function vatBreakdown(): array
     {
+        // Every line reads its rule below; load the relation once so the PDF,
+        // the invoice pages and KSeF do not run a query per line.
+        $this->items->loadMissing('taxRule');
+
         $groups = [];
         foreach ($this->items as $item) {
             $line = $this->lineTax($item);
@@ -216,8 +220,11 @@ class Invoice extends Model {
 
             if ($item->tax_rule_id !== null) {
                 $key = 'rule:'.$item->tax_rule_id;
-                $label = $item->taxRule?->name
-                    ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null);
+                // The line's own label is the text the document was issued with;
+                // the rule's name is only the fallback for a line that has none,
+                // so a rule renamed later does not rewrite a document already out.
+                $label = $item->tax_label
+                    ?: ($item->taxRule?->name ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null));
             } else {
                 $label = $item->tax_label ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null);
                 $key = $label;
@@ -232,12 +239,21 @@ class Invoice extends Model {
             $groups[$key]['net'] += $line['net'];
         }
 
+        // The returned array is keyed by label for the consumers. Two groups can
+        // share a label (two rules named the same), so sum them into one row
+        // instead of letting the second overwrite the first and drop its VAT.
         $result = [];
         foreach ($groups as $group) {
-            $group['amount'] = round($group['amount'], 2);
-            $group['net'] = round($group['net'], 2);
-            $result[$group['label']] = ['rate' => $group['rate'], 'net' => $group['net'], 'amount' => $group['amount']];
+            $result[$group['label']] ??= ['rate' => $group['rate'], 'net' => 0.0, 'amount' => 0.0];
+            $result[$group['label']]['net'] += $group['net'];
+            $result[$group['label']]['amount'] += $group['amount'];
         }
+        foreach ($result as &$row) {
+            $row['amount'] = round($row['amount'], 2);
+            $row['net'] = round($row['net'], 2);
+        }
+        unset($row);
+
         uasort($result, fn ($a, $b) => $b['rate'] <=> $a['rate']);
 
         return $result;

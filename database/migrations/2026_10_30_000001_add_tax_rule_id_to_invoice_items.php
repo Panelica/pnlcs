@@ -12,25 +12,22 @@ return new class extends Migration {
             $table->foreignId('tax_rule_id')->nullable()->after('tax_label')->constrained('tax_rules')->nullOnDelete();
         });
 
-        // Backfill legacy items from the rate/label they were stored with. An
-        // item that already matches an existing rule by name or rate is linked
-        // to it; anything else keeps a null rule and groups by its label as
-        // before. Nothing is created, and nothing historical is deleted.
-        foreach (DB::table('invoice_items')->get() as $item) {
-            $ruleId = null;
-
-            if ($item->tax_label !== null && $item->tax_label !== '') {
-                $ruleId = DB::table('tax_rules')->where('name', $item->tax_label)->value('id');
-            }
-
-            if ($ruleId === null && $item->tax_rate !== null) {
-                $ruleId = DB::table('tax_rules')->where('tax_rate', (float) $item->tax_rate)->value('id');
-            }
-
-            if ($ruleId !== null) {
-                DB::table('invoice_items')->where('id', $item->id)->update(['tax_rule_id' => $ruleId]);
-            }
-        }
+        // Link legacy items to the rule their stored label names, and only by
+        // label: "same rate" is not "same rule", and matching on rate alone
+        // could hang an old Polish line on another country's rule. The line's
+        // own label keeps rendering either way, so nothing historical changes.
+        // One set-based statement, not one query per row.
+        DB::statement('
+            UPDATE invoice_items ii
+            JOIN (
+                SELECT name, MIN(id) AS id
+                FROM tax_rules
+                WHERE name IS NOT NULL AND name <> \'\'
+                GROUP BY name
+            ) tr ON tr.name = ii.tax_label
+            SET ii.tax_rule_id = tr.id
+            WHERE ii.tax_label IS NOT NULL AND ii.tax_label <> \'\'
+        ');
     }
 
     public function down(): void
