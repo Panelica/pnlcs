@@ -639,9 +639,8 @@ class ProductController extends Controller
         ]);
 
         $taxLabel = $v['tax_label'] ?: null;
-        $taxRate = $taxLabel
-            ? (float) (TaxRule::where('name', $taxLabel)->value('tax_rate') ?? 0)
-            : 0.0;
+        $rule = $taxLabel ? TaxRule::where('name', $taxLabel)->orderBy('id')->first() : null;
+        $taxRate = $rule ? (float) $rule->tax_rate : 0.0;
 
         return [
             'name' => $v['name'],
@@ -649,6 +648,7 @@ class ProductController extends Controller
             'unit' => $v['unit'] ?? null,
             'tax_rate' => $taxRate,
             'tax_label' => $taxLabel,
+            'tax_rule_id' => $rule?->id,
         ];
     }
 }

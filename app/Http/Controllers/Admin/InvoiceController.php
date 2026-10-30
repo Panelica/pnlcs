@@ -419,6 +419,7 @@ class InvoiceController extends Controller
             'unit' => $p->unit,
             'tax_rate' => (float) $p->tax_rate,
             'tax_label' => $p->tax_label,
+            'tax_rule_id' => $p->tax_rule_id,
         ])->values();
 
         $products = $products->merge($catalogProducts)->values();
