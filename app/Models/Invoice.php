@@ -199,33 +199,64 @@ class Invoice extends Model {
     }
 
     /**
-     * The VAT rows the invoice documents print: per label (the line's tax label,
-     * else its rate), net and VAT summed and rounded once, highest rate first.
-     * One place for the PDF, the client and admin invoice pages and KSeF.
+     * The VAT rows the invoice documents print: per tax rule (a line linked to
+     * a rule groups by that rule, whatever its label says; a legacy line groups
+     * by its label/rate), net and VAT summed and rounded once, highest rate
+     * first. One place for the PDF, the client and admin invoice pages and
+     * KSeF.
      *
      * @return array<string, array{rate: float, net: float, amount: float}>
      */
     public function vatBreakdown(): array
     {
+        // Every line reads its rule below; load the relation once so the PDF,
+        // the invoice pages and KSeF do not run a query per line.
+        $this->items->loadMissing('taxRule');
+
         $groups = [];
         foreach ($this->items as $item) {
             $line = $this->lineTax($item);
-            $label = $item->tax_label ?: ($line['rate'] > 0 ? rtrim(rtrim(number_format($line['rate'], 2), '0'), '.').'%' : null);
-            if ($label === null) {
+            $rate = $line['rate'];
+
+            if ($item->tax_rule_id !== null) {
+                $key = 'rule:'.$item->tax_rule_id;
+                // The line's own label is the text the document was issued with;
+                // the rule's name is only the fallback for a line that has none,
+                // so a rule renamed later does not rewrite a document already out.
+                $label = $item->tax_label
+                    ?: ($item->taxRule?->name ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null));
+            } else {
+                $label = $item->tax_label ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null);
+                $key = $label;
+            }
+
+            if ($label === null || $label === '') {
                 continue;
             }
-            $groups[$label] ??= ['amount' => 0.0, 'rate' => $line['rate'], 'net' => 0.0];
-            $groups[$label]['amount'] += $line['vat'];
-            $groups[$label]['net'] += $line['net'];
-        }
-        foreach ($groups as &$group) {
-            $group['amount'] = round($group['amount'], 2);
-            $group['net'] = round($group['net'], 2);
-        }
-        unset($group);
-        uasort($groups, fn ($a, $b) => $b['rate'] <=> $a['rate']);
 
-        return $groups;
+            $groups[$key] ??= ['amount' => 0.0, 'rate' => $rate, 'net' => 0.0, 'label' => $label];
+            $groups[$key]['amount'] += $line['vat'];
+            $groups[$key]['net'] += $line['net'];
+        }
+
+        // The returned array is keyed by label for the consumers. Two groups can
+        // share a label (two rules named the same), so sum them into one row
+        // instead of letting the second overwrite the first and drop its VAT.
+        $result = [];
+        foreach ($groups as $group) {
+            $result[$group['label']] ??= ['rate' => $group['rate'], 'net' => 0.0, 'amount' => 0.0];
+            $result[$group['label']]['net'] += $group['net'];
+            $result[$group['label']]['amount'] += $group['amount'];
+        }
+        foreach ($result as &$row) {
+            $row['amount'] = round($row['amount'], 2);
+            $row['net'] = round($row['net'], 2);
+        }
+        unset($row);
+
+        uasort($result, fn ($a, $b) => $b['rate'] <=> $a['rate']);
+
+        return $result;
     }
     public function transactions() { return $this->hasMany(Transaction::class); }
 

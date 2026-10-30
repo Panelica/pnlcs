@@ -168,9 +168,11 @@ class InvoiceService
 
     public function addLineItem(Invoice $invoice, array $itemData): InvoiceItem
     {
-        $taxRate = array_key_exists('tax_rate', $itemData) && $itemData['tax_rate'] !== null
-            ? (float) $itemData['tax_rate']
-            : null;
+        $rule = $this->taxRule($itemData['tax_rule_id'] ?? null);
+
+        $taxRate = $rule !== null
+            ? (float) $rule->tax_rate
+            : (array_key_exists('tax_rate', $itemData) && $itemData['tax_rate'] !== null ? (float) $itemData['tax_rate'] : null);
 
         $item = InvoiceItem::create([
             'invoice_id' => $invoice->id,
@@ -182,7 +184,8 @@ class InvoiceService
             'amount' => $itemData['amount'] ?? 0,
             'taxed' => $itemData['taxed'] ?? ($taxRate === null ? true : $taxRate > 0),
             'tax_rate' => $taxRate,
-            'tax_label' => $itemData['tax_label'] ?? null,
+            'tax_label' => $rule?->name ?? ($itemData['tax_label'] ?? null),
+            'tax_rule_id' => $rule?->id,
             'unit' => $itemData['unit'] ?? null,
             'due_date' => $itemData['due_date'] ?? null,
         ]);
@@ -560,6 +563,17 @@ class InvoiceService
         $rule = $this->taxRuleFor($client);
 
         return $rule ? (float) $rule->tax_rate : 0.0;
+    }
+
+    /**
+     * The tax rule a submitted id points at, or null when absent or unknown.
+     *
+     * Separate from taxRuleFor(): that one picks the rule for a customer's
+     * country; this one resolves an explicit rule id the operator chose.
+     */
+    public function taxRule(?int $ruleId): ?TaxRule
+    {
+        return $ruleId !== null ? TaxRule::find($ruleId) : null;
     }
 
     /**

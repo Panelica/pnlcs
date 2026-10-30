@@ -173,7 +173,17 @@
                     </td>
                     <td><input type="number" form="item-form-{{ $item->id }}" name="qty" value="{{ (int) $item->qty }}" min="1" step="1" class="inv-inline inv-num" data-enter-submit @disabled($itemsLocked)></td>
                     <td><input type="number" form="item-form-{{ $item->id }}" name="amount" value="{{ number_format((float) $item->amount, 2, '.', '') }}" step="0.01" min="0" class="inv-inline inv-num" data-enter-submit @disabled($itemsLocked)></td>
-                    <td><input type="number" form="item-form-{{ $item->id }}" name="tax_rate" value="{{ $effectiveRate > 0 ? rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') : '' }}" step="0.01" min="0" max="100" placeholder="0" class="inv-inline inv-num" data-enter-submit @disabled($itemsLocked)></td>
+                    <td>
+                        <select form="item-form-{{ $item->id }}" name="tax_rule_id" class="inv-inline" @disabled($itemsLocked)>
+                            <option value="">0%</option>
+                            @foreach($taxRules as $rule)
+                            <option value="{{ $rule['id'] }}" @selected((int) $item->tax_rule_id === (int) $rule['id'])>{{ $rule['name'] }}</option>
+                            @endforeach
+                            @if($item->tax_rule_id === null && $effectiveRate > 0)
+                            <option value="__legacy__" selected>{{ rtrim(rtrim(number_format($effectiveRate, 2, '.', ''), '0'), '.') }}%</option>
+                            @endif
+                        </select>
+                    </td>
                     <td style="text-align:right;font-family:monospace;white-space:nowrap;">{{ money_fmt($item->amount * (int) $item->qty) }}</td>
                     <td style="text-align:center;">
                         @unless($itemsLocked)
