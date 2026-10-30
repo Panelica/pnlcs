@@ -1707,6 +1707,7 @@ return [
     'messages.product_created' => 'Product created.',
     'messages.product_in_use' => ':count customer service(s) still use this product. Retire it instead; it can be deleted once every service on it has ended.',
     'messages.product_deleted' => 'Product deleted.',
+    'messages.product_copied' => 'Product copied: :name.',
     'messages.product_group_created' => 'Product group created.',
     'messages.product_group_updated' => 'Product group updated.',
     'messages.product_group_deleted' => 'Product group deleted.',
