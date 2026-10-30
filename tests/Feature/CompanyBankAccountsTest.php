@@ -15,6 +15,9 @@ use App\Services\InvoicePdfService;
 function seedBankAccounts(array $extra = []): void
 {
     $defaults = [
+        // The gateway's own switch: an installation that does not take
+        // transfers prints no account numbers (see the test at the end).
+        'active' => '1',
         'account_name' => '24BOX Igor Rybicki',
         'bank_active' => '1',
         'bank_name' => 'Nest Bank',
@@ -101,4 +104,18 @@ it('renders a PDF containing the bank accounts', function () {
 
     @unlink(InvoicePdfService::customTemplatePath());
     Setting::set('InvoiceTemplate', 'default', 'general');
+});
+
+it('prints nothing once bank transfer is switched off', function () {
+    seedBankAccounts();
+    $invoice = Invoice::factory()->create();
+    $service = app(InvoicePdfService::class);
+
+    expect($service->placeholderVars($invoice)['company_bank_accounts'])->toContain('Nest Bank');
+
+    // The switch checkout and the payment QR read. An operator who stopped
+    // taking transfers should not keep printing the account on every invoice.
+    seedBankAccounts(['active' => '0']);
+
+    expect($service->placeholderVars($invoice)['company_bank_accounts'])->toBe('');
 });

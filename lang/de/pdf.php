@@ -2,7 +2,6 @@
 
 return [
     'amount_in' => 'Fälliger Betrag',
-    'bank_accounts' => 'Bankverbindungen',
     'rate_label' => 'Wechselkurs',
     'rate_note' => 'In :to abgerechnet, umgerechnet von :from zum Kurs :rate.',
     'rate_note_official' => 'Konvertiert mit dem von :source auf :date veröffentlichten :kind: 1 :from = :rate :to:ref',

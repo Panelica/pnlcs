@@ -2,7 +2,6 @@
 
 return [
     'amount_in' => 'Ödenecek tutar',
-    'bank_accounts' => 'Banka hesapları',
     'rate_label' => 'Döviz kuru',
     'rate_note' => ':from biriminden :rate kuruyla :to olarak faturalandı.',
     'rate_note_official' => ':source tarafından :date tarihinde yayımlanan :kind ile çevrildi: 1 :from = :rate :to:ref',

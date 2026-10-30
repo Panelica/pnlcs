@@ -2,7 +2,6 @@
 
 return [
     'amount_in' => '应付金额',
-    'bank_accounts' => '银行账户',
     'rate_label' => '汇率',
     'rate_note' => '以 :to 结算，按 :rate 从 :from 换算。',
     'rate_note_official' => '按 :source 于 :date 公布的:kind换算：1 :from = :rate :to:ref',

@@ -398,7 +398,16 @@ class InvoicePdfService
      */
     protected function bankAccountsHtml(): string
     {
-        $accounts = (new BankTransferModule)->accounts();
+        $module = new BankTransferModule;
+
+        // The gateway's own switch, the one checkout and the payment QR read.
+        // An operator who stopped taking transfers should not keep printing
+        // the account numbers on every invoice.
+        if (! $module->isActive()) {
+            return '';
+        }
+
+        $accounts = $module->accounts();
 
         if ($accounts === []) {
             return '';
