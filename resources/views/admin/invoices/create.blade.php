@@ -104,7 +104,6 @@
                                             <template x-for="(r, i) in clientRates" :key="i">
                                                 <option :value="r.name" x-text="r.name"></option>
                                             </template>
-                                            <option x-show="item.tax_label && !clientRates.some(r => r.name === item.tax_label)" :value="item.tax_label" x-text="item.tax_label"></option>
                                         </select>
                                         <input type="hidden" :name="`items[${index}][tax_rate]`" :value="item.tax_rate">
                                         <input type="hidden" :name="`items[${index}][tax_rule_id]`" :value="item.tax_rule_id || ''">
@@ -315,6 +314,12 @@ function invoiceBuilder() {
                 item.tax_rate = p.tax_rate;
                 item.tax_label = p.tax_label || '';
                 item.tax_rule_id = p.tax_rule_id ?? this.ruleIdForLabel(item.tax_label);
+                // Make the product's own rule selectable in the per-line box,
+                // even before a customer is chosen (their rules are the box's
+                // options, so a label not among them would otherwise not show).
+                if (item.tax_label && !this.clientRates.some(r => r.name === item.tax_label)) {
+                    this.clientRates.push({ id: item.tax_rule_id, name: item.tax_label, rate: item.tax_rate, is_default: false });
+                }
             } else {
                 item.tax_rate = p.taxed ? this.taxRate : 0;
                 item.tax_label = p.taxed ? this.taxLabel : '';
