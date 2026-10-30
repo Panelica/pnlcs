@@ -38,11 +38,19 @@ class ScheduleStatusService
      */
     public function schedulerRunsInContainer(): bool
     {
-        if (! is_file($this->supervisorConfig) || ! is_readable($this->supervisorConfig)) {
+        try {
+            if (! is_file($this->supervisorConfig) || ! is_readable($this->supervisorConfig)) {
+                return false;
+            }
+
+            return str_contains((string) file_get_contents($this->supervisorConfig), 'artisan schedule:run');
+        } catch (\Throwable) {
+            // A host with open_basedir in force makes even is_file() throw for
+            // paths outside the allowed list. A host that forbids reading the
+            // container's supervisor config cannot run the scheduler there, so
+            // the answer is "no".
             return false;
         }
-
-        return str_contains((string) file_get_contents($this->supervisorConfig), 'artisan schedule:run');
     }
 
     /**
