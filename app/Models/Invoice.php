@@ -199,9 +199,11 @@ class Invoice extends Model {
     }
 
     /**
-     * The VAT rows the invoice documents print: per label (the line's tax label,
-     * else its rate), net and VAT summed and rounded once, highest rate first.
-     * One place for the PDF, the client and admin invoice pages and KSeF.
+     * The VAT rows the invoice documents print: per tax rule (a line linked to
+     * a rule groups by that rule, whatever its label says; a legacy line groups
+     * by its label/rate), net and VAT summed and rounded once, highest rate
+     * first. One place for the PDF, the client and admin invoice pages and
+     * KSeF.
      *
      * @return array<string, array{rate: float, net: float, amount: float}>
      */
@@ -210,22 +212,35 @@ class Invoice extends Model {
         $groups = [];
         foreach ($this->items as $item) {
             $line = $this->lineTax($item);
-            $label = $item->tax_label ?: ($line['rate'] > 0 ? rtrim(rtrim(number_format($line['rate'], 2), '0'), '.').'%' : null);
-            if ($label === null) {
+            $rate = $line['rate'];
+
+            if ($item->tax_rule_id !== null) {
+                $key = 'rule:'.$item->tax_rule_id;
+                $label = $item->taxRule?->name
+                    ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null);
+            } else {
+                $label = $item->tax_label ?: ($rate > 0 ? rtrim(rtrim(number_format($rate, 2), '0'), '.').'%' : null);
+                $key = $label;
+            }
+
+            if ($label === null || $label === '') {
                 continue;
             }
-            $groups[$label] ??= ['amount' => 0.0, 'rate' => $line['rate'], 'net' => 0.0];
-            $groups[$label]['amount'] += $line['vat'];
-            $groups[$label]['net'] += $line['net'];
+
+            $groups[$key] ??= ['amount' => 0.0, 'rate' => $rate, 'net' => 0.0, 'label' => $label];
+            $groups[$key]['amount'] += $line['vat'];
+            $groups[$key]['net'] += $line['net'];
         }
-        foreach ($groups as &$group) {
+
+        $result = [];
+        foreach ($groups as $group) {
             $group['amount'] = round($group['amount'], 2);
             $group['net'] = round($group['net'], 2);
+            $result[$group['label']] = ['rate' => $group['rate'], 'net' => $group['net'], 'amount' => $group['amount']];
         }
-        unset($group);
-        uasort($groups, fn ($a, $b) => $b['rate'] <=> $a['rate']);
+        uasort($result, fn ($a, $b) => $b['rate'] <=> $a['rate']);
 
-        return $groups;
+        return $result;
     }
     public function transactions() { return $this->hasMany(Transaction::class); }
 

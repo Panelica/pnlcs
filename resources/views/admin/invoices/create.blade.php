@@ -106,6 +106,7 @@
                                             </template>
                                         </select>
                                         <input type="hidden" :name="`items[${index}][tax_rate]`" :value="item.tax_rate">
+                                        <input type="hidden" :name="`items[${index}][tax_rule_id]`" :value="item.tax_rule_id || ''">
                                     </td>
                                     <td style="padding:6px 8px;">
                                         <input type="number" :name="`items[${index}][amount]`" x-model.number="item.amount"
@@ -204,7 +205,7 @@
 <script>
 function invoiceBuilder() {
     return {
-        items: [{ description: '', qty: 1, amount: 0, unit: '', tax_rate: 0, tax_label: '', show: false, active: -1, dd: null, page: 1 }],
+        items: [{ description: '', qty: 1, amount: 0, unit: '', tax_rate: 0, tax_label: '', tax_rule_id: null, show: false, active: -1, dd: null, page: 1 }],
         products: @json($products),
         currencyPrefix: @json($defaultCurrency?->prefix ?? ''),
         currencySuffix: @json($defaultCurrency?->suffix ?? ''),
@@ -229,6 +230,7 @@ function invoiceBuilder() {
             }
             this.items[0].tax_rate = this.taxRate;
             this.items[0].tax_label = this.taxLabel;
+            this.items[0].tax_rule_id = this.defaultRuleId();
             this.recalculate();
         },
         setClient(value) {
@@ -236,23 +238,28 @@ function invoiceBuilder() {
             this.clientRates = value && opt ? this.parseRates(opt) : [];
             this.taxLabel = value && opt ? (opt.dataset.label || '') : '';
             this.taxRate = this.defaultRate();
-            this.items.forEach(i => { i.tax_rate = this.taxRate; i.tax_label = this.taxLabel; });
+            this.items.forEach(i => { i.tax_rate = this.taxRate; i.tax_label = this.taxLabel; i.tax_rule_id = this.defaultRuleId(); });
             this.recalculate();
         },
         defaultRate() {
             const d = this.clientRates.find(r => r.is_default);
             return d ? d.rate : (this.clientRates.length ? this.clientRates[0].rate : 0);
         },
+        defaultRuleId() {
+            const d = this.clientRates.find(r => r.is_default);
+            return d ? d.id : (this.clientRates.length ? this.clientRates[0].id : null);
+        },
         syncItemTax(index) {
             const item = this.items[index];
             const r = this.clientRates.find(r => r.name === item.tax_label);
             item.tax_rate = r ? r.rate : 0;
+            item.tax_rule_id = r ? r.id : null;
             this.recalculate();
         },
         parseRates(opt) {
             try { return JSON.parse(opt.dataset.rates || '[]'); } catch (e) { return []; }
         },
-        addItem() { this.items.push({ description: '', qty: 1, amount: 0, unit: '', tax_rate: this.taxRate, tax_label: this.taxLabel, show: false, active: -1, dd: null, page: 1 }); },
+        addItem() { this.items.push({ description: '', qty: 1, amount: 0, unit: '', tax_rate: this.taxRate, tax_label: this.taxLabel, tax_rule_id: this.defaultRuleId(), show: false, active: -1, dd: null, page: 1 }); },
         removeItem(index) { if (this.items.length > 1) { this.items.splice(index, 1); this.recalculate(); } },
         matchesFor(value) {
             const q = (value || '').trim().toLowerCase();
@@ -306,12 +313,18 @@ function invoiceBuilder() {
             if (p.tax_rate !== undefined && p.tax_rate !== null) {
                 item.tax_rate = p.tax_rate;
                 item.tax_label = p.tax_label || '';
+                item.tax_rule_id = this.ruleIdForLabel(item.tax_label);
             } else {
                 item.tax_rate = p.taxed ? this.taxRate : 0;
                 item.tax_label = p.taxed ? this.taxLabel : '';
+                item.tax_rule_id = p.taxed ? this.defaultRuleId() : null;
             }
             item.show = false;
             this.recalculate();
+        },
+        ruleIdForLabel(label) {
+            const r = this.clientRates.find(r => r.name === label);
+            return r ? r.id : null;
         },
         lineTotal(item) { return (parseFloat(item.amount) || 0) * (parseInt(item.qty, 10) || 1); },
         fmtRate(r) { return String(Math.round(r * 100) / 100); },

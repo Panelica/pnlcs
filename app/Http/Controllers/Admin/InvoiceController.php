@@ -85,6 +85,26 @@ class InvoiceController extends Controller
     {
         $invoice->load('client', 'items', 'transactions');
 
+        // The tax rules the operator may assign to a line: those configured for
+        // the customer's country/state, with the default first.
+        $taxRules = $invoice->client
+            ? $this->invoiceService->taxRatesFor($invoice->client)
+                ->map(fn (TaxRule $r) => ['id' => $r->id, 'name' => $r->name, 'rate' => (float) $r->tax_rate])
+                ->values()
+            : collect();
+
+        // A line keeps the rule it was written under, even if the customer's
+        // country changed since. Offer any such rule so the edit box never
+        // silently drops a line's tax to 0% just because it is off the list.
+        $referencedIds = $invoice->items->pluck('tax_rule_id')->filter()->map(fn ($id) => (int) $id);
+        $missingIds = $referencedIds->diff($taxRules->pluck('id'));
+        if ($missingIds->isNotEmpty()) {
+            $taxRules = $taxRules->merge(
+                TaxRule::whereIn('id', $missingIds)->get()
+                    ->map(fn (TaxRule $r) => ['id' => $r->id, 'name' => $r->name, 'rate' => (float) $r->tax_rate])
+            )->values();
+        }
+
         $activityLog = ActivityLog::forInvoice($invoice)->limit(50)->get();
 
         // Only asked where it can mean something. An installation that does not
@@ -105,7 +125,7 @@ class InvoiceController extends Controller
                 ->whereIn('gateway_name', array_keys(app(ModuleRegistry::class)->tokenisedGateways()))
                 ->exists();
 
-        return view('admin.invoices.show', compact('invoice', 'activityLog', 'chargeReview', 'canChargeNow'));
+        return view('admin.invoices.show', compact('invoice', 'taxRules', 'activityLog', 'chargeReview', 'canChargeNow'));
     }
 
     /**
@@ -189,28 +209,47 @@ class InvoiceController extends Controller
             'description' => ['required', 'string', 'max:255'],
             'qty' => ['required', 'integer', 'min:1', 'max:999999'],
             'amount' => ['required', 'numeric', 'min:0'],
-            'tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'tax_rule_id' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $taxRate = isset($validated['tax_rate']) && $validated['tax_rate'] !== ''
-            ? (float) $validated['tax_rate']
-            : 0.0;
+        $ruleId = $validated['tax_rule_id'] ?? '';
 
-        // Give every line an explicit rate so a legacy invoice edited once
-        // stays consistent: lines without a rate would otherwise stop being
-        // taxed the moment any other line carries its own rate.
-        $fallback = (float) $invoice->tax_rate;
-        $invoice->items()->whereNull('tax_rate')->get()->each(function (InvoiceItem $legacy) use ($fallback) {
-            $legacy->update(['tax_rate' => $legacy->taxed ? $fallback : 0.0]);
-        });
+        // A legacy line with a rate but no matching rule keeps its tax as it
+        // was; "__legacy__" is the marker the edit form sends for it. Nothing
+        // is typed by hand, so a line never drifts from the rule it was issued
+        // under, and the rule id is always validated.
+        $rule = null;
+        if ($ruleId !== '__legacy__') {
+            $rule = $ruleId !== '' ? TaxRule::find((int) $ruleId) : null;
+            abort_if($ruleId !== '' && $rule === null, 422);
+        }
 
-        $item->update([
+        $fields = [
             'description' => $validated['description'],
             'qty' => (int) $validated['qty'],
             'amount' => (float) $validated['amount'],
-            'tax_rate' => $taxRate,
-            'taxed' => $taxRate > 0,
-        ]);
+        ];
+
+        if ($ruleId !== '__legacy__') {
+            $taxRate = $rule !== null ? (float) $rule->tax_rate : 0.0;
+
+            // Give every line an explicit rate so a legacy invoice edited once
+            // stays consistent: lines without a rate would otherwise stop being
+            // taxed the moment any other line carries its own rate.
+            $fallback = (float) $invoice->tax_rate;
+            $invoice->items()->whereNull('tax_rate')->get()->each(function (InvoiceItem $legacy) use ($fallback) {
+                $legacy->update(['tax_rate' => $legacy->taxed ? $fallback : 0.0]);
+            });
+
+            $fields += [
+                'tax_rate' => $taxRate,
+                'tax_label' => $rule?->name,
+                'tax_rule_id' => $rule?->id,
+                'taxed' => $taxRate > 0,
+            ];
+        }
+
+        $item->update($fields);
 
         $this->invoiceService->recalculateTotals($invoice);
 
@@ -394,6 +433,7 @@ class InvoiceController extends Controller
             $rule = $invoiceService->taxRuleFor($client);
             $rates = $invoiceService->taxRatesFor($client)
                 ->map(fn (TaxRule $r) => [
+                    'id' => $r->id,
                     'name' => $r->name,
                     'rate' => (float) $r->tax_rate,
                     'is_default' => (bool) $r->is_default,
@@ -432,6 +472,7 @@ class InvoiceController extends Controller
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.qty' => ['nullable', 'integer', 'min:1', 'max:999999'],
             'items.*.amount' => ['required', 'numeric', 'min:0'],
+            'items.*.tax_rule_id' => ['nullable', 'integer', 'exists:tax_rules,id'],
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'items.*.tax_label' => ['nullable', 'string', 'max:255'],
             'items.*.unit' => ['nullable', 'string', 'max:50'],
@@ -444,6 +485,7 @@ class InvoiceController extends Controller
             'description' => $item['description'],
             'qty' => (int) ($item['qty'] ?? 1),
             'amount' => (float) $item['amount'],
+            'tax_rule_id' => ($item['tax_rule_id'] ?? null) ?: null,
             // Per-item VAT percentage; an empty field means untaxed.
             'tax_rate' => isset($item['tax_rate']) && $item['tax_rate'] !== '' ? (float) $item['tax_rate'] : 0.0,
             'tax_label' => $item['tax_label'] ?? null,
