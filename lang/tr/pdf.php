@@ -2,6 +2,7 @@
 
 return [
     'amount_in' => 'Ödenecek tutar',
+    'bank_accounts' => 'Banka hesapları',
     'rate_label' => 'Döviz kuru',
     'rate_note' => ':from biriminden :rate kuruyla :to olarak faturalandı.',
     'rate_note_official' => ':source tarafından :date tarihinde yayımlanan :kind ile çevrildi: 1 :from = :rate :to:ref',
@@ -40,6 +41,10 @@ return [
     'tax' => 'Vergi',
     'tax_id' => 'Vergi No',
     'taxed' => 'Vergiye Tabi',
+    'vat_summary_desc' => 'Açıklama',
+    'vat_net_total' => 'Net toplam',
+    'vat_total' => 'Toplam KDV',
+    'vat_gross_total' => 'Ödenecek (brüt)',
     'thank_you' => 'Bizi tercih ettiğiniz için teşekkür ederiz.',
     'total' => 'Genel Toplam',
     'ksef_number' => 'KSeF numarası',

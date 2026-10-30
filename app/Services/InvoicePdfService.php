@@ -225,14 +225,16 @@ class InvoicePdfService
             'total' => invoice_money_fmt((float) $invoice->total, $invoice),
             'notes' => $invoice->notes ? nl2br(e($invoice->notes)) : '',
             'items' => $this->itemsHtml($invoice),
+            'vat_summary' => $this->vatSummaryHtml($invoice),
+            'company_bank_accounts' => $this->bankAccountsHtml(),
         ];
 
         // Everything above is text the customer or the operator typed, and it
         // is about to become HTML: a company called "Müller & Sohn" must read
-        // that way in the PDF, not break the document around it. The two
-        // values that ARE markup - the logo tag and the items table - are
-        // built here and escaped as they are built.
-        $markup = ['company_logo', 'items', 'notes'];
+        // that way in the PDF, not break the document around it. The values
+        // that ARE markup - the logo, the tables and the notes - are built
+        // here and escaped as they are built.
+        $markup = ['company_logo', 'items', 'notes', 'vat_summary', 'company_bank_accounts'];
         foreach ($vars as $key => $value) {
             if (! in_array($key, $markup, true)) {
                 $vars[$key] = e((string) $value);
@@ -345,6 +347,84 @@ class InvoicePdfService
             .'</style>';
     }
 
+    /**
+     * The complete invoice summary the {vat_summary} placeholder emits: the net
+     * total, one row per VAT rate — or tax treatment, "zw." / "np." and the
+     * like — with its tax amount, the VAT total and the gross amount due. Empty
+     * when the invoice has no VAT breakdown, so the {?vat_summary} conditional
+     * block hides it by itself.
+     */
+    protected function vatSummaryHtml(Invoice $invoice): string
+    {
+        $groups = $invoice->vatBreakdown();
+
+        if ($groups === []) {
+            return '';
+        }
+
+        $rows = '<tr>'
+            .'<td>'.e(__('pdf.vat_net_total')).'</td>'
+            .'<td>'.e(invoice_money_fmt((float) $invoice->subtotal, $invoice)).'</td>'
+            .'</tr>';
+
+        foreach ($groups as $label => $group) {
+            $rows .= '<tr>'
+                .'<td>'.e((string) $label).'</td>'
+                .'<td>'.e(invoice_money_fmt((float) $group['amount'], $invoice)).'</td>'
+                .'</tr>';
+        }
+
+        $rows .= '<tr>'
+            .'<td>'.e(__('pdf.vat_total')).'</td>'
+            .'<td>'.e(invoice_money_fmt((float) $invoice->tax, $invoice)).'</td>'
+            .'</tr>';
+
+        $rows .= '<tr class="total">'
+            .'<td>'.e(__('pdf.vat_gross_total')).'</td>'
+            .'<td>'.e(invoice_money_fmt((float) $invoice->total, $invoice)).'</td>'
+            .'</tr>';
+
+        return '<table class="vat-summary"><thead><tr>'
+            .'<th>'.e(__('pdf.vat_summary_desc')).'</th>'
+            .'<th>'.e(__('pdf.amount')).'</th>'
+            .'</tr></thead><tbody>'.$rows.'</tbody></table>';
+    }
+
+    /**
+     * The bank accounts the {company_bank_accounts} placeholder emits: one
+     * line per account with its bank name, currency and number — plain text,
+     * no table. Empty when no accounts are configured, so the conditional
+     * block {?company_bank_accounts}…{/company_bank_accounts} hides it itself.
+     */
+    protected function bankAccountsHtml(): string
+    {
+        $accounts = (new BankTransferModule)->accounts();
+
+        if ($accounts === []) {
+            return '';
+        }
+
+        $html = '';
+        foreach ($accounts as $account) {
+            $name = trim((string) ($account['name'] ?? ''));
+            $currency = trim((string) ($account['currency'] ?? ''));
+            $number = trim((string) ($account['iban'] ?? ''));
+            if ($number === '') {
+                $number = trim((string) ($account['account_number'] ?? ''));
+            }
+
+            $label = implode(' · ', array_filter([$name, $currency]));
+
+            if ($label !== '') {
+                $html .= '<div>'.e($label).'</div>';
+            }
+
+            $html .= '<div>- '.e($number).'</div>';
+        }
+
+        return $html;
+    }
+
     /** The unit net price: gross less its tax share when prices include tax. */
     protected function unitNetPrice(Invoice $invoice, InvoiceItem $item, float $rate): float
     {
@@ -387,13 +467,13 @@ class InvoicePdfService
             'company_name', 'company_legal_name', 'company_domain', 'company_address',
             'company_city', 'company_postcode', 'company_country', 'company_phone',
             'company_email', 'company_tax_office', 'company_tax_id', 'company_mersis',
-            'company_logo',
+            'company_logo', 'company_bank_accounts',
             'client_name', 'client_company', 'client_address', 'client_address2',
             'client_city', 'client_state', 'client_postcode', 'client_country',
             'client_tax_id', 'client_email',
             'invoice_number', 'invoice_type', 'is_proforma', 'invoice_date', 'due_date', 'date_paid', 'status',
             'payment_method', 'subtotal', 'tax', 'tax2', 'credit', 'total', 'notes',
-            'items', 'ksef_number', 'ksef_qr', 'payment_qr',
+            'items', 'vat_summary', 'ksef_number', 'ksef_qr', 'payment_qr',
         ];
     }
 

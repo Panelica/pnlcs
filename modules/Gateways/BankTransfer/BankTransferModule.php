@@ -154,6 +154,17 @@ class BankTransferModule implements GatewayModuleInterface
         return $bank;
     }
 
+    /**
+     * Every bank to show on an invoice, each with the shared account holder,
+     * in the order the operator configured them.
+     *
+     * @return array<int, array{holder: string, name: string, iban: string, account_number: string, sort_code: string, swift: string, currency: string}>
+     */
+    public function accounts(): array
+    {
+        return array_map(fn (array $bank) => $this->withHolder($bank), $this->banks());
+    }
+
     public function capture(Invoice $invoice, float $amount, array $params = []): array
     {
         return [

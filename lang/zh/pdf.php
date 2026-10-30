@@ -2,6 +2,7 @@
 
 return [
     'amount_in' => '应付金额',
+    'bank_accounts' => '银行账户',
     'rate_label' => '汇率',
     'rate_note' => '以 :to 结算，按 :rate 从 :from 换算。',
     'rate_note_official' => '按 :source 于 :date 公布的:kind换算：1 :from = :rate :to:ref',
@@ -41,6 +42,10 @@ return [
     'tax' => '税费',
     'tax_id' => '税号',
     'taxed' => '计税',
+    'vat_summary_desc' => '描述',
+    'vat_net_total' => '净额合计',
+    'vat_total' => '税额合计',
+    'vat_gross_total' => '应付（总额）',
     'thank_you' => '感谢您的惠顾！',
     'total' => '合计',
 ];

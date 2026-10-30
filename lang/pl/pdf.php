@@ -2,6 +2,7 @@
 
 return [
     'amount_in' => 'Do zapłaty',
+    'bank_accounts' => 'Rachunki bankowe',
     'rate_label' => 'Kurs wymiany',
     'rate_note' => 'Rozliczono w :to, przeliczone z :from po kursie :rate.',
     'rate_note_official' => 'Przeliczono po :kind opublikowanym przez :source dnia :date: 1 :from = :rate :to:ref',
@@ -41,6 +42,10 @@ return [
     'tax' => 'VAT',
     'tax_id' => 'NIP',
     'taxed' => 'Opodatkowana',
+    'vat_summary_desc' => 'Opis',
+    'vat_net_total' => 'Razem netto',
+    'vat_total' => 'Razem VAT',
+    'vat_gross_total' => 'Do zapłaty (brutto)',
     'thank_you' => 'Dziękujemy za Twoje zamówienie!',
     'total' => 'Razem',
 ];

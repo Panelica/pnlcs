@@ -2,6 +2,7 @@
 
 return [
     'amount_in' => 'Amount due',
+    'bank_accounts' => 'Bank accounts',
     'rate_label' => 'Exchange rate',
     'rate_note' => 'Billed in :to, converted from :from at a rate of :rate.',
     'rate_note_official' => 'Converted at the :kind published by :source on :date: 1 :from = :rate :to:ref',
@@ -41,6 +42,10 @@ return [
     'tax' => 'Tax',
     'tax_id' => 'Tax ID',
     'taxed' => 'Taxed',
+    'vat_summary_desc' => 'Description',
+    'vat_net_total' => 'Net total',
+    'vat_total' => 'Total VAT',
+    'vat_gross_total' => 'Amount due (gross)',
     'thank_you' => 'Thank you for your business!',
     'total' => 'Total',
 ];

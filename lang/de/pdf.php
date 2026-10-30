@@ -2,6 +2,7 @@
 
 return [
     'amount_in' => 'Fälliger Betrag',
+    'bank_accounts' => 'Bankverbindungen',
     'rate_label' => 'Wechselkurs',
     'rate_note' => 'In :to abgerechnet, umgerechnet von :from zum Kurs :rate.',
     'rate_note_official' => 'Konvertiert mit dem von :source auf :date veröffentlichten :kind: 1 :from = :rate :to:ref',
@@ -41,6 +42,10 @@ return [
     'tax' => 'Steuer',
     'tax_id' => 'Steuer-ID',
     'taxed' => 'Besteuert',
+    'vat_summary_desc' => 'Beschreibung',
+    'vat_net_total' => 'Netto gesamt',
+    'vat_total' => 'MwSt. gesamt',
+    'vat_gross_total' => 'Zahlbar (brutto)',
     'thank_you' => 'Vielen Dank für Ihr Geschäft!',
     'total' => 'Insgesamt',
 ];
