@@ -457,15 +457,25 @@ if (! function_exists('invoice_money_fmt')) {
 
         $code = strtoupper($code);
 
-        if (! array_key_exists($code, $cache)) {
+        // Only a currency that exists is remembered. A miss used to be cached
+        // too, and then nothing in the process could see that currency again:
+        // a queue worker that formatted an invoice before the operator added
+        // its currency went on printing "480.00 TRY" for the rest of its life,
+        // and in the test suite one test's lookup decided what a later one was
+        // shown. A miss costs one query; being wrong costs a document.
+        $currency = $cache[$code] ?? null;
+
+        if ($currency === null) {
             try {
-                $cache[$code] = Currency::where('code', $code)->first();
+                $currency = Currency::where('code', $code)->first();
             } catch (Throwable) {
-                $cache[$code] = null;
+                $currency = null;
+            }
+
+            if ($currency !== null) {
+                $cache[$code] = $currency;
             }
         }
-
-        $currency = $cache[$code];
 
         if (! $currency) {
             return number_format((float) $amount, 2).' '.$code;
