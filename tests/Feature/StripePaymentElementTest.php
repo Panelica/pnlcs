@@ -9,9 +9,9 @@ use Modules\Gateways\Stripe\StripeModule;
 /*
  * The Stripe pay form used the bare card field, so a customer on a phone with
  * Apple Pay or Google Pay still typed a card number. It is now the Payment
- * Element, which shows the wallets where the device has them. The intent stays
- * card-only (both wallets are cards to Stripe), so what is recorded, refunded
- * and charged later does not change.
+ * Element, which shows the wallets where the device has them (both are cards
+ * to Stripe), and BLIK in złoty. It is mounted on an intent made when the form
+ * opens: set up before the intent, Stripe dropped BLIK without a word.
  */
 
 function speForm(array $invoice = [], string $locale = 'en'): string
@@ -24,36 +24,55 @@ function speForm(array $invoice = [], string $locale = 'en'): string
     ]));
 }
 
-test('the form is the Payment Element, card-only, for what is owed in minor units', function () {
+test('the form is the Payment Element, mounted on the intent it asks for', function () {
     $form = speForm(['source_currency' => 'EUR'], 'tr');
 
     expect($form)
         ->toContain('elements.create("payment"')
-        ->toContain('paymentMethodTypes: ["card"]')
-        ->toContain('amount: 1250,')
-        ->toContain('currency: "eur",')
-        ->toContain('locale: "tr"')
+        ->toContain('stripe.elements({ clientSecret: data.client_secret, locale: "tr" })')
+        ->toContain('/gateway/stripe/intent/')
         ->toContain('stripe.confirmPayment(')
         ->toContain('redirect: "if_required"')
+        ->not->toContain('mode: "payment"')
         ->not->toContain('elements.create("card"')
         ->not->toContain('confirmCardPayment');
 });
 
-test('a zero-decimal currency is not multiplied by a hundred', function () {
-    expect(speForm(['source_currency' => 'JPY', 'total' => 500]))->toContain('amount: 500,')->toContain('currency: "jpy",');
-});
-
-test('the intent asked for at payment is the amount the form was set up with', function () {
+test('the intent asked for is what is owed, in minor units', function () {
     $invoice = Invoice::factory()->create(['client_id' => Client::factory()->create()->id, 'status' => 'unpaid', 'total' => 12.5, 'source_currency' => 'EUR']);
     GatewaySettings::updateOrCreate(['gateway' => 'stripe', 'setting' => 'secret_key'], ['value' => 'sk_test_x']);
-    GatewaySettings::updateOrCreate(['gateway' => 'stripe', 'setting' => 'publishable_key'], ['value' => 'pk_test_x']);
     Http::fake(['api.stripe.com/v1/payment_intents' => Http::response(['id' => 'pi_1', 'client_secret' => 'pi_1_secret'])]);
 
-    $form = app(StripeModule::class)->getPaymentForm($invoice);
     app(StripeModule::class)->capture($invoice, $invoice->amountDue());
 
     Http::assertSent(fn ($request) => $request['amount'] == 1250 && $request['currency'] === 'eur' && str_contains($request->body(), 'payment_method_types%5B%5D=card'));
-    expect($form)->toContain('amount: 1250,');
+});
+
+test('in złoty the intent offers BLIK beside the card', function () {
+    $invoice = Invoice::factory()->create(['client_id' => Client::factory()->create()->id, 'status' => 'unpaid', 'total' => 12.5, 'source_currency' => 'PLN']);
+    GatewaySettings::updateOrCreate(['gateway' => 'stripe', 'setting' => 'secret_key'], ['value' => 'sk_test_x']);
+    Http::fake(['api.stripe.com/v1/payment_intents' => Http::response(['id' => 'pi_1', 'client_secret' => 'pi_1_secret'])]);
+
+    app(StripeModule::class)->capture($invoice, $invoice->amountDue());
+
+    Http::assertSent(fn ($request) => $request['currency'] === 'pln' && $request['payment_method_types'] === ['card', 'blik']);
+});
+
+test('a złoty payment that keeps its card stays card-only', function () {
+    $client = Client::factory()->create();
+    $invoice = Invoice::factory()->create(['client_id' => $client->id, 'status' => 'unpaid', 'total' => 12.5, 'source_currency' => 'PLN']);
+    GatewaySettings::updateOrCreate(['gateway' => 'stripe', 'setting' => 'secret_key'], ['value' => 'sk_test_x']);
+    Http::fake([
+        'api.stripe.com/v1/customers*' => Http::response(['id' => 'cus_1']),
+        'api.stripe.com/v1/payment_intents' => Http::response(['id' => 'pi_1', 'client_secret' => 'pi_1_secret']),
+    ]);
+
+    app(StripeModule::class)->capture($invoice, $invoice->amountDue(), ['save_card' => true]);
+
+    Http::assertSent(fn ($request) => str_ends_with($request->url(), '/payment_intents')
+        && $request['setup_future_usage'] === 'off_session'
+        && $request['payment_method_types[]'] === 'card'
+        && ! str_contains($request->body(), 'blik'));
 });
 
 test('after Stripe has the payment, a failed confirm says to check the invoice and keeps the button off', function () {

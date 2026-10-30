@@ -82,7 +82,7 @@ test('the pay form offers to keep the card while automatic payment is on, untick
         ->toContain('id="stripe-save-card"')
         ->not->toContain('id="stripe-save-card" value="1" checked')
         ->toContain(htmlspecialchars(__('messages.stripe.save_card'), ENT_QUOTES, 'UTF-8'))
-        ->toContain('elements.update({ setupFutureUsage: save.checked ? "off_session" : null })')
+        ->toContain('save.addEventListener("change", prepare);')
         ->toContain('body: JSON.stringify({ save_card: !!(save && save.checked) })');
     expect(__('messages.stripe.save_card'))->toContain('otomatik öde');
 });
