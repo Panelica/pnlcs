@@ -29,14 +29,7 @@ class PaymentReminderMail extends Mailable implements ShouldQueue
     {
         $num = $this->invoice->invoice_num ?? $this->invoice->id;
 
-        if ($this->daysOffset > 0) {
-            $subject = "Payment Reminder: Invoice #{$num} due in {$this->daysOffset} day(s)";
-        } else {
-            $days = abs($this->daysOffset);
-            $subject = "Overdue Notice: Invoice #{$num} is {$days} day(s) past due";
-        }
-
-        return new Envelope(subject: $subject);
+        return new Envelope(subject: __('email.invoice.reminder_subject', ['number' => $num]));
     }
 
     public function content(): Content

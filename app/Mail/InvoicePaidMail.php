@@ -28,7 +28,7 @@ class InvoicePaidMail extends Mailable implements ShouldQueue
     {
         $num = $this->invoice->invoice_num ?? $this->invoice->id;
 
-        return new Envelope(subject: "Payment Received - Invoice #{$num}");
+        return new Envelope(subject: __('email.invoice.paid_subject', ['number' => $num]));
     }
 
     public function content(): Content

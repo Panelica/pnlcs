@@ -28,9 +28,8 @@ class TicketOpenedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         $tid = $this->ticket->tid ?? $this->ticket->id;
-        $title = $this->ticket->title ?? $this->ticket->subject ?? '';
 
-        return new Envelope(subject: "[Ticket #{$tid}] {$title}");
+        return new Envelope(subject: __('email.ticket.opened_subject', ['number' => $tid]));
     }
 
     public function content(): Content

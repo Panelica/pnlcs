@@ -25,7 +25,7 @@ class PaymentNotificationRejectedMail extends Mailable implements ShouldQueue
     {
         $num = $this->notification->invoice?->invoice_num ?? $this->notification->invoice_id;
 
-        return new Envelope(subject: "Payment notification for Invoice #{$num} could not be verified");
+        return new Envelope(subject: __('email.payment_notification_rejected.subject', ['number' => $num]));
     }
 
     public function content(): Content

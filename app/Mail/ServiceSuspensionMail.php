@@ -26,9 +26,7 @@ class ServiceSuspensionMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $domain = $this->service->domain ?? $this->service->name ?? $this->service->id;
-
-        return new Envelope(subject: "Service {$domain} Suspended");
+        return new Envelope(subject: __('email.service.suspension_subject'));
     }
 
     public function content(): Content

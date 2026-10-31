@@ -28,7 +28,7 @@ class CreditCardExpiryMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your credit card is expiring soon',
+            subject: __('email.cc_expiry.subject'),
         );
     }
 
