@@ -26,9 +26,7 @@ class CancellationConfirmMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $domain = $this->service->domain ?? $this->service->name ?? $this->service->id;
-
-        return new Envelope(subject: "Cancellation Confirmed - {$domain}");
+        return new Envelope(subject: __('email.cancellation.confirm_subject'));
     }
 
     public function content(): Content

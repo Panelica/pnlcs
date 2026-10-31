@@ -119,6 +119,7 @@ return [
         'generated' => 'Nowa faktura została wygenerowana dla Twojego konta.',
     ],
     'payment_notification_rejected' => [
+        'subject' => 'Nie udało się zweryfikować powiadomienia o płatności dla faktury #:number',
         'intro' => 'Niestety nie mogliśmy zweryfikować przelewu bankowego zgłoszonego dla faktury #:number.',
         'next_steps' => 'Sprawdź szczegóły poniżej i prześlij nowe zgłoszenie płatności lub skontaktuj się z obsługą, jeśli uważasz, że to błąd.',
         'reason' => 'Powód',

@@ -119,6 +119,7 @@ return [
         'generated' => 'A new invoice has been generated for your account.',
     ],
     'payment_notification_rejected' => [
+        'subject' => 'Payment notification for Invoice #:number could not be verified',
         'intro' => 'Unfortunately we could not verify the bank transfer you reported for invoice #:number.',
         'next_steps' => 'Please check the details below and submit a new payment notification, or contact support if you believe this is an error.',
         'reason' => 'Reason',

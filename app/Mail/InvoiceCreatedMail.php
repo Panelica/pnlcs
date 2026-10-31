@@ -28,7 +28,7 @@ class InvoiceCreatedMail extends Mailable implements ShouldQueue
     {
         $num = $this->invoice->invoice_num ?? $this->invoice->id;
 
-        return new Envelope(subject: "Invoice #{$num} Created");
+        return new Envelope(subject: __('email.invoice.created_subject', ['number' => $num]));
     }
 
     public function content(): Content

@@ -27,7 +27,7 @@ class AffiliateWelcomeMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Welcome to our Affiliate Program!');
+        return new Envelope(subject: __('email.affiliate.welcome_subject'));
     }
 
     public function content(): Content

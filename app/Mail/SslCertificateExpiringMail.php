@@ -26,7 +26,7 @@ class SslCertificateExpiringMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "SSL Certificate Expiring in {$this->daysRemaining} Days - " . ($this->order->domain ?: 'Order #' . $this->order->id),
+            subject: __('email.ssl.certificate_expiring_subject'),
         );
     }
 

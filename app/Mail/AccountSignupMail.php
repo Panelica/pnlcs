@@ -27,7 +27,7 @@ class AccountSignupMail extends Mailable implements ShouldQueue
     {
         $companyName = company_name();
 
-        return new Envelope(subject: "Welcome to {$companyName}!");
+        return new Envelope(subject: __('email.account.signup_subject', ['company' => $companyName]));
     }
 
     public function content(): Content

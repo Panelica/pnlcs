@@ -26,9 +26,7 @@ class ServiceWelcomeMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $domain = $this->service->domain ?? $this->service->name ?? $this->service->id;
-
-        return new Envelope(subject: "Your Service {$domain} is Ready!");
+        return new Envelope(subject: __('email.service.welcome_subject'));
     }
 
     public function content(): Content

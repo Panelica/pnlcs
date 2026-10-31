@@ -26,9 +26,7 @@ class DomainRenewalReminderMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $name = $this->domain->domain ?? $this->domain->name ?? $this->domain->id;
-
-        return new Envelope(subject: "Domain {$name} expires in {$this->daysUntilExpiry} days");
+        return new Envelope(subject: __('email.domain.renewal_subject'));
     }
 
     public function content(): Content

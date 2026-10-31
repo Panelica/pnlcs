@@ -27,7 +27,7 @@ class OrderConfirmationMail extends Mailable implements ShouldQueue
     {
         $id = $this->order->order_num ?? $this->order->id;
 
-        return new Envelope(subject: "Order #{$id} Confirmed");
+        return new Envelope(subject: __('email.order.confirmation_subject', ['number' => $id]));
     }
 
     public function content(): Content

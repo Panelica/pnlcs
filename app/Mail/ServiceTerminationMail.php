@@ -25,9 +25,7 @@ class ServiceTerminationMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $domain = $this->service->domain ?? $this->service->name ?? $this->service->id;
-
-        return new Envelope(subject: "Service {$domain} Terminated");
+        return new Envelope(subject: __('email.service.termination_subject'));
     }
 
     public function content(): Content
