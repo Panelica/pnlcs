@@ -72,7 +72,7 @@ class ClientApiController extends BaseApiController
         // matching an incoming support email. The admin form has always refused
         // one that is taken, and clients.email carries an ordinary index, so
         // nothing else would have stopped a second account on it.
-        $validated = $request->validate(['firstname' => 'required|string|max:255', 'lastname' => 'required|string|max:255', 'email' => 'required|email|max:255|unique:clients,email']);
+        $validated = $request->validate(['firstname' => 'required|string|max:255', 'lastname' => 'required|string|max:255', 'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->withoutTrashed()]]);
 
         // The docs (and WHMCS) promise that a password2 opens a portal login.
         // This method used to swallow the parameter silently, leaving an
@@ -121,7 +121,7 @@ class ClientApiController extends BaseApiController
         // address already in use, or hand the enum cast a status it does not
         // know and turn the call into a 500.
         $request->validate([
-            'email' => ['sometimes', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)],
+            'email' => ['sometimes', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)->withoutTrashed()],
             'status' => ['sometimes', Rule::enum(ClientStatus::class)],
             // Sent empty, a name reached a NOT NULL column as a 500.
             'firstname' => 'sometimes|required|string|max:255',
