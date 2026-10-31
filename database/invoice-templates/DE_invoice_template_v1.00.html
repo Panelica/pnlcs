@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #1a1a1a; line-height: 1.5; }
+    .container { padding: 40px; }
+    .header { display: table; width: 100%; margin-bottom: 30px; }
+    .header-left { display: table-cell; width: 50%; vertical-align: top; }
+    .header-right { display: table-cell; width: 50%; vertical-align: top; text-align: right; }
+    .company-name { font-size: 20px; font-weight: bold; color: #111; margin-bottom: 5px; }
+    .invoice-title { font-size: 26px; font-weight: bold; color: #111; letter-spacing: 1px; }
+    .invoice-number { font-size: 14px; color: #444; margin-top: 5px; }
+    .addresses { display: table; width: 100%; margin-bottom: 25px; }
+    .address-box { display: table-cell; width: 50%; vertical-align: top; }
+    .address-box h4 { font-size: 11px; text-transform: uppercase; color: #555; margin-bottom: 8px; letter-spacing: 1px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    .meta-table { width: 100%; }
+    .meta-table td { padding: 3px 0; }
+    .meta-label { font-weight: bold; color: #333; width: 130px; }
+    .status-badge { display: inline-block; padding: 4px 12px; border: 1px solid #999; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #333; }
+    .notes { margin-top: 20px; padding: 12px; background: #f4f4f5; border-radius: 4px; font-size: 11px; }
+    .ksef-block { margin-top: 24px; padding: 12px; border: 1px solid #777; display: table; width: 100%; }
+    .ksef-cell { display: table-cell; vertical-align: middle; }
+    .footer { margin-top: 30px; font-size: 10px; color: #888; }
+</style>
+</head>
+<body>
+<div class="container">
+
+    <div class="header">
+        <div class="header-left">
+            {company_logo}
+            <div class="company-name">{company_name}</div>
+            {?company_legal_name}<div>{company_legal_name}</div>{/company_legal_name}
+            {?company_address}<div>{company_address}</div>{/company_address}
+            {?company_city}<div>{company_postcode} {company_city}, {company_country}</div>{/company_city}
+            {?company_tax_office}<div>Finanzamt: {company_tax_office}</div>{/company_tax_office}
+            {?company_tax_id}<div>Steuernummer: {company_tax_id}</div>{/company_tax_id}
+            {?company_phone}<div>{company_phone}</div>{/company_phone}
+            {?company_email}<div>{company_email}</div>{/company_email}
+        </div>
+        <div class="header-right">
+            <div class="invoice-title">{invoice_type}</div>
+            <div class="invoice-number">#{invoice_number}</div>
+            <div style="margin-top:10px;"><span class="status-badge">{status}</span></div>
+        </div>
+    </div>
+
+    <div class="addresses">
+        <div class="address-box">
+            <h4>Käufer</h4>
+            <strong>{client_name}</strong><br>
+            {?client_company}{client_company}<br>{/client_company}
+            {?client_address}{client_address}<br>{/client_address}
+            {?client_address2}{client_address2}<br>{/client_address2}
+            {?client_city}{client_city}, {client_state} {client_postcode}<br>{/client_city}
+            {?client_country}{client_country}<br>{/client_country}
+            {?client_tax_id}Steuernummer: {client_tax_id}<br>{/client_tax_id}
+            {client_email}
+        </div>
+        <div class="address-box">
+            <h4>Rechnungsdetails</h4>
+            <table class="meta-table">
+                <tr><td class="meta-label">Ausstellungsdatum:</td><td>{invoice_date}</td></tr>
+                <tr><td class="meta-label">Fälligkeitsdatum:</td><td>{due_date}</td></tr>
+                {?date_paid}<tr><td class="meta-label">Zahlungsdatum:</td><td>{date_paid}</td></tr>{/date_paid}
+                {?payment_method}<tr><td class="meta-label">Zahlungsmethode:</td><td>{payment_method}</td></tr>{/payment_method}
+            </table>
+        </div>
+    </div>
+
+    {items}
+
+    {vat_summary}
+
+    {?company_bank_accounts}<div style="margin-top:20px;">{company_bank_accounts}</div>{/company_bank_accounts}
+
+    {?notes}
+    <div class="notes">
+        <strong>Hinweise:</strong><br>
+        {notes}
+    </div>
+    {/notes}
+
+    {?ksef_qr}
+    <div class="ksef-block">
+        <div class="ksef-cell" style="width:80px;">{ksef_qr}</div>
+        <div class="ksef-cell" style="padding-left:12px;">
+            <div style="font-size:10px;text-transform:uppercase;color:#555;letter-spacing:1px;margin-bottom:2px;">KSeF-Nummer</div>
+            <div style="font-size:14px;font-weight:bold;color:#111;">{ksef_number}</div>
+        </div>
+    </div>
+    {/ksef_qr}
+
+    {?payment_qr}<div style="margin-top:20px;">{payment_qr}</div>{/payment_qr}
+
+    <div class="footer">Vielen Dank, dass Sie unsere Dienste nutzen.</div>
+
+</div>
+</body>
+</html>
