@@ -20,6 +20,7 @@ use App\Mail\ServiceTerminationMail;
 use App\Mail\ServiceWelcomeMail;
 use App\Mail\TicketOpenedMail;
 use App\Mail\TicketReplyMail;
+use App\Models\Admin;
 use App\Models\Setting;
 use App\Models\Ticket;
 use App\Services\AddonManager;
@@ -126,6 +127,9 @@ class SendNotificationListener
                 if ($adminEmail) {
                     Mail::to($adminEmail)->queue(new TicketOpenedMail($event->ticket, true));
                 }
+                foreach ($this->departmentStaffEmails($event->ticket, $adminEmail) as $staffEmail) {
+                    Mail::to($staffEmail)->queue(new TicketOpenedMail($event->ticket, true));
+                }
             }
         } catch (\Throwable $e) {
             Log::error('SendNotification: TicketOpened email failed', ['error' => $e->getMessage()]);
@@ -139,6 +143,44 @@ class SendNotificationListener
             'message' => "Ticket #{$reference}: {$event->ticket->title}",
             'ticket_id' => $event->ticket->id,
         ]);
+    }
+
+    /**
+     * The staff who asked to hear about new tickets in this ticket's department.
+     *
+     * Set on the staff form: the departments a member of staff handles, and
+     * whether new tickets there are emailed to them. Nobody is in a department
+     * until somebody is put there, so the company address alone is told until
+     * then, as before. That address is not mailed twice.
+     *
+     * @return list<string>
+     */
+    private function departmentStaffEmails(Ticket $ticket, ?string $alreadyTold): array
+    {
+        if (! $ticket->department_id) {
+            return [];
+        }
+
+        $told = [strtolower(trim((string) $alreadyTold))];
+        $emails = [];
+
+        $staff = Admin::where('is_disabled', false)
+            ->where('ticket_notifications', true)
+            ->whereNotNull('email')
+            ->get();
+
+        foreach ($staff as $admin) {
+            $address = strtolower(trim($admin->email));
+
+            if ($address === '' || ! $admin->handlesDepartment((int) $ticket->department_id) || in_array($address, $told, true)) {
+                continue;
+            }
+
+            $told[] = $address;
+            $emails[] = $admin->email;
+        }
+
+        return $emails;
     }
 
     public function handleTicketReplied(TicketReplied $event): void

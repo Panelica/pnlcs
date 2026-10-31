@@ -144,6 +144,10 @@ return [
     'admins.no_admins' => 'Keine Administratoren gefunden.',
     'admins.role' => 'Rolle',
     'admins.select_role' => 'Wählen Sie Rolle aus',
+    'admins.support_departments' => 'Support-Abteilungen',
+    'admins.no_departments' => 'Noch keine Support-Abteilungen.',
+    'admins.ticket_notifications' => 'Neue Tickets in diesen Abteilungen per E-Mail melden',
+    'admins.ticket_notifications_help' => 'Wenn ein Kunde in einer der oben angehakten Abteilungen ein Ticket eröffnet. Die Firmen-E-Mail-Adresse wird wie bisher über jedes neue Ticket informiert.',
     'admins.title' => 'Personalmanagement',
     'admins.username_email' => 'Benutzername / E-Mail',
     'affiliates' => [

@@ -141,6 +141,10 @@ return [
     'admins.no_admins' => 'Yönetici bulunamadı.',
     'admins.role' => 'Rol',
     'admins.select_role' => 'Rol Seçin',
+    'admins.support_departments' => 'Destek departmanları',
+    'admins.no_departments' => 'Henüz destek departmanı yok.',
+    'admins.ticket_notifications' => 'Bu departmanlardaki yeni talepleri e-postayla bildir',
+    'admins.ticket_notifications_help' => 'Müşteri yukarıda işaretli departmanlardan birinde talep açtığında. Şirket e-posta adresi her yeni talepten eskisi gibi haberdar edilir.',
     'admins.title' => 'Personel Yönetimi',
     'admins.username_email' => 'Kullanıcı Adı / E-posta',
     'affiliates' => [
