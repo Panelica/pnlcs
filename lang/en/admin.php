@@ -144,6 +144,10 @@ return [
     'admins.no_admins' => 'No admins found.',
     'admins.role' => 'Role',
     'admins.select_role' => 'Select Role',
+    'admins.support_departments' => 'Support departments',
+    'admins.no_departments' => 'No support departments yet.',
+    'admins.ticket_notifications' => 'Email new tickets in these departments',
+    'admins.ticket_notifications_help' => 'When a client opens a ticket in one of the departments ticked above. The company email is told about every new ticket as before.',
     'admins.title' => 'Staff Management',
     'admins.username_email' => 'Username / Email',
     'affiliates' => [

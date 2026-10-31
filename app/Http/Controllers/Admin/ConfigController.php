@@ -88,7 +88,34 @@ class ConfigController extends Controller
         return view('admin.config.admins', [
             'admins' => Admin::with('role')->get(),
             'roles' => AdminRole::all(),
+            'departments' => TicketDepartment::orderBy('sort_order')->get(),
         ]);
+    }
+
+    /**
+     * Who is told about a new ticket, from the staff form.
+     *
+     * Admin has carried support_departments and ticket_notifications since
+     * the first release, and nothing set or read them: the new-ticket alert
+     * went to the company address and nowhere else. The form sends
+     * notification_settings with both fields, so a request that does not
+     * carry them (an older form, a script) leaves them as they are.
+     */
+    private function ticketAlertSettings(Request $request): array
+    {
+        if (! $request->has('notification_settings')) {
+            return [];
+        }
+
+        $request->validate([
+            'support_departments' => 'nullable|array',
+            'support_departments.*' => 'integer|exists:ticket_departments,id',
+        ]);
+
+        return [
+            'support_departments' => array_values(array_unique(array_map('intval', (array) $request->input('support_departments', [])))),
+            'ticket_notifications' => $request->boolean('ticket_notifications'),
+        ];
     }
 
     /**
@@ -142,7 +169,7 @@ class ConfigController extends Controller
             'role_id' => ['required', 'exists:admin_roles,id', $this->grantableRole()],
         ]);
         $v['password'] = Hash::make($v['password']);
-        Admin::create($v);
+        Admin::create($v + $this->ticketAlertSettings($request));
 
         return back()->with('success', __('messages.success.admin_created_successfully'));
     }
@@ -166,7 +193,7 @@ class ConfigController extends Controller
         } else {
             $v['password'] = Hash::make($v['password']);
         }
-        $admin->update($v);
+        $admin->update($v + $this->ticketAlertSettings($request));
 
         return back()->with('success', __('messages.success.admin_updated_successfully'));
     }

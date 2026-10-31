@@ -72,6 +72,21 @@
             </div>
             <div class="form-group"><label class="form-label">{{ __('common.form.new_password') }}<span style="color:#999;font-weight:400;">({{ __('admin.admins.leave_blank_to_keep') }})</span></label><input type="password" name="password" minlength="6" class="form-control"></div>
         </div>
+        <input type="hidden" name="notification_settings" value="1">
+        <div class="form-group">
+            <label class="form-label">{{ __('admin.admins.support_departments') }}</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px 16px;">
+                @forelse($departments as $department)
+                <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="support_departments[]" value="{{ $department->id }}" @checked($admin->handlesDepartment($department->id))> {{ $department->name }}</label>
+                @empty
+                <span style="font-size:12px;color:#777;">{{ __('admin.admins.no_departments') }}</span>
+                @endforelse
+            </div>
+        </div>
+        <div class="form-group">
+            <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="ticket_notifications" value="1" @checked($admin->ticket_notifications)> {{ __('admin.admins.ticket_notifications') }}</label>
+            <div style="font-size:12px;color:#777;">{{ __('admin.admins.ticket_notifications_help') }}</div>
+        </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('edit-admin-{{ $admin->id }}')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>
             <button type="submit" class="btn btn-primary btn-sm">{{ __('common.actions.save_changes') }}</button>
@@ -95,6 +110,21 @@
                     @foreach($roles as $role)<option value="{{ $role->id }}">{{ $role->name }}</option>@endforeach
                 </select>
             </div>
+        </div>
+        <input type="hidden" name="notification_settings" value="1">
+        <div class="form-group">
+            <label class="form-label">{{ __('admin.admins.support_departments') }}</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px 16px;">
+                @forelse($departments as $department)
+                <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="support_departments[]" value="{{ $department->id }}" @checked(false)> {{ $department->name }}</label>
+                @empty
+                <span style="font-size:12px;color:#777;">{{ __('admin.admins.no_departments') }}</span>
+                @endforelse
+            </div>
+        </div>
+        <div class="form-group">
+            <label style="font-weight:400;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="ticket_notifications" value="1" @checked(true)> {{ __('admin.admins.ticket_notifications') }}</label>
+            <div style="font-size:12px;color:#777;">{{ __('admin.admins.ticket_notifications_help') }}</div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
             <button type="button" onclick="closeModal('add-admin')" class="btn btn-default btn-sm">{{ __('common.actions.cancel') }}</button>

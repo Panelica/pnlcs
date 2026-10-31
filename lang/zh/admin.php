@@ -144,6 +144,10 @@ return [
     'admins.no_admins' => '暂无管理员。',
     'admins.role' => '角色',
     'admins.select_role' => '选择角色',
+    'admins.support_departments' => '支持部门',
+    'admins.no_departments' => '尚无支持部门。',
+    'admins.ticket_notifications' => '通过电子邮件通知这些部门的新工单',
+    'admins.ticket_notifications_help' => '当客户在上方勾选的某个部门中提交工单时发送。公司邮箱仍会像以前一样收到每张新工单的通知。',
     'admins.title' => '员工管理',
     'admins.username_email' => '用户名 / 电子邮箱',
     'affiliates' => [
