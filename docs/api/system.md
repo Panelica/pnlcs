@@ -468,7 +468,7 @@ List the mail sent to clients.
 
 `GET /api/v1/getemails`
 
-**Permission:** `list_clients`
+**Permission:** `view_activity_log`
 
 **Parameters**
 

@@ -225,7 +225,7 @@ Delete a specific ticket reply.
 
 `POST /api/v1/deleteticketreply`
 
-**Permission:** `reply_tickets`
+**Permission:** `manage_tickets`
 
 **Parameters**
 
@@ -674,7 +674,7 @@ Edit a ticket reply.
 
 `POST /api/v1/updateticketreply`
 
-**Permission:** `reply_tickets`
+**Permission:** `manage_tickets`
 
 **Parameters**
 

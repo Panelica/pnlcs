@@ -57,12 +57,20 @@ it('does not hand customer mail to someone who may only see the system', functio
         ->assertStatus(403);
 });
 
-it('hands customer mail to someone who may see customers', function () {
+it('hands customer mail to someone who may read the mail log', function () {
     storedCustomerMail();
 
-    $this->withHeaders(scopedCredentialFor([Permissions::VIEW_SYSTEM, Permissions::LIST_CLIENTS]))
+    $this->withHeaders(scopedCredentialFor([Permissions::VIEW_SYSTEM, Permissions::VIEW_ACTIVITY_LOG]))
         ->getJson('/api/v1/getemails')
         ->assertSuccessful();
+});
+
+it('does not hand it to someone who may only list customers', function () {
+    storedCustomerMail();
+
+    $this->withHeaders(scopedCredentialFor([Permissions::LIST_CLIENTS]))
+        ->getJson('/api/v1/getemails')
+        ->assertStatus(403);
 });
 
 it('still answers a system question for the system permission', function () {

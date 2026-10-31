@@ -64,7 +64,7 @@ Record a manual payment for an invoice.
 
 `POST /api/v1/addinvoicepayment`
 
-**Permission:** `create_invoices`
+**Permission:** `manage_invoices`
 
 **Parameters**
 
@@ -123,7 +123,7 @@ Add a manual transaction record.
 
 `POST /api/v1/addtransaction`
 
-**Permission:** `create_invoices`
+**Permission:** `manage_invoices`
 
 **Parameters**
 

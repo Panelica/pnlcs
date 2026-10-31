@@ -78,7 +78,32 @@ class ApiPermissionMap
      * @var array<string, string>
      */
     private const ACTIONS = [
-        'getemails' => Permissions::LIST_CLIENTS,
+        // The mail history holds the bodies of what was sent, welcome mails
+        // included. The panel shows it on the mail log, behind "view activity
+        // log", not on the client list.
+        'getemails' => Permissions::VIEW_ACTIVITY_LOG,
+        // Money in: recording a payment or a transaction and adding credit are
+        // "manage invoices" on the panel (mark paid, the credit screen). By
+        // their "add" prefix they fell to the create permissions, so staff who
+        // could raise an invoice or a client could also mark it paid or give
+        // a balance.
+        'addinvoicepayment' => Permissions::MANAGE_INVOICES,
+        'addtransaction' => Permissions::MANAGE_INVOICES,
+        'addcredit' => Permissions::MANAGE_INVOICES,
+        // A domain's transfer code and its registrant details are on the
+        // panel's "manage domains" screens. As reads they fell to "list
+        // domains", and a transfer code is enough to move the domain away.
+        'domainrequestepp' => Permissions::MANAGE_DOMAINS,
+        'domaingetwhoisinfo' => Permissions::MANAGE_DOMAINS,
+        // Changing or removing what was written on a ticket. The panel has no
+        // such action at all; "reply" in the name put it with replying.
+        'updateticketreply' => Permissions::MANAGE_TICKETS,
+        'deleteticketreply' => Permissions::MANAGE_TICKETS,
+        // A note, a contact and a login on an existing account are changes to
+        // that account: "edit clients" on the panel, not "create clients".
+        'addclientnote' => Permissions::EDIT_CLIENTS,
+        'addcontact' => Permissions::EDIT_CLIENTS,
+        'adduser' => Permissions::EDIT_CLIENTS,
         // Writes that belong to something other than the settings screen: an
         // address ban is a security decision, an announcement is a public
         // statement in the operator's name, and the admin note on a customer
