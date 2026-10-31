@@ -189,10 +189,23 @@ class AccountController extends Controller
         }
 
         if ($client) {
+            // The name and address at the top of this form are the signed-in
+            // login's own. They are the account's too only when this login is
+            // the account holder: a colleague invited onto the account used to
+            // save their own profile and rename the account after themselves,
+            // moving its contact address (and the invoices mailed to it) to
+            // their own. Held by the owner flag, or, for a login made before
+            // that flag, by the account carrying the same address.
+            $holder = (bool) $client->pivot?->owner || strcasecmp((string) $client->email, $previousEmail) === 0;
+            if ($holder) {
+                $client->update([
+                    'first_name' => $request->first_name,
+                    'last_name' => $request->last_name,
+                    'email' => $request->email,
+                ]);
+            }
+
             $client->update([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
                 'billing_email' => $request->billing_email,
                 'company_name' => $request->company_name,
                 'address1' => $request->address1,
