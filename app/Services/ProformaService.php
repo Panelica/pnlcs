@@ -52,7 +52,7 @@ class ProformaService
                     'tax_rate' => $proforma->tax_rate,
                     'tax_rate2' => $proforma->tax_rate2,
                     'payment_method' => $proforma->payment_method,
-                    'notes' => $proforma->notes,
+                    'notes' => $this->withProformaReference($proforma),
                     // The same amounts at the same rate. Left out, the model
                     // stamped today's rate and bulletin on the VAT invoice, so
                     // a TRY customer's legal invoice showed a different lira
@@ -99,5 +99,21 @@ class ProformaService
 
             return null;
         }
+    }
+
+    /**
+     * The notes the VAT invoice carries: the proforma's own notes, with a line
+     * naming the proforma it was issued for, so the two documents link in
+     * plain text. Existing notes are kept; the reference is appended, never
+     * overwriting them. The number is read straight off the proforma, never
+     * rebuilt from numbering or id.
+     */
+    private function withProformaReference(Invoice $proforma): ?string
+    {
+        $reference = 'Faktura do faktury proformy nr '.$proforma->invoice_num;
+
+        $notes = trim((string) $proforma->notes);
+
+        return $notes === '' ? $reference : $notes."\n".$reference;
     }
 }
