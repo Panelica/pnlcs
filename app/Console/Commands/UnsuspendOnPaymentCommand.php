@@ -50,9 +50,14 @@ class UnsuspendOnPaymentCommand extends Command
                 })
                 ->exists();
 
-            // Nothing still outstanding against it.
+            // Nothing still outstanding against it. Every invoice that is not
+            // settled, not only unpaid and overdue: a bank-transfer notice
+            // moves the invoice to payment_pending before any money has
+            // arrived, and a part payment to partially_paid. Both used to
+            // read as "nothing owed", so the notice alone, with any earlier
+            // paid invoice, switched the service back on.
             $hasOverdue = Invoice::where('client_id', $service->client_id)
-                ->whereIn('status', [InvoiceStatus::Overdue->value, InvoiceStatus::Unpaid->value])
+                ->whereNotIn('status', [...InvoiceStatus::settled(), InvoiceStatus::Draft->value])
                 ->whereHas('items', function ($q) use ($service) {
                     $q->where('rel_id', $service->id);
                 })
