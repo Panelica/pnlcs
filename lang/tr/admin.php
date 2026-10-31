@@ -1688,6 +1688,7 @@ return [
     'messages.product_created' => 'Ürün oluşturuldu.',
     'messages.product_in_use' => 'Bu ürünü hâlâ :count müşteri hizmeti kullanıyor. Silmek yerine satıştan kaldırın; üzerindeki tüm hizmetler bittiğinde silinebilir.',
     'messages.product_deleted' => 'Ürün silindi.',
+    'messages.product_copied' => 'Ürün kopyalandı: :name.',
     'messages.product_group_created' => 'Ürün grubu oluşturuldu.',
     'messages.product_group_updated' => 'Ürün grubu güncellendi.',
     'messages.product_group_deleted' => 'Ürün grubu silindi.',

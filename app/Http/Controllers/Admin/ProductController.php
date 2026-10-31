@@ -600,11 +600,23 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_deleted'));
     }
 
+    /**
+     * Duplicate a product with its prices and open the duplicate for editing.
+     *
+     * The copy arrives hidden. replicate() carries every column, `hidden`
+     * among them, so copying a product that is on sale would have put
+     * "<name> - copy" in the customer store at the same prices the moment the
+     * button was pressed (CartController::store lists Product::active(), which
+     * is hidden = false and retired = false). A duplicate is a draft someone
+     * is about to edit - the edit screen it opens on is where it gets its real
+     * name and its Hidden box unticked.
+     */
     public function copy(Product $product)
     {
         $copy = $product->replicate();
         $copy->name = $product->name.' - copy';
         $copy->slug = UniqueSlug::for(Product::class, $copy->name, 'product');
+        $copy->hidden = true;
         $copy->save();
 
         // A duplicate sells at the same prices as the original.

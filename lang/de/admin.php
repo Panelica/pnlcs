@@ -1707,6 +1707,7 @@ return [
     'messages.product_created' => 'Produkt erstellt.',
     'messages.product_in_use' => 'Der/die :count-Kundendienst(e) verwenden dieses Produkt immer noch. Ziehen Sie es stattdessen zurück. Es kann gelöscht werden, sobald alle darauf befindlichen Dienste beendet sind.',
     'messages.product_deleted' => 'Produkt gelöscht.',
+    'messages.product_copied' => 'Produkt kopiert: :name.',
     'messages.product_group_created' => 'Produktgruppe erstellt.',
     'messages.product_group_updated' => 'Produktgruppe aktualisiert.',
     'messages.product_group_deleted' => 'Produktgruppe gelöscht.',

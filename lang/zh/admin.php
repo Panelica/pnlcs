@@ -1707,6 +1707,7 @@ return [
     'messages.product_created' => '产品创建成功。',
     'messages.product_in_use' => '仍有 :count 项客户服务使用此产品。请改为下架；待其上所有服务结束后方可删除。',
     'messages.product_deleted' => '产品已删除。',
+    'messages.product_copied' => '产品已复制：:name。',
     'messages.product_group_created' => '产品组创建成功。',
     'messages.product_group_updated' => '产品组已更新。',
     'messages.product_group_deleted' => '产品组已删除。',
