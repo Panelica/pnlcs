@@ -44,6 +44,10 @@
             </td>
             <td style="text-align:right;">
                 <a href="{{ route('admin.products.edit', $product) }}" class="btn btn-default btn-xs">{{ __('common.actions.edit') }}</a>
+                <form method="POST" action="{{ route('admin.products.copy', $product) }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-default btn-xs">{{ __('common.actions.copy') }}</button>
+                </form>
             </td>
         </tr>
         @endforeach

@@ -600,6 +600,27 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', __('admin.messages.product_deleted'));
     }
 
+    public function copy(Product $product)
+    {
+        $copy = $product->replicate();
+        $copy->name = $product->name.' - copy';
+        $copy->slug = UniqueSlug::for(Product::class, $copy->name, 'product');
+        $copy->save();
+
+        // A duplicate sells at the same prices as the original.
+        Pricing::where('type', 'product')
+            ->where('rel_id', $product->id)
+            ->get()
+            ->each(function (Pricing $pricing) use ($copy) {
+                $clone = $pricing->replicate();
+                $clone->rel_id = $copy->id;
+                $clone->save();
+            });
+
+        return redirect()->route('admin.products.edit', $copy)
+            ->with('success', __('admin.messages.product_copied', ['name' => $copy->name]));
+    }
+
     /**
      * Store a catalog product/service (goods or services for invoicing).
      */

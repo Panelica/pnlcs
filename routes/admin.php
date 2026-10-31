@@ -131,6 +131,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
         Route::get('products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
         Route::put('products/{product}', [ProductController::class, 'update'])->name('products.update');
         Route::delete('products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+        Route::post('products/{product}/copy', [ProductController::class, 'copy'])->name('products.copy');
         Route::post('products/{product}/fields', [ProductCustomFieldController::class, 'store'])->name('products.fields.store');
         Route::delete('products/{product}/fields/{field}', [ProductCustomFieldController::class, 'destroy'])->name('products.fields.destroy');
         Route::get('products/groups/create', [ProductController::class, 'createGroup'])->name('products.groups.create');

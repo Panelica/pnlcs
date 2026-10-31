@@ -1707,6 +1707,7 @@ return [
     'messages.product_created' => 'Produkt utworzony.',
     'messages.product_in_use' => ':count usług(i) klientów nadal korzysta z tego produktu. Wycofaj go ze sprzedaży; można go usunąć, gdy wszystkie usługi się zakończą.',
     'messages.product_deleted' => 'Produkt usunięty.',
+    'messages.product_copied' => 'Produkt skopiowany: :name.',
     'messages.product_group_created' => 'Grupa produktów utworzona.',
     'messages.product_group_updated' => 'Grupa produktów zaktualizowana.',
     'messages.product_group_deleted' => 'Grupa produktów usunięta.',
