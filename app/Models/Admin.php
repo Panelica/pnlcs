@@ -58,4 +58,11 @@ class Admin extends Authenticatable
     {
         return $this->role->hasPermission($permission);
     }
+
+    /** Whether this member of staff handles the ticket department, as ticked on the staff form. */
+    public function handlesDepartment(?int $departmentId): bool
+    {
+        return $departmentId !== null
+            && in_array($departmentId, array_map('intval', (array) ($this->support_departments ?? [])), true);
+    }
 }

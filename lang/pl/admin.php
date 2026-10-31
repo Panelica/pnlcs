@@ -144,6 +144,10 @@ return [
     'admins.no_admins' => 'Nie znaleziono administratorów.',
     'admins.role' => 'Rola',
     'admins.select_role' => 'Wybierz rolę',
+    'admins.support_departments' => 'Działy wsparcia',
+    'admins.no_departments' => 'Nie ma jeszcze działów wsparcia.',
+    'admins.ticket_notifications' => 'Powiadamiaj e-mailem o nowych zgłoszeniach w tych działach',
+    'admins.ticket_notifications_help' => 'Gdy klient otworzy zgłoszenie w jednym z zaznaczonych powyżej działów. Adres e-mail firmy jak dotąd otrzymuje powiadomienie o każdym nowym zgłoszeniu.',
     'admins.title' => 'Zarządzanie personelem',
     'admins.username_email' => 'Nazwa użytkownika / E-mail',
     'affiliates' => [
