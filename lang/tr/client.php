@@ -681,6 +681,7 @@ return [
         'pn_transfer_date' => 'Transfer Tarihi',
         'remaining_balance' => 'Kalan Bakiye',
         'reported_on' => 'Bildirim tarihi',
+        'proforma_reference' => 'Proforma no.: :number',
         'download_pdf' => 'PDF İndir',
         'due' => 'Son Ödeme',
         'invoice_details' => 'Fatura Detayları',

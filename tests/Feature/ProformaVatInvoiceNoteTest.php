@@ -9,16 +9,16 @@ use Illuminate\Support\Facades\Event;
 
 /*
  * The VAT invoice issued for a paid proforma must say which proforma it was
- * issued for, in the notes: "Faktura do faktury proformy nr <number>". The
- * number is read off the proforma itself, existing notes are kept, and the
- * line is written once no matter how often the process runs.
+ * issued for, in the notes ("Do proformy nr: <number>" in Polish). The number
+ * is read off the proforma itself, existing notes are kept, and the line is
+ * written once no matter how often the process runs.
  */
 
 beforeEach(fn () => Event::fake([InvoiceCreated::class]));
 
-function noteProforma(array $attrs = []): Invoice
+function noteProforma(array $attrs = [], string $language = 'pl'): Invoice
 {
-    $client = Client::factory()->create();
+    $client = Client::factory()->create(['language' => $language]);
     $proforma = Invoice::factory()->create(array_merge([
         'client_id' => $client->id,
         'type' => 'proforma',
@@ -44,7 +44,15 @@ test('the VAT invoice notes name the proforma it was issued for', function () {
 
     $vat = app(ProformaService::class)->issueVatInvoice($proforma);
 
-    expect($vat->notes)->toBe('Faktura do faktury proformy nr PRO-2026/10-000002');
+    expect($vat->notes)->toBe('Do proformy nr: PRO-2026/10-000002');
+});
+
+test('the reference is written in the customer\'s language', function () {
+    $proforma = noteProforma([], 'en');
+
+    $vat = app(ProformaService::class)->issueVatInvoice($proforma);
+
+    expect($vat->notes)->toBe('For proforma no.: PRO-2026/10-000002');
 });
 
 test('existing proforma notes are kept with the reference appended', function () {
@@ -52,7 +60,7 @@ test('existing proforma notes are kept with the reference appended', function ()
 
     $vat = app(ProformaService::class)->issueVatInvoice($proforma);
 
-    expect($vat->notes)->toBe("Kontakt: Jan Kowalski\nFaktura do faktury proformy nr PRO-2026/10-000002");
+    expect($vat->notes)->toBe("Kontakt: Jan Kowalski\nDo proformy nr: PRO-2026/10-000002");
 });
 
 test('issuing the VAT invoice twice writes the reference once', function () {
@@ -62,5 +70,5 @@ test('issuing the VAT invoice twice writes the reference once', function () {
     $second = app(ProformaService::class)->issueVatInvoice($proforma);
 
     expect($second->id)->toBe($first->id)
-        ->and($second->notes)->toBe('Faktura do faktury proformy nr PRO-2026/10-000002');
+        ->and($second->notes)->toBe('Do proformy nr: PRO-2026/10-000002');
 });

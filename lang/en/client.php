@@ -682,6 +682,7 @@ return [
         'pn_transfer_date' => 'Transfer Date',
         'remaining_balance' => 'Remaining Balance',
         'reported_on' => 'Reported on',
+        'proforma_reference' => 'For proforma no.: :number',
         'download_pdf' => 'Download PDF',
         'due' => 'Due',
         'invoice_details' => 'Invoice Details',

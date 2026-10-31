@@ -682,6 +682,7 @@ return [
         'pn_transfer_date' => 'Data przelewu',
         'remaining_balance' => 'Pozostałe saldo',
         'reported_on' => 'Zgłoszono',
+        'proforma_reference' => 'Do proformy nr: :number',
         'download_pdf' => 'Pobierz PDF',
         'due' => 'Termin płatności',
         'invoice_details' => 'Szczegóły faktury',

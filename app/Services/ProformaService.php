@@ -110,7 +110,9 @@ class ProformaService
      */
     private function withProformaReference(Invoice $proforma): ?string
     {
-        $reference = 'Faktura do faktury proformy nr '.$proforma->invoice_num;
+        $reference = __('client.invoices.proforma_reference', [
+            'number' => $proforma->invoice_num,
+        ], $proforma->client?->language);
 
         $notes = trim((string) $proforma->notes);
 

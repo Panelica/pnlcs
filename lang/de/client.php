@@ -681,6 +681,7 @@ return [
         'pn_transfer_date' => 'Überweisungsdatum',
         'remaining_balance' => 'Offener Betrag',
         'reported_on' => 'Gemeldet am',
+        'proforma_reference' => 'Zur Proforma Nr.: :number',
         'download_pdf' => 'PDF herunterladen',
         'due' => 'Fällig',
         'invoice_details' => 'Rechnungsdetails',
