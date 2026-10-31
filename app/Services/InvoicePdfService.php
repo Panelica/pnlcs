@@ -98,43 +98,154 @@ class InvoicePdfService
         $company = $this->companyDetails();
         $ksef = $this->ksefInfo($invoice);
 
-        $template = $this->customTemplate();
-        if ($template !== null) {
-            // The uploaded template is a plain HTML document whose {placeholders}
-            // are replaced here. It is data, never code: nothing in it runs.
-            $html = $this->merge(
-                (string) file_get_contents($template),
-                $this->placeholderVars($invoice, $company, $ksef)
-            );
+        $template = $this->customTemplate($invoice);
 
-            return Pdf::loadHTML($html)->setPaper('a4');
-        }
+        // Every label — the items table, the VAT summary, the status and
+        // payment method — is written in the invoice's own language, frozen
+        // at issue time, not in whatever locale the admin happened to be in.
+        return $this->withInvoiceLocale($invoice, function () use ($invoice, $company, $ksef, $template) {
+            if ($template !== null) {
+                // The uploaded template is a plain HTML document whose
+                // {placeholders} are replaced here. It is data, never code.
+                $html = $this->merge(
+                    (string) file_get_contents($template),
+                    $this->placeholderVars($invoice, $company, $ksef)
+                );
 
-        return Pdf::loadView('pdf.invoice', [
-            'invoice' => $invoice,
-            'company' => $company,
-            'ksef' => $ksef,
-        ])->setPaper('a4');
+                return Pdf::loadHTML($html)->setPaper('a4');
+            }
+
+            return Pdf::loadView('pdf.invoice', [
+                'invoice' => $invoice,
+                'company' => $company,
+                'ksef' => $ksef,
+            ])->setPaper('a4');
+        });
     }
 
     /**
-     * The uploaded custom template's path, or null when none is in use.
-     * Selected through Settings — General (InvoiceTemplate), the file is kept
-     * on the private disk so it is never served by the web server.
+     * The uploaded language template's path for this invoice, or null when
+     * none is in use. A template named "<LANG>_invoice_template_v<VER>.html"
+     * matching the invoice's own language wins (the highest version among
+     * matches); English is the fallback for any language without one.
      */
-    public function customTemplate(): ?string
+    public function customTemplate(Invoice $invoice): ?string
     {
-        if ((string) Setting::get('InvoiceTemplate', 'default') !== 'custom') {
-            return null;
+        $language = strtoupper((string) ($invoice->language ?: self::defaultLanguage()));
+
+        foreach (array_unique([$language, 'EN']) as $candidate) {
+            $path = $this->languageTemplatePath($candidate);
+
+            if ($path !== null) {
+                return $path;
+            }
         }
 
-        return is_file(self::customTemplatePath()) ? self::customTemplatePath() : null;
+        return null;
+    }
+
+    /** The language an invoice is written in when nothing else is set: the company's own. */
+    public static function defaultLanguage(): string
+    {
+        return (string) Setting::get('DefaultLanguage', config('app.locale', 'en'));
+    }
+
+    /**
+     * Render with the app locale switched to the invoice's language for the
+     * duration of the callback, then restore it. The locale is never left
+     * changed for the rest of the request.
+     */
+    private function withInvoiceLocale(Invoice $invoice, callable $callback): mixed
+    {
+        $locale = $invoice->language ?: self::defaultLanguage();
+        $original = app()->getLocale();
+
+        if ($locale === $original) {
+            return $callback();
+        }
+
+        app()->setLocale($locale);
+        try {
+            return $callback();
+        } finally {
+            app()->setLocale($original);
+        }
     }
 
     /** Where an uploaded custom invoice template lives. */
     public static function customTemplatePath(): string
     {
         return storage_path('app/invoice-templates/custom.html');
+    }
+
+    /**
+     * Parse a language template filename "<LANG>_invoice_template_v<VER>.html"
+     * into its language (upper-cased) and version, or null when it does not
+     * follow the convention. Anything else is the plain custom.html template.
+     *
+     * @return array{language: string, version: string}|null
+     */
+    public static function parseTemplateFilename(string $filename): ?array
+    {
+        if (! preg_match('/^(?<lang>[a-z]{2})_invoice_template_v(?<ver>\d+(?:\.\d+)?)\.html$/i', $filename, $m)) {
+            return null;
+        }
+
+        return ['language' => strtoupper($m['lang']), 'version' => $m['ver']];
+    }
+
+    /**
+     * Every uploaded language template, parsed off its filename. The files
+     * live next to custom.html in the one template directory; there is no
+     * database behind them.
+     *
+     * @return list<array{path: string, filename: string, language: string, version: string}>
+     */
+    public static function languageTemplates(): array
+    {
+        $dir = dirname(self::customTemplatePath());
+
+        if (! is_dir($dir)) {
+            return [];
+        }
+
+        $templates = [];
+
+        foreach (glob($dir.'/*_invoice_template_v*.html') ?: [] as $file) {
+            $parsed = self::parseTemplateFilename(basename($file));
+
+            if ($parsed === null) {
+                continue;
+            }
+
+            $templates[] = ['path' => $file, 'filename' => basename($file)] + $parsed;
+        }
+
+        usort($templates, fn ($a, $b) => $a['language'] === $b['language']
+            ? version_compare($b['version'], $a['version'])
+            : strcmp($a['language'], $b['language']));
+
+        return $templates;
+    }
+
+    /** The highest-version language template for a language, or null. */
+    protected function languageTemplatePath(string $language): ?string
+    {
+        $best = null;
+        $bestVersion = null;
+
+        foreach (self::languageTemplates() as $template) {
+            if ($template['language'] !== $language) {
+                continue;
+            }
+
+            if ($bestVersion === null || version_compare($template['version'], $bestVersion, '>')) {
+                $bestVersion = $template['version'];
+                $best = $template['path'];
+            }
+        }
+
+        return $best;
     }
 
     /**

@@ -44,9 +44,8 @@ class SettingController extends Controller
             'proformaFormat' => $proformaFormat,
             'proformaPreview' => $invoiceService->renderInvoiceNumber($proformaFormat, $proformaSeq),
             'proformaLast' => $proformaLast,
-            'invoiceTemplateCustom' => is_file(\App\Services\InvoicePdfService::customTemplatePath()),
-            'invoiceTemplateName' => (string) Setting::get('InvoiceTemplateName', ''),
             'invoiceTemplateVocabulary' => \App\Services\InvoicePdfService::customTemplateVocabulary(),
+            'invoiceTemplateLanguages' => \App\Services\InvoicePdfService::languageTemplates(),
         ]);
     }
 
@@ -609,9 +608,10 @@ class SettingController extends Controller
     // ═══════════════════════════════════════════════════════
 
     /**
-     * Store an uploaded invoice template (a plain HTML document with
-     * {placeholders}) on the private disk and switch the invoice renderer to
-     * it. Only HTML/text is accepted: the template is data, never code.
+     * Store an uploaded language invoice template (a plain HTML document with
+     * {placeholders}) on the private disk. Language and version are read from
+     * the file name "<LANG>_invoice_template_v<VER>.html"; any other name is
+     * rejected. Only HTML/text is accepted: the template is data, never code.
      */
     public function uploadInvoiceTemplate(Request $request)
     {
@@ -620,32 +620,60 @@ class SettingController extends Controller
         ]);
 
         $file = $request->file('template');
-        $content = (string) file_get_contents($file->getRealPath());
+        $name = basename((string) $file->getClientOriginalName());
+        $parsed = \App\Services\InvoicePdfService::parseTemplateFilename($name);
+
+        if ($parsed === null) {
+            return redirect()->to(route('admin.settings.general').'#invoicing')
+                ->with('error', __('admin.settings.invoice_template_name_invalid'));
+        }
 
         $dir = dirname(\App\Services\InvoicePdfService::customTemplatePath());
         if (! is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
 
-        file_put_contents(\App\Services\InvoicePdfService::customTemplatePath(), $content);
+        $filename = $parsed['language'].'_invoice_template_v'.$parsed['version'].'.html';
+        file_put_contents($dir.'/'.$filename, (string) file_get_contents($file->getRealPath()));
 
-        Setting::set('InvoiceTemplate', 'custom', 'general');
-        // The original name is shown in the selector, not the fixed file name.
-        Setting::set('InvoiceTemplateName', basename((string) $file->getClientOriginalName()), 'general');
-
-        return back()->with('success', __('admin.settings.invoice_template_uploaded'));
+        return redirect()->to(route('admin.settings.general').'#invoicing')
+            ->with('success', __('admin.settings.invoice_template_uploaded'));
     }
 
-    public function removeInvoiceTemplate()
+    public function removeInvoiceTemplate(Request $request)
     {
-        $path = \App\Services\InvoicePdfService::customTemplatePath();
+        $file = basename((string) $request->input('file'));
+
+        // Only a language template may be removed by name; never a path.
+        $parsed = \App\Services\InvoicePdfService::parseTemplateFilename($file);
+        if ($parsed === null) {
+            abort(400);
+        }
+
+        $path = dirname(\App\Services\InvoicePdfService::customTemplatePath()).'/'.$file;
         if (is_file($path)) {
             unlink($path);
         }
-        Setting::set('InvoiceTemplate', 'default', 'general');
-        Setting::set('InvoiceTemplateName', '', 'general');
 
-        return back()->with('success', __('admin.settings.invoice_template_removed'));
+        return redirect()->to(route('admin.settings.general').'#invoicing')
+            ->with('success', __('admin.settings.invoice_template_removed'));
+    }
+
+    public function downloadInvoiceTemplate(Request $request)
+    {
+        $file = basename((string) $request->input('file'));
+
+        $parsed = \App\Services\InvoicePdfService::parseTemplateFilename($file);
+        if ($parsed === null) {
+            abort(404);
+        }
+
+        $path = dirname(\App\Services\InvoicePdfService::customTemplatePath()).'/'.$file;
+        if (! is_file($path)) {
+            abort(404);
+        }
+
+        return response()->download($path);
     }
 
     public function sectionsList()

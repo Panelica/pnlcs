@@ -573,30 +573,39 @@
             </div>
 
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid #eee;">
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
-                    <div class="form-group">
-                        <label class="form-label">{{ __('admin.settings.invoice_template') }}</label>
-                        <select name="InvoiceTemplate" class="form-control">
-                            <option value="default" @selected(($settings['InvoiceTemplate'] ?? 'default') !== 'custom')>{{ __('admin.settings.invoice_template_default') }}</option>
-                            @if($invoiceTemplateCustom)
-                            <option value="custom" @selected(($settings['InvoiceTemplate'] ?? 'default') === 'custom')>{{ $invoiceTemplateName }}</option>
-                            @endif
-                        </select>
-                    </div>
+                <div style="font-size:13px;font-weight:600;margin-bottom:10px;">{{ __('admin.settings.invoice_template_languages') }}</div>
+
+                <div style="display:grid;grid-template-columns:1fr auto;gap:15px;align-items:end;">
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.settings.invoice_template_file') }}</label>
                         <input type="file" name="template" accept=".html,.htm,.txt" class="form-control" form="invoice-template-upload">
-                        <button type="submit" form="invoice-template-upload" class="btn btn-default btn-sm" style="margin-top:8px;">{{ __('admin.settings.invoice_template_upload') }}</button>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">&nbsp;</label>
-                        @if($invoiceTemplateCustom)
-                        <button type="submit" form="invoice-template-remove" class="btn btn-default btn-sm" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
-                        @endif
+                        <button type="submit" form="invoice-template-upload" class="btn btn-primary btn-sm">{{ __('admin.settings.invoice_template_upload') }}</button>
                     </div>
                 </div>
-                <div style="font-size:12px;color:#777;margin-top:6px;">{{ __('admin.settings.invoice_template_hint') }}</div>
+                <div style="font-size:12px;color:#777;margin-top:8px;">{{ __('admin.settings.invoice_template_languages_hint') }}</div>
+
+                <div style="font-size:12px;color:#777;margin-top:12px;">{{ __('admin.settings.invoice_template_hint') }}</div>
                 <div style="font-size:12px;color:#777;font-family:monospace;margin-top:4px;line-height:1.8;">{{ collect($invoiceTemplateVocabulary)->map(fn ($p) => '{'.$p.'}')->join(' ') }}</div>
+
+                <div style="margin-top:16px;">
+                    @forelse($invoiceTemplateLanguages as $languageTemplate)
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid #f0f0f0;">
+                        <span style="font-family:monospace;font-size:13px;">{{ $languageTemplate['filename'] }}</span>
+                        <div style="display:flex;gap:8px;">
+                            <a href="{{ route('admin.settings.invoice-template.download', ['file' => $languageTemplate['filename']]) }}" class="btn btn-default btn-xs">{{ __('common.actions.download') }}</a>
+                            <form method="POST" action="{{ route('admin.settings.invoice-template.remove') }}" style="margin:0;">
+                                @csrf @method('DELETE')
+                                <input type="hidden" name="file" value="{{ $languageTemplate['filename'] }}">
+                                <button type="submit" class="btn btn-danger btn-xs" onclick="return pnConfirm(event, @js(__('admin.settings.invoice_template_remove_confirm')))">{{ __('admin.settings.invoice_template_remove') }}</button>
+                            </form>
+                        </div>
+                    </div>
+                    @empty
+                    <div style="font-size:12px;color:#999;padding:10px 0;">{{ __('admin.settings.invoice_template_languages_none') }}</div>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>
@@ -721,11 +730,10 @@
     </div>
 </form>
 
-{{-- The invoice-template upload/remove run as their own requests, but their
-     controls sit inside the settings form above, which must not be nested.
-     These empty forms are targeted through the controls' `form` attribute. --}}
+{{-- The invoice-template upload runs as its own request, but its controls sit
+     inside the settings form above, which must not be nested. This empty form
+     is targeted through the controls' `form` attribute. --}}
 <form id="invoice-template-upload" method="POST" action="{{ route('admin.settings.invoice-template.upload') }}" enctype="multipart/form-data">@csrf</form>
-<form id="invoice-template-remove" method="POST" action="{{ route('admin.settings.invoice-template.remove') }}">@csrf @method('DELETE')</form>
 
 <script>
 (function () {

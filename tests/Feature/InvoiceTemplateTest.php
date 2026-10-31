@@ -197,29 +197,6 @@ it('strips characters outside the ZBP set from the name and title', function () 
     expect($zbp)->toBe('|PL|63253000082096102231910001|001000|Mller & Shne Pl|FV 1|||');
 });
 
-it('uses the uploaded template only while one is selected and present', function () {
-    $invoice = Invoice::factory()->create();
-    $service = app(InvoicePdfService::class);
-
-    expect($service->customTemplate())->toBeNull();
-
-    @mkdir(dirname(InvoicePdfService::customTemplatePath()), 0755, true);
-    file_put_contents(InvoicePdfService::customTemplatePath(), '<h1>{invoice_number}</h1>');
-    Setting::set('InvoiceTemplate', 'custom', 'general');
-
-    expect($service->customTemplate())->not->toBeNull();
-
-    // Selecting built-in (or a missing file) falls back to the built-in view.
-    Setting::set('InvoiceTemplate', 'default', 'general');
-    expect($service->customTemplate())->toBeNull();
-
-    Setting::set('InvoiceTemplate', 'custom', 'general');
-    @unlink(InvoicePdfService::customTemplatePath());
-    expect($service->customTemplate())->toBeNull();
-
-    invoiceTemplateCleanup();
-});
-
 it('builds the items table from the invoice line items', function () {
     $client = Client::factory()->create();
     Currency::factory()->create(['code' => 'PLN', 'prefix' => '', 'suffix' => ' zł', 'format' => 1]);
@@ -276,25 +253,47 @@ it('refuses an upload that is not an HTML document', function () {
         ->assertSessionHasErrors('template');
 });
 
-it('accepts an HTML template and removes it back to the built-in one', function () {
+it('refuses an upload whose name does not follow the language convention', function () {
     $admin = Admin::factory()->create(['role_id' => AdminRole::factory()->create(['permissions' => ['manage_settings']])->id]);
     $file = UploadedFile::fake()->createWithContent('mine.html', '<h1>{invoice_number}</h1>');
 
     $this->actingAs($admin, 'admin')
         ->post(route('admin.settings.invoice-template.upload'), ['template' => $file])
-        ->assertSessionHas('success');
+        ->assertSessionHas('error');
 
-    expect(Setting::get('InvoiceTemplate'))->toBe('custom');
-    expect(is_file(InvoicePdfService::customTemplatePath()))->toBeTrue();
+    expect(is_file(InvoicePdfService::customTemplatePath()))->toBeFalse();
+});
+
+it('accepts a language template and removes it again', function () {
+    $admin = Admin::factory()->create(['role_id' => AdminRole::factory()->create(['permissions' => ['manage_settings']])->id]);
+    $file = UploadedFile::fake()->createWithContent('PL_invoice_template_v1.32.html', '<h1>{invoice_number}</h1>');
+
+    $path = dirname(InvoicePdfService::customTemplatePath()).'/PL_invoice_template_v1.32.html';
 
     $this->actingAs($admin, 'admin')
-        ->delete(route('admin.settings.invoice-template.remove'))
+        ->post(route('admin.settings.invoice-template.upload'), ['template' => $file])
         ->assertSessionHas('success');
 
-    expect(Setting::get('InvoiceTemplate'))->toBe('default');
-    expect(is_file(InvoicePdfService::customTemplatePath()))->toBeFalse();
+    expect(is_file($path))->toBeTrue();
 
-    invoiceTemplateCleanup();
+    $this->actingAs($admin, 'admin')
+        ->delete(route('admin.settings.invoice-template.remove'), ['file' => 'PL_invoice_template_v1.32.html'])
+        ->assertSessionHas('success');
+
+    expect(is_file($path))->toBeFalse();
+});
+
+it('downloads a language template', function () {
+    $admin = Admin::factory()->create(['role_id' => AdminRole::factory()->create(['permissions' => ['manage_settings']])->id]);
+    $path = dirname(InvoicePdfService::customTemplatePath()).'/PL_invoice_template_v1.00.html';
+    @mkdir(dirname($path), 0755, true);
+    file_put_contents($path, '<h1>{invoice_number}</h1>');
+
+    $this->actingAs($admin, 'admin')
+        ->get(route('admin.settings.invoice-template.download', ['file' => 'PL_invoice_template_v1.00.html']))
+        ->assertOk();
+
+    @unlink($path);
 });
 
 it('writes text into the template as text, so a name with markup cannot break the document', function () {
