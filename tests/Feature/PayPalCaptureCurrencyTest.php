@@ -26,7 +26,9 @@ function fakeCapture(string $value, string $currency): void
 {
     Http::fake([
         '*/v1/oauth2/token' => Http::response(['access_token' => 'tok'], 200),
-        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => $value, 'currency_code' => $currency]], 200),
+        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => $value, 'currency_code' => $currency], 'supplementary_data' => ['related_ids' => ['order_id' => 'ORDER-1']]], 200),
+        // The order the capture was taken on names the invoice being paid.
+        '*/v2/checkout/orders/*' => fn () => Http::response(['purchase_units' => [['reference_id' => 'INV-'.Invoice::max('id')]]], 200),
     ]);
 }
 

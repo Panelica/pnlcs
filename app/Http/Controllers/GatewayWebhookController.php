@@ -93,7 +93,9 @@ class GatewayWebhookController extends Controller
             return response()->json(["success" => false, "message" => $verified["message"] ?? "Payment could not be verified."]);
         }
 
-        $this->recordTransaction($invoice, "paypal", $captureId, (float) ($verified["amount"] ?? $invoice->total));
+        // Under PayPal's id for the capture, so one capture is one payment
+        // however the browser spelled it.
+        $this->recordTransaction($invoice, "paypal", (string) ($verified["id"] ?? $captureId), (float) ($verified["amount"] ?? $invoice->total));
 
         return response()->json([
             "success"      => true,

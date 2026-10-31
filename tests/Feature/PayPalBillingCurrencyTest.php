@@ -42,7 +42,9 @@ function ppbCapture(string $value, string $currency = 'PLN', array $more = []): 
 {
     Http::fake($more + [
         '*/v1/oauth2/token' => Http::response(['access_token' => 'tok'], 200),
-        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => $value, 'currency_code' => $currency]], 200),
+        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => $value, 'currency_code' => $currency], 'supplementary_data' => ['related_ids' => ['order_id' => 'ORDER-1']]], 200),
+        // The order the capture was taken on names the invoice being paid.
+        '*/v2/checkout/orders/*' => fn () => Http::response(['purchase_units' => [['reference_id' => 'INV-'.Invoice::max('id')]]], 200),
         '*' => Http::response(['id' => 'ORDER-1', 'status' => 'COMPLETED'], 201),
     ]);
 }
@@ -189,7 +191,7 @@ test('the webhook holds the capture to the invoice\'s currency and reports it in
 
     $result = (new PayPalModule)->processWebhook([
         'event_type' => 'PAYMENT.CAPTURE.COMPLETED',
-        'resource' => ['id' => 'CAP-PLN', 'purchase_units' => [['reference_id' => 'INV-'.$invoice->id]]],
+        'resource' => ['id' => 'CAP-PLN'],
     ]);
 
     expect($result['success'])->toBeTrue()->and($result['amount'])->toBe(10.0);
