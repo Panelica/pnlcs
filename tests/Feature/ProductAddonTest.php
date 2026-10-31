@@ -358,7 +358,10 @@ test('a customer can order an addon for a running service', function () {
 
     $serviceAddon->refresh();
     expect($serviceAddon->status)->toBe('active')
-        ->and($serviceAddon->next_due_date->toDateString())->toBe(now()->addMonth()->toDateString());
+        // One month on, the way BillingCycleHelper counts it: addMonthsNoOverflow,
+        // so a monthly addon activated on the 31st falls due on the 30th and not
+        // in the month after next (which is what Carbon's addMonth() would say).
+        ->and($serviceAddon->next_due_date->toDateString())->toBe(now()->addMonthsNoOverflow(1)->toDateString());
 });
 
 test('a customer cannot order an addon on somebody else service', function () {

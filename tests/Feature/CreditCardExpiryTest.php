@@ -29,7 +29,11 @@ function cardExpiring(string $yearMonth): PaymentMethod
 test('a card expiring next month is warned about', function () {
     Mail::fake();
 
-    $card = cardExpiring(now()->addMonth()->format('Y-m'));
+    // The month the command looks at, computed the way the command computes it.
+    // Carbon's addMonth() overflows - on the 31st it lands in the month after
+    // next - so this test used to fail on the last day of a 31-day month while
+    // the command (addMonthNoOverflow) was right all along.
+    $card = cardExpiring(now()->addMonthNoOverflow()->format('Y-m'));
 
     $this->artisan('pnlcs:cc-expiry-alerts')->assertSuccessful();
 
