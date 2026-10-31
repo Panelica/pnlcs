@@ -2,6 +2,150 @@
 
 All notable changes to PNLCS are documented here. Newest first.
 
+## 1.16.0 — 2026-10-31
+
+A stable release, offered to every installation. It is the invoice-document
+release: a VAT summary, the bank accounts and a payment QR code for custom
+templates, a proforma that is called a proforma everywhere, and line items
+that carry the tax rule they were issued under instead of a percentage
+somebody typed. Thank you, [@hedon77](https://github.com/hedon77), for all
+ten of them (#339, #340, #341, #342, #343, #344, #345, #346, #347, #348).
+
+**Two things to do after upgrading, if they apply to you.**
+
+The **payment QR** needs to know which currency an account is in, so the
+bank-transfer gateway has a new per-bank *currency* field. It is empty on
+every existing installation and the code is simply not drawn until it is
+filled: Settings → Payment Gateways → Bank Transfer, one ISO code per bank
+(`PLN`, `EUR`). Nothing else about the gateway changes.
+
+**A proforma now says "Proforma"** on the PDF, on the admin and client invoice
+pages and in the admin search. If you have a custom invoice template, the
+`{invoice_type}` placeholder is the heading and `{?is_proforma}` tells the two
+apart; a template that uses neither is unaffected.
+
+### Added
+
+- **A VAT summary for custom templates.** `{vat_summary}` renders the
+  invoice's summary as a two-column table: the net total, one row per VAT rate
+  — or per tax treatment, `zw.`, `np.` and the like — then the VAT total and
+  the gross amount due. It is built from `Invoice::vatBreakdown()`, the same
+  computation the built-in document and KSeF use, so the summary cannot
+  disagree with the invoice it sits on. An invoice with no VAT renders nothing,
+  so `{?vat_summary}…{/vat_summary}` hides the whole block by itself (#344).
+- **The bank accounts as a placeholder.** `{company_bank_accounts}` prints the
+  accounts configured in the bank-transfer gateway, one line each with the bank
+  name, the currency and the number. It reads the gateway's own settings — no
+  second place to keep the numbers — and prints nothing while the gateway is
+  switched off (#345).
+- **A payment QR code.** `{payment_qr}` renders an inline PNG the customer
+  scans in their banking app. A Polish company invoicing in złoty gets the ZBP
+  "Przyjazny Przelew" code against its złoty account; anybody else gets the EPC
+  SEPA code against the euro account, with no amount in it, so the payer types
+  the figure rather than being handed one in the wrong currency. Nothing is
+  drawn for a settled invoice, with the gateway switched off, or when no
+  account matches (#339).
+- **A currency per bank account.** The bank-transfer gateway asks for an ISO
+  code per bank slot (`bank_currency`, `bank2_currency`, `bank3_currency`), so
+  the QR picks the account by currency rather than by position (#339).
+- **The invoice type as a placeholder.** `{invoice_type}` is the localized
+  heading (`Proforma` / `Invoice`) and `{is_proforma}` is non-empty only for a
+  proforma, for the conditional blocks from 1.15.0 (#340).
+- **Copy a product.** A *Copy* button on the products list duplicates a product
+  with its pricing and opens the duplicate for editing. The copy arrives
+  hidden: a draft nobody has finished should not be on sale, and the screen it
+  opens on is where it gets its real name (#348).
+- **A line item carries its tax rule.** The invoice's per-line VAT box offers
+  the customer's tax rules instead of a free percentage, so a line can no
+  longer drift from the rule it was issued under, and a catalog item carries a
+  rule of its own that is applied when it is picked. A line whose rate matches
+  no rule keeps it, offered as a legacy option (#347).
+
+### Changed
+
+- **A proforma is called a proforma.** The built-in invoice PDF heads it
+  `Proforma` instead of `Invoice`, and so do the admin invoice page, the
+  client invoice page and the admin search result. `Invoice::isProforma()` is
+  the single test (#340, #343).
+- **VAT rows group by tax rule, not by label.** One rule is one row on the
+  PDF, the client and admin pages and in KSeF, whatever each line's label
+  says; a line keeps the label it was issued with, so renaming a rule does not
+  rewrite a document already sent; and two rules that share a name sum into one
+  row instead of one of them replacing the other (#347).
+- **The `{items}` amounts carry the currency.** The line figures are formatted
+  with the same formatter as `{subtotal}`, `{tax}` and `{total}`, so a złoty
+  invoice reads `100,00 zł` rather than `100,00` (#341).
+- **The company postcode sits with the address.** Settings → General asks for
+  the address, postcode, city and state together in the company card instead
+  of keeping two of them among the registry identifiers. The setting keys are
+  unchanged, so an installation that filled them sees its values in the new
+  place (#342).
+
+### Fixed
+
+- **The automation screen no longer errors where `open_basedir` is in force.**
+  Asking whether the container's scheduler is running read
+  `/etc/supervisord.conf`; on a host that forbids that path PHP raised a
+  warning, Laravel turned it into an exception and the whole screen was a 500.
+  A host that will not let us read it is not running the scheduler there, which
+  is now the answer (#346).
+- **A currency added after an invoice had been formatted is no longer
+  invisible.** `invoice_money_fmt()` remembered a missed lookup as well as a
+  found one, so a queue worker that rendered an invoice before the operator
+  added its currency printed `480.00 TRY` where `₺480.00` belonged, for the
+  rest of that worker's life. Only currencies that exist are remembered now.
+- **The payment QR never states an amount in a currency it is not in.** The
+  złoty code is drawn only for a złoty invoice, and the SEPA code states no
+  amount at all (#339).
+- **A copied product is not on sale.** `replicate()` carries `hidden`, so
+  copying a product that was on sale put `<name> - copy` in the customer store
+  at the same prices (#348).
+
+### Database changes
+
+- `invoice_items.tax_rule_id` — nullable foreign key to `tax_rules`, null on
+  delete, migration `2026_10_30_000001_add_tax_rule_id_to_invoice_items`.
+  Existing rows are linked to the rule their stored label names, by label only
+  and in one statement; "same rate" is not "same rule", so a line whose label
+  matches nothing keeps a null rule and groups exactly as before (#347).
+- `invoice_products.tax_rule_id` — the same, migration
+  `2026_10_30_000002_add_tax_rule_id_to_invoice_products`. Catalog items are
+  matched within the company's own country, because rule names repeat across
+  countries (#347).
+- New gateway settings, no migration: `bank_currency`, `bank2_currency` and
+  `bank3_currency` under the bank-transfer gateway (#339).
+
+### For theme and module authors
+
+- `InvoicePdfService::paymentQr()` is public; `vatSummaryHtml()`,
+  `bankAccountsHtml()`, `plainItemsHtml()`, `nrb()`, `zbpPayload()`,
+  `epcPayload()` and `zbpChars()` are protected and overridable.
+  `customTemplateVocabulary()` gains `vat_summary`, `company_bank_accounts`,
+  `payment_qr`, `invoice_type` and `is_proforma`.
+- `Invoice::isProforma()`. `Invoice::vatBreakdown()` groups by tax rule, eager
+  loads `items.taxRule` (one query, not one per line) and sums groups that
+  share a label; the array is still keyed by label with `rate`, `net` and
+  `amount`, though not in that insertion order — read it by key.
+- `InvoiceItem::taxRule()` and `InvoiceProduct::taxRule()`.
+- `BankTransferModule::accounts()` (every shown bank with the shared holder),
+  `bankByCurrency()`, `bank()` and `isActive()`.
+- `invoice_money_fmt()` no longer caches a lookup that found nothing.
+- New translation keys: `pdf.vat_summary_desc`, `pdf.vat_net_total`,
+  `pdf.vat_total`, `pdf.vat_gross_total`, `pdf.proforma`,
+  `admin.search.proforma_title`, `client.invoices.proforma_prefix`,
+  `admin.messages.product_copied`.
+
+### Views a theme may override that changed
+
+- `resources/views/pdf/invoice.blade.php` (the proforma heading).
+- `resources/views/admin/invoices/show.blade.php` (the per-line tax rule box,
+  the proforma title) and
+  `resources/views/admin/invoices/create.blade.php` (the rule on each line and
+  on a picked catalog item).
+- `resources/views/client/invoices/show.blade.php` (the proforma title).
+- `resources/views/admin/settings/general.blade.php` (the address block).
+- `resources/views/admin/products/index.blade.php` (the Copy button).
+
 ## 1.15.0 — 2026-10-29
 
 A stable release, offered to every installation. It closes three security
