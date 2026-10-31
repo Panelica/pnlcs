@@ -206,6 +206,21 @@ class Service extends Model
                     ->whereIn('invoice_items.rel_id', fn ($a) => $a->select('id')->from('service_addons')->whereColumn('service_addons.service_id', 'services.id')))));
     }
 
+    /**
+     * A renewal or first invoice for this service that is issued and not
+     * settled yet. Until it is paid the next period is billed at the old
+     * price, so a package change now would be charged against a period the
+     * customer has not paid for and then carried into one billed too low.
+     */
+    public function hasOpenRenewalInvoice(): bool
+    {
+        return \App\Models\InvoiceItem::where('rel_id', $this->id)
+            ->whereIn('type', ['Hosting', 'Service', 'hosting', 'service'])
+            ->whereHas('invoice', fn ($q) => $q->where('client_id', $this->client_id)
+                ->whereNotIn('status', [...\App\Enums\InvoiceStatus::settled(), \App\Enums\InvoiceStatus::Draft->value]))
+            ->exists();
+    }
+
     /** A service the customer can still act on (not terminated/cancelled/fraud). */
     public function isLive(): bool
     {

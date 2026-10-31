@@ -416,6 +416,7 @@ Der API-Zugriff ist möglicherweise unterbrochen. Während der Kontostand nicht 
     'error.upgrade_not_available_for_cycle' => 'Das ausgewählte Produkt ist für diesen Abrechnungszeitraum nicht verfügbar.',
     'error.nameservers_not_saved_at_registrar' => 'Der Registrar hat die neuen Nameserver nicht akzeptiert, daher wurde nichts geändert. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support.',
     'error.upgrade_already_pending' => 'Für diesen Service steht Ihnen bereits ein Paketwechsel zur Verfügung, der darauf wartet, bezahlt zu werden. Bezahlen oder stornieren Sie zuerst diese Rechnung.',
+    'error.upgrade_after_renewal_paid' => 'Für diesen Dienst ist eine Verlängerungsrechnung offen. Bezahlen Sie sie zuerst und ändern Sie dann das Paket.',
     'success.whitelabel_saved' => 'White-Label-Einstellungen gespeichert.',
     'success.withdrawal_request_submitted' => 'Auszahlungsantrag von $:amount erfolgreich übermittelt.',
     'success.your_affiliate_account_has_been_activated' => 'Ihr Partnerkonto wurde aktiviert.',

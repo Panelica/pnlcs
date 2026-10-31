@@ -414,6 +414,7 @@ API erişimi bozulmuş olabilir. Bakiye okunamadığı sürece düşük bakiye u
     'error.upgrade_not_available_for_cycle' => 'Seçilen ürün bu fatura döngüsü için mevcut değil.',
     'error.nameservers_not_saved_at_registrar' => 'Kayıt kuruluşu yeni ad sunucularını kabul etmedi, bu nedenle hiçbir şey değişmedi. Lütfen tekrar deneyin veya destekle iletişime geçin.',
     'error.upgrade_already_pending' => 'Bu hizmet için ödenmeyi bekleyen bir paket değişikliği zaten mevcut. Önce o faturayı ödeyin veya iptal edin.',
+    'error.upgrade_after_renewal_paid' => 'Bu hizmetin ödenmeyi bekleyen bir yenileme faturası var. Önce onu ödeyin, sonra paketi değiştirin.',
     'success.whitelabel_saved' => 'Beyaz etiket ayarları kaydedildi.',
     'success.withdrawal_request_submitted' => ':amount tutarındaki çekim talebiniz gönderildi.',
     'success.your_affiliate_account_has_been_activated' => 'Ortaklık hesabınız etkinleştirildi!',
