@@ -366,6 +366,27 @@ class ClientController extends Controller
             'config_options' => ['nullable', 'array'],
         ]);
 
+        // Building an account on a server, or taking over one that is already
+        // there, is a server action: the permission the module buttons on a
+        // service ask for. Writing the billing record alone stays with "edit
+        // clients".
+        $linkUserId = trim((string) $request->input('link_user_id'));
+        if ($request->boolean('provision') || $linkUserId !== '') {
+            abort_unless(auth('admin')->user()?->hasPermission(\App\Constants\Permissions::MANAGE_SERVICES), 403);
+        }
+
+        // A panel account another live service already manages is not linked
+        // a second time (claim() asks the same of a virtual server).
+        if (! $request->boolean('provision') && $linkUserId !== '' && ! empty($validated['server_id'])) {
+            $taken = Service::where('server_id', $validated['server_id'])
+                ->whereNotIn('status', ['terminated', 'cancelled', 'fraud'])
+                ->get(['id', 'module_data'])
+                ->first(fn ($s) => (string) (($s->module_data ?? [])['panelica_user_id'] ?? '') === $linkUserId);
+            if ($taken) {
+                return back()->withInput()->with('error', __('admin.clients.link_taken', ['service' => $taken->id]));
+            }
+        }
+
         // The product's order options (operating system, memory...), checked
         // against what the product offers before anything is written.
         $optionService = app(\App\Services\ConfigOptionService::class);
@@ -414,7 +435,7 @@ class ClientController extends Controller
         // on the server so PNLCS can manage it. suspend()/terminate() address the
         // panel user id stored in module_data; we also copy the username for show.
         $linked = false;
-        if (! $provision && ($linkUserId = trim((string) $request->input('link_user_id'))) !== '') {
+        if (! $provision && $linkUserId !== '') {
             // A virtual server is linked by tagging the guest for this service.
             $module = $service->server ? app(ModuleRegistry::class)->getServerModule($service->server->type) : null;
             if ($module instanceof \Modules\Servers\Proxmox\ProxmoxModule) {

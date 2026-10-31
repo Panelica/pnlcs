@@ -235,7 +235,7 @@ test('the product form lists the plans without a server record, and says why whe
     $central = plCentral();
     plFake($central);
     plConnect();
-    $staff = plStaff(['list_products', 'manage_products']);
+    $staff = plStaff(['list_products', 'manage_products', 'manage_servers']);
 
     $this->actingAs($staff, 'admin')->getJson(route('admin.products.packages', ['module' => 'panelicalicense']))
         ->assertOk()->assertJsonPath('packages.0.id', PL_PLAN)->assertJsonPath('error', null);
@@ -759,7 +759,7 @@ test('the welcome mail can carry the install command and, later, the key', funct
 test('the Panelica Licenses page is in the top menu for staff who manage products, and only for them', function () {
     $menu = route('admin.panelica-licenses.index');
 
-    $dashboard = $this->actingAs(plStaff(['view_services', 'manage_products']), 'admin')->get(route('admin.dashboard'))->getContent();
+    $dashboard = $this->actingAs(plStaff(['view_services', 'manage_products', 'manage_servers']), 'admin')->get(route('admin.dashboard'))->getContent();
     expect($dashboard)->toContain($menu)
         // The menu says the product's name and nothing more.
         ->and($dashboard)->toMatch('#<a href="'.preg_quote($menu, '#').'"><i class="fas fa-key"></i> Panelica</a>#');
@@ -771,7 +771,7 @@ test('not connected: the page says what it is, asks for a partner application fi
     $central = plCentral();
     plFake($central);
 
-    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
 
     expect($page)->toContain(e(__('panelica_license.page.hero_title')))
         ->and($page)->toContain(e(__('panelica_license.page.hero_step1')))
@@ -790,7 +790,7 @@ test('a key Central refuses, or an account that is not active, is not kept', fun
     Http::fake(['*/api/reseller/v1/me' => Http::sequence()
         ->push(['success' => false, 'error' => 'Invalid or revoked API key.', 'code' => 401], 401)
         ->push(['success' => true, 'data' => ['company_name' => 'Acme', 'status' => 'pending']], 200)]);
-    $staff = plStaff(['manage_products']);
+    $staff = plStaff(['manage_products', 'manage_servers']);
 
     $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.connect'), ['api_key' => 'rk_wrong'])
         ->assertSessionHas('error', __('panelica_license.page.connect_failed', ['error' => 'Invalid or revoked API key.']));
@@ -805,7 +805,7 @@ test('a key Central refuses, or an account that is not active, is not kept', fun
 test('connected: the account, the plans with cost and list price, and a product made in one click', function () {
     $central = plCentral();
     plFake($central);
-    $staff = plStaff(['manage_products', 'list_products']);
+    $staff = plStaff(['manage_products', 'list_products', 'manage_servers']);
     Currency::query()->update(['is_default' => false]);
     $usd = Currency::firstOrCreate(['code' => 'USD'], ['prefix' => '$', 'suffix' => '', 'format' => 1, 'rate' => 1]);
     $usd->forceFill(['is_default' => true, 'rate' => 1])->save();
@@ -864,7 +864,7 @@ test('with no dollar currency the margin is shown at today\'s market rate, looke
     $central = plCentral();
     plEuroSite($central, ['USD' => 1, 'EUR' => 0.5]);
     plConnect();
-    $staff = plStaff(['manage_products', 'list_products']);
+    $staff = plStaff(['manage_products', 'list_products', 'manage_servers']);
     $eur = Currency::where('code', 'EUR')->first();
 
     $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), [
@@ -888,7 +888,7 @@ test('a dollar currency on the site is used instead of the market rate', functio
     Currency::create(['code' => 'USD', 'prefix' => '$', 'suffix' => '', 'format' => 1, 'rate' => 1.25, 'is_default' => false]);
     plConnect();
 
-    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
     expect($page)->not->toContain(e(__('panelica_license.page.market_usd_rate', ['rate' => '0.5000', 'code' => 'EUR'])))
         ->and($page)->not->toContain(e(__('panelica_license.page.no_usd_rate')))
         ->and($central['rates'] ?? [])->toBe([]);
@@ -898,7 +898,7 @@ test('no market rate: the page says to add a dollar currency and does not ask ag
     $central = plCentral();
     plEuroSite($central, null);
     plConnect();
-    $staff = plStaff(['manage_products']);
+    $staff = plStaff(['manage_products', 'manage_servers']);
 
     $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
     expect($page)->toContain(e(__('panelica_license.page.no_usd_rate')));
@@ -913,7 +913,7 @@ test('with automatic rate updates off no market rate is looked up', function () 
     Setting::set('currency_auto_update', '0');
     plConnect();
 
-    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
     expect($page)->toContain(e(__('panelica_license.page.no_usd_rate')))
         ->and($central['rates'] ?? [])->toBe([]);
 });
@@ -922,7 +922,7 @@ test('a product needs a price and a plan Central lists', function () {
     $central = plCentral();
     plFake($central);
     plConnect();
-    $staff = plStaff(['manage_products']);
+    $staff = plStaff(['manage_products', 'manage_servers']);
 
     $this->actingAs($staff, 'admin')->post(route('admin.panelica-licenses.products.store'), ['plan_id' => PL_PLAN, 'name' => 'X'])
         ->assertSessionHas('error', __('panelica_license.page.price_needed'));
@@ -935,7 +935,7 @@ test('a product needs a price and a plan Central lists', function () {
 test('the sales list shows what was sold, and disconnecting stops buying', function () {
     $central = plCentral();
     $service = plLicensed($central);
-    $staff = plStaff(['manage_products']);
+    $staff = plStaff(['manage_products', 'manage_servers']);
 
     $page = $this->actingAs($staff, 'admin')->get(route('admin.panelica-licenses.index'))->getContent();
     expect($page)->toContain('PNLC-AAAA-BBBB-CCCC-DDDD')
@@ -975,7 +975,7 @@ test('"Check installs now" does the work in the web request, not through a conso
     $central['installs'] = [plInstall($service)];
     Artisan::shouldReceive('call')->never();
 
-    $this->actingAs(plStaff(['manage_products']), 'admin')->post(route('admin.panelica-licenses.sync'))
+    $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->post(route('admin.panelica-licenses.sync'))
         ->assertRedirect()->assertSessionHas('success', __('panelica_license.page.synced'));
 
     expect($service->fresh()->module_data['license_id'] ?? null)->toBe(PL_LICENSE);
@@ -992,7 +992,7 @@ test('the page shows the partner account at Panelica: its licenses and the serve
     $central['licenses'][] = array_merge($central['licenses'][0], ['id' => 'other-license', 'license_key' => 'PNLC-ZZZZ-YYYY-XXXX-WWWW', 'status' => 'suspended']);
     $central['calls'] = [];
 
-    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
 
     expect($page)->toContain('srv1.customer.test')
         ->and($page)->toContain('srv9.elsewhere.test')
@@ -1024,7 +1024,7 @@ test('Central not answering the lists still shows the page, and says so', functi
             : (str_ends_with($path, '/install-link') ? $central['link'] : [])], 200);
     });
 
-    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->get(route('admin.panelica-licenses.index'))->assertOk()->getContent();
 
     expect(substr_count($page, e(__('panelica_license.page.central_error', ['error' => 'Service unavailable']))))->toBe(2);
 });
@@ -1034,7 +1034,7 @@ test('the general install link runs the partner\'s link at this site\'s address,
     plFake($central);
     plConnect();
 
-    $page = $this->actingAs(plStaff(['manage_products']), 'admin')->get(route('admin.panelica-licenses.index'))->getContent();
+    $page = $this->actingAs(plStaff(['manage_products', 'manage_servers']), 'admin')->get(route('admin.panelica-licenses.index'))->getContent();
     expect($page)->toContain(e('curl -sSL '.url('/setup').' | bash'))
         ->and($page)->toContain('value="acme"')
         ->and($page)->toContain(e('https://www.panelica.com/install/acme'));
@@ -1051,7 +1051,7 @@ test('the general install link runs the partner\'s link at this site\'s address,
 test('the install link code is changed at Central from the page, and the next install uses the new one', function () {
     $central = plCentral();
     $service = plWaiting($central);
-    $staff = plStaff(['manage_products']);
+    $staff = plStaff(['manage_products', 'manage_servers']);
 
     expect($this->get('/setup/'.$service->module_data['install_ref'])->getContent())->toContain('/install/acme/');
 
@@ -1074,7 +1074,7 @@ test('switched off under Setup -> Modules: no menu, no page, no install link, no
     $central = plCentral();
     $service = plWaiting($central);
     $central['installs'] = [plInstall($service)];
-    $staff = plStaff(['view_services', 'manage_products']);
+    $staff = plStaff(['view_services', 'manage_products', 'manage_servers']);
     $menu = route('admin.panelica-licenses.index');
     expect($this->actingAs($staff, 'admin')->get(route('admin.dashboard'))->getContent())->toContain($menu);
 

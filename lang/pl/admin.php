@@ -3381,6 +3381,7 @@ return [
     'clients.link_none' => '— brak (tylko rozliczenia) —',
     'clients.link_existing_hint' => 'To konta, które już istnieją na wybranym serwerze — w Panelice są to konta klientów na liście Użytkownicy panelu. Wybierz to, do którego należy ta usługa, aby PNLCS mógł nim zarządzać (zawieszanie, usuwanie, hasło). Lista kont działa dla serwerów Panelica; pozostaw puste, aby zapisać tylko rozliczenie.',
     'clients.service_linked' => 'Usługa dodana i powiązana z istniejącym kontem na serwerze.',
+    'clients.link_taken' => 'To konto na serwerze jest już powiązane z usługą #:service.',
     'clients.add_domain' => 'Dodaj domenę',
     'clients.add_domain_hint' => 'Zarejestruj domenę, którą klient ma już zarejestrowaną gdzie indziej (np. przeniesioną z innego systemu), aby PNLCS rozliczał jej odnowienia. Tworzy to wyłącznie rekord rozliczeniowy — u rejestratora nie jest wykonywana żadna rejestracja ani transfer.',
     'clients.domain_registrar' => 'Rejestrator',

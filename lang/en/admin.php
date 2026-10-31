@@ -3381,6 +3381,7 @@ return [
     'clients.link_none' => '— none (billing only) —',
     'clients.link_existing_hint' => 'These are the accounts that already exist on the selected server — in Panelica, the customer accounts under the panel\'s Users list. Pick the one this service belongs to so PNLCS can manage it (suspend, terminate, password). Account listing works for Panelica servers; leave empty for a billing-only record.',
     'clients.service_linked' => 'Service added and linked to the existing server account.',
+    'clients.link_taken' => 'That server account is already linked to service #:service.',
     'clients.add_domain' => 'Add Domain',
     'clients.add_domain_hint' => 'Record a domain the customer already has registered elsewhere (for example one migrated in from another system) so PNLCS bills its renewals. This only creates the billing record — no registration or transfer is made at the registrar.',
     'clients.domain_registrar' => 'Registrar',

@@ -749,9 +749,11 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
     });
     Route::middleware('admin.permission:view_services')->group(function () {
         Route::get('ssl-orders/{sslOrder}', [SslOrderController::class, 'show'])->name('ssl.show');
-        Route::get('ssl-orders/{sslOrder}/download', [SslOrderController::class, 'downloadCert'])->name('ssl.download');
     });
     Route::middleware('admin.permission:manage_services')->group(function () {
+        // The download carries the certificate's private key, which is as good
+        // as the site's identity: "manage", not "view".
+        Route::get('ssl-orders/{sslOrder}/download', [SslOrderController::class, 'downloadCert'])->name('ssl.download');
         Route::post('ssl-orders/import', [SslOrderController::class, 'importRemote'])->name('ssl.import');
         Route::post('ssl-orders/{sslOrder}/action', [SslOrderController::class, 'moduleAction'])->name('ssl.action');
     });
