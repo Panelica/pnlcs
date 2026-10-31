@@ -17,7 +17,7 @@ class UpdateClientRequest extends FormRequest
         return [
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => ['required', 'email', 'max:255', Rule::unique('clients')->ignore($this->route('client'))],
+            'email' => ['required', 'email', 'max:255', Rule::unique('clients')->ignore($this->route('client'))->withoutTrashed()],
             'company_name' => 'nullable|string|max:255',
             'address1' => 'nullable|string|max:255',
             'address2' => 'nullable|string|max:255',

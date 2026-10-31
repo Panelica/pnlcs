@@ -70,7 +70,9 @@ class ClientController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:clients,email|unique:users,email',
+            // A deleted client stays in the table (its invoices point at it), but
+            // its address is free again: the account under it is gone.
+            'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->withoutTrashed(), 'unique:users,email'],
             'billing_email' => 'nullable|email|max:255',
             'company_name' => 'nullable|string|max:255',
             'tax_id' => 'nullable|string|max:20',
@@ -550,7 +552,7 @@ class ClientController extends Controller
             'last_name' => 'required|string|max:255',
             // Excluding the row being edited: without it a client's own
             // address counted as taken and no change could be saved at all.
-            'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('clients', 'email')->ignore($client->id)->withoutTrashed()],
             'billing_email' => 'nullable|email|max:255',
             'company_name' => 'nullable|string|max:255',
             'tax_id' => 'nullable|string|max:20',
