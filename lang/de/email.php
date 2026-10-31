@@ -118,6 +118,7 @@ return [
         'generated' => 'Für Ihr Kundenkonto wurde eine neue Rechnung erstellt.',
     ],
     'payment_notification_rejected' => [
+        'subject' => 'Zahlungsbenachrichtigung für Rechnung #:number konnte nicht bestätigt werden',
         'intro' => 'Leider konnten wir die von Ihnen gemeldete Überweisung für Rechnung Nr. :number nicht bestätigen.',
         'next_steps' => 'Bitte prüfen Sie die folgenden Angaben und melden Sie die Zahlung erneut. Falls Sie einen Fehler vermuten, wenden Sie sich an unseren Support.',
         'reason' => 'Grund',

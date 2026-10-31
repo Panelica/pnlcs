@@ -28,7 +28,7 @@ class InvoiceOverdueMail extends Mailable implements ShouldQueue
     {
         $num = $this->invoice->invoice_num ?? $this->invoice->id;
 
-        return new Envelope(subject: "Overdue: Invoice #{$num} is {$this->daysOverdue} days past due");
+        return new Envelope(subject: __('email.invoice.overdue_subject', ['number' => $num]));
     }
 
     public function content(): Content

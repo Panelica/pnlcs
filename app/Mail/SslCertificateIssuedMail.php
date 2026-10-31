@@ -25,7 +25,7 @@ class SslCertificateIssuedMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'SSL Certificate Issued - ' . ($this->order->domain ?: 'Order #' . $this->order->id),
+            subject: __('email.ssl.certificate_issued_subject'),
         );
     }
 

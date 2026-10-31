@@ -25,9 +25,7 @@ class ServiceUnsuspensionMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $domain = $this->service->domain ?? $this->service->name ?? $this->service->id;
-
-        return new Envelope(subject: "Service {$domain} Reactivated");
+        return new Envelope(subject: __('email.service.unsuspension_subject'));
     }
 
     public function content(): Content

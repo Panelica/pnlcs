@@ -25,9 +25,7 @@ class DomainRegistrationMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $name = $this->domain->domain ?? $this->domain->name ?? $this->domain->id;
-
-        return new Envelope(subject: "Domain {$name} Registered");
+        return new Envelope(subject: __('email.domain.registration_subject'));
     }
 
     public function content(): Content
