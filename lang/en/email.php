@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => 'Your cancellation request has been received.',
-        'confirm_subject' => 'Cancellation Confirmation',
+        'confirm_subject' => 'Cancellation Confirmation - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => 'Your service will remain active until the end of the current billing period.',
@@ -88,9 +88,9 @@ return [
     ],
     'domain' => [
         'registration_body' => 'Your domain :domain has been registered successfully.',
-        'registration_subject' => 'Domain Registration Confirmation',
+        'registration_subject' => 'Domain Registration Confirmation - :domain',
         'renewal_body' => 'Your domain :domain is due for renewal.',
-        'renewal_subject' => 'Domain Renewal Reminder',
+        'renewal_subject' => 'Domain Renewal Reminder - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => 'Expiry Date',
@@ -158,13 +158,13 @@ return [
     ],
     'service' => [
         'suspension_body' => 'Your service has been suspended due to non-payment.',
-        'suspension_subject' => 'Service Suspended',
+        'suspension_subject' => 'Service Suspended - :domain',
         'termination_body' => 'Your service has been terminated.',
-        'termination_subject' => 'Service Terminated',
+        'termination_subject' => 'Service Terminated - :domain',
         'unsuspension_body' => 'Your service has been unsuspended and is now active.',
-        'unsuspension_subject' => 'Service Unsuspended',
+        'unsuspension_subject' => 'Service Unsuspended - :domain',
         'welcome_body' => 'Your new service has been activated and is ready to use.',
-        'welcome_subject' => 'Welcome! Your Service is Ready',
+        'welcome_subject' => 'Welcome! Your Service is Ready - :domain',
     ],
     'service_suspension' => [
         'error_contact' => 'If you believe this is an error, please contact our support team.',
@@ -206,11 +206,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => 'Your SSL certificate for :domain will expire on :date.',
-        'certificate_expiring_subject' => 'SSL Certificate Expiring Soon',
+        'certificate_expiring_subject' => 'SSL Certificate Expiring Soon - :domain',
         'certificate_issued_body' => 'Your SSL certificate has been issued and is ready for download.',
-        'certificate_issued_subject' => 'SSL Certificate Issued',
+        'certificate_issued_subject' => 'SSL Certificate Issued - :domain',
         'configuration_required_body' => 'Your SSL certificate requires configuration before it can be issued.',
-        'configuration_required_subject' => 'SSL Configuration Required',
+        'configuration_required_subject' => 'SSL Configuration Required - :domain',
         'configuration_submitted_body' => 'Your SSL configuration has been submitted. We are processing your request.',
         'configuration_submitted_subject' => 'SSL Configuration Submitted',
     ],

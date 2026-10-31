@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => 'Ми отримали ваш запит на скасування послуги.',
-        'confirm_subject' => 'Підтвердження скасування',
+        'confirm_subject' => 'Підтвердження скасування - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => 'Послуга залишатиметься активною до кінця поточного розрахункового періоду.',
@@ -87,9 +87,9 @@ return [
     ],
     'domain' => [
         'registration_body' => 'Ваш домен :domain успішно зареєстровано.',
-        'registration_subject' => 'Підтвердження реєстрації домену',
+        'registration_subject' => 'Підтвердження реєстрації домену - :domain',
         'renewal_body' => 'Настав час поновити домен :domain.',
-        'renewal_subject' => 'Нагадування про поновлення домену',
+        'renewal_subject' => 'Нагадування про поновлення домену - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => 'Дата завершення терміну дії',
@@ -156,13 +156,13 @@ return [
     ],
     'service' => [
         'suspension_body' => 'Вашу послугу призупинено через несплату.',
-        'suspension_subject' => 'Послугу призупинено',
+        'suspension_subject' => 'Послугу призупинено - :domain',
         'termination_body' => 'Вашу послугу припинено.',
-        'termination_subject' => 'Надання послуги припинено',
+        'termination_subject' => 'Надання послуги припинено - :domain',
         'unsuspension_body' => 'Вашу послугу відновлено, і вона знову активна.',
-        'unsuspension_subject' => 'Послугу відновлено',
+        'unsuspension_subject' => 'Послугу відновлено - :domain',
         'welcome_body' => 'Вашу нову послугу активовано, і вона готова до використання.',
-        'welcome_subject' => 'Вітаємо! Ваша послуга готова',
+        'welcome_subject' => 'Вітаємо! Ваша послуга готова - :domain',
     ],
     'service_suspension' => [
         'error_contact' => 'Якщо ви вважаєте це помилкою, зверніться до нашої підтримки.',
@@ -204,11 +204,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => 'Термін дії SSL-сертифіката для :domain закінчується :date.',
-        'certificate_expiring_subject' => 'Термін дії SSL-сертифіката незабаром закінчиться',
+        'certificate_expiring_subject' => 'Термін дії SSL-сертифіката незабаром закінчиться - :domain',
         'certificate_issued_body' => 'Ваш SSL-сертифікат випущено, і він готовий до завантаження.',
-        'certificate_issued_subject' => 'SSL-сертифікат випущено',
+        'certificate_issued_subject' => 'SSL-сертифікат випущено - :domain',
         'configuration_required_body' => 'Ваш SSL-сертифікат потрібно налаштувати перед випуском.',
-        'configuration_required_subject' => 'Потрібне налаштування SSL',
+        'configuration_required_subject' => 'Потрібне налаштування SSL - :domain',
         'configuration_submitted_body' => 'Налаштування SSL надіслано. Ми обробляємо ваш запит.',
         'configuration_submitted_subject' => 'Налаштування SSL надіслано',
     ],

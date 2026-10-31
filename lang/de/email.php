@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => 'Wir haben Ihre Kündigungsanfrage erhalten.',
-        'confirm_subject' => 'Kündigungsbestätigung',
+        'confirm_subject' => 'Kündigungsbestätigung - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => 'Ihr Dienst bleibt bis zum Ende des aktuellen Abrechnungszeitraums aktiv.',
@@ -87,9 +87,9 @@ return [
     ],
     'domain' => [
         'registration_body' => 'Ihre Domain :domain wurde erfolgreich registriert.',
-        'registration_subject' => 'Domainregistrierung bestätigt',
+        'registration_subject' => 'Domainregistrierung bestätigt - :domain',
         'renewal_body' => 'Ihre Domain :domain steht zur Verlängerung an.',
-        'renewal_subject' => 'Erinnerung an die Domainverlängerung',
+        'renewal_subject' => 'Erinnerung an die Domainverlängerung - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => 'Ablaufdatum',
@@ -157,13 +157,13 @@ return [
     ],
     'service' => [
         'suspension_body' => 'Ihr Dienst wurde wegen einer ausstehenden Zahlung gesperrt.',
-        'suspension_subject' => 'Dienst gesperrt',
+        'suspension_subject' => 'Dienst gesperrt - :domain',
         'termination_body' => 'Ihr Dienst wurde beendet.',
-        'termination_subject' => 'Dienst beendet',
+        'termination_subject' => 'Dienst beendet - :domain',
         'unsuspension_body' => 'Die Sperre Ihres Dienstes wurde aufgehoben. Er ist wieder aktiv.',
-        'unsuspension_subject' => 'Dienst wieder freigeschaltet',
+        'unsuspension_subject' => 'Dienst wieder freigeschaltet - :domain',
         'welcome_body' => 'Ihr neuer Dienst wurde aktiviert und kann jetzt genutzt werden.',
-        'welcome_subject' => 'Willkommen! Ihr Dienst ist einsatzbereit',
+        'welcome_subject' => 'Willkommen! Ihr Dienst ist einsatzbereit - :domain',
     ],
     'service_suspension' => [
         'error_contact' => 'Falls Sie dies für einen Fehler halten, kontaktieren Sie bitte unseren Support.',
@@ -205,11 +205,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => 'Ihr SSL-Zertifikat für :domain läuft am :date ab.',
-        'certificate_expiring_subject' => 'SSL-Zertifikat läuft bald ab',
+        'certificate_expiring_subject' => 'SSL-Zertifikat läuft bald ab - :domain',
         'certificate_issued_body' => 'Ihr SSL-Zertifikat wurde ausgestellt und steht zum Download bereit.',
-        'certificate_issued_subject' => 'SSL-Zertifikat ausgestellt',
+        'certificate_issued_subject' => 'SSL-Zertifikat ausgestellt - :domain',
         'configuration_required_body' => 'Ihr SSL-Zertifikat muss vor der Ausstellung noch konfiguriert werden.',
-        'configuration_required_subject' => 'SSL-Konfiguration erforderlich',
+        'configuration_required_subject' => 'SSL-Konfiguration erforderlich - :domain',
         'configuration_submitted_body' => 'Ihre SSL-Konfiguration wurde übermittelt. Wir bearbeiten Ihre Anfrage.',
         'configuration_submitted_subject' => 'SSL-Konfiguration übermittelt',
     ],

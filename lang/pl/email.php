@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => 'Twoje zgłoszenie anulowania zostało przyjęte.',
-        'confirm_subject' => 'Potwierdzenie anulowania',
+        'confirm_subject' => 'Potwierdzenie anulowania - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => 'Twoja usługa pozostanie aktywna do końca bieżącego okresu rozliczeniowego.',
@@ -88,9 +88,9 @@ return [
     ],
     'domain' => [
         'registration_body' => 'Twoja domena :domain została pomyślnie zarejestrowana.',
-        'registration_subject' => 'Potwierdzenie rejestracji domeny',
+        'registration_subject' => 'Potwierdzenie rejestracji domeny - :domain',
         'renewal_body' => 'Twoja domena :domain wymaga odnowienia.',
-        'renewal_subject' => 'Przypomnienie o odnowieniu domeny',
+        'renewal_subject' => 'Przypomnienie o odnowieniu domeny - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => 'Data wygaśnięcia',
@@ -158,13 +158,13 @@ return [
     ],
     'service' => [
         'suspension_body' => 'Twoja usługa została zawieszona z powodu braku płatności.',
-        'suspension_subject' => 'Usługa zawieszona',
+        'suspension_subject' => 'Usługa zawieszona - :domain',
         'termination_body' => 'Twoja usługa została zakończona.',
-        'termination_subject' => 'Usługa zakończona',
+        'termination_subject' => 'Usługa zakończona - :domain',
         'unsuspension_body' => 'Twoja usługa została przywrócona i jest teraz aktywna.',
-        'unsuspension_subject' => 'Usługa przywrócona',
+        'unsuspension_subject' => 'Usługa przywrócona - :domain',
         'welcome_body' => 'Twoja nowa usługa została aktywowana i jest gotowa do użycia.',
-        'welcome_subject' => 'Witamy! Twoja usługa jest gotowa',
+        'welcome_subject' => 'Witamy! Twoja usługa jest gotowa - :domain',
     ],
     'service_suspension' => [
         'error_contact' => 'Jeśli uważasz, że to błąd, skontaktuj się z naszym zespołem wsparcia.',
@@ -206,11 +206,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => 'Twój certyfikat SSL dla :domain wygaśnie w dniu :date.',
-        'certificate_expiring_subject' => 'Certyfikat SSL wkrótce wygaśnie',
+        'certificate_expiring_subject' => 'Certyfikat SSL wkrótce wygaśnie - :domain',
         'certificate_issued_body' => 'Twój certyfikat SSL został wydany i jest gotowy do pobrania.',
-        'certificate_issued_subject' => 'Certyfikat SSL wydany',
+        'certificate_issued_subject' => 'Certyfikat SSL wydany - :domain',
         'configuration_required_body' => 'Twój certyfikat SSL wymaga konfiguracji, zanim będzie można go wydać.',
-        'configuration_required_subject' => 'Wymagana konfiguracja SSL',
+        'configuration_required_subject' => 'Wymagana konfiguracja SSL - :domain',
         'configuration_submitted_body' => 'Twoja konfiguracja SSL została przesłana. Przetwarzamy Twoje zgłoszenie.',
         'configuration_submitted_subject' => 'Konfiguracja SSL przesłana',
     ],

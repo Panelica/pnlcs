@@ -25,7 +25,10 @@ class SslConfigurationRequiredMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('email.ssl.configuration_required_subject'),
+            // The old subject named the domain (or the order when the
+            // certificate has none); a customer with several certificates
+            // needs to know which one this is about.
+            subject: __('email.ssl.configuration_required_subject', ['domain' => $this->order->domain ?: '#'.$this->order->id]),
         );
     }
 

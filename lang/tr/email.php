@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => 'İptal talebiniz bize ulaştı.',
-        'confirm_subject' => 'İptal Talebi Onayı',
+        'confirm_subject' => 'İptal Talebi Onayı - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => 'Hizmetiniz mevcut fatura döneminin sonuna kadar aktif kalacak.',
@@ -87,9 +87,9 @@ return [
     ],
     'domain' => [
         'registration_body' => ':domain alan adınız başarıyla kaydedildi.',
-        'registration_subject' => 'Alan Adı Kayıt Onayı',
+        'registration_subject' => 'Alan Adı Kayıt Onayı - :domain',
         'renewal_body' => ':domain alan adınızın yenileme zamanı geldi.',
-        'renewal_subject' => 'Alan Adı Yenileme Hatırlatması',
+        'renewal_subject' => 'Alan Adı Yenileme Hatırlatması - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => 'Bitiş Tarihi',
@@ -118,6 +118,7 @@ return [
         'generated' => 'Hesabınız için yeni bir fatura oluşturuldu.',
     ],
     'payment_notification_rejected' => [
+        'subject' => 'Fatura #:number için ödeme bildirimi doğrulanamadı',
         'intro' => '#:number numaralı fatura için bildirdiğiniz havale/EFT maalesef doğrulanamadı.',
         'next_steps' => 'Lütfen bilgileri kontrol edip yeni bir ödeme bildirimi gönderin veya bunun bir hata olduğunu düşünüyorsanız destek ekibiyle iletişime geçin.',
         'reason' => 'Sebep',
@@ -156,13 +157,13 @@ return [
     ],
     'service' => [
         'suspension_body' => 'Ödeme yapılmadığı için hizmetiniz askıya alındı.',
-        'suspension_subject' => 'Hizmetiniz Askıya Alındı',
+        'suspension_subject' => 'Hizmetiniz Askıya Alındı - :domain',
         'termination_body' => 'Hizmetiniz sonlandırıldı.',
-        'termination_subject' => 'Hizmetiniz Sonlandırıldı',
+        'termination_subject' => 'Hizmetiniz Sonlandırıldı - :domain',
         'unsuspension_body' => 'Hizmetinizin askısı kaldırıldı ve tekrar aktif.',
-        'unsuspension_subject' => 'Hizmetinizin Askısı Kaldırıldı',
+        'unsuspension_subject' => 'Hizmetinizin Askısı Kaldırıldı - :domain',
         'welcome_body' => 'Yeni hizmetiniz etkinleştirildi ve kullanıma hazır.',
-        'welcome_subject' => 'Hoş geldiniz! Hizmetiniz hazır',
+        'welcome_subject' => 'Hoş geldiniz! Hizmetiniz hazır - :domain',
     ],
     'service_suspension' => [
         'error_contact' => 'Bunun bir hata olduğunu düşünüyorsanız lütfen destek ekibimizle iletişime geçin.',
@@ -204,11 +205,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => ':domain için SSL sertifikanız :date tarihinde sona erecek.',
-        'certificate_expiring_subject' => 'SSL Sertifikanızın Süresi Doluyor',
+        'certificate_expiring_subject' => 'SSL Sertifikanızın Süresi Doluyor - :domain',
         'certificate_issued_body' => 'SSL sertifikanız düzenlendi ve indirmeye hazır.',
-        'certificate_issued_subject' => 'SSL Sertifikanız Düzenlendi',
+        'certificate_issued_subject' => 'SSL Sertifikanız Düzenlendi - :domain',
         'configuration_required_body' => 'SSL sertifikanızın düzenlenebilmesi için yapılandırılması gerekiyor.',
-        'configuration_required_subject' => 'SSL Yapılandırması Gerekiyor',
+        'configuration_required_subject' => 'SSL Yapılandırması Gerekiyor - :domain',
         'configuration_submitted_body' => 'SSL yapılandırmanız bize ulaştı. Talebinizi işleme alıyoruz.',
         'configuration_submitted_subject' => 'SSL Yapılandırması Gönderildi',
     ],

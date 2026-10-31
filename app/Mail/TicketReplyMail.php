@@ -29,7 +29,11 @@ class TicketReplyMail extends Mailable implements ShouldQueue
     {
         $tid = $this->ticket->tid ?? $this->ticket->id;
 
-        return new Envelope(subject: __('email.ticket.reply_subject', ['number' => $tid]));
+        $title = $this->ticket->title ?? $this->ticket->subject ?? '';
+
+        // See TicketOpenedMail: the token the mail importer matches, the
+        // customer's own words, and the "Re:" mail clients thread on.
+        return new Envelope(subject: "Re: [Ticket #{$tid}] {$title}");
     }
 
     public function content(): Content

@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => 'Ваш запрос на отмену получен.',
-        'confirm_subject' => 'Подтверждение отмены',
+        'confirm_subject' => 'Подтверждение отмены - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => 'Ваша услуга останется активной до конца текущего оплаченного периода.',
@@ -86,9 +86,9 @@ return [
     ],
     'domain' => [
         'registration_body' => 'Ваш домен :domain успешно зарегистрирован.',
-        'registration_subject' => 'Подтверждение регистрации домена',
+        'registration_subject' => 'Подтверждение регистрации домена - :domain',
         'renewal_body' => 'Подошёл срок продления домена :domain.',
-        'renewal_subject' => 'Напоминание о продлении домена',
+        'renewal_subject' => 'Напоминание о продлении домена - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => 'Дата окончания',
@@ -155,13 +155,13 @@ return [
     ],
     'service' => [
         'suspension_body' => 'Ваша услуга приостановлена из-за неоплаты.',
-        'suspension_subject' => 'Услуга приостановлена',
+        'suspension_subject' => 'Услуга приостановлена - :domain',
         'termination_body' => 'Ваша услуга удалена.',
-        'termination_subject' => 'Услуга удалена',
+        'termination_subject' => 'Услуга удалена - :domain',
         'unsuspension_body' => 'Ваша услуга возобновлена и снова активна.',
-        'unsuspension_subject' => 'Услуга возобновлена',
+        'unsuspension_subject' => 'Услуга возобновлена - :domain',
         'welcome_body' => 'Ваша новая услуга активирована и готова к работе.',
-        'welcome_subject' => 'Добро пожаловать! Ваша услуга готова',
+        'welcome_subject' => 'Добро пожаловать! Ваша услуга готова - :domain',
     ],
     'service_suspension' => [
         'error_contact' => 'Если вы считаете это ошибкой, обратитесь в нашу поддержку.',
@@ -203,11 +203,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => 'Срок действия SSL-сертификата для :domain истекает :date.',
-        'certificate_expiring_subject' => 'SSL-сертификат скоро истекает',
+        'certificate_expiring_subject' => 'SSL-сертификат скоро истекает - :domain',
         'certificate_issued_body' => 'Ваш SSL-сертификат выпущен и готов к скачиванию.',
-        'certificate_issued_subject' => 'SSL-сертификат выпущен',
+        'certificate_issued_subject' => 'SSL-сертификат выпущен - :domain',
         'configuration_required_body' => 'Перед выпуском ваш SSL-сертификат нужно настроить.',
-        'configuration_required_subject' => 'Требуется настройка SSL',
+        'configuration_required_subject' => 'Требуется настройка SSL - :domain',
         'configuration_submitted_body' => 'Настройки SSL отправлены. Мы обрабатываем ваш запрос.',
         'configuration_submitted_subject' => 'Настройки SSL отправлены',
     ],

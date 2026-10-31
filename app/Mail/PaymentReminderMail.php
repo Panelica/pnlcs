@@ -29,7 +29,12 @@ class PaymentReminderMail extends Mailable implements ShouldQueue
     {
         $num = $this->invoice->invoice_num ?? $this->invoice->id;
 
-        return new Envelope(subject: __('email.invoice.reminder_subject', ['number' => $num]));
+        // Two cases, as before: an invoice that is already past due says so.
+        // The day count the old subject carried is left to the body - the
+        // shipped keys have no place for it in five languages.
+        $key = $this->daysOffset > 0 ? 'email.invoice.reminder_subject' : 'email.invoice.overdue_subject';
+
+        return new Envelope(subject: __($key, ['number' => $num]));
     }
 
     public function content(): Content

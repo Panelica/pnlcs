@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => '我们已收到您的取消请求。',
-        'confirm_subject' => '取消请求确认',
+        'confirm_subject' => '取消请求确认 - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => '您的服务将在当前计费周期结束前保持正常运行。',
@@ -87,9 +87,9 @@ return [
     ],
     'domain' => [
         'registration_body' => '您的域名 :domain 已成功注册。',
-        'registration_subject' => '域名注册确认',
+        'registration_subject' => '域名注册确认 - :domain',
         'renewal_body' => '您的域名 :domain 已到续费时间。',
-        'renewal_subject' => '域名续费提醒',
+        'renewal_subject' => '域名续费提醒 - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => '到期日期',
@@ -118,6 +118,7 @@ return [
         'generated' => '已为您的账户生成一张新发票。',
     ],
     'payment_notification_rejected' => [
+        'subject' => '无法验证发票 #:number 的付款通知',
         'intro' => '很抱歉，我们无法核实您为发票 #:number 填报的银行转账信息。',
         'next_steps' => '请核对以下信息并重新提交付款通知；如果您认为这是误判，请联系支持团队。',
         'reason' => '原因',
@@ -156,13 +157,13 @@ return [
     ],
     'service' => [
         'suspension_body' => '您的服务因欠费已被暂停。',
-        'suspension_subject' => '服务已暂停',
+        'suspension_subject' => '服务已暂停 - :domain',
         'termination_body' => '您的服务已终止。',
-        'termination_subject' => '服务已终止',
+        'termination_subject' => '服务已终止 - :domain',
         'unsuspension_body' => '您的服务已解除暂停，现已恢复正常。',
-        'unsuspension_subject' => '服务暂停已解除',
+        'unsuspension_subject' => '服务暂停已解除 - :domain',
         'welcome_body' => '您的新服务已激活，可以开始使用。',
-        'welcome_subject' => '欢迎！您的服务已就绪',
+        'welcome_subject' => '欢迎！您的服务已就绪 - :domain',
     ],
     'service_suspension' => [
         'error_contact' => '如果您认为此项暂停有误，请联系我们的支持团队。',
@@ -204,11 +205,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => ':domain 的 SSL 证书将于 :date 到期。',
-        'certificate_expiring_subject' => 'SSL 证书即将到期',
+        'certificate_expiring_subject' => 'SSL 证书即将到期 - :domain',
         'certificate_issued_body' => '您的 SSL 证书已签发，可以下载。',
-        'certificate_issued_subject' => 'SSL 证书已签发',
+        'certificate_issued_subject' => 'SSL 证书已签发 - :domain',
         'configuration_required_body' => '您的 SSL 证书需要完成配置后才能签发。',
-        'configuration_required_subject' => 'SSL 证书需要配置',
+        'configuration_required_subject' => 'SSL 证书需要配置 - :domain',
         'configuration_submitted_body' => '您的 SSL 配置已提交，我们正在处理请求。',
         'configuration_submitted_subject' => 'SSL 配置已提交',
     ],

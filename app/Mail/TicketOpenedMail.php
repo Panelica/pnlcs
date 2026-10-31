@@ -29,7 +29,15 @@ class TicketOpenedMail extends Mailable implements ShouldQueue
     {
         $tid = $this->ticket->tid ?? $this->ticket->id;
 
-        return new Envelope(subject: __('email.ticket.opened_subject', ['number' => $tid]));
+        $title = $this->ticket->title ?? $this->ticket->subject ?? '';
+
+        // Not translated, on purpose. This subject is not prose: "[Ticket
+        // #123456]" is the token TicketMailImportService matches to append a
+        // customer's emailed reply to the right ticket (TID_PATTERN), and the
+        // rest is the customer's own words. A localized "Ticket Opened -
+        // #123456" loses both: the importer cannot find the ticket, so the
+        // reply opens a new one, and the inbox gives no hint what it is about.
+        return new Envelope(subject: "[Ticket #{$tid}] {$title}");
     }
 
     public function content(): Content

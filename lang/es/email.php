@@ -27,7 +27,7 @@ return [
     ],
     'cancellation' => [
         'confirm_body' => 'Hemos recibido su solicitud de cancelación.',
-        'confirm_subject' => 'Confirmación de cancelación',
+        'confirm_subject' => 'Confirmación de cancelación - :domain',
     ],
     'cancellation_confirm' => [
         'active_until_end' => 'Su servicio permanecerá activo hasta el final del período de facturación actual.',
@@ -87,9 +87,9 @@ return [
     ],
     'domain' => [
         'registration_body' => 'Su dominio :domain se ha registrado correctamente.',
-        'registration_subject' => 'Confirmación del registro del dominio',
+        'registration_subject' => 'Confirmación del registro del dominio - :domain',
         'renewal_body' => 'Debe renovar su dominio :domain.',
-        'renewal_subject' => 'Aviso de renovación del dominio',
+        'renewal_subject' => 'Aviso de renovación del dominio - :domain',
     ],
     'domain_registration' => [
         'expiry_date' => 'Fecha de caducidad',
@@ -156,13 +156,13 @@ return [
     ],
     'service' => [
         'suspension_body' => 'Su servicio se ha suspendido por falta de pago.',
-        'suspension_subject' => 'Servicio suspendido',
+        'suspension_subject' => 'Servicio suspendido - :domain',
         'termination_body' => 'Su servicio se ha cancelado.',
-        'termination_subject' => 'Servicio cancelado',
+        'termination_subject' => 'Servicio cancelado - :domain',
         'unsuspension_body' => 'Se ha levantado la suspensión de su servicio y ya está activo.',
-        'unsuspension_subject' => 'Servicio reactivado',
+        'unsuspension_subject' => 'Servicio reactivado - :domain',
         'welcome_body' => 'Su nuevo servicio se ha activado y está listo para usar.',
-        'welcome_subject' => '¡Le damos la bienvenida! Su servicio está listo',
+        'welcome_subject' => '¡Le damos la bienvenida! Su servicio está listo - :domain',
     ],
     'service_suspension' => [
         'error_contact' => 'Si cree que se trata de un error, contacte con nuestro equipo de soporte.',
@@ -204,11 +204,11 @@ return [
     ],
     'ssl' => [
         'certificate_expiring_body' => 'Su certificado SSL para :domain caducará el :date.',
-        'certificate_expiring_subject' => 'Su certificado SSL caduca pronto',
+        'certificate_expiring_subject' => 'Su certificado SSL caduca pronto - :domain',
         'certificate_issued_body' => 'Se ha emitido su certificado SSL y está listo para descargar.',
-        'certificate_issued_subject' => 'Certificado SSL emitido',
+        'certificate_issued_subject' => 'Certificado SSL emitido - :domain',
         'configuration_required_body' => 'Debe configurar su certificado SSL para que pueda emitirse.',
-        'configuration_required_subject' => 'Se requiere la configuración del certificado SSL',
+        'configuration_required_subject' => 'Se requiere la configuración del certificado SSL - :domain',
         'configuration_submitted_body' => 'Hemos recibido la configuración de su certificado SSL y estamos procesando la solicitud.',
         'configuration_submitted_subject' => 'Configuración del certificado SSL recibida',
     ],
