@@ -682,6 +682,7 @@ return [
         'pn_transfer_date' => 'Transfer Date',
         'remaining_balance' => 'Remaining Balance',
         'reported_on' => 'Reported on',
+        'renewal_note' => 'Auto-generated renewal invoice.',
         'download_pdf' => 'Download PDF',
         'due' => 'Due',
         'invoice_details' => 'Invoice Details',

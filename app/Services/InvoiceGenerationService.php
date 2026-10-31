@@ -617,7 +617,7 @@ class InvoiceGenerationService
 
         $options = [
             'due_date' => now()->addDays((int) \App\Models\Setting::get('InvoiceDueDays', 14))->toDateString(),
-            'notes' => 'Auto-generated renewal invoice.',
+            'notes' => __('client.invoices.renewal_note', [], $client->language),
         ];
 
         $invoice = $this->invoiceService->createInvoice($client, $items, $options);

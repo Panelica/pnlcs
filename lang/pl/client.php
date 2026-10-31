@@ -682,6 +682,7 @@ return [
         'pn_transfer_date' => 'Data przelewu',
         'remaining_balance' => 'Pozostałe saldo',
         'reported_on' => 'Zgłoszono',
+        'renewal_note' => 'Faktura odnowienia wygenerowana automatycznie.',
         'download_pdf' => 'Pobierz PDF',
         'due' => 'Termin płatności',
         'invoice_details' => 'Szczegóły faktury',

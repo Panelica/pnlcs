@@ -681,6 +681,7 @@ return [
         'pn_transfer_date' => '转账日期',
         'remaining_balance' => '剩余应付金额',
         'reported_on' => '申报时间',
+        'renewal_note' => '自动生成的续费发票。',
         'download_pdf' => '下载 PDF',
         'due' => '应付',
         'invoice_details' => '发票详情',
