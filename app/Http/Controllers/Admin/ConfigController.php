@@ -200,6 +200,11 @@ class ConfigController extends Controller
 
     public function destroyAdmin(Admin $admin)
     {
+        // The same check as editing: only somebody who could have granted the
+        // account's role may remove it. Staff management alone used to be
+        // enough to delete a full administrator.
+        abort_if($admin->role && ! $this->canGrant($admin->role), 403);
+
         if ($admin->id === auth('admin')->id()) {
             return back()->with('error', __('messages.error.you_cannot_delete_your_own_account'));
         }
@@ -303,6 +308,9 @@ class ConfigController extends Controller
 
     public function destroyRole(AdminRole $role)
     {
+        // As for editing a role: one beyond your own rights is not yours to remove.
+        abort_unless($this->canGrant($role), 403);
+
         if ($role->admins()->count() > 0) {
             return back()->with('error', __('messages.error.cannot_delete_role_it_still_has_admins_assigned'));
         }
