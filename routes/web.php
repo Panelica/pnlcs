@@ -86,8 +86,9 @@ Route::match(['get', 'post'], 'gateway/{gateway}/callback', [GatewayWebhookContr
 
 // ===== Gateway JS-SDK Capture Endpoints (authenticated, CSRF-protected) =====
 // The comment was true of CSRF only: the group had no auth middleware, so
-// these ran for anyone who knew an invoice id.
-Route::middleware(['web', 'auth'])->group(function () {
+// these ran for anyone who knew an invoice id. Behind the second factor too,
+// like the invoice pages they are called from.
+Route::middleware(['web', 'auth', '2fa'])->group(function () {
     Route::post('gateway/paypal/capture/{invoice}',    [GatewayWebhookController::class, 'paypalCapture'])->name('gateway.paypal.capture');
     Route::post('gateway/stripe/intent/{invoice}',     [GatewayWebhookController::class, 'stripeIntent'])->name('gateway.stripe.intent');
     Route::post('gateway/stripe/confirm/{invoice}',    [GatewayWebhookController::class, 'stripeConfirm'])->name('gateway.stripe.confirm');
