@@ -962,6 +962,7 @@ return [
     'status.unknown' => 'Unknown',
     'domains.lock_failed' => 'The registrar did not accept the change. Please try again or contact support.',
     'services.not_live_for_action' => 'This service has ended, so that can no longer be done to it.',
+    'services.suspended_for_action' => 'This service is suspended, so it cannot be changed until it is active again.',
     'services.cancellation_already_requested' => 'A cancellation has already been requested for this service.',
     'services.addon_cancel' => 'Cancel',
     'services.addon_cancel_confirm' => 'Cancel this addon? The service itself keeps running.',

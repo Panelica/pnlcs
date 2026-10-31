@@ -961,6 +961,7 @@ return [
     'status.unknown' => '未知',
     'domains.lock_failed' => '注册商未接受此更改，请重试或联系技术支持。',
     'services.not_live_for_action' => '此服务已经结束，无法再执行该操作。',
+    'services.suspended_for_action' => '此服务已暂停，在重新激活之前无法更改。',
     'services.cancellation_already_requested' => '此服务已经提交过取消请求。',
     'services.addon_cancel' => '取消',
     'services.addon_cancel_confirm' => '确定取消此附加服务吗？主服务会继续运行。',

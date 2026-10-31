@@ -962,6 +962,7 @@ return [
     'status.unknown' => 'Nieznany',
     'domains.lock_failed' => 'Rejestrator nie przyjął zmiany. Spróbuj ponownie lub skontaktuj się z pomocą techniczną.',
     'services.not_live_for_action' => 'Ta usługa została zakończona, więc nie można jej już niczym zarządzać.',
+    'services.suspended_for_action' => 'Ta usługa jest zawieszona, więc nie można jej zmieniać, dopóki nie zostanie ponownie aktywowana.',
     'services.cancellation_already_requested' => 'Dla tej usługi został już złożony wniosek o anulowanie.',
     'services.addon_cancel' => 'Anuluj',
     'services.addon_cancel_confirm' => 'Anulować ten moduł dodatkowy? Sama usługa pozostanie aktywna.',

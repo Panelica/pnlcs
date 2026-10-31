@@ -136,6 +136,10 @@ class ServiceController extends Controller
     {
         abort_if($service->client_id !== $this->getClientId(), 403);
 
+        if ($refusal = $this->refuseChange($service)) {
+            return back()->with('error', $refusal);
+        }
+
         $result = ModuleScreens::for($service->loadMissing('product', 'server'))->run('client', $function);
         abort_if($result === null, 404);
 
@@ -217,8 +221,10 @@ class ServiceController extends Controller
         // on this service. The cancellation form has always asked; this did
         // not, and the button being hidden is no answer - the route answers
         // whoever calls it, and a customer who kept the URL still has it.
-        if (! $this->isLive($service)) {
-            return back()->with('error', __('client.services.not_live_for_action'));
+        // Signing in to the panel is every change at once, so a suspended
+        // service is refused here as well as on each tab.
+        if ($refusal = $this->refuseChange($service)) {
+            return back()->with('error', $refusal);
         }
 
         // No server yet means there is no account to sign in to; asking the
@@ -474,6 +480,29 @@ class ServiceController extends Controller
         return ! in_array(strtolower((string) $service->status), ['terminated', 'cancelled', 'fraud'], true);
     }
 
+    /**
+     * Why the customer may not change this service right now, or null.
+     *
+     * A suspended service is shown, not worked on: the rule the VPS pages
+     * already follow. Suspension stopped billing's argument, not the panel:
+     * the customer could still sign in to the control panel, create mailboxes,
+     * upload files and run the module's buttons on a service suspended for an
+     * unpaid invoice. Reading stays open, so the customer can still see and
+     * download what is theirs.
+     */
+    private function refuseChange(Service $service): ?string
+    {
+        if (! $this->isLive($service)) {
+            return __('client.services.not_live_for_action');
+        }
+
+        if (strtolower((string) $service->status) === 'suspended') {
+            return __('client.services.suspended_for_action');
+        }
+
+        return null;
+    }
+
     // -------------------------------------------------------------------------
     // Hosting management (Panelica-only, feature-gated)
     //
@@ -491,6 +520,12 @@ class ServiceController extends Controller
     {
         if (! $service->server_id || ! $this->isLive($service)) {
             return null;
+        }
+        // Every tab action that is not a read changes the account on the panel.
+        if (! request()->isMethodSafe() && ($refusal = $this->refuseChange($service))) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(request()->expectsJson()
+                ? response()->json(['success' => false, 'message' => $refusal], 409)
+                : back()->with('error', $refusal));
         }
         $module = app(ProvisioningService::class)->resolveModule($service);
         if (! $module || ! method_exists($module, 'hostingFeatures')) {
