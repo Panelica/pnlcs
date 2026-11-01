@@ -7,6 +7,7 @@ return [
     'rate_note_official' => '按 :source 于 :date 公布的:kind换算：1 :from = :rate :to:ref',
     'rate_kind_selling' => '外汇卖出价',
     'rate_kind_buying' => '外汇买入价',
+    'rate_kind_reference' => '参考汇率',
     'rate_bulletin' => '公告',
     'tax_office' => '税务局',
     'registry_no' => '登记号',

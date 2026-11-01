@@ -66,9 +66,10 @@ class Invoice extends Model {
                 $invoice->billing_currency = strtoupper($own->code);
                 $invoice->exchange_rate = CustomerCurrency::rateOf($own);
 
-                // The provenance settings describe the official lira rate
-                // (pnlcs:currency-update): they belong on a lira stamp only.
-                if (strtoupper($own->code) === 'TRY') {
+                // The provenance settings describe one official rate
+                // (pnlcs:currency-update): they belong on a stamp in that
+                // currency only.
+                if (strtoupper($own->code) === self::officialRateCurrency()) {
                     $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
                     $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
                     $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
@@ -99,14 +100,25 @@ class Invoice extends Model {
 
             // Provenance travels with the rate: a bare number on an invoice is
             // not something a customer can verify. The settings describe the
-            // official lira rate, so they belong on a lira stamp only.
-            if (strtoupper($code) === 'TRY') {
+            // official rate of one currency, so they belong on a stamp in
+            // that currency only.
+            if (strtoupper($code) === self::officialRateCurrency()) {
                 $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
                 $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
                 $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
                 $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
             }
         });
+    }
+
+    /**
+     * The currency the stored provenance (ExchangeRateSource and friends)
+     * describes. Installations that last fetched before it was recorded only
+     * ever had the TCMB lira rate.
+     */
+    private static function officialRateCurrency(): string
+    {
+        return strtoupper((string) (Setting::get('ExchangeRateCurrency') ?: 'TRY'));
     }
 
     /**

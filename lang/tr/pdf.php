@@ -7,6 +7,7 @@ return [
     'rate_note_official' => ':source tarafından :date tarihinde yayımlanan :kind ile çevrildi: 1 :from = :rate :to:ref',
     'rate_kind_selling' => 'döviz satış kuru',
     'rate_kind_buying' => 'döviz alış kuru',
+    'rate_kind_reference' => 'referans kuru',
     'rate_bulletin' => 'bülten',
     'tax_office' => 'Vergi dairesi',
     'registry_no' => 'Sicil no',
