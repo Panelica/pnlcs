@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Enums\ServiceStatus;
 use App\Events\ServiceSuspended;
+use App\Models\Invoice;
+use App\Models\Product;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Services\ProvisioningService;
@@ -22,10 +24,27 @@ class SuspensionCommand extends Command
      * Public because unsuspend-on-payment asks the same question with it: a
      * service must not be switched back on over a debt that will suspend it
      * again the next morning.
+     *
+     * A product may keep its own (suspend_after_days); without one, or for a
+     * service without a product, the general setting applies.
      */
-    public static function graceDays(): int
+    public static function graceDays(?Product $product = null): int
     {
+        if ($product && $product->suspend_after_days !== null) {
+            return max(0, (int) $product->suspend_after_days);
+        }
+
         return max(0, (int) Setting::get('AutoSuspensionDays', 3));
+    }
+
+    /** Whether the service owes what its own grace period would suspend it over. */
+    public static function behindFor(Service $service): bool
+    {
+        $grace = self::graceDays($service->product);
+
+        return self::invoicedOnly()
+            ? Service::whereKey($service->id)->owingOverdue($grace)->exists()
+            : Invoice::where('client_id', $service->client_id)->overduePastGrace($grace)->exists();
     }
 
     /**
@@ -45,6 +64,11 @@ class SuspensionCommand extends Command
 
     public function handle(ProvisioningService $provisioning): int
     {
+        // The shortest grace any service has, to find the candidates in one
+        // query; each is then held to its own product's (behindFor()).
+        $own = Product::whereNotNull('suspend_after_days')->min('suspend_after_days');
+        $least = $own === null ? self::graceDays() : min(self::graceDays(), max(0, (int) $own));
+
         $services = Service::with(['client.group', 'server', 'product'])
             ->where('status', ServiceStatus::Active->value)
             // r135-hold: "do not suspend until" is a date, not a switch. This
@@ -58,9 +82,9 @@ class SuspensionCommand extends Command
                 ->orWhereDate('override_auto_suspend_date', '<', today()))
             ->when(
                 self::invoicedOnly(),
-                fn ($q) => $q->owingOverdue(self::graceDays()),
-                fn ($q) => $q->whereHas('client', function ($q) {
-                    $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace(self::graceDays()));
+                fn ($q) => $q->owingOverdue($least),
+                fn ($q) => $q->whereHas('client', function ($q) use ($least) {
+                    $q->whereHas('invoices', fn ($iq) => $iq->overduePastGrace($least));
                 }),
             )
             ->get();
@@ -81,6 +105,11 @@ class SuspensionCommand extends Command
             if ($this->isExempt($service)) {
                 $exempt++;
 
+                continue;
+            }
+
+            // Found by the shortest grace; not yet due by its own product's.
+            if (self::graceDays($service->product) > $least && ! self::behindFor($service)) {
                 continue;
             }
 

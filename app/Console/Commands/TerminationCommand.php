@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\ServiceStatus;
 use App\Events\ServiceTerminated;
+use App\Models\Product;
 use App\Models\Service;
 use App\Models\Setting;
 use App\Services\ProvisioningService;
@@ -33,13 +34,20 @@ class TerminationCommand extends Command
 
     public function handle(ProvisioningService $provisioning): int
     {
-        if (! (int) Setting::get('AutoTerminationEnabled', 0)) {
+        // The general switch and days, and the products that keep their own
+        // (terminate_after_days). A product's own days apply even while the
+        // switch is off: setting them on the product is the opt-in.
+        $general = (int) Setting::get('AutoTerminationEnabled', 0) ? max(1, (int) Setting::get('AutoTerminationDays', 30)) : null;
+        $own = Product::whereNotNull('terminate_after_days')->min('terminate_after_days');
+
+        if ($general === null && $own === null) {
             $this->info('Automatic termination is disabled.');
 
             return Command::SUCCESS;
         }
 
-        $days = max(1, (int) Setting::get('AutoTerminationDays', 30));
+        // The shortest, to find the candidates; each is held to its own below.
+        $days = min(array_values(array_filter([$general, $own === null ? null : max(1, (int) $own)], fn ($d) => $d !== null)));
 
         $services = Service::with(['client.group', 'server', 'product'])
             ->where('status', ServiceStatus::Suspended->value)
@@ -74,6 +82,14 @@ class TerminationCommand extends Command
             if ((bool) ($service->client?->group?->terminate_exempt ?? false)) {
                 $exempt++;
 
+                continue;
+            }
+
+            // Its own product's days, or the general ones; none means never.
+            $due = $service->product?->terminate_after_days !== null
+                ? max(1, (int) $service->product->terminate_after_days)
+                : $general;
+            if ($due === null || $service->suspension_date->gt(today()->subDays($due))) {
                 continue;
             }
 

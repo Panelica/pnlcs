@@ -420,6 +420,9 @@ class ProductController extends Controller
             'retired' => 'nullable|boolean',
             'is_featured' => 'nullable|boolean',
             'auto_setup' => 'nullable|in:order,payment,manual',
+            // Empty: the general Automation settings apply.
+            'suspend_after_days' => 'nullable|integer|min:0|max:365',
+            'terminate_after_days' => 'nullable|integer|min:1|max:3650',
             // Only a module this installation actually has: it used to be free
             // text, so a typo left the product unprovisionable and silent.
             'server_type' => ['nullable', Rule::in(array_keys(app(ModuleRegistry::class)->serverModuleNames()))],
