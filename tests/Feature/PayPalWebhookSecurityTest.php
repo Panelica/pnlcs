@@ -92,19 +92,21 @@ test('a forged PAYMENT.CAPTURE.COMPLETED webhook is rejected when PayPal cannot 
 });
 
 test('a genuine webhook passes verification and returns the verified amount', function () {
+    $invoice = Invoice::factory()->create(['client_id' => Client::factory()->create()->id, 'status' => 'unpaid', 'total' => 75.0]);
     Http::fake([
         '*/v1/oauth2/token' => Http::response(['access_token' => 'tok'], 200),
-        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => '75.00', 'currency_code' => 'USD']], 200),
+        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => '75.00', 'currency_code' => 'USD'], 'supplementary_data' => ['related_ids' => ['order_id' => 'ORDER-1']]], 200),
+        '*/v2/checkout/orders/*' => Http::response(['purchase_units' => [['reference_id' => 'INV-'.$invoice->id]]], 200),
     ]);
 
     $result = (new PayPalModule)->processWebhook([
         'event_type' => 'PAYMENT.CAPTURE.COMPLETED',
-        'resource' => ['id' => 'REAL-CAP', 'purchase_units' => [['reference_id' => 'INV-123']]],
+        'resource' => ['id' => 'REAL-CAP'],
     ]);
 
     expect($result['success'])->toBeTrue()
         ->and($result['transaction_id'])->toBe('REAL-CAP')
-        ->and($result['invoice_id'])->toBe('123')
+        ->and($result['invoice_id'])->toBe((string) $invoice->id)
         ->and($result['amount'])->toBe(75.0);
 });
 
@@ -132,7 +134,8 @@ test('the paypal capture endpoint refuses a forged capture id and leaves the inv
 test('the paypal capture endpoint credits only the verified amount, not the client total', function () {
     Http::fake([
         '*/v1/oauth2/token' => Http::response(['access_token' => 'tok'], 200),
-        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => '500.00', 'currency_code' => 'USD']], 200),
+        '*/v2/payments/captures/*' => Http::response(['status' => 'COMPLETED', 'amount' => ['value' => '500.00', 'currency_code' => 'USD'], 'supplementary_data' => ['related_ids' => ['order_id' => 'ORDER-1']]], 200),
+        '*/v2/checkout/orders/*' => fn () => Http::response(['purchase_units' => [['reference_id' => 'INV-'.Invoice::max('id')]]], 200),
     ]);
 
     $client = Client::factory()->create();

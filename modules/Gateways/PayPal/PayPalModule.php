@@ -516,10 +516,62 @@ HTML;
 
         return [
             "success"     => true,
+            // PayPal's own id for the capture, which is what a payment is
+            // recorded under: the id asked for is the caller's spelling of it.
+            "id"          => (string) ($response->json("id") ?: $captureId),
             "amount"      => (float) $response->json("amount.value", 0),
             "currency"    => $response->json("amount.currency_code"),
             "invoice_ref" => $response->json("invoice_id") ?? $response->json("custom_id"),
+            "order_id"    => $response->json("supplementary_data.related_ids.order_id"),
         ];
+    }
+
+    /**
+     * The invoice a capture was taken for, read back from PayPal: the order
+     * the capture belongs to carries the invoice in its reference_id
+     * ("INV-123", set by getPaymentForm() and capture()). Null when PayPal
+     * names no order, or the order names no invoice.
+     *
+     * Nothing else says which invoice a capture pays. The browser posts a
+     * capture id against an invoice of its choosing, and the webhook body is
+     * not signed; a capture taken for one invoice is not a payment of another.
+     */
+    public function captureInvoiceId(?string $orderId): ?int
+    {
+        $accessToken = $orderId ? $this->getAccessToken() : null;
+        if (!$accessToken) {
+            return null;
+        }
+
+        $response = Http::withToken($accessToken)
+            ->get($this->getBaseUrl() . "/v2/checkout/orders/" . urlencode((string) $orderId));
+        if (!$response->successful()) {
+            Log::warning("PayPal: order lookup failed", ["order_id" => $orderId, "status" => $response->status()]);
+
+            return null;
+        }
+
+        foreach ((array) $response->json("purchase_units", []) as $unit) {
+            if (preg_match('/^INV-(\d+)$/', (string) ($unit["reference_id"] ?? ""), $m)) {
+                return (int) $m[1];
+            }
+        }
+
+        return null;
+    }
+
+    /** The order a capture belongs to, read from PayPal; null when it cannot be read. */
+    private function captureOrderId(string $captureId): ?string
+    {
+        $accessToken = $this->getAccessToken();
+        if (!$accessToken) {
+            return null;
+        }
+
+        $response = Http::withToken($accessToken)
+            ->get($this->getBaseUrl() . "/v2/payments/captures/" . urlencode($captureId));
+
+        return $response->successful() ? $response->json("supplementary_data.related_ids.order_id") : null;
     }
 
     /**
@@ -537,9 +589,21 @@ HTML;
     {
         $accepted = array_unique([$this->captureCurrency($invoice), $this->currencyCode(shop_currency_code())]);
         $verified = $this->verifyCapture($captureId, $accepted);
-        if ($verified["success"] ?? false) {
-            $verified["amount"] = $this->recordedAmount($invoice, (float) $verified["amount"], (string) $verified["currency"]);
+        if (!($verified["success"] ?? false)) {
+            return $verified;
         }
+
+        // Paid for this invoice, not for another one of the customer's.
+        $paidFor = $this->captureInvoiceId($verified["order_id"] ?? null);
+        if ($paidFor !== (int) $invoice->id) {
+            Log::warning("PayPal: capture taken for another invoice refused", [
+                "capture_id" => $captureId, "invoice_id" => $invoice->id, "paid_for" => $paidFor,
+            ]);
+
+            return ["success" => false, "message" => "Capture was not taken for this invoice."];
+        }
+
+        $verified["amount"] = $this->recordedAmount($invoice, (float) $verified["amount"], (string) $verified["currency"]);
 
         return $verified;
     }
@@ -652,18 +716,19 @@ HTML;
             return ["success" => true, "message" => "Event ignored: " . $eventType];
         }
 
-        $resource   = $data["resource"] ?? [];
-        $captureId  = $resource["id"] ?? null;
-        $invoiceRef = $resource["purchase_units"][0]["reference_id"] ?? null;
-
-        if (!$captureId || !$invoiceRef) {
-            return ["success" => false, "message" => "Missing capture ID or invoice reference."];
+        $captureId = $data["resource"]["id"] ?? null;
+        if (!$captureId) {
+            return ["success" => false, "message" => "Missing capture ID."];
         }
 
-        // Never trust the webhook body — confirm the capture with PayPal, in
-        // the currency that invoice is charged in.
-        $invoice  = Invoice::find((int) str_replace("INV-", "", (string) $invoiceRef));
-        $verified = $invoice ? $this->verifyInvoiceCapture($invoice, $captureId) : $this->verifyCapture($captureId);
+        // Never trust the webhook body, which is not signed: the capture, the
+        // invoice it was taken for and its amount are all read from PayPal.
+        // A capture resource carries no purchase unit; its order does.
+        $invoiceId = $this->captureInvoiceId($this->captureOrderId((string) $captureId));
+        $invoice   = $invoiceId ? Invoice::find($invoiceId) : null;
+        $verified  = $invoice
+            ? $this->verifyInvoiceCapture($invoice, (string) $captureId)
+            : ["success" => false, "message" => "Capture is not for an invoice here."];
         if (!($verified["success"] ?? false)) {
             Log::warning("PayPal webhook rejected — capture not verified", [
                 "capture_id" => $captureId,
@@ -672,7 +737,7 @@ HTML;
             return ["success" => false, "message" => $verified["message"] ?? "Capture verification failed."];
         }
 
-        $invoiceId = str_replace("INV-", "", (string) $invoiceRef);
+        $invoiceId = (string) $invoice->id;
 
         Log::info("PayPal webhook: PAYMENT.CAPTURE.COMPLETED verified", [
             "capture_id" => $captureId,
@@ -682,7 +747,7 @@ HTML;
 
         return [
             "success"        => true,
-            "transaction_id" => $captureId,
+            "transaction_id" => $verified["id"] ?? $captureId,
             "invoice_id"     => $invoiceId,
             "amount"         => $verified["amount"],
             "gateway"        => "paypal",
