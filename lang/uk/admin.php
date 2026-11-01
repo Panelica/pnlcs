@@ -3689,6 +3689,7 @@ return [
     'servers.ip_placeholder' => 'Наприклад, 203.0.113.10',
     'servers.username_placeholder' => 'Наприклад, root',
     'servers.keep_secret' => 'Залиште порожнім, щоб не змінювати',
+    'servers.verify_tls' => 'Перевіряти TLS-сертифікат панелі (лише якщо він довірений)',
     'servers.keep_password' => '(залиште порожнім, щоб зберегти)',
     'notifications.name_placeholder' => 'Наприклад, сповіщення Slack',
     'notifications.secret_placeholder' => 'Спільний секрет для перевірки',

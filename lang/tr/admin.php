@@ -3735,6 +3735,7 @@ return [
     'servers.ip_placeholder' => 'örn. 203.0.113.10',
     'servers.username_placeholder' => 'örn. root',
     'servers.keep_secret' => 'Değiştirmemek için boş bırakın',
+    'servers.verify_tls' => 'Panelin TLS sertifikasını doğrula (yalnız güvenilir bir sertifikası varsa)',
     'servers.keep_password' => '(değiştirmemek için boş bırakın)',
     'notifications.name_placeholder' => 'örn. Slack uyarıları',
     'notifications.secret_placeholder' => 'Doğrulama için paylaşılan gizli anahtar',

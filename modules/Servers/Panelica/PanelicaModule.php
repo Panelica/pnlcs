@@ -79,11 +79,23 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         ];
     }
 
+    /**
+     * Whether the panel's TLS certificate is checked.
+     *
+     * Off unless the server record asks for it (Setup > Servers), as for
+     * Proxmox: a panel reached by IP or with its own certificate would
+     * otherwise stop answering the day this is turned on for everybody.
+     */
+    private function verifiesTls(Server $server): bool
+    {
+        return (bool) $server->setting('verify_tls');
+    }
+
     private function get(Server $server, string $path): Response
     {
         $headers = $this->buildHeaders($server, 'GET', $path, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$path);
     }
 
     /**
@@ -160,7 +172,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'POST', $path, $body);
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->timeout($timeout)->withBody($body, 'application/json')->post($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->timeout($timeout)->withBody($body, 'application/json')->post($this->baseUrl($server).$path);
     }
 
     private function patch(Server $server, string $path, array $payload): Response
@@ -168,14 +180,14 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'PATCH', $path, $body);
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->patch($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->patch($this->baseUrl($server).$path);
     }
 
     private function delete(Server $server, string $path): Response
     {
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
     }
 
     // -------------------------------------------------------------------------
@@ -772,7 +784,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
     {
         $headers = $this->buildHeaders($server, 'GET', $path, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])
             ->connectTimeout(min($this->connectTimeout(), self::CHECK_TIMEOUT))
             ->timeout(self::CHECK_TIMEOUT)
             ->get($this->baseUrl($server).$path);
@@ -3325,7 +3337,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $qs = http_build_query(['database_name' => $databaseName], '', '&', PHP_QUERY_RFC3986);
         $path = "/v1/domains/{$domainId}/databases?{$qs}";
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
-        $resp = Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
+        $resp = Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->delete($this->baseUrl($server).$path);
         if (! $resp->successful()) {
             return $this->buildResult(false, $this->apiMessage($resp, 'Could not delete the database.'));
         }
@@ -3788,7 +3800,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $fullPath = $basePath.($qs !== '' ? '?'.$qs : '');
         $headers = $this->buildHeaders($server, 'GET', $fullPath, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$fullPath);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->get($this->baseUrl($server).$fullPath);
     }
 
     private function put(Server $server, string $path, array $payload): Response
@@ -3796,7 +3808,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'PUT', $path, $body);
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->put($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->put($this->baseUrl($server).$path);
     }
 
     /** DELETE carrying a JSON body. The panel excludes the DELETE body from the signature. */
@@ -3805,7 +3817,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
         $body = json_encode($payload);
         $headers = $this->buildHeaders($server, 'DELETE', $path, '');
 
-        return Http::withHeaders($headers)->withoutVerifying()->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->delete($this->baseUrl($server).$path);
+        return Http::withHeaders($headers)->withOptions(['verify' => $this->verifiesTls($server)])->connectTimeout($this->connectTimeout())->withBody($body, 'application/json')->delete($this->baseUrl($server).$path);
     }
 
     /** The account's home directory - the root of everything the file tab shows. */
@@ -3971,7 +3983,7 @@ class PanelicaModule extends AbstractServerModule implements \App\Contracts\Host
             'X-Timestamp' => $timestamp,
             'X-Signature' => $signature,
             'Accept' => 'application/json',
-        ])->withoutVerifying()
+        ])->withOptions(['verify' => $this->verifiesTls($server)])
             ->attach('file', $contents, $filename)
             ->post($this->baseUrl($server).$path, [
                 'user_id' => $accountId,

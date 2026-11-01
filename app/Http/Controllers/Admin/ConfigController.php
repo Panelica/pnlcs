@@ -1422,8 +1422,17 @@ class ConfigController extends Controller
     {
         $settings = $existing?->settings ?? [];
 
-        if (strtolower((string) $request->input('type')) !== 'proxmox') {
-            return array_diff_key($settings, array_flip(['node', 'pool', 'vmid_min', 'vmid_max', 'ipv4_pool', 'verify_tls', 'ci_vendor', 'backup_storage', 'capacity_alert'])) ?: null;
+        $type = strtolower((string) $request->input('type'));
+
+        if ($type !== 'proxmox') {
+            $settings = array_diff_key($settings, array_flip(['node', 'pool', 'vmid_min', 'vmid_max', 'ipv4_pool', 'verify_tls', 'ci_vendor', 'backup_storage', 'capacity_alert']));
+
+            // A Panelica panel may have its TLS certificate checked too.
+            if ($type === 'panelica' && ! empty(((array) $request->input('settings', []))['verify_tls'])) {
+                $settings['verify_tls'] = true;
+            }
+
+            return $settings ?: null;
         }
 
         $in = (array) $request->input('settings', []);

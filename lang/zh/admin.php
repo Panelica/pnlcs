@@ -3735,6 +3735,7 @@ return [
     'servers.ip_placeholder' => '例如 203.0.113.10',
     'servers.username_placeholder' => '例如 root',
     'servers.keep_secret' => '留空则保持不变',
+    'servers.verify_tls' => '校验面板的 TLS 证书（仅当证书受信任时）',
     'servers.keep_password' => '（留空则保留）',
     'notifications.name_placeholder' => '例如 Slack 提醒',
     'notifications.secret_placeholder' => '用于验证的共享密钥',

@@ -140,6 +140,9 @@
                         <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="settings[verify_tls]" value="1" data-pve="verify-tls"> {{ __('proxmox.admin.verify_tls') }}</label></div>
                     </div>
                 </div>
+                <div data-role="pnl-group" style="display:none;margin-top:15px;">
+                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="settings[verify_tls]" value="1" disabled> {{ __('admin.servers.verify_tls') }}</label>
+                </div>
                 <div data-role="ns-group" style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;">
                     <label class="form-label">{{ __('admin.servers.nameservers') }}</label>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -203,6 +206,9 @@
                         <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('proxmox.admin.ipv4_pool') }}</label><textarea name="settings[ipv4_pool]" id="edit-pve-ipv4" rows="3" class="form-control" style="font-family:monospace;font-size:12px;" placeholder="203.0.113.10-203.0.113.40/24 gw 203.0.113.1"></textarea><small style="color:#888;">{{ __('proxmox.admin.ipv4_pool_hint') }}</small></div>
                         <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="settings[verify_tls]" value="1" id="edit-pve-verify-tls"> {{ __('proxmox.admin.verify_tls') }}</label></div>
                     </div>
+                </div>
+                <div data-role="edit-pnl-group" style="display:none;margin-top:15px;">
+                    <label style="font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" name="settings[verify_tls]" value="1" id="edit-pnl-verify-tls" disabled> {{ __('admin.servers.verify_tls') }}</label>
                 </div>
                 <div data-role="edit-ns-group" style="margin-top:15px;padding-top:15px;border-top:1px solid #eee;">
                     <label class="form-label">{{ __('admin.servers.nameservers') }}</label>
@@ -319,6 +325,13 @@ function serverTypeTuning(selectEl, prefix) {
         pve.style.display = t.proxmox ? '' : 'none';
         pve.querySelectorAll('input,textarea').forEach(function (el) { el.disabled = !t.proxmox; });
     }
+    // Panelica: whether its TLS certificate is checked (off by default).
+    const pnl = q('pnl-group');
+    if (pnl) {
+        const isPanelica = selectEl.value === 'panelica';
+        pnl.style.display = isPanelica ? '' : 'none';
+        pnl.querySelectorAll('input').forEach(function (el) { el.disabled = !isPanelica; });
+    }
 
     const passLabel = q('password-label');
     // The field is named the same way when adding and when editing (a Panelica
@@ -364,6 +377,7 @@ function editServer(id, name, hostname, ip, type, port, username, maxAccounts, n
     document.getElementById('edit-pve-vmid-max').value = settings.vmid_max || '';
     document.getElementById('edit-pve-ipv4').value = settings.ipv4_pool || '';
     document.getElementById('edit-pve-verify-tls').checked = !!settings.verify_tls;
+    document.getElementById('edit-pnl-verify-tls').checked = !!settings.verify_tls;
     document.getElementById('edit-pve-ci-vendor').value = settings.ci_vendor || '';
     document.getElementById('edit-pve-backup-storage').value = settings.backup_storage || '';
     document.getElementById('edit-pve-capacity-alert').value = settings.capacity_alert ?? '';
