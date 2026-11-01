@@ -617,6 +617,7 @@ if (! function_exists('billing_rate_note')) {
             $kinds = [
                 'ForexSelling' => __('pdf.rate_kind_selling'),
                 'ForexBuying' => __('pdf.rate_kind_buying'),
+                'reference' => __('pdf.rate_kind_reference'),
             ];
 
             return __('pdf.rate_note_official', [
