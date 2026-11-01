@@ -71,14 +71,17 @@ class HrdClient
 
     /**
      * The partner's purchase prices for domains, keyed by extension without the
-     * leading dot: "pl" => ['register' => 46, 'renew' => 46, 'transfer' => 0].
+     * leading dot: "pl" => ['register' => 46, 'renew' => 46, 'transfer' => 0,
+     * 'restore' => 55].
      *
      * The getPricings command returns every service with its prices in one
      * response. Domain services are named "d_<extension>" ("d_pl", "d_com.pl");
      * SSL and other services are skipped. Prices are PLN; "(brak)" (none) means
-     * the service has no such price and is left null.
+     * the service has no such price and is left null. "Odnowienie wygasłej"
+     * (renewal of an expired domain) is the restore price; "Odnowienie z
+     * kwarantanny" is deliberately not imported.
      *
-     * @return array<string, array{register: ?string, renew: ?string, transfer: ?string}>
+     * @return array<string, array{register: ?string, renew: ?string, transfer: ?string, restore: ?string}>
      */
     public function partnerGetPriceList(): array
     {
@@ -95,7 +98,7 @@ class HrdClient
             }
 
             $extension = substr($name->item(0)->textContent, 2);
-            $row = ['register' => null, 'renew' => null, 'transfer' => null];
+            $row = ['register' => null, 'renew' => null, 'transfer' => null, 'restore' => null];
 
             foreach ($xpath->query('./price', $pricing) as $price) {
                 $priceName = $xpath->query('./name/text()', $price);
@@ -114,6 +117,7 @@ class HrdClient
                     'Rejestracja' => $row['register'] = $value,
                     'Odnowienie' => $row['renew'] = $value,
                     'Transfer' => $row['transfer'] = $value,
+                    'Odnowienie wygasłej' => $row['restore'] = $value,
                     default => null,
                 };
             }

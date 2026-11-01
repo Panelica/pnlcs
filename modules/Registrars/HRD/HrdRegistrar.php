@@ -137,12 +137,14 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                     'register_price' => $this->withMargin($prices[$ext]['register'] ?? null, $margin),
                     'renew_price' => $this->withMargin($prices[$ext]['renew'] ?? null, $margin),
                     'transfer_price' => $this->withMargin($prices[$ext]['transfer'] ?? null, $margin),
+                    'restore_price' => $this->withMargin($prices[$ext]['restore'] ?? null, $margin),
                 ];
 
                 $current = [
                     'register_price' => $tld->register_price,
                     'renew_price' => $tld->renew_price,
                     'transfer_price' => $tld->transfer_price,
+                    'restore_price' => $tld->restore_price,
                 ];
 
                 if ($next == $current) {
@@ -159,7 +161,8 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 return $c['extension']
                     .' reg:'.($c['before']['register_price'] ?? '-').'→'.($c['after']['register_price'] ?? '-')
                     .' renew:'.($c['before']['renew_price'] ?? '-').'→'.($c['after']['renew_price'] ?? '-')
-                    .' transfer:'.($c['before']['transfer_price'] ?? '-').'→'.($c['after']['transfer_price'] ?? '-');
+                    .' transfer:'.($c['before']['transfer_price'] ?? '-').'→'.($c['after']['transfer_price'] ?? '-')
+                    .' restore:'.($c['before']['restore_price'] ?? '-').'→'.($c['after']['restore_price'] ?? '-');
             })->implode(' | ');
 
             Log::info('HRD price sync: '.$updated.' changed, '.$unchanged.' unchanged, '.$skipped.' skipped'
