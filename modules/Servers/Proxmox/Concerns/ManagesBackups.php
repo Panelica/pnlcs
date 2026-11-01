@@ -10,9 +10,10 @@ use Modules\Servers\Proxmox\ProxmoxResult;
  * Backups on the server's backup storage (a directory, NFS or Proxmox Backup
  * Server), up to the plan's number.
  *
- * A backup belongs to a guest by its name - vzdump-qemu-<vmid>-... - and every
- * restore or delete checks that before touching it, so a customer cannot name
- * another customer's backup. Measured on Proxmox VE 9.1: a restore over a
+ * A backup belongs to a service by its name - vzdump-qemu-<vmid>-... - and by
+ * the "PNLCS service <id>" its notes were written with, and every restore or
+ * delete checks both before touching it, so a customer cannot name another
+ * customer's backup, nor one left under a guest id that was used before. Measured on Proxmox VE 9.1: a restore over a
  * protected guest fails ("protection mode enabled"), so the protection is
  * lifted first; the backup brings its own settings back, protection, tags and
  * MAC included, and the guest's snapshots are gone afterwards.
@@ -31,6 +32,20 @@ trait ManagesBackups
 
         return (bool) preg_match('#(^|/)vzdump-'.preg_quote($guest['type'], '#').'-'.$guest['vmid'].'-#', $volid)
             || (bool) preg_match('#:backup/'.$pbs.'/'.$guest['vmid'].'/#', $volid);
+    }
+
+    /**
+     * Whether a backup was taken for this service: backupCreate() writes
+     * "PNLCS service <id>" in its notes.
+     *
+     * The name only says which guest id it was taken of, and Proxmox hands a
+     * freed id to the next guest. A customer whose server got the id of an
+     * earlier, terminated one saw that customer's backups in the list, and
+     * could restore them onto their own server.
+     */
+    private function takenForService(Service $service, string $notes): bool
+    {
+        return trim(strtok($notes, "\n") ?: '') === 'PNLCS service '.$service->id;
     }
 
     /** @return array<int, array{volid: string, size: int, time: int, notes: string, protected: bool}>|ProxmoxResult */
@@ -52,7 +67,8 @@ trait ManagesBackups
         }
 
         return collect($list->list())
-            ->filter(fn ($v) => $this->ownsBackup($guest, (string) ($v['volid'] ?? '')))
+            ->filter(fn ($v) => $this->ownsBackup($guest, (string) ($v['volid'] ?? ''))
+                && $this->takenForService($service, (string) ($v['notes'] ?? '')))
             ->map(fn ($v) => [
                 'volid' => (string) $v['volid'],
                 'size' => (int) ($v['size'] ?? 0),

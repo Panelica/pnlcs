@@ -770,6 +770,24 @@ it('will not restore or delete a backup of another guest', function () {
         ->and(collect($pve->volumes['backup-nfs'])->pluck('volid'))->toContain($theirs);
 });
 
+it('does not list, restore or delete a backup an earlier holder of the same guest id left', function () {
+    // Proxmox hands a freed id to the next guest: the archive's name says 830,
+    // and so does the new customer's server.
+    $pve = FakeProxmox::install();
+    $service = pveService(pveServer(['backup_storage' => 'backup-nfs']), ['pve_backups' => 3]);
+    pveOwnedGuest($pve, $service, 830);
+    $earlier = $pve->backup(830, notes: 'PNLCS service 999999');
+    $byHand = $pve->backup(830, notes: '');
+    $mine = $pve->backup(830);
+    $module = new ProxmoxModule;
+
+    expect(collect($module->backups($service->fresh(['server', 'product'])))->pluck('volid')->all())->toBe([$mine])
+        ->and($module->backupRestore($service->fresh(['server', 'product']), $earlier)['success'])->toBeFalse()
+        ->and($module->backupDelete($service->fresh(['server', 'product']), $byHand)['success'])->toBeFalse()
+        ->and($pve->restored)->toBe([])
+        ->and(collect($pve->volumes['backup-nfs'])->pluck('volid'))->toContain($earlier, $byHand);
+});
+
 it('will not delete a protected backup', function () {
     $pve = FakeProxmox::install();
     $service = pveService(pveServer(['backup_storage' => 'backup-nfs']), ['pve_backups' => 3]);

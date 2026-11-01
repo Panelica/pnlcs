@@ -2,6 +2,7 @@
 
 namespace Tests\Support;
 
+use App\Models\Service;
 use GuzzleHttp\Promise\Create;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Client\Request;
@@ -515,12 +516,22 @@ final class FakeProxmox
         return $points;
     }
 
-    public function backup(int $vmid, string $storage = 'backup-nfs', array $config = [], bool $protected = false): string
+    /**
+     * A finished backup of guest $vmid. Its notes are what backupCreate()
+     * writes for the service holding the guest now ('PNLCS service <id>'),
+     * unless $notes says otherwise: a backup left by an earlier holder of the
+     * same id, or one an operator made by hand.
+     */
+    public function backup(int $vmid, string $storage = 'backup-nfs', array $config = [], bool $protected = false, ?string $notes = null): string
     {
+        if ($notes === null) {
+            $holder = Service::all()->first(fn ($s) => (int) (($s->module_data ?? [])['proxmox_vmid'] ?? 0) === $vmid);
+            $notes = $holder ? 'PNLCS service '.$holder->id : 'PNLCS';
+        }
         $type = $this->guests[$vmid]['type'] ?? 'qemu';
         $volid = "{$storage}:backup/vzdump-{$type}-{$vmid}-2026_09_20-03_00_0".count($this->volumes[$storage] ?? []).'.vma.zst';
         $this->volumes[$storage][] = ['volid' => $volid, 'content' => 'backup', 'vmid' => $vmid, 'size' => 2147483648,
-            'ctime' => 1789000000 + count($this->volumes[$storage] ?? []), 'notes' => 'PNLCS', 'protected' => $protected ? 1 : 0];
+            'ctime' => 1789000000 + count($this->volumes[$storage] ?? []), 'notes' => $notes, 'protected' => $protected ? 1 : 0];
         $this->backupConfigs[$volid] = $config ?: ($this->guests[$vmid]['config'] ?? []);
 
         return $volid;
