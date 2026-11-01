@@ -282,13 +282,15 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
     /**
      * Pull the OVH purchase prices — with the configured margin applied and
-     * rounded up to a whole złoty — onto the TLDs whose auto registrar is OVH.
+     * rounded up to a whole unit of the shop currency — onto the TLDs whose
+     * auto registrar is OVH. Refused unless OVH quotes in that currency.
      * Run manually from the registrars screen.
      */
     public function syncPrices(): array
     {
         try {
             $margin = (float) ($this->settings['margin_percent'] ?? 0);
+            $shop = strtoupper((string) (\App\Models\Currency::getDefault()?->code ?? ''));
 
             $updated = 0;
             $unchanged = 0;
@@ -314,17 +316,39 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                     continue;
                 }
 
-                $next = [
-                    'register_price' => $this->withMargin($price['register'] ?? null, $margin),
-                    'renew_price' => $this->withMargin($price['renew'] ?? null, $margin),
-                    'transfer_price' => $this->withMargin($price['transfer'] ?? null, $margin),
-                ];
+                // The cart's currency is the OVH account's. Written into a
+                // price list the shop reads in another one, every number would
+                // be wrong by the exchange rate and nothing would say so.
+                $quoted = (string) ($price['currency'] ?? '');
+                if ($quoted !== '' && $quoted !== $shop) {
+                    return ['success' => false, 'message' => __('admin.registrars.sync_currency_mismatch', [
+                        'registrar' => $quoted,
+                        'shop' => $shop !== '' ? $shop : '—',
+                    ])];
+                }
 
-                $current = [
-                    'register_price' => $tld->register_price,
-                    'renew_price' => $tld->renew_price,
-                    'transfer_price' => $tld->transfer_price,
-                ];
+                // Only the prices OVH quotes. One it does not is not a price
+                // of zero and not a null the column refuses: it is one the
+                // panel does not know, so the operator's own number stays.
+                $next = [];
+                foreach (['register' => 'register_price', 'renew' => 'renew_price', 'transfer' => 'transfer_price'] as $from => $column) {
+                    $value = $this->withMargin($price[$from] ?? null, $margin);
+                    if ($value !== null) {
+                        $next[$column] = $value;
+                    }
+                }
+
+                if ($next === []) {
+                    $skipped++;
+                    $skippedExtensions[] = $tld->extension;
+
+                    continue;
+                }
+
+                $current = [];
+                foreach (array_keys($next) as $column) {
+                    $current[$column] = (float) $tld->{$column};
+                }
 
                 if ($next == $current) {
                     $unchanged++;
@@ -506,7 +530,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
      * The price OVH quotes for a TLD, read from a synthetic domain ("example.tld")
      * through the cart. Null when the TLD is not orderable.
      *
-     * @return array{register: ?float, renew: ?float, transfer: ?float}|null
+     * @return array{register: ?float, renew: ?float, transfer: ?float, currency: ?string}|null
      */
     protected function tldPrice(string $tld): ?array
     {
@@ -532,11 +556,14 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 'quantity' => 1,
             ]);
 
-            $prices = ['register' => null, 'renew' => null, 'transfer' => null];
+            $prices = ['register' => null, 'renew' => null, 'transfer' => null, 'currency' => null];
 
             foreach ($item['prices'] ?? [] as $p) {
                 $label = strtoupper((string) ($p['label'] ?? ''));
                 $value = $p['price']['value'] ?? null;
+                // Which currency the cart quotes in: the account's, not the
+                // shop's, and the two have to agree before a number is kept.
+                $prices['currency'] ??= ($p['price']['currencyCode'] ?? null) ? strtoupper((string) $p['price']['currencyCode']) : null;
 
                 if (in_array($label, ['FEE', 'TOTAL'], true)) {
                     $prices['register'] = $value !== null ? (float) $value : null;
@@ -573,7 +600,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
         return $this->client;
     }
 
-    /** A purchase price with the margin applied, rounded up to a whole złoty. */
+    /** A purchase price with the margin applied, rounded up to a whole unit. */
     protected function withMargin(?float $price, float $margin): ?float
     {
         if ($price === null) {

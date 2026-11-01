@@ -6,6 +6,10 @@ use App\Models\RegistrarSettings;
 use Illuminate\Support\Facades\Http;
 use Modules\Registrars\OVH\OvhRegistrar;
 
+// A call this file does not stub must fail here, not reach api.ovh.com: that
+// is how the sync test passed with half its endpoints faked.
+beforeEach(fn () => Http::preventStrayRequests());
+
 function ovhSettings(): void
 {
     RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'app_key'], ['value' => 'key']);
@@ -70,12 +74,18 @@ it('marks a transfer-only domain as unavailable for registration', function () {
 
 it('reads the expiry and status when syncing a domain', function () {
     ovhSettings();
-    Http::fake(['*/domain/shop.example.com' => Http::response([
-        'expiration' => '2027-06-01T10:00:00+02:00',
-        'status' => 'ok',
-        'transferLockStatus' => 'locked',
-        'nameServers' => ['ns1.ovh.net', 'ns2.ovh.net'],
-    ], 200)]);
+    // The expiry is on serviceInfos, not on the domain itself: two calls, two
+    // stubs. The order matters — the more specific pattern first.
+    Http::fake([
+        '*/domain/shop.example.com/serviceInfos' => Http::response([
+            'expiration' => '2027-06-01T10:00:00+02:00',
+        ], 200),
+        '*/domain/shop.example.com' => Http::response([
+            'status' => 'ok',
+            'transferLockStatus' => 'locked',
+            'nameServers' => ['ns1.ovh.net', 'ns2.ovh.net'],
+        ], 200),
+    ]);
 
     $result = app(OvhRegistrar::class)->syncDomain(ovhDomain());
 
@@ -170,4 +180,84 @@ it('maps OVH name server objects back to hostnames', function () {
 
     expect(app(OvhRegistrar::class)->getNameservers(ovhDomain()))
         ->toBe(['ns2.ovh.net', 'ns1.ovh.net']);
+});
+
+/*
+ * The price sync. OVH quotes in the account's currency and does not quote
+ * every price for every TLD, and the panel's price columns are
+ * `decimal NOT NULL` — so both have to be handled before a number is written.
+ */
+function ovhCartFake(array $prices, string $currency = 'PLN'): void
+{
+    Http::fake([
+        '*/order/cart/cart-1/domain*' => Http::sequence()
+            // The availability lookup, then the item that carries the prices.
+            ->push([['pricingMode' => 'create-default', 'offerId' => 'off-1']], 200)
+            ->push(['prices' => array_map(fn (array $p) => [
+                'label' => $p[0],
+                'price' => ['value' => $p[1], 'currencyCode' => $currency],
+            ], $prices)], 200),
+        '*/order/cart' => Http::response(['cartId' => 'cart-1'], 200),
+    ]);
+}
+
+function ovhTld(string $extension, string $registrar = 'ovh', array $prices = []): App\Models\DomainPricing
+{
+    return App\Models\DomainPricing::create(array_merge([
+        'extension' => $extension,
+        'auto_registrar' => $registrar,
+        'register_price' => 1,
+        'renew_price' => 1,
+        'transfer_price' => 1,
+    ], $prices));
+}
+
+function ovhShop(string $code): void
+{
+    App\Models\Currency::query()->update(['is_default' => false]);
+    App\Models\Currency::updateOrCreate(['code' => $code], ['name' => $code, 'prefix' => '', 'suffix' => ' '.$code, 'rate' => 1.0, 'is_default' => true]);
+}
+
+it('writes the prices OVH quotes, with the margin, rounded up', function () {
+    ovhSettings();
+    ovhShop('PLN');
+    $tld = ovhTld('.pl');
+    RegistrarSettings::updateOrCreate(['registrar' => 'ovh', 'setting' => 'margin_percent'], ['value' => '20']);
+    ovhCartFake([['FEE', 46.0], ['RENEW', 50.0]]);
+
+    $result = app(OvhRegistrar::class)->syncPrices();
+
+    expect($result['success'])->toBeTrue()
+        ->and($result['updated'])->toBe(1)
+        ->and((float) $tld->fresh()->register_price)->toBe(56.0)   // 46 * 1.2 → 55.2 → 56
+        ->and((float) $tld->fresh()->renew_price)->toBe(60.0)
+        // OVH quoted no transfer price: the operator's own number stays, and
+        // the column (decimal NOT NULL) is never handed a null.
+        ->and((float) $tld->fresh()->transfer_price)->toBe(1.0);
+});
+
+it('refuses to write prices quoted in a currency the shop does not price in', function () {
+    ovhSettings();
+    ovhShop('USD');
+    $tld = ovhTld('.pl');
+    ovhCartFake([['FEE', 46.0]], 'PLN');
+
+    $result = app(OvhRegistrar::class)->syncPrices();
+
+    expect($result['success'])->toBeFalse()
+        ->and($result['message'])->toContain('PLN')
+        ->and($result['message'])->toContain('USD')
+        ->and((float) $tld->fresh()->register_price)->toBe(1.0);
+});
+
+it('leaves another registrar\'s TLDs alone', function () {
+    ovhSettings();
+    ovhShop('PLN');
+    $other = ovhTld('.de', 'hrd');
+    Http::fake();
+
+    $result = app(OvhRegistrar::class)->syncPrices();
+
+    expect($result)->toMatchArray(['success' => true, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0])
+        ->and((float) $other->fresh()->register_price)->toBe(1.0);
 });
