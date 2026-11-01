@@ -64,8 +64,23 @@ then asks the chosen provider for its currency:
 - **Fresh answer**: the rate replaces the commercial one, and invoices in that
   currency print the publisher, kind, date and reference.
 - **Stale and `on_stale` is `refuse`**, **unreachable**, **no rate or no date
-  in the answer**, or **base is not the shop currency**: the commercial rate
-  stays, and invoices print no official source until the next good run.
+  in the answer**, **base is not the shop currency**, or **the address is not a
+  public one**: the commercial rate stays, and invoices print no official
+  source until the next good run.
+
+A publisher has to be reachable on the public internet. The address is checked
+against DNS before it is requested and the connection goes to the address that
+was checked, so an entry naming this server, its own network or a cloud
+metadata service is refused rather than fetched. The key under **Official rate
+API key**, if the publisher needs one, is stored encrypted like the panel's
+other credentials.
+
+!!! note "Add Funds invoices are priced when they are paid"
+    An ordinary invoice keeps the rate it was raised at — it is a debt for
+    something already sold. An *Add Funds* invoice sells the shop currency
+    itself and stays payable until somebody pays it, so an unpaid one takes
+    today's rate when it is opened or paid, and its line says which rate was
+    applied. Once any money has arrived on it, the rate stands.
 
 ## Example: AllRatesToday central-bank tables
 

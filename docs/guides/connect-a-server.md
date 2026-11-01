@@ -23,6 +23,12 @@ Servers**.
     - **API Key:** the `pk_live_...` key, and **API Secret:** the `sk_live_...`
       secret. Create them in the Panelica panel under **Settings → API Keys**;
       the secret is shown only once there.
+    - **Verify the TLS certificate:** off by default, because a panel reached
+      by IP address or carrying its own self-signed certificate would stop
+      answering the moment it were on. Turn it on once the panel answers on a
+      host name with a certificate a browser trusts: every call PNLCS makes to
+      it then checks that certificate, as the Proxmox module's own setting
+      does.
     - **Mail:** customers' mail apps are told the host name the panel gives
       the domain's mail certificate, or else `mail.<their domain>`. When a
       domain gets its first mailbox, PNLCS asks the panel for that domain's

@@ -152,6 +152,14 @@ usable logo file, and a wrong logo is worse than a letter tile.
 URL to fetch from. That writes into layer 1, which wins over the shipped set and
 survives updates.
 
+A logo is stored under the name its **content** says it is — PNG, JPEG, GIF,
+WebP or SVG — not under the extension it arrived with, because the file is then
+served from the panel's own address. An SVG is a document that can carry
+script, so one is kept only without scripts, event handlers, embedded documents
+or links out. A URL you paste is fetched only from a public address: the panel
+will not fetch from itself, its own network or a cloud metadata service, and it
+checks every redirect the same way.
+
 **To fill in logos for apps added later**, either press *Fetch missing logos* on
 that screen or run:
 

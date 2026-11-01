@@ -9,7 +9,31 @@ Selling domains is optional: if you only sell hosting, skip this page.
 
 Add each extension you sell (`.com`, `.net`, `.org`...) with its **register**,
 **transfer** and **renew** price. Customers can only order extensions that are
-listed and enabled here.
+listed and enabled here. The prices are in your shop currency, and the column
+headings say which that is.
+
+### Prices from the registrar
+
+Some registrar modules can fill those numbers in for you — **HRD** and
+**OVHcloud** today. Set a **Margin (%)** in the registrar's settings and press
+**Sync prices** (**Setup → Registrars**):
+
+- only the extensions whose **auto registrar** is that module are touched;
+- each purchase price gets the margin and is rounded up to a whole unit;
+- a price the registrar does not publish is one PNLCS does not know, so your
+  own number stays — it does not become zero;
+- an extension the registrar prices not at all is counted as *skipped* and
+  left alone;
+- the time of the last sync is shown beside the button.
+
+!!! warning "The registrar has to quote in your shop currency"
+    HRD quotes in złoty, and OVH in the currency of your OVH account. If that
+    is not the currency your shop prices in, the sync refuses and says so
+    rather than writing numbers that are wrong by the exchange rate.
+
+Nothing is automatic: a sync happens when you press the button, so you can
+check what it did (**Utilities → Logs → Module Log** records every change it
+made) before customers see the new prices.
 
 ## 2. Choose a registrar
 
@@ -24,7 +48,8 @@ Open it, enter the credentials from your registrar account, and switch it on.
 | **ResellerClub** | Reseller ID, API key, test mode |
 | **OpenProvider** | Username, password, sandbox mode |
 | **Enom** | Username (UID), password, test mode |
-| **HRD** (Poland) | Login, API hash, API password, default nameserver group |
+| **HRD** (Poland) | Login, API hash, API password, default nameserver group, margin |
+| **OVHcloud** | Application key, application secret, consumer key, region (EU / CA / US), margin |
 | **DomainNameAPI** (Turkey) | Reseller ID, live and test API keys, test mode, default nameservers |
 | **Manual** | Nothing: you register names yourself at any registrar and record them in PNLCS |
 

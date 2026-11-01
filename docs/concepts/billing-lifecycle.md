@@ -52,7 +52,20 @@ If a renewal invoice isn't paid:
    **terminated** (the account is deleted).
 
 Paying the outstanding invoice at any point **automatically unsuspends** the
-service.
+service — once nothing is still owed on it. A bank-transfer notice moves the
+invoice to *payment pending* before any money has arrived, and that is not a
+payment: the service stays suspended until the amount is in.
+
+**A product may keep its own periods.** **Products → edit → Automation** has a
+*suspend after* and a *terminate after* in days; left empty, the general
+settings under **Setup → Automation** apply, as they always have. A product
+that sets *terminate after* is terminated on its own schedule even while the
+general termination switch is off — filling the field in is the opt-in.
+
+**A suspended service is shown, not worked on.** The customer can still open
+it and download what is theirs, but the panel login, the module buttons and
+the hosting tabs are refused while it is suspended: suspension stopped
+billing's argument, not the panel.
 
 ## Late fees
 

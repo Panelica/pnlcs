@@ -54,6 +54,16 @@ message telling them to ask the account owner.
 
 Logins created before permissions existed keep full access.
 
+The permissions hold everywhere that part of the account is reached, not only
+on its page: the client-area dashboard counts and lists only the accounts whose
+services, domains, invoices and tickets this login may see, the account balance
+appears with the invoices, and the gateway endpoints an invoice page calls to
+take a payment ask for `invoices` as well — so a login invited for tickets
+cannot pay with the account's stored card from somewhere else.
+
+A login that is not the account holder saves its **own** name and address on
+**My Profile**; the account keeps its name and the address its invoices go to.
+
 ## Inviting someone to an account
 
 An invitation is an email with a link, valid for **7 days**. The person opens

@@ -55,6 +55,33 @@ server.
 - [ ] Abusive addresses and domains go on **Setup → Banned IPs** and
   **Setup → Banned Emails**.
 
+## What PNLCS does on its own
+
+These need no setting; they are here so you know what is already covered.
+
+- **Browser-side headers** on every page: `X-Frame-Options: SAMEORIGIN` (no
+  other site can frame the admin or client area under its own buttons),
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy:
+  strict-origin-when-cross-origin`, and `Strict-Transport-Security` over
+  HTTPS. A header your web server already sends is left as it is, so you can
+  set a stricter one there.
+- **Credential settings are encrypted at rest**, with `APP_KEY`: the mail
+  password, the Google and GitHub client secrets, the reCAPTCHA secret and the
+  OpenAI, Twilio, FraudLabs, MaxMind and official-rate keys. Gateway, addon,
+  registrar and server credentials already were. A copy of the database — a
+  backup, a dump sent to support — no longer hands them over. The flip side is
+  in the checklist above: a backup without `.env` cannot be read back.
+- **Wrong second-factor codes are counted per account**, not only per visitor:
+  five wrong codes and that account waits fifteen minutes, whatever address or
+  session the next guess comes from.
+- **Changing a password signs that login's other sessions out.** Somebody who
+  was in the account is out of it as soon as its owner changes the password —
+  which is the point of changing it.
+- **The seeded administrator has no password anybody knows.** `php artisan
+  db:seed` prints a random one once; set `PNLCS_ADMIN_PASSWORD` beforehand to
+  choose it yourself. The install wizard replaces it with the account you
+  choose either way.
+
 ## Reporting a vulnerability
 
 Please do not open a public issue. Write to
