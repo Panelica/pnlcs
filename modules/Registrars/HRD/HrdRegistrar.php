@@ -27,6 +27,9 @@ use Illuminate\Support\Facades\Log;
  */
 class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 {
+    /** HRD publishes its partner prices in złoty. */
+    private const QUOTE_CURRENCY = 'PLN';
+
     use MapsClientFields;
 
     protected ?HrdClient $client = null;
@@ -114,6 +117,17 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
      */
     public function syncPrices(): array
     {
+        // HRD quotes in złoty. Written into a price list the shop reads in
+        // another currency, the numbers would be wrong by the exchange rate
+        // and nothing would say so.
+        $shop = strtoupper((string) (\App\Models\Currency::getDefault()?->code ?? ''));
+        if ($shop !== self::QUOTE_CURRENCY) {
+            return ['success' => false, 'message' => __('admin.registrars.sync_currency_mismatch', [
+                'registrar' => self::QUOTE_CURRENCY,
+                'shop' => $shop !== '' ? $shop : '—',
+            ])];
+        }
+
         try {
             $prices = $this->client()->partnerGetPriceList();
             $margin = (float) ($this->settings['margin_percent'] ?? 0);
@@ -136,19 +150,28 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                     continue;
                 }
 
-                $next = [
-                    'register_price' => $this->withMargin($prices[$ext]['register'] ?? null, $margin),
-                    'renew_price' => $this->withMargin($prices[$ext]['renew'] ?? null, $margin),
-                    'transfer_price' => $this->withMargin($prices[$ext]['transfer'] ?? null, $margin),
-                    'restore_price' => $this->withMargin($prices[$ext]['restore'] ?? null, $margin),
-                ];
+                // Only the prices HRD publishes. One it does not ("(brak)")
+                // is not a price of zero and not a null the column would
+                // refuse: it is one the panel does not know, so the
+                // operator's own number stays.
+                $next = [];
+                foreach (['register' => 'register_price', 'renew' => 'renew_price', 'transfer' => 'transfer_price', 'restore' => 'restore_price'] as $from => $column) {
+                    $value = $this->withMargin($prices[$ext][$from] ?? null, $margin);
+                    if ($value !== null) {
+                        $next[$column] = $value;
+                    }
+                }
 
-                $current = [
-                    'register_price' => $tld->register_price,
-                    'renew_price' => $tld->renew_price,
-                    'transfer_price' => $tld->transfer_price,
-                    'restore_price' => $tld->restore_price,
-                ];
+                if ($next === []) {
+                    $skipped++;
+                    $skippedExtensions[] = $tld->extension;
+                    continue;
+                }
+
+                $current = [];
+                foreach (array_keys($next) as $column) {
+                    $current[$column] = (float) $tld->{$column};
+                }
 
                 if ($next == $current) {
                     $unchanged++;
@@ -160,12 +183,14 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 $updated++;
             }
 
-            $details = collect($changes)->map(function (array $c): string {
-                return $c['extension']
-                    .' reg:'.($c['before']['register_price'] ?? '-').'→'.($c['after']['register_price'] ?? '-')
-                    .' renew:'.($c['before']['renew_price'] ?? '-').'→'.($c['after']['renew_price'] ?? '-')
-                    .' transfer:'.($c['before']['transfer_price'] ?? '-').'→'.($c['after']['transfer_price'] ?? '-')
-                    .' restore:'.($c['before']['restore_price'] ?? '-').'→'.($c['after']['restore_price'] ?? '-');
+            $labels = ['register_price' => 'reg', 'renew_price' => 'renew', 'transfer_price' => 'transfer', 'restore_price' => 'restore'];
+            $details = collect($changes)->map(function (array $c) use ($labels): string {
+                $parts = [];
+                foreach ($c['after'] as $column => $value) {
+                    $parts[] = ($labels[$column] ?? $column).':'.($c['before'][$column] ?? '-').'→'.$value;
+                }
+
+                return $c['extension'].' '.implode(' ', $parts);
             })->implode(' | ');
 
             Log::info('HRD price sync: '.$updated.' changed, '.$unchanged.' unchanged, '.$skipped.' skipped'
@@ -424,9 +449,14 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         // A private person is identified by PESEL (the National ID field); a
         // company by its NIP. The two are never interchangeable, so a person
         // never falls back to tax_id.
+        //
+        // An installation that mapped a PESEL custom field before this is
+        // still read, while National ID is empty: the option is gone from the
+        // screen, but the value its customers' records hold is not, and
+        // sending an empty PESEL means the registry refuses the domain.
         $idNumber = $isCompany
             ? (string) ($client->tax_id ?? '')
-            : (string) ($client->national_id ?? '');
+            : (string) ($client->national_id ?: $this->resolveClientField($client, $this->settings['pesel_field'] ?? null, ['pesel']) ?? '');
 
         $userId = $this->client()->userCreate(
             $isCompany ? HrdClient::COMPANY : HrdClient::PERSON,

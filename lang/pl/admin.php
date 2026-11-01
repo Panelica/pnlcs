@@ -2510,6 +2510,7 @@ return [
     'registrars.sync_success' => 'Zsynchronizowano ceny: :updated zmienione, :unchanged bez zmian, :skipped pominięte (brak ceny w HRD).',
     'registrars.sync_failed' => 'Synchronizacja cen nie powiodła się: :message',
     'registrars.sync_unavailable' => 'Ten rejestrator nie obsługuje synchronizacji cen.',
+    'registrars.sync_currency_mismatch' => 'Synchronizacja cen jest niedostępna: rejestrator podaje ceny w :registrar, a sklep w :shop. Ustaw walutę sklepu na :registrar lub wprowadź ceny ręcznie.',
     'registrars.last_sync' => 'Ostatnia synchronizacja cen: :date',
     'registrars.settings_intro' => 'Wprowadź ustawienia rejestratora :name.',
     'registrars.title' => 'Rejestratorzy domen',

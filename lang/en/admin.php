@@ -2510,6 +2510,7 @@ return [
     'registrars.sync_success' => 'Prices synced: :updated changed, :unchanged unchanged, :skipped skipped (no price in HRD).',
     'registrars.sync_failed' => 'Price sync failed: :message',
     'registrars.sync_unavailable' => 'This registrar does not support price synchronization.',
+    'registrars.sync_currency_mismatch' => 'Price sync is off: the registrar quotes in :registrar and the shop prices in :shop. Set the shop currency to :registrar, or enter the prices by hand.',
     'registrars.last_sync' => 'Last price sync: :date',
     'registrars.settings_intro' => 'Enter settings for the :name registrar.',
     'registrars.title' => 'Domain Registrars',
