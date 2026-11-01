@@ -6,6 +6,7 @@ use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
 use App\Models\DomainPricing;
+use App\Models\ModuleLog;
 use App\Models\RegistrarSettings;
 use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
@@ -121,6 +122,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             $unchanged = 0;
             $skipped = 0;
             $changes = [];
+            $skippedExtensions = [];
 
             foreach (DomainPricing::whereNotNull('auto_registrar')->get() as $tld) {
                 if (strtolower(trim((string) $tld->auto_registrar)) !== 'hrd') {
@@ -130,6 +132,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 $ext = ltrim((string) $tld->extension, '.');
                 if (! array_key_exists($ext, $prices)) {
                     $skipped++;
+                    $skippedExtensions[] = $tld->extension;
                     continue;
                 }
 
@@ -167,6 +170,24 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
             Log::info('HRD price sync: '.$updated.' changed, '.$unchanged.' unchanged, '.$skipped.' skipped'
                 .($details !== '' ? ' — '.$details : ''));
+
+            try {
+                ModuleLog::create([
+                    'module' => $this->getModuleName(),
+                    'action' => 'sync_prices',
+                    'request' => json_encode(['margin_percent' => $margin], JSON_UNESCAPED_SLASHES),
+                    'response' => json_encode([
+                        'updated' => $updated,
+                        'unchanged' => $unchanged,
+                        'skipped' => $skipped,
+                        'changed_extensions' => array_column($changes, 'extension'),
+                        'skipped_extensions' => $skippedExtensions,
+                        'changes' => $changes,
+                    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('HRD module log failed: '.$e->getMessage());
+            }
 
             RegistrarSettings::updateOrCreate(
                 ['registrar' => 'hrd', 'setting' => 'last_price_sync'],
