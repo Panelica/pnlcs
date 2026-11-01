@@ -75,6 +75,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // chosen (LocaleUrl). Before routing, after the proxy is trusted.
         $middleware->append(LocaleUrlPrefix::class);
         $middleware->prependToGroup('web', RedirectToInstaller::class);
+        // Framing, type sniffing and referrers: see SecurityHeaders.
+        $middleware->appendToGroup('web', \App\Http\Middleware\SecurityHeaders::class);
         $middleware->appendToGroup('web', AffiliateTracking::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\PromoLink::class);
         $middleware->appendToGroup('web', SetLocale::class);
