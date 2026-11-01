@@ -115,6 +115,8 @@ class GatewayWebhookController extends Controller
     public function stripeIntent(Request $request, Invoice $invoice)
     {
         $this->authoriseInvoice($invoice);
+        // A payment starts here: an unpaid Add Funds invoice takes today's rate.
+        $invoice->refreshAddFundsRate();
 
         $module = $this->registry->getGatewayModule("stripe");
         if (!$module) {
@@ -258,6 +260,8 @@ class GatewayWebhookController extends Controller
     public function authorizeCapture(Request $request, Invoice $invoice)
     {
         $this->authoriseInvoice($invoice);
+        // A payment starts here: an unpaid Add Funds invoice takes today's rate.
+        $invoice->refreshAddFundsRate();
 
         $module = $this->registry->getGatewayModule("authorize");
         if (!$module) {
@@ -507,6 +511,8 @@ class GatewayWebhookController extends Controller
     public function mollieCapture(Request $request, \App\Models\Invoice $invoice)
     {
         $this->authoriseInvoice($invoice);
+        // A payment starts here: an unpaid Add Funds invoice takes today's rate.
+        $invoice->refreshAddFundsRate();
 
         $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("mollie");
         if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
@@ -581,6 +587,8 @@ class GatewayWebhookController extends Controller
     public function tpayCapture(Request $request, \App\Models\Invoice $invoice)
     {
         $this->authoriseInvoice($invoice);
+        // A payment starts here: an unpaid Add Funds invoice takes today's rate.
+        $invoice->refreshAddFundsRate();
 
         $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("tpay");
         if (!$module) {
@@ -606,6 +614,10 @@ class GatewayWebhookController extends Controller
 
         $module = app(\App\Services\Module\ModuleRegistry::class)->getGatewayModule("razorpay");
         if (!$module) return response()->json(["success" => false, "message" => "Not configured"]);
+        if (! $request->input("confirm")) {
+            // A payment starts here: an unpaid Add Funds invoice takes today's rate.
+            $invoice->refreshAddFundsRate();
+        }
         if ($request->input("confirm")) {
             // Confirm payment — verify the Razorpay signature and order server-side
             // before crediting; never trust the browser-supplied result.
@@ -645,6 +657,8 @@ class GatewayWebhookController extends Controller
     public function iyzicoInit(Request $request, Invoice $invoice)
     {
         $this->authoriseInvoice($invoice);
+        // A payment starts here: an unpaid Add Funds invoice takes today's rate.
+        $invoice->refreshAddFundsRate();
 
         $module = $this->registry->getGatewayModule("iyzico");
         if (! $module) {

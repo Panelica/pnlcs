@@ -141,15 +141,9 @@ class FundsController extends Controller
         // The description carries the rate that was applied: a customer
         // looking at the invoice six months later should be able to see why
         // their 1000 became 20.76.
-        $description = __('messages.invoice.add_funds_description');
-
-        if ($rate !== null) {
-            $description .= ' — ' . __('client.funds.rate_line', [
-                'paid'   => number_format($paidAmount, 2, ',', '.') . ' ' . ($ctx['billingCurrency']->suffix ?: $ctx['billingCurrency']->code),
-                'rate'   => number_format($rate, 4, ',', '.'),
-                'source' => trim(($ctx['rateSource'] ?? '') . ' ' . ($ctx['rateDate'] ?? '')),
-            ]);
-        }
+        $description = $rate !== null
+            ? Invoice::addFundsDescription($paidAmount, (string) $ctx['billingCurrency']->code, $rate, trim(($ctx['rateSource'] ?? '') . ' ' . ($ctx['rateDate'] ?? '')))
+            : Invoice::addFundsDescription();
 
         InvoiceItem::create([
             'invoice_id'  => $invoice->id,
