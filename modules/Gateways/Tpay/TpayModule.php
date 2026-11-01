@@ -336,7 +336,7 @@ HTML;
         }
 
         $prefix = $this->getJwsPrefix();
-        if (substr($x5u, 0, strlen($prefix)) !== $prefix) {
+        if (!$this->isTpayCertificateUrl((string) $x5u, $prefix)) {
             Log::warning('Tpay: webhook certificate URL outside expected origin', ['x5u' => $x5u]);
             return false;
         }
@@ -383,6 +383,25 @@ HTML;
         return $result === 1;
     }
 
+    /**
+     * The certificate must come from Tpay's own host. Comparing only the
+     * start of the address let https://secure.tpay.com.example.net/ and
+     * https://secure.tpay.com@example.net/ through, and the panel fetched
+     * whatever a webhook named there.
+     */
+    private function isTpayCertificateUrl(string $url, string $prefix): bool
+    {
+        $parts = parse_url($url);
+        if (!is_array($parts)) {
+            return false;
+        }
+
+        return ($parts['scheme'] ?? '') === 'https'
+            && strtolower($parts['host'] ?? '') === parse_url($prefix, PHP_URL_HOST)
+            && !isset($parts['port']) && !isset($parts['user']) && !isset($parts['pass'])
+            && str_starts_with($parts['path'] ?? '', '/');
+    }
+
     private function fetchUrl(string $url, int $ttlSeconds): ?string
     {
         $key = 'tpay_cert_' . md5($url);
@@ -393,7 +412,8 @@ HTML;
         }
 
         try {
-            $response = Http::timeout(10)->get($url);
+            // Not followed elsewhere: the host was checked, a redirect was not.
+            $response = Http::timeout(10)->withoutRedirecting()->get($url);
         } catch (\Throwable) {
             return null;
         }
