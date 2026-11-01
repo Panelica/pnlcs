@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Currency;
 use App\Models\Setting;
 use App\Services\ExchangeRateService;
+use App\Services\OfficialRateProviders;
 use App\Services\TcmbRateService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -57,14 +58,18 @@ class CurrencyUpdateCommand extends Command
         // when the operator named one: invoices print the rate they were
         // struck at, and a customer can check a central bank bulletin number
         // but not a commercial API's.
-        $official = (string) Setting::get('OfficialRateProvider', '') === 'tcmb'
-            && $this->applyOfficialLiraRate($base, $updated, $missing);
+        $provider = (string) Setting::get('OfficialRateProvider', '');
+        $official = match (true) {
+            $provider === 'tcmb' => $this->applyOfficialLiraRate($base, $updated, $missing),
+            $provider !== '' => $this->applyOperatorProviderRate($provider, $base, $updated, $missing),
+            default => false,
+        };
 
         // The lira rate now comes from the commercial provider: the bulletin
         // details of an earlier TCMB run no longer describe it, and invoices
         // kept printing them under a rate they did not come from.
         if (! $official) {
-            foreach (['ExchangeRateSource', 'ExchangeRateKind', 'ExchangeRateDate', 'ExchangeRateBulletin'] as $key) {
+            foreach (['ExchangeRateSource', 'ExchangeRateKind', 'ExchangeRateDate', 'ExchangeRateBulletin', 'ExchangeRateCurrency'] as $key) {
                 Setting::set($key, '');
             }
         }
@@ -123,6 +128,7 @@ class CurrencyUpdateCommand extends Command
         Setting::set('ExchangeRateKind', $official['kind']);
         Setting::set('ExchangeRateDate', $official['date']);
         Setting::set('ExchangeRateBulletin', (string) $official['bulletin']);
+        Setting::set('ExchangeRateCurrency', 'TRY');
 
         if (! in_array('TRY', $updated, true)) {
             $updated[] = 'TRY';
@@ -135,6 +141,76 @@ class CurrencyUpdateCommand extends Command
             $official['date'],
             $official['bulletin'] ?? '-',
             number_format($official['rate'], 4)
+        ));
+
+        return true;
+    }
+
+    /**
+     * Overwrite one currency's rate with the one an operator-added provider
+     * publishes (OfficialRateProviders), with its provenance, the way the
+     * TCMB lira rate is applied above.
+     *
+     * Not fatal either: an unknown, unreachable or refused-as-stale provider
+     * leaves the commercial rate in place and the invoice names no source.
+     *
+     * @param  list<string>  $updated
+     * @param  list<string>  $missing
+     * @return bool whether the currency's rate is now the official one
+     */
+    private function applyOperatorProviderRate(string $key, Currency $base, array &$updated, array &$missing): bool
+    {
+        $provider = OfficialRateProviders::find($key);
+
+        if ($provider === null) {
+            $this->warn("Official rate source \"$key\" is not in the provider list - rates left at the commercial provider values.");
+
+            return false;
+        }
+
+        if ($provider['base'] !== strtoupper($base->code)) {
+            $this->warn(sprintf('%s quotes against %s, the shop currency is %s - rates left at the commercial provider values.', $provider['name'], $provider['base'], strtoupper($base->code)));
+
+            return false;
+        }
+
+        $code = (string) $provider['currency'];
+        $currency = Currency::where('code', $code)->first();
+
+        if (! $currency) {
+            return false;
+        }
+
+        $official = app(OfficialRateProviders::class)->rateFor($provider);
+
+        if (is_string($official)) {
+            $this->warn(sprintf('%s: %s - %s rate left at the commercial provider value.', $provider['name'], $official, $code));
+
+            return false;
+        }
+
+        $currency->update(['rate' => round($official['rate'], 5)]);
+
+        Setting::set('ExchangeRateSource', $official['source']);
+        Setting::set('ExchangeRateKind', $official['kind']);
+        Setting::set('ExchangeRateDate', $official['date']);
+        Setting::set('ExchangeRateBulletin', (string) $official['bulletin']);
+        Setting::set('ExchangeRateCurrency', $code);
+
+        if (! in_array($code, $updated, true)) {
+            $updated[] = $code;
+        }
+        $missing = array_values(array_diff($missing, [$code]));
+
+        $this->info(sprintf(
+            '%s set from %s (%s, %s): 1 %s = %s %s',
+            $code,
+            $official['source'],
+            $official['kind'],
+            $official['date'],
+            $provider['base'],
+            number_format($official['rate'], 4),
+            $code
         ));
 
         return true;

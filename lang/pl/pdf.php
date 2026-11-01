@@ -7,6 +7,7 @@ return [
     'rate_note_official' => 'Przeliczono po :kind opublikowanym przez :source dnia :date: 1 :from = :rate :to:ref',
     'rate_kind_selling' => 'kursie sprzedaży dewiz',
     'rate_kind_buying' => 'kursie kupna dewiz',
+    'rate_kind_reference' => 'kursie referencyjnym',
     'rate_bulletin' => 'tabela',
     'tax_office' => 'Urząd skarbowy',
     'registry_no' => 'Nr rejestru',

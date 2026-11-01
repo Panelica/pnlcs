@@ -417,6 +417,9 @@
                     <select name="OfficialRateProvider" class="form-control">
                         <option value="">{{ __('admin.settings.official_rate_none') }}</option>
                         <option value="tcmb" {{ ($settings['OfficialRateProvider'] ?? '') === 'tcmb' ? 'selected' : '' }}>{{ __('admin.settings.official_rate_tcmb') }}</option>
+                        @foreach(\App\Services\OfficialRateProviders::all() as $provider)
+                            <option value="{{ $provider['key'] }}" {{ ($settings['OfficialRateProvider'] ?? '') === $provider['key'] ? 'selected' : '' }}>{{ $provider['name'] }} ({{ $provider['base'] }} → {{ $provider['currency'] }})</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.tcmb_rate_kind') }}</label>
@@ -429,6 +432,18 @@
                 <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.settings.auto_approve_emails') }}</label><input type="text" name="AutoApproveOrderEmails" value="{{ $settings['AutoApproveOrderEmails'] ?? '' }}" class="form-control" placeholder="tester@example.com, qa@example.com"><div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.auto_approve_emails_hint') }}</div></div>
             </div>
             <div style="font-size:12px;color:#777;">{{ __('admin.settings.billing_currency_hint') }}</div>
+            {{-- Official rate sources beyond TCMB. Empty ships none; an entry
+                 applies only once chosen as the official rate source above. --}}
+            <div style="display:grid;grid-template-columns:3fr 1fr;gap:15px;margin-top:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.official_rate_providers') }}</label>
+                    <textarea name="OfficialRateProviders" rows="8" class="form-control" style="font-family:monospace;font-size:12px;" spellcheck="false" placeholder="[]">{{ $settings['OfficialRateProviders'] ?? '' }}</textarea>
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.official_rate_providers_hint') }}</div>
+                </div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.official_rate_api_key') }}</label>
+                    <input type="password" name="OfficialRateApiKey" value="" class="form-control" autocomplete="new-password" placeholder="{{ !empty($settings['OfficialRateApiKey']) ? '••••••••' : '' }}">
+                    <div style="font-size:12px;color:#777;margin-top:4px;">{{ __('admin.settings.official_rate_api_key_hint') }}</div>
+                </div>
+            </div>
         </div>
     </div>
 

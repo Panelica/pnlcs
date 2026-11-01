@@ -7,6 +7,7 @@ return [
     'rate_note_official' => 'Konvertiert mit dem von :source auf :date veröffentlichten :kind: 1 :from = :rate :to:ref',
     'rate_kind_selling' => 'Forex-Verkaufskurs',
     'rate_kind_buying' => 'Forex-Kaufkurs',
+    'rate_kind_reference' => 'Referenzkurs',
     'rate_bulletin' => 'Bulletin',
     'tax_office' => 'Finanzamt',
     'registry_no' => 'Register-Nr',

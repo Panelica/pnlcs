@@ -7,6 +7,7 @@ return [
     'rate_note_official' => 'Converted at the :kind published by :source on :date: 1 :from = :rate :to:ref',
     'rate_kind_selling' => 'forex selling rate',
     'rate_kind_buying' => 'forex buying rate',
+    'rate_kind_reference' => 'reference rate',
     'rate_bulletin' => 'bulletin',
     'tax_office' => 'Tax office',
     'registry_no' => 'Registry no',
