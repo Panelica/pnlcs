@@ -87,6 +87,7 @@ class InvoiceController extends Controller
     public function payWithStoredCard(Request $request, Invoice $invoice)
     {
         abort_if($invoice->client_id !== $this->getClientId(), 403);
+        $invoice->refreshAddFundsRate();
 
         // Paying with a card picked here is not asked about automatic payment,
         // so staff signed in as the customer could charge the card of one who
@@ -164,6 +165,9 @@ class InvoiceController extends Controller
         // message. A code, never free text - printing text from the address
         // bar onto the page would be an open injection door.
         $this->flashPaymentOutcome(request()->query('payment'));
+        // The amount shown is the amount to pay: an unpaid Add Funds invoice
+        // is shown, and paid, at today's rate (Invoice::refreshAddFundsRate).
+        $invoice->refreshAddFundsRate();
         $invoice->load('items');
 
         // The value is encrypted at rest, so it is compared after it comes

@@ -40,73 +40,147 @@ class Invoice extends Model {
      */
     protected static function booted(): void
     {
-        static::creating(function (Invoice $invoice) {
-            $shop = Currency::getDefault();
+        static::creating(fn (Invoice $invoice) => self::stampBillingRate($invoice));
+    }
 
-            // The currency the amounts on this row are denominated in. Without
-            // it, switching the shop currency later reinterprets every past
-            // invoice at the new sign.
-            if ($invoice->source_currency === null && $shop) {
-                $invoice->source_currency = strtoupper($shop->code);
-            }
+    /** The billing currency and rate as they stand now, onto an invoice that has none yet. */
+    public static function stampBillingRate(Invoice $invoice): void
+    {
+        $shop = Currency::getDefault();
 
-            if ($invoice->billing_currency !== null) {
-                return;
-            }
+        // The currency the amounts on this row are denominated in. Without
+        // it, switching the shop currency later reinterprets every past
+        // invoice at the new sign.
+        if ($invoice->source_currency === null && $shop) {
+            $invoice->source_currency = strtoupper($shop->code);
+        }
 
-            // The customer's own currency comes first, when the operator lets
-            // customers choose (CustomerCurrency) and this one did. The amounts
-            // stay in the shop currency; the stamp is what the customer reads.
-            // Only over shop-currency amounts: the rate is against the shop.
-            $own = $invoice->client_id && $shop && strtoupper((string) $invoice->source_currency) === strtoupper($shop->code)
-                ? CustomerCurrency::forClient(Client::find($invoice->client_id))
-                : null;
+        if ($invoice->billing_currency !== null) {
+            return;
+        }
 
-            if ($own) {
-                $invoice->billing_currency = strtoupper($own->code);
-                $invoice->exchange_rate = CustomerCurrency::rateOf($own);
+        // The customer's own currency comes first, when the operator lets
+        // customers choose (CustomerCurrency) and this one did. The amounts
+        // stay in the shop currency; the stamp is what the customer reads.
+        // Only over shop-currency amounts: the rate is against the shop.
+        $own = $invoice->client_id && $shop && strtoupper((string) $invoice->source_currency) === strtoupper($shop->code)
+            ? CustomerCurrency::forClient(Client::find($invoice->client_id))
+            : null;
 
-                // The provenance settings describe the official lira rate
-                // (pnlcs:currency-update): they belong on a lira stamp only.
-                if (strtoupper($own->code) === 'TRY') {
-                    $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
-                    $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
-                    $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
-                    $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
-                }
+        if ($own) {
+            $invoice->billing_currency = strtoupper($own->code);
+            $invoice->exchange_rate = CustomerCurrency::rateOf($own);
 
-                return;
-            }
-
-            $code = (string) Setting::get('BillingCurrency', '');
-
-            if ($code === '') {
-                return;                       // not configured: shop currency only
-            }
-
-            if (! $shop || strtoupper($shop->code) === strtoupper($code)) {
-                return;                       // already billing in the shop currency
-            }
-
-            $target = Currency::where('code', $code)->first();
-
-            if (! $target || (float) $target->rate <= 0) {
-                return;
-            }
-
-            $invoice->billing_currency = strtoupper($code);
-            $invoice->exchange_rate = (float) $target->rate;
-
-            // Provenance travels with the rate: a bare number on an invoice is
-            // not something a customer can verify. The settings describe the
-            // official lira rate, so they belong on a lira stamp only.
-            if (strtoupper($code) === 'TRY') {
+            // The provenance settings describe the official lira rate
+            // (pnlcs:currency-update): they belong on a lira stamp only.
+            if (strtoupper($own->code) === 'TRY') {
                 $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
                 $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
                 $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
                 $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
             }
-        });
+
+            return;
+        }
+
+        $code = (string) Setting::get('BillingCurrency', '');
+
+        if ($code === '') {
+            return;                       // not configured: shop currency only
+        }
+
+        if (! $shop || strtoupper($shop->code) === strtoupper($code)) {
+            return;                       // already billing in the shop currency
+        }
+
+        $target = Currency::where('code', $code)->first();
+
+        if (! $target || (float) $target->rate <= 0) {
+            return;
+        }
+
+        $invoice->billing_currency = strtoupper($code);
+        $invoice->exchange_rate = (float) $target->rate;
+
+        // Provenance travels with the rate: a bare number on an invoice is
+        // not something a customer can verify. The settings describe the
+        // official lira rate, so they belong on a lira stamp only.
+        if (strtoupper($code) === 'TRY') {
+            $invoice->exchange_rate_source = Setting::get('ExchangeRateSource') ?: null;
+            $invoice->exchange_rate_kind = Setting::get('ExchangeRateKind') ?: null;
+            $invoice->exchange_rate_date = Setting::get('ExchangeRateDate') ?: null;
+            $invoice->exchange_rate_ref = Setting::get('ExchangeRateBulletin') ?: null;
+        }
+    }
+
+    /**
+     * Give an unpaid Add Funds invoice today's rate before it is paid.
+     *
+     * An ordinary invoice keeps the rate it was raised at: it is a debt for
+     * something already sold. An Add Funds invoice sells the shop currency
+     * itself, and it stays payable for as long as nobody pays it. Paid months
+     * later at the rate of the day it was opened, it bought balance at an old
+     * price; with a currency that keeps falling against the shop's, opening
+     * one and waiting was a way to buy balance cheaply.
+     *
+     * Only before any money has arrived on it: a payment in progress was
+     * started at the rate on the invoice and is checked against it.
+     *
+     * @return bool whether the rate changed
+     */
+    public function refreshAddFundsRate(): bool
+    {
+        if (! in_array(strtolower((string) $this->status), ['unpaid', 'overdue'], true)
+            || empty($this->billing_currency)
+            || ! $this->items()->where('type', 'AddFunds')->exists()
+            || Transaction::where('invoice_id', $this->id)->exists()) {
+            return false;
+        }
+
+        $now = new Invoice(['client_id' => $this->client_id, 'source_currency' => $this->source_currency]);
+        self::stampBillingRate($now);
+
+        if ($now->billing_currency !== $this->billing_currency || (float) $now->exchange_rate <= 0
+            || abs((float) $now->exchange_rate - (float) $this->exchange_rate) < 0.000001) {
+            return false;
+        }
+
+        $this->forceFill([
+            'exchange_rate' => $now->exchange_rate,
+            'exchange_rate_source' => $now->exchange_rate_source,
+            'exchange_rate_kind' => $now->exchange_rate_kind,
+            'exchange_rate_date' => $now->exchange_rate_date,
+            'exchange_rate_ref' => $now->exchange_rate_ref,
+        ])->save();
+
+        // The line says which rate was applied; it now says the new one.
+        foreach ($this->items()->where('type', 'AddFunds')->get() as $item) {
+            $item->update(['description' => self::addFundsDescription(
+                (float) $item->amount * (float) $now->exchange_rate,
+                (string) $now->billing_currency,
+                (float) $now->exchange_rate,
+                trim(($now->exchange_rate_source ?? '').' '.($now->exchange_rate_date ?? '')),
+            )]);
+        }
+
+        return true;
+    }
+
+    /** The Add Funds line, with the rate that was applied when there is one. */
+    public static function addFundsDescription(?float $paid = null, ?string $currency = null, ?float $rate = null, string $source = ''): string
+    {
+        $description = __('messages.invoice.add_funds_description');
+
+        if ($rate !== null && $paid !== null && $currency !== null) {
+            $sign = Currency::where('code', $currency)->first();
+            $description .= ' — '.__('client.funds.rate_line', [
+                'paid' => number_format($paid, 2, ',', '.').' '.(($sign?->suffix ?: null) ?? $currency),
+                'rate' => number_format($rate, 4, ',', '.'),
+                'source' => $source,
+            ]);
+        }
+
+        return $description;
     }
 
     /**
