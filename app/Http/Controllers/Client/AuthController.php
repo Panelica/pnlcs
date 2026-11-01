@@ -140,11 +140,20 @@ class AuthController extends Controller
             return redirect()->route('client.login');
         }
 
+        // Per account, whatever the address or the session: the route's own
+        // limit is per visitor, and six digits do not survive a patient
+        // guesser who changes either. Five wrong codes wait fifteen minutes.
+        $attempts = 'second-factor:client:'.$user->id;
+        if (RateLimiter::tooManyAttempts($attempts, 5)) {
+            return back()->withErrors(['code' => __('auth.throttle', ['seconds' => RateLimiter::availableIn($attempts)])]);
+        }
+
         $code = $request->input('code');
 
         // Try TOTP code
         if ($twoFactor->verify($user->second_factor_secret, $code)) {
             session(['2fa_verified' => true]);
+            RateLimiter::clear($attempts);
             session()->forget('2fa_pending');
             app(LoginRecorder::class)->succeeded($user, $request, session()->pull('login_method', 'password'));
 
@@ -158,12 +167,15 @@ class AuthController extends Controller
             if ($result['valid']) {
                 $user->update(['backup_codes' => $result['remaining']]);
                 session(['2fa_verified' => true]);
+                RateLimiter::clear($attempts);
                 session()->forget('2fa_pending');
                 app(LoginRecorder::class)->succeeded($user, $request, session()->pull('login_method', 'password'));
 
                 return redirect()->intended(route('client.home'));
             }
         }
+
+        RateLimiter::hit($attempts, 15 * 60);
 
         return back()->withErrors(['code' => __('auth.invalid_verification_code')]);
     }
