@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\DockerApp;
+use App\Support\ServerAddress;
+use GuzzleHttp\Psr7\Uri;
+use GuzzleHttp\Psr7\UriResolver;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,8 +21,6 @@ use Illuminate\Support\Facades\Storage;
  */
 class DockerAppImporter
 {
-    private const ACCEPTED = ['png', 'jpg', 'jpeg', 'svg', 'webp', 'gif'];
-
     private const MAX_BYTES = 512 * 1024;
 
     /** Community icon set, addressed by app slug. */
@@ -75,11 +76,36 @@ class DockerAppImporter
     /** @return true|string true, or why it could not be fetched */
     public function import(string $slug, string $url)
     {
-        try {
-            $resp = Http::timeout(12)->withHeaders(['User-Agent' => 'PNLCS'])->get($url);
-        } catch (\Throwable $e) {
-            return $e->getMessage();
+        // Each hop is checked before it is requested: the address an operator
+        // pastes (or the panel's catalogue names) must be on the public
+        // internet, not this server, its network or a cloud metadata service.
+        for ($hop = 0; ; $hop++) {
+            $ip = $this->publicAddressFor($url);
+            if ($ip === null) {
+                return 'not a public address';
+            }
+
+            try {
+                $resp = Http::timeout(12)->withHeaders(['User-Agent' => 'PNLCS'])
+                    ->withoutRedirecting()
+                    // Connect to the address that was checked, not to whatever
+                    // the name resolves to a moment later.
+                    ->withOptions(['curl' => [CURLOPT_RESOLVE => [$this->resolveEntry($url, $ip)]]])
+                    ->get($url);
+            } catch (\Throwable $e) {
+                return $e->getMessage();
+            }
+
+            if (! $resp->redirect()) {
+                break;
+            }
+            $next = (string) $resp->header('Location');
+            if ($hop >= 2 || $next === '') {
+                return 'too many redirects';
+            }
+            $url = (string) UriResolver::resolve(new Uri($url), new Uri($next));
         }
+
         if (! $resp->successful()) {
             return 'HTTP '.$resp->status();
         }
@@ -92,25 +118,107 @@ class DockerAppImporter
             return 'larger than 512 KB';
         }
 
-        $ext = strtolower(pathinfo(parse_url($url, PHP_URL_PATH) ?? '', PATHINFO_EXTENSION));
-        if (! in_array($ext, self::ACCEPTED, true)) {
-            $type = (string) $resp->header('Content-Type');
-            $ext = match (true) {
-                str_contains($type, 'svg') => 'svg',
-                str_contains($type, 'png') => 'png',
-                str_contains($type, 'webp') => 'webp',
-                str_contains($type, 'gif') => 'gif',
-                str_contains($type, 'jpeg') => 'jpg',
-                default => '',
-            };
-        }
-        if ($ext === '') {
+        // What the bytes are, not what the address or the server says they are.
+        $ext = self::imageExtension($body);
+        if ($ext === null) {
             return 'not an image';
         }
 
         $this->store($slug, $body, $ext, 'fetch');
 
         return true;
+    }
+
+    /**
+     * The extension the stored file gets, read from its content; null for
+     * anything that is not a plain image.
+     *
+     * The file is served from the public disk under that extension, so a name
+     * taken from the upload or the URL could make it a page on the panel's own
+     * address. An SVG is a document that can carry script: it is kept only
+     * without scripts, event handlers, embedded documents or outside links.
+     */
+    public static function imageExtension(string $bytes): ?string
+    {
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($bytes);
+
+        return match ($mime) {
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/svg+xml' => self::isPlainSvg($bytes) ? 'svg' : null,
+            default => null,
+        };
+    }
+
+    private static function isPlainSvg(string $bytes): bool
+    {
+        if (stripos($bytes, '<!DOCTYPE') !== false || stripos($bytes, '<!ENTITY') !== false) {
+            return false;
+        }
+
+        $doc = new \DOMDocument;
+        $previous = libxml_use_internal_errors(true);
+        $loaded = $doc->loadXML($bytes, LIBXML_NONET);
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+
+        if (! $loaded || ! $doc->documentElement || strtolower($doc->documentElement->localName) !== 'svg') {
+            return false;
+        }
+
+        foreach ($doc->getElementsByTagName('*') as $el) {
+            if (in_array(strtolower($el->localName), ['script', 'foreignobject', 'iframe', 'embed', 'object'], true)) {
+                return false;
+            }
+            foreach ($el->attributes as $attr) {
+                $name = strtolower($attr->localName);
+                $value = strtolower(trim($attr->value));
+                if (str_starts_with($name, 'on')) {
+                    return false;
+                }
+                if ($name === 'href' && $value !== '' && ! str_starts_with($value, '#')) {
+                    return false;
+                }
+                if (str_contains($value, 'javascript:')) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /** The public IPv4 address to connect to for $url, or null. */
+    private function publicAddressFor(string $url): ?string
+    {
+        $parts = parse_url($url);
+        $scheme = strtolower($parts['scheme'] ?? '');
+        $host = strtolower(trim($parts['host'] ?? '', '[]'));
+        if (! in_array($scheme, ['http', 'https'], true) || $host === '' || isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+
+        $addresses = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : ServerAddress::resolve($host);
+        if ($addresses === []) {
+            return null;
+        }
+        foreach ($addresses as $address) {
+            if (! filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return null;
+            }
+        }
+
+        return $addresses[0];
+    }
+
+    private function resolveEntry(string $url, string $ip): string
+    {
+        $parts = parse_url($url);
+        $port = $parts['port'] ?? (strtolower($parts['scheme']) === 'https' ? 443 : 80);
+
+        return strtolower($parts['host']).':'.$port.':'.$ip;
     }
 
     /** Write the image and point the app at it, replacing whatever was there. */

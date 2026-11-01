@@ -61,8 +61,13 @@ class DockerAppController extends Controller
         ]);
 
         $slug = strtolower($request->input('slug'));
-        $ext = strtolower($request->file('logo')->getClientOriginalExtension());
-        $this->importer->store($slug, $request->file('logo')->get(), $ext, 'upload');
+        $bytes = (string) $request->file('logo')->get();
+        // Named after what the file is, not what it was called on upload.
+        $ext = DockerAppImporter::imageExtension($bytes);
+        if ($ext === null) {
+            return back()->withErrors(['logo' => __('validation.image', ['attribute' => 'logo'])]);
+        }
+        $this->importer->store($slug, $bytes, $ext, 'upload');
 
         return back()->with('success', __('admin.docker_apps.saved', ['app' => $slug]));
     }

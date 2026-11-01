@@ -5,6 +5,7 @@ use App\Models\AdminRole;
 use App\Models\DockerApp;
 use App\Models\Server;
 use App\Models\User;
+use App\Support\ServerAddress;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -41,15 +42,27 @@ function fakeCatalogue(array $apps, ?string $imageBody = null, int $imageStatus 
             return Http::response(['data' => ['templates' => $apps]], 200);
         }
         if (str_contains($request->url(), 'logos.test')) {
-            return Http::response($imageBody ?? 'PNGDATA', $imageStatus, ['Content-Type' => 'image/png']);
+            return Http::response($imageBody ?? tinyPng(), $imageStatus, ['Content-Type' => 'image/png']);
         }
 
         return Http::response('', 404);
     });
 }
 
+/** A real 1x1 PNG: the importer reads what the bytes are. */
+function tinyPng(): string
+{
+    return base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+}
+
 beforeEach(function () {
     Storage::fake('public');
+    // The image hosts in these tests stand for public ones.
+    ServerAddress::resolveUsing(fn (string $host) => ['93.184.216.34']);
+});
+
+afterEach(function () {
+    ServerAddress::resolveUsing(null);
 });
 
 it('lists the panel catalogue with what has a logo and what does not', function () {
@@ -157,7 +170,7 @@ it('falls back to the icon set when the panel has no link or a dead one', functi
         }
         // The icon set answers for both; the panel's own link does not.
         if (str_contains($url, 'dashboard-icons')) {
-            return Http::response('PNGDATA', 200, ['Content-Type' => 'image/png']);
+            return Http::response(tinyPng(), 200, ['Content-Type' => 'image/png']);
         }
 
         return Http::response('', 404);
