@@ -84,6 +84,14 @@ return Application::configure(basePath: dirname(__DIR__))
         // the page shows prices in (CustomerCurrency).
         $middleware->appendToGroup('web', SetDisplayCurrency::class);
         $middleware->appendToGroup('web', MaintenanceMode::class);
+        // A password change signs every other session of that login out.
+        $middleware->appendToGroup('web', \App\Http\Middleware\EndSessionAfterPasswordChange::class);
+        // Before the auth middleware looks at who is signed in, or it lets
+        // the request through for a session this one is about to end.
+        $middleware->prependToPriorityList(
+            before: \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+            prepend: \App\Http\Middleware\EndSessionAfterPasswordChange::class,
+        );
         // Counted before anything is checked, so a wrong key costs the caller
         // an attempt too.
         $middleware->throttleApi('api');
