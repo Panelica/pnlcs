@@ -11,6 +11,7 @@ use App\Models\TicketDepartment;
 use App\Models\TicketStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -36,10 +37,23 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Full Administrator'],
             ['description' => 'Full access to all areas', 'is_full_admin' => true]
         );
-        Admin::firstOrCreate(
+        // Not a password everybody knows: a headless install seeded by hand
+        // kept admin / admin123 until somebody remembered to change it, and
+        // nothing made them. PNLCS_ADMIN_PASSWORD chooses it; otherwise it is
+        // random and printed once, here. The install wizard replaces it with
+        // the operator's own either way.
+        $chosen = (string) env('PNLCS_ADMIN_PASSWORD', '');
+        $password = $chosen !== '' ? $chosen : Str::password(20, symbols: false);
+
+        $admin = Admin::firstOrCreate(
             ['username' => 'admin'],
-            ['role_id' => $role->id, 'email' => 'admin@pnlcs.com', 'password' => Hash::make('admin123'), 'first_name' => 'System', 'last_name' => 'Administrator']
+            ['role_id' => $role->id, 'email' => 'admin@pnlcs.com', 'password' => Hash::make($password), 'first_name' => 'System', 'last_name' => 'Administrator']
         );
+
+        if ($admin->wasRecentlyCreated && $chosen === '') {
+            $this->command?->warn("Administrator \"admin\" created with the password: {$password}");
+            $this->command?->warn('It is shown only now. Sign in and change it, or set PNLCS_ADMIN_PASSWORD before seeding.');
+        }
 
         // Default currencies
         Currency::firstOrCreate(['code' => 'USD'], ['prefix' => '$', 'suffix' => ' USD', 'rate' => 1.00000, 'is_default' => true]);

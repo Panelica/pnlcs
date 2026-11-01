@@ -36,7 +36,7 @@ docker run -d --name "$CT" --add-host=host.docker.internal:host-gateway -p "$POR
     -e PNLCS_UPDATE_INDEX_URL="file://$WORK/index-good.json" -e PNLCS_UPDATE_PUBLIC_KEY="$(base64 -w0 "$WORK/lab-key.pub")" \
     "$IMAGE" >>"$LOG" 2>&1
 for i in $(seq 1 90); do docker logs "$CT" > "$DIR/.logs" 2>&1; grep -q "Handing off" "$DIR/.logs" && break; sleep 2; done
-docker exec -u www-data -w $APP "$CT" php artisan db:seed --force >>"$LOG" 2>&1
+docker exec -e PNLCS_ADMIN_PASSWORD=admin123 -u www-data -w $APP "$CT" php artisan db:seed --force >>"$LOG" 2>&1
 docker exec "$CT" sh -c "date -Iseconds > $APP/storage/installed.lock; chown www-data:www-data $APP/storage/installed.lock"
 docker exec -u www-data "$CT" php "$LAB/customise.php" "$APP" >>"$LOG" 2>&1
 docker exec -u www-data -w $APP "$CT" php artisan config:cache >>"$LOG" 2>&1

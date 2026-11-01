@@ -110,8 +110,9 @@ PHP-FPM is still serving the previous code from its opcode cache. Reload it:
 ### The `/install` wizard is already locked, or you never got to choose a password
 
 You ran `php artisan db:seed` by hand before opening the wizard; seeing an
-administrator, it locks itself. Sign in with `admin` / `admin123` and change
-the password from your profile, or reinstall without seeding by hand.
+administrator, it locks itself. Sign in as `admin` with the password
+`db:seed` printed and change it from your profile, or reinstall without
+seeding by hand.
 
 ## Running
 

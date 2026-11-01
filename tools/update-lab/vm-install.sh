@@ -52,7 +52,7 @@ open(p, 'w').write(s + '\n')
 PY
 as_web php artisan key:generate --force >/dev/null
 as_web php artisan migrate --force >/dev/null
-as_web php artisan db:seed --force >/dev/null
+as_web env PNLCS_ADMIN_PASSWORD=admin123 php artisan db:seed --force >/dev/null
 as_web sh -c 'date -Iseconds > storage/installed.lock'
 as_web php artisan storage:link >/dev/null 2>&1 || true
 as_web php artisan config:cache >/dev/null && as_web php artisan route:cache >/dev/null && as_web php artisan view:cache >/dev/null
