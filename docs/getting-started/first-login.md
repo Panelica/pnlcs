@@ -16,8 +16,9 @@ no default password to change.
 
 !!! danger "Only if you seeded the database by hand"
     A headless install that ran `php artisan db:seed` instead of the wizard
-    starts with the account `admin` / `admin123`. That password is public
-    knowledge: change it before anything else (step 3).
+    starts with the account `admin` and the random password `db:seed`
+    printed (or `PNLCS_ADMIN_PASSWORD`, if you set it). Change it before
+    anything else (step 3).
 
 ## 3. Your account
 

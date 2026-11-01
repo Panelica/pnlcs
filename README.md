@@ -790,7 +790,8 @@ pn php artisan migrate --force
 in step 12 runs the seeder itself and renames the seeded administrator to the
 username and password *you* choose. Seeding by hand creates an administrator
 first - and the wizard, seeing one, locks itself before you ever reach it,
-leaving you with a default `admin` / `admin123` account you never chose.
+leaving you with an `admin` account whose password only the seeder's
+output shows.
 
 The wizard's seeding provides everything an installation starts with: four
 starter currencies (USD, EUR, GBP, TRY), ticket departments and statuses,
@@ -799,8 +800,9 @@ base, and default homepage sections.
 
 *Headless installs only:* if you are scripting an installation with no
 browser step at all, `php artisan db:seed --force` is how you seed - the
-default administrator is then `admin` / `admin123`, the wizard stays closed
-by design, and changing that password is your first job.
+administrator is then `admin`, with a random password the seeder prints
+once (set `PNLCS_ADMIN_PASSWORD` beforehand to choose it). The wizard stays
+closed by design, and signing in to change that password is your first job.
 
 ### 7. Build the frontend assets
 
@@ -1195,8 +1197,9 @@ Once the site loads and you can reach `/admin/login`, do these in order:
 
 - URL: `https://example.com/admin/login`
 - Use the administrator username and password you chose in the install
-  wizard. (Only a headless install that seeded by hand has the default
-  `admin` / `admin123` - if that is you, changing it is the first job.)
+  wizard. (Only a headless install that seeded by hand has the account
+  `admin`, with the password `db:seed` printed - if that is you, changing it
+  is the first job.)
 - (Recommended) Enable **Two-Factor Authentication** from **My Account**
   (the menu under your name) → **Turn on**.
 
@@ -1695,8 +1698,9 @@ PHP-FPM is still serving the previous code from its opcode cache. Reload it:
 
 **The `/install` wizard is already locked, or you never got to choose a password**
 You ran `php artisan db:seed` by hand before opening the wizard; seeing an
-administrator, it locks itself. Sign in with `admin` / `admin123` and change
-the password from your profile, or reinstall without seeding by hand.
+administrator, it locks itself. Sign in as `admin` with the password
+`db:seed` printed and change it from your profile, or reinstall without
+seeding by hand.
 
 ### Frequently asked
 

@@ -186,8 +186,9 @@ php artisan migrate --force --seed
 php artisan storage:link
 ```
 
-`migrate --seed` creates the default administrator account
-(`admin` / `admin123`). **Log in and change this immediately** — see
+`migrate --seed` creates the administrator account `admin` with a random
+password, printed in the command's output (or `PNLCS_ADMIN_PASSWORD`, if you
+set it). **Log in and change it immediately** — see
 [First Login](../getting-started/first-login.md).
 
 ## Verify
