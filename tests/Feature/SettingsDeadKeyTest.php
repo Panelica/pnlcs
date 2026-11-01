@@ -67,7 +67,7 @@ test('the invoice reads only keys an operator can actually set', function () {
     // decision (CompanyDetailsTest), the same stance the logo takes.
     $writable = [
         'Address', 'CompanyCity', 'Country', 'PhoneNumber', 'Email', 'TaxID', 'Domain',
-        'InvoiceTemplate',
+        'CompanyWebsite', 'DefaultLanguage',
         'custom_logo_path', 'Logo',
         'CompanyAddress', 'City', 'CompanyCountry', 'CompanyPhone', 'CompanyEmail',
     ];

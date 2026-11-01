@@ -259,6 +259,12 @@ function translationWords(string $value): array
     // 'çalışmayı' from being read as three words and ':have' as one.
     $prose = preg_replace('/:[a-zA-Z_][a-zA-Z0-9_]*/u', ' ', $value);
     $prose = preg_replace('/<[^>]*>/u', ' ', (string) $prose);
+    // Nor is a file name or a snake_case identifier the operator has to type
+    // exactly ('PL_invoice_template_v1.32.html'): it is the same in every
+    // language, and reading 'invoice' and 'template' out of it would flag a
+    // sentence that is fully translated around it.
+    $prose = preg_replace('/[A-Za-z0-9]+(?:[_.][A-Za-z0-9]+)*\.[A-Za-z]{2,4}\b/u', ' ', (string) $prose);
+    $prose = preg_replace('/[A-Za-z0-9]*_[A-Za-z0-9_]*/u', ' ', (string) $prose);
 
     preg_match_all('/[\p{L}]+/u', (string) $prose, $matches);
 

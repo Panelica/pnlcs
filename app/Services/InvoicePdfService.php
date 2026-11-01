@@ -289,9 +289,24 @@ class InvoicePdfService
      * The values the custom template can refer to. The keys are the vocabulary
      * listed on the settings screen (see customTemplateVocabulary).
      *
+     * Every label among them is written in the invoice's own language, whoever
+     * asks for them: generate() already renders inside that locale, but the
+     * values are read on their own too, and a document's words do not depend
+     * on who is looking at it.
+     *
      * @return array<string, string>
      */
     public function placeholderVars(Invoice $invoice, ?array $company = null, ?array $ksef = null): array
+    {
+        return $this->withInvoiceLocale($invoice, fn () => $this->placeholderValues($invoice, $company, $ksef));
+    }
+
+    /**
+     * placeholderVars() with the locale already switched.
+     *
+     * @return array<string, string>
+     */
+    private function placeholderValues(Invoice $invoice, ?array $company, ?array $ksef): array
     {
         $company ??= $this->companyDetails();
         $buyer = fn (string $field) => (string) $invoice->buyer($field);

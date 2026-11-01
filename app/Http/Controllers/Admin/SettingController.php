@@ -84,7 +84,6 @@ class SettingController extends Controller
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay', 'InvoiceRenewalsSeparately',
         // The invoice document template: the built-in view or an uploaded one.
-        'InvoiceTemplate',
         // The tax page's two switches (#305).
         'TaxEnabled', 'TaxInclusivePrices',
         'AutoSuspensionDays', 'AutoSuspendInvoicedOnly', 'AutoTerminationDays', 'AutoTerminationEnabled',
