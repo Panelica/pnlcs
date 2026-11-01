@@ -32,16 +32,23 @@
     <div class="card" data-tab="company" id="settings-company_information" style="margin-bottom:15px;">
         <div class="card-header"><strong>{{ __('admin.settings.company_information') }}</strong></div>
         <div class="card-body">
-            <div class="form-group"><label class="form-label">{{ __('common.form.company_name') }}</label><input type="text" name="CompanyName" value="{{ $settings['CompanyName'] ?? '' }}" class="form-control"></div>
-            <div class="form-group"><label class="form-label">{{ __('admin.settings.domain') }}</label><input type="text" name="Domain" value="{{ $settings['Domain'] ?? '' }}" class="form-control" placeholder="yourdomain.com"></div>
-            <div class="form-group"><label class="form-label">{{ __('admin.settings.company_address') }}</label><textarea name="Address" rows="3" class="form-control">{{ $settings['Address'] ?? '' }}</textarea></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-                <div class="form-group"><label class="form-label">{{ __('common.form.phone_number') }}</label><input type="text" name="PhoneNumber" value="{{ $settings['PhoneNumber'] ?? '' }}" class="form-control"></div>
-                <div class="form-group"><label class="form-label">{{ __('admin.settings.company_email') }}</label><input type="email" name="Email" value="{{ $settings['Email'] ?? '' }}" class="form-control"></div>
+            <div class="form-group" style="max-width:50%;"><label class="form-label">{{ __('common.form.company_name') }}</label><input type="text" name="CompanyName" value="{{ $settings['CompanyName'] ?? '' }}" class="form-control"></div>
+            <div class="form-group" style="max-width:50%;"><label class="form-label">{{ __('admin.settings.company_address') }}</label><textarea name="Address" rows="3" class="form-control">{{ $settings['Address'] ?? '' }}</textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;">
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.postcode') }}</label><input type="text" name="Postcode" value="{{ $settings['Postcode'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('common.form.city') }}</label><input type="text" name="CompanyCity" value="{{ $settings['CompanyCity'] ?? '' }}" class="form-control"></div>
                 <div class="form-group"><label class="form-label">{{ __('admin.settings.state') }}</label><input type="text" name="State" value="{{ $settings['State'] ?? '' }}" class="form-control"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('common.form.phone_number') }}</label><input type="text" name="PhoneNumber" value="{{ $settings['PhoneNumber'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.company_email') }}</label><input type="email" name="Email" value="{{ $settings['Email'] ?? '' }}" class="form-control"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                 <div class="form-group"><label class="form-label">{{ __('common.form.tax_id') }}</label><input type="text" name="TaxID" value="{{ $settings['TaxID'] ?? '' }}" class="form-control"></div>
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.company_website') }}</label><input type="text" name="CompanyWebsite" value="{{ $settings['CompanyWebsite'] ?? '' }}" class="form-control" placeholder="https://example.com"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                <div class="form-group"><label class="form-label">{{ __('admin.settings.domain') }}</label><input type="text" name="Domain" value="{{ $settings['Domain'] ?? '' }}" class="form-control" placeholder="https://panel.example.com"></div>
             </div>
         </div>
     </div>

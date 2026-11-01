@@ -31,7 +31,10 @@ class InvoicePdfService
             // that will be fed to an official e-invoicing integration has to
             // carry the legal entity, not the trading name.
             'legal_name' => $this->firstFilled(['CompanyLegalName']),
-            'domain' => Setting::get('Domain', ''),
+            // The company's own website, shown as {company_domain}. Falls back to
+            // the panel address so installations that only ever set Domain keep
+            // printing something.
+            'domain' => $this->firstFilled(['CompanyWebsite', 'Domain']),
             // The screen's key first, then the older hand-set name. The
             // fallbacks are not writable from any screen, but honouring a value
             // someone put straight into the database is a deliberate, tested

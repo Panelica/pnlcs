@@ -80,7 +80,7 @@ class SettingController extends Controller
      */
     private const GENERAL_KEYS = [
         'Address', 'CompanyCity', 'CompanyName',
-        'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain',
+        'Country', 'DateFormat', 'DefaultLanguage', 'DefaultPaymentMethod', 'Domain', 'CompanyWebsite',
         'DefaultNameserver1', 'DefaultNameserver2', 'DefaultNameserver3', 'DefaultNameserver4', 'DefaultNameserver5',
         'Email', 'EmailFromName',
         'InvoiceNumberFormat', 'InvoiceNumberYearlyReset', 'InvoiceDueDays', 'InvoiceDaysBeforeDue', 'ConsolidatedBillingDay', 'InvoiceRenewalsSeparately',
