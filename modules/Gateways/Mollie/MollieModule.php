@@ -199,7 +199,10 @@ HTML;
             return ['success' => false, 'message' => 'Mollie API key not configured.'];
         }
 
-        $response = Http::withToken($apiKey)->get("{$this->apiUrl}/payments/{$paymentId}");
+        // Encoded, so the id asked about is the whole id that was sent: a
+        // "#…" or "?…" on the end would otherwise be cut off by the HTTP
+        // client and still find the payment.
+        $response = Http::withToken($apiKey)->get("{$this->apiUrl}/payments/" . rawurlencode((string) $paymentId));
 
         if (!$response->successful()) {
             return ['success' => false, 'message' => 'Failed to verify payment with Mollie.'];
@@ -223,7 +226,9 @@ HTML;
 
         return [
             'success' => true,
-            'transaction_id' => $paymentId,
+            // Mollie's own id for the payment: one payment is one transaction,
+            // however the webhook spelled it.
+            'transaction_id' => (string) ($payment['id'] ?? $paymentId),
             'invoice_id' => $invoiceId,
             'amount' => $amountValue,
             'gateway' => 'mollie',
