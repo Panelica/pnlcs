@@ -10,11 +10,11 @@ class Product extends Model
 {
     use HasFactory, \Illuminate\Database\Eloquent\SoftDeletes;
 
-    protected $fillable = ['type', 'group_id', 'name', 'slug', 'description', 'hidden', 'show_domain_options', 'free_domain', 'free_domain_tlds', 'free_domain_cycles', 'is_featured', 'retired', 'allow_upgrades', 'pay_type', 'auto_setup', 'server_type', 'server_group_id', 'stock_control', 'stock_qty', 'welcome_email_template', 'sort_order', 'config_options', 'tax', 'ssl_module', 'overage_enabled', 'overage_disk_rate', 'overage_bw_rate'];
+    protected $fillable = ['type', 'group_id', 'name', 'slug', 'description', 'hidden', 'show_domain_options', 'free_domain', 'free_domain_tlds', 'free_domain_cycles', 'is_featured', 'retired', 'allow_upgrades', 'pay_type', 'auto_setup', 'suspend_after_days', 'terminate_after_days', 'server_type', 'server_group_id', 'stock_control', 'stock_qty', 'welcome_email_template', 'sort_order', 'config_options', 'tax', 'ssl_module', 'overage_enabled', 'overage_disk_rate', 'overage_bw_rate'];
 
     protected function casts(): array
     {
-        return ['free_domain' => 'boolean', 'hidden' => 'boolean', 'is_featured' => 'boolean', 'retired' => 'boolean', 'allow_upgrades' => 'boolean', 'stock_control' => 'boolean', 'tax' => 'boolean', 'overage_enabled' => 'boolean', 'overage_disk_rate' => 'decimal:4', 'overage_bw_rate' => 'decimal:4', 'config_options' => 'array'];
+        return ['free_domain' => 'boolean', 'hidden' => 'boolean', 'is_featured' => 'boolean', 'retired' => 'boolean', 'allow_upgrades' => 'boolean', 'stock_control' => 'boolean', 'tax' => 'boolean', 'overage_enabled' => 'boolean', 'overage_disk_rate' => 'decimal:4', 'overage_bw_rate' => 'decimal:4', 'config_options' => 'array', 'suspend_after_days' => 'integer', 'terminate_after_days' => 'integer'];
     }
 
     public function group()

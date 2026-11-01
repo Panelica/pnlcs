@@ -70,11 +70,8 @@ class UnsuspendOnPaymentCommand extends Command
             // 07:30, day after day, with an email each way.
             // With AutoSuspendInvoicedOnly the debt that counts is this
             // service's own, as it is for suspending.
-            $behind = SuspensionCommand::invoicedOnly()
-                ? Service::whereKey($service->id)->owingOverdue(SuspensionCommand::graceDays())->exists()
-                : Invoice::where('client_id', $service->client_id)
-                    ->overduePastGrace(SuspensionCommand::graceDays())
-                    ->exists();
+            // By the service's own product's grace, as auto-suspend counts it.
+            $behind = SuspensionCommand::behindFor($service);
             if ($behind) {
                 $stillBehind++;
 
