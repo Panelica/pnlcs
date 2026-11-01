@@ -23,6 +23,9 @@ function noteProforma(array $attrs = [], string $language = 'pl'): Invoice
         'client_id' => $client->id,
         'type' => 'proforma',
         'status' => 'paid',
+        // The factory fills notes at random; a test about what the notes end
+        // up saying starts from a known one.
+        'notes' => null,
         'invoice_num' => 'PRO-2026/10-000002',
         'subtotal' => 10,
         'total' => 10,
