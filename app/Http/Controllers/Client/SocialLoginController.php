@@ -132,6 +132,11 @@ class SocialLoginController extends Controller
             return redirect()->route('client.login')->with('error', __('auth.account_closed'));
         }
 
+        // Start from unverified, as the password door does: 2fa_verified is
+        // a plain session key that a login and regenerate() carry over from
+        // whoever held this session before, and it would stand in for this
+        // user's second factor.
+        session()->forget('2fa_verified');
         Auth::login($user);
         $request->session()->regenerate();
 
