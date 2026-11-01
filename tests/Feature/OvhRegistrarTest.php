@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Domain;
+use App\Models\DomainPricing;
 use App\Models\RegistrarSettings;
 use Illuminate\Support\Facades\Http;
 use Modules\Registrars\OVH\OvhRegistrar;
@@ -201,9 +203,9 @@ function ovhCartFake(array $prices, string $currency = 'PLN'): void
     ]);
 }
 
-function ovhTld(string $extension, string $registrar = 'ovh', array $prices = []): App\Models\DomainPricing
+function ovhTld(string $extension, string $registrar = 'ovh', array $prices = []): DomainPricing
 {
-    return App\Models\DomainPricing::create(array_merge([
+    return DomainPricing::create(array_merge([
         'extension' => $extension,
         'auto_registrar' => $registrar,
         'register_price' => 1,
@@ -214,8 +216,8 @@ function ovhTld(string $extension, string $registrar = 'ovh', array $prices = []
 
 function ovhShop(string $code): void
 {
-    App\Models\Currency::query()->update(['is_default' => false]);
-    App\Models\Currency::updateOrCreate(['code' => $code], ['name' => $code, 'prefix' => '', 'suffix' => ' '.$code, 'rate' => 1.0, 'is_default' => true]);
+    Currency::query()->update(['is_default' => false]);
+    Currency::updateOrCreate(['code' => $code], ['name' => $code, 'prefix' => '', 'suffix' => ' '.$code, 'rate' => 1.0, 'is_default' => true]);
 }
 
 it('writes the prices OVH quotes, with the margin, rounded up', function () {

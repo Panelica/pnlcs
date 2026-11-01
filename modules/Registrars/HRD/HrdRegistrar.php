@@ -4,6 +4,7 @@ namespace Modules\Registrars\HRD;
 
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
+use App\Models\Currency;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\ModuleLog;
@@ -81,7 +82,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
             return [
                 'success' => true,
-                'message' => 'Połączenie z HRD działa. Saldo: ' . ($balance['balance'] ?? 'n/d'),
+                'message' => 'Połączenie z HRD działa. Saldo: '.($balance['balance'] ?? 'n/d'),
             ];
         } catch (\Throwable $e) {
             return ['success' => false, 'message' => $e->getMessage()];
@@ -120,7 +121,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         // HRD quotes in złoty. Written into a price list the shop reads in
         // another currency, the numbers would be wrong by the exchange rate
         // and nothing would say so.
-        $shop = strtoupper((string) (\App\Models\Currency::getDefault()?->code ?? ''));
+        $shop = strtoupper((string) (Currency::getDefault()?->code ?? ''));
         if ($shop !== self::QUOTE_CURRENCY) {
             return ['success' => false, 'message' => __('admin.registrars.sync_currency_mismatch', [
                 'registrar' => self::QUOTE_CURRENCY,
@@ -147,6 +148,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 if (! array_key_exists($ext, $prices)) {
                     $skipped++;
                     $skippedExtensions[] = $tld->extension;
+
                     continue;
                 }
 
@@ -165,6 +167,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
                 if ($next === []) {
                     $skipped++;
                     $skippedExtensions[] = $tld->extension;
+
                     continue;
                 }
 
@@ -175,6 +178,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
 
                 if ($next == $current) {
                     $unchanged++;
+
                     continue;
                 }
 
@@ -483,8 +487,6 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
      * Build the `ns` argument for domainCreate. The client's own nameservers
      * win; otherwise the defaults from General Settings are used; otherwise a
      * preconfigured HRD group. Returns null when nothing is available.
-     *
-     * @return array|string|null
      */
     protected function nameserversFor(Domain $domain, array $params): array|string|null
     {

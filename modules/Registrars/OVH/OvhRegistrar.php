@@ -5,6 +5,7 @@ namespace Modules\Registrars\OVH;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Client;
+use App\Models\Currency;
 use App\Models\Domain;
 use App\Models\DomainPricing;
 use App\Models\ModuleLog;
@@ -290,7 +291,7 @@ class OvhRegistrar implements RegistrarModuleInterface, SyncsDomainData
     {
         try {
             $margin = (float) ($this->settings['margin_percent'] ?? 0);
-            $shop = strtoupper((string) (\App\Models\Currency::getDefault()?->code ?? ''));
+            $shop = strtoupper((string) (Currency::getDefault()?->code ?? ''));
 
             $updated = 0;
             $unchanged = 0;
