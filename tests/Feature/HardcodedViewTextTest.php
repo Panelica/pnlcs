@@ -192,7 +192,10 @@ const HARDCODED_VIEW_TEXT_BUDGET = [
     'resources/views/admin/products/index.blade.php' => 3,
     'resources/views/admin/services/show.blade.php' => 2,
     'resources/views/admin/settings/appearance.blade.php' => 5,
-    'resources/views/admin/settings/general.blade.php' => 15,
+    // 16: the example addresses, the currency code and the number formats in
+    // its placeholders. #365 added one more of the same kind - the company
+    // website's https://example.com - which no language translates.
+    'resources/views/admin/settings/general.blade.php' => 16,
     'resources/views/client/auth/forgot-password.blade.php' => 2,
     'resources/views/client/auth/login.blade.php' => 1,
     'resources/views/client/auth/reset-password.blade.php' => 2,
