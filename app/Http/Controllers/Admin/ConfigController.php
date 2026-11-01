@@ -877,9 +877,42 @@ class ConfigController extends Controller
 
     public function domainPricing()
     {
+        $currency = Currency::getDefault();
+        $currencySymbol = $currency ? trim((string) ($currency->prefix ?: $currency->suffix)) : '$';
+
         return view('admin.config.domain-pricing', [
             'tlds' => DomainPricing::orderBy('sort_order')->get(),
+            'currencySymbol' => $currencySymbol,
+            'registrars' => $this->activeRegistrars(),
         ]);
+    }
+
+    /**
+     * The active registrars as [module key => display name], for the pricing
+     * screen's auto-registrar selector. Matches the registrars screen: a
+     * registrar is active when its "visible" setting is on (manual defaults on).
+     */
+    protected function activeRegistrars(): array
+    {
+        $registry = app(ModuleRegistry::class);
+        $visible = RegistrarSettings::where('setting', 'visible')->pluck('value', 'registrar');
+
+        return collect($registry->getRegistrarModules())
+            ->filter(function (string $name) use ($visible): bool {
+                // Manual is the "no auto registrar" case, offered by the empty option.
+                if ($name === 'manual') {
+                    return false;
+                }
+
+                return $visible->get($name) === '1';
+            })
+            ->mapWithKeys(function (string $name) use ($registry): array {
+                $module = $registry->getRegistrarModule($name);
+
+                return [$name => $module?->getModuleName() ?? ucfirst($name)];
+            })
+            ->sort()
+            ->toArray();
     }
 
     public function storeTld(Request $request)
@@ -975,6 +1008,7 @@ class ConfigController extends Controller
                     'values' => $settings->toArray(),
                     'help' => ($module && method_exists($module, 'getConfigHelp')) ? $module->getConfigHelp() : null,
                     'testable' => $name === 'hrd',
+                    'syncable' => $module && method_exists($module, 'syncPrices'),
                     // Manual works out of the box; every other registrar is
                     // off until the operator switches it on.
                     'active' => $name === 'manual'
@@ -2133,6 +2167,31 @@ class ConfigController extends Controller
         $result = $module->testConnection();
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
+    }
+
+    /**
+     * Pull the registrar's domain prices into the panel's pricing (only
+     * modules that offer it, e.g. HRD).
+     */
+    public function syncRegistrarPrices(Request $request, string $registrar)
+    {
+        $module = app(ModuleRegistry::class)->getRegistrarModule($registrar);
+
+        if (! $module || ! method_exists($module, 'syncPrices')) {
+            return back()->with('error', __('admin.registrars.sync_unavailable'));
+        }
+
+        $result = $module->syncPrices();
+
+        if (empty($result['success'])) {
+            return back()->with('error', __('admin.registrars.sync_failed', ['message' => $result['message'] ?? '']));
+        }
+
+        return back()->with('success', __('admin.registrars.sync_success', [
+            'updated' => $result['updated'] ?? 0,
+            'unchanged' => $result['unchanged'] ?? 0,
+            'skipped' => $result['skipped'] ?? 0,
+        ]));
     }
 
     // ===== AUTOMATION =====

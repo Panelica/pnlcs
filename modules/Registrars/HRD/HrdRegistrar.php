@@ -5,6 +5,7 @@ namespace Modules\Registrars\HRD;
 use App\Contracts\RegistrarModuleInterface;
 use App\Contracts\SyncsDomainData;
 use App\Models\Domain;
+use App\Models\DomainPricing;
 use App\Models\RegistrarSettings;
 use App\Services\DomainHosting;
 use App\Support\MapsClientFields;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Log;
  * no third-party SDK dependency.
  *
  * The panel does not store a PESEL, so a person registrant is created with the
- * client's PESEL (custom field) or NIP (`tax_id`) as appropriate. Domains are
+ * client's National ID, a company with its NIP (`tax_id`). Domains are
  * registered asynchronously: domainCreate() returns an action id which can be
  * followed with actionInfo().
  */
@@ -51,7 +52,7 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             ['name' => 'api_hash', 'label' => 'API Hash', 'type' => 'password', 'required' => true],
             ['name' => 'api_pass', 'label' => 'API Password', 'type' => 'password', 'required' => true],
             ['name' => 'default_ns_group', 'label' => 'Default NS Group ID', 'type' => 'text', 'required' => false],
-            ['name' => 'pesel_field', 'label' => 'PESEL field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
+            ['name' => 'margin_percent', 'label' => __('admin.registrars.margin_percent'), 'type' => 'text', 'required' => false, 'default' => '0'],
             ['name' => 'csa_field', 'label' => 'CSA field', 'type' => 'select', 'options' => $fieldOptions, 'required' => false],
         ];
     }
@@ -101,6 +102,92 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
         } catch (\Throwable $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Pull the partner purchase prices from HRD and write them — with the
+     * configured margin applied and rounded up to a whole złoty — onto the TLDs
+     * whose auto registrar is HRD. Run manually from the registrars screen.
+     *
+     * @return array{success: bool, updated?: int, unchanged?: int, skipped?: int, message?: string}
+     */
+    public function syncPrices(): array
+    {
+        try {
+            $prices = $this->client()->partnerGetPriceList();
+            $margin = (float) ($this->settings['margin_percent'] ?? 0);
+
+            $updated = 0;
+            $unchanged = 0;
+            $skipped = 0;
+            $changes = [];
+
+            foreach (DomainPricing::whereNotNull('auto_registrar')->get() as $tld) {
+                if (strtolower(trim((string) $tld->auto_registrar)) !== 'hrd') {
+                    continue;
+                }
+
+                $ext = ltrim((string) $tld->extension, '.');
+                if (! array_key_exists($ext, $prices)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $next = [
+                    'register_price' => $this->withMargin($prices[$ext]['register'] ?? null, $margin),
+                    'renew_price' => $this->withMargin($prices[$ext]['renew'] ?? null, $margin),
+                    'transfer_price' => $this->withMargin($prices[$ext]['transfer'] ?? null, $margin),
+                ];
+
+                $current = [
+                    'register_price' => $tld->register_price,
+                    'renew_price' => $tld->renew_price,
+                    'transfer_price' => $tld->transfer_price,
+                ];
+
+                if ($next == $current) {
+                    $unchanged++;
+                    continue;
+                }
+
+                $tld->update($next);
+                $changes[] = ['extension' => $tld->extension, 'before' => $current, 'after' => $next];
+                $updated++;
+            }
+
+            $details = collect($changes)->map(function (array $c): string {
+                return $c['extension']
+                    .' reg:'.($c['before']['register_price'] ?? '-').'→'.($c['after']['register_price'] ?? '-')
+                    .' renew:'.($c['before']['renew_price'] ?? '-').'→'.($c['after']['renew_price'] ?? '-')
+                    .' transfer:'.($c['before']['transfer_price'] ?? '-').'→'.($c['after']['transfer_price'] ?? '-');
+            })->implode(' | ');
+
+            Log::info('HRD price sync: '.$updated.' changed, '.$unchanged.' unchanged, '.$skipped.' skipped'
+                .($details !== '' ? ' — '.$details : ''));
+
+            RegistrarSettings::updateOrCreate(
+                ['registrar' => 'hrd', 'setting' => 'last_price_sync'],
+                ['value' => now()->toDateTimeString()],
+            );
+
+            return ['success' => true, 'updated' => $updated, 'unchanged' => $unchanged, 'skipped' => $skipped];
+        } catch (\Throwable $e) {
+            Log::error("HRD syncPrices failed: {$e->getMessage()}");
+
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /** A purchase price with the margin applied, rounded up to a whole złoty. */
+    protected function withMargin(?string $price, float $margin): ?float
+    {
+        if ($price === null || trim($price) === '') {
+            return null;
+        }
+
+        $value = (float) $price;
+
+        return $value > 0 ? ceil($value * (1 + $margin / 100)) : 0.0;
     }
 
     public function register(Domain $domain, int $years, array $params = []): array
@@ -285,8 +372,8 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
      *
      * HRD keys registrants to a user id (CSA), so a domain cannot be
      * registered without one. A stored CSA is reused; otherwise a user is
-     * created. PESEL/NIP come from the mapped field (config) or auto-detected
-     * from the client's attributes and custom fields.
+     * created. A private person is identified by their National ID (PESEL); a
+     * company by its NIP.
      */
     protected function createUser(Domain $domain, array $params = []): int
     {
@@ -302,18 +389,20 @@ class HrdRegistrar implements RegistrarModuleInterface, SyncsDomainData
             return (int) trim($csa);
         }
 
-        $isCompany = filled($client->company_name);
+        $isCompany = ($client->client_type ?? null) === 'company'
+            || (($client->client_type ?? null) === null && filled($client->company_name));
         $name = $isCompany
             ? $client->company_name
             : trim(($client->first_name ?? '').' '.($client->last_name ?? ''));
 
         $phone = $this->normalizePhone($params['phone'] ?? $client->full_phone);
 
-        // A person registrant needs a PESEL; a company needs its NIP. The two
-        // are never interchangeable, so a person never falls back to tax_id.
+        // A private person is identified by PESEL (the National ID field); a
+        // company by its NIP. The two are never interchangeable, so a person
+        // never falls back to tax_id.
         $idNumber = $isCompany
             ? (string) ($client->tax_id ?? '')
-            : ($this->resolveClientField($client, $this->settings['pesel_field'] ?? null, ['pesel']) ?? '');
+            : (string) ($client->national_id ?? '');
 
         $userId = $this->client()->userCreate(
             $isCompany ? HrdClient::COMPANY : HrdClient::PERSON,

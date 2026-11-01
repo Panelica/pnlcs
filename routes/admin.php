@@ -460,6 +460,7 @@ Route::middleware(['admin.auth', 'admin.2fa'])->prefix('admin')->name('admin.')-
             Route::post('registrar-balance/check', [RegistrarBalanceController::class, 'check'])->middleware('throttle:6,1')->name('registrar-balance.check');
             Route::post('registrars/{registrar}/settings', [ConfigController::class, 'updateRegistrarSettings'])->name('registrars.settings.update');
             Route::post('registrars/{registrar}/test', [ConfigController::class, 'testRegistrar'])->name('registrars.test');
+            Route::post('registrars/{registrar}/sync-prices', [ConfigController::class, 'syncRegistrarPrices'])->middleware('throttle:6,1')->name('registrars.sync-prices');
         });
 
         // Support — manage_ticket_config

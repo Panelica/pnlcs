@@ -60,18 +60,18 @@
             <div style="padding:20px;">
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div class="form-group" style="grid-column:span 2;"><label class="form-label">{{ __('admin.domain_pricing.extension') }}</label><input type="text" name="extension" id="tld-ext" required class="form-control" placeholder=".com"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.register_price') }}</label><input type="number" name="register_price" id="tld-reg" step="0.01" required class="form-control"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.transfer_price') }}</label><input type="number" name="transfer_price" id="tld-trans" step="0.01" required class="form-control"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.renew_price') }}</label><input type="number" name="renew_price" id="tld-ren" step="0.01" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.register_price', ['currency' => $currencySymbol]) }}</label><input type="number" name="register_price" id="tld-reg" step="0.01" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.transfer_price', ['currency' => $currencySymbol]) }}</label><input type="number" name="transfer_price" id="tld-trans" step="0.01" required class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.renew_price', ['currency' => $currencySymbol]) }}</label><input type="number" name="renew_price" id="tld-ren" step="0.01" required class="form-control"></div>
                     <div class="form-group"><label class="form-label"><input type="checkbox" name="is_popular" id="tld-popular" value="1"> {{ __('admin.domain_pricing.is_popular') }}</label></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.category') }}</label><select name="category" id="tld-cat" class="form-control"><option value="generic">{{ __('client.domain_pricing.generic') }}</option><option value="local">{{ __('client.domain_pricing.local_tlds') }}</option><option value="country">{{ __('client.domain_pricing.country_tab') }}</option><option value="new" selected>{{ __('client.domain_pricing.new_tlds') }}</option></select></div>
                     <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.restore_price") }}</label><input type="number" name="restore_price" id="tld-restore" step="0.01" min="0" value="0" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.privacy_price") }}</label><input type="number" name="privacy_price" id="tld-privacy" step="0.01" min="0" class="form-control"><p style="font-size:11px;color:#999;margin-top:4px;">{{ __("admin.domain_pricing.privacy_price_hint") }}</p></div>
-                    <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.grace_period") }}</label><input type="number" name="grace_period" id="tld-grace" value="0" min="0" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.redemption_period") }}</label><input type="number" name="redemption_grace_period" id="tld-redemption" value="0" min="0" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.grace_period") }}</label><input type="number" name="grace_period" id="tld-grace" value="5" min="0" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">{{ __("admin.domain_pricing.redemption_period") }}</label><input type="number" name="redemption_grace_period" id="tld-redemption" value="30" min="0" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.min_years') }}</label><input type="number" name="min_years" id="tld-min" value="1" min="1" class="form-control"></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.max_years') }}</label><input type="number" name="max_years" id="tld-max" value="10" min="1" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.auto_registrar') }}</label><input type="text" name="auto_registrar" id="tld-reg2" class="form-control" placeholder="none"></div>
+                    <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.auto_registrar') }}</label><select name="auto_registrar" id="tld-reg2" class="form-control"><option value="">{{ __('admin.domain_pricing.manual') }}</option>@foreach($registrars as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach</select></div>
                     <div class="form-group"><label class="form-label">{{ __('admin.domain_pricing.sort_order') }}</label><input type="number" name="sort_order" id="tld-sort" value="0" class="form-control"></div>
                     <div class="form-group" style="grid-column:span 2;"><label style="font-size:13px;display:flex;align-items:center;gap:6px;"><input type="checkbox" name="enabled" value="1" id="tld-enabled" checked> {{ __('common.status.enabled') }}</label></div>
                 </div>
@@ -97,8 +97,8 @@ function openAddTLD() {
     document.getElementById('tld-privacy').value = '';
     document.getElementById('tld-cat').value = 'new';
     document.getElementById('tld-popular').checked = false;
-    document.getElementById('tld-grace').value = 0;
-    document.getElementById('tld-redemption').value = 0;
+    document.getElementById('tld-grace').value = 5;
+    document.getElementById('tld-redemption').value = 30;
     document.getElementById('tld-min').value = 1;
     document.getElementById('tld-max').value = 10;
     document.getElementById('tld-reg2').value = '';
