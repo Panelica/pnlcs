@@ -86,7 +86,7 @@ Add a note to a client's account.
 
 `POST /api/v1/addclientnote`
 
-**Permission:** `create_clients`
+**Permission:** `edit_clients`
 
 **Parameters**
 
@@ -128,7 +128,7 @@ Add a sub-contact to a client.
 
 `POST /api/v1/addcontact`
 
-**Permission:** `create_clients`
+**Permission:** `edit_clients`
 
 **Parameters**
 
@@ -165,7 +165,7 @@ Add credit to a client's account balance.
 
 `POST /api/v1/addcredit`
 
-**Permission:** `create_clients`
+**Permission:** `manage_invoices`
 
 **Parameters**
 
@@ -201,7 +201,7 @@ Create a client-area login.
 
 `POST /api/v1/adduser`
 
-**Permission:** `create_clients`
+**Permission:** `edit_clients`
 
 **Parameters**
 

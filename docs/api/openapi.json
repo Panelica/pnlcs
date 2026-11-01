@@ -448,7 +448,7 @@
                 "tags": [
                     "Clients"
                 ],
-                "description": "Signed with the user name of the staff member the credential belongs to. Permission: create_clients.",
+                "description": "Signed with the user name of the staff member the credential belongs to. Permission: edit_clients.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -505,7 +505,7 @@
                 "tags": [
                     "Clients"
                 ],
-                "description": "Permission: create_clients.",
+                "description": "Permission: edit_clients.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -542,7 +542,7 @@
                 "tags": [
                     "Clients"
                 ],
-                "description": "Adds to the client credit balance and records the entry in one step. Permission: create_clients.",
+                "description": "Adds to the client credit balance and records the entry in one step. Permission: manage_invoices.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -579,7 +579,7 @@
                 "tags": [
                     "Invoices & Billing"
                 ],
-                "description": "A part payment leaves the invoice partly paid; an overpayment becomes credit. When the invoice is paid, whatever waits on it (provisioning, unsuspension, an upgrade) runs. Permission: create_invoices.",
+                "description": "A part payment leaves the invoice partly paid; an overpayment becomes credit. When the invoice is paid, whatever waits on it (provisioning, unsuspension, an upgrade) runs. Permission: manage_invoices.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -967,7 +967,7 @@
                 "tags": [
                     "Invoices & Billing"
                 ],
-                "description": "A ledger line only. To pay an invoice, use addinvoicepayment. Permission: create_invoices.",
+                "description": "A ledger line only. To pay an invoice, use addinvoicepayment. Permission: manage_invoices.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1004,7 +1004,7 @@
                 "tags": [
                     "Clients"
                 ],
-                "description": "Permission: create_clients.",
+                "description": "Permission: edit_clients.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2310,7 +2310,7 @@
                 "tags": [
                     "Support Tickets"
                 ],
-                "description": "Permission: reply_tickets.",
+                "description": "Permission: manage_tickets.",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2510,7 +2510,7 @@
                 "tags": [
                     "Domains"
                 ],
-                "description": "Read from the registrar where it can report the contact (source: registrar); otherwise the client record in PNLCS (source: profile). Permission: list_domains.",
+                "description": "Read from the registrar where it can report the contact (source: registrar); otherwise the client record in PNLCS (source: profile). Permission: manage_domains.",
                 "parameters": [
                     {
                         "name": "domainid",
@@ -2659,7 +2659,7 @@
                 "tags": [
                     "Domains"
                 ],
-                "description": "Permission: list_domains.",
+                "description": "Permission: manage_domains.",
                 "parameters": [
                     {
                         "name": "domainid",
@@ -4105,7 +4105,7 @@
                 "tags": [
                     "System"
                 ],
-                "description": "The log of mail sent to clients, newest first. Permission: list_clients.",
+                "description": "The log of mail sent to clients, newest first. Permission: view_activity_log.",
                 "parameters": [
                     {
                         "name": "userid",
@@ -7536,7 +7536,7 @@
                 "tags": [
                     "Support Tickets"
                 ],
-                "description": "Permission: reply_tickets.",
+                "description": "Permission: manage_tickets.",
                 "requestBody": {
                     "required": true,
                     "content": {
