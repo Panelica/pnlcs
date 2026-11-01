@@ -14,6 +14,7 @@ use App\Models\CustomField;
 use App\Models\CustomFieldValue;
 use App\Models\Domain;
 use App\Models\Product;
+use App\Models\RegistrarSettings;
 use App\Models\Server;
 use App\Models\Service;
 use App\Models\Setting;
@@ -250,6 +251,7 @@ class ClientController extends Controller
                 break;
             case 'domains':
                 $data['domains'] = $client->domains()->orderBy('id', 'desc')->paginate(15);
+                $data['registrars'] = $this->activeRegistrars();
                 break;
             case 'invoices':
                 $data['invoices'] = $client->invoices()->excludeSettledProformas()->orderBy('id', 'desc')->paginate(15);
@@ -487,6 +489,31 @@ class ClientController extends Controller
             : [];
 
         return response()->json(['accounts' => $accounts]);
+    }
+
+    /**
+     * The active registrars as [module key => display name], for the client
+     * domain form. Matches the registrars screen: a registrar is active when
+     * its "visible" setting is on (manual defaults on).
+     */
+    protected function activeRegistrars(): array
+    {
+        $registry = app(ModuleRegistry::class);
+        $visible = RegistrarSettings::where('setting', 'visible')->pluck('value', 'registrar');
+
+        return collect($registry->getRegistrarModules())
+            ->filter(function (string $name) use ($visible): bool {
+                return $name === 'manual'
+                    ? $visible->get($name, '1') !== '0'
+                    : $visible->get($name) === '1';
+            })
+            ->mapWithKeys(function (string $name) use ($registry): array {
+                $module = $registry->getRegistrarModule($name);
+
+                return [$name => $module?->getModuleName() ?? ucfirst($name)];
+            })
+            ->sort()
+            ->toArray();
     }
 
     /**

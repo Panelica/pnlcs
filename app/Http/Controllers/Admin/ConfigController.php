@@ -1007,7 +1007,7 @@ class ConfigController extends Controller
                     'fields' => $module?->getConfigFields() ?? [],
                     'values' => $settings->toArray(),
                     'help' => ($module && method_exists($module, 'getConfigHelp')) ? $module->getConfigHelp() : null,
-                    'testable' => $name === 'hrd',
+                    'testable' => $module && method_exists($module, 'testConnection'),
                     'syncable' => $module && method_exists($module, 'syncPrices'),
                     // Manual works out of the box; every other registrar is
                     // off until the operator switches it on.
@@ -2163,10 +2163,6 @@ class ConfigController extends Controller
      */
     public function testRegistrar(Request $request, string $registrar)
     {
-        if ($registrar !== 'hrd') {
-            return back()->with('error', __('admin.registrars.test_unavailable'));
-        }
-
         $module = app(ModuleRegistry::class)->getRegistrarModule($registrar);
 
         if (! $module || ! method_exists($module, 'testConnection')) {

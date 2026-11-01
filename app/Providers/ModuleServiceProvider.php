@@ -20,6 +20,7 @@ use Modules\Registrars\HRD\HrdRegistrar;
 use Modules\Registrars\Manual\ManualRegistrar;
 use Modules\Registrars\Namecheap\NamecheapRegistrar;
 use Modules\Registrars\OpenProvider\OpenProviderRegistrar;
+use Modules\Registrars\OVH\OvhRegistrar;
 use Modules\Registrars\ResellerClub\ResellerClubRegistrar;
 use Modules\Servers\AaPanel\AaPanelModule;
 use Modules\Servers\CPanel\CPanelModule;
@@ -114,6 +115,8 @@ class ModuleServiceProvider extends ServiceProvider
             $registry->registerRegistrar('manual', ManualRegistrar::class);
             // HRD Registrar (hrd.pl)
             $registry->registerRegistrar('hrd', HrdRegistrar::class);
+            // OVHcloud Registrar (api.ovh.com)
+            $registry->registerRegistrar('ovh', OvhRegistrar::class);
             // DomainNameAPI (Turkey). The module shipped without this line and
             // without a pnlcs.json, so it could be configured nowhere and every
             // domain naming it was treated as having no registrar.
