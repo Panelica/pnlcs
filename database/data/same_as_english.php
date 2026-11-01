@@ -71,7 +71,6 @@ return [
         'admin.servers.hostname',
         'admin.services.domain',
         'admin.services.server',
-        'admin.settings.domain',
         'admin.settings.domains_section',
         'admin.settings.favicon',
         'admin.settings.logo',

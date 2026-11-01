@@ -2691,7 +2691,7 @@ return [
         'date_format' => '日期格式',
         'default_country' => '默认国家/地区',
         'default_language' => '默认语言',
-        'domain' => '域名',
+        'domain' => '面板地址',
         'email_from_name' => '发件人名称',
         'email_settings' => '邮件设置',
         'enable_email_sending' => '启用邮件发送',

@@ -2691,7 +2691,7 @@ return [
         'date_format' => 'Format daty',
         'default_country' => 'Domyślny kraj',
         'default_language' => 'Język domyślny',
-        'domain' => 'Domena',
+        'domain' => 'Adres panelu',
         'email_from_name' => 'Nazwa nadawcy e-mail',
         'email_settings' => 'Ustawienia e-mail',
         'enable_email_sending' => 'Włącz wysyłanie e-maili',

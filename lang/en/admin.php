@@ -2691,7 +2691,7 @@ return [
         'date_format' => 'Date Format',
         'default_country' => 'Default Country',
         'default_language' => 'Default Language',
-        'domain' => 'Domain',
+        'domain' => 'Panel address',
         'email_from_name' => 'Email From Name',
         'email_settings' => 'Email Settings',
         'enable_email_sending' => 'Enable Email Sending',

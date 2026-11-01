@@ -2668,7 +2668,7 @@ return [
         'date_format' => 'Tarih Biçimi',
         'default_country' => 'Varsayılan Ülke',
         'default_language' => 'Varsayılan Dil',
-        'domain' => 'Alan Adı',
+        'domain' => 'Panel adresi',
         'email_from_name' => 'E-posta Gönderen Adı',
         'email_settings' => 'E-posta Ayarları',
         'enable_email_sending' => 'E-posta Göndermeyi Etkinleştir',
