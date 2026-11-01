@@ -65,13 +65,13 @@ test('an invoice billed in the shop currency is charged in it either way', funct
     Http::assertSent(fn ($r) => $r['currency'] === 'eur' && $r['amount'] === 1000);
 });
 
-test('the card form is set up for the same lira amount, and its button names it', function () {
+test('the card form names the lira amount on its button', function () {
     sbcConfigured();
     app()->setLocale('en');
 
-    $form = app(StripeModule::class)->getPaymentForm(sbcInvoice());
-
-    expect($form)->toContain('amount: 40000')->toContain('currency: "try"')->toContain('Pay ₺400.00 by card');
+    // The Payment Element takes amount and currency from the intent it is
+    // mounted on; the intent's lira figure is asserted on capture().
+    expect(app(StripeModule::class)->getPaymentForm(sbcInvoice()))->toContain('Pay ₺400.00 by card');
 });
 
 test('a lira payment in full is recorded as the euro amount, to the cent', function () {

@@ -121,7 +121,7 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             ->post("https://api.stripe.com/v1/payment_intents", $saving + [
                 "amount"                      => $minorAmount,
                 "currency"                    => $currency,
-                "payment_method_types[]"      => "card",
+            ] + $this->paymentMethodTypesField($currency, $saving !== []) + [
                 "description"                 => "Invoice #" . ($invoice->invoice_num ?? $invoice->id),
                 "metadata[invoice_id]"        => $invoice->id,
                 "metadata[invoice_num]"       => $invoice->invoice_num ?? $invoice->id,
@@ -147,6 +147,39 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
             "client_secret" => $intent["client_secret"] ?? null,
             "intent_id"     => $intent["id"] ?? null,
         ];
+    }
+
+    /**
+     * What the customer may pay an invoice with at the pay form.
+     *
+     * A card everywhere, and BLIK as well when the charge is in złoty: BLIK
+     * "only supports PLN" (https://docs.stripe.com/payments/blik, fetched
+     * 2026-10-26), and a Polish customer without it was left looking for a
+     * card. A payment that keeps its card stays card-only: a BLIK payment
+     * leaves nothing that can be charged again, and keepPaidCard() would
+     * store it as a card that chargeStoredMethod() is then refused for.
+     *
+     * The pay form's Payment Element is mounted on the intent, so it offers
+     * exactly this list.
+     *
+     * @return list<string>
+     */
+    private function payableWith(string $currency, bool $keepingCard): array
+    {
+        return $currency === "pln" && !$keepingCard ? ["card", "blik"] : ["card"];
+    }
+
+    /**
+     * payableWith() as the intent's form fields. Card-only is sent exactly as
+     * it always was, so a request in any other currency is unchanged.
+     *
+     * @return array<string, string|list<string>>
+     */
+    private function paymentMethodTypesField(string $currency, bool $keepingCard): array
+    {
+        $types = $this->payableWith($currency, $keepingCard);
+
+        return $types === ["card"] ? ["payment_method_types[]" => "card"] : ["payment_method_types" => $types];
     }
 
     public function refund(string $transactionId, float $amount): array
@@ -545,21 +578,15 @@ class StripeModule implements GatewayModuleInterface, TokenizableGatewayInterfac
 
         $safeKey      = htmlspecialchars($publishableKey, ENT_QUOTES, "UTF-8");
 
-        // The Payment Element is set up before there is an intent, so it is
-        // told what the intent will be: the same amount, in the same currency
-        // and unit, that capture() asks Stripe for. Stripe refuses the confirm
-        // when the two disagree, so they are worked out by the same code.
-        $currency     = strtolower($invoice->source_currency ?: shop_currency_code());
-        $due          = (float) $invoice->amountDue();
         // Charged in the billing currency when the operator chose so: the
-        // same plan capture() makes, so the two agree to the cent.
-        if ($plan = $this->billingCharge($invoice, $due)) {
-            [$currency, $due] = [$plan["currency"], $plan["amount"]];
+        // button names the amount capture() will ask Stripe for.
+        if ($this->billingCharge($invoice, (float) $invoice->amountDue())) {
             $amount = billing_money_fmt($invoice->amountDue(), $invoice);
         }
-        $minorAmount  = $this->minorUnits($due, $currency);
-        $currencyJs   = json_encode($currency);
         $localeJs     = json_encode(str_replace("_", "-", app()->getLocale()));
+        // The client's own address, so BLIK does not ask a signed-in
+        // customer for the e-mail their account already has.
+        $emailJs      = json_encode($invoice->client()->value("email") ?: null, JSON_HEX_TAG);
         $returnUrl    = json_encode(url("/client/invoices/{$invoiceId}"), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
         $intentUrl    = url("/gateway/stripe/intent/{$invoiceId}");
         $confirmUrl   = url("/gateway/stripe/confirm/{$invoiceId}");
@@ -618,33 +645,59 @@ SAVE;
 <script>
 (function() {
     var stripe  = Stripe("{$safeKey}");
+    var btn     = document.getElementById("stripe-submit-btn");
+    var save    = document.getElementById("stripe-save-card");
+    var email   = {$emailJs};
+    var elements, card;
+
     // The Payment Element rather than the bare card field: the same card form,
-    // plus Apple Pay and Google Pay where the customer's device has them.
-    // Both wallets are cards to Stripe, so the intent stays card-only and
-    // what gets recorded, refunded and charged later is unchanged. Apple Pay
-    // also needs the site's domain added in the Stripe dashboard.
-    var elements = stripe.elements({
-        mode: "payment",
-        amount: {$minorAmount},
-        currency: {$currencyJs},
-        paymentMethodTypes: ["card"],
-        locale: {$localeJs}
-    });
-    var card    = elements.create("payment", { layout: "tabs" });
-    card.mount("#stripe-card-element");
+    // plus Apple Pay and Google Pay where the customer's device has them, and
+    // BLIK in złoty (payableWith()). Apple Pay also needs the site's domain
+    // added in the Stripe dashboard.
+    //
+    // It is mounted on an intent made up front, not set up first
+    // and given its intent at "Pay". Set up that way ("mode: payment") Stripe
+    // dropped BLIK without a word, though the account and the intent both had
+    // it; mounted on the intent's client secret it is offered (checked
+    // 2026-10-26). The element then reads amount, currency, methods and
+    // setup_future_usage from the intent itself, so the two cannot disagree.
+    // An unconfirmed intent costs nothing and expires on its own.
+    function prepare() {
+        btn.disabled = true;
+        return fetch("{$intentUrl}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]") ? document.querySelector("meta[name=csrf-token]").content : ""
+            },
+            body: JSON.stringify({ save_card: !!(save && save.checked) })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                failed(data.message || {$setupJs});
+                return;
+            }
+            if (card) card.destroy();
+            elements = stripe.elements({ clientSecret: data.client_secret, locale: {$localeJs} });
+            card = elements.create("payment", email
+                ? { layout: "tabs", fields: { billingDetails: { email: "never" } } }
+                : { layout: "tabs" });
+            card.mount("#stripe-card-element");
+            card.on("change", function(e) {
+                document.getElementById("stripe-card-errors").textContent = e.error ? e.error.message : "";
+            });
+            btn.disabled = false;
+        })
+        .catch(function() { failed({$networkJs}); });
+    }
 
-    card.on("change", function(e) {
-        document.getElementById("stripe-card-errors").textContent = e.error ? e.error.message : "";
-    });
-
-    // The element has to be told the card is being kept, or Stripe refuses
-    // the confirm: its setupFutureUsage must match the intent's. It also
-    // shows Stripe's own line about future charges while the box is ticked.
-    var save = document.getElementById("stripe-save-card");
+    // Keeping the card is written on the intent (setup_future_usage), so a
+    // change of mind is a new intent: card-only while the box is ticked,
+    // since a kept card is a card. Stripe's own line about future charges
+    // shows while it is.
     if (save) {
-        save.addEventListener("change", function() {
-            elements.update({ setupFutureUsage: save.checked ? "off_session" : null });
-        });
+        save.addEventListener("change", prepare);
     }
 
     var taken = false;
@@ -652,7 +705,6 @@ SAVE;
     // After the payment: say so, keep the button off, and offer a reload of
     // the invoice, which shows it paid once the webhook has recorded it.
     function settled(message) {
-        var btn = document.getElementById("stripe-submit-btn");
         btn.disabled = true;
         btn.textContent = {$payJs};
         var box = document.getElementById("stripe-message");
@@ -668,53 +720,36 @@ SAVE;
     }
 
     function failed(message) {
-        var btn = document.getElementById("stripe-submit-btn");
         document.getElementById("stripe-card-errors").textContent = message;
         btn.disabled = false;
         btn.textContent = {$payJs};
     }
 
-    document.getElementById("stripe-submit-btn").addEventListener("click", function() {
-        var btn = this;
+    prepare();
+
+    btn.addEventListener("click", function() {
+        if (!elements) return;
         btn.disabled = true;
         btn.textContent = {$processingJs};
+        if (save) save.disabled = true;
 
-        // The element checks what was typed (or opens the wallet sheet)
-        // before any intent is made.
-        elements.submit()
-        .then(function(checked) {
-            if (checked.error) {
-                failed(checked.error.message);
-                return;
-            }
-            return fetch("{$intentUrl}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]") ? document.querySelector("meta[name=csrf-token]").content : ""
-                },
-                body: JSON.stringify({ save_card: !!(save && save.checked) })
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (!data.success) {
-                    failed(data.message || {$setupJs});
-                    return;
-                }
-                // A card's 3-D Secure check opens over the page; nothing here
-                // leaves it unless a bank insists, and then it comes back to
-                // the invoice.
-                return stripe.confirmPayment({
-                    elements: elements,
-                    clientSecret: data.client_secret,
-                    confirmParams: { return_url: {$returnUrl} },
-                    redirect: "if_required"
-                });
-            });
+        // A card's 3-D Secure check, or BLIK's wait for the bank app, opens
+        // over the page; nothing here leaves it unless a bank insists, and
+        // then it comes back to the invoice. A declined attempt leaves the
+        // intent open for the next one.
+        stripe.confirmPayment({
+            elements: elements,
+            // A field the element was told not to show is one this page must
+            // fill: Stripe refuses the confirm otherwise.
+            confirmParams: email
+                ? { return_url: {$returnUrl}, payment_method_data: { billing_details: { email: email } } }
+                : { return_url: {$returnUrl} },
+            redirect: "if_required"
         })
         .then(function(result) {
             if (!result) return;
             if (result.error) {
+                if (save) save.disabled = false;
                 failed(result.error.message);
                 return;
             }
