@@ -25,7 +25,10 @@ class Invoice extends Model {
         'source_currency', 'billing_currency', 'exchange_rate',
         'exchange_rate_source', 'exchange_rate_kind', 'exchange_rate_date', 'exchange_rate_ref',
         // How it was taxed when issued (#305): null = on top, 'inclusive', 'none'.
-        'tax_mode'];
+        'tax_mode',
+        // The language the invoice was issued in, frozen at issue time so a
+        // customer who later switches language still reprints the same text.
+        'language'];
 
     /**
      * Freeze the billing rate the moment an invoice comes into existence.
@@ -319,6 +322,7 @@ class Invoice extends Model {
             'buyer_client_type' => $client->client_type,
             'buyer_tax_exempt' => (bool) $client->tax_exempt,
             'buyer_custom_fields' => CustomField::invoiceSnapshot($client),
+            'language' => $client->language ?: (string) \App\Models\Setting::get('DefaultLanguage', config('app.locale', 'en')),
         ];
     }
 
