@@ -575,7 +575,7 @@
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid #eee;">
                 <div style="font-size:13px;font-weight:600;margin-bottom:10px;">{{ __('admin.settings.invoice_template_languages') }}</div>
 
-                <div style="display:grid;grid-template-columns:1fr auto;gap:15px;align-items:end;">
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:15px;align-items:end;">
                     <div class="form-group">
                         <label class="form-label">{{ __('admin.settings.invoice_template_file') }}</label>
                         <input type="file" name="template" accept=".html,.htm,.txt" class="form-control" form="invoice-template-upload">
