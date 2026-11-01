@@ -5,7 +5,9 @@ use App\Models\Currency;
 use App\Models\Invoice;
 use App\Models\Setting;
 use App\Services\OfficialRateProviders;
+use App\Support\ServerAddress;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 /**
@@ -14,6 +16,13 @@ use Illuminate\Support\Facades\Http;
  * says, a missing one leaves the commercial rate, and a table quoted the other
  * way round is inverted because the entry says so.
  */
+// The publisher's address is checked against DNS before it is requested
+// (ServerAddress::publicAddressFor), so the stand-in bank resolves to a public
+// address here instead of reaching real DNS.
+beforeEach(fn () => ServerAddress::resolveUsing(fn (string $host) => $host === 'bank.test' ? ['203.0.113.10'] : []));
+
+afterEach(fn () => ServerAddress::resolveUsing(null));
+
 function providerShop(array $overrides = []): void
 {
     Currency::updateOrCreate(['code' => 'USD'], ['name' => 'USD', 'prefix' => '$', 'rate' => 1.0, 'is_default' => true]);
@@ -153,4 +162,26 @@ it('ignores a stored list that no longer validates', function () {
     Setting::set('OfficialRateProviders', '[{"key":"x"}]');
 
     expect(OfficialRateProviders::all())->toBe([]);
+});
+
+test('a publisher on a private address is refused and never requested', function () {
+    providerShop(['url' => 'https://internal.test/rates']);
+    ServerAddress::resolveUsing(fn (string $host) => $host === 'internal.test' ? ['169.254.169.254'] : []);
+    Http::fake();
+
+    $provider = OfficialRateProviders::find('standin');
+
+    expect(app(OfficialRateProviders::class)->rateFor($provider))->toBe('not a public address');
+    Http::assertNothingSent();
+});
+
+test('the key sent to a publisher is kept encrypted at rest', function () {
+    // It is a credential like the others (#379): a dump of the settings table
+    // must not hand it over.
+    expect(Setting::SECRETS)->toContain('OfficialRateApiKey');
+
+    Setting::set('OfficialRateApiKey', 'bank-api-key');
+
+    expect(DB::table('settings')->where('setting', 'OfficialRateApiKey')->value('value'))->not->toBe('bank-api-key')
+        ->and(Setting::get('OfficialRateApiKey'))->toBe('bank-api-key');
 });

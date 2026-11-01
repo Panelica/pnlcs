@@ -69,13 +69,24 @@ class DemoSeeder extends Seeder
         );
 
         // 3. Admin users
-        Admin::firstOrCreate(['username' => 'admin'], [
+        // As in DatabaseSeeder: not a password everybody knows. A demo site
+        // that wants a known one names it in PNLCS_ADMIN_PASSWORD; otherwise
+        // it is random and printed here, once.
+        $chosen = (string) env('PNLCS_ADMIN_PASSWORD', '');
+        $password = $chosen !== '' ? $chosen : Str::password(20, symbols: false);
+
+        $admin = Admin::firstOrCreate(['username' => 'admin'], [
             'role_id' => $fullRole->id,
             'email' => 'admin@pnlcs.com',
-            'password' => 'admin123',
+            'password' => $password,
             'first_name' => 'System',
             'last_name' => 'Administrator',
         ]);
+
+        if ($admin->wasRecentlyCreated && $chosen === '') {
+            $this->command?->warn("Administrator \"admin\" created with the password: {$password}");
+            $this->command?->warn('It is shown only now. Sign in and change it, or set PNLCS_ADMIN_PASSWORD before seeding.');
+        }
 
         // 4. Settings
         $settings = [

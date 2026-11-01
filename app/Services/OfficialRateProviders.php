@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Setting;
+use App\Support\ServerAddress;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -171,8 +172,19 @@ class OfficialRateProviders
      */
     public function rateFor(array $provider): array|string
     {
+        // A publisher is on the public internet. The address is checked before
+        // it is requested, and the connection is pinned to the address that
+        // was checked: the entry is operator-written, but "fetch this URL and
+        // tell me what came back" is not a thing the panel should do for this
+        // server's own network or a cloud metadata service.
+        $ip = ServerAddress::publicAddressFor($provider['url']);
+        if ($ip === null) {
+            return 'not a public address';
+        }
+
         try {
-            $request = Http::timeout(15)->acceptJson();
+            $request = Http::timeout(15)->acceptJson()
+                ->withOptions(['curl' => [CURLOPT_RESOLVE => [ServerAddress::resolveEntry($provider['url'], $ip)]]]);
 
             $apiKey = trim((string) Setting::get('OfficialRateApiKey', ''));
             if ($provider['auth'] && $apiKey !== '') {

@@ -80,7 +80,7 @@ class DockerAppImporter
         // pastes (or the panel's catalogue names) must be on the public
         // internet, not this server, its network or a cloud metadata service.
         for ($hop = 0; ; $hop++) {
-            $ip = $this->publicAddressFor($url);
+            $ip = ServerAddress::publicAddressFor($url);
             if ($ip === null) {
                 return 'not a public address';
             }
@@ -90,7 +90,7 @@ class DockerAppImporter
                     ->withoutRedirecting()
                     // Connect to the address that was checked, not to whatever
                     // the name resolves to a moment later.
-                    ->withOptions(['curl' => [CURLOPT_RESOLVE => [$this->resolveEntry($url, $ip)]]])
+                    ->withOptions(['curl' => [CURLOPT_RESOLVE => [ServerAddress::resolveEntry($url, $ip)]]])
                     ->get($url);
             } catch (\Throwable $e) {
                 return $e->getMessage();
@@ -188,37 +188,6 @@ class DockerAppImporter
         }
 
         return true;
-    }
-
-    /** The public IPv4 address to connect to for $url, or null. */
-    private function publicAddressFor(string $url): ?string
-    {
-        $parts = parse_url($url);
-        $scheme = strtolower($parts['scheme'] ?? '');
-        $host = strtolower(trim($parts['host'] ?? '', '[]'));
-        if (! in_array($scheme, ['http', 'https'], true) || $host === '' || isset($parts['user']) || isset($parts['pass'])) {
-            return null;
-        }
-
-        $addresses = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : ServerAddress::resolve($host);
-        if ($addresses === []) {
-            return null;
-        }
-        foreach ($addresses as $address) {
-            if (! filter_var($address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                return null;
-            }
-        }
-
-        return $addresses[0];
-    }
-
-    private function resolveEntry(string $url, string $ip): string
-    {
-        $parts = parse_url($url);
-        $port = $parts['port'] ?? (strtolower($parts['scheme']) === 'https' ? 443 : 80);
-
-        return strtolower($parts['host']).':'.$port.':'.$ip;
     }
 
     /** Write the image and point the app at it, replacing whatever was there. */
